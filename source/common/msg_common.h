@@ -225,7 +225,7 @@
 #define MSG_USER_XISNOKNOWNUSER_S                 _MESSAGE(23152, _(SFN" is not known as user\n"))
 #define MSG_PROJECT_XISNOKNWOWNPROJECT_S          _MESSAGE(23153, _(SFN" is not known as project\n"))
 #define MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG     _MESSAGE(23154, _("Need hostname to delete local configuration\n"))
-#define MSG_ANSWER_INVALIDOPTIONARGX_S            _MESSAGE(23155, _("invalid option argument "SFQ))
+#define MSG_ANSWER_INVALIDOPTIONARGX_S            _MESSAGE(23155, _("invalid option argument "SFQ"\n"))
 #define MSG_SRC_X_HELP_USAGE_S                    _MESSAGE(23156, _("Usage: "SFN" -help\n"))
 #define MSG_FILE_EDITFILEXDOESNOTEXIST_S          _MESSAGE(23157, _("edit file "SFN" does not exist"))
 #define MSG_QCONF_EDITOREXITEDWITHERROR_I         _MESSAGE(23158, _("editor exited with error %d"))

@@ -35,6 +35,9 @@
 #include <sys/time.h>
 
 #include "sgermon.h"
+#include "sge_log.h"
+#include "msg_lcklib.h"
+
 
 /****** sge_mtutil/sge_mutex_lock() ********************************************
 *  NAME
@@ -45,7 +48,7 @@
 *     int line, pthread_mutex_t *mutex) 
 *
 *  FUNCTION
-*     Locks the passed mutex. Before and after locking rmon DPRINTF() 
+*     Locks the passed mutex. Before and after locking rmon DLOCKPRINTF() 
 *     is used to facilitate tracking of deadlocks that are caused by 
 *     mutexes.
 *
@@ -71,8 +74,8 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 
    if (pthread_mutex_lock(mutex) != 0)
    {
-      DLOCKPRINTF(("%s failed to lock %s\n", func, mutex_name));
-      abort(); /* TODO-AD: add error message */
+      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXLOCKFAILED_SS, func, mutex_name));
+      abort();
    }
 
    DLOCKPRINTF(("%s() line %d: locked mutex \"%s\"\n", func, line, mutex_name));
@@ -90,7 +93,7 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 *     int line, pthread_mutex_t *mutex) 
 *
 *  FUNCTION
-*     Unlocks the passed mutex. Before and after unlocking rmon DPRINTF() 
+*     Unlocks the passed mutex. Before and after unlocking rmon DLOCKPRINTF() 
 *     is used to facilitate tracking of deadlocks that are caused by 
 *     mutexes.
 *
@@ -114,8 +117,8 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
 
    if (pthread_mutex_unlock(mutex) != 0)
    {
-      DLOCKPRINTF(("%s failed to lock %s\n", func, mutex_name));
-      abort(); /* TODO-AD: add error message */
+      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXUNLOCKFAILED_SS, func, mutex_name));
+      abort();
    }
 
    DLOCKPRINTF(("%s() line %d: unlocked mutex \"%s\"\n", func, line, mutex_name));

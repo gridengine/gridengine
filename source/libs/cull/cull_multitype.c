@@ -3607,6 +3607,7 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const voi
          if (s != NULL) {
             hostcpy(cmphost, s);
             if ( !SGE_STRCASECMP(cmphost, uhost) ) {
+               *iterator = ep;
                DEXIT;
                return ep; 
             }
@@ -3675,12 +3676,15 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
          if (s != NULL) {
             hostcpy(cmphost, s);
             if ( !SGE_STRCASECMP(cmphost, uhost) ) {
+               *iterator = ep;
                DEXIT;
                return ep; 
             }
          } 
       }
    }
+   *iterator = NULL;
+
    DEXIT;
    return NULL;
 }

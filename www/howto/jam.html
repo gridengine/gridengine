@@ -1,0 +1,56 @@
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><H2><font color="#336699" class="PageHeader">JAM experimental module -
+integrating Jini(TM) technology with Grid Engine</font></H2></td>
+</tr>
+</table>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+
+JAM (for Job & Application Manager) is a proof-of-concept, Jini(TM) technology
+based, graphical interface to Grid Engine.  It provides a framework for
+selecting from a set of registered applications (or specifying one yourself
+directly), and selecting a Grid Engine queue to which the job is submitted
+(from a set of available queues originating from one or more clusters or
+cells), with support for filtering on various queue attributes.  Once the job
+is submitted, it can be monitored and controlled via JAM.
+
+<p>JAM is written in the Java(TM) programming language (except for the Grid
+Engine interface), and leverages Jini networking technology.  The registered
+applications, Grid Engine queues and running jobs are all represented as Jini
+services.  The dynamic nature of Jini technology assures that all information
+is always accurate and up-to-date.  The support for service attributes is
+utilized when searching and filtering among available Grid Engine queue
+services.  In addition, JavaSpaces(TM) technology and the remote event model
+are utilized for the lifecycle management of the jobs submitted through JAM.
+
+<p>JAM utilizes native (C++) code (via JNI) for interfacing with the Grid
+Engine API (GDI) as it exists in Grid Engine 5.3.  It shows one potential
+integration methodology between Jini and Grid Engine technologies, though not
+necessarily an optimal one.
+
+<p>This code is of prototype quality (at best).  It is known to be deficient in
+several areas.  For example, applications to be controlled by JAM need to have
+wrapper code written to make them available as Jini services, and thus known to
+JAM.  This is not a trivial exercise.  Grid Engine queues are not distinguished
+by which cluster or cell they come from.  Issues like security have been
+largely ignored.  The code has also not been rigorously tested nor widely
+deployed.  You get the idea.
+
+<p>JAM was initially the result of a joint collaborative research effort
+between Sun Microsystems <a href="http://www.sun.com">(Sun)</a> and the Swiss
+Center for Scientific Computing <a href="http://www.cscs.ch">(CSCS)</a>.
+
+<p>It is being hosted as an <A
+HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/experimental/experimental.html?content-type=text/html#JAM">experimental&nbsp;module</A>,
+as we have no plans to run any kind of open source "project" around it.  We are
+simply making it available in the hope that the community will find it useful..
+It is available in <A
+HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/experimental/jam">browsable&nbsp;source</A>
+form, or can be retrieved using CVS.
+
+<p></p>
+</table>

@@ -100,6 +100,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    const char *queue_name = NULL;
    bool is_load_value;
    bool has_value_from_object; 
+   u_long32 interval;
 
    DENTER(TOP_LAYER, "sge_print_queue");
 
@@ -128,7 +129,12 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                             centry_list, load_alarm_reason, 
                             MAX_STRING_SIZE - 1, "load");
    }
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+   parse_ulong_val(NULL, &interval, TYPE_TIM,
+                   lGetString(q, QU_suspend_interval), NULL, 0);
+   if (lGetUlong(q, QU_nsuspend) != 0 &&
+       interval != 0 &&
+       sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+fprintf(stderr, u32" "u32" "u32"\n", lGetUlong(q, QU_nsuspend), interval, interval);
       qinstance_state_set_suspend_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
                             exechost_list, centry_list, suspend_alarm_reason, 

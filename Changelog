@@ -1,3 +1,9 @@
+RC-2005-03-24-3: Bugfix:    allow installation of binaries compiled on
+                            Linux 2.6 kernels
+                 Review:    AS, JM
+                 Issue:     1310, 1367
+                 Changed:   arch.dist
+
 RC-2005-03-24-2: Enhancem.: Failed to compile on Cray unicos
                  Changed:   - pdc.c (include file is now sge_unistd.h)
                             - sge_c_gdi.c, configuration_qmaster.c (conflict
@@ -7,10 +13,10 @@ RC-2005-03-24-1: Enhancem.: moved function declarations into sge_uidgid.h
                  Changed  : get*_r routines for BSD (and other OSes with
                             them missing)
 
-RC-2005-03-24-0: Bugfix:   - fixed a typo (should be qtcsh instead of qtsch)
-                           - qtcsh failed to compile on PPC Linux
-                           - restored Changelog
-                 Changed:  qtcsh
+RC-2005-03-24-0: Bugfix:    - fixed a typo (should be qtcsh instead of qtsch)
+                            - qtcsh failed to compile on PPC Linux
+                            - restored Changelog
+                 Changed:   qtcsh
 
 CR-2005-03-24-0: Bugfix:    forgot to initalize connection response state at
                             connection setup.

@@ -381,7 +381,8 @@ Cardinal size
     */
 
    if (type != QmonQUS_Type && type != QmonQCX_Type &&
-       type != QmonQMR_Type && type != QmonQUP_Type) {
+       type != QmonQMR_Type && type != QmonQUP_Type &&
+       type != QmonQSTR_Type ) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't set widget values"
          " from a resource of type '%s'",
@@ -454,6 +455,10 @@ Cardinal size
       UpdateXmList(w, str_table, size, XmFONTLIST_DEFAULT_TAG);
       StringTableFree(str_table, size);
    }   
+   
+   if (type == QmonQSTR_Type) {
+      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, STR);
+   }
       
    XmtLayoutEnableLayout(parent);
 
@@ -473,7 +478,8 @@ Cardinal size
     */
 
    if (type != QmonQUS_Type && type != QmonQCX_Type &&
-       type != QmonQMR_Type && type != QmonQUP_Type) {
+       type != QmonQMR_Type && type != QmonQUP_Type &&
+       type != QmonQSTR_Type ) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'",
@@ -495,6 +501,10 @@ Cardinal size
 
    if (type == QmonQMR_Type) {
       lp = XmStringToCull(w, MR_Type, MR_user, ALL_ITEMS);
+   }
+
+   if (type == QmonQSTR_Type) {
+      lp = XmStringToCull(w, ST_Type, STR, ALL_ITEMS);
    }
 
    *(lList**)address = lp;

@@ -269,14 +269,14 @@ const char *sge_ctime32(u_long32 *i, dstring *buffer)
 ******************************************************************************/
 const char *sge_at_time(time_t i, dstring *buffer) 
 {
-#if 1
+#ifdef HAS_LOCALTIME_R
    struct tm tm_buffer;
 #endif
    struct tm *tm;
 
    if (!i)
       i = sge_get_gmt();
-#if 0
+#ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
 #else
    tm = localtime_r(&i, &tm_buffer);

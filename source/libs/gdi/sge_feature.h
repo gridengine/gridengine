@@ -90,8 +90,13 @@ typedef enum {
  
 typedef struct {
    feature_id_t id;
-   char *name;
+   const char *name;
 } feature_names_t;            
+
+typedef struct {
+   featureset_id_t id;
+   const char *name;
+} featureset_names_t;            
 
 extern lList *Master_FeatureSet_List;
  

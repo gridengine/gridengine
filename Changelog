@@ -1,3 +1,5 @@
+JG-2003-05-27-0  Bugfix:    Broken build for solaris86 due to type mismatch.
+
 AA-2003-05-22-1  Bugfix:    sge_ca script: uniqueIdentifier has been renamed to
                             userId
                  Changed:   util/sgeCA/sge_ca           

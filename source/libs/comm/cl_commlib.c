@@ -3214,6 +3214,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
    long my_timeout = 0;
    int message_sent = 0;
    struct timeval now;
+   int leave_reason = CL_RETVAL_OK;
 
    if (message == NULL) {
       return CL_RETVAL_PARAMS;
@@ -3235,12 +3236,18 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
       CL_LOG(CL_LOG_WARNING,"message filtering not supported");
    }
    do {
+      leave_reason = CL_RETVAL_OK;
       /* return if there are no connections in list */
       cl_raw_list_lock(handle->connection_list);
       elem = cl_connection_list_get_first_elem(handle->connection_list);     
       if (elem == NULL) {
-         cl_raw_list_unlock(handle->connection_list);
-         return CL_RETVAL_CONNECTION_NOT_FOUND;
+         leave_reason = CL_RETVAL_CONNECTION_NOT_FOUND;
+         if ( synchron != 0 && handle->service_provider == 0 ) {
+            /* we are no service provider, we can't wait for a (possible)
+               new connection, we can return immediately */
+            cl_raw_list_unlock(handle->connection_list);
+            return leave_reason;
+         }
       }
 
       /* only search for messages if there are any messages in message state CL_MS_READY */
@@ -3415,6 +3422,9 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                break;
          }
          /* at this point the handle->connection_list must be unlocked */
+         if (leave_reason != CL_RETVAL_OK) {
+            return leave_reason;   /* CL_RETVAL_CONNECTION_NOT_FOUND */
+         }
          gettimeofday(&now,NULL);
          if (now.tv_sec > my_timeout) {
             return CL_RETVAL_SYNC_RECEIVE_TIMEOUT;
@@ -4132,6 +4142,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          break;
       case CL_ONE_THREAD:
          /* new connection, trigger read_thread */
+         cl_thread_trigger_event(handle->write_thread);
          cl_thread_trigger_event(handle->read_thread);
          break;
    }

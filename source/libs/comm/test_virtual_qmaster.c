@@ -48,6 +48,12 @@ static int pipe_signal = 0;
 static int hup_signal = 0;
 static int do_shutdown = 0;
 
+/* counters */
+static int rcv_messages = 0;
+static int snd_messages = 0;
+static int evc_count = 0;
+static int events_sent = 0;
+
 static cl_com_handle_t* handle = NULL; 
 cl_raw_list_t* thread_list = NULL;
 
@@ -86,15 +92,22 @@ extern int main(int argc, char** argv)
   cl_thread_settings_t* thread_p = NULL;
   cl_thread_settings_t* dummy_thread_p = NULL;
   struct sigaction sa;
+  struct timeval now;
+  struct timeval last;
+  double usec_last = 0.0;
   int i;
+  int time_interval = 0;
 
 
 
-  if (argc != 3) {
-      printf("please enter  debug level and port\n");
+  if (argc != 4) {
+      
+      printf("syntax: test_virtual_qmaster DEBUG_LEVEL PORT INTERVAL\n");
       exit(1);
   }
 
+  time_interval = atoi(argv[3]);
+  
   /* setup signalhandling */
   memset(&sa, 0, sizeof(sa));
   sa.sa_handler = sighandler_client;  /* one handler for all signals */
@@ -129,12 +142,44 @@ extern int main(int argc, char** argv)
   printf("create application threads ...\n");
   cl_thread_list_setup(&thread_list,"thread list");
   cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread", 1, my_message_thread);
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread); 
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread);
 
-  while(do_shutdown == 0) {
-     printf("\nvirtual qmaster is running ...\n");
-     sleep(1);
+  gettimeofday(&last,NULL);
+  usec_last = (last.tv_sec * 1000000.0) + last.tv_usec;
+  
+  while(do_shutdown == 0 ) {
+     double usec_now  = 0.0;
+     double interval  = 0.0;
+     double rcv_m_sec = 0.0;
+     double snd_m_sec = 0.0;
+     double nr_evc_sec = 0.0;
+     double snd_ev_sec = 0.0;
+
+     gettimeofday(&now,NULL);
+     usec_now  = (now.tv_sec  * 1000000.0) + now.tv_usec;
+     
+     interval = usec_now - usec_last;
+     interval /= 1000000.0;
+
+     rcv_m_sec  = rcv_messages / interval;
+     snd_m_sec  = snd_messages / interval;
+     nr_evc_sec = evc_count    / interval;
+     snd_ev_sec = events_sent  / interval;
+
+     printf("|%.5f|[s]   received|%d|%.3f|[nr.|1/s]   sent|%d|%.3f|[nr.|1/s]   event clients|%d|%.3f|[nr.|1/s]   events sent|%d|%.3f|[nr.|1/s]\n", 
+            interval,
+            rcv_messages, rcv_m_sec, 
+            snd_messages, snd_m_sec,
+            evc_count,    nr_evc_sec,
+            events_sent,  snd_ev_sec );
+
+
+     if ( interval >= time_interval ) {
+        break;
+     }
+     cl_thread_wait_for_event(cl_thread_get_thread_config(),1,0);
   }
+  cl_com_ignore_timeouts(CL_TRUE);
 
   printf("shutdown threads ...\n");
   /* delete all threads */
@@ -142,7 +187,6 @@ extern int main(int argc, char** argv)
      cl_thread_list_delete_thread(thread_list, thread_p);
   }
   cl_thread_list_cleanup(&thread_list);
-
 
   printf("shutdown commlib ...\n");
   cl_com_cleanup_commlib();
@@ -177,6 +221,12 @@ void *my_message_thread(void *t_conf) {
    cl_thread_func_startup(thread_config);
    CL_LOG(CL_LOG_INFO, "starting main loop ...");
 
+   printf(" \"%s\" -> running ...\n", thread_config->thread_name );
+   rcv_messages = 0;
+   snd_messages = 0;
+   evc_count    = 0;
+   
+
    /* ok, thread main */
    while (do_exit == 0) {
       int ret_val = 0;
@@ -185,24 +235,29 @@ void *my_message_thread(void *t_conf) {
 
       cl_thread_func_testcancel(thread_config);
 
-      printf(" \"%s\" -> running ...\n", thread_config->thread_name );
       ret_val = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                            1, 0,                       /* syncron, response_mid */
                                            &message, &sender );
       if (ret_val == CL_RETVAL_OK) {
+         rcv_messages++;
+#if 0
          printf(" \"%s\" -> received message from %s/%s/%ld: \"%s\" (%ld bytes)\n", thread_config->thread_name, 
                                                                         sender->comp_host,sender->comp_name,sender->comp_id,
                                                                         message->message, message->message_length);
+#endif
 
          if ( strcmp((char*)message->message,"event") == 0) {
             int i,help;
+#if 0
             printf(" \"%s\" -> new event client\n", thread_config->thread_name);
+#endif
 
             cl_com_free_message(&message);
             help = 0;
             for (i=0;i<10;i++) {
                if ( event_client_array[i] == NULL ) {
                   event_client_array[i] = sender;
+                  evc_count++;
                   help=1;
                   break;
                }
@@ -210,34 +265,27 @@ void *my_message_thread(void *t_conf) {
             if (help != 1) {
                printf(" \"%s\" -> to much connected event clients\n", thread_config->thread_name);
                cl_com_free_endpoint(&sender);
-            }
+            } 
          } else {
             /* no event client, just return message to sender */
             char data[30000];
             sprintf(data,"gdi response");
+#if 0
             printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
                            sender->comp_host, sender->comp_name, sender->comp_id);
+#endif
 
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
                                       (cl_byte_t*) data , 30000,
                                       NULL, 0, 0 , 1, 0 );
+            if (ret_val == CL_RETVAL_OK) {
+               snd_messages++;
+            }
             cl_com_free_message(&message);
             cl_com_free_endpoint(&sender);
          }
-         
-      } else { 
-         if ((ret_val = cl_thread_wait_for_event(thread_config,1,0 )) != CL_RETVAL_OK) {  /* nothing to do sleep 1 sec */
-            switch(ret_val) {
-               case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
-                  CL_LOG(CL_LOG_INFO,"condition wait timeout");
-                  break;
-               default:
-                  CL_LOG_STR( CL_LOG_INFO, ">got error<: ", cl_get_error_text(ret_val));
-                  do_exit = 1;
-            }
-         }
-      }
+      } 
    }
 
    /* at least set exit state */
@@ -269,7 +317,9 @@ void *my_event_thread(void *t_conf) {
    /* thread init done, trigger startup conditon variable*/
    cl_thread_func_startup(thread_config);
    CL_LOG(CL_LOG_INFO, "starting main loop ...");
+   printf(" \"%s\" -> running ...\n", thread_config->thread_name );
 
+   
    /* ok, thread main */
    while (do_exit == 0) {
       int ret_val;
@@ -279,8 +329,6 @@ void *my_event_thread(void *t_conf) {
 
       cl_thread_func_testcancel(thread_config);
 
-      printf(" \"%s\" -> running ...\n", thread_config->thread_name );
-      
       /* this should be 60 events/second */
       for(nr=0;nr<60;nr++) {
          first = 0;
@@ -294,19 +342,25 @@ void *my_event_thread(void *t_conf) {
                   first = 1;
                }
                sprintf(help,"event nr.: %d", event_nr );
+#if 0
                printf(" \"%s\" -> sending event to %s/%s/%ld\n", thread_config->thread_name, 
                                                                  client->comp_host, client->comp_name, client->comp_id  );
+#endif
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
                                                  CL_MIH_MAT_NAK, (cl_byte_t*) help , 10000,
                                                  NULL, 0, 0 , 1, 0 );
+             
                if ( ret_val != CL_RETVAL_OK) {
-                  cl_com_free_endpoint(&(event_client_array[i]));
+                  cl_com_free_endpoint(&(event_client_array[i])); /* should be locked at this point */
+                  evc_count--;
+               } else {
+                  events_sent++;
                }
             }
          }
       }
 
-      if ((ret_val = cl_thread_wait_for_event(thread_config,1,0 )) != CL_RETVAL_OK) {  /* nothing to do sleep 1 sec */
+      if ((ret_val = cl_thread_wait_for_event(thread_config,1, 0 )) != CL_RETVAL_OK) {  /* nothing to do sleep 1 sec */
          switch(ret_val) {
             case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
                CL_LOG(CL_LOG_INFO,"condition wait timeout");

@@ -43,6 +43,11 @@
 #include "cl_lists.h"
 #include "cl_commlib.h"
 
+
+/* counters */
+static int rcv_messages = 0;
+static int snd_messages = 0;
+
 void sighandler_client(int sig);
 static int pipe_signal = 0;
 static int hup_signal = 0;
@@ -78,8 +83,9 @@ int sig
 extern int main(int argc, char** argv)
 {
   struct sigaction sa;
-  int i;
-
+  
+  struct timeval now;
+  time_t last_time = 0;
 
   if (argc != 4) {
       printf("please enter  debug level, port and hostname of virtual qmaster\n");
@@ -97,31 +103,40 @@ extern int main(int argc, char** argv)
 
 
   while(do_shutdown == 0) {
-   
-     printf("startup commlib ...\n");
+     gettimeofday(&now,NULL);
+     if (now.tv_sec != last_time) {
+        printf("virtual gdi client message count[received |%d| / sent |%d|]...\n",rcv_messages,snd_messages);
+        last_time = now.tv_sec;
+     }
      cl_com_setup_commlib(CL_NO_THREAD ,atoi(argv[1]), NULL );
    
-     printf("setting up handle for connect port %d\n", atoi(argv[2]) );
      handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "virtual_gdi_client", 0, 1,0 );
      if (handle == NULL) {
         printf("could not get handle\n");
         exit(1);
      }
    
+#if 0
      printf("local hostname is \"%s\"\n", handle->local->comp_host);
      printf("local component is \"%s\"\n", handle->local->comp_name);
      printf("local component id is \"%ld\"\n", handle->local->comp_id);
+#endif
    
-     cl_com_get_connect_port(handle, &i);
-     printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[3]);
+#if 0
+     {
+        int i;
+        cl_com_get_connect_port(handle, &i);
+        printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[3]);
+     }
+#endif
    
+     
      
      while( do_shutdown == 0 ) {
         int                retval  = 0;
         cl_com_message_t*  message = NULL;
         cl_com_endpoint_t* sender  = NULL;
         char data[20000];
-        printf("virtual gdi client is running ...\n");
    
         sprintf(data,"gdi request");
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
@@ -129,23 +144,28 @@ extern int main(int argc, char** argv)
                                          (cl_byte_t*) data , 20000,
                                          NULL, 0, 0 , 1, 0 );
         if ( retval == CL_RETVAL_OK ) {
+           snd_messages++;
            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                                1, 0,                          /* syncron, response_mid */
                                                &message, &sender );
            if ( retval == CL_RETVAL_OK) {
+#if 0
                  printf("received message from %s/%s/%ld: \"%s\" (%ld bytes)\n", 
                            sender->comp_host,sender->comp_name,sender->comp_id, message->message,message->message_length);
+#endif
+                 rcv_messages++;
                  cl_com_free_message(&message);
                  cl_com_free_endpoint(&sender);
                  break;
            }
         } 
- 
+#if 0        
         printf("status: %s\n",cl_get_error_text(retval));
+#endif
      }
-     printf("shutdown commlib ...\n");
      cl_com_cleanup_commlib();
   }
+  
   printf("main done\n");
   return 0;
 }

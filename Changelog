@@ -1,3 +1,6 @@
+DT-2004-06-02-0: Cleanup:   o Updated DRMAA Java binding JavaDocs
+                 Changed:   DRMAA
+
 AD-2004-06-01-0: Bugfix:    Did add workaround for non POSIX compliant
                             behaviour of LinuxThreads regarding propagation
                             of UID/EUID to new threads.

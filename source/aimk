@@ -84,19 +84,19 @@ case "craytsieee":
 case "darwin":
    set BUILDARCH = DARWIN
    breaksw
-case "freebsd-alpha"
+case "fbsd-alpha"
    set BUILDARCH = FREEBSD_ALPHA
    breaksw
-case "freebsd-i386"
+case "fbsd-i386"
    set BUILDARCH = FREEBSD_I386
    breaksw
-case "freebsd-ia64"
+case "fbsd-ia64"
    set BUILDARCH = FREEBSD_IA64
    breaksw
-case "freebsd-ppc"
+case "fbsd-ppc"
    set BUILDARCH = FREEBSD_PPC
    breaksw
-case "freebsd-sparc64"
+case "fbsd-sparc64"
    set BUILDARCH = FREEBSD_SPARC64
    breaksw
 case "glinux":

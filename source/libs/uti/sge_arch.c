@@ -113,15 +113,15 @@ const char *sge_get_arch(void)
 #   define ARCHBIN "m$win"   
 #elif defined(FREEBSD)
 # if defined(FREEBSD_ALPHA)
-#   define ARCHBIN "freebsd-alpha"
+#   define ARCHBIN "fbsd-alpha"
 # elif defined(FREEBSD_I386)
-#   define ARCHBIN "freebsd-i386"
+#   define ARCHBIN "fbsd-i386"
 # elif defined(FREEBSD_IA64)
-#   define ARCHBIN "freebsd-ia64"
+#   define ARCHBIN "fbsd-ia64"
 # elif defined(FREEBSD_PPC)
-#   define ARCHBIN "freebsd-ppc"
+#   define ARCHBIN "fbsd-ppc"
 # elif defined(FREEBSD_SPARC64)
-#   define ARCHBIN "freebsd-sparc64"
+#   define ARCHBIN "fbsd-sparc64"
 # endif
 #elif defined(DARWIN)
 #   define ARCHBIN "darwin"   

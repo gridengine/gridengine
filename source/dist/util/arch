@@ -61,7 +61,7 @@ if [ -x /usr/bin/uname ]; then
       ARCH=darwin
       ;;
    FreeBSD,*)
-      ARCH=freebsd-$ht
+      ARCH=fbsd-$ht
       ;;
    esac
 fi
@@ -259,7 +259,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=/usr/man
       SHARED_LIBRARY_PATH="LIBPATH"
       ;;
-   freebsd-*)
+   fbsd-*)
       PATH=$OLD_PATH
       DEFAULTMANPATH=`/usr/bin/manpath -q`
       PATH=$SAFE_PATH

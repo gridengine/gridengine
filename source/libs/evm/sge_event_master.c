@@ -81,6 +81,58 @@ typedef struct {
 }subscription_t;
 
 
+/********************************************************************
+ *
+ * The next three array are important for lists, which can be
+ * subscripted by the event client and which contain a sub-list
+ * that can be subscripted by it self again (such as the: job list
+ * with the JAT_Task sub list, or the cluster queue list with the
+ * queue instances sub-list)
+ * All lists, which follow the same structure have to be defined
+ * in the special construct.
+ *
+ * EVENT_LIST:
+ *  Contains all events for the main list, which delivers also
+ *  the sub-list. 
+ *
+ * FIELD_LIST:
+ *  Contains all attributes in the main list, which contain the
+ *  sub-list in question.
+ *
+ * SOURCE_LIST:
+ *  Contains the sub-scription events for the sub-list, which als
+ *  contains the filter for the sub-list.
+ *
+ *
+ * This construct and its functions are limited to one sub-scribable
+ * sub-list per main list. If multiple sub-lists can be subsribed, the
+ * construct has to be exetended.
+ *
+ *
+ * SEE ALSO:
+ *     evm/sge_event_master/job_select()
+ *     evm/sge_event_master/elem_select() 
+ *  and
+ *     evm/sge_event_master/sge_add_list_event_
+ *     evm/sge_event_master/sge_add_event_
+ *
+ *********************************************************************/
+#define LIST_MAX 2
+const int EVENT_LIST[LIST_MAX][6] = {
+                              {sgeE_JOB_LIST, sgeE_JOB_ADD, sgeE_JOB_DEL, sgeE_JOB_MOD, sgeE_JOB_MOD_SCHED_PRIORITY, -1},
+                              {sgeE_CQUEUE_LIST, sgeE_CQUEUE_ADD, sgeE_CQUEUE_DEL, sgeE_CQUEUE_MOD, -1, -1},
+                              };
+
+const int FIELD_LIST[LIST_MAX][3] = {
+                              {JB_ja_tasks, JB_ja_template, -1},
+                              {CQ_qinstances, -1, -1},
+                             };
+
+const int SOURCE_LIST[LIST_MAX][3] = {
+                               {sgeE_JATASK_MOD, sgeE_JATASK_ADD, -1},
+                               {sgeE_QINSTANCE_ADD, sgeE_QINSTANCE_MOD, -1},
+                              };
+
 /****** Eventclient/Server/--Event_Client_Server ******************************
 *  NAME
 *     Event Client Interface -- Server Functionality
@@ -155,7 +207,11 @@ static const lDescr* getDescriptorL(subscription_t *subscription, const lList* l
 static const lDescr* getDescriptor(subscription_t *subscription, const lListElem* element, int type);
 static bool job_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
                        const lEnumeration *fields,  const lDescr *descr);
-   
+                       
+static lListElem *elem_select(subscription_t *subscription, lListElem *element, 
+                              const int ids[], const lCondition *selection, 
+                              const lEnumeration *fields, const lDescr *dp, int sub_type);    
+                              
 /* static void dump_subscription(const char *subscription); */
 
 /****** Eventclient/Server/-Event_Client_Server_Defines ************************
@@ -491,7 +547,6 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 
    id = lGetUlong(clio, EV_id);
    name = lGetString(clio, EV_name);
-/*   subscription = lGetString(clio, EV_subscription);*/
    subscription = lGetList(clio, EV_subscribed);
    ed_time = lGetUlong(clio, EV_d_time);
    host = lGetHost(clio, EV_host);
@@ -510,7 +565,6 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       return STATUS_ESEMANTIC;
    }
 
-/*   if (subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {*/
    if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -1358,7 +1412,6 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    event = lCreateElem(ET_Type); 
-
    /* 
       fill in event number and increment 
       EV_next_number of event recipient 
@@ -1510,14 +1563,20 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
                u_long32 intkey, u_long32 intkey2, const char *strkey, 
                const char *strkey2, lListElem *element) 
 {
-   const lDescr *dp = NULL;
    lList *lp = NULL;
-   bool job_jat_filter = ((type == sgeE_JOB_LIST) | 
-                          (type == sgeE_JOB_ADD) | 
-                          (type == sgeE_JOB_DEL) | 
-                          (type == sgeE_JOB_MOD) | 
-                          (type == sgeE_JOB_MOD_SCHED_PRIORITY)) ;
-
+   bool sub_filter = false;
+   int entry_counter;
+   int event_counter;
+   for (entry_counter = 0; entry_counter < LIST_MAX; entry_counter++) {
+      event_counter = -1;
+      while (EVENT_LIST[entry_counter][++event_counter] != -1){
+         sub_filter = (type == EVENT_LIST[entry_counter][event_counter]); 
+         if (sub_filter)
+            break;
+      }
+      if (sub_filter)
+         break;
+   }
 
    /* build a list from the element */
    if (element) {
@@ -1525,57 +1584,29 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       subscription_t *subscription = lGetRef(event_client, EV_sub_array);
       const lCondition *selection = subscription[type].where;
       const lEnumeration *fields = subscription[type].what;
-      /*dp = subscription[type].descr;*/
-      dp = getDescriptor(subscription, element, type);
+      const lDescr *dp = getDescriptor(subscription, element, type);
 
       if (fields) {
-         lList *ja_template = NULL;
-         lList *ja_tasks = NULL;
-         /*
-         if (!dp){
-            subscription[type].descr = lGetReducedDescr(lGetElemDescr(element), fields);
-            dp = subscription[type].descr; 
-         }
-         */
-         if (job_jat_filter){
-            lXchgList(element, JB_ja_tasks, &ja_tasks);
-            lXchgList(element, JB_ja_template, &ja_template);
-         }
-         el = lSelectElemD(element, selection, dp, fields);
-
+      
          /* special handling for the JAT_Type lists stored in the job
           * structure. 
           */
-
-         if (job_jat_filter) {
-            if (el) {
-               const lCondition *jat_selection = NULL; 
-               const lEnumeration *jat_fields = NULL;
-               if (subscription[sgeE_JATASK_MOD].what){
-                  jat_selection = subscription[sgeE_JATASK_MOD].where;
-                  jat_fields = subscription[sgeE_JATASK_MOD].what;
+         if (sub_filter) {
+            int sub_type = -1;
+            int i=-1;
+            
+            while (SOURCE_LIST[entry_counter][++i] != -1) {
+               if (subscription[SOURCE_LIST[entry_counter][i]].what){
+                  sub_type = SOURCE_LIST[entry_counter][i];
                }
-               else if (subscription[sgeE_JATASK_ADD].what){
-                  jat_selection = subscription[sgeE_JATASK_ADD].where;
-                  jat_fields = subscription[sgeE_JATASK_ADD].what;
-               }
-
-               if (lGetPosViaElem(el, JB_ja_tasks) != -1) {
-                  if (jat_fields) 
-                     lSetList(el, JB_ja_tasks, lSelect("",ja_tasks, jat_selection, jat_fields));
-                  else
-                     lSetList(el, JB_ja_tasks, lCopyList("", ja_tasks));
-               } 
-               if (lGetPosViaElem(el, JB_ja_template) != -1) {
-                  if (jat_fields) 
-                     lSetList(el, JB_ja_template, lSelect("", ja_template, jat_selection, jat_fields));
-                  else
-                     lSetList(el, JB_ja_template, lCopyList("", ja_template));
-               }
-               
             }
-            lXchgList(element, JB_ja_tasks, &ja_tasks);
-            lXchgList(element, JB_ja_template, &ja_template);
+
+            el = elem_select(subscription, element, 
+                              FIELD_LIST[entry_counter], selection, 
+                              fields, dp, sub_type);
+         }
+         else {
+             el = lSelectElemD(element, selection, dp, fields);
          }
          
          /* do not send empty elements */
@@ -1824,66 +1855,153 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 static bool job_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
                        const lEnumeration *fields,  const lDescr *descr){
    bool ret = false;
-   if ((type == sgeE_JOB_LIST) || 
-        (type == sgeE_JOB_ADD) || 
-        (type == sgeE_JOB_DEL) || 
-        (type == sgeE_JOB_MOD) || 
-        (type == sgeE_JOB_MOD_SCHED_PRIORITY)) {
-      const lCondition *jat_selection = NULL; 
-      const lEnumeration *jat_fields = NULL;
-      const lDescr *jat_descr = NULL;
-      int jat_type = 0;;
+   int entry_counter;
+   int event_counter;
+   for (entry_counter = 0; entry_counter < LIST_MAX; entry_counter++) {
+      event_counter = -1;
+      while (EVENT_LIST[entry_counter][++event_counter] != -1){
+         if (type == EVENT_LIST[entry_counter][event_counter]) {
+            int sub_type = -1;
+            int i=-1;
 
-      if (subscription[sgeE_JATASK_MOD].what){
-         jat_selection = subscription[sgeE_JATASK_MOD].where;
-         jat_fields = subscription[sgeE_JATASK_MOD].what;
-         jat_type = sgeE_JATASK_MOD;
-      }
-      else if (subscription[sgeE_JATASK_ADD].what){
-         jat_selection = subscription[sgeE_JATASK_ADD].where;
-         jat_fields = subscription[sgeE_JATASK_ADD].what;
-         jat_type = sgeE_JATASK_ADD;
-      }
-      if (jat_fields) {
-         lList *ja_template = NULL;
-         lList *ja_tasks = NULL;
-         lListElem *element = NULL;
-         lListElem *reduced_el = NULL;
-         int pos = -1;
-         
-         ret = true;
-         *reduced_lp = lCreateList("update", descr);        
-         
-         for_each(element, lp) {
-            lXchgList(element, JB_ja_tasks, &ja_tasks);
-            lXchgList(element, JB_ja_template, &ja_template);  
-
-            reduced_el = lSelectElemD(element, selection, descr, fields);
-            lAppendElem(*reduced_lp, reduced_el);
-
-            if (!jat_descr){
-               if (ja_tasks)
-                  jat_descr = getDescriptorL(subscription, ja_tasks, jat_type);
-               else if(ja_template) 
-                  jat_descr = getDescriptorL(subscription, ja_template, jat_type);
-               else { /* no elements to reduce, we can continue */
-                  continue;
+            while (SOURCE_LIST[entry_counter][++i] != -1) {
+               if (subscription[SOURCE_LIST[entry_counter][i]].what){
+                  sub_type = SOURCE_LIST[entry_counter][i];
+                  break;
                }
             }
-
-            if ( ja_tasks && (pos = lGetPosViaElem(reduced_el, JB_ja_tasks)) != -1) {
-               lSetPosList(reduced_el, pos, lSelectD("",ja_tasks, jat_selection, jat_descr, jat_fields));
-            } 
-            if ( ja_template && (pos = lGetPosViaElem(reduced_el, JB_ja_template)) != -1) {
-               lSetPosList(reduced_el, pos, lSelectD("", ja_template, jat_selection, jat_descr, jat_fields)); 
+  
+            if (sub_type != -1) {
+               lListElem *element = NULL;
+               lListElem *reduced_el = NULL;
+               
+               ret = true;
+               *reduced_lp = lCreateList("update", descr);        
+               
+               for_each(element, lp) {
+                  reduced_el = elem_select(subscription, element, 
+                               FIELD_LIST[entry_counter], selection, 
+                               fields, descr, sub_type);
+               
+                  lAppendElem(*reduced_lp, reduced_el);
+               }
             }
-
-            lXchgList(element, JB_ja_tasks, &ja_tasks);
-            lXchgList(element, JB_ja_template, &ja_template);
-         }
-      }
-   }
+            goto end;
+         } /* end if */
+      } /* end while */
+   } /* end for */
+end:   
    return ret;        
+}
+
+/****** sge_event_master/elem_select() ******************************************
+*  NAME
+*     elem_select() -- makes a reduced copy of an element with reducing sublists
+*                      as well
+*
+*  SYNOPSIS
+*     static lListElem *elem_select(subscription_t *subscription, lListElem *element, 
+*                              const int ids[], const lCondition *selection, 
+*                              const lEnumeration *fields, const lDescr *dp, int sub_type)
+*
+*  FUNCTION
+*     The function will apply the given filters for the element. Before the element
+*     is reduced, all attribute sub lists named in "ids" will be removed from the list and
+*     reduced. The reduced sub lists will be added the the reduced element and the original
+*     element will be restored. The sub-lists will only be reduced, if the reduced element
+*     still contains their attributes.
+*
+*  INPUTS
+*     subscription_t *subscription - subscription array 
+*     lListElem *element           - the element to reduce
+*     const int ids[]              - attribute with sublists to be reduced as well
+*     const lCondition *selection  - where filter 
+*     const lEnumeration *fields   - what filter 
+*     const lDescr *descr          - reduced descriptor 
+*     int sub_type                 - list type of the sublists.
+*
+*  RESULT
+*     bool - the reduced element, or NULL if something went wrong
+*
+*  NOTE:
+*  MT-NOTE: works only on the variables -> thread save
+*
+*******************************************************************************/
+static lListElem *elem_select(subscription_t *subscription, lListElem *element, 
+                              const int ids[], const lCondition *selection, 
+                              const lEnumeration *fields, const lDescr *dp, int sub_type) {
+   const lCondition *sub_selection = NULL; 
+   const lEnumeration *sub_fields = NULL;
+   const lDescr *sub_descr = NULL;
+   lList **sub_list;
+   lListElem *el = NULL;
+   int counter;
+ 
+   if (!element)
+      return NULL;
+ 
+   if (sub_type <= sgeE_ALL_EVENTS || sub_type >= sgeE_EVENTSIZE){
+      /* TODO: SG: add error message */
+      return NULL;
+   }
+   
+   /* get the filters for the sub lists */
+   sub_selection = subscription[sub_type].where;
+   sub_fields = subscription[sub_type].what; 
+  
+   if (sub_fields){ /* do we have a sub list filter, otherwise ... */
+      int ids_size = 0;   
+     
+      /* allocate memory to store the sub-lists, which should be handeled special */
+      while (ids[ids_size] != -1)
+         ids_size++;
+      sub_list = malloc(ids_size * sizeof(lList*));
+      memset(sub_list, 0 , ids_size * sizeof(lList*));
+      
+      /* remove the sub-lists from the main element */
+      for(counter = 0; counter < ids_size; counter ++){
+         lXchgList(element, ids[counter], &(sub_list[counter]));
+      } 
+      
+      /* get descriptor for reduced sub-lists */
+      if (!sub_descr){
+         for(counter = 0; counter < ids_size; counter ++){
+            if (sub_list[counter]){
+               sub_descr = getDescriptorL(subscription, sub_list[counter], sub_type);
+               break;
+            }
+         } 
+      }
+
+      /* copy the main list */
+      if (!fields) /* there might be no filter for the main element, but for the sub-lists */
+         el = lCopyElem(element);
+      else if (!dp) /* for soem reason, we did not get a descriptor for the target element */
+         el = lSelectElem(element, selection, fields);
+      else   
+         el = lSelectElemD(element, selection, dp, fields);
+
+      /* if we have a new reduced main element */
+      if (el) {  /* copy the sub-lists, if they are still part of the reduced main element */
+         for(counter = 0; counter < ids_size; counter ++){
+            if (sub_list[counter] && (lGetPosViaElem(el, ids[counter]) != -1)){
+               lSetList(el, ids[counter], lSelectD("", sub_list[counter], sub_selection, sub_descr, sub_fields));
+            }
+            
+         } 
+      }
+      
+      /* restore the old sub_list */
+      for(counter = 0; counter < ids_size; counter ++){
+         lXchgList(element, ids[counter], &(sub_list[counter]));
+      } 
+
+      FREE(sub_list);
+   }
+   else /* .... do a simple select */
+      el = lSelectElemD(element, selection, dp, fields);
+
+   return el;
 }
 
 /****** sge_event_master/getDescriptor() **************************************
@@ -1905,6 +2023,8 @@ static bool job_select(subscription_t *subscription, int type, lList **reduced_l
 *  RESULT
 *     static const lDescr* - reduced descriptor or NULL, if no what exists 
 *
+*  NOTE
+*   MT-NOTE: thread save, works only on the submitted variables.
 *******************************************************************************/
 static const lDescr* getDescriptor(subscription_t *subscription, const lListElem* element, int type){
    const lDescr *dp = NULL;
@@ -1936,6 +2056,8 @@ static const lDescr* getDescriptor(subscription_t *subscription, const lListElem
 *  RESULT
 *     static const lDescr* - reduced descriptor or NULL, if no what exists 
 *
+*  NOTE
+*   MT-NOTE: thread save, works only on the submitted variables.
 *******************************************************************************/
 static const lDescr* getDescriptorL(subscription_t *subscription, const lList* list, int type){
    const lDescr *dp = NULL;

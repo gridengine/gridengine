@@ -800,16 +800,12 @@ int sub_command
       user_list_flag = 0;
 
    /* Did we get a valid jobid? */
-   jid_flag = 1;
+   if (/*(!user_list_flag) &&*/ (!all_users_flag) && (!all_jobs_flag))
+      jid_flag = 1;
+   else
+      jid_flag = 0;
    jid_str = lGetString(idep, ID_str);
 
-/*   
-   if ((jid_str = lGetString(idep, ID_str)) && (atol(jid_str) > 0)) {
-      jid_flag = 1;
-   } else {
-      jid_flag = 0;    
-   }
-*/
    if ((ret=verify_job_list_filter(alpp, all_users_flag, all_jobs_flag, 
          jid_flag, user_list_flag, ruser))) { 
       DEXIT;
@@ -1060,7 +1056,7 @@ int sub_command
          }
       
          time = sge_get_gmt();
-         if (time - start_time > 6) {
+         if (time - start_time > 1) {
             INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
                   u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
@@ -1187,8 +1183,8 @@ char *ruser
       else
          where = lAndWhere(where, or_where);
    }
-
-   if (all_jobs_flag) {
+   else {
+/*   if (all_jobs_flag) {*/
       DPRINTF(("Add current user to filter\n"));
       new_where = lWhere("%T(%I==%s)", JB_Type, JB_owner, ruser);
       if (!where)
@@ -1198,7 +1194,7 @@ char *ruser
    }
 
    if (jid_flag) {
-      DPRINTF(("Add jid "u32" to filter\n", jobid));
+      DPRINTF(("Add jid %s to filter\n", jobid));
       if (isdigit(jobid[0]))
          new_where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, atol(jobid));
       else
@@ -1262,12 +1258,12 @@ char *ruser
    }
 
    /* case 2,5 */
-   if ((all_users_flag || user_list_flag) && jid_flag) {
+/*   if ((all_users_flag || user_list_flag) && jid_flag) {
       ERROR((SGE_EVENT, MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
-   }                            
+   } */                           
 
 
    /* case 1,3: Only manager can modify all jobs of all users */
@@ -2508,6 +2504,14 @@ int *trigger
 
       lList *req_list = NULL, *pred_list = NULL;
 
+      if (lGetPosViaElem(jep, JB_ja_tasks) != -1){
+         sprintf(SGE_EVENT, MSG_SGETEXT_OPTIONONLEONJOBS_U, u32c(jobid));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
       DPRINTF(("got new JB_jid_predecessor_list\n"));
 
       if (lGetNumberOfElem(lGetList(jep, JB_jid_request_list )) > 0)
@@ -3055,6 +3059,13 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
       const char *pre_ident = lGetString(pre, JRE_job_name);
 
       if (isdigit(pre_ident[0])) {
+         if (strchr(pre_ident, '.')) {
+            DPRINTF(("a job cannot wait for a task to finish\n"));
+            ERROR((SGE_EVENT, MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S, pre_ident));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
          if (atoi(pre_ident) == jobid) {
             DPRINTF(("got my own jobid in JRE_job_name\n"));
             ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U, u32c(jobid)));
@@ -3062,7 +3073,6 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
             DEXIT;
             return STATUS_EUNKNOWN;
          }
-/*         lAppendElem(predecessors_id, lCopyElem(pre));*/
            pre_temp = lCreateElem(JRE_Type);
            if (pre_temp){
                lSetUlong(pre_temp, JRE_job_number, atoi(pre_ident));
@@ -3074,7 +3084,8 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
          lListElem *next_user_job = NULL;    /* JB_Type */
          const void *user_iterator = NULL;
          const char *owner = lGetString(job, JB_owner);
-
+/*         int predecessor_count = lGetNumberOfElem(predecessors_id);*/
+         
          next_user_job = lGetElemStrFirst(Master_Job_List, JB_owner, owner, &user_iterator);
          
          while ((user_job = next_user_job)) {
@@ -3094,7 +3105,15 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
             next_user_job = lGetElemStrNext(Master_Job_List, JB_owner, 
                                             owner, &user_iterator);     
          }
-
+/* no error checking  */        
+/*         
+         if (predecessor_count == lGetNumberOfElem(predecessors_id)){
+            ERROR((SGE_EVENT, MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S, pre_ident));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
+*/         
          /* if no matching job has been found we have to assume 
             the job finished already */
       }

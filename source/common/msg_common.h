@@ -101,7 +101,7 @@
 #define MSG_SGETEXT_DOESNOTEXIST_SS             _MESSAGE(23058, _("denied: "SFN" "SFQ" does not exist\n"))
 #define MSG_SGETEXT_MUSTBEMANAGER_S             _MESSAGE(23059, _("denied: "SFQ" must be manager for this operation\n"))
 #define MSG_SGETEXT_MUSTBEOPERATOR_S            _MESSAGE(23060, _("denied: "SFQ" must be operator for this operation\n"))
-
+#define MSG_OPTIONWORKSONLYONJOB                _MESSAGE(23061, _("denied: the selected option works only on jobs and not on tasks\n"))
 
 
 /*

@@ -84,7 +84,6 @@ bool include_names
    char *token;
    char *job_str, *str;
    lList *task_id_range_list = NULL;
-   lListElem *range;
 
 /*
    Digit = '0' | '1' | ... | '9' .
@@ -107,18 +106,13 @@ bool include_names
    if ((token = strtok(NULL, ""))) {
       range_list_parse_from_string(&task_id_range_list, alpp, token,
                                    0, 1, INF_NOT_ALLOWED);
-      if (*alpp) {
+      if (*alpp || !task_id_range_list) {
          /*
          ** free the dupped string
          */
          free(str);
          DEXIT;
          return -1;
-      }
-      if (!task_id_range_list) {
-         range = lAddElemUlong(&task_id_range_list, RN_min, 1, RN_Type);
-         lSetUlong(range, RN_max, 1);
-         lSetUlong(range, RN_step, 1);
       }
    }
 

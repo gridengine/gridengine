@@ -103,6 +103,7 @@ const lCondition
       *where_queue = NULL,
       *where_queue2 = NULL,
       *where_all_queue = NULL,
+      *where_cqueue = NULL,
       *where_job = NULL,
       *where_host = NULL,
       *where_dept = NULL,
@@ -113,6 +114,7 @@ const lCondition
 const lEnumeration 
    *what_queue = NULL,
    *what_queue2 = NULL,
+   *what_cqueue = NULL,
    *what_job = NULL,
    *what_host = NULL,
    *what_acl = NULL,
@@ -216,7 +218,7 @@ int event_handler_default_scheduler()
          lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
          lList *selected = NULL;
          lList *all_selected = NULL;
-         selected = lSelect("", qinstance_list, where_queue, what_queue);
+         selected = lSelect("", qinstance_list, where_queue, what_queue2);
 
          if (copy.queue_list == NULL) {
             copy.queue_list = selected;
@@ -225,8 +227,7 @@ int event_handler_default_scheduler()
          }
 
          /* name all queues not suitable for scheduling in tsm-logging */
-         all_selected = lSelect("", qinstance_list, 
-                                where_all_queue, what_queue);
+         all_selected = lCopyList("", qinstance_list);
          if (copy.all_queue_list == NULL) {
             copy.all_queue_list = all_selected;
          } else {
@@ -380,43 +381,6 @@ static void ensure_valid_what_and_where(void)
 
    called = 1;
 
-   if (where_queue == NULL) {
-      where_queue = lWhere("%T("
-         "!(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u))",
-         QU_Type,    
-         QU_state, QI_SUSPENDED,        /* only not suspended queues      */
-         QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
-         QU_state, QI_CAL_SUSPENDED,
-         QU_state, QI_ERROR,            /* no queues in error state       */
-         QU_state, QI_AMBIGUOUS,
-         QU_state, QI_ORPHANED,
-         QU_state, QI_UNKNOWN);         /* only known queues              */
-   }
-    
-   if (where_queue == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
-   }
-
-   /* ---------------------------------------- */
-
-   if (where_all_queue == NULL) {
-      where_all_queue = lWhere("%T(%I!=%s)", QU_Type,
-            QU_qname, SGE_TEMPLATE_NAME); /* do not select queue "template" */
-   }
-
-   if (where_all_queue == NULL) {
-      CRITICAL((SGE_EVENT,
-                MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED ));
-   }
-
-   DTRACE;
-
    /* ---------------------------------------- */
 
    if (where_host == NULL) {
@@ -428,7 +392,8 @@ static void ensure_valid_what_and_where(void)
    }
 
    /* ---------------------------------------- */
-
+   
+DTRACE;
    if (!where_dept) {
       where_dept = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
    }
@@ -438,7 +403,8 @@ static void ensure_valid_what_and_where(void)
    }   
 
    /* ---------------------------------------- */
-
+   
+DTRACE;
    if (!where_acl) {
       where_acl = lWhere("%T(%I m= %u)", US_Type, US_type, US_ACL);
    }
@@ -446,22 +412,31 @@ static void ensure_valid_what_and_where(void)
    if (!where_acl) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED));
    }   
-
-#if 0
+   
+   /* ---------------------------------------- */
+   if (what_host == NULL) {
+      what_host = lWhat("%T(ALL)", EH_Type);
+   }
+   
+DTRACE;
    /* ---------------------------------------- */
    if (what_queue == NULL) {
-
-      #define NM10 "%I%I%I%I%I%I%I%I%I%I"
-      #define NM9 "%I%I%I%I%I%I%I%I%I"
-      #define NM5  "%I%I%I%I%I"
-      #define NM3  "%I%I%I"
-      #define NM1  "%I"
-
+      
       lDescr *queue_des = NULL;
       int index = 0;
       int n = 0;
+      
+      const int cqueue_nm[] = {         
+         CQ_name,  
+         CQ_hostlist,
+         CQ_qinstances,
 
-      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5 NM3 NM1 ")", QU_Type,
+         CQ_nsuspend,
+         CQ_job_slots,
+         NoName
+      };
+
+      const int queue_nm[] = {
          QU_qname,
          QU_qhostname,
          QU_full_name,
@@ -514,37 +489,66 @@ static void ensure_valid_what_and_where(void)
          QU_soft_violation,
          QU_host_seq_no,
          QU_pe_list,
-         QU_ckpt_list
-      );
+         QU_ckpt_list,
+         NoName
+      };
+   
+      what_cqueue = lIntVector2What(CQ_Type,cqueue_nm);
+      what_queue  = lIntVector2What(QU_Type,queue_nm);
 
       /* create new lList with partial descriptor */
       if ((n = lCountWhat(what_queue, QU_Type)) <= 0) {
          CRITICAL((SGE_EVENT, "empty descriptor\n"));
       }
-
-
+      
       if (!(queue_des = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-         CRITICAL((SGE_EVENT, "error memory allocation\n"));
+         CRITICAL((SGE_EVENT, "error memory allocation\n")); 
       }
       if (lPartialDescr(what_queue, QU_Type, queue_des, &index) != 0){
-         CRITICAL((SGE_EVENT, "partial queue descriptor failed\n"));
+         CRITICAL((SGE_EVENT, "partial queue descriptor failed\n")); 
       }
       else {
          what_queue2 = lWhat("%T(ALL)", queue_des );
 
+         where_queue = lWhere("%T("
+            " !(%I m= %u) &&" 
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
+            " !(%I m= %u))",
+            queue_des,    
+            QU_state, QI_SUSPENDED,        /* only not suspended queues      */
+            QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
+            QU_state, QI_CAL_SUSPENDED, 
+            QU_state, QI_ERROR,            /* no queues in error state       */
+            QU_state, QI_UNKNOWN,
+            QU_state, QI_AMBIGUOUS,
+            QU_state, QI_ORPHANED
+            );         /* only known queues              */
+            
+         if (where_queue == NULL) {
+            CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
+         }
+       
          cull_hash_free_descr(queue_des);
          free(queue_des);
-      }
-   }
-#else
-   if (what_queue == NULL) {
-      what_queue = lWhat("%T(ALL)", QU_Type);
-   }
-#endif
+       
+         DTRACE;
+         
+        /* ---------------------------------------- */
 
-   /* ---------------------------------------- */
-   if (what_host == NULL) {
-      what_host = lWhat("%T(ALL)", EH_Type);
+         where_all_queue = lWhere("%T(%I!=%s)", QU_Type,    
+                  QU_qname, SGE_TEMPLATE_NAME); /* do not select queue "template" */
+
+         if (where_all_queue == NULL) {
+            CRITICAL((SGE_EVENT, 
+                      MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED ));
+         }
+
+         DTRACE;
+      }
    }
 
    /* ---------------------------------------- */
@@ -564,30 +568,17 @@ static void ensure_valid_what_and_where(void)
 
    /* ---------------------------------------- */
    if (what_job == NULL) {
-#define NM10 "%I%I%I%I%I%I%I%I%I%I"
-#define NM5  "%I%I%I%I%I"
-#define NM2  "%I%I"
-#define NM1  "%I"
-
-      what_job = lWhat("%T(" NM10 NM10 NM10 NM5 NM2 NM2")", JB_Type,
+      const int job_nm[] = {         
 /*SGE*/     JB_job_number, 
             JB_script_file,
             JB_submission_time,
             JB_owner,
-/*            JB_uid,     */ /* x*/
             JB_group,
-/*            JB_gid,     */   /* x*/
             JB_nrunning,
             JB_execution_time,
-/*            JB_checkpoint_attr,  */   /* x*/
-
-/*            JB_checkpoint_interval, */ /* x*/
             JB_checkpoint_name,   
             JB_hard_resource_list,
             JB_soft_resource_list,
-/*            JB_mail_options,   */ /* may be we want to send mail */ /* x*/
-/*            JB_mail_list,  */ /* x*/
-/*            JB_job_name,   */ /* x*/
             JB_priority,
             JB_hard_queue_list,
             JB_soft_queue_list,
@@ -602,7 +593,6 @@ static void ensure_valid_what_and_where(void)
             JB_type,
             JB_project,
 /* SGEEE */ JB_department,
-/*            JB_jobclass, */   /*x*/
             JB_deadline,
             JB_host,
             JB_override_tickets,
@@ -620,12 +610,17 @@ static void ensure_valid_what_and_where(void)
 	         JB_rrcontr,
 
 /*SGE*/     JB_ja_template,
-            JB_category);
+            JB_category,
+            NoName
+         };
+  
+      what_job =  lIntVector2What(JB_Type, job_nm);
    }
 
    if (what_job == NULL) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED ));
    }
+   
 /**
  * The filtern does not work so easy. I am not sure, how 
  * the jat structures are created and submitted. But
@@ -636,53 +631,30 @@ static void ensure_valid_what_and_where(void)
    /* ---------------------------------------- */
 
    if (what_jat == NULL) {
-   
-#define NM10 "%I%I%I%I%I%I%I%I%I%I"
-#define NM5  "%I%I%I%I%I"
-#define NM2  "%I%I"
-#define NM1  "%I"
-
-      what_jat = lWhat("%T(" NM10 NM5 NM2 NM1")", JAT_Type,
+  
+      const int jat_nm[] = {         
          JAT_task_number, 
          JAT_status,     
          JAT_start_time,
-         /*JAT_end_time,*/ 
          JAT_hold,
          JAT_granted_pe,
-
-         /*JAT_job_restarted,*/
          JAT_granted_destin_identifier_list,
          JAT_master_queue,                 
          JAT_state,                       
-         /*JAT_pvm_ckpt_pid, */ 
-
-         /*JAT_pending_signal,*/   
-         /*JAT_pending_signal_delivery_time,*/ 
-         /*JAT_pid,  */                        
-         /*JAT_osjobid,  */                   
-         /*JAT_usage_list,   */              
-
          JAT_scaled_usage_list,
          JAT_fshare,          
          JAT_tix,            
          JAT_oticket,       
-
          JAT_fticket,     
          JAT_sticket,    
          JAT_share,     
-         /*JAT_suitable,*/ 
          JAT_task_list,  
-         /*JAT_finished_task_list, */
-
-         /*JAT_previous_usage_list, */
-
-         /*JAT_pe_object,*/      
-         /*JAT_next_pe_task_id,*/
-         /*JAT_stop_initiate_time,*/
          JAT_prio,
          JAT_ntix
-      );
-
+         NoName
+      };
+ 
+      what_jat = lIntVector2What(JAT_Type, jat_nm);
    }
 
    DEXIT;
@@ -1180,8 +1152,8 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
+   sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */

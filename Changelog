@@ -1,3 +1,18 @@
+SG-2003-12-19-1: Bugfix:    The fix ensures, that a job task is not used
+                            with the -hold_jid flag together and that in
+                            qalter only job_tasks are acepted, when they
+                            are allowed.
+                 Review:    AS                            
+                 Issue:     551
+                 bugtraq:   4969825
+                 Changed:   qmaster, qalter, submit.1
+
+SG-2003-12-19-0: Enhancem.: Enabled the event master to work with the cluster
+                            queues. Added a filter for cqueues and iqueues
+                            in the scheduler.
+                 Changed:   scheduler, qmaster                          
+                 Review:    JG
+
 JG-2003-12-18-1: Enhancem.: Made Berkeley DB spooling thread safe.
                             Cleanup.
                  Review:    AD
@@ -31,6 +46,7 @@ SG-2003-12-15-0: Enhancem.: Added the use of job_names or patterns instead
                             of job_ids
                  Changed:   qmaster, qsub, qalter, qstat, qacct, qrsh, qlogin
                             qmod, gresub, qhold, man-pages
+                 Issue:     326           
 
 EB-2003-12-15-1: Bugfix:    fixed bugs
                  * "qconf -aq test" without modification caused error message
@@ -97,6 +113,8 @@ SG-2003-12-09-1: Enhancem.: Reqular expression are allowed for the switch
                             job dependencies will only show job numbers.
                  Changed:   qmaster, qstat, qsub, qmon
                  Review:    AA, JG
+                 Issue:     181
+                 Issue:     471
 
 SG-2003-12-09-0: Bugfix:    Scheduler crashed. The bug was introduced by:
                             SG-2003-11-20-0

@@ -1783,6 +1783,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
 
       first = false;
    }
+   
    DEXIT;
    return;
 }

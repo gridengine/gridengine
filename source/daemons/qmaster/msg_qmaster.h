@@ -407,6 +407,7 @@
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request\n"))
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _MESSAGE(33310, _("denied: can't change consumable resource request "SFQ" of running job\n"))
 #define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U      _MESSAGE(33311, _("denied: job \""U32CFormat"\" may not be it's own jobnet predecessor\n"))
+#define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S              _MESSAGE(33312, _("denied: job "SFQ" not found\n"))
 #define MSG_JOB_MOD_NOJOBNAME_SS                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name for "SFN"\n"))
 #define MSG_SGETEXT_NEEDONEELEMENT_SS                 _MESSAGE(33317, _("denied: request format error: need at least one element in sublist "SFQ" in "SFN"()\n"))
 #define MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U           _MESSAGE(33318, _("job "U32CFormat" can't modify running jobs\n") ) 
@@ -430,6 +431,7 @@
 #define MSG_JOB_MOD_JOBDEPENDENCY_MEMORY              _MESSAGE(33337, _("could not create job dependency list\n"))
 
 #define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
+#define MSG_SGETEXT_OPTIONONLEONJOBS_U                _MESSAGE(33339, _("The specified option works only on jobs ("U32CFormat")\n"))
 
 /*
 ** sge_manop.c

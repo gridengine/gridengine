@@ -212,13 +212,7 @@ int main(int argc, char **argv) {
           */ 
          do_again = 0;
          do {
-            if (do_again) {
-               /*
-                * Give other clients (gdi requests) the chance to
-                * be handled by the commd before we repeat this request
-                */
-               sleep(1);
-            }
+
             do_again = 0;
             error_occured = 0;
             alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
@@ -400,12 +394,15 @@ lListElem *ep;
       }
 
       if(parse_multi_jobtaskslist(ppcmdline, "jobs", &alp, ppreflist, true)) {
+         /*
          if (lGetNumberOfElem(*ppreflist) == 1
              && !strcmp(lGetString(lFirst(*ppreflist), ID_str), "all")) 
             (*palljobs) = 1; 
+         */   
          continue;
       }
    }
+/*
    if ((*pallusers || *ppuserlist) && *ppreflist) {
       answer_list_add(&alp, MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -414,7 +411,7 @@ lListElem *ep;
       answer_list_add(&alp, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
-
+*/
    DEXIT;
    return alp;
 }

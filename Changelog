@@ -1,3 +1,7 @@
+CR-2004-02-27-4: Testsuite: compile_source procedure now supports new "myinst"
+                            behaviour.
+                 Changed:   testsuite
+
 CR-2004-02-27-3: Cleanup:   setting larger default timeouts for communications
                  Changed:   commlib
 

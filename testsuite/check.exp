@@ -6274,13 +6274,15 @@ proc compile_source { { do_only_install 0 } } {
 
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"
-   if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
-      set link_name "myinst"
-      set sgeee_param "-sgeee"
-   } else {
-      set link_name "myinst"
-      set sgeee_param ""
-   }
+   if { $ts_config(gridengine_version) == 53 } {
+      if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
+         set link_name "myinst"
+         set sgeee_param "-sgeee"
+      } else {
+         set link_name "myinst"
+         set sgeee_param ""
+      }
+   } 
    puts $CHECK_OUTPUT "\nusing environment variable \"$var_name\""
 
    # copy pos. host_aliases file to trash_
@@ -6303,9 +6305,10 @@ proc compile_source { { do_only_install 0 } } {
    catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
    puts $result
  
-
-   puts $CHECK_OUTPUT "\ncreating link \"$link_name\""
-   set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
+   if { $ts_config(gridengine_version) == 53 } {
+      puts $CHECK_OUTPUT "\ncreating link \"$link_name\""
+      set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
+   }
 
 
    set arch_list {}
@@ -6322,7 +6325,12 @@ proc compile_source { { do_only_install 0 } } {
 
  
    puts $CHECK_OUTPUT "\ninstalling product binaries"
-   set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+   if { $ts_config(gridengine_version) == 53 } {
+
+      set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+   } else {
+      set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+   }
    set sp_id [ lindex $open_spawn 1 ]
    set timeout -1
    set done 0
@@ -6759,7 +6767,7 @@ proc menu {} {
          }
     "23" { 
             if { $CHECK_PACKAGE_DIRECTORY == "none"  } {
-               # we compile the source and do a myinst
+               # we compile the source and do a scripts/distinst
                if { [have_root_passwd] == -1 } {
                      puts $CHECK_OUTPUT "need root access ..."
                      set_root_passwd

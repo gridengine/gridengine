@@ -4718,14 +4718,15 @@ proc get_qacct {jobid {variable qacct_info}} {
 proc is_job_running { jobid jobname } {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT check_timestamp
 
-   set mytime [timestamp]
+   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
 
+   set mytime [timestamp]
    if { $mytime == $check_timestamp } {
       sleep 1
    }
    set check_timestamp $mytime
 
-   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
+
 
    if { $catch_state != 0 } {
       puts $CHECK_OUTPUT "debug: $result"

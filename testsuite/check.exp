@@ -1145,21 +1145,29 @@ proc save_defaults {} {
   lappend data $CHECK_CORE_MASTER
   lappend data $CHECK_CORE_EXECD
   lappend data $CHECK_CORE_PROCESSORS
-  lappend data $CHECK_SUBMIT_ONLY_HOSTS
+  if { $CHECK_SETTINGS_VERSION >= 3 } {
+     lappend data $CHECK_SUBMIT_ONLY_HOSTS
+  }
   lappend data $CHECK_COMMD_PORT
   lappend data $CHECK_MAIN_RESULTS_DIR
   lappend data $CHECK_PRODUCT_TYPE
-  lappend data $CHECK_PRODUCT_FEATURE
+  if { $CHECK_SETTINGS_VERSION >= 6 } {
+     lappend data $CHECK_PRODUCT_FEATURE
+  }
   lappend data $CHECK_PRODUCT_ROOT 
   lappend data $CHECK_SOURCE_DIR 
   lappend data $CHECK_SOURCE_HOSTNAME
   lappend data $CHECK_SOURCE_COMPILE_HOSTS
   lappend data $CHECK_AIMK_COMPILE_OPTIONS
   lappend data $CHECK_DIST_INSTALL_OPTIONS
-  lappend data $CHECK_QMASTER_INSTALL_OPTIONS
-  lappend data $CHECK_EXECD_INSTALL_OPTIONS 
-  lappend data $CHECK_DNS_DOMAINNAME
-  lappend data $CHECK_REMOTE_ENVIRONMENT
+  if { $CHECK_SETTINGS_VERSION >= 2 } {
+     lappend data $CHECK_QMASTER_INSTALL_OPTIONS
+     lappend data $CHECK_EXECD_INSTALL_OPTIONS 
+  }
+  if { $CHECK_SETTINGS_VERSION >= 4 } {
+     lappend data $CHECK_DNS_DOMAINNAME
+     lappend data $CHECK_REMOTE_ENVIRONMENT
+  }
   lappend data $CHECK_FIRST_FOREIGN_SYSTEM_USER
   lappend data $CHECK_SECOND_FOREIGN_SYSTEM_USER
   lappend data $CHECK_FIRST_FOREIGN_SYSTEM_GROUP

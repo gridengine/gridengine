@@ -2560,6 +2560,7 @@ static void fill_category_use_t(const sge_assignment_t *a, category_use_t *use_c
    DENTER(TOP_LAYER, "fill_category_use_t");
 
    use_category->category = lGetRef(job, JB_category);
+   if (use_category->category) { 
    use_category->cache = lGetElemStr(lGetList(use_category->category, CT_cache), CCT_pe_name, pe_name);
    if (use_category->cache == NULL) {
       use_category->cache = lCreateElem(CCT_Type);
@@ -2588,7 +2589,14 @@ static void fill_category_use_t(const sge_assignment_t *a, category_use_t *use_c
                          
    use_category->compute_violation = !use_category->use_cviolation && 
                                     job_has_soft_requests(job);
-
+   }
+   else {
+      use_category->cache = NULL;
+      use_category->mod_category = false;
+      use_category->use_category = false;
+      use_category->use_cviolation = false;
+      use_category->compute_violation = false;
+   }
    DEXIT;
    return;
 }

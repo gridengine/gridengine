@@ -1,3 +1,11 @@
+JG-2004-01-29-1: Bugfix:    When queue instances were spooled as a result of a 
+                            hostgroup modification, a wrong qinstance name was 
+                            used for spooling. This resulted in missing queue 
+                            instances after a qmaster shutdown and restart.
+                 Enhancem.: Reduced number of attributes that are spooled for 
+                            cluster queues and queue instances.
+                 Review:    pending
+
 MD-2004-01-29-1: Bugfix:    command (eg. qstat) crashes, 
                             if -u -q option get an empty argument
                  Issue:     #600

@@ -603,20 +603,25 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
    const char *name = lGetHost(this_elem, HGRP_name);
    lList *cqueue_list = lGetList(this_elem, HGRP_cqueue_list);
    lListElem *cqueue = NULL;
+   dstring key_dstring = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "hgroup_spool");
 
    for_each (cqueue, cqueue_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL;
+      const char *cqname = lGetString(cqueue, CQ_name);
 
       for_each(qinstance, qinstance_list) {
          u_long32 tag = lGetUlong(qinstance, QU_tag);
 
          if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
+            const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
+                                             cqname,
+                                             lGetHost(qinstance, QU_qhostname));
             if (!spool_write_object(NULL, spool_get_default_context(), 
                                     qinstance,
-                                    name, SGE_TYPE_QINSTANCE)) {
+                                    key, SGE_TYPE_QINSTANCE)) {
                ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                                ANSWER_QUALITY_ERROR);
@@ -626,6 +631,8 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
          }
       }
    }
+
+   sge_dstring_free(&key_dstring);
 
    if (tmp_ret && !spool_write_object(answer_list, spool_get_default_context(), 
                                       this_elem, name, SGE_TYPE_HGROUP)) {

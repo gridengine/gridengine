@@ -1885,14 +1885,6 @@ int save
          return False;
       }   
         
-#if 0 /* EB: TODO review with JG */ 
-      if (!range_list) {
-         lListElem *tap = NULL;
-         tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
-         lSetUlong(tap, RN_max, 1);
-         lSetUlong(tap, RN_step, 1);
-      }
-#else
       /* initialize JB_ja_structure */
       if (range_list == NULL) {
          job_set_submit_task_ids(jep, 1, 1, 1);
@@ -1901,25 +1893,10 @@ int save
             lSetList(jep, JB_ja_structure, range_list);
          } 
       } 
-#endif
 
-#if 0 /* EB: TODO review with JG */
-      if (!reduced_job) {
-         lList *n_h_list; 
-
-         lSetList(jep, JB_ja_structure, range_list);
-
-         n_h_list = lCopyList("range list", range_list);
-         lSetList(jep, JB_ja_n_h_ids, n_h_list);
-         lSetList(jep, JB_ja_u_h_ids, NULL);
-         lSetList(jep, JB_ja_o_h_ids, NULL);
-         lSetList(jep, JB_ja_s_h_ids, NULL); 
-      }
-#else
       if (!reduced_job) {
          job_initialize_id_lists(jep, NULL);      
       }
-#endif
    }
    else {   
       if (reduced_job) {
@@ -1936,30 +1913,10 @@ int save
          lSetList(jep, JB_ja_tasks, jat_list);
       }  
  
-#if 0 /* EB: TODO review with JG */
-      if (!reduced_job) {
-         lList *n_h_list;
-         lListElem *tap = NULL;
-         lList *range_list = NULL;
-
-         tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
-         lSetUlong(tap, RN_max, 1);
-         lSetUlong(tap, RN_step, 1);
-
-         n_h_list = lCopyList("range list", range_list);
-
-         lSetList(jep, JB_ja_n_h_ids, n_h_list);
-         lSetList(jep, JB_ja_u_h_ids, NULL);
-         lSetList(jep, JB_ja_o_h_ids, NULL);
-         lSetList(jep, JB_ja_s_h_ids, NULL);
-         lSetList(jep, JB_ja_structure, range_list);
-      }                       
-#else
       if (!reduced_job) {
          job_set_submit_task_ids(jep, 1, 1, 1);
          job_initialize_id_lists(jep, NULL); 
       }
-#endif
    }
 
    if (!data->job_name || data->job_name[0] == '\0') {

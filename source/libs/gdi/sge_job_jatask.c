@@ -1398,7 +1398,7 @@ void jatask_list_print_to_string(const lList *task_list, dstring *range_string)
    DEXIT;
 }
 
-/****** gdi/range/ja_task_list_split_group() **********************************
+/****** gdi/job_jatask/ja_task_list_split_group() *****************************
 *  NAME
 *     ja_task_list_split_group() -- Splits a list into two parts
 *
@@ -1418,7 +1418,7 @@ void jatask_list_print_to_string(const lList *task_list, dstring *range_string)
 *
 *  SEE ALSO
 *     gdi/range/RN_Type
-*******************************************************************************/
+******************************************************************************/
 lList* ja_task_list_split_group(lList **task_list)
 {
    lList *ret_list = NULL;

@@ -1,3 +1,6 @@
+CR-2004-01-31-1: Bugfix:    removed debug output to stdout
+                 Changed:   qconf
+
 CR-2004-01-31-0: Enhancem.: shadowd now supports new communication library
                  Changed:   shadowd
                  Review:    pending
@@ -6,7 +9,7 @@ SG-2004-01-31-1: Bugfix:    fixed qconf -de. A exec host can be removed, even
                             so the host can not be resolved.
                  Changed:   qconf
                  Issue:     566
-                 Review:    pending
+                 Review:    CR
 
 JG-2004-01-31-1: Testsuite: Fixed a number of installation problems caused by
                             changed objects (queue, schedd_conf) and changed

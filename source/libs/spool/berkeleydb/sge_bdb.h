@@ -46,11 +46,15 @@ spool_berkeleydb_check_version(lList **answer_list);
 
 bool 
 spool_berkeleydb_create_environment(lList **answer_list, 
-                                    struct bdb_info *info, const char *url);
+                                    struct bdb_info *info);
 
 bool 
 spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info, 
-                               const char *url, bool create);
+                               bool create);
+
+bool 
+spool_berkeleydb_check_reopen_database(lList **answer_list, 
+                                       struct bdb_info *info);
 
 bool 
 spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,

@@ -211,24 +211,21 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
                                       const lListElem *rule, bool check)
 {
    bool ret = true;
-   const char *url;
-
    struct bdb_info *info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_startup_func");
 
-   url = lGetString(rule, SPR_url);
    info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
 
    ret = spool_berkeleydb_check_version(answer_list);
 
    if (ret) {
-      ret = spool_berkeleydb_create_environment(answer_list, info, url);
+      ret = spool_berkeleydb_create_environment(answer_list, info);
    }
 
    /* we only open database, if check = true */
    if (ret && check) {
-      ret = spool_berkeleydb_open_database(answer_list, info, url, false);
+      ret = spool_berkeleydb_open_database(answer_list, info, false);
    }
 
    DEXIT;
@@ -337,18 +334,16 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
                                     const char *args)
 {
    bool ret = true;
-   const char *url;
 
    struct bdb_info *info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_maintenance_func");
 
-   url = lGetString(rule, SPR_url);
    info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
 
    switch (cmd) {
       case SPM_init:
-         ret = spool_berkeleydb_open_database(answer_list, info, url, true);
+         ret = spool_berkeleydb_open_database(answer_list, info, true);
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -413,13 +408,19 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              lGetString(rule, SPR_url));
+                              url);
       ret = false;
 
       /* nothing can be done - but set new trigger!! */
       *next_trigger = trigger + MIN(BERKELEYDB_CLEAR_INTERVAL, 
                                     BERKELEYDB_CHECKPOINT_INTERVAL);
-   } else {
+   } 
+
+   if (ret) {
+      ret = spool_berkeleydb_check_reopen_database(answer_list, info);
+   }
+
+   if (ret) {
       if (info->next_clear <= trigger) {
          ret = spool_berkeleydb_clear_log(answer_list, info, url);
          info->next_clear = trigger + BERKELEYDB_CLEAR_INTERVAL;
@@ -483,7 +484,13 @@ spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule,
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               lGetString(rule, SPR_url));
       ret = false;
-   } else {
+   }
+
+   if (ret) {
+      spool_berkeleydb_check_reopen_database(answer_list, info);
+   }
+
+   if (ret) {
       switch (cmd) {
          case STC_begin:
             ret = spool_berkeleydb_start_transaction(answer_list, info);
@@ -572,14 +579,22 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               lGetString(rule, SPR_url));
       ret = false;
-   } else if (descr == NULL || list == NULL ||
+   }
+   
+   if (descr == NULL || list == NULL ||
               table_name == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
                               MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
                               object_type_get_name(object_type));
       ret = false;
-   } else {
+   }
+  
+   if (ret) {
+      ret = spool_berkeleydb_check_reopen_database(answer_list, info);
+   }
+  
+   if (ret) {
       /* if no transaction was opened from outside, open a new one */
 #if 0
    /* JG: TODO: why does reading within a transaction give me the error:
@@ -773,6 +788,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
                                  const lListElem *rule, const char *key, 
                                  const sge_object_type object_type)
 {
+   bool ret = true;
    lListElem *ep = NULL;
 
    struct bdb_info *info;
@@ -781,13 +797,27 @@ spool_berkeleydb_default_read_func(lList **answer_list,
 
    info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
 
-   switch (object_type) {
-      default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
-         break;
+   if (info == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_WARNING, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              lGetString(rule, SPR_url));
+      ret = false;
+   }
+   
+   if (ret) {
+      ret = spool_berkeleydb_check_reopen_database(answer_list, info);
+   }
+ 
+   if (ret) {
+      switch (object_type) {
+         default:
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_WARNING, 
+                                    MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                    object_type_get_name(object_type));
+            break;
+      }
    }
 
    DEXIT;
@@ -855,13 +885,21 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               lGetString(rule, SPR_url));
       ret = false;
-   } else if (key == NULL) {
+   }
+   
+   if (key == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
                               MSG_BERKELEY_NULLVALUEASKEY,
                               lGetString(rule, SPR_url));
       ret = false;
-   } else {
+   }
+
+   if (ret) {
+      ret = spool_berkeleydb_check_reopen_database(answer_list, info);
+   }
+ 
+   if (ret) {
       /* if no transaction was opened from outside, open a new one */
       DB_TXN *txn = bdb_get_txn(info);
       if (txn == NULL) {
@@ -995,7 +1033,13 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               lGetString(rule, SPR_url));
       ret = false;
-   } else {
+   }
+
+   if (ret) {
+      ret = spool_berkeleydb_check_reopen_database(answer_list, info);
+   }
+ 
+   if (ret) {
       DB_TXN *txn = bdb_get_txn(info);
       /* if no transaction was opened from outside, open a new one */
       if (txn == NULL) {
@@ -1060,3 +1104,4 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
    DEXIT;
    return ret;
 }
+

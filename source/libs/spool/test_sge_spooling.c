@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
    time_t next_prof_output = 0;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+   DENTER_MAIN(TOP_LAYER, "test_sge_spooling");
 
    /* parse commandline parameters */
    if(argc != 3) {

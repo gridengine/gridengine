@@ -58,12 +58,16 @@
 
 #include "spool/berkeleydb/sge_bdb.h"
 
-#if 1
+#if 0
 static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT | 
                              CULL_SPOOL_USER;
 #else
 static const int pack_part = 0;
 #endif
+
+static void
+spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info,
+                                  int bdb_errno);
 
 /****** spool/berkeleydb/spool_berkeleydb_check_version() **********************
 *  NAME
@@ -150,13 +154,13 @@ spool_berkeleydb_check_version(lList **answer_list)
 *     ???/???
 *******************************************************************************/
 bool spool_berkeleydb_create_environment(lList **answer_list, 
-                                         struct bdb_info *info, const char *url)
+                                         struct bdb_info *info)
 { 
    bool ret = true;
    int dbret;
    const char *server, *path;
 
-   DB_ENV *env;
+   DB_ENV *env = NULL;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_create_environment");
 
@@ -164,7 +168,7 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
    path   = bdb_get_path(info);
 
    /* check database directory (only in case of local spooling) */
-   if (server == NULL && !sge_is_directory(url)) {
+   if (server == NULL && !sge_is_directory(path)) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S,
@@ -176,11 +180,7 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
       int flags = 0;
 
       if (server != NULL) {
-/* JG: TODO: DB_CLIENT no longer defined in db-4.2.52, but former value works */
-#ifndef DB_CLIENT
-#define DB_CLIENT 1
-#endif
-         flags |= DB_CLIENT;
+         flags |= DB_RPCCLIENT;
       }
 
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -231,7 +231,7 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
       if (server == NULL) {
          flags |= DB_THREAD;
       }
-DPRINTF(("opening database %s\n", path));
+
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       dbret = env->open(env, path, flags,
                         S_IRUSR | S_IWUSR);
@@ -239,12 +239,14 @@ DPRINTF(("opening database %s\n", path));
       if (dbret != 0){
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTOPENENVIRONMENT_SS,
-                                 url,
-                                 db_strerror(dbret));
+                                 MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSS,
+                                 server == NULL ? "local spooling" : server, 
+                                 path, db_strerror(dbret));
          ret = false;
+         env = NULL;
+         /* JG: TODO: shouldn't we somehow free the env handle? */
       }
-
+      
       bdb_set_env(info, env);
    }
 
@@ -254,7 +256,7 @@ DPRINTF(("opening database %s\n", path));
 
 bool 
 spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info, 
-                               const char *url, bool create)
+                               bool create)
 {
    bool ret = true;
 
@@ -268,10 +270,15 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
    env = bdb_get_env(info);
 
    if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+      dbname = bdb_get_dbname(info, &dbname_dstring);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              url);
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -307,6 +314,7 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
             ret = spool_berkeleydb_end_transaction(answer_list, info, true);
          }
          if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     create ? MSG_BERKELEY_COULDNTCREATEDB_SS : 
@@ -317,7 +325,7 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
       }
 
       bdb_set_db(info, db);
-      DPRINTF(("db = %p\n", db));
+      DPRINTF(("opened database connection, env = %p, db = %p\n", env, db));
    }
 
    DEXIT;
@@ -339,10 +347,15 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
    db = bdb_get_db(info);
 
    if (env == NULL || db == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+      dbname = bdb_get_dbname(info, &dbname_dstring);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              url);
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
       int dbret;
@@ -408,7 +421,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *     MT-NOTE: spool_berkeleydb_start_transaction() is MT safe 
 *
 *  SEE ALSO
-*     spool/berkeleydb/spool_berkeleydb_stop_transaction()
+*     spool/berkeleydb/spool_berkeleydb_end_transaction()
 *******************************************************************************/
 bool
 spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
@@ -424,10 +437,15 @@ spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
    txn = bdb_get_txn(info);
 
    if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+      dbname = bdb_get_dbname(info, &dbname_dstring);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              "");
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
       if (txn != NULL) {
@@ -437,11 +455,21 @@ spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
          ret = false;
       } else {
          int dbret;
+         int flags = 0;
+
+         /* 
+          * RPC server does no deadlock detection - if a lock cannot be 
+          * obtained, exit immediately
+          */
+         if (bdb_get_server(info) != NULL) {
+            flags |= DB_TXN_NOWAIT;
+         }
 
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = env->txn_begin(env, NULL, &txn, 0);
+         dbret = env->txn_begin(env, NULL, &txn, flags);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_ERRORSTARTINGTRANSACTION_S,
@@ -452,6 +480,7 @@ spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
       }
 
       bdb_set_txn(info, txn);
+      DPRINTF(("BEGIN transaction %d\n", txn->id(txn)));
    }
 
    DEXIT;
@@ -474,10 +503,15 @@ spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info,
    txn = bdb_get_txn(info);
 
    if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+      dbname = bdb_get_dbname(info, &dbname_dstring);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              "");
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
       if (txn == NULL) {
@@ -487,10 +521,12 @@ spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info,
          ret = false;
       } else {
          if (commit) {
+            DPRINTF(("COMMIT transaction %d\n", txn->id(txn)));
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             dbret = txn->commit(txn, 0);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          } else {
+            DPRINTF(("ABORT transaction %d\n", txn->id(txn)));
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_WARNING, 
                                     MSG_BERKELEY_ABORTINGTRANSACTION);
@@ -500,6 +536,7 @@ spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info,
          }
 
          if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_ERRORENDINGTRANSACTION_S,
@@ -531,10 +568,15 @@ spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info,
       /* check connection */
       env = bdb_get_env(info);
       if (env == NULL) {
+         dstring dbname_dstring = DSTRING_INIT;
+         const char *dbname;
+      
+         dbname = bdb_get_dbname(info, &dbname_dstring);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                 url);
+                                 dbname);
+         sge_dstring_free(&dbname_dstring);
          ret = false;
       }
 
@@ -546,6 +588,7 @@ spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info,
          dbret = env->log_archive(env, &list, DB_ARCH_ABS);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S,
@@ -593,10 +636,15 @@ spool_berkeleydb_checkpoint(lList **answer_list, struct bdb_info *info)
 
       env = bdb_get_env(info);
       if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+         dbname = bdb_get_dbname(info, &dbname_dstring);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                 "");
+                                 dbname);
+         sge_dstring_free(&dbname_dstring);
          ret = false;
       }
 
@@ -607,6 +655,7 @@ spool_berkeleydb_checkpoint(lList **answer_list, struct bdb_info *info)
          dbret = env->txn_checkpoint(env, 0, 0, 0);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_CANNOTCHECKPOINT_S,
@@ -640,10 +689,15 @@ spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
    txn = bdb_get_txn(info);
 
    if (db == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+      dbname = bdb_get_dbname(info, &dbname_dstring);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              "");
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
       DPRINTF(("querying objects with keys %s*\n", key));
@@ -662,6 +716,7 @@ spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
       PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       while (true) {
          if (dbret != 0 && dbret != DB_NOTFOUND) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_QUERYERROR_SS,
@@ -755,8 +810,6 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
 #endif
    {
       sge_pack_buffer pb;
-      DBT key_dbt, data_dbt;
-      int dbret;
       int cull_ret;
       cull_ret = init_packbuffer(&pb, 8192, 0);
       if (cull_ret != PACK_SUCCESS) {
@@ -776,9 +829,11 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
                                     cull_pack_strerror(cull_ret));
             ret = false;
          } else { 
+            int dbret;
+            DBT key_dbt, data_dbt;
+
             DB *db = bdb_get_db(info);
             DB_TXN *txn = bdb_get_txn(info);
-            DPRINTF(("db = %p, txn = %p\n", db, txn));
 
             memset(&key_dbt, 0, sizeof(key_dbt));
             memset(&data_dbt, 0, sizeof(data_dbt));
@@ -787,14 +842,18 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
             data_dbt.data = pb.head_ptr;
             data_dbt.size = pb.bytes_used;
 
-            DPRINTF(("storing object with key "SFQ", size = %d\n", key, 
-                      data_dbt.size));
+            DPRINTF(("storing object with key "SFQ", size = %d "
+                     "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
+                     key, data_dbt.size, bdb_get_env(info), db, 
+                     txn, txn->id(txn)));
 
             /* Store a key/data pair. */
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             dbret = db->put(db, txn, &key_dbt, &data_dbt, 0);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
             if (dbret != 0) {
+               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
                                        MSG_BERKELEY_PUTERROR_SS,
@@ -976,10 +1035,15 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
    txn = bdb_get_txn(info);
 
    if (db == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+      dbname = bdb_get_dbname(info, &dbname_dstring);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                              "");
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
       ret = false;
    } else {
       if (sub_objects) {
@@ -1000,6 +1064,7 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          while (true) {
             if (dbret != 0 && dbret != DB_NOTFOUND) {
+               spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
                                        MSG_BERKELEY_QUERYERROR_SS,
@@ -1063,6 +1128,7 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
          dbret = db->del(db, txn, &cursor_dbt, 0);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          if (dbret != 0 && dbret != DB_NOTFOUND) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_DELETEERROR_SS,
@@ -1291,6 +1357,78 @@ spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
       ret = spool_berkeleydb_delete_object(answer_list, info, dbkey, true);
    }
 
+   return ret;
+}
+
+
+/* ---- static functions ---- */
+
+static void
+spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info, 
+                                  int bdb_errno)
+{
+   /* we lost the connection to a RPC server */
+   if (bdb_errno == DB_NOSERVER) {
+      DB_ENV *env;
+      DB     *db;
+      DB_TXN *txn;
+
+      const char *server = bdb_get_server(info);
+      const char *path   = bdb_get_path(info);
+
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_CONNECTION_LOST_SS,
+                              server != NULL ? server : "no server defined",
+                              path != NULL ? path : "no database path defined");
+
+      /* try to shutdown all open resources */
+      txn = bdb_get_txn(info);
+      if (txn != NULL) {
+         txn->abort(txn);
+         bdb_set_txn(info, NULL);
+      }
+
+      db = bdb_get_db(info);
+      if (db != NULL) {
+         db->close(db, 0);
+         bdb_set_db(info, NULL);
+      }
+
+      env = bdb_get_env(info);
+      if (env != NULL) {
+         env->close(env, 0);
+         bdb_set_env(info, NULL);
+      }
+   }
+}
+
+bool 
+spool_berkeleydb_check_reopen_database(lList **answer_list, 
+                                       struct bdb_info *info)
+{
+   bool ret = true;
+   DB_ENV *env;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_check_reopen_database");
+
+   env = bdb_get_env(info);
+
+   /*
+    * if environment is not set, it was either
+    * - closed due to an error condition
+    * - never open for this thread
+    * try to open it.
+    */
+   if (env == NULL) {
+      ret = spool_berkeleydb_create_environment(answer_list, info);
+
+      if (ret) {
+         ret = spool_berkeleydb_open_database(answer_list, info, false);
+      }
+   }
+
+   DEXIT;
    return ret;
 }
 

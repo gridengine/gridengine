@@ -90,9 +90,9 @@ sge_bdb_types.o: $(SPOOLBLIB_DIR)/sge_bdb_types.c
 
 #---------------------------------------------------------------------
 # test programs
-#test_sge_spooling_berkeleydb: test_sge_spooling_berkeleydb.o $(SPOOLBLIB) $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-#	$(CC) $(CFLAGS) -o test_sge_spooling_berkeleydb $(LFLAGS) test_sge_spooling_berkeleydb.o $(SPOOLBLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
-#
-#test_sge_spooling_berkeleydb.o: $(SPOOLBLIB_DIR)/test_sge_spooling_berkeleydb.c
-#	$(CC) $(CFLAGS) -c $(SPOOLBLIB_DIR)/test_sge_spooling_berkeleydb.c
-#
+test_berkeleydb_mt: test_berkeleydb_mt.o $(SPOOLING_DEPS) $(SGEOBJLIB) $(SGEOBJDLIB) $(SCHEDLIB) $(LCKLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_berkeleydb_mt $(LFLAGS) test_berkeleydb_mt.o $(SPOOLING_LIBS) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+
+test_berkeleydb_mt.o: $(SPOOLBLIB_DIR)/test_berkeleydb_mt.c
+	$(CC) $(CFLAGS) -c $(SPOOLBLIB_DIR)/test_berkeleydb_mt.c
+

@@ -66,16 +66,17 @@
 /*
  * sge_bdb.c
  */
-#define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70100, _("database directory "SFN" doesn't exist\n"))
-#define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70100, _("couldn't create database environment: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTOPENENVIRONMENT_SS _MESSAGE(70100, _("couldn't open database environment "SFQ": "SFN"\n"))
-#define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70100, _("couldn't close database environment: "SFN": "SFN"\n"))
-#define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70100, _("couldn't setup deadlock detection: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTESETRPCSERVER_S _MESSAGE(70100, _("couldn't set rpc server in database environment: "SFN"\n"))
+#define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70101, _("database directory "SFN" doesn't exist\n"))
+#define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70102, _("couldn't create database environment: "SFN"\n"))
+#define MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSS _MESSAGE(70103, _("couldn't open database environment for server "SFQ", directory "SFQ": "SFN"\n"))
+#define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70104, _("couldn't close database environment: "SFN": "SFN"\n"))
+#define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70105, _("couldn't setup deadlock detection: "SFN"\n"))
+#define MSG_BERKELEY_COULDNTESETRPCSERVER_S _MESSAGE(70106, _("couldn't set rpc server in database environment: "SFN"\n"))
+#define MSG_BERKELEY_CONNECTION_LOST_SS _MESSAGE(70107, _("connection to rpc server "SFQ", database "SFQ" lost. Freeing all resources to prepare for a reconnect.\n"))
 
 /*
  * sge_bdb_types.c
  */
-
+#define MSG_BERKELEY_DBNOTINITIALIZED _MESSAGE(70200, _("database not initialized"))
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

@@ -897,7 +897,7 @@ enum {
 SLISTDEF( JG_Type, GrantedQueue )
    SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT)  /* it's version                               */
-   SGE_HOST(JG_qhostname, CULL_DEFAULT)/* redundant qualified host name for caching  */  /* CR - hostname change */
+   SGE_HOST(JG_qhostname, CULL_DEFAULT | CULL_SUBLIST)/* redundant qualified host name for caching  */  /* CR - hostname change */
    SGE_ULONG(JG_slots, CULL_DEFAULT | CULL_SUBLIST)     /* from orders list                           */
    SGE_OBJECT(JG_queue, QU_Type, CULL_DEFAULT) /* QU_Type - complete queue only in execd */
    SGE_ULONG(JG_tag_slave_job, CULL_DEFAULT) /* whether slave execds job has arrived in 

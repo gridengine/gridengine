@@ -37,6 +37,10 @@
 
 #include <db.h>
 
+/* utilib */
+#include "sge_dstring.h"
+
+
 /* Berkeley DB data structures:
  * We have a bdb_info object per spooling rule.
  * It holds all data that is required to use the spooling rule.
@@ -46,7 +50,7 @@
  * Thread specific data is initialized in the spooling startup function.
  */
 struct bdb_info {
-   pthread_mutex_t   mtx;                 /* lock access to this object */
+   /* pthread_mutex_t   mtx;  */          /* lock access to this object */
    pthread_key_t     key;                 /* for thread specific data */
   
    const char *      server;              /* server, in case of RPC mechanism */
@@ -85,4 +89,8 @@ bdb_set_db(struct bdb_info *info, DB *db);
 
 void
 bdb_set_txn(struct bdb_info *info, DB_TXN *txn);
+
+const char *
+bdb_get_dbname(struct bdb_info *info, dstring *buffer);
+
 #endif /* __SGE_BDB_TYPES_H */    

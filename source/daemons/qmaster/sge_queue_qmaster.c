@@ -438,8 +438,7 @@ int sub_command
       DPRINTF(("got new QU_acl\n"));
       /* check user_lists */
       normalize_sublist(qep, QU_acl);
-      if (userset_list_validate_acl_list(alpp, lGetList(qep, QU_acl), "user_lists", 
-            "queue", qname)!=STATUS_OK) 
+      if (userset_list_validate_acl_list(lGetList(qep, QU_acl), alpp)!=STATUS_OK) 
          goto ERROR;            
 #if 0
       lSetList(new_queue, QU_acl, lCopyList("", lGetList(qep, QU_acl)));
@@ -454,8 +453,7 @@ int sub_command
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(qep, QU_xacl);
-      if (userset_list_validate_acl_list(alpp, lGetList(qep, QU_xacl), "xuser_lists", 
-            "queue", qname)!=STATUS_OK)
+      if (userset_list_validate_acl_list(lGetList(qep, QU_xacl), alpp)!=STATUS_OK)
          goto ERROR;            
 #if 0
       lSetList(new_queue, QU_xacl, lCopyList("", lGetList(qep, QU_xacl)));

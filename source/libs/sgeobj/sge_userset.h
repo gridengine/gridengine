@@ -41,13 +41,14 @@ userset_list_get_master_list(void);
 
 bool userset_is_deadline_user(lList *lp, const char *username);
 
-lListElem *userset_list_locate(lList *lp, const char *name);
+lListElem *
+userset_list_locate(lList *lp, const char *name);
 
-int userset_validate_entries(lListElem *userset, lList **alpp, int start_up);
+int 
+userset_validate_entries(lListElem *userset, lList **alpp, int start_up);
 
-int userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
-                                   const char *attr_name, const char *obj_descr,
-                                   const char *obj_name);
+int
+userset_list_validate_acl_list(lList *acl_list, lList **alpp);
 
 const char *
 userset_get_type_string(const lListElem *userset, lList **answer_list,

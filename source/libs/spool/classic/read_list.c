@@ -547,36 +547,38 @@ int sge_read_qinstance_list_from_disk(lListElem *cqueue)
    DENTER(TOP_LAYER, "sge_read_qinstance_list_from_disk");
 
    sge_dstring_sprintf(&qinstance_dir, "%s/%s", QINSTANCES_DIR, cqueue_name);
-   dir_list = sge_get_dirents(sge_dstring_get_string(&qinstance_dir));
-   if (dir_list) {
-      lListElem *dir;
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      
-      for_each(dir, dir_list) {
-         const char *hostname = lGetString(dir, ST_name);
-         lListElem *qinstance = NULL;
+   if (sge_is_directory(sge_dstring_get_string(&qinstance_dir))) {
+      dir_list = sge_get_dirents(sge_dstring_get_string(&qinstance_dir));
+      if (dir_list) {
+         lListElem *dir;
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         
+         for_each(dir, dir_list) {
+            const char *hostname = lGetString(dir, ST_name);
+            lListElem *qinstance = NULL;
 
-         if (hostname[0] != '.') {
-            qinstance = cull_read_in_qinstance(
-                                     sge_dstring_get_string(&qinstance_dir), 
-                                     hostname, 1, 0, NULL, NULL);
-            if (qinstance == NULL) {
-               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, 
-                      sge_dstring_get_string(&qinstance_dir), hostname));
-               DEXIT;
-               return -1;
+            if (hostname[0] != '.') {
+               qinstance = cull_read_in_qinstance(
+                                        sge_dstring_get_string(&qinstance_dir), 
+                                        hostname, 1, 0, NULL, NULL);
+               if (qinstance == NULL) {
+                  ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, 
+                         sge_dstring_get_string(&qinstance_dir), hostname));
+                  DEXIT;
+                  return -1;
+               }
+             
+               if (qinstance_list == NULL) {
+                  qinstance_list = lCreateList("", QI_Type);
+                  lSetList(cqueue, CQ_qinstances, qinstance_list);
+               } 
+               lAppendElem(qinstance_list, qinstance);
+            } else {
+               sge_unlink(sge_dstring_get_string(&qinstance_dir), hostname);
             }
-          
-            if (qinstance_list == NULL) {
-               qinstance_list = lCreateList("", QI_Type);
-               lSetList(cqueue, CQ_qinstances, qinstance_list);
-            } 
-            lAppendElem(qinstance_list, qinstance);
-         } else {
-            sge_unlink(sge_dstring_get_string(&qinstance_dir), hostname);
          }
+         lFreeList(dir_list);
       }
-      lFreeList(dir_list);
    }
    sge_dstring_free(&qinstance_dir);
 
@@ -791,7 +793,7 @@ int sge_read_cqueue_list_from_disk(void)
 #endif
 
                sge_read_qinstance_list_from_disk(qep);
-               cqueue_mod_qinstances(qep, NULL, qep, NULL, NULL);
+               cqueue_mod_qinstances(qep, NULL, qep, true, NULL, NULL);
                cqueue_list_add_cqueue(qep);
 
 #if 0 /* EB: TODO: APIBASE */

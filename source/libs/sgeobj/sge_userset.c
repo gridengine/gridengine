@@ -132,32 +132,21 @@ lListElem *userset_list_locate(lList *lp, const char *name)
 *
 *  SYNOPSIS
 *     int 
-*     userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
-*                                    const char *attr_name, 
-*                                    const char *obj_descr, 
-*                                    const char *obj_name) 
+*     userset_list_validate_acl_list(lList *acl_list, lList **alpp)
 *
 *  FUNCTION
 *     Checks if all entries of an acl list (e.g. user list of a pe) 
 *     are contained in the master userset list.
 *
 *  INPUTS
-*     lList **alpp          - answer list pointer
 *     lList *acl_list       - the acl list to check
-*     const char *attr_name - the attribute name in the referencing 
-*                             object (e.g. "user_lists")
-*     const char *obj_descr - the descriptor of the referencing 
-*                             object (e.g. "queue")
-*     const char *obj_name  - the name of the referencing object
-*                             (e.g. "fangorn.q")
+*     lList **alpp          - answer list pointer
 *
 *  RESULT
 *     int - STATUS_OK, if everything is OK
 *******************************************************************************/
 int 
-userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
-                               const char *attr_name, const char *obj_descr, 
-                               const char *obj_name) 
+userset_list_validate_acl_list(lList *acl_list, lList **alpp)
 {
    lListElem *usp;
 
@@ -165,8 +154,8 @@ userset_list_validate_acl_list(lList **alpp, lList *acl_list,
 
    for_each (usp, acl_list) {
       if (!lGetElemStr(Master_Userset_List, US_name, lGetString(usp, US_name))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNUSERSET_SSSS, lGetString(usp, US_name), 
-               attr_name, obj_descr, obj_name));
+         ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, 
+                lGetString(usp, US_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;

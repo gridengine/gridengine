@@ -160,16 +160,12 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            int subsub_key, bool *is_ambiguous, 
                            bool *has_changed)
 {
-#if 1 /* EB: debug */
+#if 0 /* EB: debug */
 #define QINSTANCE_MODIFY_DEBUG
 #endif
    bool ret = true;
   
-#ifdef QINSTANCE_MODIFY_DEBUG 
-   DENTER(TOP_LAYER, "qinstance_modify_attribute");
-#else
-   DENTER(QINSTANCE_LAYER, "qinstance_modify_attribute");
-#endif
+   DENTER(BASIS_LAYER, "qinstance_modify_attribute");
 
    if (this_elem != NULL && cqueue != NULL && 
        attribute_name != NoName && cqueue_attibute_name != NoName) {

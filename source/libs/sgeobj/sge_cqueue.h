@@ -50,6 +50,7 @@ typedef struct _list_attribute_struct {
    int primary_key_attr;
    const char *name;
    bool is_sgeee_attribute;
+   bool (*verify_function)(lListElem *attr_elem, lList **answer_list, lListElem *cqueue);
 } list_attribute_struct;
 
 extern lList *Master_CQueue_List;
@@ -68,6 +69,12 @@ cqueue_create(lList **answer_list, const char *name);
 
 lList **
 cqueue_list_get_master_list(void);
+
+bool 
+cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href);
+
+bool
+cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list);
 
 bool
 cqueue_list_add_cqueue(lListElem *queue);
@@ -102,12 +109,17 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
                     lList **rem_hosts);
 
 bool
+cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
+                         lListElem *reduced_elem, lList *add_hosts,
+                         lList *rem_hosts);
+
+bool
 cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
                       lListElem *reduced_elem, int sub_command);
 bool 
 cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool *is_ambiguous,
-                      bool *has_changed);
+                      lListElem *reduced_elem, bool refresh_all_value,
+                      bool *is_ambiguous, bool *has_changed);
 
 bool
 cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts,
@@ -120,5 +132,26 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem);
+
+bool
+cqueue_verify_priority(lListElem *cqueue, lList **answer_list,
+                       lListElem *attr_elem);
+
+bool
+cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list,
+                      lListElem *attr_elem);
+
+bool
+cqueue_verify_ckpt_list(lListElem *cqueue, lList **answer_list,
+                        lListElem *attr_elem);
+
+bool
+cqueue_verify_slots(lListElem *cqueue, lList **answer_list,
+                    lListElem *attr_elem);
+
+bool
+cqueue_verify_user_list(lListElem *cqueue, lList **answer_list,
+                        lListElem *attr_elem);
+
 
 #endif /* __SGE_CQUEUE_H */

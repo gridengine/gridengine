@@ -42,6 +42,7 @@
 #include <fnmatch.h>
 
 #include "basis_types.h"
+#include "sge.h"
 #include "sgermon.h" 
 #include "sge_string.h"
 #include "sge_str.h"
@@ -51,6 +52,7 @@
 #include "sge_hostname.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -573,4 +575,106 @@ hgroup_list_find_all_matching_references(const lList *this_list,
    DEXIT;
    return ret;
 }
+
+bool
+hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command,
+                    lList **add_hosts, lList **rem_hosts, 
+                    lList **occupant_groups)
+{
+   bool ret = true;
+
+   DENTER(HOSTREF_LAYER, "hgroup_mod_hostlist");
+   if (hgroup != NULL && reduced_elem != NULL) {
+      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
+
+      if (pos >= 0) {
+         lList *old_href_list = lCopyList("", lGetList(hgroup, HGRP_host_list));
+         lList *master_list = *(hgroup_list_get_master_list());
+         lList *href_list = NULL; 
+         lList *add_groups = NULL;
+         lList *rem_groups = NULL;
+
+         /*
+          * Modify hostlist
+          */
+         attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
+                           reduced_elem, sub_command, SGE_ATTR_HOSTLIST,
+                           SGE_OBJ_HGROUP, 0);
+         href_list = lGetList(hgroup, HGRP_host_list);
+
+         /*
+          * Resolve hostnames; Find new hgroups and make sure they exist;
+          */
+         if (ret) {
+            ret &= href_list_resolve_hostnames(href_list, answer_list);
+         }
+         if (ret) {
+            ret &= href_list_find_diff(href_list, answer_list, old_href_list, 
+                                       add_hosts, rem_hosts, &add_groups,
+                                       &rem_groups);
+         }
+         if (ret && add_groups != NULL) {
+            ret &= hgroup_list_exists(master_list, answer_list, add_groups);
+         }
+
+         /*
+          * Try to find cycles in the definition
+          */
+         if (ret) {
+            ret &= hgroup_find_all_referencees(hgroup, answer_list,
+                                               master_list, occupant_groups);
+            ret &= href_list_add(occupant_groups, answer_list,
+                                 lGetHost(hgroup, HGRP_name));
+            if (ret) {
+               if (*occupant_groups != NULL && add_groups != NULL) {
+                  lListElem *add_group = NULL;
+
+                  for_each(add_group, add_groups) {
+                     const char *name = lGetHost(add_group, HR_name);
+
+                     if (href_list_has_member(*occupant_groups, name)) {
+                        break;
+                     }
+                  }
+                  if (add_group == NULL) {
+                     /*
+                      * No cycle found => success
+                      */
+                     ;
+                  } else {
+                     /* EB: TODO: move to msg file */
+                     ERROR((SGE_EVENT, "Hostgroup "SFQ" in specification "
+                            "of "SFQ" would create a cycle\n",
+                            lGetHost(add_group, HR_name),
+                            lGetHost(hgroup, HGRP_name)));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                                     ANSWER_QUALITY_ERROR);
+                     ret = false;
+                  }
+               }
+            } 
+         }
+
+         /*
+          * Find effective hostname changes (resolve group names)
+          */
+         if (ret) {
+            ret &= href_list_find_effective_diff(answer_list, add_groups,
+                                                 rem_groups, master_list,
+                                                 add_hosts, rem_hosts);
+         }
+
+         /*
+          * Cleanup
+          */
+         old_href_list = lFreeList(old_href_list);
+         add_groups = lFreeList(add_groups);
+         rem_groups = lFreeList(rem_groups);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
 

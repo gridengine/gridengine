@@ -56,6 +56,8 @@
 #include "sge_href.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
+#include "sge_pe.h"
+#include "sge_ckpt.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -65,69 +67,69 @@
 /* *INDENT-OFF* */
 
 list_attribute_struct cqueue_attribute_array[] = {
-   { CQ_seq_no,                  QI_seq_no,                 AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SEQ_NO,            false},
-   { CQ_nsuspend,                QI_nsuspend,               AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_NSUSPEND,          false},
-   { CQ_job_slots,               QI_job_slots,              AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SLOTS,             false},
-   { CQ_fshare,                  QI_fshare,                 AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_FSHARE,            true},
-   { CQ_oticket,                 QI_oticket,                AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_OTICKET,           true},
+   { CQ_seq_no,                  QI_seq_no,                 AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SEQ_NO,            false,  NULL},
+   { CQ_nsuspend,                QI_nsuspend,               AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_NSUSPEND,          false,  NULL},
+   { CQ_job_slots,               QI_job_slots,              AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_SLOTS,             false,  cqueue_verify_slots},
+   { CQ_fshare,                  QI_fshare,                 AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_FSHARE,            true,   NULL},
+   { CQ_oticket,                 QI_oticket,                AULNG_href,    AULNG_value,      NoName,     SGE_ATTR_OTICKET,           true,   NULL},
 
-   { CQ_tmpdir,                  QI_tmpdir,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TMPDIR,            false},
-   { CQ_shell,                   QI_shell,                  ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL,             false},
-   { CQ_calendar,                QI_calendar,               ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_CALENDAR,          false},
-   { CQ_priority,                QI_priority,               ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PRIORITY,          false},
-   { CQ_processors,              QI_processors,             ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROCESSORS,        false},
-   { CQ_prolog,                  QI_prolog,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROLOG,            false},
-   { CQ_epilog,                  QI_epilog,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_EPILOG,            false},
-   { CQ_shell_start_mode,        QI_shell_start_mode,       ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL_START_MODE,  false},
-   { CQ_starter_method,          QI_starter_method,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_STARTER_METHOD,    false},
-   { CQ_suspend_method,          QI_suspend_method,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SUSPEND_METHOD,    false},
-   { CQ_resume_method,           QI_resume_method,          ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_RESUME_METHOD,     false},
-   { CQ_terminate_method,        QI_terminate_method,       ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TERMINATE_METHOD,  false},
-   { CQ_initial_state,           QI_initial_state,          ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_INITIAL_STATE,     false},
+   { CQ_tmpdir,                  QI_tmpdir,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TMPDIR,            false,  NULL},
+   { CQ_shell,                   QI_shell,                  ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL,             false,  NULL},
+   { CQ_calendar,                QI_calendar,               ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_CALENDAR,          false,  NULL},
+   { CQ_priority,                QI_priority,               ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PRIORITY,          false,  cqueue_verify_priority},
+   { CQ_processors,              QI_processors,             ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROCESSORS,        false,  NULL},
+   { CQ_prolog,                  QI_prolog,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_PROLOG,            false,  NULL},
+   { CQ_epilog,                  QI_epilog,                 ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_EPILOG,            false,  NULL},
+   { CQ_shell_start_mode,        QI_shell_start_mode,       ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SHELL_START_MODE,  false,  NULL},
+   { CQ_starter_method,          QI_starter_method,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_STARTER_METHOD,    false,  NULL},
+   { CQ_suspend_method,          QI_suspend_method,         ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_SUSPEND_METHOD,    false,  NULL},
+   { CQ_resume_method,           QI_resume_method,          ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_RESUME_METHOD,     false,  NULL},
+   { CQ_terminate_method,        QI_terminate_method,       ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_TERMINATE_METHOD,  false,  NULL},
+   { CQ_initial_state,           QI_initial_state,          ASTR_href,     ASTR_value,       NoName,     SGE_ATTR_INITIAL_STATE,     false,  NULL},
    
-   { CQ_rerun,                   QI_rerun,                  ABOOL_href,    ABOOL_value,      NoName,     SGE_ATTR_RERUN,             false},
+   { CQ_rerun,                   QI_rerun,                  ABOOL_href,    ABOOL_value,      NoName,     SGE_ATTR_RERUN,             false,  NULL},
 
-   { CQ_s_fsize,                 QI_s_fsize,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_FSIZE,           false},
-   { CQ_h_fsize,                 QI_h_fsize,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_FSIZE,           false},
-   { CQ_s_data,                  QI_s_data,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_DATA,            false},
-   { CQ_h_data,                  QI_h_data,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_DATA,            false},
-   { CQ_s_stack,                 QI_s_stack,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_STACK,           false},
-   { CQ_h_stack,                 QI_h_stack,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_STACK,           false},
-   { CQ_s_core,                  QI_s_core,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_CORE,            false},
-   { CQ_h_core,                  QI_h_core,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_CORE,            false},
-   { CQ_s_rss,                   QI_s_rss,                  AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_RSS,             false},
-   { CQ_h_rss,                   QI_h_rss,                  AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_RSS,             false},
-   { CQ_s_vmem,                  QI_s_vmem,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_VMEM,            false},
-   { CQ_h_vmem,                  QI_h_vmem,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_VMEM,            false},
+   { CQ_s_fsize,                 QI_s_fsize,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_FSIZE,           false,  NULL},
+   { CQ_h_fsize,                 QI_h_fsize,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_FSIZE,           false,  NULL},
+   { CQ_s_data,                  QI_s_data,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_DATA,            false,  NULL},
+   { CQ_h_data,                  QI_h_data,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_DATA,            false,  NULL},
+   { CQ_s_stack,                 QI_s_stack,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_STACK,           false,  NULL},
+   { CQ_h_stack,                 QI_h_stack,                AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_STACK,           false,  NULL},
+   { CQ_s_core,                  QI_s_core,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_CORE,            false,  NULL},
+   { CQ_h_core,                  QI_h_core,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_CORE,            false,  NULL},
+   { CQ_s_rss,                   QI_s_rss,                  AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_RSS,             false,  NULL},
+   { CQ_h_rss,                   QI_h_rss,                  AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_RSS,             false,  NULL},
+   { CQ_s_vmem,                  QI_s_vmem,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_S_VMEM,            false,  NULL},
+   { CQ_h_vmem,                  QI_h_vmem,                 AMEM_href,     AMEM_value,       NoName,     SGE_ATTR_H_VMEM,            false,  NULL},
 
-   { CQ_s_rt,                    QI_s_rt,                   ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_RT,              false},
-   { CQ_h_rt,                    QI_h_rt,                   ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_RT,              false},
-   { CQ_s_cpu,                   QI_s_cpu,                  ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_CPU,             false},
-   { CQ_h_cpu,                   QI_h_cpu,                  ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_CPU,             false},
+   { CQ_s_rt,                    QI_s_rt,                   ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_RT,              false,  NULL},
+   { CQ_h_rt,                    QI_h_rt,                   ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_RT,              false,  NULL},
+   { CQ_s_cpu,                   QI_s_cpu,                  ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_S_CPU,             false,  NULL},
+   { CQ_h_cpu,                   QI_h_cpu,                  ATIME_href,    ATIME_value,      NoName,     SGE_ATTR_H_CPU,             false,  NULL},
 
-   { CQ_suspend_interval,        QI_suspend_interval,       AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_SUSPEND_INTERVAL,  false},
-   { CQ_min_cpu_interval,        QI_min_cpu_interval,       AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_MIN_CPU_INTERVAL,  false},
-   { CQ_notify,                  QI_notify,                 AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_NOTIFY,            false},
+   { CQ_suspend_interval,        QI_suspend_interval,       AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_SUSPEND_INTERVAL,  false,  NULL},
+   { CQ_min_cpu_interval,        QI_min_cpu_interval,       AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_MIN_CPU_INTERVAL,  false,  NULL},
+   { CQ_notify,                  QI_notify,                 AINTER_href,   AINTER_value,     NoName,     SGE_ATTR_NOTIFY,            false,  NULL},
 
-   { CQ_qtype,                   QI_qtype,                  AQTLIST_href,  AQTLIST_value,    NoName,     SGE_ATTR_QTYPE,             false},
+   { CQ_qtype,                   QI_qtype,                  AQTLIST_href,  AQTLIST_value,    NoName,     SGE_ATTR_QTYPE,             false,  NULL},
 
-   { CQ_ckpt_list,               QI_ckpt_list,              ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_CKPT_LIST,         false},
-   { CQ_pe_list,                 QI_pe_list,                ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_PE_LIST,           false},
+   { CQ_ckpt_list,               QI_ckpt_list,              ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_CKPT_LIST,         false,  cqueue_verify_ckpt_list},
+   { CQ_pe_list,                 QI_pe_list,                ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_PE_LIST,           false,  cqueue_verify_pe_list},
  
-   { CQ_owner_list,              QI_owner_list,             AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_OWNER_LIST,        false},
-   { CQ_acl,                     QI_acl,                    AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS,        false},
-   { CQ_xacl,                    QI_xacl,                   AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS,       false},
+   { CQ_owner_list,              QI_owner_list,             AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_OWNER_LIST,        false,  NULL},
+   { CQ_acl,                     QI_acl,                    AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS,        false,  cqueue_verify_user_list},
+   { CQ_xacl,                    QI_xacl,                   AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS,       false,  cqueue_verify_user_list},
 
-   { CQ_projects,                QI_projects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS,          true},
-   { CQ_xprojects,               QI_xprojects,              APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS,         true},
+   { CQ_projects,                QI_projects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS,          true,   NULL},
+   { CQ_xprojects,               QI_xprojects,              APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS,         true,   NULL},
 
-   { CQ_consumable_config_list,  QI_consumable_config_list, ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES,    false},
-   { CQ_load_thresholds,         QI_load_thresholds,        ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD,    false},
-   { CQ_suspend_thresholds,      QI_suspend_thresholds,     ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD, false},
+   { CQ_consumable_config_list,  QI_consumable_config_list, ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES,    false,  NULL},
+   { CQ_load_thresholds,         QI_load_thresholds,        ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD,    false,  NULL},
+   { CQ_suspend_thresholds,      QI_suspend_thresholds,     ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD, false,  NULL},
 
-   { CQ_subordinate_list,        QI_subordinate_list,       ASOLIST_href,  ASOLIST_value,    SO_name,    SGE_ATTR_SUBORDINATE_LIST,  false},
+   { CQ_subordinate_list,        QI_subordinate_list,       ASOLIST_href,  ASOLIST_value,    SO_name,    SGE_ATTR_SUBORDINATE_LIST,  false,  NULL},
 
-   { NoName,                     NoName,                    NoName,        NoName,           NoName,     NULL,                       false}
+   { NoName,                     NoName,                    NoName,        NoName,           NoName,     NULL,                       false,  NULL}
 };
 
 /* *INDENT-ON* */
@@ -206,7 +208,6 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
    return ret;
 }
 
-
 lList **cqueue_list_get_master_list(void)
 {
    return &Master_CQueue_List;
@@ -233,6 +234,44 @@ cqueue_create(lList **answer_list, const char *name)
    DEXIT;
    return ret;
 }
+
+bool 
+cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
+{
+   bool ret = false;
+
+   if (this_elem != NULL && href != NULL) {
+      const char *href_name = lGetHost(href, HR_name);
+      
+      if (href_name != NULL) {
+         lList *href_list = lGetList(this_elem, CQ_hostlist);
+         lListElem *tmp_href = lGetElemHost(href_list, HR_name, href_name);
+
+         if (tmp_href != NULL) {
+            ret = true;
+         }
+      }
+   }
+   return ret;
+} 
+
+bool 
+cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list)
+{
+   bool ret = false;
+  
+   if (this_elem != NULL && href_list != NULL) { 
+      lListElem *href;
+
+      for_each(href, href_list) {
+         if (cqueue_is_href_referenced(this_elem, href)) {
+            ret = true;
+            break;
+         }
+      }
+   }
+   return ret;
+} 
 
 bool
 cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
@@ -630,7 +669,6 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
                     lListElem *reduced_elem, lList **add_hosts,
                     lList **rem_hosts)
 {
-#define CQUEUE_MOD_DEBUG
    bool ret = true;
 
    DENTER(CQUEUE_LAYER, "cqueue_mod_hostlist");
@@ -644,98 +682,23 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
          lList *add_groups = NULL;
          lList *rem_groups = NULL;
 
-         ret &= href_list_find_diff(list, answer_list,
-                                    old_href_list, add_hosts,
-                                    rem_hosts, &add_groups,
-                                    &rem_groups);
-
          if (ret) {
-            lList *master_list = *(hgroup_list_get_master_list());
-
-            if (ret && add_hosts != NULL) {
-               ret &= href_list_resolve_hostnames(*add_hosts, answer_list);
-            }
-
-            if (ret && add_groups != NULL) {
-               ret &= hgroup_list_exists(master_list, answer_list, add_groups);
-            }
+            ret &= href_list_resolve_hostnames(list, answer_list);
+         }
+         if (ret) {
+            ret &= href_list_find_diff(list, answer_list,
+                                       old_href_list, add_hosts,
+                                       rem_hosts, &add_groups,
+                                       &rem_groups);
+         }
+         if (ret && add_groups != NULL) {
+            ret &= hgroup_list_exists(master_list, answer_list, add_groups);
          }
          if (ret) {
             lSetList(cqueue, CQ_hostlist, lCopyList("", list));
-         }
-         if (ret) {
-            if (ret && add_groups != NULL) {
-               ret &= href_list_find_all_references(add_groups, answer_list, 
-                                                    master_list, add_hosts, 
-                                                    NULL);
-            }
-            if (ret && rem_groups != NULL) {
-               ret &= href_list_find_all_references(rem_groups, answer_list, 
-                                                    master_list, rem_hosts, 
-                                                    NULL);
-            }
-            if (ret && add_hosts != NULL && *add_hosts != NULL &&
-                rem_hosts != NULL && *rem_hosts != NULL) {
-               lList *tmp_rem_hosts = NULL;
-               lList *tmp_add_hosts = NULL;
-
-               ret &= href_list_find_diff(*add_hosts, answer_list,
-                                          *rem_hosts, &tmp_add_hosts,
-                                          &tmp_rem_hosts, NULL, NULL);
-               *add_hosts = lFreeList(*add_hosts);
-               *rem_hosts = lFreeList(*rem_hosts);
-               *add_hosts = tmp_add_hosts;
-               *rem_hosts = tmp_rem_hosts;
-               tmp_add_hosts = NULL;
-               tmp_rem_hosts = NULL;
-            }
-
-#ifdef CQUEUE_MOD_DEBUG
-            {
-               lListElem *href = NULL;
-               dstring message = DSTRING_INIT;
-               bool is_first_hostname = true;
-
-               for_each(href, *add_hosts) {
-                  const char *hostname = lGetHost(href, HR_name);
-
-                  if (is_first_hostname) {
-                     sge_dstring_sprintf(&message, "Added hostnames: ");
-                  } else {
-                     sge_dstring_sprintf_append(&message, ", ");
-                  }
-                  sge_dstring_sprintf_append(&message, "%s", hostname);
-                  is_first_hostname = false;
-               }
-               if (!is_first_hostname) {
-                  sge_dstring_sprintf_append(&message, "\n");
-                  DPRINTF((sge_dstring_get_string(&message)));
-               }
-               sge_dstring_free(&message);
-            }
-            {
-               lListElem *href = NULL;
-               dstring message = DSTRING_INIT;
-               bool is_first_hostname = true;
-
-               for_each(href, *rem_hosts) {
-                  const char *hostname = lGetHost(href, HR_name);
-
-                  if (is_first_hostname) {
-                     sge_dstring_sprintf(&message, "Removed hostnames: ");
-                  } else {
-                     sge_dstring_sprintf_append(&message, ", ");
-                  }
-                  sge_dstring_sprintf_append(&message, "%s", hostname);
-                  is_first_hostname = false;
-               }
-               if (!is_first_hostname) {
-                  sge_dstring_sprintf_append(&message, "\n");
-                  DPRINTF((sge_dstring_get_string(&message)));
-               }
-               sge_dstring_free(&message);
-            }
-#endif
+            ret &= href_list_find_effective_diff(answer_list, add_groups, 
+                                                 rem_groups, master_list, 
+                                                 add_hosts, rem_hosts);
          }
          add_groups = lFreeList(add_groups);
          rem_groups = lFreeList(rem_groups);
@@ -745,9 +708,41 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
    return ret;
 }
 
+bool
+cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
+                         lListElem *reduced_elem, lList *add_hosts,
+                         lList *rem_hosts) 
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_handle_qinstances");
+   if (ret) {
+      ret &= cqueue_mark_qinstances(cqueue, answer_list, rem_hosts);
+   }
+   if (ret) {
+      bool refresh_all_values = (rem_hosts != NULL) || (add_hosts != NULL);
+      bool has_changed;
+      bool is_ambiguous;
+
+      ret &= cqueue_mod_qinstances(cqueue, answer_list, reduced_elem,
+                                   refresh_all_values,
+                                   &has_changed, &is_ambiguous);
+   }
+   if (ret) {
+      bool is_ambiguous;
+
+      ret &= cqueue_add_qinstances(cqueue, answer_list, add_hosts,
+                                   &is_ambiguous);
+   }
+   DEXIT;
+   return ret;
+}
+
+
 bool 
 cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool *is_ambiguous,
+                      lListElem *reduced_elem, bool refresh_all_values,
+                      bool *is_ambiguous,
                       bool *has_changed)
 {
    bool ret = true;
@@ -763,7 +758,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
             int pos = lGetPosViaElem(reduced_elem,
                                      cqueue_attribute_array[index].cqueue_attr);
 
-            if (pos >= 0) {
+            if (pos >= 0 || refresh_all_values) {
                lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
                lListElem *qinstance = NULL;
 
@@ -933,7 +928,6 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                                     cqueue_attribute_array[index].href_attr,
                                     HOSTREF_DEFAULT);
 
-
                if (elem == NULL) {
                   /* EB: TODO: move to msg file */
                   ERROR((SGE_EVENT, SFQ" has no default value\n",
@@ -941,10 +935,128 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;
+               } 
+
+               if (ret && 
+                   cqueue_attribute_array[index].verify_function != NULL) {
+                  for_each(elem, list) {
+                     ret &= cqueue_attribute_array[index].
+                                    verify_function(cqueue, answer_list, elem);
+                  }
                }
             }
          }
          index++;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_verify_priority(lListElem *cqueue, lList **answer_list, 
+                       lListElem *attr_elem)
+{
+   bool ret = true;
+   
+   DENTER(CQUEUE_LAYER, "cqueue_verify_priority");
+   if (cqueue != NULL && attr_elem != NULL) {
+      const char *priority_string = lGetString(attr_elem, ASTR_value);
+
+      if (priority_string != NULL) {
+         const int priority = atoi(priority_string);
+
+         if (priority < -20 || priority > 20 ) {
+            ERROR((SGE_EVENT, MSG_CQUEUE_PRIORITYNOTINRANGE));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = false;
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_verify_slots(lListElem *cqueue, lList **answer_list, 
+                       lListElem *attr_elem)
+{
+   bool ret = true;
+   
+   DENTER(CQUEUE_LAYER, "cqueue_verify_slots");
+   if (cqueue != NULL && attr_elem != NULL) {
+      u_long32 slots = lGetUlong(attr_elem, AULNG_value);
+
+      if (slots < 0) {
+         ERROR((SGE_EVENT, MSG_CQUEUE_SLOTSNOTINRANGE));
+         answer_list_add(answer_list, SGE_EVENT, 
+                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = false;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list, 
+                       lListElem *attr_elem)
+{
+   bool ret = true;
+   
+   DENTER(CQUEUE_LAYER, "cqueue_verify_pe_list");
+   if (cqueue != NULL && attr_elem != NULL) {
+      lList *pe_list = lGetList(attr_elem, ASTRLIST_value);
+
+      if (pe_list != NULL) {
+         const lList *master_list = *(pe_list_get_master_list());
+
+         if (!pe_list_do_all_exist(master_list, answer_list, pe_list)) {
+            ret = false;
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_verify_ckpt_list(lListElem *cqueue, lList **answer_list, 
+                        lListElem *attr_elem)
+{
+   bool ret = true;
+   
+   DENTER(CQUEUE_LAYER, "cqueue_verify_ckpt_list");
+   if (cqueue != NULL && attr_elem != NULL) {
+      lList *ckpt_list = lGetList(attr_elem, ASTRLIST_value);
+
+      if (ckpt_list != NULL) {
+         const lList *master_list = *(ckpt_list_get_master_list());
+
+         if (!ckpt_list_do_all_exist(master_list, answer_list, ckpt_list)) {
+            ret = false;
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_verify_user_list(lListElem *cqueue, lList **answer_list, 
+                        lListElem *attr_elem)
+{
+   bool ret = true;
+   
+   DENTER(CQUEUE_LAYER, "cqueue_verify_user_list");
+   if (cqueue != NULL && attr_elem != NULL) {
+      lList *user_list = lGetList(attr_elem, AUSRLIST_value);
+
+      if (user_list != NULL) {
+         if (userset_list_validate_acl_list(user_list, answer_list)) {
+            ret = false;
+         }
       }
    }
    DEXIT;

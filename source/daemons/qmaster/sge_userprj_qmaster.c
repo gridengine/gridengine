@@ -163,8 +163,7 @@ int sub_command
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_acl, lCopyList("acl", lp));
 
-         if (userset_list_validate_acl_list(alpp, lGetList(ep, UP_acl), "user_lists", 
-               "project", lGetString(ep, UP_name))!=STATUS_OK) {
+         if (userset_list_validate_acl_list(lGetList(ep, UP_acl), alpp)!=STATUS_OK) {
             /* answerlist gets filled by userset_list_validate_acl_list() in case of errors */
             goto Error;
          }
@@ -174,8 +173,7 @@ int sub_command
       if ((pos=lGetPosViaElem(ep, UP_xacl))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_xacl, lCopyList("xacl", lp));
-         if (userset_list_validate_acl_list(alpp, lGetList(ep, UP_xacl), "xuser_lists", 
-               "project", lGetString(ep, UP_name))!=STATUS_OK) {
+         if (userset_list_validate_acl_list(lGetList(ep, UP_xacl), alpp)!=STATUS_OK) {
             /* answerlist gets filled by userset_list_validate_acl_list() in case of errors */
             goto Error;
          }

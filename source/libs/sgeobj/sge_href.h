@@ -56,6 +56,10 @@ href_list_find_diff(const lList *this_list, lList **answer_list,
                     lList **rem_hosts, lList **add_groups,
                     lList **rem_groups);
 
+bool
+href_list_find_effective_diff(lList **answer_list, const lList *add_groups, 
+                              const lList *rem_groups, const lList *master_list,
+                              lList **add_hosts, lList **rem_hosts);
 
 bool 
 href_list_find_references(const lList *this_list, lList **answer_list,

@@ -116,7 +116,7 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
    FILE *fp;
    char filename[SGE_PATH_MAX];
 
-   DENTER(TOP_LAYER, "write_cqueue");
+   DENTER(TOP_LAYER, "write_qinstance");
  
    switch (how) {
    case 0:

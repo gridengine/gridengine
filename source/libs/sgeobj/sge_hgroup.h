@@ -88,6 +88,11 @@ hgroup_list_find_all_matching_references(const lList *this_list,
                                          const char *hgroup_pattern,
                                          lList **used_hosts);
 
+bool
+hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command,
+                    lList **add_hosts, lList **rem_hosts,
+                    lList **occupant_groups);
 
 #endif /* __SGE_GROUPS_H__ */
 

@@ -452,7 +452,7 @@ lListElem *conf
          }
 
          /* .. checking userset names */
-         ok = (userset_list_validate_acl_list(alpp, tmp, name, conf_name, "configuration")==STATUS_OK);
+         ok = (userset_list_validate_acl_list(tmp, alpp)==STATUS_OK);
          lFreeList(tmp);
          if (!ok) {
             DEXIT;

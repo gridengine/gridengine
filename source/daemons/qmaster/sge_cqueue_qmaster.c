@@ -136,30 +136,11 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    }
 
    /*
-    * Now we have to modify all qinstances:
-    *    - qinstances to be deleted are marked for deletion but they are
-    *      not removed here!
-    *    - We have to modify all "remaining" qinstances
-    *    - New qinstances can then be created
-    *
-    *    => qinstances will be deleted in cqueue_success()
-    *    => events will be send in cqueue_success()
+    * Now we have to add/mod/del all qinstances
     */ 
    if (ret) {
-      ret &= cqueue_mark_qinstances(cqueue, answer_list, rem_hosts);
-   }
-   if (ret) {
-      bool has_changed;
-      bool is_ambiguous;
-
-      ret &= cqueue_mod_qinstances(cqueue, answer_list, reduced_elem, 
-                                   &has_changed, &is_ambiguous);
-   }
-   if (ret) {
-      bool is_ambiguous;
-
-      ret &= cqueue_add_qinstances(cqueue, answer_list, add_hosts,
-                                   &is_ambiguous);
+      ret &= cqueue_handle_qinstances(cqueue, answer_list, reduced_elem, 
+                                      add_hosts, rem_hosts);
    }
 
    /*
@@ -179,14 +160,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 int cqueue_success(lListElem *cqueue, lListElem *old_cqueue, 
                    gdi_object_t *object) 
 {
-   lListElem *qinstance = NULL;
-   lListElem *next_qinstance = NULL;
-   lList *qinstances = NULL;
-
    DENTER(TOP_LAYER, "cqueue_success");
    
-   qinstances = lGetList(cqueue, CQ_qinstances);
-
    /*
     * CQ modify or add event
     */
@@ -194,44 +169,98 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
                  lGetString(cqueue, CQ_name), NULL, NULL, cqueue);
 
    /*
-    * QI modify, add or delete event
+    * QI modify, add or delete event. Finalize operation.
     */
+   cqueue_commit(cqueue);
+
+   DEXIT;
+   return 0;
+}
+
+void cqueue_rollback(lListElem *cqueue) 
+{
+   lList *qinstances = lGetList(cqueue, CQ_qinstances);
+   lListElem *next_qinstance = NULL;
+   lListElem *qinstance = NULL;
+
+   DENTER(TOP_LAYER, "cqueue_rollback"); 
+
    next_qinstance = lFirst(qinstances);
    while ((qinstance = next_qinstance)) {
       u_long32 tag = lGetUlong(qinstance, QI_tag);
 
       next_qinstance = lNext(qinstance);
-      lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEFAULT);
-      if (tag == SGE_QI_TAG_ADD) {
-         DPRINTF(("ADD QI event\n"));
-         sge_add_event(NULL, 0, sgeE_QINSTANCE_ADD, 0, 0, 
-                       lGetString(qinstance, QI_name), 
-                       lGetHost(qinstance, QI_hostname),
-                       NULL, qinstance);
-      } else if (tag == SGE_QI_TAG_MOD) {
-         DPRINTF(("MOD QI event\n"));
-         sge_add_event(NULL, 0, sgeE_QINSTANCE_MOD, 0, 0, 
-                       lGetString(qinstance, QI_name), 
-                       lGetHost(qinstance, QI_hostname),
-                       NULL, qinstance);
-      } else if (tag == SGE_QI_TAG_DEL) {
-         DPRINTF(("DEL QI event\n"));
-         sge_add_event(NULL, 0, sgeE_QINSTANCE_DEL, 0, 0, 
-                       lGetString(qinstance, QI_name), 
-                       lGetHost(qinstance, QI_hostname),
-                       NULL, NULL);
 
+      /*
+       * Reset QI tag
+       */
+      lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEFAULT);
+
+      if (tag == SGE_QI_TAG_DEL) {
          /*
-          * Now we can remove the qinstance.
+          * Tag has been reset some lines above.
+          * There is nothing else to do.
+          */
+         ;
+      } else if (tag == SGE_QI_TAG_ADD) {
+         /*
+          * Trash created qinstances
           */
          lRemoveElem(qinstances, qinstance);
-      } 
+      }
    }
    if (lGetNumberOfElem(qinstances) == 0) {
       lSetList(cqueue, CQ_qinstances, NULL);
    }
    DEXIT;
-   return 0;
+}
+void cqueue_commit(lListElem *cqueue) 
+{
+   lList *qinstances = lGetList(cqueue, CQ_qinstances);
+   lListElem *next_qinstance = NULL;
+   lListElem *qinstance = NULL;
+
+   DENTER(TOP_LAYER, "cqueue_commit"); 
+
+   /*
+    * QI modify, add or delete event
+    */
+   next_qinstance = lFirst(qinstances);
+   while ((qinstance = next_qinstance)) {
+      u_long32 tag = lGetUlong(qinstance, QI_tag);
+      const char *name = lGetString(qinstance, QI_name);
+      const char *hostname = lGetHost(qinstance, QI_hostname);
+
+      next_qinstance = lNext(qinstance);
+
+      /*
+       * Reset QI tag
+       */
+      lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEFAULT);
+
+      if (tag == SGE_QI_TAG_ADD) {
+         DPRINTF(("ADD QI event\n"));
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_ADD, 0, 0,
+                       name, hostname, NULL, qinstance);
+      } else if (tag == SGE_QI_TAG_MOD) {
+         DPRINTF(("MOD QI event\n"));
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_MOD, 0, 0,
+                       name, hostname, NULL, qinstance);
+      } else if (tag == SGE_QI_TAG_DEL) {
+         DPRINTF(("DEL QI event\n"));
+         sge_add_event(NULL, 0, sgeE_QINSTANCE_DEL, 0, 0,
+                       name, hostname, NULL, NULL);
+
+         /*
+          * Now we can remove the qinstance.
+          */
+         lRemoveElem(qinstances, qinstance);
+      }
+   }
+   if (lGetNumberOfElem(qinstances) == 0) {
+      lSetList(cqueue, CQ_qinstances, NULL);
+   }
+   DEXIT;
 }
 
 int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object) 

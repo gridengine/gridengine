@@ -405,8 +405,7 @@ int sub_command
       if (lGetPosViaElem(ep, EH_acl)>=0) {
          DPRINTF(("got new EH_acl\n"));
          /* check acl list */
-         if (userset_list_validate_acl_list(alpp, lGetList(ep, EH_acl), "user_lists",
-                  object->object_name, host)!=STATUS_OK)
+         if (userset_list_validate_acl_list(lGetList(ep, EH_acl), alpp)!=STATUS_OK)
             goto ERROR;
          attr_mod_sub_list(alpp, new_host, EH_acl, US_name, ep,
             sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0);
@@ -416,8 +415,7 @@ int sub_command
       if (lGetPosViaElem(ep, EH_xacl)>=0) {
          DPRINTF(("got new EH_xacl\n"));
          /* check xacl list */
-         if (userset_list_validate_acl_list(alpp, lGetList(ep, EH_xacl), "xuser_lists",
-                  object->object_name, host)!=STATUS_OK)
+         if (userset_list_validate_acl_list(lGetList(ep, EH_xacl), alpp)!=STATUS_OK)
             goto ERROR;
          attr_mod_sub_list(alpp, new_host, EH_xacl, US_name, ep,
             sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_EXECHOST, 0);

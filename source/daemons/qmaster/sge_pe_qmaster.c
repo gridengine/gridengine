@@ -107,8 +107,7 @@ int sub_command
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
-      if (userset_list_validate_acl_list(alpp, lGetList(pe, PE_user_list), MSG_OBJ_USERLIST,
-            object_name, pe_name)!=STATUS_OK)
+      if (userset_list_validate_acl_list(lGetList(pe, PE_user_list), alpp)!=STATUS_OK)
          goto ERROR;
 
       attr_mod_sub_list(alpp, new_pe, PE_user_list, 
@@ -120,8 +119,7 @@ int sub_command
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
-      if (userset_list_validate_acl_list(alpp, lGetList(pe, PE_xuser_list), MSG_OBJ_XUSERLIST,
-            object_name, pe_name)!=STATUS_OK)
+      if (userset_list_validate_acl_list(lGetList(pe, PE_xuser_list), alpp)!=STATUS_OK)
          goto ERROR;
       attr_mod_sub_list(alpp, new_pe, PE_xuser_list,
          US_name, pe, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);      

@@ -123,17 +123,20 @@ extern "C" {
 *******************************************************************************/
 enum {
    HGRP_name = HGRP_LOWERBOUND,
-   HGRP_host_list
+   HGRP_host_list,
+   HGRP_cqueue_list
 };
 
 LISTDEF(HGRP_Type)
    SGE_HOST(HGRP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_LIST(HGRP_host_list, HR_Type, CULL_SPOOL) 
+   SGE_LIST(HGRP_cqueue_list, CQ_Type, CULL_SPOOL) 
 LISTEND
 
 NAMEDEF(HGRPN)
    NAME("HGRP_name")
    NAME("HGRP_host_list")
+   NAME("HGRP_cqueue_list")
 NAMEEND
 
 #define HGRPS sizeof(HGRPN)/sizeof(char*)

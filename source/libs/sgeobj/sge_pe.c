@@ -280,15 +280,13 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    }
 
    /* -------- PE_user_list */
-   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST,
-               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
+   if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_user_list), alpp))!=STATUS_OK) {
       DEXIT;
       return ret;
    }
 
    /* -------- PE_xuser_list */
-   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST,
-               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
+   if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_xuser_list), alpp))!=STATUS_OK) {
       DEXIT;
       return ret;
    }

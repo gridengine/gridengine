@@ -44,5 +44,9 @@ int cqueue_spool(lList **alpp, lListElem *this_elem, gdi_object_t *object);
 
 int cqueue_del(lListElem *this_elem, lList **alpp, char *ruser, char *rhost);
 
+void cqueue_commit(lListElem *cqueue);
+
+void cqueue_rollback(lListElem *cqueue);
+
 #endif /* _SGE_CQUEUE_QMASTER_H_ */
 

@@ -222,4 +222,9 @@
 #define MSG_INVALID_CENTRY_TYPE_CHANGE_S           _MESSAGE(64209, _("The type of the complex "SFQ" cannot be changed due to its build in status\n"))
 #define MSG_CQUEUE_NONDEFNOTALLOWED                _MESSAGE(64210, _("Queue domain/instance values are only allowed for cluster queues.\n"))
 
+
+#define MSG_CQUEUE_PRIORITYNOTINRANGE              _MESSAGE(64211, _("Priority not in range -20 to +20\n"))
+#define MSG_CQUEUE_SLOTSNOTINRANGE                 _MESSAGE(64212, _("Slots has to be >0\n"))
+#define MSG_CQUEUE_UNKNOWNUSERSET_S                _MESSAGE(64213, _("Userset "SFQ" does not exist\n") )
+
 #endif /* __MSG_SGEOBJLIB_H */

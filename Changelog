@@ -1,3 +1,6 @@
+CR-2002-11-07-0  Testsuite: sort checktree directory path list before starting
+                            test run to get an alphabetic test run order.
+
 SD-2002-10-17-0  Bugfix:    SGEEE - Fixed bug in the pending functional
                             ticket calculation which incorrectly
                             calculated the number of functional tickets

@@ -3473,6 +3473,7 @@ proc run_tests { path runcompleted } {
                }
            }
         }
+        set checks_to_do [lsort $checks_to_do]
         if {[llength $checks_to_do] == 0} {
            return
         }

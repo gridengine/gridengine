@@ -1,3 +1,5 @@
+CR-2002-08-29-2  Testsuite: Added SGE/EE version names for testsuite
+
 CR-2002-08-29-0  Bugfix:    corrected mistake in writing in debug messages
                             for localization
                  Changed:   All binaries using i18n

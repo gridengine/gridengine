@@ -1,3 +1,5 @@
+CR-2002-09-02-0  Testsuite: Merges from maintrunc
+
 EB-2002-09-02-0  Bugfix:    problems with destin_id_list syntax
                  Issue:     #313
                  Bugtraq:   #4740350

@@ -279,6 +279,16 @@ proc job_environment_JOB_NAME {} {
    job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
    job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
 
+   puts $CHECK_OUTPUT "\nqsub -N ..."
+   job_environment_qsub_job "newnam" job_env "-o /dev/null -e /dev/null -N newnam"
+#   foreach env $job_env(index) {
+#      puts $CHECK_OUTPUT "$env=\"$job_env($env)\""
+#   }
+   job_environment_check_env_value "JOB_NAME" "newnam" $job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "newnam" $job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
+   
+
    puts $CHECK_OUTPUT "\nqresub ..."
    job_environment_qresub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"
    job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)

@@ -73,7 +73,8 @@ global CHECK_ACTUAL_TEST_PATH      ;# directory of current running test
 global CHECK_PRODUCT_ROOT          ;# path to sge system
 global CHECK_OUTPUT                ;# output from testsuite 
 global CHECK_CURRENT_WORKING_DIR   ;# current work directory
-
+global CHECK_HTML_DIRECTORY        ;# directory for HTML output of testsuite 
+set CHECK_HTML_DIRECTORY ""
 # globals for source code specific staff
 global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
@@ -120,6 +121,8 @@ global CHECK_ACT_LEVEL             ;# actual check level ( value from 0 up to xx
 global CHECK_ROOT_PASSWORD         ;# stored root password ( only stored in a variable )
 global CHECK_SPOOL_DIR_CONFIG_FILE ;# file for local spooldirs in $CHECK_CONFIG_DIR path
 set CHECK_SPOOL_DIR_CONFIG_FILE "local-spool.conf"
+global CHECK_LOCAL_BINARY_DIR_CONFIG_FILE ;# file for local spooldirs in $CHECK_CONFIG_DIR path
+set CHECK_LOCAL_BINARY_DIR_CONFIG_FILE "local-bin.conf"
 global CHECK_BINARY_DIR_CONFIG_FILE ;# file for binary directories in $CHECK_CONFIG_DIR
 set CHECK_BINARY_DIR_CONFIG_FILE "binary-path.conf"
 global CHECK_LOADSENSOR_DIR_CONFIG_FILE ;# file for architecture specific loadsensor binaries in
@@ -1253,8 +1256,8 @@ proc source_procedures {} {
 #     ???/???
 #*******************************
 proc edit_defaults {} {
-  global CHECK_OUTPUT CHECK_DEFAULTS_FILE CHECK_HOST 
-
+  global CHECK_OUTPUT CHECK_DEFAULTS_FILE CHECK_HOST CHECK_CONFIG_DIR
+  global env
 
   load_defaults
   set return_value -1
@@ -1266,9 +1269,36 @@ proc edit_defaults {} {
   puts $def_edit_file
   set exit_edit_loop 0
   while { $exit_edit_loop == 0 } {
-     set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
-     set id [ open_spawn_process [get_binary_path "$CHECK_HOST" "vim"] "$def_edit_file" ]
-     
+     if { $CHECK_CONFIG_DIR != "" } {
+        set vim_binary [get_binary_path "$CHECK_HOST" "vim"]
+     } else {
+        puts $CHECK_OUTPUT "config directory path not set ..."
+        set env_variable "EDITOR"
+        puts $CHECK_OUTPUT "checking for $env_variable environment setting..."
+        if { [info exists env($env_variable)] } {
+           puts $CHECK_OUTPUT "$env_variable=$env($env_variable)"
+           set vim_binary $env($env_variable)
+           puts $CHECK_OUTPUT "using environment $env_variable"
+        } else {
+           puts $CHECK_OUTPUT "environment $env_variable not set, using default"
+           set vim_binary "vim"
+        }
+        set catch_return [ catch { eval exec which $vim_binary } catch_value ]
+        puts $CHECK_OUTPUT "exec \"which $vim_binary\" returns: $catch_return"
+        if { $catch_return != 0 } {
+           puts $CHECK_OUTPUT "error executing \"which $vim_binary\"!!!"
+        } else {
+           set vim_binary $catch_value
+        }
+        if { [file exists $vim_binary] != 1 } {
+           puts $CHECK_OUTPUT "could not find binary"
+           puts $CHECK_OUTPUT "$vim_binary"
+           exit 1
+        }
+        puts $CHECK_OUTPUT "using \"$vim_binary\" as editor"
+     }
+     set env(EDITOR) $vim_binary
+     set id [ open_spawn_process $vim_binary "$def_edit_file" ]
      interact
      set exit_state [ close_spawn_process $id ]
      if { $exit_state == 0 } {
@@ -1637,6 +1667,35 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   return $catch_return
 }
 
+proc get_local_hostname {} {
+   global env CHECK_OUTPUT 
+   set catch_return [ catch { exec "hostname" } result ]
+   if { $catch_return == 0 } {
+      set result [split $result "."]
+      set newname [lindex $result 0]
+      puts $CHECK_OUTPUT "got hostname: \"$newname\""
+      return $newname
+   } else {
+      puts $CHECK_OUTPUT "local hostname error or binary not found"
+      puts $CHECK_OUTPUT "error: $result"
+      puts $CHECK_OUTPUT "error: $catch_return"
+      puts $CHECK_OUTPUT "trying local HOST environment variable ..."
+      if { [ info exists env(HOST) ] } {
+         set result [split $env(HOST) "."]
+         set newname [lindex $result 0]
+         if { [ string length $newname ] > 0 } {
+             puts $CHECK_OUTPUT "got hostname_ \"$newname\""
+             return $newname
+         } 
+      }
+   }
+   puts $CHECK_OUTPUT "tcl procedure get_local_hostname() can't get local hostname"
+   puts $CHECK_OUTPUT "please set check if binary \"hostname\" is in path or"
+   puts $CHECK_OUTPUT "set the environment variable \"HOST\" to the hostname value"
+   exit 1
+   return "unknown"
+}
+
 #                                                             max. column:     |
 #****** check/load_defaults() ******
 # 
@@ -1688,23 +1747,17 @@ proc load_defaults {} {
   set CHECK_TESTSUITE_ROOT "$CHECK_CURRENT_WORKING_DIR"
   set CHECK_CHECKTREE_ROOT "$CHECK_CURRENT_WORKING_DIR/checktree"
   set CHECK_MAIN_RESULTS_DIR "$CHECK_CURRENT_WORKING_DIR/results"
-  if { [info exists env(HOST)] } {
-     set CHECK_CORE_MASTER     "[set env(HOST)]"
-  } else {
-     set CHECK_CORE_MASTER "unknown"
-  }
-  set CHECK_CORE_EXECD      "$CHECK_CORE_MASTER"  
   set CHECK_CORE_PROCESSORS "1"
   set CHECK_SUBMIT_ONLY_HOSTS ""
   set CHECK_COMMD_PORT "7776";
   set CHECK_USER "unknown";
   set CHECK_GROUP "unknown";
   set CHECK_ARCH "unknown";
-  if { [info exists env(HOST)] } {
-     set CHECK_HOST "[set env(HOST)]";
-  } else {
-     set CHECK_HOST "unknown"
-  }
+  set CHECK_HOST [get_local_hostname] 
+  set CHECK_CORE_MASTER $CHECK_HOST
+  set CHECK_SOURCE_HOSTNAME $CHECK_HOST  
+  set CHECK_MAILX_HOST $CHECK_HOST
+  set CHECK_CORE_EXECD $CHECK_HOST       
   set CHECK_PROTOCOL_DIR ""
   set CHECK_PRODUCT_TYPE "sge"
   set CHECK_PRODUCT_FEATURE "none"
@@ -1716,11 +1769,6 @@ proc load_defaults {} {
   set CHECK_SOURCE_DIR [ get_current_working_dir ]
   cd $old_dir
 
-  if { [info exists env(HOST)] } {
-     set CHECK_SOURCE_HOSTNAME "[set env(HOST)]"
-  } else {
-     set CHECK_SOURCE_HOSTNAME "unknown"
-  }
   set CHECK_SOURCE_COMPILE_HOSTS "unknown"
   set CHECK_AIMK_COMPILE_OPTIONS ""
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
@@ -1729,12 +1777,7 @@ proc load_defaults {} {
   set CHECK_DNS_DOMAINNAME ""
   set CHECK_REMOTE_ENVIRONMENT ""
   set CHECK_SOURCE_CVS_RELEASE "maintrunc"  
-  set CHECK_CONFIG_DIR "$CHECK_CURRENT_WORKING_DIR/demo_config_dir"
-  if { [info exists env(HOST)] } {
-     set CHECK_MAILX_HOST "[set env(HOST)]"
-  } else {
-     set CHECK_MAILX_HOST "unknown"
-  }
+  set CHECK_CONFIG_DIR ""
   if {[file isfile "$CHECK_DEFAULTS_FILE"] != 1} {
      source_procedures
      return -1
@@ -2312,7 +2355,6 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_GUILTY_CATEGORIES
 
   puts "starting setup ..."
-
   if { [info exists env(GRD_ROOT) ] } {
      puts "unsetting GRD_ROOT"
      unset env(GRD_ROOT)
@@ -2337,14 +2379,19 @@ proc setup { {do_only_hostname_resolving 0} } {
      show_setup_information
   }
 
+  if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+     set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
+     puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
+     set env(USER) $CHECK_USER
+  } 
+
+  if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
+     set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
+     puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
+     set env(GROUP) $CHECK_GROUP
+  }
+
   if { $have_defaults == 0 && $do_only_hostname_resolving == 0 } {
-
-      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-      } 
-
       set CHECK_ARCH [ resolve_arch ]
       puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
       set CHECK_HOST [ gethostname ]
@@ -2355,18 +2402,6 @@ proc setup { {do_only_hostname_resolving 0} } {
          puts $CHECK_OUTPUT "edit defaults: error ; stop"
          set setup_ok -1
       }
-      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-      } 
-
-      if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-        puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        set env(GROUP) $CHECK_GROUP
-      } 
-
 
       foreach host $CHECK_CORE_EXECD {
          puts $CHECK_OUTPUT "\n--> try rlogin $host and run command echo \"hello $host\" ..."
@@ -2423,19 +2458,6 @@ proc setup { {do_only_hostname_resolving 0} } {
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
      set_users_environment
    
-     if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-     }
-     if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-
-        puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        set env(GROUP) $CHECK_GROUP
-      } 
- 
-     
    # resolve now: CHECK_HOST, CHECK_CORE_EXECD, CHECK_CORE_MASTER 
    
      set result [resolve_host $CHECK_CORE_MASTER]
@@ -2465,63 +2487,40 @@ proc setup { {do_only_hostname_resolving 0} } {
   }
 
   if { $do_only_hostname_resolving == 0 } {
-
      set env(COMMD_PORT) $CHECK_COMMD_PORT;
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
      set_users_environment
-   
-     if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-        puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        set env(USER) $CHECK_USER
-     } 
-     if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-        puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        set env(GROUP) $CHECK_GROUP
-     } 
      set CHECK_ARCH [ resolve_arch ]
      set CHECK_HOST [ gethostname ]
-
-   
      if {[file isdirectory "$CHECK_MAIN_RESULTS_DIR"] != 1} {
            file mkdir "$CHECK_MAIN_RESULTS_DIR"
      }
-   
      set CHECK_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/$CHECK_HOST.completed"
      set CHECK_BAD_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/$CHECK_HOST.uncompleted"
      set CHECK_REPORT_FILE "$CHECK_MAIN_RESULTS_DIR/$CHECK_HOST.report"
-   
      set CHECK_CORE_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/core.completed"
      set CHECK_CORE_BAD_RESULT_DIR "$CHECK_MAIN_RESULTS_DIR/core.uncompleted"
-  
      set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
  
-   
      if {[file isdirectory "$CHECK_CORE_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_CORE_RESULT_DIR"
      }
      if {[file isdirectory "$CHECK_CORE_BAD_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_CORE_BAD_RESULT_DIR"
      }
-   
      if {[file isdirectory "$CHECK_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_RESULT_DIR"
      }
-   
      if {[file isdirectory "$CHECK_BAD_RESULT_DIR"] != 1} {
         file mkdir "$CHECK_BAD_RESULT_DIR"
      }
-   
      if {[file isdirectory "$CHECK_JOB_OUTPUT_DIR"] != 1} {
         file mkdir "$CHECK_JOB_OUTPUT_DIR"
      }
-
      if {[file isdirectory "$CHECK_PRODUCT_ROOT"] != 1} {
         file mkdir "$CHECK_PRODUCT_ROOT"
      }
-
-  } 
+  }
   get_version_info
 
   if {[file isdirectory "$CHECK_CONFIG_DIR"] != 1} {
@@ -2586,6 +2585,20 @@ proc setup { {do_only_hostname_resolving 0} } {
      if {$enter != "y" } { exit -1 }
      save_defaults
   }
+
+
+  if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+     set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
+     puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
+     set env(USER) $CHECK_USER
+  } 
+
+  if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
+     set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
+     puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
+     set env(GROUP) $CHECK_GROUP
+  }
+
 
   if {$do_only_hostname_resolving == 1} {
       # resolve now: CHECK_HOST, CHECK_CORE_EXECD, CHECK_CORE_MASTER 
@@ -3434,7 +3447,7 @@ proc run_tests { path runcompleted } {
     global CHECK_DIRECTORIES CHECK_OUTPUT CHECK_HOST check_errstr CHECK_RESULT_DIR
     global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_MAX_ERROR_MAILS CHECK_CORE_RESULT_DIR
     global CHECK_CHECKTREE_ROOT CHECK_ACT_PATH check_use_installed_system
-    global check_reinit_on_tcl_error
+    global check_reinit_on_tcl_error CHECK_CORE_MASTER
 
     set CHECK_DIRECTORIES ""
     get_check_dirs $path 
@@ -3908,7 +3921,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    global CHECK_CORE_RESULT_DIR check_errstr CHECK_OUTPUT check_description check_functions check_errno 
    global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS
    global CHECK_CURRENT_WORKING_DIR check_init_level_procedure CHECK_ACT_LEVEL
-   global set_error_proc_called errorInfo
+   global set_error_proc_called errorInfo CHECK_CORE_MASTER
    
    # do not run allready completed tests
    debug_puts "runcompleted is $runcompleted"
@@ -3946,6 +3959,12 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    set was_unsupported 0
    set complete_errstr ""
    set complete_errno ""
+
+   if { [ string compare $check_name "init_core_system" ] != 0 } {
+      if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
+         add_proc_error "run_test_level" -1 "scheduler is not alive"
+      }
+   }
 
    if { [info exists check_functions] == 1 } {
       foreach elem $check_functions {
@@ -4237,7 +4256,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS check_root_access_needs
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
-  global CHECK_PRODUCT_FEATURE check_category
+  global CHECK_PRODUCT_FEATURE check_category CHECK_GROUP
 
   cd $CHECK_CURRENT_WORKING_DIR
 
@@ -4332,6 +4351,11 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
         debug_puts "level $level return value of test $run_single_test: $back"
         incr no_level_calls 1
      }
+
+     if { [string first "unknown" $CHECK_GROUP] >= 0 } {
+         add_proc_error "run_test" -1 "CHECK_GROUP set to unknown, test was $path in level $level"
+     }
+
      if {$back == -101  } { 
         incr nr_errors 1
         debug_puts $CHECK_OUTPUT "--> TCL ERROR in check $path in level $level <--"
@@ -5001,7 +5025,7 @@ proc print_menu_header {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
-  global CHECK_PRODUCT_FEATURE CHECK_GUILTY_CATEGORIES
+  global CHECK_PRODUCT_FEATURE CHECK_GUILTY_CATEGORIES CHECK_USER CHECK_GROUP
 
   clear_screen
   get_version_info
@@ -5009,7 +5033,8 @@ proc print_menu_header {} {
 
   puts " system version     :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version]) / feature: $CHECK_PRODUCT_FEATURE"
   puts " current dir        :  [ format_output "                       " 54 $CHECK_ACT_PATH ]"
-
+  puts " user group         :  $CHECK_GROUP"
+  puts " user name          :  $CHECK_USER"
   set dirs [ get_dir_names $CHECK_ACT_PATH ]
   set files [get_file_names $CHECK_ACT_PATH ]
   if { [ llength $dirs ] == 0 } {
@@ -5244,6 +5269,11 @@ proc compile_source {} {
    set mail_subject "testsuite error - compile_source"
    set mail_body    "date: [exec date]\n"
 
+   set html_body [ create_html_text "date: [exec date]" 1 ]
+   append html_body [ create_html_text "compiling ..." 1 ]
+   update_compile_html_output $html_body
+   set html_body [ create_html_text "date: [exec date]" 1 ]
+
  
    set was_error 0
    set cvs_change_log ""
@@ -5251,16 +5281,22 @@ proc compile_source {} {
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
        puts $CHECK_OUTPUT "source directory unknown - check defaults file"
        mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
+       append html_body [ create_html_text "source directory unknown - check defaults file" ]
+       update_compile_html_output $html_body
        return -1
    }
    if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
        puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
        mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
+       append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
+       update_compile_html_output $html_body
        return -1
    }
    if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
        puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
        mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
+       append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
+       update_compile_html_output $html_body
        return -1
    }
 
@@ -5268,6 +5304,8 @@ proc compile_source {} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
            puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           append html_body [ create_html_text "could not create directory \"$CHECK_PROTOCOL_DIR\"" ]
+           update_compile_html_output $html_body
            return -1
       } 
    }
@@ -5281,9 +5319,12 @@ proc compile_source {} {
    if { $do_not_update == 0 } {
       puts $CHECK_OUTPUT "------------------------------------------"
       puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
-      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs update -dP" ]
+      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
       if { $prg_exit_state != 0 } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
+         append html_body [ create_html_text "cvs update -dP error:\n$output" ]
+         update_compile_html_output $html_body
+ 
          return -1
       }
       puts $CHECK_OUTPUT "------------------------------------------"
@@ -5309,6 +5350,7 @@ proc compile_source {} {
          puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
          flush $CHECK_OUTPUT
          mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
+         append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
          exit 1 
       }
       if { $testsuite_update == 1 } {
@@ -5320,7 +5362,7 @@ proc compile_source {} {
       foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
-         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk clean" prg_exit_state 60 0 "" 1 0 ]
+         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "return state: $prg_exit_state"
          puts $CHECK_OUTPUT "------------------------------------------"
@@ -5349,7 +5391,7 @@ proc compile_source {} {
       puts $CHECK_OUTPUT "-> adding compile option -csp"
    }
    puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5357,13 +5399,16 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
    if { $prg_exit_state != 0 } {
       mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
+      append html_body [ create_html_text "aimk -only-depend on host $depend_host_name returned:\n$output" ]
+      update_compile_html_output $html_body
+
       return -1
    }
 
 
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5372,6 +5417,9 @@ proc compile_source {} {
 
    if { $prg_exit_state != 0 } {
       mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
+      append html_body [ create_html_text "aimk $my_compile_options depend on host $depend_host_name returned:\n$output" ]
+      update_compile_html_output $html_body
+
       return -1
    }
 
@@ -5389,9 +5437,20 @@ proc compile_source {} {
       set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
    }
 
+   set table_row 2
    foreach elem $host_list {
       # compile the staff
       puts $CHECK_OUTPUT "-> starting compiling on host $elem ..."
+
+      set html_table($table_row,BGCOLOR) "#009900"
+      set html_table($table_row,FNCOLOR) "#FFFFFF"
+      set html_table($table_row,1) $elem
+      set html_table($table_row,2) [resolve_arch $elem]
+
+      set html_table($table_row,3) "ok"    ;# error is set later
+      set html_table($table_row) "$elem"   ;# not neccessary for html table
+
+
       set prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remotecompile.sh"
       set par1 "$CHECK_SOURCE_DIR"
       set par2 "$my_compile_options"
@@ -5403,18 +5462,25 @@ proc compile_source {} {
       lappend remote_spawn_list $open_spawn
       
       set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
+
+      set html_table($table_row,4) [create_html_link "view" $myfilename]
+  
       lappend file_name_list $myfilename
       catch { file delete $myfilename }
       lappend file_list [open $myfilename w]
-     
+      incr table_row 1    
       incr num 
-   }
+   }  
+   incr table_row -1
   
    append mail_body "\n\ncompile output saved in the files:"
    foreach elem $file_name_list {
       append mail_body "\n$elem"
    }
    append mail_body "\n"
+
+   
+
 
    puts $CHECK_OUTPUT "now waiting for end of compile ..." 
    set timeout 300
@@ -5557,6 +5623,16 @@ proc compile_source {} {
    set compile_error 0
    foreach elem $compile_bad {
       set compile_error 1
+
+      for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
+          if { [ string compare $html_table($html_c) $elem ] == 0 } {
+             set html_table($html_c,BGCOLOR) "#CC0000"
+             set html_table($html_c,FNCOLOR) "#FFFFFF"
+             set html_table($html_c,3) "compile error"
+          }
+      }
+
+
       puts $CHECK_OUTPUT "\n=============\ncompile error on host $elem:\n=============\n"
       append mail_body "\n=============\ncompile error on host $elem:\n=============\n"
       foreach file $file_name_list {
@@ -5571,8 +5647,23 @@ proc compile_source {} {
          } 
       }
    }
+
+   set html_table(1,BGCOLOR) "#3366FF"
+   set html_table(1,FNCOLOR) "#66FFFF"
+
+   set html_table(COLS) 4
+   set html_table(1,1) "Host"
+   set html_table(1,2) "Arch"
+   set html_table(1,3) "State"
+   set html_table(1,4) "Compile output"
+
+   set html_table(ROWS) $table_row
+
+   
    if { $compile_error != 0 } {
       mail_report $mail_subject $mail_body
+      append html_body [ create_html_table html_table ]
+      update_compile_html_output $html_body
       return -1
    } 
 
@@ -5658,9 +5749,23 @@ proc compile_source {} {
          puts $CHECK_OUTPUT " arch on host $elem is $host_arch - successfully installed binaries"
       } else {
          puts $CHECK_OUTPUT " error installing binaries for host $elem"
+         set found 0
+         for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
+            if { [ string compare $html_table($html_c) $elem ] == 0 } {
+               set html_table($html_c,BGCOLOR) "#CC0000"
+               set html_table($html_c,FNCOLOR) "#FFFFFF"
+               set html_table($html_c,3) "error installing binaries"
+               set found 1
+               break
+            }
+         }
+         if {$found != 1} {
+            append html_body [ create_html_text "ERROR installing binaries for host $elem !!!" ]
+         }
          set was_error 1
       }
    }
+   append html_body [ create_html_table html_table ]
  
    catch { file mkdir "$CHECK_PRODUCT_ROOT/man" } 
    catch { file mkdir "$CHECK_PRODUCT_ROOT/catman" } 
@@ -5678,6 +5783,7 @@ proc compile_source {} {
 
    if { $was_error != 0 } {
       mail_report $mail_subject "$mail_body - compile error(s)"
+      update_compile_html_output $html_body
       return -1
    }
    
@@ -5694,6 +5800,8 @@ proc compile_source {} {
    }
    set mail_subject "testsuite success - compile"
    mail_report $mail_subject $mail_body
+
+   update_compile_html_output $html_body
 
    # try to resolve hostnames in settings file
    set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
@@ -5907,6 +6015,18 @@ proc restart_debug_daemons { { shutdown 0 } } {
    }
    startup_qmaster 
    wait_for_load_from_all_queues 300 
+}
+
+proc got_command {  } {
+
+  fconfigure stdin -blocking FALSE
+  gets stdin data
+  if { [string length $data] > 0 } {
+     return $data
+  }  
+  fconfigure stdin -blocking TRUE
+
+  return 0
 }
 
 #                                                             max. column:     |
@@ -6148,6 +6268,15 @@ proc menu {} {
   menu
 }
 
+proc update_compile_html_output { content } {
+   global CHECK_HTML_DIRECTORY CHECK_OUTPUT
+   if { $CHECK_HTML_DIRECTORY != "" } { 
+      puts $CHECK_OUTPUT "-> UPDATING HTML FILES IN DIRECTORY: \"$CHECK_HTML_DIRECTORY\""
+      puts $CHECK_OUTPUT "-> UPDATING file index.html"
+      generate_html_file $CHECK_HTML_DIRECTORY/index.html "Nightly Build Compile Results" $content
+   }
+}
+
 proc setup_shared_lib_path {} {
    global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
 
@@ -6176,6 +6305,9 @@ proc setup_shared_lib_path {} {
 }
 
 # Main programm:
+
+
+
 
 set do_kill           0
 set do_install        0
@@ -6255,6 +6387,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "quiet                 no output on setup"
       puts ""
       puts "mfile FILE            write all mails into file FILE (when mail is enabled)"
+      puts ""
+      puts "html_dir              write testsuite html files into that directory"
       puts ""
       puts "close_rlogin          don't let rlogin connections open for next command (per default the testsuite"
       puts "                      not close a rlogin connection. The testsuite will reuse the open connection"
@@ -6347,6 +6481,20 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts $CHECK_OUTPUT " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
       continue
    }
+
+   if { ( [string compare [lindex $argv $i] "--html_dir"] == 0 ) || ([string compare [lindex $argv $i] "html_dir"] == 0) } {
+      incr i
+      set help_var [lindex $argv $i]
+      set CHECK_HTML_DIRECTORY [ string trim $help_var ]
+
+      if { [llength $CHECK_HTML_DIRECTORY] != 1 } {
+         puts $CHECK_OUTPUT "can't use \"html_dir\" option without filename!"
+         exit -1 
+      }
+      puts $CHECK_OUTPUT " ---> using \"$CHECK_HTML_DIRECTORY\" for HTML output <---"
+      continue
+   }
+
   
    
 
@@ -6445,7 +6593,13 @@ set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n---
 
 
 if { $no_action == 1 } {
+  puts $CHECK_OUTPUT "CHECK_GROUP=$CHECK_GROUP"
   puts "No action flag is set -> exit 1"
+  
+  puts "group: $CHECK_GROUP"
+  wait_for_enter
+  setup 1
+  puts "group: $CHECK_GROUP"
   exit 1
 }
 

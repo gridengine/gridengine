@@ -269,7 +269,7 @@ proc auto_reschedule_setup {} {
    }
 
 
-   set timeout 300
+   set timeout 90
    puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {

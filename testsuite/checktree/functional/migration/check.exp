@@ -104,6 +104,10 @@ proc threshold_suspend_queue_clear { queue_list } {
 proc start_checkpoint_job {} {
    global CHECK_ACTUAL_TEST_PATH checkpoint_job_id CHECK_OUTPUT
 
+
+   # delete migratewascalled - file
+   file delete $CHECK_ACTUAL_TEST_PATH/migratewascalled
+
    set jobargs "-pe ckpt_mig_pe 2 -cwd -ckpt ckpt_mig_ckptobj checkpt_job.sh"
    set result [ submit_job $jobargs 1 30 "" "" $CHECK_ACTUAL_TEST_PATH ]
    set checkpoint_job_id $result 
@@ -498,14 +502,16 @@ proc clean_up_checkpoint_job {} {
       return
    }
 
-   set result [ delete_job $checkpoint_job_id ]
+   # wait for job to start running
+   wait_for_end_of_transfer $checkpoint_job_id 60
+   sleep 2
+
+   set result [ delete_job $checkpoint_job_id 1]
    
    if { $result != 0 } {
       set_error -1 "cleanup_checkpoint_job - could not delete job $checkpoint_job_id" 
       return
    }
-
-   wait_for_jobend $checkpoint_job_id "DEMO" 300
 
    set files [ glob -nocomplain $CHECK_ACTUAL_TEST_PATH/DEMO.* ] 
   

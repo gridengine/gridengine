@@ -114,6 +114,43 @@ proc get_dir_names { path } {
 }
 
 
+#****** file_procedures/get_all_subdirectories() *******************************
+#  NAME
+#     get_all_subdirectories() -- returns all subdirectories in path 
+#
+#  SYNOPSIS
+#     get_all_subdirectories { path } 
+#
+#  FUNCTION
+#     This procedure returns a list of all sub directories (recursive) in
+#     given path
+#
+#  INPUTS
+#     path - root directory path
+#
+#  RESULT
+#     list of subdirectories
+#
+#*******************************************************************************
+proc get_all_subdirectories { path } {
+  set directories ""
+  set files [get_file_names $path] 
+  set dirs [get_dir_names $path]
+  
+  foreach elem $dirs {
+     lappend directories "$elem"
+  }
+  
+  foreach element $dirs {
+     set sub_dirs [ get_all_subdirectories "$path/$element"]
+     foreach elem $sub_dirs {
+        lappend directories "$element/$elem"
+     }
+  }
+  return $directories
+}
+
+
 # get all file names of path
 #                                                             max. column:     |
 #****** file_procedures/get_file_names() ******
@@ -157,6 +194,202 @@ proc get_file_names { path {ext "*"} } {
   return $r2;
 }
 
+
+#****** file_procedures/generate_html_file() ***********************************
+#  NAME
+#     generate_html_file() -- generate html file
+#
+#  SYNOPSIS
+#     generate_html_file { file headliner content } 
+#
+#  FUNCTION
+#     This procedure creates the html file with the given headline and
+#     text content.
+#
+#  INPUTS
+#     file      - html file name to create
+#     headliner - headline text
+#     content   - html body
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
+proc generate_html_file { file headliner content } {
+
+   global CHECK_USER
+
+   set catch_return [ catch {
+      set h_file [ open "$file" "w" ]
+   } ]
+   if { $catch_return != 0 } {
+      add_proc_error "generate_html_file" "-1" "could not open file $file for writing"
+      return
+   }
+
+   puts $h_file "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">"
+
+   puts $h_file "<html>"
+   puts $h_file "<head>"
+   puts $h_file "   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"
+   puts $h_file "   <meta name=\"Author\" content=\"Grid Engine Testsuite - user ${CHECK_USER}\">"
+   puts $h_file "   <meta name=\"GENERATOR\" content=\"unknown\">"
+   puts $h_file "</head>"
+   puts $h_file "<body text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#CCCCCC\" vlink=\"#999999\" alink=\"#993300\">"
+   puts $h_file ""
+   puts $h_file "<hr WIDTH=\"100%\">"
+   puts $h_file "<center><font size=+2>$headliner</font></center>"
+   puts $h_file ""
+   puts $h_file "<hr WIDTH=\"100%\">"
+   puts $h_file "<br>&nbsp;"
+   puts $h_file "<br>&nbsp;"
+   puts $h_file ""
+   puts $h_file "$content"
+   puts $h_file ""
+   puts $h_file "</body>"
+   puts $h_file "</html>"
+
+   flush $h_file
+   close $h_file
+
+}
+
+#****** file_procedures/create_html_table() ************************************
+#  NAME
+#     create_html_table() -- returns tcl array in html format
+#
+#  SYNOPSIS
+#     create_html_table { array_name } 
+#
+#  FUNCTION
+#     This procedure tries to transform the given array into an html table
+#
+#  INPUTS
+#     array_name - table content
+#
+#     table(COLS) = nr. of columns
+#     table(ROWS) = nr. of rows
+#     table(ROW number,BGCOLOR) = Background color for row
+#     table(ROW number,FNCOLOR) = Fontcolor of row
+#     table(ROW number,1 up to $COLS) = content
+#
+#
+#  RESULT
+#     html format
+#
+#  EXAMPLE
+#     set test_table(COLS) 2
+#     set test_table(ROWS) 3
+#     set test_table(1,BGCOLOR) "#3366FF"
+#     set test_table(1,FNCOLOR) "#66FFFF"
+#     set test_table(1,1) "Host"
+#     set test_table(1,2) "State"
+#   
+#     set test_table(2,BGCOLOR) "#009900"
+#     set test_table(2,FNCOLOR) "#FFFFFF"
+#     set test_table(2,1) "host1"
+#     set test_table(2,2) "ok"
+#     
+#     set test_table(3,BGCOLOR) "#CC0000"
+#     set test_table(3,FNCOLOR) "#FFFFFF"
+#     set test_table(3,1) "host2"
+#     set test_table(3,2) [create_html_link "linktext" "test.html"]
+#   
+#     set my_content    [ create_html_text "Date: [exec date]" ]
+#     append my_content [ create_html_text "some text ..." ]
+#     append my_content [ create_html_table test_table ]
+#     generate_html_file test.html "My first HTML example!!!" $my_content
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
+proc create_html_table { array_name } {
+   upvar $array_name table
+
+   set back ""
+   append back "\n<center><table BORDER=0 COLS=${table(COLS)} WIDTH=\"80%\" NOSAVE >\n" 
+   for {set row 1} { $row <= $table(ROWS) } { incr row 1 } {
+      append back "<tr ALIGN=CENTER VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
+      for {set col 1} { $col <= $table(COLS) } { incr col 1 } {
+         append back "<td NOSAVE><b><font color=\"$table($row,FNCOLOR)\"><font size=+1>$table($row,$col)</font></font></b></td>\n"
+      }
+      append back "</tr>\n"
+   }
+   append back "</table></center>\n"
+   return $back
+}
+
+#****** file_procedures/create_html_link() *************************************
+#  NAME
+#     create_html_link() -- create html link
+#
+#  SYNOPSIS
+#     create_html_link { linktext linkref } 
+#
+#  FUNCTION
+#     This procedure returns a html format for a "link"
+#
+#  INPUTS
+#     linktext - text to display for link
+#     linkref  - link to destination
+#
+#  RESULT
+#     html format
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
+proc create_html_link { linktext linkref } {
+   set back ""
+
+   append back "<a href=\"$linkref\">$linktext</a>" 
+
+   return $back
+}
+
+#****** file_procedures/create_html_text() *************************************
+#  NAME
+#     create_html_text() -- create html text
+#
+#  SYNOPSIS
+#     create_html_text { content { center 0 } } 
+#
+#  FUNCTION
+#     This procedure returns a html format for "text"
+#
+#  INPUTS
+#     content      - text 
+#     { center 0 } - if not 0: center text
+#
+#  RESULT
+#     html format
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
+proc create_html_text { content { center 0 } } {
+   set back ""
+
+   if { $center != 0 } {
+      append back "<center>\n"
+   }
+   append back "\n<p>$content</p>\n"
+   if { $center != 0 } {
+      append back "</center>\n"
+   }
+   return $back
+}
 
 #                                                             max. column:     |
 #****** file_procedures/del_job_files() ******
@@ -497,6 +730,10 @@ proc get_binary_path { hostname binary } {
    } else {
      add_proc_error "get_binary_path" -1 "config file \"$config\" not found"
      set binary_path $binary
+     if { $CHECK_DEBUG_LEVEL == 2 } {
+        wait_for_enter
+     }
+     return $binary_path
    }
 
    if { [ string compare $binary_path "" ] == 0 } {

@@ -4288,14 +4288,20 @@ proc delete_job { jobid { wait_for_end 0 }} {
    }
    if { $wait_for_end != 0 } {
       set my_timeout [timestamp]
-      incr my_timeout 60
+      set my_second_qdel_timeout $my_timeout
+      incr my_second_qdel_timeout 80
+      incr my_timeout 160
       while { [get_qstat_j_info $jobid ] != 0 } {
           puts $CHECK_OUTPUT "waiting for jobend ..."
-          sleep 1
           if { [timestamp] > $my_timeout } {
              add_proc_error "delete_job" -1 "timeout while waiting for jobend"
              break;
           }
+          if { [timestamp] > $my_second_qdel_timeout } {
+             set my_second_qdel_timeout $my_timeout
+             delete_job $jobid
+          }
+          sleep 2
       }
    }
    return $result
@@ -4369,6 +4375,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
 
   set arch [resolve_arch $host]
 
+  puts $CHECK_OUTPUT "job submit args:\n$args"
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
   if { $cd_dir != "" } {
@@ -4508,6 +4515,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
+     }
+     if { $return_value <= 0 && $do_error_check != 1 } {
+        puts $CHECK_OUTPUT "submit_job returned error: [get_submit_error $return_value]"
      }
      return $return_value
 }
@@ -5601,7 +5611,9 @@ proc release_job { jobid } {
 #     wait_for_jobend -- wait for end of job
 #
 #  SYNOPSIS
-#     wait_for_jobend { jobid jobname seconds } 
+#     wait_for_jobend { jobid jobname seconds 
+#                       { runcheck 1} 
+#                       { wait_for_end 0 } } 
 #
 #  FUNCTION
 #     This procedure is testing first if the given job is really running. After
@@ -5611,6 +5623,13 @@ proc release_job { jobid } {
 #     jobid   - job identification number
 #     jobname - name of job
 #     seconds - timeout in seconds
+#
+#     optional parameters:
+#     { runcheck }     - if 1 (default): check if job is running
+#     { wait_for_end } - if 0 (default): no for real job end waiting (job
+#                                        removed from qmaster internal list)
+#                        if NOT 0:       wait for qmaster to remove job from
+#                                        internal list
 #
 #  RESULT
 #      0 - job stops running
@@ -5635,7 +5654,7 @@ proc release_job { jobid } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
+proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
   
   global CHECK_OUTPUT
 
@@ -5661,6 +5680,20 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
     }
     sleep 1
   }
+
+  if { $wait_for_end != 0 } {
+      set my_timeout [timestamp]
+      incr my_timeout 90
+      while { [get_qstat_j_info $jobid ] != 0 } {
+          puts $CHECK_OUTPUT "waiting for jobend ..."
+          sleep 2
+          if { [timestamp] > $my_timeout } {
+             add_proc_error "wait_for_jobend" -1 "timeout while waiting for jobend"
+             break;
+          }
+      }
+   }
+
   return 0
 }
 
@@ -5816,6 +5849,33 @@ proc startup_qmaster {} {
    return 0
 }
 
+#****** sge_procedures/startup_scheduler() *************************************
+#  NAME
+#     startup_scheduler() -- ??? 
+#
+#  SYNOPSIS
+#     startup_scheduler { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc startup_scheduler {} {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
@@ -6090,6 +6150,35 @@ proc shutdown_master_and_scheduler {hostname qmaster_spool_dir} {
    shutdown_qmaster $hostname $qmaster_spool_dir
 }
 
+#****** sge_procedures/shutdown_scheduler() ************************************
+#  NAME
+#     shutdown_scheduler() -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_scheduler { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc shutdown_scheduler {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_TYPE CHECK_ARCH
@@ -6102,14 +6191,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 
 
 
-   set scheduler_pid -1
-
-   set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
-   set scheduler_pid [ string trim $scheduler_pid ]
-   if { $prg_exit_state != 0 } {
-      set scheduler_pid -1
-   }
-
+   set scheduler_pid [ get_scheduler_pid $hostname $qmaster_spool_dir ]
 
    get_ps_info $scheduler_pid $hostname
    if { ($ps_info($scheduler_pid,error) == 0) } {
@@ -6131,7 +6213,120 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 
    puts $CHECK_OUTPUT "done."
 }  
+#****** sge_procedures/is_scheduler_alive() ************************************
+#  NAME
+#     is_scheduler_alive() -- ??? 
+#
+#  SYNOPSIS
+#     is_scheduler_alive { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc is_scheduler_alive { hostname qmaster_spool_dir } {
 
+   set scheduler_pid [get_scheduler_pid $hostname $qmaster_spool_dir]
+   get_ps_info $scheduler_pid $hostname
+   
+   set alive 0
+   if { ($ps_info($scheduler_pid,error) == 0) } {
+      if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
+         set alive 1
+      }
+   }
+
+   return $alive
+}
+
+#****** sge_procedures/get_scheduler_pid() *************************************
+#  NAME
+#     get_scheduler_pid() -- ??? 
+#
+#  SYNOPSIS
+#     get_scheduler_pid { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc get_scheduler_pid { hostname qmaster_spool_dir } {
+   global CHECK_USER 
+
+   set scheduler_pid -1
+   set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
+   set scheduler_pid [ string trim $scheduler_pid ]
+   if { $prg_exit_state != 0 } {
+      set scheduler_pid -1
+   }
+   return $scheduler_pid
+}
+
+#****** sge_procedures/shutdown_qmaster() **************************************
+#  NAME
+#     shutdown_qmaster() -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_qmaster { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc shutdown_qmaster {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_TYPE CHECK_ARCH

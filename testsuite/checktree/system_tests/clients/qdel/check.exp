@@ -705,7 +705,7 @@ proc qdel_delete_unkown_jobid {} {
    # add a unkown jobid
    set unknown_jobid [ expr ( [ lindex $job_list [ expr ( [ llength $job_list] - 1 ) ] ] + 1 ) ]
    lappend job_list $unknown_jobid 
-   set default_output "job \"$unknown_jobid\" does not exist"
+   set default_output "\[33319\] job \"$unknown_jobid\" does not exist"
 
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
 
@@ -717,7 +717,7 @@ proc qdel_delete_unkown_jobid {} {
       set last_jobid "[lindex $job_list end]"
       set unknown_taskid 5
       set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
-      set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
+      set default_output "\[33320\] job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
 
       qdel_delete_unknown_jobid_proc $job_list "$default_output"
       delete_job $last_jobid
@@ -729,7 +729,7 @@ proc qdel_delete_unkown_jobid {} {
       set last_jobid "[lindex $job_list end]"
       set empty_taskrange "5-10:2"
       set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
-      set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
+      set default_output "\[33321\] job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
 
       qdel_delete_unknown_jobid_proc $job_list "$default_output"
       delete_job $last_jobid

@@ -40,8 +40,6 @@
 #include "job_log.h"
 #include "sge_queue_qmaster.h"
 #include "sge_host_qmaster.h"
-#include "read_write_queue.h"
-#include "read_write_ckpt.h"
 #include "sge_event_master.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"

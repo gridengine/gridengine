@@ -46,6 +46,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "setup.h"
+
 #include "sge_profiling.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
@@ -100,6 +102,10 @@ static bool read_spooled_data(void)
    /* cluster configuration */
    spool_read_list(context, &Master_Config_List, SGE_TYPE_CONFIG);
    DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
+
+   /* cluster configuration */
+   spool_read_list(context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(Master_Sched_Config_List)));
 
    /* complexes */
    spool_read_list(context, &Master_Complex_List, SGE_TYPE_COMPLEX);
@@ -191,6 +197,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
          case SGE_TYPE_EXECHOST:
          case SGE_TYPE_SUBMITHOST:
          case SGE_TYPE_CONFIG:
+         case SGE_TYPE_HGROUP:
             for_each(ep, *master_list) {
                lListElem *new_ep;
 
@@ -229,7 +236,6 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 #ifndef __SGE_NO_USERMAPPING__
          case SGE_TYPE_CUSER:
 #endif
-         case SGE_TYPE_HGROUP:
             for_each(ep, *master_list) {
                lListElem *new_ep;
 
@@ -460,9 +466,6 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
 int main(int argc, char *argv[])
 {
    int cl_err = 0;
-   char *cwd;
-   dstring common_dir = DSTRING_INIT;
-   dstring spool_dir  = DSTRING_INIT;
    lListElem *spooling_context;
    time_t next_prof_output = 0;
 

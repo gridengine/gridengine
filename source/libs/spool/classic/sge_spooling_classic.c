@@ -188,7 +188,8 @@ spool_classic_create_context(const char *args)
                                     spool_classic_default_list_func,
                                     spool_classic_default_read_func,
                                     spool_classic_default_write_func,
-                                    spool_classic_default_delete_func);
+                                    spool_classic_default_delete_func,
+                                    NULL);
    type = spool_context_create_type(context, SGE_TYPE_ALL);
    spool_type_add_rule(type, rule, true);
 
@@ -201,7 +202,8 @@ spool_classic_create_context(const char *args)
                                     spool_classic_default_list_func,
                                     spool_classic_default_read_func,
                                     spool_classic_default_write_func,
-                                    spool_classic_default_delete_func);
+                                    spool_classic_default_delete_func,
+                                    NULL);
    type = spool_context_create_type(context, SGE_TYPE_CONFIG);
    spool_type_add_rule(type, rule, true);
    type = spool_context_create_type(context, SGE_TYPE_SCHEDD_CONF);

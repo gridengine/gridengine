@@ -149,6 +149,9 @@ NAMEEND
 *     SGE_REF(SPR_delete_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        pointer to a function deleting a single object.
 *
+*     SGE_REF(SPR_verify_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        pointer to a function verifying a single object.
+*
 *     SGE_REF(SPR_clientdata, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        clientdata; any pointer, can be used to store and
 *        reference rule specific data, e.g. file or database handles.
@@ -178,6 +181,7 @@ enum {
    SPR_read_func,                    /* function pointer: read an object */
    SPR_write_func,                   /* function pointer: write an object */
    SPR_delete_func,                  /* function pointer: delete an object */
+   SPR_verify_func,                  /* function pointer: verify an object */
    SPR_clientdata                    /* any rule specific data */
 };
 
@@ -190,6 +194,7 @@ LISTDEF(SPR_Type)
    SGE_REF(SPR_read_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_write_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_delete_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+   SGE_REF(SPR_verify_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_clientdata, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND
 
@@ -202,6 +207,7 @@ NAMEDEF(SPRN)
    NAME("SPR_read_func")
    NAME("SPR_write_func")
    NAME("SPR_delete_func")
+   NAME("SPR_verify_func")
    NAME("SPR_clientdata")
 NAMEEND
 

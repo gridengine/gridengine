@@ -101,16 +101,16 @@ enum {
 
 
 ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
-   SGE_STRING(PE_name, CULL_HASH | CULL_UNIQUE)
-   SGE_LIST(PE_queue_list, QR_Type, CULL_DEFAULT) 
-   SGE_ULONG(PE_slots, CULL_DEFAULT)
-   SGE_LIST(PE_user_list, US_Type, CULL_DEFAULT) 
-   SGE_LIST(PE_xuser_list, US_Type, CULL_DEFAULT) 
-   SGE_STRING(PE_start_proc_args, CULL_DEFAULT)
-   SGE_STRING(PE_stop_proc_args, CULL_DEFAULT)
-   SGE_STRING(PE_allocation_rule, CULL_DEFAULT)
-   SGE_BOOL(PE_control_slaves, CULL_DEFAULT)
-   SGE_BOOL(PE_job_is_first_task, CULL_DEFAULT)
+   SGE_STRING(PE_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
+   SGE_LIST(PE_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_ULONG(PE_slots, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(PE_user_list, US_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(PE_xuser_list, US_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_STRING(PE_start_proc_args, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(PE_stop_proc_args, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(PE_allocation_rule, CULL_DEFAULT | CULL_SPOOL)
+   SGE_BOOL(PE_control_slaves, CULL_DEFAULT | CULL_SPOOL)
+   SGE_BOOL(PE_job_is_first_task, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(PE_used_slots, CULL_DEFAULT)
 LISTEND 
 

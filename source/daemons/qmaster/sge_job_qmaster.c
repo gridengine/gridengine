@@ -68,7 +68,6 @@
 #include "subordinate_qmaster.h"
 #include "sge_userset.h"
 #include "sge_userprj_qmaster.h"
-#include "read_write_job.h"
 #include "sge_prog.h"
 #include "cull_parse_util.h"
 #include "schedd_monitor.h"

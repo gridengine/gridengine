@@ -85,38 +85,38 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    /*
     * configuration values used by both SGE and SGEEE
     */
-   SGE_STRING(SC_algorithm, CULL_DEFAULT)
-   SGE_STRING(SC_schedule_interval, CULL_DEFAULT)
-   SGE_ULONG(SC_maxujobs, CULL_DEFAULT)
-   SGE_ULONG(SC_queue_sort_method, CULL_DEFAULT)    /* see at top of file for valid values */
-   SGE_BOOL(SC_user_sort, CULL_DEFAULT)
-   SGE_LIST(SC_job_load_adjustments, CE_Type, CULL_DEFAULT)        /* CE_Type */
-   SGE_STRING(SC_load_adjustment_decay_time, CULL_DEFAULT)
-   SGE_STRING(SC_load_formula, CULL_DEFAULT)
-   SGE_STRING(SC_schedd_job_info, CULL_DEFAULT)
+   SGE_STRING(SC_algorithm, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(SC_schedule_interval, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(SC_maxujobs, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(SC_queue_sort_method, CULL_DEFAULT | CULL_SPOOL)    /* see at top of file for valid values */
+   SGE_BOOL(SC_user_sort, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(SC_job_load_adjustments, CE_Type, CULL_DEFAULT | CULL_SPOOL)        /* CE_Type */
+   SGE_STRING(SC_load_adjustment_decay_time, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(SC_load_formula, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(SC_schedd_job_info, CULL_DEFAULT | CULL_SPOOL)
 
    /* 
     * SGEEE specific configuration values
     */
-   SGE_STRING(SC_sgeee_schedule_interval, CULL_DEFAULT)
-   SGE_ULONG(SC_halftime, CULL_DEFAULT)
-   SGE_LIST(SC_usage_weight_list, UA_Type, CULL_DEFAULT)   /* SGEEE - UA_Type; gives *
+   SGE_STRING(SC_sgeee_schedule_interval, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(SC_halftime, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(SC_usage_weight_list, UA_Type, CULL_DEFAULT | CULL_SPOOL)   /* SGEEE - UA_Type; gives *
                                                * weights for building the * 
                                                * usage usage = cpu * w_cpu
                                                * * + xxx * w_xxx + ... */
-   SGE_DOUBLE(SC_compensation_factor, CULL_DEFAULT)
+   SGE_DOUBLE(SC_compensation_factor, CULL_DEFAULT | CULL_SPOOL)
 
-   SGE_DOUBLE(SC_weight_user, CULL_DEFAULT) /* gives weights between different *
+   SGE_DOUBLE(SC_weight_user, CULL_DEFAULT | CULL_SPOOL) /* gives weights between different *
                                * functional scheduling targets */
-   SGE_DOUBLE(SC_weight_project, CULL_DEFAULT)
-   SGE_DOUBLE(SC_weight_jobclass, CULL_DEFAULT)
-   SGE_DOUBLE(SC_weight_department, CULL_DEFAULT)
-   SGE_DOUBLE(SC_weight_job, CULL_DEFAULT)
+   SGE_DOUBLE(SC_weight_project, CULL_DEFAULT | CULL_SPOOL)
+   SGE_DOUBLE(SC_weight_jobclass, CULL_DEFAULT | CULL_SPOOL)
+   SGE_DOUBLE(SC_weight_department, CULL_DEFAULT | CULL_SPOOL)
+   SGE_DOUBLE(SC_weight_job, CULL_DEFAULT | CULL_SPOOL)
 
-   SGE_ULONG(SC_weight_tickets_functional, CULL_DEFAULT)    /* weight between different * 
+   SGE_ULONG(SC_weight_tickets_functional, CULL_DEFAULT | CULL_SPOOL)    /* weight between different * 
                                                * scheduling targets */
-   SGE_ULONG(SC_weight_tickets_share, CULL_DEFAULT)
-   SGE_ULONG(SC_weight_tickets_deadline, CULL_DEFAULT)
+   SGE_ULONG(SC_weight_tickets_share, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(SC_weight_tickets_deadline, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_weight_tickets_deadline_active, CULL_DEFAULT)   /* prepared for setting by a 
                                                    * schedd order */
    SGE_ULONG(SC_weight_tickets_override, CULL_DEFAULT)          /* not yet implemented */

@@ -52,7 +52,6 @@
 #include "sge_host.h"
 #include "sge_give_jobs.h"
 #include "sge_pe_qmaster.h"
-#include "read_write_job.h"
 #include "sge_time.h"
 #include "time_event.h"
 #include "reschedule.h"

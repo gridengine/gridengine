@@ -104,6 +104,11 @@
 *                                         const char *key, 
 *                                         const sge_object_type event_type);
 *
+*     typedef bool (*spooling_verify_func)(const lListElem *type,
+*                                          const lListElem *rule, 
+*                                          lListElem *object, 
+*                                          const sge_object_type event_type);
+*
 *  FUNCTION
 *     These functions have to be provided by a target implementation for the 
 *     spooling framework.
@@ -151,6 +156,11 @@ typedef lListElem *(*spooling_read_func)(const lListElem *type, const lListElem 
 typedef bool (*spooling_delete_func)(const lListElem *type, const lListElem *rule, 
                                     const char *key, const sge_object_type event_type);
 
+typedef bool (*spooling_verify_func)(const lListElem *type,
+                                     const lListElem *rule, 
+                                     lListElem *object, 
+                                     const sge_object_type event_type);
+
 /* the default spooling context */
 extern lListElem *Default_Spool_Context;
 
@@ -169,7 +179,8 @@ lListElem *spool_context_create_rule(lListElem *context,
                                      spooling_list_func list_func, 
                                      spooling_read_func read_func, 
                                      spooling_write_func write_func, 
-                                     spooling_delete_func delete_func);
+                                     spooling_delete_func delete_func,
+                                     spooling_verify_func verify_func);
 
 lListElem *spool_context_search_type(const lListElem *context, const sge_object_type event_type);
 lListElem *spool_context_create_type(lListElem *context, const sge_object_type event_type);

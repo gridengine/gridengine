@@ -242,30 +242,81 @@ object_get_subtype(int nm)
    const lDescr *ret = NULL;
 
    switch(nm) {
-      case CK_queue_list:
-         ret = QR_Type;
+#ifndef __SGE_NO_USERMAPPING__ 
+      case CU_ruser_list:
+         ret = ASTR_Type;
          break;
+#endif
+      case CX_entries:
+      case EH_consumable_config_list:
+      case QU_consumable_config_list:
       case QU_load_thresholds:
       case QU_suspend_thresholds:
+      case SC_job_load_adjustments:
          ret = CE_Type;
          break;
-      case QU_acl:
-      case QU_xacl:
-      case QU_owner_list:
-         ret = US_Type;
+      case CONF_entries:
+         ret = CF_Type;
+         break;
+      case EH_complex_list:
+      case QU_complex_list:
+         ret = CX_Type;
+         break;
+      case EH_load_list:
+         ret = HL_Type;
+         break;
+      case HGRP_host_list:
+         ret = HR_Type;
+         break;
+      case EH_scaling_list:
+      case EH_usage_scaling_list:
+         ret = HS_Type;
+         break;
+      case CK_queue_list:
+      case PE_queue_list:
+         ret = QR_Type;
+         break;
+      case EH_reschedule_unknown_list:
+         ret = RU_Type;
          break;
       case QU_subordinate_list:
          ret = SO_Type;
          break;
-      case QU_complex_list:
-         ret = CX_Type;
+      case STN_children:
+         ret = STN_Type;
          break;
-      case QU_consumable_config_list:
-         ret = CE_Type;
+      case SC_usage_weight_list:
+      case UP_usage:
+      case UP_long_term_usage:
+      case UPP_usage:
+      case UPP_long_term_usage:
+         ret = UA_Type;
          break;
+      case US_entries:
+         ret = UE_Type;
+         break;
+      case EH_acl:
+      case EH_xacl:
+      case EH_prj:
+      case EH_xprj:
       case QU_projects:
       case QU_xprojects:
          ret = UP_Type;
+         break;
+      case UP_project:
+         ret = UPP_Type;
+         break;
+      case UP_debited_job_usage:
+         ret = UPU_Type;
+         break;
+      case PE_user_list:
+      case PE_xuser_list:
+      case QU_acl:
+      case QU_xacl:
+      case QU_owner_list:
+      case UP_acl:
+      case UP_xacl:
+         ret = US_Type;
          break;
    }
 
@@ -308,6 +359,8 @@ object_get_primary_key(const lDescr *descr)
       ret = CAL_name;
    } else if (descr == CK_Type) {
       ret = CK_name;
+   } else if (descr == CONF_Type) {
+      ret = CONF_hname;
    } else if (descr == EH_Type) {
       ret = EH_name;
    } else if (descr == JB_Type) {
@@ -316,6 +369,8 @@ object_get_primary_key(const lDescr *descr)
       ret = JAT_task_number;
    } else if (descr == PE_Type) {
       ret = PE_name;
+   } else if (descr == MO_Type) {
+      ret = MO_name;
    } else if (descr == PET_Type) {
       ret = PET_id;
    } else if (descr == QU_Type) {
@@ -324,8 +379,12 @@ object_get_primary_key(const lDescr *descr)
       ret = QR_name;
    } else if (descr == RN_Type) {
       ret = RN_min;
+   } else if (descr == SC_Type) {
+      ret = SC_algorithm;
    } else if (descr == SH_Type) {
       ret = SH_name;
+   } else if (descr == UP_Type) {
+      ret = UP_name;
    } else if (descr == VA_Type) {
       ret = VA_variable;
    }
@@ -461,6 +520,32 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
     *          QU_batch, QU_parallel, ...
     */
    switch (nm) {
+      case CE_valtype:
+         result = map_type2str(lGetUlong(object, nm));
+         DEXIT;
+         return result;
+      case CE_relop:
+         result = map_op2str(lGetUlong(object, nm));
+         DEXIT;
+         return result;
+      case CE_request:
+         if (lGetBool(object, CE_forced)) {
+            result = "FORCED";
+         } else if (lGetBool(object, CE_request)) {
+            result = "YES";
+         } else {
+            result = "NO";
+         }
+         DEXIT;
+         return result;
+      case CE_consumable:
+         if (lGetBool(object, nm)) {
+            result = "YES";
+         } else {
+            result = "NO";
+         }
+         DEXIT;
+         return result;
       case QU_qtype:
          result = queue_get_type_string(object, answer_list, buffer);
          DEXIT;
@@ -586,6 +671,81 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
 
    /* handle special cases */
    switch (nm) {
+      case CE_valtype:
+         {
+            /* JG: TODO: we should better have a function map_str2type 
+             * and isn't there some sort of framework for mapping 
+             * strings to ints and vice versa? See QU_qtype implementation.
+             */
+            u_long32 type = 0;
+            int i;
+
+            for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
+               if (!strcasecmp(value, map_type2str(i)))  
+                  type = i;
+            }
+
+            if (type == 0) {
+               /* error output necessary? Should be created by parsing function */
+               ret = false;
+            } else {
+               lSetUlong(object, nm, type);
+            }
+         }
+         DEXIT;
+         return ret;
+      case CE_relop:
+         {
+            u_long32 op = 0;
+            int i;
+
+            for (i=TYPE_FIRST; !op && i<=TYPE_DOUBLE; i++) {
+               if (!strcasecmp(value, map_op2str(i)))  
+                  op = i;
+            }
+
+            if (op == 0) {
+               /* error output necessary? Should be created by parsing function */
+               ret = false;
+            } else {
+               lSetUlong(object, nm, op);
+            }
+         }
+         DEXIT;
+         return ret;
+      case CE_request:
+         {
+            bool req = false;
+            bool forced = false;
+
+            if (strcasecmp(value, "y") == 0 || strcasecmp(value, "yes") == 0) {
+               req = true;
+            } else if (strcasecmp(value, "n") == 0 || strcasecmp(value, "no") == 0) {
+               ;
+            } else if (strcasecmp(value, "f") == 0 || strcasecmp(value, "forced") == 0) {
+               forced = true;
+            } else {
+               ret = false;
+            }
+            lSetBool(object, CE_forced, forced);
+            lSetBool(object, CE_request, req);
+         }
+         DEXIT;
+         return ret;
+      case CE_consumable:
+         {
+            bool cond = false;
+            if (strcasecmp(value, "y") == 0 || strcasecmp(value, "yes") == 0) {
+               cond = true;
+            } else if (strcasecmp(value, "n") == 0 || strcasecmp(value, "no") == 0) {
+               ;
+            } else {
+               ret = false;
+            }
+            lSetBool(object, nm, cond);
+         }
+         DEXIT;
+         return ret;
       case QU_qtype:
          ret = queue_set_type_string(object, answer_list, value);
          DEXIT;

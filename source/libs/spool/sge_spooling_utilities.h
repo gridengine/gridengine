@@ -106,16 +106,24 @@ typedef struct spool_instr {
    bool copy_field_names;
    bool strip_field_prefix;
    const struct spool_instr *sub_instr;
+   const void *clientdata;
 } spool_instr;
 
 extern const spool_instr spool_config_instr;
 extern const spool_instr spool_config_subinstr;
+
+extern const spool_instr spool_complex_instr;
+extern const spool_instr spool_complex_subinstr;
+
+extern const spool_instr spool_user_instr;
+extern const spool_instr spool_userprj_subinstr;
 
 typedef struct spooling_field {
    int nm;
    int width;
    const char *name;
    struct spooling_field *sub_fields;
+   const void *clientdata;
 } spooling_field;
 
 spooling_field *

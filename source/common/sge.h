@@ -161,6 +161,8 @@
 #define CKPTOBJ_DIR               "ckpt"
 #define CAL_DIR                   "calendars"
 #define ZOMBIE_DIR                "zombies"
+#define MAN_DIR                   "managers"
+#define OP_DIR                    "operators"
 
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"

@@ -152,7 +152,10 @@ bool
 spool_flatfile_default_delete_func(const lListElem *type, const lListElem *rule,
                                    const char *key, 
                                    const sge_object_type event_type);
-
+bool
+spool_flatfile_default_verify_func(const lListElem *type, const lListElem *rule,
+                                   lListElem *object,
+                                   const sge_object_type event_type);
 /*
  * base functions
  */
@@ -163,19 +166,22 @@ typedef struct spool_flatfile_instr {
    bool show_field_header;
    bool align_names;
    bool align_data;
-   const char *name_value_delimiter;
-   const char *field_delimiter;
-   const char *record_delimiter;
-   const char *record_start;
-   const char *record_end;
+   const char name_value_delimiter;
+   const char field_delimiter;
+   const char record_delimiter;
+   const char record_start;
+   const char record_end;
    const struct spool_flatfile_instr *sub_instr;
 } spool_flatfile_instr;
 
 extern const spool_flatfile_instr spool_flatfile_instr_messages;
 extern const spool_flatfile_instr spool_flatfile_instr_accounting;
+extern const spool_flatfile_instr spool_flatfile_instr_conf;
 extern const spool_flatfile_instr spool_flatfile_instr_config;
+extern const spool_flatfile_instr spool_flatfile_instr_config_sublist;
 extern const spool_flatfile_instr spool_flatfile_instr_config_list;
 extern const spool_flatfile_instr spool_flatfile_instr_complex;
+extern const spool_flatfile_instr spool_flatfile_instr_user;
 
 const char *
 spool_flatfile_write_object(lList **answer_list, const lListElem *object,

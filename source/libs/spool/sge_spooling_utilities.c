@@ -45,22 +45,47 @@
 
 #include "sge_spooling_utilities.h"
 
-const spool_instr spool_config_subinstr = 
-{
-   CULL_NAMELIST | CULL_TUPLELIST,
-   true,
-   true,
+const spool_instr spool_config_subinstr = {
+   CULL_SUBLIST,
+   false,
+   false,
    NULL
 };
 
-const spool_instr spool_config_instr = 
-{
+const spool_instr spool_config_instr = {
    CULL_SPOOL,
    true,
    true,
    &spool_config_subinstr
 };
 
+const spool_instr spool_complex_subinstr = {
+   CULL_SPOOL,
+   false,
+   false,
+   NULL
+};
+
+const spool_instr spool_complex_instr = {
+   CULL_SPOOL,
+   false,
+   false,
+   &spool_complex_subinstr
+};
+
+const spool_instr spool_userprj_subinstr = {
+   CULL_SUBLIST,
+   false,
+   false,
+   &spool_userprj_subinstr
+};
+
+const spool_instr spool_user_instr = {
+   CULL_SPOOL | CULL_SPOOL_USER,
+   true,
+   true,
+   &spool_userprj_subinstr
+};
 
 static spooling_field *
 _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr, 
@@ -160,6 +185,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       fields[i].width      = 0;
       fields[i].name       = NULL;
       fields[i].sub_fields = NULL;
+      fields[i].clientdata = NULL;
    }
 
    /* do we have to strip field prefixes, e.g. "QU_" from field names? */
@@ -175,10 +201,9 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       if ((descr[i].mt & instr->selection) != 0) {
          spooling_field *sub_fields = NULL;
 
+         DPRINTF(("field "SFQ" will be spooled\n", lNm2Str(descr[i].nm)));
+
          fields[j].nm         = descr[i].nm;
-         fields[j].width      = 0;
-         fields[j].name       = NULL;
-         fields[j].sub_fields = NULL;
 
          if (instr->copy_field_names) {
             const char *name;
@@ -193,7 +218,6 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                return NULL;
             }
             fields[j].name = strdup(name + strip);
-            DPRINTF(("field "SFQ" will be spooled\n", fields[j].name));
          }
          
          if (mt_get_type(descr[i].mt) == lListT) {
@@ -221,7 +245,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
             }
 
             sub_fields = _spool_get_fields_to_spool(answer_list, sub_descr, 
-                                                       instr->sub_instr);
+                                                    instr->sub_instr);
          }
 
          fields[j++].sub_fields = sub_fields;

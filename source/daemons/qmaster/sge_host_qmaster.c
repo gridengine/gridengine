@@ -42,7 +42,6 @@
 #include "commlib.h"
 #include "sge_host.h"
 #include "sge_manop.h"
-#include "read_write_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_gdi_request.h"
 #include "sge_host_qmaster.h"
@@ -51,10 +50,6 @@
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 #include "sge_static_load.h"
-#include "complex_history.h"
-#include "opt_history.h"
-#include "read_write_job.h"
-#include "read_write_queue.h"
 #include "sge_job_schedd.h"
 #include "sge_c_gdi.h"
 #include "mail.h"
@@ -571,8 +566,6 @@ gdi_object_t *object
 
          sge_change_queue_version_exechost(host);
          sge_add_event(NULL, 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
-         if (!is_nohist())
-            write_host_history(ep);
 
       }
       break;
@@ -672,13 +665,10 @@ lList *lp
          }
          /*
          ** if static load values (eg arch) have changed
-         ** then spool and write history
+         ** then spool
          */
          if (statics_changed && host_ep) {
             write_host(1, 2, host_ep, EH_name, NULL);
-            if (!is_nohist()) {
-               write_host_history(host_ep);
-            }
          }
 
          /* if non static load values arrived, this indicates that 
@@ -726,8 +716,7 @@ lList *lp
                lGetHost(ep, LR_host), name, value));
 
          if (is_static) {
-            if (!is_nohist() )
-               statics_changed = 1;
+            statics_changed = 1;
          } else {
             if (!global)
                added_non_static = 1; /* triggers clearing of unknown state */
@@ -737,7 +726,7 @@ lList *lp
          const char *oldval;
 
          oldval = lGetString(lep, HL_value);
-         if (!is_nohist() && sge_is_static_load_value(name) && 
+         if (sge_is_static_load_value(name) && 
              (oldval != value) && (!oldval || strcmp(value, oldval))) {
             statics_changed = 1;
 
@@ -758,14 +747,11 @@ lList *lp
 
    /*
    ** if static load values (eg arch) have changed
-   ** then spool and write history
+   ** then spool
    */
    if (statics_changed && host_ep) {
       spool_write_object(spool_get_default_context(), host_ep, 
                          lGetHost(host_ep, EH_name), SGE_TYPE_EXECHOST);
-      if (!is_nohist()) {
-         write_host_history(host_ep);
-      }
    }
 
    /* if non static load values arrived, this indicates that 

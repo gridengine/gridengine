@@ -47,7 +47,6 @@
 #include "sgermon.h"
 #include "sge_conf.h"
 #include "sge_usageL.h"
-#include "read_write_userprj.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_sharetree_qmaster.h"

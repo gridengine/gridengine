@@ -72,8 +72,6 @@ QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               startprog.c shutdown.c \
               admin_mail.c \
               category.c \
-              read_write_complex.c \
-              complex_history.c \
               config_file.c \
               execution_states.c \
               lock.c \
@@ -81,23 +79,7 @@ QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               opt_history.c \
               qmaster_heartbeat.c \
               qmaster_running.c \
-              read_list.c \
               sge_dirent.c \
-              read_object.c \
-              read_write_cal.c  \
-              read_write_ckpt.c  \
-              read_write_host.c \
-              read_write_job.c \
-              read_write_manop.c \
-              read_write_pe.c  \
-              read_write_ume.c  \
-              read_write_host_group.c \
-              read_write_queue.c \
-              read_write_userprj.c \
-              read_write_userset.c \
-              rw_configuration.c \
-              sched_conf.c \
-              read_write_sharetree.c \
               sig_handlers.c \
               unparse_job_cull.c
 

@@ -27,14 +27,13 @@ int spool_scanner_initialize(FILE *input)
 {
    spool_line = 1;
    spool_return_whitespace = false;
-   spool_in = input;
+   spool_restart(input);
 
    return spool_lex();
 }
 
 void spool_scanner_shutdown(void)
 {
-   spool__delete_buffer(YY_CURRENT_BUFFER);
 }
 
 %}
@@ -42,7 +41,7 @@ void spool_scanner_shutdown(void)
 DIGIT    [0-9]
 ID       [a-z/\$][a-z0-9_/\.\-\$]*
 COLON    :
-DELIMITER [,:|=]
+DELIMITER [,;:|=\{\}]
 COMPOP   [=<>!]
 NL       \r?\n
 
@@ -58,7 +57,7 @@ NL       \r?\n
 
 {COMPOP}{COMPOP}  return SPFT_COMPOP;
 
-{DELIMITER}+      return SPFT_DELIMITER;
+{DELIMITER}      return SPFT_DELIMITER;
 
 {ID}        return SPFT_WORD;
 

@@ -229,7 +229,7 @@ usage:
    echo "-shared-libs      -> create libraries as shared libs"
    echo "-spool-classic    -> use classic flatfile spooling (default)"
 #   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
-#   echo "-spool-flatfile   -> use new flatfile spooling"
+   echo "-spool-flatfile   -> use new flatfile spooling"
    echo "-static           -> link static"
    echo "-static-libs      -> create libraries as static libs (default)"
    echo "-umap             -> compile with usermapping and hostgroup feature"
@@ -791,12 +791,12 @@ while ($#argv >= 1 && $?found)
 #      set SPOOLING_LIBS   = "-lspoold -lspool"
 #      set SPOOLING_DEPS   = "spooldlib spoollib"
 #      breaksw
-#   case "-spool-flatfile":
-#      set SPOOLING_METHOD = "classic"
-#      set SPOOLING_LIBS   = "-lspoold -lspoolf -lspool"
-#      set SPOOLING_DEPS   = "spooldlib spoolflib spoollib"
-#      breaksw
-#   case "-static":
+   case "-spool-flatfile":
+      set SPOOLING_METHOD = "flatfile"
+      set SPOOLING_LIBS   = "-lspoold -lspoolf -lspool"
+      set SPOOLING_DEPS   = "spooldlib spoolflib spoollib"
+      breaksw
+   case "-static":
       set STATIC = 1
       breaksw
    case "-static-libs":
@@ -1591,8 +1591,10 @@ case SOLARIS86:
    endif
 
    if ( $BUILDARCH == SOLARIS86 ) then
-#     set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
-      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
+      if ( $CC == cc ) then
+#        set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
+         set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
+      endif
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 

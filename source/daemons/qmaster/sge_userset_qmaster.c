@@ -39,8 +39,6 @@
 #include "sge_queue_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_userset.h"
-#include "read_write_userset.h"
-#include "read_write_queue.h"
 #include "sge_userset_qmaster.h"
 #include "sge_feature.h"
 #include "sge_conf.h"
@@ -265,7 +263,6 @@ char *rhost
    const char *userset_name;
    int pos, ret;
    lListElem *found;
-   char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_mod_userset");
 
@@ -335,19 +332,12 @@ char *rhost
    lAppendElem(*userset_list, lCopyElem(ep));
 
    /* update on file */
-   sprintf(fname, "%s/.%s", USERSET_DIR, userset_name);
-   sprintf(real_fname, "%s/%s", USERSET_DIR, userset_name);
-   if (write_userset(alpp, ep, fname, NULL, 1)) {
+   if (!spool_write_object(spool_get_default_context(), ep, userset_name, 
+                           SGE_TYPE_USERSET)) {
       DEXIT;
       return STATUS_EDISK;
-   } else {
-      if (rename(fname, real_fname) == -1) {
-         DEXIT;
-         return 1;
-      } else {
-         strcpy(fname, real_fname);
-      }    
    }
+
    sge_add_event(NULL, 0, sgeE_USERSET_MOD, 0, 0, userset_name, ep);
 
    /* change queue versions */

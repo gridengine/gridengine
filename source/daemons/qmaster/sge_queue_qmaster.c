@@ -52,12 +52,8 @@
 #include "sge_calendar_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
-#include "read_write_host.h"
-#include "read_write_queue.h"
 #include "sge_parse_num_par.h"
-#include "complex_history.h"
 #include "sge_signal.h"
-#include "opt_history.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_time.h"
@@ -65,7 +61,6 @@
 #include "sge_qmod_qmaster.h"
 #include "config_file.h"
 #include "sge_userprj_qmaster.h"
-#include "read_write_job.h"
 #include "sge_job_qmaster.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
@@ -81,6 +76,7 @@
 #include "sge_utility.h"
 #include "sge_todo.h"
 #include "sge_utility_qmaster.h"
+#include "sge_static_load.h"
 
 #include "sge_spooling.h"
 
@@ -1207,19 +1203,6 @@ int write_history
    lSetUlong(qep, QU_version, add ? 0 : lGetUlong(qep, QU_version) + 1);
 
    sge_add_queue_event(add?sgeE_QUEUE_ADD:sgeE_QUEUE_MOD, qep);
-
-   /*
-   ** an increase in the queue version triggers the
-   ** generation of a new history file
-   ** any event that is worth increasing the version count
-   ** should also be worth writing a history version
-   */
-   if (write_history && !is_nohist() && sge_write_queue_history(qep)) {
-      WARNING((SGE_EVENT, MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S,
-               lGetString(qep, QU_qname)));
-      DEXIT;
-      return -1;
-   }
 
    DEXIT;
    return 0;

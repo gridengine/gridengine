@@ -66,13 +66,13 @@ enum {
 };
 
 ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
-   SGE_STRING(US_name, CULL_HASH | CULL_UNIQUE)       /* configured name spooled */
-   SGE_ULONG(US_type, CULL_DEFAULT)         /* configured type spooled */
-   SGE_ULONG(US_fshare, CULL_DEFAULT)       /* configured share spooled */
-   SGE_ULONG(US_oticket, CULL_DEFAULT)      /* configured override tickets spooled */
+   SGE_STRING(US_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)       /* configured name spooled */
+   SGE_ULONG(US_type, CULL_DEFAULT | CULL_SPOOL)         /* configured type spooled */
+   SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
+   SGE_ULONG(US_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets spooled */
    SGE_ULONG(US_job_cnt, CULL_DEFAULT)     /* local to schedd */
    SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT) /* local to schedd */
-   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT)     /* UE_Type */
+   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL)     /* UE_Type */
 LISTEND 
 
 NAMEDEF(USEN)
@@ -103,7 +103,7 @@ enum {
 };
 
 SLISTDEF(UE_Type, UserEntry)
-   SGE_STRING(UE_name, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(UE_name, CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
 LISTEND 
 
 NAMEDEF(UEN)

@@ -80,7 +80,7 @@ include $(SPOOLFLIB_DIR)/spoolf_dependencies
 sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_spooling_flatfile.c
 
-$(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c: #$(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.h
+flatfile_scanner: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.h
 		$(LEX) $(LEXFLAGS) -i8 -Pspool_ -o$(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l
 
 sge_spooling_flatfile_scanner.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c $(SPOOLFLIB_DIR)/sge_spooling_flatfile.h

@@ -52,7 +52,7 @@
 #ifdef SPOOLING_classic
 #include "sge_spooling_classic.h"
 #endif
-#ifdef SPOOLING_classic
+#ifdef SPOOLING_flatfile
 #include "sge_spooling_flatfile.h"
 #endif
 

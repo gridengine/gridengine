@@ -52,7 +52,6 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
-#include "read_write_sharetree.h"
 
 #include "sge_spooling.h"
 

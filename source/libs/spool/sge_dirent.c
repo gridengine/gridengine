@@ -52,7 +52,7 @@
  **** The lList has to be freed from the caller.
  **** On any error, NULL is returned.
  ****/
-lList *sge_get_dirents(char *path) {
+lList *sge_get_dirents(const char *path) {
    lList *entries = NULL;
    DIR *cwd;
    SGE_STRUCT_DIRENT *dent;

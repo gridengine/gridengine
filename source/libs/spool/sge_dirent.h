@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-lList *sge_get_dirents(char *path);
+lList *sge_get_dirents(const char *path);
 
 u_long32 sge_count_dirents(char *path);
 

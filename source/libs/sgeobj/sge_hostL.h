@@ -134,19 +134,19 @@ enum {
 };
 
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
-   SGE_HOST(EH_name, CULL_HASH | CULL_UNIQUE)                        /* CR - hostname change */
-   SGE_LIST(EH_scaling_list, HS_Type, CULL_DEFAULT)
-   SGE_LIST(EH_complex_list, CX_Type, CULL_DEFAULT)
-   SGE_LIST(EH_consumable_config_list, CE_Type, CULL_DEFAULT)
-   SGE_LIST(EH_usage_scaling_list, HS_Type, CULL_DEFAULT)
-   SGE_LIST(EH_load_list, HL_Type, CULL_DEFAULT)
+   SGE_HOST(EH_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)                        /* CR - hostname change */
+   SGE_LIST(EH_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_complex_list, CX_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_consumable_config_list, CE_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_usage_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_load_list, HL_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(EH_lt_heard_from, CULL_DEFAULT)
    SGE_ULONG(EH_startup, CULL_DEFAULT)
-   SGE_ULONG(EH_processors, CULL_DEFAULT)
-   SGE_LIST(EH_acl, US_Type, CULL_DEFAULT)
-   SGE_LIST(EH_xacl, US_Type, CULL_DEFAULT)
-   SGE_LIST(EH_prj, UP_Type, CULL_DEFAULT)
-   SGE_LIST(EH_xprj, UP_Type, CULL_DEFAULT)
+   SGE_ULONG(EH_processors, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_acl, US_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_prj, UP_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_xprj, UP_Type, CULL_DEFAULT | CULL_SPOOL)
 
    /* scheduling stuff */
    SGE_DOUBLE(EH_sort_value, CULL_DEFAULT)
@@ -158,7 +158,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_STRING(EH_real_name, CULL_DEFAULT)
 
    SGE_DOUBLE(EH_sge_tickets, CULL_DEFAULT)
-   SGE_DOUBLE(EH_resource_capability_factor, CULL_DEFAULT)
+   SGE_DOUBLE(EH_resource_capability_factor, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(EH_sge_load, CULL_DEFAULT)
    SGE_DOUBLE(EH_sge_ticket_pct, CULL_DEFAULT)
    SGE_DOUBLE(EH_resource_capability_factor_pct, CULL_DEFAULT)
@@ -176,7 +176,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_ULONG(EH_cache_version, CULL_DEFAULT)
    SGE_ULONG(EH_master_host, CULL_DEFAULT)
    SGE_ULONG(EH_reschedule_unknown, CULL_DEFAULT)
-   SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT)
+   SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(EH_report_seqno, CULL_DEFAULT)
 LISTEND 
 
@@ -277,7 +277,7 @@ enum {
 };
 
 LISTDEF(SH_Type)
-   SGE_HOST(SH_name, CULL_HASH | CULL_UNIQUE)                 /* CR - hostname change */
+   SGE_HOST(SH_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)                 /* CR - hostname change */
 LISTEND 
 
 NAMEDEF(SHN)
@@ -328,8 +328,8 @@ enum {
 };
 
 SLISTDEF(HL_Type, HostLoad)
-   SGE_STRING(HL_name, CULL_HASH | CULL_UNIQUE)
-   SGE_STRING(HL_value, CULL_DEFAULT)
+   SGE_STRING(HL_name, CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
+   SGE_STRING(HL_value, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(HL_last_update, CULL_DEFAULT)
 LISTEND 
 
@@ -350,8 +350,8 @@ enum {
 };
 
 SLISTDEF(HS_Type, LoadScaling)
-   SGE_STRING(HS_name, CULL_DEFAULT)
-   SGE_DOUBLE(HS_value, CULL_DEFAULT)
+   SGE_STRING(HS_name, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_DOUBLE(HS_value, CULL_DEFAULT | CULL_SUBLIST)
 LISTEND 
 
 NAMEDEF(HSN)

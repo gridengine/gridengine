@@ -405,3 +405,57 @@ centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
    return ret;
 }
 
+/* ---------------------------------------- 
+
+   used to map between operator 
+   and string form of it 
+
+*/
+const char *map_op2str(
+u_long32 op 
+) {
+   static char *opv[] = {
+      "??",
+      "==", /* CMPLXEQ_OP */
+      ">=", /* CMPLXGE_OP */
+      ">",  /* CMPLXGT_OP */
+      "<",  /* CMPLXLT_OP */
+      "<=", /* CMPLXLE_OP */
+      "!="  /* CMPLXNE_OP */
+   };
+
+   if (op<CMPLXEQ_OP || op>CMPLXNE_OP)
+      op = 0;
+   return opv[op];
+}
+
+/* ---------------------------------------- 
+
+   used to map from type (numeric) to type (string)
+
+*/
+const char *map_type2str(
+u_long32 type 
+) {
+   static char *typev[] = {
+      "??????",
+      "INT",     /* TYPE_INT */
+      "STRING",  /* TYPE_STR */
+      "TIME",    /* TYPE_TIM */
+      "MEMORY",  /* TYPE_MEM */
+      "BOOL",    /* TYPE_BOO */
+      "CSTRING", /* TYPE_CSTR */
+      "HOST",    /* TYPE_HOST */
+      "DOUBLE",  /* TYPE_DOUBLE */
+
+      "TYPE_ACC",/* TYPE_ACC */
+      "TYPE_LOG",/* TYPE_LOG */
+      "TYPE_LOF" /* TYPE_LOF */
+   };
+
+   if (type<TYPE_FIRST || type>TYPE_LAST)
+      type = 0;
+   return typev[type];
+}
+
+

@@ -50,4 +50,9 @@ int complex_list_verify(lList *complex_list, lList **alpp,
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string);
 
+/* mapping functions - useful for in-/output */
+const char *map_op2str(u_long32 op);
+
+const char *map_type2str(u_long32 type);
+
 #endif /* __SGE_COMPLEX_H */

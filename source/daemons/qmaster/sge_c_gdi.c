@@ -57,7 +57,6 @@
 #include "sge_cuser_qmaster.h"
 #include "sge_feature.h"
 #include "sge_qmod_qmaster.h"
-#include "read_write_queue.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -438,7 +437,7 @@ int *after
 
    switch (request->target) {
    case SGE_QUEUE_LIST:
-      qep = cull_read_in_qconf(NULL, NULL, 0, 0, NULL, NULL);
+      qep = queue_create_template();
       if (!qep) {
          /* could not get queue template */
          ERROR((SGE_EVENT, MSG_OBJ_GENQ));

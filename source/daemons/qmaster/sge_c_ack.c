@@ -38,8 +38,6 @@
 #include "sge_ja_task.h"
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
-#include "read_write_queue.h"
-#include "read_write_job.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"

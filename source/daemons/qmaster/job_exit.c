@@ -45,7 +45,6 @@
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
-#include "read_write_queue.h"
 #include "subordinate_qmaster.h"
 #include "execution_states.h"
 #include "sge_feature.h"

@@ -427,7 +427,8 @@ lListElem *spool_context_create_rule(lListElem *context,
                                      spooling_list_func list_func, 
                                      spooling_read_func read_func, 
                                      spooling_write_func write_func, 
-                                     spooling_delete_func delete_func)
+                                     spooling_delete_func delete_func,
+                                     spooling_verify_func verify_func)
 {
    lList *lp;
    lListElem *ep;
@@ -458,6 +459,7 @@ lListElem *spool_context_create_rule(lListElem *context,
    lSetRef(ep, SPR_read_func, (void *)read_func);
    lSetRef(ep, SPR_write_func, (void *)write_func);
    lSetRef(ep, SPR_delete_func, (void *)delete_func);
+   lSetRef(ep, SPR_verify_func, (void *)verify_func);
 
    /* append rule to rule list */
    lp = lGetList(context, SPC_rules);

@@ -83,8 +83,8 @@ enum {
 };
 
 ILISTDEF(CX_Type, Complex, SGE_COMPLEX_LIST)
-   SGE_STRING(CX_name, CULL_HASH | CULL_UNIQUE)
-   SGE_LIST(CX_entries, CE_Type, CULL_DEFAULT)
+   SGE_STRING(CX_name, CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
+   SGE_LIST(CX_entries, CE_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(CXN)
@@ -112,16 +112,16 @@ enum {
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
-   SGE_STRING(CE_name, CULL_HASH | CULL_UNIQUE | CULL_NAMELIST)          /* full name of attribute */
-   SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE)      /* shortcut name of attribute */
-   SGE_ULONG(CE_valtype, CULL_DEFAULT)        /* type */
-   SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_TUPLELIST)     /* non overwritten value */
+   SGE_STRING(CE_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)          /* full name of attribute */
+   SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)      /* shortcut name of attribute */
+   SGE_ULONG(CE_valtype, CULL_DEFAULT | CULL_SPOOL)        /* type */
+   SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_SPOOL | CULL_SUBLIST)     /* non overwritten value */
    SGE_DOUBLE(CE_doubleval, CULL_DEFAULT)    /* parsed CE_stringval */
-   SGE_ULONG(CE_relop, CULL_DEFAULT)          /* relational operator */
-   SGE_BOOL(CE_request, CULL_DEFAULT)         /* flag requestable */
-   SGE_BOOL(CE_consumable, CULL_DEFAULT)      /* flag consumable */
+   SGE_ULONG(CE_relop, CULL_DEFAULT | CULL_SPOOL)          /* relational operator */
+   SGE_BOOL(CE_request, CULL_DEFAULT | CULL_SPOOL)         /* flag requestable */
+   SGE_BOOL(CE_consumable, CULL_DEFAULT | CULL_SPOOL)      /* flag consumable */
    SGE_BOOL(CE_forced, CULL_DEFAULT)          /* flag forced */
-   SGE_STRING(CE_default, CULL_DEFAULT)      /* default request for consumable */
+   SGE_STRING(CE_default, CULL_DEFAULT | CULL_SPOOL)      /* default request for consumable */
    SGE_ULONG(CE_dominant, CULL_DEFAULT)      /* monitoring facility */
    SGE_STRING(CE_pj_stringval, CULL_DEFAULT) /* per job string value */
    SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT) /* per job parsed CE_stringval */

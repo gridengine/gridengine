@@ -117,6 +117,55 @@ const char* sge_dstring_append(dstring *sb, const char *a)
    return sb->s;
 }
 
+const char* sge_dstring_append_char(dstring *sb, const char a)
+{
+   int n, m;
+
+   DENTER(TOP_LAYER, "sge_dstring_append_char");
+
+   if (!sb) {
+      DEXIT;
+      return NULL;
+   }
+
+   if (a == '\0') {
+      DEXIT;
+      return sb->s;
+   }
+  
+   if (sb->is_static) {
+      m = strlen(sb->s); 
+      if (((size_t)(m+1)) < sb->size ) {
+         sb->s[m] = a;
+         sb->s[m+1] = '\0';
+      }
+   } else {
+      /* JG: TODO: strlen(a) is called more than once -> performance leak */
+      n = 2 ;
+      if (sb->s == NULL) {
+         m = 1;
+      } else {
+         m = strlen(sb->s) + 1;
+      }  
+      if ( (m + n - 1 ) > sb->size ) {
+         if (n < REALLOC_CHUNK)
+            n = REALLOC_CHUNK; 
+         sb->size += n;
+         if (sb->s)
+            sb->s = realloc(sb->s, sb->size * sizeof(char)); 
+         else {
+            sb->s = malloc(sb->size * sizeof(char));
+            sb->s[0] = '\0';
+         }
+      }   
+      
+      m = strlen(sb->s);
+      sb->s[m] = a;
+      sb->s[m+1] = '\0';
+   }
+   return sb->s;
+}
+
 /****** uti/dstring/sge_dstring_append_dstring() ******************************
 *  NAME
 *     sge_dstring_append() -- strcat() for dstring's 

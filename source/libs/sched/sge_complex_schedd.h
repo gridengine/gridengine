@@ -79,11 +79,6 @@ int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
                      int slots, int config_nm, int actual_nm, 
                      const char *obj_name);
 
-/* mapping functions - useful for in-/output */
-const char *map_op2str(u_long32 op);
-
-const char *map_type2str(u_long32 type);
-
 int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, int primary_key, int sub_command, char *attr_name, char *object_name);
 
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);

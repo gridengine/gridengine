@@ -95,14 +95,14 @@ sge_dirent.o   : $(SPOOLLIB_DIR)/sge_dirent.c
 
 #---------------------------------------------------------------------
 # test programs
-test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLING_DEPS) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 test_sge_spooling.o: $(SPOOLLIB_DIR)/test_sge_spooling.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling.c
 
-test_sge_spooling_utilities: test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_spooling_utilities $(LFLAGS) test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+test_sge_spooling_utilities: test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_spooling_utilities $(LFLAGS) test_sge_spooling_utilities.o $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(GDILIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_spooling_utilities.o: $(SPOOLLIB_DIR)/test_sge_spooling_utilities.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling_utilities.c

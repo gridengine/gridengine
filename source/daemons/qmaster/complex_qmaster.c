@@ -45,17 +45,12 @@
 #include "complex_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_event_master.h"
-#include "complex_history.h"
-#include "opt_history.h"
-#include "path_history.h"
 #include "sge_log.h"
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
 #include "sge_select_queue.h"
 #include "sge_host.h"
 #include "sge_stdio.h"
-#include "read_write_queue.h"
-#include "read_write_complex.h"
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
@@ -392,9 +387,6 @@ gdi_object_t *object
 
    sge_change_queue_version_complex(lGetString(ep, CX_name));
    
-   if (!is_nohist())
-      write_complex_history(ep);
-
    DEXIT;
    return 0;
 }

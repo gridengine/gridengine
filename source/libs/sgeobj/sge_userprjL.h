@@ -67,10 +67,10 @@ enum {
 };
 
 ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
-   SGE_STRING(UP_name, CULL_HASH | CULL_UNIQUE)       /* configured user/project name spooled */
-   SGE_ULONG(UP_oticket, CULL_DEFAULT)      /* configured override tickets (set by Qmon,
+   SGE_STRING(UP_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)       /* configured user/project name spooled */
+   SGE_ULONG(UP_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets (set by Qmon,
                                * used by SGEEE schedd) spooled */
-   SGE_ULONG(UP_fshare, CULL_DEFAULT)       /* configured functional shares (set by Qmon, 
+   SGE_ULONG(UP_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured functional shares (set by Qmon, 
                                * used by SGEEE schedd) spooled */
    SGE_ULONG(UP_job_cnt, CULL_DEFAULT)     /* job count (set and used by SGEEE schedd, not 
                                * spooled) schedd local, not stored to 
@@ -78,31 +78,31 @@ ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
    SGE_ULONG(UP_pending_job_cnt, CULL_DEFAULT)  /* job count (set and used by SGEEE schedd, not 
                                * spooled) schedd local, not stored to 
                                * qmaster */
-   SGE_LIST(UP_usage, UA_Type, CULL_DEFAULT)         /* UA_Type; decayed usage set and used by SGEEE 
+   SGE_LIST(UP_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL)         /* UA_Type; decayed usage set and used by SGEEE 
                                * schedd stored to qmaster; spooled */
-   SGE_ULONG(UP_usage_time_stamp, CULL_DEFAULT)    /* time stamp of last decay set when
+   SGE_ULONG(UP_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL)    /* time stamp of last decay set when
                                        * UP_usage changes; set and used
                                        * by * SGEEE schedd stored to qmaster;
                                        * spooled */
    SGE_ULONG(UP_usage_seqno, CULL_DEFAULT) /* usage sequence number set and used by SGE
                                * schedd, not stored to qmaster; not
                                * spooled */
-   SGE_LIST(UP_long_term_usage, UA_Type, CULL_DEFAULT)       /* UA_Type; long term accumulated 
+   SGE_LIST(UP_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL)       /* UA_Type; long term accumulated 
                                        * non-decayed i usage; set by SGEEE 
                                        * schedd stored to qmaster; spooled */
-   SGE_LIST(UP_project, UPP_Type, CULL_DEFAULT)       /* UPP_Type; usage on a project basis set and used 
+   SGE_LIST(UP_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL)       /* UPP_Type; usage on a project basis set and used 
                                * by SGEEE schedd stored to qmaster; spooled
                                * Only used by projects */
-   SGE_LIST(UP_acl, US_Type, CULL_DEFAULT) /* US_Type but only names are filled 
+   SGE_LIST(UP_acl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT) /* US_Type but only names are filled 
                                * configured excluded user access list used
                                * by SGEEE schedd; spooled */
-   SGE_LIST(UP_xacl, US_Type, CULL_DEFAULT)        /* US_Type but only names are filled configured 
+   SGE_LIST(UP_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT)        /* US_Type but only names are filled configured 
                                        * excluded user access list used by SGEEE schedd; 
                                        * spooled */
-   SGE_LIST(UP_debited_job_usage, UPU_Type, CULL_DEFAULT)     /* UPU_Type (see below) still *
+   SGE_LIST(UP_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL)     /* UPU_Type (see below) still *
                                        * debited usage per job (set and *
                                        * used by SGEEE schedd) */
-   SGE_STRING(UP_default_project, CULL_DEFAULT)     /* default project for user */
+   SGE_STRING(UP_default_project, CULL_DEFAULT | CULL_SPOOL_USER)     /* default project for user */
    SGE_ULONG(UP_version, CULL_DEFAULT)     /* user/project version, increments when usage
                                * is updated, stored to qmaster, not spooled */
 LISTEND 
@@ -168,12 +168,12 @@ enum {
 };
 
 LISTDEF(UPP_Type)
-   SGE_STRING(UPP_name, CULL_HASH | CULL_UNIQUE)    /* project name */
-   SGE_LIST(UPP_usage, UA_Type, CULL_DEFAULT)     /* 
+   SGE_STRING(UPP_name, CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)    /* project name */
+   SGE_LIST(UPP_usage, UA_Type, CULL_DEFAULT | CULL_SUBLIST)     /* 
                             * UA_Type; decayed usage set and used by SGEEE 
                             * schedd stored to qmaster; spooled 
                             */
-   SGE_LIST(UPP_long_term_usage, UA_Type, CULL_DEFAULT) /* UA_Type; long term accumulated 
+   SGE_LIST(UPP_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SUBLIST) /* UA_Type; long term accumulated 
                                   * non-decayed usage; set by SGEEE 
                                   * schedd stored to qmaster; spooled */
 LISTEND 

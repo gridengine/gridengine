@@ -80,7 +80,6 @@
 #include "shutdown.h"
 #include "parse.h"
 #include "job_log.h"
-#include "opt_history.h"
 #include "usage.h"
 #include "setup_qmaster.h"
 #include "ck_to_do_qmaster.h"
@@ -92,8 +91,6 @@
 #include "sge_bitop.h"
 #include "setup_path.h"
 #include "sge_security.h"
-#include "read_write_host.h"
-#include "complex_history.h"
 #include "sge_hostname.h"
 #include "sge_spool.h"
 #include "sge_os.h"
@@ -776,7 +773,7 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 **   none
 ** DESCRIPTION
 **   updates the number of processors in the host element
-**   spools and writes history if it has changed
+**   spools if it has changed
 */
 static int update_license_data(lListElem *hep, lList *lp_lic)
 {
@@ -806,16 +803,13 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
    old_processors = lGetUlong(hep, EH_processors);
    lSetUlong(hep, EH_processors, processors);
    /*
-   ** we spool and write history, cf. cod_update_load_values()
+   ** we spool, cf. cod_update_load_values()
    */
    if (processors != old_processors) {
       DPRINTF(("%s has " u32 " processors\n",
          lGetHost(hep, EH_name), processors));
       spool_write_object(spool_get_default_context(), hep, 
                          lGetHost(hep, EH_name), SGE_TYPE_EXECHOST);
-      if (!is_nohist()) {
-         write_host_history(hep);
-      }
    }
    DEXIT;
    return 0;
@@ -1082,7 +1076,6 @@ char *filename;
       }
       /* -nohist */
       if(parse_flag(ppcmdline, "-nohist", &alp, &flag)) {
-         set_nohist(1);
          continue;
       }
 

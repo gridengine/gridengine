@@ -40,7 +40,6 @@
 #include "sgermon.h"
 #include "sge_event_master.h"
 #include "time_event.h"
-#include "read_write_cal.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"

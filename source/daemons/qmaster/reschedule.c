@@ -52,7 +52,6 @@
 #include "time_event.h"
 #include "symbols.h"
 #include "sge_time.h"
-#include "read_write_host.h"
 #include "reschedule.h"
 #include "msg_qmaster.h"
 #include "sge_conf.h"

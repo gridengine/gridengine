@@ -1,3 +1,5 @@
+JG-2005-01-03-0: Bugfix:    Fixed aimk -no-mk.
+
 DT-2004-12-31-0: Bugfix:    o Backed out some changes from DT-2004-12-30-3
                               which conflicted with aimk -j 2
                             - merged from maintrunk DT-2004-12-31-0

@@ -493,19 +493,16 @@ int sge_send_job_start_orders(order_t *orders) {
    int ret = STATUS_OK;
    lList *alp = NULL;
    lList *malp = NULL;
-   static bool is_executed_once = false;
 
    int order_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
-   if (is_executed_once || orders->jobStartOrderList == NULL ) {
+   if ( orders->jobStartOrderList == NULL ) {
       DEXIT;
       return ret;
    }
-
-   is_executed_once = true;
 
    if (orders->configOrderList != NULL) {
 

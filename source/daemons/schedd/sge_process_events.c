@@ -212,10 +212,6 @@ int event_handler_default_scheduler()
       }
       copy.queue_list = lSelect("sel_qi_list", copy.all_queue_list, where_queue, what_queue2);
       copy.dis_queue_list = lSelect("dis_qi_list", copy.all_queue_list, where_queue2, what_queue2);
-
-
-lWriteListTo(copy.dis_queue_list, stdout);
-      
    }
 
 

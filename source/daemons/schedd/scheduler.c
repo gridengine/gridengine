@@ -1108,7 +1108,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    /*------------------------------------------------------------------
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING
     *------------------------------------------------------------------*/
-   if (result == DISPATCH_OK || is_computed_reservation) { /* TODO: SG: does not work, need to put reservation into account */
+   if (result == DISPATCH_OK || is_computed_reservation) {
       lListElem *queue;
       lList *disabled_queues = NULL;
       bool is_consumable_load_alarm = false;

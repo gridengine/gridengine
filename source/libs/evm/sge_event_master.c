@@ -2667,7 +2667,7 @@ static void send_events(lListElem *report, lList *report_list) {
          lXchgList(report, REP_list, &lp);
 
          unlock_client(ec_id);
-        
+
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
          
          lock_client(ec_id, true);      
@@ -2816,6 +2816,8 @@ static void total_update(lListElem *event_client)
    
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    
+   sge_set_commit_required();
+  
    total_update_event(event_client, sgeE_ADMINHOST_LIST);
    total_update_event(event_client, sgeE_CALENDAR_LIST);
    total_update_event(event_client, sgeE_CKPT_LIST);
@@ -2841,6 +2843,8 @@ static void total_update(lListElem *event_client)
 #ifndef __SGE_NO_USERMAPPING__
    total_update_event(event_client, sgeE_CUSER_LIST);
 #endif
+
+   sge_commit();
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    

@@ -1,3 +1,9 @@
+SG-2005-03-21-0: Bugfix:    scheduler does not get all objects on a qmaster or scheduler startup
+                 Review:    DT
+                 Issue:     1518
+                 Bugtraq:   6244808
+                 Changed:   qmaster
+
 CR-2005-04-23-0: Bugfix:    error message from execd about endpoint is not unique
                  Issue:     1504
                  Bugtraq:   6234371

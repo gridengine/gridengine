@@ -41,8 +41,9 @@
 # variables
 #
 set noglob
-unsetenv buildarch BUILDARCH COMPILE_ARCH LD_LIBRARY_PATH
+unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH
 set COMPILE_ARCH = ""
+set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
 
 if ( -f dist/util/arch ) then
@@ -334,6 +335,7 @@ usage:
    echo "-shared-libs      -> create libraries as shared libs"
    echo "-spool-berkeleydb -> use berkeleydb spooling"
    echo "-spool-classic    -> use classic flatfile spooling"
+   echo "-spool-targets    -> only create qmaster, spooldefaults and spoolinit"
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
    echo "-umap             -> compile with usermapping and hostgroup feature"
   exit
@@ -822,6 +824,22 @@ while ($#argv >= 1 && $?found)
       set SPOOLING_LIBS   = "-lspoolloader -lspoolc -lspool"
       set SPOOLING_DEPS   = "spoolloaderlib spoolclib spoollib"
       breaksw
+   case "-classic-targets":   
+      set CORE   = 1
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set SPOOLING_METHOD = "classic"
+      set SPOOLING_LIBS   = "-lspoolloader -lspoolc -lspool"  
+      set SPOOLING_DEPS   = "spoolloaderlib spoolclib spoollib"
+      set argv = ($argv sge_qmaster spoolinit spooldefaults)
+      if ("$COMPILE_ARCH" != "") then
+         set COMPILE_DIR = ${COMPILE_ARCH}_$SPOOLING_METHOD
+      else
+         set COMPILE_DIR = ${BUILDARCH}_$SPOOLING_METHOD
+      endif 
+      breaksw
    case "-sunman":
       set SGE_PRODUCT_MODE=sge
       breaksw
@@ -878,6 +896,12 @@ endif
 if (! -d $COMPILE_ARCH) then
    echo " INFO: Architecture dir $COMPILE_ARCH not existing. Making"
    mkdir $COMPILE_ARCH
+endif
+
+if ( "$COMPILE_DIR" != "" ) then
+   if (! -d $COMPILE_DIR) then
+      mkdir $COMPILE_DIR
+   endif
 endif
 
 switch ($BUILDARCH)
@@ -1556,16 +1580,20 @@ set GSHARED_LFLAGS = "$SHARED_LFLAGS"
 #---------------------------------------------------------------------------
 # Actual make targets begin here
 #
-echo making in $COMPILE_ARCH/ for $COMPILE_ARCH
+if ("$COMPILE_DIR" == "") then
+   echo making in $COMPILE_ARCH/ for $BUILDARCH
+else
+   echo making in $COMPILE_DIR/ for $BUILDARCH
+endif
 
 if ( "$BUILDMAN" == 1 ) then
    echo _________M_A_N_P_A_G_E_S__________________
 
    if ( $?MAN2HTMLPATH ) then
-      setenv PATH ${MAN2HTMLPATH}:${PATH}
+      setenv PATH ${PATH}:${MAN2HTMLPATH}
    endif   
    if ( $?GROFFPATH ) then
-      setenv PATH ${GROFFPATH}:${PATH}
+      setenv PATH ${PATH}:${GROFFPATH}
    else
       echo "groff must exist"
       echo not done
@@ -1704,7 +1732,11 @@ endif
 
 if ( "$CORE" == 1 ) then
 
-   cd $COMPILE_ARCH
+   if ( "$COMPILE_DIR" == "" ) then
+      cd $COMPILE_ARCH
+   else
+      cd $COMPILE_DIR
+   endif
 
    # spooledit is only available if berkeleydb is available.
    # if we build with spooling method classic, touch spooledit

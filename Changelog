@@ -1,3 +1,7 @@
+JG-2001-07-24-0: Adoc: Function identifiers beginning with "-" 
+                       (e.g. --Introduction) are not included in the function
+                       index
+
 CR-2001-07-23-0: Bugfix: qstat -j (Issue#: 2) causes 
                  "operation not implemented for target" error
 

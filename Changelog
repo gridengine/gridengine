@@ -1,3 +1,6 @@
+AD-2003-10-14-0: Bugfix:    Fixed the build
+                 Changed:   sge_lock.c
+
 AA-2003-10-13-0: Bugfix:    - cluster config params went to bootstrap file, removed
                               from dialogue
                             - hostgroup folder added to host dialogue

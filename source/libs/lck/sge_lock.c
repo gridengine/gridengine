@@ -31,6 +31,8 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_lock.h"
+
+#include <stdio.h>
 #include "sgermon.h"
 
 /****** sge_lock/Introduction ****************************************************

@@ -147,7 +147,7 @@ global CHECK_SCRIPT_FILE_DIR  ;# testsuite's subdir for script files
 set CHECK_SCRIPT_FILE_DIR "scripts"
 
 global CHECK_EXPECT_MATCH_MAX_BUFFER   ;# read buffer for expect
-set CHECK_EXPECT_MATCH_MAX_BUFFER 640000
+set CHECK_EXPECT_MATCH_MAX_BUFFER 6400000
 
 # to redefine in checks:
 global check_name                  ;# name of actual check module 
@@ -1285,7 +1285,7 @@ proc read_edit_defaults_file { filename } {
 
    set catch_return [ catch {
       set input [open "$filename" "r"]
-      while { [gets $input data ] > 0 } {
+      while { [gets $input data ] >= 0 } {
         set input_data([lindex $data 0]) [lrange $data 1 end]
       }
       close $input 
@@ -1527,14 +1527,22 @@ proc load_defaults {} {
   set CHECK_TESTSUITE_ROOT "$CHECK_CURRENT_WORKING_DIR"
   set CHECK_CHECKTREE_ROOT "$CHECK_CURRENT_WORKING_DIR/checktree"
   set CHECK_MAIN_RESULTS_DIR "$CHECK_CURRENT_WORKING_DIR/results"
-  set CHECK_CORE_MASTER     "[set env(HOST)]"
+  if { [info exists env(HOST)] } {
+     set CHECK_CORE_MASTER     "[set env(HOST)]"
+  } else {
+     set CHECK_CORE_MASTER "unknown"
+  }
   set CHECK_CORE_EXECD      "$CHECK_CORE_MASTER"  
   set CHECK_CORE_PROCESSORS "1"
   set CHECK_COMMD_PORT "7776";
   set CHECK_USER "unknown";
   set CHECK_GROUP "unknown";
   set CHECK_ARCH "unknown";
-  set CHECK_HOST "[set env(HOST)]";
+  if { [info exists env(HOST)] } {
+     set CHECK_HOST "[set env(HOST)]";
+  } else {
+     set CHECK_HOST "unknown"
+  }
   set CHECK_PROTOCOL_DIR ""
   set CHECK_PRODUCT_TYPE "sge"
   set CHECK_PRODUCT_ROOT "unknown"
@@ -1545,7 +1553,11 @@ proc load_defaults {} {
   set CHECK_SOURCE_DIR [ get_current_working_dir ]
   cd $old_dir
 
-  set CHECK_SOURCE_HOSTNAME "[set env(HOST)]"
+  if { [info exists env(HOST)] } {
+     set CHECK_SOURCE_HOSTNAME "[set env(HOST)]"
+  } else {
+     set CHECK_SOURCE_HOSTNAME "unknown"
+  }
   set CHECK_SOURCE_COMPILE_HOSTS "unknown"
   set CHECK_AIMK_COMPILE_OPTIONS ""
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
@@ -1553,8 +1565,11 @@ proc load_defaults {} {
   set CHECK_EXECD_INSTALL_OPTIONS ""
   set CHECK_SOURCE_CVS_RELEASE "maintrunc"  
   set CHECK_CONFIG_DIR "$CHECK_CURRENT_WORKING_DIR/demo_config_dir"
-  set CHECK_MAILX_HOST "[set env(HOST)]"
-
+  if { [info exists env(HOST)] } {
+     set CHECK_MAILX_HOST "[set env(HOST)]"
+  } else {
+     set CHECK_MAILX_HOST "unknown"
+  }
   if {[file isfile "$CHECK_DEFAULTS_FILE"] != 1} {
      source_procedures
      return -1

@@ -1062,7 +1062,7 @@ proc get_spool_dir {host subdir} {
    puts "searching spooldir for host $host, type $subdir"
    if {[file exists $spool_config ]} {
       set f [open $spool_config r]
-      while { [gets $f line] > 0 } {
+      while { [gets $f line] >= 0 } {
          if { [string first "#" $line ] == 0 } {
             continue 
          }  

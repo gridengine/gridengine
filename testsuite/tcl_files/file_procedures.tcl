@@ -368,7 +368,7 @@ proc get_binary_path { hostname binary } {
    if { [file exists $config] } {
       set file_p [ open $config r ]
       set line_no 0
-      while { [gets $file_p line] > 0 } {
+      while { [gets $file_p line] >= 0 } {
          if { [string first "#" $line ] == 0 } {
             debug_puts "found comment in line $line_no"
             incr line_no 1

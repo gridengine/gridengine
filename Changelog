@@ -1,3 +1,8 @@
+CR-2001-07-24-0: Testsuite: 
+                    - CHECK_EXPECT_MATCH_MAX_BUFFER set to 6,4 MB
+                    - enable empty lines when reading in configuration files
+                    - using env(HOST) only when HOST environment is set
+
 JG-2001-07-24-1: qmaster - qdel:
                  - if a job is already in state deleted additional qdel's do 
                    not generate additional events to execd

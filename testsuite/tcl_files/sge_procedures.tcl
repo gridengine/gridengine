@@ -468,7 +468,7 @@ proc get_loadsensor_path { arch } {
    if { [file exists $config] } {
       set file_p [ open $config r ]
       set line_no 0
-      while { [gets $file_p line] > 0 } {
+      while { [gets $file_p line] >= 0 } {
          if { [string first "#" $line ] == 0 } {
 #            puts $CHECK_OUTPUT "found comment in line $line_no"
             continue
@@ -528,7 +528,7 @@ proc get_gid_range { user port } {
   if { [file exists $config] } {
     set file_p [ open $config r ]
     set line_no 0
-    while { [gets $file_p line ] > 0 } {
+    while { [gets $file_p line ] >= 0 } {
        if { [string first "#" $line ] == 0 } {
           debug_puts "found comment in line $line_no"
           incr line_no 1
@@ -3965,7 +3965,7 @@ proc wait_for_jobpending { jobid jobname seconds} {
     }
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
-       add_proc_error "wait_for_jobpending" -1 "timeout waiting for job \"$jobid\" \"$jobname\""
+       add_proc_error "wait_for_jobpending" -1 "timeout waiting for job \"$jobid\" \"$jobname\" (timeout was $seconds sec)"
        return -1
     }
     sleep 1

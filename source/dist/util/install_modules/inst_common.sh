@@ -96,6 +96,10 @@ BasicSettings()
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 1
   fi
+
+  RM="rm -f"
+  TOUCH="touch"
+
 }
 
 
@@ -414,6 +418,7 @@ CheckWhoInstallsSGE()
                   "a limited functionality of Grid Engine.\n"
 
       ADMINUSER=`whoami`
+      #ADMINUSER="none"
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
       $CLEAR
       return 0
@@ -998,25 +1003,25 @@ AddDefaultOperator()
 
 MoveLog()
 {
-   if [ $EXECD = "uninstall" ]; then
-      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/spool/uninstall_`hostname`_$DATE.log 2>&1
+   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+      cp /tmp/$LOGSNAME $SGE_ROOT/$SGE_CELL/spool/uninstall_`hostname`_$DATE.log 2>&1
    else
-      cp /tmp/$LOGNAME $SGE_ROOT/$SGE_CELL/spool/install_`hostname`_$DATE.log 2>&1
+      cp /tmp/$LOGSNAME $SGE_ROOT/$SGE_CELL/spool/install_`hostname`_$DATE.log 2>&1
    fi
 
-   rm /tmp/$LOGNAME 2>&1
+   rm /tmp/$LOGSNAME 2>&1
 }
 
 CreateLog()
 {
-LOGNAME=install.$$
+LOGSNAME=install.$$
 DATE=`date '+%Y-%m-%d_%H:%M:%S'`
 
-if [ -f /tmp/$LOGNAME ]; then
-   rm /tmp/$LOGNAME
-   touch /tmp/$LOGNAME
+if [ -f /tmp/$LOGSNAME ]; then
+   rm /tmp/$LOGSNAME
+   touch /tmp/$LOGSNAME
 else
-   touch /tmp/$LOGNAME
+   touch /tmp/$LOGSNAME
 fi
 }
 

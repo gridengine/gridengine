@@ -27,7 +27,7 @@ The combination of csp (increased security) and autoinstall is not supported
 Make sure, what kind of installation you want to use. (Interactive or automatic)
 
 For automatic installation you have to configure a configuration file.
-A template can be found in $SGE_ROOT/util/inst_sge_modules. (For details see 3.1 Automatic Installation)
+A template can be found in $SGE_ROOT/$SGE_CELL/util/install_modules. (For details see 3.1 Automatic Installation)
 If you want to use automatic installation, it is mandatory, that root has rsh or ssh access to the hosts, which
 should be installed, because during the installation, the script tries to execute itself on the remote hosts.
 This happens over rsh or ssh.
@@ -52,11 +52,25 @@ the prefered host with ./inst.sge -db and than start the automatic installation.
 3.1 Automatic Installation
 
 During the automatic installation, the user is not asked for any question. No message will be displayed on the terminal
-After the installation you will find a log file in $SGE_ROOT/$SGE_CELL/common. The name is: install<combination of date time>.log
+After the installation you will find a log file in $SGE_ROOT/$SGE_CELL/spool. The name is: install_hostname_<combination of date time>.log
 Here you can find information about the used configuration and about errors during installation.
+In case of serious errors, it can be impossible for the installation script to move the log file into the
+spool directory, then please have a look into the /tmp/ dir. There you can also find the install logs  
 
 For a automatic installation it is recommended, that root has the right to connect via rsh/ssh to the different hosts,
-without asking for a password. If this is not allowed in your network, the automatic installation won't work.
+without asking for a password. If this is not allowed in your network, the automatic installation won't work remotely.
+In this case it is possible to login to the host and start the automatic installation again.
+
+Example:
+
+on master host:  ./inst_sge -m -auto /tmp/install_config_file.conf
+
+then login to the execution host: ./inst_sge -x -noremote -auto /tmp/install_config_file.conf
+
+First, the master host will be installed automatically, using the config file
+Second, the execution host will be installed automatically using the config file.
+The -noremote switch ensures, that the installscript doesn't try the rsh/ssh'ing to other host's
+which are configured within the config file. (eg. EXECD_HOST_LIST="host1 host2 ...."
 
 Another point is the configuration file. Before the installation is started, the configuration file has to be adapted to
 your requirements. A template of this file can be found in $SGE_ROOT/$SGE_CELL/util/install_modules/inst_template.conf
@@ -84,40 +98,51 @@ SGE_EXECD_PORT="Please enter port"
 # CELL_NAME, will be a dir in SGE_ROOT, contains the common dir
 CELL_NAME="default"
 
-# The directory, where qmaster spools (eg act_qmaster file) 
+# The dir, where qmaster spools this parts, which are not spooled by DB
 QMASTER_SPOOL_DIR="Please, enter spooldir"
 
-# The directory, where the execd spools (active jobs)
+# The dir, where the execd spools (active jobs)
 EXECD_SPOOL_DIR="Please, enter spooldir"
 
-# The directory, where the execd spools (local configuration)
+# The dir, where the execd spools (local configuration)
 EXECD_SPOOL_DIR_LOCAL="Please, enter spooldir"
 
-# Name of the Server, where the Spooling DB is running on, in
-#case of no server please enter "none"
-DB_SPOOLING_SERVER="servername"
+# If SGE is compiled with -spool-dynamic, you have to enter here, which
+# spooling method should be used. (classic or berkeleydb)
+SPOOLING_METHOD="berkeleydb"
 
-# The directory, where the DB spools. This must be a local directory
-DB_SPOOLING_DIR="path/to/spooldb/dir"
+# Name of the Server, where the Spooling DB is running on
+DB_SPOOLING_SERVER="none"
+
+# The dir, where the DB spools
+DB_SPOOLING_DIR="spooldb"
 
 # If true, the domainnames will be ignored, during the hostname resolving
 HOSTNAME_RESOLVING="true"
 
 # Shell, which should be used for remote installation (rsh/ssh)
-SHELL_NAME="rsh"
+SHELL_NAME="ssh"
 
 # Enter your default domain, if you are using /etc/hosts or NIS configuration
 DEFAULT_DOMAIN="none"
 
-# Please enter your Group id range here (e.g. 16000-16100)
+# I don't know any description at the moment (eg. 16000-16100)
 GID_RANGE="Please, enter GID range"
 
-# If a job stops, fails, finish, you can send a mail to this address
+# If a job stops, fails, finnish, you can send a mail to this adress
 ADMIN_MAIL="none"
 
 # If true, the rc scripts (sgemaster, sgeexecd, sgebdb) will be added,
 # to start automatically during boottime
 ADD_TO_RC="false"
+
+#If this is "true" the file permissions of executables will be set to 755
+#and of ordenary file to 644.  
+SET_FILE_PERMS="true"
+
+# This option is not fully implemented, yet.
+# When a exechost should be uninstalled, the running jobs will be rescheduled
+RESCHEDULE_JOBS="wait"
 
 # Enter a one of the three distributed scheduler tuning configuration sets
 # (1=normal, 2=high, 3=max)
@@ -137,7 +162,8 @@ EXEC_HOST_LIST="host1 host2 host3 host4"
 SHADOW_HOST="hostname"
 
 # Remove this execution hosts in automatic mode
-EXEC_HOST_LIST_RM="host1 host2 host3 host4" 
+EXEC_HOST_LIST_RM="host1 host2 host3 host4"
+
 
 
 After writing a valid configuration file you can start the installation with this

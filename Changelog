@@ -1,3 +1,12 @@
+MD-2004-05-18-0: Bugfix:    log file in wrong directory, autoinst failed under
+                            AIX
+                            -docu
+                 Changed:   inst_sge, docu
+                 Issue:     984, 996
+                 Review:    AS (pending)
+                 Enhancem:  SGE 6.0 upgrade procedure
+                 Changed:   inst_update.sh
+
 CR-2004-05-18-0: Bugfix:    fixed strstr() call to not zero terminated string
                  Changed:   commlib
                  Review:    JG

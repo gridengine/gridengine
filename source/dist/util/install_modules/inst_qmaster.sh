@@ -73,16 +73,29 @@ GetCell()
    while [ $is_done = "false" ]; do 
       $CLEAR
       $INFOTEXT -u "\nGrid Engine cells"
-      $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
-                   "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
-                   "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
-                   "   default\n\n" \
-                   "If you want to install multiple cells you can enter a cell name now.\n\n" \
-                   "The environment variable\n\n" \
-                   "   \$SGE_CELL=<your_cell_name>\n\n" \
-                   "will be set for all further Grid Engine commands.\n\n" \
-                   "Enter cell name [default] >> "
-      INP=`Enter default`
+      if [ "$SGE_CELL" = "" ]; then
+         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                      "   default\n\n" \
+                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                      "The environment variable\n\n" \
+                      "   \$SGE_CELL=<your_cell_name>\n\n" \
+                      "will be set for all further Grid Engine commands.\n\n" \
+                      "Enter cell name [default] >> "
+         INP=`Enter default`
+      else
+         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                      "   default\n\n" \
+                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                      "The environment variable\n\n" \
+                      "   \$SGE_CELL=<your_cell_name>\n\n" \
+                      "will be set for all further Grid Engine commands.\n\n" \
+                      "Enter cell name [%s] >> " $SGE_CELL
+         INP=`Enter $SGE_CELL`
+      fi
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
       if [ $BERKELEY = "undef" ]; then
@@ -287,12 +300,12 @@ SetSpoolingOptionsBerkeleyDB()
    if [ $AUTO = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
       SPOOLING_DIR="$DB_SPOOLING_DIR"
-      if [ -d $SPOOLING_DIR ]; then
+      if [ -d $SPOOLING_DIR -a $SPOOLING_SERVER != "none" ]; then
          $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
          MoveLog
          exit 0 
       fi
-      SpoolingCheckParams
+      #SpoolingCheckParams
       params_ok=1
    fi
    if [ $QMASTER = "install" -a $AUTO = "false" ]; then
@@ -735,7 +748,7 @@ GetConfiguration()
    if [ $AUTO = true ]; then
      CFG_EXE_SPOOL=$EXECD_SPOOL_DIR
      CFG_MAIL_ADDR=$ADMIN_MAIL
-     $INFOTEXT -log "Using >%s< as EXECD_SPOLL_DIR." "$CFG_EXE_SPOOL"
+     $INFOTEXT -log "Using >%s< as EXECD_SPOOL_DIR." "$CFG_EXE_SPOOL"
      $INFOTEXT -log "Using >%s< as ADMIN_MAIL." "$ADMIN_MAIL"
    else
    done=false

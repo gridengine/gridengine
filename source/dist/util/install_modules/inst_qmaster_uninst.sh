@@ -66,7 +66,7 @@ CheckRunningExecd()
 
      running=`qconf -se $h | grep load_values | grep load_avg`
 
-     if [ -z $running ]; then
+     if [ "$running" = "" ]; then
         :
      else
         $INFOTEXT "Found running execution hosts, exiting uninstallation!\n"

@@ -60,7 +60,7 @@ PWD=`pwd`
 # commandline argument parsing
 #---------------------------------------
 
-UPGRADE=false
+UPDATE=false
 DOWNGRADE=false
 BACKUP=false
 RESTORE=false
@@ -115,7 +115,7 @@ while [ $ARGC != 0 ]; do
      SGE_NOMSG=1
      export SGE_NOMSG
      CreateLog
-     exec 1>/tmp/$LOGNAME 2>&1
+     exec 1>/tmp/$LOGSNAME 2>&1
      ;;
    -m)
      QMASTER="install"
@@ -164,6 +164,17 @@ while [ $ARGC != 0 ]; do
    -rst)
      RESTORE=true
      #restore a backuped database
+     ;;
+   -upd)
+     UPDATE=true
+     OLD_SGE_ROOT=$2
+     OLD_SGE_CELL=$3
+     shift
+     ARGC=`expr $ARGC - 1`
+     shift
+     ARGC=`expr $ARGC - 1`
+     . ./util/install_modules/inst_update.sh
+     #update from 5.3 to 6.0
      ;; 
    -noremote)
      NOREMOTE=true
@@ -200,8 +211,46 @@ done
 if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
    ErrUsage
 fi
+
+
+if [ $UPDATE = "true" -a $QMASTER = "install" ]; then
+   WelcomeTheUser
+   CheckForLocalHostResolving
+   CheckWhoInstallsSGE
+   ProcessSGERoot 
+   GetQmasterPort
+   GetExecdPort
+   GetCell
+   GetQmasterSpoolDir $euid
+   SetCellDependentVariables
+   SetPermissions
+   SelectHostNameResolving
+   SetProductMode
+   MakeDirsMaster
+   SetSpoolingOptions
+   AddBootstrap
+   InitSpoolingDatabase
+   GetConfiguration
+   AddActQmaster
+   CreateSGEStartUpScripts $euid true master
+   CreateSGEStartUpScripts $euid true execd 
+   UpdateConfiguration
+   CreateSettingsFile
+   InitCA
+   AddSGEStartUpScript $euid master
+   StartQmaster
+   AddDefaultQueue
+   GetOldScheddConfig
+   UpdateHints
+fi
+
+
+if [ $UPDATE = "true" -a $EXECD = "install" ]; then
+   echo
+fi
+
  
-if [ $QMASTER = "install" ]; then
+if [ $QMASTER = "install" -a $UPDATE != "true" ]; then
 
  if [ $AUTO = true ]; then
   {
@@ -273,6 +322,13 @@ if [ $EXECD = "install" ]; then
          StartExecd
          AddQueue
          GiveHints
+         CheckRunningDaemon sge_execd
+         
+         if [ $? = 0 ]; then
+            $INFOTEXT -n "Execd on host %s is running!\n" $h
+         else
+            $INFOTEXT -n "Execd on host %s is not started!\n" $h
+         fi
 
          if [ $AUTO = "true" ]; then
             MoveLog
@@ -419,20 +475,24 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
-      ExecuteAsAdmin $mod_file > $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
  
       if [ $SHADOW_HOST = `hostname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
          $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
       else
-        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW_HOST /bin/sh &
+        for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
+           echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
+        done
       fi
    else
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
-      ExecuteAsAdmin $mod_file > $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW_HOST /bin/sh &
+      ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
+         echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
+      done
    fi
 fi
 
@@ -479,4 +539,5 @@ fi
 if [ $RESTORE = "true" ]; then
    RestoreConfig
 fi
+
 exit 0

@@ -508,20 +508,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          } 
          if (!strncasecmp(s, "MAX_DYN_EC", sizeof("MAX_DYN_EC")-1)) {
-            int temp = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
-            int max_file_handles = 0;
-            cl_com_handle_t* handle = NULL;
-
-            handle = cl_com_get_handle("qmaster",1);
-            if (handle != NULL) {
-               cl_com_get_max_connections(handle,&max_file_handles);
-               max_file_handles -= 19;
-               if (temp > max_file_handles) {
-                  temp = MAX(max_file_handles, 0);
-                  WARNING((SGE_EVENT, MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U, u32c(temp) ));
-               }
-            }   
-            max_dynamic_event_clients = temp;
+            max_dynamic_event_clients = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
             continue;
          }
          if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) {

@@ -1,3 +1,9 @@
+CR-2004-04-21-0: Bugfix:    Ensure that max. nr of dynamic event clients never
+                            exceeds max. nr of file descriptors used for 
+                            communication
+                 Changed:   qmaster
+                 Review:    SG
+
 AS-2004-04-21-0: CVS        Created V60_beta2_target_{BRANCH,TAG}
 -----------------------------------------------------------------
 

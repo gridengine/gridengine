@@ -70,8 +70,9 @@
 #include "sge_mtutil.h"
 #include "setup_qmaster.h"
 #include "cl_errors.h"
-
+#include "cl_commlib.h"
 #include "msg_common.h"
+#include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
 
 /****** subscription_t definition **********************
@@ -282,7 +283,7 @@ static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_COND_INITIALIZER, 
                                                 PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_MUTEX_INITIALIZER,
-                                                PTHREAD_MUTEX_INITIALIZER, 99,
+                                                PTHREAD_MUTEX_INITIALIZER, 0,
                                                 0, false, false, false, false,
                                                 false, NULL, NULL, NULL, NULL,
                                                 NULL, NULL, false};
@@ -857,7 +858,13 @@ void sge_remove_event_client(u_long32 aClientID) {
 *     void sge_set_max_dynamic_event_clients(u_long32 max) 
 *
 *  FUNCTION
-*     Sets max number of dynamic event clients
+*     Sets max number of dynamic event clients. If the new value is larger than
+*     the maximum number of used file descriptors for communication this value
+*     is set to the max. number of file descriptors minus some reserved file
+*     descriptors. (10 for static event clients, 9 for execd, 10 for file 
+*     descriptors used by application (to write files, etc.) ).
+*
+*     At least one dynamic event client is allowed.
 *
 *  INPUTS
 *     u_long32 max - number of dynamic event clients
@@ -866,7 +873,11 @@ void sge_remove_event_client(u_long32 aClientID) {
 *     MT-NOTE: sge_set_max_dynamic_event_clients() is MT safe 
 *
 *******************************************************************************/
-void sge_set_max_dynamic_event_clients(u_long32 max){
+u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
+   u_long32 max = new_value;
+   u_long32 max_allowed_value = 0;
+   cl_com_handle_t* handle = NULL;
+
    DENTER(TOP_LAYER, "sge_set_max_dynamic_event_clients");
 
    /* Don't need to lock all clients because we're not changing the clients. */
@@ -874,6 +885,25 @@ void sge_set_max_dynamic_event_clients(u_long32 max){
 
    /* Set the max event clients if it changed. */
    if (max != Master_Control.max_event_clients) {
+
+
+      /* check max. file descriptors of qmaster communication handle */
+      handle = cl_com_get_handle("qmaster",1);
+      if (handle != NULL) {
+         int max_file_handles = 0;
+         cl_com_get_max_connections(handle,&max_file_handles);
+         if ( max_file_handles >= 19 ) {
+            max_allowed_value = max_file_handles - 19;
+         } else {
+            max_allowed_value = 1;
+         }
+
+         if ( max > max_allowed_value ) {
+            max = max_allowed_value;
+            WARNING((SGE_EVENT, MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U, u32c(max) ));
+         }
+      }
+
       /* If the max is bigger than our array, resize the array and lockfield. */
       if (max > Master_Control.len_event_clients - (EV_ID_FIRST_DYNAMIC - 1)) {
          lListElem **newp = NULL;
@@ -925,12 +955,42 @@ void sge_set_max_dynamic_event_clients(u_long32 max){
       Master_Control.max_event_clients = max;
       INFO((SGE_EVENT, MSG_SET_MAXDYNEVENTCLIENT_U, u32c(max)));
    } /* if */
-   
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
    
    DEXIT;
-   return;
+   return max;
 }
+
+
+/****** sge_event_master/sge_get_max_dynamic_event_clients() *******************
+*  NAME
+*     sge_get_max_dynamic_event_clients() -- get max dynamic event clients nr
+*
+*  SYNOPSIS
+*     u_long32 sge_get_max_dynamic_event_clients(u_long32 max) 
+*
+*  FUNCTION
+*     Returns the actual value of max. dynamic event clients allowed
+*
+*  RESULT
+*     u_long32 - max value
+*
+*  NOTES
+*     MT-NOTE: sge_get_max_dynamic_event_clients() is MT save
+*
+*******************************************************************************/
+u_long32 sge_get_max_dynamic_event_clients(void){
+   u_long32 actual_value = 0;
+   DENTER(TOP_LAYER, "sge_get_max_dynamic_event_clients");
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   actual_value = Master_Control.max_event_clients;
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DEXIT;
+   return actual_value;
+}
+
 
 /****** evm/sge_event_master/sge_select_event_clients() ************************
 *  NAME

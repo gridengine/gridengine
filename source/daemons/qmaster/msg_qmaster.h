@@ -747,6 +747,7 @@
 #define MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U _MESSAGE(33903, _("qmaster will use max. "U32CFormat" file descriptors for communication\n"))
 
 #define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33904, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
+#define MSG_QMASTER_MAX_EVC_LIMIT_U              _MESSAGE(33905, _("qmaster will accept max. "U32CFormat" dynamic event clients\n"))
 
 
 #endif

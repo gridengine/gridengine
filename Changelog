@@ -1,3 +1,6 @@
+JG-2002-04-05-1: Cleanup:   removed meanwhile meaningless comments in
+                            qlogin_starter module.
+
 CR-2002-04-05-0: Testsuite: - more function parameters for logfile_wait()
                  Enhancem.  - new procedure: close_logfile_wait()
                             - output changes

@@ -364,13 +364,6 @@ int qlogin_starter(const char *cwd, char *daemon)
       return 4;
    }
 
-/*#ifdef SOLARIS
-   if(setreuid(0, 0)) {
-      SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
-      return 4;
-   } 
-#endif
-*/
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));
    
@@ -385,22 +378,13 @@ int qlogin_starter(const char *cwd, char *daemon)
 
    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
    
-   /* bind an address to socket */
-   /* we start somewhere between 1100 and 1224 and count upwards until one
-      is free. i hope this doesn't interfere too badly with other
-      programs, but i didn't find out how to use a kernel-assigned port */
-   /* port = 1100;  */
-   /* port = 511; */
+   /* bind an address to any socket */
    memset((char *) &serv_addr, 0, sizeof(serv_addr));
-   /* serv_addr.sin_port = htons(port); */
    serv_addr.sin_port = 0; 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
 
    ret = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)); 
-   /* while (((ret = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) < 0) && errno == EINVAL)
-      serv_addr.sin_port = htons(++port); */
-      /* serv_addr.sin_port = htons(--port); */
    
    if(ret != 0) {
       SHEPHERD_TRACE((err_str, "cannot bind socket: %s", strerror(errno)));

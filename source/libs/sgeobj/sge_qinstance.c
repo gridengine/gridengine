@@ -392,6 +392,15 @@ qinstance_is_centry_referenced(const lListElem *this_elem,
 
       if (centry_ref != NULL) {
          ret = true;
+      } else {
+         int i;
+      
+         for (i = 0; i < max_queue_resources; i++) {
+            if (strcmp(queue_resource[i].name, name) == 0) {
+               ret = true;
+               break;
+            }
+         }
       }
    }
    DEXIT;

@@ -286,17 +286,20 @@ host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
 
    if (this_elem != NULL) {
       const char *name = lGetString(centry, CE_name);
+      const lList *ce_values = lGetList(this_elem, EH_consumable_config_list);
+      const lList *load_list = lGetList(this_elem, EH_load_list);
+      const lList *rep_vars = lGetList(this_elem, EH_report_variables);
 
-      /* centry may be referenced in "complex_values" */
-      if (lGetElemStr(lGetList(this_elem, EH_consumable_config_list),
-                      CE_name, name) != NULL) {
+      /* 
+       * centry may be referenced in 
+       *    - complex_values
+       *    - load_list
+       *    - report_variables
+       */
+      if (lGetElemStr(ce_values, CE_name, name) != NULL ||
+          lGetElemStr(load_list, HL_name, name) != NULL ||
+          lGetElemStr(rep_vars, STU_name, name) != NULL) {
          ret = true;
-      } else {
-      /* and/or in "report_variables */
-         if (lGetElemStr(lGetList(this_elem, EH_report_variables),
-                         STU_name, name) != NULL) {
-            ret = true;
-         }
       }
    }
 
@@ -311,7 +314,21 @@ host_is_centry_a_complex_value(const lListElem *this_elem,
    bool ret = false;
 
    DENTER(TOP_LAYER, "host_is_centry_a_complex_value");
-   ret = host_is_centry_referenced(this_elem, centry);
+   if (this_elem != NULL) {  
+      const char *name = lGetString(centry, CE_name);
+      const lList *ce_values = lGetList(this_elem, EH_consumable_config_list);
+      const lList *load_list = lGetList(this_elem, EH_load_list);
+
+      /* 
+       * centry may be referenced in 
+       *    - complex_values
+       *    - load_list
+       */
+      if (lGetElemStr(ce_values, CE_name, name) != NULL ||
+          lGetElemStr(load_list, HL_name, name) != NULL) {
+         ret = true;
+      }  
+   }
    DEXIT;
    return ret;
 }

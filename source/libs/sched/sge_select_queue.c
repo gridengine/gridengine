@@ -1271,19 +1271,21 @@ job_is_forced_centry_missing(const lListElem *job,
 
    DENTER(TOP_LAYER, "job_is_forced_centry_missing");
    if (job != NULL && master_centry_list != NULL && queue_or_host != NULL) {
-      lList *res_list = lGetList(job, JB_hard_resource_list);   
+      lList *res_list = lGetList(job, JB_hard_resource_list);  
 
       for_each(centry, master_centry_list) {
          const char *name = lGetString(centry, CE_name);
          bool is_requ = is_requested(res_list, name);
          bool is_forced = (lGetUlong(centry, CE_requestable) == REQU_FORCED);
          const char *object_name = NULL;
+         bool is_qinstance = object_has_type(queue_or_host, QU_Type);
+         bool is_host = object_has_type(queue_or_host, EH_Type);
 
          if (is_forced) {
-            if (object_has_type(queue_or_host, QU_Type)) {
+            if (is_qinstance) {
                is_forced = qinstance_is_centry_a_complex_value(queue_or_host, centry);
                object_name = lGetString(queue_or_host, QU_full_name);
-            } else if (object_has_type(queue_or_host, EH_Type)) {
+            } else if (is_host) {
                is_forced = host_is_centry_a_complex_value(queue_or_host, centry);
                object_name = lGetHost(queue_or_host, EH_name);
             } else {
@@ -1297,8 +1299,13 @@ job_is_forced_centry_missing(const lListElem *job,
 
             DPRINTF(("job "u32" does not request 'forced' resource "SFQ" of "
                      SFN"\n", job_id, name, object_name));
-            schedd_mes_add(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, name, 
-                           object_name);
+            if (is_qinstance) {
+               schedd_mes_add(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, 
+                              name, object_name);
+            } else if (is_host) {
+               schedd_mes_add(job_id, SCHEDD_INFO_NOFORCEDRES_SS, 
+                              name, object_name);
+            }
             ret = true;
             break;
          }
@@ -1308,7 +1315,7 @@ job_is_forced_centry_missing(const lListElem *job,
    return ret;
 }
 
-/****** sge_select_queue/sge_soft_violations() ***************************************
+/****** sge_select_queue/sge_soft_violations() ********************************
 *  NAME
 *     sge_soft_violations() -- counts the violations in the request for a given host or queue 
 *
@@ -1565,10 +1572,10 @@ bool is_requested(lList *req, const char *attr)
 {
    if (lGetElemStr(req, CE_name, attr) ||
        lGetElemStr(req, CE_shortcut , attr)) {
-      return 1;
+      return true;
    }
 
-   return 0;
+   return false;
 }
 
 static int sge_check_load_alarm(char *reason, const char *name, const char *load_value, 

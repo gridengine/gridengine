@@ -1,3 +1,9 @@
+EB-2004-05-10-1: Bugfix:    requestable=forced is ignored for built-in 
+                            complex(5) attributes
+                 Changed:   sge_schedd
+                 Issue:     936
+                 Review:    AH, SG
+
 DT-2004-05-10-0: Enhancem.: o Began work on DRMAA howto, including example
                               programs
                             o Cleaned up qsub

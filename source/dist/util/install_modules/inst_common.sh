@@ -1122,7 +1122,7 @@ CheckRunningDaemon()
 #
 BackupConfig()
 {
-   DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+   DATE=`date '+%Y-%m-%d_%H_%M_%S'`
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
    BUP_SPOOL_FILE_LIST="jobseqnum"
 
@@ -1133,7 +1133,7 @@ BackupConfig()
                 if [ $AUTO != "true" ]; then
                    SGE_ROOT=`pwd`
                 fi
-   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT 
+   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. \nDefault: [%s]" $SGE_ROOT 
                 SGE_ROOT=`Enter $SGE_ROOT`
    $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
                 if [ $AUTO != "true" ]; then
@@ -1151,7 +1151,7 @@ BackupConfig()
                    if [ $AUTO != "true" ]; then
                       backup_dir=`Enter $SGE_ROOT/$SGE_CELL/backup`
                       if [ -d $backup_dir ]; then
-                         $INFOTEXT -n "\n The directory [%s] already exists!\n" $backup_dir
+                         $INFOTEXT -n "\n The directory [%s] \nalready exists!\n" $backup_dir
                          $INFOTEXT  -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to overwrite the existing backup directory? (y/n) [n] >>"
                          if [ $? = 0 ]; then
                             RMBUP="rm -fR"
@@ -1218,8 +1218,9 @@ BackupConfig()
       #TAR="tar -cvf"
       #ZIP="gzip -9"
 
+         GZIP=`which gzip`
          tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-         gzip -9 $bup_file  
+         $GZIP -9 $bup_file  
 
       #ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
       #ExecuteAsAdmin $ZIP $bup_file 
@@ -1260,7 +1261,7 @@ BackupConfig()
 #
 RestoreConfig()
 {
-   DATE=`date '+%H:%M:%S'`
+   DATE=`date '+%H_%M_%S'`
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
    BUP_SPOOL_FILE_LIST="jobseqnum"
 
@@ -1275,7 +1276,7 @@ RestoreConfig()
                       "Hit, <ENTER> to continue!"
    $CLEAR
                 SGE_ROOT=`pwd`
-   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT
+   $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. \nDefault: [%s]" $SGE_ROOT
                 SGE_ROOT=`Enter $SGE_ROOT`
    $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
                 SGE_CELL=`Enter default`
@@ -1302,7 +1303,9 @@ RestoreConfig()
       $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/
-      gzip -d /tmp/bup_tmp_$DATE/*.gz 
+      
+      GZIP=`which gzip`
+      $GZIP -d /tmp/bup_tmp_$DATE/*.gz 
       tar -xvf /tmp/bup_tmp_$DATE/*.tar
       cd $SGE_ROOT 
       db_home=`cat /tmp/bup_tmp_$DATE/bootstrap | grep "spooling_params" | awk '{ print $2 }'`  

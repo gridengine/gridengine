@@ -1,3 +1,9 @@
+MD-2004-11-16-0: Bugfix:    backup/restore does not work under Linux and others.
+                 Changed:   inst_commen.sh
+                 Issue:     1328
+                 Bugtraq:   6193866
+                 Review:    pending
+
 SG-2004-11-16-0: Bugfix:    a cluster queue can be deleted, even though it is referenced
                  Changed:   qmaster
                  Review:    pending

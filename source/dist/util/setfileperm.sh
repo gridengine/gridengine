@@ -46,7 +46,7 @@
 # permissions.
 #
 
-PATH=/bin:/usr/bin
+PATH=/bin:/usr/bin:/usr/sbin
 
 SECFILELIST="bin lib utilbin"
 

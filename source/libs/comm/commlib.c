@@ -2307,6 +2307,10 @@ static sigset_t build_n_set_mask()
    sigdelset(&mask, SIGIO);
    sigdelset(&mask, SIGSEGV);
    sigdelset(&mask, SIGFPE);
+
+#ifndef SIGCLD
+#define SIGCLD  SIGCHLD /* Same as SIGCHLD (System V).  */
+#endif
    sigaddset(&mask, SIGCLD);
 
    sigprocmask(SIG_SETMASK, &mask, NULL);

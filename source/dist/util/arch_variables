@@ -160,6 +160,20 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    ;;
+ freebsd-*)
+   AWK=/usr/bin/awk
+   ECHO="/bin/echo"
+   RC_FILE=freebsd
+   RC_PREFIX=/usr/local/etc/rc.d
+   RC_SUFFIX=.sh
+   XTERM=/usr/X11R6/bin/xterm
+   MAILER=/usr/bin/mail
+   QLOGIN_COMMAND=telnet
+   QLOGIN_DAEMON=/usr/libexec/telnetd
+   RLOGIN_DAEMON=/usr/libexec/rlogind
+   GETTEXT=/usr/local/bin/gettext
+   ROOTGROUP=wheel
+   ;;
  *)
    echo "Architecture $ARCH not supported by this procedure!"
    exit 1

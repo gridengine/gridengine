@@ -84,6 +84,11 @@
 #  define ALINUX_KEYWORD "cpus detected"   
 #endif
 
+#if defined(FREEBSD)
+#   include <sys/types.h>
+#   include <sys/sysctl.h>
+#endif
+
 #ifdef NPROCS_TEST
 #   include <stdio.h>
 #   include <unistd.h>
@@ -260,6 +265,14 @@ int sge_nprocs()
 
    if (!success) {
       nprocs = 1; 
+   }
+#endif
+
+#if defined(FREEBSD)
+   size_t nprocs_len = sizeof(nprocs);
+
+   if (sysctlbyname("hw.ncpu", &nprocs, &nprocs_len, NULL, 0) == -1) {
+      nprocs = -1;
    }
 #endif
 

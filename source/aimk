@@ -84,6 +84,21 @@ case "craytsieee":
 case "darwin":
    set BUILDARCH = DARWIN
    breaksw
+case "freebsd-alpha"
+   set BUILDARCH = FREEBSD_ALPHA
+   breaksw
+case "freebsd-i386"
+   set BUILDARCH = FREEBSD_I386
+   breaksw
+case "freebsd-ia64"
+   set BUILDARCH = FREEBSD_IA64
+   breaksw
+case "freebsd-ppc"
+   set BUILDARCH = FREEBSD_PPC
+   breaksw
+case "freebsd-sparc64"
+   set BUILDARCH = FREEBSD_SPARC64
+   breaksw
 case "glinux":
    set BUILDARCH = LINUX6
    breaksw
@@ -1057,6 +1072,44 @@ case DARWIN:
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    breaksw
+
+case FREEBSD_*:
+   set COMPILE_DC = 1
+   set MAKE = gmake
+   set OFLAG = "-O"
+   set ARFLAGS     = rcv
+   set CC       = gcc
+   set CXX      = g++
+   set DLLIB	= ""
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+   set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
+   set CXXFLAGS   = "$OFLAG -Wstrict-prototypes -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LIBS     = "$LIBS -lkvm"
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared" 
+   
+   if ( $STATIC == 1 ) then
+      echo "STATITCS"
+      set CFLAGS = "-static $CFLAGS"
+      set CXXFLAGS = "-static $CXXFLAGS"
+   endif
+
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = " -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+   set RM	= "rm -f"
+   breaksw 
 
 case IRIX6*:
    set COMPILE_DC = 1

@@ -54,6 +54,9 @@ int verydummyprocfs;
 #include <unistd.h>
 #include <sys/times.h>
 #include <sys/wait.h>
+#if defined(FREEBSD)
+#include <sys/time.h>
+#endif
 #include <sys/resource.h>
 #include <dirent.h>
 #include <stdlib.h>

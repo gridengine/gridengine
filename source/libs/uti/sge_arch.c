@@ -95,6 +95,18 @@ const char *sge_get_arch(void)
 #   define ARCHBIN "linux"
 #elif defined(LINUX6)
 #   define ARCHBIN "glinux"
+#elif defined(FREEBSD)
+# if defined(FREEBSD_ALPHA)
+#   define ARCHBIN "freebsd-alpha"
+# elif defined(FREEBSD_I386)
+#   define ARCHBIN "freebsd-i386"
+# elif defined(FREEBSD_IA64)
+#   define ARCHBIN "freebsd-ia64"
+# elif defined(FREEBSD_PPC)
+#   define ARCHBIN "freebsd-ppc"
+# elif defined(FREEBSD_SPARC64)
+#   define ARCHBIN "freebsd-sparc64"
+# endif
 #elif defined(SLINUX)
 #   define ARCHBIN "slinux"
 #elif defined(CRAY)

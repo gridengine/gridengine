@@ -255,7 +255,7 @@ typedef char stringT[MAX_STRING_SIZE];
 #define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name)
 #endif
 
-#if !defined(AIX42)
+#if !defined(AIX42) && !defined(FREEBSD)
 #define HAS_GETPWNAM_R
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R

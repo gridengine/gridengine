@@ -38,7 +38,7 @@
 
 # Reset PATH to a safe value  
 #
-PATH=/bin:/usr/bin:/usr/ucb
+PATH=/bin:/usr/bin:/usr/sbin:/usr/ucb
 
 # Easy way to prevent clearing of screen
 #

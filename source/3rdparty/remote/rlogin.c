@@ -64,7 +64,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#if !defined(FREEBSD)
 #include <values.h>
+#endif
 
 #ifdef CRAY
 /* SA_RESTART is not supported on the Cray */

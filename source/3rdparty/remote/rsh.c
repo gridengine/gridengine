@@ -81,7 +81,9 @@ extern int optind;
 int rcmd(char **, u_short, char *, char *, char *, int *);
 #endif
 
+#if !defined(FREEBSD)
 #include <values.h>
+#endif
 
 #ifndef MAX 
 #define MAX(a,b) ((a)<(b)?(b):(a))

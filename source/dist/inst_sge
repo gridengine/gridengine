@@ -38,7 +38,7 @@
 
 # Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin:/usr/bsd
+PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd
 
 # Easy way to prevent clearing of screen
 #
@@ -1487,6 +1487,9 @@ AddQsystStartUpScript()
       echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
       Execute cp $V5_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+   elif [ "$RC_FILE" = "freebsd" ]; then
+      echo  cp $V5_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      Execute cp $V5_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE

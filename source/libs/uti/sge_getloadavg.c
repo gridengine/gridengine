@@ -135,6 +135,10 @@
 # include <mach/mach_host.h>
 # include <mach/mach_init.h>
 # include <mach/machine.h>
+#elif defined(FREEBSD)
+#  include <sys/dkstat.h>
+#  include <fcntl.h>
+#  include <kvm.h>
 #endif
 
 #define KERNEL_TO_USER_AVG(x) ((double)x/SGE_FSCALE)
@@ -179,7 +183,7 @@
 #  define X_CP_TIME 0 
 #endif
 
-#if defined(SOLARIS) || defined(SOLARIS64)
+#if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
 typedef kvm_t* kernel_fd_type;
 #else 
 typedef int kernel_fd_type;
@@ -201,7 +205,7 @@ static double get_cpu_load(void);
 static char* skip_token(char *p); 
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64)|| defined(IRIX6) || defined(HP10)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64)|| defined(IRIX6) || defined(HP10) || defined(FREEBSD)
 
 static int sge_get_kernel_fd(kernel_fd_type *kernel_fd);
 
@@ -218,7 +222,7 @@ static int kernel_initialized = 0;
 static kernel_fd_type kernel_fd;
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(HP10) 
+#if defined(ALPHA4) || defined(ALPHA5) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(HP10) || defined(FREEBSD)
 
 static int sge_get_kernel_address(
 char *name,
@@ -298,7 +302,7 @@ char *refstr
 ) {
    kernel_fd_type kernel_fd;
 
-#if defined(SOLARIS) || defined(SOLARIS64)
+#if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
    if (sge_get_kernel_fd(&kernel_fd)
        && kvm_read (kernel_fd, offset, (char *) ptr, size) != size) {
       if (*refstr == '!') {
@@ -726,7 +730,7 @@ double get_cpu_load()
    return cpu_load;
 }
 
-#elif defined(HP10)
+#elif defined(HP10) || defined(FREEBSD)
 
 static double get_cpu_load()
 {
@@ -1123,7 +1127,7 @@ int nelem
 int get_channel_fd()
 {
    if (kernel_initialized) {
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(LINUX) || defined(HP11)
+#if defined(SOLARIS) || defined(SOLARIS64) || defined(LINUX) || defined(HP11) || defined(FREEBSD)
       return -1;
 #else
       return kernel_fd;
@@ -1139,7 +1143,7 @@ int nelem
 ) {
    int elem = 0;   
 
-#if defined(SOLARIS64)
+#if defined(SOLARIS64) || defined(FREEBSD)
    elem = getloadavg(loadavg, nelem); /* <== library function */
 #elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(DARWIN)
    elem = get_load_avg(loadavg, nelem); 

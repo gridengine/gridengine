@@ -278,7 +278,7 @@ static osjobid_t ptf_get_osjobid(lListElem *osjob)
 {
    osjobid_t osjobid;
 
-#if !defined(LINUX) && !defined(SOLARIS) && !defined(ALPHA5) && !defined(NECSX4) && !defined(NECSX5) && !defined(DARWIN)
+#if !defined(LINUX) && !defined(SOLARIS) && !defined(ALPHA5) && !defined(NECSX4) && !defined(NECSX5) && !defined(DARWIN) && !defined(FREEBSD)
 
    osjobid = lGetUlong(osjob, JO_OS_job_ID2);
    osjobid = (osjobid << 32) + lGetUlong(osjob, JO_OS_job_ID);
@@ -308,7 +308,7 @@ static osjobid_t ptf_get_osjobid(lListElem *osjob)
 ******************************************************************************/
 static void ptf_set_osjobid(lListElem *osjob, osjobid_t osjobid)
 {
-#if !defined(LINUX) && !defined(SOLARIS) && !defined(ALPHA5) && !defined(NECSX4) && !defined(NECSX5)  && !defined(DARWIN)
+#if !defined(LINUX) && !defined(SOLARIS) && !defined(ALPHA5) && !defined(NECSX4) && !defined(NECSX5) && !defined(DARWIN) && !defined(FREEBSD)
 
    lSetUlong(osjob, JO_OS_job_ID2, ((u_osjobid_t) osjobid) >> 32);
    lSetUlong(osjob, JO_OS_job_ID, osjobid & 0xffffffff);
@@ -950,7 +950,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
 
    DENTER(TOP_LAYER, "ptf_get_job_os");
 
-#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA5) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN)
+#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA5) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN) || defined(FREEBSD)
    where = lWhere("%T(%I == %u)", JO_Type, JO_OS_job_ID, (u_long32) os_job_id);
 #else
    where = lWhere("%T(%I == %u && %I == %u)", JO_Type,

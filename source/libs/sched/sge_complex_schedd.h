@@ -67,7 +67,11 @@ int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue,
                               lList *host_list, lList *complex_list, 
                               int recompute_debitation_dependent);
 
-int compare_complexes(int slots, lListElem *util_max_ep, lListElem *complex1, 
+int queue_complexes(lList **new_complex_list, lListElem *queue, 
+                        lList *host_list, lList *complex_list, 
+                        int recompute_debitation_dependent);
+/* util_max_ep was removed by stephan, because it is not used in the function */
+int compare_complexes(int slots,/* lListElem *util_max_ep,*/ lListElem *complex1, 
                       lListElem *complex2, char *availability_text, 
                       int is_threshold, int force_existence);
 

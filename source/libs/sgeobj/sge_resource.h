@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-lList *sge_parse_resources(lList *resources, const char *str, const char *hard_soft);
+lList *sge_parse_resources(lList *resources, const char *str, const char *hard_soft, bool check_value);
 
 int unparse_resources(FILE *fp, char *buff, u_long32 max_len, lList *rlp);
 

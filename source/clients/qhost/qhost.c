@@ -203,7 +203,7 @@ char **argv
 
          host_complexes2scheduler(&centry_list, ep, ehl, cl, 0);
          selected = sge_select_queue(centry_list, resource_match_list, 1, NULL,
-                                     0, -1, NULL);
+                                     0, -1);
          centry_list = lFreeList(centry_list);
 
          if (selected) 
@@ -729,7 +729,7 @@ lListElem *ep;
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplres = sge_parse_resources(*pplres, argstr, "hard");
+         *pplres = sge_parse_resources(*pplres, argstr, "hard", true);
          FREE(argstr);
          continue;
       }

@@ -66,9 +66,11 @@ static int string_cmp(u_long32 type, u_long32 relop, const char *request,
 static int fillComplexFromQueue(lList **new_complexl, lList *complexl, lListElem *queue, int recompute_debitation_dependent);
 
 static int decide_dominance(lListElem *ep, double dval, const char *as_str, u_long32 mask);
-static int append_complexes(lList **new_complex, lList *to_add, u_long32 layer, int recompute_debitation_dependent); 
+static int append_complexes(lList **new_complex, lList *to_add, u_long32 layer, int recompute_debitation_dependent, const char** filter, int filter_count); 
 
 static int fixed_and_consumable(lList *new_complex, lList *config, lList *actual, u_long32 layer, int recompute_debitation_dependent);
+
+static void build_name_filter(const char **filter, lList *list, int t_name, int *pos);
 
 static int load_values(lList *new_complex, const char *hostname, 
                        lList *lv_list, u_long32 layer, 
@@ -314,24 +316,43 @@ static int decide_dominance(lListElem *ep, double dval, const char *as_str,
    return 1;
 }
 
+/****** sched/complex_schedd/append_complexes() *************************
+*  NAME
+*     append_complexes() --
+*
+*  FUNCTION
+*
+*  INPUTS
+*     lList **new_complex                 -
+*     lList *lp_add                       -
+*     u_long32 layer                      -
+*     int recompute_debitation_dependent  -
+*     const char** filter                 - can contain a list of to copy complex elemtents, or null
+*                                           if a complete copy should be made. 
+*     int filter_count                    - number of strings in the filter;
+*
+*  RESULT
+*     int -
+******************************************************************************/
 static int append_complexes(
 lList **new_complex,
-lList *to_add,
+lList *lp_add,
 u_long32 layer, 
-int recompute_debitation_dependent  
+int recompute_debitation_dependent,
+const char** filter,
+int filter_count  
 ) {
    lListElem *newep, *ep, *already_here;
-   lList *lp_add;
    const lDescr *lp_add_descr;
    const char *name;
    int pos_CE_name, pos_CE_dominant, pos_CE_pj_dominant;
    int prev;
+   bool skip = false;
 
    DENTER(TOP_LAYER, "append_complexes");
 
    prev = lGetNumberOfElem(*new_complex);
 
-   lp_add = to_add;
    lp_add_descr = lGetListDescr(lp_add);
    pos_CE_name        = lGetPosInDescr(lp_add_descr, CE_name);
    pos_CE_dominant    = lGetPosInDescr(lp_add_descr, CE_dominant);
@@ -341,6 +362,21 @@ int recompute_debitation_dependent
    for_each(ep, lp_add) {
 
       name = lGetPosString(ep, pos_CE_name);
+      if(filter){
+         int pos = 0;
+         skip = true;
+         for(pos = 0; pos < filter_count; pos++){
+            if(strcmp(name, filter[pos]) == 0){
+               skip = false;
+               break;
+               }
+         }
+      }
+
+      if(skip){
+         continue;
+      }
+
       already_here = lGetElemStr(*new_complex, CE_name, name);
 
       /* Just skip multiple occurances of attributes.
@@ -359,11 +395,8 @@ int recompute_debitation_dependent
          if (!lGetBool(ep, CE_consumable))
 #endif
             continue; 
-      
-         if (!already_here) {
-            ERROR((SGE_EVENT, MSG_ATTRIB_ATTRIBUTEXALLREADYINLIST_S , name));
-            continue;
-         }
+
+      if(already_here)
          lRemoveElem(*new_complex, already_here);
       }
 
@@ -435,8 +468,7 @@ int recompute_debitation_dependent
 
    fillComplexFromHost(new_centry_list, global_host, centry_list, 
                        DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
-
-   centry_list_trash_elem_with_no_value(*new_centry_list);
+/*   centry_list_trash_elem_with_no_value(*new_centry_list);*/
 
    DEXIT;
    return 0;
@@ -456,7 +488,6 @@ int recompute_debitation_dependent
    if (!host) {
       DPRINTF(("!!missing host!!\n"));
    }
-
    /* build global complex and add it to result */
    if (recompute_debitation_dependent || !*new_centry_list) {
       global_complexes2scheduler(new_centry_list, 
@@ -468,7 +499,7 @@ int recompute_debitation_dependent
    fillComplexFromHost(new_centry_list, host, centry_list, 
                        DOMINANT_LAYER_HOST, recompute_debitation_dependent);
 
-   centry_list_trash_elem_with_no_value(*new_centry_list);
+/*   centry_list_trash_elem_with_no_value(*new_centry_list);*/
 
    DEXIT;
    return 0;
@@ -512,6 +543,26 @@ int recompute_debitation_dependent
    return 0;
 }
 
+int queue_complexes(
+lList **new_centry_list,
+lListElem *queue,
+lList *exechost_list,
+lList *centry_list, 
+int recompute_debitation_dependent 
+) {
+   DENTER(TOP_LAYER, "queue_complexes2scheduler");
+
+   fillComplexFromQueue(new_centry_list, centry_list, queue, 
+                        recompute_debitation_dependent);
+
+/*   centry_list_trash_elem_with_no_value(*new_centry_list); */
+
+   DEXIT;
+   return 0;
+}
+
+
+
 /**********************************************************************
 
   Build the hosts complex for the scheduler. Input is the host complex
@@ -544,10 +595,23 @@ int fillComplexFromHost(lList **new_centry_list,
    u_long32 ulc_factor;
 
    DENTER(TOP_LAYER, "fillComplexFromHost");
-
+   
    /* append main complex "host"/"global" ... */
-   if (centry_list)
-      append_complexes(new_centry_list, centry_list, layer, recompute_debitation_dependent);
+   if (centry_list){
+      int pos = 0;
+      const char **filter = NULL;
+
+      filter = malloc((lGetNumberOfElem(centry_list)+1) * sizeof(char**)); 
+      memset(filter, 0,(lGetNumberOfElem(centry_list)+1) * sizeof(char**));
+
+      build_name_filter(filter, lGetList(host, EH_load_list), HL_name, &pos);
+      build_name_filter(filter, lGetList(host, EH_consumable_config_list), CE_name, &pos);
+      build_name_filter(filter, lGetList(host, EH_consumable_actual_list), CE_name, &pos);
+
+      append_complexes(new_centry_list, centry_list, layer, recompute_debitation_dependent, filter, pos);
+
+      FREE(filter);
+   }
 
    if (!host) { /* there may be a queue which has no host object yet */
       DEXIT;
@@ -578,6 +642,27 @@ int fillComplexFromHost(lList **new_centry_list,
 
    DEXIT;
    return 0;
+}
+
+static void build_name_filter(const char **filter, lList *list, int t_name, int *pos){
+   lListElem *current = NULL;
+   
+   if(!list)
+      return;
+
+   for_each( current,list){
+         const char* name = lGetString(current, t_name);
+         bool add = true; 
+         int i;
+         for(i=0 ; i<(*pos); i++){
+            if(strcmp(filter[i], name) == 0){
+               add = false;
+               break;
+            }
+         }
+         if(add)
+            filter[(*pos)++] = name; 
+      }
 }
 
 static int load_values(
@@ -772,8 +857,24 @@ fillComplexFromQueue(lList** new_complex,
    DENTER(TOP_LAYER, "fillComplexFromQueue");
 
    /* append main "queue" complex ... */
-   if (complex)
-      append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent);
+   if (complex){
+      int pos = 0;
+      const char **filter = NULL;
+
+      filter = malloc((lGetNumberOfElem(complex)+1) * sizeof(char**)); 
+      memset(filter, 0,(lGetNumberOfElem(complex)+1) * sizeof(char**));
+   
+      for (q2cptr = q2c; q2cptr->attrname[0]; q2cptr++){ 
+         filter[pos++] = q2cptr->attrname;
+      }
+      
+      build_name_filter(filter, lGetList(queue, QU_consumable_config_list), CE_name, &pos);
+      build_name_filter(filter, lGetList(queue, QU_consumable_actual_list), CE_name, &pos);
+
+      append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent, filter, pos);
+      FREE(filter);
+   }
+   
 
    if (!queue) {
       DEXIT;
@@ -842,7 +943,6 @@ fillComplexFromQueue(lList** new_complex,
          break;
       }
    }
-
    fixed_and_consumable(
       *new_complex, 
       lGetList(queue, QU_consumable_config_list),
@@ -942,7 +1042,8 @@ double src_dl
  *********************************************************************/
 int compare_complexes(
 int slots,
-lListElem *util_max_ep, /* maximum of utilization - needed when computing slots for utilization attributes */
+/* never used */
+/*lListElem *util_max_ep,*/ /* maximum of utilization - needed when computing slots for utilization attributes */
 lListElem *req_cplx,
 lListElem *src_cplx,
 char *availability_text,

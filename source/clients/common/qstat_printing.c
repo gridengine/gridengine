@@ -213,6 +213,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
          }
 
          sge_dstring_clear(&resource_string);
+
          { 
             u_long32 type = lGetUlong(rep, CE_valtype);
             switch (type) {
@@ -286,8 +287,10 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             break;
          }
       }
+
       lFreeList(rlp);
       sge_dstring_free(&resource_string);
+
    }
 
    DEXIT;

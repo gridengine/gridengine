@@ -1,3 +1,23 @@
+SG-2003-08-19-1: Bugfix:   - "Qstat -F complex_name" did not filter for the complex_name and 
+                             displayed all complexes
+                           - working on large job lists was very slow due to the hashing. This
+                             change was introduced in JG-2002-12-17-0 as an enhancement. The JG
+                             code is commented out and can be added again, when the hashing really
+                             improves the speed.
+                           - Fixed bug: 586. All slots in a queue are used for job dispatching. 
+                 Changed:  qmaster, scheduler, qstat, qhost, qsub, qacct, ...
+                 Review:   EB
+
+                 Enhancem. - cleanup in "sge_select_resource" and all functions using it. A variable
+                             passed in ("ccl") was never used.
+                           - changed the way "xxx2scheduler" functions generates their result list. They
+                             build a filter now to generate a list, which only contains the needed elements,
+                             instead of removing the unused ones in the end.
+                           - devided the complex list for deciding if a job is suitable for a queue into two:
+                             a host complex list and a queue complex list. 
+                 Review:   EB
+                 Changed:  qmaster, scheduler, qmon, ...
+
 SG-2003-08-19-0: Bugfix:   The complex selection dialog did not show all available complexes.
                  Changed:  qmon
                  Review:   AA

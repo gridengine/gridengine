@@ -149,10 +149,19 @@ int sge_setup_qmaster()
    /*
     * Initialize Master lists and hash tables, if necessary 
     */
+
+/** This is part is making the scheduler a
+  * lot slower that it was before. This was an enhancement introduced
+  * in cvs revision 1.35
+  * It might be added again, when hte hashing problem on large job lists
+  * with only a view owners is solved.
+  */
+#if 0
    if (Master_Job_List == NULL) {
       Master_Job_List = lCreateList("Master_Job_List", JB_Type);
    }
    cull_hash_new(Master_Job_List, JB_owner, 0);
+#endif
 
    /* create spooling context */
    {

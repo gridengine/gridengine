@@ -66,10 +66,13 @@ static void show_ce_type_list(lList *cel, const char *indent, const char *separa
    resources (complex_entries).
 
    hard_soft         - for name of resources list 
+   check_value       - if true, it makes sure, that each attribut request has
+                       also a value assigned. 
  ***********************************************************************/
 lList *
 sge_parse_resources(lList *complex_attributes,
-                    const char *str, const char *hard_soft) 
+                    const char *str, const char *hard_soft,
+                    bool check_value) 
 {
    const char *cp;
 
@@ -113,7 +116,8 @@ sge_parse_resources(lList *complex_attributes,
          DEXIT;
          return NULL;
       }
-      if (value == NULL || *value == '\0') {
+
+      if ((check_value) && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
          lFreeList(complex_attributes);
          DEXIT;

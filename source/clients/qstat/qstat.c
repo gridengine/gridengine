@@ -303,8 +303,6 @@ char **argv
       }
       /* prepare request */
       for_each(qep, queue_list) {
-         lList *ccl[3];
-         lListElem *ep;
          lList *ce = NULL;
 
          /* prepare complex attributes */
@@ -315,12 +313,7 @@ char **argv
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
          queue_complexes2scheduler(&ce, qep, exechost_list, centry_list, 0);
-         ccl[0] = lGetList(host_list_locate(exechost_list, "global"), EH_consumable_config_list);
-         ccl[1] = (ep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname)))?
-                  lGetList(ep, EH_consumable_config_list):NULL;
-         ccl[2] = lGetList(qep, QU_consumable_config_list);
-
-         selected = sge_select_queue(ce, resource_list, 1, NULL, 0, -1, ccl);
+         selected = sge_select_queue(ce, resource_list, 1, NULL, 0, -1);
 
          lFreeList(ce);
          if (empty_qs)
@@ -420,7 +413,7 @@ char **argv
 
             ret = available_slots_at_queue(NULL, jep, qep, pe, ckpt, 
                                            exechost_list, centry_list, 
-                                           acl_list, NULL, 1, NULL, 0, NULL, 0, NULL);
+                                           acl_list, NULL, 1,/* NULL,*/ 0, NULL, 0, NULL);
             if (ret>0) {
                show_job = 1;
                break;
@@ -1509,7 +1502,7 @@ lList **ppljid
       if(parse_string(ppcmdline, "-F", &alp, &argstr)) {
          (*pfull) |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
          if (argstr) {
-            *pplqresource = sge_parse_resources(*pplqresource, argstr, "hard");
+            *pplqresource = sge_parse_resources(*pplqresource, argstr, "hard", false);
             FREE(argstr);
          }
          continue;
@@ -1542,7 +1535,7 @@ lList **ppljid
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplresource = sge_parse_resources(*pplresource, argstr, "hard");
+         *pplresource = sge_parse_resources(*pplresource, argstr, "hard", false);
          FREE(argstr);
          continue;
       }

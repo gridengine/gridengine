@@ -1984,20 +1984,13 @@ lList *exec_host_list
    */
    qep = lFirst(*queue_list);
    while (qep) {
-      lList *ccl[3];
-      lListElem *ep;
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
-               lGetList(ep, EH_consumable_config_list):NULL;
-      ccl[2] = lGetList(qep, QU_consumable_config_list);
-
       ce = NULL;
       set_qs_state(QS_STATE_EMPTY);
       queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
       set_qs_state(QS_STATE_FULL);
-      if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1, ccl)) {
+      if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1)) {
          dep = qep;
          qep = lNext(qep);
          lRemoveElem(*queue_list, dep);
@@ -2027,20 +2020,12 @@ lList *exec_host_list
    */
    qep = lFirst(*queue_list);
    while (qep) {
-      lList *ccl[3];
-      lListElem *ep;
-
-      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
-               lGetList(ep, EH_consumable_config_list):NULL;
-      ccl[2] = lGetList(qep, QU_consumable_config_list);
-
       ce = NULL;
       set_qs_state(QS_STATE_EMPTY);
       queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
       set_qs_state(QS_STATE_FULL);
       
-      if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1, ccl)) {
+      if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1)) {
          dep = qep;
          qep = lNext(qep);
          lRemoveElem(*queue_list, dep);
@@ -2153,17 +2138,10 @@ lList *complex_list
    ** see if queues fulfill the request_list of the job
    */
    for_each(qep, queue_list) {
-      lList *ccl[3];
-      lListElem *ep;
-      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
-               lGetList(ep, EH_consumable_config_list):NULL;
-      ccl[2] = lGetList(qep, QU_consumable_config_list);
-
       ce = NULL;
       queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
       if (sge_select_queue(ce, lGetList(jep, JB_hard_resource_list), 1, 
-                                       NULL, 0, 1, ccl)) {
+                                       NULL, 0, 1)) {
          ce = lFreeList(ce);
          return True;
       } 

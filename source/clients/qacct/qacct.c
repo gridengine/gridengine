@@ -567,7 +567,7 @@ char **argv
    ** parsing complex flags and initialising complex list
    */
    if (complexflag) {
-      complex_options = sge_parse_resources(NULL, complexes, "hard");
+      complex_options = sge_parse_resources(NULL, complexes, "hard", true);
       if (!complex_options) {
          /*
          ** problem: still to tell some more to the user
@@ -720,19 +720,7 @@ char **argv
          DPRINTF(("complex_filled: \n"));
 
          {
-            lList *ccl[3];
-
-#if 0
-            ccl[0] = lGetList(global_host, EH_consumable_config_list);
-            ccl[1] = lGetList(queue_host, EH_consumable_config_list);
-            ccl[2] = lGetList(queue, QU_consumable_config_list);
-#else
-            ccl[0] = NULL;
-            ccl[1] = NULL;
-            ccl[2] = NULL;
-#endif
-
-            selected = sge_select_queue(complex_filled, complex_options, 1, NULL, 0, 1, ccl);
+            selected = sge_select_queue(complex_filled, complex_options, 1, NULL, 0, 1 );
          }
          lFreeList(complex_filled);
   

@@ -148,7 +148,7 @@ int event_handler_default_scheduler()
    sge_Sdescr_t copy;
    dstring ds;
    char buffer[128];
-   double prof_copy=0, prof_event=0;
+   double prof_copy=0, prof_event=0, prof_init=0;
    DENTER(TOP_LAYER, "event_handler_default_scheduler");
    
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -184,9 +184,16 @@ int event_handler_default_scheduler()
       return ret;
    }
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
+   prof_init = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
+
    memset(&copy, 0, sizeof(copy));
 
    ensure_valid_what_and_where();
+
+   copy.job_list = lSelect("", Master_Job_List,
+                           where_job, what_job); 
 
    /* the scheduler functions have to work with a reduced copy .. */
    copy.host_list = lSelect("", Master_Exechost_List,
@@ -197,8 +204,6 @@ int event_handler_default_scheduler()
    /* name all queues not suitable for scheduling in tsm-logging */
    copy.all_queue_list = lSelect("", Master_Queue_List,
                                  where_all_queue, what_queue);
-   copy.job_list = lSelect("", Master_Job_List,
-                           where_job, what_job);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
@@ -271,7 +276,8 @@ int event_handler_default_scheduler()
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
-   prof_copy = prof_get_measurement_utime(SGE_PROF_CUSTOM7,false, NULL);
+   /*prof_copy = prof_get_measurement_utime(SGE_PROF_CUSTOM7,false, NULL);*/
+   prof_copy = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
 
 /* this is useful when tracing communication of schedd with qmaster */
 #define _DONT_TRACE_SCHEDULING
@@ -315,13 +321,15 @@ int event_handler_default_scheduler()
    copy.ckpt_list = lFreeList(copy.ckpt_list);
    
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
-   prof_event = prof_get_measurement_utime(SGE_PROF_CUSTOM6,false, NULL);
+/*   prof_event = prof_get_measurement_utime(SGE_PROF_CUSTOM6,false, NULL);*/
+   prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
+ 
    if(prof_is_active()){
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (copying the lists took: %.3f s)\n",
-               prof_event, prof_copy ));
+      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copying lists: %.3f s)\n",
+               prof_event, prof_init, prof_copy ));
 
       log_state_set_log_level(saved_logginglevel);
    }

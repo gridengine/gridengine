@@ -845,10 +845,10 @@ u_long32 flags
 
          if (is_hard_soft() < 2)
             resource_list =
-               sge_parse_resources(NULL, *sp, "hard");
+               sge_parse_resources(NULL, *sp, "hard", true);
          else
             resource_list =
-               sge_parse_resources(NULL, *sp, "soft");
+               sge_parse_resources(NULL, *sp, "soft", true);
          if (!resource_list) {
              sprintf(str,MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S ,
              *sp);

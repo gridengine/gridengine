@@ -696,7 +696,7 @@ _Insight_set_option("suppress", "PARM_NULL");
       DEXIT;
       return fields?true:false;
    }
-   if(!sge_parse_bitfield_str(str, enum_strings, &uval, key, alpp)) {
+   if(!sge_parse_bitfield_str(str, enum_strings, &uval, key, alpp, false)) {
       DEXIT;
       return false;
    }
@@ -708,6 +708,39 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
 
+   lSetUlong(ep, name_nm, uval);
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
+
+bool set_conf_enum_none(lList **alpp, lList **clpp, int fields[], const char *key,
+                  lListElem *ep, int name_nm, const char **enum_strings) 
+{
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   const char *str;
+   u_long32 uval = 0;
+
+   DENTER(TOP_LAYER, "set_conf_enum_none");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   if(!sge_parse_bitfield_str(str, enum_strings, &uval, key, alpp, true)) {
+      DEXIT;
+      return false;
+   }
+   
    lSetUlong(ep, name_nm, uval);
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);

@@ -59,18 +59,25 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-/* EB: TODO: queue_types definition exists multiple times */
 const char *queue_types[] = {
    "BATCH",        
    "INTERACTIVE",  
-   "CHECKPOINTING",
-   "PARALLEL",
    ""
 };
 
 lList *Master_Queue_List = NULL;
 
-static bool queue_has_type(const lListElem *this, u_long32 type);
+static bool queue_has_type(const lListElem *this_elem, u_long32 type);
+
+static bool queue_has_type(const lListElem *this_elem, u_long32 type) 
+{
+   bool ret = false;
+
+   if (lGetUlong(this_elem, QU_qtype) & type) {
+      ret = true;
+   }
+   return ret;
+}
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op)
 {
@@ -304,70 +311,6 @@ void queue_list_clear_tags(lList *queue_list)
    queue_list_set_tag(queue_list, QUEUE_TAG_DEFAULT, 0);
 } 
 
-/****** sgeobj/queue/queue_reference_list_validate() **************************
-*  NAME
-*     queue_reference_list_validate() -- verify a queue reference list
-*
-*  SYNOPSIS
-*     int 
-*     queue_reference_list_validate(lList **alpp, lList *qr_list, 
-*                                   const char *attr_name, 
-*                                   const char *obj_descr, 
-*                                   const char *obj_name) 
-*
-*  FUNCTION
-*     Verify that all queue names in a QR_Type list refer to existing 
-*     queues.
-*
-*  INPUTS
-*     lList **alpp          - AN_Type 
-*     lList *qr_list        - the queue ref. list
-*     const char *attr_name - the attribute name in the ref. object
-*     const char *obj_descr - the descriptor of the referencing object
-*                             (e.g. "parallel environment")
-*     const char *obj_name  - the name of the referencing object
-*
-*  RESULT
-*     int - STATUS_OK, if everything is OK, else another status code,
-*           see libs/gdi/sge_answer.h
-******************************************************************************/
-int 
-queue_reference_list_validate(lList **alpp, lList *qr_list, 
-                              const char *attr_name, const char *obj_descr, 
-                              const char *obj_name) 
-{
-   lListElem *qrep;
-   int all_name_exists = 0;
-   int queue_exist = 0;
-
-   DENTER(TOP_LAYER, "queue_reference_list_validate");
-
-   for_each (qrep, qr_list) {
-      if (!strcasecmp(lGetString(qrep, QR_name), SGE_ATTRVAL_ALL)) {
-         lSetString(qrep, QR_name, SGE_ATTRVAL_ALL);
-         all_name_exists = 1;
-      } else if (!queue_list_locate(Master_Queue_List, lGetString(qrep, QR_name))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNQUEUE_SSSS, 
-            lGetString(qrep, QR_name), attr_name, obj_descr, obj_name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      } else {
-         queue_exist = 1;
-      }
-      if (all_name_exists && queue_exist) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS,
-            SGE_ATTRVAL_ALL, attr_name, obj_descr, obj_name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return STATUS_OK;
-}
-
 /****** sgeobj/queue/queue_list_add_queue() ***********************************
 *  NAME
 *     queue_list_add_queue() -- add a new queue to the queue masterlist
@@ -463,111 +406,6 @@ bool queue_check_owner(const lListElem *queue, const char *user_name)
    return ret;
 }
 
-/****** sgeobj/queue/queue_get_type_string() **********************************
-*  NAME
-*     queue_get_type_string() -- get readable type definition
-*
-*  SYNOPSIS
-*     const char* 
-*     queue_get_type_string(const lListElem *queue, lList **answer_list,
-*                           dstring *buffer) 
-*
-*  FUNCTION
-*     Returns a readable string of the queue type bitfield.
-*
-*  INPUTS
-*     const lListElem *queue - the queue containing the requested 
-*                              information
-*     dstring *buffer        - string buffer to hold the result string
-*
-*  RESULT
-*     const char* - resulting string
-*
-*  SEE ALSO
-*     sgeobj/queue/queue_set_type_string()
-*******************************************************************************/
-const char *
-queue_get_type_string(const lListElem *queue, lList **answer_list, 
-                      dstring *buffer)
-{
-   u_long32 type;
-   int i;
-   bool append = false;
-   const char *ret;
-
-   DENTER(TOP_LAYER, "queue_get_type_string");
-
-   
-   SGE_CHECK_POINTER_NULL(queue);
-   SGE_CHECK_POINTER_NULL(buffer);
-
-   type = lGetUlong(queue, QU_qtype);
-   sge_dstring_clear(buffer);
-
-   for (i = 0; queue_types[i] != NULL; i++) {
-      if ((type & (1 << i)) != 0) {
-         if (append) {
-            sge_dstring_append(buffer, " ");
-         }
-         sge_dstring_append(buffer, queue_types[i]);
-         append = true;
-      }
-   }
-
-   ret = sge_dstring_get_string(buffer);
-   DEXIT;
-   return ret;
-}
-
-/****** sgeobj/queue/queue_set_type_string() **********************************
-*  NAME
-*     queue_set_type_string() -- set queue type from string 
-*
-*  SYNOPSIS
-*     bool 
-*     queue_set_type_string(lListElem *queue, lList **answer_list, 
-*                           const char *value) 
-*
-*  FUNCTION
-*     Takes a string representation for the queue type, e.g.
-*     "BATCH PARALLEL" and sets the queue type bitfield 
-*     (attribute QU_qtype) of the given queue.
-*
-*  INPUTS
-*     lListElem *queue    - the queue to change
-*     lList **answer_list - errors will be reported here
-*     const char *value   - new value for queue type
-*
-*  RESULT
-*     bool - true on success, 
-*            false on error, error message will be in answer_list
-*
-*  SEE ALSO
-*     sgeobj/queue/queue_get_type_string()
-******************************************************************************/
-bool 
-queue_set_type_string(lListElem *queue, lList **answer_list, const char *value)
-{
-   bool ret = true;
-   u_long32 type = 0;
- 
-   DENTER(TOP_LAYER, "queue_set_type_string");
-
-   SGE_CHECK_POINTER_FALSE(queue);
-
-   if (value != NULL && *value != 0) {
-      if (!sge_parse_bitfield_str(value, queue_types, &type, 
-                                 "queue type", NULL)) {
-         ret = false;
-      }
-   }
-
-   lSetUlong(queue, QU_qtype, type);
-
-   DEXIT;
-   return ret;
-}
-
 bool 
 queue_validate(lListElem *queue, lList **answer_list)
 {
@@ -656,7 +494,7 @@ lListElem *queue_create_template(void)
    lSetString(queue, QU_min_cpu_interval, "00:05:00");
    lSetString(queue, QU_processors, "UNDEFINED");
    lSetString(queue, QU_priority, "0");
-   lSetUlong(queue, QU_qtype, BQ|IQ|PQ);
+   lSetUlong(queue, QU_qtype, BQ|IQ);
    lSetUlong(queue, QU_job_slots, 1);
    lSetString(queue, QU_tmpdir, "/tmp");
    lSetString(queue, QU_shell, "/bin/csh");
@@ -683,15 +521,266 @@ lListElem *queue_create_template(void)
    return queue;
 }
 
-static bool queue_has_type(const lListElem *this_elem, u_long32 type) 
+/****** sgeobj/queue/queue_print_qtype_to_dstring() ***************************
+*  NAME
+*     queue_print_qtype_to_dstring() -- get readable type definition 
+*
+*  SYNOPSIS
+*     bool 
+*     queue_print_qtype_to_dstring(const lListElem *this_elem, 
+*                                  dstring *string, bool only_first_char) 
+*
+*  FUNCTION
+*     Returns a readable string of the queue type bitfield. 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*     dstring *string            - string buffer to hold the result string 
+*     bool only_first_char       - print only first character of each
+*                                  type string 
+*
+*  RESULT
+*     bool - true for success
+******************************************************************************/
+bool 
+queue_print_qtype_to_dstring(const lListElem *this_elem, 
+                             dstring *string, bool only_first_char)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "queue_print_qtype_to_dstring");
+   if (this_elem != NULL && string != NULL) {
+      const char **ptr = NULL;
+      u_long32 bitmask = 1;
+      bool qtype_defined = false;
+
+      for (ptr = queue_types; **ptr != '\0'; ptr++) {
+         if (bitmask & lGetUlong(this_elem, QU_qtype)) {
+            qtype_defined = true;
+            if (only_first_char) {
+               sge_dstring_sprintf_append(string, "%c", (*ptr)[0]);
+            } else {
+               sge_dstring_sprintf_append(string, "%s ", *ptr);
+            }
+         }
+         bitmask <<= 1;
+      };
+      if (!qtype_defined) {
+         if (only_first_char) {
+            sge_dstring_sprintf_append(string, "N");
+         } else {
+            sge_dstring_sprintf_append(string, "NONE");
+         }
+      }
+   } 
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/queue/queue_parse_qtype_from_string() **************************
+*  NAME
+*     queue_parse_qtype_from_string() -- set queue type from string 
+*
+*  SYNOPSIS
+*     bool 
+*     queue_parse_qtype_from_string(lListElem *queue, lList **answer_list, 
+*                                   const char *value) 
+*
+*  FUNCTION
+*     Takes a string representation for the queue type, e.g.
+*     "BATCH PARALLEL" and sets the queue type bitfield 
+*     of the given queue.
+*
+*  INPUTS
+*     lListElem *queue    - the queue to change
+*     lList **answer_list - errors will be reported here
+*     const char *value   - new value for queue type
+*
+*  RESULT
+*     bool - true on success, 
+*            false on error, error message will be in answer_list
+*
+*  SEE ALSO
+*     sgeobj/queue/queue_get_type_string()
+******************************************************************************/
+bool 
+queue_parse_qtype_from_string(lListElem *queue, lList **answer_list, 
+                              const char *value)
+{
+   bool ret = true;
+   u_long32 type = 0;
+ 
+   DENTER(TOP_LAYER, "queue_parse_qtype_from_string");
+
+   SGE_CHECK_POINTER_FALSE(queue);
+
+   if (value != NULL && *value != 0) {
+      if (!sge_parse_bitfield_str(value, queue_types, &type, 
+                                  "queue type", NULL, true)) {
+         ret = false;
+      }
+   }
+
+   lSetUlong(queue, QU_qtype, type);
+
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/queue/queue_is_pe_referenced() *********************************
+*  NAME
+*     queue_is_pe_referenced() -- containes the queue a pe reference? 
+*
+*  SYNOPSIS
+*     bool 
+*     queue_is_pe_referenced(const lListElem *this_elem, 
+*                            const lListElem *pe) 
+*
+*  FUNCTION
+*     Containes the queue 'this_elem' a reference to the given 'pe'. 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*     const lListElem *pe        - PE_Type element
+*
+*  RESULT
+*     bool - true if the pe is referenced
+*
+*  SEE ALSO
+*     sgeobj/queue/queue_is_a_pe_referenced() 
+*     sgeobj/queue/queue_is_a_ckpt_referenced()
+*     sgeobj/queue/queue_is_pe_referenced()
+*     sgeobj/queue/queue_is_ckpt_referenced()
+*******************************************************************************/
+bool 
+queue_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
+{
+   bool ret = false;
+   lListElem *re_ref_elem;
+
+   DENTER(TOP_LAYER, "queue_is_pe_referenced");
+   for_each(re_ref_elem, lGetList(this_elem, QU_pe_list)) {
+      if (pe_is_matching(pe, lGetString(re_ref_elem, STR))) {
+         ret = true;
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/queue/queue_is_a_pe_referenced() *******************************
+*  NAME
+*     queue_is_a_pe_referenced() -- is at least one pe referenced? 
+*
+*  SYNOPSIS
+*     bool queue_is_a_pe_referenced(const lListElem *this_elem) 
+*
+*  FUNCTION
+*     Is at least one pe object referenced 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type element 
+*
+*  RESULT
+*     bool - true if queue containes pe reference(s)
+*
+*  SEE ALSO
+*     sgeobj/queue/queue_is_a_pe_referenced() 
+*     sgeobj/queue/queue_is_a_ckpt_referenced()
+*     sgeobj/queue/queue_is_pe_referenced()
+*     sgeobj/queue/queue_is_ckpt_referenced()
+*******************************************************************************/
+bool 
+queue_is_a_pe_referenced(const lListElem *this_elem) 
 {
    bool ret = false;
 
-   if (lGetUlong(this_elem, QU_qtype) & type) {
+   DENTER(TOP_LAYER, "queue_is_a_pe_referenced");
+   if (lGetNumberOfElem(lGetList(this_elem, QU_pe_list))) {
       ret = true;
    }
+   DEXIT;
    return ret;
 }
+
+/****** sgeobj/queue/queue_is_ckpt_referenced() *******************************
+*  NAME
+*     queue_is_ckpt_referenced() -- containes the queue a ckpt reference? 
+*
+*  SYNOPSIS
+*     bool 
+*     queue_is_ckpt_referenced(const lListElem *this_elem, 
+*                              const lListElem *ckpt) 
+*
+*  FUNCTION
+*     Containes the queue 'this_elem' a reference to the 'ckpt' object. 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type object 
+*     const lListElem *ckpt      - CK_Type object
+*
+*  RESULT
+*     bool - true if ckpt is referenced
+*
+*  SEE ALSO
+*     sgeobj/queue/queue_is_a_pe_referenced() 
+*     sgeobj/queue/queue_is_a_ckpt_referenced()
+*     sgeobj/queue/queue_is_pe_referenced()
+*     sgeobj/queue/queue_is_ckpt_referenced()
+*******************************************************************************/
+bool 
+queue_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
+{
+   bool ret = false;
+   lListElem *re_ref_elem;
+
+   DENTER(TOP_LAYER, "queue_is_ckpt_referenced");
+   for_each(re_ref_elem, lGetList(this_elem, QU_ckpt_list)) {
+      if (!strcmp(lGetString(ckpt, CK_name), lGetString(re_ref_elem, STR))) {
+         ret = true;
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/queue/queue_is_a_ckpt_referenced() *****************************
+*  NAME
+*     queue_is_a_ckpt_referenced() -- is at least one ckpt referenced?
+*
+*  SYNOPSIS
+*     bool 
+*     queue_is_a_ckpt_referenced(const lListElem *this_elem) 
+*
+*  FUNCTION
+*     Is at least one ckpt object referenced 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type object 
+*
+*  RESULT
+*     bool - true if queue containes ckpt reference(s)
+*
+*  SEE ALSO
+*     sgeobj/queue/queue_is_a_pe_referenced() 
+*     sgeobj/queue/queue_is_a_ckpt_referenced()
+*     sgeobj/queue/queue_is_pe_referenced()
+*     sgeobj/queue/queue_is_ckpt_referenced()
+******************************************************************************/
+bool
+queue_is_a_ckpt_referenced(const lListElem *this_elem)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "queue_is_a_ckpt_referenced");
+   if (lGetNumberOfElem(lGetList(this_elem, QU_ckpt_list))) {
+      ret = true;
+   }
+   DEXIT;
+   return ret;
+}  
 
 bool queue_is_batch_queue(const lListElem *this_elem) 
 {
@@ -705,63 +794,11 @@ bool queue_is_interactive_queue(const lListElem *this_elem)
 
 bool queue_is_checkointing_queue(const lListElem *this_elem) 
 {
-   return queue_has_type(this_elem, CQ);
+   return queue_is_a_ckpt_referenced(this_elem);
 }
 
 bool queue_is_parallel_queue(const lListElem *this_elem) 
 {
-   return queue_has_type(this_elem, PQ);
+   return queue_is_a_pe_referenced(this_elem);
 }
 
-bool queue_print_qtype_to_dstring(const lListElem *this_elem, 
-                                  dstring *string, bool only_first_char)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "queue_print_qtype_to_dstring");
-   if (this_elem != NULL && string != NULL) {
-      const char **ptr = NULL;
-      u_long32 bitmask = 1;
-
-      for (ptr = queue_types; **ptr != '\0'; ptr++) {
-         if (bitmask & lGetUlong(this_elem, QU_qtype)) {
-            if (only_first_char) {
-               sge_dstring_sprintf_append(string, "%c", (*ptr)[0]);
-            } else {
-               sge_dstring_sprintf_append(string, "%s ", *ptr);
-            }
-         }
-         bitmask <<= 1;
-      };
-   } 
-   DEXIT;
-   return ret;
-}
-
-bool queue_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
-{
-   bool ret = false;
-   lListElem *re_ref_elem;
-
-   for_each(re_ref_elem, lGetList(this_elem, QU_pe_list)) {
-      if (pe_is_matching(pe, lGetString(re_ref_elem, STR))) {
-         ret = true;
-         break;
-      }
-   }
-   return ret;
-}
-
-bool queue_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
-{
-   bool ret = false;
-   lListElem *re_ref_elem;
-
-   for_each(re_ref_elem, lGetList(this_elem, QU_ckpt_list)) {
-      if (!strcmp(lGetString(ckpt, CK_name), lGetString(re_ref_elem, STR))) {
-         ret = true;
-         break;
-      }
-   }
-   return ret;
-}

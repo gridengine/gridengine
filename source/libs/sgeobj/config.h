@@ -73,6 +73,8 @@ bool set_conf_memstr(lList **alpp, lList **clpp, int fields[], const char *key, 
 
 bool set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, const char **enum_strings);
 
+bool set_conf_enum_none(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, const char **enum_strings);
+
 bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm);
 
 bool set_conf_subordlist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int subname_nm, int subval_nm);

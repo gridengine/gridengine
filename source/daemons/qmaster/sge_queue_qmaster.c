@@ -378,7 +378,7 @@ int sub_command
    if (attr_mod_str(alpp, qep, new_queue, QU_processors, "processors")) goto ERROR;
 
    /* ---- QU_qtype */      
-   if (lGetPosViaElem(qep, QU_qtype)>=0) {
+   if (lGetPosViaElem(qep, QU_qtype) >= 0) {
       u_long32 qtype;
 
       qtype = lGetUlong(qep, QU_qtype);
@@ -386,12 +386,6 @@ int sub_command
          qtype = lGetUlong(new_queue, QU_qtype) | qtype;
       } else if (sub_command == SGE_GDI_REMOVE) {
          qtype = lGetUlong(new_queue, QU_qtype) & (~qtype);
-      }
-      if (!qtype) {
-         ERROR((SGE_EVENT, MSG_AT_LEASTONEQTYPE));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EEXIST;  
       }
       lSetUlong(new_queue, QU_qtype, qtype);
    }
@@ -1055,7 +1049,6 @@ char *rhost
    lList *sos_list_before = NULL;
    char qname[256];
    lListElem *oqep;
-   u_long32 qtype;
 
    DENTER(TOP_LAYER, "sge_gdi_delete_queue");
 
@@ -1104,67 +1097,6 @@ char *rhost
       }
    }
 
-   /* delete queue, referenced in Master_Ckpt_List is not allowed */
-   {
-      lList*     qlist;
-      lListElem* qliste;
-      lListElem* ckpte;
-      const char* chkpt_qname = NULL;
-      const char* chkpt_name = NULL;
-
-
-      for_each (ckpte, Master_Ckpt_List) {
-         qlist = lGetList(ckpte, CK_queue_list);
-         for_each (qliste, qlist) {
-            chkpt_qname = lGetString(qliste, QR_name);
-            if ((chkpt_qname != NULL) && (qname != NULL)) {
-               if (strcmp(chkpt_qname, qname) == 0) {
-                  chkpt_name = lGetString(ckpte, CK_name );
-                  if (chkpt_name == NULL) {
-                     chkpt_name = MSG_OBJ_UNKNOWN;
-                  } 
-                  ERROR((SGE_EVENT, MSG_UNABLETODELQUEUEXREFERENCEDINCHKPTY_SS, qname,chkpt_name ));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
-                  DEXIT;
-                  return STATUS_ESEMANTIC;
-               }
-            } 
-         }
-      }
-   } 
-
-   /* delete queue, referenced in Master_Pe_List is not allowed */
-   {
-      lList*     qlist;
-      lListElem* qliste;
-      lListElem* pee;
-      const char* pe_qname = NULL;
-      const char* pe_name = NULL;
-
-      for_each (pee,Master_Pe_List ) {
-         qlist = lGetList(pee, PE_queue_list);
-         for_each (qliste, qlist) {
-            pe_qname = lGetString(qliste, QR_name);
-            if ((pe_qname != NULL) && (qname != NULL)) {
-               if (strcmp(pe_qname, qname) == 0) {
-                  pe_name = lGetString(pee, PE_name );
-                  if (pe_name == NULL) {
-                     pe_name = MSG_OBJ_UNKNOWN;
-                  } 
-                  ERROR((SGE_EVENT, MSG_UNABLETODELQUEUEXREFERENCEDINPEY_SS, qname,pe_name ));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);  
-                  DEXIT;
-                  return STATUS_ESEMANTIC;
-               }
-            } 
-         }
-      }
-   }  
-
-
-
-
-
    if (!(oqep = queue_list_locate(Master_Queue_List, qname))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
@@ -1187,8 +1119,6 @@ char *rhost
          qslots_used(oqep),
          lGetUlong(oqep, QU_job_slots),
          lGetUlong(oqep, QU_suspended_on_subordinate));
-
-   qtype = lGetUlong(oqep, QU_qtype);
 
    if (sge_del_queue(qname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_QUEUE, qname));

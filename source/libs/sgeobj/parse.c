@@ -539,8 +539,10 @@ lList *string_list
    -1 error
 
 */
-bool sge_parse_bitfield_str(const char *str, const char *set_specifier[], 
-                           u_long32 *value, const char *name, lList **alpp) 
+bool 
+sge_parse_bitfield_str(const char *str, const char *set_specifier[], 
+                       u_long32 *value, const char *name, lList **alpp,
+                       bool none_allowed) 
 {
    const char *s;
    const char **cpp;
@@ -550,6 +552,11 @@ bool sge_parse_bitfield_str(const char *str, const char *set_specifier[],
    DENTER(TOP_LAYER, "sge_parse_bitfield_str");
    
    *value = 0;
+
+   if (none_allowed && !strcasecmp(str, "none")) {
+      DEXIT;
+      return true;
+   }
 
    for (s = sge_strtok(str, delim); s; s=sge_strtok(NULL, delim)) {
 

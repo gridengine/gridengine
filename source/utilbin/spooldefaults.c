@@ -202,7 +202,6 @@ static int spool_pe(const char *name)
 
    ep = lCreateElem(PE_Type);
    lSetString(ep, PE_name, name);
-   lAddSubStr(ep, QR_name, "all", PE_queue_list, QR_Type);
    lSetUlong(ep, PE_slots, 999);
    lSetString(ep, PE_allocation_rule, "$pe_slots");
    lSetBool(ep, PE_control_slaves, true);

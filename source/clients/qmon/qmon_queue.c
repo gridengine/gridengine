@@ -915,11 +915,8 @@ lListElem *qep
 ) {
 
    static char info[60000];
-   int i;
    lListElem *ep;
    int qtype;
-   char buf[BUFSIZ];
-   String qtypes[] = { "BATCH", "INTERACTIVE", "CHECKPOINT", "PARALLEL" }; 
    const char *str, *str2;
 
    DENTER(GUI_LAYER, "qmonQueueShowBrowserInfo");
@@ -929,13 +926,15 @@ lListElem *qep
    sprintf(info, WIDTH"%s\n", info, "Host:", lGetHost(qep, QU_qhostname));
 
    qtype = lGetUlong(qep, QU_qtype);
-   buf[0] = '\0';
-   for (i=0; i<sizeof(qtypes); i++) {
-      if (qtype & (1<<i))
-         sprintf(buf, "%s%s ", buf, qtypes[i]); 
-   }      
-   sprintf(info, WIDTH"%s\n", info, "Type:", buf);
-   
+
+   {
+      dstring type_buffer = DSTRING_INIT;
+
+      queue_print_qtype_to_dstring(qep, &type_buffer, false);
+      sprintf(info, WIDTH"%s\n", info, "Type:", 
+              sge_dstring_get_string(&type_buffer));
+      sge_dstring_free(&type_buffer);
+   }
    sprintf(info, WIDTH"%d\n", info, "Sequence Nr:", 
                            (int)lGetUlong(qep, QU_seq_no));
 

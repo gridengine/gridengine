@@ -279,13 +279,6 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
       return STATUS_EEXIST;
    }
 
-   /* -------- PE_queue_list */
-   if ((ret=queue_reference_list_validate(alpp, lGetList(pep, PE_queue_list), MSG_OBJ_QLIST,
-               MSG_OBJ_PE, pe_name))!=STATUS_OK && !startup) {
-      DEXIT;
-      return ret;
-   }
-
    /* -------- PE_user_list */
    if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST,
                MSG_OBJ_PE, pe_name))!=STATUS_OK) {

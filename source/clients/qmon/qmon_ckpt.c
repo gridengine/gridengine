@@ -248,19 +248,6 @@ lListElem *ep
                lGetString(ep, CK_ckpt_dir));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
 
-#ifdef HOP
-   /* queue list */
-   ql = lGetList(ep, CK_queue_list);
-   sprintf(buf, "%-20.20s", "Queues");
-   for_each(qep, ql) {
-      strcat(buf, " "); 
-      strcat(buf, lGetString(qep, QR_name));
-   }
-   if (!lGetNumberOfElem(ql))
-      strcat(buf, " NONE");
-   items[i++] = XmStringCreateLtoR(buf, "LIST");
-#endif   
-   
    /* CK_when */
    sprintf(buf, "%-20.20s %s", "Checkpoint When", lGetString(ep, CK_when));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
@@ -381,46 +368,6 @@ Widget parent
    DEXIT;
    return ckpt_ask_layout;
 }
-
-#ifdef HOP
-/*-------------------------------------------------------------------------*/
-static void qmonCkptAskForQueues(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   lList *ql_out = NULL;
-   lList *ql_in = NULL;
-   static lCondition *where = NULL;
-   static lEnumeration *what = NULL;
-   int status;
-
-   DENTER(GUI_LAYER, "qmonCkptAskForQueues");
-   
-   /*
-   ** the template q is removed here
-   */
-   if (!where) {
-      where = lWhere("%T(%I!=%s)", QU_Type, QU_qname, "template");
-      what = lWhat("%T(ALL)", QU_Type);
-   }
-   ql_in = lSelect("QL", qmonMirrorList(SGE_QUEUE_LIST), where, what);
-   ql_out = XmStringToCull(ckpt_queues_w, QR_Type, QR_name, ALL_ITEMS);
-
-   status = XmtAskForItems(w, NULL, NULL, "@{Select Queues}", ql_in, QU_qname, 
-                  "@{@fBAvailable Queues}", &ql_out, QR_Type, QR_name, 
-                  "@{@fBChosen Queues}", NULL);
-
-   if (status) {
-      UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, ql_out,
-                              QR_name);
-   }
-   ql_out = lFreeList(ql_out);
-   ql_in = lFreeList(ql_in);
-
-   DEXIT;
-}
-
-#endif
 
 /*-------------------------------------------------------------------------*/
 static void qmonCkptAdd(w, cld, cad)
@@ -679,15 +626,6 @@ lListElem *ckp
    if (ckpt_signal)
       XmtInputFieldSetString(ckpt_signal_w, ckpt_signal);
 
-#ifdef HOP
-   /*
-   ** the lists have to be converted to XmString
-   */
-   ql = lGetList(ckp, CK_queue_list);
-   UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, ql, QR_name);
-#endif   
-
-
    DEXIT;
 }
 
@@ -708,12 +646,6 @@ static void qmonCkptResetAsk(void)
    XmtChooserSetState(ckpt_when_w, state, False);
    XmtChooserSetState(ckpt_reschedule_w, 0, False);
    XmtInputFieldSetString(ckpt_signal_w, "NONE");
-#ifdef HOP   
-   /*
-   ** the lists have to be converted to XmString
-   */
-   UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, NULL, QR_name);
-#endif
 
    DEXIT;
 }
@@ -830,15 +762,6 @@ lListElem *ckp
    }
    lSetString(ckp, CK_signal, ckpt_signal);
   
-#ifdef HOP  
-   /*
-   ** XmString entries --> Cull
-   */
-   ql = XmStringToCull(ckpt_queues_w, QR_Type, QR_name, ALL_ITEMS);
-   lSetList(ckp, CK_queue_list, ql);
-#endif   
-
-
    DEXIT;
    return True;
 }

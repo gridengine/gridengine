@@ -303,14 +303,6 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
       }
    }
 
-   /* -------- CK_queue_list */
-   if (queue_reference_list_validate(alpp, lGetList(this_elem, CK_queue_list), 
-                                     MSG_OBJ_QLIST, MSG_OBJ_CKPTI, 
-                                   lGetString(this_elem, CK_name))!=STATUS_OK) {
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
    /* -------- CK_signal */
    if ((s=lGetString(this_elem, CK_signal)) &&
          strcasecmp(s, "none") &&

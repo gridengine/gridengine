@@ -625,29 +625,24 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    */
 
    if (pe) { /* parallel job */
-      /* is it a parallel queue ? */
       if (!queue_is_parallel_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
-            "job %d\n", queue_name, (int)job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S,  
-            queue_name);
-   
+                  "job %d\n", queue_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S, queue_name);
          DEXIT;
          return 3;
       }
 
-      /* check if the queue is named in queue list 
-       * of requested parallel environment 
-       * or whether the keyword all is mentioned */
-      if (!lGetSubStr(pe, QR_name, queue_name, PE_queue_list)) {
-         if (!lGetSubCaseStr(pe, QR_name, SGE_ATTRVAL_ALL, PE_queue_list)) {
-            DPRINTF(("Queue \"%s\" is not in queue list of PE \"%s\" requested "
-               "by job %d\n", queue_name, lGetString(pe, PE_name), (int)job_id));
-            schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,  
-               queue_name, lGetString(pe, PE_name));
-            DEXIT;
-            return 3;
-         }
+      /*
+       * check if the requested PE is named in the PE reference list of Queue
+       */
+      if (!queue_is_pe_referenced(queue, pe)) {
+         DPRINTF(("Queue "SFQ" does not reference PE "SFQ"\n",
+                  queue_name, lGetString(pe, PE_name)));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,
+                        queue_name, lGetString(pe, PE_name));
+         DEXIT;
+         return 3;
       }
    }
 
@@ -660,20 +655,17 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          DEXIT;
          return 6;
       }
+
       /*
-         check if the keyword "all" or if the queue is named in 
-         queue list of a requested ckpt interface definition 
-      */ 
-      if (!lGetSubStr(ckpt, QR_name, queue_name, CK_queue_list)) {
-         if (!lGetSubCaseStr(ckpt, QR_name, SGE_ATTRVAL_ALL, CK_queue_list)) {
-            DPRINTF(("Queue \"%s\" is not in queue list of ckpt \"%s\" "
-               "requested by job %d\n", 
-               queue_name, lGetString(ckpt, CK_name), (int)job_id));
-            schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
-               queue_name, lGetString(ckpt, CK_name));
-            DEXIT;
-            return 6;
-         }
+       * check if the requested CKPT is named in the CKPT ref list of Queue
+       */
+      if (!queue_is_ckpt_referenced(queue, ckpt)) {
+         DPRINTF(("Queue \"%s\" does not reference checkpointing object "SFQ
+                  "\n", queue_name, lGetString(ckpt, CK_name)));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
+                        queue_name, lGetString(ckpt, CK_name));
+         DEXIT;
+         return 6;
       }
    }   
 

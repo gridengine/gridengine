@@ -102,16 +102,6 @@ int sub_command
    /* ---- PE_job_is_first_task */
    attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
-   /* ---- PE_queue_list */
-   if (lGetPosViaElem(pe, PE_queue_list)>=0) {
-      if (queue_reference_list_validate(alpp, lGetList(pe, PE_queue_list), MSG_OBJ_QLIST,
-                  MSG_OBJ_PE, pe_name)!=STATUS_OK /* && !startup */)
-         goto ERROR;
-
-      attr_mod_sub_list(alpp, new_pe, PE_queue_list, 
-            QR_name, pe, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_PE, 0);
-   }
-
    /* ---- PE_user_list */
    if (lGetPosViaElem(pe, PE_user_list)>=0) {
       DPRINTF(("got new PE_user_list\n"));
@@ -209,10 +199,6 @@ gdi_object_t *object
 
    pe_name = lGetString(ep, PE_name);
 
-   sge_change_queue_version_qr_list(lGetList(ep, PE_queue_list), 
-         old_ep ? lGetList(old_ep, PE_queue_list) : NULL, 
-         "parallel environment", pe_name);
-
    sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, NULL, ep);
    lListElem_clear_changed_info(ep);
 
@@ -286,8 +272,6 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       DEXIT;
       return STATUS_EEXIST;
    }
-   sge_change_queue_version_qr_list(lGetList(ep, PE_queue_list), 
-      NULL, MSG_OBJ_PE, pe);
 
    /* delete found pe element */
    lRemoveElem(Master_Pe_List, ep);

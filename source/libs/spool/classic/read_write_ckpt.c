@@ -149,13 +149,6 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
 
-   /* --------- CK_queue_list */
-   if (!set_conf_list(alpp, clpp, fields, "queue_list", ep, CK_queue_list, 
-                        QR_Type, QR_name)) {
-      DEXIT;
-      return -1;
-   }
-   
    /* --------- CK_signal */
    if (!set_conf_string(alpp, clpp, fields, "signal", ep, CK_signal)) {
       DEXIT;
@@ -198,7 +191,6 @@ int how,
 const lListElem *ep 
 ) {
    FILE *fp;
-   lListElem *sep;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
@@ -261,21 +253,6 @@ const lListElem *ep
 
    /* --------- CK_ckpt_dir */
    FPRINTF((fp, "ckpt_dir           %s\n", lGetString(ep, CK_ckpt_dir)));
-
-   /* --------- CK_queue_list */
-   FPRINTF((fp, "queue_list         "));
-   sep = lFirst(lGetList(ep, CK_queue_list));
-   if (sep) {
-      do {
-         FPRINTF((fp, "%s", lGetString(sep, QR_name)));
-         sep = lNext(sep);
-         if (sep) 
-             FPRINTF((fp, " "));
-      } while (sep);
-      FPRINTF((fp, "\n"));
-   } else {
-      FPRINTF((fp, "NONE\n"));
-   }
 
    /* --------- CK_signal */
    FPRINTF((fp, "signal             %s\n", lGetString(ep, CK_signal)));
@@ -354,20 +331,6 @@ char *ckpt_name
    lSetString(ep, CK_when, "sx");
    lSetString(ep, CK_signal, "none");
    lSetUlong(ep, CK_job_pid, 0);
-
-   /* use the keyword "all" for the "queue_list" attribute */
-   {
-      lList *new_qr_list;
-      lListElem *new_qr;
-
-      new_qr_list = lCreateList("", QR_Type);
-      new_qr = lCreateElem(QR_Type);
-
-      lSetString(new_qr, QR_name, SGE_ATTRVAL_ALL);
-      lAppendElem(new_qr_list, new_qr);
-
-      lSetList(ep, CK_queue_list, new_qr_list);
-   }             
 
    DEXIT;
    return ep;

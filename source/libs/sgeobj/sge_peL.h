@@ -50,9 +50,6 @@ extern "C" {
 *     SGE_STRING(PE_name)
 *        name of the pe 
 *
-*     SGE_LIST(PE_queue_list)  
-*        QR_Type; which queues have this pe
-*
 *     SGE_ULONG(PE_slots)
 *        number of total slots
 *
@@ -87,7 +84,6 @@ extern "C" {
 ******************************************************************************/
 enum {
    PE_name = PE_LOWERBOUND,  
-   PE_queue_list,           
    PE_slots,               
    PE_user_list,          
    PE_xuser_list,         
@@ -102,7 +98,6 @@ enum {
 
 ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    SGE_STRING(PE_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
-   SGE_LIST(PE_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_ULONG(PE_slots, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(PE_user_list, US_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_LIST(PE_xuser_list, US_Type, CULL_DEFAULT | CULL_SPOOL) 
@@ -116,7 +111,6 @@ LISTEND
 
 NAMEDEF(PEN)
    NAME("PE_name")
-   NAME("PE_queue_list")
    NAME("PE_slots")
    NAME("PE_user_list")
    NAME("PE_xuser_list")

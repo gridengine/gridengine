@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2002/10/10 12:22:40 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2003/05/15 09:24:46 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2002/10/10 12:22:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2003/05/15 09:24:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -180,13 +180,39 @@ time, i.e.
 .B slots
 (see above) should be set to 1 for this queue. 
 .SS "\fBqtype\fP"
-The type of queue. Currently one of
-.I batch, interactive, parallel
-or
-.I checkpointing
-or any combination in a comma separated list.
+The type of queue. Currently
+.I batch, interactive
+or a combination in a comma separated list or
+.I NONE.
 .PP
-(type string; default: batch interactive parallel ).
+The formerly supported types parallel and checkpointing are deprecated. A queue
+instance is impicitely of type parallel/checkpointing 
+if there is a parallel environment or a checkpointing interface specified
+for this queue instance in \fBpe_list\fP/\fBckpt_list\fP. 
+Formerly possible settings e.g.
+.PP
+.nf
+.ta
+qtype   PARALLEL
+.fi
+.PP  
+could be transfered into
+.PP
+.nf
+.ta 
+qtype   NONE
+pe_list pe_name
+.fi
+.PP
+(type string; default: batch interactive).
+.SS "\fBpe_list\fP"
+The list of administartor defined parallel environments to be associated with
+the queue. The default is
+.I NONE.
+.SS "\fBckpt_list\fP"
+The list of administartor defined checkpointing interfaces to be associated 
+with the queue. The default is
+.I NONE.
 .SS "\fBrerun\fP"
 Defines a default behavior for jobs which are aborted by system crashes
 or manual "violent" (via

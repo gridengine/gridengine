@@ -186,10 +186,6 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
    /* ---- CK_job_pid */
    attr_mod_ulong(ckpt, new_ckpt, CK_job_pid, "job_pid"); 
 
-   /* ---- CK_queue_list */
-   attr_mod_sub_list(alpp, new_ckpt, CK_queue_list, 
-      QR_name, ckpt, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_CKPT, 0);  
-
    /* validate ckpt data */
    if (ckpt_validate(new_ckpt, alpp) != STATUS_OK) {
       goto ERROR;
@@ -281,10 +277,6 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    DENTER(TOP_LAYER, "ckpt_success");
 
    ckpt_name = lGetString(ep, CK_name);
-
-   sge_change_queue_version_qr_list(lGetList(ep, CK_queue_list), 
-         old_ep ? lGetList(old_ep, CK_queue_list) : NULL,
-         MSG_OBJ_CKPTI, ckpt_name);
 
    sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, NULL, ep);
    lListElem_clear_changed_info(ep);
@@ -388,9 +380,6 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EDISK;
    }
 
-   sge_change_queue_version_qr_list(lGetList(found, CK_queue_list),
-      NULL, "checkpoint interface", ckpt_name);
-
    /* now we can remove the element */
    lRemoveElem(*lpp, found);
 
@@ -400,57 +389,6 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    DEXIT;
    return STATUS_OK;
 }                     
-
-void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
-                                      const char *obj_name,
-                                      const char *ckpt_name) 
-{
-   const char *q_name;
-   lListElem *qrep, *qep;
-
-   DENTER(TOP_LAYER, "sge_change_queue_version_qr_list");
-
-   /*
-      change version of all queues in new queue list of new ckpt interface
-   */
-   for_each (qrep, nq) {
-      q_name = lGetString(qrep, QR_name);
-      if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
-         lList *answer_list = NULL;
-         sge_change_queue_version(qep, 0, 0);
-
-         /* event has already been sent in sge_change_queue_version */
-         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
-                      lGetString(qep, QU_qname), NULL, qep, NULL, NULL, false, true);
-         answer_list_output(&answer_list);
-         DPRINTF(("increasing version of queue \"%s\" because %s"
-            " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
-      }
-   }
-
-   /*
-      change version of all queues in
-      old queue list and not in the new one
-   */
-   for_each (qrep, oq) {
-      q_name = lGetString(qrep, QR_name);
-      if (!lGetElemStr(nq, QR_name, q_name) 
-          && (qep = queue_list_locate(Master_Queue_List, q_name))) {
-         lList *answer_list = NULL;
-         sge_change_queue_version(qep, 0, 0);
-
-         /* event has already been sent in sge_change_queue_version */
-         sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 0, 0, 
-                      lGetString(qep, QU_qname), NULL, qep, NULL, NULL, false, true);
-         answer_list_output(&answer_list);
-         DPRINTF(("increasing version of queue \"%s\" because %s"
-               " \"%s\" has changed\n", q_name, obj_name, ckpt_name));
-      }
-   }
-
-   DEXIT;
-   return;
-}                 
 
 const char *get_checkpoint_when(int bitmask)
 {

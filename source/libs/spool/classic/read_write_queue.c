@@ -221,7 +221,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    }
 
    /* --------- QU_qtype */
-   if (!set_conf_enum(alpp, clpp, fields, "qtype", ep, QU_qtype, queue_types)) {
+   if (!set_conf_enum_none(alpp, clpp, fields, "qtype", ep, QU_qtype, queue_types)) {
       DEXIT;
       return -1;
    }

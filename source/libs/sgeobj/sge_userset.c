@@ -277,7 +277,7 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/userset/userset_set_type_string() **********************************
+/****** sgeobj/userset/userset_set_type_string() ******************************
 *  NAME
 *     userset_set_type_string() -- set userset type from string 
 *
@@ -287,9 +287,7 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
 *                           const char *value) 
 *
 *  FUNCTION
-*     Takes a string representation for the userset type, e.g.
-*     "BATCH PARALLEL" and sets the userset type bitfield 
-*     (attribute QU_qtype) of the given userset.
+*     Takes a string representation for the userset type, 
 *
 *  INPUTS
 *     lListElem *userset    - the userset to change
@@ -315,7 +313,7 @@ userset_set_type_string(lListElem *userset, lList **answer_list, const char *val
 
    if (value != NULL && *value != 0) {
       if (!sge_parse_bitfield_str(value, userset_types, &type, 
-                                 "userset type", NULL)) {
+                                  "userset type", NULL, false)) {
          ret = false;
       }
    }

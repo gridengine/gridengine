@@ -114,13 +114,6 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
 
-   /* --------- PE_queue_list */
-   if (!set_conf_list(alpp, clpp, fields, "queue_list", ep, PE_queue_list, 
-                        QR_Type, QR_name)) {
-      DEXIT;
-      return -1;
-   }
-   
    /* --------- PE_slots */
    if (!set_conf_ulong(alpp, clpp, fields, "slots", ep, PE_slots)) {
       DEXIT;
@@ -247,21 +240,6 @@ const lListElem *ep
 
    /* --------- PE_name */
    FPRINTF((fp, "pe_name           %s\n", lGetString(ep, PE_name)));
-
-   /* --------- PE_queue_list */
-   FPRINTF((fp, "queue_list        "));
-   sep = lFirst(lGetList(ep, PE_queue_list));
-   if (sep) {
-      do {
-         FPRINTF((fp, "%s", lGetString(sep, QR_name)));
-         sep = lNext(sep);
-         if (sep) 
-             FPRINTF((fp, " "));
-      } while (sep);
-      FPRINTF((fp, "\n"));
-   }
-   else
-      FPRINTF((fp, "NONE\n"));
 
    /* --------- PE_slots */
    FPRINTF((fp, "slots             %d\n", (int)lGetUlong(ep, PE_slots)));
@@ -411,8 +389,6 @@ lListElem* sge_generic_pe(char *pe_name)
 
       lSetString(new_qr, QR_name, SGE_ATTRVAL_ALL);
       lAppendElem(new_qr_list, new_qr);
-
-      lSetList(pep, PE_queue_list, new_qr_list);
    }
 
    DEXIT;

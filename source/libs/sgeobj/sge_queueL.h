@@ -47,9 +47,7 @@ extern "C" {
  */
 enum {
    BQ = 0x01,                /* batch Q */
-   IQ = 0x02,                /* interactive Q */
-   CQ = 0x04,                /* checkpointing Q */
-   PQ = 0x08                 /* parallel Q */
+   IQ = 0x02                 /* interactive Q */
 };
 
 /* Q states moved over from def.h */

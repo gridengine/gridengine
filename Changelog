@@ -1,13 +1,29 @@
-AA-2003-05-14-0: Enhancement: cluster queue prelim qmon changes
+EB-2003-05-15-0: Enhancem.: Move queue_list from PE/CKPT to queue configuartion
+                            (part 2/2: move pe/ckpt references into QU_Type)
+
+                            Apply changes 8c) to queue/pe/ckpt data structure
+                            Change the queue_conf(5)/sge_pe(5)/checkpoint(5)
+                            file formats accordingly these changes. Ensure 
+                            qtype behaviour is changed as described in 
+                            queue_conf(5)
+
+                            Find more details in the document summarizing 
+                            the specification for Cluster Queues (#14)
+
+                 IZ:        14
+                 Changed:   all
+                 Review:    JG (AH)
+
+AA-2003-05-14-0: Enhancem.: cluster queue prelim qmon changes
 
 AH-2003-05-13-0: Bugfix:    fix qacct crash in case job maxvmem equals to 0
 
 AA-2003-05-13-0: Bugfix:    allow arguments for qlogin etc. in qmon
                  Changed:   qmon
 
-AD-2003-05-12-0: Bugfix:    aimk (platform LINUX6): HAS_IN_PORT_T is defined depending on
-                            the libc version. The corresponding test know is able to deal
-                            with 2.2.x and 2.3.x libs.
+AD-2003-05-12-0: Bugfix:    aimk (platform LINUX6): HAS_IN_PORT_T is defined 
+                            depending on the libc version. The corresponding 
+                            test know is able to deal with 2.2.x and 2.3.x libs.
                  Changed:   aimk
 
 CR-2003-05-09-1  Testsuite: throughput test: use scheduler system + user time
@@ -75,7 +91,7 @@ CR-2003-05-07-0  Testsuite: fixed error for install_core_system check:
                             exists.
 
 EB-2003-05-07-0  Cleanup:   wrapper functions to access QU_qtype attribute
-                            (part 1: move pe/ckpt references intgo QU_Type 
+                            (part 1/2: move pe/ckpt references intgo QU_Type 
                              object) 
 
 JG-2003-05-06-1  Bugfix:    broken build

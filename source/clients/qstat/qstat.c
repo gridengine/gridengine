@@ -787,7 +787,7 @@ u_long32 show
    ** pe list 
    */ 
    if (pe_l) {   
-      pe_all = lWhat("%T(%I%I%I%I)", PE_Type, PE_name, PE_queue_list, PE_job_is_first_task, PE_control_slaves);
+      pe_all = lWhat("%T(%I%I%I)", PE_Type, PE_name, PE_job_is_first_task, PE_control_slaves);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL, &state);
       pe_all = lFreeWhat(pe_all);
@@ -803,7 +803,7 @@ u_long32 show
    ** ckpt list 
    */ 
    if (ckpt_l) {
-      ckpt_all = lWhat("%T(%I%I)", CK_Type, CK_name, CK_queue_list);
+      ckpt_all = lWhat("%T(%I)", CK_Type, CK_name);
       ckpt_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET, 
                            NULL, NULL, ckpt_all, NULL, &state);
       ckpt_all = lFreeWhat(ckpt_all);
@@ -1092,27 +1092,30 @@ lList *pe_list
       return -1;
    }
 
-   /* untag all non-parallel queues and queues not referenced 
-      by a pe in the selected pe list */
+   /* 
+    * untag all non-parallel queues and queues not referenced 
+    * by a pe in the selected pe list entry of a queue 
+    */
    for_each(qep, queue_list) {
-      const char *qname;
-
       lListElem* found = NULL;
 
       if (!queue_is_parallel_queue(qep)) {
          lSetUlong(qep, QU_tagged, 0);
          continue;
       }
+      for_each (pe, pe_selected) {
+         const char *pe_name = lGetString(pe, PE_name);
 
-      qname = lGetString(qep, QU_qname);
-      for_each (pe, pe_selected) 
-         if ((found=lGetSubStr(pe, QR_name, qname, PE_queue_list))
-            || (found=lGetSubCaseStr(pe, QR_name, SGE_ATTRVAL_ALL, PE_queue_list))) 
+         found = lGetSubStr(qep, STR, pe_name, QU_pe_list);
+         if (found != NULL) {
             break;
-      if (!found)
+         }
+      }
+      if (found == NULL) {
          lSetUlong(qep, QU_tagged, 0);
-      else 
+      } else {
          nqueues++;
+      }
    }
 
    if (pe_selected != NULL) {

@@ -272,10 +272,6 @@ object_get_subtype(int nm)
       case EH_usage_scaling_list:
          ret = HS_Type;
          break;
-      case CK_queue_list:
-      case PE_queue_list:
-         ret = QR_Type;
-         break;
       case EH_reschedule_unknown_list:
          ret = RU_Type;
          break;
@@ -549,7 +545,8 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          DEXIT;
          return result;
       case QU_qtype:
-         result = queue_get_type_string(object, answer_list, buffer);
+         queue_print_qtype_to_dstring(object, buffer, false);
+         result = sge_dstring_get_string(buffer); 
          DEXIT;
          return result;
       case US_type:
@@ -753,7 +750,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          DEXIT;
          return ret;
       case QU_qtype:
-         ret = queue_set_type_string(object, answer_list, value);
+         ret = queue_parse_qtype_from_string(object, answer_list, value);
          DEXIT;
          return ret; 
       case US_type:

@@ -55,7 +55,6 @@ enum {
    CK_migr_command,
    CK_rest_command,
    CK_ckpt_dir,
-   CK_queue_list,
    CK_when,
    CK_signal,
    CK_job_pid,
@@ -69,7 +68,6 @@ ILISTDEF(CK_Type, Checkpoint, SGE_CKPT_LIST)
    SGE_STRING(CK_migr_command, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CK_rest_command, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CK_ckpt_dir, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(CK_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CK_when, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CK_signal, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(CK_job_pid, CULL_DEFAULT)
@@ -83,7 +81,6 @@ NAMEDEF(CKN)
    NAME("CK_migr_command")
    NAME("CK_rest_command")
    NAME("CK_ckpt_dir")
-   NAME("CK_queue_list")
    NAME("CK_when")
    NAME("CK_signal")
    NAME("CK_job_pid")

@@ -48,7 +48,6 @@ extern lList *Master_Queue_List;
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op);
 
-
 void queue_get_state_string(char *str, u_long32 op);
 
 bool 
@@ -70,13 +69,6 @@ bool queue_list_add_queue(lListElem *queue);
 
 bool queue_check_owner(const lListElem *queue, const char *user_name);
 
-const char *
-queue_get_type_string(const lListElem *queue, lList **answer_list,
-                      dstring *buffer);
-
-bool 
-queue_set_type_string(lListElem *queue, lList **answer_list, const char *value);
-
 bool 
 queue_validate(lListElem *queue, lList **answer_list);
 
@@ -94,6 +86,10 @@ bool queue_is_parallel_queue(const lListElem *this_elem);
 bool 
 queue_print_qtype_to_dstring(const lListElem *this_elem, 
                              dstring *string, bool only_first_char);
+
+bool
+queue_parse_qtype_from_string(lListElem *queue, lList **answer_list, 
+                              const char *value);
 
 bool 
 queue_is_pe_referenced(const lListElem *this_elem, const lListElem *pe);

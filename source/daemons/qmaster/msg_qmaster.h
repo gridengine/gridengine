@@ -561,15 +561,12 @@
 #define MSG_QUEUE_NULLPTRPASSEDTOSGE_DEL_QUEUE  _MESSAGE(33454, _("NULL ptr passed to sge_del_queue()\n"))
 #define MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS _MESSAGE(33455, _("calendar "SFQ" referenced in queue "SFQ" does not exist\n"))
 #define MSG_OBJ_QUEUE                 _MESSAGE(33457, _("queue"))
-#define MSG_UNABLETODELQUEUEXREFERENCEDINCHKPTY_SS _MESSAGE(33458, _("unable to delete queue "SFQ", referenced in checkpoint definition "SFQ"\n"))
-#define MSG_UNABLETODELQUEUEXREFERENCEDINPEY_SS _MESSAGE(33459, _("unable to delete queue "SFQ", referenced in parallel environment definition "SFQ"\n"))
 #define MSG_SGETEXT_NOTPOSSIBLETOMODHOSTNAME          _MESSAGE(33460, _("it is not possible to modify the hostname attribute\n"))
 /* #define MSG_SGETEXT_TOOFEWQSIQLIC_II                  _message(33461, _("not enough qsi queue licenses; licensed=%d - requested=%d\n") )   __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SGETEXT_OPNOTALLOWED_S              _MESSAGE(33462, _("operation not allowed: "SFN"\n"))
 #define MSG_NOTALLOWEDTODELSUBORDINATE_SS              _MESSAGE(33463, _("deleting queue "SFQ" is not allowed because it is subordinate queue of "SFQ"\n"))
 #define MSG_SGETEXT_ACTIVEUNITS_SSIS            _MESSAGE(33464, _(""SFN" "SFQ" has %d active "SFN"\n"))
 /* #define MSG_SGETEXT_CANTCOUNT_QSIQ_S                  _message(33468, _("can't count qsi queues in "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
-#define MSG_AT_LEASTONEQTYPE                          _MESSAGE(33470, _("At least one queue type must be selected\n"))
 
 /*
 ** qmaster.c

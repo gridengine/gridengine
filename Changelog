@@ -1,3 +1,11 @@
+SG-2004-07-12-0: Bugfix:    - qstat -j -xml printed unparsable xml-output
+                            - the qstat xml schema missed the hard request
+                              queue field.
+                 Changed:   qstat, detailed_job_info.xsd
+                 Issue:     1144
+                 Bugtraq:   -NA-
+                 Review:    AA
+
 AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat
                  Changed:   qstat, qhost
                  Issue:     1113

@@ -132,6 +132,21 @@ ___INFO__MARK_END__-->
                      <xsd:element name="JB_checkpoint_interval" type="xsd:positiveInteger"/>
                      <xsd:element name="JB_restart" type="xsd:positiveInteger"/>
                      <xsd:element name="JB_merge_stderr" type="xsd:Boolean"/>
+                     
+                     <xsd:element name="JB_hard_queue_list">
+                        <xsd:complexType>
+                           <xsd:sequence> 
+                              <xsd:element name="destin_ident_list" minOccurs="0" maxOccurs="unbounded">
+                                 <xsd:complexType>
+                                    <xsd:sequence>
+                                       <xsd:element name="QR_name" type="xsd:String"/>
+                                    </xsd:sequence>
+                                 </xsd:complexType>                          
+                              </xsd:element> 
+                           </xsd:sequence>
+                        </xsd:complexType>  
+                     </xsd:element>
+                     
                      <xsd:element name="JB_mail_options" type="xsd:positiveInteger"/>
 
                      <xsd:element name="JB_mail_list">

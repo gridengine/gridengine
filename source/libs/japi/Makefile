@@ -36,7 +36,7 @@ JAPILIB_DIR   = $(SDIR)/libs/japi
 
 JAPILIB 	= libjapi$(LIBEXT)
 
-JAPILIB_SRC 	= japi.c sge_all_listsL.c
+JAPILIB_SRC 	= japi.c rdwr.c sge_all_listsL.c
 
 JAPILIB_OBJS = $(JAPILIB_SRC:.c=.o)
 
@@ -82,9 +82,12 @@ include $(JAPILIB_DIR)/japi_dependencies
 japi.o: $(JAPILIB_DIR)/japi.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
 
+rdwr.o: $(JAPILIB_DIR)/rdwr.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/rdwr.c
+
 #---------------------------------------------------------------------
 
-TEST_JAPI_OBJS = test_japi.o $(JAPILIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+TEST_JAPI_OBJS = test_japi.o $(JAPILIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 
 test_japi: $(TEST_JAPI_OBJS)
 	$(CC) $(CFLAGS) -o test_japi $(TEST_JAPI_OBJS) $(LFLAGS) $(LIBS)

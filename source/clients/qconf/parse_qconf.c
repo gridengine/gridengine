@@ -5109,7 +5109,7 @@ char *filename
 *     
 ****************************************************************************
 */
-void show_gdi_request_answer(
+static void show_gdi_request_answer(
 lList *alp 
 ) {
    lListElem *aep         = NULL;
@@ -5460,7 +5460,7 @@ char *user
 *  RESULT
 *     int 0 on success, -1 on error
 ******************************************************************************/
-int mod_host_group_entry(
+static int mod_host_group_entry(
 char *group 
 ) { 
    lListElem* genericElem = NULL;

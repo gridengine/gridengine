@@ -1,3 +1,11 @@
+AH-2002-02-28-1  Enhancem.: Ensure drmaa_exit() can be called while
+                            a second thread does a drmaa_run_job() or
+                            drmaa_wait().
+                            Enhanced test_japi into a test application 
+                            providing means to do multiple tests.
+                            Implemented drmaa_strerror().
+                 Review:    CR
+
 AH-2002-02-28-0  Enhancem.: Event client was not restartable. To fix this the 
                             whole event client state is resetted when 
                             ec_deregister() is called. Also a problem has

@@ -88,7 +88,7 @@ struct gdi_state_t *gdi_state = &gdi_state_opaque;
 #endif
 
 #if defined(SGE_MT)
-static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
 
 static void gdi_state_destroy(void* state) {
    free(state);
@@ -98,7 +98,7 @@ void gdi_init_mt() {
    pthread_key_create(&gdi_state_key, &gdi_state_destroy);
 } 
   
-void do_once_init(void) {
+void gdi_once_init(void) {
    /* uti */
    uti_init_mt();
    log_init_mt();
@@ -339,7 +339,7 @@ int sge_gdi_setup(const char *programname, lList **alpp)
 
    /* initialize libraries */
 #if defined(SGE_MT)
-   pthread_once(&once_control, do_once_init);
+   pthread_once(&gdi_once_control, gdi_once_init);
 #endif
 
    if (gdi_state_get_made_setup()) {
@@ -424,7 +424,7 @@ int sge_gdi_param(int param, int intval, char *strval)
 
 /* initialize libraries */
 #if defined(SGE_MT)
-   pthread_once(&once_control, do_once_init);
+   pthread_once(&gdi_once_control, gdi_once_init);
 #endif
 
    if (gdi_state_get_made_setup()) {
@@ -481,7 +481,7 @@ int sge_gdi_shutdown()
 
 /* initialize libraries */
 #if defined(SGE_MT)
-   pthread_once(&once_control, do_once_init);
+   pthread_once(&gdi_once_control, gdi_once_init);
 #endif
 
    default_exit_func(0);

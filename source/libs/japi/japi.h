@@ -1,5 +1,10 @@
 #ifndef __JAPI_H
 
+
+#ifdef JAPI_HOOKS
+extern int delay_after_submit;
+#endif
+
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAA_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
@@ -31,7 +36,9 @@ enum {
    DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE, /* The job has not been running, and it cannot be suspended. */
    DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD state. */
    DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD state. */
-   DRMAA_ERRNO_EXIT_TIMEOUT /* We have encountered a time-out condition for drmaa_synchronize or drmaa_wait. */
+   DRMAA_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for drmaa_synchronize or drmaa_wait. */
+
+   DRMAA_NO_ERRNO
 };
 
 #define DRMAA_ERROR_STRING_BUFFER   1024
@@ -147,7 +154,8 @@ int drmaa_get_vector_attribute_names(void /* vector of attribute name (string ve
  * The job identifier 'job_id' is a printable, NULL terminated string,
  * identical to that returned by the underlying DRM system.
  */
-int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt);
+int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, 
+      char *error_diagnosis, int error_diag_len);
 
 /* 
  * Submit a set of parametric jobs, dependent on the implied loop index, each
@@ -277,5 +285,12 @@ drmaa_wifaborted( OUT aborted, IN stat, INOUT drmaa_context_error_buf )
  * DRMAA_PS_FAILED = 40H : job finished, but failed.
  */
 int drmaa_job_ps( const char *job_id, int *remote_ps);
+
+const char *drmaa_strerror(int drmaa_errno);
+
+/*
+contact drmaa_get_contact();
+OUT contact Current contact information for DRM system (string)
+*/
 
 #endif /* __JAPI_H */

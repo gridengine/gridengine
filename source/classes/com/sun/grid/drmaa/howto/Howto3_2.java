@@ -36,14 +36,14 @@ import org.ggf.drmaa.*;
 
 public class Howto3_2 {
    public static void main (String[] args) {
-      DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-      DRMAASession session = factory.getSession ();
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
          session.init (null);
          JobTemplate jt = session.createJobTemplate ();
          jt.setRemoteCommand ("sleeper.sh");
-         jt.setInputParameters (new String[] {"5"});
+         jt.setArgs (new String[] {"5"});
          
          int start = 1;
          int end  = 30;
@@ -56,13 +56,13 @@ public class Howto3_2 {
             System.out.println ("Your job has been submitted with id " + i.next ());
          }
          
-         jt.delete ();
-         session.synchronize (Collections.singletonList (DRMAASession.JOB_IDS_SESSION_ALL),
-         DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+         session.deleteJobTemplate (jt);
+         session.synchronize (Collections.singletonList (Session.JOB_IDS_SESSION_ALL),
+         Session.TIMEOUT_WAIT_FOREVER, false);
          
          for (int count = start; count < end; count += step) {
-            JobInfo info = session.wait (DRMAASession.JOB_IDS_SESSION_ANY,
-            DRMAASession.TIMEOUT_WAIT_FOREVER);
+            JobInfo info = session.wait (Session.JOB_IDS_SESSION_ANY,
+            Session.TIMEOUT_WAIT_FOREVER);
             
             if (info.wasAborted ()) {
                System.out.println ("Job " + info.getJobId () + " never ran");
@@ -97,7 +97,7 @@ public class Howto3_2 {
          
          session.exit ();
       }
-      catch (DRMAAException e) {
+      catch (DrmaaException e) {
          System.out.println ("Error: " + e.getMessage ());
       }
    }

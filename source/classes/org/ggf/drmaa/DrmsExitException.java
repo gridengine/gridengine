@@ -29,30 +29,26 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package com.sun.grid.drmaa;
+package org.ggf.drmaa;
 
-import org.ggf.drmaa.*;
-
-/**
- * This class is used to create an SGESession object.
- * @see org.ggf.drmaa.DRMAASessionFactory
- * @author  dan.templeton@sun.com
+/** DRM system disengagement failed.
+ * @author dan.templeton@sun.com
+ * @since 0.5
  */
-public class SGESessionFactory extends DRMAASessionFactory {
-   private SGESession thisSession = null;
-   
-   /** Creates a new instance of SGESessionFactory */
-   public SGESessionFactory () {
-   }
-   
-	/** Gets an SGESession object.
-	 * @return an SGESession object
-	 */	
-	public DRMAASession getSession () {
-		if (thisSession == null) {
-			thisSession = new SGESession ();
-		}
-		
-		return thisSession;
+public class DrmsExitException extends DrmaaException {
+	
+	/**
+	 * Creates a new instance of <code>DrmsExitException</code> without detail message.
+	 */
+	public DrmsExitException () {
+	}
+	
+	
+	/**
+	 * Constructs an instance of <code>DrmsExitException</code> with the specified detail message.
+	 * @param msg the detail message.
+	 */
+	public DrmsExitException (String msg) {
+		super (msg);
 	}
 }

@@ -31,8 +31,9 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The format for the job attribute value is invalid.
+/** The format for the attribute value is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
 public class InvalidAttributeFormatException extends InvalidAttributeException {
 	

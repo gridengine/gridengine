@@ -35,6 +35,7 @@ package org.ggf.drmaa;
  * This exception is thrown when a setter or getter is called for an unsupported
  * optional attribute.
  * @author  dan.templeton@sun.com
+ * @since 0.4.2
  */
 public class UnsupportedAttributeException extends java.lang.RuntimeException {
    

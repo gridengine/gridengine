@@ -34,14 +34,14 @@ import org.ggf.drmaa.*;
 
 public class Howto5 {
    public static void main (String[] args) {
-      DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-      DRMAASession session = factory.getSession ();
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
          session.init (null);
          JobTemplate jt = session.createJobTemplate ();
          jt.setRemoteCommand ("sleeper.sh");
-         jt.setInputParameters (new String[] {"5"});
+         jt.setArgs (new String[] {"5"});
          
          String id = session.runJob (jt);
          
@@ -57,45 +57,45 @@ public class Howto5 {
          int status = session.getJobProgramStatus (id);
          
          switch (status) {
-            case DRMAASession.UNDETERMINED:
+            case Session.UNDETERMINED:
                System.out.println ("Job status cannot be determined\n");
                break;
-            case DRMAASession.QUEUED_ACTIVE:
+            case Session.QUEUED_ACTIVE:
                System.out.println ("Job is queued and active\n");
                break;
-            case DRMAASession.SYSTEM_ON_HOLD:
+            case Session.SYSTEM_ON_HOLD:
                System.out.println ("Job is queued and in system hold\n");
                break;
-            case DRMAASession.USER_ON_HOLD:
+            case Session.USER_ON_HOLD:
                System.out.println ("Job is queued and in user hold\n");
                break;
-            case DRMAASession.USER_SYSTEM_ON_HOLD:
+            case Session.USER_SYSTEM_ON_HOLD:
                System.out.println ("Job is queued and in user and system hold\n");
                break;
-            case DRMAASession.RUNNING:
+            case Session.RUNNING:
                System.out.println ("Job is running\n");
                break;
-            case DRMAASession.SYSTEM_SUSPENDED:
+            case Session.SYSTEM_SUSPENDED:
                System.out.println ("Job is system suspended\n");
                break;
-            case DRMAASession.USER_SUSPENDED:
+            case Session.USER_SUSPENDED:
                System.out.println ("Job is user suspended\n");
                break;
-            case DRMAASession.USER_SYSTEM_SUSPENDED:
+            case Session.USER_SYSTEM_SUSPENDED:
                System.out.println ("Job is user and system suspended\n");
                break;
-            case DRMAASession.DONE:
+            case Session.DONE:
                System.out.println ("Job finished normally\n");
                break;
-            case DRMAASession.FAILED:
+            case Session.FAILED:
                System.out.println ("Job finished, but failed\n");
                break;
          } /* switch */
          
-         jt.delete ();
+         session.deleteJobTemplate (jt);
          session.exit ();
       }
-      catch (DRMAAException e) {
+      catch (DrmaaException e) {
          System.out.println ("Error: " + e.getMessage ());
       }
    }

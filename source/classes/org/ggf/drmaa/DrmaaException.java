@@ -29,26 +29,27 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** The base class for all caught DRMAA Exceptions.
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
+public abstract class DrmaaException extends java.lang.Exception {
 	
 	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
+	 * Creates a new instance of <code>DrmaaException</code> without detail message.
 	 */
-	public InvalidArgumentException () {
+	public DrmaaException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
+	 * Constructs an instance of <code>DrmaaException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidArgumentException (String msg) {
+	public DrmaaException (String msg) {
 		super (msg);
 	}
 }

@@ -31,24 +31,26 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** Thrown by Session.wait() when a job has finished
+ * but no resource usage information and exit status data could be provided.
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @see Session#wait
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
+public class NoResourceUsageException extends DrmaaException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
+	 * Creates a new instance of <code>NoResourceUsageInformationException</code> without detail message.
 	 */
-	public InvalidArgumentException () {
+	public NoResourceUsageException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
+	 * Constructs an instance of <code>NoResourceUsageInformationException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidArgumentException (String msg) {
+	public NoResourceUsageException (String msg) {
 		super (msg);
 	}
 }

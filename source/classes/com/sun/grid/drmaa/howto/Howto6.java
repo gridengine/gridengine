@@ -34,33 +34,33 @@ import org.ggf.drmaa.*;
 
 public class Howto6 {
    public static void main (String[] args) {
-      DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-      DRMAASession session = factory.getSession ();
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
          System.out.println ("Supported contact strings: \"" +
                              session.getContact () + "\"");
          System.out.println ("Supported DRM systems: \"" +
-                             session.getDRMSystem () + "\"");
+                             session.getDrmSystem () + "\"");
          System.out.println ("Supported DRMAA implementations: \"" +
-                             session.getDRMAAImplementation () + "\"");
+                             session.getDrmaaImplementation () + "\"");
          
          session.init (null);
          
          System.out.println ("Using contact strings: \"" +
                              session.getContact () + "\"");
          System.out.println ("Using DRM systems: \"" +
-                             session.getDRMSystem () + "\"");
+                             session.getDrmSystem () + "\"");
          System.out.println ("Using DRMAA implementations: \"" +
-                             session.getDRMAAImplementation () + "\"");
+                             session.getDrmaaImplementation () + "\"");
          
-         DRMAASession.Version version = session.getVersion ();
+         Version version = session.getVersion ();
          
          System.out.println("Using DRMAA version " + version.toString ());
          
          session.exit ();
       }
-      catch (DRMAAException e) {
+      catch (DrmaaException e) {
          System.out.println ("Error: " + e.getMessage ());
       }
    }

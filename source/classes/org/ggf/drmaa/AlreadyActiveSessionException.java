@@ -31,24 +31,24 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** Initialization failed due to existing DRMAA session.
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
+public class AlreadyActiveSessionException extends SessionException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
+	 * Creates a new instance of <code>SessionAlreadyActiveException</code> without detail message.
 	 */
-	public InvalidArgumentException () {
+	public AlreadyActiveSessionException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
+	 * Constructs an instance of <code>SessionAlreadyActiveException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidArgumentException (String msg) {
+	public AlreadyActiveSessionException (String msg) {
 		super (msg);
 	}
 }

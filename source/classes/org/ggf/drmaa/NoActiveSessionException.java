@@ -31,8 +31,9 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** Exit routine failed because there is no active session.
+/** Requested action failed because there is no active session.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
 public class NoActiveSessionException extends SessionException {
 	

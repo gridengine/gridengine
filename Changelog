@@ -1,3 +1,8 @@
+DT-2004-12-13-2: Enhancem.: o Merged DRMAA-J_05 branch into main trunk
+                 Changed:   DRMAA
+                 Issue:     1369, 1370, 1371, 1372, 1373
+                 Review:    Pending
+
 EB-2004-12-12-0: Enhancem.: Added loadsensor for Interix
                  Review:    HP
 

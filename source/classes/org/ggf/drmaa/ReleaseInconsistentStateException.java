@@ -31,23 +31,20 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** Initialization failed due to existing DRMAA session.
+/** The job is not in a state where it can be released.
  * @author dan.templeton@sun.com
+ * @since 0.5
  */
-public class SessionAlreadyActiveException extends SessionException {
-	
-	/**
-	 * Creates a new instance of <code>SessionAlreadyActiveException</code> without detail message.
-	 */
-	public SessionAlreadyActiveException () {
+public class ReleaseInconsistentStateException extends InconsistentStateException {
+	/** Creates a new instance of <code>ReleaseInconsistentStateException</code> without detail message. */
+	public ReleaseInconsistentStateException () {
 	}
 	
 	
-	/**
-	 * Constructs an instance of <code>SessionAlreadyActiveException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
-	public SessionAlreadyActiveException (String msg) {
+	/** Constructs an instance of <code>ReleaseInconsistentStateException</code> with the specified detail message.
+    * @param msg the detail message.
+    */
+	public ReleaseInconsistentStateException (String msg) {
 		super (msg);
 	}
 }

@@ -29,26 +29,38 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+/*
+ * SessionFactoryTest.java
+ * JUnit based test
+ *
+ * Created on November 14, 2004, 12:50 AM
+ */
+
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+import java.io.*;
+import java.util.Properties;
+import junit.framework.*;
+
+/**
+ *
  * @author dan.templeton@sun.com
- * @since 0.4.2
  */
-public class InvalidArgumentException extends DrmaaException {
-	
-	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
-	 */
-	public InvalidArgumentException () {
-	}
-	
-	
-	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
-	public InvalidArgumentException (String msg) {
-		super (msg);
-	}
+public class SessionFactoryTest extends TestCase {
+   public SessionFactoryTest (java.lang.String testName) {
+      super (testName);
+   }
+   
+   public static Test suite () {
+      TestSuite suite = new TestSuite (SessionFactoryTest.class);
+      return suite;
+   }
+   
+   /** Test of getFactory method, of class org.ggf.drmaa.SessionFactory. */
+   public void testGetFactory () {
+      System.out.println ("testGetFactory");
+
+      SessionFactory factory = SessionFactory.getFactory ();
+      assertTrue (factory instanceof com.sun.grid.drmaa.SessionFactoryImpl);
+   }
 }

@@ -33,8 +33,9 @@ package org.ggf.drmaa;
 
 /** The value or format of an attribute is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InvalidAttributeException extends DRMAAException {
+public abstract class InvalidAttributeException extends DrmaaException {
    
    /**
     * Creates a new instance of <code>AttributeException</code> without detail message.

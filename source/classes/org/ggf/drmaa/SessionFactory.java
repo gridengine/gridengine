@@ -34,58 +34,34 @@ package org.ggf.drmaa;
 import java.io.*;
 import java.util.Properties;
 
-/** This class is used to retrieve a DRMAASession object tailored to the
- * DRM in use.  The factory will use the org.ggf.drmaa.DRMAASessionFactory
- * property to discover the DRM-specific DRMAASession implementation class.<BR>
- * An example DRMAA interaction would be:<BR>
- * <P><CODE>
- * //Get the session<BR>
- * DRMAASession session = DRMAASessionFactory.getSession ();<BR>
- * <BR>
- * //Initialize the session<BR>
- * session.init ("Sun ONE Grid Engine");<BR>
- * <BR>
- * //Get the job template<BR>
- * JobTemplate jt = session.createJobTemplate ();<BR>
- * <BR>
- * //Set some attributes<BR>
- * jt.setAttribute (JobTemplate.REMOTE_COMMAND, "uptime");<BR>
- * ...<BR>
- * jt.setAttribute (JobTempalte.DEADLINE_TIME, "2:30:0");<BR>
- * <BR>
- * //Run the job<BR>
- * String jobId = session.runJob (jt);<BR>
- * <BR>
- * //Wait for the job to finish<BR>
- * session.wait (jobId, DRMAASession.TIMEOUT_WAIT_FOREVER);<BR>
- * //Release the tempalte<BR>
- * jt.delete ();<BR>
- * //End the session<BR>
- * session.exit ();<BR>
- * </CODE></P>
+/** <p>This class is used to retrieve a Session object tailored to the
+ * DRM in use.  The factory will use the org.ggf.drmaa.SessionFactory
+ * property to discover the DRM-specific Session implementation class.</p>
  * @author dan.templeton@sun.com
+ * @see Session
+ * @since 0.5
  */
-public abstract class DRMAASessionFactory {
-	/** Right now, only one DRMAASession can exist at a time.  This is that session. */	
-	private static DRMAASessionFactory thisFactory = null;
-	/** The name of the property used to find the DRMAASession implementation
-	 * class name.
-	 */	
-	private static final String SESSION_PROPERTY = "org.ggf.drmaa.DRMAASessionFactory";
+public abstract class SessionFactory {
+	/** Right now, only one Session can exist at a time.  This is that session. */	
+	private static SessionFactory thisFactory = null;
+	/** The name of the property used to find the Session implementation
+    * class name.
+    */	
+	private static final String SESSION_PROPERTY = "org.ggf.drmaa.SessionFactory";
 	
-	/** Creates a new instance of DRMAASessionFactory */
-	protected DRMAASessionFactory () {
+	/** Creates a new instance of SessionFactory */
+	protected SessionFactory () {
 	}
 	
-	/** Gets a DRMAASession object appropriate for the DRM in use.
-	 * @return a DRMAASession object appropriate for the DRM in use
-	 */	
-	public abstract DRMAASession getSession ();
+	/** Gets a Session object appropriate for the DRM in use.
+    * @return a Session object appropriate for the DRM in use
+    */	
+	public abstract Session getSession ();
 	
-	/** Gets a DRMAASessionFactory object appropriate for the DRM in use.
-	 * @return a DRMAASessionFactory object appropriate for the DRM in use
-	 */	
-	public static DRMAASessionFactory getFactory () {
+	/** Gets a SessionFactory object appropriate for the DRM in use.
+    * @return a SessionFactory object appropriate for the DRM in use
+    */	
+	public static SessionFactory getFactory () {
 		if (thisFactory == null) {
 			thisFactory = newFactory ();
 		}
@@ -93,24 +69,24 @@ public abstract class DRMAASessionFactory {
 		return thisFactory;
    }
 	
-	/** Creates a DRMAASessionFactory object appropriate for the DRM in use.  This
-	 * method uses the com.sun.grid.drmaa.DRMAASessionFactory property to find
-	 * the appropriate class.  It looks first in the system properties.  If the
-	 * property is not present, the method looks in
-	 * $java.home/lib/drmaa.properties.  If the property still isn't found, the
-	 * method will search the classpath for a
-	 * META-INF/services/com.sun.grid.drmaa.DRMAASessionFactory resource.  If the
-	 * property still has not been found, the method throws a ConfigurationError.
-	 * @return a DRMAASession object appropriate for the DRM in use
-	 */	
-	private static DRMAASessionFactory newFactory () {
+	/** Creates a SessionFactory object appropriate for the DRM in use.  This
+    * method uses the com.sun.grid.drmaa.SessionFactory property to find
+    * the appropriate class.  It looks first in the system properties.  If the
+    * property is not present, the method looks in
+    * $java.home/lib/drmaa.properties.  If the property still isn't found, the
+    * method will search the classpath for a
+    * META-INF/services/com.sun.grid.drmaa.SessionFactory resource.  If the
+    * property still has not been found, the method throws an Error.
+    * @return a DRMAASession object appropriate for the DRM in use
+    */	
+	private static SessionFactory newFactory () {
 		ClassLoader classLoader = findClassLoader ();
 		
 		// Use the system property first
 		try {
 			String systemProp = System.getProperty (SESSION_PROPERTY);
 			if (systemProp != null) {
-				return (DRMAASessionFactory)newInstance (systemProp, classLoader);
+				return (SessionFactory)newInstance (systemProp, classLoader);
 			}
 		}
 		catch (SecurityException se) {
@@ -126,7 +102,7 @@ public abstract class DRMAASessionFactory {
 				Properties props = new Properties ();
 				props.load (new FileInputStream (f));
 				String className = props.getProperty (SESSION_PROPERTY);
-				return (DRMAASessionFactory)newInstance (className, classLoader);
+				return (SessionFactory)newInstance (className, classLoader);
 			}
 		}
 		catch (SecurityException se ) {
@@ -154,7 +130,7 @@ public abstract class DRMAASessionFactory {
 				rd.close ();
 				
 				if (className != null && ! className.equals ("")) {
-					return (DRMAASessionFactory)newInstance (className, classLoader);
+					return (SessionFactory)newInstance (className, classLoader);
 				}
 			}
 		}
@@ -182,7 +158,7 @@ public abstract class DRMAASessionFactory {
 		}
 		catch (LinkageError le) {
 			// Assume that we are running JDK 1.1, use the current ClassLoader
-			classLoader = DRMAASessionFactory.class.getClassLoader ();
+			classLoader = SessionFactory.class.getClassLoader ();
 		}
 		catch (Exception ex) {
 			// Something abnormal happened so throw an error

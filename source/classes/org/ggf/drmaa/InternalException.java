@@ -34,8 +34,9 @@ package org.ggf.drmaa;
 /** Unexpected or internal DRMAA error like memory allocation,
  * system call failure, etc.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InternalException extends DRMAAException {
+public class InternalException extends DrmaaRuntimeException {
 	
 	/**
 	 * Creates a new instance of <code>InternalException</code> without detail message.

@@ -34,14 +34,14 @@ import org.ggf.drmaa.*;
 
 public class Howto1 {
    public static void main (String[] args) {
-      DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-      DRMAASession session = factory.getSession ();
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
          session.init (null);
          session.exit ();
       }
-      catch (DRMAAException e) {
+      catch (DrmaaException e) {
          System.out.println ("Error: " + e.getMessage ());
       }
    }

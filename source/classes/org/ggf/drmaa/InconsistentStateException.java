@@ -33,35 +33,18 @@ package org.ggf.drmaa;
 
 /** The job cannot be moved to the requested state.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class InconsistentStateException extends DRMAAException {
-   /** DRMAASession.control() flag indicating to place the job in a hold state. */   
-	public static final int HOLD = 0;
-   /** DRMAASession.control() flag indicating to release the job from a hold state. */   
-	public static final int RELEASE = 1;
-   /** DRMAASession.control() flag indicating to resume the job from a suspend state. */   
-	public static final int RESUME = 2;
-   /** DRMAASession.control() flag indicating to place the job in a suspend state. */   
-	public static final int SUSPEND = 3;
-	
-   /** The job state which is inconsistent. */   
-	private int state;
-	
-	/** Creates a new instance of <code>InvalidStateException</code> without detail message.
-    * @param state the state which is inconsistent
-    */
-	public InconsistentStateException (int state) {
-		this.state = state;
+public abstract class InconsistentStateException extends DrmaaException {
+	/** Creates a new instance of <code>InconsistentStateException</code> without detail message. */
+	public InconsistentStateException () {
 	}
 	
 	
-	/** Constructs an instance of <code>InvalidStateException</code> with the specified detail message.
-    * @param state the state which is inconsistent
+	/** Constructs an instance of <code>InconsistentStateException</code> with the specified detail message.
     * @param msg the detail message.
     */
-	public InconsistentStateException (int state, String msg) {
+	public InconsistentStateException (String msg) {
 		super (msg);
-		
-		this.state = state;
 	}
 }

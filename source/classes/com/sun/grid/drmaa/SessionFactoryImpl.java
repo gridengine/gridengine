@@ -29,26 +29,35 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package org.ggf.drmaa;
+package com.sun.grid.drmaa;
 
-/** The input value for an argument is invalid.
+import org.ggf.drmaa.*;
+
+/** This class is used to create a SessionImpl object.  In order to use the Grid Engine
+ * binding, the $SGE_ROOT environment variable must be set, the
+ * $SGE_ROOT/lib/drmaa.jar file must in included in the CLASSPATH environment
+ * variable, and the $SGE_ROOT/lib/$ARCH directory must be included in the library
+ * path, e.g. LD_LIBRARY_PATH.
+ * @see org.ggf.drmaa.SessionFactory
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
-	
-	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
-	 */
-	public InvalidArgumentException () {
-	}
-	
-	
-	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
-	public InvalidArgumentException (String msg) {
-		super (msg);
+public class SessionFactoryImpl extends SessionFactory {
+   private Session thisSession = null;
+   
+   /** Creates a new instance of SessionFactoryImpl.
+    */
+   public SessionFactoryImpl () {
+   }
+   
+	/** Gets a SessionImpl object.
+    * @return a SessionImpl object
+    */	
+	public Session getSession () {
+		if (thisSession == null) {
+			thisSession = new SessionImpl ();
+		}
+		
+		return thisSession;
 	}
 }

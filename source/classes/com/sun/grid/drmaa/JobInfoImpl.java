@@ -40,8 +40,9 @@ import org.ggf.drmaa.*;
  * This class provides information about a completed Grid Engine job.
  * @see org.ggf.drmaa.JobInfo
  * @author  dan.templeton@sun.com
+ * @since 0.5
  */
-public class SGEJobInfo extends JobInfo {
+public class JobInfoImpl extends JobInfo {
    private static final int EXITED_BIT = 0x00000001;
    private static final int SIGNALED_BIT = 0x00000002;
    private static final int COREDUMP_BIT = 0x00000004;
@@ -49,18 +50,15 @@ public class SGEJobInfo extends JobInfo {
 /* POSIX exit status has only 8 bit */
    private static final int EXIT_STATUS_BITS = 0x00000FF0;
    private static final int EXIT_STATUS_OFFSET = 4;
-/* SGE signal numbers are high numbers so we use 16 bit */
-   private static final int SIGNAL_BITS = 0x0FFFF000;
-   private static final int SIGNAL_OFFSET = 12;
    private String signal = null;
    
-   /** Creates a new instance of SGEJobInfo
+   /** Creates a new instance of JobInfoImpl
     * @param jobId the job id string
     * @param status an opaque status code
     * @param resourceUsage an array of name=value resource usage pairs
     * @param signal the string description of the terminating signal
     */
-   SGEJobInfo (String jobId, int status, String[] resourceUsage, String signal) {
+   JobInfoImpl (String jobId, int status, String[] resourceUsage, String signal) {
       super (jobId, status, nameValuesToMap (resourceUsage));
       
       this.signal = signal;
@@ -77,10 +75,11 @@ public class SGEJobInfo extends JobInfo {
    
 	/** If hasSignaled() returns true, this method returns a representation of
     * the signal that caused the termination of the job. For signals declared by
-    * POSIX, the symbolic names are returned (e.g., SIGABRT, SIGALRM).<BR>
-	 * For signals not declared by POSIX, any other string may be returned.
-	 * @return the name of the terminating signal
-	 */	
+    * POSIX or otherwise known to Grid Engine, the symbolic names are returned (e.g.,
+    * SIGABRT, SIGALRM).<BR>
+    * For signals not known by Grid Engine, the string &quot;unknown signal&quot; is returned.
+    * @return the name of the terminating signal
+    */	
    public String getTerminatingSignal () {
       return signal;
    }
@@ -94,14 +93,14 @@ public class SGEJobInfo extends JobInfo {
    }
    
 	/** Returns <CODE>true</CODE> if the job terminated normally.
-	 * <CODE>False</CODE> can also indicate that
-	 * although the job has terminated normally an exit status is not available
-	 * or that it is not known whether the job terminated normally. In both
-	 * cases getExitStatus() will not provide exit status information.
-	 * <CODE>True</CODE> indicates more detailed diagnosis can be provided
-	 * by means of hasSignaled(), getTerminatingSignal() and hasCoreDump().
-	 * @return if the job has exited
-	 */	
+    * <CODE>False</CODE> can also indicate that
+    * although the job has terminated normally an exit status is not available
+    * or that it is not known whether the job terminated normally. In both
+    * cases getExitStatus() will not provide exit status information.
+    * <CODE>True</CODE> indicates more detailed diagnosis can be provided
+    * by means of getExitStatus().
+    * @return if the job has exited
+    */	
    public boolean hasExited () {
       return ((status & EXITED_BIT) != 0);
    }

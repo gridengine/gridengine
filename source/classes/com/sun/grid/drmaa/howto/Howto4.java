@@ -34,27 +34,27 @@ import org.ggf.drmaa.*;
 
 public class Howto4 {
    public static void main (String[] args) {
-      DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-      DRMAASession session = factory.getSession ();
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
          session.init (null);
          JobTemplate jt = session.createJobTemplate ();
          jt.setRemoteCommand ("sleeper.sh");
-         jt.setInputParameters (new String[] {"5"});
+         jt.setArgs (new String[] {"5"});
          
          String id = session.runJob (jt);
          
          System.out.println ("Your job has been submitted with id " + id);
          
-         session.control (id, DRMAASession.TERMINATE);
+         session.control (id, Session.TERMINATE);
          
          System.out.println("Your job has been deleted");
          
-         jt.delete ();
+         session.deleteJobTemplate (jt);
          session.exit ();
       }
-      catch (DRMAAException e) {
+      catch (DrmaaException e) {
          System.out.println ("Error: " + e.getMessage ());
       }
    }

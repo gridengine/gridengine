@@ -35,107 +35,49 @@ import java.util.*;
 
 import org.ggf.drmaa.*;
 
-/**
- * <p>The SGESession provides a DRMAA interface to Grid Engine.  This interface
+/** <p>The SessionImpl provides a DRMAA interface to Grid Engine.  This interface
  * is built on top of the DRMAA C binding using JNI.  In order to keep the
  * native code as localized as possible, this class also provides native DRMAA
- * services to other classes, such as the SGEJobTemplate.</p>
- * <p>This class relies on the <i>jdrmaa</i> shared library.</p>
- * @see org.ggf.drmaa.DRMAASession
- * @see SGEJobTemplate
- * @author  dan.templeton@sun.com
+ * services to other classes, such as the JobTemplateImpl.</p>
+ * <p>This class relies on the <i>jdrmaa</i> shared library, which in turn
+ * requires the <i>drmaa</i> shared library.</p>
+ * @see org.ggf.drmaa.Session
+ * @see com.sun.grid.drmaa.JobTemplateImpl
+ * @see <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">Grid Engine Man Pages</a>
+ * @author dan.templeton@sun.com
+ * @since 0.5
  */
-public class SGESession extends DRMAASession {
-	private static final String IMPLEMENTATION_STRING = " -- SGE 6.0";
+public class SessionImpl implements Session {
+   /* String to return from getDRMAAImplementation() */
+   /** The name of this DRMAA implementation. */   
+   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.5 -- SGE 6.0";
 	
 	static {
 		System.loadLibrary ("jdrmaa");
 	}
-	
-	public static void main (String[] args) throws Exception {
-		SGESession session = new SGESession ();
 		
-		System.out.println ("DRMS: " + session.getDRMSystem ());
-		System.out.println ("Contact: " + session.getContact ());
-		System.out.println ("Implementation: " + session.getDRMAAImplementation ());
-		
-		DRMAASession.Version version = session.getVersion ();
-		
-		System.out.println ("Version: " + Integer.toString (version.getMajor ()) + "." + Integer.toString (version.getMinor ()));
-		
-		session.init (session.getContact ());
-		
-		JobTemplate jt = session.createJobTemplate ();
-		List names = jt.getAttributeNames ();
-		Iterator i = names.iterator ();
-		
-		System.out.println ("Attributes:");
-		
-		while (i.hasNext ()) {
-			System.out.println ("\t" + i.next ());
-		}
-		
-		jt.setRemoteCommand ("/tmp/dant/examples/jobs/exit.sh");
-		System.out.println ("Submitting job");
-		
-		String jobId = session.runJob (jt);
-		
-		System.out.println ("Job id is " + jobId);
-		
-		JobInfo status = session.wait (jobId, TIMEOUT_WAIT_FOREVER);
-		
-		System.out.println ("Job completed");
-		
-		if (status.wasAborted ()) {
-			System.out.println ("job \"" + jobId + "\" never ran");
-		}
-		else if (status.hasExited ()) {
-			System.out.println ("job \"" + jobId + "\" finished regularly with exit status " + status.getExitStatus ());
-		}
-		else if (status.hasSignaled ()) {
-			System.out.println ("job \"" + jobId + "\" finished due to signal " + status.getTerminatingSignal ());
-		}
-		else {
-			System.out.println ("job \"" + jobId + "\" finished with unclear conditions");
-		}
-		
-		System.out.println ("Resource usage:");
-		
-		Map resources = status.getResourceUsage ();
-		
-		i = resources.keySet ().iterator ();
-		
-		while (i.hasNext ()) {
-			String key = (String)i.next ();
-			
-			System.out.println("\t" + key + "=" + resources.get (key));
-		}
-		
-		session.exit ();
+	/** Creates a new instance of SessionImpl */
+	SessionImpl () {
 	}
 	
-	/** Creates a new instance of SGESession */
-	public SGESession () {
-	}
-	
-   /** <p>Start, stop, restart, or kill the job identified by 'jobId'.
-	 * If 'jobId' is JOB_IDS_SESSION_ALL, then this routine acts on all jobs
-	 * <B>submitted</B> during this DRMAA session up to the moment control() is
-    * called.  To avoid thread races in multithreaded applications, the DRMAA
+   /** <p>Hold, release, suspend, resume, or kill the job identified by jobId.
+    * If jobId is <code>JOB_IDS_SESSION_ALL</code>, then this routine acts on all jobs
+    * <B>submitted</B> during this DRMAA session up to the moment control() is
+    * called.  To avoid race conditions in multithreaded applications, the DRMAA
     * implementation user should explicitly synchronize this call with any other
     * job submission calls or control calls that may change the number of remote
     * jobs.</p>
-	 * <p>The legal values for 'action' and their meanings are:</p>
-	 * <UL>
-	 * <LI>SUSPEND: stop the job,</LI>
-	 * <LI>RESUME: (re)start the job,</LI>
-	 * <LI>HOLD: put the job on-hold,</LI>
-	 * <LI>RELEASE: release the hold on the job, and</LI>
-	 * <LI>TERMINATE: kill the job.</LI>
-	 * </UL>
-	 * <p>This routine returns once the action has been acknowledged by
-	 * the DRM system, but does not necessarily wait until the action
-	 * has been completed.</p>
+    * <p>The legal values for action and their meanings are:</p>
+    * <UL>
+    * <LI><code>SUSPEND</code>: stop the job,</LI>
+    * <LI><code>RESUME</code>: (re)start the job,</LI>
+    * <LI><code>HOLD</code>: put the job on-hold,</LI>
+    * <LI><code>RELEASE</code>: release the hold on the job, and</LI>
+    * <LI><code>TERMINATE</code>: kill the job.</LI>
+    * </UL>
+    * <p>This routine returns once the action has been acknowledged by
+    * the DRM system, but does not necessarily wait until the action
+    * has been completed.</p>
     * <p>The DRMAA suspend/resume operations are equivalent to the use of
     * `-s <jobid>' and `-us <jobid>' options with qmod.  (See the qmod(1) man
     * page.)</p>
@@ -146,25 +88,25 @@ public class SGESession extends DRMAASession {
     * <p>Only user hold and user suspend can be controled via control().  For
     * affecting system hold and system suspend states the appropriate DRM
     * interfaces must be used.</p>
-	 * @param jobId The id of the job to control
-	 * @param action the control action to be taken
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>DRMCommunicationException</LI>
-	 * <LI>AuthorizationException</LI>
-	 * <LI>ResumeInconsistentStateException</LI>
-	 * <LI>SuspendInconsistentStateException</LI>
-	 * <LI>HoldInconsistentStateException</LI>
-	 * <LI>ReleaseInconsistentStateException</LI>
-	 * <LI>InvalidJobException</LI>
-	 * </UL>
-	 */
-	public void control (String jobId, int action) throws DRMAAException {
+    * @param jobId The id of the job to control
+    * @param action the control action to be taken
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>DrmCommunicationException</LI>
+    * <LI>AuthorizationException</LI>
+    * <LI>ResumeInconsistentStateException</LI>
+    * <LI>SuspendInconsistentStateException</LI>
+    * <LI>HoldInconsistentStateException</LI>
+    * <LI>ReleaseInconsistentStateException</LI>
+    * <LI>InvalidJobException</LI>
+    * </UL>
+    */
+	public void control (String jobId, int action) throws DrmaaException {
 		this.nativeControl (jobId, action);
 	}
 	
-	private native void nativeControl (String jobId, int action) throws DRMAAException;
-	//   private void nativeControl (String jobId, int action) throws DRMAAException {
+	private native void nativeControl (String jobId, int action) throws DrmaaException;
+	//   private void nativeControl (String jobId, int action) throws DrmaaException {
 	//      System.out.println("Call to drmaa_control");
 	//   }
 	
@@ -173,25 +115,25 @@ public class SGESession extends DRMAASession {
     * once by a single thread in the process and may only be called after the
     * init() function has completed.  Any call to exit() before init() returns
     * or after exit() has already been called will result in a
-    * NoActiverSessionException.</p>
+    * NoActiveSessionException.</p>
     * <p>The exit() method does neccessary clean up of the DRMAA session state,
     * including unregistering from the qmaster.  If the exit() method is not
     * called, the qmaster will store events for the DRMAA client until the
     * connection times out, causing extra work for the qmaster and comsuming
     * system resources.</p>
     * <p>Submitted jobs are not affected by the exit() method.</p>
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>DRMSExitException</LI>
-	 * <LI>NoActiveSessionException</LI>
-	 * </UL>
-	 */
-	public void exit () throws DRMAAException {
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>DrmsExitException</LI>
+    * <LI>NoActiveSessionException</LI>
+    * </UL>
+    */
+	public void exit () throws DrmaaException {
 		this.nativeExit ();
 	}
 	
-	private native void nativeExit () throws DRMAAException;
-	//   private void nativeExit () throws DRMAAException {
+	private native void nativeExit () throws DrmaaException;
+	//   private void nativeExit () throws DrmaaException {
 	//      System.out.println("Call to drmaa_exit");
 	//   }
 	
@@ -220,7 +162,7 @@ public class SGESession extends DRMAASession {
     * before and after init() is called.
 	 * @return DRM system implementation information
 	 */	
-	public String getDRMSystem () {
+	public String getDrmSystem () {
 		return this.nativeGetDRMSInfo ();
 	}
 	
@@ -230,72 +172,87 @@ public class SGESession extends DRMAASession {
 	//      return "DRMS";
 	//   }
 	
-	/** <p>Get the program status of the job identified by 'jobId'.
-	 * The possible values returned in 'remote_ps' and their meanings SHALL
-    * be:</p>
-	 * <UL>
-	 * <LI>UNDETERMINED: process status cannot be determined</LI>
-	 * <LI>QUEUED_ACTIVE: job is queued and active</LI>
-	 * <LI>SYSTEM_ON_HOLD: job is queued and in system hold</LI>
-	 * <LI>USER_ON_HOLD: job is queued and in user hold</LI>
-	 * <LI>USER_SYSTEM_ON_HOLD: job is queued and in user and system hold</LI>
-	 * <LI>RUNNING: job is running</LI>
-	 * <LI>SYSTEM_SUSPENDED: job is system suspended</LI>
-	 * <LI>USER_SUSPENDED: job is user suspended</LI>
-	 * <LI>DONE: job finished normally</LI>
-	 * <LI>FAILED: job finished, but failed.</LI>
-	 * </UL>
-	 * <p>DRMAA always gets the status of jobId from DRM system.  No caching of
+	/** <p>Get the program status of the job identified by jobId.
+    * The possible return values and their meanings are:</p>
+    * <UL>
+    * <LI><code>UNDETERMINED</code>: process status cannot be determined</LI>
+    * <LI><code>QUEUED_ACTIVE</code>: job is queued and active</LI>
+    * <LI><code>SYSTEM_ON_HOLD</code>: job is queued and in system hold</LI>
+    * <LI><code>USER_ON_HOLD</code>: job is queued and in user hold</LI>
+    * <LI><code>USER_SYSTEM_ON_HOLD</code>: job is queued and in user and system hold</LI>
+    * <LI><code>RUNNING</code>: job is running</LI>
+    * <LI><code>SYSTEM_SUSPENDED</code>: job is system suspended</LI>
+    * <LI><code>USER_SUSPENDED</code>: job is user suspended</LI>
+    * <LI><code>USER_SYSTEM_SUSPENDED</code>: job is user and system suspended</LI>
+    * <LI><code>DONE</code>: job finished normally</LI>
+    * <LI><code>FAILED</code>: job finished, but failed.</LI>
+    * </UL>
+    * <p>DRMAA always gets the status of jobId from DRM system.  No caching of
     * job state is done.</p>
     * <p>Jobs' user hold and user suspend states can be controled via control().
     * For affecting system hold and system suspend states the appropriate DRM
     * interfaces must be used.</p>
-	 * @return the program status
-	 * @param jobId the id of the job whose status is to be retrieved
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>DRMCommunicationException</LI>
-	 * <LI>AuthorizationException</LI>
-	 * <LI>InvalidJobException</LI>
-	 * </UL>
-	 */
-	public int getJobProgramStatus (String jobId) throws DRMAAException {
+    * <p>The control method can be used to control job submitted outside of the scope
+    * of the DRMAA session as long as the job identifier for the job is known.</p>
+    * @return the program status
+    * @param jobId the id of the job whose status is to be retrieved
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>DrmCommunicationException</LI>
+    * <LI>AuthorizationException</LI>
+    * <LI>InvalidJobException</LI>
+    * </UL>
+    */
+	public int getJobProgramStatus (String jobId) throws DrmaaException {
 		return this.nativeGetJobProgramStatus (jobId);
 	}
 	
-	private native int nativeGetJobProgramStatus (String jobId) throws DRMAAException;
-	//   private int nativeGetJobProgramStatus (String jobId) throws DRMAAException {
+	private native int nativeGetJobProgramStatus (String jobId) throws DrmaaException;
+	//   private int nativeGetJobProgramStatus (String jobId) throws DrmaaException {
 	//      System.out.println("Call to drmaa_job_ps");
 	//      return RUNNING;
 	//   }
 	
 	/** Get a new job template.  The job template is used to set the
 	 * environment for submitted jobs.
-	 * @throws DRMAAException May be one of the following:
+	 * @throws DrmaaException May be one of the following:
 	 * <UL>
-	 * <LI>DRMCommunicationException</LI>
+	 * <LI>DrmCommunicationException</LI>
 	 * </UL>
 	 * @return a blank JobTemplate object
 	 */
-	public JobTemplate createJobTemplate () throws DRMAAException {
+	public JobTemplate createJobTemplate () throws DrmaaException {
 		int id = nativeAllocateJobTemplate ();
 		
-		return new SGEJobTemplate (this, id);
+		return new JobTemplateImpl (this, id);
 	}
-	
-	/** The getVersion() method returns a DRMAASession.Version object containing
+	   
+   /** The deleteJobTemplate() method releases all resources associated with the DRMAA
+    * JobTemplate.  Jobs that were submitted using the JobTemplate are not
+    * affected.
+    * @param jt the job template to delete
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE</LI>
+    * </UL>
+    */
+   public void deleteJobTemplate (JobTemplate jt) throws DrmaaException {
+      nativeDeleteJobTemplate (((JobTemplateImpl)jt).getId ());
+   }
+
+	/** The getVersion() method returns a Version object containing
     * the major and minor version numbers of the DRMAA library. For a DRMAA 1.0
     * compliant implementation (e.g. this binding) `1' and `0' will be the major
     * and minor numbers, respectively.
-	 * @return the version number as a Version object
-	 */	
-	public DRMAASession.Version getVersion () {
-		return new DRMAASession.Version (1, 0);
+    * @return the version number as a Version object
+    */	
+	public Version getVersion () {
+		return new Version (1, 0);
 	}
 	
    /** <p>The init() method initializes the Grid Engine DRMAA API library for
     * all threads of the process and creates a new DRMAA Session. This routine
-    * must be called once before any other DRMAA call, except for getVersion(),
+    * must be called once before any other DRMAA call, except for
     * getDRMSystem(), getContact(), and getDRMAAImplementation().</p>
     * <p><i>contact</i> is an implementation dependent string which may be used
     * to specify which Grid Engine cell to use. If <i>contact</i> is null or
@@ -305,57 +262,60 @@ public class SGESession extends DRMAASession {
     * before the init() function <b>completes</b>.  Any DRMAA method which is
     * called before the init() method completes will throw a
     * NoActiveSessionException.  Any additional call to init() by any thread
-    * will throw a SessionAlreadyActiveException.
-	 * @param contact implementation-dependent string that may be used to specify
-	 * which DRM system to use.  If null, will select the default DRM if there
+    * will throw a SessionAlreadyActiveException.</p>
+    * <p>Once init() has been called, it is the responsibility of the developer to
+    * ensure that the exit() will be called before the program terminates.</p>
+    * @param contact implementation-dependent string that may be used to specify
+    * which DRM system to use.  If null, will select the default DRM if there
     * is only one DRM implementation available.  Ignored in the current
     * implementation.
-	 * @throws DRMAAException Maybe be one of the following:
-	 * <UL>
-	 * <LI>InvalidContactStringException</LI>
-	 * <LI>AlreadyActiveSessionException</LI>
-	 * <LI>DefaultContactStringException</LI>
+    * @throws DrmaaException Maybe be one of the following:
+    * <UL>
+    * <LI>InvalidContactStringException</LI>
+    * <LI>AlreadyActiveSessionException</LI>
+    * <LI>DefaultContactStringException</LI>
     * <LI>NoDefaultContactStringSelectedException</LI>
-	 * </UL>
-	 */
-	public void init (String contact) throws DRMAAException {
+    * </UL>
+    */
+	public void init (String contact) throws DrmaaException {
 		this.nativeInit (contact);
 	}
 	
-	private native void nativeInit (String contact) throws DRMAAException;
-	//   private void nativeInit (String contact) throws DRMAAException {
+	private native void nativeInit (String contact) throws DrmaaException;
+	//   private void nativeInit (String contact) throws DrmaaException {
 	//      System.out.println("Call to drmaa_init");
 	//   }
 	
-   /** The runBulkJobs() method submits a Grid Engine array job very much as if
+   /** <p>The runBulkJobs() method submits a Grid Engine array job very much as if
     * the qsub option `-t <i>start</i>-<i>end</i>:<i>incr</i>' had been used
     * with the corresponding attributes defined in the DRMAA JobTemplate
-    * <i>jt</i>.  The same constraints regarding qsub -t value ranges are also
-    * for the parameters <i>start</i>, <i>end</i>, and <i>incr</i>. On success a
-    * String array containing job identifiers for each array job task is
-    * returned.<BR>
-	 * @return job identifier Strings identical to that returned by the
-	 * underlying DRM system
-	 * @param start the starting value for the loop index
-	 * @param end the terminating value for the loop index
-	 * @param incr the value by which to increment the loop index each iteration
-	 * @param jt the job template to be used to create the job
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>TryLaterException</LI>
-	 * <LI>DeniedByDRMException</LI>
-	 * <LI>DRMCommunicationException</LI>
-	 * <LI>AuthorizationException</LI>
-	 * </UL>
-	 */
-	public List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DRMAAException {
-		String[] jobIds = this.nativeRunBulkJobs (((SGEJobTemplate)jt).getId (), start, end, incr);
+    * <i>jt</i>.  The same constraints regarding qsub -t value ranges also apply to
+    * the parameters <i>start</i>, <i>end</i>, and <i>incr</i>.  See the qsub(1) man
+    * page for more information.</p>
+    * <p> On success a String array containing job identifiers for each array job task is
+    * returned.</p>
+    * @return job identifier Strings identical to that returned by the
+    * underlying DRM system
+    * @param start the starting value for the loop index
+    * @param end the terminating value for the loop index
+    * @param incr the value by which to increment the loop index each iteration
+    * @param jt the job template to be used to create the job
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>TryLaterException</LI>
+    * <LI>DeniedByDrmException</LI>
+    * <LI>DrmCommunicationException</LI>
+    * <LI>AuthorizationException</LI>
+    * </UL>
+    */
+	public List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException {
+		String[] jobIds = this.nativeRunBulkJobs (((JobTemplateImpl)jt).getId (), start, end, incr);
 		
 		return Arrays.asList (jobIds);
 	}
 	
-	private native String[] nativeRunBulkJobs (int jtId, int start, int end, int incr) throws DRMAAException;
-	//   private String[] nativeRunBulkJobs (JobTemplate jt, int start, int end, int incr) throws DRMAAException {
+	private native String[] nativeRunBulkJobs (int jtId, int start, int end, int incr) throws DrmaaException;
+	//   private String[] nativeRunBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException {
 	//      System.out.println("Call to drmaa_run_bulk_jobs");
 	//      return new String[] {"123.1", "123.2"};
 	//   }
@@ -364,78 +324,79 @@ public class SGESession extends DRMAASession {
     * the DRMAA JobTemplate <i>jt</i>. On success, the job identifier is
     * returned.
 	 * @param jt the job template to be used to create the job
-	 * @throws DRMAAException May be one of the following:
+	 * @throws DrmaaException May be one of the following:
 	 * <UL>
 	 * <LI>TryLaterException</LI>
-	 * <LI>DeniedByDRMException</LI>
-	 * <LI>DRMCommunicationException</LI>
+	 * <LI>DeniedByDrmException</LI>
+	 * <LI>DrmCommunicationException</LI>
 	 * <LI>AuthorizationException</LI>
 	 * </UL>
 	 * @return job identifier String identical to that returned by the
 	 * underlying DRM system
 	 */
-	public String runJob (JobTemplate jt) throws DRMAAException {
-		return this.nativeRunJob (((SGEJobTemplate)jt).getId ());
+	public String runJob (JobTemplate jt) throws DrmaaException {
+		return this.nativeRunJob (((JobTemplateImpl)jt).getId ());
 	}
 	
-	private native String nativeRunJob (int jtId) throws DRMAAException;
-	//   private String nativeRunJob (JobTemplate jt) throws DRMAAException {
+	private native String nativeRunJob (int jtId) throws DrmaaException;
+	//   private String nativeRunJob (JobTemplate jt) throws DrmaaException {
 	//      System.out.println("Call to drmaa_run_job");
 	//      return "321";
 	//   }
 	
 	/** <p>The synchronize() method blocks the calling thread until all jobs
     * specified in <i>jobIds</i> have failed or finished execution. If
-    * <i>jobIds</i> contains JOB_IDS_SESSION_ALL, then this method waits for
+    * <i>jobIds</i> contains <code>JOB_IDS_SESSION_ALL</code>, then this method waits for
     * all jobs submitted during this DRMAA session.</p>
     * To prevent blocking indefinitely in this call, the caller may use
     * <i>timeout</i>, specifying how many seconds to wait for this call to
-    * complete before timing out. The special value TIMEOUT_WAIT_FOREVER can be
+    * complete before timing out. The special value <code>TIMEOUT_WAIT_FOREVER</code>
+    * can be
     * used to wait indefinitely for a result. The special value
-    * DRMAA_TIMEOUT_NO_WAIT can be used to return immediately.  If the call
+    * <code>DRMAA_TIMEOUT_NO_WAIT</code> can be used to return immediately.  If the call
     * exits before <i>timeout</i>, all the specified jobs have completed or
     * the calling thread received an interrupt.  In both cases, the method will
     * throw an ExitTimeoutException.</p>
     * <p>The <i>dispose</i> parameter specifies how to treat reaping
     * information.  If <i>false</i> is passed to this paramter, job finish
-    * information will still be available when wait() is called. If <i>true</i>
+    * information will still be available if wait() is called. If <i>true</i>
     * is passed, wait() will be unable to access this job's finish
     * information.</p>
-	 * @param jobIds the ids of the jobs to synchronize
-	 * @param timeout the maximum number of seconds to wait
-	 * @param dispose specifies how to treat reaping information
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>DRMCommunicationException</LI>
-	 * <LI>AuthorizationException</LI>
-	 * <LI>ExitTimeoutException</LI>
-	 * <LI>InvalidJobException</LI>
-	 * </UL>
-	 */
-	public void synchronize (List jobIds, long timeout, boolean dispose) throws DRMAAException {
+    * @param jobIds the ids of the jobs to synchronize
+    * @param timeout the maximum number of seconds to wait
+    * @param dispose specifies how to treat reaping information
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>DrmCommunicationException</LI>
+    * <LI>AuthorizationException</LI>
+    * <LI>ExitTimeoutException</LI>
+    * <LI>InvalidJobException</LI>
+    * </UL>
+    */
+	public void synchronize (List jobIds, long timeout, boolean dispose) throws DrmaaException {
 		this.nativeSynchronize ((String[])jobIds.toArray (new String[jobIds.size ()]), timeout, dispose);
 	}
 	
-	private native void nativeSynchronize (String[] jobIds, long timeout, boolean dispose) throws DRMAAException;
-	//   private void nativeSynchronize (List jobIds, long timeout, boolean dispose) throws DRMAAException {
+	private native void nativeSynchronize (String[] jobIds, long timeout, boolean dispose) throws DrmaaException;
+	//   private void nativeSynchronize (List jobIds, long timeout, boolean dispose) throws DrmaaException {
 	//      System.out.println("Call to drmaa_synchronize");
 	//   }
 	
    /** <p>The wait() function blocks the calling thread until a job fails or
-    * finishes execution.  This routine is modeled on the UNIX wait4(3) routine. 
-    * If the special string JOB_IDS_SESSION_ANY is passed as <i>jobId</i>,
+    * finishes execution.  This routine is modeled on the UNIX wait4(3) routine.
+    * If the special string <code>JOB_IDS_SESSION_ANY</code> is passed as <i>jobId</i>,
     * this routine will wait for any job from the session. Otherwise the
     * <i>jobId</i> must be the job identifier of a job or array job task that
     * was submitted during the session.</p>
     * <p>To prevent blocking indefinitely in this call, the caller may use
     * <i>timeout</i>, specifying how many seconds to wait for this call to
-    * complete before timing out. The special value TIMEOUT_WAIT_FOREVER
+    * complete before timing out. The special value <code>TIMEOUT_WAIT_FOREVER</code>
     * can be uesd to wait indefinitely for a result. The special value
-    * TIMEOUT_NO_WAIT can be used to return immediately.  If the call
+    * <code>TIMEOUT_NO_WAIT</code> can be used to return immediately.  If the call
     * exits before <i>timeout</i>, all the specified jobs have completed or the
     * calling thread received an interrupt.  In both cases, the method will
     * throw an ExitTimeoutException.</p>
-    * <p>The routine reaps jobs on a successful call, so any subsequent calls to 
+    * <p>The routine reaps jobs on a successful call, so any subsequent calls to
     * wait() will fail, throwing an InvalidJobException, meaning that the job
     * has already been reaped.  This exception is the same as if the job were
     * unknown.  Returning due to an elapsed timeout or an interrupt does not
@@ -443,31 +404,31 @@ public class SGESession extends DRMAASession {
     * is possible to issue wait() multiple times for the same <i>jobId</i>. </p>
     * <p>The wait() method will return a JobInfo object.  The JobInfo object
     * contains information about the job execution.  In particular, the JobInfo
-    * object will contain job id of the failed or finished job.  This is useful
-    * when JOB_IDS_SESSION_ANY is passed as the <i>jobId</i>.</p>
-	 * @param jobId the id of the job for which to wait
-	 * @param timeout the maximum number of seconds to wait
-	 * @return the resource usage and status information
-	 * @throws DRMAAException May be one of the following:
-	 * <UL>
-	 * <LI>DRMCommunicationException</LI>
-	 * <LI>AuthorizationException</LI>
-	 * <LI>NoResourceUsageDataException</LI>
-	 * <LI>ExitTimeoutException</LI>
-	 * <LI>InvalidJobException</LI>
-	 * </UL>
-	 */
-	public JobInfo wait (String jobId, long timeout) throws DRMAAException {
-		SGEJobInfo jobInfo = this.nativeWait (jobId, timeout);
+    * object will contain the job id of the failed or finished job.  This is useful
+    * when <code>JOB_IDS_SESSION_ANY</code> is passed as the <i>jobId</i>.</p>
+    * @param jobId the id of the job for which to wait
+    * @param timeout the maximum number of seconds to wait
+    * @return the resource usage and status information
+    * @throws DrmaaException May be one of the following:
+    * <UL>
+    * <LI>DrmCommunicationException</LI>
+    * <LI>AuthorizationException</LI>
+    * <LI>NoResourceUsageDataException</LI>
+    * <LI>ExitTimeoutException</LI>
+    * <LI>InvalidJobException</LI>
+    * </UL>
+    */
+	public JobInfo wait (String jobId, long timeout) throws DrmaaException {
+		JobInfoImpl jobInfo = this.nativeWait (jobId, timeout);
 		
 		return jobInfo;
 	}
 	
-	private native SGEJobInfo nativeWait (String jobId, long timeout) throws DRMAAException;
+	private native JobInfoImpl nativeWait (String jobId, long timeout) throws DrmaaException;
 	
-	//   private SGEJobInfo nativeWait (String jobId, long timeout) throws DRMAAException {
+	//   private JobInfoImpl nativeWait (String jobId, long timeout) throws DrmaaException {
 	//      System.out.println("Call to drmaa_wait");
-	//      return new SGEJobInfo (jobId, 1, Collections.singletonMap ("user", "100.00"));
+	//      return new JobInfoImpl (jobId, 1, Collections.singletonMap ("user", "100.00"));
 	//   }
 	
 	//   private void allocateJobTemplate (JobTemplate jt) {
@@ -529,25 +490,7 @@ public class SGESession extends DRMAASession {
     * init() is called.
     * @return DRMAA implementation information
     */
-	public String getDRMAAImplementation () {
-		return super.getDRMAAImplementation () + IMPLEMENTATION_STRING;
-	}
-	
-	private Map buildMap (String[] params) {
-		HashMap map = new HashMap ();
-		
-		for (int count = 0; count < params.length; count++) {
-			int index = params[count].indexOf ('=');
-			
-			if (index >= 0) {
-				map.put (params[count].substring (0, index),
-				params[count].substring (index + 1));
-			}
-			else {
-				map.put (params[count], null);
-			}
-		}
-		
-		return map;
+	public String getDrmaaImplementation () {
+		return IMPLEMENTATION_STRING;
 	}
 }

@@ -29,26 +29,32 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+/*
+ * DrmsInitException.java
+ *
+ * Created on June 17, 2003, 11:00 AM
+ */
+
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** DRM system initialization failed.
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
+public class DrmsInitException extends DrmaaException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
+	 * Creates a new instance of <code>DrmsInitException</code> without detail message.
 	 */
-	public InvalidArgumentException () {
+	public DrmsInitException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
+	 * Constructs an instance of <code>DrmsInitException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidArgumentException (String msg) {
+	public DrmsInitException (String msg) {
 		super (msg);
 	}
 }

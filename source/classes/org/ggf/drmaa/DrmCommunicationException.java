@@ -31,25 +31,24 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** This error code is returned by DRMAASession.wait() when a job has finished
- * but no rusage and stat data could be provided.
+/** Could not contact DRM system for this request.
  * @author dan.templeton@sun.com
- * @see DRMAASession#wait()
+ * @since 0.5
  */
-public class NoResourceUsageDataException extends DRMAAException {
+public class DrmCommunicationException extends DrmaaException {
 	
 	/**
-	 * Creates a new instance of <code>NoResourceUsageInformationException</code> without detail message.
+	 * Creates a new instance of <code>CommunicationException</code> without detail message.
 	 */
-	public NoResourceUsageDataException () {
+	public DrmCommunicationException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>NoResourceUsageInformationException</code> with the specified detail message.
+	 * Constructs an instance of <code>CommunicationException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public NoResourceUsageDataException (String msg) {
+	public DrmCommunicationException (String msg) {
 		super (msg);
 	}
 }

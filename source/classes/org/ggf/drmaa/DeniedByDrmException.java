@@ -31,24 +31,25 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** The DRM system rejected the job. The job will never be accepted
+ * due to DRM configuration or job template settings.
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
+public class DeniedByDrmException extends DrmaaException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
+	 * Creates a new instance of <code>DeniedByDrmException</code> without detail message.
 	 */
-	public InvalidArgumentException () {
+	public DeniedByDrmException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
+	 * Constructs an instance of <code>DeniedByDrmException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidArgumentException (String msg) {
+	public DeniedByDrmException (String msg) {
 		super (msg);
 	}
 }

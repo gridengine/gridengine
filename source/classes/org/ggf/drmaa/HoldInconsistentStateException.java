@@ -31,24 +31,20 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** The job is not in a state where it can be held.
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
-	
-	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
-	 */
-	public InvalidArgumentException () {
+public class HoldInconsistentStateException extends InconsistentStateException {
+	/** Creates a new instance of <code>HoldInconsistentStateException</code> without detail message. */
+	public HoldInconsistentStateException () {
 	}
 	
 	
-	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
-	 * @param msg the detail message.
-	 */
-	public InvalidArgumentException (String msg) {
+	/** Constructs an instance of <code>HoldInconsistentStateException</code> with the specified detail message.
+    * @param msg the detail message.
+    */
+	public HoldInconsistentStateException (String msg) {
 		super (msg);
 	}
 }

@@ -31,8 +31,9 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The value for the job attribute is invalid.
+/** The value for the attribute is invalid.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
 public class InvalidAttributeValueException extends InvalidAttributeException {
 	

@@ -31,11 +31,12 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** Could not pass job now to DRM system.  A retry may succeed,
- * however (saturation).
+/** Could not submit the job to DRM system at this time.  A retry may succeed,
+ * however.
  * @author dan.templeton@sun.com
+ * @since 0.4.2
  */
-public class TryLaterException extends DRMAAException {
+public class TryLaterException extends DrmaaException {
 	
 	/**
 	 * Creates a new instance of <code>TryLaterException</code> without detail message.

@@ -31,24 +31,26 @@
 /*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
-/** The input value for an argument is invalid.
+/** The JobTemplate object is no longer valid.  It has either been deleted via
+ * Session.deleteJobTemplate(), or it was never created through
+ * Session.createJobTemplate().
  * @author dan.templeton@sun.com
- * @since 0.4.2
+ * @since 0.5
  */
-public class InvalidArgumentException extends DrmaaException {
+public class InvalidJobTemplateException extends DrmaaRuntimeException {
 	
 	/**
-	 * Creates a new instance of <code>InvalidArgumentException</code> without detail message.
+	 * Creates a new instance of <code>InvalidJobException</code> without detail message.
 	 */
-	public InvalidArgumentException () {
+	public InvalidJobTemplateException () {
 	}
 	
 	
 	/**
-	 * Constructs an instance of <code>InvalidArgumentException</code> with the specified detail message.
+	 * Constructs an instance of <code>InvalidJobException</code> with the specified detail message.
 	 * @param msg the detail message.
 	 */
-	public InvalidArgumentException (String msg) {
+	public InvalidJobTemplateException (String msg) {
 		super (msg);
 	}
 }

@@ -33,12 +33,12 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
-global check_init_level_procedure check_category
+global check_init_level_procedure check_category check_root_access_needs
 
 set check_init_level_procedure "init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
-set check_name                "commlib_throughput"
+set check_name                "commlib"
 set check_description(0)      "run virtual qmaster/ gdi /event client tests"
 set check_description(100)    "run virtual qmaster/ gdi /event client tests"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)

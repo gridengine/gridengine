@@ -1,3 +1,7 @@
+JG-2002-05-14-1: Bugfix:    MPI tight integration rsh wrapper contained
+                            shortcut syntax not executed correctly by all
+                            shells.
+
 JG-2002-05-14-0: Cleanup:   Introduced an own pe task datatype in cull, that
                             replaces the former use of a complete job object
                             for each pe task.

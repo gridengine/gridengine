@@ -59,7 +59,9 @@ fi
 
 # Handle hostname before options
 rhost=
-if ! expr "$1" : "-*" >/dev/null 2>&1; then
+expr "$1" : "-*" >/dev/null 2>&1
+
+if [ $? -ne 0 ]; then
    rhost=$1
    shift
 fi

@@ -82,35 +82,35 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
-gethostname:	gethostname.o $(UTILIB) $(RMONLIB)
+gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIB) $(KRBLIB) $(CULLLIB) $(COMMLIB) $(LCKLIB)
 		$(CC) -o $@ gethostname.o sge_mt_init.o $(LFLAGS) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon  $(SLIBS) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
 
 #---------------------------------------------------------------------
-gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB)
+gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
 
 #---------------------------------------------------------------------
-gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB)
+gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 gethostbyaddr.o:	$(UTILBIN_DIR)/gethostbyaddr.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyaddr.c
 
 #---------------------------------------------------------------------
-getservbyname:	getservbyname.o $(UTILIB) $(RMONLIB)
+getservbyname:	getservbyname.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) $(CFLAGS) -o $@ getservbyname.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 getservbyname.o:	$(UTILBIN_DIR)/getservbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/getservbyname.c
 
 #---------------------------------------------------------------------
-filestat:	filestat.o $(UTILIB) $(RMONLIB)
+filestat:	filestat.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) $(CFLAGS) -o $@ filestat.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 filestat.o:	$(UTILBIN_DIR)/filestat.c
@@ -131,14 +131,14 @@ checkprog.o:	$(UTILBIN_DIR)/checkprog.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkprog.c
 
 #---------------------------------------------------------------------
-checkuser:     checkuser.o $(UTILIB) $(RMONLIB) 
+checkuser:     checkuser.o $(UTILIB) $(RMONLIB)  $(LCKLIB)
 		$(CC) $(CFLAGS) -o $@ checkuser.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 checkuser.o:      $(UTILBIN_DIR)/checkuser.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkuser.c
 
 #---------------------------------------------------------------------
-adminrun:   adminrun.o $(UTILIB) $(RMONLIB)
+adminrun:   adminrun.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ adminrun.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 adminrun.o: $(UTILBIN_DIR)/adminrun.c
@@ -159,20 +159,20 @@ signals.o:	$(UTILBIN_DIR)/signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/signals.c
 
 #---------------------------------------------------------------------
-loadcheck:	loadcheck.o $(UTILIB) $(RMONLIB)
+loadcheck:	loadcheck.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ loadcheck.o $(LFLAGS) -luti -llck -lrmon $(LOADAVGLIBS) $(LIBS)
 
 loadcheck.o:	$(UTILBIN_DIR)/loadcheck.c 
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
 
 #---------------------------------------------------------------------
-languagetest:   languagetest.o  $(UTILIB) $(RMONLIB)
+languagetest:   languagetest.o  $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ languagetest.o $(LFLAGS)  -luti -llck -lrmon $(LIBS)
 
 languagetest.o: $(UTILBIN_DIR)/languagetest.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/languagetest.c
 #---------------------------------------------------------------------
-infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB)
+infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ infotext.o version.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 infotext.o: $(UTILBIN_DIR)/infotext.c

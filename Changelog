@@ -1,3 +1,6 @@
+JG-2001-12-18-0: Testsuite: - new test procedures in qsub and in qrsh tests
+                              that test the starter_method.
+
 SD-2001-12-17-2: Enhancem.: - added verbose information to get_cred security module
                             - updated DCE documentation
 

@@ -448,7 +448,7 @@ static const char *get_sharedlib_path_name(void) {
 /****** execd/set_sharedlib_path() ***************************************
 *
 *  NAME
-*     set_sharedlib_path -- dump environment from list to file
+*     set_sharedlib_path -- set the shared library search path
 *
 *  SYNOPSIS
 *     void set_sharedlib_path(lList environmentList);
@@ -495,12 +495,12 @@ static void set_sharedlib_path(lList *environmentList) {
       char *old_value = lGetString(sharedlib_elem, VA_value);
       if(old_value && strlen(old_value) > 0) {
          DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
-         lWriteElemTo(sharedlib_elem, stderr);
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + strlen(sge_sharedlib_path) + 1);
          strcpy(sharedlib_path, sge_sharedlib_path);
          strcat(sharedlib_path, ":");
          strcat(sharedlib_path, old_value);
          lSetString(sharedlib_elem, VA_value, sharedlib_path);
+         free(sharedlib_path);
       } else {
          DPRINTF(("overwriting empty sharedlib path %s\n", sharedlib_path_name));
          lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
@@ -511,6 +511,7 @@ static void set_sharedlib_path(lList *environmentList) {
       lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
    }
 
+   free(sge_sharedlib_path);
    DEXIT;
 }
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.53 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2005/03/31 09:58:39 $     Revision: $Revision: 1.54 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2005/03/31 09:58:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1222,6 +1222,21 @@ will behave as though only \fB\-now y\fP were given until the job has been
 successfully scheduled, after which time
 .I qsub
 will behave as though only \fB\-sync y\fP were given.
+.br
+If \fB\-sync y\fP is used in conjunction with \fB\-t n[-m[:i]]\fP,
+.I qsub
+will wait for the all the job's tasks to complete before exiting.  If the all
+the job's tasks complete successfully,
+.I qsub's
+exit code will be that of the first completed job tasks with a non-zero exit
+code, or 0 if all job tasks exited with an exit code of 0.  If any of the job's
+tasks fail to complete successfully,
+.I qsub
+will print out a error message indicating why the job task(s) failed and will
+have an exit code of 1.  If
+.I qsub
+is interrupted, e.g. with CTRL-C, before the job completes, all of the job's
+tasks will be canceled.
 .\"
 .IP "\fB\-S [[hostname]:]pathname,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP and \fIqalter\fP.

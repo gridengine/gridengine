@@ -127,6 +127,7 @@ char **argv
    opt_list_append_opts_from_default_files(&opts_defaults, &alp, environ);
    tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
+      DEXIT;
       SGE_EXIT(tmp_ret);
    }
 
@@ -137,6 +138,7 @@ char **argv
                                           argv + 1, environ);
    tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_QSUB_WARNING_S);
    if (tmp_ret > 0) {
+      DEXIT;
       SGE_EXIT(tmp_ret);
    }
 
@@ -145,6 +147,7 @@ char **argv
     */
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(stdout);
+      DEXIT;
       SGE_EXIT(0);
    }
 
@@ -162,6 +165,7 @@ char **argv
       tmp_ret = answer_list_print_err_warn(&alp, MSG_QSUB_COULDNOTREADSCRIPT_S,
                                            MSG_WARNING);
       if (tmp_ret > 0) {
+         DEXIT;
          SGE_EXIT(tmp_ret);
       }
    }
@@ -191,11 +195,13 @@ char **argv
 
    tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {
+      DEXIT;
       SGE_EXIT(tmp_ret);
    }
 
    if (set_sec_cred(job) != 0) {
       fprintf(stderr, MSG_SEC_SETJOBCRED);
+      DEXIT;
       SGE_EXIT(1);
    }
 
@@ -288,7 +294,7 @@ char **argv
           * To quickly fix this issue, I'm mapping the JAPI/DRMAA error code
           * back into a GDI error code.  This is the easy solution.  The
           * correct solution would be to address issue #859, presumably by
-          * having JAPI reuse the GDI error codes instead of the JAPI error
+          * having JAPI reuse the GDI error codes instead of the DRMAA error
           * codes. */
          if (error == DRMAA_ERRNO_TRY_LATER) {
             exit_status = STATUS_NOTOK_DOAGAIN;
@@ -380,7 +386,17 @@ char **argv
             }
             
             /* report how job finished */
-            report_exit_status (stat, sge_dstring_get_string (&jobid));
+            /* If the job is an array job, use the first non-zero exit code as
+             * the exit code for qsub. */
+            if (exit_status == 0) {
+               exit_status = report_exit_status (stat,
+                                              sge_dstring_get_string (&jobid));
+            }
+            /* If we've already found a non-zero exit code, just print the exit
+             * info for the task. */
+            else {
+               report_exit_status (stat, sge_dstring_get_string (&jobid));
+            }               
          }
       }
    }
@@ -424,7 +440,7 @@ Error:
     * supended, SGE_EXIT() hangs. */
    exit (exit_status);
    DEXIT;
-   return 0;
+   return exit_status;
 }
 
 /****** get_bulk_jobid_string() ************************************************

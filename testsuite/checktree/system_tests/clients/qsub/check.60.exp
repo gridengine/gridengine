@@ -268,3 +268,115 @@ proc check_option_v {} {
    set_error -1 "timeout while waiting for job accounting"
 }
 
+#                                                             max. column:     |
+#****** qsub/check_option_sync() ******
+# 
+#  NAME
+#     check_option_sync -- ??? 
+#
+#  SYNOPSIS
+#     check_option_sync { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_option_sync {} {
+   global ::errorCode
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ARCH
+
+   # first clean up output directory:  
+   setup_output_directory
+
+   set option "-sync y"
+   set jobargs "$option -o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/exit.sh 5" 
+   set client_binary $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub
+
+   catch {  eval exec "$client_binary" "$jobargs" } result
+   puts $CHECK_OUTPUT "\njob has args: \"$jobargs\""
+
+   set errorType [lindex $errorCode 0]
+   if {$errorType == "CHILDSTATUS"} {
+      set errorStatus [lindex $errorCode 2]
+      if {$errorStatus != 5} {
+         set_error -1 "qsub did not exit with correct exit code: $result"
+      } else {
+         set_error 0 "no error"
+      }
+   } else {
+      set_error -1 "qsub terminated abnormally"
+   }
+}
+
+#                                                             max. column:     |
+#****** qsub/check_option_sync_t() ******
+# 
+#  NAME
+#     check_option_sync_t -- ??? 
+#
+#  SYNOPSIS
+#     check_option_sync_t { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_option_sync_t {} {
+   global ::errorCode
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ARCH
+
+   # first clean up output directory:  
+   setup_output_directory
+
+   set option "-sync y -t 1-2"
+   set jobargs "$option -o /dev/null -j y $CHECK_PRODUCT_ROOT/examples/jobs/exit.sh 5" 
+   set client_binary $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub
+
+   catch {  eval exec "$client_binary" "$jobargs" } result
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
+
+   set errorType [lindex $errorCode 0]
+   if {$errorType == "CHILDSTATUS"} {
+      set errorStatus [lindex $errorCode 2]
+      if {$errorStatus != 5} {
+         set_error -1 "qsub did not exit with correct exit code: $result"
+      } else {
+         set_error 0 "no error"
+      }
+   } else {
+      set_error -1 "qsub terminated abnormally"
+   }
+}
+

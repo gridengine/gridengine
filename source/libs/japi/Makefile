@@ -74,13 +74,13 @@ drmaa_clean: japi_clean drmaa_extras_clean
 	$(RM) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT)
 
 drmaa_extras_clean: drmaa_howto_clean
-	$(RM) test_drmaa.o test_drmaa example.o example test_drmaa_sync \
-              test_drmaa_sync.o
+	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_sync \
+              test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o
 
 japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 
-drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_sync
+drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_sync test_drmaa_no_bin
 	
 japi_clean:
 	$(RM) $(JAPILIB_OBJS) libjapi.a libjapi$(SHAREDEXT)
@@ -151,6 +151,12 @@ test_drmaa_mcpu: test_drmaa_mcpu.o $(DRMAALIB)
 
 test_drmaa_mcpu.o: $(JAPILIB_DIR)/test_drmaa_mcpu.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_mcpu.c
+
+test_drmaa_no_bin: test_drmaa_no_bin.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_no_bin.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+test_drmaa_no_bin.o: $(JAPILIB_DIR)/test_drmaa_no_bin.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_no_bin.c
 
 example: example.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)

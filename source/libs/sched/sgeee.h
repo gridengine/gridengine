@@ -44,9 +44,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,
                     lList *pending_jobs,
-                    lList **orderlist,
-                    bool has_queues,
-                    bool has_pending_jobs );
+                    lList **orderlist);
 void sgeee_resort_pending_jobs(lList **job_list, lList *order_list); 
  
 int calculate_host_tickets( lList **running, lList **hosts );

@@ -34,6 +34,12 @@
 
 #include "sge_schedd_confL.h"
 
+enum { 
+    DISPATCH_TYPE_NONE = 0, 
+    DISPATCH_TYPE_FAST, 
+    DISPATCH_TYPE_COMPREHENSIVE 
+};
+
 enum schedd_job_info_key {
    SCHEDD_JOB_INFO_FALSE=0,
    SCHEDD_JOB_INFO_TRUE,

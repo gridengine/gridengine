@@ -1,3 +1,10 @@
+SG-2004-10-11-0: Enhancem.: Part 1/3 of the look ahead scheduler
+                            extention.
+                            - code cleanup
+                            - every job has a duration now.
+                 Changed:   scheduler
+                 Review:    EB 
+
 JG-2004-10-11-0: Enhancem.: performance tuning
                             - improved Berkeley DB throughput
                             - cleanup of qmaster - execd protocol

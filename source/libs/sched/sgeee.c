@@ -4220,9 +4220,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                lList *running_jobs,
                lList *finished_jobs,
                lList *pending_jobs,
-               lList **orderlist,
-               bool has_queues,
-               bool has_pending_jobs )
+               lList **orderlist)
 {
    static u_long32 past = 0;
    u_long32 now = sge_get_gmt();

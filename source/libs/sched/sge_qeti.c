@@ -258,10 +258,12 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       int is_relevant;
       const void *queue_iterator = NULL;
 
-      if (host_match_static(job, NULL, hep, centry_list, acl_list) == -1)
+      if (sge_host_match_static(job, NULL, hep, centry_list, acl_list) == DISPATCH_NEVER_CAT) {
          continue;
-      if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME))
+      }   
+      if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME)) {
          continue;
+      }   
 
       /* There must be at least one queue referenced with the parallel 
          environment that resides at this host. And secondly we only 
@@ -295,7 +297,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
          continue;
 
       /* consider only those queues that match this job (statically) */
-      if (queue_match_static(qep, job, pe, ckpt, centry_list, acl_list)!=0)  
+      if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK)  
          continue;
 
       if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 

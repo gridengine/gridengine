@@ -98,21 +98,24 @@ void *get_thrd_func_arg(void)
 *******************************************************************************/
 static void *thread_function_1(void *anArg)
 {
-   sge_lock(LOCK_GLOBAL, LOCK_READ, sge_locker_id());
+   DENTER(TOP_LAYER, "thread_function");
+
+   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    sleep(3);
 
-   sge_lock(LOCK_MASTER_PROJECT_LST, LOCK_READ, sge_locker_id());
+   SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
    sleep(3);
 
-   printf("Thread %u sleeping\n", sge_locker_id());
+   DPRINTF(("Thread %u sleeping\n", sge_locker_id()));
    sleep(5);
 
-   sge_unlock(LOCK_MASTER_PROJECT_LST, LOCK_READ, sge_locker_id());
+   SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
    sleep(3);
 
-   sge_unlock(LOCK_GLOBAL, LOCK_READ, sge_locker_id());
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    sleep(3);
 
+   DEXIT;
    return (void *)NULL;
 } /* thread_function_1 */
 
@@ -151,20 +154,23 @@ static void *thread_function_1(void *anArg)
 *******************************************************************************/
 static void *thread_function_2(void *anArg)
 {
-   sge_lock(LOCK_MASTER_PROJECT_LST, LOCK_READ, sge_locker_id());
+   DENTER(TOP_LAYER, "thread_function");
+
+   SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
    sleep(3);
 
-   sge_lock(LOCK_GLOBAL, LOCK_READ, sge_locker_id());
+   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    sleep(3);
 
-   printf("Thread %u sleeping\n", sge_locker_id());
+   DPRINTF(("Thread %u sleeping\n", sge_locker_id()));
    sleep(5);
 
-   sge_unlock(LOCK_GLOBAL, LOCK_READ, sge_locker_id());
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    sleep(3);
 
-   sge_unlock(LOCK_MASTER_PROJECT_LST, LOCK_READ, sge_locker_id());
+   SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
    sleep(3);
 
+   DEXIT;
    return (void *)NULL;
 } /* thread_function_2 */

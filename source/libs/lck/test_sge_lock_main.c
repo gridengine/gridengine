@@ -79,24 +79,28 @@ int main(int argc, char *argv[])
    pthread_t *t;
    int i,j;
 
+   DENTER_MAIN(TOP_LAYER, "main");
+
    setup();
 
    i = get_thrd_demand();
    t = (pthread_t *)malloc(i * sizeof(pthread_t));
 
-   printf("Create %d threads\n", i);
+   DPRINTF(("%s Create %d threads\n", SGE_FUNC, i));
+
    for(j = 0; j < i; j++) {
       pthread_create(&(t[j]), NULL, get_thrd_func(), get_thrd_func_arg());
    }
 
    for(j = 0; j < i; j++) {
-      printf("Join thread %u\n", (unsigned int)t[j]);
+      DPRINTF(("%s Join thread %u\n", SGE_FUNC, (unsigned int)t[j]));
       pthread_join(t[j], NULL);
    }
 
    teardown();
    free(t);
 
+   DEXIT;
    return 0;
 } /* main */
 
@@ -122,21 +126,26 @@ int main(int argc, char *argv[])
 *******************************************************************************/
 static void setup(void)
 {
+   pthread_mutexattr_t attr;
    int n, i;
 
-   printf("Setup\n");
+   DENTER(TOP_LAYER, "setup");
+
+   pthread_mutexattr_init(&attr);
+   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 
    n = sge_num_locktypes();
    locks = (pthread_mutex_t *)malloc(n * sizeof(pthread_mutex_t));
 
    for(i = 0; i < n; i++) {
-      pthread_mutex_init(&(locks[i]), NULL);
+      pthread_mutex_init(&(locks[i]), &attr);
    }
 
    sge_set_lock_callback(lock_callback);
    sge_set_unlock_callback(unlock_callback);
    sge_set_id_callback(id_callback);
 
+   DEXIT;
    return;
 } /* setup */
 
@@ -156,15 +165,6 @@ static void setup(void)
 *  RESULT
 *     static void - none 
 *
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
 *  SEE ALSO
 *     test_sge_lock_main/setup()
 *******************************************************************************/
@@ -172,7 +172,7 @@ static void teardown(void)
 {
    int n, i;
 
-   printf("Teardown\n");
+   DENTER(TOP_LAYER, "teardown");
 
    n = sge_num_locktypes();
 
@@ -182,6 +182,7 @@ static void teardown(void)
    
    free(locks);
 
+   DEXIT;
    return;
 } /* teardown */
 
@@ -235,10 +236,19 @@ static sge_locker_t id_callback(void)
 *******************************************************************************/
 static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
 {
-   printf("Locker %d tries to lock %s\n", (int)anID, sge_type_name(aType));
-   pthread_mutex_lock(&(locks[aType]));
-   printf("Locker %d locked %s\n", (int)anID, sge_type_name(aType));
+   DENTER(TOP_LAYER, "lock_callback");
 
+   DLOCKPRINTF(("Locker %d tries to lock %s\n", (int)anID, sge_type_name(aType)));
+
+   if (pthread_mutex_lock(&(locks[aType])) != 0)
+   {
+      DLOCKPRINTF(("Locker %d failed to lock %s\n", (int)anID, sge_type_name(aType)));
+      abort();
+   }
+
+   DLOCKPRINTF(("Locker %d locked %s\n", (int)anID, sge_type_name(aType)));
+
+   DEXIT;
    return;
 } /* lock_callback */
 
@@ -267,9 +277,17 @@ static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker
 *******************************************************************************/
 static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
 {
-   pthread_mutex_unlock(&(locks[aType]));
-   printf("Locker %d unlocked %s\n", (int)anID, sge_type_name(aType));
+   DENTER(TOP_LAYER, "unlock_callback");
 
+   if (pthread_mutex_unlock(&(locks[aType])) != 0)
+   {
+      DLOCKPRINTF(("Locker %d failed to unlock %s\n", (int)anID, sge_type_name(aType)));
+      abort();
+   }
+
+   DLOCKPRINTF(("Locker %d unlocked %s\n", (int)anID, sge_type_name(aType)));
+
+   DEXIT;
    return;
 } /* lock_callback */
 

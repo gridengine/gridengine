@@ -37,22 +37,23 @@
 #include "sge_lock.h"
 
 
-static void *thread_function(void *anArg);
+static void *thread_function_1(void *anArg);
+static void *thread_function_2(void *anArg);
+static void lock_recursive(void);
+
 
 int get_thrd_demand(void)
 {
    long p = 2;  /* min num of threads */
-
-#if defined(SOLARIS)
-   p = sysconf(_SC_NPROCESSORS_ONLN);
-#endif
 
    return (int)p;
 }
 
 void *(*get_thrd_func(void))(void *anArg)
 {
-   return thread_function;
+   static int i = 0;
+
+   return ((i++ % 2) ? thread_function_1 : thread_function_2) ;
 }
 
 void *get_thrd_func_arg(void)
@@ -60,52 +61,48 @@ void *get_thrd_func_arg(void)
    return NULL;
 }
 
-/****** test_sge_lock_multiple/thread_function() *********************************
-*  NAME
-*     thread_function() -- Thread function to execute 
-*
-*  SYNOPSIS
-*     static void* thread_function(void *anArg) 
-*
-*  FUNCTION
-*     Acquire multiple locks and sleep. Release the locks. After each 'sge_lock()'
-*     and 'sge_unlock()' sleep to increase the probability of interlocked execution. 
-*     Note that we deliberately test the boundaries of 'sge_locktype_t'.
-*
-*  INPUTS
-*     void *anArg - thread function arguments 
-*
-*  RESULT
-*     static void* - none
-*
-*  SEE ALSO
-*     test_sge_lock_multiple/get_thrd_func()
-*******************************************************************************/
-static void *thread_function(void *anArg)
+static void *thread_function_1(void *anArg)
 {
-   DENTER(TOP_LAYER, "thread_function");
+   DENTER(TOP_LAYER, "thread_function_1");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    sleep(3);
 
-   SGE_LOCK(LOCK_MASTER_QUEUE_LST, LOCK_READ);
-   sleep(3);
+   lock_recursive();
 
-   SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
-   sleep(3);
-
-   DPRINTF(("Thread %u sleeping\n", sge_locker_id()));
-   sleep(5);
-
-   SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
-   sleep(3);
-
-   SGE_UNLOCK(LOCK_MASTER_QUEUE_LST, LOCK_READ);
-   sleep(3);
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-   sleep(3);
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
    return (void *)NULL;
-} /* thread_function */
+}
+
+static void lock_recursive(void)
+{
+   DENTER(TOP_LAYER, "lock_recursive");
+
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   sleep(15);
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   DEXIT;
+   return;
+}
+
+static void *thread_function_2(void *anArg)
+{
+   DENTER(TOP_LAYER, "thread_function_2");
+
+   sleep(6);
+
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   sleep(2);
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   DEXIT;
+   return (void *)NULL;
+} /* thread_function_2 */

@@ -34,6 +34,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
+
 #include "sge_lock.h"
 
 
@@ -81,13 +82,15 @@ void *get_thrd_func_arg(void)
 *******************************************************************************/
 static void *thread_function(void *anArg)
 {
+   DENTER(TOP_LAYER, "thread_function");
    
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
 
-   printf("Thread %u sleeping\n", sge_locker_id());
+   DPRINTF(("Thread %u sleeping\n", sge_locker_id()));
    sleep(5);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
+   DEXIT;
    return (void *)NULL;
 } /* thread_function */

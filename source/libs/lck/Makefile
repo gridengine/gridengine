@@ -51,12 +51,14 @@ LCKLIB_TEST_OBJS = \
               test_sge_lock_main.o \
               test_sge_lock_simple.o \
               test_sge_lock_multiple.o \
-              test_sge_deadlock.o
+              test_sge_deadlock.o \
+              test_sge_recursive.o
 
 LCKLIB_TEST_PROGS = \
               test_sge_lock_simple \
               test_sge_lock_multiple \
-              test_sge_deadlock
+              test_sge_deadlock \
+              test_sge_recursive
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -122,3 +124,9 @@ test_sge_deadlock:	test_sge_lock_main.o test_sge_deadlock.o $(LCKLIB) $(LCKLIB_T
 
 test_sge_deadlock.o:	$(LCKLIB_DIR)/test_sge_deadlock.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_deadlock.c
+
+test_sge_recursive:	test_sge_lock_main.o test_sge_recursive.o $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_recursive $(LFLAGS) test_sge_lock_main.o test_sge_recursive.o $(LCKLIB_TEST_ADD_LIBS) $(LIBS)
+
+test_sge_recursive.o:	$(LCKLIB_DIR)/test_sge_recursive.c
+		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_recursive.c

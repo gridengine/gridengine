@@ -659,12 +659,12 @@ proc disable_queue { queuelist } {
         } else {
            # try to find localized output
            foreach q_name $queues {
-#              MSG_QINSTANCE_CHANGEDST_SSSS  user@host changed state of "queue@host" (disabled)
-#              "SFN"@"SFN" changed state of "SFQ" ("SFN")\n"
-#              or just MSG_QINSTANCE_DISABLED
-              set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
-               
-              if { [ string match "*$HAS_DISABLED" $result ] } {
+              if { $ts_config(gridengine_version) == 53 } {
+                set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
+              } else {
+                set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QINSTANCE_DISABLED]]
+              }
+              if { [ string match "*${HAS_DISABLED}*" $result ] } {
                  incr nr_disabled 1
                  break
               } 
@@ -750,8 +750,12 @@ proc enable_queue { queuelist } {
         } else {
            # try to find localized output
            foreach q_name $queues {
-              set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER "*" ]
-              if { [ string match "*$BEEN_ENABLED" $result ] } {
+              if { $ts_config(gridengine_version) == 53 } {
+                 set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER "*" ]
+              } else {
+                 set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QINSTANCE_NDISABLED]]
+              }
+              if { [ string match "*${BEEN_ENABLED}*" $result ] } {
                  incr nr_enabled 1
                  break
               } 

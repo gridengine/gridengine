@@ -52,7 +52,7 @@ set check_init_level_procedure "submit_del_init_level"
 
 # define test's name and run level descriptions
 set check_name            "submit_del"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   0
 set check_description(0)  "delete immediate submitted job (signaling test)"
 
@@ -75,9 +75,6 @@ proc submit_del_init_level {} {
      "0" { 
            return 0    
      } 
-     "1" {
-           return -1
-     }
   } 
   return -1  ;# no other level else
 }
@@ -97,18 +94,15 @@ proc submit_del_setup  {} {
 
    if { $ts_config(gridengine_version) == 53 } {
       get_config submit_del_qconfig
-      set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
+      set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0"
       set_config my_config
    } else {
       set my_schedd_conf(flush_submit_sec) "1"
-      set_schedd_config(my_schedd_conf);
+      set_schedd_config my_schedd_conf
    }   
 
    
    wait_for_end_of_all_jobs 100
-
-   puts $CHECK_OUTPUT "waiting 15 seconds to give qmaster time to update configurations on execds ..."
-   sleep 15
 
    set_error 0 "ok"
 }
@@ -125,17 +119,16 @@ proc submit_del_test { } {
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
    set job_list ""
-   foreach elem $CHECK_CORE_EXECD {
-      set arguments "-o /dev/null -e /dev/null -q $elem.q $job_script"
+   foreach host $CHECK_CORE_EXECD {
+      set arguments "-o /dev/null -e /dev/null -l h=$host $job_script"
       lappend job_list [submit_job $arguments ]
    }
 
-   foreach elem $job_list {
-      wait_for_jobstart $elem "Sleeper" 60 1 1
+   foreach job $job_list {
+      wait_for_jobstart $job "Sleeper" 60 1 1
    }
 
    set catch_result [delete_all_jobs]
-
 
    wait_for_end_of_all_jobs 120
 
@@ -162,8 +155,8 @@ proc submit_del_test { } {
 
    set runs [ expr ( [llength $$CHECK_CORE_EXECD ] * 5 ) ]
    while { $runs > 0 } { 
-      foreach elem $CHECK_CORE_EXECD {
-         set arguments "-o /dev/null -e /dev/null -q $elem.q"
+      foreach host $CHECK_CORE_EXECD {
+         set arguments "-o /dev/null -e /dev/null -l h=$host"
          set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
          puts $CHECK_OUTPUT $result
          if { $CHECK_L10N == 0 } {   
@@ -177,7 +170,6 @@ proc submit_del_test { } {
             set job_id [string trim $job_id]
          }
          puts $CHECK_OUTPUT "job id is: $job_id"
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$arch/qconf" "-tsm" } result
          wait_for_jobstart $job_id "leeper" 60
          puts $CHECK_OUTPUT "job $job_id started, deleting it"
          set catch_return [ catch { eval exec "$qdel_program $job_id" } result ]
@@ -192,8 +184,8 @@ proc submit_del_test { } {
    
    incr job_id 1  ;# prepare job_id for next job !!!
    while { $runs > 0 } { 
-      foreach elem $CHECK_CORE_EXECD {
-         set arguments "-o /dev/null -e /dev/null -q $elem.q"
+      foreach host $CHECK_CORE_EXECD {
+         set arguments "-o /dev/null -e /dev/null -l h=$host"
 #         set result [start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"]
 
          set result [start_remote_prog $CHECK_HOST $CHECK_USER "qsub" "$arguments $job_script \nqdel $job_id"]
@@ -222,8 +214,6 @@ proc submit_del_cleanup  {} {
       set_config submit_del_qconfig
    }
 
-
-
    puts $CHECK_OUTPUT "do qdel -uall"
    set catch_result [delete_all_jobs]
 
@@ -232,13 +222,11 @@ proc submit_del_cleanup  {} {
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c ${hostname}.q" } output ]
+      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
       puts $CHECK_OUTPUT $output
    }
  
 
    set_error 0 "ok"
 }
-
-
 

@@ -1,3 +1,6 @@
+JG-2004-11-22-2: Testsuite: fixed check system_tests/shepherd/submit_del
+                 Review:    CR
+
 JG-2004-11-22-1: Testsuite: fixed creation of local configurations (set_config)
                             fixed check system_tests/config/submit_hosts
                  Review:    CR

@@ -581,8 +581,6 @@ connection *search_con_member_in_connections(message *mp) {
 *******************************************************************************/
 void del_connection_request(message *mp) {
    connection *con = NULL;
-   con_member *cm = NULL;
-
    for ( con = connection_list ; con ; con = con->next) {
       if ( delete_con_member_via_mp(con,mp) ) { 
          if (con->member_list == NULL) {

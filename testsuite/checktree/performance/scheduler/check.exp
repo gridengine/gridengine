@@ -53,6 +53,7 @@ set check_functions           ""
 lappend check_functions       "scheduler_setup"          ;# functions to call (in order)
 lappend check_functions       "scheduler_test_run"
 lappend check_functions       "scheduler_cleanup"
+# set check_functions       "show_all_schedd_test_data"
 set check_highest_level       100
 
 global scheduler_test_level 
@@ -129,7 +130,7 @@ proc scheduler_setup {} {
          set queue(hostname) $host
          set queue(slots) 4
          set queue(load_thresholds) "np_load_avg=11.75"
-         for { set q_nr 1 } { $q_nr <= 100 } { incr q_nr 1 } {
+         for { set q_nr 1 } { $q_nr <= 20 } { incr q_nr 1 } {
             set queue(qname) "$host.q${q_nr}"
             add_queue queue 1
             lappend scheduler_queue_list $queue(qname)
@@ -284,7 +285,11 @@ proc scheduler_measurement { repeat_count job_count } {
                       set_error -1 "format error for orders (1)"
                       return -1
                    }
-                   set schedd_time [ lindex $schedd_string 2 ]
+                   set schedd_time [ lindex $schedd_string 2 ]  ;# this is wall clock time 
+                   set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
+                   set schedd_time_length [string length $schedd_time]
+                   incr schedd_time_length -3
+                   set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
                    for { set s_index 0 } { $s_index < [llength $schedd_string] } { incr s_index 1 } {
                       if { [string compare [lindex $schedd_string $s_index] "orders," ] == 0  } {
                          break
@@ -321,7 +326,7 @@ proc scheduler_measurement { repeat_count job_count } {
          } 
 
          scheduler_setup_test_conditions $job_count
-         sleep 1
+         sleep 5
          catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
          set wait_for_schedd_nr $schedd_nr
          incr wait_for_schedd_nr 1 
@@ -359,7 +364,7 @@ proc scheduler_test_run {} {
 
    if { [string match "analysis" $scheduler_test_level] == 0 } {
       puts $CHECK_OUTPUT "running $scheduler_test_level test ..."
-      set job_counts "100 1000 5000 10000"
+      set job_counts "625 1250 2500 5000 7500 10000"
       set repeats 3
 
       
@@ -431,8 +436,44 @@ proc scheduler_test_run {} {
    set_error 0 "ok"
 }
 
-proc generate_all_gif_files { data_file } {
+proc show_all_schedd_test_data {  } {
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name
 
+   set sched_output_dir $CHECK_PROTOCOL_DIR/$check_name
+   set sched_output_gif_dir $sched_output_dir/gif
+   set data_file $sched_output_dir/$check_name.dat
+
+
+   read_array_from_file $data_file "content" test_data_array
+   if { [info exists test_data_array(test_data_count)] } {
+      set run_nr $test_data_array(test_data_count)
+      incr run_nr -1
+      
+      set test_name_row "standard host_complexes global_complexes glob_complexes_no_threshold"
+
+      set test_date $test_data_array($run_nr,date)
+
+      set lines_count 0
+      foreach act_test_name $test_name_row {
+         if {[info exists test_data_array($run_nr,$act_test_name,job_counts)]} {
+            puts $CHECK_OUTPUT "\n$test_data_array($run_nr,version) test results for: $act_test_name"
+            set  job_counts $test_data_array($run_nr,$act_test_name,job_counts)
+            set dcount 0
+            foreach jc $job_counts {
+              set time $test_data_array($run_nr,$act_test_name,$jc,schedd_time)
+              puts $CHECK_OUTPUT "$jc jobs scheduled in $time"
+              incr dcount 1
+            }
+            puts $CHECK_OUTPUT "avg. schedule time: $test_data_array($run_nr,$act_test_name,avg_schedule_time)"
+            incr lines_count 1
+         }
+      }
+   } else {
+      return 0
+   }
+}
+
+proc generate_all_gif_files { data_file } {
    
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name
 
@@ -521,7 +562,7 @@ proc scheduler_setup_test_conditions { nr_of_jobs } {
 
 
    set my_timeout [timestamp]
-   incr my_timeout 60
+   incr my_timeout [ expr ( 60 * 5 ) ]  ;# 5 min timeout
    while { $running_jobs != 0 && $my_timeout > [timestamp]} {
       set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -s r" } result ]
       set rjobout [split $result "\n"]
@@ -581,7 +622,7 @@ proc scheduler_setup_test_conditions { nr_of_jobs } {
    if { $my_timeout < [timestamp] } {
       add_proc_error "scheduler_setup_test_conditions" -1 "timeout error(2)"
    }
-   sleep 30 ;# let qmaster time to send jobs to scheduler
+   sleep 60 ;# let qmaster time to send jobs to scheduler
 }
 
 proc scheduler_cleanup {} {

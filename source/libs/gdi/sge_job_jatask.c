@@ -84,7 +84,7 @@ static int job_initialize_task(lListElem *job, u_long32 task_id,
    new_task = lCreateElem(JAT_Type);
    if (!new_task) {
       ERROR((SGE_EVENT, "job "u32" was rejected because it was not "
-             "possible to create task list\n", u32c(job_number)));
+             "possible to create task list\n", job_number));
       DEXIT;
       return STATUS_EUNKNOWN;
    }

@@ -217,7 +217,8 @@ lListElem **pjob
       o_h_list = lCreateList("operator hold list", RN_Type);
       s_h_list = lCreateList("system hold list", RN_Type);
       if (!n_h_list || !u_h_list || !o_h_list || !s_h_list) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);         DEXIT;
+         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         DEXIT;
          return answer;
       }     
       lSetList(*pjob, JB_ja_n_h_ids, n_h_list);

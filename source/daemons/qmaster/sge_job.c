@@ -2927,6 +2927,21 @@ sge_gdi_request *request
       }
    }
 
+#if 1 /* EB: TODO */
+   {
+      lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+
+      n_h_list = lCopyList("range list", lGetList(old_jep, JB_ja_structure));
+      u_h_list = lCreateList("user hold list", RN_Type);
+      o_h_list = lCreateList("operator hold list", RN_Type);
+      s_h_list = lCreateList("system hold list", RN_Type); 
+      lSetList(new_jep, JB_ja_n_h_ids, n_h_list);
+      lSetList(new_jep, JB_ja_u_h_ids, u_h_list);
+      lSetList(new_jep, JB_ja_o_h_ids, o_h_list);
+      lSetList(new_jep, JB_ja_s_h_ids, s_h_list); 
+   }
+#endif
+
    /* reinit state of all job array tasks - same is done by qsub */
    {
       u_long32 start, end, step;

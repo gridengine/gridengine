@@ -618,6 +618,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                                    SGE_CENTRY_LIST, SGE_GDI_DEL, old_list,
                                    NULL, NULL, &mal_answer_list, &state, false);
             if (answer_list_has_error(&gdi_answer_list)) {
+               answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
                ret = false;
             }
@@ -632,6 +633,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                                    SGE_CENTRY_LIST, SGE_GDI_MOD, &modify_list,
                                    NULL, NULL, &mal_answer_list, &state, false);
             if (answer_list_has_error(&gdi_answer_list)) {
+               answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
                ret = false;
             }
@@ -646,6 +648,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                                    SGE_CENTRY_LIST, SGE_GDI_ADD, &add_list,
                                    NULL, NULL, &mal_answer_list, &state, false);
             if (answer_list_has_error(&gdi_answer_list)) {
+               answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
                ret = false;
             }
@@ -657,19 +660,19 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
          /*
           * Verify that the parts of the multi request are successfull
           */
-         if (do_del) {
+         if (do_del && ret) {
             gdi_answer_list = sge_gdi_extract_answer(SGE_GDI_DEL, 
                                                      SGE_CENTRY_LIST, del_id,
                                                      mal_answer_list, NULL);
             answer_list_append_list(answer_list, &gdi_answer_list);
          }
-         if (do_mod) {
+         if (do_mod && ret) {
             gdi_answer_list = sge_gdi_extract_answer(SGE_GDI_MOD, 
                                                      SGE_CENTRY_LIST, mod_id,
                                                      mal_answer_list, NULL);
             answer_list_append_list(answer_list, &gdi_answer_list);
          }
-         if (do_add) {
+         if (do_add && ret) {
             gdi_answer_list = sge_gdi_extract_answer(SGE_GDI_ADD, 
                                                      SGE_CENTRY_LIST, add_id,
                                                      mal_answer_list, NULL);
@@ -684,6 +687,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                                     ANSWER_QUALITY_INFO, 
                                     MSG_CENTRY_NOTCHANGED);
          }
+
       }
    }
    DEXIT;

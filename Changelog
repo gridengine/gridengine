@@ -1,3 +1,8 @@
+AH-2005-02-15-0: Bugfix:    qconf error diagnosis broken
+                 Changed:   qconf
+                 Bugtraq:   6186597
+                 Review:    TBD
+
 SG-2005-02-15-0: Bugfix:    An array pe job can set queues into error state
                  Changed:   execd
                  Issue:     1463

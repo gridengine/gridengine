@@ -89,7 +89,7 @@ int sge_get_qmaster_port(void) {
    struct timeval now;
    static long next_timeout = 0;
    static int cached_port = -1;
-   DENTER(TOP_LAYER, "sge_get_qmaster_port");
+   DENTER(GDI_LAYER, "sge_get_qmaster_port");
 
    sge_mutex_lock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
 
@@ -103,6 +103,7 @@ int sge_get_qmaster_port(void) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "U32CFormat"\n", u32c(int_port)));
       sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
+      DEXIT;
       return int_port;
    }
 
@@ -351,7 +352,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
    int time;
    int l_errno = 0;
    
-   DENTER(TOP_LAYER, "sge_gethostbyname");
+   DENTER(GDI_LAYER, "sge_gethostbyname");
 
    /* This method goes to great lengths to slip a reentrant gethostbyname into
     * the code without making changes to the rest of the source base.  That
@@ -529,7 +530,7 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
    char **p = NULL;
    int count = 0;
 
-   DENTER (TOP_LAYER, "sge_copy_hostent");
+   DENTER (GDI_LAYER, "sge_copy_hostent");
    
    /* Easy stuff first */
    copy->h_name = strdup (orig->h_name);

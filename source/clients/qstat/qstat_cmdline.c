@@ -122,7 +122,7 @@ switch_list_qstat_parse_from_file(lList **switch_list, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "qstat_parse_switches_from_file");
+   DENTER(TOP_LAYER, "switch_list_qstat_parse_from_file");
    if (switch_list == NULL) {
       ret = false;
    } else {

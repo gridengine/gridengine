@@ -238,7 +238,7 @@ CheckHostNameResolving()
       errmsg=""
       $SGE_BIN/qconf -sh > /dev/null 2>&1
       if [ $? = 1 ]; then
-         errmsg=`$SGE_BIN/qconf 2>&1`
+         errmsg=`$SGE_BIN/qconf -sh 2>&1`
       else
          errmsg=`$SGE_BIN/qconf -sh 2>&1 |  grep denied:`
       fi

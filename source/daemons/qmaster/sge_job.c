@@ -2656,7 +2656,7 @@ int *trigger
       sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    }
 
-   /* deny modification of running jobs */
+   /* deny certain modifications of running jobs */
    if (may_not_be_running && is_running) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, u32c(jobid)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);

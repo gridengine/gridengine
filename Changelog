@@ -1,3 +1,8 @@
+AH-2002-06-10-0: Bugfix:    Complex default value was not used for load thresholds
+                            in cases when no load value was available.
+                 Issue:     #223
+                 Bugtraq:   #4700286
+
 EB-2002-06-07-0: Bugfix:    disallow "none" in load_formula and addition
                             tests for the correctness
                  Issue:     #215

@@ -339,7 +339,7 @@ static int split_command(char *command, char ***cmdargs) {
    char *s = command;
    int argc;
    char **args;
-   int i;
+   int i,end;
    char delimiter[2];
 
    sprintf(delimiter, "%c", 0xff);
@@ -358,10 +358,16 @@ static int split_command(char *command, char ***cmdargs) {
       return 0;
    }
 
-   args[argc++] = strtok(command, delimiter);
-   for(i = 1; i < counter; i++) {
-      args[argc++] = strtok(NULL, delimiter);
-   }
+   /* do not use strtok(), strtok() is seeing 2 or more delimiters as one !!! */
+   s=command;
+   args[argc++] = s;
+   end =  strlen(command);
+   for(i = 0; i < end ; i++) {
+      if (s[i] == delimiter[0]) {
+         s[i] = 0;
+            args[argc++] = &s[i+1];
+      }
+   } 
 
 #if 0
    /* debug code */
@@ -476,6 +482,7 @@ static char *join_command(int argc, char **argv) {
 */
 static int startJob(char *command, char *wrapper, int noshell)
 {
+
    child_pid = fork();
    if(child_pid == -1) {
       fprintf(stderr, MSG_QRSH_STARTER_CANNOTFORKCHILD_S, strerror(errno));

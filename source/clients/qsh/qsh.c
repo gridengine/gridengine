@@ -1290,12 +1290,18 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
       ep = lFirst(opts_qrsh);
       if(ep) {
          char delimiter[2];
+         const char *help = NULL;
          sprintf(delimiter, "%c", 0xff);
-         strcpy(buffer, lGetString(ep, SPA_argval_lStringT)); 
+         help = lGetString(ep, SPA_argval_lStringT);
+         if (help != NULL) {
+            strcpy(buffer, help); 
+         } 
          while((ep = lNext(ep)) != NULL) {
             const char *arg = lGetString(ep, SPA_argval_lStringT);
             strcat(buffer, delimiter);
-            strcat(buffer, arg);
+            if (arg != NULL) {
+               strcat(buffer, arg);
+            } 
          }   
       }
    } 

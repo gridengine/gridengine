@@ -1,3 +1,8 @@
+CR-2002-04-12-3: Testsuite: demo_config_dir files should not be used in
+                            default settings file
+                 Issue:     #163   
+                 
+
 CR-2002-04-12-2: Testsuite: removed all rsh calls, testsuite will now
                             only use rlogin.
                  Issue:     #180

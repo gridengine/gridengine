@@ -1729,7 +1729,7 @@ proc load_defaults {} {
   set CHECK_DNS_DOMAINNAME ""
   set CHECK_REMOTE_ENVIRONMENT ""
   set CHECK_SOURCE_CVS_RELEASE "maintrunc"  
-  set CHECK_CONFIG_DIR "$CHECK_CURRENT_WORKING_DIR/demo_config_dir"
+  set CHECK_CONFIG_DIR ""
   if { [info exists env(HOST)] } {
      set CHECK_MAILX_HOST "[set env(HOST)]"
   } else {

@@ -138,7 +138,7 @@ bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path )
    DENTER(TOP_LAYER, "sge_get_fs_path");
 
    if( lp && (ep=lFirst( lp ))) {
-      bFileStaging = lGetBool( ep, PN_file_staging );
+      bFileStaging = (bool)lGetBool( ep, PN_file_staging );
  
       if( bFileStaging ) {
          if( lGetHost( ep, PN_file_host )) {

@@ -95,8 +95,8 @@ enum japi_flags {
 /* Type for japi_int()/japi_enable_job_wait() error handler callback.  The
  * callback function should not free the const char* parameter. */
 typedef void (*error_handler_t)(const char *);
-   
-/* ------------------- init/exit routines ------------------- */
+
+/* init/exit routines ------------------- */
 /*
  * Initialize DRMAA API library and create a new DRMAA Session. 'Contact'
  * is an implementation dependent string which may be used to specify
@@ -127,6 +127,8 @@ int japi_enable_job_wait (const char *session_key_in, dstring *session_key_out,
  */
 
 int japi_exit(bool close_session, int flag, dstring *diag);
+
+int japi_was_init_called(dstring* diag);
 
 
 /* ------------------- job submission routines ------------------- */
@@ -323,6 +325,7 @@ void japi_standard_error(int drmaa_errno, dstring *ds);
 drmaa_attr_values_t *japi_allocate_string_vector(int type); 
 int japi_init_mt(dstring *diag);
 
+bool japi_is_delegated_file_staging_enabled(void);
 
 #ifdef  __cplusplus
 }

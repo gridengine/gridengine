@@ -173,6 +173,7 @@ const char *host_get_load_value(lListElem *host, const char *name)
 }
 
 
+/* MT-NOTE: sge_resolve_host() is MT safe */
 int sge_resolve_host(lListElem *ep, int nm) 
 {
    int pos, ret;
@@ -227,6 +228,7 @@ int sge_resolve_host(lListElem *ep, int nm)
    return ret;
 }
 
+/* MT-NOTE: sge_resolve_hostname() is MT safe */
 int sge_resolve_hostname(const char *hostname, char *unique, int nm) 
 {
    int ret = CL_RETVAL_OK;

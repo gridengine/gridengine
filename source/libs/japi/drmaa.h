@@ -153,7 +153,7 @@ extern "C" {
 /* 
  * DRMAA errno values 
  *
- * the values in detail still need to be agreed  
+ * do not touch these values are agreed !!!
  */
 enum {
    /* -------------- these are relevant to all sections ---------------- */

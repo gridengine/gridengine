@@ -217,7 +217,8 @@ static tConfEntry conf_entries[] = {
  { "auto_user_oticket", 0, "0",                 1, NULL },
  { "auto_user_fshare",  0, "0",                 1, NULL },
  { "auto_user_default_project", 0, "none",      1, NULL },
- { "auto_user_delete_time", 0, "0",             1, NULL },
+ { "auto_user_delete_time",     0, "0",         1, NULL },
+ { "delegated_file_staging",    0, "false",     1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -390,6 +391,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "auto_user_fshare", NULL, &mconf->auto_user_fshare, TYPE_INT);
    chg_conf_val(lpCfg, "auto_user_default_project", &mconf->auto_user_default_project, NULL, 0);
    chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &mconf->auto_user_delete_time, TYPE_TIM);
+   chg_conf_val(lpCfg, "delegated_file_staging", &mconf->delegated_file_staging, NULL, 0);
    DEXIT;
 }
 
@@ -732,6 +734,7 @@ void sge_show_conf()
    DPRINTF(("conf.auto_user_fshare       >%u<\n", conf.auto_user_fshare));
    DPRINTF(("conf.auto_user_default_project >%s<\n", conf.auto_user_default_project));
    DPRINTF(("conf.auto_user_delete_time  >%u<\n", conf.auto_user_delete_time));
+   DPRINTF(("conf.delegated_file_staging >%s<\n", conf.delegated_file_staging));
 
    for_each (ep, conf.user_lists) {
       DPRINTF(("%s             >%s<\n", 
@@ -790,6 +793,7 @@ sge_conf_type *conf
    FREE(conf->rsh_command);
    FREE(conf->rlogin_daemon);
    FREE(conf->rlogin_command);
+   FREE(conf->delegated_file_staging);
    
    memset(conf, 0, sizeof(sge_conf_type));
 

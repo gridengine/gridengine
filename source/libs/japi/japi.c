@@ -77,6 +77,8 @@
 #include "sge_event_master.h"
 
 /* GDI */
+#include "sge_conf.h"
+#include "gdi_conf.h"
 #include "sge_gdi.h"
 #include "gdi_tsm.h"
 #include "sge_gdi_request.h"
@@ -137,6 +139,7 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 *     static lList *Master_japi_job_list = NULL;
 *     static int japi_threads_in_session = 0;
 *     static char *japi_session_key = NULL;
+*     static bool japi_delegated_file_staging_is_enabled = false;
 *     
 *  FUNCTION
 *     japi_event_client_thread - the event client thread. Used by japi_init() and
@@ -187,6 +190,12 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 *                    session. Code using japi_session_key must be made reentant
 *                    with mutex japi_session_mutex. It is assumed the session key 
 *                    is not changed during an active session.
+*     japi_delegated_file_staging_is_enabled - A bool indicating if delegated file
+*                    staging is enabled in the cluster configuration.
+*                    No need for a mutex as long as the only function which sets 
+*                    this variable (japi_read_dynamic_attributes()) is called from
+*                    japi_init() before different threads are created.
+*
 *                    
 *  NOTES
 *
@@ -287,7 +296,7 @@ static const char *JAPI_SINGLE_SESSION_KEY = "JAPI_SSK";
 static int prog_number = JAPI;
 static bool multi_threaded = false;
 static error_handler_t error_handler = NULL;
-
+static bool japi_delegated_file_staging_is_enabled = false;
 
 /****** JAPI/-JAPI_Implementation *******************************************
 *  NAME
@@ -326,6 +335,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                            int *wevent, lList **rusagep);
 static int japi_gdi_control_error2japi_error(lListElem *aep, dstring *diag, int drmaa_control_action);
 static int japi_clean_up_jobs (int flag, dstring *diag);
+static int japi_read_dynamic_attributes(dstring *diag);
 
 
 static void japi_use_library_signals(void)
@@ -506,6 +516,13 @@ int japi_init(const char *contact, const char *session_key_in,
    if (my_prog_num > 0) {
       prog_number = my_prog_num;
    }
+
+   ret = japi_read_dynamic_attributes(diag);
+   if(ret != DRMAA_ERRNO_SUCCESS) {
+      /* diag was set in drmaa_read_dynamic_attributes() */
+      DEXIT;
+      return ret;
+   }
    
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
@@ -527,7 +544,7 @@ int japi_init(const char *contact, const char *session_key_in,
    }
 
    multi_threaded = enable_wait;
-   
+
    JAPI_LOCK_SESSION();
    if (ret == DRMAA_ERRNO_SUCCESS) {
       japi_session = JAPI_SESSION_ACTIVE;
@@ -536,7 +553,7 @@ int japi_init(const char *contact, const char *session_key_in,
       japi_session = JAPI_SESSION_INACTIVE;
    }
    JAPI_UNLOCK_SESSION();
-   
+  
    DEXIT;
    return ret;
 }
@@ -3317,8 +3334,8 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       lList **retrieved_job_list, dstring *diag)
 {
    lList *mal = NULL;
-   lList *alp;
-   lListElem *aep;
+   lList *alp = NULL;
+   lListElem *aep = NULL;
    int qu_id, jb_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
@@ -3901,7 +3918,7 @@ const char *japi_strerror(int drmaa_errno)
 
 /****** japi/japi_get_contact() ************************************************
 *  NAME
-*     japi_get_contact() -- Returnn current contact information 
+*     japi_get_contact() -- Return current contact information 
 *
 *  SYNOPSIS
 *     void japi_get_contact(dstring *contact) 
@@ -3987,7 +4004,7 @@ int japi_get_drm_system(dstring *drm, dstring *diag)
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** JAPI/japi_implementation_thread() ****************************************************
+/****** JAPI/japi_implementation_thread() **************************************
 *  NAME
 *     japi_implementation_thread() -- Control flow implementation thread
 *
@@ -4963,3 +4980,151 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
    DEXIT;
    return ret;
 }
+
+
+/****** japi/japi_was_init_called() *******************************************
+*  NAME
+*     japi_was_init_called() -- Return current contact information 
+*
+*  SYNOPSIS
+*     int japi_was_init_called(dstring* diag) 
+*
+*  FUNCTION
+*     Check if japi_init was already called.
+*
+*  OUTPUT
+*     dstring *diag - returns diagnosis information - on error
+*
+*  RESULT
+*     int - DRMAA_ERRNO_SUCCESS if japi_init was already called,
+*           DRMAA_ERRNO_NO_ACTIVE_SESSION if japi_init was not called,
+*           DRMAA_ERRNO_INTERNAL_ERROR if an unexpected error occurs.
+*
+*  NOTES
+*     MT-NOTES: japi_was_init_called() is MT safe
+*******************************************************************************/
+int japi_was_init_called(dstring* diag)
+{
+   DENTER(TOP_LAYER, "japi_was_init_called");                             
+
+   /* per thread initialization */                                      
+   if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
+      /* diag written by japi_init_mt() */
+      DEXIT;                                                                        
+      return DRMAA_ERRNO_INTERNAL_ERROR;
+   }                                                 
+    
+   /* ensure japi_init() was called */
+   JAPI_LOCK_SESSION();
+   if (japi_session != JAPI_SESSION_ACTIVE) {
+      JAPI_UNLOCK_SESSION();
+      japi_standard_error(DRMAA_ERRNO_NO_ACTIVE_SESSION, diag);
+      DEXIT;
+      return DRMAA_ERRNO_NO_ACTIVE_SESSION; 
+   }
+                                           
+   JAPI_UNLOCK_SESSION();
+
+   DEXIT;
+   return DRMAA_ERRNO_SUCCESS;
+}
+
+
+/****** japi/japi_is_delegated_file_staging_enabled() *************************
+*  NAME
+*     japi_is_delegated_file_staging_enabled() -- Is file staging enabled, i.e.
+*              is the "delegated_file_staging" configuration entry set to true?
+*
+*  SYNOPSIS
+*     bool japi_is_delegated_file_staging_enabled()
+*
+*  FUNCTION
+*     Returns if delegated file staging is enabled.
+*
+*  RESULT
+*     bool - true if delegated file staging is enabled, else false.
+*
+*  NOTES
+*     MT-NOTES: japi_is_delegated_file_staging_enabled() is MT safe
+*******************************************************************************/
+bool japi_is_delegated_file_staging_enabled()
+{
+   return japi_delegated_file_staging_is_enabled;
+}
+
+/****** japi/japi_read_dynamic_attributes() ***********************************
+*  NAME
+*     japi_read_dynamic_attributes() -- Read the 'dynamic' attributes from
+*                                       the DRM configuration.
+*
+*  SYNOPSIS
+*     static int japi_read_dynamic_attributes(dstring *diag) 
+*
+*  FUNCTION
+*     Reads from the DRM configuration, which 'dynamic' attributes are enabled.
+*
+*  OUTPUT
+*     dstring *diag - returns diagnosis information - on error
+*
+*  RESULT
+*     int - DRMAA_ERRNO_SUCCES on success,
+*           DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE,
+*           DRMAA_ERRNO_INVALID_ARGUMENT 
+*           on error.
+*
+*  NOTES
+*     MT-NOTES: japi_read_dynamic_attributes() is MT safe
+*******************************************************************************/
+static int japi_read_dynamic_attributes(dstring *diag)
+{
+   int        ret=0;
+   int        drmaa_errno=DRMAA_ERRNO_SUCCESS;
+   lList      *pSubList;
+   lListElem  *config;
+   lListElem  *ep = NULL;
+   const char *pStr = NULL;
+
+   DENTER(TOP_LAYER, "japi_read_dynamic_attributes");   
+
+   JAPI_LOCK_SESSION();
+   if((ret=get_configuration("global", &config, NULL))<0) {
+      switch( ret ) {
+         case -2:
+         case -4:
+         case -6:
+         case -7:
+            drmaa_errno = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
+            break;
+         case -1:
+         case -3:
+            drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+            break;
+         case -5:
+            /* -5 there is noc global configuration
+             * This means that "delegated_file_staging" is not set.
+             * This is not an error for us, not set means default value.
+             */
+            drmaa_errno = DRMAA_ERRNO_SUCCESS;
+            break;
+         }
+      japi_standard_error(drmaa_errno, diag);
+      JAPI_UNLOCK_SESSION();
+      DEXIT;
+      return drmaa_errno;
+   }
+
+   pSubList = lGetList( config, CONF_entries );
+   if( pSubList ) {
+      ep = lGetElemStr( pSubList, CF_name, "delegated_file_staging");
+      if( ep ) {
+         pStr = lGetString( ep, CF_value );
+         if( strcmp( pStr, "true" )==0 ) {
+            japi_delegated_file_staging_is_enabled = true;
+         }
+      }
+   }
+   JAPI_UNLOCK_SESSION();
+   DEXIT;
+   return drmaa_errno;
+}
+

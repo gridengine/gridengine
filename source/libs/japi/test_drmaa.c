@@ -3904,10 +3904,13 @@ static int test(int *argc, char **argv[], int parse_args)
    case ST_TRANSFER_FILES_SINGLE_JOB:
       {
          int aborted, stat, remote_ps;
+         bool bFound=false;
          char jobid[100];
+         char *szPath;
+         char *szTemp;
+         char attr_name[DRMAA_ATTR_BUFFER];
+         drmaa_attr_names_t *vector;
          const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
-         char* szPath;
-         char* szTemp;
 
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
@@ -3920,33 +3923,41 @@ static int test(int *argc, char **argv[], int parse_args)
        
          /* submit a working job from a local directory to the execution host */
          drmaa_allocate_job_template(&jt, NULL, 0);
+
+         drmaa_errno = drmaa_get_attribute_names(&vector, diagnosis, sizeof(diagnosis)-1);
+         while((drmaa_errno=drmaa_get_next_attr_name(vector, attr_name,
+                sizeof(attr_name)-1)) == DRMAA_ERRNO_SUCCESS) {
+            if( strcmp( attr_name, "drmaa_transfer_files" )==0 ) {
+               bFound=true;
+               break;
+            }
+         }
+         if( !bFound ) {
+            fprintf( stderr, "DRMAA_TRANSFER_FILES is not supported!\n" );
+            return 1;
+         }
          drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, sleeper_job, NULL, 0);
 
          szTemp = NEXT_ARGV(argc,argv);
-         /*fprintf( stderr, "arg=%s\n", szTemp );*/
          drmaa_set_attribute(jt, DRMAA_TRANSFER_FILES, szTemp, NULL, 0);
         
          szTemp = NEXT_ARGV(argc,argv);
-         /*fprintf( stderr, "arg=%s\n", szTemp );*/
          drmaa_set_attribute(jt, DRMAA_JOIN_FILES, szTemp, NULL, 0);
 
          if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
             szPath="";
          }
          drmaa_set_attribute(jt, DRMAA_INPUT_PATH, szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
 
          if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
             szPath="";
          }
          drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH,szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
 
          if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
             szPath="";
          }
          drmaa_set_attribute(jt, DRMAA_ERROR_PATH, szPath, NULL, 0);
-         /*fprintf( stderr, "arg=%s\n", szPath );*/
 
          if( bBulkJob ) {
             drmaa_job_ids_t *jobids;
@@ -3986,7 +3997,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          /* get job state */
          drmaa_errno = drmaa_job_ps(jobid, &remote_ps, diagnosis, sizeof(diagnosis)-1);
-         if (remote_ps != DRMAA_PS_FAILED) {
+         if (remote_ps == DRMAA_PS_FAILED) {
             fprintf(stderr, "job \"%s\" is not in failed state: %s\n", 
                      jobid, drmaa_state2str(remote_ps));
             return 1;
@@ -4001,9 +4012,9 @@ static int test(int *argc, char **argv[], int parse_args)
 
          /* job finish information */
          drmaa_wifaborted(&aborted, stat, diagnosis, sizeof(diagnosis)-1);
-         if (!aborted) {
-            fprintf(stderr, "job \"%s\" failed but drmaa_wifaborted() returns false\n", 
-                  jobid);
+         if(!aborted) {
+            fprintf(stderr,
+               "job \"%s\" failed but drmaa_wifaborted() returns false\n", jobid);
             return 1;
          }
          printf("waited job \"%s\" that never ran\n", jobid);

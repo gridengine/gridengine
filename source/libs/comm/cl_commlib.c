@@ -5272,6 +5272,7 @@ void cl_com_handle_write_thread_cleanup(void* none) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "getuniquehostname()"
+/* MT-NOTE: getuniquehostname() is MT safe */
 int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
    char* resolved_host = NULL;
    int ret_val;

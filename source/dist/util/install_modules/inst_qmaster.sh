@@ -1366,7 +1366,7 @@ GetDefaultDomain()
    done=false
 
    if [ $AUTO = "true" ]; then
-      $INFOTEXT -log "Using >%< as default domain." $DEFAULT_DOMAIN
+      $INFOTEXT -log "Using >%s< as default domain." $DEFAULT_DOMAIN
       CFG_DEFAULT_DOMAIN=$DEFAULT_DOMAIN
       done=true
    fi

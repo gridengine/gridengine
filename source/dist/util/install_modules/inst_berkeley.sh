@@ -170,10 +170,9 @@ CheckLocalFilesystem()
          fi
          ;;
       *)
-         # so far we lack a method for these OS archs to 
-         # positively verify file system is local 
-         $INFOTEXT -e "\nUnable to verify \"%s\" is a local file system." "$FS"
-         $INFOTEXT -wait -n "\nPlease make sure that the directory \"%s\" is on a local filesystem!\nHit <RETURN> to continue >> " "$FS"
+         $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
+         $INFOTEXT -wait -n "\nPlease make sure that the directory %s is on a local filesystem!\n\n" \
+                            "Hit <RETURN> to continue >> " $FS
          return 1
          ;;
    esac

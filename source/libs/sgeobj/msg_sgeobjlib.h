@@ -194,6 +194,6 @@
 #define MSG_CKPTREFDOESNOTEXIST_S                  _MESSAGE(64181, _("Ckpt "SFQ" does not exist\n"))
 #define MSG_PEREFINQUEUE_SS                        _MESSAGE(64182, _("Pe "SFQ" is still referenced in queue "SFQ".\n"))
 #define MSG_CKPTREFINQUEUE_SS                      _MESSAGE(64183, _("Ckpt "SFQ" is still referenced in queue "SFQ".\n"))
-#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(64183,_("ERROR! two files are specified for the same host\n"))
+#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(64184,_("ERROR! two files are specified for the same host\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

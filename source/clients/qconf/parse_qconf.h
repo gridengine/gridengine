@@ -40,6 +40,7 @@ typedef struct object_info_entry {
    int nm_name;
    int (*read_objectname_work)(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);    
    lListElem *(*cull_read_in_object)(const char *dirname, const char *filename, int spool, int type, int *tag, int fields[]);
+   bool (*pre_gdi_function)(lList *list, lList **answer_list);
 } object_info_entry;
 
 int sge_edit(char *fname);

@@ -1755,6 +1755,67 @@ object_set_any_type(lListElem *this_elem, int name, void *value)
    return ret;
 }
 
+bool
+object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
+{
+   int ret = true;
+   int out_pos = lGetPosViaElem(this_elem, name);
+   int in_pos = lGetPosViaElem(org_elem, name);
+   int type = lGetPosType(lGetElemDescr(this_elem), out_pos);
+
+   DENTER(OBJECT_LAYER, "object_replace_any_type");
+   if (type == lStringT) {
+      const char *value = lGetPosString(org_elem, in_pos);
+
+      ret = lSetPosString(this_elem, out_pos, value);
+   } else if (type == lHostT) {
+      const char *value = lGetPosHost(org_elem, in_pos);
+      
+      ret = lSetPosHost(this_elem, out_pos, value);
+   } else if (type == lUlongT) {
+      u_long32 value = lGetPosUlong(org_elem, in_pos);
+   
+      ret = lSetPosUlong(this_elem, out_pos, value);
+   } else if (type == lDoubleT) {
+      double value = lGetPosDouble(org_elem, in_pos);
+   
+      ret = lSetPosDouble(this_elem, out_pos, value);
+   } else if (type == lFloatT) {
+      float value = lGetPosFloat(org_elem, in_pos);
+
+      ret = lSetPosFloat(this_elem, out_pos, value);
+   } else if (type == lLongT) {
+      int value = lGetPosLong(org_elem, in_pos);
+
+      ret = lSetPosLong(this_elem, out_pos, value);
+   } else if (type == lCharT) {
+      char value = lGetPosChar(org_elem, in_pos);
+
+      ret = lSetPosChar(this_elem, out_pos, value);
+   } else if (type == lBoolT) {
+      bool value = lGetPosBool(org_elem, in_pos);
+   
+      ret = lSetPosBool(this_elem, out_pos, value);
+   } else if (type == lIntT) {
+      int value = lGetPosInt(org_elem, in_pos);
+      
+      ret = lSetPosInt(this_elem, out_pos, value);
+   } else if (type == lObjectT) {
+      lListElem *value = lGetPosObject(org_elem, in_pos);
+      
+      ret = lSetPosObject(this_elem, out_pos, value);
+   } else if (type == lRefT) {
+      void *value = lGetPosRef(org_elem, in_pos);
+
+      ret = lSetPosRef(this_elem, out_pos, value);
+   } else {
+      /* not possible */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
 void 
 object_get_any_type(lListElem *this_elem, int name, void *value)
 {

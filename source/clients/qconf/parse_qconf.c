@@ -2246,12 +2246,12 @@ DPRINTF(("ep: %s %s\n",
      
 /* *INDENT-OFF* */ 
       static object_info_entry info_entry[] = {
-         {SGE_QUEUE_LIST,      SGE_OBJ_QUEUE,     QU_Type,   SGE_ATTR_QNAME,     QU_qname,  read_queue_work,      cull_read_in_qconf},
-         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    CQ_Type,   SGE_ATTR_QNAME,     CQ_name,   read_cqueue_work,     cull_read_in_cqueue},
-         {SGE_EXECHOST_LIST,   SGE_OBJ_EXECHOST,  EH_Type,   SGE_ATTR_HOSTNAME,  EH_name,   read_host_work,       cull_read_in_host},
-         {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   read_pe_work,         cull_read_in_pe},
-         {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   read_ckpt_work,       cull_read_in_ckpt},
-         {SGE_HGROUP_LIST,     SGE_OBJ_HGROUP,    HGRP_Type, SGE_ATTR_HGRP_NAME, HGRP_name, read_host_group_work, cull_read_in_host_group},
+         {SGE_QUEUE_LIST,      SGE_OBJ_QUEUE,     QU_Type,   SGE_ATTR_QNAME,     QU_qname,  read_queue_work,      cull_read_in_qconf,      NULL},
+         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    CQ_Type,   SGE_ATTR_QNAME,     CQ_name,   read_cqueue_work,     cull_read_in_cqueue,     cqueue_xattr_pre_gdi},
+         {SGE_EXECHOST_LIST,   SGE_OBJ_EXECHOST,  EH_Type,   SGE_ATTR_HOSTNAME,  EH_name,   read_host_work,       cull_read_in_host,       NULL},
+         {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   read_pe_work,         cull_read_in_pe,         NULL},
+         {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   read_ckpt_work,       cull_read_in_ckpt,       NULL},
+         {SGE_HGROUP_LIST,     SGE_OBJ_HGROUP,    HGRP_Type, SGE_ATTR_HGRP_NAME, HGRP_name, read_host_group_work, cull_read_in_host_group, NULL},
          {0,                   NULL,              0,         NULL,               0,         NULL,                 NULL}
       }; 
 /* *INDENT-ON* */
@@ -5569,14 +5569,10 @@ const char *host
 *     1 for error
 *     0 for success
 ******************************************************************************/
-static int qconf_modify_attribute(
-lList **alpp,
-int from_file,
-char ***spp,
-lListElem **epp,
-int sub_command,
-struct object_info_entry *info_entry 
-) {
+static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
+                                  lListElem **epp, int sub_command, 
+                                  struct object_info_entry *info_entry) 
+{
    DENTER(TOP_LAYER, "qconf_modify_attribute"); 
    
    if (info_entry->cull_read_in_object) {
@@ -5589,8 +5585,8 @@ struct object_info_entry *info_entry
 
       if (from_file) {
          if (sge_next_is_an_opt(*spp))  {
-            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, 
-               "qconf"));
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, 
+               MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, "qconf"));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
@@ -5615,9 +5611,12 @@ struct object_info_entry *info_entry
             return 1;
          }                           
          if (lGetNumberOfElem(cflp) > 0) {
-            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
-                    lGetString(lFirst(cflp), CF_name), info_entry->object_name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                           MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
+                           lGetString(lFirst(cflp), CF_name), 
+                           info_entry->object_name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 
+                            ANSWER_QUALITY_ERROR);
             return 1;
          }
       }
@@ -5665,7 +5664,7 @@ struct object_info_entry *info_entry
                lSetHost(add_qp, info_entry->nm_name, **spp);
                break;
             default:
-               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                return 1;
          }
@@ -5678,8 +5677,10 @@ struct object_info_entry *info_entry
          return 1;
       }
 
-      *alpp = sge_gdi(info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
-         NULL, what);
+      if (info_entry->pre_gdi_function(qlp, alpp)) {
+         *alpp = sge_gdi(info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
+                         NULL, what);
+      }
       what = lFreeWhat(what);
       qlp = lFreeList(qlp);
       *epp = lFreeElem(*epp);

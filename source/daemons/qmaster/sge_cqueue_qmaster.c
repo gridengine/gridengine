@@ -220,25 +220,14 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                                   cqueue_attribute_array[index].cqueue_attr);
 
          if (pos >= 0) {
-            /*
-             * Sublist type (CE_Type, US_Type, ...) 
-             * or simple type (bool, u_long32, const char *, ...)
-             */
-            if (cqueue_attribute_array[index].primary_key_attr != NoName) {
-               ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 
-                                sub_command, 
-                                cqueue_attribute_array[index].cqueue_attr, 
-                                cqueue_attribute_array[index].href_attr, 
-                                cqueue_attribute_array[index].value_attr, 
-                                cqueue_attribute_array[index].primary_key_attr, 
-                                cqueue_attribute_array[index].name, 
-                                SGE_OBJ_CQUEUE);
-            } else {
-               lList *list = lGetPosList(reduced_elem, pos);
-
-               lSetList(cqueue, cqueue_attribute_array[index].cqueue_attr, 
-                        lCopyList("", list));
-            }
+            ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 
+                             sub_command, 
+                             cqueue_attribute_array[index].cqueue_attr, 
+                             cqueue_attribute_array[index].href_attr, 
+                             cqueue_attribute_array[index].value_attr, 
+                             cqueue_attribute_array[index].primary_key_attr, 
+                             cqueue_attribute_array[index].name, 
+                             SGE_OBJ_CQUEUE);
          }
          index++;
       }

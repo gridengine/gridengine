@@ -310,10 +310,9 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          lListElem *org_elem = lGetElemHost(org_list, sublist_host_name, name);
 
          /*
-          * Create default-element if it does not exist
+          * Create element if it does not exist
           */
-         if (org_elem == NULL && 
-             (!strcmp(name, HOSTREF_DEFAULT) || sub_command == SGE_GDI_SET_ALL)) {
+         if (org_elem == NULL) {
             if (org_list == NULL) {
                org_list = lCreateList("", lGetElemDescr(mod_elem));
                lSetList(this_elem, attribute_name, org_list);
@@ -327,9 +326,15 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
           * Modify sublist according to subcommand
           */
          if (org_elem != NULL) {
-            attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
+            if (subsub_key != NoName) {
+               attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
                               subsub_key, mod_elem, sub_command, 
                               attribute_name_str, object_name_str, 0);
+            } else {
+               lList *list = lGetPosList(reduced_elem, pos);
+  
+               object_replace_any_type(org_elem, sublist_value_name, mod_elem);
+            }
          }
       }
    }
@@ -366,4 +371,70 @@ cqueue_list_find_all_matching_references(const lList *this_list,
    DEXIT;
    return ret;
 }
+
+bool
+cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list) 
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_xattr_pre_gdi");
+   if (this_list != NULL) {
+      lListElem *cqueue = NULL;
+   
+      for_each(cqueue, this_list) {
+         const char *name = lGetString(cqueue, CQ_name);
+         dstring cqueue_name = DSTRING_INIT;
+         dstring host_domain = DSTRING_INIT;
+         bool has_hostname = false;
+         bool has_domain = false;
+
+         cqueue_name_split(name, &cqueue_name, &host_domain,
+                           &has_hostname, &has_domain);
+         if (has_domain || has_hostname) {
+            int index = 0;
+
+            /*
+             * Change QI/QD name to CQ name
+             */
+            lSetString(cqueue, CQ_name, sge_dstring_get_string(&cqueue_name));
+
+            /*
+             * Make sure that there is only a default entry
+             * and change that default entry to be a QD/QI entry
+             */
+            while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+               int pos = lGetPosViaElem(cqueue,
+                                  cqueue_attribute_array[index].cqueue_attr);
+
+               if (pos >= 0) {
+                  lList *list = lGetPosList(cqueue, pos);
+                  lListElem *elem = NULL;
+
+                  for_each(elem, list) {
+                     const char *attr_hostname = lGetHost(elem, 
+                                       cqueue_attribute_array[index].href_attr);
+
+                     if (strcmp(HOSTREF_DEFAULT, attr_hostname)) {
+                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
+                                       MSG_CQUEUE_NONDEFNOTALLOWED));
+                        answer_list_add(answer_list, SGE_EVENT,
+                                        STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
+                        ret = false;
+                     } else {
+                        lSetHost(elem, cqueue_attribute_array[index].href_attr,
+                                 sge_dstring_get_string(&host_domain));
+                     }
+                  }
+               }
+               index++;
+            }
+         }
+         sge_dstring_free(&host_domain);
+         sge_dstring_free(&cqueue_name);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
 

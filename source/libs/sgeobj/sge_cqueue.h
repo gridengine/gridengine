@@ -82,4 +82,7 @@ cqueue_list_find_all_matching_references(const lList *this_list,
                                          const char *cqueue_pattern,
                                          lList **qref_list);
 
+bool
+cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list);
+
 #endif /* __SGE_CQUEUE_H */

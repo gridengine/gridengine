@@ -277,6 +277,9 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
 bool
 object_set_any_type(lListElem *this_elem, int name, void *value);
 
+bool
+object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem);
+
 void
 object_get_any_type(lListElem *this_elem, int name, void *value);
 

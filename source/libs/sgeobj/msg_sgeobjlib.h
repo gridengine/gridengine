@@ -212,5 +212,6 @@
 #define MSG_EVENT_DELQINSTANCE_ISS                 _MESSAGE(64199, _("%d. EVENT DEL QUEUE INSTANCE "SFN"@"SFQ""))
 #define MSG_EVENT_ADDQINSTANCE_ISS                 _MESSAGE(64200, _("%d. EVENT ADD QUEUE INSTANCE "SFN"@"SFQ""))
 #define MSG_EVENT_MODQINSTANCE_ISS                 _MESSAGE(64201, _("%d. EVENT MOD QUEUE INSTANCE "SFN"@"SFQ""))
+#define MSG_CQUEUE_NONDEFNOTALLOWED                _MESSAGE(64202, _("Queue domain/instance values are only allowed for cluster queues.\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

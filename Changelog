@@ -1,13 +1,16 @@
-AA-2002-03-22-0  Merge:    - override, functional policy dialogue sorting
-                           - qhost formating
-                           - sec_lib SGE_KEYFILE, SGE_CERTFILE
+JG-2002-03-25-0  Testsuite: Bugfix: In a cluster with very similar hostnames
+                            testsuite wrongly reused open remote connections.
 
-EB-2002-03-21-2  Bugfix:   remove old configuration (EB-2002-03-21-0)
+AA-2002-03-22-0  Merge:     - override, functional policy dialogue sorting
+                            - qhost formating
+                            - sec_lib SGE_KEYFILE, SGE_CERTFILE
+
+EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
 
 EB-2002-03-21-1  Enhancem.: sort output of qconf -sep
 
-EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
-                 Issue:    #198
+EB-2002-03-21-0  Bugfix:    local config not written as admin user at startup
+                 Issue:     #198
 
 CR-2002-03-20-1  Testsuite: sending "vt100" when client host is using tset
                             for terminal settings.

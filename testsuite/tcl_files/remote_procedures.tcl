@@ -1128,8 +1128,9 @@ proc get_open_spawn_rlogin_session { hostname user back_var } {
 
    foreach elem $entries {
       set con_data $rlogin_spawn_session_buffer($elem)
-      if { [string first $hostname $con_data] >= 0 } {
-         if { [string first $user $con_data] >= 0 } {
+      set con_data_list [split $con_data ";"] 
+      if { [string compare $hostname [lindex $con_data_list 0]] == 0 } {
+         if { [string compare $user [lindex $con_data_list 2]] == 0 } {
             set data_list [split $con_data ";"]
             set back(spawn_id)  $elem
             set back(pid)       [lindex $data_list 1]

@@ -1,3 +1,5 @@
+CR-2002-07-18-4: Bugfix:    i18n new gridengine.pot file
+
 CR-2002-07-18-1: Bugfix:    i18n wrong function call in infotext binary - l10n
                             not working
                  Bugtraq:   #4715919

@@ -49,6 +49,7 @@
 proc vdep_set_queue_defaults { change_array } {
    upvar $change_array chgar
 
+   set chgar(hostlist)              "hostlist"
    set chgar(qtype)                 "BATCH INTERACTIVE"
    set chgar(pe_list)               "NONE"
    set chgar(ckpt_list)             "NONE"
@@ -128,48 +129,39 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    # queue_type is version dependent
    validate_queue_type chgar
 
-   # non cluster queue: set queue and hostnames
-   if { $hostlist == "@all" } {
-      set hostlist $ts_config(execd_hosts)
-   }
+   puts $CHECK_OUTPUT "creating queue \"$qname\" for hostlist \"$hostlist\""
+
+   set chgar(qname)     "$qname"
+   set chgar(hostlist)  "$hostlist"
 
    # localize messages
+   # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
    set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "cluster queue" $qname]
+   set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $qname "cluster queue" ]
 
-   foreach host $hostlist {
-      puts $CHECK_OUTPUT "creating queue \"$qname\" for host \"$host\""
+   # add queue from file?
+   if { $fast_add } {
+      set_queue_defaults default_array
+      update_change_array default_array chgar
 
-      set chgar(qname)     "${qname}_${host}"
-      set chgar(hostname)  "$host"
+      set tmpfile [dump_array_to_tmpfile default_array]
 
-      # localize messages containing the queue name
-      set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
-      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
+      set result ""
+      set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
+      puts $CHECK_OUTPUT $result
 
-      # add queue from file?
-      if { $fast_add } {
-         set_queue_defaults default_array
-         update_change_array default_array chgar
+      if { [string match "*$ADDED" $result ] == 0 } {
+         add_proc_error "add_queue" "-1" "qconf error or binary not found"
+      } 
+   } else {
+      # add by handling vi
+      set vi_commands [build_vi_command chgar]
 
-         set tmpfile [dump_array_to_tmpfile default_array]
-
-         set result ""
-         set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
-         puts $CHECK_OUTPUT $result
-
-         if { [string match "*$ADDED" $result ] == 0 } {
-            add_proc_error "add_queue" "-1" "qconf error or binary not found"
-            break
-         } 
-      } else {
-         # add by handling vi
-         set vi_commands [build_vi_command chgar]
-
-         set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
-         if { $result != 0 } {
-            add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
-            break
-         }
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
+      if { $result != 0 } {
+         add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
+         break
       }
    }
 
@@ -187,10 +179,10 @@ proc set_queue_work { qname change_array } {
 
    set vi_commands [build_vi_command chgar]
 
+   # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
    set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-   set NOT_A_QUEUENAME [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QUEUE_XISNOTAQUEUENAME_S] $qname ]
-   set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $qname $QUEUE ]
-   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED $NOT_A_QUEUENAME]
+   set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $qname "cluster queue" ]
+   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED]
    if { $result == -2 } {
       add_proc_error "set_queue" -1 "$qname is not a queue"
    }
@@ -199,6 +191,97 @@ proc set_queue_work { qname change_array } {
    } 
 
    return $result
+}
+
+proc set_cqueue_default_values { current_array change_array } {
+   global CHECK_OUTPUT
+
+   upvar $current_array currar
+   upvar $change_array chgar
+
+   # parse each attribute to be changed and set the queue default value
+   foreach attribute [array names chgar] {
+      puts $CHECK_OUTPUT "--> setting queue default value for attribute $attribute"
+      puts $CHECK_OUTPUT "--> old_value = $currar($attribute)"
+      # set the default
+      set new_value $chgar($attribute)
+      puts $CHECK_OUTPUT "--> new_value = $new_value"
+
+      # get position of host(group) specific values and append them 
+      set comma_pos [string first ",\[" $currar($attribute)]
+      puts $CHECK_OUTPUT "--> comma pos = $comma_pos"
+      if { $comma_pos != -1 } {
+         append new_value [string range $comma_pos end]
+      }
+
+      puts $CHECK_OUTPUT "--> new queue default value = $new_value"
+      # write back to chgar
+      set chgar($attribute) $new_value
+   }
+}
+
+proc set_cqueue_specific_values { current_array change_array hostlist } {
+   global CHECK_OUTPUT
+
+   upvar $current_array currar
+   upvar $change_array chgar
+
+   # parse each attribute to be changed
+   foreach attribute [array names chgar] {
+      puts $CHECK_OUTPUT "--> setting queue default value for attribute $attribute"
+      puts $CHECK_OUTPUT "--> old_value = $currar($attribute)"
+     
+      # split old value and store host specific values in an array
+      if { [info exists host_values] } {
+         unset host_values
+      }
+
+      # split attribute value into default and host specific components
+      set value_list [split $currar($attribute) "\["]
+
+      # copy the default value
+      set new_value [string trimright [lindex $value_list 0] ","]
+      puts $CHECK_OUTPUT "--> default value = $new_value"
+   
+      # copy host specific values to array
+      for {set i 1} {$i < [llength $value_list]} {incr i} {
+         set host_value [lindex $value_list $i]
+         set split_host_value [split $host_value "="]
+         set host [lindex $split_host_value 0]
+         set value [lrange $split_host_value 1 end]
+         set value [string trimright $value ",\]"]
+         puts $CHECK_OUTPUT "--> $host = $value"
+         set host_values($host) $value
+      }
+   
+      # change (or set) host specific values from chgar
+      foreach host $hostlist {
+         set host_values($host) $chgar($attribute)
+      }
+
+      # dump host specific values to new_value
+      foreach host [array names host_values] {
+         append new_value ",\[$host=$host_values($host)\]"
+      }
+
+      puts $CHECK_OUTPUT "--> new queue value = $new_value"
+
+      # write back to chgar
+      set chgar($attribute) $new_value
+   }
+
+   # check if all hosts / hostgroups are in the hostlist attribute
+   set new_hosts {}
+   foreach host $hostlist {
+      if { [lsearch -exact $currar(hostlist) $host] == -1 } {
+         lappend new_hosts $host
+         puts $CHECK_OUTPUT "--> host $host is not yet in hostlist"
+      }
+   }
+
+   if { [llength $new_hosts] > 0 } {
+      set chgar(hostlist) "$currar(hostlist) $new_hosts"
+   }
 }
 
 #****** sge_procedures.60/queue/set_queue() ******************************************
@@ -232,21 +315,39 @@ proc set_queue { qname hostlist change_array } {
    # queue_type is version dependent
    validate_queue_type chgar
 
-   # non cluster queue: set queue and hostnames
-   if { $hostlist == "@all" } {
-      set hostlist $ts_config(execd_hosts)
+   get_queue $qname currar
+
+   # process chgar and set values
+   if { [llength $hostlist] == 0 } {
+      set_cqueue_default_values currar chgar
+   } else {
+      set_cqueue_specific_values currar chgar $hostlist
    }
 
-   if { [llength $hostlist] == 0 } {
-      set result [set_queue_work $qname chgar]
-   } else {
-      foreach host $hostlist {
-         set cqname "${qname}_${host}"
-         set result [set_queue_work $cqname chgar]
-      }
-   }
+   # do the work
+   set result [set_queue_work $qname chgar]
 
    return $result
+}
+
+proc del_queue { q_name } {
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
+
+  set result ""
+  set catch_return [ catch {  
+      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -dq ${q_name}" 
+  } result ]
+
+  # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
+  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $q_name "cluster queue" ]
+
+  if { [string match "*$REMOVED" $result ] == 0 } {
+     add_proc_error "del_queue" "-1" "could not delete queue $q_name: (error: $result)"
+     return -1
+  } 
+  return 0
 }
 
 proc unassign_queues_with_pe_object { pe_obj } {
@@ -338,55 +439,37 @@ proc unassign_queues_with_ckpt_object { ckpt_obj } {
 }
 
 proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
-   global ts_config
    global CHECK_OUTPUT
 
-   if { $hostlist == "@all" } {
-      set hostlist $ts_config(execd_hosts)
+   get_queue $qname org_val
+
+   # JG: TODO: we need functions get_default_value and get_specific_value(host)
+   #           in the meantime, the hostlist parameter will be ignored!
+   if { [string match -nocase "none" $org_val(ckpt_list)] } {
+      puts $CHECK_OUTPUT "overwriting NONE value for ckpt_list in queue $qname"
+      set new_val(ckpt_list) $ckpt_obj
+   } else {
+      puts $CHECK_OUTPUT "adding new ckpt object to ckpt_list in queue $qname"
+      set new_val(ckpt_list) "$org_val(ckpt_list),$ckpt_obj"
    }
 
-   # set ckpt_list in queue object
-   foreach host $hostlist {
-      set queue "${qname}_${host}"
-
-      get_queue $queue org_val
-
-      if { [string match -nocase "none" $org_val(ckpt_list)] } {
-         puts $CHECK_OUTPUT "overwriting NONE value for ckpt_list in queue $queue"
-         set new_val(ckpt_list) $ckpt_obj
-      } else {
-         puts $CHECK_OUTPUT "adding new ckpt object to ckpt_list in queue $queue"
-         set new_val(ckpt_list) "$org_val(ckpt_list),$ckpt_obj"
-      }
-
-      set_queue $qname $host new_val
-   }
+   set_queue $qname $hostlist new_val
 }
 
 proc assign_queues_with_pe_object { qname hostlist pe_obj } {
-   global ts_config
    global CHECK_OUTPUT
 
-   if { $hostlist == "@all" } {
-      set hostlist $ts_config(execd_hosts)
+   get_queue $qname org_val
+
+   if { [string match -nocase "none" $org_val(pe_list)] } {
+      puts $CHECK_OUTPUT "overwriting NONE value for pe_list in queue $qname"
+      set new_val(pe_list) $pe_obj
+   } else {
+      puts $CHECK_OUTPUT "adding new pe object to pe_list in queue $qname"
+      set new_val(pe_list) "$org_val(pe_list),$pe_obj"
    }
 
-   # set ckpt_list in queue object
-   foreach host $hostlist {
-      set queue "${qname}_${host}"
-
-      get_queue $queue org_val
-
-      if { [string match -nocase "none" $org_val(pe_list)] } {
-         puts $CHECK_OUTPUT "overwriting NONE value for pe_list in queue $queue"
-         set new_val(pe_list) $pe_obj
-      } else {
-         puts $CHECK_OUTPUT "adding new pe object to pe_list in queue $queue"
-         set new_val(pe_list) "$org_val(pe_list),$pe_obj"
-      }
-
-      set_queue $qname $host new_val
-   }
+   set_queue $qname $hostlist new_val
 }
 
 proc validate_checkpointobj { change_array } {

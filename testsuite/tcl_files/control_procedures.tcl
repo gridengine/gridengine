@@ -363,6 +363,10 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                   }
                   set doStop 1
                }
+               -i $sp_id default {
+                  add_proc_error "handle_vi_edit" -1  "unexpected output $expect_out(buffer)"
+                  set doStop 1
+               }
            }
         }
      }

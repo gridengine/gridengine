@@ -1,3 +1,5 @@
+JG-2003-12-16-0: Testsuite: Made testsuite installation work with cluster queues.
+
 EB-2003-12-16-0: Bugfix:    fixed bugs
                  * fixed invalid event handling 
 

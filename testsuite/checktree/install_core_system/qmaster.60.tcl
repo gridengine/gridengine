@@ -129,6 +129,7 @@ proc install_qmaster {} {
  set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ] 
  set ENTER_SPOOL_DIR_OR_HIT_RET   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET] "*"]
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
+ set CREATING_ALL_QUEUE_HOSTGROUP [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ALL_QUEUE_HOSTGROUP] ]
 
 
 
@@ -572,7 +573,24 @@ proc install_qmaster {} {
           }
           continue;
        }
-   
+      # 
+      # SGE 6.0 Cluster Queues
+      #
+      -i $sp_id $CREATING_ALL_QUEUE_HOSTGROUP {
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "\n"
+         continue;
+      }
+
+      #
+      # end SGE 6.0 Cluster Queues
+      #
+
        -i $sp_id "More" {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >space<"
           if {$do_log_output == 1} {

@@ -1943,7 +1943,7 @@ proc set_queue_defaults { change_array } {
    set chgar(slots)                "10"
    set chgar(tmpdir)               "/tmp"
    set chgar(shell)                "/bin/csh"
-   set chgar(shell_start_mode)     "NONE"
+   set chgar(shell_start_mode)     "posix_compliant"
    set chgar(prolog)               "NONE"
    set chgar(epilog)               "NONE"
    set chgar(starter_method)       "NONE"
@@ -2297,25 +2297,6 @@ proc del_access_list { list_name } {
 #     sge_procedures/disable_queue()
 #     sge_procedures/enable_queue()
 #*******************************
-proc del_queue { q_name } {
-  global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
-
-  set result ""
-  set catch_return [ catch {  
-      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -dq ${q_name}" 
-  } result ]
-
-  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
-
-  if { [string match "*$REMOVED" $result ] == 0 } {
-     add_proc_error "del_queue" "-1" "could not delete queue $q_name"
-     return -1
-  } 
-  return 0
-}
-
 #                                                             max. column:     |
 #****** sge_procedures/get_queue() ******
 # 
@@ -2413,7 +2394,7 @@ proc get_queue { q_name change_array } {
   global ts_config
 
 
-  global CHECK_ARCH
+  global CHECK_ARCH CHECK_OUTPUT
   upvar $change_array chgar
 
   set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -sq ${q_name}" } result ]
@@ -2427,9 +2408,11 @@ proc get_queue { q_name change_array } {
 
   foreach elem $help {
      set id [lindex $elem 0]
-     set value [lrange $elem 1 end]
+     set value [string trim [lrange $elem 1 end] "{}"]
+     
      if { $id != "" } {
         set chgar($id) $value
+#        puts $CHECK_OUTPUT "queue($id) = $value"
      }
   }
 }
@@ -3107,10 +3090,13 @@ proc add_pe { change_array { version_check 1 } } {
 
   set ADDED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
-  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
+# JG: TODO: have to create separate add_pe in sge_procedures.60.tcl as this message no 
+#           longer exists
+#  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
 
 
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS $NOT_EXISTS ]
+#  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS $NOT_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_pe" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_pe" -1 "parallel environment \"[set chgar(pe_name)]\" already exists" }

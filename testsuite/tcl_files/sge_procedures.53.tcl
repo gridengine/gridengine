@@ -86,7 +86,7 @@ proc vdep_set_queue_defaults { change_array } {
 #
 #  INPUTS
 #     qname        - name for the (cluster) queue
-#     hostlist     - list of hostnames, or "@all" to create a queue on each host.
+#     hostlist     - list of hostnames, or "@allhosts" to create a queue on each host.
 #     change_array - array containing attributes that differ from defaults
 #     {fast_add 0} - 0: add the queue using qconf -aq,
 #                    1: add the queue using qconf -Aq, much faster!
@@ -105,7 +105,7 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    validate_queue_type chgar
 
    # non cluster queue: set queue and hostnames
-   if { $hostlist == "@all" } {
+   if { $hostlist == "@allhosts" } {
       set hostlist $ts_config(execd_hosts)
    }
 
@@ -191,7 +191,7 @@ proc set_queue_work { qname change_array } {
 #
 #  INPUTS
 #     qname        - name of the (cluster) queue
-#     hostlist     - list of hosts. If "@all" is given, the attributes are changed
+#     hostlist     - list of hosts. If "@allhosts" is given, the attributes are changed
 #                    for all hosts. If an empty list is given, the queuename is only
 #                    built from the qname parameter.
 #     change_array - array containing the changed attributes.
@@ -210,7 +210,7 @@ proc set_queue { qname hostlist change_array } {
    validate_queue_type chgar
 
    # non cluster queue: set queue and hostnames
-   if { $hostlist == "@all" } {
+   if { $hostlist == "@allhosts" } {
       set hostlist $ts_config(execd_hosts)
    }
 
@@ -226,6 +226,25 @@ proc set_queue { qname hostlist change_array } {
    return $result
 }
 
+proc del_queue { q_name } {
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
+
+  set result ""
+  set catch_return [ catch {  
+      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -dq ${q_name}" 
+  } result ]
+
+  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
+
+  if { [string match "*$REMOVED" $result ] == 0 } {
+     add_proc_error "del_queue" "-1" "could not delete queue $q_name: (error: $result)"
+     return -1
+  } 
+  return 0
+}
+
 proc unassign_queues_with_pe_object { pe_obj } {
    # nothing to be done for SGE 5.3
 }
@@ -238,7 +257,7 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
    global ts_config
    global CHECK_OUTPUT
 
-   if { $hostlist == "@all" } {
+   if { $hostlist == "" } {
       set hostlist $ts_config(execd_hosts)
    }
 
@@ -261,7 +280,7 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    global ts_config
    global CHECK_OUTPUT
 
-   if { $hostlist == "@all" } {
+   if { $hostlist == "" } {
       set hostlist $ts_config(execd_hosts)
    }
 

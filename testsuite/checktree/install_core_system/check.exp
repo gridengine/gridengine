@@ -478,7 +478,7 @@ proc cleanup_system { } {
 
    # add new testsuite queues
   puts $CHECK_OUTPUT "\nadding testsuite queues ..."
-  add_queue "all" "@all" q_param 1
+  add_queue "all.q" "@allhosts" q_param 1
   set_error 0 "ok"
 
 }
@@ -531,7 +531,7 @@ proc setup_queues {} {
    set new_values(load_thresholds)       "np_load_avg=11.00"
    set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
  
-   set result [set_queue "all" "@all" new_values]
+   set result [set_queue "all.q" "@allhosts" new_values]
    switch -- $result { 
       -1 {
          set_error -1 "setup_queues - modify queue ${hostname}.q - got timeout"
@@ -559,7 +559,7 @@ proc setup_queues {} {
          set slots [ expr ( $slots_tmp * 10) ]
          set new_values(slots) "$slots"
 
-         set result [set_queue all $hostname new_values]
+         set result [set_queue "all.q" $hostname new_values]
          switch -- $result { 
             -1 {
                set_error -1 "setup_queues - modify queue ${hostname}.q - got timeout"
@@ -615,7 +615,7 @@ proc setup_testcheckpointobject {} {
 
    set change(ckpt_name)  "testcheckpointobject"
    add_checkpointobj change
-   assign_queues_with_ckpt_object "all" "@all" "testcheckpointobject"
+   assign_queues_with_ckpt_object "all.q" "" "testcheckpointobject"
 
    set_error 0 "ok"
 }
@@ -958,7 +958,7 @@ proc setup_mytestpe {} {
    set change(slots) "5"
    add_pe change
 
-   assign_queues_with_pe_object "all" "@all" "mytestpe"
+   assign_queues_with_pe_object "all.q" "" "mytestpe"
 
    set_error 0 "ok"
 }

@@ -483,7 +483,7 @@ proc sge_macro { macro_name } {
    global CHECK_OUTPUT
  
    set value ""
-   switch $macro_name {
+   switch -exact $macro_name {
       "MSG_OBJ_QUEUE" { set value "" }
       "MSG_SGETEXT_ALREADYEXISTS_SS" { set value ""}
       "MSG_QCONF_NOXDEFINED_S" { set value "" }
@@ -560,18 +560,6 @@ proc sge_macro { macro_name } {
       "MSG_TREE_CHANGEDSHARETREE" { set value "" }
       "MSG_QCONF_CANTREADSHARETREEX_S" { set value "" }
 
-
-
-
-
-
-
-
-
-
-
-
-# script messages (not in "c" source code):
       "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 
       "DISTINST_NOT_COMPILED_IN_SECURE_MODE" { set value "\n>sge_qmaster< binary is not compiled with >-secure< option!\n" }
       "DISTINST_ENTER_HOSTS" { set value "Host(s): " }
@@ -600,9 +588,12 @@ proc sge_macro { macro_name } {
       "DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET" { set value "If you will install shadow master hosts or if you want to be able to start\n the qmaster daemon on other hosts (see the corresponding sectionin the\n Grid Engine Installation and Administration Manual for details) the account\n on the shadow master hosts also needs read/write access to this directory.\n\n Enter spool directory or hit <RETURN> to use default\n \[%s\] >> " }
       "DISTINST_USING_GID_RANGE_HIT_RETURN" { set value "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " }
       "DISTINST_EXECD_INSTALL_COMPLETE" { set value "Your execution daemon installation is now completed." }
-      "DISTINST_ADD_DEFAULT_QUEUE" { set value "Do you want to add a default queue for this host (y/n) \[y\] >> " }
       "DISTINST_LOCAL_CONFIG_FOR_HOST" { set value "Local configuration for host >%s< created." }
       "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >default< >> " }
+      "DISTINST_ADD_DEFAULT_QUEUE" { set value "Do you want to add a default queue for this host (y/n) \[y\] >> " }
+      "DISTINST_ALL_QUEUE_HOSTGROUP" { set value "Creating the default <all.q> queue and <allhosts> hostgroup" }
+      "DISTINST_ADD_DEFAULT_QUEUE_INSTANCE" { set value "Do you want to add a default queue instance for this host (y/n) \[y\] >> " }
+
 
    }
    if { $value == "" } {

@@ -1,3 +1,10 @@
+CR-2002-10-02-1  Testsuite: added sleep 1 command in procedure "delete_job" and
+                 Workaround increased wait timeout. Testsuite seems to have problems
+                            with deleting jobs. This may be connected with IZ issue
+                            #126 (qdel of just submitted job). When the signal  
+                            delivering bug is fixed, the timeout and the sleep
+                            should be taken back.
+
 EB-2002-10-02-0  Cleanup:   division by zero does not cause core
                  IZ:        390
                  Changed:   all binaries for solaris[64|86] architecture

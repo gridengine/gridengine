@@ -1887,7 +1887,7 @@ lListElem *jr
                     action);
          }
          sprintf(sge_mail_body,
-                 MSG_MAIL_BOPY_STATE_SSSSSSSSSSSSS,
+                 MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
                  sge_mail_subj, 
                  exitstr, 
                  sge_sig2str(signo),
@@ -1913,7 +1913,7 @@ lListElem *jr
                     action);
          }
          sprintf(sge_mail_body, 
-                 MSG_MAIL_BOPY_STATE_SSSSSSSSSSSSS,
+                 MSG_MAIL_BODY_STATE_SSSSSSSSSSSSS,
                  sge_mail_subj,
                  exitstr, 
                  sge_sig2str(signo),

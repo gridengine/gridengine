@@ -683,7 +683,7 @@ proc read_file { filename array_name } {
    
    if { [file isfile $filename] != 1 } {
       set data(0) 0
-      puts $CHECK_OUTPUT "\"$filename\" is not a file"
+      puts $CHECK_OUTPUT "read_file - returning empty file data structure, no such file"
       return
    }
    set file [open $filename "r"]

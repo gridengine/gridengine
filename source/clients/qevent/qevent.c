@@ -48,9 +48,11 @@
 #include "sge_mirror.h"
 #include "sge_event.h"
 #include "sge_c_event.h"
+#include "sge_time.h"
 
 
 u_long Global_jobs_running = 0;
+u_long Global_jobs_registered = 0;
 
 int print_event(sge_event_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
@@ -74,9 +76,13 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
 {
    int pos;
    char buffer[1024];
+   u_long32 timestamp;
    dstring buffer_wrapper;
 
+
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+   
+   timestamp = sge_get_gmt();
 
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
 /*    fprintf(stdout,"%s\n",event_text(event, &buffer_wrapper)); */
@@ -89,8 +95,9 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
          lListElem *ep = lFirst(jat);
          u_long job_status = lGetUlong(ep, JAT_status);
          int task_running = (job_status==JRUNNING || job_status==JTRANSFERING);
+
          if (task_running) {
-            fprintf(stdout,"START (%ld.%ld)\n", job_id ,task_id);
+            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME=%ld)\n", job_id ,task_id,timestamp);
             fflush(stdout);  
             Global_jobs_running++;
          }
@@ -102,10 +109,32 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
          u_long job_id = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
          /* lWriteElemTo(event, stdout); */
-         fprintf(stdout,"FINISH (%ld.%ld)\n", job_id, task_id);
+         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME=%ld)\n", job_id, task_id,timestamp);
          Global_jobs_running--;
          fflush(stdout);  
       }
+      if (type == sgeE_JOB_ADD) { 
+         lList *jat = lGetList(event,ET_new_version);
+         u_long job_id  = lGetUlong(event, ET_intkey);
+         u_long task_id = lGetUlong(event, ET_intkey2);
+         lListElem *ep = lFirst(jat);
+         const char* job_project = lGetString(ep, JB_project);
+         if (job_project == NULL) {
+            job_project = "NONE";
+         }
+         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME=%ld:project=%s)\n", job_id, task_id, timestamp,job_project);
+         Global_jobs_registered++;
+         fflush(stdout);  
+      }
+      if (type == sgeE_JOB_DEL) { 
+         u_long job_id  = lGetUlong(event, ET_intkey);
+         u_long task_id = lGetUlong(event, ET_intkey2);
+         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME=%ld)\n", job_id, task_id,timestamp);
+         Global_jobs_registered--;
+         fflush(stdout);  
+      }
+
+
 
    }
    /* create a callback error to test error handling */
@@ -120,6 +149,7 @@ int print_jatask_event(sge_event_type type, sge_event_action action,
 int main(int argc, char *argv[])
 {
    int cl_err = 0;
+   u_long32 timestamp;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
@@ -141,11 +171,16 @@ int main(int argc, char *argv[])
    
    ec_set_flush(sgeE_JATASK_MOD,0);
    ec_set_flush(sgeE_JOB_FINAL_USAGE,0);
+   ec_set_flush(sgeE_JOB_ADD,0);
+   ec_set_flush(sgeE_JOB_DEL,0);
+
+   
 /*   sge_mirror_subscribe(SGE_EMT_ALL, print_event, NULL, NULL); */
    
    while(!shut_me_down) {
       sge_mirror_process_events();
-      fprintf(stdout,"Running: %ld\n",Global_jobs_running);
+      timestamp = sge_get_gmt();
+      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_reqistered=%ld:ECL_TIME=%ld)\n",Global_jobs_running,Global_jobs_registered,timestamp);
       fflush(stdout);  
    }
 

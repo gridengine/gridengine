@@ -1,3 +1,8 @@
+CR-2003-02-07-0  Testsuite: Throughput performance test:
+                 Bugfix:    - Error in Job to Project assignment. This causes
+                              wrong project job analysis.
+                            - enhancement for qevent client           
+
 JG-2003-02-06-1  CVS:       Created VMAIN_STABLE_2_TAG
 
 JG-2003-02-06-0  Bugfix:    For tightly integrated parallel jobs, the handling

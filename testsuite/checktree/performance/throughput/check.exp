@@ -112,19 +112,19 @@ proc init_level {} {
         return 0  
      }
      "100"  { 
-        set end_job_count            2000         ;# number of jobs
+        set end_job_count            3000         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  1000         ;# after witch job, enable queues
+        set enable_queues_job_count  1500         ;# after witch job, enable queues
         set throughput_sharetree     0
         set throughput_subdir        "functional"
         return 0  
      }
      "101"  { 
-        set end_job_count            2000         ;# number of jobs
+        set end_job_count            3000         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  1000         ;# after witch job, enable queues
+        set enable_queues_job_count  1500         ;# after witch job, enable queues
 
         set throughput_sharetree     1
         set throughput_subdir        "functional_sharetree"
@@ -394,7 +394,22 @@ proc cleanup_queues {} {
    
    set_error 0 "ok"
 }
-
+proc get_event_client_time { string  } {
+   set ecl_time_start [string first "(" $string]
+   incr ecl_time_start 1
+   set ecl_time_end [string first ")" $string]
+   incr ecl_time_end -1
+   set data [string range $string $ecl_time_start $ecl_time_end]
+   set data [split $data ":"]
+   foreach elem $data {
+      set ecl_time_start [string first "ECL_TIME=" $elem]
+      if { $ecl_time_start >= 0 } {
+         incr ecl_time_start 9
+         return [ string range $elem $ecl_time_start end]
+      }
+   }
+   return -1
+}
 
 proc run_throughput_test {} {
 
@@ -583,7 +598,7 @@ proc run_throughput_test {} {
                  if { $throughput_sharetree == 1 } {
                     set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
                     set my_job_command "qsub -o /dev/null -e /dev/null -P project${numb} $my_job $result(job_run_time)"
-                    set job_data($sent_jobs,project) $numb
+                    #set job_data($sent_jobs,project) $numb
                  } else { 
                     set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
                  }
@@ -794,7 +809,32 @@ proc run_throughput_test {} {
              set output [ split $output "\n" ]
              foreach line $output {
                 set help [string trim $line]
-                if { [string match "FINISH (*)" $help] } {
+
+
+                if { [string match "JOB_ADD (*)" $help] } {
+                   # job is done remove job from sent_job_ids list
+                   set job_s_pos [string first "(" $help]
+                   incr job_s_pos 1
+                   set job_e_pos [string first ")" $help]
+                   incr job_e_pos -1
+
+                   set event_data [string range $help $job_s_pos $job_e_pos]
+                   set event_data [split $event_data ":"]
+                   set job_id [lindex $event_data 0] 
+                   set project_name [lindex $event_data 2]
+
+                   set help_pos [string first "." $job_id]
+                   incr help_pos -1
+                   set job_id [string range $job_id 0 $help_pos]
+
+                   set help_pos [string first "=" $project_name]
+                   incr help_pos 1
+                   set project_name [string range $project_name $help_pos end]
+                   set job_id_project_list($job_id) [ string index $project_name 7]
+                }
+
+
+                if { [string match "JOB_FINISH (*)" $help] } {
                    # job is done remove job from sent_job_ids list
                    set job_s_pos [string first "(" $help]
                    incr job_s_pos 1
@@ -814,12 +854,13 @@ proc run_throughput_test {} {
                    
                       set sub_id [get_submit_id_from_job_id job_data $job_id]
                       if { $sub_id >= 0 } {
-                         set job_data($sub_id,run_end_time) [timestamp]
+                         set job_data($sub_id,run_end_time) [get_event_client_time $help] ;#[timestamp]
                          set job_data($sub_id,state) "done"
+                         set job_data($sub_id,project) $job_id_project_list($job_id)
                       }
                    }
                 }
-                if { [string match "START (*)" $help] } {
+                if { [string match "JOB_START (*)" $help] } {
                    # job is done remove job from sent_job_ids list
                    set job_s_pos [string first "(" $help]
                    incr job_s_pos 1
@@ -832,13 +873,13 @@ proc run_throughput_test {} {
 
                    set sub_id [get_submit_id_from_job_id job_data $job_id]
                    if { $sub_id >= 0 } {
-                      set job_data($sub_id,run_start_time) [timestamp]
+                      set job_data($sub_id,run_start_time) [get_event_client_time $help] ;#[timestamp]
                       set job_data($sub_id,state) "running"
                    } else {
                       # puts $CHECK_OUTPUT "assuming job submit before start!"
                       # add the job start to job_buffer_data (when submit command
                       # returns, the job data is actualized)
-                      lappend job_buffer_data [timestamp]
+                      lappend job_buffer_data [get_event_client_time $help] ;# [timestamp]
                       lappend job_buffer_data "running"
                       lappend job_buffer_data $job_id
                       incr job_buffer_data_index 1
@@ -2698,7 +2739,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    spool_array_to_file $prot_output_file "job data"       jobs    0
    spool_array_to_file $prot_output_file "scheduler data" schedd  0
 
-   file delete ${prot_output_file}.old
+   catch { file delete ${prot_output_file}.old }
 
    # job results
    calculate_average_cluster_times results cluster_results
@@ -2728,8 +2769,9 @@ proc create_reports { results_array job_array_name schedd_array_name} {
 
    analyse_dump_data_file $prot_output_file 1
    compare_dump_directory $prot_output_dir
-   puts $CHECK_OUTPUT "to gzip $prot_output_file ..."
-   puts $CHECK_OUTPUT [start_remote_prog $CHECK_HOST $CHECK_USER gzip $prot_output_file prg_exit_state 60 0 "" 1 0 0]
+#   puts $CHECK_OUTPUT "do gzip $prot_output_file ..."
+#   puts $CHECK_OUTPUT [start_remote_prog $CHECK_HOST $CHECK_USER gzip $prot_output_file prg_exit_state 60 0 "" 1 0 0]
+   
    
 }
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2004/04/19 10:52:14 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2004/07/30 13:04:33 $     Revision: $Revision: 1.5.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2004/04/19 10:52:14 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2004/07/30 13:04:33 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
 .\"
@@ -82,6 +82,55 @@ spool directory of
 for reporting through
 .M xxqs_name_sxx_execd 8
 and finishes.
+
+.I xxqs_name_sxx_shepherd
+also places a exit status file in the spool directory. This exit status can
+be viewed with qacct -j JobId (see
+.M qacct 1 );
+it is not the exit status of 
+.I xxqs_name_sxx_shepherd
+itself but of one of the methods executed by 
+.I xxqs_name_sxx_shepherd.
+This exit status can have several meanings, depending on in which method
+an error occured (if any).
+The possible methods are: prolog, parallel start, job, parallel stop,
+epilog, suspend, restart, terminate, clean, migrate, checkpoint.
+
+The following exit values are returned:
+.IP "0" 0.7i
+All methods: Operation was executed successfully.
+.IP "99" 0.7i
+Job script, prolog and epilog: When
+.I
+FORBID_RESCHEDULE 
+is not set in the configuration
+(see 
+.M xxqs_name_sxx_conf 5 ),
+the job gets requeued.
+Otherwise see "Other".
+.IP "100" 0.7i
+Job script, prolog and epilog: When
+.I
+FORBID_APPERROR
+is not set in the configuration
+(see
+.M xxqs_name_sxx_conf 5 ),
+the job gets requeued.
+Otherwise see "Other".
+.IP "Other" 0.7i
+Job script: This is the exit status of the job itself. No action is taken upon
+this exit status because the meaning of this exit status is not known.
+.br
+Prolog, epilog and parallel start: The queue is set to error state and the job is
+requeued.
+.br
+Parallel stop: The queue is set to error state, but the job is not requeued. It
+is assumed that the job itself ran successfully and only the clean up script failed.
+.br
+Suspend, restart, terminate and clean, migrate: Always successfull.
+.br
+Checkpoint: Success, except for kernel checkpointing: checkpoint was not 
+successfull, did not happen (but migration will happen by xxQS_NAMExx).
 .\"
 .\"
 .SH RESTRICTIONS

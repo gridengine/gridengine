@@ -22,14 +22,17 @@ JG-2002-07-18-0: Bugfix:    qsh mechanism passing options to xterm was broken.
                             unsupported options.
                  Changed:   qsh           
 
+AS-2002-07-18-1  CVS        Created V531_beta3_TAG
+--------------------------------------------------
+
 CR-2002-07-18-4: Bugfix:    i18n new gridengine.pot file
 
-CR-2002-07-18-1: Bugfix:    i18n wrong function call in infotext binary - l10n
-                            not working
+CR-2002-07-18-1: Bugfix:    i18n wrong function call in infotext binary -
+                            l10n not working
                  Bugtraq:   #4715919
 
-CR-2002-07-18-0: Bugfix:    i18n aimk compilation for SOLARIS86 did not translate
-                            i18n code
+CR-2002-07-18-0: Bugfix:    i18n aimk compilation for SOLARIS86 did not
+                            translate i18n code
 
 AA-2002-07-15-0: Bugfix:    l10n wrong widget name in qmon_cluster.ad file
                             dist/locale/en/qmon_messages.ad added as l10n

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2002/03/08 14:36:24 $     Revision: $Revision: 1.3.6.1 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2002/07/29 15:23:23 $     Revision: $Revision: 1.3.6.1.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2002/03/08 14:36:24 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2002/07/29 15:23:23 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -67,7 +67,8 @@ The name of the parallel environment. To be used in the
 \fB\-pe\fP switch.
 .SS "\fBqueue_list\fP"
 A comma separated list of queues to which parallel jobs belonging
-to this parallel environment have access to.
+to this parallel environment have access to. Alternatively the keyword
+"all" can be used to give access to all queues across the cluster.
 .SS "\fBslots\fP"
 The number of parallel processes being allowed to run in total under the
 parallel environment concurrently.

@@ -177,17 +177,17 @@
 /* 
 ** utilib/sge_uidgid.c
 */ 
-#define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49059, _("getpwuid("pid_t_fmt") failed: "SFN"\n"))
-#define MSG_SYSTEM_GETGRGIDFAILED_US               _MESSAGE(49060, _("getgrgid("pid_t_fmt") failed: "SFN"\n"))
+#define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49059, _("getpwuid("U32CFormat") failed: "SFN"\n"))
+#define MSG_SYSTEM_GETGRGIDFAILED_US               _MESSAGE(49060, _("getgrgid("U32CFormat") failed: "SFN"\n"))
 #define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _MESSAGE(49061, _("tried to change uid/gid without being root"))
-#define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _MESSAGE(49062, _("gid of user "SFN" ("gid_t_fmt") less than minimum allowed in conf (%d)"))
-#define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _MESSAGE(49063, _("uid of user "SFN" ("uid_t_fmt") less than minimum allowed in conf (%d)"))
-#define MSG_SYSTEM_SETGIDFAILED_U               _MESSAGE(49064, _("setgid("gid_t_fmt") failed"))
-#define MSG_SYSTEM_SETUIDFAILED_U               _MESSAGE(49065, _("setuid("uid_t_fmt") failed"))
-#define MSG_SYSTEM_SETEGIDFAILED_U              _MESSAGE(49066, _("setegid("gid_t_fmt") failed"))
-#define MSG_SYSTEM_SETEUIDFAILED_U              _MESSAGE(49067, _("seteuid("uid_t_fmt") failed"))
+#define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _MESSAGE(49062, _("gid of user "SFN" ("U32CFormat") less than minimum allowed in conf (%d)"))
+#define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _MESSAGE(49063, _("uid of user "SFN" ("U32CFormat") less than minimum allowed in conf (%d)"))
+#define MSG_SYSTEM_SETGIDFAILED_U               _MESSAGE(49064, _("setgid("U32CFormat") failed"))
+#define MSG_SYSTEM_SETUIDFAILED_U               _MESSAGE(49065, _("setuid("U32CFormat") failed"))
+#define MSG_SYSTEM_SETEGIDFAILED_U              _MESSAGE(49066, _("setegid("U32CFormat") failed"))
+#define MSG_SYSTEM_SETEUIDFAILED_U              _MESSAGE(49067, _("seteuid("U32CFormat") failed"))
 #define MSG_SYSTEM_INITGROUPSFAILED_I           _MESSAGE(49068, _("initgroups() failed with errno %d\n"))
-#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS   _MESSAGE(49069, _("can't set additional group id (uid="uid_t_fmt", euid="uid_t_fmt"): "SFN"\n"))
+#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS   _MESSAGE(49069, _("can't set additional group id (uid="U32CFormat", euid="U32CFormat"): "SFN"\n"))
 #define MSG_SYSTEM_INVALID_NGROUPS_MAX          _MESSAGE(49070, _("invalid value for NGROUPS_MAX"))
 #define MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS       _MESSAGE(49071, _("the user already has too many group ids"))
 

@@ -178,7 +178,7 @@ void sge_reap_children_execd()
             failed = ESSTATE_SHEPHERD_EXIT;
       } else {
          /* not signaled and not exited - so what else happend with this guy? */
-         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_PI, pid, status));
+         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_UI, u32c(pid), status));
          continue;
       }
   
@@ -1392,7 +1392,7 @@ int npids
 
    /* report this information */
    sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS, 
-           dir, pid, (shepherd_alive ? "": MSG_NOT));
+           dir, u32c(pid), (shepherd_alive ? "": MSG_NOT));
    if (startup) {
       INFO((SGE_EVENT, err_str));
    }

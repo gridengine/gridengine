@@ -61,7 +61,7 @@
 */
 #define MSG_SLAVE    _MESSAGE(29008, _("slave "))
 #define MSG_COREDUMPED    _MESSAGE(29009, _("(core dumped) "))
-#define MSG_WAITPIDNOSIGNOEXIT_PI   _MESSAGE(29010, _("waitpid() returned for pid "pid_t_fmt" status %d unequal WIFSIGNALED/WIFEXITED\n"))
+#define MSG_WAITPIDNOSIGNOEXIT_UI   _MESSAGE(29010, _("waitpid() returned for pid "U32CFormat" status %d unequal WIFSIGNALED/WIFEXITED\n"))
 #define MSG_SHEPHERD_VSHEPHERDOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI    _MESSAGE(29011, _(SFN"shepherd of job "U32CFormat"."U32CFormat" died through signal "SFN"= %d"))
 #define MSG_SHEPHERD_WSHEPHERDOFJOBXYEXITEDWITHSTATUSZ_SUUI    _MESSAGE(29012, _(SFN"shepherd of job "U32CFormat"."U32CFormat" exited with exit status = %d\n"))
 #define MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU    _MESSAGE(29013, _("missing job "U32CFormat"."U32CFormat" in job report for exiting job - adding it"))
@@ -107,7 +107,7 @@
 #define MSG_SHEPHERD_CANTREADPIDFILEXFORJOBYSTARTTIMEZX_SSUS    _MESSAGE(29053, _("can't read pid file "SFQ" of shepherd for job "SFQ" - starttime: "U32CFormat" cleaning up: "SFN))
 #define MSG_SHEPHERD_MISSINGJOBXINJOBREPORTFOREXITINGJOB_U    _MESSAGE(29054, _("missing job \""U32CFormat"\" in job report for exiting job"))
 #define MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS    _MESSAGE(29055, _("can't read pid from pid file "SFQ" of shepherd for job "SFN))
-#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS    _MESSAGE(29056, _("shepherd for job "SFN" has pid \""pid_t_fmt"\" and is "SFN" alive\n"))
+#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS    _MESSAGE(29056, _("shepherd for job "SFN" has pid \""U32CFormat"\" and is "SFN" alive\n"))
 #define MSG_NOT    _MESSAGE(29057, _("not"))
 #define MSG_SHEPHERD_INCONSISTENTDATAFORJOBX_U    _MESSAGE(29058, _("inconsistent data for job \""U32CFormat"\""))
 #define MSG_SHEPHERD_MISSINGJOBXYINJOBREPORT_UU    _MESSAGE(29059, _("Missing job "U32CFormat"."U32CFormat" in job report"))

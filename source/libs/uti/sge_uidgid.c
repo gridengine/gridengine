@@ -423,7 +423,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       while (!(pw = getpwuid(uid))) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETPWUIDFAILED_US , 
-                  uid, strerror(errno)));
+                  u32c(uid), strerror(errno)));
             DEXIT;
 #ifdef QIDL
             pthread_mutex_unlock(&lock);
@@ -490,7 +490,7 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       while (!(gr = getgrgid(gid))) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US , 
-                  gid, strerror(errno)));
+                  u32c(gid), strerror(errno)));
 #ifdef QIDL
             pthread_mutex_unlock(&lock);
 #endif
@@ -584,16 +584,16 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
        */
       if (pw->pw_gid < min_gid) {
          sprintf(err_str, MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI ,
-                 user, (gid_t) pw->pw_gid, min_gid);
+                 user, u32c( pw->pw_gid), min_gid);
          return 1;
       }
       if (setgid(pw->pw_gid)) {
-         sprintf(err_str,MSG_SYSTEM_SETGIDFAILED_U , (gid_t) pw->pw_gid);
+         sprintf(err_str,MSG_SYSTEM_SETGIDFAILED_U , u32c(pw->pw_gid) );
          return 1;
       }
    } else {
       if (setegid(pw->pw_gid)) {
-         sprintf(err_str, MSG_SYSTEM_SETEGIDFAILED_U , (gid_t) pw->pw_gid);
+         sprintf(err_str, MSG_SYSTEM_SETEGIDFAILED_U , u32c(pw->pw_gid));
          return 1;
       }
    }
@@ -642,31 +642,31 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
    if (!intermediate_user) {
       if (pw->pw_uid < min_uid) {
          sprintf(err_str, MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI ,
-                 user, pw->pw_uid, min_uid);
+                 user, u32c(pw->pw_uid), min_uid);
          return 1;
       }
  
       if (use_qsub_gid) {
          if (setgid(pw->pw_gid)) {
-            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, pw->pw_uid);
+            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, u32c(pw->pw_uid));
             return 1;
          }
       }
  
       if (setuid(pw->pw_uid)) {
-         sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , pw->pw_uid);
+         sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , u32c(pw->pw_uid));
          return 1;
       }
    } else {
       if (use_qsub_gid) {
          if (setgid(pw->pw_gid)) {
-            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , pw->pw_uid);
+            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , u32c(pw->pw_uid));
             return 1;
          }
       }
  
       if (seteuid(pw->pw_uid)) {
-         sprintf(err_str, MSG_SYSTEM_SETEUIDFAILED_U , pw->pw_uid);
+         sprintf(err_str, MSG_SYSTEM_SETEUIDFAILED_U , u32c(pw->pw_uid));
          return 1;
       }
    }
@@ -715,8 +715,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0) {
       if(err_str != NULL) {
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
-                 geteuid(), MSG_SYSTEM_INVALID_NGROUPS_MAX);
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, u32c(getuid()), 
+                 u32c(geteuid()), MSG_SYSTEM_INVALID_NGROUPS_MAX);
       }
       return -1;
    }
@@ -733,8 +733,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    if (list == NULL) {
       if(err_str != NULL) {
          int error = errno;
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
-                 geteuid(), strerror(error));
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, u32c(getuid()), 
+                 u32c(geteuid()), strerror(error));
       }
       return -1;
    }
@@ -743,8 +743,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    if (groups == -1) {
       if(err_str != NULL) {
          int error = errno;
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
-                 geteuid(), strerror(error));
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, u32c(getuid()), 
+                 u32c(geteuid()), strerror(error));
       }
       free(list);
       return -1;
@@ -757,16 +757,16 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
       if (groups == -1) {
          if(err_str != NULL) {
             int error = errno;
-            sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
-                    geteuid(), strerror(error));
+            sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, u32c(getuid()), 
+                    u32c(geteuid()), strerror(error));
          }
          free(list);
          return -1;
       }
    } else {
       if(err_str != NULL) {
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
-                 geteuid(), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, u32c(getuid()), 
+                 u32c(geteuid()), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
       }
       free(list);
       return -1;

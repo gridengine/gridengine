@@ -1,3 +1,9 @@
+SG-2005-04-06-0: Bugfix:     reserved jobs prevent other jobs from starting
+                 Review:    AH
+                 Issue:     1543
+                 Bugtraq:   6251172
+                 Changed:   scheduler
+
 CR-2005-04-06-3: Testsuite: fixed testsuite test bugs/issuezilla/1096 for
                             BDB RPC spooling 
 

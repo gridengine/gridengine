@@ -759,7 +759,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
             DPRINTF(("Found pending job "u32"."u32". Try %sto start and %sto reserve\n", 
                   job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
             DPRINTF(("-----------------------------------------\n"));
-         
+
+            
             result = select_assign_debit(
                &(lists->queue_list), 
                &(lists->dis_queue_list),
@@ -996,6 +997,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             is_computed_reservation = true;
             lAppendList(*queue_list, *dis_queue_list);
          }
+         
          result = sge_select_parallel_environment(&a, pe_list);
       }
 
@@ -1009,6 +1011,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             a.is_reservation = true;
 
             result = sge_select_parallel_environment(&a, pe_list);
+
             if (result == DISPATCH_OK) {
                result = DISPATCH_NOT_AT_TIME; /* this job got a reservation */
             }   
@@ -1134,7 +1137,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                SCHEDULING_RECORD_ENTRY_TYPE_STARTING);
    } 
    else {
-      debit_scheduled_job(&a, sort_hostlist, orders, true, 
+      debit_scheduled_job(&a, sort_hostlist, orders, false,  
             SCHEDULING_RECORD_ENTRY_TYPE_RESERVING);
    }   
 

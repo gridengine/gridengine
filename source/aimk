@@ -1121,7 +1121,7 @@ case LINUX6:
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+   set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
@@ -1314,7 +1314,7 @@ case SOLARIS86:
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
    set XCFLAGS  = "-Xc -DNeedFunctionPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-lXm -lXt -lXext -lX11 -lw -lgen"
+   set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
    set RANLIB   = "echo"
 
@@ -1430,13 +1430,15 @@ if ( $WITH_GETTEXT == 1 ) then
    else
       if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "SOLARIS86" || $COMPILE_ARCH == "LINUX6" ) then
          set LIBINTL = ""
+         set HFLAGS = ""
       else
+         set HFLAGS = "-I$GETTEXTBASE/$BUILDARCH/include"
          set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
          set LIBINTL = "-lintl -lnlsut"
       endif
    endif
    set LIBS = "$LIBINTL $LIBS"
-   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ -I$GETTEXTBASE/$BUILDARCH/include"
+   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ $HFLAGS"
    set CXXFLAGS = "$CXXFLAGS"
 else
    set XGETTEXT = ""

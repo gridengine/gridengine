@@ -568,8 +568,9 @@ lListElem *ep
       items = (XmString*) malloc(sizeof(XmString)*itemCount); 
 
       for(cep = lFirst(confl), i=0; cep; cep = lNext(cep), i++) {
-         sprintf(buf, "%-20.20s %s", lGetString(cep, CF_name),
-                        lGetString(cep, CF_value));
+         const char *name = lGetString(cep, CF_name);
+         const char *value = lGetString(cep, CF_value);
+         sprintf(buf, "%-20.20s %s", name ? name : "", value ? value : "");
          items[i] = XmStringCreateLtoR(buf, "LIST");
       }
       XtVaSetValues( cluster_conf_list, 

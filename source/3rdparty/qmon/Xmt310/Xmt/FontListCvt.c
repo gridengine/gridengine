@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: FontListCvt.c,v 1.1.1.1.6.2 2002/08/01 14:39:48 andre Exp $
+ * $Id: FontListCvt.c,v 1.1.1.1.6.3 2002/08/09 12:25:56 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,24 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: FontListCvt.c,v $
+ * Revision 1.1.1.1.6.3  2002/08/09 12:25:56  andre
+ * AA-2002-08-09-0  I18N:      - aimk: -lXmu for LINUX6 broke build under special
+ *                                     RHLinux 7.3
+ *                                     HFLAGS for gettext
+ *                             - Cli widget multiple localized message lines
+ *                             - source/3rdparty/qmon/Xmt310/Xmt/HelpBox.c
+ *                               Bugtraq 4721140
+ *                             - source/3rdparty/qmon/Xmt310/Xmt/FontListCvt.c
+ *                               additional debugging code XMTDEBUGFONT env var
+ *                             - fonts, translations for browser, complex window
+ *                               width (4723532, 4725248), global crash (4728293),
+ *                               locale setting qmon_init.c ad file search,
+ *                               q/j customize dialogue (4723543),
+ *                               accelerators (4729085),
+ *                               submit dialogue missing msg translations,
+ *                             - arch dependend *.mo files:
+ *                               locale/{fr|ja|zh}/LC_MESSAGES/<arch>/gridengine.mo
+ *
  * Revision 1.1.1.1.6.2  2002/08/01 14:39:48  andre
  * AA-2002-08-01-1  L10N:      Yun's bug list, XtResolvePathname fix in Lookup.c
  *                             l10n fixes, sge_ca script
@@ -125,7 +143,7 @@ XtPointer *converter_data;
     }
     
     if (fontdebug) {
-       printf("FontListCvt:\n%s\n------------------------\n", 
+       printf("FontListCvt:\n->%s<-\n------------------------\n", 
                   s ? s : "empty" );    
     }
        
@@ -243,7 +261,9 @@ XtPointer *converter_data;
 #endif
 
 #endif
-
+           if (fontdebug) {
+               printf("bs: '%s (%s)'\n", bs, tag);
+           }    
            entry = XmFontListEntryLoad(dpy, bs, font_type, tag ? tag : XmFONTLIST_DEFAULT_TAG);
            fontlist = XmFontListAppendEntry(fontlist, entry);
            XmFontListEntryFree(&entry);
@@ -300,6 +320,7 @@ XtPointer *converter_data;
                                 printf("XmFONT_IS_FONT: %s\n", tag ? tag : "no tag");
                         } else {        
                                 printf("XmFONT_IS_FONTSET: %s\n", tag ? tag : "no tag");
+                                printf("BaseFonts: %s\n", f ? XBaseFontNameListOfFontSet((XFontSet)f): "--none--");
                         }        
                         XtFree(tag);
                                 

@@ -54,7 +54,7 @@ Qmon*qmon_cplx.cplx_layout.layout: \
       Caption tl "@{Complexes}" 2 in cplx_names \
       Stretchable Etched Through Caption tc "@{Attributes}" Col { \
          Fixed 4 in cplx_attributes_title \
-         Stretchable cplx_attributes \
+         Stretchable 6 in cplx_attributes \
       } \
       Fixed Shadowed Col { \
          Fixed cplx_add \
@@ -140,14 +140,14 @@ Qmon*cplx_ask_layout.layout: \
          # \
          Etched Through Caption tc "@{@fBAttributes} " Col { \
             Fixed Row { \
-               FlushTop Caption tl "@{Name}" cplx_ask_aname \
-               FlushTop Caption tl "@{Shortcut}" cplx_ask_ashort \
-               Centered Caption tl "@{Type}" cplx_ask_atype \
-               FlushTop Caption tl "@{Value}" cplx_ask_avalue \
-               Centered Caption tl "@{Relation}" cplx_ask_arel \
-               Centered Caption tl "@{Requestable}" cplx_ask_areq \
-               Centered Caption tl "@{Consumable}" cplx_ask_aconsumable \
-               FlushTop Caption tl "@{Default}" cplx_ask_adefault \
+               FlushTop Caption tl "@{Name}" 10 em cplx_ask_aname \
+               FlushTop Caption tl "@{Shortcut}" 10 em cplx_ask_ashort \
+               Centered Caption tl "@{Type}" 5 em cplx_ask_atype \
+               FlushTop Caption tl "@{Value}" 10 em cplx_ask_avalue \
+               Centered Caption tl "@{Relation}" 5 em cplx_ask_arel \
+               Centered Caption tl "@{Requestable}" 5 em cplx_ask_areq \
+               Centered Caption tl "@{Consumable}" 10 em cplx_ask_aconsumable \
+               FlushTop Caption tl "@{Default}" 10 em cplx_ask_adefault \
             } \
             Etched Top Centered Row { \
                cplx_ask_mx \
@@ -209,7 +209,8 @@ Qmon*cplx_ask_layout*cplx_ask_mx*cplx_ask_menu.items: \
 Qmon*cplx_ask_layout*cplx_ask_mx.rows:         7
 Qmon*cplx_ask_layout*cplx_ask_mx.visibleRows:  7
 Qmon*cplx_ask_layout*cplx_ask_mx.columns:      8
-Qmon*cplx_ask_layout*cplx_ask_mx.columnWidths: 15,10,15,10,10,10,10,15
+!Qmon*cplx_ask_layout*cplx_ask_mx.columnWidths: 15,10,15,10,10,10,10,15
+Qmon*cplx_ask_layout*cplx_ask_mx.columnWidths: 10,7,10,7,7,7,7,10
 Qmon*cplx_ask_layout*cplx_ask_mx.maxLengths:   100,100,100,100,10,10,10,100
 Qmon*cplx_ask_layout*cplx_ask_mx.columnLabels: @{Name}, @{Shortcut}, @{Type}, @{Value}, @{Relation}, @{Requestable}, @{Consumable}, @{Default}
 Qmon*cplx_ask_layout*cplx_ask_mx.boldLabels:          True

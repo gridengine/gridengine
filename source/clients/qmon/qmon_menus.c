@@ -94,67 +94,67 @@ static XmtMenuItem file_menu_items[] = {
 
 static XmtMenuItem task_menu_items[] = {
                                                  /* callback--v cld--v */
-   {XmtMenuItemPushButton, "@{Job Control}", 'J', "Meta<Key>J", "Meta+J",
+   {XmtMenuItemPushButton, "@{Job Control}", 'J', "Alt<Key>J", "Alt+J",
          qmonJobPopup, NULL },
-   {XmtMenuItemPushButton, "@{Queue Control}", 'Q', "Meta<Key>Q", "Meta+Q",
+   {XmtMenuItemPushButton, "@{Queue Control}", 'Q', "Alt<Key>Q", "Alt+Q",
          qmonQueuePopup, NULL},
-   {XmtMenuItemPushButton, "@{Job Submit}", 'S', "Meta<Key>S", "Meta+S",
+   {XmtMenuItemPushButton, "@{Job Submit}", 'S', "Alt<Key>S", "Alt+S",
          qmonSubmitPopup, NULL},
-   {XmtMenuItemPushButton, "@{Complex Configuration}", 'x', "Meta<Key>x", "Meta+x",
+   {XmtMenuItemPushButton, "@{Complex Configuration}", 'x', "Alt<Key>x", "Alt+x",
          qmonPopupCplxConfig, NULL},
-   {XmtMenuItemPushButton, "@{Host Configuration}", 'H', "Meta<Key>H", "Meta+H",
+   {XmtMenuItemPushButton, "@{Host Configuration}", 'o', "Alt<Key>o", "Alt+o",
          qmonPopupHostConfig, NULL},
-   {XmtMenuItemPushButton, "@{User Configuration}", 'U', "Meta<Key>U", "Meta+U",
+   {XmtMenuItemPushButton, "@{User Configuration}", 'U', "Alt<Key>U", "Alt+U",
          qmonPopupManopConfig, NULL},
-   {XmtMenuItemPushButton, "@{Cluster Configuration}", 'C', "Meta<Key>C", "Meta+C",
+   {XmtMenuItemPushButton, "@{Cluster Configuration}", 'l', "Alt<Key>l", "Alt+l",
          qmonPopupClusterConfig, NULL},
-   {XmtMenuItemPushButton, "@{Scheduler Configuration}", 'd', "Meta<Key>D", 
-         "Meta+D", qmonPopupSchedConfig, NULL},
-   {XmtMenuItemPushButton, "@{PE Configuration}", 'P', "Meta<Key>P", "Meta+P",
+   {XmtMenuItemPushButton, "@{Scheduler Configuration}", 'd', "Alt<Key>d", 
+         "Alt+d", qmonPopupSchedConfig, NULL},
+   {XmtMenuItemPushButton, "@{PE Configuration}", 'P', "Alt<Key>P", "Alt+P",
          qmonPopupPEConfig, NULL},
-   {XmtMenuItemPushButton, "@{Checkpointing Configuration}", 'K', "Meta<Key>K", 
-         "Meta+K", qmonPopupCkptConfig, NULL},
-   {XmtMenuItemPushButton, "@{Calendar Configuration}", 'a', "Meta<Key>A", "Meta+A",
+   {XmtMenuItemPushButton, "@{Checkpointing Configuration}", 'k', "Alt<Key>k", 
+         "Alt+k", qmonPopupCkptConfig, NULL},
+   {XmtMenuItemPushButton, "@{Calendar Configuration}", 'a', "Alt<Key>a", "Alt+a",
          qmonPopupCalendarConfig, NULL},
    /*
    ** the 'Ticket Overview' is only managed if SGE_MODE is true
    ** !!!!!! Attention the position is referenced in qmonCreateMainControl
    */
-   {XmtMenuItemPushButton, "@{Ticket Overview}", 'T', "Meta<Key>T", "Meta+T",
+   {XmtMenuItemPushButton, "@{Ticket Overview}", 'i', "Alt<Key>i", "Alt+i",
          qmonPopupTicketOverview, NULL},
 
-   {XmtMenuItemPushButton, "@{Project Configuration}", 'R', "Meta<Key>R", "Meta+R",
+   {XmtMenuItemPushButton, "@{Project Configuration}", 'r', "Alt<Key>r", "Alt+r",
          qmonPopupProjectConfig, NULL},
 
-   {XmtMenuItemPushButton, "@{Browser Dialog}", 'B', "Meta<Key>B", "Meta+B",
+   {XmtMenuItemPushButton, "@{Browser Dialog}", 'B', "Alt<Key>B", "Alt+B",
          qmonBrowserOpen, NULL},
    {XmtMenuItemEnd}
 };
 
 #ifdef QMON_DEBUG
 static XmtMenuItem mirror_menu_items[] = {
-   {XmtMenuItemPushButton, "Queue", 'Q', "Meta<Key>J", "Meta+J",
+   {XmtMenuItemPushButton, "Queue", 'Q', "Alt<Key>J", "Alt+J",
          qmonShowMirrorList, (XtPointer) SGE_QUEUE_LIST},
-   {XmtMenuItemPushButton, "Job", 'S', "Meta<Key>S", "Meta+S",
+   {XmtMenuItemPushButton, "Job", 'S', "Alt<Key>S", "Alt+S",
          qmonShowMirrorList, (XtPointer) SGE_JOB_LIST},
-   {XmtMenuItemPushButton, "Exechost", 'Q', "Meta<Key>Q", "Meta+Q",
+   {XmtMenuItemPushButton, "Exechost", 'Q', "Alt<Key>Q", "Alt+Q",
          qmonShowMirrorList, (XtPointer) SGE_EXECHOST_LIST},
-   {XmtMenuItemPushButton, "Adminhost", 'B', "Meta<Key>B", "Meta+B",
+   {XmtMenuItemPushButton, "Adminhost", 'B', "Alt<Key>B", "Alt+B",
          qmonShowMirrorList, (XtPointer) SGE_ADMINHOST_LIST},
-   {XmtMenuItemPushButton, "Submithost", 'R', "Meta<Key>R", "Meta+R",
+   {XmtMenuItemPushButton, "Submithost", 'R', "Alt<Key>R", "Alt+R",
          qmonShowMirrorList, (XtPointer) SGE_SUBMITHOST_LIST},
-   {XmtMenuItemPushButton, "Complex", 'O', "Meta<Key>O", "Meta+O",
+   {XmtMenuItemPushButton, "Complex", 'O', "Alt<Key>O", "Alt+O",
          qmonShowMirrorList, (XtPointer) SGE_COMPLEX_LIST},
-   {XmtMenuItemPushButton, "Manager", 'H', "Meta<Key>H", "Meta+H",
+   {XmtMenuItemPushButton, "Manager", 'H', "Alt<Key>H", "Alt+H",
          qmonShowMirrorList, (XtPointer) SGE_MANAGER_LIST},
-   {XmtMenuItemPushButton, "Operator", 'U', "Meta<Key>U", "Meta+U",
+   {XmtMenuItemPushButton, "Operator", 'U', "Alt<Key>U", "Alt+U",
          qmonShowMirrorList, (XtPointer) SGE_OPERATOR_LIST},
-   {XmtMenuItemPushButton, "Userset", 'U', "Meta<Key>U", "Meta+U",
+   {XmtMenuItemPushButton, "Userset", 'U', "Alt<Key>U", "Alt+U",
          qmonShowMirrorList, (XtPointer) SGE_USERSET_LIST},
    {XmtMenuItemSeparator},
-   {XmtMenuItemPushButton, "ReportWidgets", 'R', "Meta<Key>R", "Meta+R",
+   {XmtMenuItemPushButton, "ReportWidgets", 'R', "Alt<Key>R", "Alt+R",
          reportWidgetsCB, NULL},
-   {XmtMenuItemPushButton, "Point To Widget", 'R', "Meta<Key>R", "Meta+R",
+   {XmtMenuItemPushButton, "Point To Widget", 'R', "Alt<Key>R", "Alt+R",
          qmonPointTo, NULL},
    {XmtMenuItemEnd}
 };
@@ -162,12 +162,12 @@ static XmtMenuItem mirror_menu_items[] = {
 
 
 static XmtMenuItem help_menu_items[] = {
-   {XmtMenuItemPushButton, "@{Context Help}", 'C', "Meta<Key>C", "Meta+C",
+   {XmtMenuItemPushButton, "@{Context Help}", 'C', "Ctrl<Key>H", "Ctrl+H",
          (XtCallbackProc) XmtHelpDoContextHelp, NULL},
-/*    {XmtMenuItemPushButton, "@{Help Index}", 'E', "Meta<Key>E", "Meta+E", */
+/*    {XmtMenuItemPushButton, "@{Help Index}", 'E', "Alt<Key>E", "Alt+E", */
 /*          qmonHelpBrowserPopup, NULL}, */
-/*    {XmtMenuItemPushButton, "@{Netscape Help}", 'N', "Meta<Key>N", "Meta+N", */
-   {XmtMenuItemPushButton, "@{About}", 'A', "Meta<Key>A", "Meta+A",
+/*    {XmtMenuItemPushButton, "@{Netscape Help}", 'N', "Alt<Key>N", "Alt+N", */
+   {XmtMenuItemPushButton, "@{About}", 'A', "Ctrl<Key>A", "Ctrl+A",
          qmonAboutMsg, NULL},
    {XmtMenuItemEnd}
 };

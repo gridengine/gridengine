@@ -592,10 +592,14 @@ String qmonSubmitRequestType(void)
    XmtDialogGetDialogValues(submit_layout, &SMData);
 
    if (SMData.pe) {
-      sprintf(buf, "@fBParallel Job Request: %s", SMData.pe); 
+      sprintf(buf, 
+              XmtLocalize(submit_layout, "@fBParallel Job Request - %s",
+                           "@fBParallel Job Request - %s"),
+              SMData.pe); 
    }
    else
-      strcpy(buf, "@fBSerial Job");
+      strcpy(buf, 
+             XmtLocalize(submit_layout, "@fBSerial Job", "@fBSerial Job"));
                            
 
    DEXIT;
@@ -1476,7 +1480,6 @@ int read_defaults
    lListElem *job = NULL;
    lList *alp = NULL;
    lList *cmdline = NULL;
-   char msg[BUFSIZ];
    char prefix[20];
    String dir_pre;
    SGE_STRUCT_STAT statb;
@@ -2693,10 +2696,10 @@ XtPointer cld, cad;
       */
       XtFree((char*)strs);
    }
-   else
+   else {
       qmonMessageShow(w, True, 
-            "@{Please configure a project first.}");
-   
+            "@{Please configure a project first !}");
+   } 
    DEXIT;
 }
 

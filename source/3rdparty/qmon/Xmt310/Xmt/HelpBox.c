@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: HelpBox.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: HelpBox.c,v 1.1.1.1.6.1 2002/08/09 12:25:57 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,26 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: HelpBox.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.1.1.1.6.1  2002/08/09 12:25:57  andre
+ * AA-2002-08-09-0  I18N:      - aimk: -lXmu for LINUX6 broke build under special
+ *                                     RHLinux 7.3
+ *                                     HFLAGS for gettext
+ *                             - Cli widget multiple localized message lines
+ *                             - source/3rdparty/qmon/Xmt310/Xmt/HelpBox.c
+ *                               Bugtraq 4721140
+ *                             - source/3rdparty/qmon/Xmt310/Xmt/FontListCvt.c
+ *                               additional debugging code XMTDEBUGFONT env var
+ *                             - fonts, translations for browser, complex window
+ *                               width (4723532, 4725248), global crash (4728293),
+ *                               locale setting qmon_init.c ad file search,
+ *                               q/j customize dialogue (4723543),
+ *                               accelerators (4729085),
+ *                               submit dialogue missing msg translations,
+ *                             - arch dependend *.mo files:
+ *                               locale/{fr|ja|zh}/LC_MESSAGES/<arch>/gridengine.mo
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -214,11 +232,30 @@ XmtHelpBoxWidget hb;
 
 
     /* get the label string and size and query # of lines */
+
+#if defined(SOLARIS64)
+    /*
+    ** I18N bug for label size under Solaris
+    */
+    XtVaGetValues(hb->help_box.label_widget,
+		  XmNlabelString, &label,
+		  XmNheight, &height,
+		  NULL);
+   
+      
+    XtVaSetValues(hb->help_box.label_widget, 
+                  XmNlabelString, label,
+                  XmNalignment, XmALIGNMENT_BEGINNING,
+                  XmNheight, (int)(1.1 * height), 
+                  NULL);
+#endif
+
     XtVaGetValues(hb->help_box.label_widget,
 		  XmNlabelString, &label,
 		  XmNwidth, &width,
 		  XmNheight, &height,
 		  NULL);
+
     if (label) {
 	lines = XmStringLineCount(label);
 #if XmVersion < 1002
@@ -227,7 +264,6 @@ XmtHelpBoxWidget hb;
     }
     else lines = 0;
     XmStringFree(label);
-
     /*
      * if the number of lines in the label widget is > than the requested
      * number of visible lines, then we will have a vertical scrollbar.
@@ -255,6 +291,8 @@ XmtHelpBoxWidget hb;
     XtVaSetValues(hb->help_box.scrolled_widget,
 		  XmtNlayoutWidth, width,
 		  XmtNlayoutHeight, height,
+		  XmNwidth, width,
+		  XmNheight, height,
 		  NULL);
 }
 
@@ -418,7 +456,6 @@ Cardinal *num_args;
     XtVaSetValues((Widget)sw->swindow.ClipWindow,
 		  XmNbackground, hb->help_box.help_background,
 		  NULL);    
-    
     label = XmStringCreateSimple(XmtLocalizeWidget(init, "Okay", "ok"));
     hb->help_box.button_widget =
 	XtVaCreateManagedWidget("okay", xmPushButtonWidgetClass, init,

@@ -190,7 +190,8 @@ char *localeDir
    
      /* no package name given, using default one */
      if (packName == NULL) {
-        packName = strdup(SGE_DEFAULT_PACKAGE);
+        packName = malloc(sizeof(char)*(strlen(SGE_DEFAULT_PACKAGE)+strlen(sge_get_arch()) + 2));
+        sprintf(packName, "%s/%s", sge_get_arch(), SGE_DEFAULT_PACKAGE);
      }
       
      /* try to get the localization directory */ 
@@ -220,8 +221,8 @@ char *localeDir
         if ( root == NULL ) {
             locDir = strdup("/usr/lib/locale");
         } else {
-            locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR)+100));
-            sprintf(locDir,"%s/%s",root,SGE_DEFAULT_LOCALEDIR);
+            locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR) + 100));
+            sprintf(locDir, "%s/%s", root, SGE_DEFAULT_LOCALEDIR);
         }
         free(root);
         root = NULL;

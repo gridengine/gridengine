@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Cli.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: Cli.c,v 1.1.1.1.6.1 2002/08/09 12:25:56 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,26 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Cli.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.1.1.1.6.1  2002/08/09 12:25:56  andre
+ * AA-2002-08-09-0  I18N:      - aimk: -lXmu for LINUX6 broke build under special
+ *                                     RHLinux 7.3
+ *                                     HFLAGS for gettext
+ *                             - Cli widget multiple localized message lines
+ *                             - source/3rdparty/qmon/Xmt310/Xmt/HelpBox.c
+ *                               Bugtraq 4721140
+ *                             - source/3rdparty/qmon/Xmt310/Xmt/FontListCvt.c
+ *                               additional debugging code XMTDEBUGFONT env var
+ *                             - fonts, translations for browser, complex window
+ *                               width (4723532, 4725248), global crash (4728293),
+ *                               locale setting qmon_init.c ad file search,
+ *                               q/j customize dialogue (4723543),
+ *                               accelerators (4729085),
+ *                               submit dialogue missing msg translations,
+ *                             - arch dependend *.mo files:
+ *                               locale/{fr|ja|zh}/LC_MESSAGES/<arch>/gridengine.mo
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -26,6 +44,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <wchar.h>
 #include <Xmt/XmtP.h>
 #include <Xmt/CliP.h>
 #include <Xmt/Converters.h>
@@ -416,8 +435,9 @@ XtPointer tag, call_data;
     XmTextVerifyCallbackStruct *data = (XmTextVerifyCallbackStruct *)call_data;
 
     /* special case when called from TrimLines */
-    if (cw->cli.permissive) return;
-
+    if (cw->cli.permissive) {
+      return;
+    }
     if (data->startPos < cw->cli.inputpos) {
         data->doit = FALSE;
 #ifdef BACKSPACEBUG
@@ -1382,15 +1402,19 @@ int n;
 #endif
 {
     XmtCliWidget cw = (XmtCliWidget) w;
+    wchar_t wcs[4*BUFSIZ];
+    int mblen = 0;
+
+    mbstowcs(wcs, s, 8*BUFSIZ-1);
+    mblen = wcslen(wcs);
 
     /* XXX
      * we may also want to modify this routine to break long lines
      * at the last column, to avoid horizontal scrolling, which is gross.
      */
-
     XmTextReplace(w, cw->cli.inputpos, cw->cli.inputpos, s);
 
-    cw->cli.inputpos += n;
+    cw->cli.inputpos += mblen;
     /* XXX  this is kind of a hack; Motif 1.2 seems not to
      * adjust the cursor on insertions, at least sometimes,
      * so we adjust it somewhat here

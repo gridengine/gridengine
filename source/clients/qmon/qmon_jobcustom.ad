@@ -71,7 +71,7 @@ Qmon*jobfield.xmtChildren: \
 Qmon*jobfield.layout: \
    Row { \
       Etched Through 4 2 Caption tc "@{@fBAvailable Fields}" \
-         15 em jobfield_available\
+         25 em jobfield_available\
       Fixed Col { \
          <>\
          Fixed Centered jobfield_add \
@@ -80,7 +80,7 @@ Qmon*jobfield.layout: \
          <>\
       } \
       Etched Through 4 2 Caption tc "@{@fBSelected Fields}" \
-         15 em jobfield_selected \
+         25 em jobfield_selected \
    }
 
 

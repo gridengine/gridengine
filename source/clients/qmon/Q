@@ -126,8 +126,8 @@ _FontLists_*.ja.*.interface: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -*-medium-*-*--10*:QUEUEICON
 
 _FontLists_*.ja.*.dialog_font: \
     -*-medium-*-*--14*:R,\
@@ -139,8 +139,8 @@ _FontLists_*.ja.*.dialog_font: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -*-medium-*-*--10*:QUEUEICON
 
 _FontLists_*.ja.*.matrix_font: \
     -*-medium-*-*--14*:R,\
@@ -152,8 +152,8 @@ _FontLists_*.ja.*.matrix_font: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -*-medium-*-*--10*:QUEUEICON
 
 _FontLists_*.ja.*.browser_font: \
     -*-medium-*-*--14*:R,\
@@ -165,8 +165,8 @@ _FontLists_*.ja.*.browser_font: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -*-medium-*-*--10*:QUEUEICON
 
 _FontLists_*.ja.*.fixed_font:\
     -*-medium-*-*--14*:R,\
@@ -178,8 +178,8 @@ _FontLists_*.ja.*.fixed_font:\
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -*-medium-*-*--10*:QUEUEICON
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! chinese fonts
@@ -194,8 +194,8 @@ _FontLists_*.zh.*.interface: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
 
 _FontLists_*.zh.*.dialog_font: \
     -*-medium-*-*--14*:R,\
@@ -207,8 +207,8 @@ _FontLists_*.zh.*.dialog_font: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
 
 _FontLists_*.zh.*.matrix_font: \
     -*-medium-*-*--14*:R,\
@@ -220,8 +220,8 @@ _FontLists_*.zh.*.matrix_font: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
 
 _FontLists_*.zh.*.browser_font: \
     -*-medium-*-*--14*:R,\
@@ -233,8 +233,8 @@ _FontLists_*.zh.*.browser_font: \
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
 
 _FontLists_*.zh.*.fixed_font:\
     -*-medium-*-*--14*:R,\
@@ -246,8 +246,8 @@ _FontLists_*.zh.*.fixed_font:\
     -*-medium-*-*--14*:SMALL,\
     -*-medium-*-*--14*:LIST,\
     -*-bold-*-*--14*:LISTBOLD,\
-    -*-medium-*-*-*14*:LISTSMALL,\
-    -*-medium-*-*-*10*:QUEUEICON
+    -*-medium-*-*--14*:LISTSMALL,\
+    -adobe-helvetica-medium-r-*-*-9-*-*-*-p-*-*-*=QUEUEICON
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! end of font specs
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -117,6 +117,7 @@ _Messages_.en.*.@fBOperator: @fBOperator
 _Messages_.en.*.@fBOverride Policy: @fBOverride Policy
 _Messages_.en.*.@fBOwner List: @fBOwner List
 _Messages_.en.*.@fBOwners: @fBOwners
+_Messages_.en.*.@fBParallel Job Request - %s: @fBParallel Job Request - %s
 _Messages_.en.*.@fBParallel Environment Configuration: @fBParallel Environment Configuration
 _Messages_.en.*.@fBPending Jobs: @fBPending Jobs
 _Messages_.en.*.@fBPolicy: @fBPolicy
@@ -477,7 +478,7 @@ _Messages_.en.*.Path: Path
 _Messages_.en.*.Percentage: Percentage
 _Messages_.en.*.Please configure a checkpoint object first !: Please configure a checkpoint object first !
 _Messages_.en.*.Please configure a Parallel Environment first !: Please configure a Parallel Environment first !
-_Messages_.en.*.Please configure a project first.: Please configure a project first.
+_Messages_.en.*.Please configure a project first !: Please configure a project first !
 _Messages_.en.*.Please type or select a filename: Please type or select a filename
 _Messages_.en.*.Predecessors: Predecessors
 _Messages_.en.*.Prefix: Prefix

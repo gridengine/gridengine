@@ -1,3 +1,15 @@
+MD-2004-08-11-1: Bugfix:    - sge backup cannot override older backups
+                 Issue:       1222
+                 Bugtraq:     5085508
+                 Review:      HP
+                 Changed:     inst_sge
+
+MD-2004-08-11-0: Bugfix:    - sge_inst restore does not work
+                 Issue:       1219
+                 Bugtraq:     5085507
+                 Review:      HP
+                 Changed:     inst_sge
+
 DT-2004-08-11-0: Bugfix.:   o Rolled back dangerous fix from DT-2004-07-21-1
                  Doc.:      o Cleaned up man3, man8, and submit.1 man pages
                  Issue:     1170

@@ -1,3 +1,9 @@
+EB-2003-07-21-1: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
+                            * After removing slots and np_load_avg attribute
+                              it was not possible to add the attributes again
+                 Changed:   sge_qmaster
+                 Review:    AA
+
 JG-2003-07-21-0: Testsuite: Added test functional/usage checking for issue 580.
                             Cleanup of test functional/tight_integration.
                  Review:    CR
@@ -10,6 +16,7 @@ EB-2003-07-21-0: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
 EB-2003-07-18-0: Enhancem.: Added support for memory and time values
                             in configuration sublists of CQs
                  Changed:   sge_qmaster, qconf
+                 Review:    AH
 
 SG-2003-07-18-1: optim.     - Optimized function ticket computation. Decreased
                             the amount of cull accesses when the pending jobs

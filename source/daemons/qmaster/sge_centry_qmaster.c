@@ -99,23 +99,6 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       } 
    }
 
-   /*
-    * Try to find centry reference in other objects 
-    */
-   {
-      lList *local_answer_list = NULL;
-   
-      if (centry_is_referenced(centry, &local_answer_list, Master_Queue_List,
-                               Master_Exechost_List, Master_Sched_Config_List)) {
-         lListElem *answer = lFirst(local_answer_list);
-
-         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                         ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
-         ret = false;
-      }
-   }
 
    /*
     * Shortcut (CE_shortcut)
@@ -315,28 +298,40 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
       const char* name = lGetString(centry, CE_name);
 
       if (name != NULL) {
+         lList *local_answer_list = NULL;
          lList *master_centry_list = *(centry_list_get_master_list());
          lListElem *tmp_centry = centry_list_locate(master_centry_list, name);
 
          if (tmp_centry != NULL) {
-            if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
-                                0, 0, name, NULL,
-                                NULL, NULL, NULL, true, true)) {
+            if (!centry_is_referenced(tmp_centry, &local_answer_list, 
+                                     Master_Queue_List, Master_Exechost_List, 
+                                     Master_Sched_Config_List)) {
+               if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
+                                   0, 0, name, NULL,
+                                   NULL, NULL, NULL, true, true)) {
 
-               sge_change_queue_version_centry(name);
+                  sge_change_queue_version_centry(name);
 
-               lRemoveElem(master_centry_list, tmp_centry);
+                  lRemoveElem(master_centry_list, tmp_centry);
 
-               INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, remote_user, 
-                     remote_host, name, MSG_OBJ_CPLX));
-
-               answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
-                               ANSWER_QUALITY_INFO);
+                  INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
+                        remote_user, remote_host, name, MSG_OBJ_CPLX));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
+                                  ANSWER_QUALITY_INFO);
+               } else {
+                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
+                         "complex entry", name ));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
             } else {
-               ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
-                      "complex entry", name ));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+               lListElem *answer = lFirst(local_answer_list);
+
+               ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                ANSWER_QUALITY_ERROR);
+               local_answer_list = lFreeList(local_answer_list);
                ret = false;
             }
          } else {
@@ -345,6 +340,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
             answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
             ret = false;
          }
+
       } else {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                    lNm2Str(CE_name), SGE_FUNC));

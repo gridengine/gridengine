@@ -1,3 +1,5 @@
+JG-2001-11-30-0: Cleanup:   made a number of function parameters const
+
 CR-2001-11-30-1: Bugfix:    qrsh error with empty job parameters
                  Issue:     #110
                  Bugtraq:   #4533448

@@ -38,10 +38,10 @@
 #   include "cull_list.h"
 #endif
 
-int sge_manager(char *cp);
-int sge_operator(char *cp);
-int sge_owner(char *cp, lList *lp);
-int sge_job_owner(char *user_name, u_long32);
+int sge_manager(const char *cp);
+int sge_operator(const char *cp);
+int sge_owner(const char *cp, const lList *lp);
+int sge_job_owner(const char *user_name, u_long32);
 
 #endif /* __SEC_H */
 

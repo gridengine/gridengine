@@ -42,7 +42,7 @@
 
 /***********************************************************************/
 int sge_manager(
-char *cp 
+const char *cp 
 ) {
 
    DENTER(TOP_LAYER, "sge_manager");
@@ -64,7 +64,7 @@ char *cp
 
 /***********************************************************************/
 int sge_operator(
-char *cp 
+const char *cp 
 
 /*
    Note: a manager is implicitly an "operator".
@@ -96,8 +96,8 @@ char *cp
 
 /***********************************************************************/
 int sge_owner(
-char *cp,
-lList *lp 
+const char *cp,
+const lList *lp 
 
 /*
    Note: a manager/operator is implicitly an "owner".
@@ -132,7 +132,7 @@ lList *lp
 
 /***********************************************************************/
 int sge_job_owner(
-char *user_name,
+const char *user_name,
 u_long32 job_number 
 
 /*

@@ -39,8 +39,8 @@
 int sge_add_manop(lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 int sge_del_manop(lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
-lListElem* sge_locate_manager(char *cp);
-lListElem* sge_locate_operator(char *cp);
+lListElem* sge_locate_manager(const char *cp);
+lListElem* sge_locate_operator(const char *cp);
 
 #endif /* _SGE_MANOP_H_ */
 

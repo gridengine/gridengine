@@ -247,14 +247,14 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
 
 lListElem* sge_locate_manager(
-char *cp 
+const char *cp 
 ) {
    return lGetElemStr(Master_Manager_List, MO_name, cp);
 }
 
 
 lListElem* sge_locate_operator(
-char *cp 
+const char *cp 
 ) {
    return lGetElemStr(Master_Operator_List, MO_name, cp);
 }

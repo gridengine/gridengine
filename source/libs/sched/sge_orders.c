@@ -207,6 +207,7 @@ lList
                                  {JB_dlcontr, lDoubleT },
                                  {JB_wtcontr, lDoubleT },
                                  {JB_ja_tasks, lListT},
+                                 {NoName, lEndT}
                                };
       ja_task_pos_t *ja_pos;
       ja_task_pos_t *order_ja_pos;   

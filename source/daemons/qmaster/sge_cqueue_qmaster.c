@@ -742,8 +742,8 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
    lList *spool_answer_list = NULL;
 
    DENTER(TOP_LAYER, "cqueue_spool");
-   dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), cqueue, 
-                              name, SGE_TYPE_CQUEUE);
+   dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
+                              cqueue, name, SGE_TYPE_CQUEUE);
    answer_list_output(&spool_answer_list);
 
    if (!dbret) {
@@ -758,10 +758,11 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
       u_long32 tag = lGetUlong(qinstance, QU_tag);
       
       if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
-         const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
-                                         name,
-                                         lGetHost(qinstance, QU_qhostname));
-         dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), qinstance,
+         const char *key = 
+               sge_dstring_sprintf(&key_dstring, "%s/%s", name,
+                                   lGetHost(qinstance, QU_qhostname));
+         dbret = spool_write_object(&spool_answer_list, 
+                                    spool_get_default_context(), qinstance,
                                     key, SGE_TYPE_QINSTANCE);
          answer_list_output(&spool_answer_list);
 
@@ -802,35 +803,63 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
             lListElem *qinstance = NULL;
             const char *cq_name = lGetString(cqueue, CQ_name);
             dstring dir = DSTRING_INIT;
+            bool do_del = true;
 
-            sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name); 
+
+            /*
+             * test if the CQ can be removed
+             */
             for_each(qinstance, qinstances) {
-               dstring key = DSTRING_INIT;
-               const char *qi_name = lGetHost(qinstance, QU_qhostname);
-
-               sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
-               if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
-                                   0, 0, cq_name, qi_name,
-                                   NULL, NULL, NULL, NULL, true, true)) {
-                  ; 
+               int slots = qinstance_slots_used(qinstance);
+   
+               if (slots > 0) {
+                  do_del = false;
+                  break; 
                }
-               sge_dstring_free(&key);
             }
-            sge_rmdir(sge_dstring_get_string(&dir), NULL);
-            sge_dstring_free(&dir);
-            if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
-                                0, 0, name, NULL, NULL,
-                                NULL, NULL, NULL, true, true)) {
-               lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                           cqueue);
 
-               INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
-                     remote_user, remote_host, name , "cluster queue"));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_OK,
-                               ANSWER_QUALITY_INFO);
+            if (do_del) {
+               /*
+                * delete QIs
+                */
+               sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name); 
+               for_each(qinstance, qinstances) {
+                  dstring key = DSTRING_INIT;
+                  const char *qi_name = lGetHost(qinstance, QU_qhostname);
+
+                  sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
+                  if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
+                                      0, 0, cq_name, qi_name,
+                                      NULL, NULL, NULL, NULL, true, true)) {
+                     ; 
+                  }
+                  sge_dstring_free(&key);
+               }
+               sge_rmdir(sge_dstring_get_string(&dir), NULL);
+               sge_dstring_free(&dir);
+
+               /*
+                * delete CQ
+                */
+               if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
+                                   0, 0, name, NULL, NULL,
+                                   NULL, NULL, NULL, true, true)) {
+                  lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                              cqueue);
+
+                  INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
+                        remote_user, remote_host, name , "cluster queue"));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_OK,
+                                  ANSWER_QUALITY_INFO);
+               } else {
+                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, "cluster queue",
+                         name )); 
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
             } else {
-               ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, "cluster queue",
-                      name )); 
+               ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
                answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                ANSWER_QUALITY_ERROR);
                ret = false;

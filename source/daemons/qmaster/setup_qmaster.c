@@ -874,7 +874,7 @@ static int setup_qmaster(void)
    */
    debit_all_jobs_from_qs(); 
    debit_all_jobs_from_pes(Master_Pe_List); 
-         
+
    /* clear suspend on subordinate flag in QU_state */ 
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
@@ -1058,7 +1058,8 @@ static int debit_all_jobs_from_qs()
    lListElem *gdi;
    u_long32 slots, jid, tid;
    const char *queue_name;
-   lListElem *hep, *master_hep, *next_jep, *jep, *qep, *next_jatep, *jatep;
+   lListElem *hep = NULL;
+   lListElem *master_hep, *next_jep, *jep, *qep, *next_jatep, *jatep;
    int ret = 0;
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
@@ -1086,17 +1087,17 @@ static int debit_all_jobs_from_qs()
             
             if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
-                  queue_name, u32c(lGetUlong(jep, JB_job_number))));
+                      queue_name, u32c(lGetUlong(jep, JB_job_number))));
                lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);   
+            } else {
+               /* debit in all layers */
+               debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+                                     "global"), Master_CEntry_List, slots);
+               debit_host_consumable(jep, hep = host_list_locate(
+                        Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
+                        Master_CEntry_List, slots);
+               qinstance_debit_consumable(qep, jep, Master_CEntry_List, slots);
             }
-
-            /* debit in all layers */
-            debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
-                                  "global"), Master_CEntry_List, slots);
-            debit_host_consumable(jep, hep = host_list_locate(
-                     Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
-                     Master_CEntry_List, slots);
-            qinstance_debit_consumable(qep, jep, Master_CEntry_List, slots);
             if (!master_hep)
                master_hep = hep;
          }

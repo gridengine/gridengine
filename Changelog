@@ -1,3 +1,8 @@
+EB-2004-02-19-1: Bugfix:    It was possible to delete used cluster queues
+                 Changed:   sge_qmaster
+                 Review:    pending
+                 Issue:     679
+                  
 DT-2004-02-19-1: Bugfix:    Did various minor qconf & FF bug fixes.
                             qconf now supresses line continuation when the
                             SGE_SINGLE_LINE env var is set.
@@ -57,7 +62,7 @@ SG-2004-02-19-1: Bugfix:    - scheduler did not get the global configuration
                  Issue:     678
 
 EB-2004-02-19-0: Bugfix:    qsub -l q=<QI> was not rejected
-                 Issue:     #671
+                 Issue:     671
                  Changed:   sge_qmaster
                  Review:    JG
 

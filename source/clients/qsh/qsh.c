@@ -1902,7 +1902,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-hold_jid") && strcmp(cp, "-h") &&
             strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
             strcmp(cp, "-N") && strcmp(cp, "-noshell") && strcmp(cp, "-now") &&
-            strcmp(cp, "-P") &&
+            strcmp(cp, "-notify") && strcmp(cp, "-P") &&
             strcmp(cp, "-p") && strcmp(cp, "-pe") && strcmp(cp, "-q") && strcmp(cp, "-v") &&
             strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
@@ -1964,7 +1964,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                }
             }
          }
-         
+#if 0         
          /* set defaults for mail delivery */
          if (strcmp(cp, "-m") == 0) {
             int m;
@@ -1974,6 +1974,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             m &= ~MAIL_AT_EXIT;
             lSetInt(ep, SPA_argval_lIntT, m);
          }
+#endif
       }
    }
 

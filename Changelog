@@ -1,3 +1,18 @@
+JG-2003-11-11-0: Bugfix:    -M options didn't work for interactive commands
+                            (qsh, qrsh, qlogin). The man page was incorrect.
+                 Bugtraq:   4952236
+                 Issue:     617
+                 Changed:   qsh, submit.1
+
+                 Bugfix:    -notify didn't work for qrsh with command.
+                            The man page was incorrect: -notify is not available
+                            for qsh, qlogin and qrsh without command
+                 Bugtraq:   4952236
+                 Issue:     617
+                 Changed:   qsh, submit.1
+
+JG-2003-10-17-0: Bugfix:    Fixed the build for the new solaris x86 compiler.
+
 AA-2003-10-22-0: Security:  OpenSSL 0.9.7c replaces OpenSSL 0.9.7a 
                  Changed:   all binaries
                  Review:    AS

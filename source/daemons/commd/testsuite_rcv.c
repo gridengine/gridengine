@@ -98,8 +98,7 @@ char **argv
    
    int i;
    int repetitions;
-   u_long32 nr_bytes;
-   u_long32 end_time;
+   u_long32 nr_bytes = 0;
    double bytes_per_second;
    double run_time;
    int first_message;  
@@ -285,7 +284,6 @@ int run_client_test(char* host, int port) {
    char buffer[10000]; 
    u_long32 nr_bytes;
    u_long32 start_time;
-   u_long32 end_time;
    double bytes_per_second;
    double run_time;
 
@@ -345,7 +343,8 @@ int run_client_test(char* host, int port) {
       int help = strlen(mydata)+1;
       int sent_data = 0;
       int write_ret = 0;
-      int maxfd,select_back;
+      int maxfd = 0;
+      int select_back = 0;
 
       FD_ZERO(&writefds);
       maxfd = MAX(maxfd,sockfd);
@@ -397,9 +396,7 @@ void start_server_handling(int sockfd) {
    int open_connections[10];
    char data_buffer[10000];
    char send_buffer[10000];
-   u_long32 nr_bytes;
-   u_long32 start_time;
-   u_long32 end_time;
+   u_long32 nr_bytes = 0;
    double bytes_per_second;
    double run_time;
 

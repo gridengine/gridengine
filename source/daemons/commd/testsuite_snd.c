@@ -89,7 +89,7 @@ char **argv
    char sender_enroll[256] = "tstsnd";
    int sender_enroll_id = 1;
    char* buffer = NULL;
-   int buflen;
+   int buflen = 0;
    int i;
    u_long32 mid;
    int closefd = 0;              /* close file descriptors    0/1 */
@@ -98,12 +98,10 @@ char **argv
    int first_message;  
    int repetitions;
    u_long32 nr_bytes;
-   u_long32 end_time;
    double bytes_per_second;
    double run_time;
 
    int port = 0;
-   int client_option = 0;
 
    int datasize = 1024;
    int repeat = 5000;
@@ -311,7 +309,6 @@ int run_client_test(char* host, int port, int repeat) {
    char buffer[30000]; 
    u_long32 nr_bytes;
    u_long32 start_time;
-   u_long32 end_time;
    double bytes_per_second;
    double run_time;
 
@@ -389,7 +386,9 @@ int run_client_test(char* host, int port, int repeat) {
       int help = strlen(mydata)+1;
       int sent_data = 0;
       int write_ret = 0;
-      int maxfd,select_back;
+      int maxfd = 0;
+      int select_back = 0;
+      
 
       
 
@@ -453,9 +452,9 @@ void start_server_handling(int sockfd) {
    int open_connections[10];
    char data_buffer[30000];
    char send_buffer[30000];
-   u_long32 nr_bytes;
-   u_long32 start_time;
-   u_long32 end_time;
+   u_long32 nr_bytes = 0;
+   u_long32 start_time = 0;
+   u_long32 end_time = 0;
    double bytes_per_second;
    u_long32 run_time;
 

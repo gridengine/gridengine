@@ -939,9 +939,11 @@ int read_all_centries(const char *directory)
       if (!strcmp(dent->d_name,"..") || !strcmp(dent->d_name,".")) {
          continue;
       }
+#if 0
       if (!sge_silent_get()) {
          printf(MSG_SETUP_COMPLEX_ATTR_S, dent->d_name);
       }  
+#endif
       if ((dent->d_name[0] == '.')) {
          sge_unlink(directory, dent->d_name);
          continue;

@@ -1383,7 +1383,6 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
 
                if (!sge_hostcmp(hgroup_or_hostname, attr_hostname)) {
                   lRemoveElem(list, elem);
-printf("tashing %s\n", hgroup_or_hostname);
                }
             }
          }

@@ -106,7 +106,7 @@
  *  
  */
 #define MSG_SETUP_COMPLEX_ATTR_S         _MESSAGE(61049, _("\tComplex attribute "SFQ".\n"))
-#define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes:\n"))
+#define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes.\n"))
 #define MSG_HGROUP_INCFILE_S             _MESSAGE(61051, _("Incorrect spoolfile for hostgroup "SFQ"\n"))
 
 #endif /* __MSG_SPOOLLIB_CLASSIC_H */

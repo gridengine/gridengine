@@ -85,6 +85,7 @@
 #define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85044, _("closing \""SFN"/"SFN"/"U32CFormat"\""))
 #define MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE                  _MESSAGE(85045, _("compile source code with larger FD_SETSIZE value"))
 #define MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE                                  _MESSAGE(85046, _("please check certificate validity"))
+#define MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU                 _MESSAGE(85047, _("hostname "SFQ" exceeds MAXHOSTNAMELEN(="U32CFormat")"))
 
 
 

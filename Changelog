@@ -1,3 +1,9 @@
+CR-2005-04-23-0: Bugfix:    error message from execd about endpoint is not unique
+                 Issue:     1504
+                 Bugtraq:   6234371
+                 Changed:   commlib, all binaries
+                 Review:    MD
+
 RH-2005-03-23-0: Bugfix:    misleading qstat -j message when the scheduler 
                             is not running
                  Issue:     1435
@@ -12,7 +18,7 @@ RH-2005-03-22-1: Bugfix:    qsub -b y must fail if no command is specified
                  Changed:   qsub, shepherd
                  Review:    AH
 
-DT-2005-04-22-0: Bugfix:    o Fixed broken build
+DT-2005-03-22-0: Bugfix:    o Fixed broken build
                  Changed:   Shepherd
 
 JG-2005-03-22-0: Testsuite: Added support for solaris zones.

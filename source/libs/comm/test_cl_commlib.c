@@ -371,7 +371,10 @@ extern int main(int argc, char** argv)
                                 &mid, message->message_id,0, 
                                 CL_FALSE,CL_FALSE);
            if (ret_val != CL_RETVAL_OK) {
+              CL_LOG_INT(CL_LOG_ERROR,"sent message response for message id", (int)message->message_id);
               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
+           } else {
+              CL_LOG_INT(CL_LOG_INFO,"sent message response for message id", (int)message->message_id);
            }
            cl_com_application_debug(handle, "message sent (1)");
            cl_com_application_debug(handle, "message sent (2)");

@@ -395,9 +395,9 @@ int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
 
    tmp_setup->dc_debug_list = NULL;
    if ((return_value=cl_string_list_setup(&(tmp_setup->dc_debug_list), "debug list")) != CL_RETVAL_OK) {
-      CL_LOG(CL_LOG_ERROR,"could not setup debug client information list");
+      CL_LOG_STR(CL_LOG_ERROR,"could not setup debug client information list:", cl_get_error_text(return_value));
       cl_com_free_debug_client_setup(&tmp_setup);
-      return CL_RETVAL_MALLOC;
+      return return_value;
    }
 
    /* set values */   
@@ -734,6 +734,8 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    }
   
    /* init connection struct */
+   (*connection)->check_endpoint_flag = CL_FALSE;
+   (*connection)->check_endpoint_mid  = 0;
    (*connection)->crm_state_error = NULL;
    (*connection)->error_func      = NULL;
    (*connection)->tag_name_func   = NULL;
@@ -3946,7 +3948,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             cl_raw_list_t*   connection_list = NULL; 
             cl_connection_list_elem_t* elem = NULL;
             cl_com_connection_t* tmp_con = NULL;
-            int is_double = 0;
+            cl_com_connection_t* double_endpoint = NULL;
    
             handler = connection->handler;
             if (handler != NULL) {
@@ -3968,13 +3970,19 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   }                 
    
                   if (cl_com_compare_endpoints(tmp_con->receiver, connection->receiver) != 0) {
-                     is_double = 1;
+                     double_endpoint = tmp_con;
                      break;
                   } 
                }
-               if (is_double == 0) {
+               if (double_endpoint == NULL) {
                   CL_LOG(CL_LOG_INFO,"new client is unique");
                } else {
+
+                  /* endpoint is not unique, check already connected endpoint */
+                  if (double_endpoint->check_endpoint_flag == CL_FALSE) {
+                     double_endpoint->check_endpoint_flag = CL_TRUE;             
+                  }
+
                   snprintf(tmp_buffer,
                            256, 
                            MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,

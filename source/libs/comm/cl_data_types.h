@@ -406,6 +406,10 @@ typedef struct cl_com_con_statistic_type {
 
 struct cl_com_connection_type {
 
+   cl_bool_t             check_endpoint_flag;  /* set when an endpoint should get a SIM to check availability of endpoint */
+                                               /* (if CL_TRUE, there is already a sim/sirm check ongoing) */
+   unsigned long         check_endpoint_mid;   /* contains the mid of the sim when sent */
+
    cl_error_func_t       error_func;   /* if not NULL this function is called on errors */
    cl_tag_name_func_t    tag_name_func; /* if not NULL this function is called for debug clients to get tag id name */
 

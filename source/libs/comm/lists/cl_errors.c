@@ -407,6 +407,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT: {
          return MSG_CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
       }
+      case CL_RETVAL_HOSTNAME_LENGTH_ERROR: {
+         return MSG_CL_RETVAL_HOSTNAME_LENGTH_ERROR;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

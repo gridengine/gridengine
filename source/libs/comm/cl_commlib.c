@@ -3162,6 +3162,20 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
    if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
       long timeout_time = 0;
       cl_bool_t ignore_timeouts = CL_FALSE;
+
+      /* 
+       * This code will send a sim message to the connection in order to test the connection
+       * availability(Part 1/2).
+       */
+      if (connection->check_endpoint_flag == CL_TRUE && connection->check_endpoint_mid == 0) {
+         if (connection->ccm_received == 0 &&
+             connection->connection_state == CL_CONNECTED &&
+             connection->connection_sub_state == CL_COM_WORK) {
+            cl_commlib_send_sim_message(connection, &(connection->check_endpoint_mid)); 
+            CL_LOG(CL_LOG_INFO,"sending sim to connection to check its availability");
+         }
+      }
+
 #if CL_DO_COMMLIB_DEBUG
        CL_LOG(CL_LOG_INFO,"checking timeouts for ack messages");
 #endif
@@ -3177,9 +3191,33 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
          message = message_list_elem->message;
          next_message_list_elem = cl_message_list_get_next_elem(message_list_elem);
          if (message->message_state == CL_MS_PROTOCOL) {
+
+            /* 
+             * Check out for SIRM's sent to connections when check_endpoint_flag was TRUE 
+             * This is Part 2/2 for connection alive tests.
+             */
+            if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
+               if (message->message_sirm != NULL) {
+                  CL_LOG(CL_LOG_INFO,"got sirm from checked connection");
+                  cl_message_list_remove_message(connection->send_message_list, message,0 );
+                  CL_LOG_INT(CL_LOG_INFO,"endpoint runtime:", (int)message->message_sirm->runtime );
+                  if (message->message_sirm->info != NULL) {
+                     CL_LOG_STR(CL_LOG_INFO,"endpoint info:   ", message->message_sirm->info);
+                  }
+                  cl_com_free_message(&message);
+                  connection->check_endpoint_mid = 0;
+                  connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
+                  message_list_elem = next_message_list_elem;
+                  continue;
+               }
+            } 
             timeout_time = (message->message_send_time).tv_sec + connection->handler->acknowledge_timeout;
             if ( timeout_time <= now.tv_sec ) {
                CL_LOG_INT(CL_LOG_ERROR,"ack timeout for message",(int) message->message_id);
+               if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
+                  connection->check_endpoint_mid = 0;
+                  connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
+               }
                cl_message_list_remove_message(connection->send_message_list, message,0 );
                cl_com_free_message(&message);
             } else {
@@ -3189,6 +3227,10 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
                      CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set, but this connection is connected and waiting for ack - continue waiting");
                   } else {
                      CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set and connection is not connected - ignore timeout");
+                     if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
+                        connection->check_endpoint_mid = 0;
+                        connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
+                     }
                      cl_message_list_remove_message(connection->send_message_list, message,0 );
                      cl_com_free_message(&message);
                   }
@@ -5701,6 +5743,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
    cl_com_endpoint_t receiver;
    char* unique_hostname = NULL;
    int retry_send = 1;
+   cl_bool_t ignore_connection = CL_FALSE;
 
    cl_commlib_check_callback_functions();
 
@@ -5744,13 +5787,30 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
       elem = cl_connection_list_get_first_elem(handle->connection_list);     
       connection = NULL;
       while(elem) {
-   
+         ignore_connection = CL_FALSE;
          connection = elem->connection;
    
-         /* send message to client (no broadcast) */
-         if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
+         if (connection->was_accepted == CL_TRUE) {
+            /* ignore duplicate endpoints */
+            switch (connection->crm_state) {
+               case CL_CRM_CS_UNDEFINED:
+               case CL_CRM_CS_CONNECTED: {
+                  ignore_connection = CL_FALSE;
+                  break;
+               }
+               default: {
+                  ignore_connection = CL_TRUE;
+                  break;
+               }
+            }
+         }
+         
+         if (ignore_connection == CL_FALSE && 
+             cl_com_compare_endpoints(connection->receiver, &receiver)) {
             cl_byte_t* help_data = NULL;
    
+            /* send message to client (no broadcast) */
+
             if (connection->ccm_received != 0) {  
                /* we have sent connection close response, do not accept any new message */
                /* we wait till connection is down and try to reconnect  */
@@ -5811,6 +5871,10 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
             message_added = 1;
             
             break;
+         } else {
+            if (ignore_connection == CL_TRUE) {
+               CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
+            }
          }
          elem = cl_connection_list_get_next_elem(elem);
          connection = NULL;
@@ -6757,9 +6821,13 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
    }
    ret_val = cl_com_cached_gethostbyname((char*)hostin, &resolved_host, NULL, NULL, NULL );
    if (resolved_host != NULL) {
-      if (strlen(resolved_host) > CL_MAXHOSTLEN ) {
+      if (strlen(resolved_host) >= CL_MAXHOSTLEN ) {
+         char tmp_buffer[1024];
+         snprintf(tmp_buffer, 1024, MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU,
+                  resolved_host, u32c(CL_MAXHOSTLEN));
+         cl_commlib_push_application_error(CL_RETVAL_HOSTNAME_LENGTH_ERROR, tmp_buffer);
          free(resolved_host);
-         return CL_RETVAL_UNKNOWN;
+         return CL_RETVAL_HOSTNAME_LENGTH_ERROR;
       }
       snprintf(hostout, CL_MAXHOSTLEN, "%s", resolved_host );
       free(resolved_host);

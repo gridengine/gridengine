@@ -152,6 +152,7 @@
 #define MSG_CL_RETVAL_SSL_NOT_SUPPORTED                _MESSAGE(80114, _("SSL module not compiled with -DSECURE (aimk -secure) option"))
 #define MSG_CL_RETVAL_ERROR_SETTING_CIPHER_LIST        _MESSAGE(80115, _("error setting cipher list"))
 #define MSG_CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT     _MESSAGE(80116, _("file descriptor exeeds FD_SETSIZE of this system"))
+#define MSG_CL_RETVAL_HOSTNAME_LENGTH_ERROR            _MESSAGE(80117, _("hostname exeeds hostname length(MAXHOSTNAMELEN) on this system"))
 
 
 

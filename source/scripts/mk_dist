@@ -207,7 +207,7 @@ done
 #--- END-OF-COMMANDLINE-PARSING------------------------------------------
 
 PVMCONTENT="pvm/README pvm/*.sh pvm/*.template pvm/src"
-DOC_PACKAGE="doc/SGE5_3alpha.pdf"
+DOC_PACKAGE="doc/SGE53beta1_doc.pdf"
 COMMON_DOCS="doc/INSTALL doc/*.asc"
 COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs $INSTALL_SCRIPT install_qmaster install_execd man $PVMCONTENT mpi qmon util"
 

@@ -88,17 +88,22 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_setup");
 
    /*
-   ** for setuid clients we must seteuid to the users uid
-   */
-   if (sge_run_as_user()) {   
-      CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
-      if (!uti_state_get_exit_on_error()) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
-      SGE_EXIT(1);
-   }   
+    * for setuid clients we must seteuid to the users uid
+    *
+    * NOTE: For qmaster uid != euid is just the normal modus operandi.
+    * Do *not* call 'sge_run_as_user()'!
+    */
+   if (QMASTER != sge_formal_prog_name) {
+      if (sge_run_as_user()) {   
+         CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
+         if (!uti_state_get_exit_on_error()) {
+            answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return -1;
+         }
+         SGE_EXIT(1);
+      }   
+   }
 
    sge_getme(sge_formal_prog_name);
 

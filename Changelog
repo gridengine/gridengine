@@ -1,3 +1,6 @@
+AD-2004-01-29-0: Bugfix:    Qmaster must not invoke 'sge_run_as_user()'.
+                 Changed:   qmaster
+
 JG-2004-01-29-1: Bugfix:    When queue instances were spooled as a result of a 
                             hostgroup modification, a wrong qinstance name was 
                             used for spooling. This resulted in missing queue 

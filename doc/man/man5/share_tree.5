@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: share_tree.5,v $     Last Update: $Date: 2001/07/20 08:19:16 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: share_tree.5,v $     Last Update: $Date: 2002/01/28 10:10:16 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SHARE_TREE 5 "$Date: 2001/07/20 08:19:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SHARE_TREE 5 "$Date: 2002/01/28 10:10:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 share_tree \- xxQS_NAME_EExx share tree file format
@@ -77,6 +77,24 @@ the tree is "Root" by convention.
 .IP "\(bu" 3n
 The parameter \fBshares\fP defines the share of the node among the nodes
 with the same parent node.
+.IP "\(bu" 3n
+A user leaf node named 'default' can be defined as a descendant of a
+.M project 5 )
+node in the share tree. The default node defines the number
+of shares for users  who are running in the project, but who do not have
+a user node defined under the project. The default user node is a
+convenient way of specifying a single node for all users which should
+receive an equal share of the project resources. The default node may be
+specified by itself or with other 
+.M user 5 )
+nodes at the same level below
+a project. All users, whether explicitly specified as a user node or
+those which map to the 'default' user node must have a corresponding
+.M user 5 )
+object defined in order to get shares. Do not configure a
+.M user 5 )
+object named 'default'. 
+
 .\"
 .\"
 .SH "SEE ALSO"

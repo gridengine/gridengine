@@ -35,6 +35,7 @@
 #include <pthread.h>
 #include <strings.h>
 #include <string.h>
+#include <errno.h>
 
 #include "japi/drmaa.h"
 #include "japi/msg_drmaa.h"
@@ -623,7 +624,7 @@ static void throw_exception (JNIEnv *env, int errnum, char *message)
    jclass newExcCls = NULL;
    
    DENTER (TOP_LAYER, "throw_exception");
-   
+
    switch (errnum) {
       case DRMAA_ERRNO_INTERNAL_ERROR:
          newExcCls = (*env)->FindClass(env,

@@ -1170,7 +1170,7 @@ case HP1164:
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -b +s"
    endif
 
-   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS -D_REENTRANT"
    set LIBS     = "-lnsl $LIBS"
 
    if ($BUILDARCH == HP11) then
@@ -2113,24 +2113,3 @@ if ( "$ADOC" == 1) then
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
 
    echo "Creating documentation for libs: libdrmaa.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine DRMAA Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/drmaa.h libs/japi/drmaa.c -o $COMPILE_ARCH/libdrmaa.texi
-
-   echo "Creating documentation for libs: libspool.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Spooling Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/spool/*.h libs/spool/*.c libs/spool/*/*.h libs/spool/*/*.c -o $COMPILE_ARCH/libspool.texi
-
-   echo "Creating documentation for libs: libuti.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine UTI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
-
-   echo "Creating documentation for core system: core.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE -o $COMPILE_ARCH/core.texi
-
-   echo "Creating documentation for testsuite: testsuite.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE -o $COMPILE_ARCH/testsuite.texi
-
-   echo "To create a html or pdf documentation, execute for example"
-   echo "texi2html $COMPILE_ARCH/libsgeobj.texi   or"
-   echo "texi2pdf $COMPILE_ARCH/libsgeobj.texi"
-endif
-
-echo done.
-exit 0

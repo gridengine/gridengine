@@ -18,9 +18,9 @@ CC=cc
 #BASICOPTS=-xO3
 BASICOPTS=-g
 #Uncomment the following line for Solaris
-#CFLAGS=$(BASICOPTS) -xCC -lsocket -lnsl -lpthread -mt
+CFLAGS=$(BASICOPTS) -xCC -lsocket -lnsl -lpthread -mt -DSOLARIS
 #Uncomment the following line for Linux
-CFLAGS=$(BASICOPTS) -pthread
+#CFLAGS=$(BASICOPTS) -pthread
 #NETFLAGS=-DIPv6
 
 # Define the target directories.

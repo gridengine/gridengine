@@ -616,6 +616,8 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
    int       ret = DRMAA_ERRNO_SUCCESS;
    dstring   diag, *diagp = NULL;
    
+   DENTER(TOP_LAYER, "drmaa_get_attribute");
+
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
       diagp = &diag;
@@ -623,12 +625,14 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
 
    if (jt == NULL) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
+      DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
    ret = japi_was_init_called(diagp);
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diagp written by japi_was_init_called() */
+      DEXIT;
       return ret;
    }
 
@@ -641,7 +645,8 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
          if (strlen(value)!=1 || (value[0] != 'y' && value[0] != 'n' )) {
             if (diagp) 
                sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
-                     DRMAA_JOIN_FILES, "y", "n");
+                                   DRMAA_JOIN_FILES, "y", "n");
+            DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
       }
@@ -653,6 +658,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
             if (diagp) 
                sge_dstring_sprintf(diagp, "attribute "SFQ" must be either "SFQ" or "SFQ"\n", 
                      DRMAA_JS_STATE, DRMAA_SUBMISSION_STATE_ACTIVE, DRMAA_SUBMISSION_STATE_HOLD);
+            DEXIT;
             return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
          }
       }
@@ -666,6 +672,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       }
    }
 
+   DEXIT;
    return ret;
 }
 
@@ -806,7 +813,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
-   if ((ep = lGetElemStr(jt->string_vectors, NSV_name, name))) {
+   if ((ep = lGetElemStr(jt->string_vectors, NSV_name, name)) != NULL) {
       lSetList(ep, NSV_strings, NULL);
    }
    else {
@@ -814,7 +821,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
    }
  
    lp = lCreateList(NULL, ST_Type);
-   for (i=0; value[i]; i++) {
+   for (i=0; value[i] != NULL; i++) {
       sep = lCreateElem(ST_Type);
       lSetString(sep, ST_name, value[i]);
       lAppendElem(lp, sep);

@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,12 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * InitException.java
- *
- * Created on June 17, 2003, 10:46 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** A problem occured with the DRM session preventing the routine from completing.

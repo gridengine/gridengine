@@ -65,7 +65,7 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 	private static final String USAGE = 
 		"Usage: java -Djava.rmi.server.codebase=codebase " +
 		"com.sun.grid.jgrid.proxy.ComputeServer [-d job_path] " + 
-		"[-sub submit_command] [-skel skeleton_command] [-sp server_port]" +
+		"[-skel skeleton_command] [-sp server_port]" +
 		"[-rp return_channel_port] [-debug] [-help]";
 	/** The logging mechanism
 	 */	
@@ -106,8 +106,8 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 	public ComputeServer () throws RemoteException {
       try {
          DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-         
          drmaa = factory.getSession ();
+         drmaa.init (null);
          template = drmaa.createJobTemplate ();
       }
       catch (DRMAAException e) {
@@ -357,8 +357,6 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 				System.out.println (USAGE);
 				System.out.println ("\t-d = set the path where job files are written");
 				System.out.println ("\t\tdefaults to \"./ser/\"");
-				System.out.println ("\t-sub = set the command used to submit jobs to the grid");
-				System.out.println ("\t\tdefaults to \"qsub\"");
 				System.out.println ("\t-skel = set the command to be run on the execution host");
 				System.out.println ("\t\tdefaults to \"skel\"");
 				System.out.println ("\t-rp = set the port number for the return data channel RMI registry");
@@ -368,7 +366,7 @@ public class ComputeServer extends UnicastRemoteObject implements ComputeEngine 
 				System.out.println ("\t-help = print this message");
 				System.out.println ("");
 				
-				break;
+				System.exit (0);
 			}
 			else {
 				error = USAGE;

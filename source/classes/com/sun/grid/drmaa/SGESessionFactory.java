@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,12 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * SGESessionFactory.java
- *
- * Created on March 3, 2004, 12:04 PM
- */
-
+/*___INFO__MARK_END__*/
 package com.sun.grid.drmaa;
 
 import org.ggf.drmaa.*;

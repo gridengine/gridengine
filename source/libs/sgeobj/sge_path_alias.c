@@ -154,7 +154,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
       return -1;
    }
 
-   if (SGE_STAT(file_name, &sb) && errno == ENOENT) {
+   if ((SGE_STAT(file_name, &sb) != 0) && (errno == ENOENT)) {
       DEXIT;
       return 0;
    }    

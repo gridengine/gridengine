@@ -41,7 +41,7 @@ JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB      = libdrmaa$(SHAREDEXT)
 DRMAALIB_SRC  = drmaa.c
-DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCLIB_OBJS) \
+DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_ADD_OBJS) $(EVCLIB_OBJS) \
                 $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
                 $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
                 $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
@@ -49,13 +49,13 @@ DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCL
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
-JAPI_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd \
+JAPI_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd \
                 $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
                 -luti -lrmon -llck $(DLLIB)
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 
-JAPI_DEPEND_LIBS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
+JAPI_DEPEND_LIBS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                    $(UTILIB) $(RMONLIB) $(LCKLIB)
 

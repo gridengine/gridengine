@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,12 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * JobInfo.java
- *
- * Created on June 18, 2003, 11:42 AM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 import java.util.*;

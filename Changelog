@@ -1,4 +1,15 @@
-MD-2004-06-17-0: Bugfix:    remove stat_log_time from configuration                              Changed:   inst_qmaster.sh
+DT-2004-06-17-0: Bugfix:    o Fixed bad link in DRMAA howto (again)
+                            o Added copyright placeholders to Java source files
+                            o Renamed DRMAA Java binding README
+                            o Fixed various JGrid bugs
+                            o Fixed factory bug in DRMAA Java binding
+                            o Fixed multi-threaded errno issue on HP-UX 11
+                            o Added JGrid to experimental html file
+                            - HP11 and HP1164 will need a aimk -clean
+                 Changed:   doc, www, classes, DRMAA, JGrid, aimk
+
+MD-2004-06-17-0: Bugfix:    remove stat_log_time from configuration
+                 Changed:   inst_qmaster.sh
                  Review:    AS
                  Issue:     1082
                  Bugtraq:   506330
@@ -12,7 +23,7 @@ MD-2004-06-16-0: Bugfix:    Install script fails when sgeadmin is selected
 SG-2004-06-16-0: Bugfix:    This bugfix is related to SG-2004-06-09-2. The
                             prefious one did not fix all aspects of the growing
                             scheduler and master. The implementation of the
-                            job categories was bugy.
+                            job categories was buggy.
                  Changed:   scheduler
                  Review:    JG
                  Issue:     1087

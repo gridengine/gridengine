@@ -1,3 +1,4 @@
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -27,12 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
-/*
- * TryLaterException.java
- *
- * Created on June 17, 2003, 12:54 PM
- */
-
+/*___INFO__MARK_END__*/
 package org.ggf.drmaa;
 
 /** Could not pass job now to DRM system.  A retry may succeed,

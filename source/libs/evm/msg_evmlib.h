@@ -55,8 +55,5 @@
 
 #define MSG_COM_ACKTIMEOUT4EV_ISIS    _MESSAGE(66011, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
 #define MSG_COM_NOSHUTDOWNPERMS       _MESSAGE(66012, _("shutdown requires manager privileges\n"))
-#define MSG_COM_NOSCHEDDREGMASTER     _MESSAGE(66013, _("no scheduler registered at qmaster\n"))
-#define MSG_COM_NOSCHEDMONPERMS       _MESSAGE(66014, _("starting scheduler monitoring requires manager privileges\n"))
-#define MSG_COM_SCHEDMON_SS           _MESSAGE(66015, _(SFN"@"SFN" triggers scheduler monitoring\n"))
 
 #endif /* __MSG_EVMLIB_H */

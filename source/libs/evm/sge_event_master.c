@@ -38,7 +38,6 @@
 
 #include "sge.h"
 #include "cull.h"
-#include "sge_gdi_request.h"
 #include "sge_feature.h"
 #include "sge_time.h"
 #include "sge_host.h"
@@ -70,6 +69,17 @@
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
+
+
+typedef struct {
+      bool         subscription;
+      bool         flush;
+      u_long32     flush_time;
+      lCondition   *where;
+      lDescr       *descr;
+      lEnumeration *what;
+}subscription_t;
+
 
 /****** Eventclient/Server/-Event_Client_Server_Defines ************************
 *  NAME
@@ -172,16 +182,6 @@ static bool SEND_EVENTS[sgeE_EVENTSIZE];
 static bool IS_INIT_SEND_EVENTS = false;
 
 static lList *EV_Clients = NULL;
-
-
-typedef struct {
-      bool         subscription;
-      bool         flush;
-      u_long32     flush_time;
-      lCondition   *where;
-      lDescr       *descr;
-      lEnumeration *what;
-}subscription_t;
 
 
 static void sge_init_send_events(void); 
@@ -873,6 +873,67 @@ void sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, u
    return;
 } /* sge_add_event() */
 
+/****** sge_event_master/sge_add_event_for_client() ****************************
+*  NAME
+*     sge_add_event_for_client() -- add an event for a given object
+*
+*  SYNOPSIS
+*     int sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, 
+*     ev_event anID, u_long32 anIntKey1, u_long32 anIntKey2, const char 
+*     *aStrKey1, const char *aStrKey2, const char *aSeesion, lListElem 
+*     *anObject) 
+*
+*  FUNCTION
+*     Add an event for a given event client.
+*
+*  INPUTS
+*     u_long32 aClientID   - event client id 
+*     u_long32 aTimestamp  - event delivery time, 0 -> deliver now 
+*     ev_event anID        - event id 
+*     u_long32 anIntKey1   - 1st numeric key 
+*     u_long32 anIntKey2   - 2nd numeric key 
+*     const char *aStrKey1 - 1st alphanumeric key 
+*     const char *aStrKey2 - 2nd alphanumeric key 
+*     const char *aSession - event session 
+*     lListElem *anObject  - object to be delivered with the event 
+*
+*  RESULT
+*     EACCES - failed to add event
+*     0      - success
+*
+*  NOTES
+*     MT-NOTE: sge_add_event_for_client() is not MT safe 
+*
+*******************************************************************************/
+int sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event anID, u_long32 anIntKey1, u_long32 anIntKey2, const char *aStrKey1, const char *aStrKey2, const char *aSession, lListElem *anObject)
+{
+   int res = EACCES;
+   lListElem *client = NULL;
+
+   DENTER(TOP_LAYER, "sge_add_event_for_client");
+
+   if ((client = lGetElemUlong(EV_Clients, EV_id, aClientID)) == NULL)
+   {
+      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
+      DEXIT;
+      return EACCES;
+   }
+
+   if (0 == aTimestamp) {
+      aTimestamp = time(NULL);
+   }
+
+
+   if (sge_eventclient_subscribed(client, anID, aSession))
+   {
+      sge_add_event_(client, aTimestamp, anID, anIntKey1, anIntKey2, aStrKey1, aStrKey2, anObject);
+      res = 0;
+   }
+
+   DEXIT;
+   return res;
+} /* sge_add_event_for_client() */
+
 /****** Eventclient/Server/sge_add_list_event() ********************************
 *  NAME
 *     sge_add_list_event() -- add a list as event
@@ -1083,82 +1144,6 @@ u_long32 sge_get_next_event_number(u_long32 aClientID)
    DEXIT;
    return ret;
 } /* sge_get_next_event_number() */
-
-/****** Eventclient/Server/sge_gdi_tsm() ***************************************
-*  NAME
-*     sge_gdi_tsm() -- trigger scheduling
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     void 
-*     sge_gdi_tsm(char *host, sge_gdi_request *request, 
-*                 sge_gdi_request *answer) 
-*
-*  FUNCTION
-*     Triggers a scheduling run for the scheduler as special event client.
-*
-*  INPUTS
-*     char *host               - host that triggered scheduling
-*     sge_gdi_request *request - request structure
-*     sge_gdi_request *answer  - answer structure to return to client
-*
-*  MT-NOTE: sge_gdi_tsm() is MT safe.
-*
-*  NOTES
-*     This function should not be part of the core event client interface.
-*     Or it should be possible to trigger any event client.
-*
-*  SEE ALSO
-*     qconf -tsm
-*
-*******************************************************************************/
-void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
-{
-   uid_t uid;
-   gid_t gid;
-   char user[128];
-   char group[128];
-   lListElem *scheduler;
-
-   DENTER(GDI_LAYER, "sge_gdi_tsm");
-
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
-      DEXIT;
-      return;
-   }
-
-   if (!manop_is_manager(user)) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
-                      ANSWER_QUALITY_WARNING);
-
-      DEXIT;
-      return;
-   }
-     
-   scheduler = eventclient_list_locate(EV_ID_SCHEDD);
-     
-   if (scheduler == NULL) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, 
-                      ANSWER_QUALITY_WARNING);
-
-      DEXIT;
-      return;
-   }
-
-   sge_add_event(scheduler, 0, sgeE_SCHEDDMONITOR, 0, 0, 
-                 NULL, NULL, NULL, NULL);
-
-   INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
-   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
-   DEXIT;
-   return;
-} /* sge_gdi_tsm() */
 
 /****** evm/sge_event_master/sge_resync_schedd() *******************************
 *  NAME
@@ -2459,8 +2444,7 @@ static const lDescr* getDescriptorL(subscription_t *subscription, const lList* l
 *     MT-NOTE: eventclient_list_locate() is MT safe.
 *
 *******************************************************************************/
-lListElem *
-eventclient_list_locate(ev_registration_id id)
+static lListElem* eventclient_list_locate(ev_registration_id id)
 {
    lListElem *ep;
 

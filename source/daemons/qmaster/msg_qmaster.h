@@ -742,5 +742,14 @@
 #define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d\n"))
 #define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
 
+
+/*
+ * sge_c_gdi.c
+ */
+#define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges\n"))
+#define MSG_COM_NOSCHEDDREGMASTER _MESSAGE(33816, _("no scheduler registered at qmaster\n"))
+#define MSG_COM_SCHEDMON_SS       _MESSAGE(33817, _(SFN"@"SFN" triggers scheduler monitoring\n"))
+
+
 #endif
 

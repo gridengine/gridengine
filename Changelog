@@ -1,3 +1,9 @@
+AD-2004-02-08-0: Bugfix:    - Did move 'sge_gdi_tsm()' out of evm.
+                            - evm no longer does link libgdi
+                            - evm no longer does link libngc and libngclists
+                 Issue:     656
+                 Changed:   qmaster, evm
+
 AS-2004-02-09-1: Enhancem.: porting changes for HP (begin native 64bit port),
                             IRIX (support only IRIX 6.5) and Linux (AMD64
                             and IA64).

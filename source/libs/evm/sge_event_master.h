@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
-#include "sge_gdiP.h"
 #include "sge_eventL.h"
 #include "sge_qmaster_timed_event.h"
 
@@ -48,12 +47,13 @@ extern u_long32 sge_get_event_client_data(u_long32);
 extern int      sge_set_event_client_data(u_long32, u_long32);
 
 extern void sge_add_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lListElem*);
+extern int  sge_add_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lListElem*);
 extern void sge_add_list_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*); 
+
 extern int  sge_handle_event_ack(u_long32, ev_event);
 extern void sge_deliver_events_immediately(u_long32);
 
 extern u_long32 sge_get_next_event_number(u_long32);
-extern void     sge_gdi_tsm(char*, sge_gdi_request*, sge_gdi_request*);
 extern int      sge_resync_schedd(void);
 
 extern void sge_remote_event_delivery_handler(te_event_t);

@@ -102,6 +102,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
 static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*);
 static int  get_client_id(lListElem*, int*);
+static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_request*); 
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
@@ -1034,7 +1035,7 @@ sge_gdi_request *answer
       sge_gdi_shutdown_event_client(host, request, answer);
       break;
    case SGE_SC_LIST: /* trigger scheduler monitoring */
-      sge_gdi_tsm(host, request, answer);
+      trigger_scheduler_monitoring(host, request, answer);
       break;
    default:
       WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -1167,6 +1168,72 @@ static int get_client_id(lListElem *anElem, int *anID)
    DEXIT;
    return 0;
 } /* get_client_id() */
+
+/****** qmaster/sge_c_gdi/trigger_scheduler_monitoring() ***********************
+*  NAME
+*     trigger_scheduler_monitoring() -- trigger scheduler monitoring 
+*
+*  SYNOPSIS
+*     void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, 
+*     sge_gdi_request *anAnswer) 
+*
+*  FUNCTION
+*     Trigger scheduler monitoring.
+*
+*  INPUTS
+*     char *aHost               - sender 
+*     sge_gdi_request *aRequest - request 
+*     sge_gdi_request *anAnswer - response 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: trigger_scheduler_monitoring() is not MT safe 
+*
+*  SEE ALSO
+*     qconf -tsm
+*
+*******************************************************************************/
+void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
+{
+   uid_t uid;
+   gid_t gid;
+   char user[128];
+   char group[128];
+
+   DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
+
+   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1)
+   {
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
+      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      DEXIT;
+      return;
+   }
+
+   if (!manop_is_manager(user))
+   {
+      WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
+      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
+      DEXIT;
+      return;
+   }
+     
+   if (sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL) != 0)
+   {
+      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
+      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_WARNING);
+      DEXIT;
+      return;
+   }
+
+   INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, aHost));
+   answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   DEXIT;
+   return;
+} /* trigger_scheduler_monitoring() */
 
 static void sge_c_gdi_mod(
 gdi_object_t *ao,

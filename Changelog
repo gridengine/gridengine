@@ -1,3 +1,6 @@
+CR-2003-02-05-4  Testsuite: Throughput performance test:
+                 Bugfix:    Test submitted jobs without project switch
+
 JG-2003-02-05-0  Bugfix:    path_aliasing truncated commandline of qrsh jobs
                  Review:    EB
                  Changed:   sge_execd

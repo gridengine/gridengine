@@ -112,19 +112,19 @@ proc init_level {} {
         return 0  
      }
      "100"  { 
-        set end_job_count            8000         ;# number of jobs
+        set end_job_count            2000         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  4000         ;# after witch job, enable queues
+        set enable_queues_job_count  1000         ;# after witch job, enable queues
         set throughput_sharetree     0
         set throughput_subdir        "functional"
         return 0  
      }
      "101"  { 
-        set end_job_count            8000         ;# number of jobs
+        set end_job_count            2000         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  4000         ;# after witch job, enable queues
+        set enable_queues_job_count  1000         ;# after witch job, enable queues
 
         set throughput_sharetree     1
         set throughput_subdir        "functional_sharetree"
@@ -346,7 +346,7 @@ proc setup_queues {} {
 
 proc cleanup_queues {} {
    global CHECK_CORE_EXECD  CHECK_OUTPUT
-   global queue_list event_client_bin
+   global queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
    global stored_configuration throughput_sharetree
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
@@ -363,6 +363,13 @@ proc cleanup_queues {} {
       set_error -3 "could not open event client binary: $event_client_bin"
       return -3
    }
+
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+
+
+   # after this we can cleanup the system (no jobs registered at qmaster)
+   wait_for_end_of_all_jobs 120
+
 
    if { $throughput_sharetree == 1 } {
       throughput_cleanup_sharetree
@@ -391,7 +398,7 @@ proc cleanup_queues {} {
 
 proc run_throughput_test {} {
 
-   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST
+   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR CHECK_CORE_EXECD
    global end_job_count host_list event_client_bin CHECK_FIRST_FOREIGN_SYSTEM_USER
@@ -445,9 +452,6 @@ proc run_throughput_test {} {
    # prepare job arguments 
    set my_job "\$SGE_ROOT/examples/jobs/sleeper.sh"
 
-   set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
-
-   
    # open shell on each execd host, used for submitting jobs
    set spawn_list ""
    set remote_spawn_list ""
@@ -560,7 +564,10 @@ proc run_throughput_test {} {
    set job_buffer_data ""
    set max_errors 10
    set resend_buffer ""
+   set last_job_id 0
 
+   set max_submit_output_lines 40
+   set current_output_line 0
    # here the throughput test starts
    while { $result(jobs_done) < $end_job_count } {
        # submit jobs (via expect chanels)
@@ -572,12 +579,14 @@ proc run_throughput_test {} {
               if { $host_index >= 0 } {
                  set spawn_id [lindex $spawn_list $host_index]
                  set next_submit_list [lrange $next_submit_list 1 end]
+
                  if { $throughput_sharetree == 1 } {
                     set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
                     set my_job_command "qsub -o /dev/null -e /dev/null -P project${numb} $my_job $result(job_run_time)"
                     set job_data($sent_jobs,project) $numb
-                 } 
-                 set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
+                 } else { 
+                    set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
+                 }
                  send -i $spawn_id "$my_job_command ; echo \"_:>${my_job_command}<:_>>\"\$?\"<<\"\n"
                  set job_data($sent_jobs,state) "submit"
    #              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
@@ -640,6 +649,15 @@ proc run_throughput_test {} {
             set output [ split $output "\n" ]
             foreach help $output {
                set line [string trim $help]
+               set output_lines($current_output_line) "$line"
+               if { $current_output_line < $max_submit_output_lines } {
+                  incr current_output_line 1
+               } else {
+                  for {set ln 0 } { $ln < $max_submit_output_lines } { incr ln 1 } {
+                     set output_lines($ln) $output_lines([expr ( $ln + 1 )])
+                  }
+                  set  output_lines($max_submit_output_lines) ""
+               }
                # removing additional characters before string
                set match_start [lindex $JOB_SUBMITTED 0]
                set match_pos [string first $match_start $line]
@@ -669,6 +687,8 @@ proc run_throughput_test {} {
                   set submitjob_jobid [string range $submitjob_jobid 0 $space_pos ]
                   set submitjob_jobid [string trim $submitjob_jobid]
                   
+                  set last_job_id $submitjob_jobid
+
                   set job_data($result(jobs_submitted),job_id) $submitjob_jobid
 #                  puts $CHECK_OUTPUT "job $submitjob_jobid submitted"    
                   set job_data($submitjob_jobid) $result(jobs_submitted)   ;# pointer from job id to submit id
@@ -709,6 +729,7 @@ proc run_throughput_test {} {
 
                } else {
                   if { [string length $line] > 0 } {
+                      
                      if { [ string match "*>>*<<*" $line] } {
                          # exit state of last submit
                          set exit_state_start [string first ">>" $line]
@@ -727,7 +748,15 @@ proc run_throughput_test {} {
                                lappend resend_buffer "$expect_out(spawn_id)"
                                lappend resend_buffer "$command_string"
    
-                               add_proc_error "run_throughput_test" -3 "submit exit state is $exit_state, expect id: $expect_out(spawn_id), sent jobs: $sent_jobs"
+                               set proc_error_help_buffer ""
+                               for {set ln 0 } { $ln <= $max_submit_output_lines } { incr ln 1 } {
+                                  if { [info exists output_lines($ln) ] } {
+                                     append proc_error_help_buffer "$output_lines($ln)\n"
+                                  }
+                               }
+
+
+                               add_proc_error "run_throughput_test" -3 "submit exit state is $exit_state, expect id: $expect_out(spawn_id), sent jobs: $sent_jobs\n$proc_error_help_buffer"
 
                                
                                incr max_errors -1
@@ -868,15 +897,9 @@ proc run_throughput_test {} {
    close_spawn_process $event_client_sid
    close_spawn_process $schedd_messages_sid
 
-   # send test job to system and wait for it's end (to give qmaster time to delete all jobs)
-   puts $CHECK_OUTPUT "submitting test job to system:"
-   submit_job "-o /dev/null -e /dev/null $my_job 5" 
-   
-   # after this we can cleanup the system (no jobs registered at qmaster)
-   wait_for_end_of_all_jobs 120
-
-   
-
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   puts $CHECK_OUTPUT "qdel -uall\n$catch_result"
+   wait_for_jobend $last_job_id leeper 60 0 1
    set_error 0 "ok"
 }
 

@@ -1,3 +1,8 @@
+SG-2004-11-04-2: Bugfix:    qconf -ks gives bad error message if scheduler isn't running
+                 Issue:     1319
+                 Changed:   qmaster
+                 Review:    DT
+
 JG-2004-11-04-0: Bugfix:    Jobs were not rescheduled to the same host they ran 
                             on before.
                  Issue:     1317

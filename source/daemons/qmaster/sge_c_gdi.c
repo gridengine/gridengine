@@ -1136,9 +1136,16 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
          res = sge_shutdown_event_client(client_id, user, uid, alpp);
       }
 
+      if ((res == EINVAL) && (client_id == EV_ID_SCHEDD)) {
+         WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
+         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+         for_each (answer, *alpp) { /* we do not want to see the error messages twice */
+            answer = lDechainElem (*alpp, answer);
+         }
+      }
       
       /* Process answer */
-      if (anAnswer->alp == NULL) {
+      else if (anAnswer->alp == NULL) {
          anAnswer->alp = lCopyList ("Answer", *alpp);
       }
       else {
@@ -1260,7 +1267,7 @@ void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gd
    if (!sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL))
    {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_WARNING);
+      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       DEXIT;
       return;
    }

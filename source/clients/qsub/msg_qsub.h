@@ -50,7 +50,7 @@
 #define MSG_QSUB_JOBEXITED_II    _MESSAGE(210013, _("Job "SFN" exited with exit code %d.\n"))
 #define MSG_QSUB_INTERRUPTED    _MESSAGE(210015, _("\nInterrupted!\n"))
 #define MSG_QSUB_TERMINATING    _MESSAGE(210016, _("Please wait while qsub shuts down.\n"))
-#define MSG_QSUB_COULDNOTREADSCRIPT_S    _MESSAGE(210016, _("Unable to read script file because of error: "))
+#define MSG_QSUB_COULDNOTREADSCRIPT_S    _MESSAGE(210017, _("Unable to read script file because of error: "))
 
 #endif /* __MSG_QSUB_H */
 

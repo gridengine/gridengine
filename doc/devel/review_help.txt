@@ -60,22 +60,35 @@ How to use the review form
 
 5 Check if adequate testing has taken place
 
-5.1 Which manual tests have been done? 
+5.1 Run flawfinder diff (/vol2/SW/bin/flawdiff.sh)
+    The script has to be run in the gridengine/source directory on a host 
+    having an open CVS tunnel.
+    It will call flawfinder --diff to make sure the modified files contain no new
+    flaws. The diff is done against a hitlist generated in the daily test procedure.
+
+5.2 Run the changed component in a memory debugger, e.g.
+    dbx (check -all), purify, insure.
+    Optional test for complex scenarios.
+    Especially for library functions having no dependencies on a running system,
+    please consider writing a module tests and run this module tests in the 
+    memory debugger.
+
+5.3 Which manual tests have been done? 
     Include a short description.
 
-5.2 Does the testsuite sufficiently cover the issue?
+5.4 Does the testsuite sufficiently cover the issue?
     If not, please consider adding a test scenario yourself.
     This can be a completely new testsuite check or just an addition to an existing 
     check.
 
-5.3 If the testsuite does not cover the issue, a testsuite issue has to be 
+5.5 If the testsuite does not cover the issue, a testsuite issue has to be 
     created.
     This issue should contain information about test cases (usually will 
     reflect the manual tests), 
     if scripts have been written for the manual testing, they should be 
     attached to the issue.
 
-5.4 A testsuite run should always be done before checking in code. 
+5.6 A testsuite run should always be done before checking in code. 
     Even if there is no special test case for the issue, testsuite might show 
     problems or sideeffects.
 

@@ -156,7 +156,7 @@ if [ -x /bin/uname ]; then
       rev="`/bin/uname -r`"
       case $rev in
       2.[246].*)
-         strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.0 2>&1 > /dev/null
+         strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.[01]" 2>&1 > /dev/null
          if [ $? = 0 ]; then
             ARCH=UNSUPPORTED-glinux20
          else

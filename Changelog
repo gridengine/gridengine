@@ -1,3 +1,7 @@
+RC-2004-02-24-0: Bugfix:    A small bug in glibc recognition code
+                 Changed:   arch
+                 Review:    AS
+
 JG-2004-02-19-1: Bugfix:    Fixed lGetElemHost[First|Next] in case no hashtable
                             was defined for the queried attribute.
                  Changed:   all (libcull)

@@ -1,3 +1,6 @@
+EB-2003-02-14-1  Testsuite: new test which will find #226 
+                 Issue:     #364
+
 JG-2003-02-13-1  Enhancem.: Disabled use of non unique hashtable in scheduler.
                             It has negative performance impact on job sorting.
                  Changed:   sge_schedd

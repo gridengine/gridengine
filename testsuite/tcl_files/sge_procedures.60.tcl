@@ -124,6 +124,29 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    return $result
 }
 
+proc set_queue_work { qname change_array } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH CHECK_USER
+
+   upvar $change_array chgar
+
+   puts $CHECK_OUTPUT "modifying queue \"$qname\""
+
+   set vi_commands [build_vi_command chgar]
+
+   set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+   set NOT_A_QUEUENAME [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QUEUE_XISNOTAQUEUENAME_S] $qname ]
+   set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $qname $QUEUE ]
+   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED $NOT_A_QUEUENAME]
+   if { $result == -2 } {
+      add_proc_error "set_queue" -1 "$qname is not a queue"
+   }
+   if { $result != 0  } {
+      add_proc_error "set_queue" -1 "error modify queue $qname, $result"
+   } 
+
+   return $result
+}
 
 proc set_queue { qname hostlist change_array } {
    global ts_config
@@ -140,22 +163,13 @@ proc set_queue { qname hostlist change_array } {
       set hostlist $ts_config(execd_hosts)
    }
 
-   foreach host $hostlist {
-      puts $CHECK_OUTPUT "modifying queue \"$qname\" for host \"$host\""
-
-      set vi_commands [build_vi_command chgar]
-      set cqname "${qname}_${host}"
-
-      set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-      set NOT_A_QUEUENAME [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QUEUE_XISNOTAQUEUENAME_S] $cqname ]
-      set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $cqname $QUEUE ]
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${cqname}" $vi_commands $MODIFIED $NOT_A_QUEUENAME]
-      if { $result == -2 } {
-         add_proc_error "set_queue" -1 "$cqname is not a queue"
+   if { [llength $hostlist] == 0 } {
+      set result [set_queue_work $qname chgar]
+   } else {
+      foreach host $hostlist {
+         set cqname "${qname}_${host}"
+         set result [set_queue_work $cqname chgar]
       }
-      if { $result != 0  } {
-         add_proc_error "set_queue" -1 "error modify queue $cqname, $result"
-      } 
    }
 
    return $result
@@ -199,7 +213,7 @@ proc unassign_queues_with_pe_object { pe_obj } {
             }
 
             set mod_params(pe_list) [string trim $new_params]
-            set_queue $elem "@all" mod_params 
+            set_queue $elem "" mod_params 
          }
       }
    }
@@ -243,7 +257,7 @@ proc unassign_queues_with_ckpt_object { ckpt_obj } {
             }
 
             set mod_params(ckpt_list) [string trim $new_params]
-            set_queue $elem "@all" mod_params 
+            set_queue $elem "" mod_params 
          }
       }
    }

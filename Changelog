@@ -1,3 +1,5 @@
+JG-2003-12-10-1: Testsuite: Fixed some problems with JG-2003-12-10-0.
+
 JG-2003-12-10-0: Testsuite: Removed SGE version dependencies in the testsuite 
                             installation process, prepared cluster queue 
                             changes. Cleanup.

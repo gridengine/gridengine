@@ -455,23 +455,21 @@ proc cleanup_system { } {
   }
 
 
-  if { $check_use_installed_system != 0 } {
-     puts $CHECK_OUTPUT "\nremoving queues ..."
-     set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
+  puts $CHECK_OUTPUT "\nremoving queues ..."
+  set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
 
-     catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result
-     if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
-        puts $CHECK_OUTPUT "no queue defined"
-     } else {
-        foreach elem $result {
-           puts $CHECK_OUTPUT "removing queue $elem."
-           del_queue $elem 
-        }
+  catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sql" } result
+  if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+     puts $CHECK_OUTPUT "no queue defined"
+  } else {
+     foreach elem $result {
+        puts $CHECK_OUTPUT "removing queue $elem."
+        del_queue $elem 
      }
-
-     puts $CHECK_OUTPUT "\nadding testsuite queues ..."
-     add_queue "all" "@all" q_param 1
   }
+
+  puts $CHECK_OUTPUT "\nadding testsuite queues ..."
+  add_queue "all" "@all" q_param 1
   set_error 0 "ok"
 
 }

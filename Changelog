@@ -1,3 +1,12 @@
+SG-2003-07-17-0: optim.     - Optimized function ticket computation. Decreased
+                            the amount of cull accesses when the pending jobs
+                            are set active and inactive for calculation its
+                            tickets.
+                            - Fixed a bug (which I added with the last optimization)
+                              for calculating the ftickets for running jobs.
+                 Review:    AH
+                 Changed:   sge_schedd
+
 BD-2003-07-16-0: Bugfix:    Change FreeBSD arch strings from freebsd-* to
                             fbsd-*.  This fixes arch display for FreeBSD
                             i386, ia64, and ppc.

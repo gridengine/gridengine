@@ -233,7 +233,7 @@ int scheduler(sge_Sdescr_t *lists) {
       u_long32 saved_logginglevel = logginglevel;
 
       logginglevel = LOG_INFO;
-      INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all) %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+      INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          (now - start) * 1.0 / CLK_TCK, 
          (tms_now.tms_utime - tms_buffer.tms_utime) * 1.0 / CLK_TCK,
          (tms_now.tms_stime - tms_buffer.tms_stime) * 1.0 / CLK_TCK,

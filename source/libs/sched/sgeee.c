@@ -731,6 +731,7 @@ sge_set_job_refs( lListElem *job,
 
 /*--------------------------------------------------------------------
  * sge_set_job_cnts - set job counts in the various object entries
+ * either pending or queued job counter is incremented.
  *--------------------------------------------------------------------*/
 
 void
@@ -763,7 +764,8 @@ sge_set_job_cnts( sge_ref_t *ref,
 
 
 /*--------------------------------------------------------------------
- * sge_unset_job_cnts - set job counts in the various object entries
+ * sge_unset_job_cnts - set job counts in the various object entries 
+ * either pending or queued job counter is incremented.
  *--------------------------------------------------------------------*/
 
 void
@@ -1851,6 +1853,10 @@ calc_job_share_tree_tickets_pass2( sge_ref_t *ref,
 /*--------------------------------------------------------------------
  * calc_functional_tickets_pass1 - performs pass 1 of calculating
  *      the functional tickets for the specified job
+ *
+ * The flag "activate_job" is needed, when this method is executed on
+ * pending jobs and the sge_set_job_cnts has not been called for that
+ * job.
  *--------------------------------------------------------------------*/
 
 void
@@ -1862,7 +1868,8 @@ calc_job_functional_tickets_pass1( sge_ref_t *ref,
                                    double *sum_of_job_functional_shares,
                                    int shared,
                                    int include_queued_jobs,
-                                   int sum_shares )
+                                   int sum_shares,
+                                   int activate_job )
 {
    double job_cnt;
 
@@ -1872,6 +1879,8 @@ calc_job_functional_tickets_pass1( sge_ref_t *ref,
 
    if (ref->user) {
       job_cnt = lGetUlong(ref->user, UP_job_cnt);
+      if(activate_job)
+         job_cnt ++;
       if (include_queued_jobs)
          job_cnt += lGetUlong(ref->user, UP_pending_job_cnt);
       ref->user_fshare = shared ?
@@ -1887,6 +1896,8 @@ calc_job_functional_tickets_pass1( sge_ref_t *ref,
 
    if (ref->project) {
       job_cnt = lGetUlong(ref->project, UP_job_cnt);
+      if(activate_job)
+         job_cnt ++;
       if (include_queued_jobs)
          job_cnt += lGetUlong(ref->project, UP_pending_job_cnt);
       ref->project_fshare = shared ?
@@ -1902,6 +1913,8 @@ calc_job_functional_tickets_pass1( sge_ref_t *ref,
 
    if (ref->dept) {
       job_cnt = lGetUlong(ref->dept, US_job_cnt);
+      if(activate_job)
+         job_cnt ++;
       if (include_queued_jobs)
          job_cnt += lGetUlong(ref->dept, US_pending_job_cnt);
       ref->dept_fshare = shared ?
@@ -1920,6 +1933,8 @@ calc_job_functional_tickets_pass1( sge_ref_t *ref,
       for(i=0; i<ref->num_task_jobclasses; i++)
          if (ref->task_jobclass[i]) {
             job_cnt = lGetUlong(ref->task_jobclass[i], QU_job_cnt);
+            if(activate_job)
+               job_cnt ++;
             if (include_queued_jobs)
                job_cnt += lGetUlong(ref->task_jobclass[i], QU_pending_job_cnt);
             if(sum_shares){
@@ -1933,6 +1948,8 @@ calc_job_functional_tickets_pass1( sge_ref_t *ref,
          }
    } else if (ref->jobclass) {
       job_cnt = lGetUlong(ref->jobclass, QU_job_cnt);
+      if(activate_job)
+         job_cnt ++;
       if (include_queued_jobs)
          job_cnt += lGetUlong(ref->jobclass, QU_pending_job_cnt);
       ref->jobclass_fshare = shared ?
@@ -1977,7 +1994,7 @@ get_functional_weighting_parameters( double sum_of_user_functional_shares,
 {
    double k_sum;
    lListElem *config;
-/*   memset(weight, 0, sizeof(double)*k_last);*/
+   memset(weight, 0, sizeof(double)*k_last);
 
    if ((config = lFirst(all_lists->config_list))) {
 
@@ -2043,10 +2060,12 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
     * calculate user functional tickets for this job
     *-------------------------------------------------------*/
 
-   if (ref->user && sum_of_user_functional_shares)
+   if (ref->user && sum_of_user_functional_shares){
+
       user_functional_tickets = (ref->user_fshare *
                                 total_functional_tickets /
                                 sum_of_user_functional_shares);
+   }
 
    /*-------------------------------------------------------
     * calculate project functional tickets for this job
@@ -2476,7 +2495,11 @@ sge_clear_ja_task( lListElem *ja_task )
       lSetDouble(granted_el, JG_jcfticket, 0);
    }
 }
-
+/*
+ * The flag "activate_job" is needed, when this method is executed on
+ * pending jobs and the sge_set_job_cnts has not been called for that
+ * job.
+ */
 void
 calc_pending_job_functional_tickets(sge_ref_t *ref,
                                     double *sum_of_user_functional_shares,
@@ -2487,7 +2510,8 @@ calc_pending_job_functional_tickets(sge_ref_t *ref,
                                     double total_functional_tickets,
                                     double weight[],
                                     int shared,
-                                    int included_queued_jobs)
+                                    int included_queued_jobs,
+                                    int activate_job)
 {
    /*double w[k_last];*/
 
@@ -2499,7 +2523,8 @@ calc_pending_job_functional_tickets(sge_ref_t *ref,
                                      sum_of_job_functional_shares,
                                      share_functional_shares,
                                      0,
-                                     !share_functional_shares);
+                                     !share_functional_shares,
+                                     activate_job);
 
    /*
     * If the functional shares of a given object are shared between jobs
@@ -2932,13 +2957,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                           &sum_of_jobclass_functional_shares,
                                           &sum_of_job_functional_shares,
                                           share_functional_shares,
-                                          classic_sgeee_scheduling ? 1 : 0,1 );
+                                          classic_sgeee_scheduling ? 1 : 0, 
+                                          1, 0);
 
       if (total_deadline_tickets > 0 && job_deadline_time > 0)
          sum_of_deadline_tickets +=
                   calc_job_deadline_tickets_pass1(&job_ref[job_ndx],
                                                   total_deadline_tickets,
                                                   curr_time);
+printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
 
    }
 /*
@@ -2965,12 +2992,14 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       double weight[k_last];
 
       if(total_functional_tickets > 0)
+
          get_functional_weighting_parameters(sum_of_user_functional_shares,
                                        sum_of_project_functional_shares,
                                        sum_of_department_functional_shares,
                                        sum_of_jobclass_functional_shares,
                                        sum_of_job_functional_shares,
                                        weight);
+      
 
       for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
    
@@ -3009,7 +3038,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   classic_sgeee_scheduling ? 1 : 0);
 
          sum_of_active_tickets += calc_job_tickets(&job_ref[job_ndx]);
-
+printf("2_tickets: %d\n", REF_GET_FTICKET(&job_ref[job_ndx]));
       }
    }
    /* set scheduler configuration information to go back to GUI */
@@ -3168,7 +3197,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          for(i=0; i<max; i++) {
             double ftickets, max_ftickets=0;
             u_long jid, save_jid=0, save_tid=0;
-
+   
             for(j=i; j<num_queued_jobs; j++) {
                sge_ref_t *jref = &job_ref[sort_list[j]];
                double user_fshares = pending_user_fshares + 0.001;
@@ -3177,7 +3206,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                double jobclass_fshares = pending_jobclass_fshares + 0.001;
                double job_fshares = pending_job_fshares + 0.001;
                /* Consider this job "active" by incrementing user and project job counts */
-               sge_set_job_cnts(jref, 0);
+               /*sge_set_job_cnts(jref, 0);*/
 
                calc_pending_job_functional_tickets(jref,
                                                    &user_fshares,
@@ -3188,10 +3217,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                                    total_functional_tickets,
                                                    weight,
                                                    share_functional_shares,
-                                                   0);
+                                                   0,1);
 
                /* Consider job inactive now */
-               sge_unset_job_cnts(jref, 0);
+               /*sge_unset_job_cnts(jref, 0);*/
 
                ftickets = REF_GET_FTICKET(jref);
 
@@ -3229,11 +3258,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                                 total_functional_tickets,
                                                 weight,
                                                 share_functional_shares,
-                                                0);
+                                                0,0);
          }
 
          /* Reset the pending jobs to inactive */
-        /* for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+       /*  for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          
             sge_ref_t *jref = &job_ref[job_ndx];
             if (jref->queued) {
@@ -3243,6 +3272,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
             }
          }
 */
+
          {
             int depend = hierarchy[policy_ndx].dependent;
             for(job_ndx=0; job_ndx < num_queued_jobs; job_ndx++){
@@ -3254,6 +3284,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   jref->tickets += REF_GET_FTICKET(jref);
             }
          }
+
          free(sort_list);
       }
 

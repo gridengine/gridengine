@@ -134,7 +134,19 @@ RescheduleJobs()
 
    done
 
+   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
 
+     $INFOTEXT "There are still running jobs on %s!" $q
+     $INFOTEXT -log "There are still running jobs on %s!" $q
+     $INFOTEXT "To make sure, that no date will be lost, the uninstall\n" \
+               "of this executionhost stops now!"
+     $INFOTEXT "Please, check the running jobs and run uninstall again!"
+     $INFOTEXT -log "To make sure, that no date will be lost, the uninstall\n" \
+               "of this executionhost stops now!"
+     $INFOTEXT -log "Please, check the running jobs and run uninstall again!"
+     break
+
+   done
 }
 
 RemoveQueues()

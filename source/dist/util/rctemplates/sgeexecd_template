@@ -88,6 +88,7 @@ SGE_EXECD_PORT=GENSGE_EXECD_PORT; export SGE_EXECD_PORT
 
 unset CODINE_ROOT GRD_ROOT COD_CELL GRD_CELL
 
+ARCH=`$SGE_ROOT/util/arch`
 shlib_path_name=`$SGE_ROOT/util/arch -lib`
 old_value=`eval echo '$'$shlib_path_name`
 if [ x$old_value = x ]; then

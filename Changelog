@@ -1,3 +1,8 @@
+MD-2004-04-22-0: Bugfix:    LD_LIBRARY_PATH was wrong. -> wrong ARCH string
+                            job check during uninstall, if rescheduled or no
+                 Review:    JG
+                 Changed:   rc_templates
+
 CR-2004-04-22-0: Bugfix:    qping now also supports auto close when qmaster
                             runs out of filedescriptors
 

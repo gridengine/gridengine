@@ -1,3 +1,8 @@
+EB-2004-04-19-0: Bugfix:    stale resource_unknown_list
+                 Issue:     942
+                 Changed:   sge_qmaster
+                 Review:    JG
+
 JG-2004-04-20-0: Enhancem.: Make dynamic spooling the default build rule,
                             statically linked spooling methods can be choosen
                             in aimk with the switches -spool-berkeleydb and

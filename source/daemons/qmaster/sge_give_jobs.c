@@ -879,6 +879,7 @@ sge_commit_flags_t commit_flags
    case COMMIT_ST_FINISHED_FAILED:
 /*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
+      remove_from_reschedule_unknown_lists(jobid, jataskid);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
@@ -892,6 +893,7 @@ sge_commit_flags_t commit_flags
       jobid = lGetUlong(jep, JB_job_number);
 /*       job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL); */
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
+      remove_from_reschedule_unknown_lists(jobid, jataskid);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
 

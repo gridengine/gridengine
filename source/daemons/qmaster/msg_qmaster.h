@@ -64,7 +64,7 @@
 
 
 #define MSG_JOB_JOBACCESSQ_US         _MESSAGE(33025, _("job "U32CFormat" has no access to queue "SFQ"\n"))
-#define MSG_JOB_FREESLOTS_US          _MESSAGE(33026, _("not enough ("U32CFormat") free slots in queue "SFQ"\n"))
+#define MSG_JOB_FREESLOTS_USUU        _MESSAGE(33026, _("not enough ("U32CFormat") free slots in queue "SFQ" for job "U32CFormat"."U32CFormat"\n"))
 #define MSG_JOB_QMARKEDERROR_S        _MESSAGE(33027, _("queue "SFQ" is marked QERROR\n") ) 
 #define MSG_JOB_QSUSPCAL_S            _MESSAGE(33028, _("while scheduling queue "SFQ" was suspended on calendar\n"))
 #define MSG_JOB_QDISABLECAL_S         _MESSAGE(33029, _("while scheduling queue "SFQ" was disabled on calendar\n"))

@@ -332,7 +332,8 @@ lList **topp  /* ticket orders ptr ptr */
 
          /* ensure that this queue has enough free slots */
          if (lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep) < q_slots) {
-            ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_US, u32c(q_slots), q_name));
+            ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_USUU, u32c(q_slots), q_name, 
+                  u32c(job_number), u32c(task_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
             lSetString(jatp, JAT_granted_pe, NULL);

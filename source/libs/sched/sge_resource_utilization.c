@@ -171,7 +171,9 @@ void utilization_print(const lListElem *cr, const char *object_name)
    lListElem *rde;
    DENTER(TOP_LAYER, "utilization_print");
 
-   DPRINTF(("resource utilization: %s \"%s\"\n", object_name?object_name:"<unknown_object>", lGetString(cr, RUE_name)));
+   DPRINTF(("resource utilization: %s \"%s\" %f utilized now\n", 
+         object_name?object_name:"<unknown_object>", lGetString(cr, RUE_name),
+            lGetDouble(cr, RUE_utilized_now)));
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
 #ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
@@ -277,7 +279,6 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    /* find existing end element or the element before */
    while (this) {
       if (end_time == lGetUlong(this, RDE_time)) {
-         DPRINTF(("found existing end\n"));
          end = this;
          break;
       }
@@ -508,7 +509,24 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
    for_each(gel, a->gdil) {  
       int slots = lGetUlong(gel, JG_slots); 
       const char *qname = lGetString(gel, JG_qname);
-      qep = qinstance_list_locate2(a->queue_list, qname); 
+      qep = qinstance_list_locate2(a->queue_list, qname);
+
+      if (!qep && (!strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_RUNNING) ||
+         !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_SUSPENDED) ||
+         !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_PREEMPTING))) { 
+         /* 
+          * This happens in case of queues that were sorted out b/c they 
+          * are unknown, in some suspend state or in calendar disable state. As long 
+          * as we do not intend to schedule future resource utilization for those 
+          * queues it's valid to simply ignore resource utilizations decided in former 
+          * schedule runs: running/suspneded/migrating jobs.
+          * 
+          * Entering rc_add_job_utilization() would result in an error logging which
+          * is intended with SCHEDULING_RECORD_ENTRY_TYPE_STARTING and 
+          * SCHEDULING_RECORD_ENTRY_TYPE_RESERVING.
+          */
+         continue;
+      }
       rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
                QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
                a->duration, QUEUE_TAG);

@@ -4392,7 +4392,8 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
 
    util = utilization_max(actual_el, ready_time, duration);
 
-DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f\n", object_name, attrname, total, util));
+DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "u32" plus "u32" seconds\n", 
+      object_name, attrname, total, util, ready_time, duration));
 
    /* ensure resource is sufficient from now until finish */
    if (request * slots > total - util) {

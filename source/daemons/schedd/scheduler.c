@@ -470,14 +470,16 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       return -1;
    }
 
-   /* Once we now if there are available queues we put
+   /* Once we know if there are available queues we put
       the non available ones back into our main queue list
       this is actually needed for reservation scheduling */
    queues_available = (lFirst(lists->queue_list) != NULL);
-   if (lists->queue_list == NULL)
+
+   if (lists->queue_list == NULL) {
       lists->queue_list = non_avail_queues;
-   else 
+   } else {
       lAddList(lists->queue_list, non_avail_queues);
+   }
    non_avail_queues = NULL;
 
    /*---------------------------------------------------------------------
@@ -836,6 +838,7 @@ lList **load_list
    a.host_list        = host_list;
    a.centry_list      = centry_list;
    a.acl_list         = acl_list;
+
 
    /* in reservation scheduling mode a non-zero duration always must be defined */
    if (reservation_mode && (!job_get_duration(&a.duration, job) || a.duration == 0)) {

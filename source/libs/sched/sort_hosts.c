@@ -306,12 +306,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    /* search complex */
 
    if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){
-      /* 
-       * admin has forgotten to configure complex for 
-       * load value in load formula 
-       */
-
-      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS , attrname, lGetHost(host, EH_name) ));
+      /* neither load or consumable available for that host */
       DEXIT;
       return 1;
    }

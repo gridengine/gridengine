@@ -1,3 +1,8 @@
+AA-2004-05-06-0: Bugfix:    qtcsh shows strange error messages on AIX 43/51
+                 Issue:     849
+                 Changed:   qtcsh
+                 Review:    CR
+
 JG-2004-04-05-1: Bugfix:    Fixed parsing of report_variables in qconf. It now 
                             uses a comma separated list of variables. Adjusted 
                             man page accordingly.

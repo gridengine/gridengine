@@ -51,14 +51,14 @@
 #endif
 
 /*
- * VFORK	This machine has a vfork().  
+ * VFORK	This machine has a vfork().
  *		It used to be that for job control to work, this define
  *		was mandatory. This is not the case any more.
- *		If you think you still need it, but you don't have vfork, 
- *		define this anyway and then do #define vfork fork.  
+ *		If you think you still need it, but you don't have vfork,
+ *		define this anyway and then do #define vfork fork.
  *		I do this anyway on a Sun because of yellow pages brain damage,
  *		[should not be needed under 4.1]
- *		and on the iris4d cause	SGI's fork is sufficiently "virtual" 
+ *		and on the iris4d cause	SGI's fork is sufficiently "virtual"
  *		that vfork isn't necessary.  (Besides, SGI's vfork is weird).
  *		Note that some machines eg. rs6000 have a vfork, but not
  *		with the berkeley semantics, so we cannot use it there either.
@@ -81,7 +81,7 @@
  *		have sigvec() and friends (ie: 4.3BSD-RENO, HP-UX).
  */
 /* AIX 3.2.5 might need undef'ing this */
-#define BSDSIGS
+#undef BSDSIGS
 
 /*
  * BSDTIMES	You have BSD-style process time stuff (like rusage)
@@ -101,7 +101,7 @@
 # define BSDLIMIT
 #else
 /* # undef BSDLIMIT */
-#endif 
+#endif
 
 /*
  * BSDNICE	Your system uses setpriority() instead of nice, to
@@ -151,7 +151,7 @@
 #if (defined(_AIX) && defined(_I386)) || defined(aiws)
 /* # undef SIGVOID */
 #else /* _AIX && _I386 */
-# define SIGVOID 
+# define SIGVOID
 #endif /* (_AIX && _I386) || aiws */
 
 /*

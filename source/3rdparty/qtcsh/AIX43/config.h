@@ -81,7 +81,7 @@
  *		have sigvec() and friends (ie: 4.3BSD-RENO, HP-UX).
  */
 /* AIX 3.2.5 might need undef'ing this */
-#define BSDSIGS
+#undef BSDSIGS
 
 /*
  * BSDTIMES	You have BSD-style process time stuff (like rusage)

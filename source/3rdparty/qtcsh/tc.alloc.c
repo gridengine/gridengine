@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/tc.alloc.c,v 1.7 2004/02/09 13:19:27 andy Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/tc.alloc.c,v 1.8 2004/05/06 12:05:32 andre Exp $ */
 /*
  * tc.alloc.c (Caltech) 2/21/82
  * Chris Kingsley, kingsley@cit-20.
@@ -44,7 +44,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: tc.alloc.c,v 1.7 2004/02/09 13:19:27 andy Exp $")
+RCSID("$Id: tc.alloc.c,v 1.8 2004/05/06 12:05:32 andre Exp $")
 
 static char   *memtop = NULL;		/* PWP: top of current memory */
 static char   *membot = NULL;		/* PWP: bottom of allocatable memory */
@@ -64,6 +64,10 @@ int dont_free = 0;
 # define calloc		fcalloc
 # define realloc	frealloc
 #endif /* WINNT */
+
+#if defined(AIX51) || defined(AIX43)
+#define SYSMALLOC
+#endif
 
 #ifndef SYSMALLOC
 

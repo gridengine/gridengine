@@ -441,15 +441,15 @@ int nm
    String str;
    lList *pred;
    lListElem *jep = NULL;
-   char buf[ 10 * BUFSIZ];
+   char buf[ 100 * BUFSIZ];
 
    DENTER(GUI_LAYER, "PrintPredecessors");
 
    pred = lGetList(ep, nm);
-   
+
    strcpy(buf, "");
    for_each(jep, pred) {
-      sprintf(buf, "%s %d", buf, (int) lGetUlong(jep, JRE_job_number));
+      sprintf(buf, "%s %s", buf, lGetString(jep, JRE_job_name));
    }
    str = XtNewString(buf);
 

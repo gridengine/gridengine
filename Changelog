@@ -1,3 +1,6 @@
+AA-2002-06-14-0: FIX:       Job dependency display in qmon
+                 Issue:     #275 affects only qmon
+
 CR-2002-06-13-5: Testsuite: testing issue #140 also for pending jobs
                  Enhancem.: 
 

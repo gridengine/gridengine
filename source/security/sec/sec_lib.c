@@ -107,6 +107,16 @@ static void *handle = NULL;
 
 
 #define INC32(a)        (((a) == 0xffffffff)? 0:(a)+1)
+struct sec_state_t {
+   u_char *key_mat;                  /* secret key used for connection per thread */
+   u_long32 key_mat_len;             /* length of per connection secret key */
+   u_long32 connid;                  /* per thread sec connection id */
+   int connect;                      /* per thread connected state */
+   u_long32 seq_send;                /* per thread send sequence number */
+   u_long32 seq_receive;             /* per thread receive sequence number */
+   ASN1_UTCTIME *refresh_time;       /* per thread refresh time in clients */
+   char unique_identifier[BUFSIZ];   /* per thread unique identifier */
+};
 
 typedef struct gsd_str {
    X509 *x509;                       /* per process certificate of daemon or client 
@@ -120,18 +130,9 @@ typedef struct gsd_str {
    OPENSSL_CONST EVP_MD *digest;     /* per process digest
                                         MT-NOTE: no mutex needed as long as write acess is done only by sec_init() */
    /* ASN1_UTCTIME *refresh_time;       per process in qmaster (constant) */
+   struct sec_state_t sec_state;
 } GlobalSecureData;
 
-struct sec_state_t {
-   u_char *key_mat;                  /* secret key used for connection per thread */
-   u_long32 key_mat_len;             /* length of per connection secret key */
-   u_long32 connid;                  /* per thread sec connection id */
-   int connect;                      /* per thread connected state */
-   u_long32 seq_send;                /* per thread send sequence number */
-   u_long32 seq_receive;             /* per thread receive sequence number */
-   ASN1_UTCTIME *refresh_time;       /* per thread refresh time in clients */
-   char unique_identifier[BUFSIZ];   /* per thread unique identifier */
-};
 
 static pthread_key_t   sec_state_key;
 
@@ -334,10 +335,7 @@ static void sec_crypto_locking_callback(int mode, int type, char *file, int line
 static void sge_thread_setup(void);
 static void sec_thread_cleanup(void);
 
-#ifdef ENABLE_NGC
-#else
 static int sec_alloc_key_mat(void);
-#endif
 
 #ifdef SEC_RECONNECT
 static void sec_dealloc_key_mat(void);
@@ -346,72 +344,42 @@ static void sec_dealloc_key_mat(void);
 /* 
 ** prototypes for per thread data access functions
 */
-#ifdef ENABLE_NGC
-#else
 static void sec_state_set_key_mat(u_char *);
-#endif
-
-#ifdef ENABLE_NGC
-#else
 static u_char *sec_state_get_key_mat(void);
-#endif
-
-#ifdef ENABLE_NGC
-#else
 static void sec_state_set_key_mat_len(u_long32);
-#endif
-
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_key_mat_len(void);
-#endif
 
 static void sec_state_set_connid(u_long32);
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_connid(void);
-#endif
 static void sec_state_set_connect(int);
-#ifdef ENABLE_NGC
-#else
 static int sec_state_get_connect(void);
-#endif
 
 static void sec_state_set_seq_receive(u_long32);
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_seq_receive(void);
-#endif
 static void sec_state_set_seq_send(u_long32);
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_seq_send(void);
-#endif
 static void sec_state_set_refresh_time(ASN1_UTCTIME *);
 static ASN1_UTCTIME *sec_state_get_refresh_time(void);
 static char *sec_state_get_unique_identifier(void);
+static void sec_state_set_unique_identifier(const char *unique_identifier);
 
 /*
 ** prototypes
 */
-
-#ifdef ENABLE_NGC
-#else
 static int sec_set_encrypt(int tag);
-#endif
 static int sec_files(void);
 static int sec_is_daemon(const char *progname);
 static int sec_is_master(const char *progname);
 
 
-#ifdef ENABLE_NGC
-#else
-static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
-static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
-static int sec_handle_announce(char *comproc, u_short id, char *host, char *buffer, u_long32 buflen);
+static int sec_announce_connection(cl_com_handle_t* cl_handle, GlobalSecureData *gsd, const cl_com_endpoint_t *sender);
 static int sec_encrypt(sge_pack_buffer *pb, const char *buf, int buflen);
-static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id);
-#endif
+
+static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint_t *sender, char *buffer, u_long32 buflen, unsigned long response_id);
+
+static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t *sender);
+
+static int sec_respond_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint_t *sender, char *buffer, u_long32 buflen, u_long32 response_id);
 static int sec_verify_certificate(X509 *cert);
 
 /* #define SEC_RECONNECT */
@@ -440,33 +408,22 @@ static int sec_unpack_reconnect(sge_pack_buffer *pb,
 
 #endif
 
-
-static void sec_error(void);
-#ifdef ENABLE_NGC
-#else
-static int sec_send_err(char *commproc, int id, char *host, sge_pack_buffer *pb, const char *err_msg);
+static int sec_set_secdata(const cl_com_endpoint_t *sender);
 static int sec_set_connid(char **buffer, int *buflen);
 static int sec_get_connid(char **buffer, u_long32 *buflen);
-static int sec_update_connlist(const char *host, const char *commproc, int id);
-static int sec_set_secdata(const char *host, const char *commproc, int id);
-static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier);
-#endif
+static int sec_update_connlist(const cl_com_endpoint_t *sender);
+
+static void sec_error(void);
+static int sec_send_err(const cl_com_endpoint_t *sender, sge_pack_buffer *pb, const char *err_msg, u_long32 request_mid);
+static int sec_insert_conn2list(u_long32 connid, const cl_com_endpoint_t *sender, const char *uniqueIdentifier);
 
 
-#ifdef ENABLE_NGC
-#else
 static void sec_keymat2list(lListElem *element);
-#endif
 
-#ifdef ENABLE_NGC
-#else
 static void sec_list2keymat(lListElem *element);
-#endif
 static int sec_verify_callback(int ok, X509_STORE_CTX *ctx);
 static void sec_setup_path(int is_daemon, int is_master);
 
-#ifdef ENABLE_NGC
-#else
 static int sec_pack_announce(u_long32 len, u_char *buf, u_char *chall, sge_pack_buffer *pb);
 static int sec_unpack_announce(u_long32 *len, u_char **buf, u_char **chall, sge_pack_buffer *pb);
 static int sec_pack_response(u_long32 len, u_char *buf, 
@@ -485,7 +442,6 @@ static int sec_unpack_response(u_long32 *len, u_char **buf,
                         sge_pack_buffer *pb);
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len);
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg);
-#endif
 static int sec_build_symbol_table(void);
 
 /****** security/sec_lib/debug_print_ASN1_UTCTIME() *************************************
@@ -612,22 +568,19 @@ static pthread_mutex_t sec_initialized_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define SEC_LOCK_INITIALIZED()   sge_mutex_lock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
 #define SEC_UNLOCK_INITIALIZED() sge_mutex_unlock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
 
+static pthread_mutex_t sec_global_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define SEC_LOCK_GLOBAL_SD()   sge_mutex_lock("sec_global_data_mutex", SGE_FUNC, __LINE__, &sec_global_data_mutex)
+#define SEC_UNLOCK_GLOBAL_SD() sge_mutex_unlock("sec_global_data_mutex", SGE_FUNC, __LINE__, &sec_global_data_mutex)
 /* ---- sec_connid_counter -- a consecutive number for connections -- */
 
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_connid_counter = 0;
-#endif
 
 
 /* 
 ** MT-NOTE: sec_connid_counter_mutex guards access to sec_connid_counter 
 ** MT-NOTE: that must be synchronized in case of a MT qmaster
 */
-#ifdef ENABLE_NGC
-#else
 static pthread_mutex_t sec_connid_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
 
 
 #define SEC_LOCK_CONNID_COUNTER()   sge_mutex_lock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
@@ -647,11 +600,8 @@ static pthread_mutex_t sec_conn_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ---- *_file --------------------------------- */
 
-#ifdef ENABLE_NGC
-#else
 static char *ca_key_file;
 static char *reconnect_file;
-#endif
 static char *ca_cert_file;
 static char *key_file;
 static char *cert_file;
@@ -825,8 +775,6 @@ static void sec_thread_cleanup(void)
 *  NOTES
 *     MT-NOTE: sec_alloc_key_mat() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
 static int sec_alloc_key_mat(void)
 {
    /* must be done per thread on demand before accessing key_mat */
@@ -838,7 +786,6 @@ static int sec_alloc_key_mat(void)
       
    return 0;
 }
-#endif
 
 #ifdef SEC_RECONNECT
 /****** sec_lib/sec_dealloc_key_mat() ******************************************
@@ -878,124 +825,279 @@ static void sec_dealloc_key_mat(void)
 *     See definition of 'struct sec_state_t' for information about purpose
 *     of these variables.
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
 static void sec_state_set_key_mat(u_char *key_mat)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat");
-   sec_state->key_mat = key_mat;
+   DENTER(GDI_LAYER, "sec_state_set_key_mat");
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat");
+      sec_state->key_mat = key_mat;
+   } else { 
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.key_mat = key_mat;
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
 }
-#endif
 
-#ifdef ENABLE_NGC
-#else
 static u_char *sec_state_get_key_mat(void)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
-   return sec_state->key_mat;
-}
-#endif
+   DENTER(GDI_LAYER, "sec_state_get_key_mat");
 
-#ifdef ENABLE_NGC
-#else
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
+      DEXIT;
+      return sec_state->key_mat;
+   } else { 
+      /* copy global data to thread specific data */
+      SEC_LOCK_GLOBAL_SD();
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
+      sec_state->key_mat = gsd.sec_state.key_mat;
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->key_mat;
+   }
+}
+
 static void sec_state_set_key_mat_len(u_long32 key_mat_len)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat_len");
-   sec_state->key_mat_len = key_mat_len;
-}
-#endif
+   DENTER(GDI_LAYER, "sec_state_set_key_mat_len");
 
-#ifdef ENABLE_NGC
-#else
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat_len");
+      sec_state->key_mat_len = key_mat_len;
+   } else { 
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.key_mat_len = key_mat_len;
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
+
+}
+
 static u_long32 sec_state_get_key_mat_len(void)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
-   return sec_state->key_mat_len;
+   DENTER(GDI_LAYER, "sec_state_get_key_mat_len");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
+      DEXIT;
+      return sec_state->key_mat_len;
+   } else { 
+      /* copy global data to thread specific data */
+      SEC_LOCK_GLOBAL_SD();
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
+      sec_state->key_mat_len = gsd.sec_state.key_mat_len;
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->key_mat_len;
+   }
 }
-#endif
 
 static void sec_state_set_connid(u_long32 connid)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_connid");
-   sec_state->connid = connid;
+   DENTER(GDI_LAYER, "sec_state_set_connid");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_connid");
+      sec_state->connid = connid;
+   } else { 
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.connid = connid;
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
+
 }
 
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_connid(void)
-{
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
-   return sec_state->connid;
+{ 
+   DENTER(GDI_LAYER, "sec_state_get_connid");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
+      DEXIT;
+      return sec_state->connid;
+   } else {
+      /* copy global data to thread specific data */
+      SEC_LOCK_GLOBAL_SD();
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
+      sec_state->connid = gsd.sec_state.connid;
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->connid;
+   }
 }
-#endif
 
 static void sec_state_set_connect(int connect)
-{
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_connect");
-   sec_state->connect = connect;
+{ 
+   DENTER(GDI_LAYER, "sec_state_set_connect");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_connect");
+      sec_state->connect = connect;
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.connect = connect;
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
 }
 
-#ifdef ENABLE_NGC
-#else
 static int sec_state_get_connect(void)
-{
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
-   return sec_state->connect;
+{ 
+   DENTER(GDI_LAYER, "sec_state_get_connect");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
+      DEXIT;
+
+      return sec_state->connect;
+   } else {
+      /* copy global data to thread specific data */
+      SEC_LOCK_GLOBAL_SD();
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
+      sec_state->connect = gsd.sec_state.connect;   
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->connect;
+   }
 }
-#endif
 
 static void sec_state_set_seq_receive(u_long32 seq_receive)
-{
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_seq_receive");
-   sec_state->seq_receive = seq_receive;
+{ 
+   DENTER(GDI_LAYER, "sec_state_set_seq_receive");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_seq_receive");
+      sec_state->seq_receive = seq_receive;
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.seq_receive = seq_receive;
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
+
 }
 
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_seq_receive(void)
-{
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
-   return sec_state->seq_receive;
+{ 
+   DENTER(GDI_LAYER, "sec_state_get_seq_receive");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
+      DEXIT;
+      return sec_state->seq_receive;
+   } else {
+      /* copy global data to thread specific data */
+      SEC_LOCK_GLOBAL_SD();
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
+      sec_state->seq_receive = gsd.sec_state.seq_receive;
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->seq_receive;
+   }
 }
-#endif
 
 static void sec_state_set_seq_send(u_long32 seq_send)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_seq_send");
-   sec_state->seq_send = seq_send;
+   DENTER(GDI_LAYER, "sec_state_set_seq_send");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_seq_send");
+      sec_state->seq_send = seq_send;
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.seq_send = seq_send;
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
 }
 
-#ifdef ENABLE_NGC
-#else
 static u_long32 sec_state_get_seq_send(void)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
-   return sec_state->seq_send;
+   DENTER(GDI_LAYER, "sec_state_get_seq_send");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
+      DEXIT;
+      return sec_state->seq_send;
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      /* copy global data to thread specific data */
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
+      sec_state->seq_send = gsd.sec_state.seq_send;
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->seq_send;
+   }
 }
-#endif
 
 static void sec_state_set_refresh_time(ASN1_UTCTIME *refresh_time)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_refresh_time");
-#if 0
-   if (sec_state->refresh_time) {
-      sec_ASN1_UTCTIME_free(sec_state->refresh_time);
-      sec_state->refresh_time = NULL;   
+   DENTER(GDI_LAYER, "sec_state_set_refresh_time");
+
+   if (uti_state_get_mewho() != QMASTER) {
+
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_refresh_time");
+      sec_state->refresh_time = refresh_time;
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      gsd.sec_state.refresh_time = refresh_time;
+      SEC_UNLOCK_GLOBAL_SD();
    }
-#endif
-   sec_state->refresh_time = refresh_time;
+   DEXIT;
 }
 
 static ASN1_UTCTIME *sec_state_get_refresh_time(void)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_refresh_time");
-   return sec_state->refresh_time;
+   DENTER(GDI_LAYER, "sec_state_get_refresh_time");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_refresh_time");
+      DEXIT;
+      return sec_state->refresh_time;
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      /* copy global data to thread specific data */
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_refresh_time");
+      sec_state->refresh_time = gsd.sec_state.refresh_time;
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->refresh_time;
+   }
 }
 
 static char *sec_state_get_unique_identifier(void)
 {
-   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
-   return sec_state->unique_identifier;
+   DENTER(GDI_LAYER, "sec_state_get_unique_identifier");
+
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
+      DEXIT;
+      return sec_state->unique_identifier;
+   } else {
+      /* copy global data to thread specific data */
+      SEC_LOCK_GLOBAL_SD();
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
+      strncpy(sec_state->unique_identifier, gsd.sec_state.unique_identifier , BUFSIZ);
+      SEC_UNLOCK_GLOBAL_SD();
+      DEXIT;
+      return sec_state->unique_identifier;
+   }
+}
+
+static void sec_state_set_unique_identifier(const char *unique_identifier)
+{
+   DENTER(GDI_LAYER, "sec_state_set_unique_identifier");
+   if (uti_state_get_mewho() != QMASTER) {
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_unique_identifier");
+      strncpy(sec_state->unique_identifier, unique_identifier, BUFSIZ);
+   } else {
+      SEC_LOCK_GLOBAL_SD();
+      strncpy(gsd.sec_state.unique_identifier, unique_identifier, BUFSIZ );
+      SEC_UNLOCK_GLOBAL_SD();
+   }
+   DEXIT;
 }
 
 /****** security/sec_lib/sec_init() ******************************************
@@ -1236,6 +1338,85 @@ int sec_exit(void)
 *     MT-NOTE: sec_send_message() is not MT safe
 *******************************************************************************/
 #ifdef ENABLE_NGC
+int sec_send_message(cl_com_handle_t* cl_handle,
+                     char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                     cl_xml_ack_type_t ack_type, 
+                     cl_byte_t* data, unsigned long size , 
+                     unsigned long* mid, unsigned long response_mid, unsigned long tag ,
+                     int copy_data,
+                     int wait_for_ack
+) {
+   int i = 0;
+   sge_pack_buffer pb;
+   char* buffer;
+   int buflen;
+   cl_com_endpoint_t *destination = NULL;
+
+   DENTER(GDI_LAYER, "sec_send_message");
+
+   destination = cl_com_create_endpoint(un_resolved_hostname, component_name, component_id);
+
+   buffer = (char*) data;
+   buflen = size;
+   /*
+   ** every component has to negotiate its connection with qmaster
+   */
+   if (uti_state_get_mewho() != QMASTER) {
+      if (sec_announce_connection(cl_handle,&gsd, destination)) {
+         ERROR((SGE_EVENT, MSG_SEC_ANNOUNCEFAILED));
+         cl_com_free_endpoint(&destination);
+         DEXIT;
+         return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
+      }
+   }   
+      
+   if (sec_set_encrypt(tag)) {
+      if (uti_state_get_mewho() == QMASTER) {
+         SEC_LOCK_CONN_LIST();
+         if (sec_conn_list) {
+            /*
+            ** set the corresponding key and connection information
+            ** in the connection list for commd triple 
+            ** (tohost, tocomproc, toid)
+            */
+            if (sec_set_secdata(destination)) {
+               SEC_UNLOCK_CONN_LIST();
+               ERROR((SGE_EVENT, MSG_SEC_SETSECDATAFAILED));
+               cl_com_free_endpoint(&destination);
+               DEXIT;
+               return CL_RETVAL_SECURITY_SEND_FAILED;
+            }
+            SEC_UNLOCK_CONN_LIST();
+         }
+      }
+      DEBUG_PRINT_BUFFER("Message before encryption", (unsigned char*) buffer, buflen);
+
+      if (sec_encrypt(&pb, buffer, buflen)) {
+         ERROR((SGE_EVENT, MSG_SEC_MSGENCFAILED));
+         cl_com_free_endpoint(&destination);
+         DEXIT;
+         return CL_RETVAL_SECURITY_SEND_FAILED;
+      }
+
+      DEBUG_PRINT_BUFFER("Message after encryption", (unsigned char*)pb.head_ptr, pb.bytes_used);
+   }
+   else if (uti_state_get_mewho() != QMASTER) {
+      if (sec_set_connid(& buffer, &buflen)) {
+         cl_com_free_endpoint(&destination);
+         ERROR((SGE_EVENT, MSG_SEC_CONNIDSETFAILED));
+         DEXIT;
+         return CL_RETVAL_SECURITY_SEND_FAILED;
+      }
+   }
+   cl_com_free_endpoint(&destination);
+
+   i = cl_commlib_send_message(cl_handle, un_resolved_hostname,  component_name,  component_id, 
+                                  ack_type, (cl_byte_t *)pb.head_ptr, pb.bytes_used ,
+                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
+   clear_packbuffer(&pb);
+   DEXIT;
+   return i;
+}
 #else
 int sec_send_message(
 int synchron,
@@ -1342,6 +1523,83 @@ int compressed
 *     MT-NOTE: sec_receive_message() is MT safe
 *******************************************************************************/
 #ifdef ENABLE_NGC
+int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender)
+{
+   int i;
+   int tag = -1;
+   u_long32 tmp_buf_len;
+   char* tmp_buf_pp = NULL;
+
+   DENTER(GDI_LAYER, "sec_receive_message");
+   
+   if ((i=cl_commlib_receive_message(cl_handle, un_resolved_hostname,  component_name,  component_id,  
+                                     synchron, response_mid,  message,  sender) ) != CL_RETVAL_OK) {
+      DEXIT;
+      return i;
+   }
+
+   if (message != NULL && *message != NULL) {
+      tag = (*message)->message_tag;
+   } else {
+      return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
+   }
+   if (sender != NULL && *sender != NULL) {
+   } else {
+      return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
+   }
+
+   if (tag == TAG_SEC_ANNOUNCE) {
+
+      DEBUG_PRINT_BUFFER("Received announce message", 
+                         (unsigned char*) (*message)->message, (int)(*message)->message_length);
+
+      if ( sec_handle_announce(cl_handle, *sender, 
+                           (char*) (*message)->message, (*message)->message_length, (*message)->message_id) ) {
+
+         ERROR((SGE_EVENT, MSG_SEC_HANDLEANNOUNCEFAILED_SSI, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
+         DEXIT;
+         return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
+      }
+   }
+   else if (sec_set_encrypt(tag)) {
+      DEBUG_PRINT_BUFFER("Encrypted incoming message", 
+                         (unsigned char*) (*message)->message, (int)(*message)->message_length);
+      tmp_buf_len = (*message)->message_length;
+      tmp_buf_pp = (char*) ((*message)->message);
+      if (sec_decrypt(&tmp_buf_pp, &tmp_buf_len, *sender)) {
+         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSI, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
+         (*message)->message_length = tmp_buf_len;
+         (*message)->message = (cl_byte_t*)tmp_buf_pp;
+         if (sec_handle_announce(cl_handle, *sender,NULL,0,(*message)->message_id))
+            ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
+
+         DEXIT;
+         return CL_RETVAL_SECURITY_RECEIVE_FAILED;
+      }
+      (*message)->message_length = tmp_buf_len;
+      (*message)->message = (cl_byte_t*)tmp_buf_pp;
+
+      DEBUG_PRINT_BUFFER("Decrypted incoming message", (unsigned char*) (*message)->message, (int)(*message)->message_length);
+   }
+   else if (uti_state_get_mewho() == QMASTER) {
+      tmp_buf_len = (*message)->message_length;
+      tmp_buf_pp = (char*) ((*message)->message);
+      if (sec_get_connid(&tmp_buf_pp , &tmp_buf_len) ||
+               sec_update_connlist(*sender)) {
+         (*message)->message_length = tmp_buf_len;
+         (*message)->message = (cl_byte_t*)tmp_buf_pp;
+
+         ERROR((SGE_EVENT, MSG_SEC_CONNIDGETFAILED));
+         DEXIT;
+         return CL_RETVAL_SECURITY_RECEIVE_FAILED;
+      }
+      (*message)->message_length = tmp_buf_len;
+      (*message)->message = (cl_byte_t*)tmp_buf_pp;
+   }
+
+   DEXIT;
+   return CL_RETVAL_OK;
+}
 #else
 int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
                         int *tag, char **buffer, u_long32 *buflen, 
@@ -1421,8 +1679,6 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 *  NOTES
 *     MT-NOTE: sec_set_encrypt() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
 static int sec_set_encrypt(
 int tag 
 ) {
@@ -1436,7 +1692,6 @@ int tag
          return 1; 
    }
 }
-#endif
 
 /****** sec_lib/sec_files() ****************************************************
 *  NAME
@@ -1708,15 +1963,16 @@ static int sec_undump_connlist()
 *  NOTES
 *     MT-NOTE: sec_announce_connection() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
 static int sec_announce_connection(
+cl_com_handle_t* cl_handle,
 GlobalSecureData *gsd,
-const char *tocomproc,
-const char *tohost 
+const cl_com_endpoint_t *sender
+
 ) {
+   unsigned long dummymid;
    EVP_PKEY *master_key = NULL;
    int i;
+   int ngc_error;
    X509 *x509_master=NULL;
    u_long32 x509_len, x509_master_len, chall_enc_len, enc_key_len, enc_key_mat_len,
             iv_len = 0, connid;
@@ -1731,16 +1987,12 @@ const char *tohost
    sge_pack_buffer pb;
    char *buffer;
    u_long32 buflen;
-   char fromhost[MAXHOSTLEN];
-   char fromcommproc[MAXCOMPONENTLEN];
-   int fromtag;
-   u_short fromid;
    u_short compressed = 0;
-   u_long32 dummymid;
    EVP_MD_CTX ctx;
    EVP_CIPHER_CTX ectx;
    u_long32 tmp_key_mat_len;
-   
+   cl_com_message_t* message = NULL; 
+   cl_com_endpoint_t* local_sender = NULL; 
    DENTER(GDI_LAYER, "sec_announce_connection");
 
    /*
@@ -1799,11 +2051,15 @@ const char *tohost
    /* 
    ** send buffer
    */
-   DPRINTF(("send announce to=(%s:%s)\n",tohost,tocomproc));
-   if (send_message(COMMD_SYNCHRON, tocomproc, 0, tohost, 
-                    TAG_SEC_ANNOUNCE, pb.head_ptr, pb.bytes_used, 
-                    &dummymid, 0)) {
+   DPRINTF(("send announce to=(%s:%s)\n", sender->comp_host, sender->comp_name));
+ 
+
+   ngc_error = cl_commlib_send_message(cl_handle, (char*)sender->comp_host, (char*)sender->comp_name, sender->comp_id, 
+                                       CL_MIH_MAT_ACK, (unsigned char*)pb.head_ptr, pb.bytes_used, 
+                                       &dummymid, 0 ,TAG_SEC_ANNOUNCE,1,1);
+   if (ngc_error != CL_RETVAL_OK) {
       i = -1;
+      
       goto error;
    }
 
@@ -1817,38 +2073,34 @@ const char *tohost
    /* 
    ** receive sec_response
    */
-   fromhost[0] = '\0';
-   fromcommproc[0] = '\0';
-   fromid = 0;
-   fromtag = 0;
-   if ((i = receive_message(fromcommproc, &fromid, fromhost, &fromtag,
-                        &buffer, &buflen,
-                        COMMD_SYNCHRON, &compressed)) != CL_OK) {
-      ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SISIS,
-             fromcommproc, fromid, fromhost, fromtag, cl_errstr(i)));
+   ngc_error = cl_commlib_receive_message(cl_handle, (char*)sender->comp_host, (char*)sender->comp_name, sender->comp_id, 
+                                          1, dummymid, &message, &local_sender);
+   if (ngc_error != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SISIS,(char*)sender->comp_name, sender->comp_id,(char*)sender->comp_host , 0, cl_get_error_text(ngc_error)));
       i = -1;
       goto error;
    }
 
-   if((i = init_packbuffer_from_buffer(&pb, buffer, buflen, compressed)) != PACK_SUCCESS) {
+   if((i = init_packbuffer_from_buffer(&pb, (char*) message->message, message->message_length , compressed)) != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
       i = -1;
       goto error;
    }
 
    DPRINTF(("received announcement response from=(%s:%s:%d) tag=%d buflen=%d\n",
-           fromhost, fromcommproc, fromid, fromtag, pb.mem_size));
+            local_sender->comp_host,local_sender->comp_name , local_sender->comp_id, 
+            message->message_tag, message->message_length));
 
    /* 
    ** manage error or wrong tags
    */
-   if (fromtag == TAG_SEC_ERROR){
+   if (message->message_tag == TAG_SEC_ERROR){
       ERROR((SGE_EVENT, MSG_SEC_MASTERERROR));
       ERROR((SGE_EVENT, pb.cur_ptr));
       i=-1;
       goto error;
    }
-   if (fromtag != TAG_SEC_RESPOND) {
+   if (message->message_tag != TAG_SEC_RESPOND) {
       ERROR((SGE_EVENT, MSG_SEC_UNEXPECTEDTAG));
       i=-1;
       goto error;
@@ -1969,6 +2221,8 @@ const char *tohost
 
    error:
    clear_packbuffer(&pb);
+   cl_com_free_message(&message);
+   cl_com_free_endpoint(&local_sender);
    if (x509_buf)
       free(x509_buf);
    if (x509_master_buf)
@@ -1989,7 +2243,7 @@ const char *tohost
    DEXIT;
    return i;
 }
-#endif
+
 
 /****** sec_lib/sec_respond_announce() *****************************************
 *  NAME
@@ -2016,10 +2270,12 @@ const char *tohost
 *  NOTES
 *     MT-NOTE: sec_respond_announce() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
-static int sec_respond_announce(char *commproc, u_short id, char *host, 
-                         char *buffer, u_long32 buflen)
+static int sec_respond_announce(
+cl_com_handle_t* cl_handle, 
+const cl_com_endpoint_t *sender,
+char *buffer, 
+u_long32 buflen, 
+u_long32 response_id)
 {
    EVP_PKEY *public_key[1];
    u_long32 i = 0, x509_len = 0, enc_key_mat_len = 0;
@@ -2028,7 +2284,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    u_char *enc_key_mat=NULL, *challenge=NULL, *enc_challenge=NULL;
    X509 *x509 = NULL;
    sge_pack_buffer pb, pb_respond;
-   u_long32 dummymid;
+   unsigned long dummymid;
    int public_key_size;
    unsigned char iv[EVP_MAX_IV_LENGTH];
    unsigned char *ekey[1];
@@ -2036,6 +2292,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    EVP_CIPHER_CTX ectx;
    EVP_MD_CTX ctx;
    char uniqueIdentifier[BUFSIZ];
+   int ngc_error;
 
    DENTER(GDI_LAYER, "sec_respond_announce");
 
@@ -2052,7 +2309,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    if ((i=init_packbuffer(&pb_respond, 0, 0)) != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
-      sec_send_err(commproc, id, host, &pb_respond, SGE_EVENT);
+      sec_send_err(sender, &pb_respond, SGE_EVENT, response_id);
       goto error;
    }
 
@@ -2061,10 +2318,11 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    if (sec_unpack_announce(&x509_len, &x509_buf, &challenge, &pb)) {
       ERROR((SGE_EVENT, MSG_SEC_UNPACKANNOUNCEFAILED));
-      sec_send_err(commproc, id, host, &pb_respond, 
-                   MSG_SEC_UNPACKANNOUNCEFAILED);
+      sec_send_err(sender, &pb_respond, MSG_SEC_UNPACKANNOUNCEFAILED, response_id);
       goto error;
    }
+
+   DEBUG_PRINT_BUFFER("After sec_unpack_announce", x509_buf, x509_len);
 
    /* 
    ** read x509 certificate
@@ -2077,8 +2335,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    if (!x509){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTREADFAILED));
       sec_error();
-      sec_send_err(commproc, id, host, &pb_respond, 
-                   MSG_SEC_CLIENTCERTREADFAILED);
+      sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTREADFAILED, response_id);
       i = -1;
       goto error;
    }
@@ -2086,8 +2343,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    if (!sec_verify_certificate(x509)) {
       ERROR((SGE_EVENT, MSG_SEC_CLIENTCERTVERIFYFAILED));
       sec_error();
-      sec_send_err(commproc, id, host, &pb_respond, 
-                   MSG_SEC_CLIENTCERTVERIFYFAILED);
+      sec_send_err(sender, &pb_respond, MSG_SEC_CLIENTCERTVERIFYFAILED, response_id);
       i = -1;
       goto error;
    }
@@ -2114,8 +2370,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    if(!public_key[0]){
       ERROR((SGE_EVENT, MSG_SEC_CLIENTGETPUBKEYFAILED));
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond, 
-                   MSG_SEC_CLIENTGETPUBKEYFAILED);
+      sec_send_err(sender,&pb_respond, MSG_SEC_CLIENTGETPUBKEYFAILED, response_id);
       i=-1;
       goto error;
    }
@@ -2130,7 +2385,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
 
    if (!enc_key_mat ||  !enc_challenge || sec_alloc_key_mat()) {
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
-      sec_send_err(commproc,id,host,&pb_respond, MSG_MEMORY_MALLOCFAILED);
+      sec_send_err(sender,&pb_respond, MSG_MEMORY_MALLOCFAILED, response_id);
       i=-1;
       goto error;
    }
@@ -2157,8 +2412,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    if (!sec_EVP_SignFinal(&ctx, enc_challenge, (unsigned int*) &chall_enc_len, gsd.private_key)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTCHALLENGEFAILED));
       sec_error();
-      sec_send_err(commproc, id, host, &pb_respond,
-                   MSG_SEC_ENCRYPTCHALLENGEFAILED);
+      sec_send_err(sender, &pb_respond, MSG_SEC_ENCRYPTCHALLENGEFAILED, response_id);
       i = -1;
       goto error;
    }   
@@ -2178,7 +2432,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       ERROR((SGE_EVENT, MSG_SEC_SEALINITFAILED));;
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond, MSG_SEC_SEALINITFAILED);
+      sec_send_err(sender,&pb_respond, MSG_SEC_SEALINITFAILED, response_id);
       i = -1;
       goto error;
    }
@@ -2186,7 +2440,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
       sec_EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
-      sec_send_err(commproc,id,host,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED);
+      sec_send_err(sender,&pb_respond, MSG_SEC_ENCRYPTKEYFAILED, response_id);
       i = -1;
       goto error;
    }
@@ -2211,28 +2465,34 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
 
    if (i) {
       ERROR((SGE_EVENT, MSG_SEC_PACKRESPONSEFAILED));
-      sec_send_err(commproc, id, host, &pb_respond, MSG_SEC_PACKRESPONSEFAILED);
+      sec_send_err(sender, &pb_respond, MSG_SEC_PACKRESPONSEFAILED, response_id);
       goto error;   
    }
 
    /* 
    ** insert connection to Connection List
    */
-   if (sec_insert_conn2list(sec_state_get_connid(), host, commproc, id, uniqueIdentifier)) {
+   if (sec_insert_conn2list(sec_state_get_connid(), sender, uniqueIdentifier)) {
       ERROR((SGE_EVENT, MSG_SEC_INSERTCONNECTIONFAILED));
-      sec_send_err(commproc, id, host, &pb_respond, 
-                   MSG_SEC_INSERTCONNECTIONFAILED);
+      sec_send_err(sender, &pb_respond, MSG_SEC_INSERTCONNECTIONFAILED, response_id);
       goto error;
    }
 
    /* 
    ** send response
    */
-   DPRINTF(("send response to=(%s:%s:%d)\n", host, commproc, id));
-   
-   if (send_message(0, commproc, id, host, TAG_SEC_RESPOND, pb_respond.head_ptr,
-                     pb_respond.bytes_used, &dummymid, 0)) {
-      ERROR((SGE_EVENT, MSG_SEC_SENDRESPONSEFAILED_SIS, commproc, id, host));
+   DPRINTF(("send response to=(%s:%s:%d)\n", sender->comp_host, sender->comp_name, sender->comp_id));
+  
+   ngc_error =  cl_commlib_send_message(cl_handle, 
+                                        sender->comp_host, sender->comp_name, sender->comp_id,
+                                        CL_MIH_MAT_NAK,
+                                        (unsigned char*)pb_respond.head_ptr, pb_respond.bytes_used,
+                                        &dummymid,response_id,TAG_SEC_RESPOND,
+                                        1,0 );
+
+
+   if (ngc_error != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, MSG_SEC_SENDRESPONSEFAILED_SIS, sender->comp_name, sender->comp_id, sender->comp_host));
       i = -1;
       goto error;
    }
@@ -2260,7 +2520,6 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       return i;
 }
 
-#endif
 
 /****** sec_lib/sec_encrypt() **************************************************
 *  NAME
@@ -2284,8 +2543,6 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
 *  NOTES
 *     MT-NOTE: sec_encrypt() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
 static int sec_encrypt(
 sge_pack_buffer *pb,
 const char *inbuf,
@@ -2412,7 +2669,6 @@ int inbuflen
       DEXIT;
       return i;
 }
-#endif
 
 /****** security/sec_lib/sec_handle_announce() *******************************
 *  NAME
@@ -2440,14 +2696,13 @@ int inbuflen
 *  NOTES
 *     MT-NOTE: sec_handle_announce() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
-static int sec_handle_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen)
+static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint_t *sender, char *buffer, u_long32 buflen, unsigned long response_id)
 {
    int i;
-   u_long32 mid;
+   unsigned long mid;
    SGE_STRUCT_STAT file_info;
    int compressed = 0;
+   int ngc_error;
 
    DENTER(GDI_LAYER, "sec_handle_announce");
 
@@ -2456,8 +2711,8 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
          /* 
          ** someone wants to announce to master
          */
-         if (sec_respond_announce(commproc, id, host, buffer,buflen)) {
-            ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SIS, commproc, id, host));
+         if (sec_respond_announce(cl_handle, sender, buffer,buflen,response_id )) {
+            ERROR((SGE_EVENT, MSG_SEC_RESPONSEFAILED_SIS, sender->comp_name, sender->comp_id, sender->comp_host));
             i = -1;
             goto error;
          }
@@ -2466,8 +2721,12 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
          /* 
          ** a sec_decrypt error has occured
          */
-         if (send_message(0,commproc,id,host,TAG_SEC_ANNOUNCE, buffer,buflen,&mid, compressed)) {
-            ERROR((SGE_EVENT, MSG_SEC_SUMMONSESFAILED_SIS, commproc, id, host));
+         ngc_error = cl_commlib_send_message(cl_handle, sender->comp_host, sender->comp_name, sender->comp_id,
+                                             CL_MIH_MAT_NAK,
+                                             (unsigned char*)buffer,buflen,
+                                             &mid, response_id, TAG_SEC_ANNOUNCE,
+                                             1, 0);
+         if (ngc_error != CL_RETVAL_OK) {
             i = -1;
             goto error;
          }
@@ -2498,7 +2757,6 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
       DEXIT;
       return i;
 }
-#endif
 
 /****** security/sec_lib/sec_decrypt() **************************************
 *  NAME
@@ -2524,9 +2782,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
 *  NOTES 
 *     MT-NOTE: sec_decrypt() is MT safe
 *******************************************************************************/
-#ifdef ENABLE_NGC
-#else
-static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id)
+static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t *sender)
 {
    int i;
    u_char *enc_msg = NULL;
@@ -2599,7 +2855,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       ** get data from connection list
       */
       sec_list2keymat(element);
-      strcpy(sec_state_get_unique_identifier(), lGetString(element, SEC_UniqueIdentifier)); 
+      sec_state_set_unique_identifier(lGetString(element, SEC_UniqueIdentifier));
       sec_state_set_seq_receive(lGetUlong(element, SEC_SeqNoReceive));
       sec_state_set_connid(connid);
 
@@ -2712,9 +2968,9 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    */
    sec_state_set_seq_receive(INC32(sec_state_get_seq_receive()));
    if(sec_conn_list) {
-      lSetHost(element, SEC_Host, host);
-      lSetString(element, SEC_Commproc, commproc);
-      lSetInt(element, SEC_Id, id);
+      lSetHost(element, SEC_Host, sender->comp_host);
+      lSetString(element, SEC_Commproc, sender->comp_name);
+      lSetInt(element, SEC_Id, sender->comp_id);
       lSetUlong(element, SEC_SeqNoReceive, sec_state_get_seq_receive());
    }
 
@@ -2737,7 +2993,6 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       DEXIT;
       return i;
 }
-#endif
 
 #ifdef SEC_RECONNECT
 /****** security/sec_lib/sec_reconnect() *************************************
@@ -2999,21 +3254,18 @@ static void sec_error(void)
 **    MT-NOTES: sec_send_err() is MT safe
 */
 
-#ifdef ENABLE_NGC
-#else
 static int sec_send_err(
-char *commproc,
-int id,
-char *host,
+const cl_com_endpoint_t *sender,
 sge_pack_buffer *pb,
-const char *err_msg 
+const char *err_msg,
+u_long32 request_id 
 ) {
    int   i;
 
    DENTER(GDI_LAYER,"sec_send_error");
    if((i=packstr(pb,err_msg))) 
       goto error;
-   if((i=sge_send_any_request(0,NULL,host,commproc,id,pb,TAG_SEC_ERROR)))
+   if((i=sge_send_any_request(0,NULL,sender->comp_host,sender->comp_name,sender->comp_id,pb,TAG_SEC_ERROR,request_id )))
       goto error;
    else{
       DEXIT;
@@ -3024,7 +3276,6 @@ const char *err_msg
    DEXIT;
    return(-1);
 }
-#endif
 
 /*
 ** NAME
@@ -3046,8 +3297,6 @@ const char *err_msg
 ** NOTES
 **      MT-NOTE: sec_set_connid() is MT safe
 */
-#ifdef ENABLE_NGC
-#else
 static int sec_set_connid(char **buffer, int *buflen)
 {
    u_long32 i, new_buflen;
@@ -3074,7 +3323,6 @@ static int sec_set_connid(char **buffer, int *buflen)
    DEXIT;
    return(i);
 }
-#endif
 
 /*
 ** NAME
@@ -3097,15 +3345,13 @@ static int sec_set_connid(char **buffer, int *buflen)
 **    MT-NOTE: sec_get_connid() is MT safe
 */
 
-#ifdef ENABLE_NGC
-#else
 static int sec_get_connid(char **buffer, u_long32 *buflen)
 {
    int i;
    u_long32 new_buflen, tmp_connid;
    sge_pack_buffer pb;
 
-   DENTER(GDI_LAYER,"sec_set_connid");
+   DENTER(GDI_LAYER,"sec_get_connid");
 
    new_buflen = *buflen - INTSIZE;
 
@@ -3128,7 +3374,6 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
      DEXIT;
      return(i);
 }
-#endif
 
 /*
 ** NAME
@@ -3153,9 +3398,7 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
 **    MT-NOTE: sec_update_connlist() is MT safe
 */
 
-#ifdef ENABLE_NGC
-#else
-static int sec_update_connlist(const char *host, const char *commproc, int id)
+static int sec_update_connlist(const cl_com_endpoint_t *sender)
 {
    lListElem *element = NULL;
 
@@ -3170,16 +3413,15 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
       DEXIT;
       return -1;
    }
-   lSetHost(element, SEC_Host,host);
-   lSetString(element, SEC_Commproc,commproc);
-   lSetInt(element, SEC_Id,id);
+   lSetHost(element, SEC_Host, sender->comp_host);
+   lSetString(element, SEC_Commproc, sender->comp_name);
+   lSetInt(element, SEC_Id, sender->comp_id);
 
    SEC_UNLOCK_CONN_LIST();
 
    DEXIT;
    return 0;
 }
-#endif
 
 /*
 ** NAME
@@ -3204,9 +3446,7 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
 **    MT-NOTE: Caller must own sec_conn_list_mutex
 **    MT-NOTE: sec_set_secdata() is not MT safe
 */
-#ifdef ENABLE_NGC
-#else
-static int sec_set_secdata(const char *host, const char *commproc, int id)
+static int sec_set_secdata(const cl_com_endpoint_t *sender)
 {
    lListElem *element=NULL;
    lCondition *where=NULL;
@@ -3216,19 +3456,19 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    /* 
    ** get right element from connection list         
    */
-   if (id) {
+   if (sender && sender->comp_id) {
       where = lWhere("%T(%I==%s && %I==%s && %I==%d)", SecurityT,
-                       SEC_Host, host, SEC_Commproc, commproc, SEC_Id, id);
+                       SEC_Host, sender->comp_host, SEC_Commproc, sender->comp_name, SEC_Id, sender->comp_id);
    }
    else {
       where = lWhere("%T(%I==%s && %I==%s)", SecurityT,
-                     SEC_Host, host, SEC_Commproc, commproc);
+                     SEC_Host, sender->comp_host, SEC_Commproc, sender->comp_name);
    }
 
    element = lFindFirst(sec_conn_list, where);
    where = lFreeWhere(where);
    if (!element) {
-      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI, host,commproc,id));
+      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI, sender->comp_host, sender->comp_name, sender->comp_id));
       DEXIT;
       return -1;
    } 
@@ -3245,7 +3485,6 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    DEXIT;
    return 0;
 }
-#endif
 
 /*
 ** NAME
@@ -3268,9 +3507,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
 ** NOTES
 **      MT-NOTE: sec_insert_conn2list() is MT safe
 */
-#ifdef ENABLE_NGC
-#else
-static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier)
+static int sec_insert_conn2list(u_long32 connid, const cl_com_endpoint_t *sender, const char *uniqueIdentifier)
 {
    lListElem *element;
    lCondition *where;
@@ -3281,9 +3518,9 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    ** delete element if some with <host,commproc,id> exists   
    */
    where = lWhere("%T(%I==%s && %I==%s && %I==%d)", SecurityT,
-                    SEC_Host, host,
-                    SEC_Commproc, commproc,
-                    SEC_Id, id);
+                    SEC_Host, sender->comp_host,
+                    SEC_Commproc, sender->comp_name,
+                    SEC_Id, sender->comp_id);
    if (!where) {
       DEXIT;
       return -1;
@@ -3294,10 +3531,10 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    element = lFindFirst(sec_conn_list, where);
    where = lFreeWhere(where);
 
-   if (!element && sec_is_daemon(commproc)) {
+   if (!element && sec_is_daemon(sender->comp_name)) {
       where = lWhere("%T(%I==%s && %I==%s)", SecurityT,
-                       SEC_Host, host,
-                       SEC_Commproc, commproc);
+                       SEC_Host, sender->comp_host,
+                       SEC_Commproc, sender->comp_name);
       if (!where) {
          SEC_UNLOCK_CONN_LIST();
          DEXIT;
@@ -3325,9 +3562,9 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    ** set values of element               
    */
    lSetUlong(element, SEC_ConnectionID, connid);
-   lSetHost(element, SEC_Host, host);
-   lSetString(element, SEC_Commproc, commproc); 
-   lSetInt(element, SEC_Id, id); 
+   lSetHost(element, SEC_Host, sender->comp_host);
+   lSetString(element, SEC_Commproc, sender->comp_name); 
+   lSetInt(element, SEC_Id, sender->comp_id); 
    lSetString(element, SEC_UniqueIdentifier, uniqueIdentifier); 
    lSetUlong(element, SEC_SeqNoSend, 0); 
    lSetUlong(element, SEC_SeqNoReceive, 0); 
@@ -3349,7 +3586,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    SEC_UNLOCK_CONN_LIST();
 
    DPRINTF(("++++ added %d (%s, %s, %d) of %s to sec_conn_list\n", 
-               (int)connid, host, commproc, id, uniqueIdentifier));
+               (int)connid, sender->comp_host, sender->comp_name, sender->comp_id, uniqueIdentifier));
 
    /* 
    ** increment connid                   
@@ -3361,7 +3598,6 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    DEXIT;
    return 0;   
 }
-#endif
 
 
 /*
@@ -3381,8 +3617,6 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 **    MT-NOTE: sec_keymat2list() is MT safe
 */
 
-#ifdef ENABLE_NGC
-#else
 static void sec_keymat2list(lListElem *element)
 {
    int i;
@@ -3402,7 +3636,6 @@ static void sec_keymat2list(lListElem *element)
    lSetUlong(element,SEC_KeyPart6,ul[6]);
    lSetUlong(element,SEC_KeyPart7,ul[7]);
 }
-#endif
 
 /*
 ** NAME
@@ -3421,8 +3654,6 @@ static void sec_keymat2list(lListElem *element)
 **   MT-NOTE: sec_list2keymat() is MT safe
 */
 
-#ifdef ENABLE_NGC
-#else
 static void sec_list2keymat(lListElem *element)
 {
    int i;
@@ -3443,7 +3674,6 @@ static void sec_list2keymat(lListElem *element)
    memcpy(sec_state_get_key_mat(), working_buf, sec_state_get_key_mat_len());
 
 }
-#endif
 
 /*==========================================================================*/
 /*
@@ -3455,16 +3685,6 @@ static void sec_list2keymat(lListElem *element)
 ** NOTES
 **    MT-NOTE: sec_setup_path() is not MT safe
 */
-#ifdef ENABLE_NGC
-static void sec_setup_path(
-int is_daemon,
-int is_master
-) {
-  DENTER(GDI_LAYER, "sec_setup_path");
-  ERROR((SGE_EVENT,"NOT YET IMPLEMENTED\n"));
-  DEXIT;
-}
-#else
 static void sec_setup_path(
 int is_daemon,
 int is_master
@@ -3482,8 +3702,8 @@ int is_master
 
    DENTER(GDI_LAYER, "sec_setup_path");
  
-
-   cp = getenv("COMMD_PORT");
+   cp = getenv("SGE_QMASTER_PORT");
+#define SGE_COMMD_SERVICE "sge_qmaster"
    
    /*
    ** malloc ca_root string and check if directory has been created during
@@ -3510,14 +3730,16 @@ int is_master
          ca_local_root = ca_root;
       } else {
          char *ca_local_dir = NULL;
-         
          /* If the user is root, use /var/sgeCA.  Otherwise, use /tmp/sgeCA */
+#if 0
          if (geteuid () == 0) {
             ca_local_dir = CA_LOCAL_DIR;
          }
          else {
             ca_local_dir = USER_CA_LOCAL_DIR;
          }
+#endif
+         ca_local_dir = CA_LOCAL_DIR; 
          
          len = strlen(ca_local_dir) + 
                (cp ? strlen(cp)+4:strlen(SGE_COMMD_SERVICE)) +
@@ -3655,7 +3877,6 @@ int is_master
    DEXIT;
    return;
 }
-#endif
 
 
 /*
@@ -3678,8 +3899,6 @@ int is_master
 **      MT-NOTE: sec_pack_announce() is MT safe 
 **      MT-NOTE: sec_unpack_announce() is MT safe 
 */
-#ifdef ENABLE_NGC
-#else
 static int sec_pack_announce(u_long32 certlen, u_char *x509_buf, u_char *challenge, sge_pack_buffer *pb)
 {
    int   i;
@@ -3694,10 +3913,7 @@ static int sec_pack_announce(u_long32 certlen, u_char *x509_buf, u_char *challen
    error:
       return(i);
 }
-#endif
 
-#ifdef ENABLE_NGC
-#else
 static int sec_unpack_announce(u_long32 *certlen, u_char **x509_buf, u_char **challenge, sge_pack_buffer *pb)
 {
    int i;
@@ -3712,11 +3928,8 @@ static int sec_unpack_announce(u_long32 *certlen, u_char **x509_buf, u_char **ch
    error:   
       return(i);
 }
-#endif
 
 /* MT-NOTE: sec_pack_response() is MT safe */
-#ifdef ENABLE_NGC
-#else
 static int sec_pack_response(u_long32 certlen, u_char *x509_buf, 
                       u_long32 chall_enc_len, u_char *enc_challenge, 
                       u_long32 connid, 
@@ -3753,11 +3966,8 @@ static int sec_pack_response(u_long32 certlen, u_char *x509_buf,
    error:
       return(i);
 }
-#endif
 
 /* MT-NOTE: sec_unpack_response() is MT safe */
-#ifdef ENABLE_NGC
-#else
 static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf, 
                         u_long32 *chall_enc_len, u_char **enc_challenge, 
                         u_long32 *connid, 
@@ -3795,11 +4005,8 @@ static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf,
    error:
       return(i);
 }
-#endif
 
 /* MT-NOTE: sec_pack_message() is MT safe */
-#ifdef ENABLE_NGC
-#else
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len)
 {
    int i;
@@ -3818,11 +4025,8 @@ static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_m
    error:
       return(i);
 }
-#endif
 
 /* MT-NOTE: sec_unpack_message() is MT safe */
-#ifdef ENABLE_NGC
-#else
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg)
 {
    int i;
@@ -3841,7 +4045,6 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
    error:
       return(i);
 }
-#endif
 
 #ifdef SEC_RECONNECT
 

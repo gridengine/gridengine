@@ -161,6 +161,55 @@ void sge_security_exit(int i)
 }
 
 
+int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender) {
+
+   int ret;
+   DENTER(TOP_LAYER, "gdi_receive_sec_message");
+
+#ifdef SECURE   
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
+      DEXIT;
+      return ret;
+   }                      
+#endif
+
+   ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
+                                     synchron, response_mid,  message,  sender);
+
+   DEXIT;
+   return ret;
+}
+
+int gdi_send_sec_message(cl_com_handle_t* handle,
+                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                            cl_xml_ack_type_t ack_type, 
+                            cl_byte_t* data, unsigned long size , 
+                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
+                            int copy_data,
+                            int wait_for_ack) {
+   int ret;
+   DENTER(TOP_LAYER, "gdi_send_sec_message");
+
+   
+#ifdef SECURE
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
+                                  ack_type, data,  size ,
+                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
+      DEXIT;
+      return ret;
+   }                      
+#endif
+
+   ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
+                                  ack_type, data,  size ,
+                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
+   DEXIT;
+   return ret;
+
+}
+
 /************************************************************
    COMMLIB/SECURITY WRAPPERS
    FIXME: FUNCTIONPOINTERS SHOULD BE SET IN sge_security_initialize !!!
@@ -190,7 +239,6 @@ int compressed
    int use_execd_handle = 0;
    DENTER(TOP_LAYER, "gdi_send_message");
 
-   /* TODO: handle Kerberos and SECURE send message */
 
 
 
@@ -245,14 +293,14 @@ int compressed
    }
 
    DEBUG((SGE_EVENT,"gdi_send_message(): sending message to %s,%s,%ld\n",(char*)tohost,(char*)tocomproc ,(unsigned long)toid));
-   ret = cl_commlib_send_message( handle, 
+   ret = gdi_send_sec_message( handle, 
                                   (char*)tohost ,(char*)tocomproc ,toid , 
                                   ack_type , 
                                   (cl_byte_t*)buffer ,(unsigned long)buflen,
                                   &dummy_mid , 0 ,tag,1 , synchron);
    if (ret != CL_RETVAL_OK) {
       /* try again ( if connection timed out) */
-      ret = cl_commlib_send_message( handle, 
+      ret = gdi_send_sec_message( handle, 
                                      (char*)tohost ,(char*)tocomproc ,toid ,
                                      ack_type , 
                                      (cl_byte_t*)buffer ,(unsigned long)buflen,
@@ -336,7 +384,6 @@ u_short *compressed
    int use_execd_handle = 0;
 
    DENTER(TOP_LAYER, "gdi_receive_message");
-   /* TODO: handle Kerberos and SECURE send message */
 
       /* CR- TODO: This is for tight integration of qrsh -inherit
     *       
@@ -381,7 +428,7 @@ u_short *compressed
       }
    } 
 
-   ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
+   ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
 
    if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
       if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
@@ -390,7 +437,7 @@ u_short *compressed
           INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (1)\n", fromhost , fromcommproc , u32c(*fromid)));
           if (ret == CL_RETVAL_OK) {
              INFO((SGE_EVENT,"reconnected successfully\n"));
-             ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
+             ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
           } 
       } else {
          DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (1)\n"));

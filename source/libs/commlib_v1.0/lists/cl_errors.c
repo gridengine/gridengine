@@ -277,6 +277,15 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_ALIAS_VERSION_ERROR: {
          return "CL_RETVAL_ALIAS_VERSION_ERROR";
       }
+      case CL_RETVAL_SECURITY_ANNOUNCE_FAILED: {
+         return "CL_RETVAL_SECURITY_ANNOUNCE_FAILED";
+      }
+      case CL_RETVAL_SECURITY_SEND_FAILED: {
+         return "CL_RETVAL_SECURITY_SEND_FAILED";
+      } 
+      case CL_RETVAL_SECURITY_RECEIVE_FAILED: {
+         return "CL_RETVAL_SECURITY_RECEIVE_FAILED";
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

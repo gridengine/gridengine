@@ -1,3 +1,9 @@
+CR-2004-02-06-0: Bugfix:    Gridengine system with csp feature not working
+                            -  modified csp feature for new communication
+                 Issue:     657      
+                 Changed:   all binaries, install scripts, japi
+                 Review:    AA
+
 AD-2004-02-06-1: Bugfix:    'sge_remote_event_delivery_handler' is now called
                             after message.
                  Changed:   qmaster

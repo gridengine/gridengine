@@ -111,12 +111,15 @@
 #define CL_RETVAL_ALIAS_FILE_NOT_FOUND     (CL_RETVAL_START_ID + 75)
 #define CL_RETVAL_OPEN_ALIAS_FILE_FAILED   (CL_RETVAL_START_ID + 76)
 #define CL_RETVAL_ALIAS_VERSION_ERROR      (CL_RETVAL_START_ID + 77)
+#define CL_RETVAL_SECURITY_ANNOUNCE_FAILED (CL_RETVAL_START_ID + 78)
+#define CL_RETVAL_SECURITY_SEND_FAILED     (CL_RETVAL_START_ID + 79)
+#define CL_RETVAL_SECURITY_RECEIVE_FAILED  (CL_RETVAL_START_ID + 80)
 
 
 
 
 
-#define CL_RETVAL_LAST_ID                  (CL_RETVAL_START_ID + 78)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                  (CL_RETVAL_START_ID + 81)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
 
 const char* cl_get_error_text(int error_id);   /* CR check */

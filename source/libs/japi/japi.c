@@ -413,7 +413,7 @@ int japi_init_mt(dstring *diag)
    if ( uti_state_get_mewho() == QUSERDEFINED) { 
       sge_gdi_param(SET_MEWHO, prog_number, NULL);
    } 
-   gdi_errno = sge_gdi_setup(uti_state_get_sge_formal_prog_name(), &alp);
+   gdi_errno = sge_gdi_setup(prognames[prog_number], &alp);
    if (gdi_errno!=AE_OK && gdi_errno != AE_ALREADY_SETUP) {
       answer_to_dstring(lFirst(alp), diag);
       lFreeList(alp);

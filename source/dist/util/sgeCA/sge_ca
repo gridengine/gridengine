@@ -57,6 +57,7 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
    "\nUsage: %s <command>\n" \
+   "   -env             export SGE_CERTFILE and SGE_KEYFILE for daemon\n" \
    "   -init            initialize CA infrastructure\n" \
    "   -req             generate a certificate request and private key\n" \
    "   -sign            sign a certificate request\n" \
@@ -677,6 +678,9 @@ nodes="-nodes"
 ARGC=$#
 while [ $ARGC != 0 ]; do
    case $1 in
+   -env)
+      WHICH="env"
+      ;;
    -init)
       WHICH="init"
       ;;
@@ -836,6 +840,14 @@ print)
     ;;
 extend) 
     $X509 -in $newcert -signkey $CALOCALTOP/private/$CAKEY $DAYS -out $outdir/extended_cert.pem
+    RET=$?
+    ;;
+env) 
+    echo $CALOCALTOP
+#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
+#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
+#    export SGE_KEYFILE SGE_CERTFILE
+#    echo $SGE_CERTFILE $SGE_KEYFILE
     RET=$?
     ;;
 pkcs12) 

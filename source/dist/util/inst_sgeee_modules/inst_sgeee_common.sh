@@ -929,3 +929,12 @@ else
    touch /tmp/$LOGNAME
 fi
 }
+
+ExportCertKey()
+{
+   user=$1
+   SGE_CERTFILE=`util/sgeCA/sge_ca -env`/userkeys/$user/cert.pem
+   SGE_KEYFILE=`util/sgeCA/sge_ca -env`/userkeys/$user/key.pem
+   export SGE_CERTFILE SGE_KEYFILE
+}
+

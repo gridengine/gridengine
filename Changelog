@@ -1,3 +1,12 @@
+DT-2004-02-18-4: Bugfix:    Revamped JAPI signal handling to be more POSIX
+                            friendly and less dangerous.
+                            Reworked JAPI event client thread so that it doesn't
+                            hang the process whenever something goes wrong.
+                            JAPI now shares one comm lib connection between the
+                            main thread and the event client thread.
+                 Changed:   JAPI
+                 Review:    pending
+
 AD-2004-02-18-1: Cleanup:   Did remove *currently* dispensable mutex
                             attributes. Did add some additional commentaries.
                  Changed:   qmaster

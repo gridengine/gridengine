@@ -48,7 +48,7 @@ JAPI_ALL 	  = test_drmaa japilib drmaalib
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c \
 							 sge_qtcsh.c
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
-JAPI_ADD_LIBS = -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd \
+JAPI_ADD_LIBS = -L. -lspool -lsched -lgdi -lsgeobj -lsgeobjd \
 								$(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck \
                 $(DLLIB) -levc -levm
 JAPI_LIB_DEPENDS = $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \

@@ -197,12 +197,14 @@ static const char *drmaa_supported_nonvector[] = {
    DRMAA_NATIVE_SPECIFICATION,  /* mandatory */
    DRMAA_BLOCK_EMAIL,           /* mandatory */
    DRMAA_START_TIME,            /* mandatory */
+#if 0
    DRMAA_TRANSFER_FILES,        /* optional */
    DRMAA_DEADLINE_TIME,         /* optional */
    DRMAA_WCT_HLIMIT,            /* optional */
    DRMAA_WCT_SLIMIT,            /* optional */
    DRMAA_DURATION_HLIMIT,       /* optional */
    DRMAA_DURATION_SLIMIT,       /* optional */
+#endif
    NULL
 };
 

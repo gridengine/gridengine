@@ -84,6 +84,9 @@ int disable_reschedule = 0;
 int flush_submit_sec = -1;
 int flush_finish_sec = -1;
 int profile_schedd = 0;
+#ifdef PROFILE_MASTER
+int profile_master = 0;
+#endif
  
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
@@ -602,6 +605,11 @@ int merge_configuration(lListElem *global, lListElem *local,
                     sizeof("SCHEDULER_TIMEOUT")-1)) {
             scheduler_timeout=atoi(&s[sizeof("SCHEDULER_TIMEOUT=")-1]);
          }
+#ifdef PROFILE_MASTER
+           else if (!strncasecmp(s, "PROFILE=1", sizeof("PROFILE=1")-1)) {
+            profile_master = 1;
+         }
+#endif
        
       /* always initialize to defaults before we check execd_params */
 #ifdef COMPILE_DC
@@ -725,6 +733,9 @@ int merge_configuration(lListElem *global, lListElem *local,
       flush_submit_sec = -1;
       flush_finish_sec = -1;
       profile_schedd = 0;
+#ifdef PROFILEMASTER
+      profile_master = 0;
+#endif
       classic_sgeee_scheduling = 0;
       share_override_tickets = 1;
       share_functional_shares = 1;

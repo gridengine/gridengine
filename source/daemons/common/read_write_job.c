@@ -34,6 +34,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef PROFILE_MASTER 
+#include <time.h>
+#include <sys/times.h>
+#endif
 
 #include "sge.h"
 #include "sge_log.h"
@@ -60,6 +64,10 @@
 #include "msg_common.h"
 #include "sge_suser.h"
 #include "sge_conf.h"
+
+#ifdef PROFILE_MASTER
+extern u_long32 logginglevel;
+#endif
 
 extern lList *Master_Job_List;
 
@@ -274,7 +282,53 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    int within_execd = flags & SPOOL_WITHIN_EXECD;
    int ignore_instances = flags & SPOOL_IGNORE_TASK_INSTANCES;
    int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
+#ifdef PROFILE_MASTER
+   static u_long32 sumall = 0, sumuser = 0, sumsystem = 0;  
+   static u_long32 firststart = 0;
+   static u_long32 jobs;
+   u_long32 start = 0, now;
+   struct tms tms_start, tms_now;
+#endif
    DENTER(TOP_LAYER, "job_write_spool_file");
+
+#ifdef PROFILE_MASTER
+   if (profile_master) {
+      start = times(&tms_start);
+
+      {
+         float all, spooling_all, spooling_user, spooling_system;
+
+         if (firststart == 0) {
+            firststart = start;
+            all = spooling_all = spooling_user = spooling_system = 0;
+            jobs = 0;
+         } else {
+            all = (start - firststart) * 1.0 / CLK_TCK;
+            spooling_all = sumall * 1.0 / CLK_TCK;
+            spooling_user = sumuser * 1.0 / CLK_TCK;
+            spooling_system = sumsystem * 1.0 / CLK_TCK;
+         }
+         jobs++;
+         if (all > 5*60) {
+            u_long32 saved_logginglevel = logginglevel;
+            logginglevel = LOG_INFO;
+
+            INFO((SGE_EVENT, "Profile interval %.3f, "u32" J, %.3f (u %.3f + s %.3f = %.3f) J(spool)\n", 
+                  all,
+                  jobs, 
+                  spooling_all,
+                  spooling_user,
+                  spooling_system,
+                  spooling_user + spooling_system));
+            logginglevel = saved_logginglevel;
+
+            firststart = start;
+            all = spooling_all = spooling_user = spooling_system = 0;
+            jobs = 0;
+         }
+      }
+   }
+#endif
 
    spool_single_task_files = (!handle_as_zombie && !within_execd && 
       job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
@@ -286,6 +340,16 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    } else {
       ret = job_write_as_single_file(job, ja_taskid, flags); 
    }
+
+#ifdef PROFILE_MASTER
+   if (profile_master) {
+      now = times(&tms_now);  
+
+      sumall += now - start;
+      sumuser += tms_now.tms_utime - tms_start.tms_utime;
+      sumsystem += tms_now.tms_stime - tms_start.tms_stime;
+   }
+#endif
 
    DEXIT; 
    return ret;

@@ -633,7 +633,7 @@ CheckWhoCalls
 CheckPrerequisites
 CheckUpgradeType
 
-$INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n " \
+$INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
           "Do you want to start the update procedure(y/n) [y] >> "
 if [ $? != 0 ]; then
    echo
@@ -776,7 +776,7 @@ elif [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
    if [ $? = 0 ]; then
       sed -e 's/codine/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
    else
-      sed -e -e 's/sge/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
+      sed -e 's/sge/sgeee/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
    fi
 elif [ $OLD_SGE_MODE = sge -a $SGE_MODE = sge ]; then
    sed -e 's/codine/sge/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
@@ -916,7 +916,7 @@ fi
 #
 if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
    $INFOTEXT "Updating usersets"
-   if [ "`ls $MSPOOLdir/usersets" != "" ]; then
+   if [ "`ls $MSPOOLdir/usersets`" != "" ]; then
 
       Execute $CP $MSPOOLdir/usersets/* $BACKUP_DIR_USERSETS
       Execute $RM -f $MSPOOLdir/usersets/*

@@ -1,3 +1,6 @@
+AH-2002-03-15-3  Doc:       Added information about qmod [-e|-s|..] queue_list
+                            syntax (wildcards).
+
 AH-2002-03-15-1: Bugfix:    Changed scheme used for creation of id used for
                             qrsh -inherit sub-tasks to fix accounting
                             data leak with

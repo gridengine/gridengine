@@ -808,7 +808,7 @@ static void lWriteList_(const lList *lp, int nesting_level, FILE *fp)
    fprintf(out, "\n%sList: <%s> %c #Elements: %d\n", indent, lGetListName(lp), lp->changed ? '*' : ' ', lGetNumberOfElem(lp));
 
    for_each(ep, lp) {
-      lWriteElem_(ep, nesting_level, NULL);
+      lWriteElem_(ep, nesting_level, out);
    }
    DEXIT;
 }

@@ -1726,6 +1726,7 @@ int sub_command
          job_id_str = job_id;
       }
       else {   
+         /* format: <delimiter>old_name<delimiter>new_name */
          char *del_pos = NULL;
          job_id_str = lGetPosString(jep, job_name_pos);
          job_id_str++;
@@ -1736,11 +1737,12 @@ int sub_command
          job_mod_name = sge_strdup(NULL, job_id_str);
          job_id_str = job_mod_name;
 
-         if (strlen(del_pos)>0)
+         if (strlen(del_pos)>0) {
             lSetPosString(jep, job_name_pos, del_pos);
-         else
+         }   
+         else {
             lSetPosString(jep, job_name_pos, NULL);
-            
+         }   
       }
 
       job_list_filter(user_list_flag?lGetPosList(jep, user_list_pos):NULL,  
@@ -3153,7 +3155,11 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 {
    const char *job_name = lGetString(job, JB_job_name);
    int ret = 0;
+#define MAX_characters 6
+   const char characters[MAX_characters] = { '\n', '\t', '\r', '/', ':', '@'};
+   const char *output[MAX_characters] = {"\\n", "\\t", "\\r", "/", ":", "@"};
 
+   
    DENTER(TOP_LAYER, "job_verify_name");
 
    if (isdigit(job_name[0])) {
@@ -3162,8 +3168,35 @@ static int job_verify_name(const lListElem *job, lList **alpp,
       ret = STATUS_EUNKNOWN;
    }
    else {
+      int i;
+      for (i=0; i < MAX_characters; i++) {
+         if (strchr(job_name, characters[i])) {
+            ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, output[i])); 
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+            break;  
+         }   
+      }
+   }
+      
+/*      
+      if (strchr(job_name, '/')) {
+      ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, MSG_GDI_KEYSTR_COLON, '/'));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      ret = STATUS_EUNKNOWN;
+   }
+   else if (strchr(job_name, ':')) {
+      ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, MSG_GDI_KEYSTR_COLON, ':'));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      ret = STATUS_EUNKNOWN;
+   } 
+*/
+
+   
+/*   else {
       ret = verify_str_key(alpp, job_name, "job"); 
    }
+*/   
 
    DEXIT;
    return ret;

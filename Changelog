@@ -1,3 +1,10 @@
+SG-2004-07-25-0: Bugfix:    - fixed lWriteListTo to use the spedified file handle
+                            - some minor cleanup
+                            - changed the job name specification that all characters
+                              are allowed except: "\n", "\t", "\r", "/", ":", "@"
+                 Issue:     -NA-
+                 Changed:   qmaster, submit.1
+
 CR-2004-07-24-1: Bugfix:    schedd and qmaster get out of sync - no scheduling
                             for long time
                  Changed:   communication lib

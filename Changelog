@@ -1,3 +1,6 @@
+DT-2004-01-28-0: Bugfix:    Fixed install script wrt new SGE_EXECD_PORT variable
+                 Changed:   inst_sge
+
 CR-2004-01-28-0: Bugfix:    - correct commlib shutdown for qmon
                             - removed unnecessary cl_commlib_shutdown_handle() 
                               call in sge_terminate()

@@ -105,14 +105,16 @@ PreCheckForFastInstall()
       return 1
    fi
 
-   $V5UTILBIN/getservbyname $QSYST_SERVICE  >/dev/null 2>&1
-   ret=$?
+   $V5UTILBIN/getservbyname $QSYST_MASTER_NAME  >/dev/null 2>&1
+   mret=$?
+   $V5UTILBIN/getservbyname $QSYST_EXECD_NAME  >/dev/null 2>&1
+   eret=$?
 
-   if [ $ret = 1 -a "$SGE_QMASTER_PORT" = "" ]; then
+   if [ $mret = 1 -a "$SGE_QMASTER_PORT" = "" ]; then
       return 1
    fi
 
-   if [ $ret = 1 -a "$SGE_EXECD_PORT" = "" ]; then
+   if [ $eret = 1 -a "$SGE_EXECD_PORT" = "" ]; then
       return 1
    fi
 
@@ -1226,8 +1228,11 @@ CheckForCommdPort()
       qmaster_port_max=65500
    fi
 
-   $V5UTILBIN/getservbyname $QSYST_SERVICE  >/dev/null 2>&1
-   ret=$?
+   $V5UTILBIN/getservbyname $QSYST_MASTER_NAME  >/dev/null 2>&1
+   mret=$?
+
+   $V5UTILBIN/getservbyname $QSYST_EXECD_NAME  >/dev/null 2>&1
+   eret=$?
 
    if [ "$SGE_QMASTER_PORT" != "" -a "$SGE_EXECD_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
@@ -1238,8 +1243,11 @@ CheckForCommdPort()
          $INFOTEXT "\nUsing the environment variable\n\n" \
                    "   \$SGE_EXECD_PORT=%s\n\n" \
                      "as port for communication with >sge_execd<.\n\n" $SGE_EXECD_PORT
-         if [ $ret = 0 ]; then
-            $INFOTEXT "This overrides the preset TCP/IP service >%s<.\n" $QSYST_SERVICE
+         if [ $mret = 0 ]; then
+            $INFOTEXT "This overrides the preset TCP/IP service >%s<.\n" $QSYST_MASTER_NAME
+         fi
+         if [ $eret = 0 ]; then
+            $INFOTEXT "This overrides the preset TCP/IP service >%s<.\n" $QSYST_EXECD_NAME
          fi
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
@@ -1253,17 +1261,17 @@ CheckForCommdPort()
       fi
    fi
 
-   $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<" $QSYST_SERVICE
-   if [ $ret != 0 ]; then
-      $INFOTEXT "\nThere is no service >%s< available in your >/etc/services< file\n" \
+   $INFOTEXT -u "\nGrid Engine TCP/IP services >%s< and >%s<" $QSYST_MASTER_NAME $QSYST_EXECD_NAME
+   if [ $mret != 0 -o $eret != 0 ]; then
+      $INFOTEXT "\nThere is either no >%s< or >%s< service available in your >/etc/services< file\n" \
                 "or in your NIS/NIS+ database.\n\n" \
-                "You may add this service now to your services database or choose a port number.\n" \
-                "It is recommended to add the service now. If you are using NIS/NIS+ you should\n" \
-                "add the service at your NIS/NIS+ server and not to the local >/etc/services<\n" \
+                "You may add these services now to your services database or choose port numbers.\n" \
+                "It is recommended to add these services now. If you are using NIS/NIS+ you should\n" \
+                "add these services at your NIS/NIS+ server and not to the local >/etc/services<\n" \
                 "file.\n\n" \
-                "Please add an entry in the form\n\n" \
+                "Please add entries in the form\n\n" \
                 "   %s <port_number>/tcp\n\n" \
-                "to your services database and make sure to use an unused port number.\n" $QSYST_SERVICE $QSYST_SERVICE
+                "to your services database and make sure to use unused port numbers.\n" $QSYST_MASTER_NAME $QSYST_EXECD_NAME $QSYST_SERVICE
 
       if [ "$host_type" = "exec" ]; then
 
@@ -1275,19 +1283,22 @@ CheckForCommdPort()
       service_available=false
       done=false
       while [ $done = false ]; do
-         $V5UTILBIN/getservbyname $QSYST_SERVICE 2>/dev/null
-         if [ $? != 0 ]; then
+         $V5UTILBIN/getservbyname $QSYST_MASTER_NAME 2>/dev/null
+         mret = $?
+         $V5UTILBIN/getservbyname $QSYST_EXECD_NAME 2>/dev/null
+         eret = $?
+         if [ $mret != 0 -o $eret != 0 ]; then
             $CLEAR
-            $INFOTEXT -u "\nNo TCP/IP service >%s< yet" $QSYST_SERVICE
-            $INFOTEXT "\nThere is still no service for >%s< available.\n\n" \
-                      "If you have just added the service it may take a while until the service\n" \
-                      "propagates in your network. If this is true we can again check for\n" \
-                      "the service >%s<. If you don't want to add this service or if\n" \
+            $INFOTEXT -u "\nNo TCP/IP >%s< or >%s< service yet" $QSYST_MASTER_NAME $QSYST_EXECD_NAME
+            $INFOTEXT "\nThere is still no service for >%s< or >%s< available.\n\n" \
+                      "If you have just added the services it may take a while until the services\n" \
+                      "propagate in your network. If this is true we can check again for\n" \
+                      "the services. If you don't want to add these services or if\n" \
                       "you want to install Grid Engine just for testing purposes you can enter\n" \
-                      "a port number.\n" $QSYST_SERVICE $QSYST_SERVICE
+                      "port numbers.\n" $QSYST_MASTER_NAME $QSYST_EXECD_NAME
 
             $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-                      "Check again (if not you need to enter a port number later) (y/n) [y] >> "
+                      "Check again (if not you will be asked to enter a port number) (y/n) [y] >> "
             if [ $? = 0 ]; then
                :
             else
@@ -1335,21 +1346,21 @@ CheckForCommdPort()
          export SGE_QMASTER_PORT
          SGE_EXECD_PORT=`expr ${SGE_QMASTER_PORT} + 1`
          export SGE_EXECD_PORT
-         $INFOTEXT "\nUsing port >%s<. No service >%s< available.\n" $SGE_QMASTER_PORT $QSYST_SERVICE
+         $INFOTEXT "\nUsing port >%s<. No >%s< service available.\n" $SGE_QMASTER_PORT $QSYST_MASTER_NAME
          $INFOTEXT "\nUsing port >%s< for execution daemons.\n" $SGE_EXECD_PORT
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
          unset SGE_QMASTER_PORT
          unset SGE_EXECD_PORT
-         $INFOTEXT "\nService >%s< is now available.\n" $QSYST_SERVICE
+         $INFOTEXT "\n>%s< and >%s< services are now available.\n" $QSYST_MASTER_NAME $QSYST_EXECD_NAME
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
       fi
    else
-      $INFOTEXT "\nUsing the service\n\n" \
-                "   %s\n\n" \
-                "for communication with Grid Engine.\n" $QSYST_SERVICE
+      $INFOTEXT "\nUsing the services\n\n" \
+                "   %s and %s\n\n" \
+                "for communication with Grid Engine.\n" $QSYST_MASTER_NAME $QSYST_EXECD_NAME
       $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi

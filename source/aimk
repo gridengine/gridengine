@@ -1104,7 +1104,7 @@ case LINUX6:
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
-   set LIBS     = "-lefence $LIBS"
+   set LIBS     = "$LIBS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"

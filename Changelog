@@ -1,3 +1,7 @@
+EB-2003-04-06-0  Testsuite: Added new testsuite test for issue 509
+                 Issue:     520
+                 Review:    CR
+
 EB-2003-04-04-0  Bugfix:    jobs suspended due to calendar were handled as 
                             running jobs within scheduler 
                             (see EB-2003-03-27-0)
@@ -12,7 +16,7 @@ CR-2003-04-03-0  Bugfix:    commd ignored first message for commlib client
                  Review:    AH
                  Changed:   commd
 
-EB-2003-04-03-1  Enhancem:  Added new testsuite test for issue 511
+EB-2003-04-03-1  Testsuite: Added new testsuite test for issue 511
                  Bugtraq:   518
                  Review:    CR
 

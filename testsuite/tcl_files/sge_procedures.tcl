@@ -3716,15 +3716,16 @@ proc get_extended_job_info {jobid {variable job_info}} {
 #     parser/parse_qacct()
 #*******************************
 proc get_qacct {jobid {variable qacct_info}} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
    upvar $variable qacctinfo
    
    set exit_code [catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qacct" -j $jobid} result]
-
    if { $exit_code == 0 } {
       parse_qacct result qacctinfo $jobid
       return 1
-   } 
+   } else {
+      puts $CHECK_OUTPUT "result of qacct -j $jobid:\n$result"
+   }
    return 0
 }
 
@@ -3812,7 +3813,7 @@ proc is_job_running { jobid jobname } {
 #     wait_for_jobstart -- wait for job to get out of pending list
 #
 #  SYNOPSIS
-#     wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} } 
+#     wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } 
 #
 #  FUNCTION
 #     This procedure will call the is_job_running procedure in a while
@@ -3825,6 +3826,8 @@ proc is_job_running { jobid jobname } {
 #     seconds           - timeout in seconds
 #     {do_errorcheck 1} - enable error check (default)
 #                         if 0: do not report errors
+#     {do_tsm 0}        - do qconf -tsm before waiting
+#                         if 1: do qconf -tsm (trigger scheduler) 
 #
 #  RESULT
 #     -1 - job is not running (timeout error)
@@ -3845,9 +3848,15 @@ proc is_job_running { jobid jobname } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} } {
+proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
   
-  global CHECK_OUTPUT
+  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+
+  if { $do_tsm == 1 } {
+     puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+     catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+     puts $CHECK_OUTPUT $result
+  }
 
   puts $CHECK_OUTPUT "Waiting for start of job $jobid ($jobname)"
    

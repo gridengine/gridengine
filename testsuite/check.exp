@@ -38,6 +38,9 @@ global no_action                   ;# just put out what would be done
 set no_action 0
 global be_quiet
 set be_quiet 0
+global write_mail_to_file
+set write_mail_to_file 0
+
 
 global do_compile
 
@@ -45,6 +48,7 @@ global do_compile
 # path/file variables
 global CHECK_TESTSUITE_ROOT        ;# path to TESTSUITE directory
 global CHECK_CHECKTREE_ROOT        ;# path where checktree lies
+
 # never touch these dirs: begin
 global CHECK_RESULT_DIR            ;# check result directory            
 global CHECK_BAD_RESULT_DIR        ;# check rusult directory for failed checkes
@@ -104,7 +108,8 @@ global CHECK_BINARY_DIR_CONFIG_FILE ;# file for binary directories in $CHECK_CON
 set CHECK_BINARY_DIR_CONFIG_FILE "binary-path.conf"
 global CHECK_LOADSENSOR_DIR_CONFIG_FILE ;# file for architecture specific loadsensor binaries in
 set CHECK_LOADSENSOR_DIR_CONFIG_FILE "loadsensor.conf" ;# $CHECK_CONFIG_DIR
-
+global CHECK_MAIL_OUTPUT_FILE
+set CHECK_MAIL_OUTPUT_FILE "all_test_mails.txt"
 
 global check_use_installed_system   ;# used only for install_core_system test (noinst parameter)
 set check_use_installed_system 0    ;# set to 1 when installed system parameter is set
@@ -927,6 +932,22 @@ proc send_mail { address cc subject body } {
 
   global CHECK_TESTSUITE_ROOT CHECK_MAILX_HOST CHECK_OUTPUT
   global CHECK_MAILS_SENT CHECK_ENABLE_MAIL
+  global write_mail_to_file CHECK_MAIL_OUTPUT_FILE
+
+
+  if { $write_mail_to_file != 0 } {
+     set fd [ open $CHECK_MAIL_OUTPUT_FILE "a" ]
+     puts $fd "-=*************************************************************=-"
+     puts $fd "Grid Engine Version: [get_version_info]"
+     puts $fd "Subject            : $subject"
+     puts $fd "-=*************************************************************=-"
+     puts $fd "$body"
+     puts $fd "-=*=-"
+     flush $fd
+     close $fd 
+     puts $CHECK_OUTPUT "Added entry in mail output file $CHECK_MAIL_OUTPUT_FILE"
+     return
+  }
 
   set new_subject "[get_version_info] - $subject"
 
@@ -5235,10 +5256,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       } else {
         puts "could not copy defaults file"
       }
+      continue
    }
    
    if {([string compare [lindex $argv $i] "--quiet"] == 0) || ([string compare [lindex $argv $i] "quiet"] == 0) } {
       set be_quiet 1
+      continue
    }
 
 
@@ -5261,43 +5284,69 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "debug LEVEL  run testsuite in debuglevel 0,1 or 2"
       puts "             0=no debug, 1=more output, 2=1+user response"
       puts "quiet        no output on setup"
+      puts "mfile FILE   write all mails into file FILE (when mail is enabled)"
       exit 1
    }
    if { ( [string compare [lindex $argv $i] "--re_init"] == 0 ) || ([string compare [lindex $argv $i] "re_init"] == 0) } {
       set check_use_installed_system 1
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--kill"] == 0 ) || ([string compare [lindex $argv $i] "kill"] == 0) } {
       set do_kill 1
+      continue
    }
-
    
+   if { ( [string compare [lindex $argv $i] "--mfile"] == 0 ) || ([string compare [lindex $argv $i] "mfile"] == 0) } {
+      incr i
+      set CHECK_MAIL_OUTPUT_FILE [lindex $argv $i]
+      if { [llength $CHECK_MAIL_OUTPUT_FILE] != 1 } {
+         puts $CHECK_OUTPUT "can't use \"mfile\" option without filename!"
+         exit -1 
+      }
+      if { ([ string first "/" $CHECK_MAIL_OUTPUT_FILE ] < 0) && ([ string first "\/" $CHECK_MAIL_OUTPUT_FILE ] < 0)} {
+          set CHECK_MAIL_OUTPUT_FILE "$CHECK_CURRENT_WORKING_DIR/$CHECK_MAIL_OUTPUT_FILE"
+      }
+      set write_mail_to_file 1
+      puts $CHECK_OUTPUT " ---> writing all mails into \"$CHECK_MAIL_OUTPUT_FILE\" ! <---"
+      continue
+   }
  
    if { ( [string compare [lindex $argv $i] "--file"] == 0 ) || ([string compare [lindex $argv $i] "file"] == 0) } {
       incr i
       set CHECK_DEFAULTS_FILE [lindex $argv $i]
+      if { [llength $CHECK_DEFAULTS_FILE] != 1 } {
+         puts $CHECK_OUTPUT "can't use \"file\" option without filename!"
+         exit -1 
+      }
+
       if { ([ string first "/" $CHECK_DEFAULTS_FILE ] < 0) && ([ string first "\/" $CHECK_DEFAULTS_FILE ] < 0)} {
           set CHECK_DEFAULTS_FILE "$CHECK_CURRENT_WORKING_DIR/$CHECK_DEFAULTS_FILE"
       }
-      debug_puts " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
+      puts $CHECK_OUTPUT " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
+      continue
    }
   
    if { ( [string compare [lindex $argv $i] "--install"] == 0 ) || ([string compare [lindex $argv $i] "install"] == 0 ) } {
       set do_install 1
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--compile"] == 0 ) || ([string compare [lindex $argv $i] "compile"] == 0 ) } {
       set do_compile 1
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--no_update"] == 0 ) || ([string compare [lindex $argv $i] "no_update"] == 0 ) } {
       set do_not_update 1
+      continue
    }
 
    
    
    if { ( [string compare [lindex $argv $i] "--test_perm"] == 0 ) || ([string compare [lindex $argv $i] "test_perm"] == 0 ) } {
       set do_only_test_perm 1
+      continue
    }
   
 
@@ -5315,6 +5364,8 @@ for { set i 0 } { $i < $argc } { incr i } {
          mail_report $mail_subject "$mail_body used all parameter without runlevel" 
          exit -1
       }
+      incr i
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--debug"] == 0 ) || ([string compare [lindex $argv $i] "debug"] == 0 ) } {
@@ -5322,6 +5373,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       set CHECK_DEBUG_LEVEL [lindex $argv $deb_lev]
 
       debug_puts "debuglevel is $CHECK_DEBUG_LEVEL"
+      incr i
+      continue
    }
 
 
@@ -5329,6 +5382,7 @@ for { set i 0 } { $i < $argc } { incr i } {
    if { ( [string compare [lindex $argv $i] "--no_main"] == 0 ) || ([string compare [lindex $argv $i] "no_main"] == 0 ) } {
       set do_nomain 1
       set no_action 0
+      continue
    }
 }   
 

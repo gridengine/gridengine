@@ -1,3 +1,9 @@
+CR-2001-10-10-0: Testsuite:
+                 - new command line option: mfile FILE
+                   (don't mail messages, write it to file)
+                 - new optional parameter for procedure "wait_for_jobstart"
+                   (do a qconf -tsm before waiting for jobstart) 
+
 CR-2001-10-09-2: (sge_rusage.c)
                  - Issue #68 (The accounting file handles only entries < 2048 
                               chars/line)

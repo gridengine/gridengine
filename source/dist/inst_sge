@@ -61,6 +61,7 @@ PWD=`pwd`
 #---------------------------------------
 
 UPDATE=false
+UPDATEDB=false
 DOWNGRADE=false
 BACKUP=false
 RESTORE=false
@@ -201,6 +202,11 @@ while [ $ARGC != 0 ]; do
      MAKE_RC=true
      #Generate new rc scripts from settings file
      ;; 
+   -updatedb)
+     UPDATEDB=true
+     . ./util/install_modules/inst_update.sh
+     #Needed for 6.0 to 6.0u2 BDB update
+     ;;
    -noremote)
      NOREMOTE=true
      #Disable remote installation
@@ -676,6 +682,23 @@ if [ $MAKE_RC = "true" ]; then
    $INFOTEXT "Please now copy the new startup scripts to the system wide rc\n" \
              "file location on all qmaster, shadowd and execution hosts."
 
+fi
+
+if [ $UPDATEDB = "true" ]; then
+
+   WelcomeTheUserUpgrade
+   ProcessSGERoot
+
+   $INFOTEXT -n "\nPlease enter your SGE_CELL directory or use the default [default] >> "
+
+   SGE_CELL=`Enter default`
+   SGE_CELL_VAL=$SGE_CELL
+
+   export SGE_CELL
+   export SGE_CELL_VAL
+   
+   $CLEAR
+   UpgradeDB
 fi
 
 exit 0

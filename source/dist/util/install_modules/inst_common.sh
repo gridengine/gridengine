@@ -341,7 +341,7 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db| \\\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-updatedb \\\n" \
              "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] [-csp] \\\n" \
              "       [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
@@ -355,6 +355,7 @@ ErrUsage()
              "   -rst       restore configuration from backup (Berkeley DB spooling)\n" \
              "   -upd       upgrade cluster from 5.x to 6.0\n" \
              "   -rccreate  create startup scripts from templates\n" \
+             "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \

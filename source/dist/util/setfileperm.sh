@@ -51,7 +51,7 @@ PATH=/bin:/usr/bin:/usr/sbin
 FILELIST="3rd_party bin ckpt examples inst_sge install_execd install_qmaster \
           lib mpi pvm qmon util utilbin"
 
-OPTFILES="catman dbwriter doc include man reporting" 
+OPTFILES="catman doc include man"  
 
 umask 022
 

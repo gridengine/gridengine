@@ -1,3 +1,7 @@
+MD-2004-11-23-0: Enhancm.:  60/60u1 to 60u2 BDB update script
+                 Changed:   inst_sge, inst_update, inst_common, set_fileperm.sh
+                 Review:    CR
+
 AA-2004-11-23-0: Bugfix:    qmon segv when deleting sharetree Root node more than once
                             - disallow editing of Root node
                             - disallow changing default node label

@@ -1,3 +1,8 @@
+DT-2004-12-28-0: Bugfix:    Increased MAX_STRING_SIZE from 2048 to 8192 to 
+                            allow for longer PATHs.
+                 Issue:	    538
+                 Changed:   sge_basis.h
+
 JG-2004-09-17-0: Bugfix:    Fixed build of qtcsh on AIX43 if LIBPATH was set.
 
 RC-2004-07-02-0: Bugfix:    NetBSD port for AMD64 was not working

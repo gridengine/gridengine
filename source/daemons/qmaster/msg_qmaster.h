@@ -163,7 +163,7 @@
 #define MSG_GDI_KEYSTR_QUOTE           _MESSAGE(33095, _("Quote"))
 #define MSG_GDI_KEYSTR_DBLQUOTE        _MESSAGE(33096, _("Double quote"))
 #define MSG_GDI_KEYSTR_BACKSLASH       _MESSAGE(33097, _("Backslash"))
-#define MSG_GDI_KEYSTR_BRACKETS        _MESSAGE(33098, _("Backslash"))
+#define MSG_GDI_KEYSTR_BRACKETS        _MESSAGE(33098, _("Brackets"))
 #define MSG_GDI_KEYSTR_BRACES          _MESSAGE(33099, _("Braces"))
 #define MSG_GDI_KEYSTR_PARENTHESIS     _MESSAGE(33100, _("Parenthesis"))
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("AT"))

@@ -1,3 +1,6 @@
+CR-2002-09-13-0: Bugfix:    Typo in message
+                 Bugtraq:   #4746705
+
 EB-2002-09-12-2: Cleanup:   Added two functions which might be used to
                             retrieve the size of a CULL-list or element:
                               cull_get_list_packsize()

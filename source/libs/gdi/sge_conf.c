@@ -121,6 +121,14 @@ int max_functional_jobs_to_schedule = 200;
 int max_pending_tasks_per_job = 50;
 lList *halflife_decay_list = NULL;
 
+/*
+ * This value overrides the default scheduler timeout (10 minutes)
+ * to allow graceful degradation on extremely busy systems with
+ * tens of thousands or hundreds of thousands of pending jobs.
+ */
+
+int scheduler_timeout = 0;
+
 /* 
  * Reserved usage flags
  *
@@ -548,6 +556,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       use_qidle = 0;
       disable_reschedule = 0;   
       simulate_hosts = 0;
+      scheduler_timeout = 0;
 
       for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "FORBID_RESCHEDULE")) {
@@ -589,6 +598,9 @@ int merge_configuration(lListElem *global, lListElem *local,
                   compression_threshold = 0;
             }  
             DPRINTF(("COMPRESSION_THRESHOLD=%d\n", compression_threshold));
+         } else if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
+                    sizeof("SCHEDULER_TIMEOUT")-1)) {
+            scheduler_timeout=atoi(&s[sizeof("SCHEDULER_TIMEOUT=")-1]);
          }
        
       /* always initialize to defaults before we check execd_params */

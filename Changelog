@@ -1,3 +1,15 @@
+SD-2002-12-19-2  Enhancem.  A new qmaster_params attribute called
+                            SCHEDULER_TIMEOUT will allow the scheduler GDI event
+                            acknowledge timeout (default is 10 minutes) to be
+                            configured to a specific value. I have also added
+                            GEEE profiling information which reports the number
+                            of seconds required for specific parts of GEEE
+                            scheduling (pending job ticket calculation, job
+                            sorting, active job ticket calculation, and job
+                            placement). These changes will provide additional
+                            feedback for further reducing job scheduling
+                            overhead and improving scheduler scalability.
+
 AH-2002-12-19-1  Bugfix     job arguments larger than 10k crash qmaster
                             and introduced static dstrings
                  IZ:        #440

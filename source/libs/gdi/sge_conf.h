@@ -150,6 +150,7 @@ extern int share_deadline_tickets;
 extern int max_functional_jobs_to_schedule;                                
 extern int max_pending_tasks_per_job;                                      
 extern lList* halflife_decay_list;                                         
+extern int scheduler_timeout;
 
 
 /* simulation of large clusters: 

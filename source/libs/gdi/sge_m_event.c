@@ -891,7 +891,11 @@ u_long32 now
       if(timeout > EVENT_ACK_MAX_TIMEOUT) {
          timeout = EVENT_ACK_MAX_TIMEOUT;
       }
-      
+
+      /* if set, use qmaster_params SCHEDULER_TIMEOUT */
+      if (scheduler_timeout > 0)
+          timeout = scheduler_timeout;
+
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, 
                (int) timeout, commproc, (int) id, host));

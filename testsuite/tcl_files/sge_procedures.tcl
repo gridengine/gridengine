@@ -5243,6 +5243,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
   set ONLY_ONE_RANGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_ONLYONERANGE]]
+  set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
 
   if { [resolve_version] >= 3 } {
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
@@ -5560,6 +5561,10 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $ONLY_ONE_RANGE {
              set return_value -18
           }
+          -i $sp_id -- $PARSE_DUPLICATEHOSTINFILESPEC { 
+             set return_value -19
+          }
+
         }
      }
  
@@ -5590,6 +5595,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-15" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-16" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-17" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-18" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-19" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -5642,6 +5649,9 @@ proc get_submit_error { error_id } {
       "-15" { return "job violates reference unambiguousness - error" }
       "-16" { return "error opening file - error" }
       "-17" { return "colon not allowed in account string - error" }
+      "-18" { return "-t option only allows one range specification" } 
+      "-19" { return "two files are specified for the same host" }
+
       default { return "unknown error" }
    }
 }

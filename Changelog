@@ -1,3 +1,13 @@
+RH-2004-07-26-0: Bugfix:    Wrong parameter for -Mc option argument qconf(1)
+                            man page fixed.
+                            Enhancements in man page for sched_conf(5).
+                            In man pages submit(1) the '$' and '.' as forbidden
+                            characters for job names removed.
+                 Issue:     1114, 969, ???????
+                 Bugtraq:   ????, ???, 5076358
+                 Changed:   qconf(1), sched_conf(5), submit(1)
+                 Review:    SG
+
 SG-2004-07-26-0: Bugfix:    - first part of the event_master changes. The total
                             update of a event client is now thread save.
                             - excluded the flowwing character from a job name: "\"

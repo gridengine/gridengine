@@ -1,3 +1,11 @@
+CR-2002-05-03-1: Testsuite: - removed rsh with rlogin calls
+                 Bugfix:    - compile source has set wrong LIBPATH on AIX
+                            - new parameter for create_shell_script(),
+                              start_remote_prog(), open_remote_spawn_process()
+                              (source_settings_file parameter)
+                            - new procedure: get_submit_error(): 
+                              resolve submit error value
+
 EB-2002-05-03-0: Bugfix:    Fixed bug of JG-2002-04-29-0.
 
 JG-2002-05-03-0: Bugfix:    Fixed messed up JB_Type from JG-2002-04-29-0.

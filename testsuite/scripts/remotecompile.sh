@@ -34,8 +34,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 cd $1 
-eval ./aimk $2
+eval ./aimk $2 2>&1
 if [ $? != 0 ]; then
+    echo "LIBPATH=$LIBPATH"
+    sleep 15
     echo "remotecompile $HOST aimk compile error"
     exit 1
 fi

@@ -3511,7 +3511,6 @@ proc run_tests { path runcompleted } {
               }   
 
               set test_result [ run_test $check $runcompleted ]
-              
 
               switch -- $test_result {
                        0 { 
@@ -5325,28 +5324,24 @@ proc compile_source {} {
          source_procedures
       }
       puts $CHECK_OUTPUT "------------------------------------------"
-      set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
-      if { [ string compare "csp" $CHECK_PRODUCT_FEATURE ] == 0 } {
-         append my_compile_options " -secure"
-         puts $CHECK_OUTPUT "-> adding compile option -csp"
-      }
+
       foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
          puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "-> starting aimk $my_compile_options clean on host $chost ..."
-         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options clean" ]
+         puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
+         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk clean" prg_exit_state 60 0 "" 1 0 ]
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "return state: $prg_exit_state"
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "output:\n$output"
          puts $CHECK_OUTPUT "------------------------------------------"
       }
-      sleep 60
    }
+   
    set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
 
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" ]
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5354,26 +5349,29 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
 
    puts $CHECK_OUTPUT "------------------------------------------"
+
+
    set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
    if { [ string compare "csp" $CHECK_PRODUCT_FEATURE ] == 0 } {
       append my_compile_options " -secure"
       puts $CHECK_OUTPUT "-> adding compile option -csp"
    }
-   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options -only-depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options -only-depend" ]
+   puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "output:\n$output"
    puts $CHECK_OUTPUT "------------------------------------------"
    if { $prg_exit_state != 0 } {
-      mail_report $mail_subject "$mail_body aimk $my_compile_options -only-depend on host $depend_host_name returned:\n$output"
+      mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
       return -1
    }
 
+
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" ]
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5385,7 +5383,6 @@ proc compile_source {} {
       return -1
    }
 
-   sleep 60
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
    
    set num 0
@@ -5408,7 +5405,8 @@ proc compile_source {} {
       set par2 "$my_compile_options"
       
       puts $CHECK_OUTPUT "$prog $par1 '$par2'"
-      set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" ] 
+      set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" 0 "" 0 ] 
+
       lappend spawn_list [ lindex $open_spawn 1 ]
       lappend remote_spawn_list $open_spawn
       

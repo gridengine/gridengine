@@ -4480,6 +4480,26 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
      return $return_value
 }
 
+#****** sge_procedures/get_submit_error() **************************************
+#  NAME
+#     get_submit_error() -- resolve negative error value from submit_job()
+#
+#  SYNOPSIS
+#     get_submit_error { error_id } 
+#
+#  FUNCTION
+#     This procedure is used to get an error text from an negative return
+#     value of the submit_job() procedure.
+#
+#  INPUTS
+#     error_id - negative return value from submit_job() call
+#
+#  RESULT
+#     Error text
+#
+#  SEE ALSO
+#     sge_procedures/submit_job()
+#*******************************************************************************
 proc get_submit_error { error_id } {
    switch -- $error_id {
       "-1"  { return "timeout error" }
@@ -5754,6 +5774,33 @@ proc startup_qmaster {} {
    return 0
 }
 
+#****** sge_procedures/startup_scheduler() *************************************
+#  NAME
+#     startup_scheduler() -- ??? 
+#
+#  SYNOPSIS
+#     startup_scheduler { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc startup_scheduler {} {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
@@ -6028,6 +6075,35 @@ proc shutdown_master_and_scheduler {hostname qmaster_spool_dir} {
    shutdown_qmaster $hostname $qmaster_spool_dir
 }
 
+#****** sge_procedures/shutdown_scheduler() ************************************
+#  NAME
+#     shutdown_scheduler() -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_scheduler { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc shutdown_scheduler {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_TYPE CHECK_ARCH
@@ -6040,7 +6116,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 
 
 
-   set scheduler_pid [ get_scheduler_pid $hostname $qmaster_spool_dir ] 
+   set scheduler_pid [ get_scheduler_pid $hostname $qmaster_spool_dir ]
 
    get_ps_info $scheduler_pid $hostname
    if { ($ps_info($scheduler_pid,error) == 0) } {
@@ -6062,6 +6138,35 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 
    puts $CHECK_OUTPUT "done."
 }  
+#****** sge_procedures/is_scheduler_alive() ************************************
+#  NAME
+#     is_scheduler_alive() -- ??? 
+#
+#  SYNOPSIS
+#     is_scheduler_alive { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc is_scheduler_alive { hostname qmaster_spool_dir } {
 
    set scheduler_pid [get_scheduler_pid $hostname $qmaster_spool_dir]
@@ -6077,6 +6182,35 @@ proc is_scheduler_alive { hostname qmaster_spool_dir } {
    return $alive
 }
 
+#****** sge_procedures/get_scheduler_pid() *************************************
+#  NAME
+#     get_scheduler_pid() -- ??? 
+#
+#  SYNOPSIS
+#     get_scheduler_pid { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc get_scheduler_pid { hostname qmaster_spool_dir } {
    global CHECK_USER 
 
@@ -6089,6 +6223,35 @@ proc get_scheduler_pid { hostname qmaster_spool_dir } {
    return $scheduler_pid
 }
 
+#****** sge_procedures/shutdown_qmaster() **************************************
+#  NAME
+#     shutdown_qmaster() -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_qmaster { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
 proc shutdown_qmaster {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_TYPE CHECK_ARCH

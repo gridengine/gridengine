@@ -128,6 +128,7 @@ proc access_lists_setup  {} {
    add_access_list "$CHECK_FIRST_FOREIGN_SYSTEM_USER"   userA_name
    add_access_list "$CHECK_SECOND_FOREIGN_SYSTEM_USER"  userB_name
 
+ 
 
    if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
       add_proc_error "access_lists_setup" -1 "scheduler is not alive"

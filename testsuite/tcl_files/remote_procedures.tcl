@@ -175,6 +175,9 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #                                 before starting program
 #     { do_file_check 1 }       - internal parameter for file existence check
 #                                 if 0: don't do a file existence check
+#     { source_settings_file 1 } - if 1 (default):
+#                                  source $SGE_ROOT/default/settings.csh
+#                                  if not 1: don't source settings file
 #
 #  RESULT
 #     program output
@@ -190,7 +193,7 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #
 #*******************************
 #
-proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg_exit_state} {mytimeout 60} {background 0} {envlist ""} { do_file_check 1 } } {
+proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg_exit_state} {mytimeout 60} {background 0} {envlist ""} { do_file_check 1 } { source_settings_file 1 } } {
    global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_DEBUG_LEVEL 
    global open_spawn_buffer CHECK_HOST
    upvar $exit_var back_exit_state
@@ -244,7 +247,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    }
 
 #   puts [array names users_env]
-   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env]
+   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file]
    if { [string compare $id ""] == 0 } {
       add_proc_error "start_remote_prog" -1 "got no spawn id"
       return ""
@@ -396,24 +399,31 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 #****** remote_procedures/open_remote_spawn_process() ******
 # 
 #  NAME
-#     open_remote_spawn_process -- ??? 
+#     open_remote_spawn_process -- open spawn process on remote host
 #
 #  SYNOPSIS
 #     open_remote_spawn_process { hostname user exec_command exec_arguments { background 0 } } 
 #
 #  FUNCTION
-#     ??? 
+#     This procedure creates a shell script with default settings for Grid
+#     Engine and starts it as spawn process on the given host.
 #
 #  INPUTS
-#     hostname         - ??? 
-#     user             - ??? 
-#     exec_command     - ??? 
-#     exec_arguments   - ??? 
+#     hostname         - remote host (can also be local host!)
+#     user             - user to start script
+#     exec_command     - command after script init
+#     exec_arguments   - arguments for command
 #     { background 0 } - if not 0 -> start command with "&" in background 
 #                        if 2 -> wait 30 seconds after starting background process
+#     { envlist "" }   - array with environment settings to export
+#                        before starting program
+#     { source_settings_file 1 } - if 1 (default):
+#                        source $SGE_ROOT/default/settings.csh
+#                        if not 1: don't source settings file
 #
 #  RESULT
-#     ??? 
+#     spawn id of process (internal format, see close_spawn_process for details)
+#
 #
 #  EXAMPLE
 #     set id [open_remote_spawn_process "boromir" "testuser" "ls" "-la"]
@@ -439,15 +449,10 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
 #     puts $CHECK_OUTPUT ">>> output end <<<"
 #
 #  NOTES
-#     ??? 
+#     The spawn command is from the TCL enhancement EXPECT
 #
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
-proc open_remote_spawn_process { hostname user exec_command exec_arguments { background 0 } {envlist ""} } {
+proc open_remote_spawn_process { hostname user exec_command exec_arguments { background 0 } {envlist ""} { source_settings_file 1 } } {
 
   global open_spawn_buffer CHECK_OUTPUT CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
   global CHECK_MAIN_RESULTS_DIR CHECK_EXPECT_MATCH_MAX_BUFFER
@@ -484,8 +489,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
   } else {
      set script_name "$CHECK_MAIN_RESULTS_DIR/temp_${hostname}_${type}_[timestamp].sh"
   }
-  create_shell_script "$script_name" "$exec_command" "$exec_arguments" users_env
- 
+  create_shell_script "$script_name" "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file
   set open_spawn_buffer $script_name
   uplevel 1 { set open_remote_spawn__script_name $open_spawn_buffer }
  

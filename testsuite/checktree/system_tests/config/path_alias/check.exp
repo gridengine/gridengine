@@ -99,6 +99,7 @@ proc path_alias_setup {} {
    global env CHECK_PROTOCOL_DIR
    global CHECK_CORE_EXECD
   
+   
    set PATH_ALIAS_OUTPUT1 [ file dirname "$CHECK_JOB_OUTPUT_DIR/adir" ]
    set PATH_ALIAS_OUTPUT2 [ file dirname "$CHECK_JOB_OUTPUT_DIR/adir" ]
    append PATH_ALIAS_OUTPUT1 "/path_alias_output1"

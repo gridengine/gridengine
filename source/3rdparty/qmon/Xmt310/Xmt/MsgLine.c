@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: MsgLine.c,v 1.1.1.1.6.1 2002/08/22 15:00:15 andre Exp $
+ * $Id: MsgLine.c,v 1.1.1.1.6.2 2003/02/11 15:09:51 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,18 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: MsgLine.c,v $
+ * Revision 1.1.1.1.6.2  2003/02/11 15:09:51  andre
+ * AA-2003-02-11-0  Bugfix:    qmon crash fixed for pressing Why ? when several
+ *                             jobs are selected.
+ *                  Changed:   qmon
+ *                  Bugtraq:   4816529
+ *                  IZ:        #490
+ *
+ * Issue number:
+ * Obtained from:
+ * Submitted by:
+ * Reviewed by:
+ *
  * Revision 1.1.1.1.6.1  2002/08/22 15:00:15  andre
  * AA-2002-08-22-0  I18N:      bunch of fixes for l10n
  *                  Bugtraq:   #4733802, #4733201, #4733089, #4733043,
@@ -759,7 +771,8 @@ StringConst s;
     handle_delayed_action(mw);
     mbstowcs(wcs, s, 8*BUFSIZ-1);
     mblen = wcslen(wcs);
-    XmTextInsert(w, mw->msgline.inputpos, (String)s);
+/*     XmTextInsert(w, mw->msgline.inputpos, (String)s); */
+    XmTextInsertWcs(w, mw->msgline.inputpos, wcs);
     mw->msgline.inputpos += mblen;
     if (XmTextGetInsertionPosition(w) < mw->msgline.inputpos)
 	XmTextSetInsertionPosition(w, mw->msgline.inputpos);

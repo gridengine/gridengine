@@ -1,3 +1,9 @@
+AA-2003-02-11-0  Bugfix:    qmon crash fixed for pressing Why ? when several
+                            jobs are selected.
+                 Changed:   qmon
+                 Bugtraq:   4816529
+                 IZ:        #490
+
 JG-2003-02-11-0  Enhancem.  Improved ineffective implementation of removing 
                             entries in nonunique hashtables.
                             Added a test program for cull_hash.

@@ -1,3 +1,8 @@
+DT-2004-09-14-0: Bugfix:    o Fixed DRMAA-J README
+                            o Fixed JavaDoc error in aimk
+                            o Updated DRMAA-J JavaDocs
+                 Changed:   docs, aimk
+
 JG-2004-09-14-0: Testsuite: Improved test performance/throughput:
                             - Monitoring of qmaster communication (qping).
                             - Additional senarios:
@@ -7,7 +12,8 @@ JG-2004-09-14-0: Testsuite: Improved test performance/throughput:
                               - array jobs
                               - functional policy
 
-DT-2004-09-13-1: Bugfix:    o Fixed DRMAA-J on Irix 6.5
+DT-2004-09-13-1: Bugfix:    o Added libjdrmaa to LD_LIBRARYN32_PATH in
+                              settings.sh|csh for Irix 6.5
                  Changed:   create_settings.sh
 
 DT-2004-09-13-0: Bugfix:    o Fixed "delete all" bug in JAPI
@@ -15,7 +21,7 @@ DT-2004-09-13-0: Bugfix:    o Fixed "delete all" bug in JAPI
                             o Tested DRMAA-J on all platforms
                             - No J2SE 1.4 on Tru64 5.0 and AIX 4.3
                             o Fixed attribute getter error in DRMAA-J
-                            o Added libjdrmaa to CLASSPATH in settings.sh|csh
+                            o Added drmaa.jar to CLASSPATH in settings.sh|csh
                  Changed:   JAPI, DRMAA, aimk, distinst, create_settings.sh
                  Review:    EB
 

@@ -60,11 +60,12 @@ Content
    The first is the jar file, drmaa.jar.  This file is need for both
    compiling and running applications utilizing the Java language binding.  The
    second file is the Java language binding shared library.  This file will need
-   to be accessible from the LD_LIBRARY_PATH in order for your application to
+   to be accessible from the shared library path in order for your application to
    link properly and run.  If you built the binaries yourself (using "aimk
-   -java"), you will find both of these files in the $SGE_ROOT/lib/$ARCH after
-   using distinst -local to install the distribution.  Otherwise, you can
-   download the binaries from the File Exchange at:
+   -java"), you will find the shared library in $SGE_ROOT/lib/$ARCH and the
+   jar file in $SGE_ROOT/lib after using distinst -local to install the
+   distribution.  Otherwise, you can download the binaries from the File
+   Exchange at:
 
       http://gridengine.sunsource.net/servlets/ProjectDownloadList
 

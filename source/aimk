@@ -1749,7 +1749,7 @@ if ( "$BUILDJAVADOC" == 1 ) then
       rm -Rf ../../doc/javadocs/*
    endif
 
-   $JAVA_HOME/$JAVA_BINDIR/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadocs -version -subpackages org.ggf.drmaa, com.sun.grid.drmaa -exclude com.sun.grid.drmaa.howto
+   $JAVA_HOME/$JAVA_BINDIR/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadocs -version -subpackages org.ggf.drmaa com.sun.grid.drmaa -exclude com.sun.grid.drmaa.howto
 
    if ( $status != 0 ) then
       echo not done

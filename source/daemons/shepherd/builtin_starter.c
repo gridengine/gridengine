@@ -1,4 +1,4 @@
-
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -937,7 +937,9 @@ char *str_title
    /*
    ** prepare job arguments
    */
-   if (atoi(get_conf_val("handle_as_binary")) && !is_rsh && !is_qlogin) {
+   if ((atoi(get_conf_val("handle_as_binary")) == 1) &&
+       (atoi(get_conf_val("no_shell")) == 0) &&
+       !is_rsh && !is_qlogin) {
       int arg_id = 0;
       dstring arguments = DSTRING_INIT;
       int n_job_args;
@@ -963,9 +965,12 @@ char *str_title
             sge_dstring_append(&arguments, "\"\"");
          }
       }
+      
+      /* DT: TODO: Why are we passing the argument list twice? */
       pre_args_ptr[arg_id++] = strdup(sge_dstring_get_string(&arguments));
       pre_args_ptr[arg_id++] = NULL;
       args = read_job_args(pre_args, 0);
+   /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {
       /*
       ** -s makes it possible to make the shell read from stdin
@@ -977,11 +982,14 @@ char *str_title
       pre_args_ptr[1] = "-s";
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
-   } else if (!strcasecmp("posix_compliant", shell_start_mode)) {
+   /* Binary, noshell jobs have to make it to the else */
+   } else if (!strcasecmp("posix_compliant", shell_start_mode) &&
+              (atoi(get_conf_val("handle_as_binary")) == 0)) {
       pre_args_ptr[0] = argv0;
       pre_args_ptr[1] = script_file;
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
+   /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("start_as_command", shell_start_mode)) {
       pre_args_ptr[0] = argv0;
       sprintf(err_str, "start_as_command: pre_args_ptr[0] = argv0; \"%s\" shell_path = \"%s\"", argv0, shell_path); 
@@ -990,6 +998,7 @@ char *str_title
       pre_args_ptr[2] = script_file;
       pre_args_ptr[3] = NULL;
       args = pre_args;
+   /* No need to test for binary since this option excludes binary */
    } else if (is_interactive) {
       int njob_args;
       pre_args_ptr[0] = script_file;
@@ -1003,6 +1012,7 @@ char *str_title
       args[njob_args + 5] = "-e";
       args[njob_args + 6] = get_conf_val("shell_path");
       args[njob_args + 7] = NULL;
+   /* No need to test for binary since qlogin handles that itself */
    } else if (is_qlogin) {
       pre_args_ptr[0] = script_file;
       if(is_rsh) {
@@ -1017,6 +1027,7 @@ char *str_title
       pre_args_ptr[2] = "-d"; 
       pre_args_ptr[3] = NULL;
       args = read_job_args(pre_args, 0);
+   /* Here we finally deal with binary, noshell jobs */
    } else {
       /*
       ** unix_behaviour/raw_exec

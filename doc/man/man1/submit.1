@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/26 13:56:26 $     Revision: $Revision: 1.41 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/03/22 14:18:17 $     Revision: $Revision: 1.42 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/26 13:56:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/03/22 14:18:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -395,7 +395,7 @@ of the job.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
-.IP "\fB\-b y|n\fP"
+.IP "\fB\-b y[es]|n[o]\fP"
 Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow
 changing this option. This option is only interpreted if it occures in the
 commandline. It is not possible to embed this flag in \fBcommand\fP itself.
@@ -772,7 +772,7 @@ with
 option \fB\-inherit\fP from within a job script, export COMMD_PORT with the 
 submit option or special comment "-v COMMD_PORT".
 .\"
-.IP "\fB\-j y|n\fP"
+.IP "\fB\-j y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Specifies whether or not the standard error stream of the job
@@ -1105,7 +1105,7 @@ allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
-.IP "\fB\-R y|n\fP"
+.IP "\fB\-R y[es]|n[o]\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
 Indicates whether a reservation for this job should be done. Reservation 
@@ -1117,7 +1117,7 @@ and might be limited only to a certain number of high prior jobs.
 .sp 1
 By default jobs are submitted with \fB\-R n\fP option.
 .\"
-.IP "\fB\-r y|n\fP"
+.IP "\fB\-r y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Identifies the ability of a job to be rerun or not.
@@ -1155,6 +1155,39 @@ execution context in its environment.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
+.\"
+.IP "\fB\-shell y[es]|n[o]\fP"
+Available only for \fIqsub\fP.
+.sp 1
+\fB\-shell n\fP
+causes qsub not to start the commandline given to \fIqsub\fP in a users login
+shell but execute it without the wrapping shell.  This option only applies when
+\fB\-b y\fP
+is also used.  Without
+\fB\-b y\fP
+,
+\fB\-shell n\fP
+has no effect.
+.sp 1
+The option can be used to speed up execution as some overhead like the  
+shell startup and sourcing the shell resource files is avoided.
+.sp 1
+The option can only be used, if no shell specific commandline parsing is
+required. If the commandline contains shell syntax like environment
+variable substitution or (back) quoting, a shell must be started.
+In this case either do not use the \fB\-shell\fP option or include
+the shell call in the commandline.
+.sp 1
+\fB\-shell y\fP
+cancels the effect of a previous
+\fB\-shell n\fP.
+Otherwise, it has no effect.
+.sp 1
+See
+\fB\-b\fP
+and
+\fB\-noshell\fP
+for more information.
 .\"
 .IP "\fB\-soft\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and

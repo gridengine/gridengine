@@ -128,7 +128,7 @@ char **argv
     */
    opt_list_append_opts_from_qsub_cmdline(&opts_cmdline, &alp,
                                           argv + 1, environ);
-   tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_QSUB_WARNING);
+   tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_QSUB_WARNING_S);
    if (tmp_ret > 0) {
       SGE_EXIT(tmp_ret);
    }
@@ -537,7 +537,7 @@ static int report_exit_status (int stat, const char *jobid)
       japi_wifexited(&exited, stat, NULL);
       if (exited) {
          japi_wexitstatus(&exit_status, stat, NULL);
-         printf(MSG_QSUB_JOBEXITED_II, jobid, exit_status);
+         printf(MSG_QSUB_JOBEXITED_SI, jobid, exit_status);
       } else {
          japi_wifsignaled(&signaled, stat, NULL);
          

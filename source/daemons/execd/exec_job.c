@@ -879,8 +879,10 @@ char *err_str
    {
       u_long32 jb_now = lGetUlong(jep, JB_type);
       int handle_as_binary = (JOB_TYPE_IS_BINARY(jb_now) ? 1 : 0);
+      int no_shell = (JOB_TYPE_IS_NO_SHELL(jb_now) ? 1 : 0);
 
       fprintf(fp, "handle_as_binary=%d\n", handle_as_binary);
+      fprintf(fp, "no_shell=%d\n", no_shell);
    }
 
    if (lGetUlong(jep, JB_checkpoint_attr) && 

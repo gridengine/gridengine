@@ -1,3 +1,13 @@
+DT-2004-3-22-0:  Bugfix:    o Added -shell y|n option to qsub and update man
+                              page
+                            o Made -shell n the default for DRMAA clients
+                            o Made yes and no acceptable arguments to qsub y|n
+                              options and update man page
+                            o Minor cleanup in clients and spooling
+                 Issues:    476, 658
+                 Changed:   shepherd, qsub, qsh, execd, sge_spool.c, sge_job.h
+                 Review:    EB, AH
+
 AS-2004-03-22-1  Bugfix:    mk_dist script
 
 AS-2004-03-22-0  Bugfix:    "about" output fix in qmon 
@@ -17,7 +27,7 @@ AS-2004-03-10-0: CVS        Created V60_beta1_OS_TAG
 SG-2004-03-18-0: Bugfix:    - "qdel 0" is not allowed.
                             - "qdel 45-54" results in an error and does
                               not delete job 45.
-                 Issue:     893, 896
+                 Issue:     893
                  Changed:   qdel, qmod, qalter
 
 AA-2004-03-18-0  Bugfix:    - qmon spinbox on lx24-amd, lx22-alpha

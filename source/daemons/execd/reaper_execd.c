@@ -331,10 +331,10 @@ lListElem *jr
 
 /************************************************************************
    This is the job clean up and report function. We design this function
-   to be as independent from the execd as possible. May be we want to 
+   to be as independent from the execd as possible. Maybe we want to 
    make an extra executable later. We have another function cleaning up jobs
    (execd_job_start_failure). This function is called if the job starting 
-   failed. At his time there is no config-file present.
+   failed. At this time there is no config-file present.
 
    jobid = id of job to reap
    failed = indicates a failure of job execution, see shepherd_states.h
@@ -545,6 +545,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
+      /* DT: TODO: What does this check mean? */
       if (!*error) {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id));
@@ -681,30 +682,27 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             master_queue = responsible_queue(job, ja_task, NULL);
          }
 
-         if (failed == SSTATE_NO_SHELL) {
-            if (job && lGetList(job, JB_shell_list)) {
-               job_caused_failure = 1;
-            } else if (master_queue) {
-               const char *mode = job_get_shell_start_mode(job, master_queue, 
-                                                         conf.shell_start_mode);
-               if (!strcmp(mode, "unix_behavior")) {
-                  job_caused_failure = 1;
-               }
-            }
+         if ((failed == SSTATE_NO_SHELL) && (job != NULL) && 
+             ((lGetList(job, JB_shell_list) != NULL) ||
+              ((master_queue != NULL) &&
+               JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
+               JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type))))) {
+            job_caused_failure = 1;
          }
-/* bugfix 476: But is this enough? Do we have to handle some states some
-   where else? Now a queue is allways setin error state. When a job start
-   failed. 
- */
-#if 1            
-         else if (failed == SSTATE_BEFORE_JOB) {
-            
-            if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
-                !sge_is_file(lGetString(job, JB_script_file))) {
+         else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
+            const char *mode = job_get_shell_start_mode(job, master_queue, 
+                                                   conf.shell_start_mode);
+
+            if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
             }
          }
-#endif         
+         else if ((failed == SSTATE_BEFORE_JOB) && (job != NULL) &&
+                  JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
+                  !sge_is_file(lGetString(job, JB_script_file))) {
+            job_caused_failure = 1;
+         }
+
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
          job_related_adminmail(jr, is_array);

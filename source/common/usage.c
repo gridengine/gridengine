@@ -964,6 +964,10 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_sh_OPT, MSG_GDI_UTEXT_sh_OPT);
    }
 
+   if (VALID_OPT(shell_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_shell_OPT_YN, MSG_GDI_UTEXT_shell_OPT_YN);
+   }
+
    if (VALID_OPT(shgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_shgrp_OPT, MSG_GDI_UTEXT_shgrp_OPT);
    }
@@ -1086,7 +1090,6 @@ FILE *fp
 
    if (VALID_OPT(sync_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sync_OPT_YN, MSG_GDI_UTEXT_sync_OPT_YN);
-      MARK(OA_PATH_LIST);
    }
 
    if (VALID_OPT(S_OPT, uti_state_get_mewho())) {

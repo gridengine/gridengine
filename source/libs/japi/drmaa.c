@@ -2318,17 +2318,16 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
    } else {
       const char *path = NULL;
 
-/* This doesn't function until cull_parse_job_parameter() understands the
- * -noshell option. */
-#if 0
       /* BUGFIX: #658
        * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
        * If another option level disables binary mode, I have to remove this
        * option.  This means that "-b n" trumps both the default "-b y" and the
-       * default "-noshell". */
-      ep = lGetElemStr(opts_default, SPA_switch, "-noshell");
+       * default "-shell n".
+       * Technically, this is no necessary since -shell is ignored if -b y is
+       * not set, but if -b n is set, and then overridden with -b y, I don't
+       * want the -shell n to still be hanging around. */
+      ep = lGetElemStr(opts_default, SPA_switch, "-shell");
       lRemoveElem(opts_default, ep);
-#endif
 
       /* If the scriptfile is to be parsed for options, we have to set the
        * cwd.  In DRMAA, the script path is assumed to be relative to the
@@ -2882,16 +2881,12 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
-/* This doesn't function until cull_parse_job_parameter() understands the
- * -noshell option. */
-#if 0
    /* BUGFIX: #658
     * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
     * Later in drmaa_job2sge_job if binary mode is disabled, I also have to
     * remove this option. */
    DPRINTF (("disabling execution shell\n"));
-   ep_opt = sge_add_noarg(opts, noshell_OPT, "-noshell", NULL);
-#endif
+   ep_opt = sge_add_arg (opts, shell_OPT, lIntT, "-shell", "n");
 
    DEXIT;
 }

@@ -1171,6 +1171,7 @@ int main(int argc, char **argv)
    lListElem *job = NULL;
    lList *lp_jobs = NULL;
    lList *alp = NULL;
+   lList *answer = NULL;
 
    lListElem *aep = NULL;
    u_long32 status = STATUS_OK;
@@ -1267,19 +1268,17 @@ int main(int argc, char **argv)
       SGE_EXIT(1);
    }
 
-   if (!job) {
-      lList *answer = NULL;
-
-      job = lCreateElem(JB_Type);
-      if (!job) {
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-         answer_list_add(&answer, SGE_EVENT, 
-                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         do_exit = parse_result_list(alp, &alp_error);
-         lFreeList(answer);
-         if (alp_error) {
-            SGE_EXIT(1);
-         }
+   job = lCreateElem(JB_Type);
+   
+   if (job == NULL) {
+      sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+      answer_list_add(&answer, SGE_EVENT, 
+                      STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      do_exit = parse_result_list(alp, &alp_error);
+      answer = lFreeList(answer);
+      
+      if (alp_error) {
+         SGE_EXIT(1);
       }
    }
 

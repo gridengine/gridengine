@@ -761,7 +761,7 @@ sge_commit_flags_t commit_flags
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
          lList *answer_list = NULL;
-         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+         spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
                             SGE_TYPE_JATASK);
          answer_list_output(&answer_list);

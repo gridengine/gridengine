@@ -636,7 +636,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
    int       ret = DRMAA_ERRNO_SUCCESS;
    dstring   diag, *diagp = NULL;
    
-   DENTER(TOP_LAYER, "drmaa_get_attribute");
+   DENTER(TOP_LAYER, "drmaa_set_attribute");
 
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);

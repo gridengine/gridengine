@@ -1,3 +1,7 @@
+DT-2004-11-24-0: Bugfix:    o Fixed segfault in japi_synchronize()
+                 Review:    AH
+                 Changed:   JAPI
+
 MD-2004-11-23-0: Enhancm.:  60/60u1 to 60u2 BDB update script
                  Changed:   inst_sge, inst_update, inst_common, set_fileperm.sh
                  Review:    CR

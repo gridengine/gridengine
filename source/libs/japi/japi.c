@@ -2409,14 +2409,12 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
 
          /* If we created a new job list, we have to free it. */
          if (sync_all) {
-            int count = 0;
-
-            for (count = 0; sync_job_ids[count] != NULL; count++) {
-               FREE (sync_job_ids[count]);
-            }
-
-            FREE (sync_job_ids);
+            /* The sync_job_ids is an array of pointers to the ST_name elements
+             * of the sync_list.  That means that if we free the sync_list, we
+             * don't have to free the individual elements of the
+             * sync_job_ids. */
             sync_list = lFreeList (sync_list);
+            FREE (sync_job_ids);
          }
          
          DEXIT;
@@ -2446,14 +2444,11 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
 
    /* If we created a new job list, we have to free it. */
    if (sync_all) {
-      int count = 0;
-      
-      for (count = 0; sync_job_ids[count] != NULL; count++) {
-         FREE (sync_job_ids[count]);
-      }
-      
-      FREE (sync_job_ids);
+      /* The sync_job_ids is an array of pointers to the ST_name elements of the
+       * sync_list.  That means that if we free the sync_list, we don't have to
+       * free the individual elements of the sync_job_ids. */
       sync_list = lFreeList (sync_list);
+      FREE (sync_job_ids);
    }
    
    DEXIT;

@@ -381,7 +381,7 @@ int sub_command
          goto ERROR;
       }
       attr_mod_sub_list(alpp, new_queue, QU_pe_list, ST_name, qep, 
-                        sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);
+                        sub_command, SGE_ATTR_PE_LIST, SGE_OBJ_QUEUE, 0);
    }
 
    /* ---- QU_ckpt_list */
@@ -394,7 +394,7 @@ int sub_command
          goto ERROR;
       }
       attr_mod_sub_list(alpp, new_queue, QU_ckpt_list, ST_name, qep, 
-                        sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);
+                        sub_command, SGE_ATTR_CKPT_LIST, SGE_OBJ_QUEUE, 0);
    }
 
    /* ---- QU_rerun */

@@ -1,3 +1,8 @@
+EB-2003-07-15-1: Enhancem.: Bugfix for Enhancem. EB-2003-05-15-0
+                            * wrong attribute reference in answer list message
+                              of qconf -mattr request
+                 Changed:  sge_qmaster
+
 SG-2003-07-15-0: Bugfix:   Fixed the build
                            Some message IDs were used twice
                  Changed:  sge_qmaster, sge_scheduler

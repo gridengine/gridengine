@@ -59,7 +59,8 @@
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_SCALING          "load_scaling"
-#define SGE_ATTR_COMPLEX_LIST          "complex_list"
+#define SGE_ATTR_PE_LIST               "pe_list"
+#define SGE_ATTR_CKPT_LIST             "ckpt_list"
 #define SGE_ATTR_COMPLEX_VALUES        "complex_values"
 #define SGE_ATTR_LOAD_VALUES           "load_values"
 #define SGE_ATTR_PROCESSORS            "processors"

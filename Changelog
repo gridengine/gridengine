@@ -1,3 +1,7 @@
+JG-2002-03-27-0  Testsuite: large_cluster test:
+                            - fixed problems due to change of runlevel
+                            - output cluster utilization in test report
+
 CR-2002-03-27-0  Bugfix:    Fixed broken shadow daemon qmaster startup functionality 
 
 SD-2002-03-26-1  Bugfix:    Fixed "missing node XXXXX in dst trees" problem where

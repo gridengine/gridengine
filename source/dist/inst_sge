@@ -2040,22 +2040,6 @@ if [ ! -f util/arch ]; then
    exit 1
 fi
 
-#----------------------------------------------------
-# setup i18n
-
-if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
-   unset TEXTDOMAINDIR TEXTDOMAIN
-   TEXTDOMAINDIR="`/bin/pwd`/locale"
-   TEXTDOMAIN=gridengine
-   translation=1
-else
-   translation=0
-   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
-   unset LC_NUMERIC LC_TIME LANGUAGE
-fi
-
-# end of internationalization setup
-#----------------------------------------------------
 
 umask 022
 

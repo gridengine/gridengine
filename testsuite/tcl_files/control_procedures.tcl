@@ -536,21 +536,6 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set command_pos 8
       }
      
-#      "solaris" { 
-#         set myenvironment(COLUMNS) "500"
-#         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
-#         set index_names "  PID  PGID  PPID   UID S    STIME  VSZ        TIME COMMAND"
-#         set pid_pos     0
-#         set gid_pos     1
-#         set ppid_pos    2
-#         set uid_pos     3
-#         set state_pos   4
-#         set stime_pos   5
-#         set vsz_pos     6
-#         set time_pos    7
-#         set command_pos 8
-#      }
-
       "osf4" -
       "tru64" { 
          set myenvironment(COLUMNS) "500"

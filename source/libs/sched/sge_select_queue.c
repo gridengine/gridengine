@@ -1146,15 +1146,11 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
 
       relop = lGetUlong(cep, CE_relop);
 
-      if((hlep = lGetSubStr(hep, HL_name, name, EH_load_list)) == NULL) {
-         if((glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
-            /* no host or global load value -> ERROR */
-            DEXIT;
-            return 1;
-         }   
-      }
-
-      if (hlep) {
+      if ((hlep = lGetSubStr(hep, HL_name, name, EH_load_list)) == NULL &&
+         (glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
+         /* use complex default as value */
+         load_value = lGetString(cep, CE_stringval);
+      } else if (hlep) {
          load_value = lGetString(hlep, HL_value);
       } else {
          load_value = lGetString(glep, HL_value);

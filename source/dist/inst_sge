@@ -404,12 +404,21 @@ if [ $SHADOW = "install" ]; then
       else
          SHADOW_HOST=$HOST
       fi
+
+      $INFOTEXT "Starting sge_shadowd on host %s" $SHADOW_HOST    
+      mod_file="echo $SHADOW_HOST > $SGE_ROOT/$SGE_CELL/common/shadow_masters"
+      ExecuteAsAdmin $mod_file
  
-      echo $SHADOW_HOST > $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+      if [ $SHADOW_HOST = `hostname` ]; then
+         . $SGE_ROOT/$SGE_CELL/common/settings.sh
+         $SGE_ROOT/bin/$ARCH/sge_shadowd &
+      else
+        echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+      fi
    else
-      $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST      
-      echo $SHADOW_HOST > $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
+      mod_file="echo $SHADOW_HOST > $SGE_ROOT/$SGE_CELL/common/shadow_masters"
+      ExecuteAsAdmin $mod_file
       echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
    fi
 fi

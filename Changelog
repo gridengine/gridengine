@@ -1,3 +1,8 @@
+CR-2004-03-05-1: Bugfix:    sge_shadowd fails to create communication handle 
+                            on takeover and exits.
+                 Issue:     776
+                 Review:    MD
+
 DT-2004-03-05-1: Bugfix:    o Changed list separator from ',' to ' ' for
                               hostgroups in qconf
                  Changed:   qconf

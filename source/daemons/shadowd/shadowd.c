@@ -116,7 +116,8 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
    handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 0, sge_get_qmaster_port() ,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
       CRITICAL((SGE_EVENT,"could not create communication handle\n"));
-      exit(1);
+      DEXIT;
+      return is_up_and_running;
    }
 
    DPRINTF(("Try to send status information message to previous master host "SFQ" to port %ld\n", oldqmaster, sge_get_qmaster_port() ));

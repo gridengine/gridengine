@@ -166,7 +166,9 @@ proc project_access_lists_setup  {} {
 proc test_job_run { id_string job_id } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
 
-   wait_for_jobpending $job_id "leeper" 60 1
+   if { $job_id > 0 } {
+      wait_for_jobpending $job_id "leeper" 60 1
+   }
 
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
@@ -180,7 +182,6 @@ proc test_job_run { id_string job_id } {
       }
    }
    delete_job $job_id 1
-#   wait_for_jobend $job_id "leeper" 60
 }
 
 proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
@@ -194,16 +195,10 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
    # "userB_project_name"    D
 
    
-   puts $CHECK_OUTPUT "id_string is $id_string"
+   puts $CHECK_OUTPUT "\nid_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
    sleep 2
    
-
-   if { [ string first "-P" $jobargs] >= 0 } {
-      set no_P 1
-   } else {
-      set no_P 0
-   }   
 
    set job_id_A [ submit_job "-P userA_project_group $jobargs" 0 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
    if { $A_ok == 1 } {
@@ -274,7 +269,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
 
 
    
-   puts $CHECK_OUTPUT "id_string is $id_string"
+   puts $CHECK_OUTPUT "\nid_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
 
    sleep 2
@@ -775,7 +770,8 @@ proc project_access_lists_project {} {
    global CHECK_GROUP
 
    set jobargs "-o /dev/null -e /dev/null -P access_test_project -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
-   
+   # second -P switch will overwrite first one in run_user_denied_jobs !
+
    set my_project(name)     "access_test_project"
 
    # testing user and group
@@ -830,7 +826,13 @@ proc project_access_lists_project {} {
       set my_project(acl)  "NONE"
       add_prj my_project
       if { $group_test == 1 } {
+         puts $CHECK_OUTPUT "group test active"
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+
+         puts $CHECK_OUTPUT "CHECK_GROUP is $CHECK_GROUP"
+         puts $CHECK_OUTPUT "group1 is $group1"
+         puts $CHECK_OUTPUT "CHECK_SECOND_FOREIGN_SYSTEM_GROUP is $CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
+
          if { [string first $CHECK_GROUP $group1] >= 0 ||
               [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
             set C_run 0
@@ -838,11 +840,13 @@ proc project_access_lists_project {} {
             set C_run 1
          }
       } else {
+         puts $CHECK_OUTPUT "no group test"
          set C_run 1
       }
+      puts $CHECK_OUTPUT "C_run is $C_run"
       run_user_denied_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 0 0 $C_run
       del_prj "access_test_project"
-
+      puts "case 6 done"
    
       #case 7
       set my_project(xacl) "NONE"

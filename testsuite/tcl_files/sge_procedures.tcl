@@ -170,6 +170,14 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGE_5.3.1beta3)      2
    set versions(SGEEE_5.3.1beta4)    2
    set versions(SGE_5.3.1beta4)      2
+   set versions(SGEEE_5.3.1beta5)    2
+   set versions(SGE_5.3.1beta5)      2
+   set versions(SGEEE_5.3.1beta6)    2
+   set versions(SGE_5.3.1beta6)      2
+   set versions(SGEEE_5.3.1beta7)    2
+   set versions(SGE_5.3.1beta7)      2
+   set versions(SGEEE_5.3.1beta8)    2
+   set versions(SGE_5.3.1beta8)      2
    set versions(SGEEE_5.3p1)         2
    set versions(SGE_5.3p1)           2
    set versions(SGEEE_pre6.0_(Maintrunk))    2
@@ -4367,6 +4375,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
 
   set arch [resolve_arch $host]
 
+  puts $CHECK_OUTPUT "job submit args:\n$args"
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
   if { $cd_dir != "" } {
@@ -4506,6 +4515,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
+     }
+     if { $return_value <= 0 && $do_error_check != 1 } {
+        puts $CHECK_OUTPUT "submit_job returned error: [get_submit_error $return_value]"
      }
      return $return_value
 }

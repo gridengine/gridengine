@@ -712,101 +712,31 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 #endif /* CRAY */
 
 #if defined(DARWIN)
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <mach/mach_init.h>
+#include <mach/mach_host.h>
 #include <mach/host_info.h>
-#include <nlist.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <kvm.h>
+#include <sys/stat.h>
 
 int sge_loadmem(sge_mem_info_t *mem_info)
 {
- #if 0
-    long total, fr;
-    register long cnt, i;
-    register long t, f, l;
-    struct swaptable *swt;
-    struct swapent *ste;
-    static char path[256];
-    int sz;
 
-    long freemem;
+    vm_statistics_data_t vm_info;
+    mach_msg_type_number_t info_count;
+    struct host_basic_info cpu_load_data;
+    int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
+    mach_port_t host_priv_port = mach_host_self();
 
-    DENTER(TOP_LAYER, "loadmem");
+    host_info(host_priv_port, HOST_BASIC_INFO , (host_info_t)&cpu_load_data, &host_count);
 
-    init_pageshift();
+    mem_info->mem_total = cpu_load_data.memory_size / (1024*1024);
 
-    /* get total number of swap entries */
-    if ((cnt = swapctl(SC_GETNSWP, 0))<0) {
-       DEXIT;
-       return -1;
-    }
 
-    /* allocate enough space to hold count + n swapents */
-    sz =  sizeof(long) + cnt * sizeof(struct swapent);
-    swt = (struct swaptable *) malloc(sz);
+    info_count = HOST_VM_INFO_COUNT;
+    host_statistics(mach_host_self (), HOST_VM_INFO, (host_info_t)&vm_info, &info_count);
+    mem_info->mem_free = vm_info.free_count*vm_page_size/1024/1024;
 
-    if (swt == NULL) {
-       total = 0;
-       fr = 0;
-       DEXIT;
-       return -1;
-    }
-    swt->swt_n = cnt;
-
-    /* fill in ste_path pointers: we don't care about the paths, so we point
-       them all to the same buffer */
-    ste = &(swt->swt_ent[0]);
-    i = cnt;
-    while (--i >= 0) {
-       ste++->ste_path = path;
-    }
-
-    /* grab all swap info */
-    if (swapctl(SC_LIST, swt) != cnt) {
-       DEXIT;
-       return -1;
-    }
-
-    /* walk thru the structs and sum up the fields */
-    t = f = l = 0;
-    ste = &(swt->swt_ent[0]);
-
-    i = cnt;
-    while (--i >= 0) {
-       /* dont count slots being deleted */
-       if (!(ste->ste_flags & ST_INDEL) &&
-           !(ste->ste_flags & ST_DOINGDEL)) {
-       /* DPRINTF(("%s pages: %ld free: %ld length %ld\n",
-            ste->ste_path,
-             ste->ste_pages,
-             ste->ste_free,
-             ste->ste_length)); */
-          t += ste->ste_pages;
-          f += ste->ste_free;
-          l += ste->ste_length;
-       }
-       ste++;
-    }
-
-    /* fill in the results */
-    total = t;
-    fr = f;
-    free(swt);
-    mem_info->swap_total = page2M(total);
-    mem_info->swap_free = page2M(fr);
-
-    if (get_freemem(&freemem)) {
-       DEXIT;
-       return -1;
-    }
-
-    mem_info->mem_free = page2M(freemem);
-    mem_info->mem_total = page2M(sysconf(_SC_PHYS_PAGES));
-#endif /* 0 */
     return 0;
- }
+}
+
 #endif /* DARWIN */
 

@@ -2337,75 +2337,6 @@ proc mod_user { change_array { from_file 0 } } {
 }
 
 
-#                                                             max. column:     |
-#****** sge_procedures/add_prj() ******
-# 
-#  NAME
-#     add_prj -- ??? 
-#
-#  SYNOPSIS
-#     add_prj { change_array } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     change_array - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc add_prj { change_array } {
-  global ts_config
-
-# returns 
-# -100 on unknown error
-# -1   on timeout
-# -2   if queue allready exists
-# 0    if ok
-
-# name      template
-# oticket   0
-# fshare    0
-# acl       NONE
-# xacl      NONE  
-# 
-  global CHECK_ARCH 
-  global CHECK_CORE_MASTER CHECK_USER
-
-  upvar $change_array chgar
-
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     add_proc_error "add_prj" -1 "not possible for sge systems"
-     return
-  }
-
-  set vi_commands [build_vi_command chgar]
-
-#  set PROJECT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PROJECT]]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS ]
-  
-  if {$result == -1 } { add_proc_error "add_prj" -1 "timeout error" }
-  if {$result == -2 } { add_proc_error "add_prj" -1 "\"[set chgar(name)]\" already exists" }
-  if {$result != 0  } { add_proc_error "add_prj" -1 "could not add project \"[set chgar(name)]\"" }
-
-  return $result
-}
-
 
 #                                                             max. column:     |
 #****** sge_procedures/del_pe() ******
@@ -2472,79 +2403,6 @@ proc del_pe { mype_name } {
   }
   return $result
 
-}
-
-#                                                             max. column:     |
-#****** sge_procedures/del_prj() ******
-# 
-#  NAME
-#     del_prj -- ??? 
-#
-#  SYNOPSIS
-#     del_prj { myprj_name } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     myprj_name - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc del_prj { myprj_name } {
-  global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_CORE_MASTER
-  global CHECK_HOST
-
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     set_error -1 "del_prj - not possible for sge systems"
-     return
-  }
-
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $myprj_name "*" ]
-
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dprj $myprj_name"]
-  set sp_id [ lindex $id 1 ]
-  set result -1
-  set timeout 30 	
-  log_user 0 
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_prj" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-
-    -i $sp_id default {
-      set result -1
-    }
-  }
-  close_spawn_process $id
-  log_user 1
-  if { $result != 0 } {
-     add_proc_error "del_prj" -1 "could not delete project \"$myprj_name\""
-  }
-  return $result
 }
 
 #                                                             max. column:     |
@@ -5480,7 +5338,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_qmaster {} {
+proc startup_qmaster { {and_scheduler 1} } {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
@@ -5497,7 +5355,12 @@ proc startup_qmaster {} {
       set startup_user $CHECK_USER
    } 
 
-   puts $CHECK_OUTPUT "starting up qmaster and scheduler on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   if {$and_scheduler} {
+      set schedd_message "and scheduler"
+   } else {
+      set schedd_message ""
+   }
+   puts $CHECK_OUTPUT "starting up qmaster $schedd_message on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
    set arch [resolve_arch $CHECK_CORE_MASTER]
 
    if { $master_debug != 0 } {
@@ -5506,14 +5369,17 @@ proc startup_qmaster {} {
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_qmaster" ""
    }
-   if { $schedd_debug != 0 } {
-      puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
-   } else {
-      puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-      set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
-      puts $CHECK_OUTPUT $result
+
+   if {$and_scheduler} {
+      if { $schedd_debug != 0 } {
+         puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+         puts $CHECK_OUTPUT "starting schedd as $startup_user" 
+         start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      } else {
+         puts $CHECK_OUTPUT "starting schedd as $startup_user" 
+         set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
+         puts $CHECK_OUTPUT $result
+      }
    }
    
    return 0

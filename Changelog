@@ -1,3 +1,6 @@
+JG-2004-07-01-0: Testsuite: Added check for qmaster spooling containing a 
+                            testcase for issue 1122.
+
 EB-2004-06-23-0: Cleanup:   Added/Changed ADOC commets
 
 EB-2004-06-22-0: Cleanup:   Added ADOC commets

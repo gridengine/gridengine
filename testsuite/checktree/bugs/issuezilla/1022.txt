@@ -1,0 +1,6 @@
+Issue:      1022
+Synopsis:   project list not available after qmaster restart
+
+This bug is verified in the following testsuite check:
+Check:      system_tests/qmaster/spooling
+Function:   qmaster_spooling_prj_restart

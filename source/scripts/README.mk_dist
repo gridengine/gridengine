@@ -6,16 +6,15 @@ Content
 
 1) What 'mk_dist' is and what it does
 2) Command line options of 'mk_dist'
+3) Example
 3) Copyright
-
 
 1) What 'mk_dist' is and what it does 
 -------------------------------------
 
    After creating a distribution repository with 'scripts/distinst' you can
    create Grid Engine distributions for further distribution. Currently
-   distributions in 'tar.gz' format and in Sun Microsystems 'pkgadd' format are
-   supported.
+   distributions in 'tar.gz' format are supported.
 
    When you stage a Grid Engine distribution with 'scripts/distinst' it is
    copied to a directory which you specifiy with the "-basedir" switch.
@@ -35,7 +34,46 @@ Content
 
    Show a brief summary of its command line options:
 
-      % mk_dist
+    mk_dist -vdir vdir -version version [-basedir dir] [-cdrom] \
+            [-sgeee] [-bin] [-common] [-doc] binarchs ...
+
+    -vdir <versiondir> use this subdirectory form which distribution
+                       is created
+
+    -version version   string which will be used for filenames
+                    
+    -basedir dir       directory where tar.gz files will be created
+                       (default "/tmp/sge_dist")
+
+    -cdrom             create in ISO CDROM image with "mkisofs"
+                       in current directory.
+
+    -sgeee             create a SGEEE distribution
+
+    -bin               created binary tar.gz files from given "binarchs"
+
+    -common            created tar.gz of architecture independent files
+   
+    -doc               reated tar.gz of documentation
+
+
+    -tar tarcmd        use "tarcmd" instead of default "tar". Must support
+                       "z" option
+
+3) Example
+----------
+
+   Create "everything" for a couple of binary platforms:
+
+   # ./mk_dist -vdir SGE53 -version 5.3 -common -doc -bin glinux solaris
+
+   The following files will be created in /tmp/sge_dist:
+
+      sge-5.3-common.tar.gz
+      sge-5.3-doc.tar.gz
+      sge-5.3-bin-solaris.tar.gz
+      sge-5.3-bin-glinux.tar.gz
+
 
 3) Copyright 
 ------------

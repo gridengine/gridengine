@@ -28,13 +28,12 @@ Content
    Typically there are two scenarios in which a distribution needs to be
    created. (1) During development changes should be tested as quickly as
    possible. (2) As soon as development is done, you may want to create a
-   repository to create further distributions (in tar.gz format or other
-   formats, where currently the Sun Microsystems pkgadd format for Solaris
-   is supported) e.g. for putting it on a FTP server. 'distinst' supports
-   both types of staging. If the script is called as 'distinst', the files
-   to stage will be copied to a repository, if the script is called as
-   'myinst', the files will be copied to the directory to which the
-   environment variable $SGE_ROOT points.
+   repository to create further distributions (in tar.gz format), e.g. for
+   putting it on a FTP server. 'distinst' supports both types of staging. If
+   the script is called as 'distinst', the files to stage will be copied to
+   a repository, if the script is called as 'myinst', the files will be
+   copied to the directory to which the environment variable $SGE_ROOT
+   points.
 
    There is not much difference between both types. By default 'distinst'
    has a "strict" behavior - it will exit with an error message if one of

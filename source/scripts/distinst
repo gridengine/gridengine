@@ -37,7 +37,7 @@
 umask 022
 
 BASEDIR=/dist/SGEDIST
-VERSIONDIR=SGE54
+VERSIONDIR=SGE53
 
 HASDIR="ckpt doc examples/jobs locale mpi pvm/src qmon/PIXMAPS/big qmon/locale"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
@@ -409,6 +409,7 @@ done
 
 if [ $localinst = false ]; then
    DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
+   mkdir -p $DEST_SGE_ROOT
 fi
 
 whoseargs="archs"
@@ -665,7 +666,7 @@ if [ $instcommon = true ]; then
       echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      echo No PS and PDF files to install yet
+      Execute cp ../doc/SGE5_3alpha.pdf $DEST_SGE_ROOT/doc
    fi
 
    # this rule must come *after* the "instdoc" rule

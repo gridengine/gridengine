@@ -198,12 +198,11 @@ Content
 ---------------------------------------
 
    If you are planning to create a distribution which later should be used
-   to create further distributions (currently tar.gz, Sun pkgadd format and
-   creating CDROM's is supported), the files are first copied to a
-   distribution repository. From that distribution repository you later can
-   create distributions. The base directory for the distribution repository
-   is defined in the 'distinst' script or can be overridden with command
-   line parameters.
+   to create further distributions (currently tar.gz is supported), the
+   files are first copied to a distribution repository. From that
+   distribution repository you later can create distributions. The base
+   directory for the distribution repository is defined in the 'distinst'
+   script or can be overridden with command line parameters.
    
    By default distinst in this mode will have a "strict" behavior. It will
    exit, if one of the installation targets cannot be installed

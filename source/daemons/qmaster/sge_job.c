@@ -2980,21 +2980,25 @@ static int job_verify_name(const lListElem *job, lList **alpp,
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       ret = STATUS_EUNKNOWN;
    } else {
+      const char *job_owner = lGetString(job, JB_owner);
+
       for_each (jep, Master_Job_List) {
          const char *jep_name = lGetString(jep, JB_job_name);
-         const char *jep_owner = lGetString(jep, JB_owner);
-         const char *job_owner = lGetString(job, JB_owner);
 
-         if (!strcmp(job_name, jep_name) && !strcmp(job_owner, jep_owner)) {
-            u_long32 succ_jid = is_referenced_by_jobname(jep);
+         if (strcmp(job_name, jep_name) == 0) {
+            const char *jep_owner = lGetString(jep, JB_owner);
 
-            if (succ_jid) {
-               ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU, 
-                      job_name, job_descr, u32c(lGetUlong(jep, JB_job_number)), 
-                      u32c(succ_jid)));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-               ret = STATUS_EUNKNOWN;
-               break;
+            if(strcmp(job_owner, jep_owner) == 0) {
+               u_long32 succ_jid = is_referenced_by_jobname(jep);
+
+               if (succ_jid) {
+                  ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU, 
+                         job_name, job_descr, u32c(lGetUlong(jep, JB_job_number)), 
+                         u32c(succ_jid)));
+                  sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+                  ret = STATUS_EUNKNOWN;
+                  break;
+               }
             }
          }
       }

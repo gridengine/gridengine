@@ -1079,10 +1079,6 @@ case HP11:
       set CXXFLAGS = "$OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
 
-   if ( $BUILDARCH == HP1164 ) then
-      set CFLAGS = "$CFLAGS -DHP11"
-   endif
-   
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"

@@ -46,7 +46,7 @@ Content
    glinux	LINUX6		Linux x86, 2.[24] kernel, glibc >= 2.1
    hp10		HP10		HP HP-UX 10.20
    hp11		HP11		HP HP-UX 11.00, 32bit
-   hp11-64	HP11		HP HP-UX 11.00, 64bit
+   hp11-64	HP1164	HP HP-UX 11.00, 64bit
    irix6	IRIX6		SGI Irix 6.2-6.5, 32+64bit
    necsx4	NECSX4		NEC SX4, SUPER-UX
    necsx5	NECSX5		NEC SX5, SUPER-UX

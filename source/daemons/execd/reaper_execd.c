@@ -829,7 +829,7 @@ lListElem *jr
       if((jatep = search_task(jataskid, jep)) != NULL) {
          break;
       }
-      lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
 
    if (jep && jatep) {

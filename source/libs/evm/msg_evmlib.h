@@ -54,5 +54,5 @@
 #define MSG_COM_ACKTIMEOUT4EV_ISIS        _MESSAGE(66011, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
 #define MSG_COM_NOSHUTDOWNPERMS           _MESSAGE(66012, _("shutdown requires manager privileges\n"))
 #define MSG_COM_SHUTDOWNNOTIFICATION_SUS  _MESSAGE(66013, _("sent shutdown notification to event client " SFN " with id " U32CFormat " on host " SFN "\n"))
-
+#define MSG_EVE_QMASTERISGOINGDOWN        _MESSAGE(66014, _("do not accept new event clients. Qmaster is going down\n"))
 #endif /* __MSG_EVMLIB_H */

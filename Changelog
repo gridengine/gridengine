@@ -1,3 +1,7 @@
+SG-2004-02-19-0: Bugfix:    the event should not accept new event clients when
+                            the master is going down.
+                 Changed:   qmaster                            
+
 JG-2004-02-18-1: Bugfix:    Fixed build for dbstat.
 
 JG-2004-02-18-0: Testsuite: Fixed testsuite installation - it failed as schedd

@@ -91,12 +91,18 @@ typedef struct {
 } subscription_t;
 
 typedef struct {
-   pthread_mutex_t  mutex;                 /* used for mutual exclusion                           */
-   pthread_cond_t   cond_var;              /* used for waiting                                    */
-   pthread_mutex_t  cond_mutex;            /* used for mutual exclusion                           */
-   int              clients_deliver_count; /* counts the event clients, which have pending events */
-   bool             exit;                  /* true -> exit event master                           */
-   lList*           clients;               /* list of event master clients                        */
+   pthread_mutex_t  mutex;                 /* used for mutual exclusion. only use in public functions   */
+   pthread_cond_t   cond_var;              /* used for waiting                                          */
+   pthread_mutex_t  cond_mutex;            /* used for mutual exclusion. only use in internal functions */
+   int              clients_deliver_count; /* counts the event clients, which have pending events       */
+                                           /* protected by cond_mutex.                                  */
+   bool             prepare_shutdown;      /* is set, when the qmaster is going down. Do not accept     */
+                                           /* new event clients, when this is set to false. protected   */
+                                           /* by mutex.                                                 */
+   bool             exit;                  /* true -> exit event master, and the thread should end      */
+                                           /* protected by mutex                                        */
+   lList*           clients;               /* list of event master clients                              */
+                                           /* protected by mutex                                        */
 } event_master_control_t;
 
 /****** Eventclient/Server/-Event_Client_Server_Defines ************************
@@ -104,14 +110,14 @@ typedef struct {
 *     Defines -- Constants used in the module
 *
 *  SYNOPSIS
-*     #define FLUSH_INTERVAL 15
+*     #define EVENT_DELIVERY_INTERVAL_S 1 
+*     #define EVENT_DELIVERY_INTERVAL_N 0 
 *     #define EVENT_ACK_MIN_TIMEOUT 600
 *     #define EVENT_ACK_MAX_TIMEOUT 1200
 *
 *  FUNCTION
 *     EVENT_DELIVERY_INTERVAL_S is the event delivery interval. It is set in seconds.
 *     EVENT_DELIVERY_INTERVAL_N same thing but in nano seconds.
-*     
 *
 *     EVENT_ACK_MIN/MAX_TIMEOUT is the minimum/maximum timeout value for an event
 *     client sending the acknowledge for the delivery of events.
@@ -200,7 +206,7 @@ const int SOURCE_LIST[LIST_MAX][3] = {
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
 static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 
-                                                PTHREAD_MUTEX_INITIALIZER, 0, false, NULL};
+                                                PTHREAD_MUTEX_INITIALIZER, 0, false, false, NULL};
 static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
 
@@ -307,6 +313,13 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
+   if (Master_Control.prepare_shutdown) {
+      ERROR((SGE_EVENT, MSG_EVE_QMASTERISGOINGDOWN));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);      
+      DEXIT;
+      return STATUS_ESEMANTIC;
+   }
+   
    if (id == EV_ID_ANY) {   /* qmaster shall give id dynamically */
       id = first_dynamic_id++;
       lSetUlong(clio, EV_id, id);
@@ -2157,6 +2170,7 @@ add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
       const subscription_t *subscription = lGetRef(event_client, EV_sub_array);
 
       if (type == sgeE_QMASTER_GOES_DOWN) {
+         Master_Control.prepare_shutdown = true;
          lSetUlong(event_client, EV_busy, 0); /* can't be too busy for shutdown */
          flush_events(event_client, 0);
          pthread_cond_signal(&Master_Control.cond_var);

@@ -30,9 +30,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
+#include <string.h>
 
 #ifdef TEST
-#include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #endif
@@ -271,6 +271,7 @@ sge_mem_info_t *mem_info
    /* allocate enough space to hold count + n swapents */
    sz =  sizeof(long) + cnt * sizeof(struct swapent);
    swt = (struct swaptable *) malloc(sz);
+   memset(swt, 0, sz);
 
    if (swt == NULL) {
       total = 0;

@@ -1,3 +1,6 @@
+JG-2001-11-26-1: Fixed a (non critical) read to uninitialized memory in 
+                 the code retrieving memory load values on solaris.
+
 JG-2001-11-26-0: Added qconf options -secl (show event client list) and
                  -kec (kill event client).
 

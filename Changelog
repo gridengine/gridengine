@@ -1,3 +1,8 @@
+AH-2004-07-13-2: Bugfix:    Revert change AH-2004-07-09-0. Bug #1113 is not fixed.
+                 Issue:     1113
+                 Bugtraq:   5072481
+                 Review:    CR
+
 RH-2004-06-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
                             in the method qref_resolve_hostname (libs/sgeobj/sge_qref.c)
                             a sprintf "@%s" instead of "%s@%s" is executed if the 
@@ -37,6 +42,7 @@ SG-2004-07-12-0: Bugfix:    - qstat -j -xml printed unparsable xml-output
                  Bugtraq:   -NA-
                  Review:    AA
 
+>>>>>>> 1.2086.2.19
 AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat
                  Changed:   qstat, qhost
                  Issue:     1113

@@ -1,5 +1,10 @@
+DT-2005-01-19-0: Cleanup:   o Made JAPI Makefile more readable
+                 Bugfix:    o JAPI makefile didn't delete drmaa.o on clean
+                            - merged from maintrunk DT-2005-01-17-0 and
+                              DT-2005-01-18-0
+                 Changed:   DRMAA
+
 AS-2005-01-19-0: CVS        Created V60u3_TAG
----------------------------------------------
 
 DT-2005-01-16-0: Enhancem.: o aimk can now build javadocs with or without
                               protected fields and methods.

@@ -1,6 +1,8 @@
 AH-2003-01-22-0  Bugfix:    STRING complex attribute handling with RELOP "!=" is broken
                  IZ:        #450
                  Bugtraq:   #4805423 
+                 Review:    CR
+                 Changed:   sge_qmaster, sge_schedd, qstat, qhost , qselect, qacct, 
 
 EB-2003-01-22-0  Bugfix:    qalter shows wrong priority number when using
                             negative priorities with -p option

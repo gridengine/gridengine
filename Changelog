@@ -1,3 +1,5 @@
+JG-2004-01-28-0: Bugfix:    Fixed the build (some files were dos files).
+
 MD-2004-01-27-0: Bugfix:    - setting productmode sgeee to default
                             - bugfix logfile creation
                             - path generation

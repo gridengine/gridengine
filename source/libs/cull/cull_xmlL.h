@@ -1,6 +1,5 @@
 #ifndef __SGE_CULL_XMLL_H
-#define __SGE_XULL_XMLL_H
-
+#define __SGE_CULL_XMLL_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 

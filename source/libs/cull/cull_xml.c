@@ -308,8 +308,8 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
    else if (lGetPosViaElem(ep, XMLE_Attribute) !=-1 ) {
       if (lGetBool(ep, XMLE_Print)){
          char *attr = NULL; 
-         lAttributesToString_(lGetList(ep, XMLE_Attribute), &attr); 
          lListElem *elem = lGetObject(ep, XMLE_Element);
+         lAttributesToString_(lGetList(ep, XMLE_Attribute), &attr); 
          if (!fp){
             DPRINTF(("%s<%s%s>", space, lGetString(elem, XMLA_Name), attr));
             DPRINTF(("%s", lGetString(elem, XMLA_Value))); 

@@ -1,3 +1,6 @@
+CR-2003-03-10-0  Bugfix:    distinst failure for -allall option if user has
+                            no access to PDF manual file.
+
 CR-2003-03-06-0  Cleanup:   Removed unused messages from message files (msg_*.h) 
 
 CR-2003-03-05-1  Bugfix:    Missing "return" in main() function reports

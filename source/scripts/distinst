@@ -775,7 +775,7 @@ if [ $instcommon = true ]; then
       echo "   --> PS and PDF files"
       Execute rm -rf $DEST_SGE_ROOT/doc
       Execute mkdir $DEST_SGE_ROOT/doc
-      if [ -e $MANUALPDF ]; then
+      if [ -r $MANUALPDF ]; then
          Execute cp $MANUALPDF $DEST_SGE_ROOT/doc/SGE53beta2_doc.pdf
       fi
    fi

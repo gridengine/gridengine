@@ -45,7 +45,6 @@
 #include "ck_to_do_qmaster.h"
 #include "sgermon.h"
 #include "sge_time.h"
-#include "slots_used.h"
 #include "sge_log.h"
 #include "time_event.h"
 #include "sge_calendar_qmaster.h"
@@ -152,8 +151,6 @@ u_long32 now
                      lGetString(qep, QU_qname),
                      load_avg, 
                      vmem);
-                     /* ,(int) lGetUlong(qep, QU_job_slots),
-                     (int) qslots_used(qep) */
 
             /* states */
             {

@@ -34,7 +34,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_conf.h"
-#include "slots_used.h"
 #include "sge_sched.h"
 #include "sge_signal.h"
 #include "subordinate_qmaster.h"
@@ -85,12 +84,12 @@ u_long32 jobid  /* just for logging in case of errors */
       for_each (so, lGetList(qep, QU_subordinate_list)) {
 
          /* skip if sos before this job came on this queue ? */
-         if (tst_sos(qslots_used(qep) - (int)lGetUlong(ep, JG_slots), 
+         if (tst_sos(qinstance_slots_used(qep) - (int)lGetUlong(ep, JG_slots), 
                lGetUlong(qep, QU_job_slots), lGetUlong(qep, QU_suspended_on_subordinate), so)) 
             continue;
 
          /* skip if not sos since job is on this queue ? */
-         if (!tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots), 
+         if (!tst_sos(qinstance_slots_used(qep), lGetUlong(qep, QU_job_slots), 
                   lGetUlong(qep, QU_suspended_on_subordinate), so))
             continue;
 
@@ -192,12 +191,12 @@ u_long32 jobid  /* just for logging in case of errors */
       for_each (so, lGetList(qep, QU_subordinate_list)) {
 
          /* skip if not sos since job is on this queue ? */
-         if (!tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots), 
+         if (!tst_sos(qinstance_slots_used(qep), lGetUlong(qep, QU_job_slots), 
             lGetUlong(qep, QU_suspended_on_subordinate), so))
             continue;
 
          /* skip if sos after job gone from this queue ? */
-         if (tst_sos(qslots_used(qep) - (int)lGetUlong(ep, JG_slots), 
+         if (tst_sos(qinstance_slots_used(qep) - (int)lGetUlong(ep, JG_slots), 
             lGetUlong(qep, QU_job_slots), lGetUlong(qep, QU_suspended_on_subordinate), so))
             continue;
 
@@ -343,7 +342,7 @@ lListElem *queueep
       for_each(so, lGetList(qep, QU_subordinate_list)) {
          if (!strcmp(lGetString(so, SO_name), lGetString(queueep, QU_qname))) {
             /* suspend the queue if neccessary */
-            if (tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots),
+            if (tst_sos(qinstance_slots_used(qep), lGetUlong(qep, QU_job_slots),
                   lGetUlong(qep, QU_suspended_on_subordinate), so))
                sos(queueep, 0);
                n++;

@@ -40,7 +40,6 @@
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_host.h"
-#include "slots_used.h"
 #include "sge_feature.h"
 #include "sge_c_gdi.h"
 #include "sge_host_qmaster.h"
@@ -756,14 +755,14 @@ int sub_command
       /* create a list of subordinates that are susupended actually */
       copy_suspended(&unsuspend, 
             lGetList(old_queue, QU_subordinate_list), 
-            qslots_used(old_queue), 
+            qinstance_slots_used(old_queue), 
             lGetUlong(old_queue, QU_job_slots), 
             lGetUlong(old_queue, QU_suspended_on_subordinate));
 
       /* create a list of subordinates that must be susupended with the new queue */
       copy_suspended(&suspend, 
             lGetList(new_queue, QU_subordinate_list), 
-            qslots_used(new_queue), 
+            qinstance_slots_used(new_queue), 
             lGetUlong(new_queue, QU_job_slots), 
             lGetUlong(new_queue, QU_suspended_on_subordinate));
 
@@ -847,8 +846,8 @@ int sub_command
 
       lSetList(new_queue, QU_consumable_actual_list, NULL);
 
-      slots2config_list(new_queue);
-      debit_queue_consumable(NULL, new_queue, Master_CEntry_List, 0); 
+      qinstance_set_conf_slots_used(new_queue);
+      qinstance_debit_consumable(NULL, new_queue, Master_CEntry_List, 0); 
       for_each (jep, Master_Job_List) {
          int slots = 0;
          lListElem *jatep;
@@ -860,7 +859,7 @@ int sub_command
             slots += lGetUlong(gdil_ep, JG_slots);
          }
          if (slots)
-            debit_queue_consumable(jep, new_queue, Master_CEntry_List, slots); 
+            qinstance_debit_consumable(jep, new_queue, Master_CEntry_List, slots); 
       }
    }
 
@@ -878,7 +877,7 @@ int sub_command
       */
       copy_suspended(&sos_list_after,
             lGetList(new_queue, QU_subordinate_list),
-            qslots_used(new_queue), 
+            qinstance_slots_used(new_queue), 
             lGetUlong(new_queue, QU_job_slots),
             lGetUlong(new_queue, QU_suspended_on_subordinate));
       suspend_all(sos_list_after, 0);
@@ -1022,7 +1021,7 @@ char *rhost
       DEXIT;
       return STATUS_EEXIST;
    }
-   running_jobs = qslots_used(oqep);
+   running_jobs = qinstance_slots_used(oqep);
    if (running_jobs) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ACTIVEUNITS_SSIS,
          MSG_OBJ_QUEUE, qname, running_jobs, MSG_OBJ_JOBS));
@@ -1035,7 +1034,7 @@ char *rhost
       that were in the subordinate list */
    copy_suspended(&sos_list_before,
          lGetList(oqep, QU_subordinate_list),
-         qslots_used(oqep),
+         qinstance_slots_used(oqep),
          lGetUlong(oqep, QU_job_slots),
          lGetUlong(oqep, QU_suspended_on_subordinate));
 

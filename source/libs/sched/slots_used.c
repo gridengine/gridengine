@@ -33,11 +33,12 @@
 #include "cull.h"
 #include "sge_log.h"
 #include "sgermon.h"
-#include "slots_used.h"
 #include "sge_qinstance.h"
 #include "sge_centry.h"
 
 #include "msg_schedd.h"
+
+#if 0 /* EB: TODO: remove */
 
 int qslots_used(
 lListElem *qep 
@@ -61,10 +62,9 @@ lListElem *qep
 #endif
 }
 
-void set_qslots_used(
-lListElem *qep,
-int slots 
-) {
+void 
+set_qslots_used(lListElem *qep, int slots) 
+{
    lListElem *slots_ep;
 
    DENTER(TOP_LAYER, "set_qslots_used");
@@ -72,7 +72,8 @@ int slots
    if (!(slots_ep = lGetSubStr(qep, CE_name, "slots", 
             QU_consumable_actual_list))) {
       /* aaargh! may never happen */
-      ERROR((SGE_EVENT, MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S, lGetString(qep, QU_full_name)));
+      ERROR((SGE_EVENT, MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S, 
+             lGetString(qep, QU_full_name)));
       DEXIT;
       return;
    }
@@ -81,3 +82,4 @@ int slots
    return;
 }
 
+#endif

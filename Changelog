@@ -1,3 +1,10 @@
+AA-2001-10-29-0: Fix for weired characters in helper dialogs (PE,Project Configi, Calendar, Cluster Config, 
+                 Complex Config)
+                 Queue Control Reschedule functionality added (corresponds qmod -r <qname>)
+                 Cluster config Reschedule Unknown bug fixed 
+                 Job Custom dialogue core dump fix
+                 
+
 EB-2001-10-29-0: Fix for sgeee scheduler
                   - empty sharetree && sharetreetickets > 0 caused
                     fatal exit of scheduler

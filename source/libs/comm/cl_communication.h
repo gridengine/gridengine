@@ -72,9 +72,6 @@ cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent);
 int cl_com_add_debug_message(cl_com_connection_t* connection, const char* message, cl_com_message_t* ms);
 
 
-/* application error functions */
-int cl_com_push_application_error(int cl_error, const char* cl_info);
-
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_host_list_refresh(cl_raw_list_t* host_list);
 int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);

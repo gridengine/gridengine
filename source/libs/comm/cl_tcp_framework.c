@@ -20,6 +20,7 @@
 
 #include "cl_tcp_framework.h"
 #include "cl_communication.h"
+#include "cl_commlib.h"
 #include "cl_message_list.h"
 #include "cl_connection_list.h"
 #include "cl_util.h"
@@ -257,7 +258,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
             if ((private->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
                CL_LOG(CL_LOG_ERROR,"could not create socket");
                private->sockfd = -1;
-               cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
+               cl_commlib_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
                return CL_RETVAL_CREATE_SOCKET;
             }
             break;
@@ -268,7 +269,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
             if ((private->sockfd = rresvport(&res_port)) < 0) {
                CL_LOG(CL_LOG_ERROR,"could not create reserved port socket");
                private->sockfd = -1;
-               cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR );
+               cl_commlib_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR );
                return CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
             }
             break;
@@ -279,7 +280,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
          private->sockfd = -1;
-         cl_com_push_application_error(CL_RETVAL_SETSOCKOPT_ERROR, MSG_CL_TCP_FW_SETSOCKOPT_ERROR);
+         cl_commlib_push_application_error(CL_RETVAL_SETSOCKOPT_ERROR, MSG_CL_TCP_FW_SETSOCKOPT_ERROR);
          return CL_RETVAL_SETSOCKOPT_ERROR;
       }
    
@@ -287,7 +288,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       if ( fcntl(private->sockfd, F_SETFL, O_NONBLOCK) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set O_NONBLOCK");
          private->sockfd = -1;
-         cl_com_push_application_error(CL_RETVAL_FCNTL_ERROR, MSG_CL_TCP_FW_FCNTL_ERROR);
+         cl_commlib_push_application_error(CL_RETVAL_FCNTL_ERROR, MSG_CL_TCP_FW_FCNTL_ERROR);
          return CL_RETVAL_FCNTL_ERROR;
       }
 
@@ -309,7 +310,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          } else {
             snprintf(tmp_buffer,256, "%s", cl_get_error_text(tmp_error));
          }
-         cl_com_push_application_error(tmp_error, tmp_buffer);
+         cl_commlib_push_application_error(tmp_error, tmp_buffer);
          return tmp_error; 
       } 
       free(unique_host);
@@ -346,7 +347,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
                return CL_RETVAL_CONNECT_ERROR;
             }
             case EADDRNOTAVAIL: {
@@ -355,7 +356,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
                return CL_RETVAL_CONNECT_ERROR;
             }
             case EINPROGRESS:
@@ -373,7 +374,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
                close(private->sockfd);
                private->sockfd = -1;
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
                return CL_RETVAL_CONNECT_ERROR;
             } 
          }
@@ -406,7 +407,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
             
             if (select_back < 0) {
                CL_LOG(CL_LOG_ERROR,"select error");
-               cl_com_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
+               cl_commlib_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
                return CL_RETVAL_SELECT_ERROR;
             }
          }
@@ -428,7 +429,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
                close(private->sockfd);
                private->sockfd = -1;
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
                return CL_RETVAL_CONNECT_ERROR;
             }
          } 
@@ -443,7 +444,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
             shutdown(private->sockfd, 2);
             close(private->sockfd);
             private->sockfd = -1;
-            cl_com_push_application_error(CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
+            cl_commlib_push_application_error(CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
             return CL_RETVAL_CONNECT_TIMEOUT;
          }
 

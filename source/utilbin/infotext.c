@@ -34,7 +34,7 @@
 /* Interactive formatted localized text*/
 /* __          _          _        ____*/
 /* -> infotext binary */
-
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +45,6 @@
 #include "msg_utilbin.h"
 #include "sge_dstring.h"
 #include "version.h"
-
 
 typedef struct sge_infotext_opt {
       int e;     /* print to stderr */
@@ -64,7 +63,9 @@ typedef struct sge_infotext_opt {
 static void  sge_infotext_welcome(void);
 static void  sge_infotext_usage(void);
 static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
+#if defined(ALPHA) || defined(ALPHA5)
 static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
+#endif
 static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
 static char* sge_infotext_string_output_parsing(dstring* buf,char* string);
 static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line);
@@ -534,7 +535,7 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
 }
 
 
-
+#if defined(ALPHA) || defined(ALPHA5)
 char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
@@ -572,6 +573,7 @@ char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char*
    sge_dstring_free(&arg_copy);
    return (char*) sge_dstring_get_string(tmp_buf);
 }
+#endif
 
 int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
    char* p1 = NULL;
@@ -853,7 +855,7 @@ char **argv
    }
 
    if (args_ok != 1) {
-      printf("syntax error! Type sge_infotext -help for usage!\n");
+      printf("syntax error! Type infotext -help for usage!\n");
       /* sge_infotext_usage(); */
       exit(10);
    }
@@ -1006,17 +1008,35 @@ char **argv
   
    /* 4th pass - insert parameters */ 
    DPRINTF(("pass 4\n"));
-
-   if (real_args > 0) {
+   {
+      
+      char tbuf1[MAX_STRING_SIZE*4];
+      if (real_args > 0) {
+#if defined(ALPHA) || defined(ALPHA5)
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
          sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));
          sge_dstring_copy_dstring(&buffer2,&buffer); 
       }  
-   } else {
-      sge_dstring_copy_dstring(&buffer,&buffer2);
+#else
+      vsprintf(tbuf1, (char*) sge_dstring_get_string(&buffer2), &argv[first_arg] );
+      sge_dstring_copy_string(&buffer,tbuf1);
+
+   /*      for(i=0;i<real_args;i++) { 
+            sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));
+            sge_dstring_copy_dstring(&buffer2,&buffer); 
+         }  
+   */
+   /*      for(i=0;i<real_args;i++) { 
+            printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]);
+         }
+   */
+#endif
+      } else {
+         sge_dstring_copy_dstring(&buffer,&buffer2);
+      }
    }
-      
+
    /* output */
    DPRINTF(("build_dash\n"));
    sge_dstring_append(&sge_infotext_dash_buffer,"");

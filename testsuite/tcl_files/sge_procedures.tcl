@@ -873,7 +873,7 @@ proc reset_schedd_config {} {
   set default_array(maxujobs)                   "0"
   set default_array(queue_sort_method)          "load"
   set default_array(user_sort)                  "false"
-  set default_array(job_load_adjustments)       "np_load_avg=0.50"
+  set default_array(job_load_adjustments)       "np_load_avg=0.15"
   set default_array(load_adjustment_decay_time) "0:7:30"
   set default_array(load_formula)               "np_load_avg"
   set default_array(schedd_job_info)            "true"

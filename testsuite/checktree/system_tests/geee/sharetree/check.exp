@@ -331,6 +331,7 @@ proc share_tree_setup  {} {
 
    get_schedd_config my_config 
    set my_config(weight_tickets_share) "10000"
+   set my_config(job_load_adjustments) "np_load_avg=0.0"
    set my_config(schedule_interval)    "2:0:0"
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
    set my_config(halftime)             "1"
@@ -461,7 +462,7 @@ proc share_tree_test {} {
 
    set done 0
    set my_timeout [timestamp]
-   incr my_timeout 300
+   incr my_timeout 400
    while { $done == 0 && [timestamp] < $my_timeout} {
       set done 1
       set nr_of_jobs 0

@@ -1,3 +1,5 @@
+CR-2002-01-25-0: Bugfix:    changed some settings to prevent timeouts
+
 EB-2002-01-25-0: Enhancem.: new schedd_param: POLICY_HIERARCHY
 
 JG-2002-01-25-0: Enhancem.: If killing a qrsh <command> job (by the pid of the

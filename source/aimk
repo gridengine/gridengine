@@ -1096,17 +1096,14 @@ case DARWIN:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
-
    set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
-   # set LFLAGS   = "-bind_at_load $DEBUG_FLAG $LFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
-   set SHAREDLD = "$CC -dynamiclib"
-   set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "-dynamic -L."
+   set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
+   set SHARED_CFLAGS = "-dynamic"
+   set SHARED_LFLAGS = "-L."
    set SHAREDEXT = ".dylib"
    if ( $SHAREDLIBS == 1 ) then
       set libext = ".dylib"
@@ -1136,10 +1133,8 @@ case DARWIN:
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set GCC_NOSP = "-Wno-strict-prototypes"
 
-   # regarding cc(1) -pthread is to be used for pthread multithreaded applications
-   # however it is rejected ...
    set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-pthread"
+   set MTLFLAGS = "-lpthread"
    breaksw
 
 case FREEBSD_*:

@@ -1591,7 +1591,7 @@ int read_defaults
    if (dir_pre && dir_pre[0] != '\0')
       strcpy(prefix, dir_pre);
    else
-      strcpy(prefix, "#$");
+      strcpy(prefix, default_prefix);
 
    if (read_defaults) {
       opt_list_append_opts_from_default_files(&cmdline, &alp, environ);

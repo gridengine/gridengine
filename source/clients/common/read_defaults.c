@@ -368,6 +368,8 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
    c_option = lGetElemStr(opts_cmdline, SPA_switch, "-C");
    if (c_option != NULL) {
       prefix = lGetString(c_option, SPA_argval_lStringT);
+   } else {
+      prefix = default_prefix;
    }
    if (*answer_list) {
       *answer_list = lFreeList(*answer_list);

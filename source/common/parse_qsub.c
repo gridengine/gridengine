@@ -428,7 +428,10 @@ u_long32 flags
          DPRINTF(("\"-C %s\"\n", *sp));
 
          ep_opt = sge_add_arg(pcmdline, C_OPT, lStringT, *(sp - 1), *sp);
-         lSetString(ep_opt, SPA_argval_lStringT, *sp);
+
+         if (strlen(*sp) > 0) {
+            lSetString(ep_opt, SPA_argval_lStringT, *sp);
+         }
 
          sp++;
          continue;

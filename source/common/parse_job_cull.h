@@ -42,6 +42,8 @@
 #define FLG_DONT_ADD_SCRIPT      4
 #define FLG_IGNORE_EMBEDED_OPTS  8
 
+extern const char *default_prefix;
+
 lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob);
 lList *parse_script_file(const char *script_file, const char *directive_prefix, lList **option_list_ref, char **envp, u_long32 flags);
 

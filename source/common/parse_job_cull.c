@@ -73,6 +73,8 @@
 ** USE_CLIENT_QSH
 */
 
+const char *default_prefix = "#$";
+
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -683,7 +685,6 @@ lList **lpp_options,
 char **envp,
 u_long32 flags 
 ) {
-   static const char default_prefix[] = "#$";
    unsigned int dpl; /* directive_prefix length */
    FILE *fp;
    char *filestrptr = NULL;
@@ -747,143 +748,135 @@ u_long32 flags
          }
       }
 
-      /* 
-       * no prefix for special comments given - i
-       * try to find one in current commandline
-       * or take default
-       */
-      if (!directive_prefix) {
-         lListElem *ep;
-
-         ep = lGetElemStr(*lpp_options, SPA_switch, "-C");
-         if (ep) {
-            directive_prefix = lGetString(ep, SPA_argval_lStringT);
-         }
-         if (!directive_prefix) {
-            directive_prefix = default_prefix;
-         }
+      if (directive_prefix == NULL) {
+         DPRINTF(("directive prefix = <null> - will skip parsing of script\n"));
+         dpl = 0;
+      } else {
+         DPRINTF(("directive prefix = "SFQ"\n", directive_prefix));
+         dpl = strlen(directive_prefix);
       }
-      dpl = strlen(directive_prefix);
 
-      /* now look for job parameters in script file */
-      s = filestrptr;
-      while(*s != 0) {
-         int length = 0;
-         char *parameters = NULL;
-         char *d = buffer;
+      if (directive_prefix != NULL) {
+         /* now look for job parameters in script file */
+         s = filestrptr;
+         while(*s != 0) {
+            int length = 0;
+            char *parameters = NULL;
+            char *d = buffer;
 
-         /* copy MAX_STRING_SIZE bytes maximum */
-         while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
-            *d++ = *s++;
-            length++;
-            parsed_chars++;
-         }
-
-         /* terminate target string */
-         *d = 0;
-         
-         /* skip linefeed */
-         if(*s == '\n') {
-            s++;
-            parsed_chars++;
-         }
-         
-         parameters = buffer;
-
-         /*
-         ** If directive prefix is zero string then all lines except
-         ** comment lines are read, this makes it possible to parse
-         ** defaults files with this function.
-         ** If the line contains no SGE options, we set parameters to NULL.
-         */
-
-         if(dpl == 0) {
-            /* we parse a settings file (e.g. sge_request): skip comment lines */
-            if(*parameters == '#') {
-               parameters = NULL;
+            /* copy MAX_STRING_SIZE bytes maximum */
+            while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
+               *d++ = *s++;
+               length++;
+               parsed_chars++;
             }
-         } else {
-            /* we parse a script file with special comments */
-            if(strncmp(parameters, directive_prefix, dpl) == 0) {
-               parameters += dpl;
-               while(isspace(*parameters)) {
-                  parameters++;
+
+            /* terminate target string */
+            *d = 0;
+            
+            /* skip linefeed */
+            if(*s == '\n') {
+               s++;
+               parsed_chars++;
+            }
+            
+            parameters = buffer;
+
+            /*
+            ** If directive prefix is zero string then all lines except
+            ** comment lines are read, this makes it possible to parse
+            ** defaults files with this function.
+            ** If the line contains no SGE options, we set parameters to NULL.
+            */
+
+            if(dpl == 0) {
+               /* we parse a settings file (e.g. sge_request): skip comment lines */
+               if(*parameters == '#') {
+                  parameters = NULL;
                }
             } else {
-               parameters = NULL;
-            }
-         }
-
-         /* delete trailing garbage */
-         if(parameters != NULL) {
-            for(i = strlen(parameters) - 1; i >= 0; i--) {
-               if(isspace(parameters[i])) {
-                  parameters[i] = 0;
+               /* we parse a script file with special comments */
+               if(strncmp(parameters, directive_prefix, dpl) == 0) {
+                  parameters += dpl;
+                  while(isspace(*parameters)) {
+                     parameters++;
+                  }
                } else {
-                  break;
+                  parameters = NULL;
                }
             }
-         }
 
-         if(parameters != NULL && *parameters != 0) {
-            DPRINTF(("parameter in script: %s\n", parameters));
-
-            /*
-            ** here cull comes in 
-            */
-
-            /* so str_table has to be freed afterwards */
-            str_table = string_list(parameters, " \t\n", NULL);
-            
-            for (i=0; str_table[i]; i++) {
-               DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
-            }
-            sge_strip_quotes(str_table);
-            for (i=0; str_table[i]; i++) {
-               DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
-            }
-
-            /*
-            ** problem: error handling missing here and above
-            */
-            alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
-
-            for_each(aep, alp) {
-               u_long32 quality;
-               u_long32 status = STATUS_OK;
-
-               status = lGetUlong(aep, AN_status);
-               quality = lGetUlong(aep, AN_quality);
-               if (quality == ANSWER_QUALITY_ERROR) {
-                  DPRINTF(("%s", lGetString(aep, AN_text)));
-                  do_exit = 1;
+            /* delete trailing garbage */
+            if(parameters != NULL) {
+               for(i = strlen(parameters) - 1; i >= 0; i--) {
+                  if(isspace(parameters[i])) {
+                     parameters[i] = 0;
+                  } else {
+                     break;
+                  }
                }
-               else {
-                  DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
-               }
-               answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
             }
 
-            lFreeList(alp);
-            if (do_exit) {
-               DEXIT;
-               return answer;
-            }
+            if(parameters != NULL && *parameters != 0) {
+               DPRINTF(("parameter in script: %s\n", parameters));
 
-            free((char*) str_table);
+               /*
+               ** here cull comes in 
+               */
 
-            /*
-            ** -C option is ignored in scriptfile - delete all occurences
-            */
-            {
-               lListElem *ep;
+               /* so str_table has to be freed afterwards */
+               str_table = string_list(parameters, " \t\n", NULL);
                
-               while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
-                  lRemoveElem(lp_new_opts, ep);
+               for (i=0; str_table[i]; i++) {
+                  DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+               }
+               sge_strip_quotes(str_table);
+               for (i=0; str_table[i]; i++) {
+                  DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+               }
+
+               /*
+               ** problem: error handling missing here and above
+               */
+               alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
+
+               for_each(aep, alp) {
+                  u_long32 quality;
+                  u_long32 status = STATUS_OK;
+
+                  status = lGetUlong(aep, AN_status);
+                  quality = lGetUlong(aep, AN_quality);
+                  if (quality == ANSWER_QUALITY_ERROR) {
+                     DPRINTF(("%s", lGetString(aep, AN_text)));
+                     do_exit = 1;
+                  }
+                  else {
+                     DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
+                  }
+                  answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
+               }
+
+               lFreeList(alp);
+               if (do_exit) {
+                  DEXIT;
+                  return answer;
+               }
+
+               free((char*) str_table);
+
+               /*
+               ** -C option is ignored in scriptfile - delete all occurences
+               */
+               {
+                  lListElem *ep;
+                  
+                  while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
+                     lRemoveElem(lp_new_opts, ep);
+                  }
                }
             }
          }
-      }
+      }   
    }
 
    if (!(flags & FLG_USE_NO_PSEUDOS)) {

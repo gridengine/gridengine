@@ -1,3 +1,8 @@
+JG-2003-01-22-1  Bugfix:    qsub -C "" (do not parse special comments in script 
+                            file) did not work.
+                 IZ:        #449
+                 Bugtraq:   #480283
+
 CR-2003-01-22-0  Testsuite: - throughput test enhancment:
                               test sharetree with projects
                             - procedure spool_array_to_file():

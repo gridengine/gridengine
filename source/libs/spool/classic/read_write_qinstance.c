@@ -63,6 +63,7 @@
 #include "sgeobj/sge_qinstance_state.h"
 
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 
 lListElem *cull_read_in_qinstance(const char *dirname, const char *filename, 
                                   int spool, int flag, int *tag, int fields[]) 
@@ -199,7 +200,7 @@ write_qinstance(int spool, int how, const lListElem *ep)
 
       fp = fopen(filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, 
+         CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, 
                    strerror(errno)));
          DEXIT;
          return NULL;

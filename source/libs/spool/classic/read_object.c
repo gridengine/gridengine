@@ -44,6 +44,7 @@
 #include "sge_conf.h"
 
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 
 /****
  **** read_object

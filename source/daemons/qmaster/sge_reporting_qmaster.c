@@ -1317,12 +1317,12 @@ reporting_flush_report_file(lList **answer_list,
             spool_ret = sge_spoolmsg_write(fp, COMMENT_CHAR, version_string);
             if (spool_ret != 0) {
                if (answer_list == NULL) {
-                  ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, 
+                  ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, 
                          sge_strerror(errno, &error_dstring)));
                } else {
                   answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                           ANSWER_QUALITY_ERROR, 
-                                          MSG_ERROR_WRITINGFILE_SS, filename, 
+                                          MSG_ERRORWRITINGFILE_SS, filename, 
                                           sge_strerror(errno, &error_dstring));
                } 
                ret = false;
@@ -1334,12 +1334,12 @@ reporting_flush_report_file(lList **answer_list,
       if (ret) {
          if (fwrite(sge_dstring_get_string(&(buf->buffer)), size, 1, fp) != 1) {
             if (answer_list == NULL) {
-               ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, 
+               ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, 
                       sge_strerror(errno, &error_dstring)));
             } else {
                answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                        ANSWER_QUALITY_ERROR, 
-                                       MSG_ERROR_WRITINGFILE_SS, filename, 
+                                       MSG_ERRORWRITINGFILE_SS, filename, 
                                        sge_strerror(errno, &error_dstring));
             }
 

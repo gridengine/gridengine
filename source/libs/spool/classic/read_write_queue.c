@@ -647,7 +647,7 @@ const lListElem *qep
 
       fp = fopen(filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, 
+         CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, 
                filename, strerror(errno)));
          DEXIT;
          return -1;

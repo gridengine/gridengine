@@ -353,7 +353,7 @@ int slave
                so shepherd can open (execute) it after changing to the user. */
             fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
             if (fd < 0) {
-               sge_dstring_sprintf(&err_str, MSG_FILE_ERRORWRITING_SS, 
+               sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
                                    lGetString(jelem, JB_exec_file), 
                                    strerror(errno));
                DEXIT;

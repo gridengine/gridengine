@@ -61,6 +61,7 @@
 #include "sge_conf.h"
 
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 
 #define allow_delete_time_modification
 

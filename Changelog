@@ -1,3 +1,8 @@
+JG-2004-05-13-0: Cleanup:   Cleanup for nightly build:
+                            - fixed duplicate message id's
+                            - removed unused messages
+                            - create libdrmaa and test programs on AIX43
+
 JG-2004-05-12-3: Testsuite: Adapted testsuite qstat parsing to the extended
                             queue column from SG-2004-05-11-1 (IZ 1016).
 

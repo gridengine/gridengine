@@ -52,6 +52,7 @@
 #include "sge_attr.h"
 
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 
 static int read_ume_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
@@ -233,7 +234,7 @@ const lListElem *ep
 
       fp = fopen(filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+         CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }

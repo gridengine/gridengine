@@ -1701,12 +1701,6 @@ if ( "$CORE" == 1 ) then
 
    cd $COMPILE_ARCH
 
-   # Really bad workaround to compile SGE 
-   # until we can build libdrmaa.so in AIX 4.3
-   if ($COMPILE_ARCH == AIX43) then
-      touch 12121212 libdrmaa.so example test_drmaa
-   endif
-
    # spooledit is only available if berkeleydb is available.
    # if we build with spooling method classic, touch spooledit
    if ($SPOOLING_METHOD == classic) then

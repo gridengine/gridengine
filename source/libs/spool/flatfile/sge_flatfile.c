@@ -867,7 +867,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    /* write data */
    if (fwrite(data, sizeof(char), data_len, file) != data_len) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_ERROR_WRITINGFILE_SS,
+                              ANSWER_QUALITY_ERROR, MSG_ERRORWRITINGFILE_SS,
                               result, strerror(errno));
       spool_flatfile_close_file(answer_list, file, result, destination);
       FREE(result);

@@ -39,9 +39,7 @@
 #define MSG_QDEL_f_OPT_USAGE             _MESSAGE(7007, _("force action\n"))
 #define MSG_QDEL_help_OPT_USAGE          _MESSAGE(7008, _("print this help\n"))
 #define MSG_QDEL_del_list_1_OPT_USAGE    _MESSAGE(7010, _("delete all jobs given in list\n"))
-#define MSG_QDEL_del_list_2_OPT_USAGE    _MESSAGE(7011, _("delete all jobs of current user\n"))
 #define MSG_QDEL_del_list_3_OPT_USAGE    _MESSAGE(7012, _("delete all jobs of users specified in list\n"))
-#define MSG_QDEL_del_list_4_OPT_USAGE    _MESSAGE(7013, _("delete all jobs of all users\n"))
 
 #endif /* __MSG_QDEL_H */
 

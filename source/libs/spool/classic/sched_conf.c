@@ -47,6 +47,7 @@
 #include "sge_log.h"
 #include "setup_path.h"
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 #include "sge_stdio.h"
 #include "sge_schedd.h"
 #include "sge_spool.h"
@@ -142,7 +143,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
 
       fp = fopen(fname, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
+         CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, fname, strerror(errno)));
          DEXIT;
          return NULL;
       }

@@ -132,7 +132,6 @@
 #define MSG_PARSE_WRONGMAILLISTFORMATXSPECTOMOPTION_S              _MESSAGE(23083, _("ERROR! Wrong mail list format "SFQ" specified to -M option\n"))
 #define MSG_PARSE_ARGUMENTTONOPTIONMUSTNOTCONTAINBSL              _MESSAGE(23084, _("ERROR! argument to -N option must not contain / \n"))
 #define MSG_PARSE_EMPTYSTRINGARGUMENTTONOPTIONINVALID              _MESSAGE(23085, _("ERROR! empty string argument to -N option invalid\n"))
-#define MSG_PARSE_INVALIDOPTIONARGUMENTNOW_S              _MESSAGE(23086, _("invalid option argument \"-now "SFN"\"\n"))
 #define MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S              _MESSAGE(23087, _("ERROR! Wrong stdout path list format "SFQ" specified to -o option\n"))
 #define MSG_PARSE_PEOPTIONMUSTHAVEPENAMEARGUMENT              _MESSAGE(23088, _("ERROR! -pe option must have pe_name argument\n"))
 #define MSG_PARSE_PEOPTIONMUSTHAVERANGEAS2NDARGUMENT              _MESSAGE(23089, _("ERROR! -pe option must have range as 2nd argument\n"))
@@ -151,7 +150,6 @@
 #define MSG_PARSE_INVALIDOPTIONARGUMENTWX_S              _MESSAGE(23103, _("invalid option argument \"-w "SFN"\"\n"))
 #define MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT       _MESSAGE(23104, _("ERROR! -@ option must have file argument\n"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTX_S              _MESSAGE(23105, _("ERROR! invalid option argument "SFQ"\n"))
-#define MSG_PARSE_NOJOBIDGIVENBEFORESEPARATOR              _MESSAGE(23106, _("ERROR! no job id given before -- separator\n"))
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23107, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
@@ -277,7 +275,6 @@
 #define MSG_PARSE_INVALIDCPLXCONSUM_SSS _MESSAGE(23251, _("error in file "SFN": attribute "SFN" may not be consumable because it is of type "SFN"\n"))
 #define MSG_PARSE_INVALIDCPLXENTRY_SSS  _MESSAGE(23252, _("parse error in file "SFN", invalid "SFN" entry "SFN"\n"))
 #define MSG_PARSE_INVALIDCPLXREQ_SS     _MESSAGE(23253, _("parse error in file "SFN", invalid requestable entry "SFN"\n"))
-#define MSG_INFRTREQ_INVALIDRESERVATION_S _MESSAGE(23254, _("denied: -l "SFN"=infinity not supported with resource reservation scheduling\n"))
 #define MSG_CPLX_VALUEMISSING_S       _MESSAGE(23255, _("denied: missing value for request "SFQ"\n"))
 #define MSG_CPLX_WRONGTYPE_SSS        _MESSAGE(23256, _("wrong type in \""SFN"="SFN"\" - "SFN" expected\n"))
 #define MSG_SGETEXT_INVALIDHOST_S               _MESSAGE(23257, _("invalid hostname "SFQ"\n"))
@@ -286,46 +283,6 @@
 #define MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S        _MESSAGE(23260, _("resource "SFQ" configured as non requestable\n") )    
 #define MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U         _MESSAGE(23261, _("unknown complex attribute type " U32CFormat  "\n"))
 #define MSG_SGETEXT_UNKNOWN_ATTR_TYPE_S         _MESSAGE(23262, _("unknown complex attribute type "SFQ"\n"))
-
-
-/*
-** read_object.c
-*/
-#define MSG_MEMORY_CANTMALLOCBUFFERFORXOFFILEY_SS    _MESSAGE(23262, _("can't malloc buffer for "SFN" of file "SFQ))
-#define MSG_FILE_CANTDETERMINESIZEFORXOFFILEY_SS    _MESSAGE(23263, _("can't determine size for "SFN" of file "SFQ))
-#define MSG_SGETEXT_UNKNOWN_CONFIG_VALUE_SSS          _MESSAGE(23264, _("unknown attribute "SFQ" in "SFN" configuration in file "SFN"\n") ) 
-
-/*
-** read_write_cal.c
-*/
-#define MSG_TMPNAM_GENERATINGTMPNAM    _MESSAGE(23265, _("generating tmpnam()"))
-
-/*
-** read_write_host.c
-*/
-#define MSG_FILE_ERRORWRITING_SS    _MESSAGE(23266, _("error writing "SFN", "SFN"\n"))
-#define MSG_FILE_ERRORWRITINGHOSTNAME    _MESSAGE(23267, _("error writing hostname\n"))
-
-
-/*
-** read_write_queue.c
-*/
-#define MSG_ERROR_CLASSIC_SPOOLING           _MESSAGE(23268, _("error: error message not spooled! (no classic spooling support)\n"))
-#define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS  _MESSAGE(23269, _("getuniquehostname() failed resolving "SFN": "SFN"\n"))
-
-/*
-** read_write_userprj.c
-*/
-#define MSG_RWUSERPRJ_EPISNULLNOUSERORPROJECTELEMENT    _MESSAGE(23270, _("ep == NULL - no user or project element"))
-#define MSG_PROJECT_FOUNDPROJECTXTWICE_S    _MESSAGE(23271, _("found project "SFN" twice"))
-#define MSG_PROJECT_INVALIDPROJECTX_S    _MESSAGE(23272, _("invalid project "SFN))
-#define MSG_JOB_FOUNDJOBWITHWRONGKEY_S    _MESSAGE(23273, _("found job with wrong key "SFQ""))
-#define MSG_JOB_FOUNDJOBXTWICE_U    _MESSAGE(23274, _("found job "U32CFormat" twice"))
-
-/*
-** read_write_userset.c
-*/
-#define MSG_USERSET_NOUSERETELEMENT    _MESSAGE(23275, _("no userset element"))
 
 
 /*
@@ -1001,9 +958,7 @@
  */
 #define MSG_SGETEXT_NOMEM                       _MESSAGE(23492, _("out of memory\n"))
 #define MSG_SGETEXT_CANT_OPEN_SS                _MESSAGE(23493, _("can't open "SFQ" ("SFN")\n"))
-#define MSG_SYSTEM_CANTRUNASCALLINGUSER         _MESSAGE(23494, _("cannot run as calling user"))
 #define MSG_SYSTEM_GETPWNAMFAILED_S             _MESSAGE(23495, _("can't get password entry for user "SFQ". Either the user does not exist or NIS error!") ) 
-#define MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S  _MESSAGE(23496, _(""SFN" is already running\n"))
 #define MSG_SGETEXT_NULLPTRPASSED_S             _MESSAGE(23497, _("NULL ptr passed to "SFN"()\n"))
 #define MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S     _MESSAGE(23498, _("missing attribute "SFQ" in complexes\n"))
 
@@ -1014,7 +969,6 @@
 #define MSG_GDI_UTEXT_i_OPT_PATH_LIST                    _MESSAGE(23499, _("specify standard input stream file(s)"))
 #define MSG_GDI_USAGE_b_OPT_YN                           "[-b y[es]|n[o]]"
 #define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
-#define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23501, _("invalid option argument \"-b "SFN"\"\n")) 
 
 #define MSG_GDI_USAGE_Msconf_OPT                         "[-Msconf fname]"
 #define MSG_GDI_UTEXT_Msconf_OPT                         _MESSAGE(23502, _("modify scheduler configuration from file"))
@@ -1043,7 +997,7 @@
 #define MSG_ERROROPENINGFILEFORREADING_SS _MESSAGE(60203, _("error opening file "SFQ" for reading: "SFN"\n")) 
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN"\n"))
 #define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN"\n"))
-#define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
+#define MSG_ERRORWRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
 #define MSG_ERRORREADINGCWD_S             _MESSAGE(60208, _("error reading current working directory: "SFN"\n"))
 #define MSG_ERRORCHANGINGCWD_SS            _MESSAGE(60209, _("error changing current working directory to "SFN": "SFN"\n"))
 #define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming file "SFQ" to "SFQ": "SFN"\n"))

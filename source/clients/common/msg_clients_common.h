@@ -35,7 +35,6 @@
 
 #include "basis_types.h"
 
-#define MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER    _MESSAGE(1000, _("-u and -uall are not allowed together\n"))
 #define MSG_JOB_UNASSIGNED                               _MESSAGE(1001, _("unassigned"))
 #define MSG_FILE_CANTREADCURRENTWORKINGDIR               _MESSAGE(1002, _("cannot read current working directory\n"))
 #define MSG_SRC_USAGE                                    _MESSAGE(1003, _("usage:"))

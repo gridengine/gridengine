@@ -35,21 +35,6 @@
 #include "basis_types.h"
 
 /* 
-** schedd/sge_gdi_attributes.c
-*/ 
-#define MSG_NET_UNKNOWNHOSTNAME_S                     _MESSAGE(47002, _("unknown hostname "SFQ"\n"))
-#define MSG_LIST_FAILEDRETRIEVINGEXECHOSTOBJ_S        _MESSAGE(47003, _("failed retrieving exec host object: "SFN"\n"))
-#define MSG_LIST_FAILEDRETRIEVINGEXECHOSTOBJS_S       _MESSAGE(47004, _("failed retrieving exec host objects: "SFN"\n"))
-#define MSG_LIST_FAILEDRETRIEVINGCOMPLEXLISTS_S       _MESSAGE(47005, _("failed retrieving complex lists: "SFN"\n"))
-#define MSG_LIST_FAILEDRETRIEVINGJOB_US               _MESSAGE(47006, _("failed retrieving job "U32CFormat": "SFN"\n"))
-#define MSG_LIST_FAILEDBUILDINGATTRIBUTESFORHOST_S    _MESSAGE(47007, _("failed building attributes for host "SFN"\n"))
-#define MSG_ERROR_UNKNOWNREASON                       _MESSAGE(47008, _("unknown reason"))
-#define MSG_LIST_NOEXECHOSTOBJECT_S                   _MESSAGE(47009, _("no such exec host object "SFQ"\n"))
-#define MSG_LIST_NOATTRIBUTEXFORHOSTY_SS              _MESSAGE(47010, _("no attribute "SFQ" for host "SFQ"\n"))
-#define MSG_ERROR_BADARGUMENT                         _MESSAGE(47011, _("bad argument\n"))
-
-
-/* 
 ** schedd/sge_complex_schedd.c
 */ 
 #define MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S    _MESSAGE(47014, _("missing actual element to attrib "SFN"\n"))
@@ -288,11 +273,6 @@
 #define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "U32CFormat"\n"))
 
 /* 
-** schedd/sort_hosts.c
-*/   
-#define MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS           _MESSAGE(47290, _("no attribute "SFQ" in complex list from "SFQ" \n"))
-
-/* 
 ** schedd/valid_queue_user.c
 */ 
 #define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47300, _("Group "SFQ" already contained in userset "SFQ"\n"))
@@ -311,7 +291,6 @@
 #define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN"\n"))
 #define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue\n"))
 #define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ"\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_SS               _MESSAGE(47319, _("no such complex attribute for threshold "SFQ" in queue "SFQ"\n"))
 
 #define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47330, _(SFN" * %f with nproc=%d"))
 #define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47331, _(SFN" * %f"))

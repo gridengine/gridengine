@@ -163,7 +163,6 @@
 /*
 ** sge_c_ack.c
 */
-#define MSG_COM_NOQUEUE              _MESSAGE(33103, _("<no queue>"))
 #define MSG_COM_ACK_S                _MESSAGE(33105, _("ack event from "SFN"\n") )     
 #define MSG_COM_ACKEVENTFORUNKOWNJOB_U _MESSAGE(33106, _("ack event for unknown job "U32CFormat"\n"))
 #define MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU _MESSAGE(33107, _("ack event for unknown task " U32CFormat  " of job " U32CFormat " \n"))
@@ -171,7 +170,6 @@
 
 #define MSG_COM_ACK_U                _MESSAGE(33109, _("signalling acknowledged for unknown job " U32CFormat  "\n"))
 /* #define MSG_COM_ACK_UU               _message(33110, _("signalling acknowledged for unknown task " U32CFormat  " of job " U32CFormat " \n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_COM_ACK_US               _MESSAGE(33111, _("ack event for job " U32CFormat  " can't find queue "SFN"\n"))
 #define MSG_COM_ACK_QUEUE_U          _MESSAGE(33112, _("ack event for unknown queue " U32CFormat "\n"))
 #define MSG_COM_ACK_UNKNOWN          _MESSAGE(33113, _("unknown ack event\n"))
 
@@ -192,7 +190,6 @@
 #define MSG_SGETEXT_NOSUBMITORADMINHOST_S        _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
 #define MSG_SGETEXT_ALREADYEXISTS_SS             _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
 
-#define MSG_GDI_SHUTDOWNEVCLIENTFAILED_US  _MESSAGE(33130, _("shutdown event client with id " U32CFormat " failed in %s\n"))
 #define MSG_GDI_EVENTCLIENTIDFORMAT_S      _MESSAGE(33131, _("invalid event client id format " SFQ "\n"))
 
 
@@ -369,7 +366,6 @@
 #define MSG_JOB_JOBNAME               _MESSAGE(33282, _("job name"))
 #define MSG_JOB_NOTIFYBEHAVIOUR       _MESSAGE(33283, _("notify behaviour"))
 #define MSG_JOB_SLOTRANGE             _MESSAGE(33284, _("slot range"))
-#define MSG_JOB_QNOTREQUESTABLE2      _MESSAGE(33285, _("denied: queues are not configured to be requestable\n"))
 #define MSG_JOB_HARDQLIST             _MESSAGE(33286, _("hard queue list"))
 #define MSG_JOB_SOFTQLIST             _MESSAGE(33287, _("soft queue list"))
 #define MSG_JOB_MASTERHARDQLIST       _MESSAGE(33288, _("master hard queue list"))
@@ -493,13 +489,6 @@
 #define MSG_OBJ_QUEUE                 _MESSAGE(33457, _("queue"))
 
 /*
-** sge_qmaster_main.c
-*/
-#define MSG_SETTING_PRIORITY_TAGS_S             _MESSAGE(33472, _("setting SGE_PRIORITY_TAGS to "SFN"\n"))
-#define MSG_TOO_MANY_PRIORITY_TAGS_S            _MESSAGE(33473, _("SGE_PRIORITY_TAGS "SFN" contains too many tags (max 9)\n"))
-
-
-/*
 ** sge_sharetree_qmaster.c
 */
 #define MSG_STREE_ADDSTREE_SSII       _MESSAGE(33474, _(SFN"@"SFN" has added sharetree with %d nodes and %d leafs\n"))
@@ -612,8 +601,6 @@
 /*
 ** sge_qmaster_main.c
 */
-#define MSG_COMMD_CANTENROLLTOCOMMD_S              _MESSAGE(33588, _("can't enroll to commd: "SFN))
-#define MSG_COMMD_FOUNDRUNNINGCOMMDONLOCALHOST              _MESSAGE(33589, _("found running commd on local host"))
 #define MSG_STARTUP_BEGINWITHSTARTUP              _MESSAGE(33590, _("begin with start up"))
 #define MSG_STARTUP_SETUPFAILED              _MESSAGE(33591, _("setup failed"))
 #define MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI           _MESSAGE(33594, _("Failed in sge_unpack_gdi_request ("SFN"/"SFN"/%d)\n"))

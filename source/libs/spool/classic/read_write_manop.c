@@ -165,7 +165,7 @@ int target
 
    fp = fopen(filename, "w");
    if (!fp) {
-      ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+      ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, strerror(errno)));
       DEXIT;
       return 1;
    }

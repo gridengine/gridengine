@@ -95,18 +95,64 @@
 /* 
  * libs/spool/read_list.c continued
  */
-#define MSG_CONFIG_READINGHOSTGROUPENTRYS  _MESSAGE(33642, _("Reading in host group entries:\n"))
-#define MSG_SETUP_HOSTGROUPENTRIES_S               _MESSAGE(33610, _("\tHost group entries for group "SFQ".\n"))
-#define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(33641, _("Reading in user mapping entries:\n"))
-#define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(33609, _("\tMapping entries for "SFQ".\n"))
 #define MSG_SPOOL_SCHEDDCONFIGNOTDELETED _MESSAGE(61046, _("the scheduler configuration must not be deleted\n"))
 #define MSG_QMASTER_PRJINCORRECT_S       _MESSAGE(61048, _("Spoolfile for project "SFQ" containes invalid name\n"))
-
-/*
- *  
- */
 #define MSG_SETUP_COMPLEX_ATTR_S         _MESSAGE(61049, _("\tComplex attribute "SFQ".\n"))
 #define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes.\n"))
 #define MSG_HGROUP_INCFILE_S             _MESSAGE(61051, _("Incorrect spoolfile for hostgroup "SFQ"\n"))
+#define MSG_CONFIG_READINGHOSTGROUPENTRYS  _MESSAGE(61052, _("Reading in host group entries:\n"))
+#define MSG_SETUP_HOSTGROUPENTRIES_S               _MESSAGE(61053, _("\tHost group entries for group "SFQ".\n"))
+#define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(61054, _("Reading in user mapping entries:\n"))
+#define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(61055, _("\tMapping entries for "SFQ".\n"))
+
+/*
+ * read_object.c
+ */
+#define MSG_MEMORY_CANTMALLOCBUFFERFORXOFFILEY_SS    _MESSAGE(61100, _("can't malloc buffer for "SFN" of file "SFQ))
+#define MSG_FILE_CANTDETERMINESIZEFORXOFFILEY_SS    _MESSAGE(61101, _("can't determine size for "SFN" of file "SFQ))
+#define MSG_SGETEXT_UNKNOWN_CONFIG_VALUE_SSS          _MESSAGE(61102, _("unknown attribute "SFQ" in "SFN" configuration in file "SFN"\n") ) 
+
+/*
+ * read_write_host.c
+ */
+#define MSG_FILE_ERRORWRITINGHOSTNAME    _MESSAGE(61110, _("error writing hostname\n"))
+
+/*
+ * read_write_queue.c
+ */
+#define MSG_ERROR_CLASSIC_SPOOLING           _MESSAGE(61120, _("error: error message not spooled! (no classic spooling support)\n"))
+#define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS  _MESSAGE(61121, _("getuniquehostname() failed resolving "SFN": "SFN"\n"))
+
+/*
+ * read_write_userprj.c
+ */
+#define MSG_RWUSERPRJ_EPISNULLNOUSERORPROJECTELEMENT    _MESSAGE(61130, _("ep == NULL - no user or project element"))
+#define MSG_PROJECT_FOUNDPROJECTXTWICE_S    _MESSAGE(61131, _("found project "SFN" twice"))
+#define MSG_PROJECT_INVALIDPROJECTX_S    _MESSAGE(61132, _("invalid project "SFN))
+#define MSG_JOB_FOUNDJOBWITHWRONGKEY_S    _MESSAGE(61133, _("found job with wrong key "SFQ""))
+#define MSG_JOB_FOUNDJOBXTWICE_U    _MESSAGE(61134, _("found job "U32CFormat" twice"))
+
+/*
+ * read_write_userset.c
+ */
+#define MSG_USERSET_NOUSERETELEMENT    _MESSAGE(61140, _("no userset element"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ * all classic spooling code
+ */
+#define MSG_TMPNAM_GENERATINGTMPNAM    _MESSAGE(61900, _("generating tmpnam()"))
 
 #endif /* __MSG_SPOOLLIB_CLASSIC_H */

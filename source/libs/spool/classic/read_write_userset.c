@@ -50,6 +50,7 @@
 #include "sge_userset.h"
 
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 
 /*
 ** corresponding enum is in sge_usersetL.h

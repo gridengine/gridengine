@@ -54,7 +54,6 @@
 #define MSG_DELAYED    _MESSAGE(29004, _("delayed"))
 #define MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS    _MESSAGE(29005, _(SFN" registering job \""U32CFormat"\" task "SFN" at ptf during startup"))
 #define MSG_ANSWER_KEEPINGCHANNELFDXOPEN_I    _MESSAGE(29006, _("keeping channel fd #%d open\n"))
-#define MSG_SGETEXT_NOCOMMD                     _MESSAGE(29007, _("can't connect commd.\n"))
 
 /*
 ** reaper_execd.c
@@ -289,17 +288,12 @@
 /*
 ** execd.c
 */
-#define MSG_EXECD_PROGINVALIDNAME_S   _MESSAGE(29167, _("program called with invalid name: "SFQ"\n"))
 #define MSG_FILE_REDIRECTFD_I         _MESSAGE(29168, _("can't redirect file descriptor #%d\n"))
-#define MSG_EXECD_NOPROGNAMEPROD_S    _MESSAGE(29169, _("program name "SFQ" does not match product mode") ) 
-#define MSG_COM_CANTSTARTCOMMD        _MESSAGE(29170, _("can't start commd"))
-#define MSG_COM_CANTENROLL2COMMD_S    _MESSAGE(29171, _("can't enroll to commd: "SFN))
 #define MSG_EXECD_NOSTARTPTF          _MESSAGE(29172, _("could not start priority translation facility (ptf)"))
 #define MSG_EXECD_STARTPDCANDPTF      _MESSAGE(29173, _("successfully started PDC and PTF"))
 #define MSG_COM_RECEIVEREQUEST_S      _MESSAGE(29174, _("can't receive request: "SFN))
 #define MSG_COM_CANTREGISTER_S        _MESSAGE(29175, _("can't register at \"qmaster\": "SFN))
 #define MSG_COM_ERROR                 _MESSAGE(29176, _("communication error"))
-#define MSG_COM_REGISTERDENIED_S      _MESSAGE(29177, _("registration at \"qmaster\" was denied: "SFN))
 #define MSG_PARSE_INVALIDARG_S        _MESSAGE(29178, _("invalid command line argument "SFQ"\n"))
 #define MSG_PARSE_TOOMANYARGS         _MESSAGE(29179, _("too many command line options\n"))
 

@@ -46,6 +46,7 @@
 #include "read_object.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
@@ -135,7 +136,7 @@ char *write_host_group(int spool, int how, const lListElem *ep)
 
       fp = fopen(filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+         CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }

@@ -258,7 +258,7 @@ CheckHostNameResolving()
        $ECHO "----------------------------"
        $ECHO ""
        resolve_admin_hosts=`ExecuteAsAdmin $V5BIN/qconf -sh`
-       resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -name`
+       resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -aname`
        resolve_default_domain=`ExecuteAsAdmin $V5BIN/qconf -sconf global | grep "^default_domain" | awk '{print $2}'`
 
        if [ "$resolve_default_domain" = "" ]; then

@@ -1,3 +1,6 @@
+AA-2001-10-30-0: Fix for defaultdepartment callback
+                 sensitivity of clusterparams IZ 81
+
 JG-2001-10-30-0: qtcsh could not be compiled on newer linux systems (SuSE 7.2)
                  due to changes in the operating system include files
 

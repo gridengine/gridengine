@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/02/27 13:06:34 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/03/06 11:22:22 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/02/27 13:06:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/03/06 11:22:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -764,7 +764,8 @@ have the following meaning:
 .ta \w'|b|  'u
 `b'     Mail is sent at the beginning of the job.
 `e'     Mail is sent at the end of the job.
-`a'     Mail is sent when the job is aborted.
+`a'     Mail is sent when the job is aborted or 
+        rescheduled.
 `s'     Mail is sent when the job is suspended.
 `n'     No mail is sent.
 .fi

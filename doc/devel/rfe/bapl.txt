@@ -19,7 +19,8 @@ ToDo:
 
    - fetched information:
       
-      - function which will get the lock
+      - threads waiting for lock
+      - thread which holds the lock
       - time to get the lock
       - time hold the lock
       - lock name

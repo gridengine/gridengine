@@ -132,7 +132,7 @@ int  sort_host_list_by_share_load ( lList *host_list,       /* EH_Type */
 void print_job_ref_array ( sge_ref_t* ref_list,
                            int max_elem );
 
-void sgeee_resort_pending_jobs(lList **job_list); 
+void sgeee_resort_pending_jobs(lList **job_list, lList *order_list); 
  
 #if 0 /* EB: debug */
 

@@ -511,7 +511,8 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
          DPRINTF(("%sORDER #%d: job("u32")->ticket = "u32"\n", 
-            force?"FORCE ":"", seq_no, job_number, (u_long32)lGetDouble(ep, OR_ticket)));
+            force?"FORCE ":"", seq_no, job_number, 
+            (u_long32)lGetDouble(ep, OR_ticket)));
 
          jep = sge_locate_job(job_number);
          if(!jep) {
@@ -534,11 +535,13 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
+            sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, 
+                          NULL, NULL);
             DEXIT;
             return -2;
          }
-         if (!force && lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
+         if (!force && lGetUlong(jep, JB_version) != 
+                                                lGetUlong(ep, OR_job_version)) {
             WARNING((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
                      u32c(lGetUlong(ep, OR_job_version)), 
                      u32c(lGetUlong(jep, JB_job_number)),

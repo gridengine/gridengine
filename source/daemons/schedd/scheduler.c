@@ -860,11 +860,8 @@ SKIP_THIS_JOB:
        *------------------------------------------------------------------*/
 
       if (sgeee_mode && dispatched_a_job) {
-         sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
-         *orderlist = sge_build_sge_orders(lists, NULL, 
-                                           *splitted_job_lists[SPLIT_PENDING], 
-                                           NULL, *orderlist, 0, 
-                                           sgeee_get_scheduling_run_id()); 
+         sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING],
+                                   *orderlist);
       }
 
       /* no more free queues - then exit */

@@ -344,14 +344,17 @@ u_long32 sgeee_get_scheduling_run_id(void)
  * sub-tasks, then the job is still first in the job list.
  * We need to remove and reinsert the job back into the sorted job
  * list in case another job is higher priority (i.e. has more tickets)
+ *
+ * Additionally it is neccessary to update the number of pending tickets
+ * for the following pending array task. (The next task will get less
+ * tickets than the current one)
  *------------------------------------------------------------------*/
-void sgeee_resort_pending_jobs(lList **job_list)
+void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
 {
-   u_long32 num_jobs = lGetNumberOfElem(*job_list);
    lListElem *next_job = lFirst(*job_list);
 
    DENTER(TOP_LAYER, "sgeee_resort_pending_jobs");
-   if (num_jobs > 1 && next_job) {
+   if (next_job) {
       u_long32 job_id = lGetUlong(next_job, JB_job_number);
       lList *range_list = lGetList(next_job, JB_ja_n_h_ids);
       u_long32 ja_task_id = range_list_get_first_id(range_list, NULL);
@@ -359,10 +362,33 @@ void sgeee_resort_pending_jobs(lList **job_list)
       lListElem *ja_task_template = lFirst(lGetList(next_job, JB_ja_template));
       lListElem *insert_jep = NULL;
       lListElem *jep = NULL;
+      lListElem *order = NULL;
       double ticket;
 
+      /*
+       * Update pending tickets in template element
+       */
       task_ref_copy_to_ja_task(tref, ja_task_template);
- 
+
+
+      /* 
+       * Update pending tickets in ORT_ptickets-order which was
+       * created previously
+       */
+      for_each(order, orderlist) {
+         if (lGetUlong(order, OR_type) == ORT_ptickets &&
+             lGetUlong(order, OR_job_number) == job_id) {
+            lListElem *order_job = lFirst(lGetList(order, OR_joker));
+            lListElem *order_task = lFirst(lGetList(order_job, JB_ja_tasks));
+
+            task_ref_copy_to_ja_task(tref, order_task);
+            break;
+         }
+      }
+
+      /*
+       * Re-Insert job at the correct possition
+       */
       lDechainElem(*job_list, next_job);
       ticket = lGetDouble(ja_task_template, JAT_ticket);
       for_each(jep, *job_list) {

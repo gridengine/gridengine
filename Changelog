@@ -1,3 +1,7 @@
+EB-2001-12-05-0: Bugfix:    Master got pending tickets for jobs which
+                            where already started.
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
+
 SD-2001-12-04-1: Enhancem.: SGEEE - Added support for qconf -clearusage to reset
                             sharetree usage back to zero.
 

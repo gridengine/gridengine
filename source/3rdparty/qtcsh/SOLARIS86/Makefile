@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.1 2001/07/18 11:06:06 root Exp $
+# $Id: Makefile,v 1.2 2001/11/30 10:33:41 andre Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -348,7 +348,7 @@ tcsh.exe: tcsh
 
 gethost:  gethost.c sh.err.h tc.const.h sh.h
 	rm -f gethost
-	${CC} -o gethost ${LDFLAGS} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${EXTRAFLAGS} $(srcdir)/gethost.c ${LIBES} ${EXTRALIBS}
+	${CC} -o gethost ${LDFLAGS} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${EXTRAFLAGS} $(srcdir)/gethost.c ${LIBES}
 
 tc.defs.c:	gethost host.defs
 	@rm -f $@

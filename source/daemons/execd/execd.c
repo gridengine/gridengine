@@ -95,6 +95,7 @@ char execd_spool_dir[SGE_PATH_MAX];
 
 lList *execd_config_list = NULL;
 lList *Master_Job_List = NULL;
+lList *Master_Zombie_List = NULL;
 
 static void execd_exit_func(int i);
 static void execd_register(void);

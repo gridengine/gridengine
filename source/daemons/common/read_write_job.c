@@ -80,6 +80,7 @@ static int job_write_as_single_file(lListElem *job, u_long32 ja_task_id,
                                    sge_spool_flags_t flags);
 
 extern lList *Master_Job_List;
+extern lList *Master_Zombie_List;
 
 lListElem *cull_create_job_from_disk(u_long32 job_id, u_long32 ja_task_id,
                                      sge_spool_flags_t flags)
@@ -383,12 +384,13 @@ int cull_remove_jobtask_from_disk(u_long32 jobid, u_long32 ja_taskid,
    stringT spoolpath_common;
    stringT error_string = "";
    int within_execd = flags & SPOOL_WITHIN_EXECD;
+   int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
    int spool_single_task_files;
-   lListElem *job;
+   lList *master_list = handle_as_zombie ? Master_Zombie_List : Master_Job_List;
+   lListElem *job = lGetElemUlong(master_list,  JB_job_number, jobid);
 
    DENTER(TOP_LAYER, "cull_remove_jobtask_from_disk");
 
-   job = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
    spool_single_task_files = (!within_execd && 
       job_get_number_of_ja_tasks(job) > sge_get_ja_tasks_per_file());
 

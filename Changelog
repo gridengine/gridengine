@@ -6,9 +6,9 @@ CR-2004-12-07-0: Bugfix:    - error in commlib read/write timeout handling
                               the application
                             - removed duplicate function
                  Issue:     1389
-                 Bugtraq:   pending
+                 Bugtraq:   6205648
                  Changed:   commlib
-                 Review:    pending
+                 Review:    AA
 
 DT-2004-12-07-1: Bugfix:    o Client commands now fail if GID is unresolvable
                             o qmaster now rejects sharetrees with dangling

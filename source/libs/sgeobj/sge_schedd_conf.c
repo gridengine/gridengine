@@ -205,6 +205,7 @@ typedef struct{
 }config_pos_type;
 
 static bool schedd_profiling = false;
+static bool is_category_job_filtering = false;
 
 static bool sconf_calc_pos(void);
 
@@ -212,6 +213,7 @@ static void sconf_clear_pos(void);
 
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param); 
 static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param);
+static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list, const char* param);
 
 static char policy_hierarchy_enum2char(policy_type_t value);
 
@@ -241,6 +243,7 @@ static config_pos_type pos = {true,
 const parameters_t params[] = {
    {"PROFILE",  sconf_eval_set_profiling},
    {"MONITOR",  sconf_eval_set_monitoring},
+   {"JC_FILTER", sconf_eval_set_job_category_filtering},
    {"NONE",     NULL},
    {NULL,       NULL}
 };
@@ -1660,6 +1663,27 @@ bool sconf_get_report_pjob_tickets(void){
 
 }
 
+/****** sge_schedd_conf/sconf_is_job_category_filtering() **********************
+*  NAME
+*     sconf_is_job_category_filtering() -- true, if the job_category_filtering is on
+*
+*  SYNOPSIS
+*     bool sconf_is_job_category_filtering(void) 
+*
+*  FUNCTION
+*     returns the status of the job category filtering 
+*
+*  RESULT
+*     bool - true, the job category filtering is on
+*
+*  NOTES
+*     MT-NOTE: sconf_is_job_category_filtering() is not MT safe 
+*
+*******************************************************************************/
+bool sconf_is_job_category_filtering(void){
+   return is_category_job_filtering;   
+}
+
 /****** sge_schedd_conf/sconf_get_flush_submit_sec() ***************************
 *  NAME
 *     sconf_get_flush_submit_sec() -- ??? 
@@ -2194,6 +2218,8 @@ bool sconf_validate_config_(lList **answer_list){
          changed, but it should be turned off. This means we have to turn everything off,
          before we work on the params */
       schedd_profiling = false;
+      is_category_job_filtering = false;
+
       serf_set_active(false);
 
       if (sparams) {
@@ -2637,6 +2663,64 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
    DEXIT;
    return ret;
 }
+
+/****** sge_schedd_conf/sconf_eval_set_job_category_filtering() ****************
+*  NAME
+*     sconf_eval_set_job_category_filtering() -- enable jc filtering or not.
+*
+*  SYNOPSIS
+*     static bool sconf_eval_set_job_category_filtering(lList *param_list, 
+*     lList **answer_list, const char* param) 
+*
+*  FUNCTION
+*     A parsing function for the prama settings in the scheduler configuration.
+*     It is looking for JC_FILTER to be set to true, or false and updates the
+*     settings accordingly.
+*
+*  INPUTS
+*     lList *param_list   - the param list
+*     lList **answer_list - the answer list, in case of an error
+*     const char* param   - the param string
+*
+*  RESULT
+*     static bool - true, if everything went fine
+*
+*     MT-NOTE: sconf_eval_set_job_category_filtering() is not MT safe 
+*
+*******************************************************************************/
+static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list, const char* param){
+   bool ret = true;
+   lListElem *elem = NULL;
+   DENTER(TOP_LAYER, "sconf_eval_set_job_category_filtering");
+
+   is_category_job_filtering= false;
+
+   if (!strncasecmp(param, "JC_FILTER=1", sizeof("JC_FILTER=1")-1) || 
+       !strncasecmp(param, "JC_FILTER=TRUE", sizeof("JC_FILTER=FALSE")-1) ) {
+      is_category_job_filtering= true;
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "jc_filter");
+      lSetString(elem, PARA_value, "true");
+   }      
+   else if (!strncasecmp(param, "JC_FILTER=0", sizeof("JC_FILTER=1")-1) ||
+            !strncasecmp(param, "JC_FILTER=FALSE", sizeof("JC_FILTER=FALSE")-1) ) {
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "jc_filter");
+      lSetString(elem, PARA_value, "false");
+   }
+   else {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INVALID_PARAM_SETTING_S, param)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   if (elem){
+      lAppendElem(pos.c_params, elem);
+   }
+
+   DEXIT;
+   return ret;
+}
+
 
 /****** sge_schedd_conf/sconf_eval_set_monitoring() ****************************
 *  NAME

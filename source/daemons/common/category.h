@@ -34,7 +34,7 @@
 
 
 
-const char* sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list);
+const char* sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list, bool is_resource_cat);
 
 #endif /* __CATEGORY_H */
 

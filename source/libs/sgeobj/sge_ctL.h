@@ -53,20 +53,22 @@ extern "C" {
 enum {
    CT_str = CT_LOWERBOUND,   /* string of category */
    CT_refcount,              /* number of jobs referencing the string */
+   CT_count,                 /* number of jobs used in this schuling run, if -1, than CT_refcount is used */ 
    CT_rejected,              /* has this category been rejected as it can not be dispached now */
    CT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
    CT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
    CT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
    CT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
    CT_messages_added,        /* if true, the scheduler info messages have been added for this category */
-   CT_resource_contribution, /* SGEEE: resource request dependent contribution on urgency 
-                                       this value is common with all jobs of a category */
-   CT_rc_valid               /* SGEEE: indicates whether cached CT_resource_contribution is valid */
+   CT_resource_contribution, /* resource request dependent contribution on urgency 
+                                this value is common with all jobs of a category */
+   CT_rc_valid               /* indicates whether cached CT_resource_contribution is valid */
 };
 
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
    SGE_ULONG(CT_refcount, CULL_DEFAULT)
+   SGE_INT(CT_count, CULL_DEFAULT)
    SGE_ULONG(CT_rejected, CULL_DEFAULT)
    SGE_LIST(CT_ignore_queues, CTI_Type, CULL_DEFAULT)
    SGE_LIST(CT_ignore_hosts, CTI_Type, CULL_DEFAULT)
@@ -80,6 +82,7 @@ LISTEND
 NAMEDEF(CTN)
    NAME("CT_str")
    NAME("CT_refcount")
+   NAME("CT_count")
    NAME("CT_rejected")
    NAME("CT_ignore_queues")
    NAME("CT_ignore_hosts")

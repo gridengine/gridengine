@@ -1,3 +1,8 @@
+JG-2002-01-20-0  Bugfix:    qsub -C "" (do not parse special comments in script 
+                            file) did not work.
+                 IZ:        #449
+                 Bugtraq:   #4802831
+
 SD-2002-12-19-1  Enhancem.  A new qmaster_params attribute called
                             SCHEDULER_TIMEOUT will allow the scheduler GDI event
                             acknowledge timeout (default is 10 minutes) to be

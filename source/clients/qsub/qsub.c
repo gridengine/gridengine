@@ -171,6 +171,8 @@ char **argv
    ep = lGetElemStr(opts_cmdline, SPA_switch, "-C");
    if (ep) {
       dprefix = lGetString(ep, SPA_argval_lStringT);
+   } else {
+      dprefix = default_prefix;
    }
    alp = parse_script_file(option ? 
                               lGetString(option, SPA_argval_lStringT) : NULL, 

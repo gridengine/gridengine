@@ -43,6 +43,8 @@
 #define FLG_USE_NO_PSEUDOS  2
 #define FLG_DONT_ADD_SCRIPT 4
 
+extern const char *default_prefix;
+
 void add_parent_uplink(lListElem *job);
 
 lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob);

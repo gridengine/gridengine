@@ -1,3 +1,6 @@
+SD-2001-12-17-2: Enhancem.: - added verbose information to get_cred security module
+                            - updated DCE documentation
+
 CR-2001-12-17-1: Feature:   - Grep for host-type and foreach loops, optimize via
                               first/next hash table functions.
                             - set exit state of qconf -ks to "1" if no scheduler

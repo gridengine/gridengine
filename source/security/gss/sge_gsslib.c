@@ -205,6 +205,22 @@ gsslib_get_credentials(char *service_name, gss_buffer_desc *cred,
       return -1;
    }
 
+   if (verbose) {
+      gss_buffer_desc service_name;
+      gss_OID doid;
+      service_name.length = 0;
+      maj_stat = gss_display_name(&min_stat, target_name, &service_name, &doid);
+      if (maj_stat != GSS_S_COMPLETE) {
+         gsslib_display_status(MSG_GSS_DISPLAYSTATUS_DISPLAYINGNAME, maj_stat, min_stat);
+         cc = -1;
+         goto error;
+      }
+      fprintf(stderr, "service: \"%.*s\"\n",
+             (int) service_name.length, (char *) service_name.value);
+      if (service_name.length)
+         (void) gss_release_buffer(&min_stat, &service_name);
+   }
+
    token_ptr = GSS_C_NO_BUFFER;
 
    /*

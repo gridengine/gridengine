@@ -205,19 +205,27 @@ file is generally /etc/v5srvtab</li>
 Make sure you have a valid /etc/krb5.conf file. Something like this should
 be OK:</li>
 
+<br>
 <br>[libdefaults]
-<br>default_realm = &lt;your_DCE_realm_name>
-<br>default_tkt_enctypes = des-cbc-crc
-<br>default_tgs_enctypes = des-cbc-crc
-<br>ccache_type = 2
+<br>
+<br>&nbsp;&nbsp;&nbsp;default_realm = &lt;your_DCE_realm_name>
+<br>&nbsp;&nbsp;&nbsp;default_tkt_enctypes = des-cbc-crc
+<br>&nbsp;&nbsp;&nbsp;default_tgs_enctypes = des-cbc-crc
+<br>&nbsp;&nbsp;&nbsp;kdc_req_checksum_type = 2
+<br>&nbsp;&nbsp;&nbsp;ccache_type = 2
+<br>
 <br>[realms]
-<br>&lt;your_DCE_realm_name> = {
-<br>&nbsp;&nbsp;&nbsp;&nbsp; kdc = &lt;your_security_server_hostname>:88
-<br>}
+<br>
+<br>&nbsp;&nbsp;&nbsp;&lt;your_DCE_realm_name> = {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; kdc = &lt;your_security_server_hostname>:88
+<br>&nbsp;&nbsp;&nbsp;}
+<br>
 <br>[domain_realm]
-<br>.&lt;your_local_domain> = &lt;your_DCE_realm_name></ol>
+<br>
+<br>&nbsp;&nbsp;&nbsp;.&lt;your_local_domain> = &lt;your_DCE_realm_name>
+<br>&nbsp;&nbsp;&nbsp;&lt;your_local_domain> = &lt;your_DCE_realm_name></ol>
 
-<p><br>For additional information, see the Kerberos krb5.conf(5) man page.
+<p><br>Host and domain names in the [domain_realm] section should be specified in lowercase letters. For additional information, see the Kerberos krb5.conf(5) man page.
 <br>&nbsp;
 <br>&nbsp;</ol>
 

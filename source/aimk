@@ -2045,7 +2045,7 @@ if ( "$QTCSH" == 1) then
    endif
 
    if ( $SHAREDLIBS == 1 ) then
-      unsetenv SHARED_PATH_NAME
+      unsetenv $SHARED_PATH_NAME
    endif
 
    cd $SOURCE

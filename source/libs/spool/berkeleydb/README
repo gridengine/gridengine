@@ -130,6 +130,15 @@ creates an rc script for the startup of the RPC server.
 The new installation script (sge_config) can also install the rc script on the 
 RPC server host and startup the RPC server.
 
+If you use the Berkeley DB RPC server, transaction checkpointing and removing 
+outdated transaction logs has to be done using external commands (db_checkpoint
+and db_archive).
+These binaries are called by the utility script 
+$SGE_ROOT/util/bdb_checkpoint.sh. 
+The best way to call it is probably by starting it as a cronjob (crontab of the
+admin user on the RPC server host).
+
+
 Berkeley DB RPC server on 64 bit platforms
 ------------------------------------------
 The Berkeley DB RPC server is known to fail on some 64 bit platforms, e.g.

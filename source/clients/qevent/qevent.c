@@ -537,6 +537,7 @@ int main(int argc, char *argv[])
       lEnumeration *what = NULL;
 
       sge_mirror_initialize(EV_ID_ANY, "sge_mirror -trigger");
+      ec_set_busy_handling(EV_BUSY_UNTIL_ACK);
 
       /* put out information about -trigger option */
       for (i=0;i<enabled_options.trigger_option_count;i++) {

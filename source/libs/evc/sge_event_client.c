@@ -675,7 +675,7 @@ ec_prepare_registration(ev_registration_id id, const char *name)
          ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
          ec_subscribe_flush(sgeE_SHUTDOWN, 0);
 
-         ec_set_busy_handling(EV_BUSY_NO_HANDLING);
+         ec_set_busy_handling(EV_BUSY_UNTIL_ACK);
          lSetUlong(ec, EV_busy, 0);
 
          ret = true;

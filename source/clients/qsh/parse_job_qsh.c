@@ -440,13 +440,17 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    }
 
    /*
-   ** handling for display:
-   ** command line has highest priority
-   ** then comes environment variable DISPLAY which was given via -v
-   ** then comes environment variable DISPLAY read from environment
-   ** if we have none of that, we must resolve the host
-   ** we put the display switch into the variable list
-   ** otherwise, we'd have to add a field to the job structure
+   * handling for display:
+   * command line (-display) has highest priority
+   * then comes environment variable DISPLAY which was given via -v
+   * then comes environment variable DISPLAY read from environment
+   *
+   * If a value for DISPLAY is set, it is checked for completeness:
+   * In a GRID environment, it has to contain the name of the display host.
+   * DISPLAY variables of form ":id" are not allowed and are deleted.
+   *
+   * we put the display switch into the variable list
+   * otherwise, we'd have to add a field to the job structure
    */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-display"))) {
       lList  *lp;
@@ -501,69 +505,27 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
-   if (!(ep = lGetElemStr(lGetList(*pjob, JB_env_list), VA_variable, 
-         "DISPLAY"))) {
-      const char *display;
-      char *new_display = NULL;
-      lList  *lp;
-      lListElem *vep;
-      char str[1024 + 1];
+   {
+      lListElem *ep;
 
-      display = sge_getenv("DISPLAY");
+      ep = lGetSubStr(*pjob, VA_variable, "DISPLAY", JB_env_list);
 
-      lp = lGetList(*pjob, JB_env_list);
-      if (!lp) {
-         lp = lCreateList("env list", VA_Type);
-         lSetList(*pjob, JB_env_list, lp);
+      /* if DISPLAY not set from -display or -v option,
+       * try to read it from the environment
+       */
+      if(ep == NULL) {
+         const char *display;
+         display = getenv("DISPLAY");
+
+         if(display != NULL) {
+            ep = lAddSubStr(*pjob, VA_variable, "DISPLAY", JB_env_list, VA_Type);
+            lSetString(ep, VA_value, display);   
+         }   
       }
-
-      vep = lCreateElem(VA_Type);
-      lSetString(vep, VA_variable, "DISPLAY");
-
-      if (!display || (*display == ':')) {
-         lListElem *hep;
-         const char *ending = NULL;
-
-         if (display) {
-            ending = display;
-         }
-
-         hep = lCreateElem(EH_Type);
-         lSetHost(hep, EH_name, me.unqualified_hostname);
-            
-         switch (sge_resolve_host(hep, EH_name)) {
-            case 0:
-               break;
-            case -1:
-               sprintf(str, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S,
-                  cl_errstr(-1));
-               answer_list_add(&answer, str, 
-                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               lFreeElem(hep);
-               DEXIT;
-            return answer;
-            default:
-               sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-                       lGetHost(hep, EH_name));
-               answer_list_add(&answer, str, STATUS_EUNKNOWN, 0);
-               lFreeElem(hep);
-            DEXIT;
-            return answer;
-         }
-         new_display = malloc(strlen(lGetHost(hep, EH_name)) + 4 + 1 +
-                           (ending ? strlen(ending) : 0));
-         strcpy(new_display, lGetHost(hep, EH_name));
-         strcat(new_display, (ending ? ending : ":0.0"));
-         lFreeElem(hep);
-         lSetString(vep, VA_value, new_display);
-         FREE(new_display);
-      } else {
-         lSetString(vep, VA_value, display);
-      }
-
-      lAppendElem(lp, vep);
    }
 
+   /* check DISPLAY on the client side before submitting job to qmaster */
+   job_check_qsh_display(*pjob, &answer, FALSE);
 
    DEXIT;
    return answer;

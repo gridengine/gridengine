@@ -189,8 +189,6 @@
 #define MSG_EXECD_NOADDGID            _MESSAGE(29103, _("can not find an unused add_grp_id"))
 #define MSG_MAIL_MAILLISTTOOLONG_U    _MESSAGE(29104, _("maillist for job " U32CFormat " too long\n"))
 #define MSG_EXECD_NOXTERM             _MESSAGE(29105, _("unable to find xterm executable for interactive job, not configured\n"))
-#define MSG_EXECD_NODISPLAY           _MESSAGE(29106, _("no DISPLAY variable found with interactive job"))
-#define MSG_EXECD_EMPTYDISPLAY        _MESSAGE(29107, _("empty DISPLAY variable delivered with interactive job"))
 #define MSG_EXECD_NOSHEPHERD_SSS      _MESSAGE(29108, _("unable to find shepherd executable neither in architecture directory "SFN" nor in "SFN": "SFN))
 #define MSG_EXECD_NOSHEPHERDWRAP_SS   _MESSAGE(29109, _("unable to find shepherd wrapper command "SFN": "SFN))
 #define MSG_DCE_NOSHEPHERDWRAP_SS     _MESSAGE(29110, _("unable to find DCE shepherd wrapper command "SFN": "SFN))

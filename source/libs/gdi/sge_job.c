@@ -1845,17 +1845,21 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
 
    DENTER(TOP_LAYER, "job_get_id_string");
 
-   if(ja_task_id == 0) {
-      sge_dstring_sprintf(&id, MSG_JOB_JOB_ID_U, job_id);
+   if(job_id == 0) {
+      sge_dstring_sprintf(&id, "");
    } else {
-      if(pe_task_id == NULL) {
-         sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
-                             job_id, ja_task_id);
+      if(ja_task_id == 0) {
+         sge_dstring_sprintf(&id, MSG_JOB_JOB_ID_U, job_id);
       } else {
-         sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
-                            job_id, ja_task_id, pe_task_id);
+         if(pe_task_id == NULL) {
+            sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
+                                job_id, ja_task_id);
+         } else {
+            sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
+                               job_id, ja_task_id, pe_task_id);
+         }
       }
-   }
+   }   
    
    DEXIT;
    return sge_dstring_get_string(&id);
@@ -1976,3 +1980,89 @@ lListElem *job_list_locate(lList *job_list, u_long32 job_id)
    return job;
 }
 
+/****** gdi/job/job_check_qsh_display() ****************************************
+*  NAME
+*     job_check_qsh_display() -- check DISPLAY variable for qsh jobs 
+*
+*  SYNOPSIS
+*     int job_check_qsh_display(const lListElem *job, lList **answer_list, 
+*                               int output_warning) 
+*
+*  FUNCTION
+*     Checks the DISPLAY variable for qsh jobs:
+*     - existence
+*     - empty string
+*     - local variable
+*
+*     In each error cases, an appropriate error message is generated.
+*     If output_warning is set to TRUE, an error message is output.
+*     In each case, an error message is written into answer_list.
+*
+*  INPUTS
+*     const lListElem *job - the job to check
+*     lList **answer_list  - answer list to take error messages, if NULL, no 
+*                            answer is passed back.
+*     int output_warning   - output error messages to stderr?
+*
+*  RESULT
+*     int - STATUS_OK, if function call succeeds,
+*           else STATUS_EUNKNOWN.
+*
+*  NOTES
+*     To fully hide the data representation of the DISPLAY settings, 
+*     functions job_set_qsh_display and job_get_qsh_display would
+*     be usefull.
+*
+*******************************************************************************/
+int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning)
+{
+   const lListElem *display_ep;
+   const char *display;
+
+   DENTER(TOP_LAYER, "job_check_qsh_display");
+
+   /* check for existence of DISPLAY */
+   display_ep = lGetElemStr(lGetList(job, JB_env_list), VA_variable, "DISPLAY");
+   if(display_ep == NULL) {
+      if(output_warning) {
+         WARNING((SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+      } else {
+         sprintf(SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+      }
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   /* check value of display variable, if it is an empty string,
+    * it is useless in a grid environment.
+    */
+   display = lGetString(display_ep, VA_value);
+   if(display == NULL || strlen(display) == 0) {
+      if(output_warning) {
+         WARNING((SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+      } else {
+         sprintf(SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+      }
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   /* check value of display variable, if it has the form :<id> (local display)
+    * it is useless in a grid environment.
+    */
+   if(*display == ':') {
+      if(output_warning) {
+         WARNING((SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+      } else {
+         sprintf(SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+      }
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}      

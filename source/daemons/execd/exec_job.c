@@ -1017,31 +1017,29 @@ char *err_str
          jb_now = lGetUlong(jep, JB_now);    /* detect qsh case  */
       }
       
-      env = lGetElemStr(lGetList(jep, JB_env_list), VA_variable, "DISPLAY");
+      /* check DISPLAY variable for qsh jobs */
+      if(JB_NOW_IS_QSH(jb_now)) {
+         lList *answer_list = NULL;
 
-      if (!env) {                                  /* no DISPLAY set   */
-         if(JB_NOW_IS_QSH(jb_now)) {               /* and qsh -> error */
-            sprintf(err_str, MSG_EXECD_NODISPLAY);
+         if(job_check_qsh_display(jep, &answer_list, FALSE) == STATUS_OK) {
+            env = lGetElemStr(lGetList(jep, JB_env_list), VA_variable, "DISPLAY");
+            fprintf(fp, "display=%s\n", lGetString(env, VA_value));
+         } else {
+            /* JG: TODO: the whole function should not use err_str to return
+             *           error descriptions, but an answer list.
+             */
+            const char *error_string = lGetString(lFirst(answer_list), AN_text);
+            if(error_string != NULL) {
+               sprintf(err_str, error_string);
+            }
+            lFreeList(answer_list);
             lFreeList(environmentList);
             fclose(fp);
             sge_dstring_free(&active_dir_buffer);
             DEXIT;
             return -1;
          }
-      } else {
-         if (!lGetString(env, VA_value) || !strcmp(lGetString(env, VA_value), "")) {  /* no value for DISPLAY */
-            if(JB_NOW_IS_QSH(jb_now)) {                                               /* and qsh -> error     */
-               sprintf(err_str, MSG_EXECD_EMPTYDISPLAY);
-               lFreeList(environmentList);
-               fclose(fp);
-               sge_dstring_free(&active_dir_buffer);
-               DEXIT;
-               return -1;
-            }
-         } else { /* DISPLAY exists and is valid -> write to config */
-            fprintf(fp, "display=%s\n", lGetString(env, VA_value));
-         }
-      }   
+      }
    }
 
    

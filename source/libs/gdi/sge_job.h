@@ -157,4 +157,6 @@ void job_get_state_string(char *str, u_long32 op);
 
 lListElem *job_list_locate(lList *job_list, u_long32 job_id);
 
+int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning);
+
 #endif /* __SGE_JOB_H */    

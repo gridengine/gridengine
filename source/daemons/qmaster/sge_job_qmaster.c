@@ -175,6 +175,15 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EUNKNOWN;
    }
 
+   /* check for qsh without DISPLAY set */
+   if(JB_NOW_IS_QSH(lGetUlong(jep, JB_now))) {
+      int ret = job_check_qsh_display(jep, alpp, FALSE);
+      if(ret != STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
+   }
+
    /* 
     * fill in user and group
     *
@@ -2681,6 +2690,7 @@ int *trigger
    /* ---- JB_shell_list */
    if ((pos=lGetPosViaElem(jep, JB_shell_list))>=0) {
       DPRINTF(("got new JB_shell_list\n")); 
+
       lSetList(new_job, JB_shell_list, 
                lCopyList("", lGetList(jep, JB_shell_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_SHELLLIST, u32c(jobid));
@@ -2693,6 +2703,18 @@ int *trigger
 
       DPRINTF(("got new JB_env_list\n")); 
       
+      /* check for qsh without DISPLAY set */
+      if(JB_NOW_IS_QSH(lGetUlong(new_job, JB_now))) {
+         int ret = job_check_qsh_display(jep, alpp, FALSE);
+         if(ret != STATUS_OK) {
+            DEXIT;
+            return ret;
+         }
+      }
+
+      /* save existing prefix env vars from being overwritten
+         TODO: can we rule out that after that step a prefix 
+               env var appears two times in the env var list ? */
       var_list_split_prefix_vars(lGetList(new_job, JB_env_list), 
                                  &prefix_vars, VAR_PREFIX);
       lSetList(new_job, JB_env_list, 

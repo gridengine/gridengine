@@ -1477,12 +1477,6 @@ char **argv
       }   
    }
 
-   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_now), existing_job, TRUE);
-   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_now), existing_job, FALSE);
-   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_now), existing_job, FALSE);
-
-   opts_all = merge_and_order_options(&opts_defaults, &opts_scriptfile, &opts_cmdline);
-
    if (!job) {
       lList *answer = NULL;
 
@@ -1496,10 +1490,17 @@ char **argv
             SGE_EXIT(1);
          }
       }
-   }  
+   }
+
    if(!existing_job) {
       set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
    }
+
+   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_now), existing_job, TRUE);
+   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_now), existing_job, FALSE);
+   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_now), existing_job, FALSE);
+
+   opts_all = merge_and_order_options(&opts_defaults, &opts_scriptfile, &opts_cmdline);
 
    alp = cull_parse_qsh_parameter(opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);

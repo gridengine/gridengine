@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/09/12 09:40:06 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/09/17 13:46:45 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/09/12 09:40:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/09/17 13:46:45 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -503,6 +503,10 @@ Directs
 to use
 .B display_specifier
 in order to contact the X server.
+The \fBdisplay_specifier\fP has to contain the hostname part of the display name (e.g. myhost:1). 
+Local display names (e.g. :0) cannot be used in grid environments.
+Values set with the \fB\-display\fP option overwrite settings from the submission environment 
+and from \fB\-v\fP commandline options.
 .\"
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -1391,6 +1395,12 @@ to be used for xxQS_NAMExx communication of the
 client resides.
 Per default the local host is used.
 .\"
+.IP "DISPLAY" 1.5i
+For
+.I qsh
+jobs the DISPLAY has to be specified at job submission.
+If the DISPLAY is not set by using the \fB\-display\fP or the \fB\-v\fP
+switch, the contents of the DISPLAY environment variable are used as default.
 .PP
 In addition to those environment variables specified to be
 exported to the job via the \fB\-v\fP or the \fB\-V\fP option

@@ -1,3 +1,9 @@
+JG-2002-09-17-1  Bugfix:    qsh jobs without or with local DISPLAY variable
+                            set have to be rejected.
+                 IZ:        #342
+                 Bugtraq:   #4744523
+                 Changed:   sge_qmaster, sge_execd, qsh, submit.1
+
 JG-2002-09-17-0  Bugfix:    If a task of a tightly integrated job died through 
                             a signal (e.g. SIGXCPU), the job was not terminated
                             and the signalling information not visible in the 

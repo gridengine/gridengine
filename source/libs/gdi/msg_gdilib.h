@@ -403,10 +403,17 @@
 #define MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS      _MESSAGE(43254, _("denied: complex "SFQ" referenced in "SFN" "SFQ" is not a user complex\n") )
 #define MSG_HOSTREFINQUEUE_SS                      _MESSAGE(43255, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
 /*
-** common/usage.c
-*/
+ * common/usage.c
+ */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43256, _("startup silently"))
 
+
+/*
+ * sge_job.c
+ */
+#define MSG_JOB_NODISPLAY_S             _MESSAGE(43256, _("no DISPLAY variable found with interactive job "SFN"\n"))
+#define MSG_JOB_EMPTYDISPLAY_S          _MESSAGE(43257, _("empty DISPLAY variable delivered with interactive job "SFN"\n"))
+#define MSG_JOB_LOCALDISPLAY_SS         _MESSAGE(43258, _("local DISPLAY variable "SFQ" delivered with interactive job "SFN"\n"))
 
 #endif /* __MSG_GDILIB_H */
 

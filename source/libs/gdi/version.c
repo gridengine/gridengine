@@ -29,7 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-char GDI_VERSION[] = "5.3";
+char GDI_VERSION[] = "5.3 alpha1";
 
 char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\

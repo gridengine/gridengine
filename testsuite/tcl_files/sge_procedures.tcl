@@ -148,6 +148,9 @@ proc resolve_version { { internal_number -100 } } {
    set versions(unknown)                                          -1
 
    set versions(SGE_5.3)     1
+   set versions(SGE_5.3 alpha1)     1
+   set versions(SGEEE_5.3)     1
+   set versions(SGEEE_5.3 alpha1)     1
    set versions(SGE_6.0_pre) 1
 
    if { $internal_number == -100 } {

@@ -1,3 +1,9 @@
+AS-2004-02-27-2" Enhancem.: added "-nosource" switch" to scripts/distinst
+
+AS-2004-02-27-0  Enhancem.: changes to the install procedure
+                 Changed:   scripts/distinst and related minor files
+                 Renamed:   inst_sgeee -> inst_sge
+
 CR-2004-02-27-4: Testsuite: compile_source procedure now supports new "myinst"
                             behaviour.
                  Changed:   testsuite
@@ -5,9 +11,9 @@ CR-2004-02-27-4: Testsuite: compile_source procedure now supports new "myinst"
 CR-2004-02-27-3: Cleanup:   setting larger default timeouts for communications
                  Changed:   commlib
 
-CR-2004-02-27-2: Bugfix:    changed DEBUG_FLAG from -g3 to -g2 for ALPHA5 (tru64)
-                            sytems (-g3 produced segmentation faults in gethostname
-                            binary)
+CR-2004-02-27-2: Bugfix:    changed DEBUG_FLAG from -g3 to -g2 for ALPHA5
+                            (tru64) sytems (-g3 produced segmentation faults
+                            in gethostname binary)
                  Changed:   aimk
 
 SD-2004-02-27-0: Bugfix:    Fixed checking of read return code

@@ -30,7 +30,7 @@
 # 
 #########################################################################
 #
-# This scripts forks and execs identical copies of qsub.
+# This script forks and execs identical copies of qsub.
 #
 # Syntax:
 #    qsub_blast.pl -n num_instances -m num_simultaneous -q -- qsub_args...

@@ -27,6 +27,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
 import java.util.*;
@@ -37,11 +38,10 @@ public class Howto3 {
    public static void main (String[] args) {
       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
       DRMAASession session = factory.getSession ();
-      JobTemplate jt = null;
       
       try {
          session.init (null);
-         jt = session.createJobTemplate ();
+         JobTemplate jt = session.createJobTemplate ();
          jt.setRemoteCommand ("sleeper.sh");
          jt.setInputParameters (new String[] {"5"});
          

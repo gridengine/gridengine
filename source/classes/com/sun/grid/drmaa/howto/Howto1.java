@@ -27,6 +27,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
 import org.ggf.drmaa.*;

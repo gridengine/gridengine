@@ -56,26 +56,38 @@ Content
 2. Getting Started
 -------------------
 
-   The Grid Engine 6.0 release includes a DRMAA Java language binding.  To
+   The Grid Engine 6.0 release supports a DRMAA Java language binding.  To
    develop applications that utilize the Java binding, you will need two files.
-   The first is the jar file, drmaa.jar.  You will find this file under the
-   $SGE_ROOT/lib directory in the distribution.  This file is need for both
+   The first is the jar file, drmaa.jar.  This file is need for both
    compiling and running applications utilizing the Java language binding.  The
-   second file is the Java language binding shared library.  You will also find
-   this file in the $SGE_ROOT/lib directory.  This file will need to be
-   accessible from the LD_LIBRARY_PATH in order for your application to link
-   properly and run.
+   second file is the Java language binding shared library.  This file will need
+   to be accessible from the LD_LIBRARY_PATH in order for your application to
+   link properly and run.  If you built the binaries yourself (using "aimk
+   -java"), you will find both of these files in the $SGE_ROOT/lib/$ARCH after
+   using distinst -local to install the distribution.  Otherwise, you can
+   download the binaries from the File Exchange at:
 
-   The first step is to look at the example program included in the
-   $SGE_ROOT/examples/drmaa directory of the distribution.  The example
-   program demonstrates a simple usage of the DRMAA library to submit
-   several bulk jobs and several single jobs, wait for the jobs to finish,
-   and then output the results.
+      http://gridengine.sunsource.net/servlets/ProjectDownloadList
 
-   Also in the $SGE_ROOT/examples/drmaa directory you will find the example
-   programs from the online tutorial at:
+   Look for the latest jdrmaa.tar file.  This file contains the drmaa.jar and
+   the Java language binding shared libraries for all currently supported
+   platforms.
 
-      http://gridengine.sunsource.net/project/gridengine/howto/drmaa.html
+   The first step is to look at the example program to be found at:
+
+      http://gridengine.sunsource.net/source/browse/gridengine/source/classes/DRMAAExample.java
+
+   The example program demonstrates a simple usage of the DRMAA library to
+   submit several bulk jobs and several single jobs, wait for the jobs to
+   finish, and then output the results.
+
+   In the:
+ 
+      http://gridengine.sunsource.net/source/browse/gridengine/source/classes/com/sun/grid/drmaa/howto/
+
+   directory you will find the example programs from the online tutorial at:
+
+      http://gridengine.sunsource.net/project/gridengine/howto/drmaa_java.html
 
    Once you're familiar with the DRMAA API, you're ready to begin
    development of your Java application.  When compiling your file, you will

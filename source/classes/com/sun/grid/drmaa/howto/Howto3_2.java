@@ -27,6 +27,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
 import java.util.*;
@@ -37,17 +38,16 @@ public class Howto3_2 {
    public static void main (String[] args) {
       DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
       DRMAASession session = factory.getSession ();
-      JobTemplate jt = null;
       
       try {
+         session.init (null);
+         JobTemplate jt = session.createJobTemplate ();
+         jt.setRemoteCommand ("sleeper.sh");
+         jt.setInputParameters (new String[] {"5"});
+         
          int start = 1;
          int end  = 30;
          int step = 2;
-         
-         session.init (null);
-         jt = session.createJobTemplate ();
-         jt.setRemoteCommand ("sleeper.sh");
-         jt.setInputParameters (new String[] {"5"});
          
          List ids = session.runBulkJobs (jt, start, end, step);
          Iterator i = ids.iterator ();
@@ -58,40 +58,40 @@ public class Howto3_2 {
          
          jt.delete ();
          session.synchronize (Collections.singletonList (DRMAASession.JOB_IDS_SESSION_ALL),
-                              DRMAASession.TIMEOUT_WAIT_FOREVER, false);
+         DRMAASession.TIMEOUT_WAIT_FOREVER, false);
          
          for (int count = start; count < end; count += step) {
             JobInfo info = session.wait (DRMAASession.JOB_IDS_SESSION_ANY,
-                                         DRMAASession.TIMEOUT_WAIT_FOREVER);
-
+            DRMAASession.TIMEOUT_WAIT_FOREVER);
+            
             if (info.wasAborted ()) {
-               System.out.println("Job " + info.getJobId () + " never ran");
+               System.out.println ("Job " + info.getJobId () + " never ran");
             }
             else if (info.hasExited ()) {
-               System.out.println("Job " + info.getJobId () +
-                                  " finished regularly with exit status " +
-                                  info.getExitStatus ());
+               System.out.println ("Job " + info.getJobId () +
+               " finished regularly with exit status " +
+               info.getExitStatus ());
             }
             else if (info.hasSignaled ()) {
-               System.out.println("Job " + info.getJobId () +
-                                  " finished due to signal " +
-                                  info.getTerminatingSignal ());
+               System.out.println ("Job " + info.getJobId () +
+               " finished due to signal " +
+               info.getTerminatingSignal ());
             }
             else {
-               System.out.println("Job " + info.getJobId () +
-                                  " finished with unclear conditions");
+               System.out.println ("Job " + info.getJobId () +
+               " finished with unclear conditions");
             }
-
+            
             System.out.println ("Job Usage:");
-
+            
             Map rmap = info.getResourceUsage ();
             Iterator r = rmap.keySet ().iterator ();
-
+            
             while (r.hasNext ()) {
                String name = (String)r.next ();
                String value = (String)rmap.get (name);
-
-               System.out.println("  " + name + "=" + value);
+               
+               System.out.println ("  " + name + "=" + value);
             }
          }
          

@@ -35,6 +35,8 @@
 #define FLG_CONF_SPOOL  0x00000001L
 #define FLG_CONF_STDOUT 0x00000002L
 
+#define GID_RANGE_NOT_ALLOWED_ID 100
+
 int write_configuration(int write_configuration, lList **alpp, char *fname, lListElem *conf_list, FILE *fpout, u_long32 flags);
 
 lListElem *read_configuration(const char *fname, const char *conf_name, u_long32 flags);

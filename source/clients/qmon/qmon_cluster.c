@@ -70,7 +70,9 @@
 #include "qmon_cluster.h"
 #include "qmon_globals.h"
 #include "sge_feature.h"
+#include "sge_range.h"
 #include "resolve_host.h"
+#include "rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
 
@@ -1419,21 +1421,34 @@ int local
 #endif
 
       if (clen->gid_range && clen->gid_range[0] != '\0') {
-         if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
+         lList *range_list = NULL;    /* RN_Type */
+         int incorrect_gid_range = 0;
+
+         if (strcasecmp(clen->gid_range, "none") &&
+             !(range_list = parse_ranges(clen->gid_range, 0, 0, &alp, NULL, 
+                                         INF_NOT_ALLOWED))) {
+            incorrect_gid_range = 1;
+         } else if (range_list_containes_id_less_than(range_list, 
+                                                    GID_RANGE_NOT_ALLOWED_ID)) {
+            range_list = lFreeList(range_list);
+            incorrect_gid_range = 1; 
+         }
+   
+         if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
             alp = lFreeList(alp);
             goto error;
+         } else {
+            ep = lGetElemStr(confl, CF_name, "gid_range");
+            if (!ep) {
+               new = lCreateElem(CF_Type);
+               lSetString(new, CF_name, "gid_range");
+            } else {
+               new = lCopyElem(ep);
+            }
+            lSetString(new, CF_value, clen->gid_range);
+            lAppendElem(lp, new);
          }
-
-         ep = lGetElemStr(confl, CF_name, "gid_range");
-         if (!ep) {
-            new = lCreateElem(CF_Type);
-            lSetString(new, CF_name, "gid_range");
-         }
-         else
-            new = lCopyElem(ep);
-         lSetString(new, CF_value, clen->gid_range);
-         lAppendElem(lp, new);
       }
    }
    else {
@@ -1661,20 +1676,31 @@ int local
       ep = lGetElemStr(confl, CF_name, "xuser_lists");
       lSetString(ep, CF_value, buf);
 
-        
       if (clen->gid_range && clen->gid_range[0] != '\0') {
-         if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
+         lList *range_list = NULL;    /* RN_Type */
+         int incorrect_gid_range = 0;
+
+         if (strcasecmp(clen->gid_range, "none") &&
+             !(range_list = parse_ranges(clen->gid_range, 0, 0, &alp, NULL, 
+                                         INF_NOT_ALLOWED))) { 
+            incorrect_gid_range = 1;
+         } else if (range_list_containes_id_less_than(range_list, 
+                                                   GID_RANGE_NOT_ALLOWED_ID)) {
+            range_list = lFreeList(range_list);
+            incorrect_gid_range = 1;
+         }
+      
+         if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
             alp = lFreeList(alp);
             goto error;
+         } else {
+            ep = lGetElemStr(confl, CF_name, "gid_range");
+            if (!ep)
+               ep = lAddElemStr(&confl, CF_name, "gid_range", CF_Type);
+            lSetString(ep, CF_value, clen->gid_range);
          }
-
-         ep = lGetElemStr(confl, CF_name, "gid_range");
-         if (!ep)
-            ep = lAddElemStr(&confl, CF_name, "gid_range", CF_Type);
-         lSetString(ep, CF_value, clen->gid_range);
-      }
-      else {
+      } else {
          lDelElemStr(&confl, CF_name, "gid_range");
       }
 

@@ -1,12 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
 <HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Win32)">
 	<META NAME="AUTHOR" CONTENT=" ">
 	<META NAME="CREATED" CONTENT="20020111;13083600">
-	<META NAME="CHANGED" CONTENT="20020313;12341100">
+	<META NAME="CHANGED" CONTENT="20020315;9310466">
 	<STYLE>
 	<!--
 		H2 { font-family: "Sunsans Demi" }
@@ -36,8 +36,8 @@ Administrative Tasks</A>&quot;.</P>
 <OL>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#qconf">Add or modify
 	objects using files</A></P>
-	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#queuehost">Queue/host
-	modification</A>, <A HREF="#qselect">qselect</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#queuehost">Modification
+	of queues, hosts, and environments</A>; <A HREF="#qselect">qselect</A></P>
 	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#schedconf">Modification
 	of global configuration and scheduler</A></P>
 </OL>
@@ -78,24 +78,27 @@ echo &quot;migr_command $MIGMETHOD&quot; &gt;&gt; $TMPFILE
 qconf -Mckpt $TMPFILE
 rm $TMPFILE</PRE>
 <HR>
-<H2><A NAME="queuehost"></A>Queue/Host modification</H2>
-<P STYLE="margin-bottom: 0cm">Individual queues can be modified from
-the command line by using the <B>qconf -Mq &lt;filename&gt;</B>
-command as shown above, or by using the <B>qconf -mq &lt;queuename&gt;</B>
-command. This opens a temporary file in an editor, and when you save
-any changes you make to this file and exit the editor, the system
-immediately reflects those changes. However, when you want to change
-many queues at once, and to change queue configuration
-non-interactively, the <B>qconf -<SPAN STYLE="font-style: normal">...</SPAN>attr
+<H2><A NAME="queuehost"></A>Modification of queues, hosts, and
+environments</H2>
+<P STYLE="margin-bottom: 0cm">Individual queues, hosts, and both
+parallel and checkpointing enviroments can be modified from the
+command line by using the <B>qconf -M{q,e,p,ckpt} &lt;filename&gt;</B>
+command as shown above, or by using the <B>qconf -m{q,e,p,ckpt}
+&lt;objname&gt;</B> command. This opens a temporary file in an
+editor, and when you save any changes you make to this file and exit
+the editor, the system immediately reflects those changes. However,
+when you want to change many objects at once, and to change object
+configuration non-interactively, the <B>qconf -<SPAN STYLE="font-style: normal">...</SPAN>attr
 </B>set of commands are used. 
 </P>
 <P STYLE="margin-bottom: 0cm">The first type of commands makes
 modifications according to the specification on the command line.</P>
-<BLOCKQUOTE><CODE>qconf -{a,m,r,d}attr queue|exechost &lt;attrib&gt;
-&lt;value&gt; &lt;queue_list&gt;|&lt;host_list&gt;</CODE></BLOCKQUOTE>
+<BLOCKQUOTE><CODE>qconf -{a,m,r,d}attr queue|exechost|pe|ckpt
+&lt;attrib&gt; &lt;value&gt; &lt;queue_list&gt;|&lt;host_list&gt;</CODE></BLOCKQUOTE>
 <P STYLE="margin-bottom: 0cm">while the second makes modifications
 according to specifications in a file:</P>
-<BLOCKQUOTE><CODE>qconf -{A,M,R,D}attr queue|exechost &lt;filename&gt;</CODE></BLOCKQUOTE>
+<BLOCKQUOTE><CODE>qconf -{A,M,R,D}attr queue|exechost<CODE>|pe|ckpt</CODE>
+&lt;filename&gt;</CODE></BLOCKQUOTE>
 <P STYLE="margin-bottom: 0cm">In both sets of commands, the options
 indicate the following:</P>
 <BLOCKQUOTE><B>-A/a</B>: add attribute<BR><B>-M/m</B><SPAN STYLE="font-weight: medium">:</SPAN>
@@ -136,12 +139,18 @@ scratch1=500M tcf27-e019</CODE></BLOCKQUOTE>
 <P STYLE="margin-bottom: 0cm">Delete the resource &quot;long&quot;</P>
 <BLOCKQUOTE><CODE>% qconf -dattr exechost complex_values long
 tcf27-e019</CODE></BLOCKQUOTE>
+<P STYLE="margin-bottom: 0cm">Add &quot;tcf27-b011.q&quot; to the
+list of queues for checkpointing enviroment &quot;sph&quot;</P>
+<BLOCKQUOTE><CODE>% qconf -aattr ckpt queue_list_tcf27-b011.q sph</CODE></BLOCKQUOTE>
+<P STYLE="margin-bottom: 0cm">Change the number of slots in parallel
+environment &quot;make&quot; to 50</P>
+<BLOCKQUOTE><CODE>% qconf -mattr pe slots 50 make</CODE></BLOCKQUOTE>
 <H3><A NAME="qselect"></A>qselect</H3>
 <P STYLE="margin-bottom: 0cm">The <B>qselect</B> command outputs a
 list of queues. If called with options, it lists only queues which
 match the given specifications. This can be used to great advantage
-in combination with the <B>qconf -...attr</B> commands to target
-specific queues to modify.</P>
+in combination with the <B>qconf -...attr queue</B> commands to
+target specific queues to modify.</P>
 <H4>Examples:</H4>
 <P STYLE="margin-bottom: 0cm">all queues on Linux machines</P>
 <BLOCKQUOTE><CODE>% qselect -l arch=glinux</CODE></BLOCKQUOTE>

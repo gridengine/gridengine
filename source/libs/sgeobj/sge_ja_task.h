@@ -47,4 +47,7 @@ lList* ja_task_list_split_group(lList **ja_task_list);
 bool 
 ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id);
 
+bool 
+ja_task_clear_finished_pe_tasks(lListElem *ja_task);
+
 #endif /* __SGE_JA_TASK_H */

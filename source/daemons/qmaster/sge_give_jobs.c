@@ -832,6 +832,7 @@ sge_commit_flags_t commit_flags
       }   
 
       sge_clear_granted_resources(jep, jatep, 1);
+      ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);

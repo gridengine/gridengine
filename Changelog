@@ -1,3 +1,9 @@
+JG-2003-02-14-0  Bugfix:    Second migration of tightly integrated jobs failed
+                            if any host was used in both the first and second
+                            run of the job.
+                 Review:    EB
+                 Changed:   sge_qmaster
+
 CR-2003-02-14-3  Teststuie: comment from change by CR-2003-02-14-2 caused
                  Bugfix:    tcl error. 
 

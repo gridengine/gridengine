@@ -45,7 +45,7 @@
 
 #include "msg_sgeobjlib.h"
 
-/****** gdi/ja_task/ja_task_search_pe_task()***********************************
+/****** sgeobj/ja_task/ja_task_search_pe_task()*********************************
 *  NAME
 *     ja_task_search_pe_task() -- Find a certain PE Task 
 *
@@ -77,7 +77,7 @@ lListElem *ja_task_search_pe_task(const lListElem *ja_task,
    return NULL;
 }
 
-/****** gdi/ja_task/ja_task_list_print_to_string() ****************************
+/****** sgeobj/ja_task/ja_task_list_print_to_string() **************************
 *  NAME
 *     ja_task_list_print_to_string() -- print task id ranges into string 
 *
@@ -111,7 +111,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
    DEXIT;
 }
 
-/****** gdi/ja_task/ja_task_list_split_group() *****************************
+/****** sgeobj/ja_task/ja_task_list_split_group() ******************************
 *  NAME
 *     ja_task_list_split_group() -- Splits a list into two parts
 *
@@ -130,7 +130,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
 *     lList* - JAT_Type list (elements with equivalent state)
 *
 *  SEE ALSO
-*     gdi/range/RN_Type
+*     sgeobj/range/RN_Type
 ******************************************************************************/
 lList* ja_task_list_split_group(lList **ja_task_list)
 {
@@ -155,8 +155,38 @@ lList* ja_task_list_split_group(lList **ja_task_list)
    return ret_list;
 }                     
 
-bool 
-ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
+/****** sgeobj/ja_task/ja_task_add_finished_pe_task() **************************
+*  NAME
+*     ja_task_add_finished_pe_task() -- remember finished parallel task
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id) 
+*
+*  FUNCTION
+*     To avoid duplicate handling of finished parallel tasks (which could be
+*     triggered by sge_execd sending task end reports multiple times until
+*     it receives an ack from qmaster), the ja_task object (JAT_Type) contains
+*     a list of finished parallel tasks.
+*    
+*     ja_task_add_finished_pe_task tries to add a new parallel task to this
+*     list.
+*
+*     If an entry with the given pe_task_id already exists, the function returns
+*     false, else true.
+*
+*  INPUTS
+*     lListElem *ja_task     - the ja_task to check/modify
+*     const char *pe_task_id - the pe_task_id to check/insert
+*
+*  RESULT
+*     bool - true, if the pe_task_id did not yet exist and could be inserted,
+*            false, if the pe_task_id already existed.
+*
+*  SEE ALSO
+*     sgeobj/ja_task/ja_task_clear_finished_pe_tasks()
+*******************************************************************************/
+bool ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
 {
    lListElem *pe_task;
 
@@ -170,8 +200,61 @@ ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
       return false;
    }
 
-   pe_task = lAddSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list, 
-                        FPET_Type);
+   pe_task = lAddSubStr(ja_task, FPET_id, pe_task_id, jat_finished_task_list, 
+                        fpet_type);
+
+   dexit;
+   return true;
+}
+
+/****** sgeobj/ja_task/ja_task_clear_finished_pe_tasks() ***********************
+*  NAME
+*     ja_task_clear_finished_pe_tasks() -- clear finished task list 
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_clear_finished_pe_tasks(lListElem *ja_task) 
+*
+*  FUNCTION
+*     A ja_task contains a list of all finished parallel tasks (see also
+*     sgeobj/ja_task/ja_task_add_finished_pe_task()).
+*
+*     In certain circumstances (e.g. if a ja_task is rescheduled), it is 
+*     necessary to clear this list.
+*
+*     ja_task_clear_finished_pe_tasks removes the complete sublist including
+*     the contained task ids.
+*
+*  INPUTS
+*     lListElem *ja_task - the ja_task to modify
+*
+*  RESULT
+*     bool - true, if the list could be cleared,
+*            false, if no list of finished pe_tasks existed.
+*
+*  SEE ALSO
+*     sgeobj/ja_task/ja_task_add_finished_pe_task()
+*******************************************************************************/
+bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
+{
+   lList *pe_task_list;
+
+   DENTER(TOP_LAYER, "ja_task_clear_finished_pe_tasks");
+
+   /* get list of finished pe tasks */
+   pe_task_list = lGetList(ja_task, JAT_finished_task_list);
+   if (pe_task_list == NULL) {
+      DPRINTF(("no finished pe task list to clear in ja_task "U32CFormat"\n",
+               lGetUlong(ja_task, JAT_task_number)));
+      DEXIT;
+      return false;
+   }
+
+   /* if we have such a list, delete it (lSetList will free the list) */
+   lSetList(ja_task, JAT_finished_task_list, NULL);
+
+   DPRINTF(("cleared finished pe task list in ja_task "U32CFormat"\n",
+            lGetUlong(ja_task, JAT_task_number)));
 
    DEXIT;
    return true;

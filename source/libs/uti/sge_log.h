@@ -88,10 +88,15 @@ int             log_state_get_log_as_admin_user(void);
 *     ...
 ******************************************************************************/ 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
-#   define CRITICAL(x) (sge_set_message_id_output(1), \
+#   define CRITICAL(x) ((LOG_CRIT <= MAX(log_state_get_log_level(), LOG_WARNING)) ? (sge_set_message_id_output(1), \
+                         sprintf x, \
+                         sge_set_message_id_output(0), sge_log(LOG_CRIT, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
+
+/*                       (sge_set_message_id_output(1), \
                         sprintf x, \
                         sge_set_message_id_output(0), \
                         sge_log(LOG_CRIT, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+*/                        
 #else
 #   define CRITICAL(x) (sprintf x, \
                         sge_log(LOG_CRIT, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
@@ -114,10 +119,14 @@ int             log_state_get_log_as_admin_user(void);
 *     ...
 ******************************************************************************/ 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
-#   define ERROR(x)    (sge_set_message_id_output(1),                          \
+#   define ERROR(x) ((LOG_ERR <= MAX(log_state_get_log_level(), LOG_WARNING)) ? (sge_set_message_id_output(1), \
+                      sprintf x, \
+                      sge_set_message_id_output(0), sge_log(LOG_ERR, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
+
+/*                      (sge_set_message_id_output(1),                          \
                         sprintf x,                                             \
                         sge_set_message_id_output(0),                          \
-                        sge_log(LOG_ERR,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__), 1) ? 1 : 0
+                        sge_log(LOG_ERR,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__), 1) ? 1 : 0*/
 #else
 #   define ERROR(x)    (sprintf x,                                             \
                         sge_log(LOG_ERR,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__), 1) ? 1 : 0
@@ -140,10 +149,15 @@ int             log_state_get_log_as_admin_user(void);
 *     ...
 ******************************************************************************/ 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
-#   define WARNING(x)  (sge_set_message_id_output(1), \
+#   define WARNING(x) ((LOG_WARNING <= MAX(log_state_get_log_level(), LOG_WARNING)) ? (sge_set_message_id_output(1), \
+                      sprintf x, \
+                      sge_set_message_id_output(0), sge_log(LOG_WARNING, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
+
+
+/*                     (sge_set_message_id_output(1), \
                         sprintf x,       \
                         sge_set_message_id_output(0), \
-                        sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+                        sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0 */
 #else
 #   define WARNING(x)  ( sprintf x,       \
                         sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
@@ -165,9 +179,13 @@ int             log_state_get_log_as_admin_user(void);
 *     formatstring - printf formatstring
 *     ...
 ******************************************************************************/ 
-#   define NOTICE(x)   (sprintf x,  \
-                        sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#   define NOTICE(x)  ((LOG_NOTICE <= MAX(log_state_get_log_level(), LOG_WARNING)) ? ( sprintf x, \
+                       sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
+  
 
+/*                     (sprintf x,  \
+                        sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+*/
 /****** uti/log/INFO() ********************************************************
 *  NAME
 *     INFO() -- Log an info message
@@ -184,8 +202,13 @@ int             log_state_get_log_as_admin_user(void);
 *     formatstring - printf formatstring
 *     ...
 ******************************************************************************/ 
-#   define INFO(x)     (sprintf x,  \
+#   define INFO(x)    ((LOG_INFO <= MAX(log_state_get_log_level(), LOG_WARNING)) ? ( sprintf x, \
+                       sge_log(LOG_INFO, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
+  
+
+/*                     (sprintf x,  \
                         sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+*/                        
 
 /****** uti/log/DEBUG() ******************************************************
 *  NAME
@@ -204,10 +227,14 @@ int             log_state_get_log_as_admin_user(void);
 *     ...
 ******************************************************************************/ 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
-#   define DEBUG(x)    (sge_set_message_id_output(1),  \
+#   define DEBUG(x)  ((LOG_DEBUG <= MAX(log_state_get_log_level(), LOG_WARNING)) ? (sge_set_message_id_output(1), \
+                      sprintf x, \
+                      sge_set_message_id_output(0), sge_log(LOG_DEBUG, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
+
+/*                     (sge_set_message_id_output(1),  \
                         sprintf x,  \
                         sge_set_message_id_output(0), \
-                        sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+                        sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0 */
 #else
 #   define DEBUG(x)    (sprintf x,  \
                         sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0

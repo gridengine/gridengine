@@ -1,3 +1,7 @@
+SG-2004-09-08-0: Cleanup:   improved the loging
+                 Changed:   all
+                 Review:    AA
+
 JG-2004-09-07-0: Testsuite: Improved test functional/tight_integration 
                             (different sizes of massive parallel jobs are 
                             tested)

@@ -5407,9 +5407,9 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
 
    set result ""
    set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke -ks -km" ]
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke all -ks -km" ]
 
-   puts $CHECK_OUTPUT "qconf -ke -ks -km returned $prg_exit_state"
+   puts $CHECK_OUTPUT "qconf -ke all -ks -km returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
       puts $CHECK_OUTPUT $result
    } else {
@@ -5561,6 +5561,7 @@ proc resolve_arch { { host "none" } } {
   if { [ string compare $host "none" ] == 0 } {
       set prg_exit_state [ catch { eval exec "$CHECK_PRODUCT_ROOT/util/arch" } result ]
   } else {
+      puts $CHECK_OUTPUT "resolve_arch: resolving architecture for host $host"
       set result [ start_remote_prog $host $CHECK_USER "$CHECK_PRODUCT_ROOT/util/arch" "" ]
   }
 

@@ -193,7 +193,6 @@ char **argv
       }
       /* prepare request */
       for_each(ep, ehl) {
-         lList *centry_list = NULL;
 
          /* prepare complex attributes */
          if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
@@ -201,10 +200,7 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         host_complexes2scheduler(&centry_list, ep, ehl, cl, NULL, 0);
-         selected = sge_select_queue(centry_list, resource_match_list, 1, NULL,
-                                     0, -1);
-         centry_list = lFreeList(centry_list);
+         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 1, NULL, 0, -1);
 
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
@@ -454,7 +450,7 @@ u_long32 show
       DEXIT;
       return;
    }
-   host_complexes2scheduler(&rlp, host, ehl, cl, NULL, 0);
+   host_complexes2scheduler(&rlp, host, ehl, cl);
    for_each (rep , rlp) {
       if (resl) {
          lListElem *r1;

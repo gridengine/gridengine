@@ -1,46 +1,47 @@
-#ifndef __SGE_SELECT_QUEUE_H
-#define __SGE_SELECT_QUEUE_H
-/*___INFO__MARK_BEGIN__*/
-/*************************************************************************
- * 
- *  The Contents of this file are made available subject to the terms of
- *  the Sun Industry Standards Source License Version 1.2
- * 
- *  Sun Microsystems Inc., March, 2001
- * 
- * 
- *  Sun Industry Standards Source License Version 1.2
- *  =================================================
- *  The contents of this file are subject to the Sun Industry Standards
- *  Source License Version 1.2 (the "License"); You may not use this file
- *  except in compliance with the License. You may obtain a copy of the
- *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
- *  Software provided under this License is provided on an "AS IS" basis,
- *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
- *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
- *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
- *  See the License for the specific provisions governing your rights and
- *  obligations concerning the Software.
- * 
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
- *   All Rights Reserved.
- * 
- ************************************************************************/
-/*___INFO__MARK_END__*/
+   #ifndef __SGE_SELECT_QUEUE_H
+   #define __SGE_SELECT_QUEUE_H
+   /*___INFO__MARK_BEGIN__*/
+   /*************************************************************************
+    * 
+    *  The Contents of this file are made available subject to the terms of
+    *  the Sun Industry Standards Source License Version 1.2
+    * 
+    *  Sun Microsystems Inc., March, 2001
+    * 
+    * 
+    *  Sun Industry Standards Source License Version 1.2
+    *  =================================================
+    *  The contents of this file are subject to the Sun Industry Standards
+    *  Source License Version 1.2 (the "License"); You may not use this file
+    *  except in compliance with the License. You may obtain a copy of the
+    *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+    * 
+    *  Software provided under this License is provided on an "AS IS" basis,
+    *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+    *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+    *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+    *  See the License for the specific provisions governing your rights and
+    *  obligations concerning the Software.
+    * 
+    *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+    * 
+    *   Copyright: 2001 by Sun Microsystems, Inc.
+    * 
+    *   All Rights Reserved.
+    * 
+    ************************************************************************/
+   /*___INFO__MARK_END__*/
 
-/* 
- * can this job run on this queue 
- * if not why?
- * 
- */
-int sge_select_queue(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots);
+   /* 
+    * can this job run on this queue 
+    * if not why?
+    * 
+    */
+/*   int sge_select_queue(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots);*/
 
-
-int sge_match_complex_attributes(lList *queue_attr, lList *host_attr, lList *requested_attr, int quick_exit, int allow_non_requestable, char *reason, int reason_size, int is_a_request, int slots, int force_existence, bool ignore_strings);
+int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
+                     lList *centry_list, int allow_non_requestable, char *reason, 
+                     int reason_size, int slots); 
 
 /* 
  * is there a load alarm on this queue
@@ -94,8 +95,10 @@ lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListEle
  * which ulong value has the following attribute
  * 
  */
+/* not used */
+/*
 int sge_get_ulong_qattr(u_long32 *uvalp, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list);
-
+*/
 /* 
  * which double value has the following attribute
  * 
@@ -117,17 +120,10 @@ int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *glo
 
 int debit_queue_consumable(lListElem *jep, lListElem *qep, lList *complex_list, int slots);
 
-/* 
- *
- * check wheater queues are requestable
- *
- */
-int queues_are_requestable(lList *complex_list);
-
 char *trace_resource(lListElem *rep);
 
 void trace_resources(lList *resources);
 
-int available_slots_at_queue(lList *host_resources, lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, const char **job_filter, int job_filter_count);
+int available_slots_at_queue( lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, int *soft_violations);
 
 #endif

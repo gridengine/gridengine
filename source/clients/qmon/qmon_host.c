@@ -925,7 +925,7 @@ StringConst name
    */
 /*    correct_capacities(ehl, cl); */
    for_each (ep, ehl) {
-      host_complexes2scheduler(&entries, ep, ehl, cl, NULL, 0);   
+      host_complexes2scheduler(&entries, ep, ehl, cl);   
    }
    if (!where)
       where = lWhere("%T(%I == %u || %I == %u || %I == %u || %I == %u)", CE_Type,

@@ -693,7 +693,6 @@ char **argv
       
       if (complexflag) {
          lListElem *queue;
-         lList *complex_filled;
          int selected;
       
          queue = queue_list_locate(queue_list, dusage.qname);
@@ -702,27 +701,10 @@ char **argv
                       (int)dusage.job_number, dusage.qname));
             continue;
          } 
-         complex_filled = NULL;
    
          set_qs_state(QS_STATE_EMPTY);
 
-         queue_complexes2scheduler(&complex_filled, queue, exechost_list, centry_list);
-
-         if (!complex_filled) {
-            ERROR((SGE_EVENT, \
-               MSG_HISTORY_COMPLEXTEMPLATESCANTBEFILLEDCORRECTLYFORJOBX_D, \
-               u32c(dusage.job_number)));
-            lFreeList(centry_list);
-            lFreeElem(queue);
-            SGE_EXIT(1);
-         }
-
-         DPRINTF(("complex_filled: \n"));
-
-         {
-            selected = sge_select_queue(complex_filled, complex_options, 1, NULL, 0, 1 );
-         }
-         lFreeList(complex_filled);
+         selected = sge_select_queue(complex_options,queue, NULL, exechost_list,centry_list ,1, NULL, 0, 1 );
   
          if (!selected) {
             continue;

@@ -75,26 +75,26 @@ int scheduled_complex_jobs;
 
 static int is_requested(lList *req, const char *attr);
 
-static int sge_select_resource(lList *queue_attributes, lList *host_attributes,
-                               lList *resources, int allow_non_requestable, 
-                               char *reason, int reason_size, int slots, 
-                               int force_attr_existence, bool ignore_strings);
+static void clear_resource_tags( lList *resources, u_long32 max_tag); 
 
-static int available_slots_global(lList **global_resources, lListElem *job, 
+static int available_slots_global(lListElem *job, 
                                   lListElem *ja_task, lListElem *pe, 
-                                  lList *host_list, lList *centry_list, 
+                                  lListElem *global_host, lList *centry_list, 
                                   int global_slots,
-                                  lList *acl_list);
+                                  lList *acl_list,
+                                  int *violations);
 
-static int available_slots_at_host(lList *host_resources, lListElem *job, 
-                                   lListElem *ja_task, lListElem *host, 
-                                   int global_slots, int minslots, 
-                                   int allocation_rule,
-                                   lList *centry_list, lList *acl_list);
+static int available_slots_at_host(lListElem *job, lListElem *ja_task, lListElem *host, lList *host_list, 
+                                   int global_slots, int minslots, int allocation_rule, lList *centry_list,
+                                   lList *acl_list, int *violations);
+ 
+static int sge_check_resource(lList *requested, lList *load_attr, lList *config_attr, lList *actual_attr, lList *centry_list, lListElem *queue,
+                               int allow_non_requestable, char *reason, int reason_size, int slots,
+                               u_long32 layer, double lc_factor, u_long32 tag);
 
-static void sge_soft_violations(lList *queue_attributes, lList *host_attributes, lListElem *queue, 
-                               lListElem *job, lListElem *pe, lList *centry_list); 
-
+static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,lList *load_attr, lList *config_attr,
+                               lList *actual_attr, lList *centry_list, u_long32 layer, double lc_factor, u_long32 tag);
+ 
 static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job, 
                                         lListElem *pe, lListElem *ckpt, 
                                         lList *centry_list, lList *host_list, 
@@ -104,9 +104,8 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
                                 lListElem *host, lList *centry_list, 
                                 lList *acl_list);
 
-static int fulfilled(lListElem *rep, lList *queue_attr, lList *host_attr, char *reason, 
-                     int reason_size, int allow_non_requestable, 
-                     int is_a_request, int slots, int force_existence);
+static int ful_filled(lListElem *rep, lList *load_attr, lList *config_attr, lList *actual_attr, lList *centry_list,lListElem *queue,
+                      char *reason, int reason_size, int allow_non_requestable, int slots, u_long32 layer, double lc_factor); 
 
 static int resource_cmp(u_long32 relop, double req, double src_dl);
 
@@ -171,65 +170,162 @@ void trace_resources(lList *resources)
       DPRINTF((ret));
    }
 }
-/************************************************************************
-   sge_select_queue - selects suitable queues based on what can be done
-                       with -l (resources)
-   QU_tagged will be set if a queue is selected
-   The caller is responsible for cleaning tags.
-   No range is used. For serial jobs we will need a call for hard and one
-   for soft requests. For parallel jobs we will call this function for each
-   -l request. Because of in serial jobs requests can be simply added.
-   In Parallel jobs each -l requests a different set of queues.
 
-   queue_list: list of queues from which to select
-   exechost_list: list of execution hosts (to fill host complex)
-                  can be empty if we dont want to use actual values.
-   allow_non_requestable: if true check for being requestable is skipped
-   resources: resources generated from -l requests
-   reason: if non NULL a reason is stored in case of no matching 
-   reason_size: max. size of reason char array
-
-complex_attributes: CE_Type
-resources: CE_Type
- 
-************************************************************************/
-
-int sge_select_queue(lList *complex_attributes, lList *resources, 
-                     int allow_non_requestable, char *reason, 
+/****** sge_select_queue/sge_select_queue() ************************************
+*  NAME
+*     sge_select_queue() -- checks weather a job fits on a given queue or host 
+*
+*  SYNOPSIS
+*     int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem 
+*     *host, lList *exechost_list, lList *centry_list, int 
+*     allow_non_requestable, char *reason, int reason_size, int slots) 
+*
+*  FUNCTION
+*     Takes the requested attributes from a job and checks if it fits to the given
+*     host or queue. Only of of them has to be specified. It both, the function
+*     assumes, that the queue belongs to the given host. 
+*
+*  INPUTS
+*     lList *requested_attr     - list of requested attributes 
+*     lListElem *queue          - current queue or null if host is set
+*     lListElem *host           - current host or null if queue is set
+*     lList *exechost_list      - list of all hosts in the system
+*     lList *centry_list        - system wide attribut config list
+*     int allow_non_requestable - allow non requestable?
+*     char *reason              - error message
+*     int reason_size           - max error message length
+*     int slots                 - number of requested slots
+*
+*  RESULT
+*     int - 1, if okay, QU_tagged will be set if a queue is selected
+*           0, if not okay 
+*  
+*  NOTES
+*   The caller is responsible for cleaning tags.   
+*
+*   No range is used. For serial jobs we will need a call for hard and one
+*    for soft requests. For parallel jobs we will call this function for each
+*   -l request. Because of in serial jobs requests can be simply added.
+*   In Parallel jobs each -l requests a different set of queues.
+*
+*******************************************************************************/
+int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
+                     lList *centry_list, int allow_non_requestable, char *reason, 
                      int reason_size, int slots) 
 {
    int ret;
+   lList *load_attr = NULL;
+   lList *config_attr = NULL;
+   lList *actual_attr = NULL; 
+   lListElem *global = NULL;
+   double lc_factor = 0; /* scaling for load correction */ 
+   u_long32 ulc_factor;
 
    DENTER(TOP_LAYER, "sge_select_queue");
-   ret = sge_select_resource(complex_attributes,NULL, resources, 
-                             allow_non_requestable, reason, reason_size, 
-                             slots, 1, false);
 
+   clear_resource_tags(requested_attr, MAX_TAG);
+
+/* global */
+   global = host_list_locate(exechost_list, "global");
+   load_attr = lGetList(global, EH_load_list); 
+   config_attr = lGetList(global, EH_consumable_config_list);
+   actual_attr = lGetList(global, EH_consumable_actual_list);
+
+   /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
+   if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
+      if ((ulc_factor=lGetUlong(global, EH_load_correction_factor)))
+         lc_factor = ((double)ulc_factor)/100;
+   } 
+
+   ret = sge_check_resource(requested_attr, load_attr, config_attr, actual_attr, centry_list,NULL, allow_non_requestable, reason, sizeof(reason)-1, 
+            slots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG );
+
+/*Ühost */
+   if(ret){
+      if(!host)
+         host = host_list_locate(exechost_list, lGetHost(queue, QU_qhostname));
+      load_attr = lGetList(host, EH_load_list); 
+      config_attr = lGetList(host, EH_consumable_config_list);
+      actual_attr = lGetList(host, EH_consumable_actual_list);
+
+      if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
+         if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
+            lc_factor = ((double)ulc_factor)/100;
+      }
+
+      ret = sge_check_resource(requested_attr, load_attr, config_attr, actual_attr, centry_list,NULL, allow_non_requestable, reason, sizeof(reason)-1, 
+               slots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG );
+/* queue */
+     if(ret && queue){
+         config_attr = lGetList(queue, QU_consumable_config_list);
+         actual_attr = lGetList(queue, QU_consumable_actual_list);
+   
+         ret = sge_check_resource(requested_attr, NULL, config_attr, actual_attr, centry_list,queue, allow_non_requestable, reason, sizeof(reason)-1, 
+               slots, DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG );
+      }
+   }
    DEXIT;
    return ret;
 }
 
-/*
- * check whether resource can fulfill for the jobs 
- * - explicit hard resource requests
- * - consumablel default requests
- * - jobs implicit slot request 
- * 
- * Important:
- * we have some special behavior, when slots is set to -1.
- *
- * complex_attributes: CE_Type
- * resources: CE_Type
- */ 
-static int sge_select_resource(lList *queue_attributes, lList *host_attributes, lList *resources,
-                               int allow_non_requestable, char *reason,
-                               int reason_size, int slots,
-                               int force_attr_existence, bool ignore_strings) 
+/****** sge_select_queue/sge_check_resource() **********************************
+*  NAME
+*     sge_check_resource() -- checks weather all resource requests on one leve
+*                             are fulfilled 
+*
+*  SYNOPSIS
+*     static int sge_check_resource(lList *requested, lList *load_attr, lList 
+*     *config_attr, lList *actual_attr, lList *centry_list, lListElem *queue, 
+*     int allow_non_requestable, char *reason, int reason_size, int slots, 
+*     u_long32 layer, double lc_factor, u_long32 tag) 
+*
+*  FUNCTION
+*     Checks, weather all requests, default requests and implicit requests on this
+*     this level are fulfilled 
+*
+*  INPUTS
+*     lList *requested          - list of attribute requests 
+*     lList *load_attr          - list of load attributes or null on queue level
+*     lList *config_attr        - list of user defined attributes 
+*     lList *actual_attr        - usage of all consumables 
+*     lList *centry_list        - system wide attribute config. list 
+*     lListElem *queue          - current queue or null on host level
+*     int allow_non_requestable - allow none requestabales? 
+*     char *reason              - error message
+*     int reason_size           - max error message size
+*     int slots                 - number of slots the job is looking for 
+*     u_long32 layer            - current layer flag 
+*     double lc_factor          - load correction factor 
+*     u_long32 tag              - current layer tag 
+*
+*  RESULT
+*     static int - 1 = no resource problems where found
+*                  0 = a resource mismatch was found
+*
+*  NOTES
+*   check whether resource can fulfill for the jobs 
+*     - explicit hard resource requests
+*     - consumablel default requests
+*     - jobs implicit slot request 
+* 
+*  Important:
+*     we have some special behavior, when slots is set to -1.
+*
+*     complex_attributes: CE_Type
+*     resources: CE_Type 
+*
+*******************************************************************************/
+static int sge_check_resource(lList *requested, lList *load_attr, lList *config_attr, lList *actual_attr, lList *centry_list, lListElem *queue, 
+                               int allow_non_requestable, char *reason, int reason_size, int slots, 
+                               u_long32 layer, double lc_factor, u_long32 tag) 
 {
    static lListElem *implicit_slots_request = NULL;
+   lListElem *attr;
 
-   DENTER(TOP_LAYER, "sge_select_resource");
-   
+   DENTER(TOP_LAYER, "sge_check_resource");
+  
+   clear_resource_tags(requested, QUEUE_TAG); 
+
    /* check amount of slots */
    if (!implicit_slots_request) {
       implicit_slots_request = lCreateElem(CE_Type);
@@ -239,11 +335,12 @@ static int sge_select_resource(lList *queue_attributes, lList *host_attributes, 
    }
 
    /* match number of free slots */
-   if (slots != -1 && fulfilled(implicit_slots_request, queue_attributes, host_attributes,
-       reason, reason_size, allow_non_requestable, 1, slots,  force_attr_existence)) {
+   if (slots != -1 && queue && ful_filled(implicit_slots_request, load_attr, config_attr, actual_attr, centry_list, queue,  
+       reason, reason_size, allow_non_requestable, slots, layer, lc_factor)) {
       DEXIT;
       return 0;
    }
+
 
    /* ensure all default requests are fulfilled */
    if (slots != -1 && !allow_non_requestable) {
@@ -251,303 +348,193 @@ static int sge_select_resource(lList *queue_attributes, lList *host_attributes, 
       int ff;
       const char *name;
       const char *def_req; 
-      double dval;
+      double dval=0.0;
+      lListElem *default_request = NULL;
 
-      for_each (attr, queue_attributes) {
+      for_each(attr, actual_attr) {
          name = lGetString(attr, CE_name);
          if (!strcmp(name, "slots"))
             continue;
 
-         /* consumable && used in this global/host/queue && not requested */
-         if (lGetBool(attr, CE_consumable) &&  !is_requested(resources, name)) {   
-            lListElem *default_request;
-            char tmp_reason[2048];
+         default_request = lGetElemStr(centry_list, CE_name, name);
 
-            def_req = lGetString(attr, CE_default);
+         /* consumable && used in this global/host/queue && not requested */
+         if (!is_requested(requested, name)) {   
+            
+            def_req = lGetString(default_request, CE_default);
+
             parse_ulong_val(&dval, NULL, lGetUlong(attr, CE_valtype), def_req, NULL, 0);
 
             /* ignore default request if the value is 0 */
-            if (dval != 0.0) {
+            if(def_req != NULL) {
+               char tmp_reason[2048];
+               tmp_reason[0] = '\0';
+
                /* build the default request */
-               default_request = lCreateElem(CE_Type);
-               lSetString(default_request, CE_name, name);
+               parse_ulong_val(&dval, NULL, lGetUlong(attr, CE_valtype), def_req, NULL, 0);
+
                lSetString(default_request, CE_stringval, def_req);
                lSetDouble(default_request, CE_doubleval, dval);
 
-               tmp_reason[0] = '\0';
-               ff = fulfilled(default_request, queue_attributes, host_attributes, tmp_reason, 
-                  sizeof(tmp_reason)-1, 1, 1, slots, force_attr_existence);
-               lFreeElem(default_request);
+               ff = ful_filled(default_request,load_attr, config_attr, actual_attr, centry_list, queue,  tmp_reason, 
+                  sizeof(tmp_reason)-1, 1, slots, layer, lc_factor);
+                     
                if (ff) {
                   if (reason) {
                      strncpy(reason, MSG_SCHEDD_FORDEFAULTREQUEST , reason_size-1);
                      strncat(reason, tmp_reason, reason_size-1);
                   }
+
                   DEXIT;
                   return 0;
                }
             } 
          } 
       }/* end for*/
-
-      if(host_attributes)
-      for_each (attr, host_attributes) {
-         name = lGetString(attr, CE_name);
-         if (!strcmp(name, "slots"))
-            continue;
-
-         /* the same element exists in the queue list and overrides the host attribute. */
-         if(centry_list_locate(queue_attributes, name))
-            continue;
-
-         /* consumable && used in this global/host/queue && not requested */
-         if (lGetBool(attr, CE_consumable) &&  !is_requested(resources, name)) {   
-            lListElem *default_request;
-            char tmp_reason[2048];
-
-            def_req = lGetString(attr, CE_default);
-            parse_ulong_val(&dval, NULL, lGetUlong(attr, CE_valtype), def_req, NULL, 0);
-
-            /* ignore default request if the value is 0 */
-            if (dval != 0.0) {
-               /* build the default request */
-               default_request = lCreateElem(CE_Type);
-               lSetString(default_request, CE_name, name);
-               lSetString(default_request, CE_stringval, def_req);
-               lSetDouble(default_request, CE_doubleval, dval);
-
-               tmp_reason[0] = '\0';
-               ff = fulfilled(default_request, queue_attributes, host_attributes, tmp_reason, 
-                  sizeof(tmp_reason)-1, 1, 1, slots, force_attr_existence);
-               lFreeElem(default_request);
-               if (ff) {
-                  if (reason) {
-                     strncpy(reason, MSG_SCHEDD_FORDEFAULTREQUEST , reason_size-1);
-                     strncat(reason, tmp_reason, reason_size-1);
-                  }
-                  DEXIT;
-                  return 0;
-               }
-            } 
-         } 
-      }/* end for */
-
-
-
    }
  
    if (slots == -1)
       slots = 1;
 
    /* explicit requests */
-   if (sge_match_complex_attributes(queue_attributes, host_attributes,
-         resources, 1, allow_non_requestable, reason, reason_size, 1,
-        slots, force_attr_existence, ignore_strings)) {
-      DEXIT;
-      return 0;
+   for_each (attr, requested) {
+      switch (ful_filled(attr,load_attr, config_attr, actual_attr, centry_list, queue, reason, reason_size, allow_non_requestable, 
+                  slots, layer, lc_factor)) {
+         case -1 : /* an error accured or a missmatch was found */ 
+                     DEXIT;
+                     return 0;
+         case 0 : /* a match was found */
+                  if( lGetUlong(attr, CE_tagged) < tag)
+                     lSetUlong(attr, CE_tagged, tag);
+            break;
+         case 1 : /* the requested element does not exist */
+                  if(tag == QUEUE_TAG){
+                     if( lGetUlong(attr, CE_tagged) == NO_TAG)
+                        DEXIT;
+                        return 0 ;
+                  }
+            break;
+         default: /* error */
+            break;
+      } 
    }
+
 
    DEXIT;
    return 1;
 }
 
-/* ----------------------------------------
-
-   Matches two complex attribute lists
-
-   This function gets used for two essential test
-
-   - test whether resources 'given_attr' will be enough for   
-      'slots' slots of a job with the resource request 'requested_attr'
-
-   - test whether a load/suspend/migrate threshold is exceeded
-
-   The job matches on a queue if all single requests match.
-
-   The flag 'allow_non_requestable' says whether requesting non 
-   requestables should cause an error
-   The flag 'is_a_request' is used to reverse logic 
-
-   As comparison operator CE_relop of given_attr gets used
-   as data type CE_valtype of given_attr gets used 
-   from requested_attr we only handle CE_name and CE_stringval
-   allow_non_requestable: if true check for being requestable is skipped
-   reason: if non NULL a reason is stored in case of no matching 
-   reason_size: max. size of reason char array
-
-   return value:
-      -1 if req_attr is not in given_attr list.
-      -2 an attribute configured as non requestable was requested
-
-      if quick_exit
-         returns 1 as soon as first non-matching req_attr is encountered.
-         returns 0 if all req_attr match.
-      else
-         returns number of non-matching req_attrs, 0 if all match.
-
-given_attr: CE_Type list
-requested_attr: CE_Type list
-*/
-int sge_match_complex_attributes(lList *queue_attr, lList *host_attr, lList *requested_attr, 
-                                 int quick_exit, int allow_non_requestable,
-                                 char *reason, int reason_size, 
-                                 int is_a_request, int slots, int force_existence, bool ignore_strings) 
-{
-   lListElem *rep; /* a requested element */
-   int ret=0;
-
-   DENTER(TOP_LAYER, "sge_match_complex_attributes");
-
-   for_each (rep, requested_attr) {
-      if(ignore_strings){
-         u_long32 type = lGetUlong(rep, CE_valtype);
-         if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST){
-            continue;   
-         }
-      }
-      if (fulfilled(rep, queue_attr, host_attr, reason, reason_size, allow_non_requestable, 
-                  is_a_request, slots, force_existence)) {
-         if (quick_exit) {
-            DEXIT;
-            return -1;
-         }
-         ret++;
-      } 
-   }
-
-   DEXIT;
-   return ret;
-}
-
-/****** sge_select_queue/fulfilled() *******************************************
+/****** sge_select_queue/ful_filled() ******************************************
 *  NAME
-*     fulfilled() -- checks if the current queue contains the requested attribute. 
+*     ful_filled() -- checks weather the attribut request can be fulfilled or not 
 *
 *  SYNOPSIS
-*     static int fulfilled(lListElem *rep, lList *queue_attr, lList *host_attr, 
-*     char *reason, int reason_size, int allow_non_requestable, int 
-*     is_a_request, int slots, int force_existence) 
+*     static int ful_filled(lListElem *rep, lList *load_attr, lList 
+*     *config_attr, lList *actual_attr, lList *centry_list, lListElem *queue, 
+*     char *reason, int reason_size, int allow_non_requestable, int slots, 
+*     u_long32 layer, double lc_factor) 
 *
 *  FUNCTION
-*     Checks if the queue or host contains the requested attribute from a job. If 
-*     so, the function returs 1 otherwise 0. 
+*     Checks for one level, if one request is fulfilled or not. 
 *
 *  INPUTS
-*     lListElem *rep            - requested element 
-*     lList *queue_attr         - list of queue attributes 
-*     lList *host_attr          - list of host attributes including the global ones 
-*     char *reason              - in case of a failure does it contain the error message 
-*     int reason_size           - length of the error message 
-*     int allow_non_requestable - 
-*     int is_a_request          - 
-*     int slots                 - number of requested slots 
-*     int force_existence       - 
+*     lListElem *rep            - requested attribut 
+*     lList *load_attr          - list of load attributes or null on queue level 
+*     lList *config_attr        - list of user defined attributes 
+*     lList *actual_attr        - usage of user consumables 
+*     lList *centry_list        - the system wide attribut configuration list 
+*     lListElem *queue          - the current queue, or null on host level 
+*     char *reason              - target for error message 
+*     int reason_size           - max length for error message 
+*     int allow_non_requestable - allow none requestable attributes? 
+*     int slots                 - the number of slotes the job is looking for? 
+*     u_long32 layer            - the current layer 
+*     double lc_factor          - load correction factor 
 *
 *  RESULT
-*     static int - true, if the request can be satisfied
+*     static int - "-1" = bad error (should never happen) or no match, most likly
+*                  " 0" = match everything is okay
+*                  " 1" = element not found 
 *
 *******************************************************************************/
-static int fulfilled(lListElem *rep, lList *queue_attr, lList *host_attr, char *reason,
-                     int reason_size, int allow_non_requestable, 
-                     int is_a_request, int slots, int force_existence) 
+static int ful_filled(lListElem *rep, lList *load_attr, lList *config_attr, lList *actual_attr, lList *centry_list, lListElem *queue,
+                      char *reason, int reason_size, int allow_non_requestable, int slots, u_long32 layer, double lc_factor) 
 {
-   lListElem *cplx_el=NULL; /* a complex element */
-   lListElem *host_el=NULL;
+
+   lListElem *cplx_el=NULL;
    const char *attrname; 
    char availability_text[2048];
    int match;
-   int type;
-/*   lListElem *util_max_ep = NULL;*/
+   int ret = 0;
 
-   DENTER(TOP_LAYER, "fulfilled");
+   DENTER(TOP_LAYER, "ful_filled");
 
    /* resource_attr is a complex_entry (CE_Type) */
    attrname = lGetString(rep, CE_name);
-   cplx_el = centry_list_locate(queue_attr, attrname);
-   if(host_attr)
-      host_el = centry_list_locate(host_attr, attrname);
 
-   if(!cplx_el) 
-      cplx_el = host_el;
-   else if ( (host_attr) && 
-            strcmp("slots", attrname) !=0 &&
-            (type = lGetUlong(cplx_el, CE_valtype) != TYPE_STR) &&
-            (type != TYPE_CSTR) &&
-            (type != TYPE_HOST) ){ /* the attribut is defined in both complex lists.*/
-         u_long32 op;
-         double host_val = 0.0;
-         double queue_val = 0.0;
-
-         if (!(lGetUlong(cplx_el, CE_pj_dominant) & (DOMINANT_TYPE_VALUE))) {
-            host_val = lGetDouble(host_el, CE_pj_doubleval);
-            queue_val = lGetDouble(cplx_el, CE_pj_doubleval);
-         }
-         else{
-            host_val = lGetDouble(host_el, CE_doubleval);
-            queue_val = lGetDouble(cplx_el, CE_doubleval);         
-         }
-      
-         op=lGetUlong(cplx_el, CE_relop);
-        if ((op == CMPLXGE_OP || op == CMPLXGT_OP)? 
-            /* max */ (host_val >= queue_val):
-            /* min */ (host_val <= queue_val)) {
-            cplx_el = host_el;
-        }
-   } 
-
-   if (!cplx_el ) { /* -l contains a complex we know nothing about -> dont select this queue */
-      if (force_existence) {
+   cplx_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, queue,layer, lc_factor, reason, reason_size );
+   
+   if(!cplx_el){
+      ret = 1;
+   }
+   else{
+   /* check whether attrib is requestable */
+      if (!allow_non_requestable && 
+         lGetUlong(cplx_el, CE_requestable) == REQU_NO) {
          if (reason) {
-
-            strncpy(reason, MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE , reason_size);
+            strncpy(reason, MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE , reason_size);
             strncat(reason, attrname, reason_size);
             strncat(reason, "\"", reason_size);
          }
-         DPRINTF(("unknown resource %s\n", attrname));
+
+         lFreeElem(cplx_el);
          DEXIT;
          return -1;
       }
 
-      DEXIT;
-      return 0;
-   } 
+      match = compare_complexes(slots, rep, cplx_el, availability_text, false , false);
 
-   /* check whether attrib is requestable */
-   if (!allow_non_requestable && 
-       lGetUlong(cplx_el, CE_requestable) == REQU_NO) {
-      if (reason) {
-         strncpy(reason, MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE , reason_size);
-         strncat(reason, attrname, reason_size);
-         strncat(reason, "\"", reason_size);
+      if (!match) {
+         if (reason) {
+            strncpy(reason, MSG_SCHEDD_ITOFFERSONLY , reason_size);
+          strncat(reason, availability_text, reason_size);
+         }
+         ret = -1;
       }
-      DEXIT;
-      return -1;
    }
-
-#if 0
-   if (is_a_request==0) { /* threshold */
-      DPRINTF(("attributes     %s", trace_resource(cplx_el)));
-      DPRINTF(("load threshold %s", trace_resource(rep)));
-   } else { /* request */
-      DPRINTF(("attributes     %s", trace_resource(cplx_el)));
-      DPRINTF(("request        %s", trace_resource(rep)));
-   }
-#endif
-
-   match = compare_complexes(slots, rep, cplx_el, 
-         availability_text, !is_a_request, force_existence);
-
-   if (!match) {
-      if (reason) {
-         strncpy(reason, MSG_SCHEDD_ITOFFERSONLY , reason_size);
-         strncat(reason, availability_text, reason_size);
-      }
-      DEXIT;
-      return -1;
-   }
-
+   if(cplx_el)
+      lFreeElem(cplx_el);
    DEXIT;
-   return 0;
+
+   return ret;
+}
+
+/****** sge_select_queue/clear_resource_tags() *********************************
+*  NAME
+*     clear_resource_tags() -- removes the tags from a resouce request. 
+*
+*  SYNOPSIS
+*     static void clear_resource_tags(lList *resouces, u_long32 max_tag) 
+*
+*  FUNCTION
+*     Removes the tages from the given resouce list. A tag is only removed
+*     if it is smaller or equal to the given tag value. The tag value "MAX_TAG" results
+*     in removing all existing tags, or the value "HOST_TAG" removes queue and host
+*     tags but keeps the global tags.
+*
+*  INPUTS
+*     lList *resouces  - list of job requests. 
+*     u_long32 max_tag - max tag element 
+*
+*******************************************************************************/
+static void clear_resource_tags( lList *resources, u_long32 max_tag) {
+
+   lListElem *attr=NULL;
+
+   for_each(attr, resources){
+      if(lGetUlong(attr, CE_tagged) <= max_tag)
+         lSetUlong(attr, CE_tagged, NO_TAG);
+   }
 }
 
 
@@ -811,47 +798,95 @@ job_is_forced_centry_missing(const lListElem *job,
    return ret;
 }
 
-static void sge_soft_violations(lList *queue_attributes, lList *host_attributes, lListElem *queue,
-                               lListElem *job, lListElem *pe, 
-                               lList *centry_list) 
+/****** sge_select_queue/sge_soft_violations() ***************************************
+*  NAME
+*     sge_soft_violations() -- counts the violations in the request for a given host or queue 
+*
+*  SYNOPSIS
+*     static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,lList *load_attr, lList *config_attr,
+*                               lList *actual_attr, lList *centry_list, u_long32 layer, double lc_factor, u_long32 tag)
+*
+*  FUNCTION
+*     this function checks if the current resources can satisfy the requests. The resources come from the global host, a
+*     given host or the queue. The function returns the number of violations. 
+*
+*  INPUTS
+*     lListElem *queue     - should only be set, when one using this method on queue level 
+*     int violation        - the number of previous violations. This is needed to get a correct result on queue level. 
+*     lListElem *job       - the job which is tested 
+*     lList *load_attr     - the load attributs, only when used on hosts or global 
+*     lList *config_attr   - a list of custom attributes 
+*     lList *actual_attr   - a list of custom consumables, they contain the current usage of these attributes 
+*     lList *centry_list   - the system wide complex list 
+*     u_long32 layer       - the curent layer flag 
+*     double lc_factor     - should be set, when load correction has to be done. 
+*     u_long32 tag         - the current layer tag. (GLOGAL_TAG, HOST_TAG, QUEUE_TAG) 
+*
+*  RESULT
+*     static int - the number of violations ( = (prev. violations) + (new violations in this run)). 
+*
+*******************************************************************************/
+static int sge_soft_violations(lListElem *queue, int violation, lListElem *job,lList *load_attr, lList *config_attr,
+                               lList *actual_attr, lList *centry_list, u_long32 layer, double lc_factor, u_long32 tag) 
 {
    u_long32 job_id;
-   const char *queue_name;
+   const char *queue_name = NULL;
+   const int reason_size = 1024;
    char reason[1024 + 1];
-   char buff[1024 + 1];
-   unsigned int soft_violation = 0; 
+   unsigned int soft_violation = violation;
+   lList *soft_requests = NULL; 
+   lListElem *attr;
 
    DENTER(TOP_LAYER, "sge_soft_violations");
 
-   reason[0] = buff[0] = '\0';
+   reason[0] = '\0';
+
+   soft_requests = lGetList(job, JB_soft_resource_list);
+   clear_resource_tags(soft_requests, QUEUE_TAG);
 
    job_id = lGetUlong(job, JB_job_number);
-   queue_name = lGetString(queue, QU_qname);
+   if(queue)
+      queue_name = lGetString(queue, QU_qname);
 
    /* count number of soft violations for _one_ slot of this job */
-   soft_violation = sge_match_complex_attributes(queue_attributes, host_attributes,
-         lGetList(job, JB_soft_resource_list), 0, 0, reason, sizeof(reason)-1, 1, 1, 1, 0);
 
-   DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
-         queue_name, soft_violation, reason));
-
-   if (lGetList(job, JB_soft_queue_list)) {
-      /* check whether queue fulfills soft queue request of the job (-q) */
-      if (!lGetSubStr(job, QR_name, queue_name, JB_soft_queue_list)) {
-         DPRINTF(("Queue \"%s\" is not contained in the soft "
-           "queue list (-q) that was requested by job %d\n",
-               queue_name, (int) job_id));
-         soft_violation++;
+   for_each (attr, soft_requests) {
+      switch (ful_filled(attr, load_attr, config_attr, actual_attr, centry_list, queue,
+                      reason, reason_size, false, 1, layer, lc_factor)){
+            /* no match */
+            case -1 :   soft_violation++;
+               break;
+            /* element not found */
+            case 1 : if(tag == QUEUE_TAG && lGetUlong(attr, CE_tagged) == NO_TAG)
+                           soft_violation++;
+               break;
+            /* everything is fine */
+            default : if( lGetUlong(attr, CE_tagged) < tag)
+                           lSetUlong(attr, CE_tagged, tag);
       }
+
    }
 
-   /* store number of soft violations in queue */
-   lSetUlong(queue, QU_soft_violation, soft_violation);
-     
-   DEXIT;
-   return;
-}
+   if(queue){
+      DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
+         queue_name, soft_violation, reason));
 
+      if (lGetList(job, JB_soft_queue_list)) {  /* check whether queue fulfills soft queue request of the job (-q) */
+         if (!lGetSubStr(job, QR_name, queue_name, JB_soft_queue_list)) {
+            DPRINTF(("Queue \"%s\" is not contained in the soft "
+            "queue list (-q) that was requested by job %d\n",
+                  queue_name, (int) job_id));
+            soft_violation++;
+         }
+      }
+
+      /* store number of soft violations in queue */
+      lSetUlong(queue, QU_soft_violation, soft_violation);
+   }  
+
+   DEXIT;
+   return soft_violation;
+}
 
 static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
                                 lListElem *host, lList *centry_list,
@@ -1628,7 +1663,6 @@ int host_order_changed) {
 
    {
       lListElem *hep, *qep, *global_hep;
-      lList *global_resources = NULL, *host_resources = NULL;
       int success = 0;
       int queue_slots, accu_queue_slots;
       int host_slots;
@@ -1641,29 +1675,9 @@ int host_order_changed) {
       int have_master_host, suited_as_master_host;
       const char *eh_name, *qname;
 
-      const char* slots_str = "slots";
-      static const char **filter = NULL;
-      static int  max_filter_entries = 0;
-      int max_def_filter=0;
-
-      /* init filter */
-      if(max_filter_entries < lGetNumberOfElem(centry_list)){
-         if(filter != NULL)
-            FREE(filter);
-      
-         max_filter_entries = lGetNumberOfElem(centry_list);   
-         filter = malloc(max_filter_entries * sizeof(char*));
-      }
-      memset(filter, 0, max_filter_entries * sizeof(char*));
 
       /* untag all queues */
       queue_list_clear_tags(queues);
-
-      /* build filter */
-      filter[max_def_filter++] = slots_str;
-
-      build_name_filter(filter,lGetList(job, JB_hard_resource_list), CE_name, &max_def_filter, NULL, 0);
-      build_name_filter(filter,lGetList(job, JB_soft_resource_list), CE_name, &max_def_filter, NULL, 0);
 
       global_hep = host_list_locate(host_list, "global");
 
@@ -1744,26 +1758,21 @@ int host_order_changed) {
 
          }
       
-         global_complexes2scheduler(&global_resources, global_hep, centry_list, filter, max_def_filter);
-         
-         if(available_slots_global(&global_resources, job, ja_task, pe, host_list, centry_list, 1, acl_list)){
+         if(available_slots_global( job, ja_task, pe, global_hep, centry_list, 1, acl_list, NULL)){
             for_each(hep, host_list){
 
                eh_name = lGetHost(hep, EH_name);
                if (!strcasecmp(eh_name, "global") || !strcasecmp(eh_name, "template"))
                   continue;
 
-               host_resources = lCopyList("host", global_resources);
-               host_complexes2scheduler(&host_resources, hep, host_list, centry_list, filter, max_def_filter);
-               
-               if(available_slots_at_host(host_resources, job, ja_task, hep, 1, 1, 1, centry_list, acl_list)){
+               if(available_slots_at_host(job, ja_task, hep, host_list, 1, 1, 1, centry_list, acl_list, NULL)){
 
                   for_each (qep, queues) {
                      if (sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name))
                          continue;        
                         
-                     if(available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, centry_list, acl_list,
-                              load_adjustments, 1, ndispatched, global_hep, 1, hep, filter, max_def_filter)){
+                     if(available_slots_at_queue(job, qep, pe, ckpt, host_list, centry_list, acl_list,
+                              load_adjustments, 1, ndispatched, global_hep, 1, hep, NULL)){
                   
                         lListElem *gdil_ep;
                         lList *gdil = NULL;
@@ -1784,41 +1793,10 @@ int host_order_changed) {
                      }
                   }          
                }
+
             }
          }
 
-
-#if 0
-         /* do static and dynamic checks for "global" host */ 
-         if (!sge_why_not_job2host(job, ja_task, global_hep, centry_list, acl_list)) {
-            for_each (qep, queues) { /* in queue sort order */
-               hep = host_list_locate(host_list, lGetHost(qep, QU_qhostname));
-
-               host_complexes2scheduler(&host_resources, hep, host_list, centry_list, filter, max_def_filter);
-
-               if (!sge_why_not_job2host(job, ja_task, hep, centry_list, acl_list) &&
-                     available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, centry_list, acl_list,
-                              load_adjustments, 1, ndispatched, global_hep, 1, hep, filter, max_def_filter)) {
-                  lListElem *gdil_ep;
-                  lList *gdil = NULL;
-
-                  qname = lGetString(qep, QU_qname);
-                  eh_name = lGetHost(qep, QU_qhostname);
-
-                  DPRINTF((u32": 1 slot in queue %s@%s user %s\n",
-                     job_id, qname, eh_name, lGetString(job, JB_owner)));
-
-                  gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
-                  lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
-                  lSetHost(gdil_ep, JG_qhostname, eh_name);
-                  lSetUlong(gdil_ep, JG_slots, 1);
-                  scheduled_fast_jobs++;
-                  DEXIT;
-                  return gdil;
-               }
-            }
-         }
-#endif
          DEXIT;
          return NULL;
       } else {
@@ -1882,9 +1860,8 @@ int host_order_changed) {
           *    available.
           *
           * ------------------------------------------------------------------ */
+         int global_soft_violations = 0;
          *last_dispatch_type = DISPATCH_TYPE_COMPREHENSIVE;
-
-         global_complexes2scheduler(&global_resources, global_hep, centry_list, filter, max_def_filter);
 
          /* iterate through all global amounts of slots */
          for (total_slots = (pe ?  
@@ -1892,9 +1869,8 @@ int host_order_changed) {
                 (lGetUlong(pe, PE_slots) - lGetUlong(pe, PE_used_slots)))
                :1)
               ;!success && 
-                  (total_slots = available_slots_global(&global_resources, 
-                        job, ja_task,
-                        pe, host_list, centry_list, total_slots, acl_list))
+                  (total_slots = available_slots_global( job, ja_task,
+                        pe, global_hep, centry_list, total_slots, acl_list, &global_soft_violations))
               ; total_slots = (max_slots_all_hosts!=0) ?  
                   MIN(max_slots_all_hosts, total_slots-1):
                   total_slots-1) {
@@ -1922,6 +1898,7 @@ int host_order_changed) {
             for_each (hep, host_list) {
 
                int max_slots_this_host = 0;
+               int host_soft_violations = global_soft_violations;
 
                eh_name = lGetHost(hep, EH_name);
                if (!strcasecmp(eh_name, "global") || !strcasecmp(eh_name, "template"))
@@ -1934,9 +1911,6 @@ int host_order_changed) {
                 */  
                if (!(qep=lGetElemHost(queues, QU_qhostname, eh_name)))
                   continue;   
-
-               host_resources = lCopyList("host", global_resources);
-               host_complexes2scheduler(&host_resources, hep, host_list, centry_list, filter, max_def_filter);
                         
                /* try it decreasinly for each slots amount which makes sense  
                 *  
@@ -1949,10 +1923,10 @@ int host_order_changed) {
                suited_as_master_host = 0;
                for ( host_slots = ALLOC_RULE_IS_BALANCED(allocation_rule)?
                          allocation_rule:total_slots;
-                     (host_slots = available_slots_at_host(host_resources, 
-                         job, ja_task, hep, host_slots, minslots, 
-                         allocation_rule,  centry_list, acl_list));
+                     (host_slots = available_slots_at_host( job, ja_task, hep, host_list, host_slots, minslots, 
+                                                            allocation_rule,  centry_list, acl_list, &host_soft_violations));
                      host_slots--) {
+                  int queue_soft_violations = host_soft_violations;
                   max_slots_this_host = host_slots;
                   accu_queue_slots = 0;
 
@@ -1963,9 +1937,9 @@ int host_order_changed) {
                            continue;
                         qname = lGetString(qep, QU_qname);
 
-                        if ((queue_slots = available_slots_at_queue(host_resources, job, qep, pe, 
+                        if ((queue_slots = available_slots_at_queue(job, qep, pe, 
                                  ckpt, host_list, centry_list, acl_list, load_adjustments, host_slots, ndispatched, 
-                                       global_hep, total_slots, hep, filter, max_def_filter))) {   
+                                       global_hep, total_slots, hep, &queue_soft_violations ))) {   
                            /* in case the load of two hosts is equal this
                               must be also reflected by the sequence number */
                            if (previous_load_inited && (previous_load < lGetDouble(hep, EH_sort_value)))
@@ -2015,11 +1989,6 @@ int host_order_changed) {
                if (suited_as_master_host)
                   have_master_host = 1;
 
-               if (get_qs_state()==QS_STATE_EMPTY) { /* no caching */
-                  host_resources = lFreeList(host_resources);
-               } else 
-                  host_resources = NULL; /* reference is saved in host */
-
             } /* for each host */
 
             if (accu_host_slots >= total_slots && 
@@ -2032,11 +2001,6 @@ int host_order_changed) {
             }
 
          } /* for all slot amounts */
-
-         if (get_qs_state()==QS_STATE_EMPTY) /* no caching */
-            global_resources = lFreeList(global_resources);
-         else 
-            global_resources = NULL; /* reference is saved in global host */
 
          if (!success) {
             DEXIT;
@@ -2294,11 +2258,14 @@ int host_order_changed) {
 *     Note that this function will not look for more slots than needed 
 *     by the job.
 *
+*
+*     int *violations = the number of soft violations on host / global level
+*                       if NULL is passed in, no soft_violations are computed
+*
 *  RESULT
 *     int - the # of slots
 ******************************************************************************/
 int available_slots_at_queue(
-      lList *host_resources,
       lListElem *job,
       lListElem *qep,
       lListElem *pe,
@@ -2312,14 +2279,12 @@ int available_slots_at_queue(
       lListElem *global_hep,
       int total_slots, /* global amount of slots we want to dispatch */
       lListElem *hep,
-      const char **job_filter,
-      int job_filter_count)
+      int *violations)
 {
    int qslots;
    lListElem *cep;
    const char *qname; 
    char reason[1024];
-   lList *queue_resources = NULL;
    u_long32 job_id;
 
    DENTER(TOP_LAYER, "available_slots_at_queue");
@@ -2331,6 +2296,10 @@ int available_slots_at_queue(
 
    job_id = lGetUlong(job, JB_job_number);
    qname = lGetString(qep, QU_qname);
+
+
+/* TODO SG:
+   this should only be execuded, if the queue has load thresholds set */
 
    /* ensure we are causing no load alarm - but only if 
       we are thinking about more than one slot 
@@ -2386,53 +2355,54 @@ int available_slots_at_queue(
       }
    }
 
-   queue_complexes(&queue_resources, qep, host_list, centry_list, job_filter, job_filter_count);
+   {
+      lList *hard_requests = lGetList(job, JB_hard_resource_list);
+      lList *config_attr = lGetList(qep, QU_consumable_config_list);
+      lList *actual_attr = lGetList(qep, QU_consumable_actual_list);
 
+      cep = lCopyElem(lGetElemStr(centry_list, CE_name, "slots"));
 
-   /* get QU_job_slots_used of queue */
-   if (!(cep=lGetElemStr(queue_resources, CE_name, "slots"))) {
-      DEXIT;
-      return 0;
-   }
-   if (!(qslots = lGetDouble(cep, CE_doubleval))) {
-      schedd_mes_add(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
-   }
-
-   /* get QU_job_slots of queue */
-
-/* well, has the host not at least as many open slots as this queue? */
-   qslots = MIN(host_slots, qslots);
-
-   for (; qslots; qslots--) {
-
-      /* check if queue fulfills hard request of the job */
-      if (!sge_select_resource(queue_resources, host_resources, lGetList(job, JB_hard_resource_list), 
-               0, reason, sizeof(reason)-1, qslots, 1, false)) {
-
-         if (qslots==1) {
-            char buff[1024 + 1];
-            unparse_resources(NULL, buff, sizeof(buff) - 1,
-                     lGetList(job, JB_hard_resource_list));
-            if (*buff && (buff[strlen(buff) - 1] == '\n'))
-               buff[strlen(buff) - 1] = 0;
-            schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
-         } 
-         continue;
+     if (!get_queue_resource(cep, qep, "slots")) {   
+         DEXIT;
+         return 0;
       }
-      else
-         sge_soft_violations(queue_resources,host_resources, qep, job, pe, centry_list);
+      if (!(qslots = lGetDouble(cep, CE_doubleval))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
+      }
 
-      break;
+      lFreeElem(cep);
+
+      /* get QU_job_slots of queue */
+      qslots = MIN(host_slots, qslots);
+
+      for (; qslots; qslots--) {
+
+         /* check if queue fulfills hard request of the job */
+         if(!sge_check_resource(hard_requests, NULL, config_attr, actual_attr, centry_list, qep, 0, reason, sizeof(reason)-1, 
+                                qslots, DOMINANT_LAYER_QUEUE , 0, QUEUE_TAG)){
+            if (qslots==1) {
+               char buff[1024 + 1];
+               unparse_resources(NULL, buff, sizeof(buff) - 1,
+                        lGetList(job, JB_hard_resource_list));
+               if (*buff && (buff[strlen(buff) - 1] == '\n'))
+                  buff[strlen(buff) - 1] = 0;
+               schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
+            } 
+            continue;
+         }
+         else{/* hard requests are fulfilled, now check the soft requests */
+            if(violations)
+               *violations = sge_soft_violations(qep, *violations, job, NULL, config_attr, actual_attr, centry_list, 
+                                   DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG);
+
+            break;
+         }
+      }
    }
-
-   if (get_qs_state()==QS_STATE_EMPTY) {
-      lFreeList(queue_resources);
-   } 
 
    DEXIT;
    return qslots;
 }
-
 
 /****** sched/select_queue/available_slots_at_host() **************************
 *  NAME
@@ -2446,11 +2416,9 @@ int available_slots_at_queue(
 *  RESULT
 *     int - the # of slots
 ******************************************************************************/
-static int available_slots_at_host(lList *host_resources, lListElem *job,
-                                   lListElem *ja_task, lListElem *host,
-                                   int hslots, int minslots, 
-                                   int allocation_rule, 
-                                   lList *centry_list, lList *acl_list) 
+static int available_slots_at_host(lListElem *job, lListElem *ja_task, lListElem *host,lList *host_list, 
+                                   int hslots, int minslots, int allocation_rule, lList *centry_list, 
+                                   lList *acl_list, int *violations) 
 {
    lListElem *cep;
    char reason[1024];
@@ -2468,35 +2436,56 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
       return 0;
    }
 
-   /* get job_slots_free from host */
-   if ((cep=lGetElemStr(host_resources, CE_name, "slots")) && 
-   !(lGetUlong(cep, CE_dominant) & DOMINANT_TYPE_VALUE)) {
-      /* we hope that slots are limited at queue level */
-      /* no limitations at host level */
-      hslots = MIN((u_long32)hslots, (u_long32)lGetDouble(cep, CE_doubleval));
-   }
+   {
+      lList *hard_requests = lGetList(job, JB_hard_resource_list);
+      lList *load_attr = lGetList(host, EH_load_list); 
+      lList *config_attr = lGetList(host, EH_consumable_config_list);
+      lList *actual_attr = lGetList(host, EH_consumable_actual_list);
+      double lc_factor = 0; /* scaling for load correction */ 
+      u_long32 ulc_factor;
 
-   for (; hslots>=minslots; hslots--) {
-      /* check if host fulfills hard request of the job */
-      if (!sge_select_resource(host_resources, NULL, lGetList(job, JB_hard_resource_list), 
-            0, reason, sizeof(reason)-1, hslots, 0, true)) {
+      clear_resource_tags(hard_requests, HOST_TAG);
 
-         if (hslots==minslots) {
-            char buff[1024 + 1];
-            unparse_resources(NULL, buff, sizeof(buff) - 1,
-                     lGetList(job, JB_hard_resource_list));
-            if (*buff && (buff[strlen(buff) - 1] == '\n'))
-               buff[strlen(buff) - 1] = 0;
-
-            schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, 
-               buff, eh_name, reason);
-         }
-/*          DPRINTF(("HOST failed %s %d slots: %s\n", eh_name, hslots, reason));    */
-         continue;
+      /* get job_slots_free from host */
+      if ((cep=lGetElemStr(config_attr, CE_name, "slots")) && 
+         !(lGetUlong(cep, CE_dominant) & DOMINANT_TYPE_VALUE)) {
+         /* we hope that slots are limited at queue level */
+         /* no limitations at host level */
+         hslots = MIN((u_long32)hslots, (u_long32)lGetDouble(cep, CE_doubleval));
       }
-      break;
-   }
 
+      /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
+      if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
+         if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
+            lc_factor = ((double)ulc_factor)/100;
+      }
+
+      for (; hslots>=minslots; hslots--) {
+         /* check if host fulfills hard request of the job */
+         if(!sge_check_resource(hard_requests, load_attr, config_attr, actual_attr, centry_list,NULL,  0, reason, sizeof(reason)-1, 
+            hslots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG )) { 
+   
+            if (hslots==minslots) {
+               char buff[1024 + 1];
+               unparse_resources(NULL, buff, sizeof(buff) - 1,
+                        lGetList(job, JB_hard_resource_list));
+               if (*buff && (buff[strlen(buff) - 1] == '\n'))
+                  buff[strlen(buff) - 1] = 0;
+   
+               schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff, eh_name, reason);
+            }
+   /*          DPRINTF(("HOST failed %s %d slots: %s\n", eh_name, hslots, reason));    */
+            continue;
+         }
+         else{/* hard requests are fulfilled, now check the soft requests */
+            if(violations)
+               *violations = sge_soft_violations(NULL, *violations, job, load_attr, config_attr, actual_attr, centry_list, 
+                                   DOMINANT_LAYER_HOST, lc_factor, HOST_TAG);
+
+            break;
+         }
+      }
+   }
    DEXIT;
    return (hslots<minslots)?0:hslots;
 }
@@ -2513,15 +2502,15 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
 *  RESULT
 *     int - the # of slots
 ******************************************************************************/
-static int available_slots_global(global_resources, job, ja_task, pe_object, host_list, centry_list, global_slots, acl_list)
-lList **global_resources;
-lListElem *job;
-lListElem *ja_task; /* either JAT_Type or NULL */
-lListElem *pe_object;
-lList *host_list;
-lList *centry_list;
-int global_slots; /* 0 reinitializes other values serve as the first start value for checks */
-lList *acl_list;
+static int available_slots_global(
+lListElem *job,
+lListElem *ja_task, /* either JAT_Type or NULL */
+lListElem *pe_object,
+lListElem *global_host,
+lList *centry_list,
+int global_slots, /* 0 reinitializes other values serve as the first start value for checks */
+lList *acl_list,
+int *violations)
 {
    char reason[1024];
    int not_select_resource = 0;
@@ -2535,7 +2524,7 @@ lList *acl_list;
 
    /* check if job has access to any hosts globally */
    if (sge_why_not_job2host(job, ja_task, 
-         host_list_locate(host_list, SGE_GLOBAL_NAME ), centry_list, acl_list)>0) {
+         global_host, centry_list, acl_list)>0) {
       DEXIT;
       return 0;
    }
@@ -2558,32 +2547,41 @@ lList *acl_list;
       }
    } else
       global_slots = 1;
-
-   /* initially looked at global slots */
-   if (!*global_resources)
-      global_complexes2scheduler(global_resources, host_list_locate(host_list, "global"), centry_list, NULL, 0);
- 
-   for (; global_slots; 
-            global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {
-
-      /* How many slots can get served with resources limited at the global layer?
-       *
-       * check for:              
-       * - explicit hard resource requests 
-       * - consumable default requests 
-       * - jobs implicit slot request 
-       */
-      not_select_resource = 0;
-
-      if (!sge_select_resource(*global_resources, NULL, lGetList(job, JB_hard_resource_list),
-               0, reason, sizeof(reason)-1, global_slots, 0, false)) {
-
-         not_select_resource = 1;
-         continue;
+   
+   {
+      lList *hard_request = lGetList(job, JB_hard_resource_list);
+      lList *load_attr = lGetList(global_host, EH_load_list); 
+      lList *config_attr = lGetList(global_host, EH_consumable_config_list);
+      lList *actual_attr = lGetList(global_host, EH_consumable_actual_list);
+      double lc_factor=0.0;
+      u_long32 ulc_factor;
+   
+      clear_resource_tags(hard_request, GLOBAL_TAG);
+      
+      /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
+      if (lGetPosViaElem(global_host, EH_load_correction_factor) >= 0) {
+         if ((ulc_factor=lGetUlong(global_host, EH_load_correction_factor)))
+            lc_factor = ((double)ulc_factor)/100;
       }
 
-      break;
+      for (; global_slots; 
+            global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {
+         not_select_resource = 0;
+         if(!sge_check_resource(hard_request, load_attr, config_attr, actual_attr, centry_list, NULL, 0, reason, 
+             sizeof(reason)-1, global_slots, DOMINANT_LAYER_GLOBAL, lc_factor,GLOBAL_TAG )) {
+            not_select_resource = 1;
+            continue;
+         }
+         else{/* hard requests are fulfilled, now check the soft requests */
+            if(violations)
+               *violations = sge_soft_violations(NULL, *violations, job, load_attr, config_attr, actual_attr, centry_list, 
+                                   DOMINANT_LAYER_GLOBAL, lc_factor, GLOBAL_TAG);
+
+            break;
+         }
    }
+   } 
+
    if (not_select_resource && global_slots == 0) {
       char buff[1024 + 1];
 
@@ -2609,7 +2607,9 @@ lList *acl_list;
       -1 the queue has no such attribute
       -2 type error: cant compute uval from actual string value 
 
-*/      
+*/  
+/* TODO SG remove (not used anymore?) */   
+#if 0
 int sge_get_ulong_qattr(
 u_long32 *uvalp,
 char *attrname,
@@ -2652,7 +2652,7 @@ lList *centry_list
    DEXIT; 
    return ret;
 }
-
+#endif
 
 /* ----------------------------------------
 
@@ -2672,19 +2672,25 @@ sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
 {
    int ret = -1;
    lListElem *ep;
-   lList *attributes = NULL;
+/*   lList *attributes = NULL;*/
    u_long32 type;
    double tmp_dval;
    char dom_str[4];
+   lListElem *global = NULL;
+   lListElem *host = NULL;
 
-   DENTER(TOP_LAYER, "sge_get_ulong_qattr");
+   DENTER(TOP_LAYER, "sge_get_double_qattr");
+
+   global = host_list_locate(exechost_list, "global"); 
+   host = host_list_locate(exechost_list, lGetHost(q, QU_qhostname));
 
    /* fill in complexes */
-   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);
+/*   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);*/
 
    /* find matching */
    *has_value_from_object = false;
-   if ((ep = centry_list_locate(attributes, attrname)) &&
+   if (( ep = get_attribute_by_name(global, host, q, attrname, centry_list, NULL, 0)) &&
+/*   if ((ep = centry_list_locate(attributes, attrname)) &&*/
          (type=lGetUlong(ep, CE_valtype))!=TYPE_STR) {
          
          if ((lGetUlong(ep, CE_pj_dominant)&DOMINANT_TYPE_MASK)!=DOMINANT_TYPE_VALUE ) {
@@ -2703,7 +2709,8 @@ sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
    }
 
    /* free */
-   lFreeList(attributes);
+/*   lFreeList(attributes); */
+   ep = lFreeElem(ep);
 
    DEXIT; 
    return ret;
@@ -2729,25 +2736,39 @@ lList *exechost_list,
 lList *centry_list 
 ) {
    lListElem *ep;
-   lList *attributes = NULL;
+/*   lList *attributes = NULL;*/
+   lListElem *global = NULL;
+   lListElem *host = NULL;
+   int ret = 0;
 
    DENTER(TOP_LAYER, "sge_get_string_qattr");
 
+   global = host_list_locate(exechost_list, "global"); 
+   host = host_list_locate(exechost_list, lGetHost(q, QU_qhostname));
+
    /* fill in complexes */
-   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);
+/*   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);*/
 
    /* find matching */
-   ep = centry_list_locate(attributes, attrname);
+/*   ep = centry_list_locate(attributes, attrname);*/
+
+   ep = get_attribute_by_name(global, host, q, attrname, centry_list, NULL, 0);
 
    /* first copy ... */
    if (ep && dst)
       strncpy(dst, lGetString(ep, CE_stringval), dst_len);
 
+   if(ep){
+      ep = lFreeElem(ep);
+      ret = 0;
+   }
+   else
+      ret = -1;
    /* ... and then free */
-   lFreeList(attributes);
+/*   lFreeList(attributes);*/
 
    DEXIT;
-   return ep?0:-1;
+   return ret; 
 }
 
 

@@ -199,6 +199,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       u_long32 dominant;
 
       rlp = NULL;
+
       queue_complexes2scheduler(&rlp, q, exechost_list, centry_list);
       for_each (rep , rlp) {
 
@@ -209,9 +210,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                                lGetString(rep, CE_name));
             /* if this complex variable wasn't requested with -F, skip it */
             if (qres == NULL)
-               continue;
+               continue ;
          }
-
          sge_dstring_clear(&resource_string);
 
          { 
@@ -219,7 +219,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             switch (type) {
             case TYPE_HOST:   
             case TYPE_STR:   
-            case TYPE_CSTR:   
+            case TYPE_CSTR:  
+
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                   dominant = lGetUlong(rep, CE_pj_dominant);
                   s = lGetString(rep, CE_pj_stringval);
@@ -228,7 +229,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                   s = lGetString(rep, CE_stringval);
                }
                break;
-            case TYPE_TIM:
+            case TYPE_TIM: 
+
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                   double val = lGetDouble(rep, CE_pj_doubleval);
 
@@ -244,6 +246,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                }
                break;
             case TYPE_MEM:
+
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                   double val = lGetDouble(rep, CE_pj_doubleval);
 
@@ -259,6 +262,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                }
                break;
             default:   
+
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                   double val = lGetDouble(rep, CE_pj_doubleval);
 
@@ -282,7 +286,6 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
          case TYPE_MEM:  
          case TYPE_BOO:  
          case TYPE_DOUBLE:  
-         default:
             printf("\t%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
             break;
          }

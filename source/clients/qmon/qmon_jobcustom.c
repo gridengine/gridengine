@@ -1967,7 +1967,6 @@ lList *exec_host_list
 ) {
    lListElem *qep;
    lListElem *dep;
-   lList *ce;
 
    DENTER(GUI_LAYER, "match_queue");
 
@@ -1983,22 +1982,20 @@ lList *exec_host_list
    ** remove the queues not fulfilling the request_list
    */
    qep = lFirst(*queue_list);
+   set_qs_state(QS_STATE_EMPTY);
    while (qep) {
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      ce = NULL;
-      set_qs_state(QS_STATE_EMPTY);
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list);
-      set_qs_state(QS_STATE_FULL);
-      if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1)) {
+      if (!sge_select_queue(request_list, qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
          dep = qep;
          qep = lNext(qep);
          lRemoveElem(*queue_list, dep);
       }
       else
          qep = lNext(qep);
-      ce = lFreeList(ce);
    }
+   set_qs_state(QS_STATE_FULL);
+
    /*
    ** remove the template queue if present
    */
@@ -2019,22 +2016,18 @@ lList *exec_host_list
    ** remove the queues not fulfilling the request_list
    */
    qep = lFirst(*queue_list);
+   set_qs_state(QS_STATE_EMPTY);
    while (qep) {
-      ce = NULL;
-      set_qs_state(QS_STATE_EMPTY);
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list);
-      set_qs_state(QS_STATE_FULL);
       
-      if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1)) {
+      if (!sge_select_queue(request_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
          dep = qep;
          qep = lNext(qep);
          lRemoveElem(*queue_list, dep);
       }
       else
          qep = lNext(qep);
-      
-      ce = lFreeList(ce);
    }
+   set_qs_state(QS_STATE_FULL);
 
    if (lGetNumberOfElem(*queue_list) == 0)
       *queue_list = lFreeList(*queue_list);
@@ -2124,13 +2117,14 @@ lList *exec_host_list,
 lList *complex_list 
 ) {
    lListElem *qep;   
-   lList *ce;
-   Boolean was_not_in_loop = True;
+   lList *hard_resource_list=NULL;   
 
+   hard_resource_list = lGetList(jep, JB_hard_resource_list);
+   
    /*
    ** if the job has no requests all queues fit
    */
-   if (!lGetList(jep, JB_hard_resource_list)) {
+   if (!hard_resource_list) {
       return True;
    }
 
@@ -2138,16 +2132,10 @@ lList *complex_list
    ** see if queues fulfill the request_list of the job
    */
    for_each(qep, queue_list) {
-      ce = NULL;
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list);
-      if (sge_select_queue(ce, lGetList(jep, JB_hard_resource_list), 1, 
-                                       NULL, 0, 1)) {
-         ce = lFreeList(ce);
+      if (sge_select_queue(hard_resource_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
          return True;
       } 
-      ce = lFreeList(ce);
-      was_not_in_loop = False;
    } 
    
-   return was_not_in_loop;
+   return False; 
 }

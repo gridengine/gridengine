@@ -3551,6 +3551,20 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                }
             }
 
+            /* - set the results from first entry of the winning category to the second 
+               - remove the winning element
+               - if it was the last element, remove the fcategory*/
+            {
+               sge_ref_list_t *tmp =lGetRef(max_current, FCAT_jobrelated_ticket_first);  
+               copy_ftickets (tmp, tmp->next);
+               lSetRef(max_current, FCAT_jobrelated_ticket_first, tmp->next);  
+               free(tmp);
+               if(lGetRef(max_current, FCAT_jobrelated_ticket_first) == NULL){
+                  lSetRef(max_current, FCAT_jobrelated_ticket_last,  NULL);
+                  lRemoveElem(fcategories, max_current);
+               }
+            }
+
             /* This is the job with the most functional tickets, consider it active */
             sge_set_job_cnts(sort_list[i], 0);
 
@@ -3796,6 +3810,8 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    }
 
    /* 
+    * copy tickets 
+    * 
     * Tickets for unenrolled pending tasks where stored an internal table.
     * Now it is necessary to find the ja_task of a job which got the 
     * most tickets. These ticket numbers will be stored in the template
@@ -4555,18 +4571,18 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       for_each(job, pending_jobs_excluded)
          sge_clear_job(job);
    }
-   if ((now = sge_get_gmt())<next) { /* normal scheduling interval */
 
-      if (classic_sgeee_scheduling) {
-         seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
-
-         seqno = sge_calc_tickets(lists,running_jobs, NULL, pending_jobs, 0);
-      } else {
-
-         /* calculate tickets for pending jobs */
-         seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
-                                  pending_jobs, 1);
-      }
+   if (classic_sgeee_scheduling) {
+      seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, NULL, 1);
+      seqno = sge_calc_tickets(lists,running_jobs, NULL, pending_jobs, 0);
+   } else {
+      /* calculate tickets for pending jobs */
+      seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
+                               pending_jobs, 1);
+         
+      /* calculate tickets for running jobs */
+      seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
+   }
 
     /* 
      * Order Jobs in descending order according to tickets and 
@@ -4587,47 +4603,18 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
        log_state_set_log_level(saved_logginglevel);
     }
 
+
+   if ((now = sge_get_gmt())<next) { /* normal scheduling interval */
+
       /* Only update qmaster with tickets of pending jobs - everything
          else will be updated on the SGEEE scheduling interval. */
-      *orderlist = sge_build_sge_orders(lists, NULL, pending_jobs, NULL,
+      *orderlist = sge_build_sge_orders(lists, NULL, pending_jobs, finished_jobs,
                                         *orderlist, 0, seqno, max_report_job_tickets);
 
    } else {    /* sgeee scheduling interval */
 
       DPRINTF(("=-=-=-=-=-=-=-=-=-=-=  SGEEE ORDER   =-=-=-=-=-=-=-=-=-=-=\n"));
-      if (classic_sgeee_scheduling) {
-         seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, NULL, 1);
-         seqno = sge_calc_tickets(lists,running_jobs, NULL, pending_jobs, 0);
-      } else {
-
-         /* calculate tickets for pending jobs */
-         seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
-                                  pending_jobs, 1);
-         
-         /* calculate tickets for running jobs */
-         seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
-      }
  
-
-    /* 
-     * Order Jobs in descending order according to tickets and 
-     * then job number 
-     */
-    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
-
-    sgeee_sort_jobs(&pending_jobs);
-
-    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
-
-    if (do_profiling) {
-       u_long32 saved_logginglevel = log_state_get_log_level();
-
-       log_state_set_log_level(LOG_INFO);
-       INFO((SGE_EVENT, "PROF: SGEEE job sorting took %.3f s\n",
-             prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-       log_state_set_log_level(saved_logginglevel);
-    }
-  
       /* update qmaster with job tickets, usage, and finished jobs */
       *orderlist = sge_build_sge_orders(lists, running_jobs, pending_jobs,
                                         finished_jobs, *orderlist, 1, seqno, max_report_job_tickets);

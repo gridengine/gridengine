@@ -83,6 +83,15 @@ enum {
    DOMINANT_TYPE_MASK = 0xff00          /* all types */
 };
 
+/* tag level*/
+enum{
+   NO_TAG = 0,
+   QUEUE_TAG,
+   HOST_TAG,
+   GLOBAL_TAG,
+   MAX_TAG
+};
+
 enum {
    CE_name = CE_LOWERBOUND,
    CE_shortcut,
@@ -96,7 +105,8 @@ enum {
    CE_pj_stringval,          /* per job */
    CE_pj_doubleval,
    CE_pj_dominant,
-   CE_requestable
+   CE_requestable,
+   CE_tagged
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
@@ -113,6 +123,7 @@ SLISTDEF(CE_Type, ComplexEntry)
    SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT) /* per job parsed CE_stringval */
    SGE_ULONG(CE_pj_dominant, CULL_DEFAULT)   /* per job monitoring facility */
    SGE_ULONG(CE_requestable, CULL_DEFAULT)
+   SGE_ULONG(CE_tagged, CULL_DEFAULT)        /* used to tag resource request, which can be fulfilled */
 LISTEND 
 
 NAMEDEF(CEN)
@@ -129,6 +140,7 @@ NAMEDEF(CEN)
    NAME("CE_pj_doubleval")
    NAME("CE_pj_dominant")
    NAME("CE_requestable")
+   NAME("CE_tagged")
 NAMEEND
 
 /* *INDENT-ON* */ 

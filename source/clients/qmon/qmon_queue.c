@@ -813,6 +813,8 @@ XEvent *event
    qmonQueueSetLoad(matrix, qb->qI->qp);
 #endif
 
+   XtAddEventHandler(lmon, StructureNotifyMask, False, 
+                        SetMaxShellSize, (XtPointer) SHELL_WIDTH);
 
    DEXIT;
 }

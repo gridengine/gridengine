@@ -303,7 +303,6 @@ char **argv
       }
       /* prepare request */
       for_each(qep, queue_list) {
-         lList *ce = NULL;
 
          /* prepare complex attributes */
          if (!strcmp(lGetString(qep, QU_qname), "template"))
@@ -312,10 +311,8 @@ char **argv
          DPRINTF(("matching queue %s with qstat -l\n", lGetString(qep, QU_qname)));
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
-         queue_complexes2scheduler(&ce, qep, exechost_list, centry_list);
-         selected = sge_select_queue(ce, resource_list, 1, NULL, 0, -1);
 
-         lFreeList(ce);
+         selected = sge_select_queue( resource_list, qep, NULL, exechost_list, centry_list, 1, NULL, 0, -1);
          if (empty_qs)
             set_qs_state(QS_STATE_FULL);
 
@@ -408,18 +405,12 @@ char **argv
          show_job = 0;
 
          for_each(qep, queue_list) {
-            lList *host_resources;
-            lListElem *hep;
-
             if (!(lGetUlong(qep, QU_tagged) & TAG_SHOW_IT))
                continue;
 
-            hep = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
-            host_complexes2scheduler(&host_resources, hep, exechost_list, centry_list, NULL, 0);
-
-            ret = available_slots_at_queue(host_resources, jep, qep, pe, ckpt, 
+            ret = available_slots_at_queue(jep, qep, pe, ckpt, 
                                            exechost_list, centry_list, 
-                                           acl_list, NULL, 1, 0, NULL, 0, NULL, NULL, 0);
+                                           acl_list, NULL, 1, 0, NULL, 0, NULL, NULL);
             if (ret>0) {
                show_job = 1;
                break;
@@ -458,6 +449,7 @@ char **argv
    for_each (qep, queue_list) {
       int print_jobs_of_queue = 0;
       /* here we have the queue */
+
       if (lGetUlong(qep, QU_tagged) & TAG_SHOW_IT) {
          if ((full_listing & QSTAT_DISPLAY_NOEMPTYQ) && !qslots_used(qep)) {
             continue;
@@ -467,6 +459,7 @@ char **argv
                               full_listing, qresource_list);
             print_jobs_of_queue = 1;
          }
+
       }
 
       if (shut_me_down) {
@@ -476,6 +469,7 @@ char **argv
       sge_print_jobs_queue(qep, job_list, pe_list, user_list,
                            exechost_list, centry_list,
                            print_jobs_of_queue, full_listing, "");
+
    }
 
    /* 

@@ -1,3 +1,27 @@
+SG-2003-09-08-0: Enhancem.: - calculation running job tickets allways
+                            - fixed functional ptix calculation
+                            - calculating final usage in every run (not only
+                              sgeee_scheduling_interval)
+                 Review:    AH
+                 Changed:   sge_schedd
+
+                 Optim.:    - optimized attribute matching in scheduler during
+                              job dispatching.
+                            - new semantic for attribute matching:
+                                 - we have a strict hierachy: global -> host ->queue
+                                 If it does not match on one of the levels, if is
+                                 over for the job.
+                                 - within a level: 
+                                   - a load value can be overridden with a user def.
+                                     value, when the "==" or "!=" operator is used.
+                                   - in all other cases the minimum/ maximum is used
+                                 - the values for attributes with ">", ">=", "<=", "<"
+                                   can be overridden on a lower level, when the new
+                                   value is more restrictive than the old one.
+                 Review:   pending
+                 Changed.  sge_schedd, qmaster, qmon, qstat, qhost,....
+                                   
+
 EB-2003-09-09-0: Enhancem.: partially implemented qmasters gdi part for
                             queue instance changed: add/remove/modify
 

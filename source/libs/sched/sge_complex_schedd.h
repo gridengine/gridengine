@@ -53,39 +53,43 @@ void set_global_load_correction(int flag);
 
 int get_global_load_correction(void);
 
-void build_name_filter(const char **filter, lList *list, int t_name, int *pos, const char** job_filter, int job_filter_count);
-
 void monitor_dominance(char *str, u_long32 mask);
 
 int global_complexes2scheduler(lList **new_complex_list, 
-                               lListElem *global_host, lList *complex_list, 
-                               const char **filter, int filter_cnt);
+                               lListElem *global_host, lList *complex_list);
 
 int host_complexes2scheduler(lList **new_complex_list, lListElem *host, 
-                             lList *exechost_list, lList *complex_list, 
-                             const char **filter, int filter_cnt);  
+                             lList *exechost_list, lList *complex_list);  
 
 int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue, 
                               lList *host_list, lList *complex_list); 
 
-int queue_complexes(lList **new_complex_list, lListElem *queue, 
-                        lList *host_list, lList *complex_list, 
-                        const char **filter, int filter_cnt);
+lListElem *get_attribute_by_name(lListElem *global, lListElem *host, lListElem *queue, const char *attrname, lList *centry_list, 
+                                     char *reason, int reason_size);
 
 int compare_complexes(int slots, lListElem *complex1, 
                       lListElem *complex2, char *availability_text, 
                       int is_threshold, int force_existence);
-
+/*
 int fillComplexFromHost(lList **new_complex,  
-                        lListElem *host, lList *complex, u_long32 layer, 
-                        const char **filter, int filter_cnt);
-
+                        lListElem *host, lList *complex, u_long32 layer);
+*/
 int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 
                      int slots, int config_nm, int actual_nm, 
                      const char *obj_name);
 
 int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, int primary_key, int sub_command, char *attr_name, char *object_name);
 
+bool is_attr_prior(lListElem *upper_el, lListElem *lower_el);
+
+bool get_queue_resource(lListElem *queue_elem, lListElem *queue, const char *attrname);
+
+lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr,lList *centry_list,
+                                lListElem *queue, u_long32 layer, double lc_factor, char *reason, int reason_size);
+/*
+void load_value( lListElem *target_load_value, lListElem *source_load_value, int nproc,
+                const char *hostname, u_long32 layer, double lc_factor ); 
+*/
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 
 #endif /* __SGE_COMPLEX_SCHEDD_H */

@@ -63,6 +63,7 @@ SGEOBJLIB_SRC = \
          sge_ja_task.c \
          sge_job.c \
          sge_load.c \
+         sge_order.c \
          sge_mailrec.c \
          sge_manop.c \
          sge_mesobj.c \
@@ -222,6 +223,10 @@ sge_qinstance_state.o: $(SGEOBJLIB_DIR)/sge_qinstance_state.c
 sge_qinstance_type.o: $(SGEOBJLIB_DIR)/sge_qinstance_type.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_type.c
 
+sge_order.o: $(SGEOBJLIB_DIR)/sge_order.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_order.c
+
+      
 sge_qref.o: $(SGEOBJLIB_DIR)/sge_qref.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qref.c
 

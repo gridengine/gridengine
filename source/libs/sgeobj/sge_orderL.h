@@ -61,9 +61,7 @@ enum {
 };
 
 enum {
-   OR_seq_no = OR_LOWERBOUND,
-   OR_type,
-   OR_force,
+   OR_type = OR_LOWERBOUND,
    OR_job_number,
    OR_ja_task_number,
    OR_job_version,
@@ -76,9 +74,7 @@ enum {
 };
 
 LISTDEF(OR_Type)
-   SGE_ULONG(OR_seq_no, CULL_DEFAULT)       /* sequence number */
    SGE_ULONG(OR_type, CULL_DEFAULT)         /* command */
-   SGE_ULONG(OR_force, CULL_DEFAULT)        /* set if force */
    SGE_ULONG(OR_job_number, CULL_DEFAULT)   /* which job */
    SGE_ULONG(OR_ja_task_number, CULL_DEFAULT)       /* which JobArray task */
    SGE_ULONG(OR_job_version, CULL_DEFAULT)  /* which job version */
@@ -102,9 +98,7 @@ LISTDEF(OR_Type)
 LISTEND 
 
 NAMEDEF(ORN)
-     NAME("OR_seq_no")
      NAME("OR_type")
-     NAME("OR_force")
      NAME("OR_job_number")
      NAME("OR_ja_task_number")
      NAME("OR_job_version")

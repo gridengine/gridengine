@@ -1,5 +1,5 @@
-#ifndef __SGE_FOLLOW_H
-#define __SGE_FOLLOW_H
+#ifndef __SGE_ORDER_H
+#define __SGE_ORDER_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,11 +32,46 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int 
-sge_follow_order(lListElem *order, lList **alpp, char *ruser, 
-                 char *rhost, lList **topp);
 
-int 
-distribute_ticket_orders(lList *ticket_orders);
+/* struct containing the cull pos for fields in the ticket order */
+typedef struct {
+   int JAT_status_pos;
+   int JAT_tix_pos;
 
-#endif /* __SGE_FOLLOW_H */
+   int JAT_oticket_pos;
+   int JAT_fticket_pos;
+   int JAT_sticket_pos;
+   int JAT_share_pos;
+   int JAT_prio_pos;
+   int JAT_ntix_pos;   
+} ja_task_pos_t;
+
+
+/* struct containing the cull pos for fields in the ticket order */
+typedef struct {
+   int JB_version_pos;
+   int JB_nppri_pos;
+   int JB_nurg_pos;
+   int JB_urg_pos;
+   int JB_rrcontr_pos;
+   int JB_dlcontr_pos;
+   int JB_wtcontr_pos;
+} job_pos_t;
+
+
+/* struct containing the cull field position of the job target structures
+   and the reduced order elements */
+typedef struct {
+   ja_task_pos_t ja_task;
+   ja_task_pos_t order_ja_task;   
+   job_pos_t   job;
+   job_pos_t   order_job;
+} order_pos_t;
+
+void 
+sge_free_cull_order_pos(order_pos_t **cull_order_pos);
+
+void 
+sge_create_cull_order_pos(order_pos_t **cull_order_pos, lListElem *jep, lListElem *jatp,
+                          lListElem *joker, lListElem *joker_task); 
+#endif /* __SGE_ORDER_H */

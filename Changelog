@@ -1,3 +1,7 @@
+SG-2004-09-27-0: Tuning:    improved ticket order generation
+                 Changed:   qmaster, scheduler
+                 Review:    JG
+
 JG-2004-09-23-0: Bugfix:    Fixed broken build.
 
 CR-2004-09-23-0: Bugfix:    more precise error messages for communication 

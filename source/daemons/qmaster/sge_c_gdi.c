@@ -579,8 +579,8 @@ if (!request->host || !user || !request->commproc)
                  case -1 :
                  case -3 :
                            /* stop the order processing */
-                           DPRINTF(("Failed to follow order #%d. Remaining %d orders unprocessed.\n", 
-                                     lGetUlong(ep, OR_seq_no), lGetNumberOfRemainingElem(ep)));
+                           DPRINTF(("Failed to follow order . Remaining %d orders unprocessed.\n", 
+                                     lGetNumberOfRemainingElem(ep)));
 
                            ep = lLast(request->lp); 
                     break;

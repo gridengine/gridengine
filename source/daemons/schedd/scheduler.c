@@ -264,7 +264,7 @@ int scheduler(sge_Sdescr_t *lists) {
    
    orders.pendingOrderList = sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_NOT_STARTED]), NULL, 
                                                     orders.pendingOrderList, false, 0, false); 
-  
+ 
    /* generated scheduler messages, thus we have to call it */
    trash_splitted_jobs(splitted_job_lists); 
 
@@ -321,7 +321,7 @@ int scheduler(sge_Sdescr_t *lists) {
       log_state_set_log_level(saved_logginglevel);
    }
    
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM5);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM5); 
    
    /* free all job lists */
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
@@ -330,7 +330,7 @@ int scheduler(sge_Sdescr_t *lists) {
          splitted_job_lists[i] = NULL;
       }
    }
-   
+
    {
       lList *orderlist=sge_join_orders(&orders);
      
@@ -340,10 +340,11 @@ int scheduler(sge_Sdescr_t *lists) {
       }
    }
 
+
    schedd_mes_release();
    schedd_mes_set_logging(0); 
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM5);
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM5); 
 
    if(prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();

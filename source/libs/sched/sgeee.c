@@ -3956,25 +3956,29 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
    
    DENTER(TOP_LAYER, "sge_build_sgeee_orders");
 
-   if (!config_what)
+   if (config_what == NULL) {
       config_what = lWhat("%T(%I )", SC_Type,
                    SC_weight_tickets_override);
+   }   
                    
-   if (!share_tree_what)
+   if (share_tree_what == NULL) {
       share_tree_what = lWhat("%T(%I %I %I %I %I %I)", STN_Type,
                          STN_version, STN_name, STN_job_ref_count, STN_m_share,
                          STN_last_actual_proportion,
                          STN_adjusted_current_proportion);
+   }   
 
-   if (!usage_what)
+   if (usage_what == NULL) {
       usage_what = lWhat("%T(%I %I %I %I %I %I %I)", UP_Type,
                    UP_name, UP_usage, UP_usage_time_stamp,
                    UP_long_term_usage, UP_project, UP_debited_job_usage,
                    UP_version);
+   }   
 
 
-   if (!order_list)
+   if (order_list == NULL) {
       order_list = lCreateList("orderlist", OR_Type);
+   }   
 
    /*-----------------------------------------------------------------
     * build ticket orders for running jobs
@@ -4018,8 +4022,10 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
       lListElem *qep;
       u_long32 free_qslots = 0;
       norders = lGetNumberOfElem(order_list);
-      for_each(qep, lists->queue_list)
+      for_each(qep, lists->queue_list) {
          free_qslots += MAX(0, lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep));
+      }
+      
       for_each(job, queued_jobs) {
          lListElem *ja_task;
          int tasks=0;
@@ -4028,10 +4034,12 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
          /* when the first sub-task gets scheduled, then the other sub-tasks didn't have
             any tickets specified */
          for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-            if (++tasks > MIN(max_pending_tasks_per_job, free_qslots+1))
+            if (++tasks > MIN(max_pending_tasks_per_job, free_qslots+1)) {
                break;
+            }   
             order_list = sge_create_orders(order_list, ORT_ptickets, job, ja_task, NULL, !max_queued_ticket_orders, false);
          }
+
          if (job_get_not_enrolled_ja_tasks(job) > 0) {
             lListElem *task_template = NULL;
 
@@ -4069,7 +4077,6 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
          if ((up_list = lSelect("", lists->user_list, where, usage_what))) {
             if (lGetNumberOfElem(up_list)>0) {
                order = lCreateElem(OR_Type);
-               lSetUlong(order, OR_seq_no, get_seq_nr());
                lSetUlong(order, OR_type, ORT_update_user_usage);
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
@@ -4089,7 +4096,6 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
          if ((up_list = lSelect("", lists->project_list, where, usage_what))) {
             if (lGetNumberOfElem(up_list)>0) {
                order = lCreateElem(OR_Type);
-               lSetUlong(order, OR_seq_no, get_seq_nr());
                lSetUlong(order, OR_type, ORT_update_project_usage);
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
@@ -4114,7 +4120,6 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
             up_list = lCreateList("", STN_Type);
             lAppendElem(up_list, node);
             order = lCreateElem(OR_Type);
-            lSetUlong(order, OR_seq_no, get_seq_nr());
             lSetUlong(order, OR_type, ORT_share_tree);
             lSetList(order, OR_joker, up_list);
             lAppendElem(order_list, order);
@@ -4133,7 +4138,6 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
          if ((config_list = lSelect("", *sconf_get_config_list(), NULL, config_what))) {
             if (lGetNumberOfElem(config_list)>0) {
                order = lCreateElem(OR_Type);
-               lSetUlong(order, OR_seq_no, get_seq_nr());
                lSetUlong(order, OR_type, ORT_sched_conf);
                lSetList(order, OR_joker, config_list);
                lAppendElem(order_list, order);

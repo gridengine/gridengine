@@ -76,8 +76,8 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
 lListElem *job_search_task(lListElem *job, lList **answer_list, 
                            u_long32 ja_task_id, int enroll_if_not_existing);
 
-void job_add_not_enrolled_as_zombie(lListElem *zombie, const lListElem *job,
-                                    lList **answer_list, u_long32 ja_task_id);
+void job_add_as_zombie(lListElem *zombie, const lListElem *job,
+                       lList **answer_list, u_long32 ja_task_id);
 
 int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
                      int check); 

@@ -656,7 +656,7 @@ u_long32 show
          else
             jw = lAndWhere(jw, nw);
       }
-      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10")", JB_Type, 
+      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10 FORMAT_I_1")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_script_file,
@@ -685,6 +685,7 @@ u_long32 show
                      JB_ja_u_h_ids,
                      JB_ja_o_h_ids,
                      JB_ja_s_h_ids,
+                     JB_ja_z_ids,
                      JB_ja_template,
                      JB_execution_time );
 
@@ -710,7 +711,7 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_5 FORMAT_I_2")", JB_Type, 
+      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_5 FORMAT_I_2 FORMAT_I_2")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_group,
@@ -736,8 +737,10 @@ u_long32 show
                      JB_ja_u_h_ids,
                      JB_ja_o_h_ids,
                      JB_ja_s_h_ids, 
+                     JB_ja_z_ids,
                      JB_ja_template,
-                     JB_ja_tasks );
+                     JB_ja_tasks,
+                     JB_execution_time );
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
                            NULL, zw, z_all, NULL);

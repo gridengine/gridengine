@@ -1,3 +1,8 @@
+EB-2001-12-10-1: Enhancem.: Memory optimization for zombie jobs
+
+                            THE SPOOL FILE FORMAT FOR JOBS (CULL JOB STRUCTURE)
+                            HAS BEEN CHANGED
+                 
 JG-2001-12-10-1: Testsuite: fixed qrsh test:
                             - accounting wrongly reported errors
                             - terminate test did no longer work for 
@@ -15,6 +20,7 @@ CR-2001-12-10-0: Testsuite: using catch to prevent testsuite abort when a test
 
 EB-2001-12-10-0: Bugfix:    Fix in sgeee scheduler where pending tickets 
                             are moved into the template for pending tasks 
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0) 
 
 AH-2001-12-07-0: Cleanup:   Improved diagnosis possibilities when commd is 
                             blocked NIS/DNS resolver library calls.

@@ -134,7 +134,7 @@ void print_job_ref_array ( sge_ref_t* ref_list,
 
 void sgeee_resort_pending_jobs(lList **job_list, lList *order_list); 
  
-#if 0 /* EB: debug */
+#if 1 /* EB: debug */
 
 void task_ref_print_table(void);
 

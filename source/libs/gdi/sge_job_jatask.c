@@ -191,13 +191,15 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 int job_is_enrolled(const lListElem *job, u_long32 task_number)
 {
    int ret = 1;
- 
+
+   DENTER(TOP_LAYER, "job_is_enrolled");
    if (range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), task_number)) {
       ret = 0;
    }
+   DEXIT;
    return ret;
 }
 
@@ -310,26 +312,15 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
    }
 } 
 
-void job_add_not_enrolled_as_zombie(lListElem *zombie, const lListElem *job, 
-                                    lList **answer_list, u_long32 ja_task_id) 
+void job_add_as_zombie(lListElem *zombie, const lListElem *job, 
+                                lList **answer_list, u_long32 ja_task_id) 
 {
-   const int attributes = 4;
-   const int attribute[] = {JB_ja_n_h_ids, JB_ja_u_h_ids, JB_ja_o_h_ids,
-                            JB_ja_s_h_ids};
-   int i;
-
-   for (i = 0; i < attributes; i++) {
-      lList *job_range_list = NULL;
-      lList *zombie_range_list = NULL;
-
-      job_range_list = lGetList(job, attribute[i]);
-      lXchgList(zombie, attribute[i], &zombie_range_list);
-      if (range_list_is_id_within(job_range_list, ja_task_id)) {
-         range_list_insert_id(&zombie_range_list, answer_list, ja_task_id);
-      }
-      range_compress(zombie_range_list);
-      lXchgList(zombie, attribute[i], &zombie_range_list);
-   }
+   lList *z_ids = NULL;    /* RN_Type */
+ 
+   lXchgList(zombie, JB_ja_z_ids, &z_ids);
+   range_list_insert_id(&z_ids, NULL, ja_task_id);
+   range_compress(z_ids);
+   lXchgList(zombie, JB_ja_z_ids, &z_ids);    
 }
 
 int job_has_job_pending_tasks(lListElem *job) 

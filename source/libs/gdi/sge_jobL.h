@@ -264,6 +264,7 @@ enum {
    JB_ja_u_h_ids,
    JB_ja_s_h_ids,
    JB_ja_o_h_ids,
+   JB_ja_z_ids,
    JB_ja_template,
    JB_ja_tasks
 };
@@ -437,6 +438,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_RLIST(JB_ja_u_h_ids, RN_Type)    /* just submitted with user hold */
    SGE_RLIST(JB_ja_s_h_ids, RN_Type)    /* just submitted with system hold */
    SGE_RLIST(JB_ja_o_h_ids, RN_Type)    /* just submitted with operator hold */
+   SGE_RLIST(JB_ja_z_ids, RN_Type)      /* zombie task ids */
    SGE_RLIST(JB_ja_template, JAT_Type)  /* template for a task */
    SGE_RLIST(JB_ja_tasks, JAT_Type)     /* List of JobArray Tasks */
 
@@ -596,6 +598,7 @@ NAMEDEF(JBN)
    NAME("JB_ja_u_h_ids")
    NAME("JB_ja_s_h_ids")
    NAME("JB_ja_o_h_ids")
+   NAME("JB_ja_z_ids")
    NAME("JB_ja_template")
    NAME("JB_ja_tasks")
 NAMEEND

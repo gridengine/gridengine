@@ -606,19 +606,10 @@ u_long32 group_opt
          }
          ja_task_list = lFreeList(ja_task_list);
       }
-#if 1 /* EB: Andre could explain the code above ?!? */
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
-         sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, 
-#if 1
-      full_listing,
-#else
-                                     (full_listing & QSTAT_DISPLAY_FULL) | 
-                                     (full_listing & QSTAT_DISPLAY_PENDING) |
-                                     (full_listing & QSTAT_DISPLAY_EXTENDED), 
-#endif
+         sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
                                      0, 0, ehl, cl, NULL, "", sge_ext);
       }
-#endif
    }
    sge_string_free(&dyn_task_str);
    DEXIT;
@@ -834,22 +825,23 @@ u_long32 full_listing
    sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
                (full_listing & QSTAT_DISPLAY_EXTENDED);
 
-   for_each (jep, zombie_list) {
-      for_each(jatep, lGetList(jep, JB_ja_tasks)) {
+   for_each (jep, zombie_list) { 
+      lList *z_ids = NULL;
+
+      z_ids = lGetList(jep, JB_ja_z_ids);
+      if (z_ids != NULL) {
+         lListElem *ja_task = NULL;
+         u_long32 first_task_id = range_list_get_first_id(z_ids, NULL);
+
          sge_printf_header(full_listing & 
                            (QSTAT_DISPLAY_ZOMBIES | QSTAT_DISPLAY_FULL), 
                            sge_ext);
+         ja_task = job_get_ja_task_template_pending(jep, first_task_id);
+         range_print_to_string(z_ids, &dyn_task_str);
+         sge_print_job(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
+                       full_listing, 0, 0, ehl, cl, NULL, "");
          sge_string_free(&dyn_task_str);
-         sge_string_printf(&dyn_task_str, u32, lGetUlong(jatep, JAT_task_number)); 
-         sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");   
       }
-#if 1 /* EB: */
-         sge_print_jobs_not_enrolled(jep, NULL, 1, NULL,
-                                     full_listing & (QSTAT_DISPLAY_ZOMBIES |
-                                     QSTAT_DISPLAY_FULL), 
-                                     0, 0, ehl, cl, 
-                                     NULL, "", sge_ext);
-#endif  
    }
    DEXIT;
 }

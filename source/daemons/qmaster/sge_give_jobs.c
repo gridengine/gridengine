@@ -1173,48 +1173,57 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task, int spool_job)
 {
    u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
    u_long32 job_id = lGetUlong(job, JB_job_number);
-   int is_defined = job_is_ja_task_defined(job, ja_task_id);
+   int is_defined;
    DENTER(TOP_LAYER, "sge_to_zombies");
- 
+
+
+   is_defined = job_is_ja_task_defined(job, ja_task_id); 
    if (is_defined) {
       int is_enrolled = job_is_enrolled(job, ja_task_id);     
       lListElem *zombie = lGetElemUlong(Master_Zombie_List, JB_job_number, 
                                         job_id);
 
-      if (!Master_Zombie_List) {
+      /*
+       * Create zombie job list if it does not exist
+       */
+      if (Master_Zombie_List == NULL) {
          Master_Zombie_List = lCreateList("Master_Zombie_List", JB_Type);
       }
 
       /*
-       * Move the task
-       * or
-       * Copy the job and remove all not-zombie-tasks
+       * Create zombie job if it does not exist 
+       * (don't copy unnecessary sublists)
+       */
+      if (zombie == NULL) {
+         lList *n_h_ids = NULL;     /* RN_Type */ 
+         lList *u_h_ids = NULL;     /* RN_Type */ 
+         lList *o_h_ids = NULL;     /* RN_Type */ 
+         lList *s_h_ids = NULL;     /* RN_Type */ 
+         lList *ja_tasks = NULL;    /* JAT_Type */ 
+
+         lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
+         lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
+         lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+         lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+         lXchgList(job, JB_ja_tasks, &ja_tasks);
+         zombie = lCopyElem(job);
+         lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
+         lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
+         lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+         lXchgList(job, JB_ja_tasks, &ja_tasks);
+         lAppendElem(Master_Zombie_List, zombie);
+      }
+
+      /*
+       * Add the zombie task id
        */
       if (zombie) {
-         if (is_enrolled) {
-            lListElem *zombie_task = lCopyElem(ja_task);
- 
-            lAppendElem(lGetList(zombie, JB_ja_tasks), zombie_task); 
-         } else {
-            job_add_not_enrolled_as_zombie(zombie, job, NULL, ja_task_id);  
-         }
-      } else {
-         zombie = lCopyElem(job);
-         lSetList(zombie, JB_ja_n_h_ids, NULL);
-         lSetList(zombie, JB_ja_u_h_ids, NULL);
-         lSetList(zombie, JB_ja_o_h_ids, NULL);
-         lSetList(zombie, JB_ja_s_h_ids, NULL);
-         if (is_enrolled) {
-            lListElem *zombie_task = lCopyElem(ja_task);
-            lList *tasks = lCreateList("tasks", JAT_Type);
+         job_add_as_zombie(zombie, job, NULL, ja_task_id); 
+      } 
 
-            lAppendElem(tasks, zombie_task);
-            lSetList(zombie, JB_ja_tasks, tasks);
-         } else {
-            job_add_not_enrolled_as_zombie(zombie, job, NULL, ja_task_id);
-         }
-         lAppendElem(Master_Zombie_List, zombie);   
-      }
+      /* 
+       * Spooling
+       */
       if (spool_job) {
          job_write_spool_file(zombie, ja_task_id, SPOOL_HANDLE_AS_ZOMBIE);
       }

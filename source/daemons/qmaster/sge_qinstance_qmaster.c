@@ -109,6 +109,39 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
       bool value_found = true;
 
       switch (cqueue_attibute_name) {
+         case CQ_calendar:
+            {
+               const char *old_value = lGetString(this_elem, attribute_name);
+               const char *new_value;
+
+               str_attr_list_find_value(attr_list, answer_list,
+                                        hostname, &new_value, 
+                                        matching_host_or_group,
+                                        matching_group, is_ambiguous);
+               if (old_value == NULL || new_value == NULL ||
+                   strcmp(old_value, new_value)) {
+                  lList *master_calendar_list = 
+                             *(object_type_get_master_list(SGE_TYPE_CALENDAR)); 
+                  lListElem *calendar = 
+                         calendar_list_locate(master_calendar_list, new_value);
+  
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
+                           lNm2Str(attribute_name),
+                           old_value ? old_value : "<null>",
+                           new_value ? new_value : "<null>"));
+#endif
+                  if (calendar != NULL) { 
+                     qinstance_change_state_on_calendar(this_elem, calendar);
+                  } else {
+                     qinstance_state_set_cal_disabled(this_elem, false);
+                     qinstance_state_set_cal_suspended(this_elem, false);
+                  }
+                  lSetString(this_elem, attribute_name, new_value);
+                  *has_changed_conf_attr = true;
+               }
+            }
+            break;
          case CQ_qtype:
             {
                u_long32 old_value = lGetUlong(this_elem, attribute_name);

@@ -1,3 +1,12 @@
+JG-2002-02-05-0: Testsuite: Enhanced "large_cluster" test:
+                            - testcase "throughput cluster" (loadcorrection and
+                              loadthresholds switched off)
+                            - testcase "usersort" (scheduling param user_sort
+                              enabled)
+                            - monitor size of qmaster and scheduler
+                            - check if all slots are filled in first scheduling
+                              run
+
 AS-2002-02-04-1: CVS        Created V53_beta2_BRANCH
 
 AS-2002-02-04-0: Doc:       updated courtesy download pages to reflect

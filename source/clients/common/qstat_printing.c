@@ -81,7 +81,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                            int print_jobid, char *master, u_long32 full_listing,
                            int slots, int slot, lList *exechost_list,
                            lList *complex_list, lList *pe_list, char *indent,
-                           u_long32 sge_ext);
+                           u_long32 sge_ext, u_long32 group_opt);
 
 static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
 
@@ -577,17 +577,28 @@ u_long32 group_opt
                                  sge_ext);
 
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
-                  group_opt != GROUP_TASK_GROUPS) {
-
+                   group_opt != GROUP_TASK_GROUPS) {
                   sge_string_free(&dyn_task_str);
-                  sge_string_printf(&dyn_task_str, u32, lGetUlong(jatep, JAT_task_number));
+                  sge_string_printf(&dyn_task_str, u32, 
+                                    lGetUlong(jatep, JAT_task_number));
+                  sge_print_job(jep, jatep, NULL, 1, NULL,
+                                &dyn_task_str, full_listing, 0, 0, ehl, cl, 
+                                NULL, "");
                } else {
-                  if (!ja_task_list)
+                  if (!ja_task_list) {
                      ja_task_list = lCreateList("", JAT_Type);
+                  }
                   lAppendElem(ja_task_list, lCopyElem(jatep));
                   FoundTasks = 1;
                }
+#if 0
+   /*    
+    * EB: 
+    *    I can not explain the line below. Why should the first loop start
+    *    at the first element of 'job_list'?
+    */
                nxt = lFirst(job_list);
+#endif
             }
          }
       }
@@ -599,8 +610,8 @@ u_long32 group_opt
          while ((task_group = split_task_group(&ja_task_list))) {
             get_taskrange_str(task_group, &dyn_task_str);
 
-            sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, &dyn_task_str, 
-               full_listing, 0, 0, ehl, cl, NULL, "");
+            sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, 
+                          &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");
             task_group = lFreeList(task_group);
             sge_string_free(&dyn_task_str);
          }
@@ -608,7 +619,8 @@ u_long32 group_opt
       }
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
          sge_print_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
-                                     0, 0, ehl, cl, NULL, "", sge_ext);
+                                     0, 0, ehl, cl, NULL, "", sge_ext, 
+                                     group_opt);
       }
    }
    sge_string_free(&dyn_task_str);
@@ -645,7 +657,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                            int print_jobid, char *master, u_long32 full_listing,
                            int slots, int slot, lList *exechost_list,
                            lList *complex_list, lList *pe_list, char *indent,
-                           u_long32 sge_ext)
+                           u_long32 sge_ext, u_long32 group_opt)
 {
    lList *range_list[8];         /* RN_Type */
    u_long32 hold_state[8];
@@ -671,30 +683,50 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
       }
 
       if (range_list[i] != NULL && show) { 
-         range_list_print_to_string(range_list[i], &ja_task_id_string);
-         first_id = range_list_get_first_id(range_list[i], &answer_list);
-         if (answer_list_is_error_in_list(&answer_list) != 1) {
-            lListElem *ja_task = job_get_ja_task_template_hold(job, first_id, 
-                                                               hold_state[i]);
-            lList *n_h_ids = NULL;
-            lList *u_h_ids = NULL;
-            lList *o_h_ids = NULL;
-            lList *s_h_ids = NULL;
+         if (group_opt == GROUP_TASK_GROUPS) {
+            range_list_print_to_string(range_list[i], &ja_task_id_string);
+            first_id = range_list_get_first_id(range_list[i], &answer_list);
+            if (answer_list_is_error_in_list(&answer_list) != 1) {
+               lListElem *ja_task = job_get_ja_task_template_hold(job, 
+                                                      first_id, hold_state[i]);
+               lList *n_h_ids = NULL;
+               lList *u_h_ids = NULL;
+               lList *o_h_ids = NULL;
+               lList *s_h_ids = NULL;
 
-            sge_printf_header(full_listing, sge_ext);
-            lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
-            lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
-            lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
-            lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
-            sge_print_job(job, ja_task, qep, print_jobid, master,
-                          &ja_task_id_string, full_listing, slots, slot,
-                          exechost_list, complex_list, pe_list, indent);
-            lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
-            lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
-            lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
-            lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+               sge_printf_header(full_listing, sge_ext);
+               lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
+               lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
+               lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+               lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+               sge_print_job(job, ja_task, qep, print_jobid, master,
+                             &ja_task_id_string, full_listing, slots, slot,
+                             exechost_list, complex_list, pe_list, indent);
+               lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
+               lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
+               lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+               lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+            }
+            sge_string_free(&ja_task_id_string);
+         } else {
+            lListElem *range; /* RN_Type */
+            
+            for_each(range, range_list[i]) {
+               u_long32 start, end, step;
+
+               range_get_all_ids(range, &start, &end, &step);
+               for (; start <= end; start += step) { 
+                  lListElem *ja_task = job_get_ja_task_template_hold(job,
+                                                          start, hold_state[i]);
+
+                  sge_string_free(&ja_task_id_string);
+                  sge_string_printf(&ja_task_id_string, u32, start);
+                  sge_print_job(job, ja_task, NULL, 1, NULL,
+                                &ja_task_id_string, full_listing, 0, 0, 
+                                exechost_list, complex_list, pe_list, indent);
+               }
+            }
          }
-         sge_string_free(&ja_task_id_string);
       }
    }
    job_destroy_hold_id_lists(job, range_list); 

@@ -1,3 +1,7 @@
+EB-2001-12-18-0: Bugfix:    'qstat -f' showed pending tasks multiple times 
+                            Rescusciated '-g d' option of qstat
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)
+
 JG-2001-12-18-0: Testsuite: - new test procedures in qsub and in qrsh tests
                               that test the starter_method.
 

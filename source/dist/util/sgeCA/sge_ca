@@ -305,7 +305,7 @@ MakeCAcert()
          echo OU="$CA_OU" >> $TMPFILE
          ExecuteAsAdmin $CP $TMPFILE $CATOP/dn.info
          echo CN="SGE Certificate Authority" >> $TMPFILE
-         echo uniqueIdentifier=CA >> $TMPFILE
+         echo userId=CA >> $TMPFILE
          echo emailAddress=$CA_EMAIL >> $TMPFILE
 
          cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
@@ -397,7 +397,7 @@ MakeUserCerts()
 # MakeCert create certificate and private key for daemon
 #
 # $1 = "daemon" or "user"
-# $2 = uniqueIdentifier   (Unix user name)
+# $2 = userId   (Unix user name)
 # $3 = commonname         (e.g. passwd gecos field)
 # $4 = email address
 #
@@ -409,7 +409,7 @@ MakeCert()
    TMPFILE1=/tmp/sge_ca1$$.tmp
    $RM -f $TMPFILE $TMPFILE1
    Execute cp $CATOP/dn.info $TMPFILE
-   echo uniqueIdentifier=$2 >> $TMPFILE
+   echo userId=$2 >> $TMPFILE
    echo CN=$3 >> $TMPFILE
    echo emailAddress=$4 >> $TMPFILE
    cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1

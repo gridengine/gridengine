@@ -244,6 +244,9 @@ size_t len
 *  SEE ALSO
 *     cull/pack/-Packing-typedefs
 *     cull/pack/pack_set_chunk()
+*  
+*  NOTES
+*     MT-NOTE: init_packbuffer() is MT safe (assumptions)
 *******************************************************************************/
 int init_packbuffer(
 sge_pack_buffer *pb,
@@ -449,6 +452,7 @@ sge_pack_buffer *pb
 }
 
 /**************************************************************/
+/* MT-NOTE: clear_packbuffer() is MT safe */
 void clear_packbuffer(
 sge_pack_buffer *pb 
 ) {

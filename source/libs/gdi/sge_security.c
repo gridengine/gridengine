@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
+#ifdef SGE_MT
+#include <pthread.h>
+#endif
 
 #include "cull.h"
 #include "sgermon.h"
@@ -60,6 +63,10 @@
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
+#ifdef SGE_MT
+#include "sge_mtutil.h"
+#endif
+
 #ifdef CRYPTO
 #include <openssl/evp.h>
 #endif
@@ -72,6 +79,21 @@
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
+
+/* ---- sec_initialized ------------------------------------- */
+
+static int sec_initialized = 0;
+
+#ifdef SGE_MT
+/* guards access to sec_initialized global variable */
+static pthread_mutex_t sec_initialized_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define SEC_LOCK_INITIALIZED()      sge_mutex_lock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
+#define SEC_UNLOCK_INITIALIZED()    sge_mutex_unlock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
+#else
+#define SEC_LOCK_INITIALIZED()      
+#define SEC_UNLOCK_INITIALIZED()   
+#endif
 
 /****** gdi/security/sge_security_initialize() ********************************
 *  NAME
@@ -93,14 +115,19 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 *  NOTES
 *     MT-NOTE: sge_security_initialize() is MT safe (assumptions)
 ******************************************************************************/
+
 int sge_security_initialize(const char *name)
 {
+
    DENTER(TOP_LAYER, "sge_security_initialize");
 
-   if (!gdi_state_get_sec_initialized()) {
+   SEC_LOCK_INITIALIZED();
+
+   if (!sec_initialized) {
 #ifdef SECURE
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
          if (sec_init(name)) {
+            SEC_UNLOCK_INITIALIZED();
             DEXIT;
             return -1;
          }
@@ -109,12 +136,14 @@ int sge_security_initialize(const char *name)
 
 #ifdef KERBEROS
       if (krb_init(name)) {
+         SEC_UNLOCK_INITIALIZED();
          DEXIT;
          return -1;
       }
 #endif   
-      gdi_state_set_sec_initialized(1); 
+      sec_initialized = 1; 
    }
+   SEC_UNLOCK_INITIALIZED();
 
    DEXIT;
    return 0;
@@ -135,7 +164,7 @@ int sge_security_initialize(const char *name)
 *     status - exit status value
 *
 *  NOTES
-*     MT-NOTE: sge_security_exit() is MT safe (assumptions)
+*     MT-NOTE: sge_security_exit() is MT safe
 ******************************************************************************/
 void sge_security_exit(int i)
 {
@@ -143,9 +172,7 @@ void sge_security_exit(int i)
 
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      if (sec_exit_func) {
-         sec_exit_func();
-      }
+      sec_exit();
    }     
 #endif
 
@@ -214,7 +241,7 @@ int compressed
 /* 
  *
  *  NOTES
- *     MT-NOTE: gdi_receive_message() is MT safe (assumptions)
+ *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
 int gdi_receive_message(
@@ -288,7 +315,7 @@ u_short *compressed
 *     DCE/KERBEROS code.
 * 
 *  NOTES
-*     MT-NOTE: set_sec_cred() is MT safe (assumptions)
+*     MT-NOTE: set_sec_cred() is MT safe (major assumptions!)
 ******************************************************************************/
 int set_sec_cred(lListElem *job)
 {
@@ -531,7 +558,7 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
 /*
  * 
  *  NOTES
- *     MT-NOTE: delete_credentials() is MT safe (assumptions)
+ *     MT-NOTE: delete_credentials() is MT safe (major assumptions!)
  * 
  */
 void delete_credentials(lListElem *jep)
@@ -881,7 +908,7 @@ struct dispatch_entry *de
  *     get TGT from job entry and store in client connection 
  *
  *  NOTES
- *     MT-NOTE: tgt2cc() is not MT safe
+ *     MT-NOTE: tgt2cc() is not MT safe (assumptions)
  */
 void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 {
@@ -928,7 +955,7 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 /*
  *
  *  NOTES
- *     MT-NOTE: tgtcclr() is not MT safe
+ *     MT-NOTE: tgtcclr() is MT safe (assumptions)
  */
 void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 {
@@ -973,7 +1000,6 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 /*
 ** NOTES
 **    MT-NOTE: sge_decrypt() is MT safe (assumptions)
-**    MT-NOTE: sge_decrypt() is not MT safe when -DCRYPTO is set
 */
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group)
@@ -1002,7 +1028,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
 /*
 ** standard encrypt/decrypt functions
 **
-** MT-NOTE: standard sge_encrypt() is MT safe
+** MT-NOTE: sge_encrypt() is MT safe
 */
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {

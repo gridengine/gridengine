@@ -82,11 +82,12 @@ int kerb_job(lListElem *jelem, struct dispatch_entry *de);
 #endif
 
 void tgt2cc(lListElem *jep, const char *rhost, const char* target);
-void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 
+void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group);
+
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group);
 

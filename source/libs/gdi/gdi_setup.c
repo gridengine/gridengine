@@ -79,7 +79,6 @@ struct gdi_state_t {
    int      isalive;
    int      reread_qmaster_file;
 
-   int      sec_initialized;
    char     cached_master_name[MAXHOSTLEN];
 };
 
@@ -87,7 +86,7 @@ struct gdi_state_t {
 static pthread_key_t   gdi_state_key;
 #else
 static struct gdi_state_t gdi_state_opaque = {
-  0, 1, 1, COMMD_UNKNOWN, 0, 0, 0, 0, "" };
+  0, 1, 1, COMMD_UNKNOWN, 0, 0, 0, "" };
 struct gdi_state_t *gdi_state = &gdi_state_opaque;
 #endif
 
@@ -114,6 +113,11 @@ void gdi_once_init(void) {
    /* commlib */
    commlib_init_mt();
 
+   /* sec */
+#ifdef SECURE
+   sec_init_mt();
+#endif
+
    /* gdi */
    gdi_init_mt();
    path_init_mt();
@@ -128,7 +132,6 @@ static void gdi_state_init(struct gdi_state_t* state) {
    state->made_setup = 0;
    state->isalive = 0;
    state->reread_qmaster_file = 0;
-   state->sec_initialized = 0;
    strcpy(state->cached_master_name, "");
 }
 #endif
@@ -189,37 +192,11 @@ int gdi_state_get_reread_qmaster_file(void)
    return gdi_state->reread_qmaster_file;
 }
 
-int gdi_state_get_sec_initialized(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_sec_initialized");
-   return gdi_state->sec_initialized;
-}
-
 char *gdi_state_get_cached_master_name(void)
 {
    GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
    return gdi_state->cached_master_name;
 }
-
-#if 0 
-int gdi_state_get_ec_need_register(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_ec_need_register");
-   return gdi_state->ec_need_register;
-}
-
-lListElem *gdi_state_get_ec(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_ec");
-   return gdi_state->ec;
-}
-
-u_long32 gdi_state_get_ec_reg_id(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_ec_reg_id");
-   return gdi_state->ec_reg_id;
-}
-#endif
 
 /****** libs/gdi/gdi_state_set_????() ************************************
 *  NAME
@@ -273,38 +250,7 @@ void gdi_state_set_reread_qmaster_file(int i)
    gdi_state->reread_qmaster_file = i;
 }
 
-void gdi_state_set_sec_initialized(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_sec_initialized");
-   gdi_state->sec_initialized = i;
-}
 
-#if 0
-void gdi_state_set_ec_config_changed(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec_config_changed");
-   gdi_state->ec_config_changed = i;
-}
-
-void gdi_state_set_ec_need_register(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec_need_register");
-   gdi_state->ec_need_register = i;
-}
-
-void gdi_state_set_ec(lListElem *ec)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec");
-   lFreeElem(gdi_state->ec);
-   gdi_state->ec = ec;
-}
-
-void gdi_state_set_ec_reg_id(u_long32 id)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec_reg_id");
-   gdi_state->ec_reg_id = id;
-}
-#endif
 
 /****** gdi/setup/sge_gdi_setup() *********************************************
 *  NAME

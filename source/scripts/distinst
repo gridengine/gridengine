@@ -76,6 +76,10 @@ JOBBINARIES="work"
 SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti libspool libspoold libspoolc libspoolf libsgeobj libsgeobjd libevc libevm libmir"
 QMON_SHARED_LIBRARIES="libXbae libXicon libXltree libXmt libXspin libXtab"
 ZLIB_SHARED_LIBRARIES="libz"
+OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
+
+DRMAA_SHARED_LIBRARIES="libdrmaa"
+DRMAA_HEADER_FILES="libs/japi/drmaa.h"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -341,6 +345,7 @@ instsharedlibs=true
 instckpt=false
 instlocale=false
 instdirectory=false
+instdrmaa=false
 instinst_sge=false
 instutiltree=false
 instexamples=false
@@ -546,6 +551,7 @@ for prog in $PROG; do
    case $prog in
       common|distcommon) 
          instdirectory=true
+         instdrmaa=true
          instcommon=true
          inst3rdparty=true
          instckpt=true
@@ -728,6 +734,16 @@ if [ $instcommon = true ]; then
       for f in $PVMSRCSCRIPTS; do
          Execute cp dist/pvm/src/$f $DEST_SGE_ROOT/pvm/src
          chmod 755 $DEST_SGE_ROOT/pvm/src/$f
+      done
+   fi
+
+   if [ $instdrmaa = true ]; then
+      echo Installing \"DRMAA\"
+      Execute rm -rf $DEST_SGE_ROOT/include/*
+      Execute mkdir $DEST_SGE_ROOT/include
+           
+      for f in $DRMAA_HEADER_FILES; do
+         Execute cp $f $DEST_SGE_ROOT/include
       done
    fi
 
@@ -1000,6 +1016,24 @@ for i in $ARCH; do
 
       for lib in $ZLIB_SHARED_LIBRARIES; do
          libname="../3rdparty/zlib/$ARCHBIN/$lib.$shlibext"
+         echo checking $libname
+         if [ -f $libname ]; then
+            InstallProg $libname
+         fi
+      done
+
+      for lib in $OPENSSL_SHARED_LIBRARIES; do
+         libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
+         echo checking $libname
+         if [ -f $libname ]; then
+            InstallProg $libname
+         fi
+         echo linking $libname
+         (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.$shlibext.0.9.7 $lib.$shlibext)
+      done
+
+      for lib in $DRMAA_SHARED_LIBRARIES; do
+         libname="../${ARCHBIN}_MT/$lib.$shlibext"
          echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname

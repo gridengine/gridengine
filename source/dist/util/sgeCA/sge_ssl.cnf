@@ -70,7 +70,7 @@ stateOrProvinceName     = match
 organizationName        = match
 organizationalUnitName  = optional
 commonName              = supplied
-uniqueIdentifier        = supplied
+userId                  = supplied
 emailAddress            = optional
 
 # For the 'anything' policy
@@ -135,8 +135,8 @@ organizationalUnitName_default      = Gridware
 commonName                          = Common Name (eg, YOUR name)
 commonName_max                      = 64
 
-uniqueIdentifier                    = UID
-uniqueIdentifier_max                = 64
+userId                              = UID
+userId_max                          = 64
 
 emailAddress                        = Email Address
 emailAddress_max                    = 40

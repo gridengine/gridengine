@@ -40,6 +40,10 @@
 #include <string.h>
 #include <pwd.h>
 
+#ifdef SGE_MT
+#include <pthread.h>
+#endif
+
 #include "commlib.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -59,6 +63,10 @@
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
 
+#ifdef SGE_MT
+#include "sge_mtutil.h"
+#endif
+
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
 #define NID_userId NID_uniqueIdentifier
@@ -67,7 +75,7 @@
 #endif
 
 #define CHALL_LEN       16
-#define ValidMinutes    10          /* expiry of connection        */
+#define VALID_MINUTES    10          /* expiry of connection        */
 #define SGESecPath      ".sge"
 #define CaKey           "cakey.pem"
 #define CaCert          "cacert.pem"
@@ -82,24 +90,64 @@
 #define INC32(a)        (((a) == 0xffffffff)? 0:(a)+1)
 
 typedef struct gsd_str {
-   OPENSSL_CONST EVP_CIPHER *cipher;
-   OPENSSL_CONST EVP_MD *digest;
-   int crypt_space;
-   int block_len;
-   u_char *key_mat;
-   u_long32 key_mat_len;
-   EVP_PKEY *private_key;
-   X509 *x509;
-   char uniqueIdentifier[BUFSIZ];
-   u_long32 connid;
-   int is_daemon;
-   int is_master;
-   int connect;
-   u_long32 seq_send;
-   u_long32 seq_receive;
-   ASN1_UTCTIME *refresh_time;
+   X509 *x509;                       /* per process certificate of daemon or client 
+                                        MT-NOTE: no mutex needed as long as write acess is done only by sec_init() */
+   EVP_PKEY *private_key;            /* per process private key
+                                        MT-NOTE: no mutex needed as long as write acess is done only by sec_init() */ 
+   int is_daemon;                    /* per process information whether we are a deamon 
+                                        MT-NOTE: no mutex needed as long as write acess is done only by sec_init() */
+   OPENSSL_CONST EVP_CIPHER *cipher; /* per process cipher 
+                                        MT-NOTE: no mutex needed as long as write acess is done only by sec_init() */
+   OPENSSL_CONST EVP_MD *digest;     /* per process digest
+                                        MT-NOTE: no mutex needed as long as write acess is done only by sec_init() */
+   /* ASN1_UTCTIME *refresh_time;       per process in qmaster (constant) */
 } GlobalSecureData;
 
+struct sec_state_t {
+   u_char *key_mat;                  /* secret key used for connection per thread */
+   u_long32 key_mat_len;             /* length of per connection secret key */
+   u_long32 connid;                  /* per thread sec connection id */
+   int connect;                      /* per thread connected state */
+   u_long32 seq_send;                /* per thread send sequence number */
+   u_long32 seq_receive;             /* per thread receive sequence number */
+   ASN1_UTCTIME *refresh_time;       /* per thread refresh time in clients */
+   char unique_identifier[BUFSIZ];   /* per thread unique identifier */
+};
+
+#if defined(SGE_MT)
+static pthread_key_t   sec_state_key;
+#else
+static struct sec_state_t sec_state_opaque = {
+   NULL, 0, 0, 0, 0, 0, NULL, "" };
+struct sec_state_t *sec_state = &sec_state_opaque;
+#endif
+
+#if defined(SGE_MT)
+static void sec_state_init(struct sec_state_t* state) {
+   state->key_mat              = NULL;
+   state->key_mat_len          = 0;
+   state->connid               = 0;
+   state->connect              = 0;
+   state->seq_send             = 0;
+   state->seq_receive          = 0;
+   state->refresh_time         = NULL;
+   state->unique_identifier[0] = '\0';
+}
+
+static void sec_state_destroy(void* state) {
+   if (((struct sec_state_t *)state)->key_mat)
+      free(((struct sec_state_t *)state)->key_mat);
+   free(state);
+}
+
+static pthread_once_t sec_once_control = PTHREAD_ONCE_INIT;
+void sec_once_init(void) {
+   pthread_key_create(&sec_state_key, &sec_state_destroy);
+}
+void sec_init_mt(void) {
+   pthread_once(&sec_once_control, sec_once_init);
+}
+#endif
 
 #define c4TOl(c,l)      (l =((unsigned long)(*((c)++)))<<24, \
                          l|=((unsigned long)(*((c)++)))<<16, \
@@ -118,8 +166,44 @@ typedef struct gsd_str {
 
 
 /*
+** prototypes needed to make openssl library MT safe
+*/
+
+#ifdef SGE_MT
+static unsigned long sec_crypto_thread_id(void);
+static void sec_crypto_locking_callback(int mode, int type, char *file, int line);
+static void sge_thread_setup(void);
+static void sec_thread_cleanup(void);
+#endif /* SGE_MT */
+
+static int sec_alloc_key_mat(void);
+#ifdef SEC_RECONNECT
+static void sec_dealloc_key_mat(void);
+#endif
+
+/* 
+** prototypes for per thead data access functions
+*/
+static void sec_state_set_key_mat(u_char *);
+static u_char *sec_state_get_key_mat(void);
+static void sec_state_set_key_mat_len(u_long32);
+static u_long32 sec_state_get_key_mat_len(void);
+static void sec_state_set_connid(u_long32);
+static u_long32 sec_state_get_connid(void);
+static void sec_state_set_connect(int);
+static int sec_state_get_connect(void);
+static void sec_state_set_seq_receive(u_long32);
+static u_long32 sec_state_get_seq_receive(void);
+static void sec_state_set_seq_send(u_long32);
+static u_long32 sec_state_get_seq_send(void);
+static void sec_state_set_refresh_time(ASN1_UTCTIME *);
+static ASN1_UTCTIME *sec_state_get_refresh_time(void);
+static char *sec_state_get_unique_identifier(void);
+
+/*
 ** prototypes
 */
+
 static int sec_set_encrypt(int tag);
 static int sec_files(void);
 static int sec_is_daemon(const char *progname);
@@ -171,8 +255,6 @@ static void sec_list2keymat(lListElem *element);
 static int sec_verify_callback(int ok, X509_STORE_CTX *ctx);
 static void sec_setup_path(int is_daemon, int is_master);
 
-static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
-
 static int sec_pack_announce(u_long32 len, u_char *buf, u_char *chall, sge_pack_buffer *pb);
 static int sec_unpack_announce(u_long32 *len, u_char **buf, u_char **chall, sge_pack_buffer *pb);
 static int sec_pack_response(u_long32 len, u_char *buf, 
@@ -192,6 +274,7 @@ static int sec_unpack_response(u_long32 *len, u_char **buf,
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len);
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg);
 
+
 /****** security/sec_lib/debug_print_ASN1_UTCTIME() *************************************
 *  NAME
 *     debug_print_ASN1_UTCTIME() -- print an ASN1_UTCTIME string prefixed by a label 
@@ -210,11 +293,14 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
 *     static void - 
 *
 *  EXAMPLE
-*     debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
+*     debug_print_ASN1_UTCTIME("refresh_time: ", sec_state_get_refresh_time());
 *     debug_print_ASN1_UTCTIME("Certificate not valid before: ", X509_get_notBefore(cert));
 *
 *  SEE ALSO
 *     security/sec_lib/debug_print_buffer()
+*
+*  NOTES
+*     MT-NOTE: 
 *******************************************************************************/
 static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
 {
@@ -256,6 +342,7 @@ static void debug_print_ASN1_UTCTIME(char *label, ASN1_UTCTIME *time)
 *     Used as a macro DEBUG_PRINT_BUFFER(x,y,z) which expands to the 
 *     empty string if SEC_BEBUG is undefined and to debug_print_buffer() 
 *     if SEC_BEBUG is defined.
+*     MT-NOTE: 
 *
 *  SEE ALSO
 *     security/sec_lib/debug_print_ASN1_UTCTIME()
@@ -288,18 +375,73 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 /* #define PREDEFINED_PW         "troet" */
 #define PREDEFINED_PW         NULL
 
-/* #define SECRET_KEY_ERROR    */
-
-
-sec_exit_func_type sec_exit_func = NULL;
 
 /*
-** global secure data
+** process global secure data
 */
 static GlobalSecureData gsd;
 
-static u_long32 connid_counter = 0;
-static lList *conn_list = NULL;
+/*
+** MT-NOTE: see GlobalSecureData typedef for detailed MT notes on
+** MT-NOTE: each gsd struct member 
+*/
+
+/* ---- sec_initialized --------------------------------- */
+
+static int sec_initialized = 0;
+
+/* 
+** MT-NOTE: sec_initialized_mutex guards access to sec_initialized 
+** MT-NOTE: that must be synchronized in case of any MT program using sec lib
+*/
+
+#ifdef SGE_MT
+static pthread_mutex_t sec_initialized_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define SEC_LOCK_INITIALIZED()   sge_mutex_lock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
+#define SEC_UNLOCK_INITIALIZED() sge_mutex_unlock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
+#else
+#define SEC_LOCK_INITIALIZED()
+#define SEC_UNLOCK_INITIALIZED()
+#endif
+
+/* ---- sec_connid_counter -- a consecutive number for connections -- */
+
+static u_long32 sec_connid_counter = 0;
+
+#ifdef SGE_MT
+
+/* 
+** MT-NOTE: sec_connid_counter_mutex guards access to sec_connid_counter 
+** MT-NOTE: that must be synchronized in case of a MT qmaster
+*/
+
+static pthread_mutex_t sec_connid_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define SEC_LOCK_CONNID_COUNTER()   sge_mutex_lock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
+#define SEC_UNLOCK_CONNID_COUNTER() sge_mutex_unlock("sec_connid_counter_mutex", SGE_FUNC, __LINE__, &sec_connid_counter_mutex)
+#else
+#define SEC_LOCK_CONNID_COUNTER()
+#define SEC_UNLOCK_CONNID_COUNTER()
+#endif
+/* ---- sec_conn_list --------------------------------- */
+
+static lList *sec_conn_list = NULL;
+
+#ifdef SGE_MT
+
+/* 
+** MT-NOTE: sec_conn_list_mutex guards access to sec_conn_list 
+** MT-NOTE: that must be synchronized in case of a MT qmaster
+*/
+static pthread_mutex_t sec_conn_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define SEC_LOCK_CONN_LIST()      sge_mutex_lock("sec_conn_list_mutex", SGE_FUNC, __LINE__, &sec_conn_list_mutex)
+#define SEC_UNLOCK_CONN_LIST()    sge_mutex_unlock("sec_conn_list_mutex", SGE_FUNC, __LINE__, &sec_conn_list_mutex)
+#else
+#define SEC_LOCK_CONN_LIST()
+#define SEC_UNLOCK_CONN_LIST()
+#endif
+
+/* ---- *_file --------------------------------- */
 
 static char *ca_key_file;
 static char *ca_cert_file;
@@ -307,6 +449,325 @@ static char *key_file;
 static char *cert_file;
 static char *reconnect_file;
 static char *rand_file;
+
+/* 
+** MT-NOTE: no mutex needed for all *_file global variables as long as write access 
+** MT-NOTE: is done only in MT safe sec_init() 
+*/
+
+
+#ifdef SGE_MT
+
+/* 
+** Two callback functions are needed for making -lcrypto MT safe 
+*/ 
+
+/* this looks like a global variable, but actually it's an array of mutexes 
+   one must be sure that 'lock_cs' is initialized only once */
+static pthread_mutex_t *lock_cs = NULL;
+static long *lock_count = NULL;
+
+/****** sec_lib/sec_crypto_thread_id() *****************************************
+*  NAME
+*     sec_crypto_thread_id() -- Callback function returning thread id
+*
+*  SYNOPSIS
+*     static unsigned long sec_crypto_thread_id(void) 
+*
+*  FUNCTION
+*     Callback function returning a threads id. This is needed to
+*     make -lcrypto MT safe.
+*
+*  RESULT
+*     static unsigned long - The thread ID
+*
+*  NOTES
+*     MT-NOTE: sec_crypto_thread_id() is MT safe
+*
+*  SEE ALSO
+*     OpenSSL threads(3) man page 
+*******************************************************************************/
+static unsigned long sec_crypto_thread_id(void)
+{
+   return pthread_self();
+}
+
+/****** sec_lib/sec_crypto_locking_callback() **********************************
+*  NAME
+*     sec_crypto_locking_callback() -- Callback function for mutex (un)locking 
+*
+*  SYNOPSIS
+*     static void sec_crypto_locking_callback(int mode, int type, char *file, 
+*     int line) 
+*
+*  FUNCTION
+*     Callback function that (un)locks a mutex. This is needed to
+*     make -lcrypto MT safe.
+*
+*  INPUTS
+*     int mode   - Specifies lock/unlock case.
+*     int type   - Unclear. Simply taken from mttest.c referenced in OpenSSL threads(3) 
+*     char *file - OpenSSL source file from where we are called.
+*     int line   - Line number in OpenSSL source file from where we are called.
+*
+*  NOTES
+*     MT-NOTES: sec_crypto_locking_callback() is MT safe
+*
+*  SEE ALSO
+*     OpenSSL threads(3) man page 
+*******************************************************************************/
+static void sec_crypto_locking_callback(int mode, int type, char *file, int line)
+{
+   char mutex_name[255];
+
+   sprintf(mutex_name, "crypto-lock[ mode=%s lock=%s %s:%d ]", 
+                (mode&CRYPTO_LOCK)?"l":"u",
+                (type&CRYPTO_READ)?"r":"w", file, line);
+   if (mode & CRYPTO_LOCK) {
+      sge_mutex_lock(mutex_name, "sec_crypto_locking_callback", __LINE__, &(lock_cs[type]));
+   } else {
+      sge_mutex_unlock(mutex_name, "sec_crypto_locking_callback", __LINE__, &(lock_cs[type]));
+   }
+   return;
+}
+
+/****** sec_lib/sge_thread_setup() *********************************************
+*  NAME
+*     sge_thread_setup() -- Make -lcrypto MT safe
+*
+*  SYNOPSIS
+*     static void sge_thread_setup(void) 
+*
+*  FUNCTION
+*     We use -lcrypto threads(3) interface to allow OpenSSL safely be used by 
+*     multiple threads. No -lcrypto function may be called prior this function
+*     was called.
+*
+*  NOTES
+*     MT-NOTES: sge_thread_setup() is not MT safe 
+*
+*  SEE ALSO
+*     OpenSSL threads(3) man page
+*******************************************************************************/
+static void sge_thread_setup(void)
+{
+   int i;
+
+   DENTER(TOP_LAYER, "sge_thread_setup");
+
+   lock_cs=OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+   lock_count=OPENSSL_malloc(CRYPTO_num_locks() * sizeof(long));
+   for (i=0; i<CRYPTO_num_locks(); i++) {
+      lock_count[i]=0;
+      pthread_mutex_init(&(lock_cs[i]),NULL);
+   }
+
+   CRYPTO_set_id_callback((unsigned long (*)())sec_crypto_thread_id);
+   CRYPTO_set_locking_callback((void (*)())sec_crypto_locking_callback);
+
+   DEXIT;
+   return;
+}
+
+/****** sec_lib/sec_thread_cleanup() *******************************************
+*  NAME
+*     sec_thread_cleanup() --  Make -lcrypto MT unsafe
+*
+*  SYNOPSIS
+*     static void sec_thread_cleanup(void) 
+*
+*  FUNCTION
+*     As part of the libsec library shutdown call back functions are 
+*     unregistered and mutexes that were used for making -lcrypto MT 
+*     safe are freed.
+*
+*  NOTES
+*     MT-NOTES: sec_thread_cleanup() is not MT safe 
+*
+*  SEE ALSO
+*     OpenSSL threads(3) man page
+*******************************************************************************/
+static void sec_thread_cleanup(void)
+{
+   int i;
+
+   DENTER(TOP_LAYER, "sec_thread_cleanup");
+
+   CRYPTO_set_locking_callback(NULL);
+
+   for (i=0; i<CRYPTO_num_locks(); i++) {
+      pthread_mutex_destroy(&(lock_cs[i]));
+      DPRINTF(("%8ld:%s\n", lock_count[i], CRYPTO_get_lock_name(i)));
+   }
+   OPENSSL_free(lock_cs);
+   OPENSSL_free(lock_count);
+
+   DEXIT;
+   return;
+}
+#endif
+
+
+/****** sec_lib/sec_alloc_key_mat() ********************************************
+*  NAME
+*     sec_alloc_key_mat() -- Convenience function to alloc/init per thread 
+*                            key_mat* variables.
+*
+*  SYNOPSIS
+*     static int sec_alloc_key_mat(void) 
+*
+*  RESULT
+*     static int - 0 on success, -1 on failure
+*
+*  NOTES
+*     MT-NOTE: sec_alloc_key_mat() is MT safe
+*******************************************************************************/
+static int sec_alloc_key_mat(void)
+{
+   /* must be done per thread on demand before accessing key_mat */
+   sec_state_set_key_mat_len(GSD_KEY_MAT_32);
+   if (!sec_state_get_key_mat())
+      sec_state_set_key_mat((u_char *) malloc(GSD_KEY_MAT_32));
+   if (!sec_state_get_key_mat())
+      return -1;
+      
+   return 0;
+}
+
+#ifdef SEC_RECONNECT
+/****** sec_lib/sec_dealloc_key_mat() ******************************************
+*  NAME
+*     sec_dealloc_key_mat() -- Convenience function to dealloc/init per thread
+*                              key_mat* variables.
+*
+*  SYNOPSIS
+*     static void sec_dealloc_key_mat(void) 
+*
+*  NOTES
+*     MT-NOTE: sec_dealloc_key_mat() is MT safe
+*******************************************************************************/
+static void sec_dealloc_key_mat(void)
+{
+   u_char *buf;
+   if ((buf=sec_state_get_key_mat())) {
+      free(buf);
+      sec_state_set_key_mat(NULL);
+   }
+
+   return;
+}
+#endif
+
+
+/****** sec_lib/sec_state_set_key_mat() ****************************************
+*  NAME
+*     sec_state_{s|g}et_*() -- Per thread global variables setter/getter funcs
+*
+*  FUNCTION
+*     Used to set and get values of sec lib per thread global variables.
+*
+*  NOTES
+*     MT-NOTE: sec_state_{s|g}et_*() functions are MT safe
+*
+*  SEE ALSO
+*     See definition of 'struct sec_state_t' for information about purpose
+*     of these variables.
+*******************************************************************************/
+static void sec_state_set_key_mat(u_char *key_mat)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat");
+   sec_state->key_mat = key_mat;
+}
+
+static u_char *sec_state_get_key_mat(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
+   return sec_state->key_mat;
+}
+
+static void sec_state_set_key_mat_len(u_long32 key_mat_len)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_key_mat_len");
+   sec_state->key_mat_len = key_mat_len;
+}
+
+static u_long32 sec_state_get_key_mat_len(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
+   return sec_state->key_mat_len;
+}
+
+static void sec_state_set_connid(u_long32 connid)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_connid");
+   sec_state->connid = connid;
+}
+
+static u_long32 sec_state_get_connid(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
+   return sec_state->connid;
+}
+
+static void sec_state_set_connect(int connect)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_connect");
+   sec_state->connect = connect;
+}
+
+static int sec_state_get_connect(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
+   return sec_state->connect;
+}
+
+static void sec_state_set_seq_receive(u_long32 seq_receive)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_seq_receive");
+   sec_state->seq_receive = seq_receive;
+}
+
+static u_long32 sec_state_get_seq_receive(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
+   return sec_state->seq_receive;
+}
+
+static void sec_state_set_seq_send(u_long32 seq_send)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_seq_send");
+   sec_state->seq_send = seq_send;
+}
+
+static u_long32 sec_state_get_seq_send(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
+   return sec_state->seq_send;
+}
+
+static void sec_state_set_refresh_time(ASN1_UTCTIME *refresh_time)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_set_refresh_time");
+#if 0
+   if (sec_state->refresh_time) {
+      ASN1_UTCTIME_free(sec_state->refresh_time);
+      sec_state->refresh_time = NULL;   
+   }
+#endif
+   sec_state->refresh_time = refresh_time;
+}
+
+static ASN1_UTCTIME *sec_state_get_refresh_time(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_refresh_time");
+   return sec_state->refresh_time;
+}
+
+static char *sec_state_get_unique_identifier(void)
+{
+   GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
+   return sec_state->unique_identifier;
+}
 
 
 /****** security/sec_lib/sec_init() ******************************************
@@ -317,9 +778,8 @@ static char *rand_file;
 *     int sec_init(const char *progname) 
 *
 *  FUNCTION
-*     This function initialices the security related data in the global 
-*     gsd-struct. This must be done only once, typically before the 
-*     enroll to the commd.
+*     This function initialices all security related data for the process
+*     This must be done only once, typically before the enroll to the commd.
 *
 *  INPUTS
 *     const char *progname - commproc name to distinguish daemons and non-daemons 
@@ -327,19 +787,30 @@ static char *rand_file;
 *  RESULT
 *     int 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_init() is MT safe
 *******************************************************************************/
 int sec_init(const char *progname) 
 {
-   static int sec_initialized = 0;
    char *randfile = NULL;
    SGE_STRUCT_STAT file_info;
+   int is_master;
 
-   DENTER(GDI_LAYER,"sec_init");
+   DENTER(GDI_LAYER, "sec_init");
+
+   SEC_LOCK_INITIALIZED();
 
    if (sec_initialized) {
+      SEC_UNLOCK_INITIALIZED();
       DEXIT;
       return 0;
    }   
+
+   /* use -lcrypto threads(3) interface here to allow OpenSSL 
+      safely be used by multiple threads */
+#ifdef SGE_MT
+   sge_thread_setup();
+#endif
 
    /*
    ** set everything to zero
@@ -373,12 +844,12 @@ int sec_init(const char *progname)
    ** FIXME: am I a sge daemon? -> is_daemon() should be implemented
    */
    gsd.is_daemon = sec_is_daemon(progname);
-   gsd.is_master = sec_is_master(progname);
+   is_master     = sec_is_master(progname);
 
    /* 
    ** setup the filenames of randfile, certificates, keys, etc.
    */
-   sec_setup_path(gsd.is_daemon, gsd.is_master);
+   sec_setup_path(gsd.is_daemon, is_master);
 
    /* 
    ** seed PRNG, /dev/random is used if possible
@@ -392,6 +863,7 @@ int sec_init(const char *progname)
       } else if (rand_file) {   
          RAND_load_file(rand_file, 2048); 
       } else {
+         SEC_UNLOCK_INITIALIZED();
          ERROR((SGE_EVENT, MSG_SEC_RANDFILENOTSET));
          DEXIT;
          return -1;
@@ -411,69 +883,90 @@ int sec_init(const char *progname)
 /*    gsd.cipher = EVP_enc_null(); */
 #endif   
 
-   gsd.key_mat_len = GSD_KEY_MAT_32;
-   gsd.key_mat = (u_char *) malloc(gsd.key_mat_len);
-   if (!gsd.key_mat){
-      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
-      DEXIT;
-      return -1;
-   }
-   if(!strcmp(progname, prognames[QMASTER])) {
-      /* 
-      ** time after qmaster clears the connection list   
-      */
-      gsd.refresh_time = X509_gmtime_adj(gsd.refresh_time, 0);
-   }
-   else {
+   if(strcmp(progname, prognames[QMASTER])) {
       /* 
       ** time after client makes a new announce to master   
       */
-      gsd.refresh_time = X509_gmtime_adj(gsd.refresh_time, (long) 60*ValidMinutes);
+      sec_state_set_refresh_time(X509_gmtime_adj(sec_state_get_refresh_time(), (long) 60*VALID_MINUTES));
    }   
 
-   gsd.connid = gsd.seq_send = gsd.connect = gsd.seq_receive = 0;
+   sec_state_set_connid(0);
+   sec_state_set_seq_send(0);
+   sec_state_set_connect(0);
+   sec_state_set_seq_receive(0);
 
    /* 
    ** read security related files
    */
-   if(sec_files()){
+   if (sec_files()){
+      SEC_UNLOCK_INITIALIZED();
       DEXIT;
       return -1;
    }
 
 #ifdef SEC_RECONNECT   
-#if 0
-   /* 
-   ** FIXME: install sec_exit functions for utilib
-   */
-   if(!strcmp(progname, prognames[QMASTER])){
-      install_sec_exit_func(sec_dump_connlist);
-      if (sec_undump_connlist())
-                WARNING((SGE_EVENT,"warning: Can't read ConnList\n"));
-   }
-   else 
-#endif   
-   if(!gsd.is_daemon)
-      install_sec_exit_func(sec_write_data2hd);
-
    /*
    ** read reconnect data
    ** FIXME
    */
    if (!gsd.is_daemon)
       sec_reconnect();
-#else
-   install_sec_exit_func(NULL);
 #endif      
 
    
    DPRINTF(("====================[  CSP SECURITY  ]===========================\n"));
 
    sec_initialized = 1;
+   SEC_UNLOCK_INITIALIZED();
 
    DEXIT;
    return 0;
 }
+
+/****** sec_lib/sec_exit() *****************************************************
+*  NAME
+*     sec_exit() -- Shutown CSP security 
+*
+*  SYNOPSIS
+*     int sec_exit() 
+*
+*  FUNCTION
+*     All actions that are required for shutting down CSP security are performed.
+*
+*  RESULT
+*     int 0 on success, -1 on failure
+*
+*  NOTES
+*     MT-NOTES: sec_exit() is MT safe
+*******************************************************************************/
+int sec_exit(void) 
+{
+   DENTER(GDI_LAYER, "sec_exit");
+
+   SEC_LOCK_INITIALIZED();
+   if (!sec_initialized) {
+      SEC_UNLOCK_INITIALIZED();
+      DEXIT;
+      return -1;
+   }   
+
+   /* dump client reconnect data to file */
+#ifdef SEC_RECONNECT   
+   if(!gsd.is_daemon)
+      sec_write_data2hd();
+#endif
+
+#ifdef SGE_MT
+   sec_thread_cleanup();
+#endif
+
+   sec_initialized = 0;   
+   SEC_LOCK_INITIALIZED();
+
+   DEXIT;
+   return 0;
+}
+
 
 /****** security/sec_lib/sec_send_message() *********************************************
 *  NAME
@@ -502,6 +995,9 @@ int sec_init(const char *progname)
 *
 *  RESULT
 *     int - 0 on success, CL_ or SEC_ errors otherwise
+*
+*  NOTES
+*     MT-NOTE: sec_send_message() is not MT safe
 *******************************************************************************/
 int sec_send_message(
 int synchron,
@@ -531,23 +1027,33 @@ int compressed
    }   
       
    if (sec_set_encrypt(tag)) {
-      if (uti_state_get_mewho() == QMASTER && conn_list) {
-         /*
-         ** set the corresponding key and connection information
-         ** in the connection list for commd triple 
-         ** (tohost, tocomproc, toid)
-         */
-         if (sec_set_secdata(tohost,tocomproc,toid)) {
-            ERROR((SGE_EVENT, MSG_SEC_SETSECDATAFAILED));
-            DEXIT;
-            return SEC_SEND_FAILED;
+      if (uti_state_get_mewho() == QMASTER) {
+         SEC_LOCK_CONN_LIST();
+         if (sec_conn_list) {
+            /*
+            ** set the corresponding key and connection information
+            ** in the connection list for commd triple 
+            ** (tohost, tocomproc, toid)
+            */
+            if (sec_set_secdata(tohost,tocomproc,toid)) {
+               SEC_UNLOCK_CONN_LIST();
+               ERROR((SGE_EVENT, MSG_SEC_SETSECDATAFAILED));
+               DEXIT;
+               return SEC_SEND_FAILED;
+            }
+            SEC_UNLOCK_CONN_LIST();
          }
       }
+      DEBUG_PRINT_BUFFER("Message before encryption", (unsigned char*) buffer, buflen);
+
       if (sec_encrypt(&pb, buffer, buflen)) {
          ERROR((SGE_EVENT, MSG_SEC_MSGENCFAILED));
          DEXIT;
          return SEC_SEND_FAILED;
       }
+
+      DEBUG_PRINT_BUFFER("Message after encryption",
+                               pb.head_ptr, pb.bytes_used);
    }
    else if (uti_state_get_mewho() != QMASTER) {
       if (sec_set_connid(&buffer, &buflen)) {
@@ -593,6 +1099,8 @@ int compressed
 *  RESULT
 *     int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_receive_message() is MT safe
 *******************************************************************************/
 int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
                         int *tag, char **buffer, u_long32 *buflen, 
@@ -628,6 +1136,9 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
          DEXIT;
          return SEC_RECEIVE_FAILED;
       }
+
+      DEBUG_PRINT_BUFFER("Decrypted incoming message", 
+                         (unsigned char*) (*buffer), (int)(*buflen));
    }
    else if (uti_state_get_mewho() == QMASTER) {
       if (sec_get_connid(buffer,buflen) ||
@@ -665,6 +1176,8 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 *     static int - 0 if the message is not encrypted, 
 *                  1 if the message is encrypted 
 *
+*  NOTES
+*     MT-NOTE: sec_set_encrypt() is MT safe
 *******************************************************************************/
 static int sec_set_encrypt(
 int tag 
@@ -697,6 +1210,8 @@ int tag
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_files() is not MT safe
 *******************************************************************************/
 static int sec_files()
 {
@@ -715,6 +1230,7 @@ static int sec_files()
        i = -1;
        goto error;
    }
+
    gsd.x509 = PEM_read_X509(fp, NULL, NULL, PREDEFINED_PW);
    if (gsd.x509 == NULL) {
       sec_error();
@@ -729,7 +1245,6 @@ static int sec_files()
       i = -1;
       goto error;
    }
-
 
    /* 
    ** read private key from file
@@ -779,6 +1294,8 @@ static int sec_files()
 *  BUGS
 *     Revocation of certificates is not yet supported.
 *
+*  NOTES
+*     MT-NOTE: sec_verify_certificate() is MT safe
 *******************************************************************************/
 static int sec_verify_certificate(X509 *cert)
 {
@@ -815,10 +1332,9 @@ static int sec_verify_certificate(X509 *cert)
          break;
    }      
    
-
    DEXIT;
    return ret;
-}   
+}
 
 
 #ifdef SEC_RECONNECT
@@ -839,27 +1355,35 @@ static int sec_verify_certificate(X509 *cert)
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**    MT-NOTES: sec_dump_connlist() is MT safe
 */
 static int sec_dump_connlist()
 {
    FILE    *fp;
 
    if (uti_state_get_mewho() == QMASTER) {
-      fp = fopen("sec_connlist.dat", "w");
+      fp = fopen("connlist.dat", "w");
       if (fp) {
-         lDumpList(fp, conn_list, 0);
+         SEC_LOCK_CONN_LIST();
+         lDumpList(fp, sec_conn_list, 0);
+         SEC_UNLOCK_CONN_LIST();
          fclose(fp);
       }
       else 
          return -1;
 
-      fp = fopen("sec_connid.dat","w");
+      fp = fopen("connid.dat","w");
       if (fp) {
-         fprintf(fp, u32, connid_counter);
+         SEC_LOCK_CONNID_COUNTER();
+         fprintf(fp, u32, sec_connid_counter);
+         SEC_UNLOCK_CONNID_COUNTER();
          fclose(fp);
       }
-      else
+      else {
          return -1;
+      }
    }
    return 0;
 }
@@ -879,28 +1403,35 @@ static int sec_dump_connlist()
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**    MT-NOTES: sec_undump_connlist() is MT safe
 */
 static int sec_undump_connlist()
 {
    FILE    *fp;
 
    if (uti_state_get_mewho() == QMASTER) {
-      fp = fopen("sec_connlist.dat","r");
+      fp = fopen("connlist.dat","r");
       if (fp){
-         conn_list = lUndumpList(fp,NULL,NULL);
+         SEC_LOCK_CONN_LIST();
+         sec_conn_list = lUndumpList(fp,NULL,NULL);
+         SEC_UNLOCK_CONN_LIST();
          fclose(fp);
       } 
       else
          return -1;
-
          
-      fp = fopen("sec_connid.dat","r");
+      fp = fopen("connid.dat","r");
       if (fp){
-         fscanf(fp, u32, &connid_counter);
+         SEC_LOCK_CONNID_COUNTER();
+         fscanf(fp, u32, &sec_connid_counter);
+         SEC_UNLOCK_CONNID_COUNTER();
          fclose(fp);
       }
-      else
+      else {
          return -1;
+      }
    } 
    return 0;
 }
@@ -929,6 +1460,8 @@ static int sec_undump_connlist()
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_announce_connection() is MT safe
 *******************************************************************************/
 static int sec_announce_connection(
 GlobalSecureData *gsd,
@@ -959,16 +1492,17 @@ const char *tohost
    u_long32 dummymid;
    EVP_MD_CTX ctx;
    EVP_CIPHER_CTX ectx;
+   u_long32 tmp_key_mat_len;
    
    DENTER(GDI_LAYER, "sec_announce_connection");
 
    /*
    ** try to reconnect
    */
-   if (gsd->connect) {
-/* debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time); */
-      if (gsd->refresh_time && (X509_cmp_current_time(gsd->refresh_time) > 0)) {
-         DPRINTF(("++++ Connection %d still valid\n", (int) gsd->connid));      
+   if (sec_state_get_connect()) {
+/* debug_print_ASN1_UTCTIME("refresh_time: ", sec_state_get_refresh_time()); */
+      if (sec_state_get_refresh_time() && (X509_cmp_current_time(sec_state_get_refresh_time()) > 0)) {
+         DPRINTF(("++++ Connection %d still valid\n", (int) sec_state_get_connid()));      
          DEXIT;      
          return 0;
       }   
@@ -978,7 +1512,8 @@ const char *tohost
    /* 
    ** send sec_announce
    */
-   gsd->seq_send = gsd->seq_receive = 0;
+   sec_state_set_seq_send(0);
+   sec_state_set_seq_receive(0);
 
    /* 
    ** write x509 to buffer
@@ -1138,7 +1673,14 @@ const char *tohost
       i = -1;
       goto error;
    }   
-   
+  
+   /* ensure key mat buffer is allocated */  
+   if (sec_alloc_key_mat()) {
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
+      i = -1;
+      goto error;
+   }
+
    /*
    ** decrypt secret key
    */
@@ -1149,30 +1691,32 @@ const char *tohost
       i=-1;
       goto error;
    }
-   if (!EVP_OpenUpdate(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len), enc_key_mat, (int) enc_key_mat_len)) {
+   if (!EVP_OpenUpdate(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len, enc_key_mat, (int) enc_key_mat_len)) {
       ERROR((SGE_EVENT, MSG_SEC_EVPOPENUPDATEFAILED));
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
       i = -1;
       goto error;
    }
-   EVP_OpenFinal(&ectx, gsd->key_mat, (int*) &(gsd->key_mat_len));
+   sec_state_set_key_mat_len(tmp_key_mat_len);
+
+   EVP_OpenFinal(&ectx, sec_state_get_key_mat(), (int*) &tmp_key_mat_len);
+   sec_state_set_key_mat_len(tmp_key_mat_len);
    EVP_CIPHER_CTX_cleanup(&ectx);
    /* FIXME: problem in EVP_* lib for stream ciphers */
-   gsd->key_mat_len = enc_key_mat_len;   
+   sec_state_set_key_mat_len(enc_key_mat_len);
 
-   DEBUG_PRINT_BUFFER("Received key material", gsd->key_mat, gsd->key_mat_len);
+   DEBUG_PRINT_BUFFER("Received key material", sec_state_get_key_mat(), sec_state_get_key_mat_len());
    
    /*
    ** set own connid to assigned connid
-   ** set refresh_time to current time + 60 * ValidMinutes
+   ** set refresh_time to current time + 60 * VALID_MINUTES
    ** set connect flag
    */
-   gsd->connect = 1;
-   gsd->connid = connid;
-   gsd->refresh_time = X509_gmtime_adj(gsd->refresh_time, 
-                                       (long) 60*ValidMinutes);
-
+   sec_state_set_connect(1);
+   sec_state_set_connid(connid);
+   sec_state_set_refresh_time(X509_gmtime_adj(sec_state_get_refresh_time(), 
+                                       (long) 60*VALID_MINUTES));
 
    i=0;
 
@@ -1221,6 +1765,8 @@ const char *tohost
 *  RESULT
 *     static int - 0 on success, -1 on failure 
 *
+*  NOTES
+*     MT-NOTE: sec_respond_announce() is MT safe
 *******************************************************************************/
 static int sec_respond_announce(char *commproc, u_short id, char *host, 
                          char *buffer, u_long32 buflen)
@@ -1332,7 +1878,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    enc_key_mat = (u_char *) malloc(public_key_size);
    enc_challenge = (u_char *) malloc(public_key_size);
 
-   if (!enc_key_mat ||  !enc_challenge) {
+   if (!enc_key_mat ||  !enc_challenge || sec_alloc_key_mat()) {
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
       sec_send_err(commproc,id,host,&pb_respond, MSG_MEMORY_MALLOCFAILED);
       i=-1;
@@ -1342,7 +1888,9 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** set connection ID
    */
-   gsd.connid = connid_counter;
+   SEC_LOCK_CONNID_COUNTER();
+   sec_state_set_connid(sec_connid_counter);
+   SEC_UNLOCK_CONNID_COUNTER();
 
    /* 
    ** write x509 certificate to buffer
@@ -1368,8 +1916,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** make key material
    */
-   RAND_pseudo_bytes(gsd.key_mat, gsd.key_mat_len);
-   DEBUG_PRINT_BUFFER("Sent key material", gsd.key_mat, gsd.key_mat_len);
+   RAND_pseudo_bytes(sec_state_get_key_mat(), sec_state_get_key_mat_len());
+   DEBUG_PRINT_BUFFER("Sent key material", sec_state_get_key_mat(), sec_state_get_key_mat_len());
    DEBUG_PRINT_BUFFER("Sent enc_challenge", enc_challenge, chall_enc_len);
    
    /*
@@ -1384,7 +1932,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
       i = -1;
       goto error;
    }
-   if (!EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, gsd.key_mat, gsd.key_mat_len)) {
+   if (!EVP_EncryptUpdate(&ectx, enc_key_mat, (int *)&enc_key_mat_len, sec_state_get_key_mat(), sec_state_get_key_mat_len())) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTKEYFAILED));
       EVP_CIPHER_CTX_cleanup(&ectx);
       sec_error();
@@ -1394,7 +1942,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    }
    EVP_SealFinal(&ectx, enc_key_mat, (int*) &enc_key_mat_len);
 
-   enc_key_mat_len = gsd.key_mat_len;
+   enc_key_mat_len = sec_state_get_key_mat_len();
 
    DEBUG_PRINT_BUFFER("Sent ekey[0]", ekey[0], ekeylen);
    DEBUG_PRINT_BUFFER("Sent enc_key_mat", enc_key_mat, enc_key_mat_len);
@@ -1403,7 +1951,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** write response data to packing buffer
    */
    i=sec_pack_response(x509_len, x509_buf, chall_enc_len, enc_challenge,
-                       gsd.connid, 
+                       sec_state_get_connid(), 
                        ekeylen, ekey[0], 
                        EVP_CIPHER_CTX_iv_length(&ectx), iv,
                        enc_key_mat_len, enc_key_mat,
@@ -1420,7 +1968,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** insert connection to Connection List
    */
-   if (sec_insert_conn2list(gsd.connid, host, commproc, id, uniqueIdentifier)) {
+   if (sec_insert_conn2list(sec_state_get_connid(), host, commproc, id, uniqueIdentifier)) {
       ERROR((SGE_EVENT, MSG_SEC_INSERTCONNECTIONFAILED));
       sec_send_err(commproc, id, host, &pb_respond, 
                    MSG_SEC_INSERTCONNECTIONFAILED);
@@ -1481,6 +2029,8 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_encrypt() is MT safe
 *******************************************************************************/
 static int sec_encrypt(
 sge_pack_buffer *pb,
@@ -1501,14 +2051,14 @@ int inbuflen
    
    DENTER(GDI_LAYER,"sec_encrypt");   
 
-   seq_no = htonl(gsd.seq_send);
+   seq_no = htonl(sec_state_get_seq_send());
    memcpy(seq_str, &seq_no, INTSIZE);
 
    /*
    ** create digest
    */
    EVP_DigestInit(&mdctx, gsd.digest);
-   EVP_DigestUpdate(&mdctx, gsd.key_mat, gsd.key_mat_len);
+   EVP_DigestUpdate(&mdctx, sec_state_get_key_mat(), sec_state_get_key_mat_len());
    EVP_DigestUpdate(&mdctx, seq_str, INTSIZE);
    EVP_DigestUpdate(&mdctx, inbuf, inbuflen);
    EVP_DigestFinal(&mdctx, md_value, &md_len);
@@ -1526,18 +2076,9 @@ int inbuflen
    /*
    ** encrypt digest and message
    */
-#ifdef SECRET_KEY_ERROR   
-   {
-      static int count = 0;
-      if (++count == 10) {
-         RAND_pseudo_bytes(gsd.key_mat, gsd.key_mat_len);
-         count = 0;
-      }   
-   }   
-#endif   
    
    memset(iv, '\0', sizeof(iv));
-   EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
+   EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
    if (!EVP_EncryptUpdate(&ctx, md_value, (int*) &enc_md_len, md_value, md_len)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMACFAILED));
       sec_error();
@@ -1554,7 +2095,7 @@ int inbuflen
 
 
    memset(iv, '\0', sizeof(iv));
-   EVP_EncryptInit(&ctx, gsd.cipher, gsd.key_mat, iv);
+   EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
    if (!EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
                            (unsigned char*)inbuf, inbuflen)) {
       ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
@@ -1580,11 +2121,10 @@ int inbuflen
       goto error;
    }
 
-
    /*
    ** pack the information into one buffer
    */
-   i = sec_pack_message(pb, gsd.connid, md_len, md_value, 
+   i = sec_pack_message(pb, sec_state_get_connid(), md_len, md_value, 
                            (unsigned char *)outbuf, outlen);
    
    if (i) {
@@ -1592,19 +2132,22 @@ int inbuflen
       goto error;
    }
 
-   gsd.seq_send = INC32(gsd.seq_send);
+   sec_state_set_seq_send(INC32(sec_state_get_seq_send()));
 
-   if (conn_list) {
+   SEC_LOCK_CONN_LIST();
+   if (sec_conn_list) {
       lListElem *element=NULL;
       
-      element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
+      element = lGetElemUlong(sec_conn_list, SEC_ConnectionID, sec_state_get_connid());
       if (!element) {
+         SEC_UNLOCK_CONN_LIST();
          ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY));
          i = -1;
          goto error;
       }
-      lSetUlong(element, SEC_SeqNoSend, gsd.seq_send);
+      lSetUlong(element, SEC_SeqNoSend, sec_state_get_seq_send());
    }   
+   SEC_UNLOCK_CONN_LIST();
 
    i=0;
 
@@ -1639,6 +2182,8 @@ int inbuflen
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_handle_announce() is MT safe
 *******************************************************************************/
 static int sec_handle_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen)
 {
@@ -1660,7 +2205,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
             goto error;
          }
       }
-      else{         
+      else {         
          /* 
          ** a sec_decrypt error has occured
          */
@@ -1672,11 +2217,12 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
       }
    }
    else if (gsd.is_daemon) {
-      gsd.connect = 0;
+      sec_state_set_connect(0);
    }
    else {
       printf("You should reconnect - please try command again!\n");
-      gsd.connect = 0;
+      sec_state_set_connect(0);
+
       if (SGE_STAT(reconnect_file,&file_info) < 0) {
          i = 0;
          goto error;
@@ -1717,6 +2263,8 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES 
+*     MT-NOTE: sec_decrypt() is MT safe
 *******************************************************************************/
 static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id)
 {
@@ -1753,14 +2301,15 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       goto error;
    }
 
-   if (conn_list) {
+   SEC_LOCK_CONN_LIST();
+   if (sec_conn_list) {
       /*
       ** for debugging
       */
       if (getenv("SGE_DEBUG_CONNLIST")) {
          lListElem *el;
          ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
-         for_each(el, conn_list) {
+         for_each(el, sec_conn_list) {
             const char *dtime = lGetString(el, SEC_ExpiryDate);
             utctime = d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
                                              strlen(dtime));
@@ -1777,8 +2326,9 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       /* 
       ** search list element for this connection
       */
-      element = lGetElemUlong(conn_list, SEC_ConnectionID, connid);
+      element = lGetElemUlong(sec_conn_list, SEC_ConnectionID, connid);
       if (!element) {
+         SEC_UNLOCK_CONN_LIST();
          ERROR((SGE_EVENT, MSG_SEC_NOCONN_I, (int) connid));
          packstr(&pb, SGE_EVENT);
          i = -1;
@@ -1789,14 +2339,18 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       ** get data from connection list
       */
       sec_list2keymat(element);
-      strcpy(gsd.uniqueIdentifier, lGetString(element, SEC_UniqueIdentifier)); 
-      gsd.seq_receive = lGetUlong(element, SEC_SeqNoReceive);
-      gsd.connid = connid;
+      strcpy(sec_state_get_unique_identifier(), lGetString(element, SEC_UniqueIdentifier)); 
+      sec_state_set_seq_receive(lGetUlong(element, SEC_SeqNoReceive));
+      sec_state_set_connid(connid);
+
+      /* unfortunately we may not unlock sec_conn_list_mutex here 
+         because 'element' is still in use and refers to a sec_conn_list entry */
    }
    else {
-      if (gsd.connid != connid) {
+      if (sec_state_get_connid() != connid) {
+         SEC_UNLOCK_CONN_LIST();
          ERROR((SGE_EVENT, MSG_SEC_CONNIDSHOULDBE_II,
-                  (int) connid, (int) gsd.connid));
+                  (int) connid, (int) sec_state_get_connid()));
          packstr(&pb, SGE_EVENT);
          i = -1;
          goto error;
@@ -1808,6 +2362,17 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    */
    *buffer = malloc(*buflen + EVP_CIPHER_block_size(gsd.cipher));
    if (!*buffer) {
+      SEC_UNLOCK_CONN_LIST();
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
+      i = -1;
+      goto error;
+   }
+
+   /*
+   ** malloc key_mat buffer
+   */
+   if (sec_alloc_key_mat()) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
       i = -1;
       goto error;
@@ -1817,7 +2382,8 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    ** decrypt digest and message
    */
    memset(iv, '\0', sizeof(iv));
-   if (!EVP_DecryptInit(&ctx, gsd.cipher, gsd.key_mat, iv)) {
+   if (!EVP_DecryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv)) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
@@ -1827,6 +2393,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
 
    if (!EVP_DecryptUpdate(&ctx, md_value, (int*) &md_len, 
                            enc_mac, enc_mac_len)) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
@@ -1834,6 +2401,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       goto error;
    }
    if (!EVP_DecryptFinal(&ctx, md_value, (int*) &md_len)) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
@@ -1846,7 +2414,8 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
 
 
    memset(iv, '\0', sizeof(iv));
-   if (!EVP_DecryptInit(&ctx, gsd.cipher, gsd.key_mat, iv)) {
+   if (!EVP_DecryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv)) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_DECMACFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
@@ -1855,6 +2424,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    }
    if (!EVP_DecryptUpdate(&ctx, (unsigned char*) *buffer, (int*) &outlen,
                            (unsigned char*)enc_msg, enc_msg_len)) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
@@ -1862,6 +2432,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
       goto error;
    }
    if (!EVP_DecryptFinal(&ctx, (unsigned char*) *buffer, (int*)&outlen)) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED));
       EVP_CIPHER_CTX_cleanup(&ctx);
       sec_error();
@@ -1879,13 +2450,16 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
    /* 
    ** increment sequence number and write it to connection list   
    */
-   gsd.seq_receive = INC32(gsd.seq_receive);
-   if(conn_list){
+   sec_state_set_seq_receive(INC32(sec_state_get_seq_receive()));
+   if(sec_conn_list) {
       lSetHost(element, SEC_Host, host);
       lSetString(element, SEC_Commproc, commproc);
       lSetInt(element, SEC_Id, id);
-      lSetUlong(element, SEC_SeqNoReceive, gsd.seq_receive);
+      lSetUlong(element, SEC_SeqNoReceive, sec_state_get_seq_receive());
    }
+
+   /* uff .... now sec_conn_list_mutex can finally be released */
+   SEC_UNLOCK_CONN_LIST();
 
    /* 
    ** set *buflen                  
@@ -1921,6 +2495,8 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_reconnect() is MT safe
 *******************************************************************************/
 static int sec_reconnect()
 {
@@ -1930,7 +2506,7 @@ static int sec_reconnect()
    SGE_STRUCT_STAT file_info;
    char *ptr;
    u_char *time_str = NULL;
-   u_long32 len;
+   u_long32 len, tmp_connid, tmp_seq_send, tmp_seq_receive;
    BIO *bio = NULL;
 
    DENTER(GDI_LAYER,"sec_reconnect");
@@ -1968,20 +2544,31 @@ static int sec_reconnect()
       goto error;
    }
 
-   i = sec_unpack_reconnect(&pb, &gsd.connid, &gsd.seq_send, &gsd.seq_receive,
-                              &gsd.key_mat, &gsd.key_mat_len, &time_str, &len);
+   i = sec_unpack_reconnect(&pb, &tmp_connid, &tmp_seq_send, &tmp_seq_receive,
+                              &new_key_mat, &tmp_key_mat_len, &time_str, &len);
    if (i) {
       ERROR((SGE_EVENT, MSG_SEC_UNPACKRECONNECTFAILED));
       goto error;
    }
 
+   /* free old key_mat and keep newly allocated instead */
+   sec_dealloc_key_mat();
+   sec_state_set_key_mat(new_key_mat);
+   sec_state_set_key_mat_len(tmp_key_mat_len);
+   sec_state_set_connid(tmp_connid);
+   sec_state_set_seq_send(tmp_seq_send);
+
    ptr = time_str;
-   d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char **)&time_str, len);
+   {
+      ASN1_UTCTIME *tmp_refresh_time;
+      d2i_ASN1_UTCTIME(&tmp_refresh_time, (unsigned char **)&time_str, len);
+      sec_state_set_refresh_time(tmp_refresh_time);
+   } 
    free((char*) ptr);
 
-   /* debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd.refresh_time); */
+   /* debug_print_ASN1_UTCTIME("refresh_time: ", sec_state_get_refresh_time()); */
 
-   gsd.connect = 1;
+   sec_state_set_connect(1);
    i = 0;
    
    error:
@@ -2009,6 +2596,8 @@ static int sec_reconnect()
 *  RESULT
 *     static int - 0 on success, -1 on failure
 *
+*  NOTES
+*     MT-NOTE: sec_write_data2hd() is MT safe
 *******************************************************************************/
 static int sec_write_data2hd()
 {
@@ -2033,14 +2622,20 @@ static int sec_write_data2hd()
    }
    
    tmp = time_str;
-   len = i2d_ASN1_UTCTIME(gsd.refresh_time, &tmp);
+   len = i2d_ASN1_UTCTIME(sec_state_get_refresh_time(), &tmp);
    time_str[len] = '\0';
-   
+  
+   if (sec_alloc_key_mat()) {
+      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
+      i = -1;
+      goto error;
+   }
+
    /* 
    ** write data to packing buffer
    */
-   if (sec_pack_reconnect(&pb, gsd.connid, gsd.seq_send, gsd.seq_receive,
-                           gsd.key_mat, gsd.key_mat_len, 
+   if (sec_pack_reconnect(&pb, sec_state_get_connid(), sec_state_get_seq_send(), sec_state_get_seq_receive(),
+                           sec_state_get_key_mat(), sec_state_get_key_mat_len(), 
                            time_str, len)) {
       ERROR((SGE_EVENT, MSG_SEC_PACKRECONNECTFAILED));
       i = -1;
@@ -2079,6 +2674,7 @@ static int sec_write_data2hd()
       goto error;
    }
 
+
    i=0;
 
    error:
@@ -2104,6 +2700,8 @@ static int sec_write_data2hd()
 ** DESCRIPTION
 **      This function prints error messages from crypto library
 **
+** NOTES
+**      MT-NOTE: sec_error() is MT safe
 */
 static void sec_error(void)
 {
@@ -2135,6 +2733,9 @@ static void sec_error(void)
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**    MT-NOTES: sec_send_err() is MT safe
 */
 
 static int sec_send_err(
@@ -2177,6 +2778,9 @@ const char *err_msg
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**      MT-NOTE: sec_set_connid() is MT safe
 */
 
 static int sec_set_connid(char **buffer, int *buflen)
@@ -2192,7 +2796,7 @@ static int sec_set_connid(char **buffer, int *buflen)
    pb.bytes_used = *buflen;
    pb.mem_size = *buflen;
 
-   if((i = packint(&pb,gsd.connid))){
+   if ((i = packint(&pb, sec_state_get_connid()))){
       ERROR((SGE_EVENT, MSG_SEC_PACKCONNIDFAILED));
       goto error;
    }
@@ -2222,12 +2826,15 @@ static int sec_set_connid(char **buffer, int *buflen)
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**    MT-NOTE: sec_get_connid() is MT safe
 */
 
 static int sec_get_connid(char **buffer, u_long32 *buflen)
 {
    int i;
-   u_long32 new_buflen;
+   u_long32 new_buflen, tmp_connid;
    sge_pack_buffer pb;
 
    DENTER(GDI_LAYER,"sec_set_connid");
@@ -2239,10 +2846,11 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
    pb.bytes_used = new_buflen;
    pb.mem_size = *buflen;
 
-   if((i = unpackint(&pb,&gsd.connid))){
+   if((i = unpackint(&pb, &tmp_connid))){
       ERROR((SGE_EVENT, MSG_SEC_UNPACKCONNIDFAILED));
       goto error;
    }
+   sec_state_set_connid(tmp_connid);
 
    *buflen = new_buflen;
    
@@ -2271,16 +2879,22 @@ static int sec_get_connid(char **buffer, u_long32 *buflen)
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**    MT-NOTE: sec_update_connlist() is MT safe
 */
 
 static int sec_update_connlist(const char *host, const char *commproc, int id)
 {
-   lListElem *element=NULL;
+   lListElem *element = NULL;
 
    DENTER(GDI_LAYER,"sec_update_connlist");
 
-   element = lGetElemUlong(conn_list, SEC_ConnectionID, gsd.connid);
+   SEC_LOCK_CONN_LIST();
+
+   element = lGetElemUlong(sec_conn_list, SEC_ConnectionID, sec_state_get_connid());
    if (!element){
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY));
       DEXIT;
       return -1;
@@ -2288,6 +2902,8 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
    lSetHost(element, SEC_Host,host);
    lSetString(element, SEC_Commproc,commproc);
    lSetInt(element, SEC_Id,id);
+
+   SEC_UNLOCK_CONN_LIST();
 
    DEXIT;
    return 0;
@@ -2311,6 +2927,10 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**    MT-NOTE: Caller must own sec_conn_list_mutex
+**    MT-NOTE: sec_set_secdata() is not MT safe
 */
 static int sec_set_secdata(const char *host, const char *commproc, int id)
 {
@@ -2331,7 +2951,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
                      SEC_Host, host, SEC_Commproc, commproc);
    }
 
-   element = lFindFirst(conn_list, where);
+   element = lFindFirst(sec_conn_list, where);
    where = lFreeWhere(where);
    if (!element) {
       ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI, host,commproc,id));
@@ -2343,10 +2963,10 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    ** set security data                  
    */
    sec_list2keymat(element);
-   strcpy(gsd.uniqueIdentifier, lGetString(element, SEC_UniqueIdentifier));
-   gsd.connid = lGetUlong(element, SEC_ConnectionID);
-   gsd.seq_send = lGetUlong(element, SEC_SeqNoSend);
-   gsd.seq_receive = lGetUlong(element, SEC_SeqNoReceive);
+   strcpy(sec_state_get_unique_identifier(), lGetString(element, SEC_UniqueIdentifier));
+   sec_state_set_connid(lGetUlong(element, SEC_ConnectionID));
+   sec_state_set_seq_send(lGetUlong(element, SEC_SeqNoSend));
+   sec_state_set_seq_receive(lGetUlong(element, SEC_SeqNoReceive));
    
    DEXIT;
    return 0;
@@ -2369,6 +2989,9 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
 ** RETURN VALUES
 **      0       on success
 **      -1      on failure
+**
+** NOTES
+**      MT-NOTE: sec_insert_conn2list() is MT safe
 */
 static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int id, const char *uniqueIdentifier)
 {
@@ -2388,7 +3011,10 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
       DEXIT;
       return -1;
    }
-   element = lFindFirst(conn_list, where);
+
+   SEC_LOCK_CONN_LIST();
+
+   element = lFindFirst(sec_conn_list, where);
    where = lFreeWhere(where);
 
    if (!element && sec_is_daemon(commproc)) {
@@ -2396,21 +3022,23 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
                        SEC_Host, host,
                        SEC_Commproc, commproc);
       if (!where) {
+         SEC_UNLOCK_CONN_LIST();
          DEXIT;
          return -1;
       }
-      element = lFindFirst(conn_list, where);
+      element = lFindFirst(sec_conn_list, where);
       where = lFreeWhere(where);
    }   
 
    /* 
    ** add new element if it does not exist                  
    */
-   if (!element || !conn_list) {
-      element = lAddElemUlong(&conn_list, SEC_ConnectionID, 
+   if (!element || !sec_conn_list) {
+      element = lAddElemUlong(&sec_conn_list, SEC_ConnectionID, 
                                  connid, SecurityT);
    }
    if (!element) {
+      SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_SEC_INSERTCONNECTIONFAILED));
       DEXIT;
       return -1;
@@ -2433,7 +3061,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
    ASN1_UTCTIME *asn1_time_str = NULL;
    unsigned char time_str[50]; 
 
-   asn1_time_str = X509_gmtime_adj(asn1_time_str, 60*ValidMinutes);
+   asn1_time_str = X509_gmtime_adj(asn1_time_str, 60*VALID_MINUTES);
    tmp = time_str;
    len = i2d_ASN1_UTCTIME(asn1_time_str, &tmp);
    time_str[len] = '\0';
@@ -2441,13 +3069,17 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 
    lSetString(element, SEC_ExpiryDate, (char*) time_str);
 }   
-   DPRINTF(("++++ added %d (%s, %s, %d) of %s to conn_list\n", 
+   SEC_UNLOCK_CONN_LIST();
+
+   DPRINTF(("++++ added %d (%s, %s, %d) of %s to sec_conn_list\n", 
                (int)connid, host, commproc, id, uniqueIdentifier));
 
    /* 
    ** increment connid                   
    */
-   connid_counter = INC32(connid_counter);
+   SEC_LOCK_CONNID_COUNTER();
+   sec_connid_counter = INC32(sec_connid_counter);
+   SEC_UNLOCK_CONNID_COUNTER();
 
    DEXIT;
    return 0;   
@@ -2466,6 +3098,9 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 ** DESCRIPTION
 **   This function converts the key material to unsigned long to store
 **   it within the connection list, a cull list.
+**
+** NOTES
+**    MT-NOTE: sec_keymat2list() is MT safe
 */
 
 static void sec_keymat2list(lListElem *element)
@@ -2474,7 +3109,7 @@ static void sec_keymat2list(lListElem *element)
    u_long32 ul[8];
    u_char working_buf[32 + 33], *pos_ptr;
 
-   memcpy(working_buf,gsd.key_mat,gsd.key_mat_len);
+   memcpy(working_buf, sec_state_get_key_mat(), sec_state_get_key_mat_len());
    pos_ptr = working_buf;
    for(i=0;i<8;i++) c4TOl(pos_ptr,ul[i]);
 
@@ -2500,6 +3135,9 @@ static void sec_keymat2list(lListElem *element)
 ** DESCRIPTION
 **   This function converts the igned longs from the connection list
 **   to key material.
+**
+** NOTES
+**   MT-NOTE: sec_list2keymat() is MT safe
 */
 
 static void sec_list2keymat(lListElem *element)
@@ -2519,7 +3157,7 @@ static void sec_list2keymat(lListElem *element)
 
    pos_ptr = working_buf;
    for(i=0;i<8;i++) lTO4c(ul[i],pos_ptr);
-   memcpy(gsd.key_mat,working_buf,gsd.key_mat_len);
+   memcpy(sec_state_get_key_mat(), working_buf, sec_state_get_key_mat_len());
 
 }
 
@@ -2529,6 +3167,9 @@ static void sec_list2keymat(lListElem *element)
 **	These functions generate the pathnames for key and certificate files.
 ** and stores them in module static vars and forces an SGE_EXIT if something
 ** is wrong
+**
+** NOTES
+**    MT-NOTE: sec_setup_path() is not MT safe
 */
 static void sec_setup_path(
 int is_daemon,
@@ -2546,6 +3187,7 @@ int is_master
    char *cp = NULL;
 
    DENTER(GDI_LAYER, "sec_setup_path");
+ 
 
    cp = getenv("COMMD_PORT");
    
@@ -2705,16 +3347,8 @@ int is_master
    if (!getenv("SGE_NO_CA_LOCAL_ROOT")) {
       free(ca_local_root);
    }   
-}
 
-static sec_exit_func_type install_sec_exit_func(
-sec_exit_func_type new 
-) {
-   sec_exit_func_type old;
-
-   old = sec_exit_func;
-   sec_exit_func = new;
-   return(old);
+   return;
 }
 
 
@@ -2733,6 +3367,10 @@ sec_exit_func_type new
 ** RETURN VALUES
 **      0       on success
 **      <>0     on failure
+**
+** NOTES 
+**      MT-NOTE: sec_pack_announce() is MT safe 
+**      MT-NOTE: sec_unpack_announce() is MT safe 
 */
 static int sec_pack_announce(u_long32 certlen, u_char *x509_buf, u_char *challenge, sge_pack_buffer *pb)
 {
@@ -2764,6 +3402,7 @@ static int sec_unpack_announce(u_long32 *certlen, u_char **x509_buf, u_char **ch
       return(i);
 }
 
+/* MT-NOTE: sec_pack_response() is MT safe */
 static int sec_pack_response(u_long32 certlen, u_char *x509_buf, 
                       u_long32 chall_enc_len, u_char *enc_challenge, 
                       u_long32 connid, 
@@ -2801,6 +3440,7 @@ static int sec_pack_response(u_long32 certlen, u_char *x509_buf,
       return(i);
 }
 
+/* MT-NOTE: sec_unpack_response() is MT safe */
 static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf, 
                         u_long32 *chall_enc_len, u_char **enc_challenge, 
                         u_long32 *connid, 
@@ -2839,6 +3479,7 @@ static int sec_unpack_response(u_long32 *certlen, u_char **x509_buf,
       return(i);
 }
 
+/* MT-NOTE: sec_pack_message() is MT safe */
 static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_mac_len, u_char *enc_mac, u_char *enc_msg, u_long32 enc_msg_len)
 {
    int i;
@@ -2858,6 +3499,7 @@ static int sec_pack_message(sge_pack_buffer *pb, u_long32 connid, u_long32 enc_m
       return(i);
 }
 
+/* MT-NOTE: sec_unpack_message() is MT safe */
 static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *enc_mac_len, u_char **enc_mac, u_long32 *enc_msg_len, u_char **enc_msg)
 {
    int i;
@@ -2879,6 +3521,7 @@ static int sec_unpack_message(sge_pack_buffer *pb, u_long32 *connid, u_long32 *e
 
 #ifdef SEC_RECONNECT
 
+/* MT-NOTES: sec_pack_reconnect() is MT safe */
 static int sec_pack_reconnect(sge_pack_buffer *pb, u_long32 connid, u_long32 seq_send, u_long32 seq_receive, u_char *key_mat, u_long32 key_mat_len,
 u_char *refreshtime, u_long32 refreshtime_len)
 {
@@ -2904,6 +3547,7 @@ u_char *refreshtime, u_long32 refreshtime_len)
         return(i);
 }
 
+/* MT-NOTES: sec_unpack_reconnect() is MT safe */
 static int sec_unpack_reconnect(sge_pack_buffer *pb, u_long32 *connid, u_long32 *seq_send, u_long32 *seq_receive, u_char **key_mat, u_long32 *key_mat_len,
 u_char **refreshtime, u_long32 *refreshtime_len)
 {
@@ -2940,20 +3584,23 @@ u_char **refreshtime, u_long32 *refreshtime_len)
 **   char *user - unix user name
 **
 ** DESCRIPTION
-**   This function checks if the unix user name that has been send corresponds **   to the certificate
+**   This function checks if the unix user name that has been send corresponds 
+**   to the certificate
 **
 ** RETURN VALUES
 **      1       on success
 **      0       on failure
+** NOTES
+**    MT-NOTES: sec_verify_user() is MT safe
 */
 int sec_verify_user(const char *user, const char *commproc) 
 {
    DENTER(GDI_LAYER,"sec_verify_user");
 
 /*    if (!sec_is_daemon(commproc)) { */
-      DPRINTF(("commproc = '%s' user = '%s', gsd.uniqueIdentifier = '%s'\n", 
-               commproc, user, gsd.uniqueIdentifier));
-      if (strcmp(user, gsd.uniqueIdentifier)) {
+      DPRINTF(("commproc = '%s' user = '%s', unique_identifier = '%s'\n", 
+               commproc, user, sec_state_get_unique_identifier()));
+      if (strcmp(user, sec_state_get_unique_identifier())) {
          DEXIT;
          return 0;
       }   
@@ -2963,7 +3610,8 @@ int sec_verify_user(const char *user, const char *commproc)
    DEXIT;
    return 1;
 }
-
+ 
+/* MT-NOTE: sec_is_daemon() is MT safe */
 static int sec_is_daemon(const char *progname)
 {
    if (!strcmp(prognames[QMASTER],progname) ||
@@ -2972,8 +3620,9 @@ static int sec_is_daemon(const char *progname)
       return True;
    else
       return False;
-}      
+}
 
+/* MT-NOTE: sec_is_master() is MT safe */
 static int sec_is_master(const char *progname)
 {
    if (!strcmp(prognames[QMASTER],progname))
@@ -2981,7 +3630,8 @@ static int sec_is_master(const char *progname)
    else
       return False;
 }      
-
+ 
+/* MT-NOTE: sec_verify_callback() is MT safe */
 static int sec_verify_callback(int ok, X509_STORE_CTX *ctx)
 {
    X509 *cert;
@@ -2999,10 +3649,11 @@ printf(" notAfter X509_cmp_current_time = %d\n",  X509_cmp_current_time(X509_get
       printf("No cert\n");
 
    return ok;
-}   
+}
 
 
 
+/* MT-NOTE: sec_clear_connectionlist() is MT safe */
 int sec_clear_connectionlist(void)
 {
    lListElem *element = NULL;
@@ -3012,10 +3663,11 @@ int sec_clear_connectionlist(void)
    /*
    ** remove any outdated entries first
    */
-   if (conn_list) {
+   SEC_LOCK_CONN_LIST();
+   if (sec_conn_list) {
       ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
 
-      element = lFirst(conn_list);
+      element = lFirst(sec_conn_list);
       while (element) {
          lListElem *del_el;
          const char *dtime = lGetString(element, SEC_ExpiryDate);
@@ -3025,18 +3677,20 @@ int sec_clear_connectionlist(void)
          del_el = element;
          element = lNext(element);
          if ((X509_cmp_current_time(utctime) < 0)) { 
-            DPRINTF(("---- removed %d (%s, %s, %d) from conn_list\n", 
+            DPRINTF(("---- removed %d (%s, %s, %d) from sec_conn_list\n", 
                       (int) lGetUlong(del_el, SEC_ConnectionID), 
                       lGetHost(del_el, SEC_Host),
                       lGetString(del_el, SEC_Commproc),
                       lGetInt(del_el, SEC_Id)));
             if (!sec_is_daemon(lGetString(del_el, SEC_Commproc))) {
-               lRemoveElem(conn_list, del_el);
+               lRemoveElem(sec_conn_list, del_el);
             }
          }   
       }
       ASN1_UTCTIME_free(utctime);
    }
+   SEC_UNLOCK_CONN_LIST();
+
    DEXIT;
    return True;
 }

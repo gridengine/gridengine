@@ -36,7 +36,7 @@ UTILIB_DIR  = $(SDIR)/libs/uti
 
 UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
-UTILIB_SRC = \
+UTILIB_DRMAA_SRC = \
          config_file.c \
          sge_afsutil.c \
          sge_arch.c \
@@ -44,11 +44,9 @@ UTILIB_SRC = \
          sge_bitop.c \
          sge_crc.c \
          sge_hostname.c \
-         sge_getloadavg.c \
          sge_htable.c \
          sge_io.c \
          sge_language.c \
-         sge_loadmem.c \
          sge_log.c \
          sge_nprocs.c \
          sge_os.c \
@@ -66,7 +64,9 @@ UTILIB_SRC = \
          sge_tmpnam.c \
          sge_edit.c \
          sge_uidgid$(QIDLEXT).c 
+UTILIB_SRC = sge_loadmem.c sge_getloadavg.c $(UTILIB_DRMAA_SRC)
 
+UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
 
 UTILIB_ADD_OBJS = peopen_standalone.o pids_standalone.o

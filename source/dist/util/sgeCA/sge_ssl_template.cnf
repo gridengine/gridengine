@@ -70,7 +70,7 @@ stateOrProvinceName     = match
 organizationName        = match
 organizationalUnitName  = optional
 commonName              = supplied
-uniqueIdentifier        = supplied
+userId                  = supplied
 emailAddress            = optional
 
 # For the 'anything' policy
@@ -83,7 +83,7 @@ localityName            = optional
 organizationName        = optional
 organizationalUnitName  = optional
 commonName              = supplied
-uniqueIdentifier        = supplied
+userId                  = supplied
 emailAddress            = optional
 
 ####################################################################

@@ -168,7 +168,7 @@ enum {
 };
 static int japi_session = JAPI_SESSION_INACTIVE;
 /* guards access to japi_session global variable */
-static pthread_mutex_t japi_session_mutex;
+static pthread_mutex_t japi_session_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define JAPI_LOCK_SESSION()      sge_mutex_lock("SESSION", SGE_FUNC, __LINE__, &japi_session_mutex)
 #define JAPI_UNLOCK_SESSION()    sge_mutex_unlock("SESSION", SGE_FUNC, __LINE__, &japi_session_mutex)
@@ -340,18 +340,12 @@ int japi_init_mt(dstring *diag)
    }
 
    /* current major assumptions are
-
-      - code is not compiled -DCOMMCOMPRESS
+      - if code was compiled with -SECURE then
+        either a MT safe OpenSSL libraries is used or
+        CSP security is not used
       - code is not compiled with -DCRYPTO
       - code is not compiled with -DKERBEROS
-      - if code is compiled with -SECURE then
-        only non secure communication may be used 
-      - neither AFS nor DCE/KERBEROS security may be used
-   */
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      sge_dstring_copy_string(diag, "error: secure mode not supported\n");
-      return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
-   }
+      - neither AFS nor DCE/KERBEROS security may be used */
 
    /* as long as signal handling is not restored japi_init_mt() is
       good place to install library signal handling */  

@@ -32,8 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-typedef int (*sec_exit_func_type)(void);
-extern sec_exit_func_type sec_exit_func;
+#ifdef SGE_MT
+void sec_init_mt(void);
+#endif
 
 int sec_init(const char *progname);
 

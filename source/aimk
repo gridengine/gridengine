@@ -224,7 +224,8 @@ usage:
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
-   echo "-secure           -> enable ssl security"
+   echo "-secure           -> enable ssl security (requires shared OpenSSL libraries)"
+   echo "-secure-static    -> use static libraries for ssl security support"
    echo "-shared           -> link shared (default)"
    echo "-shared-libs      -> create libraries as shared libs"
    echo "-spool-classic    -> use classic flatfile spooling (default)"
@@ -326,6 +327,7 @@ set   INTERACTTARGETS = "qmake qtcsh"
 set   SLIBS=""
 # SECURE
 set   SEC	  = 0
+set   STATIC_SECURE = 0
 set   SECTARGETS  = ""
 set   SECLIBS = ""
 set   SECLIB = ""
@@ -386,6 +388,7 @@ switch ($BUILDARCH)
       set MT = 0
       breaksw
 endsw      
+
 # end Compile with mutlithreading
 
 # Compile with usermapping feature
@@ -764,6 +767,10 @@ while ($#argv >= 1 && $?found)
       set MAKE     = "qmake"
       set MAKEOPT = "-cwd -v PATH -pe make 2-100 -now n -- $MAKEOPT"
       breaksw
+
+   case "-secure-static":
+      set STATIC_SECURE = 1
+
    case "-secure":
       set SEC    = 1
       set SECTARGETS = "sec_all"
@@ -774,9 +781,15 @@ while ($#argv >= 1 && $?found)
       set SECLIB_OBJS = "sec_lib.o"
       set CFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CFLAGS"
       set CXXFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CXXFLAGS"
+
+      if ( $STATIC_SECURE == 1 ) then
+         set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
+      else 
+         set KLIBS = "-lcrypto"
+      endif
       set KLFLAGS  = "-L$OPENSSL_HOME/lib"
-      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
       breaksw
+
    case "-shared":
       set STATIC = 0
       breaksw
@@ -1812,8 +1825,6 @@ if ( $SHAREDLIBS == 1 ) then
    set LIBEXT = "$SHAREDEXT"
 else
    set LIBEXT = ".a"
-   set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = ""
 endif
 
 if ( "$BUILDMAN" == 1 ) then
@@ -2023,7 +2034,7 @@ if ( "$CORE" == 1 ) then
 endif
 
 if ( "$MT" == 1 ) then
-   
+
    set COMPILE_ARCH_MT = "${COMPILE_ARCH}_MT"
 
    echo making in $COMPILE_ARCH_MT/ for $COMPILE_ARCH

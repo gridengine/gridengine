@@ -30,5 +30,5 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-# Base directory where the openssl binary resides
-OPENSSLBASE=/vol2/tools/SW/openssl-0.9.6g
+# Base directory where the openssl binary and libraries resides
+OPENSSLBASE=/vol2/tools/SW/openssl-0.9.7b

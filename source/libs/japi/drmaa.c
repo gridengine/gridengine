@@ -90,7 +90,7 @@ static int japi_drmaa_path2sge_job(drmaa_job_template_t *drmaa_jt, lListElem *jt
 *     JAPI/-JAPI_Session_state
 *******************************************************************************/
 
-static pthread_mutex_t environ_mutex;
+static pthread_mutex_t environ_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define DRMAA_LOCK_ENVIRON()      sge_mutex_lock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
 #define DRMAA_UNLOCK_ENVIRON()    sge_mutex_unlock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)

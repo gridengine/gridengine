@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int scale_usage(lListElem *jep, lListElem *jatep, lList *scaling, lList *previous);
+lList *scale_usage(lList *scaling, lList *prev_usage, lList *scaled_usage);
 
 #endif /* _SCALE_USAGE_H_ */

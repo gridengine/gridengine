@@ -40,6 +40,7 @@
 #include "sge_jobL.h"
 #include "sge_queueL.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "sge_job_reportL.h"
 #include "sge_reportL.h"
 #include "sge_usageL.h"
@@ -557,8 +558,6 @@ static void update_job_usage()
    lList *usage_list = NULL;
    lListElem *jr;
    lListElem *usage;
-   int job_id_index, job_ja_task_index, job_pe_task_id_str_index;
-   const lDescr* dp;
 
    DENTER(TOP_LAYER, "update_job_usage");
 
@@ -580,7 +579,6 @@ static void update_job_usage()
          }
       }
    }
-
 #endif
 
    if (sharetree_reserved_usage)
@@ -591,11 +589,6 @@ static void update_job_usage()
       return;
    }
 
-   /*
-      we got a list with the fields JB_job_number,
-      JB_usage_list, JB_pe_task_id_str - we may
-      not make any assumptions on other fields
-   */
    if (lGetNumberOfElem(usage_list)<=0) {
       /* could be an empty list head */
       lFreeList(usage_list);
@@ -603,51 +596,28 @@ static void update_job_usage()
       return;
    }
 
-   dp = lGetListDescr(usage_list);
-   if ((job_id_index = lGetPosInDescr(dp, JB_job_number))<0) {
-      ERROR((SGE_EVENT, "missing job number in usage list from ptf"));
-      lFreeList(usage_list);
-      DEXIT;
-      return;
-   }
-
-   if ((job_ja_task_index = lGetPosInDescr(dp, JB_ja_tasks))<0) {
-      ERROR((SGE_EVENT, "missing ja task list in usage list from ptf"));
-      lFreeList(usage_list);
-      DEXIT;
-      return; }
-
-   if ((job_pe_task_id_str_index = lGetPosInDescr(dp, JB_pe_task_id_str))<0) {
-      ERROR((SGE_EVENT, "missing task ID str in usage list from ptf"));
-      lFreeList(usage_list);
-      DEXIT;
-      return;
-   }
-
    /* replace existing usage in the job report with the new one */
    for_each(usage, usage_list) {
-      u_long32 jobid;
-      const char *taskidstr;
-      lList* ja_tasks;
-      lListElem *ja_task, *uep;
+      u_long32 job_id;
+      lListElem *ja_task;
 
-      jobid = lGetPosUlong(usage, job_id_index);
-      taskidstr = lGetPosString(usage, job_pe_task_id_str_index);
-      ja_tasks = lGetPosList(usage, job_ja_task_index);
+      job_id = lGetUlong(usage, JB_job_number);
 
-      for_each (ja_task, ja_tasks) {
-         u_long32 jataskid;
+      for_each (ja_task, lGetList(usage, JB_ja_tasks)) {
+         u_long32 ja_task_id;
+         lListElem *uep;
+         lListElem *pe_task;
 
-         jataskid = lGetUlong(ja_task, JAT_task_number);
+         ja_task_id = lGetUlong(ja_task, JAT_task_number);
          /* search matching job report */
-         if (!(jr = get_job_report(jobid, jataskid, taskidstr))) {
+         if (!(jr = get_job_report(job_id, ja_task_id, NULL))) {
             /* should not happen in theory */
             ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
-               "task %s contained in job usage from ptf", jobid, jataskid,
-          taskidstr ? taskidstr : "<none>"));
+               "contained in job usage from ptf", job_id, ja_task_id));
             continue;
          }
 
+         /* JG: TODO: make a function updating all load values in job report */
          /* replace cpu/mem/io with newer values */
          if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_CPU, JAT_usage_list))) {
             DPRINTF(("added/updated 'cpu' usage: %f\n", lGetDouble(uep, UA_value)));
@@ -674,8 +644,50 @@ static void update_job_usage()
             add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
          }
 
-         DPRINTF(("---> updating job report usage for job "u32" task \"%s\"\n",
-             jobid, taskidstr?taskidstr:""));
+         DPRINTF(("---> updating job report usage for job "u32"."u32"\n",
+             job_id, ja_task_id));
+
+         for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+            const char *pe_task_id = lGetString(pe_task, PET_id);
+
+            /* search matching job report */
+            if (!(jr = get_job_report(job_id, ja_task_id, pe_task_id))) {
+               /* should not happen in theory */
+               ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
+                  "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
+               continue;
+            }
+
+            /* replace cpu/mem/io with newer values */
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_CPU, PET_usage))) {
+               DPRINTF(("added/updated 'cpu' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_CPU, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_MEM, PET_usage))) {
+               DPRINTF(("added/updated 'mem' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_MEM, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_IO, PET_usage))) {
+               DPRINTF(("added/updated 'io' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_IO, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_IOW, PET_usage))) {
+               DPRINTF(("added/updated 'iow' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_IOW, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_VMEM, PET_usage))) {
+               DPRINTF(("added/updated 'vmem' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_VMEM, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_MAXVMEM, PET_usage))) {
+               DPRINTF(("added/updated 'maxvmem' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
+            }
+
+            DPRINTF(("---> updating job report usage for job "u32"."u32" task \"%s\"\n",
+                job_id, ja_task_id, pe_task_id));
+
+         }
       }
    }
 
@@ -694,7 +706,7 @@ lList **job_usage_list
    double cpu_val, vmem_val, io_val, iow_val, vmem, maxvmem;
    u_long32 jobid;
    char err_str[128];
-   const char *taskidstr;
+   const char *taskidstr = NULL;
    lEnumeration *what;
    u_long32 now;
    double wall_clock_time;
@@ -702,19 +714,18 @@ lList **job_usage_list
    DENTER(TOP_LAYER, "get_reserved_usage");
 
    now = sge_get_gmt();
-   what = lWhat("%T(%I %I %I)", JB_Type, JB_job_number, JB_ja_tasks,
-                JB_pe_task_id_str);
+   what = lWhat("%T(%I %I)", JB_Type, JB_job_number, JB_ja_tasks);
 
    temp_job_usage_list = lCreateList("JobResUsageList", JB_Type);
 
    for_each (jep, Master_Job_List) {
-
       jobid = lGetUlong(jep, JB_job_number);
-      taskidstr = lGetString(jep, JB_pe_task_id_str);
+      /* JG: TODO: did it ever work? pe tasks are not contained directly in the Master_Job_List,
+       *           but are in the array tasks task list.
+       */
       new_job = lCreateElem(JB_Type);
       new_ja_task_list = lCreateList("jat_list", JAT_Type);
       lSetUlong(new_job, JB_job_number, jobid);
-      lSetString(new_job, JB_pe_task_id_str, taskidstr);
       lSetList(new_job, JB_ja_tasks, new_ja_task_list);
       lAppendElem(temp_job_usage_list, new_job);
 

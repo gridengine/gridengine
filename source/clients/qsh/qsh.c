@@ -1606,7 +1606,7 @@ char **argv
    
       cwd = lGetString(job, JB_cwd);
 
-      tid = sge_qexecve(host, NULL, cwd, NULL, lGetList(job, JB_env_list), 1); 
+      tid = sge_qexecve(host, NULL, cwd, lGetList(job, JB_env_list)); 
 
       if(tid <= 0) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,

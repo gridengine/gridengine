@@ -38,6 +38,7 @@
 #include "sge.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "sge_queueL.h"
 #include "sge_parse_num_par.h"
 #include "dispatcher.h"
@@ -222,7 +223,6 @@ u_long32 sig,
 lListElem *jep,
 lListElem *jatep 
 ) {
-   lListElem *tep;
    int queue_already_suspended;
    int getridofjob = 0;
 
@@ -249,7 +249,7 @@ lListElem *jatep
          if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
                    u32c(jobid), u32c(jataskid)));
-            jr = add_job_report(jobid, jataskid, NULL);
+            jr = add_job_report(jobid, jataskid, NULL, jep);
          }
 
          lSetUlong(jr, JR_state, JEXITING);
@@ -283,14 +283,17 @@ lListElem *jatep
    queue_already_suspended = (lGetUlong(jatep, JAT_state)&JSUSPENDED);
    if (!(sig == SGE_MIGRATE 
          && (lGetUlong(jep, JB_checkpoint_attr)|CHECKPOINT_SUSPEND)) 
-         && !queue_already_suspended)
+         && !queue_already_suspended) {
+      lListElem *petep;
       /* signal each pe task */
-      for_each (tep, lGetList(jatep, JAT_task_list)) {
-         if (sge_kill((int)lGetUlong(lFirst(lGetList(tep, JB_ja_tasks)), JAT_pid), sig, 
+      for_each (petep, lGetList(jatep, JAT_task_list)) {
+         if (sge_kill((int)lGetUlong(petep, PET_pid), sig, 
             lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 
-            lGetString(tep, JB_pe_task_id_str))==-2)
+            lGetString(petep, PET_id))==-2)
             getridofjob = 1;
       }
+   }
+
    if (lGetUlong(jatep, JAT_status)!=JSLAVE)
       if (sge_kill((int)lGetUlong(jatep, JAT_pid), sig, lGetUlong(jep, JB_job_number), 
                         lGetUlong(jatep, JAT_task_number), NULL)==-2)

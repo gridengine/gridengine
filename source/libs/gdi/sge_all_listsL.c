@@ -51,6 +51,7 @@ lDescr *descr
        || (descr == QU_Type && lGetPosInDescr(ep->descr, QU_qname) != -1)
        || (descr == JB_Type && lGetPosInDescr(ep->descr, JB_job_number) != -1)
        || (descr == JAT_Type && lGetPosInDescr(ep->descr, JAT_task_number) !=-1)
+       || (descr == PET_Type && lGetPosInDescr(ep->descr, PET_id) !=-1)
        || (descr == RN_Type && lGetPosInDescr(ep->descr, RN_min) !=-1)
       ) {
       ret = 1;

@@ -68,6 +68,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_var.c \
          sge_path_alias.c \
          sge_job_jatask.c \
+         sge_pe_task.c \
          sge_suser.c \
          sge_answer.c \
          version.c
@@ -201,6 +202,9 @@ sge_path_alias.o: $(GDILIB_DIR)/sge_path_alias.c
 
 sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_jatask.c
+
+sge_pe_task.o: $(GDILIB_DIR)/sge_pe_task.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_pe_task.c
 
 sge_suser.o: $(GDILIB_DIR)/sge_suser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_suser.c

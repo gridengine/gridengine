@@ -266,7 +266,7 @@ lList *qresource_list
 static int sge_print_subtask(
 lListElem *job,
 lListElem *ja_task,
-lListElem *task,
+lListElem *pe_task,  /* NULL, if master task shall be printed */
 int print_hdr,
 int indent 
 ) {
@@ -274,14 +274,24 @@ int indent
    u_long32 tstate, tstatus;
    int task_running;
    const char *str;
-   lListElem *ep, *task_task;
+   lListElem *ep;
    int sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   lList *usage_list;
+   lList *scaled_usage_list;
 
    DENTER(TOP_LAYER, "sge_print_subtask");
 
    /* is sub-task logically running */
-   task_task = lFirst(lGetList(task, JB_ja_tasks));
-   tstatus = lGetUlong(task_task, JAT_status);
+   if(pe_task == NULL) {
+      tstatus = lGetUlong(ja_task, JAT_status);
+      usage_list = lGetList(ja_task, JAT_usage_list);
+      scaled_usage_list = lGetList(ja_task, JAT_scaled_usage_list);
+   } else {
+      tstatus = lGetUlong(pe_task, PET_status);
+      usage_list = lGetList(pe_task, PET_usage);
+      scaled_usage_list = lGetList(pe_task, PET_scaled_usage);
+   }
+
    task_running = (tstatus==JRUNNING || tstatus==JTRANSFERING);
 
    if (print_hdr) {
@@ -294,8 +304,12 @@ int indent
              "failed");
    }
 
-   str = (task==job)?NULL:lGetString(task, JB_pe_task_id_str);
-   printf("   %s%-12s ", indent?QSTAT_INDENT2:"", str?str:"");
+   if(pe_task == NULL) {
+      str = "";
+   } else {
+      str = lGetString(pe_task, PET_id);
+   }
+   printf("   %s%-12s ", indent?QSTAT_INDENT2:"", str);
 
    /* move status info into state info */
    tstate = lGetUlong(ja_task, JAT_state);
@@ -327,32 +341,33 @@ int indent
       lListElem *up;
 
       /* scaled cpu usage */
-      if (!(up = lGetSubStr(task_task, UA_name, USAGE_ATTR_CPU, 
-         JAT_scaled_usage_list))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) 
          printf("%-10.10s ", task_running?"NA":""); 
       else 
          printf("%s ", resource_descr(lGetDouble(up, UA_value), TYPE_TIM, NULL));
 
       /* scaled mem usage */
-      if (!(up = lGetSubStr(task_task, UA_name, USAGE_ATTR_MEM, 
-         JAT_scaled_usage_list))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) 
          printf("%-7.7s ", task_running?"NA":""); 
       else
          printf("%-5.5f ", lGetDouble(up, UA_value)); 
   
       /* scaled io usage */
-      if (!(up = lGetSubStr(task_task, UA_name, USAGE_ATTR_IO, 
-         JAT_scaled_usage_list))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_IO))) 
          printf("%-7.7s ", task_running?"NA":""); 
       else
          printf("%-5.5f ", lGetDouble(up, UA_value)); 
    }
 
    if (tstatus==JFINISHED) {
-      ep=lGetElemStr(lGetList(task_task, JAT_usage_list), UA_name, 
-            "exit_status");
-      str=(job==task)?"":job_get_env_string(task, VAR_PREFIX "O_MAIL");
-      printf("%-4d %s", ep ? (int)lGetDouble(ep, UA_value) : 0, str?str:"");
+      ep=lGetElemStr(usage_list, UA_name, "exit_status");
+      if(pe_task == NULL) {
+         str = "";
+      } else {
+         str = var_list_get_string(lGetList(pe_task, PET_environment), VAR_PREFIX "O_MAIL");
+      }
+
+      printf("%-4d %s", ep ? (int)lGetDouble(ep, UA_value) : 0, str);
    }
 
    putchar('\n');
@@ -1013,20 +1028,19 @@ char *indent
       else
          job_usage_list = lCreateList("", UA_Type);
 
-      /* sum sub-task usage based on queue slots */
+      /* sum pe-task usage based on queue slots */
       if (job_usage_list) {
          int subtask_ndx=1;
          for_each(task, lGetList(jatep, JAT_task_list)) {
-            lListElem *dst, *src, *ep, *task_task;
+            lListElem *dst, *src, *ep;
             const char *qname;
 
-            task_task = lFirst(lGetList(task, JB_ja_tasks));
             if (!slots ||
                 (queue_name && 
-                 ((ep=lFirst(lGetList(task_task, JAT_granted_destin_identifier_list)))) &&
+                 ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
                  ((qname=lGetString(ep, JG_qname))) &&
                  !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
-               for_each(src, lGetList(task_task, JAT_scaled_usage_list)) {
+               for_each(src, lGetList(task, PET_scaled_usage)) {
                   if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name))))
                      lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
                   else
@@ -1172,23 +1186,19 @@ char *indent
           !strcmp(qname, queue_name)) {
          if (indent++)
             printf("%*s", num_spaces, " ");
-         sge_print_subtask(job, jatep, job, 0, 0);
+         sge_print_subtask(job, jatep, NULL, 0, 0);
          /* subtask_ndx++; */
       }
          
       /* print sub-tasks belonging to this queue */
       for_each(task, task_list) {
-         lListElem* task_task;
-
-         for_each(task_task,  lGetList(task, JB_ja_tasks)) {
-            if (!slots || (queue_name && 
-                 ((ep=lFirst(lGetList(task_task, JAT_granted_destin_identifier_list)))) &&
-                 ((qname=lGetString(ep, JG_qname))) &&
-                 !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
-               if (indent++)
-                  printf("%*s", num_spaces, " ");
-               sge_print_subtask(job, jatep, task, 0, 0);
-            }
+         if (!slots || (queue_name && 
+              ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
+              ((qname=lGetString(ep, JG_qname))) &&
+              !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
+            if (indent++)
+               printf("%*s", num_spaces, " ");
+            sge_print_subtask(job, jatep, task, 0, 0);
          }
       }
 

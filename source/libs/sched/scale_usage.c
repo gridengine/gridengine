@@ -41,26 +41,29 @@
 
 /* #define TRACE_INCOMING_USAGE */
 
-int scale_usage(
-lListElem *jep,
-lListElem *jatep,
-lList *scaling, /* HS_Type */
-lList *previous  /* HS_Type */
-/* UA_Type */
+/* if the scaled usage list does not yet exist, it is created and returned */
+/* JG: TODO: why is it in libsched? It is only used by qmaster. */
+lList *scale_usage(
+lList *scaling,     /* HS_Type */
+lList *prev_usage,  /* HS_Type */
+lList *scaled_usage /* UA_Type */
 ) {
    lListElem *sep, *ep, *prev;
-   lList *usage = NULL;
 
    DENTER(TOP_LAYER, "scale_usage");
 
 #ifndef TRACE_INCOMING_USAGE 
    if (!scaling) {
       DEXIT;
-      return 0;
+      return NULL;
    }
 #endif
 
-   for_each (ep, lGetList(jatep, JAT_scaled_usage_list)) {
+   if(scaled_usage == NULL) {
+      scaled_usage = lCreateList("usage", UA_Type);
+   }
+
+   for_each (ep, scaled_usage) {
 #ifdef TRACE_INCOMING_USAGE
       DPRINTF(("%s = %f\n", 
          lGetString(ep, UA_name), 
@@ -72,27 +75,21 @@ lList *previous  /* HS_Type */
    }
 
    /* summarize sge usage */
-   for_each (prev, previous) {
+   for_each (prev, prev_usage) {
       if (!strcmp(lGetString(prev, UA_name), USAGE_ATTR_CPU) ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_IO)  ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_IOW) ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_VMEM) ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_MAXVMEM) ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_MEM)) {
-         if ((ep=lGetSubStr(jatep, UA_name, lGetString(prev, UA_name), 
-             JAT_scaled_usage_list)))
-            lSetDouble(ep, UA_value, lGetDouble(ep, UA_value) + 
-               lGetDouble(prev, UA_value));
-         else {
-            if (!usage && !(usage = lGetList(jatep, JAT_scaled_usage_list))) {
-               usage = lCreateList("usage", UA_Type);
-               lSetList(jatep, JAT_scaled_usage_list, usage);
-            }
-            lAppendElem(usage, lCopyElem(prev));
+         if ((ep=lGetElemStr(scaled_usage, UA_name, lGetString(prev, UA_name)))) {
+            lSetDouble(ep, UA_value, lGetDouble(ep, UA_value) + lGetDouble(prev, UA_value));
+         } else {
+            lAppendElem(scaled_usage, lCopyElem(prev));
          }
       }
    }
 
    DEXIT;
-   return 0;
+   return scaled_usage;
 }

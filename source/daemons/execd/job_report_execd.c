@@ -47,6 +47,7 @@
 #include "sge_string.h"
 #include "msg_execd.h"
 #include "sge_job_jatask.h"
+#include "sge_pe_task.h"
 
 lList *jr_list = NULL;
 int flush_jr = 0;
@@ -72,6 +73,7 @@ void trace_jr()
 lListElem *add_job_report(
 u_long32 jobid,
 u_long32 jataskid,
+const char *petaskid,
 lListElem *jep 
 ) {  
    lListElem *jr, *jatep = NULL;
@@ -86,13 +88,24 @@ lListElem *jep
       DEXIT;
       return NULL;
    }
+
    lSetUlong(jr, JR_job_number, jobid);
    lSetUlong(jr, JR_ja_task_number, jataskid);
+   if(petaskid != NULL) {
+      lSetString(jr, JR_pe_task_id_str, petaskid);
+   }
+
    lAppendElem(jr_list, jr);
 
-   jatep = job_search_task(jep, NULL, jataskid, 0);
-   if (jep != NULL && jatep != NULL) { 
-      init_from_job(jr, jep, jatep);
+   if(jep != NULL) {
+      jatep = job_search_task(jep, NULL, jataskid, 0);
+      if (jatep != NULL) { 
+         lListElem *petep = NULL;
+         if(petaskid != NULL) {
+            petep = search_petask_from_jatask(jatep, petaskid);
+         }   
+         init_from_job(jr, jep, jatep, petep);
+      }
    }
  
    DEXIT;
@@ -102,19 +115,20 @@ lListElem *jep
 lListElem *get_job_report(
 u_long32 jobid, 
 u_long32 jataskid, 
-const char *pe_task_id_str 
+const char *petaskid 
 ) {
    lListElem *jr;
    const char *s;
 
    DENTER(TOP_LAYER, "get_job_report");
 
+   /* JG: TODO: Could be optimized by using lGetElemUlong for jobid */
    for_each (jr, jr_list) {
       s = lGetString(jr, JR_pe_task_id_str);
 
       if (lGetUlong(jr, JR_job_number) == jobid && 
           lGetUlong(jr, JR_ja_task_number) == jataskid &&
-          !sge_strnullcmp(s, pe_task_id_str))
+          !sge_strnullcmp(s, petaskid))
          break; 
    }
 

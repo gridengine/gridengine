@@ -33,6 +33,6 @@
 /*___INFO__MARK_END__*/
 
 void print_usage(FILE *fp, lListElem *jr);
-int init_from_job(lListElem *jr, lListElem *jep, lListElem *jatep);
+int init_from_job(lListElem *jr, lListElem *jep, lListElem *jatep, lListElem *petep);
 
 #endif /* _JOB_REPORT_H_ */

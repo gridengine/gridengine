@@ -56,6 +56,7 @@
 #include "sge_feature.h"
 #include "sge_job_jatask.h"
 #include "sge_uidgid.h"
+#include "sge_pe_task.h"
 
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
@@ -1632,28 +1633,25 @@ int ptf_job_started(osjobid_t os_job_id, const char *task_id_str,
  * ptf_job_complete - process completed job
  *--------------------------------------------------------------------*/
 
-int ptf_job_complete(lListElem *completed_job)
+int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, lList **usage)
 {
-   lList *job_list = ptf_jobs;
-   lListElem *job, *osjob, *ja_task;
-   u_long job_id = lGetUlong(completed_job, JB_job_number);
-   const char *tid;
-   int job_complete;
-   lListElem *completed_task = NULL;
-   u_long32 ja_task_id = 0;
+   lListElem *ptf_job, *osjob;
+   lList *osjobs;
 
    DENTER(TOP_LAYER, "ptf_job_complete");
 
-   job = ptf_get_job(job_id);
+   ptf_job = ptf_get_job(job_id);
 
-   if (job == NULL) {
+   if (ptf_job == NULL) {
       return PTF_ERROR_JOB_NOT_FOUND;
    }
+
+   osjobs = lGetList(ptf_job, JL_OS_job_list);
 
    /*
     * if job is not complete, go get latest job usage info
     */
-   if (!(lGetUlong(job, JL_state) & JL_JOB_COMPLETE)) {
+   if (!(lGetUlong(ptf_job, JL_state) & JL_JOB_COMPLETE)) {
       ptf_get_usage_from_data_collector();
    }
 
@@ -1661,41 +1659,40 @@ int ptf_job_complete(lListElem *completed_job)
     * Get usage for completed job
     *    (If this for a sub-task then we return the sub-task usage)
     */
-   tid = lGetString(completed_job, JB_pe_task_id_str);
-   for_each(ja_task, lGetList(completed_job, JB_ja_tasks)) {
-      ja_task_id = lGetUlong(ja_task, JAT_task_number);
+   *usage = _ptf_get_job_usage(ptf_job, ja_task_id, pe_task_id); 
 
-      completed_task = job_search_task(completed_job, NULL, ja_task_id, 0);
-      lSetList(completed_task, JAT_usage_list,
-               _ptf_get_job_usage(job, ja_task_id, tid));
+   /* Search ja/pe ptf task */
+   for_each(osjob, osjobs) {
+      if(lGetUlong(osjob, JO_ja_task_ID) == ja_task_id) {
+         const char *osjob_pe_task_id = lGetString(osjob, JO_task_id_str);
+         if(pe_task_id != NULL && 
+            osjob_pe_task_id != NULL &&
+            strcmp(pe_task_id, osjob_pe_task_id) == 0) {
+            break;
+         } else {
+            break;
+         }   
+      }
    }
 
+   if(osjob == NULL) {
+      return PTF_ERROR_JOB_NOT_FOUND;
+   }
+   
    /*
     * Mark osjob as complete and see if all tracked osjobs are done
     * Tell data collector to stop collecting data for this job
     */
-   job_complete = 1;
-   for_each(osjob, lGetList(job, JL_OS_job_list)) {
-      const char *osjob_tid = lGetString(osjob, JO_task_id_str);
-
-      u_long jstate = lGetUlong(osjob, JO_state);
-
-      if ((!tid && !osjob_tid)
-          || (tid && osjob_tid && !strcmp(tid, osjob_tid))) {
-         lSetUlong(osjob, JO_state, jstate | JL_JOB_DELETED);
+   lSetUlong(osjob, JO_state, lGetUlong(osjob, JO_state) | JL_JOB_DELETED);
 #ifdef USE_DC
-         psIgnoreJob(ptf_get_osjobid(osjob));
+   psIgnoreJob(ptf_get_osjobid(osjob));
 #endif
-      } else if (!(jstate & JL_JOB_DELETED)) {
-         job_complete = 0;
-      }
-   }
 
 #ifndef USE_DC
 # ifdef MODULE_TEST
 
    {
-      int procfd = lGetUlong(job, JL_procfd);
+      int procfd = lGetUlong(ptf_job, JL_procfd);
 
       if (procfd > 0)
          close(procfd);
@@ -1706,24 +1703,15 @@ int ptf_job_complete(lListElem *completed_job)
    /*
     * Remove job/task from job/task list
     */
-   if (job_complete && completed_task) {
-      lList *os_jatasks;
-      lListElem *os_jatask, *nxt_os_jatask;
 
-      DPRINTF(("PTF: Removing job " u32 "." u32 "\n", job_id, ja_task_id));
-      os_jatasks = lGetList(job, JL_OS_job_list);
-      nxt_os_jatask = lFirst(os_jatasks);
-      while ((os_jatask = nxt_os_jatask)) {
-         nxt_os_jatask = lNext(nxt_os_jatask);
-         if (ja_task_id == lGetUlong(os_jatask, JO_ja_task_ID)) {
-            lRemoveElem(os_jatasks, os_jatask);
-         }
-      }
-      if (lGetNumberOfElem(os_jatasks) == 0) {
-         DPRINTF(("PTF: Removing job\n"));
-         lDechainElem(job_list, job);
-         lFreeElem(job);
-      }
+   DPRINTF(("PTF: Removing job " u32 "." u32 ", petask %s\n", 
+            job_id, ja_task_id, pe_task_id == NULL ? "none" : pe_task_id));
+   lRemoveElem(osjobs, osjob);
+
+   if (lGetNumberOfElem(osjobs) == 0) {
+      DPRINTF(("PTF: Removing job\n"));
+      lDechainElem(ptf_jobs, ptf_job);
+      lFreeElem(ptf_job);
    }
 
    DEXIT;
@@ -1986,14 +1974,13 @@ static lList *_ptf_get_job_usage(lListElem *job, u_long ja_task_id,
 
 int ptf_get_usage(lList **job_usage_list)
 {
-   lList *job_list, *temp_usage_list, *new_ja_task_list;
-   lListElem *job, *new_job, *osjob, *new_ja_task;
+   lList *job_list, *temp_usage_list;
+   lListElem *job, *osjob;
    lEnumeration *what;
 
    DENTER(TOP_LAYER, "ptf_get_usage");
 
-   what = lWhat("%T(%I %I %I)", JB_Type, JB_job_number, JB_ja_tasks,
-                JB_pe_task_id_str);
+   what = lWhat("%T(%I %I)", JB_Type, JB_job_number, JB_ja_tasks);
 
    temp_usage_list = lCreateList("PtfJobUsageList", JB_Type);
    job_list = ptf_jobs;
@@ -2002,55 +1989,38 @@ int ptf_get_usage(lList **job_usage_list)
       u_long32 job_id = lGetUlong(job, JL_job_ID);
 
       for_each(osjob, lGetList(job, JL_OS_job_list)) {
+         lListElem *tmp_ja_task;
+         lListElem *tmp_pe_task;
          u_long32 ja_task_id = lGetUlong(osjob, JO_ja_task_ID);
+         const char *pe_task_id = lGetString(osjob, JO_task_id_str);
 
-         if (!(lGetUlong(osjob, JO_state) & JL_JOB_DELETED)) {
-            int insert = 1;
-
-            for_each(tmp_job, temp_usage_list) {
-
-               if (lGetUlong(tmp_job, JB_job_number) == job_id &&
-                   lGetString(tmp_job, JB_pe_task_id_str) &&
-                   lGetString(osjob, JO_task_id_str) &&
-                   !strcmp(lGetString(tmp_job, JB_pe_task_id_str),
-                           lGetString(osjob, JO_task_id_str))) {
-
-                  new_ja_task = lCreateElem(JAT_Type);
-                  lSetUlong(new_ja_task, JAT_task_number, ja_task_id);
-
-#if 0
-                  {
-                     lListElem *uep;
-                     for_each (uep, lGetList(osjob, JO_usage_list))
-                        printf("%s=%f%c", lGetString(uep, UA_name),
-                                             lGetDouble(uep, UA_value), lNext(uep)?',':'\n');
-                  }
-#endif
-                  lSetList(new_ja_task, JAT_usage_list,
-                           lCopyList(NULL, lGetList(osjob, JO_usage_list)));
-                  lAppendElem(lGetList(tmp_job, JB_ja_tasks), new_ja_task);
-                  insert = 0;
-               }
-            }
-            if (insert) {
-               /* Job not found => Create Job and JobArrayTask */
-               new_ja_task_list = lCreateList("", JAT_Type);
-               new_job = lCreateElem(JB_Type);
-               new_ja_task = lCreateElem(JAT_Type);
-
-               lSetUlong(new_ja_task, JAT_task_number, ja_task_id);
-               lSetList(new_ja_task, JAT_usage_list,
-                        lCopyList(NULL, lGetList(osjob, JO_usage_list)));
-               lAppendElem(new_ja_task_list, new_ja_task);
-               lSetUlong(new_job, JB_job_number, lGetUlong(job, JL_job_ID));
-               lSetString(new_job, JB_pe_task_id_str,
-                          lGetString(osjob, JO_task_id_str));
-               lSetList(new_job, JB_ja_tasks, new_ja_task_list);
-               lAppendElem(temp_usage_list, new_job);
-            }
+         if (lGetUlong(osjob, JO_state) & JL_JOB_DELETED) {
+            continue;
          }
-      }
-   }
+
+         tmp_job = lGetElemUlong(temp_usage_list, JB_job_number, job_id);
+         if(tmp_job == NULL) {
+            tmp_job = lCreateElem(JB_Type);
+            lSetUlong(tmp_job, JB_job_number, job_id);
+            lAppendElem(temp_usage_list, tmp_job);
+         }
+
+         tmp_ja_task = job_search_task(tmp_job, NULL, ja_task_id, 0);
+         if(tmp_ja_task == NULL) {
+            tmp_ja_task = lAddSubUlong(tmp_job, JAT_task_number, ja_task_id, JB_ja_tasks, JAT_Type);
+         }
+
+         if(pe_task_id != NULL) {
+            tmp_pe_task = search_petask_from_jatask(tmp_ja_task, pe_task_id);
+            if(tmp_pe_task == NULL) {
+               tmp_pe_task = lAddSubStr(tmp_ja_task, PET_id, pe_task_id, JAT_task_list, PET_Type);
+            }
+            lSetList(tmp_pe_task, PET_usage, lCopyList(NULL, lGetList(osjob, JO_usage_list)));
+         } else {
+            lSetList(tmp_ja_task, JAT_usage_list, lCopyList(NULL, lGetList(osjob, JO_usage_list)));
+         }
+      } /* for each osjob */
+   } /* for each ptf job */
 
    *job_usage_list = lSelect("PtfJobUsageList", temp_usage_list, NULL, what);
 

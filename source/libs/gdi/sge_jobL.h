@@ -319,9 +319,6 @@ enum {
 *     SGE_LIST(JB_master_hard_queue_list)  
 *        Master queue list (QR_Type). ("qsub -masterq queue_list")
 *
-*     SGE_STRING(JB_pe_task_id_str)      ----> move to petask object 
-*        String identifying pe task (e.g. pvm tid)
-*
 *     SGE_LIST(JB_pe_object)   
 *        PE object (PE_Type).
 *
@@ -398,6 +395,7 @@ I        ("qsub -t tid_range")
 *
 *     SGE_STRING(JB_job_source)
 *        Submitter (host:commproc:id) of a pe task. Only needed in execd.
+*        ---> probably no longer needed here, but in PET_Type.
 *
 *     SGE_XULONG(JB_verify_suitable_queues)   ---> qalter?
 *
@@ -502,7 +500,6 @@ enum {
    JB_pe,
    JB_pe_range,
    JB_master_hard_queue_list,
-   JB_pe_task_id_str,
    JB_pe_object,
   
    JB_tgt,
@@ -601,7 +598,6 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_XSTRING(JB_pe)              
    SGE_TLIST(JB_pe_range, RN_Type)     
    SGE_LIST(JB_master_hard_queue_list)  
-   SGE_XSTRING(JB_pe_task_id_str) 
    SGE_OBJECT(JB_pe_object, PE_Type)   
 
    SGE_XSTRING(JB_tgt)      
@@ -740,7 +736,6 @@ NAMEDEF(JBN)
    NAME("JB_pe")
    NAME("JB_pe_range")
    NAME("JB_master_hard_queue_list")
-   NAME("JB_pe_task_id_str")
    NAME("JB_pe_object")
    
    NAME("JB_tgt")

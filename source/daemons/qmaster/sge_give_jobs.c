@@ -40,6 +40,7 @@
 #include "sge_hostL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "sge_usageL.h"
 #include "sge_queueL.h"
 #include "sge_ckptL.h"
@@ -671,10 +672,10 @@ lListElem *jatep,
 int mode,
 sge_commit_flags_t commit_flags
 ) {
-   lListElem *qep, *hep, *task, *tmp_ja_task;
+   lListElem *qep, *hep, *petask, *tmp_ja_task;
    lListElem *global_host_ep;
    int slots;
-   lUlong jid, ja_task_id;
+   lUlong jobid, jataskid;
    int no_unlink = 0;
    int spool_job = !(commit_flags & COMMIT_NO_SPOOLING);
    int no_events = (commit_flags & COMMIT_NO_EVENTS);
@@ -684,16 +685,15 @@ sge_commit_flags_t commit_flags
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
-   jid = lGetUlong(jep, JB_job_number);
-   ja_task_id = jatep?lGetUlong(jatep, JAT_task_number):0;
+   jobid = lGetUlong(jep, JB_job_number);
+   jataskid = jatep?lGetUlong(jatep, JAT_task_number):0;
 
    switch (mode) {
    case 0:
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
 
-
-      job_log(jid, ja_task_id, MSG_LOG_SENT2EXECD);
+      job_log(jobid, jataskid, MSG_LOG_SENT2EXECD);
 
       /* should use jobs gdil instead of tagging queues */
       global_host_ep = sge_locate_host("global", SGE_EXECHOST_LIST);
@@ -720,17 +720,18 @@ sge_commit_flags_t commit_flags
       }
 
       now = sge_get_gmt();
+      /* JG: TODO: shouldn't the start time better be set on the exec host? */
       lSetUlong(jatep, JAT_start_time, now);
-      job_enroll(jep, NULL, ja_task_id);
-      job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
+      job_enroll(jep, NULL, jataskid);
+      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
    case 1:
       lSetUlong(jatep, JAT_status, JRUNNING);
-      job_log(jid, ja_task_id, "job received by execd");
-      job_enroll(jep, NULL, ja_task_id);
-      job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
+      job_log(jobid, jataskid, "job received by execd");
+      job_enroll(jep, NULL, jataskid);
+      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
       break;
 
    case 2:
@@ -807,63 +808,61 @@ sge_commit_flags_t commit_flags
       }
 
       /* add sub-task usage to previous job usage */
-      for_each(task, lGetList(jatep, JAT_task_list)) {
-         lListElem *dst, *src, *task_ja_task;
+      /* JG: TODO: really sum up pe tasks usage into the ja task?
+                   does code actually work?
+                   usage is _not_ summed up in ja task!
+       */            
+      for_each(petask, lGetList(jatep, JAT_task_list)) {
+         lListElem *dst, *src;
          lList *usage;
 
-         for_each(task_ja_task, lGetList(task, JB_ja_tasks)) {
-            for_each(src, lGetList(task_ja_task, JAT_scaled_usage_list)) {
-               if ((dst=lGetSubStr(jatep, UA_name, lGetString(src, UA_name), JAT_previous_usage_list)))
-                  lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
-               else {                                                                       
-                  if (!(usage = lGetList(jatep, JAT_previous_usage_list))) {           
-                     usage = lCreateList("usage", UA_Type);                                 
-                     lSetList(jatep, JAT_previous_usage_list, usage);                            
-                  }                                                                         
-                  lAppendElem(usage, lCopyElem(src));                                      
-               }
+         for_each(src, lGetList(petask, PET_scaled_usage)) {
+            if ((dst=lGetSubStr(jatep, UA_name, lGetString(src, UA_name), JAT_previous_usage_list))) {
+               lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
+            } else {                                                                       
+               if (!(usage = lGetList(jatep, JAT_previous_usage_list))) {           
+                  usage = lCreateList("usage", UA_Type);                                 
+                  lSetList(jatep, JAT_previous_usage_list, usage);                            
+               }                                                                         
+               lAppendElem(usage, lCopyElem(src));                                      
             }
          }
       }
 
       sge_clear_granted_resources(jep, jatep, 1);
-      job_enroll(jep, NULL, ja_task_id);
-      job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
+      job_enroll(jep, NULL, jataskid);
+      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
    case 3:
-      job_log(jid, ja_task_id, MSG_LOG_EXITED);
+      job_log(jobid, jataskid, MSG_LOG_EXITED);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
       if (!unenrolled_task) { 
          sge_clear_granted_resources(jep, jatep, 1);
       }
-      sge_bury_job(jep, jid, jatep, spool_job, no_events);
+      sge_bury_job(jep, jobid, jatep, spool_job, no_events);
       break;
    case 4:
-      jid = lGetUlong(jep, JB_job_number);
-      job_log(jid, ja_task_id, MSG_LOG_WAIT4SGEDEL);
+      jobid = lGetUlong(jep, JB_job_number);
+      job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
       sge_clear_granted_resources(jep, jatep, 1);
-      job_enroll(jep, NULL, ja_task_id);
-      job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
-      for_each(task, lGetList(jatep, JAT_task_list)) {
-         lListElem* task_ja_task;
-
-         for_each (task_ja_task, lGetList(task, JB_ja_tasks)) {   
-            sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
-               lGetUlong(task_ja_task, JAT_task_number), 
-               lGetString(task, JB_pe_task_id_str), 
-               lGetList(task_ja_task, JAT_scaled_usage_list));
-         }
+      job_enroll(jep, NULL, jataskid);
+      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
+      for_each(petask, lGetList(jatep, JAT_task_list)) {
+         sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
+            lGetUlong(jatep, JAT_task_number), 
+            lGetString(petask, PET_id), 
+            lGetList(petask, PET_scaled_usage));
       }
-      sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, jid = lGetUlong(jep, JB_job_number), 
+      sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, jobid = lGetUlong(jep, JB_job_number), 
          lGetUlong(jatep, JAT_task_number),
          NULL, lGetList(jatep, JAT_scaled_usage_list));
 
@@ -883,9 +882,9 @@ sge_commit_flags_t commit_flags
 
    case 5: /* triggered by ORT_remove_job */
    case 6: /* triggered by ORT_remove_immediate_job */
-      job_log(jid, ja_task_id, (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
-      jid = lGetUlong(jep, JB_job_number);
-      sge_bury_job(jep, jid, jatep, spool_job, no_events);
+      job_log(jobid, jataskid, (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
+      jobid = lGetUlong(jep, JB_job_number);
+      sge_bury_job(jep, jobid, jatep, spool_job, no_events);
       break;
    
    case 7: /*  this is really case 2.5! The same as case 2 except 
@@ -897,8 +896,8 @@ sge_commit_flags_t commit_flags
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
-      job_enroll(jep, NULL, ja_task_id);
-      job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
+      job_enroll(jep, NULL, jataskid);
+      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
    }

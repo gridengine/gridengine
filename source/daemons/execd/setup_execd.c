@@ -41,6 +41,7 @@
 #include "sge_log.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "sge_stringL.h"
 #include "sge_gdi_intern.h"
 #include "job_report_execd.h"
@@ -176,10 +177,10 @@ int job_initialize_job(lListElem *job)
 
       ja_task_id = lGetUlong(ja_task, JAT_task_number);
 
-      add_job_report(job_id, ja_task_id, job);
+      add_job_report(job_id, ja_task_id, NULL, job);
                                                                                       /* add also job reports for tasks */
       for_each (pe_task, lGetList(ja_task, JAT_task_list)) {
-         add_job_report(job_id, ja_task_id, pe_task);
+         add_job_report(job_id, ja_task_id, lGetString(pe_task, PET_id), job);
       }
 
       /* does active dir exist ? */
@@ -192,7 +193,7 @@ int job_initialize_job(lListElem *job)
                            SPOOL_WITHIN_EXECD, job_id, ja_task_id);
          if (SGE_STAT(active_dir, &stat_buffer)) {
             /* lost active directory - initiate cleanup for job */
-            execd_job_run_failure(job, ja_task, "lost active dir of running "
+            execd_job_run_failure(job, ja_task, NULL, "lost active dir of running "
                                   "job", GFSTATE_HOST);
             continue;
          }
@@ -210,13 +211,12 @@ int job_initialize_job(lListElem *job)
             }
          }
          for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
-            if (lGetUlong(lFirst(lGetList(pe_task, JB_ja_tasks)),
-                  JAT_status) == JRUNNING) {
+            if (lGetUlong(pe_task, PET_status) == JRUNNING) {
                ret=register_at_ptf(job, ja_task, pe_task);
                if (ret) {
                   ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS,
                      (ret == 1 ? MSG_DELAYED : MSG_FAILED),
-                     u32c(job_id), lGetString(pe_task, JB_pe_task_id_str)));
+                     u32c(job_id), lGetString(pe_task, PET_id)));
                }
             }
          }

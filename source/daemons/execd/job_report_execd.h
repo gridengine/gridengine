@@ -34,9 +34,8 @@
 
 extern int flush_jr;
 
-lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, lListElem *jep);
-lListElem *get_job_report(u_long32 jobid, u_long32 jataskid, 
-                          const char *pe_task_id_str);
+lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid, lListElem *jep);
+lListElem *get_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid);
 
 void del_job_report(lListElem *jr);
 void cleanup_job_report(u_long32 jobid, u_long32 jataskid);

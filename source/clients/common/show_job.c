@@ -449,8 +449,13 @@ DTRACE;
       }
 
    /* display online job usage separately for each array job but summarized over all pe_tasks */
-#define SUM_UP_USAGE(pe_task, dst, attr) \
-      if ((uep=lGetSubStr(pe_task, UA_name, attr, JAT_scaled_usage_list))) { \
+#define SUM_UP_JATASK_USAGE(ja_task, dst, attr) \
+      if ((uep=lGetSubStr(ja_task, UA_name, attr, JAT_scaled_usage_list))) { \
+         dst += lGetDouble(uep, UA_value); \
+      }
+
+#define SUM_UP_PETASK_USAGE(pe_task, dst, attr) \
+      if ((uep=lGetSubStr(pe_task, UA_name, attr, PET_scaled_usage))) { \
          dst += lGetDouble(uep, UA_value); \
       }
 
@@ -469,19 +474,19 @@ DTRACE;
          cpu = mem = io = vmem = maxvmem = 0.0;
 
          /* master task */
-         SUM_UP_USAGE(jatep, cpu, USAGE_ATTR_CPU);
-         SUM_UP_USAGE(jatep, vmem, USAGE_ATTR_VMEM);
-         SUM_UP_USAGE(jatep, mem, USAGE_ATTR_MEM);
-         SUM_UP_USAGE(jatep, io, USAGE_ATTR_IO);
-         SUM_UP_USAGE(jatep, maxvmem, USAGE_ATTR_MAXVMEM);
+         SUM_UP_JATASK_USAGE(jatep, cpu, USAGE_ATTR_CPU);
+         SUM_UP_JATASK_USAGE(jatep, vmem, USAGE_ATTR_VMEM);
+         SUM_UP_JATASK_USAGE(jatep, mem, USAGE_ATTR_MEM);
+         SUM_UP_JATASK_USAGE(jatep, io, USAGE_ATTR_IO);
+         SUM_UP_JATASK_USAGE(jatep, maxvmem, USAGE_ATTR_MAXVMEM);
 
          /* slave tasks */
          for_each (pe_task_ep, lGetList(jatep, JAT_task_list)) {
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), cpu, USAGE_ATTR_CPU);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), vmem, USAGE_ATTR_VMEM);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), mem, USAGE_ATTR_MEM);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_IO);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_MAXVMEM);
+            SUM_UP_PETASK_USAGE(pe_task_ep, cpu, USAGE_ATTR_CPU);
+            SUM_UP_PETASK_USAGE(pe_task_ep, vmem, USAGE_ATTR_VMEM);
+            SUM_UP_PETASK_USAGE(pe_task_ep, mem, USAGE_ATTR_MEM);
+            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_IO);
+            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_MAXVMEM);
          }
 
          printf("cpu=%s, mem=%-5.5f GBs, io=%-5.5f, vmem=%s, maxvmem=%s\n",

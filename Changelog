@@ -1,3 +1,10 @@
+JG-2002-05-14-0: Cleanup:   Introduced an own pe task datatype in cull, that
+                            replaces the former use of a complete job object
+                            for each pe task.
+                            Fixed some bugs in the handling of tightly 
+                            integrated parallel jobs.
+                 Issues:    #201, #221, #225
+
 CR-2002-05-14-0: Cleanup:   Removed unused schedd variable in sge_c_gdi_add()
 
 AH-2002-05-13-1: Change:    Do no longer flush events immediately after orders 

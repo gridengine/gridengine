@@ -208,7 +208,7 @@ void write_exit_code_to_qrsh(int exit_code)
          exit_code = 1;
          
          tmpdir = getenv("TMPDIR");
-         taskid = get_conf_val("qrsh_task_id");
+         taskid = search_conf_val("qrsh_task_id");
          SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh - TMPDIR = "
             "%s, qrsh_task_id = %s", tmpdir ? tmpdir : "0", 
             taskid ? taskid : "0"));

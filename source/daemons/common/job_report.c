@@ -29,16 +29,20 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+/* JG: TODO: This file seems to handle jobreport related stuff.
+ *           It should be moved to libs/gdi.
+ */
+
 #include <stdio.h>
 
 #include "sgermon.h"
 #include "cull.h"
 #include "sge_usageL.h"
-/* #include "execd_pseudo_jobid.h" */
 #include "sge_job_reportL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
-
+#include "sge_pe_taskL.h"
 
 #include "job_report.h"
 
@@ -74,7 +78,8 @@ lListElem *jr
 int init_from_job(
 lListElem *jr,
 lListElem *jep,
-lListElem *jatep 
+lListElem *jatep,
+lListElem *petep
 ) {
    lListElem *masterq;
 
@@ -82,16 +87,31 @@ lListElem *jatep
 
    lSetUlong(jr, JR_job_number, lGetUlong(jep, JB_job_number));
    lSetUlong(jr, JR_ja_task_number, lGetUlong(jatep, JAT_task_number));
-   lSetString(jr, JR_pe_task_id_str, lGetString(jep, JB_pe_task_id_str));
+
+   if(petep != NULL) {
+      lSetString(jr, JR_pe_task_id_str, lGetString(petep, PET_id));
+   }
 
    lSetString(jr, JR_owner, lGetString(jep, JB_owner));
-   if (jep && lGetUlong(jatep, JAT_status) == JSLAVE){
-      lSetUlong(jr, JR_state, JSLAVE);
+
+   if (lGetUlong(jatep, JAT_status) == JSLAVE){
+      if(petep == NULL) {
+         lSetUlong(jr, JR_state, JSLAVE);
+      } else {
+         lSetUlong(jr, JR_state, JWRITTEN);
+      }
    } else {
       lSetUlong(jr, JR_state, JWRITTEN);
    }
+
    /* put in data from master queue */
-   if ((masterq=lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)))) {
+   if(petep != NULL) {
+      masterq = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
+   } else {
+      masterq=lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
+   }
+
+   if (masterq != NULL) {
       lSetString(jr, JR_queue_name, lGetString(masterq, JG_qname));
       lSetHost(jr, JR_host_name,  lGetHost(masterq, JG_qhostname));
    }

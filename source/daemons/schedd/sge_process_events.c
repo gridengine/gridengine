@@ -53,6 +53,7 @@
 #include "sge_hostL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_peL.h"
@@ -937,6 +938,7 @@ int sge_process_all_events(lList *event_list)
                DEXIT;
                goto Error;
             }
+            /* JG: TODO: use lGetElemUlong  */
             for_each(ja_task, lGetList(ep, JB_ja_tasks)) {
                if (lGetUlong(ja_task, JAT_task_number) == intkey2)
                   break;
@@ -949,15 +951,24 @@ int sge_process_all_events(lList *event_list)
 
 	         if (strkey) { /* must be a task usage */
                lListElem *ja_task;
-
+               
+               /* JG: TODO: use lGetElemStr. And we already have the jatask! */
                for_each (ja_task, lGetList(jep, JB_ja_tasks)) {
-		            if (!(ep=lGetSubStr(ja_task, JB_pe_task_id_str, strkey, JAT_task_list)))
-                     ep = lAddSubStr(ja_task, JB_pe_task_id_str, strkey, JAT_task_list, JB_Type);
+		            if (!(ep=lGetSubStr(ja_task, PET_id, strkey, JAT_task_list)))
+                     /* JG: TODO: Do we really want to store all petasks in scheduler?
+                      *           It can be thousands, as task ids are no longer recycled!
+                      *           Do we need them at all?
+                      */
+                     ep = lAddSubStr(ja_task, PET_id, strkey, JAT_task_list, PET_Type);
                }
             }	    
 
 
             /* exchange old and new usage list */
+            /* JG: TODO: I doubt this works correctly for petasks! 
+             *           Their usage would have to be added to the jatask usage or
+             *           summed up in a container for all petasks.
+             */
             {
                lList *tmp = NULL;
 

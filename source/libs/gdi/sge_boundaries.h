@@ -245,12 +245,16 @@ enum NameSpaceBoundaries {
    SC_LOWERBOUND = STN_UPPERBOUND + 1,
    SC_UPPERBOUND = SC_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* no longer used, just to fix the order of nms */
-   YYYCONF_LOWERBOUND = SC_UPPERBOUND + 1,
-   YYYCONF_UPPERBOUND = YYYCONF_LOWERBOUND + 1*BASIC_UNIT - 1,
+   /* pe task object */
+   PET_LOWERBOUND = SC_UPPERBOUND + 1,
+   PET_UPPERBOUND = PET_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* pe task request object */
+   PETR_LOWERBOUND = PET_UPPERBOUND + 1,
+   PETR_UPPERBOUND = PETR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* job report */
-   JR_LOWERBOUND = YYYCONF_UPPERBOUND + 1,
+   JR_LOWERBOUND = PETR_UPPERBOUND + 1,
    JR_UPPERBOUND = JR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* license report */

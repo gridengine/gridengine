@@ -1,5 +1,3 @@
-#ifndef __REAPER_EXECD_H
-#define __REAPER_EXECD_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -31,13 +29,20 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include "sge_pe_task.h"
 
-void sge_reap_children_execd(void);
-lListElem *execd_job_start_failure(lListElem *jep, lListElem *jatep, lListElem *petep, char *error_string, int general);
-lListElem *execd_job_run_failure(lListElem *jep, lListElem *jatep, lListElem *petep, char *error_string, int general);
-void job_unknown(u_long32 jobid, u_long32 jataskid, char *qname);
-int clean_up_old_jobs(int startup);
-void remove_acked_job_exit(u_long32 jobid, u_long32 jataskid, lListElem *jr); 
-void reaper_sendmail(lListElem *jep, lListElem *jr);
+#include "sge_pe_taskL.h"
+#include "sge_jataskL.h"
 
-#endif
+lListElem *search_petask_from_jatask(const lListElem *jatep, const char *petaskid)
+{
+   if(jatep != NULL) {
+      lList *petasks = lGetList(jatep, JAT_task_list);
+      if(petasks != NULL) {
+         return lGetElemStr(petasks, PET_id, petaskid);
+      }
+   }
+
+   return NULL;
+}
+

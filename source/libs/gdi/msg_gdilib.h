@@ -151,11 +151,11 @@
 
 /* 
 ** gdilib/sge_qexec.c
-*/ 
-#define MSG_GDI_RETRIEVINGLOCALHOSTNAMEFAILED_S          _("failed retrieving local hostname: %s")
+*/
+#define MSG_GDI_INVALIDPARAMETER_SS                      _("invalid paramter to "SFQ": "SFQ)
 #define MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS          _("failed resolving uid %d to username: %s")
-#define MSG_GDI_MISSINGJOBIDENVIRONMENT                  _("missing JOB_ID in environment")
-#define MSG_GDI_STRINGINJOBIDISINVALID_S                 _("string \"%s\" in env var JOB_ID is not a valid jobid")
+#define MSG_GDI_MISSINGINENVIRONMENT_S                   _("missing "SFQ" in environment")
+#define MSG_GDI_STRINGISINVALID_SS                       _("string "SFQ" in env var "SFQ" is not a valid job/taskid")
 #define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _("proposed task id %s \"%s\" is invalid")
 #define MSG_GDI_TASKEXISTS_S                             _("task %s already exists")
 #define MSG_GDI_SETUPGDILIBFAILED                        _("failed setting up gdi library")

@@ -194,7 +194,7 @@ lList *ptf_get_job_usage(u_long job_id, u_long ja_task_id,
 
 int ptf_process_job_ticket_list(lList *jobs);
 
-int ptf_job_complete(lListElem *job);
+int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, lList **usage);
 
 void ptf_update_job_usage(void);
 

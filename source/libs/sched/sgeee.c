@@ -1365,7 +1365,7 @@ decay_and_sum_usage( sge_ref_t *ref,
              *user=ref->user,
              *project=ref->project,
              *userprj = NULL,
-             *task;
+             *petask;
 
    if (!node && !user && !project)
       return;
@@ -1406,9 +1406,9 @@ decay_and_sum_usage( sge_ref_t *ref,
 
       /* sum sub-task usage into job_usage_list */
       if (job_usage_list) {
-         for_each(task, lGetList(ja_task, JAT_task_list)) {
+         for_each(petask, lGetList(ja_task, JAT_task_list)) {
             lListElem *dst, *src;
-            for_each(src, lGetList(ja_task, JAT_scaled_usage_list)) {
+            for_each(src, lGetList(petask, PET_scaled_usage)) {
                if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name))))
                   lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
                else

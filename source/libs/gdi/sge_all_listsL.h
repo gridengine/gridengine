@@ -84,6 +84,7 @@
 #include "sge_featureL.h"
 #include "sge_suserL.h"
 #include "sge_secL.h"
+#include "sge_pe_taskL.h"
 #include "sge_varL.h"
 
 #ifdef  __cplusplus
@@ -154,7 +155,8 @@ extern "C" {
       {UP_LOWERBOUND, UPS, UPN},        /* SGEEE - user/project */
       {STN_LOWERBOUND, STNS, STNN},     /* SGEEE - share tree node */
       {SC_LOWERBOUND, SCS, SCN},        /* scheduler config */
-      {YYYCONF_LOWERBOUND, 0, NULL},    /* obsolete - reuse me */
+      {PET_LOWERBOUND, PETS, PETN},     /* PE Task object */
+      {PETR_LOWERBOUND, PETRS, PETRN},   /* PE Task request object */
       {JR_LOWERBOUND, JRS, JRN},        /* Job report */
       {LIC_LOWERBOUND, LICS, LICN},     /* structure of license report */
       {CK_LOWERBOUND, CKS, CKN},        /* checkpointing object */

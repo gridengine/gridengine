@@ -51,6 +51,7 @@
 #include "sge_peL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "sge_ckptL.h"
 #include "sge_complexL.h"
 #include "sge_queueL.h"
@@ -125,30 +126,16 @@ static long get_next_addgrpid(lList *, long);
 lListElem* responsible_queue(
 lListElem *jep,
 lListElem *jatep,
-lListElem *slave_jep,
-lListElem *slave_jatep 
+lListElem *petep
 ) {
    lListElem *master_q = NULL;
 
    DENTER(TOP_LAYER, "responsible_queue");
 
-   if (!slave_jep)
-      master_q = lFirst(lGetList(lFirst(lGetList(jatep, 
-         JAT_granted_destin_identifier_list)), JG_queue));
-   else {
-      /* seek responsible queue for this task in gdil of slave job */
-      const char *qnm;
-      lListElem *gdil_ep;
-
-      qnm = lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
-         JG_qname);
-      /* DPRINTF(("queue to seek for: %s\n", qnm)); */
-      for_each (gdil_ep, lGetList(slave_jatep, JAT_granted_destin_identifier_list)) {
-         if (!strcmp(qnm, lGetString(gdil_ep, JG_qname))) {
-            master_q = lFirst(lGetList(gdil_ep, JG_queue));
-            break;
-         }
-      }
+   if (petep == NULL) {
+      master_q = lFirst(lGetList(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_queue));
+   } else {
+      master_q = lFirst(lGetList(lFirst(lGetList(petep, PET_granted_destin_identifier_list)), JG_queue));
    }
 
    DEXIT;
@@ -228,8 +215,7 @@ long add_grp_id
 int sge_exec_job(
 lListElem *jep,
 lListElem *jatep,
-lListElem *slave_jep,
-lListElem *slave_jatep,
+lListElem *petep,
 char *err_str 
 ) {
    int i;
@@ -271,7 +257,7 @@ char *err_str
         pe_stderr_path[SGE_PATH_MAX];
    char mail_str[1024], *shepherd_name;
    lListElem *gdil_ep, *master_q;
-   lListElem *ep, *job_jep, *job_jatep;
+   lListElem *ep;
    lListElem *env;
    lList *environmentList;
    const char *arch = sge_get_arch();
@@ -285,15 +271,15 @@ char *err_str
 
    environmentList = lCreateList("environment list", VA_Type);
 
-   DPRINTF(("Job: %ld Task: %ld\n", lGetUlong(jep, JB_job_number), 
-      lGetUlong(jatep, JAT_task_number)));
+   DPRINTF(("job: %ld jatask: %ld petask: %s\n", lGetUlong(jep, JB_job_number), 
+      lGetUlong(jatep, JAT_task_number),
+      petep != NULL ? lGetString(petep, PET_id) : "none"));
 
-   master_q = responsible_queue(jep, jatep, slave_jep, slave_jatep);
+   master_q = responsible_queue(jep, jatep, petep);
    SGE_ASSERT((master_q));
 
    /* prepare complex of master_q */
-   if (!(cplx = lGetList( lGetElemStr( lGetList(slave_jatep?slave_jatep:jatep, 
-         JAT_granted_destin_identifier_list), 
+   if (!(cplx = lGetList( lGetElemStr( lGetList(jatep, JAT_granted_destin_identifier_list), 
          JG_qname, lGetString(master_q, QU_qname)), JG_complex))) {
       DEXIT;
       return -2;
@@ -306,7 +292,8 @@ char *err_str
       return -3;        /* error only relevant for this user */
    }
 
-   if (slave_jep) {
+   /* JG: TODO: create function make_active_job_dir() */
+   if (petep != NULL) {
       SGE_STRUCT_STAT statbuf;
 
       /*
@@ -330,7 +317,7 @@ char *err_str
       ** Now we can create the directory for the pe-task
       */  
       sprintf(dir, "%s/"u32"."u32"/%s", ACTIVE_DIR, lGetUlong(jep, JB_job_number), 
-         lGetUlong(jatep, JAT_task_number), lGetString(jep, JB_pe_task_id_str));
+         lGetUlong(jatep, JAT_task_number), lGetString(petep, PET_id));
    } else {
       sprintf(dir, "%s/"u32"."u32"", ACTIVE_DIR, lGetUlong(jep, JB_job_number), 
          lGetUlong(jatep, JAT_task_number));
@@ -388,7 +375,8 @@ char *err_str
 
    
    /***************** write out sge host file ******************************/
-   if (!slave_jep) {
+   /* JG: TODO: create function write_pe_hostfile() */
+   if (petep == NULL) {
       if (processor_set)
          processor_set = lFreeList(processor_set);
 
@@ -454,16 +442,6 @@ char *err_str
       return -2;        /* general */
    }
    
-   /* take environment from job in case of tasks */
-   if (slave_jep) {
-      job_jep = slave_jep;
-      job_jatep = slave_jatep;
-   }
-   else {
-      job_jep = jep;
-      job_jatep = jatep;
-   }
-
    /* write inherited environment first, to be sure that some task specific variables
    ** will be overridden
    */
@@ -473,22 +451,11 @@ char *err_str
       var_list_set_string(&environmentList, "PATH", buffer);
    }
 
-   if (slave_jep) {
+   /* write environment of job */
+   {   
       const char *s, *name;
       int n = strlen(VAR_COMPLEX_PREFIX);
-      for_each(env, lGetList(slave_jep, JB_env_list)) {
-         name = lGetString(env, VA_variable);
-         if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
-            continue; /* we handle them later on in var_list_copy_complex_vars_and_value() */
 
-         s = lGetString(env, VA_value);
-         var_list_set_string(&environmentList, name, s ? s : "");
-      }
-   }
-
-   {
-      const char *s, *name;
-      int n = strlen(VAR_COMPLEX_PREFIX);
       for_each(env, lGetList(jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
          if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
@@ -498,39 +465,53 @@ char *err_str
          var_list_set_string(&environmentList, name, s ? s : "");
       }
    }
+
+   /* write environment of petask */
+   if(petep != NULL) {
+      const char *s, *name;
+      int n = strlen(VAR_COMPLEX_PREFIX);
+
+      for_each(env, lGetList(petep, PET_environment)) {
+         name = lGetString(env, VA_variable);
+         if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
+            continue; /* we handle them later on in var_list_copy_complex_vars_and_value() */
+
+         s = lGetString(env, VA_value);
+         var_list_set_string(&environmentList, name, s ? s : "");
+      }
+   }
   
-   /* in case of pe task: 
-   ** jep = pe task
-   ** slave_jep = job_jep = job 
-   */
-   /* write PWD and set, might get overridden by task environment */
-   
    /* 1.) try to read cwd from pe task */
-   if(slave_jep) {
-      cwd = lGetString(jep, JB_cwd);
+   if(petep != NULL) {
+      cwd = lGetString(petep, PET_cwd);
    } 
 
    /* 2.) try to read cwd from job */
    if(cwd == NULL) {
-      cwd = lGetString(job_jep, JB_cwd);
+      cwd = lGetString(jep, JB_cwd);
    }
 
-   /* 3.) if task or job set cwd: do path mapping */
+   /* 3.) if pe task or job set cwd: do path mapping */
    if(cwd != NULL) {
       static char cwd_out[SGE_PATH_MAX];
      
+      /* JG: TODO: Petask must have its own path mapping. */         
       /* path aliasing only for cwd flag set */
-      path_alias_list_get_path(lGetList(job_jep, JB_path_aliases), NULL,
+      path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
                                cwd, me.qualified_hostname, cwd_out, 
                                SGE_PATH_MAX);
       cwd = cwd_out;
       var_list_set_string(&environmentList, "PWD", cwd);
-   }
-   else 
+   } else {
+   /* 4.) if cwd not set in job: take users home dir */
       cwd = pw->pw_dir;
+   }   
 
-   if (lGetString(job_jep, JB_job_name)) {
-      var_list_set_string(&environmentList, "REQNAME", lGetString(job_jep, JB_job_name));
+   {
+      const char *reqname = petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name);
+      if (reqname != NULL) {
+         var_list_set_string(&environmentList, "REQNAME", reqname);
+      }
    }
 
    var_list_set_string(&environmentList, VAR_PREFIX "CELL", me.default_cell);
@@ -541,45 +522,58 @@ char *err_str
    var_list_set_string(&environmentList, "LOGNAME", pw->pw_name);
 
    /*
-   ** interactive jobs get job name INTERACTIVE
-   ** login jobs have LOGIN
+   ** set JOB_NAME variable
+   ** for interactive jobs a fixed name is set,
+   ** for batch jobs the script name is used.
    */
-   if (lGetString(jep, JB_script_file)) {
-      const char *s;
-
-      /* build basename */ 
-      s=strrchr(lGetString(jep, JB_script_file), '/');
-      if (s) 
-         s++;
-      else 
-         s = lGetString(jep, JB_script_file);
-
-      var_list_set_string(&environmentList, "JOB_NAME", s);
-   }
-   else {
-      u_long32 jb_now = lGetUlong(jep, JB_now);
-
-      if(JB_NOW_IS_QLOGIN(jb_now)) { 
-         var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QLOGIN);
+   {
+      u_long32 jb_now;
+      if(petep != NULL) {
+         jb_now = JB_NOW_QRSH;
       } else {
-         if(JB_NOW_IS_QRSH(jb_now)) {
+         jb_now = lGetUlong(jep, JB_now);
+      }
+
+      JB_NOW_CLEAR_IMMEDIATE(jb_now);
+      switch(jb_now) {
+         case JB_NOW_QSH:
+            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QSH); 
+            break;
+         case JB_NOW_QLOGIN:
+            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QLOGIN);
+            break;
+         case JB_NOW_QRSH:
             var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRSH);
-         } else {
-            if(JB_NOW_IS_QRLOGIN(jb_now)) {
-               var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRLOGIN);
-            } else {   
-               var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QSH); 
+            break;
+         case JB_NOW_QRLOGIN:
+            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRLOGIN);
+            break;
+         default:
+            if (lGetString(jep, JB_script_file)) {
+               const char *s;
+
+               /* build basename */ 
+               s=strrchr(lGetString(jep, JB_script_file), '/');
+               if (s) 
+                  s++;
+               else 
+                  s = lGetString(jep, JB_script_file);
+
+               var_list_set_string(&environmentList, "JOB_NAME", s);
             }
-         }  
-      }      
+            break;
+      }
    }
 
-   var_list_set_string(&environmentList, "REQUEST", lGetString(job_jep, JB_job_name));
+   /* JG: TODO: do we need REQNAME and REQUEST? */
+   var_list_set_string(&environmentList, "REQUEST", petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name));
    var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
    var_list_set_string(&environmentList, "QUEUE", lGetString(master_q, QU_qname));
-   var_list_set_u32(&environmentList, "JOB_ID", lGetUlong(job_jep, JB_job_number));
+   /* JB: TODO: shouldn't we better have a SGE_JOB_ID? */
+   var_list_set_u32(&environmentList, "JOB_ID", lGetUlong(jep, JB_job_number));
   
-   if (job_is_array(job_jep)) {
+   /* JG: TODO: shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
+   if (job_is_array(jep)) {
       var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", lGetUlong(jatep, JAT_task_number));
    } else {
       var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", "undefined");
@@ -599,22 +593,27 @@ char *err_str
    var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path.sge_root);
 
    var_list_set_int(&environmentList, "NQUEUES", 
-      lGetNumberOfElem(lGetList(job_jatep, JAT_granted_destin_identifier_list)));
+      lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)));
    var_list_set_int(&environmentList, "NSLOTS", pe_slots);
    var_list_set_int(&environmentList, "NHOSTS", nhosts);
 
-   var_list_set_int(&environmentList, "RESTARTED", (int) lGetUlong(job_jatep, JAT_job_restarted));
+   var_list_set_int(&environmentList, "RESTARTED", (int) lGetUlong(jatep, JAT_job_restarted));
 
    /*
    ** interactive and login jobs have no script file
    */
-   if (lGetString(jep, JB_job_source))
-      strcpy(script_file, lGetString(jep, JB_script_file));
-   else if (lGetString(jep, JB_script_file))
-      sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR, 
-              lGetUlong(jep, JB_job_number));
-   else { 
-      strcpy(script_file, lGetString(lGetElemStr(environmentList, VA_variable, "JOB_NAME"), VA_value));
+   if(petep != NULL) {
+      /* JG: TODO: passing information if it is an interactive job and which type, should not be
+       *           be done in scriptfile - find a better solution, e.g. a config variable 
+       */
+      strcpy(script_file, "QRSH");
+   } else {
+      if (lGetString(jep, JB_script_file) != NULL) {
+         sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR, 
+                 lGetUlong(jep, JB_job_number));
+      } else { 
+         strcpy(script_file, lGetString(lGetElemStr(environmentList, VA_variable, "JOB_NAME"), VA_value));
+      }
    }
 
    var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
@@ -622,30 +621,30 @@ char *err_str
    var_list_set_string(&environmentList, "TMPDIR", tmpdir);
    var_list_set_string(&environmentList, "TMP", tmpdir);
 
-   var_list_set_string(&environmentList, VAR_PREFIX "ACCOUNT", (lGetString(job_jep, JB_account) ? 
-            lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
+   var_list_set_string(&environmentList, VAR_PREFIX "ACCOUNT", (lGetString(jep, JB_account) ? 
+            lGetString(jep, JB_account) : DEFAULT_ACCOUNT));
 
-   sge_get_path(lGetList(job_jep, JB_shell_list), cwd, 
-                lGetString(job_jep, JB_owner),
-                lGetString(job_jep, JB_job_name), 
-                lGetUlong(job_jep, JB_job_number), 
+   sge_get_path(lGetList(jep, JB_shell_list), cwd, 
+                lGetString(jep, JB_owner),
+                petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name), 
+                lGetUlong(jep, JB_job_number), 
                 job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0,
                 SGE_SHELL, shell_path);
 
-   if (!shell_path[0])
+   if (shell_path[0] == 0)
       strcpy(shell_path, lGetString(master_q, QU_shell));
    var_list_set_string(&environmentList, "SHELL", shell_path);
 
    /* forward name of pe to job */
-   if (lGetString(job_jatep, JAT_granted_pe)) {
+   if (lGetString(jatep, JAT_granted_pe) != NULL) {
       char buffer[SGE_PATH_MAX];
-      var_list_set_string(&environmentList, "PE", lGetString(job_jatep, JAT_granted_pe));
+      var_list_set_string(&environmentList, "PE", lGetString(jatep, JAT_granted_pe));
       sprintf(buffer, "%s/%s/%s", execd_spool_dir, dir, PE_HOSTFILE);
       var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
    }   
 
    /* forward name of ckpt env to job */
-   if ((ep = lFirst(lGetList(job_jep, JB_checkpoint_object_list)))) {
+   if ((ep = lFirst(lGetList(jep, JB_checkpoint_object_list)))) {
       var_list_set_string(&environmentList, VAR_PREFIX "CKPT_ENV", lGetString(ep, CK_name));
       if (lGetString(ep, CK_ckpt_dir))
          var_list_set_string(&environmentList, VAR_PREFIX "CKPT_DIR", lGetString(ep, CK_ckpt_dir));
@@ -659,7 +658,7 @@ char *err_str
    }
 
    var_list_copy_complex_vars_and_value(environmentList, 
-                                        lGetList(job_jep, JB_env_list),
+                                        lGetList(jep, JB_env_list),
                                         cplx);
 
    var_list_set_sharedlib_path(&environmentList);
@@ -744,7 +743,11 @@ char *err_str
       /* write add_grp_id to job-structure and file */
       sprintf(str_id, "%ld", (long) last_addgrpid);
       fprintf(fp, "add_grp_id="gid_t_fmt"\n", last_addgrpid);
-      lSetString(jatep, JAT_osjobid, str_id);
+      if(petep == NULL) {
+         lSetString(jatep, JAT_osjobid, str_id);
+      } else {
+         lSetString(petep, PET_osjobid, str_id);
+      }
       
       lFreeList(rlp);
       lFreeList(alp);
@@ -776,9 +779,9 @@ char *err_str
    if (lGetUlong(jep, JB_checkpoint_attr) && 
        (ep = lFirst(lGetList(jep, JB_checkpoint_object_list)))) {
       fprintf(fp, "ckpt_job=1\n");
-      fprintf(fp, "ckpt_restarted=%d\n", slave_jep ? 0 : (int) lGetUlong(job_jatep, JAT_job_restarted));
-      fprintf(fp, "ckpt_pid=%d\n", (int) lGetUlong(job_jatep, JAT_pvm_ckpt_pid));
-      fprintf(fp, "ckpt_osjobid=%s\n", lGetString(job_jatep, JAT_osjobid) ? lGetString(job_jatep, JAT_osjobid): "0");
+      fprintf(fp, "ckpt_restarted=%d\n", petep != NULL ? 0 : (int) lGetUlong(jatep, JAT_job_restarted));
+      fprintf(fp, "ckpt_pid=%d\n", (int) lGetUlong(jatep, JAT_pvm_ckpt_pid));
+      fprintf(fp, "ckpt_osjobid=%s\n", lGetString(jatep, JAT_osjobid) ? lGetString(jatep, JAT_osjobid): "0");
       fprintf(fp, "ckpt_interface=%s\n", lGetString(ep, CK_interface));
       fprintf(fp, "ckpt_command=%s\n", lGetString(ep, CK_ckpt_command));
       fprintf(fp, "ckpt_migr_command=%s\n", lGetString(ep, CK_migr_command));
@@ -787,16 +790,16 @@ char *err_str
       fprintf(fp, "ckpt_dir=%s\n", lGetString(ep, CK_ckpt_dir));
       fprintf(fp, "ckpt_signal=%s\n", lGetString(ep, CK_signal));
  
-      if (!(lGetUlong(job_jep, JB_checkpoint_attr) & CHECKPOINT_AT_MINIMUM_INTERVAL))
+      if (!(lGetUlong(jep, JB_checkpoint_attr) & CHECKPOINT_AT_MINIMUM_INTERVAL)) {
          interval = 0;
-      else {   
+      } else {   
          parse_ulong_val(NULL, &interval, TYPE_TIM, lGetString(master_q, QU_min_cpu_interval), NULL, 0);   
-         interval = MAX(interval, lGetUlong(job_jep, JB_checkpoint_interval));
+         interval = MAX(interval, lGetUlong(jep, JB_checkpoint_interval));
       }   
       fprintf(fp, "ckpt_interval=%d\n", (int) interval);
-   }
-   else 
+   } else {
       fprintf(fp, "ckpt_job=0\n");
+   }   
       
    fprintf(fp, "s_cpu=%s\n", lGetString(master_q, QU_s_cpu));
    fprintf(fp, "h_cpu=%s\n", lGetString(master_q, QU_h_cpu));
@@ -823,7 +826,7 @@ char *err_str
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX6)
    {
-      const char *env_value = job_get_env_string(job_jep, VAR_PREFIX "O_HOST");
+      const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOST");
 
       if (env_value) {
          fprintf(fp, "spi_initiator=%s\n", env_value);
@@ -834,32 +837,42 @@ char *err_str
 #endif
 
    /* do not start prolog/epilog in case of pe tasks */
-   fprintf(fp, "prolog=%s\n", lGetString(jep, JB_job_source) ? "none":
-       ((cp=lGetString(master_q, QU_prolog)) && strcasecmp(cp, "none"))?
-         cp: conf.prolog);
-   fprintf(fp, "epilog=%s\n", lGetString(jep, JB_job_source) ? "none":
-       ((cp=lGetString(master_q, QU_epilog)) && strcasecmp(cp, "none"))?
-         cp: conf.epilog);
+   if(petep == NULL) {
+      fprintf(fp, "prolog=%s\n", 
+              ((cp=lGetString(master_q, QU_prolog)) && strcasecmp(cp, "none"))?
+              cp: conf.prolog);
+      fprintf(fp, "epilog=%s\n", 
+              ((cp=lGetString(master_q, QU_epilog)) && strcasecmp(cp, "none"))?
+              cp: conf.epilog);
+   } else {
+      fprintf(fp, "prolog=%s\n", "none");
+      fprintf(fp, "epilog=%s\n", "none");
+   }
 
    fprintf(fp, "starter_method=%s\n", (cp=lGetString(master_q, QU_starter_method))? cp : "none");
    fprintf(fp, "suspend_method=%s\n", (cp=lGetString(master_q, QU_suspend_method))? cp : "none");
    fprintf(fp, "resume_method=%s\n", (cp=lGetString(master_q, QU_resume_method))? cp : "none");
    fprintf(fp, "terminate_method=%s\n", (cp=lGetString(master_q, QU_terminate_method))? cp : "none");
 
+   /* JG: TODO: should at least be a define, better configurable */
    fprintf(fp, "script_timeout=120\n");
 
    fprintf(fp, "pe=%s\n", lGetString(jatep, JAT_granted_pe)?lGetString(jatep, JAT_granted_pe):"none");
    fprintf(fp, "pe_slots=%d\n", pe_slots);
    fprintf(fp, "host_slots=%d\n", host_slots);
 
+   /* write pe related data */
    if (lGetString(jatep, JAT_granted_pe)) {
-      lListElem *pep;
-      pep = lFirst(lGetList(jep, JB_pe_object));
-      
+      lListElem *pep = NULL;
+      /* no pe start/stop for petasks */
+      if(petep == NULL) {
+         pep = lFirst(lGetList(jep, JB_pe_object));
+      }
+      /* JG: TODO: shouldn't pe_object be part of jatep? */
       fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, dir, PE_HOSTFILE);
-      fprintf(fp, "pe_start=%s\n",  lGetString(pep, PE_start_proc_args)?
+      fprintf(fp, "pe_start=%s\n",  pep != NULL && lGetString(pep, PE_start_proc_args)?
                                        lGetString(pep, PE_start_proc_args):"none");
-      fprintf(fp, "pe_stop=%s\n",   lGetString(pep, PE_stop_proc_args)?
+      fprintf(fp, "pe_stop=%s\n",   pep != NULL && lGetString(pep, PE_stop_proc_args)?
                                        lGetString(pep, PE_stop_proc_args):"none");
 
       /* build path for stdout of pe scripts */
@@ -911,11 +924,22 @@ char *err_str
       sge_dstring_free(&range_string);
    }
    fprintf(fp, "\n");
-   fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
+   if(petep != NULL) {
+      fprintf(fp, "job_name=%s\n", lGetString(petep, PET_name));
+   } else {
+      fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
+   }
    fprintf(fp, "job_id="u32"\n", lGetUlong(jep, JB_job_number));
    fprintf(fp, "ja_task_id="u32"\n", job_is_array(jep) ? lGetUlong(jatep, JAT_task_number) : 0);
-   fprintf(fp, "account=%s\n", (lGetString(job_jep, JB_account) ? lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
-   fprintf(fp, "submission_time=" u32 "\n", lGetUlong(job_jep, JB_submission_time));
+   if(petep != NULL) {
+      fprintf(fp, "pe_task_id=%s\n", lGetString(petep, PET_id));
+   }
+   fprintf(fp, "account=%s\n", (lGetString(jep, JB_account) ? lGetString(jep, JB_account) : DEFAULT_ACCOUNT));
+   if(petep != NULL) {
+      fprintf(fp, "submission_time=" u32 "\n", lGetUlong(petep, PET_submission_time));
+   } else {
+      fprintf(fp, "submission_time=" u32 "\n", lGetUlong(jep, JB_submission_time));
+   }
 
    {
       u_long32 notify = 0;
@@ -925,10 +949,16 @@ char *err_str
    }
    
    /*
-   ** interactive jobs have no exec file
+   ** interactive (qsh) jobs have no exec file
    */
    if (!lGetString(jep, JB_script_file)) {
-      u_long32 jb_now = lGetUlong(jep, JB_now);
+      u_long32 jb_now;
+      if(petep != NULL) {
+         jb_now = JB_NOW_QRSH;
+      } else {
+         jb_now = lGetUlong(jep, JB_now);
+      }
+
       if (!(JB_NOW_IS_QLOGIN(jb_now) || 
            JB_NOW_IS_QRSH(jb_now) || 
            JB_NOW_IS_QRLOGIN(jb_now))) {
@@ -957,10 +987,20 @@ char *err_str
          
 
    {
+      lList *args;
       lListElem *se;
+
       int nargs=1;
-      fprintf(fp, "njob_args=%d\n", lGetNumberOfElem(lGetList(jep, JB_job_args)));
-      for_each(se, lGetList(jep, JB_job_args)) {
+      
+      if(petep != NULL) {
+         args = lGetList(petep, PET_args);
+      } else {
+         args = lGetList(jep, JB_job_args);
+      }
+
+      fprintf(fp, "njob_args=%d\n", lGetNumberOfElem(args));
+
+      for_each(se, args) {
          const char *arg = lGetString(se, STR);
          if(arg != NULL) {
             fprintf(fp, "job_arg%d=%s\n", nargs++, arg);
@@ -968,7 +1008,6 @@ char *err_str
             fprintf(fp, "job_arg%d=\n", nargs++);
          }
       }   
-
    }
 
    fprintf(fp, "queue_tmpdir=%s\n", lGetString(master_q, QU_tmpdir));
@@ -976,7 +1015,12 @@ char *err_str
    ** interactive jobs need a display to send output back to (only qsh - JG)
    */
    if (!lGetString(jep, JB_script_file)) {         /* interactive job  */
-      u_long32 jb_now = lGetUlong(jep, JB_now);    /* detect qsh case  */
+      u_long32 jb_now;
+      if(petep != NULL) {
+         jb_now = JB_NOW_QRSH;
+      } else {
+         jb_now = lGetUlong(jep, JB_now);    /* detect qsh case  */
+      }
       
       env = lGetElemStr(lGetList(jep, JB_env_list), VA_variable, "DISPLAY");
 
@@ -1043,12 +1087,17 @@ char *err_str
 
    /* config for interactive jobs */
    {
-      u_long32 jb_now = lGetUlong(jep, JB_now); 
-      const char *qrsh_task_id = lGetString(jep, JB_pe_task_id_str);
-
-      if (qrsh_task_id != NULL) {
-         fprintf(fp, "qrsh_task_id=%s\n", qrsh_task_id);
+      u_long32 jb_now;
+      if(petep != NULL) {
+         jb_now = JB_NOW_QRSH;
+      } else {
+         jb_now = lGetUlong(jep, JB_now); 
       }
+     
+      /* JG: TODO: replace by pe_task_id */
+      if(petep != NULL) {
+         fprintf(fp, "qrsh_task_id=%s\n", lGetString(petep, PET_id));
+      }   
 
       if(JB_NOW_IS_QLOGIN(jb_now) || JB_NOW_IS_QRSH(jb_now) 
          || JB_NOW_IS_QRLOGIN(jb_now)) {
@@ -1082,8 +1131,8 @@ char *err_str
 
                fprintf(fp, "qrsh_tmpdir=%s\n", tmpdir);
 
-               if(qrsh_task_id != NULL) {
-                  fprintf(fp, "qrsh_pid_file=%s/pid.%s\n", tmpdir, qrsh_task_id);
+               if(petep != NULL) {
+                  fprintf(fp, "qrsh_pid_file=%s/pid.%s\n", tmpdir, lGetString(petep, PET_id));
                } else {
                   fprintf(fp, "qrsh_pid_file=%s/pid\n", tmpdir);
                }
@@ -1117,7 +1166,8 @@ char *err_str
    /*
    ** interactive jobs dont need to access script file
    */
-   if (!lGetString(jep, JB_job_source) && lGetString(jep, JB_script_file)) {
+   /* JG: TODO: find better way to identify interactive jobs */
+   if (!lGetString(jep, JB_job_source) && petep == NULL && lGetString(jep, JB_script_file)) {
       if (SGE_STAT(script_file, &buf)) {
          sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
                  script_file, strerror(errno));
@@ -1199,6 +1249,11 @@ char *err_str
    }
 
    /* send mail to users if requested */
+   /* JG: TODO: Is this also done for pe tasks?
+    *           If yes, is this wanted?
+    *           If yes, it should contain the petaskid
+    *           make a function send_job_start_mail()
+    */
    mail_users = lGetList(jep, JB_mail_list);
    mail_options = lGetUlong(jep, JB_mail_options);
    strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
@@ -1243,10 +1298,13 @@ char *err_str
       i = fork();
 
    if (i != 0) { /* parent */
-
-      lSetUlong(jep, JB_hard_wallclock_gmt, 0); /* in case we are restarting! */
-      lSetUlong(jatep, JAT_pending_signal, 0);
-      lSetUlong(jatep, JAT_pending_signal_delivery_time, 0);
+      if(petep == NULL) {
+         lSetUlong(jep, JB_hard_wallclock_gmt, 0); /* in case we are restarting! */
+         lSetUlong(jatep, JAT_pending_signal, 0);
+         lSetUlong(jatep, JAT_pending_signal_delivery_time, 0);
+      } else {
+         /* JG: TODO: what to do for petask? */
+      }
       if (chdir(execd_spool_dir))       /* go back */
          /* if this happens (dont know how) we have a real problem */
          ERROR((SGE_EVENT, MSG_FILE_CHDIR_SS, execd_spool_dir, strerror(errno))); 

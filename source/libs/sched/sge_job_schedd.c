@@ -51,6 +51,7 @@
 #include "schedd_conf.h"      /*added to support SGE*/
 #include "schedd_message.h"
 #include "sge_jataskL.h"
+#include "sge_pe_taskL.h"
 #include "cull_lerrnoP.h"
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"
@@ -1119,27 +1120,25 @@ int active_subtasks(
 lListElem *job,
 const char *qname 
 ) {
-   lListElem *task, *ep, *ja_task, *task_task;
+   lListElem *petask, *ep, *jatask;
    const char *task_qname;
    const char *master_qname;
 
-   for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-      master_qname = lGetString(ja_task, JAT_master_queue);
+   for_each(jatask, lGetList(job, JB_ja_tasks)) {
+      master_qname = lGetString(jatask, JAT_master_queue);
 
       /* always consider the master queue to have active sub-tasks */
       if (master_qname && !strcmp(qname, master_qname))
          return 1;
 
-      for_each(task, lGetList(ja_task, JAT_task_list)) {
-         for_each(task_task, lGetList(task, JB_ja_tasks)) {
-            if (qname &&
-                lGetUlong(task_task, JAT_status) != JFINISHED &&
-                ((ep=lFirst(lGetList(task_task, JAT_granted_destin_identifier_list)))) &&
-                ((task_qname=lGetString(ep, JG_qname))) &&
-                !strcmp(qname, task_qname))
-
-               return 1;
-         }
+      for_each(petask, lGetList(jatask, JAT_task_list)) {
+         if (qname &&
+             lGetUlong(petask, PET_status) != JFINISHED &&
+             ((ep=lFirst(lGetList(petask, PET_granted_destin_identifier_list)))) &&
+             ((task_qname=lGetString(ep, JG_qname))) &&
+             !strcmp(qname, task_qname)) {
+            return 1;
+         }   
       }
    }
    return 0;
@@ -1152,15 +1151,15 @@ lList *granted,
 const char *qhostname 
 ) {
    lList *task_list;
-   lListElem *gdil_ep, *ja_task;
+   lListElem *gdil_ep, *jatask;
    int nslots = 0;
    const void *iterator = NULL;
 
 
    if (qhostname == NULL) {
       for_each (gdil_ep, granted) {   /* for all hosts */
-         for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-            task_list = lGetList(ja_task, JAT_task_list);
+         for_each (jatask, lGetList(job, JB_ja_tasks)) {
+            task_list = lGetList(jatask, JAT_task_list);
             if (task_list == NULL || active_subtasks(job, lGetString(gdil_ep, JG_qname)))
                nslots += lGetUlong(gdil_ep, JG_slots);
          }
@@ -1169,8 +1168,8 @@ const char *qhostname
       /* only for qhostname */
       gdil_ep = lGetElemHostFirst(granted, JG_qhostname, qhostname, &iterator);
       while (gdil_ep != NULL) {
-         for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-            task_list = lGetList(ja_task, JAT_task_list);
+         for_each (jatask, lGetList(job, JB_ja_tasks)) {
+            task_list = lGetList(jatask, JAT_task_list);
             if (task_list == NULL || active_subtasks(job, lGetString(gdil_ep, JG_qname)))
                nslots += lGetUlong(gdil_ep, JG_slots);
          }

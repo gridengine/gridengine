@@ -1,3 +1,10 @@
+AS-2004-03-12-0: Bugfix:    installation fixes:
+                              - rewrite of hostname checking module
+                              - non-root user install fixes
+                              - minor "%s" fixes
+
+AS-2004-03-11-1: Bugfix:    installation fixes and formatting
+
 SG-2004-03-12-2: Bugfix:    execd died, when a load sensor was restarted.
                  Issue:     835
                  Changed:   execd

@@ -1,7 +1,7 @@
 		Third party licenses and copyright statements
                 ---------------------------------------------
 
-The following list shows the different 3rd party libraries and code parts.
+The following list shows the different 3rd party libraries and code parts
 of the Grid Engine Open Source project:
 
 	- files concerned
@@ -45,7 +45,7 @@ Content
     * documentation.
     */
 
-   only GUI affected
+   --> Only used by qmon
 
 
 2. Iconlist
@@ -86,7 +86,7 @@ Content
     *  cwikla@wri.com
     */
 
-   only GUI affected
+   --> Only used by qmon
 
 
 3. Xbae Matrix Widget
@@ -139,8 +139,7 @@ Content
    contributor shall be held liable; this work is provided "as is".  If
    this is a problem for you, then don't use this software.
 
-
-   - only GUI affected
+   --> Only used by qmon
 
 
 4. List Tree Widget
@@ -175,8 +174,7 @@ Content
     *         http://www.ae.utexas.edu/~rwmcm
     */
  
-   There have been several changes to the original library.
-   only GUI affected
+   --> Only used by qmon
 
 
 5. XmTab Widget
@@ -204,8 +202,7 @@ Content
     *
     **************************************************************************/
     
-   This has been enhanced.
-   only GUI affected
+   --> Only used by qmon
 
 
 6. Xmt Library
@@ -358,10 +355,7 @@ Content
        this software for any purpose.  It is provided "as is" without express
        or implied warranty.
    
-   The current GUI depends strongly on the Xmt library. A license has been acquired.
-   There have been fixes applied coming from the Xmt mailing list and smaller adaptions
-   for our convenience.
-   Only the GUI is affected.
+   --> Only used by qmon
 
 
 7. ReplayXt
@@ -384,7 +378,8 @@ Content
     */
                                         
    This can be activated by compiling with a special define statement.
-   Affects only GUI.
+
+   --> Only used by qmon
 
 
 8. XtscHelp
@@ -420,7 +415,8 @@ Content
    *************************************************************************
 
    Currently not activated.
-   Only GUI affected.
+
+   --> Only used by qmon
 
 
 9. rsh/rshd

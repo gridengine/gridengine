@@ -921,10 +921,11 @@ for i in $ARCH; do
       echo "---------------------------"
       for prog in $UTILITYBINARIES; do
          if [ $prog = openssl ]; then
-            if [ -f $OPENSSLBASE/$DSTARCH/bin/openssl ]; then
-               InstallProg $OPENSSLBASE/$DSTARCH/bin/openssl
-            elif [ -f $OPENSSLBASE/bin/openssl ]; then
-               InstallProg $OPENSSLBASE/bin/openssl
+            echo using directory \"$OPENSSL_HOME\" for searching \"openssl\" binary
+            if [ -f $OPENSSL_HOME/$DSTARCH/bin/openssl ]; then
+               InstallProg $OPENSSL_HOME/$DSTARCH/bin/openssl
+            elif [ -f $OPENSSL_HOME/bin/openssl ]; then
+               InstallProg $OPENSSL_HOME/bin/openssl
             else
                echo \"openssl\" binary not found
             fi

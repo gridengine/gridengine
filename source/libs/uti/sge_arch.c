@@ -79,6 +79,8 @@ const char *sge_get_arch()
 #   define ARCHBIN "hp10"
 #elif defined(HP11)
 #   define ARCHBIN "hp11"
+#elif defined(HP1164)
+#   define ARCHBIN "hp11-64"
 #elif defined(SOLARIS86)
 #   define ARCHBIN "solaris86"
 #elif defined(SOLARIS64)

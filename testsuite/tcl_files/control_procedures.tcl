@@ -414,8 +414,8 @@ proc ps_grep { forwhat { host "local" } { variable ps_info } } {
 #       up the information into one resulting list
 #
 #     o this procedure should run on following platforms:
-#       solaris64, solaris, osf4, tru64, irix6, aix43, aix42, hp10, hp11, glinux,
-#       and alinux
+#       solaris64, solaris, osf4, tru64, irix6, aix43, aix42, hp10, hp11, 
+#       hp11-64, glinux and alinux
 #
 #  BUGS
 #     ??? 
@@ -549,7 +549,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       
 
       "hp10" -
-      "hp11" {
+      "hp11" -
+      "hp11-64" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-efl" prg_exit_state 60 0 myenvironment]
          set index_names "  F S      UID   PID  PPID  C PRI NI     ADDR   SZ    WCHAN    STIME {TTY   }    TIME COMD"

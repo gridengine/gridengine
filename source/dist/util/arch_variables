@@ -108,7 +108,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/etc/telnetd
    RLOGIN_DAEMON=/usr/etc/rlogind
    ;;
- hp10|hp11)
+ hp10|hp11|hp11-64)
    AWK=/usr/bin/awk
    ECHO=/bin/echo
    RC_FILE=sysv_rc

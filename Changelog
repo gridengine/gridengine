@@ -1,3 +1,5 @@
+JG-2002-09-24-0  Enhancem.: Initial Part of port for HP-UX 11 64 bit
+
 CR-2002-09-24-0  Testsuite: install_core_system check: wait for 
                             default/spool/configuration file to appear at remote 
                             host before starting to install an execution host. 

@@ -51,7 +51,6 @@ SCHEDLIB_SRC = sge_select_queue.c \
               suspend_thresholds.c \
               schedd_monitor.c \
               scale_usage.c \
-              schedd_conf.c \
               sgeee.c \
               sge_gdi_attributes.c \
               sge_support.c \
@@ -110,9 +109,6 @@ sge_schedd_text.o:	$(SCHEDLIB_DIR)/sge_schedd_text.c
 sge_select_queue.o : $(SCHEDLIB_DIR)/sge_select_queue.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_select_queue.c
       
-schedd_conf.o : $(SCHEDLIB_DIR)/schedd_conf.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/schedd_conf.c
-
 sge_complex_schedd.o : $(SCHEDLIB_DIR)/sge_complex_schedd.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_complex_schedd.c
 

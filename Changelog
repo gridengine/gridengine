@@ -1,3 +1,5 @@
+SG-2003-10-17-2: Bugfix:    fixed the build
+
 SG-2003-10-17-1: Enhancem.: First part of the scheduler configuration cleanup.
                             All copies of the scheduler configuration within
                             the scheduler are removed. The scheduler works via

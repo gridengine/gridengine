@@ -38,14 +38,10 @@
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h" 
-#include "sge_arch.h"
-#include "sge_daemonize.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
-#include "sge_log_pid.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
@@ -68,9 +64,9 @@
 #include "sig_handlers.h"
 #include "startprog.h"
 #include "usage.h"
-#include "sge_switch_user.h"
 #include "read_write_job.h"
-#include "sge_file_path.h"
+#include "sge_os.h"
+#include "sge_spool.h"
 
 #include "basis_types.h"
 #include "msg_utilib.h"
@@ -142,7 +138,7 @@ char **argv
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -179,7 +175,7 @@ char **argv
    sge_setup(EXECD, NULL);   
    prepare_enroll(prognames[EXECD], 1, priority_tags);
 
-   if ((i=occupy_first_three())>=0) {
+   if ((i=sge_occupy_first_three())>=0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
       SGE_EXIT(1);
    }     
@@ -272,7 +268,7 @@ char **argv
 
    execd_register();
 
-   sge_log_pid(EXECD_PID_FILE);
+   sge_write_pid(EXECD_PID_FILE);
 
    /* at this point we are sure we are the only sge_execd */
    /* first we have to report any reaped children that might exist */

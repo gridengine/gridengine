@@ -43,7 +43,6 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "sge_copy_append.h"
 #include "commlib.h"
 #include "sge_string.h"
 
@@ -52,15 +51,12 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "sge_me.h"
-#include "sge_max_nis_retries.h"
-#include "sge_arch.h"
 
 /* #include "sgermon.h" */
 /* #include "basis_types.h" */
 
 #include "sge_complex.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "msg_krb.h"
 
 #include "krb_data.h"
@@ -693,7 +689,7 @@ int compressed
       if (gsd.daemon && !strcmp(prognames[QMASTER], tocomproc) &&
 	  (!gsd.tgt_acquired || 
           gsd.creds.times.endtime < (time_now + gsd.tgt_renew_threshold) ||
-	  (gsd.qmaster_host[0] && hostcmp(tohost, gsd.qmaster_host)))) {
+	  (gsd.qmaster_host[0] && sge_hostcmp(tohost, gsd.qmaster_host)))) {
 
 	 strcpy(gsd.qmaster_host, tohost);
 

@@ -38,28 +38,28 @@
 #include "rmon.h"
 #include "sge_log.h"
 #include "sge.h"
-#include "sge_arch.h"
 #include "msg_utilib.h"
-#include "sge_stat.h"
 #include "sgermon.h"
 #include "msg_common.h"
 #include "msg_commd.h"
 #include "sge_unistd.h"
+#include "sge_arch.h"
 
-/****** uti/sge/sge_get_arch() ************************************************
+/****** uti/prog/sge_get_arch() ************************************************
 *  NAME
-*     sge_get_arch() -- Return the architecture of the appl. using this func.
+*     sge_get_arch() -- SGE/EE architecture string
 *
 *  SYNOPSIS
 *     const char* sge_get_arch(void) 
 *
 *  FUNCTION
-*     This function returns the architecture of the application which called 
-*     this function.
+*     This function returns the SGE/EE architecture string of that
+*     host where the application is running which called this 
+*     functionon.
 *
 *  RESULT
 *     const char* - architecture string
-*******************************************************************************/
+******************************************************************************/
 const char *sge_get_arch(void)
 {
 #if defined(AIX42)
@@ -111,9 +111,9 @@ const char *sge_get_arch(void)
    return ARCHBIN;
 }
 
-/****** uti/sge/sge_get_root_dir() *********************************************
+/****** uti/prog/sge_get_root_dir() *******************************************
 *  NAME
-*     sge_get_root_dir() -- Returns the installation directory of SGE/SGEEE 
+*     sge_get_root_dir() -- SGE/SGEEE installation directory 
 *
 *  SYNOPSIS
 *     const char* sge_get_root_dir(int do_exit) 
@@ -123,9 +123,10 @@ const char *sge_get_arch(void)
 *     This directory is defined by the SGE_ROOT environment variable 
 *     of the calling process. 
 *     If the environment variable does not exist or is not set then
-*     this function will handle this as error and return NULL (do_exit = 0).
-*     If do_exit is 1 an an error occures, the function will log
-*     an appropriate message and terminat the calling application.
+*     this function will handle this as error and return NULL 
+*     (do_exit = 0). If 'do_exit' is 1 and an error occures, the 
+*     function will log an appropriate message and terminate the 
+*     calling application.
 *
 *  INPUTS
 *     int do_exit - Terminate the application in case of an error
@@ -141,8 +142,8 @@ const char *sge_get_arch(void)
 *        CODINE_ROOT
 *        GRD_ROOT 
 *
-*     Multiple environment variables will only be accepted when they are
-*     identical. Other cases will be handled as error.
+*     Multiple environment variables will only be accepted when they 
+*     are identical. Other cases will be handled as error.
 *******************************************************************************/
 const char *sge_get_root_dir(int do_exit)
 {
@@ -240,7 +241,7 @@ error:
    return NULL;
 }
 
-/****** uti/sge/sge_get_default_cell() *****************************************
+/****** uti/prog/sge_get_default_cell() ***************************************
 *  NAME
 *     sge_get_default_cell() -- get cell name and remove trailing slash 
 *
@@ -266,8 +267,8 @@ error:
 *        GRD_CELL
 *
 *     Multiple environment variables will only be accepted when they are
-*     identical. Other cases will be handled as error. In case of an error
-*     the 'DEFAULT_CELL' will be returned.
+*     identical. Other cases will be handled as error. In case of an 
+*     error the 'DEFAULT_CELL' will be returned.
 ******************************************************************************/
 const char *sge_get_default_cell(void)
 {
@@ -334,10 +335,18 @@ const char *sge_get_default_cell(void)
    return s;
 }
 
-/*-----------------------------------------------------------------------
- * get_alias_path
- *-----------------------------------------------------------------------*/
-char *get_alias_path(void) {
+/****** uti/prog/sge_get_alias_path() *****************************************
+*  NAME
+*     sge_get_alias_path() -- Return the path of the 'alias_file' 
+*
+*  SYNOPSIS
+*     char* sge_get_alias_path(void) 
+*
+*  FUNCTION
+*     Return the path of the 'alias_file' 
+******************************************************************************/
+char *sge_get_alias_path(void) 
+{
 /* JG: suppress READ_DANGLING. sge_root comes from a getenv() call.
  *     this should be handled properly in underlying function, e.g. by
  *     strdupping the value returned by getenv().
@@ -350,7 +359,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    int len;
    SGE_STRUCT_STAT sbuf;
 
-   DENTER(TOP_LAYER, "get_alias_path");
+   DENTER(TOP_LAYER, "sge_get_alias_path");
 
    sge_root = sge_get_root_dir(1);
    sge_cell = sge_get_default_cell();

@@ -70,7 +70,7 @@
 #include "sge_m_event.h"
 #include "sge_feature.h"
 #include "read_write_job.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "config.h"
 #include "mail.h"
 #include "sge_stringL.h"
@@ -82,6 +82,7 @@
 #include "jb_now.h"
 #include "sge_range.h"
 #include "sge_job_jatask.h"
+#include "sge_hostname.h"
 
 extern lList *Master_Userset_List;
 extern lList *Master_Project_List;
@@ -422,7 +423,7 @@ lList **topp  /* ticket orders ptr ptr */
             }
      
 
-            if (hostcmp(lGetHost(master_host, EH_name), lGetHost(hep, EH_name))) {
+            if (sge_hostcmp(lGetHost(master_host, EH_name), lGetHost(hep, EH_name))) {
                lListElem *first_at_host;
 
                /* ensure each host gets tagged only one time 
@@ -736,7 +737,7 @@ lList **topp  /* ticket orders ptr ptr */
                         if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
                             ((curr_oep_qep = sge_locate_queue(curr_oep_qname))) &&
                             ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
-                            !hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
+                            !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
                            job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
                            lRemoveElem(oeql, curr_oep);
                         }
@@ -1216,7 +1217,7 @@ lList *ticket_orders
 
          host_name = lGetHost(lFirst(lGetList(other_jatask, 
             JAT_granted_destin_identifier_list)), JG_qhostname);
-         if (!hostcmp(host_name, master_host_name)) {
+         if (!sge_hostcmp(host_name, master_host_name)) {
             /* add it */
             lDechainElem(ticket_orders, other);
             lAppendElem(to_send, other);

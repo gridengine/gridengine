@@ -51,7 +51,7 @@
 #include "sge_peL.h"
 #include "sge_ckptL.h"
 #include "sgermon.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_host.h"
 #include "sge_complex.h"
 #include "slots_used.h"
@@ -81,6 +81,7 @@
 #include "read_write_job.h"
 #include "sge_job.h"
 #include "sge_unistd.h"
+#include "sge_hostname.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -250,7 +251,7 @@ int sub_command
    } else {
    
       if (lGetPosViaElem(qep, QU_qhostname) >= 0) {
-         if (hostcmp(lGetHost(new_queue, QU_qhostname), lGetHost(qep, QU_qhostname))) {
+         if (sge_hostcmp(lGetHost(new_queue, QU_qhostname), lGetHost(qep, QU_qhostname))) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOTPOSSIBLETOMODHOSTNAME));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
             goto ERROR;

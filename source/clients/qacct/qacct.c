@@ -41,7 +41,6 @@
 #include "path_history.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
-#include "sge_getme.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
 #include "sge_gdi_intern.h"
@@ -54,18 +53,17 @@
 #include "sge_parse_date_time.h"
 #include "sge_feature.h"
 #include "sge_rusage.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qm_name.h"
 #include "basis_types.h"
 #include "sge_time.h"
 #include "parse_range.h"
-#include "sge_stat.h" 
 #include "msg_history.h"
 #include "msg_clients_common.h"
 #include "sge_parse_num_par.h"
+#include "sge_hostname.h"
 
 static void show_the_way(FILE *fp);
 static void showjob(sge_rusage_type *dusage);
@@ -773,7 +771,7 @@ char **argv
             continue;
       }
       if (host[0]) {
-         if (hostcmp(host, dusage.hostname))
+         if (sge_hostcmp(host, dusage.hostname))
             continue;
       }
       if (accountflag) {
@@ -921,19 +919,19 @@ char **argv
          ** or the existing element to increase
          */
          while (hostflag && ep &&
-                (hostcmp(lGetHost(ep, QAJ_host), dusage.hostname) < 0)) {
+                (sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname) < 0)) {
              ep = lNext(ep);
          }
          while (queueflag && ep &&
                 (sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname) < 0) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname)))) {
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname)))) {
              ep = lNext(ep);
          }
          while (groupflag && ep &&
                 (sge_strnullcmp(lGetString(ep, QAJ_group), dusage.group) < 0) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname)))) {
              ep = lNext(ep);
@@ -941,7 +939,7 @@ char **argv
          while (ownerflag && ep &&
                 (sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner) < 0) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -953,7 +951,7 @@ char **argv
                 (!ownerflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag ||  
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -967,7 +965,7 @@ char **argv
                 (!ownerflag ||
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -984,7 +982,7 @@ char **argv
                 (!ownerflag ||
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -1002,7 +1000,7 @@ char **argv
                 (!ownerflag ||
                 (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&
                 (!hostflag || 
-                (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
+                (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) && 
                 (!queueflag || 
                 (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
                 (!groupflag || 
@@ -1014,7 +1012,7 @@ char **argv
          ** or do we have to insert one?
          */
          if (ep &&
-             (!hostflag ||       (!hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) &&
+             (!hostflag ||       (!sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) &&
              (!queueflag ||      (!sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) &&
              (!groupflag ||      (!sge_strnullcmp(lGetString(ep, QAJ_group) , dusage.group))) &&
              (!ownerflag ||      (!sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) &&

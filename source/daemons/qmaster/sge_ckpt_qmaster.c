@@ -51,9 +51,8 @@
 #include "sge_m_event.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
-#include "sge_me.h"
 #include "sge_signal.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_job_schedd.h"
@@ -600,7 +599,7 @@ int validate_ckpt(lListElem *ep, lList **alpp)
    /* -------- CK_signal */
    if ((s=lGetString(ep, CK_signal)) &&
          strcasecmp(s, "none") &&
-         sys_str2signal(s)==-1) {
+         sge_sys_str2signal(s)==-1) {
       ERROR((SGE_EVENT, MSG_CKPT_XISNOTASIGNALSTRING_S , s));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
       DEXIT;

@@ -39,7 +39,6 @@
              
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_me.h"
 #include "sge_conf.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
@@ -61,13 +60,15 @@
 #include "symbols.h"
 #include "exec_job.h"
 #include "read_write_job.h"
-#include "sge_switch_user.h"
 #include "execution_states.h"
-#include "sge_stat.h" 
 #include "msg_execd.h"
 #include "sge_string.h"
 #include "sge_feature.h"
+#include "sge_uidgid.h"
 #include "sge_security.h"
+#include "sge_unistd.h"
+#include "sge_hostname.h"
+#include "sge_prog.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -213,7 +214,7 @@ void force_job_rlimit()
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             double lim;
 
-            if (hostcmp(me.qualified_hostname, 
+            if (sge_hostcmp(me.qualified_hostname, 
                  lGetHost(gdil_ep, JG_qhostname)) 
                 || !(q = lFirst(lGetList(gdil_ep, JG_queue))))
                continue;
@@ -330,15 +331,15 @@ int answer_error
    notify_ptf();
 
    if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-      switch2start_user();
+      sge_switch2start_user();
       ptf_update_job_usage();
-      switch2admin_user();
+      sge_switch2admin_user();
    }
    if (feature_is_enabled(FEATURE_REPRIORISATION) && !deactivate_ptf) {
-      switch2start_user();
+      sge_switch2start_user();
       DPRINTF(("ADJUST PRIORITIES\n"));
       ptf_adjust_job_priorities();
-      switch2admin_user();
+      sge_switch2admin_user();
       repriorisation_enabled = 1;
    } else {
       /* Here we will make sure that each job which was started
@@ -597,7 +598,7 @@ lListElem *slave_jatep
    /* we might simulate another host */
    if(simulate_hosts == 1) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(hostcmp(host, me.qualified_hostname) != 0) {
+      if(sge_hostcmp(host, me.qualified_hostname) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 

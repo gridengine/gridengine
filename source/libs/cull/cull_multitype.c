@@ -48,6 +48,7 @@
 #include "cull_lerrnoP.h"
 #include "cull_hash.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
 
@@ -760,8 +761,8 @@ int name
 *     const char* lGetHost(const lListElem *ep, int name) 
 *
 *  FUNCTION
-*     This procedure returns the char* value for the field name, but doesn't
-*     copy the string (runtime type checking)
+*     This procedure returns the char* value for the field name, 
+*     but doesn't copy the string (runtime type checking)
 *
 *  INPUTS
 *     const lListElem *ep - list element pointer
@@ -1450,14 +1451,7 @@ const char *value
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   sets in the element ep for field name the char * value   
-   also duplicates the pointed to char array
-   (runtime type checking)
-
- */
-/****** cull/multitype/lSetHost() **********************************************
+/****** cull/multitype/lSetHost() ********************************************
 *  NAME
 *     lSetHost() -- Set hostname for field name in for list elem
 *
@@ -1489,7 +1483,7 @@ const char *value
 *
 *  SEE ALSO
 *     ???/???
-*******************************************************************************/
+******************************************************************************/
 int lSetHost(
 lListElem *ep,
 int name,
@@ -2151,20 +2145,21 @@ int refcmp(lRef c0, lRef c1)
 
 /****** cull/multitype/lAddSubStr() *******************************************
 *  NAME
-*     lAddSubStr() -- adds a string to the string sublist of element ep 
+*     lAddSubStr() -- adds a string to the string sublist  
 *
 *  SYNOPSIS
-*     lListElem* lAddSubStr(lListElem* ep, int nm, char* str, int snm, lDescr* 
-*     dp) 
+*     lListElem* lAddSubStr(lListElem* ep, int nm, char* str, 
+*                           int snm, lDescr* dp) 
 *
 *  FUNCTION
-*     This function add a new element into a sublist snm of an element ep.
-*     The field nm of this added element will get the initial value specified
-*     with str. 
+*     This function add a new element into a sublist snm of an 
+*     element ep. The field nm of this added element will get the 
+*     initial value specified with str. 
 *
 *  INPUTS
 *     lListElem* ep - list element 
-*     int nm        - field id contained in the element which will be created
+*     int nm        - field id contained in the element which 
+*                     will be created
 *     char* str     - initial value if nm 
 *     int snm       - field id of the sublist within ep 
 *     lDescr* dp    - Type of the new element 
@@ -2172,8 +2167,7 @@ int refcmp(lRef c0, lRef c1)
 *  RESULT
 *     NULL in case of error
 *     otherwise pointer to the added element 
-*******************************************************************************
-*/
+******************************************************************************/
 lListElem *lAddSubStr(
 lListElem *ep,
 int nm,
@@ -2211,22 +2205,23 @@ const lDescr *dp
    return ret;
 }
 
-/****** cull/multitype/lAddSubHost() *******************************************
+/****** cull/multitype/lAddSubHost() ******************************************
 *  NAME
-*     lAddSubHost() -- adds a string to the string sublist of element ep 
+*     lAddSubHost() -- adds a string to the string sublist  
 *
 *  SYNOPSIS
-*     lListElem* lAddSubHost(lListElem* ep, int nm, char* str, int snm, lDescr* 
-*     dp) 
+*     lListElem* lAddSubHost(lListElem* ep, int nm, char* str, 
+*                            int snm, lDescr* dp) 
 *
 *  FUNCTION
-*     This function add a new element into a sublist snm of an element ep.
-*     The field nm of this added element will get the initial value specified
-*     with str. 
+*     This function add a new element into a sublist snm of an 
+*     element ep. The field nm of this added element will get the 
+*     initial value specified with str. 
 *
 *  INPUTS
 *     lListElem* ep - list element 
-*     int nm        - field id contained in the element which will be created
+*     int nm        - field id contained in the element which 
+*                     will be created
 *     char* str     - initial value if nm 
 *     int snm       - field id of the sublist within ep 
 *     lDescr* dp    - Type of the new element 
@@ -2234,8 +2229,7 @@ const lDescr *dp
 *  RESULT
 *     NULL in case of error
 *     otherwise pointer to the added element 
-*******************************************************************************
-*/
+******************************************************************************/
 lListElem *lAddSubHost(
 lListElem *ep,
 int nm,
@@ -2290,11 +2284,11 @@ const lDescr *dp
 *     lList** lpp - list reference 
 *     int nm      - field id 
 *     char* str   - initial value 
-*     lDescr* dp  - Type of the object which will be added (e.g. JB_Type) 
+*     lDescr* dp  - Type of the object which will be added  
 *
 *  RESULT
 *     lListElem* - 
-******************************************************************************
+*******************************************************************************
 */
 lListElem *lAddElemStr(
 lList **lpp,
@@ -2404,8 +2398,9 @@ const lDescr *dp
 *     int lDelSubStr(lListElem* ep, int nm, const char* str, int snm) 
 *
 *  FUNCTION
-*     This function removes an element specified by a string field nm and
-*     the string str supposed to be in the sublist snm of the element ep.
+*     This function removes an element specified by a string field 
+*     nm and the string str supposed to be in the sublist snm of the 
+*     element ep.
 *
 *  INPUTS
 *     lListElem* ep - element 
@@ -2446,14 +2441,14 @@ int snm
 
 /****** cull/multitype/lDelElemStr() ******************************************
 *  NAME
-*     lDelElemStr() -- removes an element specified by a string field nm 
+*     lDelElemStr() -- removes element specified by a string field nm 
 *
 *  SYNOPSIS
 *     int lDelElemStr(lList** lpp, int nm, const char* str) 
 *
 *  FUNCTION
-*     This function removes an element from the list referenced by lpp,
-*     which is identified by the field nm and the string str 
+*     This function removes an element from the list referenced by 
+*     lpp, which is identified by the field nm and the string str 
 *
 *  INPUTS
 *     lList** lpp - list reference 
@@ -2529,19 +2524,20 @@ const char *str
 
 /****** cull/multitype/lGetSubStr() *******************************************
 *  NAME
-*     lGetSubStr() -- returns an element specified by a string field nm 
+*     lGetSubStr() -- returns element specified by a string field nm 
 *
 *  SYNOPSIS
-*     lListElem* lGetSubStr(const lListElem* ep, int nm, const char* str, 
-*                           int snm) 
+*     lListElem* lGetSubStr(const lListElem* ep, int nm, 
+*                           const char* str, int snm) 
 *
 *  FUNCTION
-*     returns an element specified by a string field nm and the string str
-*     from the sublist snm of the element ep 
+*     returns an element specified by a string field nm and the 
+*     string str from the sublist snm of the element ep 
 *
 *  INPUTS
 *     const lListElem* ep - element pointer 
-*     int nm              - field id contained in an sublist element of ep 
+*     int nm              - field id contained in an sublist 
+*                           element of ep 
 *     const char* str     - string 
 *     int snm             - field id contained in ep 
 *
@@ -2579,7 +2575,7 @@ int snm
 
 /****** cull/multitype/lGetElemStr() *******************************************
 *  NAME
-*     lGetElemStr() -- returns an element specified by a string field nm 
+*     lGetElemStr() -- returns element specified by a string field nm 
 *
 *  SYNOPSIS
 *     lListElem* lGetElemStr(const lList* lp, int nm, const char* str) 
@@ -2744,14 +2740,16 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
 
 /****** cull/multitype/lGetElemStrLike() **************************************
 *  NAME
-*     lGetElemStrLike() -- returns an element specified by a wildcard string 
+*     lGetElemStrLike() -- returns element specified by a wildcard 
 *
 *  SYNOPSIS
-*     lListElem* lGetElemStrLike(const lList* lp, int nm, const char* str) 
+*     lListElem* lGetElemStrLike(const lList* lp, int nm, 
+*                                const char* str) 
 *
 *  FUNCTION
-*     returns an element specified by a string field nm from the list lp and
-*     uses a trailing '*' as a wilcard, e.g. 'OAport' matches 'OA*' 
+*     returns an element specified by a string field nm from the 
+*     list lp and uses a trailing '*' as a wilcard, e.g. 'OAport' 
+*     matches 'OA*' 
 *
 *  INPUTS
 *     const lList* lp - list pointer 
@@ -2761,8 +2759,7 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
 *  RESULT
 *     NULL if element was not found or in case of error
 *     otherwise pointer to element 
-*******************************************************************************
-*/
+******************************************************************************/
 lListElem *lGetElemStrLike(
 const lList *lp,
 int nm,
@@ -2823,28 +2820,29 @@ const char *str
 
 /****** cull/multitype/lAddSubUlong() *****************************************
 *  NAME
-*     lAddSubUlong() -- adds a ulong to the ulong sublist of element ep 
+*     lAddSubUlong() -- adds ulong to the ulong sublist of element ep 
 *
 *  SYNOPSIS
-*     lListElem* lAddSubUlong(lListElem* ep, int nm, lUlong val, int snm, 
-*                             const lDescr* dp) 
+*     lListElem* lAddSubUlong(lListElem* ep, int nm, lUlong val, 
+*                             int snm, const lDescr* dp) 
 *
 *  FUNCTION
-*     This function adds a new element into the sublist snm of the element ep.
-*     The field nm of the added element will get the initial value val. 
+*     This function adds a new element into the sublist snm of the 
+*     element ep. The field nm of the added element will get the 
+*     initial value val. 
 *
 *  INPUTS
 *     lListElem* ep       - element 
 *     int nm              - field which will get value val 
 *     lUlong val          - initial value for nm 
-*     int snm             - sublist within ep where the element will be added 
+*     int snm             - sublist within ep where the element 
+*                           will be added 
 *     const lDescr* dp    - Type of the new element (e.g. JB_Type) 
 *
 *  RESULT
 *     NULL in case of error
 *     or the pointer to the new element 
-*******************************************************************************
-*/
+******************************************************************************/
 lListElem *lAddSubUlong(
 lListElem *ep,
 int nm,
@@ -2896,15 +2894,15 @@ const lDescr *dp
 *
 *  INPUTS
 *     lList** lpp       - list  
-*     int nm            - field in the new element which will get value val 
+*     int nm            - field in the new element which will get 
+*                         value val 
 *     lUlong val        - initial value for nm 
 *     const lDescr* dp  - type of the list (e.g. JB_Type) 
 *
 *  RESULT
 *     NULL on error
 *     or pointer to the added element 
-*******************************************************************************
-*/
+******************************************************************************/
 lListElem *lAddElemUlong(
 lList **lpp,
 int nm,
@@ -2956,7 +2954,8 @@ const lDescr *dp
 *
 *  FUNCTION
 *     This function removes an element specified by a ulong field nm
-*     and the ulong val supposed to be in the sublist snm of the element ep 
+*     and the ulong val supposed to be in the sublist snm of the 
+*     element ep 
 *
 *  INPUTS
 *     lListElem* ep - element 
@@ -2997,14 +2996,14 @@ int snm
 
 /****** cull/multitype/lDelElemUlong() ****************************************
 *  NAME
-*     lDelElemUlong() -- removes an element specified by a ulong field nm 
+*     lDelElemUlong() -- removes elem specified by a ulong field nm 
 *
 *  SYNOPSIS
 *     int lDelElemUlong(lList** lpp, int nm, lUlong val) 
 *
 *  FUNCTION
-*     This function removes an element specified by a ulong field nm with the
-*     value val from the list referenced by lpp. 
+*     This function removes an element specified by a ulong field nm 
+*     with the value val from the list referenced by lpp. 
 *
 *  INPUTS
 *     lList** lpp - reference to a list 
@@ -3064,18 +3063,20 @@ lUlong val
 
 /****** cull/multitype/lGetSubUlong() *****************************************
 *  NAME
-*     lGetSubUlong() -- returns an element specified by a ulong field nm 
+*     lGetSubUlong() -- Element specified by a ulong field nm 
 *
 *  SYNOPSIS
-*     lListElem* lGetSubUlong(const lListElem* ep, int nm, lUlong val, int snm) 
+*     lListElem* lGetSubUlong(const lListElem* ep, int nm, 
+*                             lUlong val, int snm) 
 *
 *  FUNCTION
-*     returns an element specified by a ulong field nm an the ulong value
-*     val from the sublist snm of the element ep 
+*     returns an element specified by a ulong field nm an the ulong 
+*     value val from the sublist snm of the element ep 
 *
 *  INPUTS
 *     const lListElem* ep - element pointer 
-*     int nm              - field id which is part of a sublist element of ep 
+*     int nm              - field id which is part of a sublist 
+*                           element of ep 
 *     lUlong val          - unsigned long value 
 *     int snm             - field id of a list which is part of ep 
 *
@@ -3114,14 +3115,14 @@ int snm
 
 /****** cull/multitype/lGetElemUlong() ****************************************
 *  NAME
-*     lGetElemUlong() -- returns an element specified by a ulong field nm 
+*     lGetElemUlong() -- returns element specified by a ulong field nm 
 *
 *  SYNOPSIS
 *     lListElem* lGetElemUlong(const lList* lp, int nm, lUlong val) 
 *
 *  FUNCTION
-*     returns an element specified by a ulong field nm an an ulong value
-*     val from list lp 
+*     returns an element specified by a ulong field nm an an ulong 
+*     value val from list lp 
 *
 *  INPUTS
 *     const lList* lp  - list pointer 
@@ -3131,8 +3132,7 @@ int snm
 *  RESULT
 *    NULL if element was not found or an error occured
 *    otherwise pointer to element 
-*******************************************************************************
-*/
+******************************************************************************/
 lListElem *lGetElemUlong(
 const lList *lp,
 int nm,
@@ -3233,14 +3233,15 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **i
 
 /****** cull/multitype/lDelSubCaseStr() ***************************************
 *  NAME
-*     lDelSubCaseStr() -- removes an element specified by a string field nm 
+*     lDelSubCaseStr() -- removes elem specified by a string field nm 
 *
 *  SYNOPSIS
-*     int lDelSubCaseStr(lListElem* ep, int nm, const char* str, int snm) 
+*     int lDelSubCaseStr(lListElem* ep, int nm, const char* str, 
+*                        int snm) 
 *
 *  FUNCTION
-*     removes an element specified by a string field nm an a string str which
-*     is contained in the sublist snm of ep 
+*     removes an element specified by a string field nm an a string 
+*     str which is contained in the sublist snm of ep 
 *
 *  INPUTS
 *     lListElem* ep       - element 
@@ -3281,27 +3282,27 @@ int snm
 
 /****** cull/multitype/lDelElemCaseStr() **************************************
 *  NAME
-*     lDelElemCaseStr() -- removes an element specified by a string field nm 
+*     lDelElemCaseStr() -- removes elem specified by a string field nm 
 *
 *  SYNOPSIS
 *     int lDelElemCaseStr(lList** lpp, int nm, const char* str) 
 *
 *  FUNCTION
-*     This function removes an element specified by nm and str from the list
-*     lpp. 
-*     If the list does not contain elements after this operation, it will
-*     be deleted too.
+*     This function removes an element specified by nm and str from 
+*     the list lpp. 
+*     If the list does not contain elements after this operation, it 
+*     will be deleted too.
 *
 *  INPUTS
 *     lList** lpp       - list 
-*     int nm            - field id of the element which should be removed 
+*     int nm            - field id of the element which 
+*                         should be removed 
 *     const char* str   - value of the attribute identified by nm 
 *
 *  RESULT
 *     1 if the element was found and removed
 *     0 in case of error 
-*******************************************************************************
-*/
+******************************************************************************/
 int lDelElemCaseStr(
 lList **lpp,
 int nm,
@@ -3357,21 +3358,22 @@ const char *str
 
 /****** cull/multitype/lGetSubCaseStr() ***************************************
 *  NAME
-*     lGetSubCaseStr() -- returns an element specified by a string field nm 
+*     lGetSubCaseStr() -- returns elem specified by a string field nm 
 *
 *  SYNOPSIS
-*     lListElem* lGetSubCaseStr(const lListElem* ep, int nm, const char* str, 
-*                               int snm) 
+*     lListElem* lGetSubCaseStr(const lListElem* ep, int nm, 
+*                               const char* str, int snm) 
 *
 *  FUNCTION
-*     returns an element specified by a string field nm and a string str
-*     from a sublist snm of the element ep 
+*     returns an element specified by a string field nm and a string 
+*     str from a sublist snm of the element ep 
 *
 *  INPUTS
 *     const lListElem* ep - element pointer 
 *     int nm              - field within an element of the sublist 
 *     const char* str     - string 
-*     int snm             - field within ep which identifies the sublist 
+*     int snm             - field within ep which identifies the 
+*                           sublist 
 *
 *  RESULT
 *     NULL if element was not found or in case of an error
@@ -3408,19 +3410,20 @@ int snm
 
 /****** cull/multitype/lGetElemCaseStr() **************************************
 *  NAME
-*     lGetElemCaseStr() -- returns an element specified by a string field 
+*     lGetElemCaseStr() -- returns element specified by a string field 
 *
 *  SYNOPSIS
-*     lListElem* lGetElemCaseStr(const lList* lp, int nm, const char* str) 
+*     lListElem* lGetElemCaseStr(const lList* lp, int nm, 
+*                                const char* str) 
 *
 *  FUNCTION
-*     This functions returns an element specified by a string field nm
-*     and str from the list lp. 
+*     This functions returns an element specified by a string 
+*     field nm and str from the list lp. 
 *
 *  INPUTS
 *     const lList* lp - Pointer to a list 
-*     int nm          - Constant specifying an attribute within an element of 
-*                       lp 
+*     int nm          - Constant specifying an attribute within an 
+*                       element of lp 
 *     const char* str - string 
 *
 *  RESULT
@@ -3507,8 +3510,8 @@ const char *str
 *     const char* str - hostname 
 *
 *  RESULT
-*     NULL when the list does not contain the element or in case of error 
-*     otherwise pointer to an element
+*     NULL when the list does not contain the element or in case of 
+*     error otherwise pointer to an element
 *******************************************************************************
 */
 lListElem *lGetElemHost( const lList *lp, int nm, const char *str ) {
@@ -3552,8 +3555,8 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const voi
    *iterator = NULL;
    if (lp->descr[str_pos].hash != NULL) {
       /* we have a hash table */
-      hostcpy(host_key,str);
-      string_toupper(host_key,MAXHOSTLEN);
+      sge_hostcpy(host_key,str);
+      sge_strtoupper(host_key,MAXHOSTLEN);
       ep = cull_hash_first(lp, str_pos, host_key, iterator);
       DEXIT;
       return ep;
@@ -3561,13 +3564,13 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const voi
       /* expensive host search algorithm */
 
       /* copy searched hostname */
-      hostcpy(uhost, str); 
+      sge_hostcpy(uhost, str); 
   
       /* sequence search */ 
       for_each(ep, lp) {
          s = lGetPosHost(ep, str_pos);
          if (s != NULL) {
-            hostcpy(cmphost, s);
+            sge_hostcpy(cmphost, s);
             if ( !SGE_STRCASECMP(cmphost, uhost) ) {
                DEXIT;
                return ep; 
@@ -3619,8 +3622,8 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
       
       /* host_key not neccessare here */
       /* 
-      hostcpy(host_key,str);
-      string_toupper(host_key,MAXHOSTLEN); 
+      sge_hostcpy(host_key,str);
+      sge_strtoupper(host_key,MAXHOSTLEN); 
       */
       ep = cull_hash_next(lp, str_pos, NULL, iterator);
       DEXIT;
@@ -3629,13 +3632,13 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
       /* expensive host search algorithm */
 
       /* copy searched hostname */
-      hostcpy(uhost, str); 
+      sge_hostcpy(uhost, str); 
   
       /* sequence search */ 
       for (ep = ((lListElem *)*iterator)->next; ep ; ep = ep->next) {
          s = lGetPosHost(ep, str_pos);
          if (s != NULL) {
-            hostcpy(cmphost, s);
+            sge_hostcpy(cmphost, s);
             if ( !SGE_STRCASECMP(cmphost, uhost) ) {
                DEXIT;
                return ep; 
@@ -3650,15 +3653,15 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
 
 /****** cull/multitype/lGetSubHost() ******************************************
 *  NAME
-*     lGetSubHost() -- returns an element specified by a string field nm 
+*     lGetSubHost() -- returns elem specified by a string field nm 
 *
 *  SYNOPSIS
-*     lListElem* lGetSubHost(const lListElem* ep, int nm, const char* str, 
-*                            int snm) 
+*     lListElem* lGetSubHost(const lListElem* ep, int nm, 
+*                            const char* str, int snm) 
 *
 *  FUNCTION
-*     returns an element specified by a string field nm and the hostname str
-*     from the sublist snm of the element ep 
+*     returns an element specified by a string field nm and the 
+*     hostname str from the sublist snm of the element ep 
 *
 *  INPUTS
 *     const lListElem* ep - element pointer 
@@ -3700,15 +3703,16 @@ int snm
 
 /****** cull/multitype/lDelElemHost() ****************************************
 *  NAME
-*     lDelElemHost() -- removes an element specified by a lHostT field nm 
+*     lDelElemHost() -- removes elem specified by a lHostT field nm 
 *
 *  SYNOPSIS
 *     int lDelElemHost(lList** lpp, int nm, const char* str) 
 *
 *  FUNCTION
-*     removes an element specified by a string field nm and the hostname
-*     str from the list referenced by lpp.
-*     If it is the last element within lpp the list itself will be deleted.
+*     removes an element specified by a string field nm and the 
+*     hostname str from the list referenced by lpp.
+*     If it is the last element within lpp the list itself will be 
+*     deleted.
 *
 *  INPUTS
 *     lList** lpp       - list 

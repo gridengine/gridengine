@@ -50,5 +50,9 @@ char *sge_ctime32(u_long32 *);
 
 char *sge_at_time(time_t);
 
+void sge_stopwatch_start(int);
+ 
+void sge_stopwatch_log(int, const char *);  
+
 #endif /* __SGE_TIME_H */
 

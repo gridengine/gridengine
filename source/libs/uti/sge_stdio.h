@@ -33,7 +33,31 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <sys/time.h>
+#include <time.h>  
 
+/****** uti/stdio/FPRINTF() ***************************************************
+*  NAME
+*     FPRINTF() -- fprintf() macro 
+*
+*  SYNOPSIS
+*     #define FPRINTF(arguments)
+*     void fprintf(FILE *stream, const char *format, ...)
+*
+*  FUNCTION
+*     This FPRINTF macro has to be used similar to the fprintf 
+*     function. It is not necessary to check the return value. 
+*     In case of an error the macro will jump to a defined label.
+*     The label name is 'FPRINTF_ERROR'.
+*
+*  INPUTS
+*     FILE *stream       - output stream
+*     const char *format - format string
+*     ...
+*
+*  NOTES
+*     Don't forget to define the 'FPRINTF_ERROR'-label
+******************************************************************************/
 #define FPRINTF(x) \
    __fprintf_ret = fprintf x; \
    if (__fprintf_ret == -1) { \
@@ -41,5 +65,12 @@
    }
 
 extern int __fprintf_ret;
+
+pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
+                 const char *user, char **env, FILE **fp_in, FILE **fp_out, 
+                 FILE **fp_err);
+ 
+int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, 
+                struct timeval *timeout); 
 
 #endif /* __SGE_STDIO_H */

@@ -36,7 +36,7 @@
 #include "parse_qconf.h"
 #include "sig_handlers.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_clients_common.h"

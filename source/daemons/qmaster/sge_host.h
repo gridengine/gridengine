@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
- 
-
 extern lList *exechost_list;
 extern lList *submithost_list;
 extern lList *adminhost_list;

@@ -41,8 +41,7 @@
 #include "basis_types.h"
 #include "msg_utilbin.h"
 #include "sge_string.h"
-#include "host.h"
-#include "sge_arch.h"
+#include "sge_hostname.h"
 
 #if defined(SOLARIS)
 int gethostname(char *, int);
@@ -91,7 +90,7 @@ int main(int argc,char *argv[])
 
   if (name_only) {
      const char *s;
-     if (sge_aliasing && (s=resolve_hostname_local(buf)))
+     if (sge_aliasing && (s=sge_host_resolve_name_local(buf)))
         printf("%s\n", s);
      else /* no aliased name */
         printf("%s\n", buf);

@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.3 2002/02/20 15:12:54 ernst Exp $	*/
+/*	$Id: rshd.c,v 1.4 2002/02/24 13:41:18 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -84,7 +84,6 @@
 #include <sge_pgrp.h>
 #include <setosjobid.h>
 #include <config_file.h>
-#include <sge_switch_user.h>
 #include <sge_uidgid.h>
 
 #if defined SOLARIS || SUN4 || HP11 || HP10 || NECSX5 || CRAY
@@ -424,7 +423,7 @@ doit(fromp)
    {
       static char err_str[1024];
       read_config("config");
-      if(set_admin_username(get_conf_val("admin_user"), err_str)) {
+      if(sge_set_admin_username(get_conf_val("admin_user"), err_str)) {
          errorstr = err_str;
          goto fail;
       }   
@@ -566,10 +565,10 @@ fail:
    gid_t add_grp_id;
    
    /* chdir(active_jobs_dir); */
-   switch2admin_user();
+   sge_switch2admin_user();
    foreground = 0; /* setosjobid shall write to shepherd trace file */
    setosjobid(0, &add_grp_id, pwd);
-   switch2start_user();
+   sge_switch2start_user();
    /* chdir(pwd->pw_dir); */
    
 	if (*pwd->pw_shell == '\0')

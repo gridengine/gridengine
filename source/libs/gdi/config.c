@@ -82,7 +82,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
 
    while (fgets(buffer, buffer_size, fp)) {
       if (last) {
-         free_saved_vars(last);
+         sge_free_saved_vars(last);
          last = NULL;
       }
       /*
@@ -169,13 +169,13 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
    }
    
    if (last)
-      free_saved_vars(last);
+      sge_free_saved_vars(last);
    DEXIT;
    return 0; 
 
 Error:
    if (last)
-      free_saved_vars(last);
+      sge_free_saved_vars(last);
    return -1;
 }
 

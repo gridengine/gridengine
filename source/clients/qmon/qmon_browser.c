@@ -50,13 +50,13 @@
 #include "sge_gdi.h"
 #include "sge_gdi_intern.h"
 #include "basis_types.h"
+#include "sge_prog.h"
 #include "qmon_util.h"
 #include "qmon_browser.h"
 #include "qmon_globals.h"
 #include "qmon_init.h"
 #include "qmon_file.h"
 #include "qmon_message.h"
-#include "sge_me.h"
 
 
 static int BrowserState = 0;

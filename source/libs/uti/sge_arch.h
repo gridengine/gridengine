@@ -38,7 +38,7 @@ const char *sge_get_root_dir(int exit);
 
 const char *sge_get_default_cell(void); 
 
-char *get_alias_path(void);
+char *sge_get_alias_path(void);
 
 #endif /* __SGE_ARCH_H */
 

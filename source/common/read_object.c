@@ -41,8 +41,9 @@
 #include "read_object.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_unistd.h"
+
 #include "msg_utilib.h"
-#include "sge_stat.h" 
 #include "msg_common.h"
 
 /****

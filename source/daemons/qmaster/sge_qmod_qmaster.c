@@ -48,7 +48,7 @@
 #include "sge_peL.h"
 #include "sec.h"
 #include "sge_signal.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_qmod_qmaster.h"
 #include "read_write_job.h"
 #include "read_write_queue.h"
@@ -58,7 +58,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_queue_qmaster.h"
 #include "sge_pe_qmaster.h"
-#include "sge_isint.h"
+#include "sge_string.h"
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -74,6 +74,7 @@
 #include "sge_conf.h"
 #include "sge_complexL.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -166,7 +167,7 @@ sge_gdi_request *answer
          ** We found no queue so look for a job. This only makes sense for
          ** suspend, unsuspend and reschedule
          */
-         if (isint(lGetString(dep, ID_str)) && 
+         if (sge_strisint(lGetString(dep, ID_str)) && 
                (lGetUlong(dep, ID_action) == QSUSPENDED || 
                 lGetUlong(dep, ID_action) == QRESCHEDULED ||
                 lGetUlong(dep, ID_action) == QERROR || 
@@ -1222,7 +1223,7 @@ lListElem *jatep
             simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
             if(simhost != NULL) {
                const char *real_host = lGetString(simhost, CE_stringval);
-               if(real_host != NULL && hostcmp(real_host, hnm) != 0) {
+               if(real_host != NULL && sge_hostcmp(real_host, hnm) != 0) {
                   DPRINTF(("deliver signal for job/queue on simulated host %s to host %s\n", hnm, real_host));
                   hnm = real_host;
                }   

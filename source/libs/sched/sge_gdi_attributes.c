@@ -38,7 +38,6 @@
 
 /* basis gdi */
 #include "sge.h"
-#include "sge_me.h"
 #include "sge_gdi.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
@@ -49,6 +48,8 @@
 #include "resolve_host.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
+#include "sge_prog.h"
+
 /* scheduling library */
 #include "sge_complex_schedd.h"
 

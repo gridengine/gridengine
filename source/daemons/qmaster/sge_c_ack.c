@@ -41,7 +41,7 @@
 #include "sge_m_event.h"
 #include "read_write_queue.h"
 #include "read_write_job.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time_eventL.h"

@@ -65,9 +65,9 @@
 #include "config_file.h"
 #include "setrlimits.h"
 #include "err_trace.h"
-#include "sge_switch_user.h"
 #include "setjoblimit.h"
-#include "sge_nice.h"
+#include "sge_uidgid.h"
+#include "sge_os.h"
 
 #ifndef CRAY
 static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);
@@ -178,9 +178,9 @@ int trace_rlimit
 
    priority = atoi(get_conf_val("priority"));
    /* had problems doing this with admin user priviledges under HPUX */
-   switch2start_user(); 
+   sge_switch2start_user(); 
    SETPRIORITY(priority);
-   switch2admin_user();  
+   sge_switch2admin_user();  
 
    /* how many slots do we have at this host */
    if (!(s=search_nonone_conf_val("host_slots")) || !(host_slots=atoi(s)))
@@ -414,13 +414,13 @@ int trace_rlimit
 #  define limit_fmt "%d"
 #endif
 
-      switch2start_user();
+      sge_switch2start_user();
 #ifdef IRIX6
       ret = setrlimit64(resource, rlp);
 #else
       ret = setrlimit(resource,rlp);
 #endif
-      switch2admin_user();  
+      sge_switch2admin_user();  
       if (ret) {
          /* exit or not exit ? */
          sprintf(trace_str, "setrlimit(%s, {"limit_fmt", "limit_fmt"}) failed: %s"

@@ -32,11 +32,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <unistd.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
 #include "lock.h"
-#include "sge_stat.h" 
 
 /*-------------------------------------------------------------
  * Name:   qmaster_lock

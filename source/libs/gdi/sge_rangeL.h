@@ -57,9 +57,9 @@ extern "C" {
 *     (e.g. 1-10:2 => 1, 3, 5, 7, 9). 
 *     Lists of this CULL element are hold within a CULL job element
 *     to hold job array task ids.
-*     Several functions may be used to access/modify/delete range elements
-*     and range lists. You may find them in the 'see also' section.
-*     It is highly advised to use these access functions
+*     Several functions may be used to access/modify/delete range 
+*     elements and range lists. You may find them in the 'see also' 
+*     section. It is highly advised to use these access functions
 *     because they assure and require a defined structure of 
 *     elements and lists.
 *     

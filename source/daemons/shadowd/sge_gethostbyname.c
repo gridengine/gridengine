@@ -37,7 +37,7 @@
 
 #include "sgermon.h"
 #include "sge_gethostbyname.h"
-#include "sge_max_nis_retries.h"
+#include "sge_uidgid.h"
 
 /*-----------------------------------------------------------------
  * sge_gethostbyname

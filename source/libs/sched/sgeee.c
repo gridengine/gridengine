@@ -47,11 +47,10 @@
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "sge_copy_append.h"
 #include "commlib.h"
 #include "sge_time.h"
 #include "sge_complex.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "scheduler.h"
 /* #include "sge_schedd.h" */
@@ -4419,7 +4418,7 @@ main(int argc, char **argv)
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);

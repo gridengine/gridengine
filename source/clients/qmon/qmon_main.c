@@ -61,8 +61,6 @@
 #include "qmon_appres.h"
 #include "qmon_preferences.h"
 #include "sge_feature.h"
-#include "sge_me.h"
-#include "sge_arch.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"

@@ -58,7 +58,6 @@
 #include "path_history.h"
 #include "sge_log.h"
 #include "gdi_utility_qmaster.h"
-#include "opt_silent.h"
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
 #include "sge_select_queue.h"
@@ -68,8 +67,8 @@
 #include "msg_qmaster.h"
 #include "sge_stdio.h"
 #include "read_write_queue.h"
-#include "sge_dirent.h"
 #include "sge_unistd.h"
+#include "sge_spool.h"
 
 extern lList *Master_Job_List;
 extern lList *Master_Queue_List;
@@ -431,14 +430,14 @@ int read_all_complexes()
       DEXIT;
       return -1;
    }
-   if (!silent())
+   if (!sge_silent_get())
       printf(MSG_CONFIG_READINGINCOMPLEXES);
 
    while ((dent=SGE_READDIR(dir)) != NULL) {
       if (!strcmp(dent->d_name,"..") || !strcmp(dent->d_name,".")) {
          continue;
       }
-      if (!silent()) {
+      if (!sge_silent_get()) {
          printf(MSG_SETUP_COMPLEX_S, dent->d_name);
       }  
       if ((dent->d_name[0] == '.')) {

@@ -46,10 +46,10 @@
 #include "read_write_ume.h"
 #include "sge_string.h"
 #include "sge_log.h"
-#include "sge_tmpnam.h"
 #include "config.h"
 #include "read_object.h"
 #include "sge_stdio.h"
+#include "sge_io.h"
 #include "msg_common.h"
 
 

@@ -82,7 +82,7 @@ int gethostname(char *name, int namelen);
 #include "commd_io.h"
 #include "sge_time.h"
 #include "sgermon.h"
-#include "sge_crc.h"
+#include "sge_io.h"
 #include "msg_commd.h"
 #include "sge_language.h"
 
@@ -574,7 +574,7 @@ u_short compressed
 #endif /* WIN32NATIVE */
 
    cp = pack_ulong(buflen, cp);
-   cp = pack_ulong(cksum((char*)prolog, PROLOGLEN-4), cp);
+   cp = pack_ulong(sge_cksum((char*)prolog, PROLOGLEN-4), cp);
 
    retry = 0;
    while(1) {
@@ -833,7 +833,7 @@ u_short *compressed
    cp = pack_ulong(flags, prolog);
    cp = pack_ushort(headerlen, cp);
    cp = pack_ulong(0, cp);
-   cp = pack_ulong(cksum((char*)prolog, PROLOGLEN-4), cp);
+   cp = pack_ulong(sge_cksum((char*)prolog, PROLOGLEN-4), cp);
 
 #ifndef WIN32NATIVE
    omask = build_n_set_mask();
@@ -1046,7 +1046,7 @@ int *tag_priority_list
    cp = pack_ushort((u_short)(strlen(name) + 1 + 2 + 2 + 20), cp);
 #endif /* WIN32NATIVE */
    cp = pack_ulong(0, cp);
-   chksum = cksum((char*)buffer, PROLOGLEN-4);
+   chksum = sge_cksum((char*)buffer, PROLOGLEN-4);
    cp = pack_ulong(chksum, cp);
 
    /* header */
@@ -1261,7 +1261,7 @@ static int leave_()
    cp = pack_ushort((u_short)headerlen, cp);
 #endif /* WIN32NATIVE */
    cp = pack_ulong(0, cp);      /* no body */
-   cp = pack_ulong(cksum((char*)prolog, PROLOGLEN-4), cp);
+   cp = pack_ulong(sge_cksum((char*)prolog, PROLOGLEN-4), cp);
 
 #ifndef WIN32NATIVE
    omask = build_n_set_mask();
@@ -1397,7 +1397,7 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
    cp = pack_ushort((u_short)headerlen, cp);
 #endif /* WIN32NATIVE */
    cp = pack_ulong(0, cp);
-   cp = pack_ulong(cksum((char*)buffer, PROLOGLEN-4), cp);
+   cp = pack_ulong(sge_cksum((char*)buffer, PROLOGLEN-4), cp);
 
    /* header */
    cp = pack_ushort(cntl_operation, cp);
@@ -1750,7 +1750,7 @@ u_long32 *buflen
    cp = unpack_ulong(buflen, cp);
    cp = unpack_ulong(&crc32, cp);
 
-   if(crc32 != cksum((char*)prolog, PROLOGLEN-4)) {
+   if(crc32 != sge_cksum((char*)prolog, PROLOGLEN-4)) {
       closeconnection(1);
       DEXIT;
       return CL_CHKSUM;
@@ -1817,18 +1817,14 @@ int force
 
 
 
-/****** commd/getuniquehostname() **********************************
+/****** lib/commd/getuniquehostname() *****************************************
 *
 *  NAME
 *     getuniquehostname() -- resolve hostname to get his primary name 
 *
 *  SYNOPSIS
-*
-*     #include "commlib.h"
-*     #include <commd/commlib.h>
-* 
-*     int getuniquehostname(char *hostin, char *hostout, int refresh_aliases); 
-*       
+*     int getuniquehostname(char *hostin, char *hostout, 
+*                           int refresh_aliases); 
 *
 *  FUNCTION
 *
@@ -1842,33 +1838,9 @@ int force
 *     0  = OK
 *     !0 = CL_... errorcode
 *
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
 *  SEE ALSO
 *     src/sge_resolveMappingList()
-*     
-****************************************************************************
-*/
-/**********************************************************************
-  get unique hostname / force reread of aliasfile
-
-   parameters
-
-   hostin          = host for which to get the primary hostname
-   hostout         = filled with primary host
-   refresh_aliases = reload aliasfile
-
-   0  = OK
-   !0 = CL_... errorcode
- **********************************************************************/
+******************************************************************************/
 int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) 
 {
    unsigned char *cp;
@@ -1933,7 +1905,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
    cp = pack_ushort((u_short)headerlen, cp);
 #endif /* WIN32NATIVE */
    cp = pack_ulong(0, cp);
-   cp = pack_ulong(cksum((char*)prolog, PROLOGLEN-4), cp);
+   cp = pack_ulong(sge_cksum((char*)prolog, PROLOGLEN-4), cp);
 
    /* write prolog */
    if ((i = send2commd(prolog, PROLOGLEN))) {

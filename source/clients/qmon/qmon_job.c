@@ -75,7 +75,7 @@
 #include "qmon_matrix.h"
 #include "sge_range.h"
 #include "parse.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "sge_schedd_text.h"
 #include "sgeee.h"
 #include "sge_support.h"
@@ -133,13 +133,13 @@ static Pixel qmonJobStateToColor(Widget w, lListElem *jep);
 static Boolean qmonDeleteJobForMatrix(Widget w, Widget matrix, lList **local);
 static lList* qmonJobBuildSelectedList(Widget matrix, lDescr *dp, int nm);
 /* static void qmonResizeCB(Widget w, XtPointer cld, XtPointer cad); */
-static Boolean AskForHold(Widget w, Cardinal *hold, StringBufferT *dyn_tasks);
+static Boolean AskForHold(Widget w, Cardinal *hold, dstring *dyn_tasks);
 static void AskHoldCancelCB(Widget w, XtPointer cld, XtPointer cad);
 static void AskHoldOkCB(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad);
 /*-------------------------------------------------------------------------*/
-static int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, StringBufferT *sb);
-static int show_info_for_job(FILE *fp, lList **alpp, StringBufferT *sb);
+static int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, dstring *sb);
+static int show_info_for_job(FILE *fp, lList **alpp, dstring *sb);
 
 
 /*-------------------------------------------------------------------------*/
@@ -1214,8 +1214,8 @@ XtPointer cld, cad;
       lAddList(jl, rl);
    
    if (jl) {
-      StringBufferT dyn_tasks = {NULL, 0};
-      StringBufferT dyn_oldtasks = {NULL, 0};
+      dstring dyn_tasks = {NULL, 0};
+      dstring dyn_oldtasks = {NULL, 0};
       lListElem *selected_job;
       lListElem *selected_ja_task;
       u_long32 selected_job_id;
@@ -1239,7 +1239,7 @@ XtPointer cld, cad;
 
       if (lGetNumberOfElem(jl) == 1 && job_is_array(job)) {
          get_taskrange_str(lGetList(selected_job, JB_ja_tasks), &dyn_tasks);
-         sge_string_append(&dyn_oldtasks, dyn_tasks.s);
+         sge_dstring_append(&dyn_oldtasks, dyn_tasks.s);
       }
 
       status_ask = AskForHold(w, &new_hold, &dyn_tasks); 
@@ -1285,8 +1285,8 @@ XtPointer cld, cad;
          XbaeMatrixDeselectAll(job_running_jobs);
 
       }
-      sge_string_free(&dyn_tasks);
-      sge_string_free(&dyn_oldtasks);
+      sge_dstring_free(&dyn_tasks);
+      sge_dstring_free(&dyn_oldtasks);
    }
    else
       qmonMessageShow(w, True, "@{There are no jobs selected !}");
@@ -1543,7 +1543,7 @@ lListElem *jep
 static Boolean AskForHold(
 Widget w,
 Cardinal *hold,
-StringBufferT *dyn_tasks 
+dstring *dyn_tasks 
 ) {
    static tAskHoldInfo AskHoldInfo;      
    Widget shell = XmtGetShell(w);
@@ -1638,8 +1638,8 @@ StringBufferT *dyn_tasks
       String ts;
       *hold = XmtChooserGetState(hold_flags);
       ts = XmtInputFieldGetString(hold_tasks);
-      sge_string_free(dyn_tasks);
-      sge_string_append(dyn_tasks, ts ? ts : ""); 
+      sge_dstring_free(dyn_tasks);
+      sge_dstring_append(dyn_tasks, ts ? ts : ""); 
       DEXIT;
       return True;
    }
@@ -1673,7 +1673,7 @@ static void qmonJobScheddInfo(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   StringBufferT sb = {NULL, 0};
+   dstring sb = {NULL, 0};
    lList *jl = NULL;
 
    lDescr info_descr[] = {
@@ -1756,7 +1756,7 @@ static int show_info_for_jobs(
 lList *jid_list,
 FILE *fp,
 lList **alpp,
-StringBufferT *sb
+dstring *sb
 ) {
    lListElem *j_elem = 0;
    lList* jlp = NULL;
@@ -1828,7 +1828,7 @@ StringBufferT *sb
       lListElem *sme;
  
       if (line_separator)
-         sge_string_printf(sb, "\n");
+         sge_dstring_sprintf(sb, "\n");
       else
          line_separator = 1;
 /*       cull_show_job(j_elem, 0); */
@@ -1839,12 +1839,12 @@ StringBufferT *sb
             /* global schduling info */
             for_each (mes, lGetList(sme, SME_global_message_list)) {
                if (first_run) {
-                  sge_string_printf(sb, "%s", "scheduling info:            ");
+                  sge_dstring_sprintf(sb, "%s", "scheduling info:            ");
                   first_run = 0;
                }
                else
-                  sge_string_printf(sb, "%s", "                            ");
-               sge_string_printf(sb, "%s\n", lGetString(mes, MES_message));
+                  sge_dstring_sprintf(sb, "%s", "                            ");
+               sge_dstring_sprintf(sb, "%s\n", lGetString(mes, MES_message));
             }
  
             /* job scheduling info */
@@ -1853,14 +1853,14 @@ StringBufferT *sb
             mes = lFindFirst(lGetList(sme, SME_message_list), where);
             if (mes) {
                if (first_run) {
-                  sge_string_printf(sb, "%s", "scheduling info:            ");
+                  sge_dstring_sprintf(sb, "%s", "scheduling info:            ");
                   first_run = 0;
                }
                else
-                  sge_string_printf(sb, "%s\n", lGetString(mes, MES_message));
+                  sge_dstring_sprintf(sb, "%s\n", lGetString(mes, MES_message));
             }
             while ((mes = lFindNext(mes, where)))
-               sge_string_printf(sb, "                            %s\n",
+               sge_dstring_sprintf(sb, "                            %s\n",
                                     lGetString(mes, MES_message));
             lFreeWhere(where);
          }
@@ -1876,7 +1876,7 @@ StringBufferT *sb
 static int show_info_for_job(
 FILE *fp,
 lList **alpp,
-StringBufferT *sb
+dstring *sb
 ) {
    lList *ilp = NULL, *mlp = NULL;
    lListElem* aep = NULL;
@@ -1923,15 +1923,15 @@ StringBufferT *sb
       first_run = 1;
       for_each (mes, lGetList(sme, SME_global_message_list)) {
          if (first_run) {
-            sge_string_printf(sb, "%s", "scheduling info:            ");
+            sge_dstring_sprintf(sb, "%s", "scheduling info:            ");
             first_run = 0;
          }
          else
-            sge_string_printf(sb, "%s", "                            ");
-         sge_string_printf(sb, "%s\n", lGetString(mes, MES_message));
+            sge_dstring_sprintf(sb, "%s", "                            ");
+         sge_dstring_sprintf(sb, "%s\n", lGetString(mes, MES_message));
       }                                               
       if (!first_run)
-         sge_string_printf(sb, "\n");
+         sge_dstring_sprintf(sb, "\n");
  
       first_run = 1;
  
@@ -1963,7 +1963,7 @@ StringBufferT *sb
             }
  
             if (strlen(text) >= MAX_LINE_LEN || ids_per_line >= MAX_IDS_PER_LINE || header) {
-               sge_string_printf(sb, "%s", text);
+               sge_dstring_sprintf(sb, "%s", text);
                text[0] = 0;
                ids_per_line = 0;
                first_row = 0;
@@ -1974,7 +1974,7 @@ StringBufferT *sb
                   printf("\n\n");
                else
                   first_run = 0;
-               sge_string_printf(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
+               sge_dstring_sprintf(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
                first_row = 1;
             }
  
@@ -1996,7 +1996,7 @@ StringBufferT *sb
          }
       }
       if (text[0] != 0)
-         sge_string_printf(sb, "%s\n", text);
+         sge_dstring_sprintf(sb, "%s\n", text);
    }
  
    lFreeList(ilp);

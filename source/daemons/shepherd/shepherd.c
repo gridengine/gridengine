@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
@@ -114,7 +113,6 @@ typedef unsigned long long sbv_t;
 #include "sge_signal.h"
 #include "sge_pgrp.h"
 #include "sge_time.h"
-#include "sge_getpwnam.h"
 #include "sge_parse_num_par.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
@@ -123,18 +121,10 @@ typedef unsigned long long sbv_t;
 #include "builtin_starter.h"
 #include "sge_afsutil.h"
 #include "qlogin_starter.h"
-#include "sge_switch_user.h"
 #include "sge_uidgid.h"
-#include "sge_max_nis_retries.h"
-#include "sge_stat.h" 
 #include "sge_feature.h"
-#include "sge_daemonize.h"
-
-#if defined(__sgi) || defined(ALPHA)
-#include "sge_nprocs.h"
-#endif
-
-#include "sge_set_def_sig_mask.h"
+#include "sge_unistd.h"
+#include "sge_os.h"
 
 #if defined(IRIX6)
 #include "sge_processes_irix.h"
@@ -547,8 +537,8 @@ char **argv
       if (getuid() == 0 && geteuid() != 0) {
           char name[128];
           if (!sge_uid2user(geteuid(), name, sizeof(name), MAX_NIS_RETRIES)) {
-             set_admin_username(name, NULL);
-             switch2admin_user();
+             sge_set_admin_username(name, NULL);
+             sge_switch2admin_user();
           }
       }
       if (ret == 1) {
@@ -560,10 +550,10 @@ char **argv
 
    /* init admin user stuff */
    admin_user = get_conf_val("admin_user");
-   if (set_admin_username(admin_user, err_str))
+   if (sge_set_admin_username(admin_user, err_str))
       shepherd_error(err_str);
 
-   if (switch2admin_user())
+   if (sge_switch2admin_user())
       shepherd_error(err_str);
 
    sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION));
@@ -614,11 +604,11 @@ char **argv
    if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
       int ret;
 
-      switch2start_user();
+      sge_switch2start_user();
       if ((ret=set_processor_range(get_conf_val("processors"),
                  (int) strtol(get_conf_val("job_id"), NULL, 10),
                  err_str)) != PROC_SET_OK) {
-         switch2admin_user();
+         sge_switch2admin_user();
          if (ret == PROC_SET_WARNING) /* not critical - e.g. not root */
             shepherd_trace("warning: processor set not set in set_processor_range");
          else { /* critical --> use err_str to indicate error */
@@ -627,7 +617,7 @@ char **argv
             shepherd_error(err_str);
          }
       } else {
-         switch2admin_user();
+         sge_switch2admin_user();
       }
    }
 #endif
@@ -648,12 +638,12 @@ char **argv
          shepherd_state = SSTATE_AFS_PROBLEM;
          shepherd_error("AFS with incomplete specification requested");
       }
-      if ((tokenbuf = read_token(TOKEN_FILE)) == NULL) {
+      if ((tokenbuf = sge_read_token(TOKEN_FILE)) == NULL) {
          shepherd_state = SSTATE_AFS_PROBLEM;
          shepherd_error("can't read AFS token");
       }   
 
-      if (extend_afs_token(set_token_cmd, tokenbuf, job_owner,
+      if (sge_afs_extend_token(set_token_cmd, tokenbuf, job_owner,
                            atoi(token_extend_time), err_str)) {
          shepherd_state = SSTATE_AFS_PROBLEM;                  
          shepherd_error(err_str);
@@ -754,9 +744,9 @@ char **argv
    if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
       int ret;
 
-      switch2start_user();
+      sge_switch2start_user();
       if ((ret=free_processor_set(err_str)) != PROC_SET_OK) {
-         switch2admin_user();
+         sge_switch2admin_user();
          switch (ret) {
          case PROC_SET_WARNING: /* not critical - e.g. not root */
             shepherd_trace("warning: processor set not freed in free_processor_set - "
@@ -780,16 +770,16 @@ char **argv
             break;
          }
       } else {
-         switch2admin_user(); 
+         sge_switch2admin_user(); 
       }
    }
 #endif
 
    if (coshepherd_pid > 0) {
       shepherd_trace("sending SIGTERM to sge_coshepherd");
-      switch2start_user();
+      sge_switch2start_user();
       kill(coshepherd_pid, SIGTERM);
-      switch2admin_user();
+      sge_switch2admin_user();
    }
 
    if (!SGE_STAT("exit_status", &buf) && buf.st_size) {
@@ -1171,7 +1161,7 @@ char *override_signal
 ) {
    if (!isdigit(override_signal[0])) 
       override_signal = &override_signal[3];
-   return sys_str2signal(override_signal);
+   return sge_sys_str2signal(override_signal);
 }
 
 static void verify_method(
@@ -1409,7 +1399,7 @@ pid_t ctrl_pid[3];
                   if (notify_susp_type == 0) {
                      tmp_str = search_conf_val("notify_susp");
                      if (tmp_str) {
-                        notify_susp_signal = sys_str2signal(tmp_str);
+                        notify_susp_signal = sge_sys_str2signal(tmp_str);
                         SHEPHERD_TRACE((err_str, "%s %s) notification for delayed(%d s) SIGSTOP.",
                            kill_str, tmp_str, notify));
                         notify_signal = notify_susp_signal;
@@ -1466,7 +1456,7 @@ pid_t ctrl_pid[3];
                   if (notify_kill_type == 0) {
                      tmp_str = search_conf_val("notify_kill");
                      if (tmp_str) {
-                        notify_kill_signal = sys_str2signal(tmp_str);
+                        notify_kill_signal = sge_sys_str2signal(tmp_str);
                         SHEPHERD_TRACE((err_str, "%s %s) notification for delayed(%d s) SIGKILL.",
                            kill_str, tmp_str, notify));
                         notify_signal = notify_kill_signal;
@@ -2055,7 +2045,7 @@ static int check_ckpttype()
          ckpt_type &= ~CKPT_REST_KERNEL;    
 
       if (strcasecmp(ckpt_signal_str, "none")) {
-         ckpt_signal = sys_str2signal(ckpt_signal_str);
+         ckpt_signal = sge_sys_str2signal(ckpt_signal_str);
          if (ckpt_signal == -1)
             ckpt_type = -1;
       }
@@ -2069,7 +2059,7 @@ static int check_ckpttype()
       if (!strcasecmp(ckpt_signal_str, "none"))  
          ckpt_type = -1;
       else {
-         ckpt_signal = sys_str2signal(ckpt_signal_str);
+         ckpt_signal = sge_sys_str2signal(ckpt_signal_str);
          if (ckpt_signal == -1)
             ckpt_type = -1;
       }      
@@ -2080,7 +2070,7 @@ static int check_ckpttype()
       if (atoi(ckpt_restarted) > 1)
          ckpt_type |= CKPT_REST; 
       if (strcasecmp(ckpt_signal_str, "none")) {
-         ckpt_signal = sys_str2signal(ckpt_signal_str);
+         ckpt_signal = sge_sys_str2signal(ckpt_signal_str);
          if (ckpt_signal == -1)
             ckpt_type = -1;
       }
@@ -2171,7 +2161,7 @@ char *childname            /* "job", "pe_start", ...     */
             /* notify: postponed signals SIGSTOP, SIGKILL */
             if (postponed_signal) {
                sprintf(err_str, "delivering postponed signal %s",
-                       sys_sig2str(postponed_signal));
+                       sge_sys_sig2str(postponed_signal));
                shepherd_trace(err_str);
                shepherd_signal_job(-pid, postponed_signal);
                postponed_signal = 0;
@@ -2191,15 +2181,15 @@ char *childname            /* "job", "pe_start", ...     */
                   }
                   else if (ckpt_type & CKPT_TRANS) {
                      shepherd_trace("send checkpointing signal to transparent checkpointing job");
-                     switch2start_user();
+                     sge_switch2start_user();
                      kill(-pid, ckpt_signal);
-                     switch2admin_user();
+                     sge_switch2admin_user();
                   } 
                   else if (ckpt_type & CKPT_USER) {
                      shepherd_trace("send checkpointing signal to userdefined checkpointing job");
-                     switch2start_user();
+                     sge_switch2start_user();
                      kill(-pid, ckpt_signal);
-                     switch2admin_user();
+                     sge_switch2admin_user();
                   }
                } 
          }
@@ -2614,7 +2604,7 @@ int sig
          break;
       }
 
-      switch2start_user();
+      sge_switch2start_user();
 #     if defined(IRIX6)
       kill_ash(osjobid, sig, sig == 9);
 #     elif defined(CRAY)
@@ -2649,7 +2639,7 @@ int sig
          }
       }                   
 #     endif
-      switch2admin_user();
+      sge_switch2admin_user();
 
    } while (0);
 
@@ -2667,9 +2657,9 @@ int sig
    sprintf(err_str, "pdc_kill_addgrpid: %d %d", (int) add_grp_id , sig);
    shepherd_trace(err_str);
 
-   switch2start_user();
+   sge_switch2start_user();
    pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
-   switch2admin_user();
+   sge_switch2admin_user();
    }
 #endif
 #endif
@@ -2701,7 +2691,7 @@ int sig
 
             pid_file_name = get_conf_val("qrsh_pid_file");
 
-            switch2start_user();
+            sge_switch2start_user();
             if((pid_file = fopen(pid_file_name, "r")) != NULL) {
                pid_t qrsh_pid = 0;
                if(fscanf(pid_file, pid_t_fmt, &qrsh_pid) == 1) {
@@ -2711,7 +2701,7 @@ int sig
                }
                fclose(pid_file);
             }
-            switch2admin_user();
+            sge_switch2admin_user();
          }
       }
 
@@ -2723,9 +2713,9 @@ int sig
       shepherd_trace(err_str);
    }
 
-   switch2start_user();
+   sge_switch2start_user();
    kill(pid, sig);
-   switch2admin_user();
+   sge_switch2admin_user();
 }
 
 static int notify_tasker(
@@ -2817,12 +2807,12 @@ u_long32 exit_status
    sprintf(err_str, "signalling tasker with pid #"pid_t_fmt, tasker_pid);
    shepherd_trace(err_str);
 
-   switch2start_user();
+   sge_switch2start_user();
    kill(tasker_pid, SIGCHLD);
 #ifdef SIGCLD
    kill(tasker_pid, SIGCLD);
 #endif
-   switch2admin_user(); 
+   sge_switch2admin_user(); 
 
    return 0;
 }

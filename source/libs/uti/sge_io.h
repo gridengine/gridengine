@@ -32,8 +32,54 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_crc.h"
+
+/****** uti/io/sge_mode_t *****************************************************
+*  NAME
+*     sge_mode_t -- Type of operation for sge_copy_append()
+*
+*  SYNOPSIS
+*
+*     typedef enum {
+*        SGE_MODE_APPEND = 1,
+*        SGE_MODE_COPY = 2
+*     } sge_mode_t;
+*
+*  FUNCTION
+*     Defines the operation which should be performed by 
+*     sge_copy_append():
+*
+*        SGE_MODE_APPEND - append the file
+*        SGE_MODE_COPY   - copy the file
+*
+*  SEE ALSO
+*     uti/io/sge_copy_append();
+******************************************************************************/
+typedef enum {
+   SGE_MODE_APPEND = 1,
+   SGE_MODE_COPY = 2
+} sge_mode_t;
+
 int sge_readnbytes(register int sfd, register char *ptr, register int n);
-int sge_writenbytes(register int sfd, register const char *ptr, register int n);
+
+int sge_writenbytes(register int sfd, register const char *ptr, 
+                    register int n);
+
+int sge_filecmp(const char *file0, const char *file1); 
+
+int sge_copy_append(char *dst, const char *src, sge_mode_t mode);
+ 
+char *sge_bin2string(FILE *fp, int size);
+ 
+int sge_string2bin(FILE *fp, const char *buf);  
+
+char *sge_file2string(const char *fname, int *len);
+ 
+char *sge_stream2string(FILE *fp, int *len);
+ 
+int sge_string2file(const char *str, int len, const char *fname); 
+
+char *sge_tmpnam(char *fname); 
  
 #endif /* __SGE_IO_H */
 

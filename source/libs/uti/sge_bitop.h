@@ -32,14 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int cshift(char *area, int area_len, int n, int direction);
+int sge_area_cshift(char *area, int area_len, int n, int direction);
 
-int print_area(const char *fname, const char *label, const char *area, 
-               int area_len);
+int sge_area_print(const char *fname, const char *label, const char *area, 
+                   int area_len);
 
-void xor_area(char *area, int area_len, const char *key, int key_len);
+void sge_area_xor(char *area, int area_len, const char *key, int key_len);
 
-int areacmp(const char *a1, const char *a2, int size);
+int sge_area_cmp(const char *a1, const char *a2, int size);
 
 #define SHIFT_RIGHT -1
 #define SHIFT_LEFT   1

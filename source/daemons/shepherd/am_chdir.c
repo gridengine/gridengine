@@ -29,10 +29,9 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <unistd.h>
 
+#include "sge_unistd.h"
 #include "am_chdir.h"
-#include "sge_stat.h" 
 
 int sge_cwd_chdir(
 char *dir 

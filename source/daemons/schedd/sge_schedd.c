@@ -43,14 +43,10 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
-#include "sge_copy_append.h"
-#include "sge_daemonize.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
-#include "sge_log_pid.h"
-#include "sge_me.h"
 #include "sge_orders.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_schedd.h"
 #include "sgermon.h"
 #include "commlib.h"
@@ -63,7 +59,6 @@
 #include "sig_handlers.h"
 #include "sge_conf.h"
 #include "sge_process_events.h"
-#include "sge_switch_user.h"
 #include "basis_types.h"
 #include "qm_name.h"
 #include "msg_schedd.h"
@@ -73,7 +68,11 @@
 #include "setup_path.h" 
 #include "sge_time.h" 
 #include "job_log.h" 
-
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_spool.h"
+#include "sge_hostname.h"
+#include "sge_os.h"
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
@@ -121,7 +120,7 @@ char *argv[]
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -140,7 +139,7 @@ char *argv[]
    sge_setup(SCHEDD, NULL);
    prepare_enroll(prognames[SCHEDD], 1, NULL);
 
-   if ((ret = occupy_first_three()) >= 0) {
+   if ((ret = sge_occupy_first_three()) >= 0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I , ret));
       SGE_EXIT(1);
    }
@@ -158,7 +157,7 @@ char *argv[]
    check_qmaster = sge_setup_sge_schedd();
 
    master_host = sge_get_master(0);
-   if (hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
+   if (sge_hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
       SGE_EXIT(1);
    }
@@ -174,7 +173,7 @@ char *argv[]
    }
 
    starting_up();
-   sge_log_pid(SCHEDD_PID_FILE);
+   sge_write_pid(SCHEDD_PID_FILE);
 
 #if RAND_ERROR
    rand_error = 1;
@@ -495,12 +494,12 @@ static int sge_setup_sge_schedd()
    /*
    ** switch to admin user
    */
-   if (set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSWITCHTOADMINUSER ));
       SGE_EXIT(1);
    }
@@ -513,12 +512,12 @@ static int sge_setup_sge_schedd()
    sge_chdir(SCHED_SPOOL_DIR, 1);
 
    /* having passed this statement we may log messages into the ERR_FILE */
-   sge_copy_append(TMP_ERR_FILE_SCHEDD, ERR_FILE, SGE_APPEND);
-   switch2start_user();
+   sge_copy_append(TMP_ERR_FILE_SCHEDD, ERR_FILE, SGE_MODE_APPEND);
+   sge_switch2start_user();
    unlink(TMP_ERR_FILE_SCHEDD);
-   switch2admin_user();
+   sge_switch2admin_user();
    error_file = ERR_FILE;
-   sge_log_as_admin_user();
+   sge_log_set_auser(1);
    /* suppress the INFO messages during setup phase */
    saved_logginglevel = logginglevel;
    logginglevel = LOG_WARNING;

@@ -37,7 +37,6 @@
 
 #include "sgermon.h"
 #include "def.h"
-#include "sge_str_from_file.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge.h"
@@ -77,19 +76,14 @@
 #include "sge_userset.h"
 #include "sge_userprj_qmaster.h"
 #include "read_write_job.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "cull_parse_util.h"
 #include "schedd_monitor.h"
 #include "sge_messageL.h"
 #include "sge_rangeL.h"
 #include "sge_identL.h"
-#include "sge_peopen.h"
-#include "sge_copy_append.h"
-#include "sge_arch.h"
 #include "sge_afsutil.h"
 #include "sge_ulongL.h"
-#include "sge_switch_user.h"
 #include "setup_path.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
@@ -102,6 +96,8 @@
 #include "sge_job_jatask.h"
 #include "qmaster.h"
 #include "sge_suser.h"
+#include "sge_io.h"
+#include "sge_hostname.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -612,9 +608,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* write script to file */
    if (lGetString(jep, JB_script_file)) {
-      if (str2file(lGetString(jep, JB_script_ptr), 
-                   lGetUlong(jep, JB_script_size),
-                   lGetString(jep, JB_exec_file))) {
+      if (sge_string2file(lGetString(jep, JB_script_ptr), 
+                       lGetUlong(jep, JB_script_size),
+                       lGetString(jep, JB_exec_file))) {
          ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, u32c(job_number), strerror(errno)));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
          DEXIT;
@@ -1309,7 +1305,7 @@ char *commproc
       sge_pack_buffer tmp_pb;
 
       for_each (granted_queue, lGetList(t, JAT_granted_destin_identifier_list)) { 
-         if (hostcmp(pb_host, lGetHost(granted_queue, JG_qhostname))) {
+         if (sge_hostcmp(pb_host, lGetHost(granted_queue, JG_qhostname))) {
             if(init_packbuffer(&tmp_pb, 1024, 0) == PACK_SUCCESS) {
 
                ERROR((SGE_EVENT, MSG_JOB_SENDKILLTOXFORJOBYZ_SUU ,
@@ -1328,7 +1324,7 @@ char *commproc
       }
    }     
 
-   if (pb && !hostcmp(pb_host, lGetHost(qep, QU_qhostname)))
+   if (pb && !sge_hostcmp(pb_host, lGetHost(qep, QU_qhostname)))
       pack_job_kill(pb, job_number, task_number); 
    else {
       if (qep && sge_signal_queue(SGE_SIGKILL, qep, j, t)) {
@@ -3072,7 +3068,7 @@ sge_gdi_request *request
    if ( lGetString(old_jep, JB_exec_file)) {
       char *str;
       int len;
-      if ((str = str_from_file(lGetString(old_jep, JB_exec_file), &len))) {
+      if ((str = sge_file2string(lGetString(old_jep, JB_exec_file), &len))) {
          lSetString(new_jep, JB_script_ptr, str);
          FREE(str);
          lSetUlong(new_jep, JB_script_size, len);

@@ -36,11 +36,8 @@
 
 #include "sge_log.h"
 #include "sge.h"
-#include "sge_arch.h"
-#include "sge_get_confval.h"
-#include "sge_me.h"
-#include "sge_pids.h"
-#include "sge_prognames.h"
+#include "sge_os.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
@@ -52,8 +49,8 @@
 #include "sge_string.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
-
-#include "host.h"
+#include "sge_spool.h"
+#include "sge_hostname.h"
 
 #define ENROLL_ERROR_DO_RETRY -50
 static int qmaster_running(char *, int *);
@@ -90,17 +87,17 @@ int *enrolled
 
    /* resolve master name - there is no commd at this time so 
       host name resolving must be accomplished without commd */ 
-   if ((s=resolve_hostname_local(master)) && strcasecmp(master, s))
+   if ((s=sge_host_resolve_name_local(master)) && strcasecmp(master, s))
       strcpy(master, s);
 
    /* get qmaster spool dir, try to read pidfile and check if qmaster is running */
-   if (!hostcmp(master, me.qualified_hostname)) {
-      if ((cp = get_confval("qmaster_spool_dir", path.conf_file))) {
+   if (!sge_hostcmp(master, me.qualified_hostname)) {
+      if ((cp = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
          sprintf(pidfile, "%s/%s", cp, QMASTER_PID_FILE);
 	      DPRINTF(("pidfilename: %s\n", pidfile));
-         if ((pid = readpid(pidfile))) {
+         if ((pid = sge_readpid(pidfile))) {
             DPRINTF(("pid: %d\n", pid));
-            if (!checkprog(pid, SGE_QMASTER, PSCMD)) {
+            if (!sge_checkprog(pid, SGE_QMASTER, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_QMASTER_FOUNDRUNNINGQMASTERWITHPIDXNOTSTARTING_I, (int) pid));
                SGE_EXIT(1);
             }
@@ -124,11 +121,11 @@ int *enrolled
    case 0:
       /* We are enrolled to a commd on another host */
       /* Ask if qmaster is enrolled on that host    */
-      if (hostcmp(me.qualified_hostname, master)) {
+      if (sge_hostcmp(me.qualified_hostname, master)) {
          alive = ask_commproc(master, prognames[QMASTER], 0);
          DPRINTF(("alive: %s %s %d\n", master, prognames[QMASTER], alive));
          if (alive == 0) {
-            DPRINTF(("hostcmp(%s, %s) not equal\n", master, me.qualified_hostname));
+            DPRINTF(("sge_hostcmp(%s, %s) not equal\n", master, me.qualified_hostname));
             ret = 1;
          } else
             ret = 0;

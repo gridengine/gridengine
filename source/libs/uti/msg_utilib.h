@@ -152,16 +152,12 @@
 #define MSG_FILE_WRITEOPENFAILED_SS             _("couldn't open %s for writing: %s\n")
 #define MSG_FILE_READOPENFAILED_SS              _("couldn't open %s for reading: %s")
 
-/* 
-** utilib/sge_set_def_sig_mask.c
-*/ 
-#define MSG_PROC_SIGACTIONFAILED_IS             _("sigaction for signal %d failed: %s")
-
 
 /* 
 ** utilib/sge_signal.c
 */ 
 #define MSG_PROC_UNKNOWNSIGNAL                  _("unknown signal")
+#define MSG_PROC_SIGACTIONFAILED_IS             _("sigaction for signal %d failed: %s")
 
 
 /* 
@@ -183,6 +179,8 @@
 #define MSG_POINTER_SETADMINUSERNAMEFAILED      _("set_admin_username() with zero length username")
 #define MSG_SYSTEM_ADMINUSERNOTEXIST_S          _("admin_user \"%s\" does not exist")
 #define MSG_SYSTEM_CANTRUNASCALLINGUSER         _("cannot run as calling user")
+#define MSG_SWITCH_USER_NOT_INITIALIZED         _("Module 'sge_switch_user' not initialized")
+#define MSG_SWITCH_USER_NOT_ROOT                _("User 'root' did not start the application\n")
 
 
 /* 

@@ -61,18 +61,14 @@
 #include "commlib.h"
 #include "sig_handlers.h"
 #include "sge_resource.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "sge_me.h"
-#include "sge_copy_append.h"
 #include "setup_path.h" 
-#include "sge_arch.h"
 #include "sge_afsutil.h"
 #include "sge_conf.h"
 #include "sge_jobL.h"
-#include "sge_set_def_sig_mask.h"
 #include "sge_qexec.h"
 #include "qm_name.h"
 #include "sge_pgrp.h"
@@ -118,7 +114,7 @@ static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
 
-#define VERBOSE_LOG(x) if(sge_is_verbose()) { fprintf x; fflush(stderr); }
+#define VERBOSE_LOG(x) if(sge_log_is_verbose()) { fprintf x; fflush(stderr); }
 
 /****** Interactive/qsh/--Introduction ***************************************
 *
@@ -732,7 +728,7 @@ static int start_client_program(const char *client_name,
 
             if(WIFSIGNALED(status)) {
                int code = WTERMSIG(status);
-               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, code, sys_sig2str(code)));
+               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, code, sge_sys_sig2str(code)));
                /* if not qrsh <command>: use default: delete job */
             }
 
@@ -1412,9 +1408,9 @@ char **argv
    ** qrsh: quiet
    */
    if(is_rsh) {
-      sge_log_verbose(0); 
+      sge_log_set_verbose(0); 
    } else {
-      sge_log_verbose(1);
+      sge_log_set_verbose(1);
    }
 
    /*
@@ -1450,7 +1446,7 @@ char **argv
    /* set verbosity */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-verbose"))) {
       lRemoveElem(opts_cmdline, ep);
-      sge_log_verbose(1);
+      sge_log_set_verbose(1);
    }
 
    /* parse -noshell */
@@ -1766,7 +1762,7 @@ char **argv
   
          if (!lp_poll || !(jep = lFirst(lp_poll))) {
             WARNING((SGE_EVENT, "\n"));
-            sge_log_verbose(1);
+            sge_log_set_verbose(1);
             WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, me.sge_formal_prog_name));
             do_exit = 1;
             exit_status = 1;

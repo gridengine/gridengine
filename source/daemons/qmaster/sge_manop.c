@@ -43,7 +43,6 @@
 #include "sge_eventL.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
-#include "sge_max_nis_retries.h"
 #include "sge_uidgid.h"
 #include "msg_common.h"
 #include "msg_utilib.h"

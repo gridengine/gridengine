@@ -52,13 +52,11 @@
 
 #include "basis_types.h"
 #include "sgermon.h"
-#include "sge_str_from_file.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge.h"
 #include "def.h"
 #include "sge_conf.h"
-#include "sge_arch.h"
 #include "time_event.h"
 #include "commlib.h"
 #include "job_log.h"
@@ -75,16 +73,12 @@
 #include "sge_host.h"
 #include "sge_pe_qmaster.h"
 #include "sge_m_event.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "slots_used.h"
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
-#include "sge_copy_append.h"
 #include "sge_user_mapping.h"
-#include "sge_switch_user.h"
 #include "setup_path.h"
 #include "execution_states.h"
 #include "jb_now.h"
@@ -100,6 +94,8 @@
 #include "sge_job_jatask.h"
 #include "sge_string.h"
 #include "sge_suser.h"
+#include "sge_io.h"
+#include "sge_hostname.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -270,7 +266,7 @@ int master
       const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
       if(simhost != NULL) {
          const char *real_host = lGetString(simhost, CE_stringval);
-         if(real_host != NULL && hostcmp(real_host, rhost) != 0) {
+         if(real_host != NULL && sge_hostcmp(real_host, rhost) != 0) {
             DPRINTF(("deliver job for simulated host %s to host %s\n", rhost, real_host));
             rhost = real_host;
          }   
@@ -299,7 +295,7 @@ int master
    */
    if (master && lGetString(jep, JB_exec_file)) {
 
-      str = str_from_file(lGetString(jep, JB_exec_file), &len);
+      str = sge_file2string(lGetString(jep, JB_exec_file), &len);
       lSetString(jep, JB_script_ptr, str);
       FREE(str);
       lSetUlong(jep, JB_script_size, len);
@@ -769,7 +765,7 @@ sge_commit_flags_t commit_flags
                   if (!master_host) {
                      master_host = granted_queue_JG_qhostname;
                   } 
-                  if (hostcmp(master_host, granted_queue_JG_qhostname )) {
+                  if (sge_hostcmp(master_host, granted_queue_JG_qhostname )) {
                      host = lGetElemHost(Master_Exechost_List, EH_name, granted_queue_JG_qhostname ); 
                      
                      add_to_reschedule_unknown_list(host, 

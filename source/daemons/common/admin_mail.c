@@ -30,10 +30,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
-#include "sge_stat.h" 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_conf.h"
 #include "sge_usageL.h"

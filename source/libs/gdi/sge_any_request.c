@@ -34,8 +34,7 @@
 
 #include "sge_gdi_intern.h"
 #include "commlib.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qm_name.h"

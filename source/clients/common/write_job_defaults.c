@@ -46,8 +46,6 @@
 #include "sge_stringL.h"
 #include "sge_identL.h"
 #include "sge_job_refL.h"
-#include "sge_str_from_file.h"
-#include "sge_me.h"
 #include "sge_resource.h"
 #include "sgermon.h"                       
 
@@ -256,7 +254,7 @@ char **envp
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -338,7 +336,7 @@ char **envp
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
-   sge_init_language(NULL,NULL);   
+   sge_lang_init(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
 

@@ -30,18 +30,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                 
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h> 
 
+#if defined(LINUX)
+#  include <limits.h>
+#endif  
+
 #include "sge_unistd.h"
-#include "sge_stat.h"
 #include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"
-#include "sge_dirent.h" 
 #include "msg_utilib.h"
 
 typedef enum {
@@ -54,7 +57,7 @@ static int sge_domkdir(const char *, int, int);
 
 static file_type_t sge_get_file_type(const char *name);  
 
-static exit_func_type exit_func = NULL;
+static sge_exit_func_t exit_func = NULL;
 
 static file_type_t sge_get_file_type(const char *name)
 {
@@ -262,24 +265,24 @@ void sge_exit(int i)
 *     sge_install_exit_func() -- Installs a new exit handler 
 *
 *  SYNOPSIS
-*     exit_func_type sge_install_exit_func(exit_func_type new) 
+*     sge_exit_func_t sge_install_exit_func(sge_exit_func_t new) 
 *
 *  FUNCTION
 *     Installs a new exit handler and returns the old one. Exit function
 *     will be called be sge_exit()
 *
 *  INPUTS
-*     exit_func_type new - new function pointer 
+*     sge_exit_func_t new - new function pointer 
 *
 *  RESULT
-*     exit_func_type - old function pointer 
+*     sge_exit_func_t - old function pointer 
 *
 *  SEE ALSO
 *     uti/unistd/sge_exit() 
 ******************************************************************************/
-exit_func_type sge_install_exit_func(exit_func_type new) 
+sge_exit_func_t sge_install_exit_func(sge_exit_func_t new) 
 {
-   exit_func_type old;
+   sge_exit_func_t old;
  
    old = exit_func;
    exit_func = new;
@@ -348,7 +351,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error)
 
 /****** uti/unistd/sge_rmdir() ************************************************
 *  NAME
-*     sge_rmdir() -- Recursive rmdir  
+*     sge_rmdir() -- Recursive rmdir
 *
 *  SYNOPSIS
 *     int sge_rmdir(const char *cp, char *err_str)  
@@ -491,9 +494,47 @@ int sge_is_file(const char *name)
    return (sge_get_file_type(name) == FILE_TYPE_FILE);
 }                         
 
-
-#ifdef TEST
+/****** uti/unistd/sge_sysconf() **********************************************
+*  NAME
+*     sge_sysconf() -- Replacement for sysconf 
+*
+*  SYNOPSIS
+*     u_long32 sge_sysconf(sge_sysconf_t id)
+*
+*  FUNCTION
+*     Replacement for sysconf  
+*
+*  INPUTS
+*     sge_sysconf_t id - value 
+*
+*  RESULT
+*     u_long32 - meaning depends on 'id' 
+*
+*  SEE ALSO
+*     uti/unistd/sge_sysconf_t
+******************************************************************************/
+u_long32 sge_sysconf(sge_sysconf_t id) 
+{
+   u_long32 ret = 0;
  
+   DENTER(BASIS_LAYER, "sge_sysconf");
+   switch (id) {
+      case SGE_SYSCONF_NGROUPS_MAX:
+#if defined(AIX42)
+         ret = NGROUPS;
+#else
+         ret = sysconf(_SC_NGROUPS_MAX);
+#endif
+      break;
+      default:
+         CRITICAL((SGE_EVENT, MSG_SYSCONF_UNABLETORETRIEVE_I, (int) id));
+      break;
+   }
+   DEXIT;
+   return ret;
+}      
+ 
+#ifdef TEST
 int main(int argc, char **argv)
 {
    char err_str[1024];
@@ -508,5 +549,4 @@ int main(int argc, char **argv)
    }
    return 0;
 }
- 
 #endif   

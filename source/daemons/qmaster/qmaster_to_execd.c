@@ -32,7 +32,7 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "qmaster_to_execd.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_qmaster.h"

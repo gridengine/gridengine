@@ -50,7 +50,7 @@
 #include "commlib.h" 
 #include "sge_gdi.h" 
 #include "sge_gdi_intern.h" 
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_all_listsL.h" 
 #include "qmon_rmon.h"
 #include "qmon_init.h"
@@ -66,6 +66,7 @@
 #include "qmon_globals.h"
 #include "qmon_util.h"
 #include "sge_log.h"
+#include "sge_unistd.h"
 #include "msg_clients_common.h"
 #include "msg_gdilib.h"
 #include "qm_name.h"
@@ -222,7 +223,7 @@ void qmonInitSge( char *progname)
    
    DENTER(GUI_LAYER, "qmonInitSge");
    
-   sge_qmon_log(True);
+   sge_log_set_qmon(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
    if ((cl_err = sge_gdi_setup(prognames[QMON]))) {
@@ -232,7 +233,7 @@ void qmonInitSge( char *progname)
          ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
    }
-   sge_qmon_log(False);
+   sge_log_set_qmon(False);
 
    DEXIT;
 }

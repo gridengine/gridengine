@@ -43,9 +43,9 @@
 #include "parse_range.h"
 #include "sge_rangeL.h"
 #include "sge_stdio.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h" 
 #include "sge_unistd.h"
+#include "sge_spool.h"
 
 #include "msg_common.h"
 

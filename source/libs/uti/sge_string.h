@@ -32,11 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #ifdef  __cplusplus
 extern "C" {
 #endif
+
+#include <string.h>
+
+struct saved_vars_s {
+   char *static_cp;
+   char *static_str;
+};
 
 const char *sge_basename(const char *name, int delim);
 
@@ -50,36 +55,30 @@ char *sge_strtok(const char *str, const char *delimitor);
 
 int sge_is_pattern(const char *p);
 
-struct saved_vars_s {
-   char *static_cp;
-   char *static_str;
-};
+char *sge_strtok_r(const char *str, const char *delimitor, 
+                   struct saved_vars_s **last);
 
-char *sge_strtok_r(const char *str, const char *delimitor, struct saved_vars_s **last);
+void sge_free_saved_vars(struct saved_vars_s *last);
 
-void free_saved_vars(struct saved_vars_s *last);
-
-char *stradd(const char *cp1, const char *cp2, char *res);
-
-int check_fname(const char *fname);
+int sge_is_valid_filename(const char *fname);
 
 int sge_strnullcasecmp(const char *a, const char *b);
 
 int sge_strnullcmp(const char *a, const char *b);
 
-void strip_blanks(char *str);
+void sge_strip_blanks(char *str);
 
-/* compare hosts with FQDN or not */
-#define MAXHOSTLEN 256
-extern int fqdn_cmp;
+void sge_strtoupper(char *buffer, int max_len);
 
-/* compare hosts by using a default domain FQDN or not */
-extern char *default_domain;
+int sge_strisint(const char *str);
 
-int hostcmp(const char *h1, const char *h2);
+char **sge_stradup(char **cpp, int n);
 
-void hostcpy(char *dst, const char *raw);
-void string_toupper(char *buffer , int max_len );
+void sge_strafree(char **cpp); 
+
+char **sge_stramemncpy(const char *cp, char **cpp, int n);
+
+char **sge_stracasecmp(const char *cp, char **cpp);
 
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)

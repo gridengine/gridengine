@@ -36,11 +36,11 @@
 
 #include "sge_conf.h"
 #include "sge_jobL.h"
-#include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_getpwnam.h"
 #include "get_path.h"
+#include "sge_uidgid.h"
+#include "sge_prog.h"
 #include "msg_execd.h"
 
 static const char* expand_path(const char *path_in, u_long32 job_id, 

@@ -1,3 +1,10 @@
+EB-2002-02-24-0: Cleanup:   in 'libuti' and 'libgdi'
+                            - moved functions from libgdi into libuti
+                            - rearranged/modified/created modules
+                            - some function names have been changed
+                            - added ADOC comments for all not commented 
+                              non-static functions
+
 SD-2002-02-22-2: Feature:   Added support to control restart timeout
                             delays using environment variables.
 

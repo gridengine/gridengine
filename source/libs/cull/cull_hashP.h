@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull_list.h"
-#include "sge_hash.h"
+#include "sge_htable.h"
 
 enum {
    HASH_OFF = 0,
@@ -43,7 +43,7 @@ enum {
 
 struct _lHash {
    int type;
-   HashTable table;
+   htable table;
 };
 
 extern lHash template_hash;

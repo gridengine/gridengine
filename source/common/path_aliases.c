@@ -31,27 +31,25 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
-#include <stdlib.h>
 #include <pwd.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <errno.h>
        
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
 #include "sge_answerL.h"
 #include "sge_paL.h"
-#include "sge_getpwnam.h"
 #include "path_aliases.h"
 #include "sge_log.h"
 #include "resolve_host.h"
 #include "setup_path.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
-#include "sge_stat.h" 
 #include "msg_daemons_common.h"
 #include "sge_string.h" 
-
+#include "sge_uidgid.h"
+#include "sge_unistd.h"
+#include "sge_hostname.h"
 
 static void compress_slashes(char *str);
 static int read_path_aliases(char *file_name, lList **path_alias_list, lList **alpp);
@@ -303,7 +301,7 @@ lList **alpp
             exec_host = lGetHost(pap, PA_exec_host);
 
             /* and compare it to the executing host */
-            if (hostcmp(exec_host, myhost))
+            if (sge_hostcmp(exec_host, myhost))
                continue;
 
          }

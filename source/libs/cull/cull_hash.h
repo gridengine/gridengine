@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_hash.h"
+#include "sge_htable.h"
 #include "cull_hashP.h"
 #include "cull_list.h"
 

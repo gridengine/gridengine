@@ -42,15 +42,15 @@
 #include "config.h"
 #include "sge_answerL.h"
 #include "read_write_ckpt.h"
-#include "sge_tmpnam.h"
 #include "read_object.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
+#include "sge_spool.h"
+#include "sge_io.h"
 
 /****
  **** cull_read_in_ckpt

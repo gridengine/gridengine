@@ -45,7 +45,7 @@
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
-#include "sge_timestop.h"
+#include "sge_time.h"
 #include "qmon_timer.h"
 #include "qmon_appres.h"
 #include "qmon_globals.h"
@@ -195,7 +195,7 @@ lList **answerp
 
    DENTER(GUI_LAYER, "qmonMirrorMultiAnswer");
 
-   starttime(0);
+   sge_stopwatch_start(0);
 
    /*
    ** mask the sgeee lists in SGE mode
@@ -276,7 +276,7 @@ lList **answerp
       }
    }
    mal = lFreeList(mal);
-   log_time(0, "qmonMirrorMulti:");
+   sge_stopwatch_log(0, "qmonMirrorMulti:");
 
    DEXIT;
    return 0;
@@ -323,7 +323,7 @@ lEnumeration *what
     * alp contains several answer elements for 
     * SGE_GDI_DEL
     */
-   starttime(0);
+   sge_stopwatch_start(0);
    
    alp = sge_gdi(type, SGE_GDI_DEL, lpp, where, what); 
 
@@ -382,7 +382,7 @@ printf("__________________________________\n");
       }
    }
 
-   log_time(0, "SGE_GDI_DEL:");
+   sge_stopwatch_log(0, "SGE_GDI_DEL:");
    
    DEXIT;
    return alp; 
@@ -409,7 +409,7 @@ lEnumeration *what
    if (!what ) 
       goto error;
    
-   starttime(0);
+   sge_stopwatch_start(0);
    
    if (type == SGE_JOB_LIST)
       alp = sge_gdi(type, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
@@ -425,7 +425,7 @@ lEnumeration *what
       }
    }
 
-   log_time(0, "SGE_GDI_ADD:");
+   sge_stopwatch_log(0, "SGE_GDI_ADD:");
    
    DEXIT;
    return alp; 
@@ -492,7 +492,7 @@ lEnumeration *what
     * alp contains several answer elements for 
     * SGE_GDI_MOD
     */
-   starttime(0);
+   sge_stopwatch_start(0);
 
 #if 0
    /* 
@@ -538,7 +538,7 @@ lEnumeration *what
          }
       }
    } 
-   log_time(0, "SGE_GDI_MOD:");
+   sge_stopwatch_log(0, "SGE_GDI_MOD:");
    
    DEXIT;
    return alp; 
@@ -573,13 +573,13 @@ int action
     * get the answer list for error reporting 
     * alp contains several answer elements for 
     */
-   starttime(0);
+   sge_stopwatch_start(0);
    
    alp = gdi_qmod(lp, force, action);
 
    qmonMirrorMultiAnswer(l2s(type), &alp);
    
-   log_time(0, "CHANGE_STATE:");
+   sge_stopwatch_log(0, "CHANGE_STATE:");
    
    DEXIT;
    return alp; 

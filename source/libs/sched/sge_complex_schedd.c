@@ -49,6 +49,7 @@
 #include "msg_schedd.h"
 #include "sge_language.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
@@ -495,20 +496,23 @@ int recompute_debitation_dependent
   values. 
 
   Returns: new_complex
+
+new_complex;                     here we collect resulting attributes  
+complex_list;                    the global complex list               
+host;                            the host or the global host           
+complex;                         he template                          
+layer;                           which layer was dominant?             
+recompute_debitation_dependent;  recompute only attribute types which  
+                                 depend on the amount of debited jobs  
+                                 these types are:                      
+                                 - load corrected load values          
+                                   (-> scheddconf.job_load_adjustments)
+                                 - consumable attributes              
+                                   (-> CE_consumable)                 
  **********************************************************************/
-int fillComplexFromHost(new_complex, complex_list, host, complex, layer, recompute_debitation_dependent)
-lList** new_complex;                /* here we collect resulting attributes  */
-lList* complex_list;                /* the global complex list               */
-lListElem *host;                    /* the host or the global host           */
-lListElem *complex;                 /* the template                          */
-u_long32 layer;                     /* which layer was dominant?             */
-int recompute_debitation_dependent; /* recompute only attribute types which  */
-                                    /* depend on the amount of debited jobs  */
-                                    /* these types are:                      */
-                                    /* - load corrected load values          */
-                                    /*   (-> scheddconf.job_load_adjustments)*/
-                                    /* - consumable attributes               */
-                                    /*   (-> CE_consumable)                  */
+int fillComplexFromHost(lList **new_complex, lList *complex_list, 
+                        lListElem *host, lListElem *complex, u_long32 layer, 
+                        int recompute_debitation_dependent)
 {
    lListElem *cep;
    double lc_factor = 0; /* scaling for load correction */ 
@@ -945,7 +949,7 @@ int force_existence
          if (type==TYPE_CSTR)
             match = strcasecmp(request, offer);
          else
-            match = hostcmp(request, offer);
+            match = sge_hostcmp(request, offer);
       }
       match = !match;
 
@@ -1075,7 +1079,7 @@ int main(int argc, char *argv[], char *envp[])
   
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);

@@ -40,8 +40,7 @@
 #include "basis_types.h"
 #include "msg_utilbin.h"
 #include "sge_string.h"
-#include "host.h"
-#include "sge_arch.h"
+#include "sge_hostname.h"
 
 #ifndef h_errno
 extern int h_errno;
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
 
   if (name_only) {
       const char *s;
-      if (sge_aliasing && (s=resolve_hostname_local(he->h_name)))
+      if (sge_aliasing && (s=sge_host_resolve_name_local(he->h_name)))
          printf("%s\n", s);
       else /* no aliased name */
          printf("%s\n", he->h_name);

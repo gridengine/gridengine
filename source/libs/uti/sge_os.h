@@ -1,3 +1,5 @@
+#ifndef __SGE_PIDS_H
+#define __SGE_PIDS_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,35 +31,56 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <stdio.h>
-#include <unistd.h>
 
-#include "basis_types.h"
-#include "sgermon.h"
-#include "sge_sysconf.h"
-#include "sge_log.h"
-#include "msg_utilib.h"
-
-#if defined(LINUX)
-#  include <limits.h>
+#if defined(AIX32) || defined(AIX41)
+#   include <sys/select.h>
+#endif
+ 
+#if defined(AIX32) || defined(AIX4)
+#   include <sys/select.h>
 #endif
 
-u_long32 sge_sysconf (sge_sysconf_id id) {
-   u_long32 ret = 0;
+#include "sge_getloadavg.h"
+#include "sge_loadmem.h"
+#include "sge_nprocs.h"
+#include "sge_nice.h"
+ 
+#ifdef WIN32NATIVE
+ 
+typedef u_int           SOCKET;
+ 
+#ifndef FD_SETSIZE
+#define FD_SETSIZE      64
+ 
+typedef struct fd_set {
+        u_int fd_count;               /* how many are SET? */
+        SOCKET  fd_array[FD_SETSIZE];   /* an array of SOCKETs */
+} fd_set;
+ 
+#endif /* FD_SETSIZE */
+#endif /* WIN32NATIVE */
 
-   DENTER(BASIS_LAYER, "sge_sysconf");
-   switch (id) {
-      case sge_sysconf_NGROUPS_MAX:   
-#if defined(AIX42)
-         ret = NGROUPS;
+#if defined(SUN4) || defined(LINUX)
+#  define PSCMD "/bin/ps -axc"
+#elif defined(ALPHA)
+#  define PSCMD "/bin/ps axo pid,ucomm"
+#elif defined(SOLARIS)
+#  define PSCMD "/bin/ps -eo pid,fname"
 #else
-         ret = sysconf(_SC_NGROUPS_MAX);
+#  define PSCMD "/bin/ps -e"
 #endif
-      break;
-      default:
-         CRITICAL((SGE_EVENT, MSG_SYSCONF_UNABLETORETRIEVE_I, (int) id));
-      break;
-   }
-   DEXIT;
-   return ret;
-}
+
+int sge_get_pids(pid_t *, int, const char *, const char *);
+
+int sge_contains_pid(pid_t, pid_t *, int);
+
+int sge_checkprog(pid_t, const char *, const char *);
+
+void sge_close_all_fds(fd_set *keep_open);
+ 
+int sge_daemonize(fd_set *keep_open);
+ 
+int sge_occupy_first_three(void);
+ 
+#endif /* __SGE_PIDS_H */
+

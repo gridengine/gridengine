@@ -44,7 +44,6 @@
 #include "basis_types.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "sge_copy_append.h"
 #include "read_write_job.h"
 #include "commlib.h"
 
@@ -53,11 +52,9 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "sge_me.h"
-#include "sge_max_nis_retries.h"
 
 #include "sge_complex.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "msg_krb.h"
 
 #include "krb_data.h"

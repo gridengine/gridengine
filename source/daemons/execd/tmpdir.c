@@ -33,8 +33,8 @@
 #include "sge_queueL.h"
 #include "tmpdir.h"
 #include "sge_log.h"
-#include "sge_switch_user.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
 #include "msg_execd.h"
 
 /*******************************************************/
@@ -61,10 +61,10 @@ char *tmpdir
 
    DPRINTF(("making TMPDIR=%s\n", tmpdir));
 
-   switch2start_user();
+   sge_switch2start_user();
    sge_mkdir(tmpdir, 0755, 0);
    chown(tmpdir, uid, gid);
-   switch2admin_user();
+   sge_switch2admin_user();
 
    DEXIT;
    return tmpdir;

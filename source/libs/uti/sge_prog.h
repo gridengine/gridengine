@@ -32,6 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge.h" 
+#include "basis_types.h"
+
+#include "sge_arch.h"
+
 #define SGE_PREFIX      "sge_"
 
 #define SGE_COMMD       "sge_commd"
@@ -93,7 +98,27 @@ enum {
  COMMDCNTL               /* 38 */ 
 };
 
+typedef struct {
+   char        *sge_formal_prog_name;      /* taken from prognames[] */
+   char        *qualified_hostname;
+   char        *unqualified_hostname;
+   u_long32    who;                        /* Qxxx defines           */
+   u_long32    uid;
+   u_long32    gid;
+   u_long32    daemonized;
+   char        *user_name;
+   char        *default_cell;
+} sge_me_type;
+ 
+extern sge_me_type me;        
+
 extern const char *prognames[];
+
+void sge_getme(u_long32 sge_formal_prog_name);
+ 
+#ifdef WIN32NATIVE
+void sge_deleteme ();
+#endif
 
 #endif /* __SGE_PROGNAMES_H */
 

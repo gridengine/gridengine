@@ -43,16 +43,13 @@
 #include "cull_file.h"
 #include "cull_list.h"
 #include "read_write_job.h"
-#include "sge_file_path.h"
+#include "sge_spool.h"
 #include "utility_daemon.h"
 #include "sge_stringL.h"
 #include "sge_job.h"
 #include "sge_job_jatask.h"
 #include "sge_answerL.h"
 #include "msg_qmaster.h"
-#include "opt_silent.h"
-#include "sge_washing_machine.h"
-#include "sge_stat.h"
 #include "msg_common.h"
 #include "sge_suser.h"
 #include "sge_conf.h"
@@ -569,11 +566,11 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
                      flags, 0, 0);  
    first_direnties = sge_get_dirents(first_dir);
 
-   if (first_direnties && !silent()) {
+   if (first_direnties && !sge_silent_get()) {
       printf(MSG_CONFIG_READINGINX_S, list_name);
    }
 
-   washing_machine_set_type(WASHING_MACHINE_DOTS);
+   sge_status_set_type(STATUS_DOTS);
    for (;
         (first_direntry = lFirst(first_direnties)); 
         lRemoveElem(first_direnties, first_direntry)) {
@@ -621,7 +618,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
             u_long32 job_id, ja_task_id;
             int all_finished;
 
-            washing_machine_next_turn();
+            sge_status_next_turn();
             sprintf(fourth_dir, SFN"/"SFN, third_dir,
                     lGetString(third_direntry, STR));
             sprintf(job_id_string, SFN SFN SFN, 
@@ -715,7 +712,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
    }
 
    if (*job_list) {
-      washing_machine_end_turn();
+      sge_status_end_turn();
    }      
 
    DEXIT;

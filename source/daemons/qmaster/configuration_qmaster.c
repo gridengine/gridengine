@@ -45,7 +45,6 @@
 #include "sge_confL.h"
 #include "sge_eventL.h"
 #include "sge_log.h"
-#include "sge_me.h"
 #include "sge_parse_num_par.h"
 #include "sgermon.h"
 #include "commlib.h"
@@ -67,9 +66,10 @@
 #include "msg_qmaster.h"
 #include "sge_m_event.h"
 #include "sge_string.h"
-#include "sge_dirent.h"
 #include "reschedule.h"
 #include "sge_unistd.h"
+#include "sge_hostname.h"
+#include "sge_prog.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    
@@ -487,7 +487,7 @@ char *rhost
    ** if so, initialise conf struct anew
    */
    if (!strcmp(SGE_GLOBAL_NAME, config_name) || 
-       !hostcmp(config_name, me.qualified_hostname)) {
+       !sge_hostcmp(config_name, me.qualified_hostname)) {
       lListElem *lep = NULL;
 
       ret = select_configuration(me.qualified_hostname, Master_Config_List, &lep);

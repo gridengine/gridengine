@@ -30,11 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <sys/types.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 
+#include "sge_unistd.h"
 #include "sge_conf.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
@@ -51,7 +51,6 @@
 #include "sge_calendar_qmaster.h"
 #include "sge_parse_num_par.h"
 #include "setup_path.h"
-#include "sge_stat.h" 
 #include "reschedule.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"

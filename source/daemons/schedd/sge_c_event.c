@@ -38,7 +38,7 @@
 #include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_answerL.h"
 #include "sge_eventL.h"

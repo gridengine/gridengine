@@ -39,9 +39,9 @@
 #include "sge_stringL.h"
 #include "utility_daemon.h"
 #include "sge_log.h"
+#include "sge_unistd.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
-#include "sge_dirent.h"
 
 /****
  **** sge_get_dirents

@@ -48,7 +48,7 @@
 #include "sge_peL.h"
 #include "sge_schedd.h"
 #include "sge_process_events.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_queueL.h"
 #include "sge_ctL.h"
 #include "sge_schedconfL.h"
@@ -63,7 +63,7 @@
 #include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "unparse_job_cull.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "parse_qsubL.h"
 #include "sge_access_tree.h"
 #include "parse.h"
@@ -81,7 +81,7 @@ lListElem *job,
 lList *acl_list 
 ) {
    char *cats = NULL;
-   StringBufferT sb = {NULL, 0};
+   dstring sb = {NULL, 0};
    lList *cmdl = NULL;
    lListElem *ep;
    const char *owner, *group;
@@ -180,10 +180,10 @@ lList *acl_list
       char buf[20];
       strcpy(buf, lGetString(ep, SPA_switch));
       strcat(buf, " ");
-      cats = sge_string_append(&sb, buf);
+      cats = sge_dstring_append(&sb, buf);
       if (lGetString(ep, SPA_switch_arg))
-         cats = sge_string_append(&sb, lGetString(ep, SPA_switch_arg));
-      cats = sge_string_append(&sb, " ");
+         cats = sge_dstring_append(&sb, lGetString(ep, SPA_switch_arg));
+      cats = sge_dstring_append(&sb, " ");
    }
    lFreeList(cmdl);
        

@@ -44,7 +44,6 @@
 #include "sgermon.h"
 #include "sge_time.h"
 #include "sge_log.h"
-#include "sge_switch_user.h"
 #include "sge.h"
 #include "basis_types.h"
 #include "sge_language.h"
@@ -56,6 +55,7 @@
 #include "pdc.h"
 #include "sge_feature.h"
 #include "sge_job_jatask.h"
+#include "sge_uidgid.h"
 
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
@@ -117,7 +117,6 @@ int setpriority(int which, id_t who, int prio);
 #endif
 
 #include "sge_all_listsL.h"
-#include "sge_copy_append.h"
 #include "commlib.h"
 
 #ifdef USE_DC
@@ -2027,9 +2026,9 @@ int ptf_init(void)
       return -1; 
    }
 
-   switch2start_user();
+   sge_switch2start_user();
    if (psStartCollector()) {
-      switch2admin_user();
+      sge_switch2admin_user();
       DEXIT;
       return -1;
    }
@@ -2053,7 +2052,7 @@ int ptf_init(void)
       }
    }
 #endif
-   switch2admin_user();
+   sge_switch2admin_user();
    DEXIT;
    return 0;
 }
@@ -2218,7 +2217,7 @@ static int ptf_kill(u_long job_id, int sig)
 
    if (job) {
       cc = 0;
-      switch2start_user();
+      sge_switch2start_user();
       for_each(osjob, lGetList(job, JL_OS_job_list)) {
 #if defned(__sgi) || defined(ALPHA)
          lListElem *proc;
@@ -2230,7 +2229,7 @@ static int ptf_kill(u_long job_id, int sig)
          cc += killm(C_JOB, ptf_get_osjobid(osjob), sig);
 #endif
       }
-      switch2admin_user();
+      sge_switch2admin_user();
    }
    DEXIT;
    return cc;
@@ -2317,7 +2316,7 @@ int main(int argc, char **argv)
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type) gettext,
+   sge_init_language_func((gettext_func_type) gettext,
                          (setlocale_func_type) setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type) textdomain);

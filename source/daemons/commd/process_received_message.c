@@ -110,10 +110,10 @@ int commdport
    mp->creation_date = now;
 
    /* look for host of sender */
-   h = search_host(NULL, (char *) &mp->fromaddr);
+   h = sge_host_search(NULL, (char *) &mp->fromaddr);
 
    if (h)
-      DEBUG((SGE_EVENT, "found sender host %s", get_mainname(h)));
+      DEBUG((SGE_EVENT, "found sender host %s", sge_host_get_mainname(h)));
    else
       DEBUG((SGE_EVENT, "sender host not found"));
 
@@ -135,8 +135,8 @@ int commdport
       DEBUG((SGE_EVENT, "* enrolling commproc"));
 
       if (!h) {
-         read_aliasfile(aliasfile);
-         h = newhost_addr(&mp->fromaddr);
+         sge_host_list_read_aliasfile(aliasfile);
+         h = sge_host_new_addr(&mp->fromaddr);
 
          if (!h) {
             DEBUG((SGE_EVENT, "message from unknown host %s",
@@ -163,7 +163,7 @@ int commdport
          commp = match_commproc(&tmpnew);
          if (commp) {           /* allready enrolled -> NACK_CONFLICT */
             DEBUG((SGE_EVENT, "Commproc tries to enroll with same host, name and id: %s:%s:%d",
-                  get_mainname(h), newname, id));
+                  sge_host_get_mainname(h), newname, id));
 
             mp->ackchar = COMMD_NACK_CONFLICT;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -203,7 +203,7 @@ int commdport
       }
 
       NOTICE((SGE_EVENT, "ENROLL: %s:%d from %s %d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-              new->name, new->id, get_mainname(new->host),
+              new->name, new->id, sge_host_get_mainname(new->host),
               new->tag_priority_list[0], new->tag_priority_list[1],
               new->tag_priority_list[2], new->tag_priority_list[3],
               new->tag_priority_list[4], new->tag_priority_list[5],
@@ -238,8 +238,8 @@ int commdport
       DEBUG((SGE_EVENT, "* controlling operation"));
      
       if (!h) {
-         read_aliasfile(aliasfile);
-         h = newhost_addr(&mp->fromaddr);
+         sge_host_list_read_aliasfile(aliasfile);
+         h = sge_host_new_addr(&mp->fromaddr);
 
          if (!h) {
             DEBUG((SGE_EVENT, "control message from unknown host %s",
@@ -258,7 +258,7 @@ int commdport
       cp = unpack_string(op_carg, sizeof(op_carg), cp);
 
       DEBUG((SGE_EVENT, "CNTL OPERATION %d:"u32":%s from host %s", 
-            operation, op_arg, op_carg, get_mainname(h)));
+            operation, op_arg, op_carg, sge_host_get_mainname(h)));
   
       /* secure tests for critical commd commands (only when started as root)*/ 
       
@@ -305,25 +305,25 @@ int commdport
          
          if (read_qmaster_name_from_file(master_name,actmasterfile ) == 0) {
             DEBUG((SGE_EVENT, "master file host name is %s", master_name )); 
-            master_host = search_host( master_name ,NULL);
+            master_host = sge_host_search( master_name ,NULL);
             if (master_host == NULL) {
                  int i = 0;
   
                  DEBUG((SGE_EVENT, "adding master host name %s", master_name ));  
-                 read_aliasfile(aliasfile);
-                 master_host = newhost_name( master_name ,&i);
+                 sge_host_list_read_aliasfile(aliasfile);
+                 master_host = sge_host_new_name( master_name ,&i);
             }
          }
 
-         if (master_host && !strcasecmp(get_mainname(master_host), get_mainname(h))) 
+         if (master_host && !strcasecmp(sge_host_get_mainname(master_host), sge_host_get_mainname(h))) 
             sender_ok = 1;
 
-         if (!strcasecmp(get_mainname(localhost), get_mainname(h)))
+         if (!strcasecmp(sge_host_get_mainname(localhost), sge_host_get_mainname(h)))
             sender_ok = 1;
         
          if (sender_ok != 1) {
             DEBUG((SGE_EVENT, "message denied, sender host %s is neither qmaster host %s nor local host %s", 
-               get_mainname(h), master_host?get_mainname(master_host):"<unresolvable>", get_mainname(localhost)));
+               sge_host_get_mainname(h), master_host?sge_host_get_mainname(master_host):"<unresolvable>", sge_host_get_mainname(localhost)));
             mp->ackchar = COMMD_NACK_PERM;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             DEXIT;
@@ -429,8 +429,8 @@ int commdport
 
    /* unknown host ? */
    if (!h && (mp->flags & COMMD_SCOMMD)) {
-      read_aliasfile(aliasfile);
-      h = newhost_addr(&mp->fromaddr);
+      sge_host_list_read_aliasfile(aliasfile);
+      h = sge_host_new_addr(&mp->fromaddr);
    }
    if (!h) {
       WARNING((SGE_EVENT, "can't resolve host address %s", inet_ntoa(mp->fromaddr)));
@@ -452,7 +452,7 @@ int commdport
 
       commp = match_commproc(&mp->from);
       NOTICE((SGE_EVENT, "LEAVE: %s:%d from %s%s", mp->from.name, mp->from.id,
-              get_mainname(h), commp ? "" : " (not enrolled)"));
+              sge_host_get_mainname(h), commp ? "" : " (not enrolled)"));
 
       if (commp) {
          if (mp->new_connection && reconnect_commproc_with_fd(commp, mp->fromfd, "LEAVE")) {
@@ -496,19 +496,19 @@ int commdport
       from.host = h;
 
       if (refresh_aliases)
-         read_aliasfile(aliasfile);
+         sge_host_list_read_aliasfile(aliasfile);
 
-      h = search_host(hostname, NULL);
+      h = sge_host_search(hostname, NULL);
       if (!h && !refresh_aliases) {
-         read_aliasfile(aliasfile);
-         h = search_host(hostname, NULL);
+         sge_host_list_read_aliasfile(aliasfile);
+         h = sge_host_search(hostname, NULL);
       }
 
       if (!h)
-         h = newhost_name(hostname, NULL);
+         h = sge_host_new_name(hostname, NULL);
 
       if (h)
-         uhostname = get_mainname(h);
+         uhostname = sge_host_get_mainname(h);
       else
          uhostname = "<unknown host>";
 
@@ -518,7 +518,7 @@ int commdport
       /* look for asking commproc */
       if (!(commp = match_commproc(&from))) {
          DEBUG((SGE_EVENT, "unique host query: commproc not enrolled: %s:%s",
-               from.name, get_mainname(from.host)));
+               from.name, sge_host_get_mainname(from.host)));
 
          mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -590,10 +590,10 @@ int commdport
       cp = unpack_ushort(&compressed, cp);
 
       if (fromhost[0]) {
-         fhost = search_host(fromhost, NULL);
+         fhost = sge_host_search(fromhost, NULL);
          if (!fhost) {
-            read_aliasfile(aliasfile);
-            fhost = newhost_name(fromhost, NULL);
+            sge_host_list_read_aliasfile(aliasfile);
+            fhost = sge_host_new_name(fromhost, NULL);
          }
 
          if (!fhost) {
@@ -616,7 +616,7 @@ int commdport
       commp = match_commproc(&to);
       if (!commp) {
          DEBUG((SGE_EVENT, "receive query: receiver not enrolled: %s:%s",
-               to.name, get_mainname(to.host)));
+               to.name, sge_host_get_mainname(to.host)));
 
          mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
@@ -718,11 +718,11 @@ int commdport
    cp = unpack_ushort(&ustag, cp);
    mp->tag = ustag;
    cp = unpack_ushort(&mp->compressed, cp);
-   thost = search_host(tohost, NULL);
+   thost = sge_host_search(tohost, NULL);
 
    if (!thost) {
-      read_aliasfile(aliasfile);
-      thost = newhost_name(tohost, NULL);
+      sge_host_list_read_aliasfile(aliasfile);
+      thost = sge_host_new_name(tohost, NULL);
    }
 
    if (!thost) {
@@ -740,16 +740,16 @@ int commdport
          ((mp->flags & COMMD_ASK_COMMPROC) ? " (ask)" : ""),
          ((mp->flags & COMMD_SCOMMD) ? " (COMMD<->COMMD)" : ""),
          tohost, mp->to.name, mp->to.id,
-         ((mp->flags & COMMD_SCOMMD) ? fromhost : get_mainname(h)), mp->from.name,
+         ((mp->flags & COMMD_SCOMMD) ? fromhost : sge_host_get_mainname(h)), mp->from.name,
          mp->from.id, mp->tag, mp->buflen, (int)mp->mid));
 
    /* If the message came direct from the sender 'fromhost' is the host we got
       from accept(). If not we have to rely on the commd who is sending */
    if (mp->flags & COMMD_SCOMMD) {
-      fhost = search_host(fromhost, NULL);
+      fhost = sge_host_search(fromhost, NULL);
       if (!fhost) {
-         read_aliasfile(aliasfile);
-         fhost = newhost_name(fromhost, NULL);
+         sge_host_list_read_aliasfile(aliasfile);
+         fhost = sge_host_new_name(fromhost, NULL);
          if (!fhost) {
             ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S , fromhost));
 

@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 #include "sge_gdi_intern.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "pack.h"
 #include "commlib.h"
 #include "qm_name.h"

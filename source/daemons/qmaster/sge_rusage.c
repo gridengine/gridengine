@@ -42,8 +42,8 @@
 #include "sge_string.h"
 #include "sge_job_schedd.h"
 #include "sge_schedd.h"
-#include "sge_spoolmsg.h"
 #include "sge_job_jatask.h"
+#include "sge_spool.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define ARCH_COLUMN ":%s"

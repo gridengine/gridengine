@@ -38,8 +38,9 @@
 #include <pwd.h>
 #include <errno.h>
 
-#include <sge_getpwnam.h>
 #include <sge_string.h>
+#include <sge_signal.h>
+#include <sge_unistd.h>
 #include <setosjobid.h>
 
 #if defined(CRAY)
@@ -81,10 +82,6 @@ struct rusage {
 #include "sge_pgrp.h"
 
 /* from utilib */
-#include "sge_getpwnam.h"
-#include "sge_set_def_sig_mask.h"
-#include "sge_switch_user.h"
-#include "sge_stat.h" 
 #include "sge_uidgid.h"
 
 /* static functions */
@@ -224,14 +221,14 @@ int truncate_stderr_out
 
 #if defined(ALPHA)
    /* setlogin() stuff */
-   switch2start_user();
+   sge_switch2start_user();
    if (!geteuid()) {
       if (setlogin(target_user)) {
-         switch2admin_user();
+         sge_switch2admin_user();
          sprintf(err_str, "setlogin(%s) failed: %s", target_user, strerror(errno));
          shepherd_error(err_str);
       }
-      switch2admin_user();
+      sge_switch2admin_user();
    }
 #endif
 

@@ -41,7 +41,7 @@
 #include "sge_job_jatask.h"
 #include "sge_range.h"
 #include "msg_gdilib.h"
-#include "sge_hash.h"
+#include "sge_htable.h"
 #include "read_write_job.h"
 
 /****** gdi/job_jatask/job_get_ja_task_template_pending() **********************
@@ -54,7 +54,8 @@
 *
 *  FUNCTION
 *     The function returns a pointer to a template array task element.
-*     This task represents a currently submitted pending task (no hold state).
+*     This task represents a currently submitted pending task 
+*     (no hold state).
 *
 *     The task number (JAT_task_number) of this template task will be
 *     initialized with the value given by 'ja_task_id'.
@@ -178,7 +179,6 @@ int job_is_zombie_job(const lListElem *job)
 *  FUNCTION
 *     The function returns a pointer to a template array task element.
 *     This task represents a currently submitted pending task.
-*     (see job_get_ja_task_hold_state() and job_get_ja_task_template_hold())
 *
 *  INPUTS
 *     const lListElem *job - JB_Type
@@ -203,7 +203,7 @@ lListElem *job_get_ja_task_template(const lListElem *job,
 
 /****** gdi/job_jatask/job_get_ja_task_hold_state() ****************************
 *  NAME
-*     job_get_ja_task_hold_state() -- return hold state of unenrolled task
+*     job_get_ja_task_hold_state() -- Hold state of unenrolled task
 *
 *  SYNOPSIS
 *     u_long32 job_get_ja_task_hold_state(const lListElem *job, 
@@ -241,18 +241,20 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 
 /****** gdi/job_jatask/job_create_hold_id_lists() ******************************
 *  NAME
-*     job_create_hold_id_lists() -- create lists for eight hold combinations
+*     job_create_hold_id_lists() -- Lists for hold combinations
 *
 *  SYNOPSIS
-*     void job_create_hold_id_lists(const lListElem *job, lList *id_list[8], 
+*     void job_create_hold_id_lists(const lListElem *job, 
+*                                   lList *id_list[8], 
 *                                   u_long32 hold_state[8]) 
 *
 *  FUNCTION
-*     This function creates eight 'id_lists'. Tasks whose id is contained in
-*     an id list has the hold state combination delivered by 'hold_state'.
+*     This function creates eight 'id_lists'. Tasks whose id is 
+*     contained in an id list has the hold state combination delivered 
+*     by 'hold_state'.
 *
-*     After using 'id_list' the function job_destroy_hold_id_lists() has
-*     to be called to free allocated memory.
+*     After using 'id_list' the function job_destroy_hold_id_lists() 
+*     has to be called to free allocated memory.
 *
 *  INPUTS
 *     const lListElem *job   - JB_Type 
@@ -332,10 +334,11 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
 
 /****** gdi/job_jatask/job_destroy_hold_id_lists() *****************************
 *  NAME
-*     job_destroy_hold_id_lists() -- destroy lists for eight hold combinations 
+*     job_destroy_hold_id_lists() -- destroy hold combination lists
 *
 *  SYNOPSIS
-*     void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]) 
+*     void job_destroy_hold_id_lists(const lListElem *job, 
+*                                    lList *id_list[8]) 
 *
 *  FUNCTION
 *     This function frees all memory allocated by a previous call of 
@@ -361,14 +364,15 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 
 /****** gdi/job_jatask/job_is_enrolled() ***************************************
 *  NAME
-*     job_is_enrolled() -- Is a certain array task enrolled in JB_ja_tasks 
+*     job_is_enrolled() -- Is a certain array task enrolled 
 *
 *  SYNOPSIS
 *     int job_is_enrolled(const lListElem *job, u_long32 task_number) 
 *
 *  FUNCTION
 *     This function will return true (1) if the array task with 
-*     'task_number' is not enrolled in the JB_ja_tasks sublist of 'job'.
+*     'task_number' is not enrolled in the JB_ja_tasks sublist 
+*     of 'job'.
 *
 *  INPUTS
 *     const lListElem *job - JB_Type 
@@ -397,13 +401,14 @@ int job_is_enrolled(const lListElem *job, u_long32 task_number)
 *     job_is_ja_task_defined() -- was this task submitted 
 *
 *  SYNOPSIS
-*     int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
+*     int job_is_ja_task_defined(const lListElem *job, 
+*                                u_long32 ja_task_number) 
 *
 *  FUNCTION
-*     This function will return true (1) if the task with 'ja_task_number' is
-*     defined within the array 'job'. The task is defined when 'ja_task_number'
-*     is enclosed in the task id range which was specified during submit
-*     time (qsub -t). 
+*     This function will return true (1) if the task with 
+*     'ja_task_number' is defined within the array 'job'. The task 
+*     is defined when 'ja_task_number' is enclosed in the task id 
+*     range which was specified during submit time (qsub -t). 
 *
 *  INPUTS
 *     const lListElem *job    - JB_Type 
@@ -454,7 +459,7 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 
 /****** gdi/job_jatask/job_get_not_enrolled_ja_tasks() *************************
 *  NAME
-*     job_get_not_enrolled_ja_tasks() -- returns num. of unenrolled array tasks 
+*     job_get_not_enrolled_ja_tasks() -- num. of unenrolled tasks 
 *
 *  SYNOPSIS
 *     u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
@@ -493,7 +498,7 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
 
 /****** gdi/job_jatask/job_get_enrolled_ja_tasks() *****************************
 *  NAME
-*     job_get_enrolled_ja_tasks() -- returns num. of enrolled array tasks 
+*     job_get_enrolled_ja_tasks() -- num. of enrolled array tasks 
 *
 *  SYNOPSIS
 *     u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
@@ -521,7 +526,7 @@ u_long32 job_get_enrolled_ja_tasks(const lListElem *job)
 
 /****** gdi/job_jatask/job_get_submit_ja_tasks() ******************************
 *  NAME
-*     job_get_submit_ja_tasks() -- returns array size during job submittion 
+*     job_get_submit_ja_tasks() -- array size during job submittion 
 *
 *  SYNOPSIS
 *     u_long32 job_get_submit_ja_tasks(const lListElem *job) 
@@ -558,8 +563,8 @@ u_long32 job_get_submit_ja_tasks(const lListElem *job)
 *                     u_long32 ja_task_number) 
 *
 *  FUNCTION
-*     The task with 'ja_task_number' will be enrolled into the JB_ja_tasks
-*     list of 'job' when this function is called. 
+*     The task with 'ja_task_number' will be enrolled into the 
+*     JB_ja_tasks list of 'job' when this function is called. 
 *
 *  INPUTS
 *     lListElem *job          - JB_Type 
@@ -617,8 +622,8 @@ void job_enroll(lListElem *job, lList **answer_list, u_long32 ja_task_number)
 *     int job_has_tasks(lListElem *job) 
 *
 *  FUNCTION
-*     This function returns true (1) if there exists an unenrolled pending 
-*     task in 'job'.
+*     This function returns true (1) if there exists an unenrolled 
+*     pending task in 'job'.
 *
 *  INPUTS
 *     lListElem *job - JB_Type 
@@ -645,10 +650,11 @@ int job_has_tasks(lListElem *job)
 
 /****** gdi/job_jatask/job_delete_not_enrolled_ja_task() ***********************
 *  NAME
-*     job_delete_not_enrolled_ja_task() -- remove unenrolled pending task 
+*     job_delete_not_enrolled_ja_task() -- remove unenrolled task 
 *
 *  SYNOPSIS
-*     void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list, 
+*     void job_delete_not_enrolled_ja_task(lListElem *job, 
+*                                          lList **answer_list, 
 *                                          u_long32 ja_task_number) 
 *
 *  FUNCTION
@@ -716,7 +722,7 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
 
 /****** gdi/job_jatask/job_has_job_pending_tasks() *****************************
 *  NAME
-*     job_has_job_pending_tasks() -- Has the job unenrolled pending tasks? 
+*     job_has_job_pending_tasks() -- Has the job unenrolled tasks? 
 *
 *  SYNOPSIS
 *     int job_has_job_pending_tasks(lListElem *job) 
@@ -745,11 +751,12 @@ int job_has_job_pending_tasks(lListElem *job)
 
 /****** gdi/job_jatask/job_set_hold_state() ************************************
 *  NAME
-*     job_set_hold_state() -- Changes the hold state of a job/array-task.
+*     job_set_hold_state() -- Changes the hold state of a task.
 *
 *  SYNOPSIS
 *     void job_set_hold_state(lListElem *job, lList **answer_list, 
-*                             u_long32 ja_task_id, u_long32 new_hold_state) 
+*                             u_long32 ja_task_id, 
+*                             u_long32 new_hold_state) 
 *
 *  FUNCTION
 *     This function changes the hold state of a job/array-task.
@@ -810,7 +817,7 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
 
 /****** gdi/job_jatask/job_get_hold_state() ************************************
 *  NAME
-*     job_get_hold_state() -- Returns the hold state of a job/array-task
+*     job_get_hold_state() -- Returns the hold state of a task
 *
 *  SYNOPSIS
 *     u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id) 
@@ -862,10 +869,10 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
 *                                int enroll_if_not_existing) 
 *
 *  FUNCTION
-*     This function return the array task with the id 'ja_task_id' if it exists
-*     in the JB_ja_tasks-sublist of 'job'. If this task does not exist in this
-*     list, NULL will be returned. 
-*     If the task is not found in the sublist and if 'enroll_if_not_existing'  
+*     This function return the array task with the id 'ja_task_id' if 
+*     it exists in the JB_ja_tasks-sublist of 'job'. If this task 
+*     does not exist in this list, NULL will be returned. If the task 
+*     is not found in the sublist and if 'enroll_if_not_existing'  
 *     is true (1) than a new element will be created in the sublist
 *     of 'job' and a pointer to the new element will be returned.
 *     Errors may be found in the 'answer_list'
@@ -903,8 +910,8 @@ lListElem *job_search_task(lListElem *job, lList **answer_list,
 *
 *  SYNOPSIS
 *     const char* job_get_shell_start_mode(const lListElem *job, 
-*                                          const lListElem *queue,
-*                                          const char *conf_shell_start_mode) 
+*                                        const lListElem *queue,
+*                             const char *conf_shell_start_mode) 
 *
 *  FUNCTION
 *     Returns a string identifying the shell start mode for 'job'.
@@ -912,7 +919,8 @@ lListElem *job_search_task(lListElem *job, lList **answer_list,
 *  INPUTS
 *     const lListElem *job              - JB_Type element 
 *     const lListElem *queue            - QU_Type element
-*     const char *conf_shell_start_mode - shell start mode of configuration
+*     const char *conf_shell_start_mode - shell start mode of 
+*                                         configuration
 *
 *  RESULT
 *     const char* - shell start mode
@@ -942,17 +950,18 @@ const char *job_get_shell_start_mode(const lListElem *job,
 *     job_list_add_job() -- Creates a joblist and adds an job into it 
 *
 *  SYNOPSIS
-*     int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
-*                          int check) 
+*     int job_list_add_job(lList **job_list, const char *name, 
+*                          lListElem *job, int check) 
 *
 *  FUNCTION
-*     A 'job_list' will be created by this function if it does not already 
-*     exist and 'job' will be inserted into this 'job_list'. 'name' will
-*     be the name of the new list.
+*     A 'job_list' will be created by this function if it does not 
+*     already exist and 'job' will be inserted into this 'job_list'. 
+*     'name' will be the name of the new list.
 *
-*     If 'check' is true (1) than the function will test whether there is 
-*     already an element in 'job_list' which has the same 'JB_job_number' like
-*     'job'. If this is true than -1 will be returned by this function.
+*     If 'check' is true (1) than the function will test whether 
+*     there is already an element in 'job_list' which has the same 
+*     'JB_job_number' like 'job'. If this is true than -1 will be 
+*     returned by this function.
 *      
 *
 *  INPUTS
@@ -1008,8 +1017,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *     int job_is_array(const lListElem *job) 
 *
 *  FUNCTION
-*     The function returns true (1) if "job" is an array job with more than
-*     one task. 
+*     The function returns true (1) if "job" is an array job with more 
+*     than one task. 
 *
 *  INPUTS
 *     const lListElem *job - JB_Type element 
@@ -1028,11 +1037,13 @@ int job_is_array(const lListElem *job)
 
 /****** gdi/job_jatask/job_get_submit_task_ids() ******************************
 *  NAME
-*     job_get_submit_task_ids() -- Return submit time task specification 
+*     job_get_submit_task_ids() -- Submit time task specification 
 *
 *  SYNOPSIS
-*     void job_get_submit_task_ids(const lListElem *job, u_long32 *start, 
-*                                  u_long32 *end, u_long32 *step) 
+*     void job_get_submit_task_ids(const lListElem *job, 
+*                                  u_long32 *start, 
+*                                  u_long32 *end, 
+*                                  u_long32 *step) 
 *
 *  FUNCTION
 *     The function returns the "start", "end" and "step" numbers 
@@ -1071,9 +1082,9 @@ void job_get_submit_task_ids(const lListElem *job, u_long32 *start,
 *                                 u_long32 end, u_long32 step) 
 *
 *  FUNCTION
-*     The function stores the initial range id values ("start", "end" and
-*     "step") in "job". It should only be used in functions initializing
-*     new jobs.
+*     The function stores the initial range id values ("start", "end" 
+*     and "step") in "job". It should only be used in functions 
+*     initializing new jobs.
 *
 *  INPUTS
 *     lListElem *job - JB_Type job 
@@ -1119,14 +1130,14 @@ int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
 
 /****** gdi/job_jatask/job_get_smallest_task_id() ******************************
 *  NAME
-*     job_get_smallest_task_id() -- return the smallest un/enrolled task id 
+*     job_get_smallest_task_id() -- return the smallest un/enrolled id 
 *
 *  SYNOPSIS
 *     u_long32 job_get_smallest_task_id(const lListElem *job) 
 *
 *  FUNCTION
-*     returns the smallest task id currently existing in a job independent
-*     whether it is enrolled or unenrolled
+*     returns the smallest task id currently existing in a job 
+*     independent whether it is enrolled or unenrolled
 *
 *  INPUTS
 *     const lListElem *job - JB_Type element 
@@ -1157,14 +1168,14 @@ u_long32 job_get_smallest_task_id(const lListElem *job)
 
 /****** gdi/job_jatask/job_get_biggest_task_id() *******************************
 *  NAME
-*     job_get_biggest_task_id() -- return the biggest un/enrolled task id 
+*     job_get_biggest_task_id() -- return the biggest un/enrolled id 
 *
 *  SYNOPSIS
 *     u_long32 job_get_biggest_task_id(const lListElem *job) 
 *
 *  FUNCTION
-*     returns the biggest task id currently existing in a job independent
-*     whether it is enrolled or unenrolled 
+*     returns the biggest task id currently existing in a job 
+*     independent whether it is enrolled or unenrolled 
 *
 *  INPUTS
 *     const lListElem *job - JB_Type element 
@@ -1198,7 +1209,8 @@ u_long32 job_get_biggest_task_id(const lListElem *job)
 *     job_list_register_new_job() -- try to register a new job
 *
 *  SYNOPSIS
-*     int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
+*     int job_list_register_new_job(const lList *job_list, 
+*                                   u_long32 max_jobs,
 *                                   int force_registration)
 *
 *  FUNCTION

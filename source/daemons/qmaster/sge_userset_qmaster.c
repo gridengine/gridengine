@@ -33,7 +33,6 @@
 #include <sys/types.h>
 
 #include "sge.h"
-#include "sge_max_nis_retries.h"
 #include "sge_log.h"
 #include "sgermon.h"
 #include "sge_jobL.h"

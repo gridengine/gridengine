@@ -1,5 +1,5 @@
-#ifndef __SGE_COPY_APPEND_H
-#define __SGE_COPY_APPEND_H
+#ifndef __SGE_STRING_APPEND_H
+#define __SGE_STRING_APPEND_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,14 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define SGE_APPEND 1
-#define SGE_COPY   2
+typedef struct {
+   char *s;
+   size_t size;
+} dstring;
 
-int sge_copy_append(char *dst, const char *src, int mode); 
+char* sge_dstring_append(dstring *sb, const char *a);
 
-char *sge_bin2string(FILE *fp, int size);
+char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
 
-int sge_string2bin(FILE *fp, const char *buf);
+void sge_dstring_free(dstring *sb);
 
-#endif /* __SGE_COPY_APPEND_H */
+#endif /* __SGE_STRING_APPEND_H */
 

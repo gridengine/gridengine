@@ -41,7 +41,6 @@
 #include "complex_history.h"
 #include "read_write_queue.h"
 #include "read_write_host.h"
-#include "sge_tmpnam.h"
 #include "config.h"
 #include "read_object.h"
 #include "sge_feature.h"
@@ -50,8 +49,9 @@
 #include "sge_string.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
+#include "sge_spool.h"
+#include "sge_io.h"
 
 static intprt_type intprt_as_scaling[] = { HS_name, HS_value, 0 };
 static intprt_type intprt_as_load[] = { HL_name, HL_value, 0 };

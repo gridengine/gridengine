@@ -44,27 +44,25 @@
 #include "sge_reportL.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
+#include "sge_prog.h"
 #include "commlib.h"
 
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
-#include "sge_arch.h"
-#include "sge_nprocs.h"
-#include "sge_getloadavg.h"
 #include "load_avg.h"
-#include "sge_loadmem.h"
 #include "execd_ck_to_do.h"
 #include "report.h"
-#include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_switch_user.h"
 #include "sge_conf.h"
 #include "sge_parse_num_par.h"
 #include "msg_execd.h"
 #include "sge_string.h"
 #include "sge_feature.h"
+#include "sge_uidgid.h"
+#include "sge_hostname.h"
+#include "sge_os.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -233,9 +231,9 @@ lList *sge_build_load_report()
    */
 
    /* build up internal report list */
-   switch2start_user();
+   sge_switch2start_user();
    sge_get_loadavg(&lp);
-   switch2admin_user(); 
+   sge_switch2admin_user(); 
 
    /* get load report from external load sensor */
    sge_ls_get(&lp);
@@ -244,7 +242,7 @@ lList *sge_build_load_report()
    /* retrieve num procs first - we need it for all other derived load values */
    ep = lGetElemStrFirst(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
    while(ep != NULL) {
-      if ((hostcmp(lGetHost(ep, LR_host), me.qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
+      if ((sge_hostcmp(lGetHost(ep, LR_host), me.qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
          nprocs = MAX(1, atoi(s));
          break;
       }   
@@ -400,7 +398,7 @@ lList **lpp
 #ifdef SGE_LOADMEM
    /* memory load report */
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
-   if (loadmem(&mem_info)) {
+   if (sge_loadmem(&mem_info)) {
       static int mem_fail = 0;
       if (!mem_fail) {
          ERROR((SGE_EVENT, MSG_LOAD_NOMEMINDICES));
@@ -746,7 +744,7 @@ lList **job_usage_list
 
             double lim, h_vmem_lim, s_vmem_lim;
 
-            if (hostcmp(me.qualified_hostname,
+            if (sge_hostcmp(me.qualified_hostname,
                   lGetHost(gdil_ep, JG_qhostname)) ||
                   !(q = lFirst(lGetList(gdil_ep, JG_queue))))
                continue;

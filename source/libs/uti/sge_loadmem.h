@@ -36,17 +36,42 @@
 
 #define SGE_LOADMEM
 
+/****** uti/os/sge_mem_info_t *************************************************
+*  NAME
+*     sge_mem_info_t -- Structure to store memory information
+*
+*  SYNOPSIS
+*     typedef struct {
+*        double mem_total; 
+*        double mem_free;  
+*        double swap_total; 
+*        double swap_free;   
+*     #ifdef IRIX6
+*        double swap_rsvd;   
+*     #endif
+*     } sge_mem_info_t;
+*
+*  FUNCTION
+*     mem_total  - total amount of memory in MB
+*     mem_free   - amount of free memory in MB
+*     swap_total - total amount of swap space in MB
+*     swap_free  - amount of free swap space in MB
+*     swap_rsvd  - amount of reserved swap space in MB
+*
+*  SEE ALSO
+*     uti/os/sge_loadmem()
+******************************************************************************/
 typedef struct {
-   double mem_total;   /* total amount of memory     in megs    */
-   double mem_free;    /* amount of free memory      in megs    */
-   double swap_total;  /* total amount of swap space in megs    */
-   double swap_free;   /* amount of free swap space  in megs    */
+   double mem_total;  
+   double mem_free;    
+   double swap_total;  
+   double swap_free; 
 #ifdef IRIX6
-   double swap_rsvd;   /* amount of reserved swap space in megs */
+   double swap_rsvd;  
 #endif
 } sge_mem_info_t;
 
-int loadmem(sge_mem_info_t *mem_info);
+int sge_loadmem(sge_mem_info_t *mem_info);
 #endif /* SGE_LOADMEM */
 
 #endif /* __SGE_LOADMEM_H */

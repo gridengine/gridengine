@@ -43,12 +43,13 @@ int verydummypdc;
 #include <stdio.h>
 #include "basis_types.h"
 #include "sge_language.h"
+#include "sge_os.h"
 
 int main(int argc,char *argv[])
 {
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -80,7 +81,6 @@ int main(int argc,char *argv[])
 #include <sys/tcpipstats.h>
 #include <sys/systeminfo.h>
 #include <sys/swap.h>
-#include "sge_stat.h"
 #endif
 
 #if defined(ALPHA)
@@ -118,7 +118,7 @@ int main(int argc,char *argv[])
 #endif
 
 #if defined(LINUX) || defined(ALPHA) || defined(IRIX6) || defined(SOLARIS)
-#include "sge_nprocs.h"
+#include "sge_os.h"
 #endif
 
 #if defined(IRIX6)
@@ -2548,7 +2548,7 @@ main(int argc, char **argv)
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
-   sge_init_language(NULL,NULL);   
+   sge_lang_init(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
    
    psStartCollector();

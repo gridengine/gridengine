@@ -47,6 +47,7 @@
 #include "sge_qmod_qmaster.h"
 #include "msg_qmaster.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 extern lList *Master_Queue_List;
 
@@ -297,7 +298,7 @@ int how
          /* need to be done in case of suspend_at adding a queue */
 
       } else {
-         if (hostcmp(host, lGetHost(refqep, QU_qhostname))) {
+         if (sge_hostcmp(host, lGetHost(refqep, QU_qhostname))) {
             ERROR((SGE_EVENT, MSG_SGETEXT_SUBHOSTDIFF_SSS, 
                   qname, so_qname, lGetHost(refqep, QU_qhostname)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);

@@ -68,7 +68,6 @@
 #include "commlib.h"
 #include "config.h"
 #include "rw_configuration.h"
-#include "sge_me.h"
 #include "sge_client_access.h"
 #include "parse_qconf.h"
 #include "sge_host.h"
@@ -87,22 +86,20 @@
 #include "sge_feature.h"
 #include "read_write_ckpt.h"
 #include "read_write_userset.h"
-#include "sge_tmpnam.h"
 #include "gdi_tsm.h"
 #include "gdi_checkpermissions.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_stringL.h"
 #include "resolve_host.h"
-#include "sge_set_def_sig_mask.h"
 #include "scheduler.h"
 #include "sge_support.h"
 #include "msg_gdilib.h"
-#include "sge_stat.h" 
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_stdlib.h"
-#include "sge_file_path.h"
+#include "sge_spool.h"
+#include "sge_signal.h"
+#include "sge_io.h"
 #include "msg_qconf.h"
 
 static int sge_edit(char *fname);
@@ -5626,7 +5623,7 @@ char *fname                     /* != NULL if we read the complex from file */
    DENTER(TOP_LAYER, "add_chg_cmplx");
 
    /* test cmplx_name */
-   if (verify_filename(cmplx_name)) {
+   if (sge_is_valid_filename2(cmplx_name)) {
       fprintf(stderr, MSG_QCONF_XISNOVALIDCOMPLEXNAME_S, cmplx_name);
       DEXIT;
       return -1;

@@ -35,23 +35,22 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_answerL.h"
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_getme.h"
 #include "setup_path.h"
 #include "qm_name.h"
 #include "msg_gdilib.h"
 #include "commlib.h"
 #include "sge_string.h"
 #include "msg_common.h"
-#include "sge_switch_user.h"
 #include "msg_utilib.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_prog.h"
 
 extern long compression_level;
 extern long compression_threshold;
@@ -66,7 +65,7 @@ lList **alpp
    /*
    ** for setuid clients we must seteuid to the users uid
    */
-   if (run_as_user()) {   
+   if (sge_run_as_user()) {   
       CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
       SGE_EXIT(1);
    }   

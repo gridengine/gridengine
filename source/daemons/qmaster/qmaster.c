@@ -53,11 +53,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "sge_timestop.h"
 #include "sge_string.h"
-#include "sge_log_pid.h"
-#include "sge_daemonize.h"
-#include "sge_me.h"
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "sge_all_listsL.h"
@@ -82,13 +78,12 @@
 #include "shutdown.h"
 #include "parse.h"
 #include "job_log.h"
-#include "opt_silent.h"
 #include "opt_history.h"
 #include "usage.h"
 #include "setup_qmaster.h"
 #include "ck_to_do_qmaster.h"
 #include "sec.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sched_conf_qmaster.h"
 #include "qmaster.h"
 #include "sge_feature.h"
@@ -100,12 +95,12 @@
 #include "sge_language.h"
 #include "sge_bitop.h"
 #include "setup_path.h"
-#include "sge_dirent.h"
 #include "sge_security.h"
 #include "read_write_host.h"
 #include "complex_history.h"
-#include "host.h"
-#include "sge_arch.h"
+#include "sge_hostname.h"
+#include "sge_spool.h"
+#include "sge_os.h"
 
 #ifdef PW
 /* The license key - to be replaced when serialized */
@@ -206,7 +201,7 @@ char **argv
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -233,7 +228,7 @@ char **argv
 
    /* to ensure SGE host_aliasing is considered resolve me.qualified_hostname 
       before commd might be available */
-   if ((s=resolve_hostname_local(me.qualified_hostname)))
+   if ((s=sge_host_resolve_name_local(me.qualified_hostname)))
       me.qualified_hostname = sge_strdup(me.qualified_hostname, s);
 
    memset(priority_tags, 0, sizeof(priority_tags));
@@ -416,7 +411,7 @@ char **argv
 
    sge_setup_sig_handlers(QMASTER);
 
-   sge_log_pid(QMASTER_PID_FILE);
+   sge_write_pid(QMASTER_PID_FILE);
 
    /* don't wanna get old messages */
    remove_pending_messages(NULL, 0, 0, 0);
@@ -468,15 +463,15 @@ char **argv
          sge_shutdown();
       }
 
-      starttime(TIMELEVEL);
+      sge_stopwatch_start(TIMELEVEL);
       
       sge_ck_to_do_qmaster(0);
 
-      log_time(TIMELEVEL, "check to do:");
+      sge_stopwatch_log(TIMELEVEL, "check to do:");
 
       DPRINTF(("===========================[EPOCH]=====================================\n"));
 
-      starttime(TIMELEVEL);
+      sge_stopwatch_start(TIMELEVEL);
       
       host[0] = '\0';
       commproc[0] = '\0';
@@ -515,7 +510,7 @@ char **argv
       }
       
       if (i != CL_OK) {
-         log_time(TIMELEVEL, "sge_get_any_request != 0");
+         sge_stopwatch_log(TIMELEVEL, "sge_get_any_request != 0");
          
          if ( i != COMMD_NACK_TIMEOUT ) {
             DPRINTF(("Problems reading request: %s\n", cl_errstr(i)));
@@ -524,8 +519,8 @@ char **argv
          continue;              
       }
       else {
-         log_time(TIMELEVEL, "sge_get_any_request == 0");
-         starttime(TIMELEVEL);
+         sge_stopwatch_log(TIMELEVEL, "sge_get_any_request == 0");
+         sge_stopwatch_start(TIMELEVEL);
       }
 
       switch (tag) {
@@ -534,7 +529,7 @@ char **argv
 #ifdef SECURE
       case TAG_SEC_ANNOUNCE:    /* completly handled in libsec  */
          clear_packbuffer(&pb);
-         log_time(TIMELEVEL, "request handling SEC_ANNOUNCE");
+         sge_stopwatch_log(TIMELEVEL, "request handling SEC_ANNOUNCE");
          break;
 #endif
 
@@ -577,7 +572,7 @@ char **argv
          sge_send_gdi_request(0, host, commproc, id, answer);
          answer = free_gdi_request(answer);
          gdi = free_gdi_request(gdi);
-         log_time(TIMELEVEL, "request handling GDI_REQUEST");
+         sge_stopwatch_log(TIMELEVEL, "request handling GDI_REQUEST");
 
          break;
       /* ======================================== */
@@ -587,7 +582,7 @@ char **argv
 
          sge_c_ack(host, commproc, &pb);
          clear_packbuffer(&pb);
-         log_time(TIMELEVEL, "request handling ACK_REQUEST");
+         sge_stopwatch_log(TIMELEVEL, "request handling ACK_REQUEST");
          break;
 
       /* ======================================== */
@@ -597,7 +592,7 @@ char **argv
 
          sge_event_client_exit(host, commproc, &pb);
          clear_packbuffer(&pb);
-         log_time(TIMELEVEL, "request handling EVENT_CLIENT_EXIT");
+         sge_stopwatch_log(TIMELEVEL, "request handling EVENT_CLIENT_EXIT");
          break;
 
       /* ======================================== */
@@ -614,7 +609,7 @@ char **argv
          sge_c_report(host, commproc, id, report_list);
          lFreeList(report_list);
          report_list = NULL;
-         log_time(TIMELEVEL, "request handling REPORT");
+         sge_stopwatch_log(TIMELEVEL, "request handling REPORT");
          break;
 
       /* ======================================== */
@@ -1012,7 +1007,7 @@ char *filename;
 
       /* -s */
       if(parse_flag(ppcmdline, "-s", &alp, &flag)) {
-         set_silent(1);
+         sge_silent_set(1);
          continue;
       }
       

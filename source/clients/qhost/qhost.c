@@ -43,11 +43,10 @@
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sig_handlers.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
-#include "sge_copy_append.h"
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_resource.h"
@@ -65,6 +64,7 @@
 #include "msg_clients_common.h"
 #include "msg_qhost.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_job_queue.h"
 
@@ -373,7 +373,7 @@ u_long32 show
    DENTER(TOP_LAYER, "sge_print_queues");
 
    for_each(qep, qlp) {
-      if (!hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
+      if (!sge_hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
          char buf[80];
 
          if (show & QHOST_DISPLAY_QUEUES) { 
@@ -1072,7 +1072,7 @@ lWriteListTo(ehl, stdout);
    }
    alp = lFreeList(alp);
 
-   /* --- apply global configuration for hostcmp() scheme */
+   /* --- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
       printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);

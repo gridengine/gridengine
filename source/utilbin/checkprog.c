@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include "basis_types.h"
-#include "sge_pids.h"
+#include "sge_os.h"
 #include "msg_utilbin.h"
 
 void sge_exit_wrapper(int);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
    if (checkit) {
       pid = atoi(argv[1]);
    
-      res = checkprog(pid, argv[2], PSCMD);
+      res = sge_checkprog(pid, argv[2], PSCMD);
 
       if (res == 1)
          printf(MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS, (int) pid, argv[2]);
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
          res = 2;
    }
    else {
-      res = get_pids(pids, 10000, argv[1], PSCMD);
+      res = sge_get_pids(pids, 10000, argv[1], PSCMD);
       if (res == -1)
          printf(MSG_COMMAND_RUNPSCMDFAILED_S , PSCMD);
       else if (res == 0)

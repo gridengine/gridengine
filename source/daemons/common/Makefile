@@ -42,7 +42,6 @@ DAEMONS_COMMON_SRC = admin_mail.c \
                     job_report.c \
                     lock.c \
                     mail.c \
-                    opt_silent.c \
                     qlogin_starter.c \
                     qmaster_heartbeat.c \
                     qmaster_running.c \
@@ -108,9 +107,6 @@ lock.o: 	$(DAEMONS_COMMON_DIR)/lock.c
 
 mail.o:		$(DAEMONS_COMMON_DIR)/mail.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/mail.c
-
-opt_silent.o: $(DAEMONS_COMMON_DIR)/opt_silent.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/opt_silent.c
 
 qlogin_starter.o: $(DAEMONS_COMMON_DIR)/qlogin_starter.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/qlogin_starter.c

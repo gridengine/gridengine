@@ -38,7 +38,6 @@
 #include "def.h"
 #include "sge.h"
 #include "sge_conf.h"
-#include "sge_me.h"
 #include "sge_confL.h"
 #include "sge_usersetL.h"
 #include "sge_userprjL.h"
@@ -52,7 +51,7 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_userset_qmaster.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "setup_path.h"
 #include "sge_confL.h"
 #include "sge_hostL.h"
@@ -62,7 +61,7 @@
 #include "resolve_host.h"
 #include "msg_common.h"
 #include "sge_string.h"
-#include "sge_dirent.h"
+#include "sge_hostname.h"
 
 #define SGE_BIN "bin"
 

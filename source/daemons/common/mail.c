@@ -44,8 +44,8 @@
 #include "sge_jobL.h"
 #include "sig_handlers.h"
 #include "sge_pgrp.h"
-#include "sge_me.h"
-#include "sge_daemonize.h"
+#include "sge_prog.h"
+#include "sge_os.h"
 #include "msg_daemons_common.h"
 
 

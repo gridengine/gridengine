@@ -43,15 +43,11 @@
 #include "commd.h"
 #include "setup_commd_path.h"
 #include "sgermon.h"
-#include "sge_switch_user.h"
 #include "sge_log.h"
-#include "sge_getme.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "sge_stat.h" 
+#include "sge_prog.h"
 #include "sge.h"
-#include "sge_arch.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
 
 #include "msg_utilib.h"
 #include "msg_common.h"
@@ -69,7 +65,7 @@ void sge_commd_setup( u_long32 sge_formal_prog_name ) {
    /*
    ** for setuid clients we must seteuid to the users uid
    */
-   if (run_as_user()) {   
+   if (sge_run_as_user()) {   
       CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
       SGE_EXIT(1);
    }   

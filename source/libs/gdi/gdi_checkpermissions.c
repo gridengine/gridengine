@@ -38,53 +38,38 @@
 #include "sgermon.h"
 
 
-/****** gdi/sge/sge_gdi_get_mapping_name() **********************************
-*
+/****** gdi/sge/sge_gdi_get_mapping_name() ************************************
 *  NAME
 *     sge_gdi_get_mapping_name() -- get username for host 
 *
 *  SYNOPSIS
-*
-*     #include "gdi_checkpermissions.h"
-*     #include <gdilib/gdi_checkpermissions.h>
-* 
-*     int sge_gdi_get_mapping_name(char* requestedHost,char* buf, int buflen)
+*     int sge_gdi_get_mapping_name(char* requestedHost, char* buf, 
+*                                  int buflen)
 *
 *  FUNCTION
-*     This function sends a PERM_Type list to the qmaster. The requestedHost
-*     is stored in the PERM_req_host list entry. The qmaster will fill up
-*     the PERM_Type list. The mapped user name is stored in the PERM_req_username
-*     field. The function will strcpy the name into the "buf" char array if the
-*     name is shorter than the given "buflen". On success the function returns
-*     TRUE. 
+*     This function sends a PERM_Type list to the qmaster. The 
+*     requestedHost is stored in the PERM_req_host list entry. The 
+*     qmaster will fill up the PERM_Type list. The mapped user name 
+*     is stored in the PERM_req_username field. The function will strcpy 
+*     the name into the "buf" char array if the name is shorter than 
+*     the given "buflen". On success the function returns TRUE. 
 * 
 *  INPUTS
-*     char* requestedHost - pointer to char array; this is the name of the host
-*                           were the caller wants to get his username.
+*     char* requestedHost - pointer to char array; this is the name of 
+*                           the host were the caller wants to get his 
+*                           username.
 *     char* buf           - char array buffer to store the username
 *     int   buflen        - length (sizeof) buf
 *
 *  RESULT
 *     int TRUE on success, FALSE if not
-* 
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
 *
 *  SEE ALSO
 *     gdilib/sge_gdi_check_permission()
-*     gdilib/PERM_LOWERBOUND
-*     
-****************************************************************************
-*/
-/* requestedHost is for getting information for this host */
-int sge_gdi_get_mapping_name(
-const char *requestedHost,
-char *buf,
-int buflen 
-) {  
+******************************************************************************/
+int sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
+                             int buflen) 
+{  
    lList* alp = NULL;
    lList* permList = NULL;
    lListElem *ep = NULL;
@@ -139,57 +124,32 @@ int buflen
    return FALSE;
 }
 
-
-
 /****** gdi/sge/sge_gdi_check_permission() **********************************
 *
 *  NAME
 *     sge_gdi_check_permission() -- check permissions of gdi request 
 *
 *  SYNOPSIS
-*
-*     #include "gdi_checkpermissions.h"
-*     #include <gdilib/gdi_checkpermissions.h>
-* 
 *     int sge_gdi_check_permission(int option);
-*       
 *
 *  FUNCTION
-*     This function asks the qmaster for the permission (PERM_Type) list. 
-*     The option flag specifies which right should be checked. It can
-*     be MANAGER_CHECK or/and OPERATOR_CHECK at this time. If the caller
-*     has access the function returns TRUE.
+*     This function asks the qmaster for the permission (PERM_Type) 
+*     list. The option flag specifies which right should be checked. 
+*     It can be MANAGER_CHECK or/and OPERATOR_CHECK at this time. If 
+*     the caller has access the function returns TRUE.
 * 
 *  INPUTS
 *     int option - check flag (MANAGER_CHECK or OPERATOR_CHECK)
 *
 *  RESULT
-*     int TRUE if caller has the right, FALSE if not (-10 if qmaster not reachable)
+*     int TRUE if caller has the right, FALSE if not (-10 if qmaster 
+*     not reachable)
 * 
-*  EXAMPLE
-*     if (sge_gdi_check_permission( MANAGER_CHECK | OPERATOR_CHECK ) == TRUE) {
-*        printf("I have manager and operator privileges\n");
-*     }
-* 
-*     if (sge_gdi_check_permission( OPERATOR_CHECK ) == TRUE) {
-*        printf("I have operator privileges\n");
-*     } 
-*   
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
 *     gdilib/sge_gdi_get_mapping_name()
 *     gdilib/PERM_LOWERBOUND
-*     
-****************************************************************************
-*/
-/* option is one of : MANAGER_CHECK  
-   return is TRUE or FALSE on failure */
-int sge_gdi_check_permission(
-int option 
-) {
+******************************************************************************/
+int sge_gdi_check_permission(int option) {
   int access_status = FALSE;
   int failed_checks = 0;
   lList* alp = NULL;

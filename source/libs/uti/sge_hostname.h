@@ -31,20 +31,26 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
-#include <sys/types.h>
+#include <stdlib.h>
+#include <ctype.h> 
 
 #ifndef WIN32NATIVE
-#	include <sys/socket.h>
 #	include <netdb.h>
+#  include <sys/socket.h>
+#  include <sys/types.h>
+#  include <netinet/in.h> 
 #else 
 #	include <winsock2.h>
 #endif 
 
+#include "sge_unistd.h"
 
+/* compare hosts with FQDN or not */
+#define MAXHOSTLEN 256
 
 /* host information based on the hostent structure */
-
 typedef struct host {
     struct hostent he;		/* copy of what we got from gethostbyname */
     char mainname[MAXHOSTLEN];  /* This is what the administrator think it is
@@ -56,22 +62,34 @@ typedef struct host {
 
 extern host *localhost;
 
-int matches_name(struct hostent *he, const char *name);
-void host_initialize(void);
-host *newhost_addr(const struct in_addr *addr);
-host *newhost_name(const char *name, int *not_really_new);
-host *create_host(void);
-void delete_host(host *h);
-host *search_host(const char *name, char *addr);
-int alias_host(host *h1, host *h2);
-int alias_hoststr(char *host1, char *host2);
-void print_host(host *, FILE *fp);
-void print_hostlist(FILE *fp);
-int read_aliasfile(char *fname);
-void refresh_hostlist(void);
-char *get_mainname(host *h);
-const char *get_aliased_name(const char *name);
+/* compare hosts by using a default domain FQDN or not */
+extern int fqdn_cmp;
+extern char *default_domain;
 
-const char *resolve_hostname_local(const char *unresolved);
+host *sge_host_new_addr(const struct in_addr *addr);
+
+host *sge_host_new_name(const char *name, int *not_really_new);
+
+host *sge_host_search(const char *name, char *addr);
+
+void sge_host_print(host *, FILE *fp);
+
+void sge_host_list_print(FILE *fp);
+
+int sge_host_list_read_aliasfile(char *fname);
+
+void sge_host_list_refresh(void);
+
+char *sge_host_get_mainname(host *h);
+
+const char *sge_host_get_aliased_name(const char *name);
+
+const char *sge_host_resolve_name_local(const char *unresolved);
+
+void sge_host_list_initialize(void);
+
+int sge_hostcmp(const char *h1, const char *h2);
+ 
+void sge_hostcpy(char *dst, const char *raw);       
 
 #endif /* __HOST_H */

@@ -84,7 +84,7 @@ void main(int, char**);
 #endif
 
 #ifndef NPROCS_TEST
-#include "sge_nprocs.h"
+#include "sge_os.h"
 #else 
 int sge_nprocs (void);
 #endif
@@ -112,7 +112,20 @@ int sge_nprocs_rsg(rsg_id) {
 }
 #endif
 
-/* use this function to get the number of processors in this machine */
+/****** uti/os/sge_nprocs() ***************************************************
+*  NAME
+*     sge_nprocs() -- Number of processors in this machine 
+*
+*  SYNOPSIS
+*     int sge_nprocs() 
+*
+*  FUNCTION
+*     Use this function to get the number of processors in 
+*     this machine 
+*
+*  RESULT
+*     int - number of procs
+******************************************************************************/
 int sge_nprocs()
 {
    int nprocs=1; /* default */

@@ -81,13 +81,17 @@ int sge_unmap_signal(u_long32 sge_sig);
 
 u_long32 sge_map_signal(int sys_sig);
 
-u_long32 str2signal(const char *str);
+u_long32 sge_str2signal(const char *str);
 
 const char *sge_sig2str(u_long32 sge_sig);
 
-const char *sys_sig2str(u_long32 sig);
+const char *sge_sys_sig2str(u_long32 sig);
 
-u_long32 sys_str2signal(const char *str);
+u_long32 sge_sys_str2signal(const char *str);
+
+typedef void (*err_func_t)(char *s);
+ 
+void sge_set_def_sig_mask(int, err_func_t);
 
 #endif /* __SGE_SIGNAL_H */
 

@@ -69,7 +69,7 @@
 #include "IconList.h"
 #include "sge_feature.h"
 #include "parse_range.h"
-#include "sge_hash.h"
+#include "sge_htable.h"
 #include "sge_range.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
@@ -130,8 +130,8 @@ static int is_job_runnable_on_queues(lListElem *jep, lList *queue_list, lList *e
 /* there are fixed columns at the beginning of the natrix                  */
 /*-------------------------------------------------------------------------*/
 
-static HashTable JobColumnPrintHashTable = NULL;
-static HashTable NameMappingHashTable = NULL;
+static htable JobColumnPrintHashTable = NULL;
+static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
 #define SGEEE_FIELDS    10
@@ -908,19 +908,19 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   StringBufferT dyn_buf = {NULL, 0};
+   dstring dyn_buf = {NULL, 0};
    String str;
 
    DENTER(GUI_LAYER, "PrintJobTaskId");
    /*
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
-   sge_string_printf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
+   sge_dstring_sprintf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
    if (job_is_array(ep)) {
-      StringBufferT dyn_buf2 = {NULL, 0};
+      dstring dyn_buf2 = {NULL, 0};
 
       if (jat) {
-         sge_string_printf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
+         sge_dstring_sprintf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
       } else if (eleml) {
          lListElem *first_elem = lFirst(eleml);
 
@@ -931,9 +931,9 @@ int nm
          }
       }
       if (dyn_buf2.s) {
-         sge_string_append(&dyn_buf, ".");
-         sge_string_append(&dyn_buf, dyn_buf2.s);
-         sge_string_free(&dyn_buf2);
+         sge_dstring_append(&dyn_buf, ".");
+         sge_dstring_append(&dyn_buf, dyn_buf2.s);
+         sge_dstring_free(&dyn_buf2);
       }
    }
 
@@ -941,7 +941,7 @@ int nm
 
    str = XtNewString(dyn_buf.s);
 
-   sge_string_free(&dyn_buf);
+   sge_dstring_free(&dyn_buf);
 
    DEXIT;
    return str;
@@ -1274,7 +1274,7 @@ XtPointer cld,cad;
          u_long32 temp;
          XmStringGetLtoR(strlist[i], XmFONTLIST_DEFAULT_TAG, &text);
          temp = XrmStringToQuark(text);
-         if (HashTableLookup(NameMappingHashTable, 
+         if (sge_htable_lookup(NameMappingHashTable, 
                              &temp,
                              (const void **) &job_item)) {
             job_item->show = 1;
@@ -1627,10 +1627,10 @@ XtPointer cld
    /*
    ** create JobColumnPrintHashTable
    */
-   JobColumnPrintHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
+   JobColumnPrintHashTable = sge_htable_create(5, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       u_long32 temp = XrmStringToQuark(job_items[i].name);
-      HashTableStore(JobColumnPrintHashTable,
+      sge_htable_store(JobColumnPrintHashTable,
                      &temp,
                      (void *)&job_items[i]);
    }
@@ -1638,14 +1638,14 @@ XtPointer cld
    /*
    ** create NameMappingHashTable
    */
-   NameMappingHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
+   NameMappingHashTable = sge_htable_create(5, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       String text;
       u_long32 temp;
       XmString xstr = XmtCreateLocalizedXmString(jcu, job_items[i].name);
       XmStringGetLtoR(xstr, XmFONTLIST_DEFAULT_TAG, &text);
       temp = XrmStringToQuark(text);
-      HashTableStore(NameMappingHashTable,
+      sge_htable_store(NameMappingHashTable,
                      &temp,
                      (void *)&job_items[i]);
       XmStringFree(xstr);
@@ -1693,7 +1693,7 @@ XtPointer cld
       */
       for_each(field, jobfilter_fields) {
          u_long32 temp = XrmStringToQuark(lGetString(field, STR));
-         if (HashTableLookup(JobColumnPrintHashTable, 
+         if (sge_htable_lookup(JobColumnPrintHashTable, 
              &temp,
              (const void **) &job_item)) {
             job_item->show = 1;

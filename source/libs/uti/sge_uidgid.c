@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -36,18 +37,257 @@
 #include <pwd.h>
 #include <grp.h>
 
-#include "sgermon.h"
+#ifdef QIDL
+#  include <pthread.h>
+#endif
+
 #include "sge_uidgid.h"
-#include "sge_switch_user.h"
-#include "sge_getpwnam.h"
-#include "sge_sysconf.h"
+#include "sgermon.h"
+#include "sge_unistd.h"
 #include "sge_unistd.h"
 #include "sge_log.h"
+
 #include "msg_utilib.h"
 
-#ifdef QIDL
-#include <pthread.h>
-#endif
+static uid_t admin_uid = -1;
+static gid_t admin_gid = -1;
+static int initialized = 0;
+ 
+static void set_admin_user(uid_t, gid_t);
+ 
+static void set_admin_user(uid_t a_uid, gid_t a_gid)
+{
+   DENTER(TOP_LAYER, "set_admin_user");
+   admin_uid = a_uid;
+   admin_gid = a_gid;
+   initialized = 1;
+   DPRINTF(("uid=%ld, gid=%ld\n", (long) a_uid, (long) a_gid));
+   DEXIT;
+}     
+
+/****** uti/uidgid/sge_set_admin_username() ***********************************
+*  NAME
+*     sge_set_admin_username() -- Set SGE/EE admin user
+*
+*  SYNOPSIS
+*     int sge_set_admin_username(const char *user, char *err_str)
+*
+*  FUNCTION
+*     Set SGE/EE admin user. If 'user' is "none" then use the current
+*     uid/gid. Ignore if current user is not root.
+*
+*  INPUTS
+*     const char *user - admin user name
+*     char *err_str    - error message
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Username does not exist
+*        -2 - Admin user was already set
+*
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user()
+*     uti/uidgid/sge_set_admin_username()
+*     uti/uidgid/sge_switch2start_user()
+*     uti/uidgid/sge_run_as_user()
+******************************************************************************/
+int sge_set_admin_username(const char *user, char *err_str)
+{
+   struct passwd *admin_user;
+   int ret;
+   DENTER(TOP_LAYER, "sge_set_admin_username");
+ 
+   if (initialized) {
+      DEXIT;
+      return -2;
+   }
+   if (!user || user[0] == '\0') {
+      if (err_str) {
+         sprintf(err_str, MSG_POINTER_SETADMINUSERNAMEFAILED);
+      }
+      DEXIT;
+      return -1;
+   }
+ 
+   ret = 0;
+   if (!strcasecmp(user, "none")) {
+      set_admin_user(getuid(), getgid());
+   } else {
+      admin_user = sge_getpwnam(user);
+      if (admin_user) {
+         set_admin_user(admin_user->pw_uid, admin_user->pw_gid);
+      } else {
+         if (err_str)
+            sprintf(err_str, MSG_SYSTEM_ADMINUSERNOTEXIST_S, user);
+         ret = -1;
+      }
+   }
+   DEXIT;
+   return ret;
+}           
+
+/****** uti/uidgid/sge_switch2admin_user() ************************************
+*  NAME
+*     sge_switch2admin_user() -- Set euid/egid to admin uid/gid
+*
+*  SYNOPSIS
+*     int sge_switch2admin_user(void)
+*
+*  FUNCTION
+*     Set euid/egid to admin uid/gid. Silently ignore if our uid
+*     is not root. Do nothing if out euid/egid is already the admin
+*     uid/gid. If the admin user was not set with
+*     sge_set_admin_username() the function will not return.
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - setegid()/seteuid() fails
+*
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user()
+*     uti/uidgid/sge_set_admin_username()
+*     uti/uidgid/sge_switch2start_user()
+*     uti/uidgid/sge_run_as_user()
+******************************************************************************/
+int sge_switch2admin_user(void)
+{
+   DENTER(TOP_LAYER, "sge_switch2admin_user");
+ 
+   if (!initialized) {
+      CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
+      abort();
+   }
+ 
+   if (getuid()) {
+      DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
+      DEXIT;
+      return 0;
+   }
+   else {
+      if (getegid() != admin_gid) {
+         if (setegid(admin_gid) == -1) {
+            DEXIT;
+            return -1;
+         }
+         else
+            DPRINTF(("egid=%ld\n", (long) admin_gid));
+      }
+ 
+      if (geteuid() != admin_uid) {
+         if (seteuid(admin_uid) == -1) {
+            DEXIT;
+            return -1;
+         }
+         else
+            DPRINTF(("euid=%ld\n", (long) admin_uid));
+      }
+   }
+   DEXIT;
+   return 0;
+}                 
+
+/****** uti/uidgid/sge_switch2start_user() ************************************
+*  NAME
+*     sge_switch2start_user() -- set euid/egid to start uid/gid
+*
+*  SYNOPSIS
+*     int sge_switch2start_user(void)
+*
+*  FUNCTION
+*     Set euid/egid to the uid/gid of that user which started the
+*     application which calles this function. If our euid/egid is
+*     already the start uid/gid don't do anything. If the admin user
+*     was not set with sge_set_admin_username() the function will
+*     not return.
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - setegid()/seteuid() fails
+*
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user()
+*     uti/uidgid/sge_set_admin_username()
+*     uti/uidgid/sge_switch2start_user()
+*     uti/uidgid/sge_run_as_user()
+******************************************************************************/
+int sge_switch2start_user(void)
+{
+   uid_t start_uid = getuid();
+   gid_t start_gid = getgid();
+ 
+   DENTER(TOP_LAYER, "sge_switch2start_user");
+ 
+   if (!initialized) {
+      CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
+      abort();
+   }
+ 
+   if (start_uid) {
+      DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
+      DEXIT;
+      return 0;
+   }
+   else {
+      if (start_gid != getegid()) {
+         if (setegid(start_gid) == -1) {
+            DEXIT;
+            return -1;
+         }
+         else
+            DPRINTF(("gid=%ld\n", (long) start_gid));
+      }
+      if (start_uid != geteuid()) {
+         if (seteuid(start_uid) == -1) {
+            DEXIT;
+            return -1;
+         }
+         else
+            DPRINTF(("uid=%ld\n", (long) start_uid));
+      }
+   }
+   DEXIT;
+   return 0;
+} 
+
+/****** uti/uidgid/sge_run_as_user() ******************************************
+*  NAME
+*     sge_run_as_user() -- Set euid to uid
+*
+*  SYNOPSIS
+*     int sge_run_as_user(void)
+*
+*  FUNCTION
+*     Set euid to uid
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - setegid()/seteuid() failed
+*
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user()
+*     uti/uidgid/sge_set_admin_username()
+*     uti/uidgid/sge_switch2start_user()
+*     uti/uidgid/sge_run_as_user()
+******************************************************************************/
+int sge_run_as_user(void)
+{
+   int ret = 0;
+ 
+   DENTER(TOP_LAYER, "sge_run_as_user");
+ 
+   if (geteuid() != getuid()) {
+      if (seteuid(getuid())) {
+         ret = -1;
+      }
+   }
+ 
+   DEXIT;
+   return ret;
+}       
 
 /****** uti/uidgid/sge_user2uid() *********************************************
 *  NAME
@@ -97,7 +337,7 @@ int sge_user2uid(const char *user, uid_t *uidp, int retries)
 
 /****** uti/uidgid/sge_group2gid() ********************************************
 *  NAME
-*     sge_group2gid() -- ??? 
+*     sge_group2gid() -- Resolve a group name to its gid 
 *
 *  SYNOPSIS
 *     int sge_group2gid(const char *gname, gid_t *gidp, int retries) 
@@ -312,7 +552,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 #endif
    struct passwd *pw;
  
-   switch2start_user();
+   sge_switch2start_user();
  
    if (getuid() != 0) {
       sprintf(err_str, MSG_SYSTEM_CHANGEUIDORGIDFAILED );
@@ -442,8 +682,8 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 *     int sge_add_group(gid_t add_grp_id)
 *
 *  FUNCTION
-*     Add a gid to the list of additional group ids. If 'add_grp_id' is 0
-*     don't add value to group id list (but return sucessfully).
+*     Add a gid to the list of additional group ids. If 'add_grp_id' 
+*     is 0 don't add value to group id list (but return sucessfully).
 *
 *  INPUTS
 *     gid_t add_grp_id - new gid
@@ -463,7 +703,7 @@ int sge_add_group(gid_t add_grp_id)
       return 0;
    }
  
-   max_groups = sge_sysconf(sge_sysconf_NGROUPS_MAX);
+   max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0) {
       return -1;
    }
@@ -499,4 +739,54 @@ int sge_add_group(gid_t add_grp_id)
    free(list);
    return 0;
 }  
+
+struct passwd *sge_getpwnam(const char *name)
+{
+#ifndef WIN32 /* var not needed */
+   int i = MAX_NIS_RETRIES;
+#endif
+   struct passwd *pw;
+ 
+   pw = NULL;
+ 
+#ifndef WIN32 /* getpwnam not called */
+ 
+   while (i-- && !pw)
+      pw = getpwnam(name);
+ 
+#else
+   {
+      char *pcHome;
+      char *pcEnvHomeDrive;
+      char *pcEnvHomePath;
+ 
+      pcEnvHomeDrive = getenv("HOMEDRIVE");
+      pcEnvHomePath  = getenv("HOMEPATH");
+ 
+      if (!pcEnvHomeDrive || !pcEnvHomePath) {
+         return pw;
+      }
+      pcHome = malloc(strlen(pcEnvHomeDrive) + strlen(pcEnvHomePath) + 1);
+      if (!pcHome) {
+         return NULL;
+      }
+      strcpy(pcHome, pcEnvHomeDrive);
+      strcat(pcHome, pcEnvHomePath);
+ 
+      pw = malloc(sizeof(struct passwd));
+      if (!pw) {
+         return NULL;
+      }
+      memset(pw, 0, sizeof(sizeof(struct passwd)));
+      pw->pw_dir = pcHome;
+ 
+   }
+#endif
+ 
+   /* sometime on failure struct is non NULL but name is empty */
+   if (pw && !pw->pw_name)
+      pw = NULL;
+ 
+   return pw;
+}    
   

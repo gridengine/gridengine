@@ -45,14 +45,14 @@
 #include "read_write_host_group.h"
 #include "sge_string.h"
 #include "sge_log.h"
-#include "sge_tmpnam.h"
 #include "config.h"
 #include "read_object.h"
 #include "sge_groups.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
+#include "sge_spool.h"
+#include "sge_io.h"
 
 static int read_host_group_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 

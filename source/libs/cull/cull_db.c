@@ -732,12 +732,8 @@ const lEnumeration *ep1
 *     lString2List() -- convert char* string into cull list 
 *
 *  SYNOPSIS
-*
-*     #include "cull_db.h"
-*     #include <cull/src/cull_db.h>
-* 
-*     int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
-*                      const char *delimitor); 
+*     int lString2List(const char *s, lList **lpp, const lDescr *dp, 
+*                      int nm, const char *delimitor); 
 *
 *  FUNCTION
 *     parses separated strings and adds them into the cull list *lpp
@@ -758,10 +754,6 @@ const lEnumeration *ep1
 *  RESULT
 *     0 on error
 *     1 ok
-*
-*  EXAMPLE
-*     lList* stringList = NULL;
-*     lString2List("host1, host2 host3", &stringList, ST_Type, STR, ", ");
 ******************************************************************************/
 int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
                  const char *dlmt) {

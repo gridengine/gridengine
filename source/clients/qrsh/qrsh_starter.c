@@ -43,9 +43,9 @@
 #include <sys/stat.h>
 
 #include "basis_types.h"
-#include "sge_getpwnam.h"
 #include "sge_pgrp.h"
 #include "sge_string.h"
+#include "sge_uidgid.h"
 #include "config_file.h"
 #include "msg_qrsh.h"
 

@@ -49,8 +49,6 @@
 #include "sge_stringL.h"
 #include "sge_identL.h"
 #include "sge_job_refL.h"
-#include "sge_str_from_file.h"
-#include "sge_me.h"
 #include "sge_resource.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
@@ -66,6 +64,8 @@
 #include "sge_range.h"
 #include "sge_job_jatask.h"
 #include "sge_stdlib.h"
+#include "sge_io.h"
+#include "sge_prog.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -722,7 +722,7 @@ u_long32 flags
       fclose(fp);
 
       /* read the script file in one sweep */
-      filestrptr = str_from_file(script_file, &script_len);
+      filestrptr = sge_file2string(script_file, &script_len);
 
       if (!filestrptr) {
          sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
@@ -732,7 +732,7 @@ u_long32 flags
       }
    } else {
       /* no script file but input from stdin */
-      filestrptr = str_from_stream(stdin, &script_len);
+      filestrptr = sge_stream2string(stdin, &script_len);
       if (!filestrptr) {
          sge_add_answer(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, STATUS_EUNKNOWN, 0);
          DEXIT;

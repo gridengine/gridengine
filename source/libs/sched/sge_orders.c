@@ -43,7 +43,6 @@
 #include "schedd_message.h"
 #include "msg_schedd.h"
 #include "msg_common.h"
-#include "sge_stat.h" 
 
 
 lList *sge_add_schedd_info(

@@ -34,14 +34,12 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "msg_cull.h"
 #include "sge_gdi_intern.h"
 #include "cull_list.h"
 #include "cull_lerrnoP.h"
@@ -55,7 +53,9 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_io.h"
-#include "sge_stat.h" 
+#include "sge_unistd.h"
+
+#include "msg_cull.h"
 
 extern long compression_level;
 

@@ -29,10 +29,10 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_gdi.h"
@@ -41,10 +41,9 @@
 #include "cull.h"
 #include "sge_manopL.h"
 #include "sge_stdio.h"
-#include "sge_stat.h"
 #include "msg_common.h" 
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
+#include "sge_spool.h"
 
 extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;

@@ -18,7 +18,7 @@ RSHD_ADD_OBJS = \
             $(SGE_ARCH_DIR)/setosjobid.o \
             $(SGE_ARCH_DIR)/config_file.o \
             $(SGE_ARCH_DIR)/err_trace.o \
-            $(SGE_ARCH_DIR)/sge_switch_user.o \
+            $(SGE_ARCH_DIR)/sge_uidgid.o \
             $(SGE_ARCH_DIR)/execution_states.o \
             $(SGE_ARCH_DIR)/qlogin_starter.o \
             $(SGE_ARCH_DIR)/setenv.o \

@@ -57,7 +57,7 @@
 #include "qmon_message.h"
 #include "qmon_calendar.h"
 #include "qmon_globals.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 
 static Widget qmon_cal = 0;
 static Widget cal_names = 0;
@@ -171,7 +171,7 @@ lListElem *ep
    Cardinal itemCount; 
    const char *s;
    int i;
-   StringBufferT sb = {NULL, 0};
+   dstring sb = {NULL, 0};
 
    DENTER(GUI_LAYER, "qmonCalendarFillConf");
    
@@ -193,16 +193,16 @@ lListElem *ep
    i = 0;
 
    /* year calendar */
-   sge_string_printf(&sb, "%-20.20s ", "Year");
-   sge_string_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:"NONE");
+   sge_dstring_sprintf(&sb, "%-20.20s ", "Year");
+   sge_dstring_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:"NONE");
    items[i++] = XmStringCreateLtoR(sb.s, "LIST");
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
 
    /* week calendar */
-   sge_string_printf(&sb, "%-20.20s ", "Week");
-   sge_string_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:"NONE");
+   sge_dstring_sprintf(&sb, "%-20.20s ", "Week");
+   sge_dstring_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:"NONE");
    items[i++] = XmStringCreateLtoR(sb.s, "LIST");
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
 
    XtVaSetValues( cal_conf_list, 
                   XmNitems, items,

@@ -34,10 +34,11 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
-#include "sge_arch.h"
+#include "sge_prog.h"
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 
@@ -58,54 +59,46 @@ typedef struct {
 
 static language_functions_struct sge_language_functions;
 
-/* this is to find out if the install_language_func() was called */
+/* this is to find out if the sge_init_language_func() was called */
 static int sge_are_language_functions_installed = FALSE;
 
 
 /****** uti/language/sge_init_language() **************************************
-*
 *  NAME
 *     sge_init_language() -- initialize language package for gettext() 
 *
 *  SYNOPSIS
-*
-*     #include "sge_language.h"
-*     #include <utilib/sge_language.h>
-* 
-*     int state = sge_init_language(char* package, char* localeDir)
 *     int sge_init_language(char* package, char* localeDir)
 *       
 *
 *  FUNCTION
-*     starts up the language initialization for gettext(). This function 
-*     should be called nearly after the main() function.
+*     starts up the language initialization for gettext(). This 
+*     function should be called nearly after the main() function.
 *  
-*     install_language_func() must be called first to install the correct
-*     function pointers for gettext() setlocale() etc. etc. 
+*     sge_init_language_func() must be called first to install the 
+*     correct function pointers for gettext() setlocale() etc. etc. 
 *
 *  INPUTS
-*     char* package     -  package name like "gridengine" of binary package
-*                          *.mo file. 
-*                          (if package is NULL sge_init_language tries to 
-*                          get the package name from the invironment 
+*     char* package     -  package name like "gridengine" of binary 
+*                          package *.mo file. 
+*                          (if package is NULL sge_init_language tries 
+*                          to get the package name from the invironment 
 *                          variable "GRIDPACKAGE"). 
 *     char* localeDir  -   path to the localisazion directory 
-*                          (if localeDir is NULL sge_init_language tries 
-*                          to get the localization directory path from the 
-*                          invironment variable "GRIDLOCALEDIR"). 
+*                          (if localeDir is NULL sge_init_language 
+*                          tries to get the localization directory path 
+*                          from the invironment variable 
+*                          "GRIDLOCALEDIR"). 
 *
 *  RESULT
 *     int state         -  TRUE for seccess, FALSE on error.
 *
 *  SEE ALSO
-*     utilib/sge_init_language()
-*     utilib/install_language_func()
-*     
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
 ******************************************************************************/
-int sge_init_languagefunc(
-char *package,
-char *localeDir 
-) {
+int sge_init_languagefunc(char *package, char *localeDir) 
+{
   char* packName = NULL;
   char* locDir   = NULL;
   char* language = NULL;
@@ -230,51 +223,37 @@ char *localeDir
   return (success);
 }
 
-/****** uti/language/install_language_func() **********************************
-*
+/****** uti/language/sge_init_language_func() **********************************
 *  NAME
 *     sge_init_language() -- install language functions
 *
 *  SYNOPSIS
-*
-*     #include "sge_language.h"
-*     #include <utillib/sge_language.h>
-* 
-*     void install_language_func(gettext_func_type new_gettext, 
-*                                setlocale_func_type new_setlocale, 
-*                                bindtextdomain_func_type new_bindtextdomain, 
-*                                textdomain_func_type new_textdomain);
+*     void sge_init_language_func(gettext_func_type new_gettext, 
+*                         setlocale_func_type new_setlocale, 
+*                         bindtextdomain_func_type new_bindtextdomain, 
+*                         textdomain_func_type new_textdomain);
 *
 *  FUNCTION
-*     set the function pointer for the gettext(), setlocale(), bindtextdomain()
-*     and textdomain() function calls. This function must called before any 
-*     call to sge_init_language() and sge_gettext().  
+*     set the function pointer for the gettext(), setlocale(), 
+*     bindtextdomain() and textdomain() function calls. This function 
+*     must called before any call to sge_init_language() and 
+*     sge_gettext().  
 *
 *  INPUTS
-*     gettext_func_type        - function pointer for gettext()
-*     setlocale_func_type      - function pointer for setlocale()
-*     bindtextdomain_func_type - function pointer for bindtextdomain()
-*     textdomain_func_type     - function pointer for textdomain()
-*
-*  RESULT
-*
-*  EXAMPLE
-*      install_language_func((gettext_func_type)        gettext,
-*                            (setlocale_func_type)      setlocale,
-*                            (bindtextdomain_func_type) bindtextdomain,
-*                            (textdomain_func_type)     textdomain);    
+*     gettext_func_type        - pointer for gettext()
+*     setlocale_func_type      - pointer for setlocale()
+*     bindtextdomain_func_type - pointer for bindtextdomain()
+*     textdomain_func_type     - pointer for textdomain()
 *
 *  SEE ALSO
-*     utilib/sge_init_language()
-*     utilib/sge_gettext()
-*     
+*     uti/language/sge_init_language()
+*     uti/language/sge_gettext()
 ******************************************************************************/
-void install_language_func(
-gettext_func_type new_gettext,
-setlocale_func_type new_setlocale,
-bindtextdomain_func_type new_bindtextdomain,
-textdomain_func_type new_textdomain 
-) {
+void sge_init_language_func(gettext_func_type new_gettext, 
+                            setlocale_func_type new_setlocale,
+                            bindtextdomain_func_type new_bindtextdomain,
+                            textdomain_func_type new_textdomain) 
+{
    /* initialize the functions pointer to NULL */
    sge_language_functions.gettext_func = NULL;
    sge_language_functions.setlocale_func = NULL;
@@ -303,16 +282,11 @@ textdomain_func_type new_textdomain
 }
 
 /****** uti/language/sge_gettext() ********************************************
-*
 *  NAME
 *     sge_gettext() -- get translated message from message file
 *
 *  SYNOPSIS
-*
-*     #include "sge_language.h"
-*     #include <utillib/sge_language.h>
-* 
-*     char *sge_gettext( char* x)
+*     char *sge_gettext(char *x)
 *
 *  FUNCTION
 *     makes a call to sge_language_functions.gettext_func(x) if 
@@ -320,25 +294,17 @@ textdomain_func_type new_textdomain
 *     string. 
 *
 *  INPUTS
-*     char* x - pointer to message which should be internationalizied    
+*     char *x - pointer to message which should be internationalizied    
 *
 *  RESULT
 *     char*   - pointer internationalized message
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     utilib/sge_init_language()
-*     utilib/install_language_func()
-*     
+*     uti/language/sge_init_language()
+*     uti/language/sge_init_language_func()
 *******************************************************************************/
-const char *sge_gettext(
-char *x 
-) {
+const char *sge_gettext(char *x) 
+{
    char *z;
    DENTER(GDI_LAYER, "sge_gettext");
 

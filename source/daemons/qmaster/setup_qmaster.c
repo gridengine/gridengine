@@ -38,11 +38,9 @@
 #include "def.h"
 #include "sge_conf.h"
 #include "commlib.h"
-#include "sge_copy_append.h"   
 #include "subordinate_qmaster.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_sched.h"
-#include "opt_silent.h"
 #include "sge_all_listsL.h"
 #include "read_write_host.h"
 #include "read_write_cal.h"
@@ -81,12 +79,10 @@
 #include "utility_daemon.h"
 #include "gdi_utility_qmaster.h"
 #include "setup_qmaster.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "resolve_host.h"
-#include "sge_switch_user.h"
 #include "config_file.h"
 #include "sge_qmod_qmaster.h"
 #include "time_event.h"
@@ -95,14 +91,14 @@
 #include "sge_groups.h"
 #include "setup_path.h"
 #include "reschedule.h"
-#include "sge_stat.h" 
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "reschedule.h"
-#include "sge_washing_machine.h"
 #include "sge_job_jatask.h"
-#include "sge_file_path.h"
+#include "sge_spool.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_io.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;
@@ -195,12 +191,12 @@ int sge_setup_qmaster()
    /*
    ** switch to admin user
    */
-   if (set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
       SGE_EXIT(1);
    }
@@ -226,10 +222,10 @@ int sge_setup_qmaster()
    ** we are in the master spool dir now 
    ** log messages into ERR_FILE in master spool dir 
    */
-   sge_copy_append(TMP_ERR_FILE_QMASTER, ERR_FILE, SGE_APPEND);
-   switch2start_user();
+   sge_copy_append(TMP_ERR_FILE_QMASTER, ERR_FILE, SGE_MODE_APPEND);
+   sge_switch2start_user();
    unlink(TMP_ERR_FILE_QMASTER);   
-   switch2admin_user();
+   sge_switch2admin_user();
    error_file = ERR_FILE;
 
    /* 
@@ -362,14 +358,14 @@ int sge_setup_qmaster()
    Master_Userset_List = lCreateList("user set list", US_Type);
    direntries = sge_get_dirents(USERSET_DIR);
    if (direntries) {
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINUSERSETS);
 
       for_each(direntry, direntries) {
          const char *userset = lGetString(direntry, STR);
 
          if (userset[0] != '.') {
-            if (!silent()) {
+            if (!sge_silent_get()) {
                printf(MSG_SETUP_USERSET_S , lGetString(direntry, STR));
             }
             if (verify_str_key(&alp, userset, "userset")) {
@@ -420,14 +416,14 @@ int sge_setup_qmaster()
    if (direntries) {
       const char *queue_str;
       
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINQUEUES);
       for_each(direntry, direntries) {
 
          queue_str = lGetString(direntry, STR);
          if (queue_str[0] != '.') {
             config_tag = 0;
-            if (!silent()) {
+            if (!sge_silent_get()) {
                printf(MSG_SETUP_QUEUE_S, lGetString(direntry, STR));
             }
             if (verify_str_key(&alp, queue_str, "queue")) {
@@ -627,7 +623,7 @@ int sge_setup_qmaster()
    rebuild_signal_events();
 
    /* scheduler configuration stuff */
-   if (!silent()) 
+   if (!sge_silent_get()) 
       printf(MSG_CONFIG_READINGINSCHEDULERCONFIG);
    Master_Sched_Config_List = read_sched_configuration(path.sched_conf_file, 1, &alp);
    if (!Master_Sched_Config_List) {
@@ -645,7 +641,7 @@ int sge_setup_qmaster()
       Master_User_List = lCreateList("user list", UP_Type);
       direntries = sge_get_dirents(USER_DIR);
       if (direntries) {
-         if (!silent()) 
+         if (!sge_silent_get()) 
             printf(MSG_CONFIG_READINGINUSERS);
          
          for_each(direntry, direntries) {
@@ -654,7 +650,7 @@ int sge_setup_qmaster()
             direntry_str = lGetString(direntry, STR); 
             if (direntry_str[0] != '.') { 
                config_tag = 0;
-               if (!silent()) 
+               if (!sge_silent_get()) 
                   printf(MSG_SETUP_USER_S, lGetString(direntry, STR));
 
                ep = cull_read_in_userprj(USER_DIR, lGetString(direntry, STR), 1,
@@ -682,7 +678,7 @@ int sge_setup_qmaster()
       Master_Project_List = lCreateList("project list", UP_Type);
       direntries = sge_get_dirents(PROJECT_DIR);
       if (direntries) {
-         if (!silent()) 
+         if (!sge_silent_get()) 
             printf(MSG_CONFIG_READINGINPROJECTS);
 
          for_each(direntry, direntries) {
@@ -691,7 +687,7 @@ int sge_setup_qmaster()
             userprj_str = lGetString(direntry, STR);
             if (userprj_str[0] != '.') {
                config_tag = 0;
-               if (!silent()) 
+               if (!sge_silent_get()) 
                   printf(MSG_SETUP_PROJECT_S, lGetString(direntry, STR));
                if (verify_str_key(&alp, userprj_str, "project")) {
                   DEXIT;
@@ -818,7 +814,7 @@ static int sge_read_host_group_entries_from_disk()
      if (Master_Host_Group_List == NULL) {
         Master_Host_Group_List = lCreateList("main host group list", GRP_Type);
      }  
-     if (!silent()) { 
+     if (!sge_silent_get()) { 
         printf(MSG_CONFIG_READINGHOSTGROUPENTRYS);
      }
      
@@ -826,7 +822,7 @@ static int sge_read_host_group_entries_from_disk()
         hostGroupEntry = lGetString(direntry, STR);
 
         if (hostGroupEntry[0] != '.') {
-           if (!silent()) { 
+           if (!sge_silent_get()) { 
               printf(MSG_SETUP_HOSTGROUPENTRIES_S, hostGroupEntry);
            }
 
@@ -884,7 +880,7 @@ static int sge_read_user_mapping_entries_from_disk()
         Master_Usermapping_Entry_List = 
            lCreateList("Master_Usermapping_Entry_List", UME_Type);
      }  
-     if (!silent()) { 
+     if (!sge_silent_get()) { 
         printf(MSG_CONFIG_READINGUSERMAPPINGENTRY);
      }
      
@@ -892,7 +888,7 @@ static int sge_read_user_mapping_entries_from_disk()
          ume = lGetString(direntry, STR);
 
          if (ume[0] != '.') {
-            if (!silent()) { 
+            if (!sge_silent_get()) { 
                printf(MSG_SETUP_MAPPINGETRIES_S, ume);
             }
 
@@ -938,7 +934,7 @@ static int sge_read_host_list_from_disk()
 
    direntries = sge_get_dirents(EXECHOST_DIR);
    if(direntries) {
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINEXECUTIONHOSTS);
       
       for_each(direntry, direntries) {
@@ -1012,7 +1008,7 @@ static int sge_read_host_list_from_disk()
 
    direntries = sge_get_dirents(ADMINHOST_DIR);
    if(direntries) {
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINADMINHOSTS);
       for_each(direntry, direntries) {
          host = lGetString(direntry, STR);
@@ -1052,7 +1048,7 @@ static int sge_read_host_list_from_disk()
 
    direntries = sge_get_dirents(SUBMITHOST_DIR);
    if(direntries) {
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINSUBMITHOSTS);
       for_each(direntry, direntries) {
          host = lGetString(direntry, STR);
@@ -1102,13 +1098,13 @@ static int sge_read_pe_list_from_disk()
 
    direntries = sge_get_dirents(PE_DIR);
    if(direntries) {
-      if (!silent()) {
+      if (!sge_silent_get()) {
          printf(MSG_CONFIG_READINGINGPARALLELENV);
       }
       for_each(direntry, direntries) {
          pe = lGetString(direntry, STR);
          if (pe[0] != '.') {
-            if (!silent()) {
+            if (!sge_silent_get()) {
                printf(MSG_SETUP_PE_S, pe);
             }
             if (verify_str_key(&alp, pe, "pe")) {
@@ -1158,13 +1154,13 @@ static int sge_read_cal_list_from_disk()
 
    direntries = sge_get_dirents(CAL_DIR);
    if(direntries) {
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINCALENDARS);
       for_each(direntry, direntries) {
          cal = lGetString(direntry, STR);
 
          if (cal[0] != '.') {
-            if (!silent()) {
+            if (!sge_silent_get()) {
                printf(MSG_SETUP_CALENDAR_S, cal);
             }
             if (verify_str_key(&alp, cal, "cal")) {
@@ -1215,13 +1211,13 @@ static int sge_read_ckpt_list_from_disk()
 
    direntries = sge_get_dirents(CKPTOBJ_DIR);
    if(direntries) {
-      if (!silent()) 
+      if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS);
       for_each(direntry, direntries) {
          ckpt = lGetString(direntry, STR);
 
          if (ckpt[0] != '.') {
-            if (!silent()) 
+            if (!sge_silent_get()) 
                printf(MSG_SETUP_CKPT_S, ckpt);
             ep = cull_read_in_ckpt(CKPTOBJ_DIR, ckpt, 1, 0, NULL, NULL);
             if (!ep) {

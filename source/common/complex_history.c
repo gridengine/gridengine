@@ -57,17 +57,14 @@
 #include "sge_resource.h"
 #include "read_write_queue.h"
 #include "path_history.h"
-#include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "read_write_host.h"
 #include "setup_path.h"
 #include "sge_language.h"
-#include "sge_stat.h" 
-#include "sge_dirent.h"
 #include "sge_unistd.h"
-
+#include "sge_hostname.h"
 #include "msg_common.h"
 #include "msg_history.h"
 
@@ -1408,7 +1405,7 @@ unsigned long flags
          str[strlen(str) - 1] = 0;
       }
       not_the_same = ((flags & FLG_BY_NAME_NOCASE) ? 
-                      hostcmp(str, host_name) : 
+                      sge_hostcmp(str, host_name) : 
                       strcmp(str, host_name));
       if (!not_the_same) {
          i_ret = find_host_version(ldir, host_subdir, uldate, ppelem);
@@ -2305,7 +2302,7 @@ int main(int argc, char *argv[], char *envp[])
   
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);

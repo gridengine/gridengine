@@ -54,26 +54,20 @@
 #include "read_write_job.h"
 #include "sge_feature.h"
 #include "sge_conf.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sge_log.h"
-#include "sge_max_nis_retries.h"
 #include "sge_io.h"
-#include "sge_getpwnam.h"
 #include "execution_states.h"
-#include "sge_peopen.h"
-#include "sge_copy_append.h"
-#include "sge_arch.h"
 #include "sge_afsutil.h"
-#include "sge_switch_user.h"
 #include "setup_path.h"
-#include "sge_stat.h" 
 #include "jb_now.h"
 #include "sge_security.h"
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
 #include "sge_job_jatask.h"
+#include "sge_unistd.h"
+#include "sge_hostname.h"
 
 extern volatile int jobs_to_start;
 extern lList *Master_Job_List;
@@ -534,7 +528,7 @@ static lList *job_get_queue_for_task(lListElem *jatep, lListElem *jatask)
        * or task about to exit 
        */
       if(this_q && 
-         !hostcmp(lGetHost(gdil_ep, JG_qhostname), me.qualified_hostname) &&
+         !sge_hostcmp(lGetHost(gdil_ep, JG_qhostname), me.qualified_hostname) &&
          qslots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
          return job_set_queue_info_in_task(lGetString(gdil_ep, JG_qname), jatask);
       } 
@@ -681,7 +675,7 @@ int *synchron;
          if (!this_q) {
             ERROR((SGE_EVENT, MSG_JOB_NOSUCHQ_SUSS, qnm, u32c(jobid), lGetString(jelem, JB_owner), de->host));
             gdil = NULL;
-         } else if (hostcmp(lGetHost(job_gdil, JG_qhostname), me.qualified_hostname)) {
+         } else if (sge_hostcmp(lGetHost(job_gdil, JG_qhostname), me.qualified_hostname)) {
             ERROR((SGE_EVENT, MSG_JOB_NOREQQONHOST_SSS, qnm, me.qualified_hostname, lGetHost(job_gdil, JG_qhostname)));
             gdil = NULL;
          } else if (lGetUlong(this_q, QU_job_slots)<=qslots_used(this_q)) {

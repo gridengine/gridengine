@@ -43,6 +43,7 @@
 
 #include "msg_cull.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 #include "sgermon.h"
 #include "cull_whereP.h"
@@ -1341,7 +1342,7 @@ const lCondition *cp
             result = SGE_STRCASECMP(lGetPosString(ep, cp->operand.cmp.pos),
                                 cp->operand.cmp.val.str);
          } else {
-            result = hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
+            result = sge_hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
                              cp->operand.cmp.val.str);
          }
          result = (result == 0);
@@ -1351,7 +1352,7 @@ const lCondition *cp
             result = SGE_STRCASECMP(lGetPosHost(ep, cp->operand.cmp.pos),
                                 cp->operand.cmp.val.host);
          } else {
-            result = hostcmp(lGetPosHost(ep, cp->operand.cmp.pos),
+            result = sge_hostcmp(lGetPosHost(ep, cp->operand.cmp.pos),
                              cp->operand.cmp.val.host);
          }
          result = (result == 0);

@@ -36,7 +36,6 @@
 #include "sge_load_sensor.h"
 #include "sgermon.h"
 #include "admin_mail.h"
-#include "sge_me.h"
 #include "sge_string.h"
 
 extern lList *execd_config_list;

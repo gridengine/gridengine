@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_file_path.h"
-#include "sge_hash.h"
+#include "sge_spool.h"
+#include "sge_htable.h"
 
 int job_write_spool_file(lListElem *jep, u_long32 ja_taskid, 
                          sge_spool_flags_t flags);

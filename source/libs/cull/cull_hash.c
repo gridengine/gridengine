@@ -43,39 +43,49 @@
 #include "cull_multitypeP.h"
 #include "cull_multitype.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
-/****** uti/hash/--Introduction *************************************************
+/****** cull/hash/--Introduction **********************************************
 *  NAME
-*     Cull & HashTables -- Hashtable extensions for cull lists 
+*     htable -- Hashtable extensions for cull lists 
 *
 *  SYNOPSIS
 *     lHash *cull_hash_copy_descr(const lDescr *descr);
+*
 *     lHash *cull_hash_create(const lDescr *descr);
+*
 *     void cull_hash_new(lList *lp, int name, int type);
+*
 *     void cull_hash_insert(const lListElem *ep, const int pos);
+*
 *     void cull_hash_remove(const lListElem *ep, const int pos);
+*
 *     void cull_hash_elem(const lListElem *ep);
-*     lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, const void **iterator);
-*     lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const void **iterator);
+*
+*     lListElem *cull_hash_first(const lList *lp, const int pos, 
+*                         const void *key, const void **iterator);
+*
+*     lListElem *cull_hash_next(const lList *lp, const int pos, 
+*                         const void *key, const void **iterator);
+*
 *     void cull_hash_free_descr(lDescr *descr);
 *
 *  FUNCTION
-*     This module provides an abstraction layer between cull and the hash table
-*     implementation in libuti. It provides the necessary functions to use 
-*     hash tables from libuti for cull lists.
+*     This module provides an abstraction layer between cull and 
+*     the hash table implementation in libuti. It provides the 
+*     necessary functions to use hash tables from libuti for cull lists.
 *
 *     The functions defined in this module implement hash tables with 
-*     non unique keys, provide wrapper functions for hash insert, remove and 
-*     search that are aware of the non unique hash implementation, 
+*     non unique keys, provide wrapper functions for hash insert, remove 
+*     and search that are aware of the non unique hash implementation, 
 *     functions that deal with the necessary extensions to the cull list
 *     descriptor objects etc.
 *
 *  SEE ALSO
 *     uti/hash/--Introduction
-*
 *******************************************************************************/
 
-/****** cull/hash/-Defines ***************************************
+/****** cull/hash/-Defines ****************************************************
 *  NAME
 *     Defines -- Constants for the cull hash implementation
 *
@@ -83,17 +93,16 @@
 *     #define MIN_CULL_HASH_SIZE 4
 *
 *  FUNCTION
-*     Provides constants to be used in the hash table implementation for 
-*     cull lists.
+*     Provides constants to be used in the hash table implementation 
+*     for cull lists.
 *
-*     MIN_CULL_HASH_SIZE - minimum size of a hash table. When a new hash table
-*                          is created, it will have the size 
+*     MIN_CULL_HASH_SIZE - minimum size of a hash table. When a new 
+*                          hash table is created, it will have the size 
 *                          2^MIN_CULL_HASH_SIZE
-*
 *******************************************************************************/
 #define MIN_CULL_HASH_SIZE 4
 
-/****** cull/hash/-Templates ***************************************
+/****** cull/hash/-Templates **************************************************
 *  NAME
 *     Templates -- Templates for typical hash table definitions 
 *
@@ -120,7 +129,7 @@ lHash template_hash_unique = {
    NULL
 };
 
-/****** cull/hash/-Typedefs ***************************************
+/****** cull/hash/-Typedefs ***************************************************
 *  NAME
 *     Typedefs -- Typedefs for cull hash implementation 
 *
@@ -133,10 +142,11 @@ lHash template_hash_unique = {
 *     };
 *
 *  FUNCTION
-*     Internal data structure to handle hash tables with non unique keys.
-*     The hash table (from libuti) in this case will not store a pointer
-*     to the cull object itself, but a pointer to a list of cull objects.
-*     This list is implemented using the non_unique_hash structures.
+*     Internal data structure to handle hash tables with non unique 
+*     keys. The hash table (from libuti) in this case will not store 
+*     a pointer to the cull object itself, but a pointer to a list of 
+*     cull objects. This list is implemented using the non_unique_hash 
+*     structures.
 *
 *  SEE ALSO
 *     uti/hash/--Introduction
@@ -148,23 +158,22 @@ struct _non_unique_hash {
    const void *data;
 };
 
-/****** cull/hash/cull_hash_copy_descr() ***************************************
+/****** cull/hash/cull_hash_copy_descr() **************************************
 *  NAME
-*     cull_hash_copy_descr() -- copy the hashing information in an lDescr
+*     cull_hash_copy_descr() -- copy hashing info in lDescr
 *
 *  SYNOPSIS
 *     lHash* cull_hash_copy_descr(const lDescr *descr) 
 *
 *  FUNCTION
-*     Allocates and initializes/copies a cull lDescr object.
+*     Allocates and initializes or copies a cull lDescr object.
 *
 *  INPUTS
 *     const lDescr *descr - the descriptor to be copied
 *
 *  RESULT
 *     lHash* - the new hash element for a lDescr object
-*
-*******************************************************************************/
+******************************************************************************/
 lHash *cull_hash_copy_descr(const lDescr *descr)
 {
    lHash *hash;
@@ -191,11 +200,11 @@ lHash *cull_hash_copy_descr(const lDescr *descr)
 *     hash description (lHash) for it.
 *
 *  INPUTS
-*     const lDescr *descr - descriptor for the data field in a cull object.
+*     const lDescr *descr - descriptor for the data field in a 
+*                           cull object.
 *
 *  RESULT
 *     lHash* - initialized hash description
-*
 *******************************************************************************/
 lHash *cull_hash_create(const lDescr *descr)
 {
@@ -207,19 +216,19 @@ lHash *cull_hash_create(const lDescr *descr)
 
    switch(descr->mt) {
       case lStringT:
-         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+         if((hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, hash_func_string, hash_compare_string)) == NULL) {
             free(hash);
             return NULL;
          }
          break;
       case lHostT:
-         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+         if((hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, hash_func_string, hash_compare_string)) == NULL) {
             free(hash);
             return NULL;
          }
          break;
       case lUlongT:
-         if((hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
+         if((hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32)) == NULL) {
             free(hash);
             return NULL;
          }
@@ -247,9 +256,8 @@ lHash *cull_hash_create(const lDescr *descr)
 *     lList *lp - initialized list structure
 *
 *  NOTES
-*     If the list already contains elements, these elements are not inserted
-*     into the hash lists.
-*
+*     If the list already contains elements, these elements are not 
+*     inserted into the hash lists.
 *******************************************************************************/
 void cull_hash_create_hashtables(lList *lp) 
 {
@@ -263,19 +271,19 @@ void cull_hash_create_hashtables(lList *lp)
       if(lp->descr[i].hash != NULL && lp->descr[i].hash->table == NULL) {
          switch(lp->descr[i].mt) {
             case lStringT:
-               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+               if((lp->descr[i].hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, hash_func_string, hash_compare_string)) == NULL) {
                   free(lp->descr[i].hash);
                   lp->descr[i].hash = NULL;
                }
                break;
             case lHostT:
-               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+               if((lp->descr[i].hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, hash_func_string, hash_compare_string)) == NULL) {
                   free(lp->descr[i].hash);
                   lp->descr[i].hash = NULL;
                }
                break;
             case lUlongT:
-               if((lp->descr[i].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
+               if((lp->descr[i].hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32)) == NULL) {
                   free(lp->descr[i].hash);
                   lp->descr[i].hash = NULL;
                }
@@ -307,7 +315,6 @@ void cull_hash_create_hashtables(lList *lp)
 *     const lListElem *ep - the cull object to be stored in a hash list
 *     const int pos       - describes the data field of the objects that
 *                           is to be hashed
-*
 *******************************************************************************/
 void cull_hash_insert(const lListElem *ep, const int pos)
 {
@@ -336,8 +343,8 @@ void cull_hash_insert(const lListElem *ep, const int pos)
   
       case lHostT:
          if (ep->cont[pos].host != NULL) {
-            hostcpy(host_key,ep->cont[pos].host);
-            string_toupper(host_key,MAXHOSTLEN);
+            sge_hostcpy(host_key,ep->cont[pos].host);
+            sge_strtoupper(host_key,MAXHOSTLEN);
             key = host_key;
          }
          break;
@@ -349,11 +356,11 @@ void cull_hash_insert(const lListElem *ep, const int pos)
   
    if(key != NULL) {
       if(descr->hash->type == HASH_UNIQUE) {
-         HashTableStore(descr->hash->table, key, ep);
+         sge_htable_store(descr->hash->table, key, ep);
       } else {
          non_unique_hash *nuh = NULL;
          /* do we already have a list of elements with this key? */
-         if(HashTableLookup(descr->hash->table, key, (const void **)&nuh) == True) {
+         if(sge_htable_lookup(descr->hash->table, key, (const void **)&nuh) == True) {
             if(nuh->data != ep) {
                non_unique_hash *head = nuh; /* remember head of list */
 
@@ -373,7 +380,7 @@ void cull_hash_insert(const lListElem *ep, const int pos)
             nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
             nuh->next = NULL;
             nuh->data = ep;
-            HashTableStore(descr->hash->table, key, nuh);
+            sge_htable_store(descr->hash->table, key, nuh);
          }
       }
    }   
@@ -392,7 +399,6 @@ void cull_hash_insert(const lListElem *ep, const int pos)
 *  INPUTS
 *     const lListElem *ep - the cull object to be removed
 *     const int pos       - position of the data field 
-*
 *******************************************************************************/
 void cull_hash_remove(const lListElem *ep, const int pos)
 {
@@ -421,8 +427,8 @@ void cull_hash_remove(const lListElem *ep, const int pos)
       
       case lHostT:
          if (ep->cont[pos].host != NULL) {
-            hostcpy(host_key,ep->cont[pos].host);
-            string_toupper(host_key,MAXHOSTLEN);
+            sge_hostcpy(host_key,ep->cont[pos].host);
+            sge_strtoupper(host_key,MAXHOSTLEN);
             key = host_key;
          }
          break;
@@ -434,18 +440,18 @@ void cull_hash_remove(const lListElem *ep, const int pos)
   
    if(key != NULL) {
       if(descr->hash->type == HASH_UNIQUE) {
-        HashTableDelete(descr->hash->table, key);
+        sge_htable_delete(descr->hash->table, key);
       } else {
          non_unique_hash *nuh = NULL;
-         if(HashTableLookup(descr->hash->table, key, (const void **)&nuh) == True) {
+         if(sge_htable_lookup(descr->hash->table, key, (const void **)&nuh) == True) {
             /* first element is element to remove (and perhaps only element) */
             if(nuh->data == ep) {
                non_unique_hash *head = nuh->next;
                free(nuh);
                if(head != NULL) {
-                  HashTableStore(descr->hash->table, key, head);
+                  sge_htable_store(descr->hash->table, key, head);
                } else {
-                  HashTableDelete(descr->hash->table, key);
+                  sge_htable_delete(descr->hash->table, key);
                }
             } else {
                while(nuh->next != NULL) {
@@ -471,12 +477,11 @@ void cull_hash_remove(const lListElem *ep, const int pos)
 *     void cull_hash_elem(const lListElem *ep) 
 *
 *  FUNCTION
-*     Insert the cull element ep into all hash tables that are defined for
-*     the cull list ep is member of.
+*     Insert the cull element ep into all hash tables that are 
+*     defined for the cull list ep is member of.
 *
 *  INPUTS
 *     const lListElem *ep - the cull object to be hashed
-*
 *******************************************************************************/
 void cull_hash_elem(const lListElem *ep) {
    int i;
@@ -492,17 +497,18 @@ void cull_hash_elem(const lListElem *ep) {
    }
 }
 
-/****** cull/hash/cull_hash_first() ********************************************
+/****** cull/hash/cull_hash_first() *******************************************
 *  NAME
 *     cull_hash_first() -- find first object for a certain key
 *
 *  SYNOPSIS
 *     lListElem* cull_hash_first(const lList *lp, const int pos, 
-*                                const void  *key, const void **iterator) 
+*                                const void  *key, 
+*                                const void **iterator) 
 *
 *  FUNCTION
-*     Searches for key in the hash table for data field described by pos in the
-*     cull list lp.
+*     Searches for key in the hash table for data field described by 
+*     pos in the cull list lp.
 *     If an element is found, it is returned.
 *     If the hash table uses non unique hash keys, iterator returns the 
 *     necessary data for consecutive calls of cull_hash_next() returning
@@ -520,8 +526,9 @@ void cull_hash_elem(const lListElem *ep) {
 *
 *  SEE ALSO
 *     cull/hash/cull_hash_next()
-*******************************************************************************/
-lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, const void **iterator)
+******************************************************************************/
+lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, 
+                           const void **iterator)
 {
    lListElem *ep = NULL;
    lDescr *descr;
@@ -538,14 +545,14 @@ lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, cons
 
    if(descr->hash->type == HASH_UNIQUE) {
       *iterator = NULL;
-      if(HashTableLookup(descr->hash->table, key, (const void **)&ep) == True) {
+      if(sge_htable_lookup(descr->hash->table, key, (const void **)&ep) == True) {
          return ep;
       } else {
          return NULL;
       }
    } else {
       non_unique_hash *nuh;
-      if(HashTableLookup(descr->hash->table, key, (const void **)&nuh) == True) {
+      if(sge_htable_lookup(descr->hash->table, key, (const void **)&nuh) == True) {
          ep = (lListElem *)nuh->data;
          *iterator = nuh;
          return ep;
@@ -611,30 +618,32 @@ lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const
    return ep;
 }
 
-/****** cull/hash/cull_hash_delete_non_unique_chain() **************************
+/****** cull/hash/cull_hash_delete_non_unique_chain() *************************
 *  NAME
-*     cull_hash_delete_non_unique_chain() -- delete list of non unique objects
+*     cull_hash_delete_non_unique_chain() -- del list of non unique obj.
 *
 *  SYNOPSIS
-*     void cull_hash_delete_non_unique_chain(HashTable table, const void *key, 
+*     void cull_hash_delete_non_unique_chain(htable table, 
+*                                            const void *key, 
 *                                            const void **data) 
 *
 *  FUNCTION
-*     For objects that are stored in a hash table with non unique keys, for
-*     each key a linked list of objects is created.
-*     This function deletes this linked list for each key in the hash table.
-*     It is designed to be called by the function HashTableForEach from
-*     the libuti hash implementation.
+*     For objects that are stored in a hash table with non unique keys, 
+*     for each key a linked list of objects is created.
+*     This function deletes this linked list for each key in the hash 
+*     table. It is designed to be called by the function 
+*     sge_htable_for_each from the libuti hash implementation.
 *
 *  INPUTS
-*     HashTable table   - hash table in which to delete/free a sublist
+*     htable table   - hash table in which to delete/free a sublist
 *     const void *key   - key of the list to be freed 
 *     const void **data - pointer to the sublist
 *
 *  SEE ALSO
-*     uti/hash/HashTableForEach()
-*******************************************************************************/
-void cull_hash_delete_non_unique_chain(HashTable table, const void *key, const void **data)
+*     uti/hash/sge_htable_for_each()
+******************************************************************************/
+void cull_hash_delete_non_unique_chain(htable table, const void *key, 
+                                       const void **data)
 {
    non_unique_hash *head = (non_unique_hash *)*data;
    while(head != NULL) {
@@ -644,25 +653,25 @@ void cull_hash_delete_non_unique_chain(HashTable table, const void *key, const v
    }
 }
 
-/****** cull/hash/cull_hash_free_descr() ***************************************
+/****** cull/hash/cull_hash_free_descr() **************************************
 *  NAME
-*     cull_hash_free_descr() -- free the hash contents of a cull descriptor
+*     cull_hash_free_descr() -- free the hash contents of a cull descr
 *
 *  SYNOPSIS
 *     void cull_hash_free_descr(lDescr *descr) 
 *
 *  FUNCTION
-*     Frees the memory used by the hashing information in a cull descriptor 
-*     (lDescr). If a hash table is still associated to the descriptor, it
-*     is also deleted.
+*     Frees the memory used by the hashing information in a cull 
+*     descriptor (lDescr). If a hash table is still associated to 
+*     the descriptor, it is also deleted.
 *
 *  INPUTS
 *     lDescr *descr - descriptor to free 
 *
 *  SEE ALSO
 *     cull/hash/cull_hash_delete_non_unique()
-*     uti/hash/HashTableDestroy()
-*******************************************************************************/
+*     uti/hash/sge_htable_destroy()
+******************************************************************************/
 void cull_hash_free_descr(lDescr *descr)
 {
    int i;
@@ -671,9 +680,9 @@ void cull_hash_free_descr(lDescr *descr)
          if(descr[i].hash->table != NULL) {
             if(descr[i].hash->type == HASH_NONUNIQUE) {
                /* delete chain of non unique elements */
-               HashTableForEach(descr[i].hash->table, cull_hash_delete_non_unique_chain);
+               sge_htable_for_each(descr[i].hash->table, cull_hash_delete_non_unique_chain);
             }
-            HashTableDestroy(descr[i].hash->table);
+            sge_htable_destroy(descr[i].hash->table);
          }
          free(descr[i].hash);
          descr[i].hash = NULL;
@@ -723,19 +732,19 @@ int cull_hash_new(lList *lp, int nm, lHash *template)
    
    switch(descr[pos].mt) {
       case lStringT:
-         if((descr[pos].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+         if((descr[pos].hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, hash_func_string, hash_compare_string)) == NULL) {
             free(lp->descr[pos].hash);
             descr[pos].hash = NULL;
          }
          break;
       case lHostT:
-         if((descr[pos].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_string, HashFunc_string, HashCompare_string)) == NULL) {
+         if((descr[pos].hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_string, hash_func_string, hash_compare_string)) == NULL) {
             free(descr[pos].hash);
             descr[pos].hash = NULL;
          }
          break;
       case lUlongT:
-         if((descr[pos].hash->table  = HashTableCreate(MIN_CULL_HASH_SIZE, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32)) == NULL) {
+         if((descr[pos].hash->table  = sge_htable_create(MIN_CULL_HASH_SIZE, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32)) == NULL) {
             free(descr[pos].hash);
             descr[pos].hash = NULL;
          }

@@ -58,7 +58,7 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "languagetest");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);

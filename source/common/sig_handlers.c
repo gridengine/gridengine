@@ -36,7 +36,7 @@
 #include "commlib.h"
 #include "sgermon.h"
 #include "sig_handlers.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 
 static void sge_terminate(int);
 static void sge_sigpipe_handler(int);

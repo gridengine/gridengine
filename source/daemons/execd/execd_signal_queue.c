@@ -33,9 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <unistd.h>
-
-
 #include "sgermon.h"
 #include "def.h"
 #include "sge.h"
@@ -53,15 +50,13 @@
 #include "execd_signal_queue.h"
 #include "sig_handlers.h"
 #include "read_write_job.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "symbols.h"
 #include "sge_time.h"
 #include "job_report_execd.h"
-#include "sge_stat.h" 
 #include "msg_execd.h"
 #include "sge_job_jatask.h"
-
+#include "sge_unistd.h"
 #include "sge_conf.h"
 #include "sge_job_reportL.h"
 #include "sge_usageL.h"
@@ -391,11 +386,11 @@ const char *petask
    **    => kill does neither send SIGCONT-signals nor return an error
    */
 #if defined(NECSX4) || defined(NECSX5)
-   switch2start_user();
+   sge_switch2start_user();
 #endif    
    if ((status = kill(pid, direct_signal?sig:SIGTTIN))) {
 #if defined(NECSX4) || defined(NECSX5)
-      switch2admin_user();
+      sge_switch2admin_user();
 #endif   
       if (errno == ESRCH)
          goto CheckShepherdStillRunning;
@@ -403,7 +398,7 @@ const char *petask
       return -1;
    }
 #if defined(NECSX4) || defined(NECSX5)
-   switch2admin_user();
+   sge_switch2admin_user();
 #endif 
    
    DEXIT;

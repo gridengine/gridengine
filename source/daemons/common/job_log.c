@@ -47,10 +47,9 @@
 #include "basis_types.h"
 #include "job_log.h"
 #include "sgermon.h"
-#include "sge_stat.h" 
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sge_time.h"
+#include "sge_unistd.h"
 
 static char job_log_file[SGE_PATH_MAX]="";
 

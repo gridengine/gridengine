@@ -56,6 +56,7 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_security.h"
+#include "sge_hostname.h"
 
 static int   sge_isHostInHostList(lList *hostGroupList, lList *hostList, const char *hostName);
 static int   sge_isNameInMappingList(lList *mapList, const char *mappedName);
@@ -143,7 +144,7 @@ const char *hostName
                 } 
              } else {
                 /* tmpHost is host name */ 
-                if (hostcmp(tmpHost,hostName) == 0 ) {
+                if (sge_hostcmp(tmpHost,hostName) == 0 ) {
                    DEXIT;
                    return TRUE;
                 } 
@@ -162,7 +163,7 @@ const char *hostName
              /* check if tmpHost is group name */
              if (sge_is_group(hostGroupList, tmpHost) == TRUE) {
                 /* tmpHost is group name */
-                if (hostcmp(tmpHost, hostName) == 0 ) {
+                if (sge_hostcmp(tmpHost, hostName) == 0 ) {
                    DPRINTF(("found group '%s' in hostlist\n", hostName));
                    DEXIT;
                    return TRUE;

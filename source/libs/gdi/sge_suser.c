@@ -107,11 +107,12 @@ lListElem *suser_list_add(lList **suser_list, lList **answer_list,
 *     suser_list_find() -- find a user entry in a list 
 *
 *  SYNOPSIS
-*     lListElem* suser_list_find(lList *suser_list, const char *suser_name) 
+*     lListElem* suser_list_find(lList *suser_list, 
+*                                const char *suser_name) 
 *
 *  FUNCTION
-*     This function tries to find the first entry for user "suser_name" in
-*     the list "suser_list".
+*     This function tries to find the first entry for user "suser_name" 
+*     in the list "suser_list".
 *
 *  INPUTS
 *     lList *suser_list      - SU_Type list 
@@ -231,7 +232,8 @@ u_long32 suser_get_job_counter(lListElem *suser)
 *     suser_register_new_job() -- try to register a new job 
 *
 *  SYNOPSIS
-*     int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs, 
+*     int suser_register_new_job(const lListElem *job, 
+*                                u_long32 max_u_jobs, 
 *                                int force_registration) 
 *
 *  FUNCTION

@@ -170,7 +170,7 @@ int sub_command
    if (add == 1) {
       /* GRP_group_name -------------------------------*/
 
-      if (check_fname(groupName) != 0) {
+      if (sge_is_valid_filename(groupName) != 0) {
          /* no correct filename */
          ERROR((SGE_EVENT,MSG_HGRP_GROUPXNOTGUILTY_S, groupName ));
          sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "sge_rangeL.h"
 
 #define MAX_IDS_PER_LINE  8
@@ -59,7 +59,7 @@ void range_get_all_ids(const lListElem *range_elem, u_long32 *min,
 void range_set_all_ids(lListElem *range_elem, u_long32 min, u_long32 max,
                        u_long32 step);
 
-void range_list_print_to_string(const lList *range_list, StringBufferT *string);
+void range_list_print_to_string(const lList *range_list, dstring *string);
 
 void range_sort_uniq_compress(lList *range_list, lList **answer_list);  
 
@@ -88,7 +88,7 @@ u_long32 range_list_get_number_of_ids(const lList *range_list);
  
 u_long32 range_get_number_of_ids(const lListElem *range);
 
-void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
+void get_taskrange_str(lList *task_list, dstring *taskrange_str);
 
 lList* split_task_group(lList **in_list);
 

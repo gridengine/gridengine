@@ -59,7 +59,6 @@
 #include "sge_rangeL.h"
 #include "parse.h"
 #include "get_path.h"
-#include "sge_arch.h"
 #include "sge_job.h"
 #include "tmpdir.h"
 #include "read_write_queue.h"
@@ -69,30 +68,26 @@
 #include "sge_parse_num_par.h"
 #include "show_job.h"
 #include "mail.h"
-#include "sge_me.h"
 #include "sgermon.h"
 #include "parse_range.h"
-#include "sge_getpwnam.h"
 #include "commlib.h"
-#include "sge_copy_append.h"
-#include "sge_peopen.h"
 #include "basis_types.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
 #include "sge_afsutil.h"
-#include "sge_switch_user.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "setup_path.h"
 #include "qm_name.h"
-#include "sge_stat.h" 
 #include "sge_string.h" 
 #include "jb_now.h"
 #include "sge_feature.h"
 #include "sge_job_jatask.h"
 #include "sge_stdlib.h"
-#include "sge_daemonize.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_hostname.h"
+#include "sge_os.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -705,7 +700,7 @@ char *err_str
             slots, 
             lGetString(gdil_ep, JG_qname), 
             q_set);
-         if (!hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
+         if (!sge_hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
             host_slots += slots;
             if (q_set && strcasecmp(q_set, "UNDEFINED")) {
                parse_ranges(lGetString(qep, QU_processors), 0, 0, &alp, &processor_set, INF_ALLOWED);

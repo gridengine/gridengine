@@ -40,8 +40,8 @@
 #include "qmon_appres.h"
 #include "sgermon.h"
 #include "sge_feature.h"
-#include "sge_string_append.h"
-#include "sge_me.h"
+#include "sge_dstring.h"
+#include "sge_prog.h"
 #include "version.h"
 
 static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s";

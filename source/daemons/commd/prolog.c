@@ -37,7 +37,7 @@
 #include "commd_io.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_crc.h"
+#include "sge_io.h"
 #include "rwfd.h"
 #include "msg_commd.h"
 
@@ -112,7 +112,7 @@ message *mp
    DEBUG((SGE_EVENT, "read prolog: flags=0x"x32" headerlen=%d bufferlen="u32" checksum = "u32,
          mp->flags, mp->headerlen, mp->buflen, crc32));
 
-   if(crc32 != cksum((char*)mp->prolog, PROLOGLEN-4)) {
+   if(crc32 != sge_cksum((char*)mp->prolog, PROLOGLEN-4)) {
       DEBUG((SGE_EVENT, "delete commproc on fd=%d cause of checksum error", mp->fromfd));
       delete_message(mp, "checksum error");
       delete_commproc_using_fd(mp->fromfd);

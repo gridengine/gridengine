@@ -32,15 +32,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "opt_silent.h"
 #include "usage.h"
 #include "sge_feature.h"
 
 #include "def.h"
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sge_options.h"
 #include "sge_unistd.h"
 #include "msg_gdilib.h"

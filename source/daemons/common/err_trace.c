@@ -47,11 +47,10 @@
 #include "basis_types.h"
 #include "err_trace.h"
 #include "sge_time.h"
-#include "sge_switch_user.h"
-
+#include "sge_uidgid.h"
 #include "config_file.h"
 #include "qlogin_starter.h"
-#include "sge_stat.h" 
+#include "sge_unistd.h"
 
 static int sh_str2file(char *header_str, char *str, char *file);
 
@@ -91,15 +90,15 @@ int do_exit
       fprintf(stderr, "%s%s\n", header_str, str);
 
    if (shep_log_as_admin_user && geteuid() == 0)
-      switch2admin_user();
+      sge_switch2admin_user();
 
    sprintf(header_str, "%d", shepherd_state);
    sh_str2file(header_str, NULL, "exit_status");
 
    if (coshepherd_pid > 0) {
-      switch2start_user();
+      sge_switch2start_user();
       kill(coshepherd_pid, SIGTERM);
-      switch2admin_user();
+      sge_switch2admin_user();
    }   
      
    if(search_conf_val("qrsh_control_port") != NULL) {
@@ -125,7 +124,7 @@ char *str
    sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0), geteuid(), getpid());
 
    if (shep_log_as_admin_user && geteuid() == 0) {
-      switch2admin_user();
+      sge_switch2admin_user();
       switch_back = 1;
    }
 
@@ -137,7 +136,7 @@ char *str
    }
 
    if (shep_log_as_admin_user && switch_back)
-      switch2start_user();
+      sge_switch2start_user();
 
    return ret;
 }

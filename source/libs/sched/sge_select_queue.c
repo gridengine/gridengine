@@ -69,6 +69,7 @@
 #include "sge_jataskL.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
@@ -1032,7 +1033,7 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
             if (type==TYPE_CSTR)
                match = strcasecmp(limit_value, load_value);
             else
-               match = hostcmp(limit_value, load_value);
+               match = sge_hostcmp(limit_value, load_value);
          }
 
          if (!match) {
@@ -1548,10 +1549,11 @@ lList **disabled         /* QU_Type */
 
 /****** sched/select_queue/sge_replicate_queues_suitable4job() ****************
 *  NAME
-*     sge_replicate_queues_suitable4job() -- select resources for a certain job
+*     sge_replicate_queues_suitable4job() -- select res. for a job
 *
 *  RESULT
-*     A JG_Type list refering the selected resources (queues) for that job
+*     A JG_Type list refering the selected resources (queues) for 
+*     that job
 ******************************************************************************/
 lList* sge_replicate_queues_suitable4job(
 lList *queues,       /* QU_Type */
@@ -1895,7 +1897,7 @@ int host_order_changed) {
                   if (host_slots>=minslots) {
                      /* tag amount of slots we can get served with resources limited per queue */
                      for_each (qep, queues) {
-                        if (hostcmp(lGetHost(qep, QU_qhostname), eh_name))
+                        if (sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name))
                            continue;
                         qname = lGetString(qep, QU_qname);
 
@@ -2127,7 +2129,7 @@ int host_order_changed) {
             queue of the master host to be at the first position */
          master_eh_name = lGetHost(master_hep, EH_name);
          for_each (qep, queues) {
-            if (hostcmp(master_eh_name, lGetHost(qep, QU_qhostname)))
+            if (sge_hostcmp(master_eh_name, lGetHost(qep, QU_qhostname)))
                continue;
             if (lGetUlong(qep, QU_tagged4schedule))
                break;
@@ -2174,7 +2176,7 @@ int host_order_changed) {
             for_each (qep, queues) {
                int qtagged;
 
-               if (hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
+               if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                   continue;
 
                qname = lGetString(qep, QU_qname);

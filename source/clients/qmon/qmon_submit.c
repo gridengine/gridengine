@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h> 
-#include <unistd.h> 
 #include <sys/types.h>
 #include <fcntl.h>
 #include "msg_common.h"
@@ -54,16 +53,16 @@
 #include <Xmt/MsgLine.h>
 
 /*----------------------------------------------------------------------------*/
+#include "sge_unistd.h"
+#include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge_parse_date_time.h"
 #include "sge_userset.h"
-#include "sge_me.h"
 #include "Matrix.h"
 #include "symbols.h"
 #include "parse_qsub.h"
 #include "parse_range.h"
-#include "sge_str_from_file.h"
 #include "sge_time.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
@@ -86,18 +85,15 @@
 #include "qmon_init.h"
 #include "sge_feature.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
-#include "sge_copy_append.h"
-#include "sge_arch.h"
 #include "sge_range.h"
 #include "path_aliases.h"
 #include "jb_now.h"
 #include "setup_path.h"
 #include "qm_name.h"
-#include "sge_stat.h" 
 #include "sge_security.h" 
 #include "sge_job_jatask.h"
 #include "sge_stdlib.h"
+#include "sge_io.h"
 
 extern char **environ;
 
@@ -1675,7 +1671,7 @@ tSMEntry *data,
 char *prefix 
 ) {
    StringConst job_script;
-   StringBufferT dyn_job_tasks = {NULL, 0};
+   dstring dyn_job_tasks = {NULL, 0};
    char pe_tasks[BUFSIZ];
    char pe_range[BUFSIZ];
    StringConst job_name;
@@ -1877,7 +1873,7 @@ int save
       if (!save) {
          /* Job Script/Name */
          lSetString(jep, JB_script_file, data->job_script);
-         job_script = str_from_file(data->job_script, &len);
+         job_script = sge_file2string(data->job_script, &len);
          lSetString(jep, JB_script_ptr, job_script);
          XtFree((char*)job_script);
          lSetUlong(jep, JB_script_size, len);

@@ -38,7 +38,6 @@
 #include "def.h"
 #include "symbols.h"
 #include "sge.h"
-#include "sge_timestop.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
@@ -57,8 +56,7 @@
 #include "sge_feature.h"
 #include "parse.h"
 #include "parse_range.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
 #include "show_job.h"
@@ -67,7 +65,6 @@
 #include "sge_schedd_text.h"
 #include "qm_name.h"
 #include "load_correction.h"
-#include "sge_stat.h" 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qstat.h"
@@ -208,7 +205,7 @@ char **argv
       SGE_EXIT(ret);
    }
 
-   starttime(0);
+   sge_stopwatch_start(0);
    get_all_lists(
       &queue_list, 
       qselect_mode?NULL:&job_list, 
@@ -226,7 +223,7 @@ char **argv
 
    init_complex_double_values(complex_list);
 
-   log_time(0, "Time for getting all lists");
+   sge_stopwatch_log(0, "Time for getting all lists");
    
    if (getenv("MORE_INFO")) {
       if(global_showjobs) {
@@ -1000,7 +997,7 @@ u_long32 show
    }
    alp = lFreeList(alp);
 
-   /* -- apply global configuration for hostcmp() scheme */
+   /* -- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
       printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);

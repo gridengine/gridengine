@@ -35,9 +35,8 @@
 #include "sge.h"
 #include "sge_conf.h"
 #include "symbols.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_time.h"
-#include "sge_me.h"
 #include "sge_feature.h"
 #include "sge_hostL.h"
 #include "sge_answerL.h"
@@ -81,6 +80,7 @@
 #include "sge_string.h"
 #include "sge_security.h"
 #include "sge_unistd.h"
+#include "sge_hostname.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
@@ -261,7 +261,7 @@ u_long32 target
       the qmaster host from admin host list
    */
    if (target==SGE_ADMINHOST_LIST && 
-         !hostcmp(unique, me.qualified_hostname)) {
+         !sge_hostcmp(unique, me.qualified_hostname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELADMINQMASTER_S, 
           me.qualified_hostname));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
@@ -654,7 +654,7 @@ lList *lp
       }
 
       /* we get load values for another host */
-      if(*hepp && hostcmp(lGetHost(*hepp, EH_name), host)) {
+      if(*hepp && sge_hostcmp(lGetHost(*hepp, EH_name), host)) {
          /* output error from previous host, if any */
          if (report_host) {
             INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, report_host));
@@ -842,7 +842,7 @@ u_long32 now
          const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
          if(simhost != NULL) {
             const char *real_host = lGetString(simhost, CE_stringval);
-            if(real_host != NULL && hostcmp(real_host, host) != 0) {
+            if(real_host != NULL && sge_hostcmp(real_host, host) != 0) {
                DPRINTF(("skip trashing load values for host %s simulated by %s\n", host, real_host));
                continue;
             }
@@ -1090,7 +1090,7 @@ lList *shl
    shel = lFirst(shl);
    while(ahel || shel) {
       if (shel && ahel) {
-         ret = hostcmp(lGetHost(ahel,AH_name),
+         ret = sge_hostcmp(lGetHost(ahel,AH_name),
                           lGetHost(shel,SH_name));
          if (ret < 0) ret = -1;
          if (ret > 0) ret = 1;
@@ -1299,7 +1299,7 @@ int force
          for_each(jatep, lGetList(jep, JB_ja_tasks)) {
             gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
             if(gdil) {
-               if(!(hostcmp(lGetHost(lFirst(gdil), JG_qhostname), hostname))) {
+               if(!(sge_hostcmp(lGetHost(lFirst(gdil), JG_qhostname), hostname))) {
                   /*   send mail to users if requested                  */
                   if (mail_users == NULL) {
                      mail_users = lGetList(jep, JB_mail_list);

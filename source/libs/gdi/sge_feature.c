@@ -39,8 +39,7 @@
 #include "sge_host_qmaster.h"
 #include "sge_m_event.h"
 #include "config_file.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "gdi_utility_qmaster.h"
@@ -178,8 +177,8 @@ static void feature_initialize(void)
 *
 *  FUNCTION
 *     This function reads the product mode string from file and
-*     tags the corresponding featureset enty within the Master_FeatureSet_List
-*     as active.
+*     tags the corresponding featureset enty within the 
+*     Master_FeatureSet_List as active.
 *
 *  INPUTS
 *     char *filename - product mode filename 
@@ -237,8 +236,9 @@ int feature_initialize_from_file(const char *filename)
 *     int feature_initialize_from_string(char *mode) 
 *
 *  FUNCTION
-*     This function interprets the mode string and tags the corresponding 
-*     featureset enty within the Master_FeatureSet_List as active.  
+*     This function interprets the mode string and tags the 
+*     corresponding featureset enty within the Master_FeatureSet_List 
+*     as active.  
 *
 *  INPUTS
 *     char *mode - product mode string (valid strings are defined in
@@ -273,8 +273,9 @@ int feature_initialize_from_string(const char *mode) {
 *     void feature_activate(featureset_ id) 
 *
 *  FUNCTION
-*     Marks the current active featureset within the Master_FeatureSet_List
-*     as inactive and flags the featureset given as parameter as active.
+*     Marks the current active featureset within the 
+*     Master_FeatureSet_List as inactive and flags the featureset 
+*     given as parameter as active.
 *      
 *
 *  INPUTS
@@ -407,7 +408,7 @@ featureset_id_t id
 
 /****** gdi/feature/feature_get_featureset_id() *******************************
 *  NAME
-*     feature_get_featureset_id() -- returns a constant for a featureset string 
+*     feature_get_featureset_id() -- Value for a featureset string 
 *
 *  SYNOPSIS
 *     featureset_id_t feature_get_featureset_id(char* name) 
@@ -417,7 +418,8 @@ featureset_id_t id
 *     a given featureset string 
 *
 *  INPUTS
-*     char* name - feature set name earlier known as product mode string 
+*     char* name - feature set name earlier known as product 
+*                  mode string 
 *
 *  RESULT
 *     featureset_id_t 
@@ -533,8 +535,8 @@ featureset_product_name_id_t style
 *     int feature_is_enabled(feature_id_t id) 
 *
 *  FUNCTION
-*     return true or false whether the given feature is enabled or disabled
-*     in the current active featureset 
+*     return true or false whether the given feature is enabled or 
+*     disabled in the current active featureset 
 *
 *  INPUTS
 *     feature_id_t id 
@@ -577,7 +579,8 @@ feature_id_t id
 *
 *  RESULT
 *     char* - name of the given feature constant 
-*             (or "<<unknown>>" when the id isn't a valid feature constant) 
+*             (or "<<unknown>>" when the id isn't a valid 
+*              feature constant) 
 ******************************************************************************/
 const char *feature_get_name(
 feature_id_t id 

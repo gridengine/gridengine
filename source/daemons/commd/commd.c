@@ -51,25 +51,21 @@
 #include "commd_error.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_getme.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "commd.h"
 #include "message.h"
 #include "rwfd.h"
 #include "debug_malloc.h"
 #include "sge_time.h"
-#include "sge_daemonize.h"
 #include "sge_gdi_intern.h"
 #include "sge.h"
 #include "msg_common.h"
 #include "msg_commd.h"
 #include "sge_language.h"
-#include "sge_stat.h" 
 #include "sge_feature.h"
 #include "setup_commd_path.h"
-#include "sge_arch.h"
 #include "sge_unistd.h"
+#include "sge_os.h"
 
 void init_send(message *mp, int reserved_port, int commdport);
 static char *fdsetstr(fd_set *fds, char *);
@@ -136,7 +132,7 @@ char **argv
   
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -253,11 +249,11 @@ char **argv
    sigaction(SIGPIPE, &sa, NULL);
 
    /* initialize host module */
-   host_initialize();
+   sge_host_list_initialize();
 
    if (aliasfile == NULL) {
       /* expect alias file at default location */
-      aliasfile = get_alias_path();
+      aliasfile = sge_get_alias_path();
 
    }   
    if (actmasterfile == NULL) {
@@ -276,7 +272,7 @@ char **argv
          INFO((SGE_EVENT, MSG_COMMD_STATHOSTALIASFILEFAILED_SS, 
                aliasfile, strerror(errno)));
       else {
-         read_aliasfile(aliasfile);
+         sge_host_list_read_aliasfile(aliasfile);
       }
    }
 
@@ -377,7 +373,7 @@ char **argv
       /* look for changes in host names and aliases */
       if (hostname_refresh) {
          if (now - lasthostrefresh > HOSTREFRESHTIME) {
-            refresh_hostlist();
+            sge_host_list_refresh();
             lasthostrefresh = now;
          }
       }
@@ -905,7 +901,7 @@ void dump()
    fp = fopen("/tmp/commd/commd.dump", "w");
    if (fp) {
       fprintf(fp, "----------  HOSTLIST ----------\n");
-      print_hostlist(fp);
+      sge_host_list_print(fp);
       fprintf(fp, "----------  COMMPROCLIST ------\n");
       print_commprocs(fp);
       fprintf(fp, "----------  MESSAGELIST ------\n");

@@ -38,7 +38,7 @@
 #include "parse_qsub.h"
 #include "parse.h"
 #include "usage.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_feature.h"

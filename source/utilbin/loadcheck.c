@@ -34,12 +34,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "basis_types.h"
-#include "sge_getloadavg.h"
-#include "sge_nprocs.h"
-#include "sge_arch.h"
-#include "sge_loadmem.h"
+#include "sge_os.h"
 #include "msg_utilbin.h"
 #include "sge_language.h"
+#include "sge_prog.h"
+#include "sge_os.h"
 #include "sge_hostL.h"
 
 void usage(void);
@@ -72,7 +71,7 @@ int main(int argc, char *argv[])
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -122,7 +121,7 @@ int main(int argc, char *argv[])
 #ifdef SGE_LOADMEM
    /* memory load report */
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
-   if (loadmem(&mem_info)) {
+   if (sge_loadmem(&mem_info)) {
       fprintf(stderr, MSG_SYSTEM_RETMEMORYINDICESFAILED );
       return 1;
    }

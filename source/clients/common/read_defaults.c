@@ -36,19 +36,18 @@
 #include <sys/types.h>
 
 #include "sgermon.h"
-#include "sge_getpwnam.h"
-#include "sge_filecmp.h"
 #include "sge_gdi_intern.h"
 #include "sge_answerL.h"
 #include "parse_job_cull.h"
 #include "read_defaults.h"
-#include "sge_me.h"
 #include "setup_path.h"
-#include "sge_stat.h" 
 #include "sge_unistd.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "sge_feature.h"
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_prog.h"
 
 static char *def_files[3 + 1];
 
@@ -185,7 +184,7 @@ lList *get_all_defaults_files(lList **pcmdline, char **envp)
 
       already_read = 0; 
       for (ppstr = def_files; *ppstr != *pstr; ppstr++) {
-         if (!filecmp(*ppstr, *pstr)) {
+         if (!sge_filecmp(*ppstr, *pstr)) {
             DPRINTF(("-- skipping %s as defaults file - already read as %s\n", 
                *pstr, *ppstr));
             already_read = 1; 

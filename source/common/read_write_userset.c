@@ -43,14 +43,13 @@
 #include "config.h"
 #include "sge_answerL.h"
 #include "read_write_userset.h"
-#include "sge_tmpnam.h"
 #include "read_object.h"
 #include "sge_feature.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_stdio.h"
+#include "sge_spool.h"
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 
 /*
 ** corresponding enum is in sge_usersetL.h

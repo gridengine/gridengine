@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "sge_me.h"
 #include "symbols.h"
 #include "sge_options.h"
 #include "def.h"
@@ -56,6 +55,7 @@
 #include "cull_parse_util.h"
 #include "sge.h"
 #include "valid_queue_user.h"
+#include "sge_hostname.h"
 
 #include "sge_language.h"
 #include "sge_feature.h"
@@ -275,7 +275,7 @@ int flags
          user = lGetString(ep, MR_user);
          host = lGetHost(ep, MR_host);
          if (sge_strnullcmp(user, me.user_name) || 
-             hostcmp(host, me.qualified_hostname)) {
+             sge_hostcmp(host, me.qualified_hostname)) {
             ep_new = lAddElemStr(&lp_new, MR_user, user, MR_Type);
             lSetHost(ep_new, MR_host, host);
          }

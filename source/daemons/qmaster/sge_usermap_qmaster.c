@@ -154,7 +154,7 @@ int sub_command
    if (add == 1) {
       /* UME_cluster_user -------------------------------*/
 
-      if (check_fname(clusterUser) != 0) {
+      if (sge_is_valid_filename(clusterUser) != 0) {
          /* no correct filename */
          ERROR((SGE_EVENT,MSG_UM_CLUSTERUSERXNOTGUILTY_S, clusterUser ));
          sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);

@@ -38,11 +38,10 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#include "sge_max_nis_retries.h"
 #include "cull.h"
 #include "commlib.h"
 #include "commd_message_flags.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_gdi.h"
 #include "sge_gdi_intern.h"
 #include "sge_uidgid.h"
@@ -76,7 +75,7 @@ const char *qexec_last_err(void)
 
 /****** gdi/sge/sge_qexecve() ************************************************
 *  NAME
-*     sge_qexecve() -- start a task in a tightly integrated parallel job
+*     sge_qexecve() -- start a task in a tightly integrated par. job
 *
 *  SYNOPSIS
 *     sge_tid_t sge_qexecve(const char *hostname, const char *path, 
@@ -95,16 +94,17 @@ const char *qexec_last_err(void)
 *     const char *hostname - name of the host on which to start the task
 *     const char *path     - complete path of the command to start
 *     const char *argv[]   - argument vector for the command to start
-*     const lList *env_lp  - list containing environment variable settings
-*                            for the task that override the default environment
-*     int is_qrsh          - is the task to be started a qrsh -inherit task?
-*                            0 means 0, != 0 means yes
+*     const lList *env_lp  - list containing environment variable 
+*                            settings for the task that override the 
+*                            default environment
+*     int is_qrsh          - is the task to be started a 
+*                            "qrsh -inherit" task?
 *
 *  RESULT
 *     sge_tid_t - the task id, if the task can be executed,
 *                 a value <= 0 indicates an error.
 *
-*******************************************************************************/
+******************************************************************************/
 sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *cwd,
                       const char *argv[], const lList *env_lp, 
                       int is_qrsh)

@@ -38,7 +38,7 @@
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sig_handlers.h"
 #include "parse.h"
 

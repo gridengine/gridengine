@@ -43,20 +43,14 @@
 #include "sge_jataskL.h"
 #include "sge_stringL.h"
 #include "sge_gdi_intern.h"
-#include "sge_copy_append.h"
 #include "job_report_execd.h"
 #include "execd_ck_to_do.h"
 #include "setup_execd.h"
 #include "sge_load_sensor.h"
 #include "cull_file.h"
 #include "utility_daemon.h"
-#include "sge_daemonize.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "sge_getloadavg.h"
-#include "sge_switch_user.h"
+#include "sge_prog.h"
 #include "sge_string.h"
-#include "sge_stat.h"
 #include "reaper_execd.h"
 #include "execution_states.h"
 #include "msg_common.h"
@@ -65,6 +59,9 @@
 #include "sge_feature.h"
 #include "read_write_job.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_os.h"
 
 extern char execd_spool_dir[];
 extern lList *execd_config_list;
@@ -88,12 +85,12 @@ void sge_setup_sge_execd()
    /*
    ** switch to admin user
    */
-   if (set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
       SGE_EXIT(1);
    }
@@ -114,10 +111,10 @@ void sge_setup_sge_execd()
    sge_chdir(me.unqualified_hostname, 1); 
    /* having passed the  previous statement we may 
       log messages into the ERR_FILE  */
-   sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_APPEND);
-   switch2start_user();
+   sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_MODE_APPEND);
+   sge_switch2start_user();
    unlink(TMP_ERR_FILE_EXECD);
-   switch2admin_user();
+   sge_switch2admin_user();
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
            me.unqualified_hostname, ERR_FILE);
    error_file = execd_messages_file;

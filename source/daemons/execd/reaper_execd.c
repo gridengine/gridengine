@@ -51,10 +51,9 @@
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
 #include "sge_job_reportL.h"
-#include "sge_pids.h"
+#include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usageL.h"
-#include "sge_getpwnam.h"
 #include "sge_time.h"
 #include "slots_used.h"
 #include "sge_queueL.h"
@@ -73,29 +72,24 @@
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "job_report.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_conf.h"
 #include "sge_qexec.h"
 #include "sge_string.h"
-#include "sge_switch_user.h"
-#include "sge_arch.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
 #include "sge_parse_num_par.h"
 #include "sge_conf.h"
 #include "setup_path.h"
-#include "sge_stat.h" 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
 #include "sge_security.h" 
-#include "sge_dirent.h"
 #include "sge_feature.h"
-#include "sge_file_path.h"
+#include "sge_spool.h"
 #include "read_write_job.h"
 #include "sge_job_jatask.h"
 #include "sge_unistd.h"
+#include "sge_uidgid.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -567,11 +561,11 @@ int is_array
          /* Job died through a signal */
          if (!pe_task_id_str)
             sprintf(error, MSG_JOB_WXDIEDTHROUGHSIGNALYZ_UUSI, 
-                    u32c(jobid), u32c(jataskid), sys_sig2str(signo), signo);
+                    u32c(jobid), u32c(jataskid), sge_sys_sig2str(signo), signo);
          else
             sprintf(error, MSG_JOB_TASKVOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI, 
                      pe_task_id_str, u32c(jobid), u32c(jataskid), 
-                     sys_sig2str(signo), signo);
+                     sge_sys_sig2str(signo), signo);
 
          DPRINTF(("%s\n", error));
          failed = SSTATE_FAILURE_AFTER_JOB;
@@ -916,11 +910,11 @@ lListElem *jr
       used_slots = qslots_used(master_q) - 1;
       set_qslots_used(master_q, used_slots);
       if (!used_slots) {
-         switch2start_user();
+         sge_switch2start_user();
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
             lGetString(job, JB_owner), lGetUlong(job, JB_job_number), 
             jataskid, lGetString(master_q, QU_qname));
-         switch2admin_user();
+         sge_switch2admin_user();
       }
 
       if (!pe_task_id_str) {
@@ -1201,7 +1195,7 @@ int startup
 
    /* Get pids of running jobs. So we can look for running shepherds. */
    cp = SGE_SHEPHERD;
-   npids = get_pids(pids, 10000, cp, PSCMD);
+   npids = sge_get_pids(pids, 10000, cp, PSCMD);
    if (npids == -1) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND));
       DEXIT;
@@ -1376,7 +1370,7 @@ int npids
    fclose(fp);
 
    /* look whether shepherd is still alive */ 
-   shepherd_alive = contains_pid(pid, pids, npids);
+   shepherd_alive = sge_contains_pid(pid, pids, npids);
 
    /* report this information */
    sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS, 

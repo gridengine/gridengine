@@ -45,12 +45,10 @@
 #include "sge_c_gdi.h"
 #include "sge_multiL.h"
 #include "sge_answerL.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "sge_max_nis_retries.h"
 #include "sge_uidgid.h"
 #include "qm_name.h"
 #include "sge_unistd.h"
@@ -86,8 +84,8 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out,
 *                    lCondition* cp, lEnumeration* enp) 
 *
 *  FUNCTION
-*     Using this function an application can operate on a linked lists (CULL) 
-*     stored in the master daemon. 
+*     Using this function an application can operate on a linked lists 
+*     (CULL) stored in the master daemon. 
 *
 *  INPUTS
 *     u_long32 target   - References a list of the master 
@@ -103,7 +101,8 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out,
 *           The 'operation' describes what to do with elements directly
 *           contained within lpp.
 *           The 'subcommand' bits gives the master some hints how
-*           to handle elements in sublists contained in the elements of lpp.
+*           to handle elements in sublists contained in the elements 
+*           of lpp.
 *
 *           operation:
 *              SGE_GDI_GET - get a list of objects
@@ -120,31 +119,34 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out,
 *           (a complete list ob enum values and valid combinations 
 *            can be found in sge_gdi.h)
 *
-*     lList** lpp       - This parameter is used to get a list in case of 
-*           SGE_GDI_GET command. The caller is responsible for freeing by 
-*           using lFreeList(). In the other cases the caller passes a list 
-*           containing the (sub)elements to add/modify/delete.
-*           sge_gdi() doesn't free the passed list.
+*     lList** lpp       - This parameter is used to get a list in case 
+*           of SGE_GDI_GET command. The caller is responsible for 
+*           freeing by using lFreeList(). In the other cases the caller 
+*           passes a list containing the (sub)elements to 
+*           add/modify/delete. sge_gdi() doesn't free the passed list.
 *
-*     lCondition* cp    - Points to a lCondition as it is build by lWhere
-*           (refer to CULL documentation). This enumeration describes the 
-*           fields in the request list of an SGE_GDI_GET-request.  
+*     lCondition* cp    - Points to a lCondition as it is build by 
+*           lWhere (refer to CULL documentation). This enumeration 
+*           describes the fields in the request list of an 
+*           SGE_GDI_GET-request.  
 *
-*     lEnumeration* enp - Points to a lEnumerations structure build by lWhat()
-*           (refer to CULL documentation) in case of SGE_GDI_GET command. This
-*           enumeration describes the fields in the requested list. 
+*     lEnumeration* enp - Points to a lEnumerations structure build 
+*           by lWhat() (refer to CULL documentation) in case of 
+*           SGE_GDI_GET command. This enumeration describes the fields 
+*           in the requested list. 
 *
 *  RESULT
-*     returns a CULL list reporting success/failure of the operation. This list 
-*     gets allocated by sge_gdi. Again the caller is responsible for freeing.
-*     A response is a list element containing a field with a status value
-*     (AN_status). The value STATUS_OK is used in case of success. STATUS_OK 
-*     and other values are defined in sge_answerL.h. the second field (AN_text)
-*     in a response list element is a string that describes the performed 
-*     operation or a description of an error.
-*     Each call od sge_gdi passes a list with at least one respone to the 
-*     caller. The response list of a SGE_GDI_GET-operation containes only one
-*     element reporting success or failure.  
+*     returns a CULL list reporting success/failure of the operation. 
+*     This list gets allocated by sge_gdi. Again the caller is 
+*     responsible for freeing. A response is a list element containing 
+*     a field with a status value (AN_status). The value STATUS_OK is 
+*     used in case of success. STATUS_OK and other values are defined 
+*     in sge_answerL.h. the second field (AN_text) in a response list 
+*     element is a string that describes the performed operation or a 
+*     description of an error.
+*     Each call od sge_gdi passes a list with at least one respone to 
+*     the caller. The response list of a SGE_GDI_GET-operation 
+*     containes only one element reporting success or failure.  
 *    
 *  EXAMPLE
 *     In following directory you can find small applications which
@@ -189,14 +191,15 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 
 /****** gdi/request/sge_gdi_multi() *******************************************
 *  NAME
-*     sge_gdi_multi() -- request, change or delete multiple lists in master 
+*     sge_gdi_multi() -- get, change or delete multiple lists  
 *
 *  SYNOPSIS
-*     int sge_gdi_multi(lList** alpp, int mode, u_long32 target, u_long32 cmd, 
-*        lList* lp, lCondition* cp, lEnumeration* enp, lList** malpp) 
+*     int sge_gdi_multi(lList** alpp, int mode, u_long32 target, 
+*                       u_long32 cmd, lList* lp, lCondition* cp, 
+*                       lEnumeration* enp, lList** malpp) 
 *
 *  FUNCTION
-*     In some situations it is necessary to change multiple master lists.
+*     In some situations it is necessary to change multiple master lists
 *     Normally someone would use multiple sge_gdi() requests which would 
 *     raise frequent commlib communication.
 *
@@ -213,8 +216,9 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *     lList** alpp      - result of this sge_gdi_multi() call 
 *
 *     int mode          - What should the function do with this request 
-*        SGE_GDI_RECORD - record a GDI request (no commlib communication)
-*        SGE_GDI_SEND - send all recorded GDI requests including the current one
+*        SGE_GDI_RECORD - record a GDI request (no commlib comm.)
+*        SGE_GDI_SEND   - send all recorded GDI requests including 
+*                         the current one
 *
 *     u_long32 target   - References a list of the master
 *              SGE_JOB_LIST    - list of jobs
@@ -228,8 +232,9 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           'subcommand'.
 *           The 'operation' describes what to do with elements directly
 *           contained within lpp.
-*           The 'subcommand' bits gives the master some hints how
-*           to handle elements in sublists contained in the elements of lpp.
+*           The 'subcommand' bits gives the master some hints how to 
+*           handle elements in sublists contained in the elements 
+*           of lpp.
 *
 *           operation:
 *              SGE_GDI_GET - get a list of objects
@@ -250,27 +255,29 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           containing the (sub)elements to add/modify/delete.
 *           sge_gdi_multi() doesn't free the passed list.
 *
-*     lCondition* cp    - Points to a lCondition as it is build by lWhere
-*           (refer to CULL documentation). This enumeration describes the
-*           fields in the request list of an SGE_GDI_GET-request.
+*     lCondition* cp    - Points to a lCondition as it is build by 
+*           lWhere (refer to CULL documentation). This enumeration 
+*           describes the fields in the request list of an 
+*           SGE_GDI_GET-request.
 *
-*     lEnumeration* enp - Points to a lEnumerations structure build by lWhat()
-*           (refer to CULL documentation) in case of SGE_GDI_GET command. This
-*           enumeration describes the fields in the requested list.  
+*     lEnumeration* enp - Points to a lEnumerations structure build 
+*           by lWhat() (refer to CULL documentation) in case of 
+*           SGE_GDI_GET command. This enumeration describes the fields 
+*           in the requested list.  
 *
 *     lList** malpp     - in case of mode=SGE_GDI_SEND this parameter
 *           returns informations for each invidual request previously
 *           stored with sge_gdi_multi(mode=SGE_GDI_RECORD). 
-*           sge_gdi_extract_answer() can be used to get the answer list for
-*           one of these GDI requests.
+*           sge_gdi_extract_answer() can be used to get the answer 
+*           list for one of these GDI requests.
 *
 *  RESULT
 *     -1  - if an error occured
 *     (positive integer) - id which identifies the current gdi request.
-*        The returned ids are only unique until this function was called with
-*        SGE_GDI_SEND as mode. Ids returned by this function can be used
-*        with sge_gdi_extract_answer() to get answer lists for single GDI 
-*        requests.
+*        The returned ids are only unique until this function was 
+*        called with SGE_GDI_SEND as mode. Ids returned by this 
+*        function can be used with sge_gdi_extract_answer() to get 
+*        answer lists for single GDI requests.
 *
 *  EXAMPLE
 *     Please have a look into the qstat client application. This client
@@ -478,12 +485,12 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 *     sge_gdi_extract_answer() -- exctact answers of a multi request.
 *
 *  SYNOPSIS
-*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, 
-*                                   lList* mal, lList** olpp) 
+*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, 
+*                                   int id, lList* mal, lList** olpp) 
 *
 *  FUNCTION
-*     This function extracts the answer for each invidual request on previous
-*     sge_gdi_multi() calls. 
+*     This function extracts the answer for each invidual request on 
+*     previous sge_gdi_multi() calls. 
 *
 *  INPUTS
 *     u_long32 cmd    - bitmask which decribes the operation 
@@ -498,18 +505,19 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 *     lList* mal      - List of answer/response lists returned from
 *        sge_gdi_multi(mode=SGE_GDI_SEND)
 *
-*     lList** olpp    - This parameter is used to get a list in case of
-*           SGE_GDI_GET command. The caller is responsible for freeing by
-*           using lFreeList(). 
+*     lList** olpp    - This parameter is used to get a list in case 
+*           of SGE_GDI_GET command. The caller is responsible for 
+*           freeing by using lFreeList(). 
 *
 *  RESULT
-*     returns a CULL list reporting success/failure of the operation. This list
-*     gets allocated by GDI. The caller is responsible for freeing.
-*     A response is a list element containing a field with a status value
-*     (AN_status). The value STATUS_OK is used in case of success. STATUS_OK
-*     and other values are defined in sge_answerL.h. the second field (AN_text)
-*     in a response list element is a string that describes the performed
-*     operation or a description of an error.
+*     returns a CULL list reporting success/failure of the operation. 
+*     This list gets allocated by GDI. The caller is responsible 
+*     for freeing. A response is a list element containing a field 
+*     with a status value (AN_status). The value STATUS_OK is used 
+*     in case of success. STATUS_OK and other values are defined in 
+*     sge_answerL.h. the second field (AN_text) in a response list 
+*     element is a string that describes the performed operation or 
+*     a description of an error.
 ******************************************************************************/
 lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
                               lList *mal, lList **olpp) 
@@ -555,12 +563,13 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
   
 /****** gdi/request/sge_send_receive_gdi_request() ****************************
 *  NAME
-*     sge_send_receive_gdi_request() -- sends and receives an gdi structure 
+*     sge_send_receive_gdi_request() -- snd and rcv a gdi structure 
 *
 *  SYNOPSIS
-*     static int sge_send_receive_gdi_request(char *rhost, char *commproc, 
-*                                             u_short id, sge_gdi_request *out,
-*                                             sge_gdi_request **in) 
+*     static int sge_send_receive_gdi_request(char *rhost, 
+*                                char *commproc, u_short id, 
+*                                sge_gdi_request *out, 
+*                                sge_gdi_request **in) 
 *
 *  FUNCTION
 *     sends and receives an gdi request structure 
@@ -580,7 +589,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *        -3 failed receiving gdi request
 *        -4 check_isalive() failed
 *        -5 failed due to a received signal  
-*******************************************************************************/
+******************************************************************************/
 static int sge_send_receive_gdi_request(char *rhost, char *commproc, 
                                         u_short id, sge_gdi_request *out,
                                         sge_gdi_request **in)
@@ -736,8 +745,8 @@ int sge_send_gdi_request(int sync, const char *rhost, const char *commproc,
 *     sge_get_gdi_request() -- ??? 
 *
 *  SYNOPSIS
-*     static int sge_get_gdi_request(char *host, char *commproc, u_short *id, 
-*     sge_gdi_request** arp) 
+*     static int sge_get_gdi_request(char *host, char *commproc, 
+*                                    u_short *id, sge_gdi_request** arp) 
 *
 *  FUNCTION
 *     ??? 
@@ -807,7 +816,8 @@ static int sge_get_gdi_request(char *host, char *commproc,
 *     sge_unpack_gdi_request() -- unpacks an gdi_request structure 
 *
 *  SYNOPSIS
-*     int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp) 
+*     int sge_unpack_gdi_request(sge_pack_buffer *pb, 
+*                                sge_gdi_request **arp) 
 *
 *  FUNCTION
 *     ??? 

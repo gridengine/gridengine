@@ -56,6 +56,7 @@
 #include "sge_conf.h"
 #include "sge_string.h"
 #include "sge_job_jatask.h"
+#include "sge_hostname.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
@@ -375,7 +376,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
       if (first_granted_queue &&
           ((qep && (strcmp(lGetString(first_granted_queue, JG_qname),
               lGetString(qep, QU_qname))))
-          || ((hep && hostcmp(lGetHost(first_granted_queue, JG_qhostname),
+          || ((hep && sge_hostcmp(lGetHost(first_granted_queue, JG_qhostname),
               lGetHost(hep, EH_name)))))) {
          /* Skip jobs silently which are not intended to reschedule */
          continue;
@@ -475,7 +476,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
        * Is this task already contained in the list?
        * Append it if necessary
        */
-      if (hep && !hostcmp(lGetHost(first_granted_queue, JG_qhostname),
+      if (hep && !sge_hostcmp(lGetHost(first_granted_queue, JG_qhostname),
           lGetHost(hep, EH_name))) {
          host = hep;
       } else {

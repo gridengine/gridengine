@@ -51,14 +51,14 @@
 #include "cull_parse_util.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "scheduler.h"                                                                
 #include "sgeee.h"                                                                
 #include "sge_support.h"                                                                
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
 #include "sge_stdio.h"
+#include "sge_spool.h"
 
 static lListElem *search_unspecified_node(lListElem *ep);
 static int id_sharetree(lListElem *ep, int id);
@@ -541,11 +541,11 @@ const char *path
          fprintf(fp, "="u32"\n", lGetUlong(node, STN_shares));
       free_ancestors(&ancestors);
       for_each(cep, lGetList(node, STN_children)) {
-         StringBufferT sb = {NULL, 0};
+         dstring sb = {NULL, 0};
          if (!strcmp(path, "/"))
-            sge_string_printf(&sb, "/%s", lGetString(cep, STN_name));
+            sge_dstring_sprintf(&sb, "/%s", lGetString(cep, STN_name));
          else
-            sge_string_printf(&sb, "%s/%s", path,
+            sge_dstring_sprintf(&sb, "%s/%s", path,
                                  lGetString(cep, STN_name));
          show_sharetree_path(root, sb.s);
          free(sb.s);

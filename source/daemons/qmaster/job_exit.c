@@ -56,8 +56,7 @@
 #include "execution_states.h"
 #include "sge_feature.h"
 #include "sge_rusage.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "symbols.h"
@@ -68,8 +67,9 @@
 #include "msg_qmaster.h"
 #include "sge_string.h"
 #include "sge_feature.h"
-#include "sge_stat.h"
-#include "sge_spoolmsg.h"
+#include "sge_unistd.h"
+#include "sge_spool.h"
+#include "sge_hostname.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Userset_List;
@@ -260,7 +260,7 @@ lListElem *jatep
          if (hep) {
             host = lGetHost(hep, EH_name);
             for_each(qep, Master_Queue_List) {
-               if (!hostcmp(lGetHost(qep, QU_qhostname), host)) {
+               if (!sge_hostcmp(lGetHost(qep, QU_qhostname), host)) {
                   state = lGetUlong(qep, QU_state);
                   CLEARBIT(QRUNNING,state);
                   SETBIT(QERROR, state);

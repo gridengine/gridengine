@@ -41,7 +41,7 @@ SHADOWD_SRC =   shadowd.c \
 
 SHADOWD_ADD_SRC = sig_handlers.c qmaster_running.c qmaster_heartbeat.c \
                startprog.c lock.c rw_configuration.c \
-               sge_switch_user.c usage.c sge_options.c shutdown.c
+               usage.c sge_options.c shutdown.c
 
 SHADOWD_OBJS = $(SHADOWD_SRC:.c=.o)
 

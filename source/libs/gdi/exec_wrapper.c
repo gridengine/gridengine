@@ -38,19 +38,18 @@
 #include <pwd.h>
 #include <errno.h>
 
-#include "sge_arch.h"
 #include "sge_confL.h"
 #include "sge_answerL.h"
 
 #include "read_object.h"
-#include "sge_getpwnam.h"
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_me.h"
 #include "config.h"
 #include "exec_wrapper.h"
 #include "setup_path.h"
+#include "sge_uidgid.h"
+#include "sge_prog.h"
 
 #include "msg_utilib.h"
 

@@ -37,11 +37,10 @@
 #include <errno.h>
 #endif
 
-#include "sgermon.h"
 #include "sge_loadmem.h"
+#include "sgermon.h"
 #include "sge_log.h"
 #include "msg_utilib.h"
-#include "sge_getloadavg.h"
 
 #if !defined(LINUX) && !defined(SUN4) && !defined(HPUX) && !defined(CRAY)
 
@@ -111,7 +110,7 @@ char *argv[]
    sge_mem_info_t mem_info;
 
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
-   if (loadmem(&mem_info)) {
+   if (sge_loadmem(&mem_info)) {
       fprintf(stderr, "error: failed retrieving memory info\n");
       return 1;
    }
@@ -134,11 +133,9 @@ char *argv[]
 #include <sys/types.h>
 #include <fcntl.h>
 
-int loadmem_rsg(
-int rsg_id,
-sge_mem_info_t *mem_info_l,
-sge_mem_info_t *mem_info_s 
-) {
+int loadmem_rsg(int rsg_id, sge_mem_info_t *mem_info_l, 
+                sge_mem_info_t *mem_info_s) 
+{
    int fd;
    memrb_t lmem, smem;
    rsg_info_t info;
@@ -187,10 +184,8 @@ sge_mem_info_t *mem_info_s
    return 0;
 }
 
-int loadmem_small_large(
-sge_mem_info_t *mem_info_l,
-sge_mem_info_t *mem_info_s 
-) {
+int loadmem_small_large(sge_mem_info_t *mem_info_l, sge_mem_info_t *mem_info_s)
+{
    int fd;
    int fsg_id;
    rsg_info_t info;
@@ -218,9 +213,30 @@ sge_mem_info_t *mem_info_s
    return ret;
 }
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+/****** uti/os/sge_loadmem() **************************************************
+*  NAME
+*     sge_loadmem() -- Get information about the memory of this machine
+*
+*  SYNOPSIS
+*     int sge_loadmem(sge_mem_info_t *mem_info) 
+*
+*  FUNCTION
+*     Retrieves some information about the current memory of 
+*     this host.
+*
+*  INPUTS
+*     sge_mem_info_t *mem_info - memory structure 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  SEE ALSO
+*     uti/os/sge_mem_info_t
+******************************************************************************/
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    sge_mem_info_t mem_info_s, mem_info_l;
    int ret;
 
@@ -245,9 +261,8 @@ sge_mem_info_t *mem_info
 #include <fcntl.h>
 #include <kvm.h>               
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    long total, fr;
    register long cnt, i;
    register long t, f, l;
@@ -342,9 +357,8 @@ sge_mem_info_t *mem_info
 
 #define SWAP_BURST 10
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    int i, cnt, idx;
    struct pst_dynamic ps_dyn;
    struct pst_swapinfo ps_swap[SWAP_BURST];
@@ -463,9 +477,8 @@ sge_mem_info_t *mem_info
 #include <paths.h>
 #include <sys/table.h>
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    struct vm_statistics vmstats;
    int swap_pages=0,swap_free=0,i;
    int physical_memory;     /* size of real mem in KB                 */
@@ -531,9 +544,8 @@ sge_mem_info_t *mem_info
 #define pagetom(size) ((size)*(((float)pagesize)/1024))
 
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    struct rminfo rmi;
    struct minfo mi;
    off_t swaptot, swapfree, swaprsrv;
@@ -583,9 +595,8 @@ sge_mem_info_t *mem_info
 #define KEY_BUFFERS   "Buffers"
 #define KEY_CACHED    "Cached"
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    char dummy[512], buffer[1024];
    double kbytes;
    FILE *fp;
@@ -643,12 +654,9 @@ sge_mem_info_t *mem_info
 #include <sys/stat.h>
 #include <sys/machcons.h>
 
-static int read_kernel_table(
-char *name,
-void **table,
-long *size,
-int *entries 
-) {
+static int read_kernel_table(char *name, void **table, long *size, 
+                             int *entries) 
+{
    struct tbs tinfo;
    long tsize;
 
@@ -679,9 +687,8 @@ int *entries
    return 0;
 }
 
-int loadmem(
-sge_mem_info_t *mem_info 
-) {
+int sge_loadmem(sge_mem_info_t *mem_info) 
+{
    static struct sysinfo *si;
    static long si_size;
    static struct swapper *sw;

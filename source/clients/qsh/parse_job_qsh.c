@@ -49,7 +49,6 @@
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "parse_job_qsh.h"
-#include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
@@ -61,6 +60,7 @@
 #include "sge_job_jatask.h"
 #include "jb_now.h"
 #include "sge_stdlib.h"
+#include "sge_prog.h"
 
 /*
 ** NAME

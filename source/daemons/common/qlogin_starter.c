@@ -53,10 +53,10 @@
 #endif
 
 #include "basis_types.h"
+#include "sge_prog.h"
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
-#include "sge_arch.h"
 
 
 static char err_str[1024];

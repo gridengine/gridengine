@@ -57,7 +57,6 @@
 #include "sge_log.h"
 #include "parse_range.h"
 #include "msg_schedd.h"
-#include "sge_dirent.h"
 
 sge_schedd_conf_type scheddconf = { 
    NULL, 0, 0, 0, 0, NULL, 0, NULL 
@@ -189,7 +188,7 @@ u_long32 *si              /* here scheduling interval gets written */
    if (sc) {
       sc->load_formula = sge_strdup(sc->load_formula, 
          lGetString(sc_ep, SC_load_formula));
-      strip_blanks(sc->load_formula);
+      sge_strip_blanks(sc->load_formula);
    }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, 
          lGetString(sc_ep, SC_load_formula), "load_formula"));

@@ -35,27 +35,25 @@
 
 #include "cull.h"
 #include "sgermon.h"
-#include "sge_peopen.h"
 #include "sge_gdi_intern.h"
 #include "sge_log.h"
 #include "setup_path.h"
-#include "sge_copy_append.h"
 #include "sge_jobL.h"
 #include "sge_string.h"
 #include "sge_answerL.h"
 #include "sge_afsutil.h"
-#include "sge_switch_user.h"
 #include "execution_states.h"
-#include "sge_me.h"
-#include "sge_arch.h"
 #include "sge_gdi.h"
 #include "qm_name.h"
 #include "sge_unistd.h"
-#include "msg_gdilib.h"
 #include "sge_feature.h"
-#include "sge_getpwnam.h"
 #include "dispatcher.h"
 #include "sge_security.h"
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_stdio.h"
+#include "sge_prog.h"
+#include "msg_gdilib.h"
 
 #ifdef CRYPTO
 #include <openssl/evp.h>
@@ -284,8 +282,8 @@ u_short *compressed
 *  EXAMPLE
 *
 *  NOTES
-*     Hope, the above description is correct - don't know the DCE/KERBEROS
-*     code.
+*     Hope, the above description is correct - don't know the 
+*     DCE/KERBEROS code.
 ******************************************************************************/
 int set_sec_cred(lListElem *job)
 {
@@ -304,12 +302,12 @@ int set_sec_cred(lListElem *job)
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       sprintf(binary, "%s/util/get_token_cmd", path.sge_root);
 
-      if (get_token_cmd(binary, NULL) != 0) {
+      if (sge_get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
       
-      command_pid = peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
+      command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S, binary);
@@ -318,7 +316,7 @@ int set_sec_cred(lListElem *job)
 
       str = sge_bin2string(fp_out, 0);
       
-      ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+      ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
       
       lSetString(job, JB_tgt, str);
    }
@@ -335,14 +333,14 @@ int set_sec_cred(lListElem *job)
        feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
       sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
-      if (get_token_cmd(binary, NULL) != 0) {
+      if (sge_get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
 
       sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-      command_pid = peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
+      command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S, binary);
@@ -356,7 +354,7 @@ int set_sec_cred(lListElem *job)
             fprintf(stderr, "get_cred stderr: %s", line);
       }
 
-      ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+      ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
       if (ret) {
          fprintf(stderr, MSG_QSH_CANTGETCREDENTIALS);
@@ -382,10 +380,10 @@ int set_sec_cred(lListElem *job)
 
          sprintf(binary, "%s/util/get_token_cmd", path.sge_root);
 
-         if (get_token_cmd(binary, buf))
+         if (sge_get_token_cmd(binary, buf))
             goto error;
 
-         command_pid = peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
+         command_pid = sge_peopen("/bin/sh", 0, binary, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
          if (command_pid == -1) {
             DPRINTF(("can't start command \"%s\" to get token\n",  binary));
@@ -395,7 +393,7 @@ int set_sec_cred(lListElem *job)
 
          cp = sge_bin2string(fp_out, 0);
 
-         ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+         ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          lSetString(lFirst(lp), JB_tgt, cp);
       }
@@ -418,12 +416,12 @@ int set_sec_cred(lListElem *job)
 
          sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
-         if (get_token_cmd(binary, buf) != 0)
+         if (sge_get_token_cmd(binary, buf) != 0)
             goto error;
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", sge_get_master(0));
       
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, NULL, &fp_in, &fp_out, &fp_err);
 
          if (command_pid == -1) {
             DPRINTF((buf, "can't start command \"%s\" to get credentials "
@@ -440,7 +438,7 @@ int set_sec_cred(lListElem *job)
                fprintf(stderr, "get_cred stderr: %s", line);
          }
 
-         ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+         ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          if (ret) {
             DPRINTF(("warning: could not get credentials\n"));
@@ -483,14 +481,14 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
 
       sprintf(binary, "%s/utilbin/%s/get_cred", path.sge_root, sge_get_arch());
 
-      if (get_token_cmd(binary, NULL) == 0) {
+      if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", rhost);
 
-         switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         switch2admin_user();
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, 
@@ -504,7 +502,7 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
                ERROR((SGE_EVENT, MSG_QSH_GET_CREDSTDERR_S, line));
          }
 
-         ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+         ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          lSetString(jep, JB_cred, str);
 
@@ -549,14 +547,14 @@ void delete_credentials(lListElem *jep)
 
       sprintf(binary, "%s/utilbin/%s/delete_cred", path.sge_root, sge_get_arch());
 
-      if (get_token_cmd(binary, NULL) == 0) {
+      if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
 
          sprintf(cmd, "%s -s %s", binary, "sge");
 
-         switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         switch2admin_user();
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             strcpy(tmpstr, SGE_EVENT);
@@ -573,7 +571,7 @@ void delete_credentials(lListElem *jep)
             }
          }
 
-         ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+         ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          if (ret != 0) {
             strcpy(tmpstr, SGE_EVENT);
@@ -629,12 +627,12 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
       sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root, sge_get_arch());
 
-      if (get_token_cmd(binary, NULL) == 0) {
+      if (sge_get_token_cmd(binary, NULL) == 0) {
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
 
-         switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         switch2admin_user();
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU,
@@ -648,7 +646,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
                ERROR((SGE_EVENT, MSG_SEC_PUTCREDSTDERR_S, line));
          }
 
-         ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+         ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          if (ret) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTORECRED_USI,
@@ -746,15 +744,15 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
       sprintf(binary, "%s/utilbin/%s/put_cred", path.sge_root,
               sge_get_arch());
 
-      if (get_token_cmd(binary, NULL) == 0) {
+      if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
 
          sprintf(cmd, "%s -s %s -u %s -b %s", binary, "sge",
                  lGetString(jelem, JB_owner), lGetString(jelem, JB_owner));
 
-         switch2start_user();
-         command_pid = peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         switch2admin_user();
+         sge_switch2start_user();
+         command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
+         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, binary, u32c(lGetUlong(jelem, JB_job_number))));
@@ -767,7 +765,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
                ERROR((SGE_EVENT, MSG_SEC_PUTCREDSTDERR_S, line));
          }
 
-         ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL);
+         ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          if (ret) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTORECRED_USI, u32c(lGetUlong(jelem, JB_job_number)), binary, ret));

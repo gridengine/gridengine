@@ -75,8 +75,7 @@ struct rusage {
 #include "config_file.h"
 #include "err_trace.h"
 #include "setenv.h"
-#include "sge_switch_user.h"
-
+#include "sge_uidgid.h"
 #include "setosjobid.h"
 
 #if defined(NECSX4) || defined(NECSX5)
@@ -149,7 +148,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
             shepherd_error("can't open \"osjobid\" file");
 
 
-         if(switch2start_user() == 0) {
+         if(sge_switch2start_user() == 0) {
 #     if defined(IRIX6)
       {
          /* The following block contains the operations necessary for
@@ -335,7 +334,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
          /* write a default os-jobid to file */
          sprintf(osjobid, pid_t_fmt, sid);
 #     endif
-         switch2admin_user();
+         sge_switch2admin_user();
       } 
       else /* not running as super user --> we want a default os-jobid */
          sprintf(osjobid, "0");

@@ -33,26 +33,24 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
 #ifdef AIX32
 #   include <sys/select.h>
 #endif
 
+#include "sge_unistd.h"
 #include "sge_load_reportL.h"
 #include "sge_loadsensorL.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
-#include "sge_me.h"
-#include "sge_peopen.h"
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_conf.h"
 #include "def.h"
 #include "report.h"
-#include "sge_arch.h"
-#include "sge_stat.h"
+#include "sge_stdio.h"
+#include "sge_prog.h"
 #include "msg_execd.h"
 
 
@@ -262,7 +260,7 @@ static void sge_ls_start_ls(lListElem *this_ls)
    }
 
    /* we need fds for select() .. */
-   pid = peopen("/bin/sh", 0, lGetString(this_ls, LS_command), NULL, envp,
+   pid = sge_peopen("/bin/sh", 0, lGetString(this_ls, LS_command), NULL, envp,
                 &fp_in, &fp_out, &fp_err);
 
    if (envp) {
@@ -399,10 +397,10 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
 
    /* close all fds to load sensor */
    if (ret != LS_NOT_STARTED) {
-      exit_status = peclose(sge_ls_get_pid(this_ls), lGetRef(this_ls, LS_in),
+      exit_status = sge_peclose(sge_ls_get_pid(this_ls), lGetRef(this_ls, LS_in),
                             lGetRef(this_ls, LS_out), lGetRef(this_ls, LS_err),
                             (t.tv_sec ? &t : NULL));
-      DPRINTF(("%s: load sensor `%s` stopped, exit status from peclose= %d\n",
+      DPRINTF(("%s: load sensor `%s` stopped, exit status from sge_peclose= %d\n",
                SGE_FUNC, lGetString(this_ls, LS_command), exit_status));
    }
 

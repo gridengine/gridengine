@@ -33,8 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
@@ -50,17 +50,14 @@
 #include "sge_feature.h"
 #include "sge_log.h"
 #include "setup_path.h"
-#include "sge_stat.h" 
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
 #include "sge_stdio.h"
-#include "sge_getme.h"
 #include "sge_schedd.h"
-#include "sge_spoolmsg.h"
-#include "sge_tmpnam.h"
-#include "sge_arch.h"
+#include "sge_spool.h"
 #include "sge_string.h"
+#include "sge_prog.h"
+#include "sge_io.h"
 
 static intprt_type intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
 

@@ -44,11 +44,10 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "sge_copy_append.h"
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_complex.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_c_event.h"
 #include "sge_schedd.h"
 #include "sge_time.h"

@@ -33,18 +33,38 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 
 #define REALLOC_CHUNK   1024
 
-char* sge_string_append(StringBufferT *sb, const char *a) {
+/****** uti/dstring/sge_dstring_append() **************************************
+*  NAME
+*     sge_dstring_append() -- strcat() for dstring's 
+*
+*  SYNOPSIS
+*     char* sge_dstring_append(dstring *sb, const char *a) 
+*
+*  FUNCTION
+*     Append 'a' after 'sb' 
+*
+*  INPUTS
+*     dstring *sb   - dynamic string 
+*     const char *a - string 
+*
+*  RESULT
+*     char* - result string
+******************************************************************************/
+char* sge_dstring_append(dstring *sb, const char *a) 
+{
    int n, m;
 
-   if (!sb)
+   if (!sb) {
       return NULL;
+   }
    
-   if (!a || *a == '\0')
+   if (!a || *a == '\0') {
       return sb->s;
+   }
 
    n = strlen(a);
    m = sb->s ? strlen(sb->s) : 0;
@@ -64,7 +84,25 @@ char* sge_string_append(StringBufferT *sb, const char *a) {
    return sb->s;
 }
 
-char* sge_string_printf(StringBufferT *sb, const char *format,...)
+/****** uti/dstring/sge_dstring_sprintf() *************************************
+*  NAME
+*     sge_dstring_sprintf() -- sprintf() for dstring's 
+*
+*  SYNOPSIS
+*     char* sge_dstring_sprintf(dstring *sb, const char *format, ...) 
+*
+*  FUNCTION
+*     see sprintf() 
+*
+*  INPUTS
+*     dstring *sb        - dynamic string 
+*     const char *format - format string 
+*     ...                - additional parameters 
+*
+*  RESULT
+*     char* - result string 
+******************************************************************************/
+char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
    char buf[BUFSIZ];
    va_list ap;
@@ -74,12 +112,24 @@ char* sge_string_printf(StringBufferT *sb, const char *format,...)
       return sb ? sb->s : NULL;
    }
    vsprintf(buf, format, ap);
-   return sge_string_append(sb, buf);
+   return sge_dstring_append(sb, buf);
 }
 
-void sge_string_free(
-StringBufferT *sb 
-) {
+/****** uti/dstring/sge_dstring_free() ****************************************
+*  NAME
+*     sge_dstring_free() -- free() for dstring's 
+*
+*  SYNOPSIS
+*     void sge_dstring_free(dstring *sb) 
+*
+*  FUNCTION
+*     Frees a dynamically allocated string 
+*
+*  INPUTS
+*     dstring *sb - dynamic string 
+******************************************************************************/
+void sge_dstring_free(dstring *sb) 
+{
    if (sb && sb->s) {
       free(sb->s);
       sb->s = NULL;
@@ -91,17 +141,17 @@ StringBufferT *sb
 int main(void)
 {
    char *s;
-   StringBufferT sb = {NULL, 0};
+   dstring sb = {NULL, 0};
 
-   s = sge_string_append(&sb, "Trala");
-   s = sge_string_append(&sb, " trolo");
-   s = sge_string_append(&sb, " troet");
-   s = sge_string_printf(&sb, "%d, %s, %f\n", 5, "rabarber ", 5.6);
+   s = sge_dstring_append(&sb, "Trala");
+   s = sge_dstring_append(&sb, " trolo");
+   s = sge_dstring_append(&sb, " troet");
+   s = sge_dstring_sprintf(&sb, "%d, %s, %f\n", 5, "rabarber ", 5.6);
    printf("%s\n", s);
    /*
    ** free the string when no longer needed
    */
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
    return 0;
 }
 #endif

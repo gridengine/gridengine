@@ -63,7 +63,7 @@
 #include "qmon_pe.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 
 
 static Widget qmon_pe = 0;
@@ -195,7 +195,7 @@ lListElem *ep
    char buf[BUFSIZ];
    StringConst str;
    int i;
-   StringBufferT sb = {NULL, 0};
+   dstring sb = {NULL, 0};
 
    DENTER(GUI_LAYER, "qmonPEFillConf");
    
@@ -226,40 +226,40 @@ lListElem *ep
 
    /* queue list */
    ql = lGetList(ep, PE_queue_list);
-   sge_string_printf(&sb, "%-20.20s", "Queues");
+   sge_dstring_sprintf(&sb, "%-20.20s", "Queues");
    for_each(qep, ql) {
-      (void) sge_string_append(&sb, " "); 
-      (void) sge_string_append(&sb, lGetString(qep, QR_name));
+      (void) sge_dstring_append(&sb, " "); 
+      (void) sge_dstring_append(&sb, lGetString(qep, QR_name));
    }
    if (!lGetNumberOfElem(ql))
-      (void) sge_string_append(&sb, " NONE"); 
+      (void) sge_dstring_append(&sb, " NONE"); 
 /*    items[i++] = XmStringCreateLtoR(sb.s, "LIST"); */
    items[i++] = XmStringCreateLocalized(sb.s);
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
    
    /* users list */
    ul = lGetList(ep, PE_user_list);
-   sge_string_printf(&sb, "%-20.20s", "Users");
+   sge_dstring_sprintf(&sb, "%-20.20s", "Users");
    for_each(uep, ul) {
-      (void) sge_string_append(&sb, " "); 
-      (void) sge_string_append(&sb, lGetString(uep, US_name));
+      (void) sge_dstring_append(&sb, " "); 
+      (void) sge_dstring_append(&sb, lGetString(uep, US_name));
    }
    if (!lGetNumberOfElem(ul))
-      (void) sge_string_append(&sb, " NONE"); 
+      (void) sge_dstring_append(&sb, " NONE"); 
    items[i++] = XmStringCreateLocalized(sb.s);
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
    
    /* xusers list */
    ul = lGetList(ep, PE_xuser_list);
-   sge_string_printf(&sb, "%-20.20s", "Xusers");
+   sge_dstring_sprintf(&sb, "%-20.20s", "Xusers");
    for_each(uep, ul) {
-      (void) sge_string_append(&sb, " "); 
-      (void) sge_string_append(&sb, lGetString(uep, US_name));
+      (void) sge_dstring_append(&sb, " "); 
+      (void) sge_dstring_append(&sb, lGetString(uep, US_name));
    }
    if (!lGetNumberOfElem(ul))
-      (void) sge_string_append(&sb, " NONE"); 
+      (void) sge_dstring_append(&sb, " NONE"); 
    items[i++] = XmStringCreateLocalized(sb.s);
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
    
    /* start_proc_args */
    str = lGetString(ep, PE_start_proc_args);

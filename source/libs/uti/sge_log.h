@@ -52,10 +52,10 @@ typedef void (*trace_func_type)(char *);
 extern trace_func_type trace_func;
 
 
-void sge_log_as_admin_user(void);
-void sge_log_verbose(int i);
-int sge_is_verbose(void);
-void sge_qmon_log(int i);
+void sge_log_set_auser(int i);
+void sge_log_set_verbose(int i);
+int sge_log_is_verbose(void);
+void sge_log_set_qmon(int i);
 
 
 #define SGE_LOG(level,msg) sge_log(level, msg, __FILE__, SGE_FUNC, __LINE__ );
@@ -79,11 +79,114 @@ void sge_qmon_log(int i);
 #   define INFO(x)     (sprintf x,sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #   define DEBUG(x)    (sprintf x,sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #else
+
+/****** uti/log/CRITICAL() ****************************************************
+*  NAME
+*     CRITICAL() -- Log a critical message 
+*
+*  SYNOPSIS
+*     #define CRITICAL(params)
+*     void CRITICAL(char *buffer, const char* formatstring, ...) 
+*
+*  FUNCTION
+*     Log a critical message 
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
+
 #   define CRITICAL(x) (sprintf x,sge_log(LOG_CRIT,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+/****** uti/log/ERROR() *******************************************************
+*  NAME
+*     ERROR() -- Log an error message 
+*
+*  SYNOPSIS
+*     #define ERROR(params)
+*     void ERROR(char *buffer, const char* formatstring, ...) 
+*
+*  FUNCTION
+*     Log a error message 
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
 #   define ERROR(x)    (sprintf x,sge_log(LOG_ERR,    SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+/****** uti/log/WARNING() ******************************************************
+*  NAME
+*     WARNING() -- Log an warning message
+*
+*  SYNOPSIS
+*     #define WARNING(params)
+*     void WARNING(char *buffer, const char* formatstring, ...)
+*
+*  FUNCTION
+*     Log a warning message
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
 #   define WARNING(x)  (sprintf x,sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+/****** uti/log/NOTICE() ******************************************************
+*  NAME
+*     WARNING() -- Log a notice message
+*
+*  SYNOPSIS
+*     #define NOTICE(params)
+*     void NOTICE(char *buffer, const char* formatstring, ...)
+*
+*  FUNCTION
+*     Log a notice message
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
 #   define NOTICE(x)   (sprintf x,sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+/****** uti/log/INFO() ********************************************************
+*  NAME
+*     WARNING() -- Log an info message
+*
+*  SYNOPSIS
+*     #define INFO(params)
+*     void INFO(char *buffer, const char* formatstring, ...)
+*
+*  FUNCTION
+*     Log an info message
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
 #   define INFO(x)     (sprintf x,sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+/****** uti/log/DEBUG() ******************************************************
+*  NAME
+*     WARNING() -- Log a debug message
+*
+*  SYNOPSIS
+*     #define DEBUG(params)
+*     void DEBUG(char *buffer, const char* formatstring, ...)
+*
+*  FUNCTION
+*     Log a debug message
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
 #   define DEBUG(x)    (sprintf x,sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
 #endif
 int sge_log(int log_level, char *mesg, char *file__, char *func__, int line__);

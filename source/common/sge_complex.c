@@ -48,8 +48,8 @@
 #include "sge_string.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "sge_feature.h"
+#include "sge_spool.h"
 
 static int parse_flag(lList **alpp, const char *cp, lListElem *ep, int nm, const char *name, const char *fname, int line);
 

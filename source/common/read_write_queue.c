@@ -48,15 +48,15 @@
 #include "read_write_queue.h"
 #include "read_object.h"
 #include "config.h"
-#include "sge_tmpnam.h"
 #include "parse_range.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_stdio.h"
+#include "sge_spool.h"
+#include "sge_io.h"
 #include "msg_common.h"
 #include "sched_conf.h"
-#include "sge_spoolmsg.h"
 
 static char *queue_types[] = {
    "BATCH",        

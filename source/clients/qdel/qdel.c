@@ -68,11 +68,8 @@ int main(int argc, char **argv) {
    int cmd;
    int wait;
    unsigned long status = 0;
-   lListElem* ref_elem = NULL;
-   const char* jobName = NULL;
    int have_master_privileges;
    int cl_err = 0;
-   int delete_mode;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
@@ -186,7 +183,6 @@ int main(int argc, char **argv) {
       }
       while (delete_mode) {
          int no_forced_deletion = delete_mode & 2;
-         int combined_deletion = delete_mode & 4;
          int do_again;
          int error_occured;
          int first_try = 1;

@@ -1,3 +1,9 @@
+EB-2003-04-08-0  Bugfix:    sge_shepherd does not exit on SIGTERM
+                 Issue:     522
+                 Bugtraq:   4844838 
+                 Changed:   sge_shepherd
+                 Review:    AH
+
 EB-2003-04-07-0  Bugfix:    SGEEE: scheduler dispatches wrong jobs if
                             there are jobs in the list of pending jobs
                             which had an error state or which have 

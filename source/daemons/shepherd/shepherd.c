@@ -217,6 +217,7 @@ int notify; /* 0 if no notify or # of seconds to delay signal */
 
 static void signal_handler(int signal);
 static void set_shepherd_signal_mask(void);
+static void change_shepherd_signal_mask(void);
 
 extern char **environ;
 
@@ -490,7 +491,7 @@ int signal
 ) {
    char err_str[256];
 
-   sprintf(err_str, "received signal %s", sys_sig2str(signal));
+   sprintf(err_str, "received signal %s (%d)", sys_sig2str(signal), signal);
    shepherd_trace(err_str);
 
    received_signal = signal;
@@ -920,6 +921,8 @@ int ckpt_type
 
    sprintf(err_str, "forked \"%s\" with pid %d", childname, pid);
    shepherd_trace(err_str);
+
+   change_shepherd_signal_mask();
    
    start_time = sge_get_gmt();
 
@@ -944,7 +947,6 @@ int ckpt_type
    
    *truncate_flag = 0;  /* only first child truncates stderr/out */
 
-#if 1 /* EB: signals */
    if (received_signal > 0 && received_signal != SIGALRM) {
       int sig = SIGKILL;
       char sig_str[80];
@@ -1004,7 +1006,6 @@ int ckpt_type
       }
       received_signal = 0;
    }
-#endif
  
    if (timeout) {
       sprintf(err_str, "using signal delivery delay of %d seconds", timeout);
@@ -2133,6 +2134,15 @@ static void set_shepherd_signal_mask()
    sigdelset(&mask, SIGALRM);
 
    /* set mask */
+   sigprocmask(SIG_SETMASK, &mask, NULL);
+}
+
+static void change_shepherd_signal_mask()   
+{
+   sigset_t mask;
+      
+   sigprocmask(SIG_SETMASK, NULL, &mask);
+   sigdelset(&mask, SIGTERM);
    sigprocmask(SIG_SETMASK, &mask, NULL);
 }
 

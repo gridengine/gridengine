@@ -285,9 +285,6 @@ static int cl_commlib_check_callback_functions(void) {
           break;
     }
 
-    
-    CL_LOG(CL_LOG_WARNING,"checking for errors in application error list");
-  
     /* check if caller is application (thread) */
     if ( is_commlib_thread == CL_FALSE ) {
        /* here we are in application context, we can call trigger functions */
@@ -301,6 +298,8 @@ static int cl_commlib_check_callback_functions(void) {
           if (cl_com_error_status_func != NULL) {
              CL_LOG(CL_LOG_WARNING,"triggering application error function");
              cl_com_error_status_func(elem->cl_error,elem->cl_info);
+          } else {
+             CL_LOG(CL_LOG_WARNING,"can't trigger application error function: no function set");
           }
           pthread_mutex_unlock(&cl_com_error_mutex);
 

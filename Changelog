@@ -1,3 +1,7 @@
+CR-2004-10-11-0: Bugfix:    removed unnecessary logging output
+                 Review:    HP
+                 Changed:   commlib
+
 MD-2004-10-11-0: Bugfix:    fixed broken build
                  Changed:   sge_profiling
 

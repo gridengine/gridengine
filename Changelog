@@ -1,3 +1,9 @@
+CR-2002-04-05-0: Testsuite: - more function parameters for logfile_wait()
+                 Enhancem.  - new procedure: close_logfile_wait()
+                            - output changes
+                            - new procedure: get_schedd_messages_file()
+                            - new procedure: check_schedd_messages()
+
 JG-2002-04-05-0: Enhancem.  Further cleanup and enhancement of the
                             event client interface:
                             - general implementation for flushing of events 

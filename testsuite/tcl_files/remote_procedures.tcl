@@ -212,7 +212,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    if { $hostname != $CHECK_HOST && $do_file_check == 1 } {
       set is_ok 0
       set my_timeout [ expr ( [timestamp] + 60 ) ] 
-      puts $CHECK_OUTPUT "----> REMOTE connection, checking file availability ..."
+      debug_puts "----> REMOTE connection, checking file availability ..."
 
       while { $is_ok == 0 } {
          if { $exec_command == "cd" } {
@@ -231,17 +231,14 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
                break
             }
          }
-         puts -nonewline $CHECK_OUTPUT "."
          if { [timestamp] > $my_timeout } {
             break
          }
          sleep 1
       }
       if { $is_ok == 1 } {
-         puts $CHECK_OUTPUT "ok"
-         puts $CHECK_OUTPUT "found prog: $output"
+         debug_puts "found prog: $output"
       } else {
-         puts $CHECK_OUTPUT "timeout"
          add_proc_error "start_remote_prog" -1 "timeout while waiting for file $exec_command on host $hostname"
       }
    }
@@ -384,7 +381,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    }
    debug_puts "E X I T   S T A T E   of remote prog: $exit_status"
    if { $exit_status != 0 && $do_file_check == 1} {
-      puts $CHECK_OUTPUT "--> exit_state is \"$exit_status\""
+      debug_puts "--> exit_state is \"$exit_status\""
    }
     
    if { $CHECK_DEBUG_LEVEL == 2 } {
@@ -526,7 +523,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
      set using_ts_def_con 1
   }
   if { $con_data(pid) != 0 } {
-     puts $CHECK_OUTPUT "Using open rlogin connection to host \"$hostname\",user \"$user\"" 
+     debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\"" 
      set nr_of_shells $con_data(nr_shells)
      set back  $con_data(pid) 
      lappend back $con_data(spawn_id)
@@ -535,7 +532,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
         set open_remote_spawn__id "$open_spawn_buffer" 
      }
   } else { 
-     uplevel 1 { puts $CHECK_OUTPUT "opening connection to host $open_remote_spawn__hostname" }
+     uplevel 1 { debug_puts "opening connection to host $open_remote_spawn__hostname" }
      if { [have_ssh_access] == 0 } {
         set pid [ uplevel 1 { spawn "rlogin" "$open_remote_spawn__hostname" } ] 
         uplevel 1 { incr remote_spawn_nr_of_shells 1 }
@@ -1190,12 +1187,12 @@ proc get_open_spawn_rlogin_session { hostname user back_var } {
             set back(hostname)  $hostname
             set back(ltime)     [lindex $data_list 3]
             set back(nr_shells) [lindex $data_list 4]
-            puts $CHECK_OUTPUT "spawn_id  : $back(spawn_id)"
-            puts $CHECK_OUTPUT "pid       : $back(pid)"
-            puts $CHECK_OUTPUT "hostname  : $back(hostname)"
-            puts $CHECK_OUTPUT "user:     : $back(user)"
-            puts $CHECK_OUTPUT "ltime:    : $back(ltime)"
-            puts $CHECK_OUTPUT "nr_shells : $back(nr_shells)"
+            debug_puts "spawn_id  : $back(spawn_id)"
+            debug_puts "pid       : $back(pid)"
+            debug_puts "hostname  : $back(hostname)"
+            debug_puts "user:     : $back(user)"
+            debug_puts "ltime:    : $back(ltime)"
+            debug_puts "nr_shells : $back(nr_shells)"
             if { [check_rlogin_session $back(spawn_id) $back(pid) $back(hostname) $back(user) $back(nr_shells) ] != 1 } {
                set back(spawn_id) "0"
                set back(pid)      "0"
@@ -1215,7 +1212,7 @@ proc get_open_spawn_rlogin_session { hostname user back_var } {
          }
       }
    }
-   puts $CHECK_OUTPUT "get_open_spawn_rlogin_session - session $user,$hostname not found"
+   debug_puts "get_open_spawn_rlogin_session - session $user,$hostname not found"
    return 0
 }
 
@@ -1488,8 +1485,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    if { $con_data(pid) != 0 } {
       debug_puts "sending CTRL + C to spawn id $sp_id ..."
       send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
-      puts $CHECK_OUTPUT "Will not close spawn id \"$sp_id\", this is rlogin connection to"
-      puts $CHECK_OUTPUT "host \"$con_data(hostname)\", user \"$con_data(user)\""
+      debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
+      debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
       return -1   
    }
 
@@ -1504,6 +1501,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        set send_slow "1 .05"
        debug_puts "nr of open shells: $nr_of_shells"
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
+       send -s -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
           set timeout 15
@@ -1514,8 +1513,11 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
               -i $sp_id "*" {
                  debug_puts "shell exit"
               }
+              -i $sp_id eof {
+                 debug_puts "timeout or eof while waiting for shell exit"
+              }
               -i $sp_id default {
-                 puts $CHECK_OUTPUT "timeout or eof while waiting for shell exit"
+                 debug_puts "timeout or eof while waiting for shell exit"
               }
           }
        }

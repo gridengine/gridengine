@@ -1041,12 +1041,12 @@ proc delete_directory { path } {
 #
 #  SEE ALSO
 #     file_procedures/logfile_wait()
+#     file_procedures/close_logfile_wait()
 #*******************************************************************************
 proc init_logfile_wait { hostname logfile  } {
 
    global CHECK_OUTPUT
    global file_procedure_logfile_wait_sp_id
-
 
    set sid [ open_remote_spawn_process $hostname "ts_def_con" "tail" "-f $logfile"]
    set sp_id [lindex $sid 1]
@@ -1077,8 +1077,8 @@ proc init_logfile_wait { hostname logfile  } {
             break
          }
       }
-   } 
-   log_user 1
+   }
+   log_user 1 
    puts $CHECK_OUTPUT "init_logfile_wait done"
    set file_procedure_logfile_wait_sp_id $sid
 }
@@ -1088,7 +1088,13 @@ proc init_logfile_wait { hostname logfile  } {
 #     logfile_wait() -- observe logfiles by using tail functionality (2)
 #
 #  SYNOPSIS
-#     logfile_wait { { wait_string "" } { mytimeout 60 } } 
+#     logfile_wait {
+#                    { wait_string ""     } 
+#                    { mytimeout 60       }
+#                    { close_connection 1 } 
+#                    { add_errors 1       } 
+#                    { return_err_code "logfile_wait_error" }
+#                  } 
 #
 #  FUNCTION
 #     This procedure is called after an init_logfile_wait() call. It will
@@ -1099,9 +1105,23 @@ proc init_logfile_wait { hostname logfile  } {
 #     error.
 #
 #  INPUTS
-#     { wait_string "" } - if the tail process generates output containing
-#                          this string the procedure returns
-#     { mytimeout 60 }   - timeout in seconds
+#     { wait_string "" }     - if the tail process generates output 
+#                              containing this string the procedure 
+#                              returns
+#     { mytimeout 60 }       - timeout in seconds
+#
+#     { close_connection 1 } - if 0, don't close tail process
+#
+#     { add_errors 1       } - if 0, don't call add_proc_error()
+#
+#     { return_err_code "logfile_wait_error" } 
+#                            - variable where the return
+#                              value is stored:
+#                              0  : no error
+#                              -1 : timeout error
+#                              -2 : full expect buffer 
+#                              -3 : unexpected end of file
+#                              -4 : unexpected end of tail command
 #
 #  RESULT
 #     This procedure returns the output of the tail command since the 
@@ -1109,10 +1129,16 @@ proc init_logfile_wait { hostname logfile  } {
 # 
 #  SEE ALSO
 #     file_procedures/init_logfile_wait()
+#     file_procedures/close_logfile_wait()
 #*******************************************************************************
-proc logfile_wait { { wait_string "" } { mytimeout 60 } } {
+proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } { add_errors 1 } { return_err_code "logfile_wait_error" } } {
    global file_procedure_logfile_wait_sp_id
    global CHECK_OUTPUT
+
+   upvar $return_err_code back_value
+
+
+   set back_value 0
 
    set sp_id [ lindex $file_procedure_logfile_wait_sp_id 1 ]
    puts $CHECK_OUTPUT "spawn id: $sp_id"
@@ -1123,22 +1149,34 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } } {
    while { 1 } {
       if { [timestamp] > $real_timeout } {
           if { $wait_string != "" } {
-             add_proc_error "logfile_wait" -1 "timeout waiting for logfile content"
+             if { $add_errors == 1 } {
+                add_proc_error "logfile_wait" -1 "timeout waiting for logfile content"
+             }
+             set back_value -1
           }
           break
       }
       expect {
          -i $sp_id -- full_buffer {
-            add_proc_error "init_logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            if { $add_errors == 1 } {
+               add_proc_error "init_logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
+            set back_value -2
             break
          }
 
          -i $sp_id eof {
-            add_proc_error "init_logfile_wait" "-1" "unexpected end of file"
+            if { $add_errors == 1 } {
+               add_proc_error "init_logfile_wait" "-1" "unexpected end of file"
+            }
+            set back_value -3
             break
          }
-         -i $sp_id -- "_exit_status_" {
-            add_proc_error "init_logfile_wait" "-1" "unexpected end of tail command"
+         -i $sp_id -- "_exit_status_" { 
+            if { $add_errors == 1 } {
+               add_proc_error "init_logfile_wait" "-1" "unexpected end of tail command"
+            }
+            set back_value -4
             break
          }
          -i $sp_id timeout {
@@ -1162,10 +1200,34 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } } {
       }
    }
    puts $CHECK_OUTPUT ""
-   close_spawn_process $file_procedure_logfile_wait_sp_id
-   
+   if { $close_connection == 1 } {
+      uplevel 1 { close_spawn_process $file_procedure_logfile_wait_sp_id }
+   }
    log_user 1
    return $my_tail_buffer
+}
+
+#****** file_procedures/close_logfile_wait() ***********************************
+#  NAME
+#     close_logfile_wait() -- close open_spawn_connection id for tail process
+#
+#  SYNOPSIS
+#     close_logfile_wait { } 
+#
+#  FUNCTION
+#     This procedure is used for closing an open tail process, started with
+#     init_logfile_wait(), when logfile_wait() is called with 
+#     "close_connection != 1" parameter.
+#
+#  SEE ALSO
+#     file_procedures/init_logfile_wait()
+#     file_procedures/logfile_wait()
+#*******************************************************************************
+proc close_logfile_wait { } {
+   global file_procedure_logfile_wait_sp_id
+   global CHECK_OUTPUT
+
+   uplevel 1 { close_spawn_process $file_procedure_logfile_wait_sp_id }
 }
 
 #****** file_procedures/washing_machine() **************************************

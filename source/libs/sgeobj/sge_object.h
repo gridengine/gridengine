@@ -138,8 +138,10 @@ typedef enum {
    SGE_TYPE_SUBMITHOST,
    SGE_TYPE_USER,
    SGE_TYPE_USERSET,
-   SGE_TYPE_CUSER,
    SGE_TYPE_HGROUP,
+#ifndef __SGE_NO_USERMAPPING__
+   SGE_TYPE_CUSER,
+#endif
 
    SGE_TYPE_ALL            /* must be last entry */
 } sge_object_type;

@@ -1,3 +1,5 @@
+JG-2003-03-18-0  Bugfix:    sge_schedd dumped core on exit.
+
 EB-2003-03-17-0  Bugfix:    qsh/qrsh/qlogin might core with segementation
                             violation
                  Issue:     #508

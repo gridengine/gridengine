@@ -77,12 +77,12 @@ QSYST_ROOT=GENROOT; export QSYST_ROOT
 QSYST_CELL=GENCELL; export QSYST_CELL
 GENCOMMD_PORT; export COMMD_PORT
 
-shlib_path_name=`/cod_home/jg114090/sge/util/arch -lib`
+shlib_path_name=`$QSYST_ROOT/util/arch -lib`
 old_value=`eval echo '$'$shlib_path_name`
 if [ x$old_value = x ]; then
-   eval $shlib_path_name=/cod_home/jg114090/sge/lib/$ARCH
+   eval $shlib_path_name=$QSYST_ROOT/lib/$ARCH
 else
-   eval $shlib_path_name=$old_value:/cod_home/jg114090/sge/lib/$ARCH
+   eval $shlib_path_name=$old_value:$QSYST_ROOT/lib/$ARCH
 fi
 export $shlib_path_name
 

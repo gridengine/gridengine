@@ -1,3 +1,9 @@
+AA-2003-05-22-0  Bugfix:    missing comment and syntax errors in qmon resource
+                            file Q
+                            aimk.site, upgrade to openssl 0.9.7a
+                 IZ:        560           
+                 Changed:   all binaries
+                            
 JG-2003-05-21-0  Bugfix:    SGE didn't compile on systems with glibc-2.3 and
                             didn't compile with gcc-3.3
                  Review:    EB

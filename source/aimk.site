@@ -1,4 +1,4 @@
- #___INFO__MARK_BEGIN__
+#___INFO__MARK_BEGIN__
 ##########################################################################
 #
 #  The Contents of this file are made available subject to the terms of
@@ -34,7 +34,7 @@
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6g/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7a/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is
@@ -89,4 +89,3 @@ set SUN_COPYRIGHT_DIR  = /off_home/codine/sun-copyright
 #
 set JAVA_HOME     = "/vol2/jdk14/$buildarch"
 set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/solaris"
-

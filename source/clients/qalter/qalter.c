@@ -739,12 +739,14 @@ int *all_users
          char *name = NULL;
          const char *job_name = lGetString(job, JB_job_name);
          int size = strlen(lGetString(ep, ID_str));
-         if (job_name)
+         if (job_name) {
             size += strlen(job_name); 
+         }   
          size += 3;
           
          name = malloc(size);
-         sprintf(name, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
+         /* format: <delimiter>old_name<delimiter>new_name */
+         snprintf(name, size, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
          rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
          FREE(name);
       }   

@@ -1,3 +1,6 @@
+JG-2002-03-08-0  Testsuite: Make testsuite work for users that use a csh as
+                            login shell (open_remote_spawn_process).
+
 AA-2002-03-07-0: Bugfix:    Addition of acl to project generated core dump due
                             to uninitialized pointer
 

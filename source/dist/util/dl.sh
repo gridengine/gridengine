@@ -32,6 +32,9 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+SGE_ND="true"
+export SGE_ND
+
 dl() {
    case $1 in
       0) SGE_DEBUG_LEVEL="0 0 0 0 0 0 0 0"; export SGE_DEBUG_LEVEL ;;

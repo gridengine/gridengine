@@ -1,3 +1,7 @@
+AD-2004-01-19-0: Bugfix:    Debug level (dl) scripts now set "SGE_ND" env var,
+                            if needed.
+                 Changed:   util
+
 CR-2004-01-19-2: Cleanup:   commlib now uses sge_gethostbyaddr() and
                             sge_gethostbyname() from util library
 

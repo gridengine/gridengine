@@ -42,6 +42,7 @@ endif
 switch ($argv[1])
    case "0":
       unsetenv SGE_DEBUG_LEVEL
+      unsetenv SGE_ND
       breaksw
    case "1":
       set argv = (-); source $SGE_ROOT/util/dl2.csh

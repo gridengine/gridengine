@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
 	<META NAME="AUTHOR" CONTENT=" ">
 	<META NAME="CREATED" CONTENT="20020111;13083600">
-	<META NAME="CHANGED" CONTENT="20030814;12383000">
+	<META NAME="CHANGED" CONTENT="20030826;9410500">
 	<STYLE>
 	<!--
 		@page { size: 21.59cm 27.94cm }
@@ -16,7 +16,7 @@
 <BODY LANG="en-US">
 <H1><FONT COLOR="#336699"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Common
 problems using Grid Engine</B></FONT></FONT></H1>
-<P STYLE="margin-bottom: 0cm">Last updated: <SDFIELD TYPE=DATETIME SDNUM="1023;1033;MMM D, YYYY">Aug 14, 2003</SDFIELD></P>
+<P STYLE="margin-bottom: 0cm">Last updated: <SDFIELD TYPE=DATETIME SDNUM="1023;1033;MMM D, YYYY">Aug 26, 2003</SDFIELD></P>
 <P STYLE="margin-bottom: 0cm">The present HOWTO goes over some
 commonly seen problems experienced when using Grid Engine, and
 appropriate solutions. The information is presented in a tabular
@@ -261,7 +261,7 @@ qconf -mattr queue s_stack 8389486 &lt;queue_name&gt; (soft limit in bytes)</PRE
 					up the execd as root on the host by running the
 					$SGE_ROOT/default/common/rcsge script </FONT></FONT></FONT>
 					</P>
-					<LI><P STYLE="margin-bottom: 0cm"><FONT SIZE=3><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">Run
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Run
 					'qconf -mconf' as the Sun Grid Engine administrator and change
 					the default_domain to none. </FONT></FONT></FONT>
 					</P>
@@ -378,13 +378,13 @@ configuration meta not defined - using global configuration </PRE><P>
 		<TR>
 			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
 				<PRE>&ldquo;critical error: can't connect commd&rdquo;
-&ldquo;<FONT SIZE=2>critical error: setup failed starting cod_schedd&rdquo;</FONT></PRE>
+&ldquo;critical error: setup failed starting cod_schedd&rdquo;</PRE>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=50%>
-				<P>A bug on 32 bit systems: <FONT SIZE=2>rlim_fd_max &gt; 1024 </FONT><FONT SIZE=3><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">in
-				/etc/system</FONT></FONT></FONT></P>
+				<P>A bug on 32 bit systems: <FONT SIZE=2>rlim_fd_max &gt; 1024 </FONT><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">in
+				/etc/system</FONT></FONT></P>
 			</TD>
 			<TD WIDTH=50%>
 				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Set
@@ -417,7 +417,7 @@ configuration meta not defined - using global configuration </PRE><P>
 			<TD WIDTH=50%>
 				<OL>
 					<LI><P>Fix errors in users' .cshrc/.profile</P>
-					<LI><P>Use the -f option  in the first line of the jobscript
+					<LI><P>Use the -f option in the first line of the jobscript
 					(i.e. Use &ldquo;!#/bin/sh -f&rdquo;) to bypass users' .cshrc or
 					.profile</P>
 				</OL>
@@ -436,13 +436,13 @@ configuration meta not defined - using global configuration </PRE><P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=50%>
-				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Parameter
-				<CODE><FONT SIZE=2>sched_job_info=true</FONT></CODE></FONT></FONT></FONT></P>
+				<P><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">Parameter
+				<CODE><FONT SIZE=2>sched_job_info=true</FONT></CODE></FONT></FONT></P>
 			</TD>
 			<TD WIDTH=50%>
-				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Set
+				<P><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">Set
 				<CODE><FONT SIZE=2>sched_job_info= false</FONT></CODE> or update
-				to release 5.3p3 or higher</FONT></FONT></FONT></P>
+				to release 5.3p3 or higher</FONT></FONT></P>
 			</TD>
 		</TR>
 		<TR>
@@ -775,8 +775,8 @@ Your &quot;qrsh&quot; request could not be scheduled, try again later.</PRE>
 				to control the distributed jobs.</FONT></FONT></FONT></P>
 			</TD>
 			<TD WIDTH=50%>
-				<P>Follow the complete HOW-TO instructions:
-				<A HREF="http://supportforum.sun.com/gridengine/appnote_hpc.html">http://supportforum.sun.com/gridengine/appnote_hpc.html</A></P>
+				<P>Follow the complete <A HREF="hpc.html">HOW-TO instructions</A>
+				on Integration between Grid Engine and HPC Cluster Tools.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -799,7 +799,7 @@ Your &quot;qrsh&quot; request could not be scheduled, try again later.</PRE>
 		<TR VALIGN=TOP>
 			<TD WIDTH=50%>
 				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>A
-				bug in SGE  prevented correct signal delivery to all parallel
+				bug in SGE prevented correct signal delivery to all parallel
 				processes</FONT></FONT></FONT></P>
 			</TD>
 			<TD WIDTH=50%>
@@ -832,9 +832,8 @@ Your &quot;qrsh&quot; request could not be scheduled, try again later.</PRE>
 			<TD WIDTH=50%>
 				<P>Need to set the suspend/resume methods in the queues used for
 				the parallel jobs with the appropriate scripts. These scripts can
-				either be downloaded from the Grid Engine Project site at the
-				<A HREF="http://gridengine.sunsource.net/servlets/ProjectDownloadList">File
-				Exchange</A> or obtained from Sun support.</P>
+				either be downloaded from the Grid Engine Project site <A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/dist/mpi/sunhpc/tight-integration/">at
+				this link</A> or obtained from Sun support.</P>
 				<P>Releases beyond 5.3p4 will ship with these two scripts, a
 				README file and a parallel environment template.</P>
 			</TD>
@@ -881,16 +880,15 @@ Your &quot;qrsh&quot; request could not be scheduled, try again later.</PRE>
 		<TR VALIGN=TOP>
 			<TD WIDTH=50%>
 				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Root
-				R/W access  to $SGE_ROOT directory and its sub-directories should
+				R/W access to $SGE_ROOT directory and its sub-directories should
 				be from both master and shadow.</FONT></FONT></FONT></P>
 			</TD>
 			<TD WIDTH=50%>
 				<P STYLE="margin-bottom: 0cm">Adjust permissions for root r/w
 				access to the $SGE_ROOT directory and its sub-directories from
 				shadow host.</P>
-				<P><B>NOTE: </B><SPAN STYLE="font-weight: medium">please s</SPAN>ee
-				the <A HREF="http://gridengine.sunsource.net/project/gridengine/howto/shadow.html">Shadow
-				Master  HOWTO</A></P>
+				<P><B>NOTE: </B>please see the <A HREF="http://gridengine.sunsource.net/project/gridengine/howto/shadow.html">Shadow
+				Master HOWTO</A></P>
 			</TD>
 		</TR>
 	</TBODY>

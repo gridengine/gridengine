@@ -1,20 +1,56 @@
-<table border="0" cellpadding="2" cellspacing="0" width="100%">
-<tr>
-<td><H2><font color="#336699" class="PageHeader">Loose Integration Between Grid Engine and HPC Cluster Tools
-Software</font></H2></td>
-</tr>
-</table>
-<table border="0" cellpadding="2" cellspacing="0" width="100%">
-<tr>
-<td>
-
-<br><br>
-
-There is an <A HREF="http://supportforum.sun.com/gridengine/appnote_hpc.html">integration
-package</A> useful for setting up a loose integration of Grid Engine
-5.2 with <A HREF="http://www.sun.com/software/hpc/index.html">Sun HPC
-Cluster Tools</A> with little effort. It is currently being reworked to
-reflect changes like $CODINE_ROOT -&gt; $SGE_ROOT, for compatability with Grid
-Engine 5.3.</P>
-<p></p>
-</table>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="CREATED" CONTENT="20030826;9373600">
+	<META NAME="CHANGED" CONTENT="20030826;9401300">
+</HEAD>
+<BODY LANG="en-US">
+<H2><FONT COLOR="#336699">Integration Between Grid Engine and HPC
+Cluster Tools Software</FONT></H2>
+<P><B><FONT SIZE=5>Close Integration</FONT></B> 
+</P>
+<P>With <A HREF="http://www.sun.com/software/hpc/index.html">Sun HPC
+Cluster Tools</A><FONT SIZE=2><SUP>TM</SUP></FONT> 5 software
+release, Sun CRE (Cluster Runtime Environment) provides close
+integration with several distributed resource managers. In that
+integration, Sun CRE retains most of its original functions, but
+delegates others to the resource manager.<BR><BR>The <A HREF="http://docs.sun.com/db/doc/817-0083-10?q=ClusterTools">Sun
+HPC ClusterTools 5 Software Administrator's Guide</A> provides the
+detailed description of <A HREF="http://docs.sun.com/source/817-0083-10/config_notes.html#85989">how
+it works</A> and <A HREF="http://docs.sun.com/source/817-0083-10/config_notes.html#30211">how
+to configure it with Sun Grid Engine</A>, which is based on Grid
+Engine open source community project.<BR><BR>We recommend the close
+integration for Sun HPC ClusterTools 5 software because it provides
+significantly better resource monitoring, control and accounting on
+Sun MPI processes via Grid Engine commands than the loose integration
+introduced for Sun HPC ClusterTools 3.1 and 4 releases.<BR><BR>However,
+we need to provide appropriate suspend and resume methods for Grid
+Engine queues to run Sun MPI jobs under Grid Engine environment.
+These suspend and resume methods (scripts) can deliver SIGSTOP and
+SIGCONT signals to Sun MPI processes when suspending/resuming Sun MPI
+jobs using Grid Engine commands such as &quot;qmod -s $sge_jid&quot;
+and &quot;qmod -us $sge_jid&quot;. This is all due to the difference
+between how both Grid Engine and HPC ClusterTools products trap and
+deliver signals to their child processes. <A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/dist/mpi/sunhpc/tight-integration/">The
+enhancement package</A> includes the following
+files:<BR><BR>README<BR>suspend_sunmpi_ci.sh<BR>resume_sunmpi_ci.sh<BR>pe_sunmpi_ci.template<BR><BR>The
+README file in this package describes about all other files and
+provides technical background information about this enhancement and
+how to configure suspend and resume methods.</P>
+<P><FONT SIZE=5><B>Loose Integration</B></FONT></P>
+<P>A loose integration package distributed with Grid Engine 5.3 is
+useful to loosely integrate Grid Engine with <A HREF="http://www.sun.com/software/hpc/index.html">Sun
+HPC Cluster Tools</A> software with little effort. The package works
+for Sun HPC ClusterTools 3.1 and 4 releases.<BR><BR>The loose
+integration package is located at
+$SGE_ROOT/mpi/sunhpc/loose-integration directory after installing
+Grid Engine software. The loose integration package includes all the
+necessary files and integration script. The README file in the
+package gives detailed technical description of the loose integration
+and a step-by-step integration procedure in case anyone wants to
+implement it manually.</P>
+</BODY>
+</HTML>

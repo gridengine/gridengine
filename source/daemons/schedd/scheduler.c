@@ -209,9 +209,10 @@ int scheduler(sge_Sdescr_t *lists) {
       }
       qlp = lSelect("", lists->all_queue_list, where, what);
 
-      for_each(mes_queues, qlp)
+      for_each(mes_queues, qlp) {
          schedd_mes_add_global(SCHEDD_INFO_QUEUENOTAVAIL_, 
                                    lGetString(mes_queues, QU_full_name));
+      }                             
 
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED, 
                       qlp, QU_full_name);
@@ -536,14 +537,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    nr_pending_jobs = lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]));
 
    DPRINTF(("STARTING PASS 2 WITH %d PENDING JOBS\n",nr_pending_jobs ));
-
-   /*
-    * job categories are reset here, we need 
-    *  - an update of the rejected field for every new run
-    *  - the resource request dependent urgency contribution is cached 
-    *    per job category 
-    */
-   sge_reset_job_category(); 
 
    /*--------------------------------------------------------------------
     * CALL SGEEE SCHEDULER TO

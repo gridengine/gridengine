@@ -52,6 +52,8 @@ lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count);
 
 void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...);
 
+void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...);
+
 void schedd_mes_add_global(u_long32 message_number, ...);
 
 void schedd_mes_set_logging(int bval);

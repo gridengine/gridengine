@@ -78,6 +78,7 @@
 #include "sge_profiling.h"
 #include "sge_serf.h"
 #include "sge_mt_init.h"
+#include "sge_category.h"
 
 #include <sgeobj/sge_schedd_conf.h>
 
@@ -604,6 +605,14 @@ int sge_before_dispatch(void)
       ec_commit();
    }
 
+   /*
+    * job categories are reset here, we need 
+    *  - an update of the rejected field for every new run
+    *  - the resource request dependent urgency contribution is cached 
+    *    per job category 
+    */
+   sge_reset_job_category(); 
+   
    DEXIT;
    return 0;
 }

@@ -285,7 +285,7 @@
 #define MSG_SGETEXT_UNKNOWN_RESOURCE_S          _MESSAGE(23259, _("unknown resource "SFQ"\n"))
 #define MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S        _MESSAGE(23260, _("resource "SFQ" configured as non requestable\n") )    
 #define MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U         _MESSAGE(23261, _("unknown complex attribute type " U32CFormat  "\n"))
-#define MSG_SGETEXT_UNKNOWN_ATTR_TYPE_S         _MESSAGE(23261, _("unknown complex attribute type "SFQ"\n"))
+#define MSG_SGETEXT_UNKNOWN_ATTR_TYPE_S         _MESSAGE(23262, _("unknown complex attribute type "SFQ"\n"))
 
 
 /*

@@ -44,6 +44,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "sge_profiling.h"
 #include "sge.h"
 #include "sge_event_client.h"
 #include "sge_ja_task.h"
@@ -147,10 +148,15 @@ int event_handler_default_scheduler()
    sge_Sdescr_t copy;
    dstring ds;
    char buffer[128];
-
+   double prof_copy=0, prof_event=0;
    DENTER(TOP_LAYER, "event_handler_default_scheduler");
    
    sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB0);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB1);
+
 
    if (__CONDITION(INFOPRINT)) {
       DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n", 
@@ -264,6 +270,9 @@ int event_handler_default_scheduler()
       SCHED_MON((log_string, "-------------START-SCHEDULER-RUN-------------"));
    }
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB1);
+   prof_copy = prof_get_measurement_utime(SGE_PROF_SCHEDLIB1,false, NULL);
+
 /* this is useful when tracing communication of schedd with qmaster */
 #define _DONT_TRACE_SCHEDULING
 #ifdef DONT_TRACE_SCHEDULING
@@ -305,6 +314,17 @@ int event_handler_default_scheduler()
    copy.config_list = lFreeList(copy.config_list);
    copy.ckpt_list = lFreeList(copy.ckpt_list);
    
+   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB0);
+   prof_event = prof_get_measurement_utime(SGE_PROF_SCHEDLIB0,false, NULL);
+   if(prof_is_active()){
+      u_long32 saved_logginglevel = log_state_get_log_level();
+      log_state_set_log_level(LOG_INFO); 
+
+      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (copying the lists took: %.3f s)\n",
+               prof_event, prof_copy ));
+
+      log_state_set_log_level(saved_logginglevel);
+   }
    DEXIT;
    return 0;
 }

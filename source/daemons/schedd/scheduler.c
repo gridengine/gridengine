@@ -131,6 +131,7 @@ int scheduler(sge_Sdescr_t *lists) {
    lList *running_list = NULL;                     /* JB_Type */
    lList *error_list = NULL;                       /* JB_Type */
    lList *hold_list = NULL;                        /* JB_Type */
+   int prof_job_count;
 
    int ret;
    int i;
@@ -144,6 +145,7 @@ int scheduler(sge_Sdescr_t *lists) {
 #endif
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
+   prof_job_count = lGetNumberOfElem(lists->job_list);
 
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
@@ -228,7 +230,7 @@ int scheduler(sge_Sdescr_t *lists) {
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
 
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(x), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+      INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e),  %d J(x),%d J(all),  %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
@@ -243,7 +245,10 @@ int scheduler(sge_Sdescr_t *lists) {
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_RUNNING])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_SUSPENDED])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_HOLD])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_ERROR])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_FINISHED])),
+         prof_job_count,
          lGetNumberOfElem(lists->centry_list),
          lGetNumberOfElem(lists->acl_list),
          lGetNumberOfElem(lists->pe_list),
@@ -257,6 +262,8 @@ int scheduler(sge_Sdescr_t *lists) {
       ));
       log_state_set_log_level(saved_logginglevel);
    }
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
 
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), &orderlist);
    orderlist = sge_add_schedd_info(orderlist);
@@ -278,6 +285,17 @@ int scheduler(sge_Sdescr_t *lists) {
 
       sge_send_orders2master(orderlist);
       orderlist = lFreeList(orderlist);
+   }
+   
+   if(prof_is_active()) {
+      u_long32 saved_logginglevel = log_state_get_log_level();
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
+      log_state_set_log_level(LOG_INFO);
+   
+      INFO((SGE_EVENT, "PROF: generate and send orders took: %.3f s\n", 
+         prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL) ));
+
+      log_state_set_log_level(saved_logginglevel);
    }
 
    schedd_mes_release();

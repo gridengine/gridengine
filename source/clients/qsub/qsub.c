@@ -234,8 +234,14 @@ char **argv
 
    if (num_tasks > 1) {
       int error = japi_run_bulk_jobs(&jobids, job, start, end, step, &diag);
-      if ((error != DRMAA_ERRNO_SUCCESS)) {
-         fprintf(stderr, "%s\n", sge_dstring_get_string(&diag));
+      if (error != DRMAA_ERRNO_SUCCESS) {
+         /* No active session here means that japi_enable_job_wait() was
+          * interrupted by the signal handler, in which case we just break out
+          * quietly. */
+         if (error != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
+            fprintf(stderr, MSG_QSUB_COULDNOTRUNJOB_S,
+                    sge_dstring_get_string(&diag));
+         }
          
          /* BUGFIX: Issuezilla #1013
           * To quickly fix this issue, I'm mapping the JAPI/DRMAA error code
@@ -261,7 +267,8 @@ char **argv
       int error = japi_run_job(&jobid, job, &diag);
       
       if (error != DRMAA_ERRNO_SUCCESS) {
-         fprintf(stderr, "%s\n", sge_dstring_get_string(&diag));
+         fprintf(stderr, MSG_QSUB_COULDNOTRUNJOB_S,
+                 sge_dstring_get_string(&diag));
          
          /* BUGFIX: Issuezilla #1013
           * To quickly fix this issue, I'm mapping the JAPI/DRMAA error code
@@ -322,10 +329,11 @@ char **argv
             goto Error;
          }
          else {
-            /* Since we told japi_wait to wait forever, we know that if it gets
-             * a timeout, it's because it's been interrupted to exit, in which
-             * case we don't complain. */
-            if (tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
+         /* Since we told japi_wait to wait forever, we know that if it gets
+          * a timeout, it's because it's been interrupted to exit, in which
+          * case we don't complain.  Same for no active session. */
+            if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) &&
+                (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
                fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S,
                        sge_dstring_get_string (&diag));
             }
@@ -472,12 +480,19 @@ static void qsub_setup_sig_handlers (void)
 static void qsub_terminate(void)
 {
    dstring diag = DSTRING_INIT;
+   int tmp_ret;
    
    fprintf(stderr, MSG_QSUB_INTERRUPTED);
    fprintf(stderr, MSG_QSUB_TERMINATING);
 
-   if (japi_exit (1, JAPI_EXIT_KILL_PENDING, &diag) != DRMAA_ERRNO_SUCCESS) {
-     fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
+   tmp_ret = japi_exit (1, JAPI_EXIT_KILL_PENDING, &diag);
+   
+   /* No active session here means that the main thread beat us to exiting,
+      in which case, we just quietly give up and go away. */
+   if ((tmp_ret != DRMAA_ERRNO_SUCCESS) &&
+       (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
+      fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S,
+              sge_dstring_get_string (&diag));
    }
 
    sge_dstring_free (&diag);

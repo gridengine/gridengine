@@ -758,11 +758,12 @@ int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
       }
       else {
          JAPI_UNLOCK_EC_STATE();
-      /* else japi_ec_state == JAPI_EC_DOWN which means the thread was shut down
-       * by japi_exit() before it could register as an event client.  In this
-       * case, we just quietly exit as though everything worked, which
-       * techincally it did.  We just triggered a shortcut that prevents the
-       * event client thread from starting up completely just to be shut down. */
+         /* else japi_ec_state == JAPI_EC_DOWN which means the thread was shut
+          * down by japi_exit() before it could register as an event client.  In
+          * this case, we just quietly exit as though everything worked, which
+          * techincally it did.  We just triggered a shortcut that prevents the
+          * event client thread from starting up completely just to be shut
+          * down. */
          ret = DRMAA_ERRNO_SUCCESS;
       }
    }

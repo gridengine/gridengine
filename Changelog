@@ -1,3 +1,8 @@
+DT-2004-06-01-1: Bugfix:    o Better handling of errors in qsub
+                            - NOTE: checking *so* I can compile and test
+                 Changed:   qsub, JAPI
+                 Issue:     Related to 1075
+
 DT-2004-06-01-0: Bugfix:    o Fixed state of JAPI event client thread on aborted
                               startup.
                             o Fixed typo in howtos

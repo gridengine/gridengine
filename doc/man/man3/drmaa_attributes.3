@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/04/19 10:52:05 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/04/22 16:09:54 $     Revision: $Revision: 1.4.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/04/19 10:52:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/04/22 16:09:54 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -328,8 +328,20 @@ used. If the day (DD) is not specified, the current day will be used unless the
 specified hour:mm:ss has already elapsed, in which case the next day will be used. 
 Similarly for month (MM), year (YY), and century-1 (CC). 
 Example: The time: Sep 3 4:47:27 PM PDT 2002, could be represented as: 2002/09/03 16:47:27 -07:00.
- .PP
+.PP
 .\" 
+.\"
+.SS "drmaa_transfer_files - ""[i][o][e]"""
+Specifies, which of the standard I/O files (stdin, stdout and stderr) are to be 
+transfered to/from the execution host. If not set, defaults to "". Any combination
+of 'e', 'i' and 'o' may be specified.
+See drmaa_input_path, drmaa_output_path and drmaa_error_path for information about 
+how to specify the standard input file, standard output file and standard error file.
+The file transfer mechanism itself must be configured by the administrator (see 
+.M sge_conf 5
+). When it is configured, the administrator has to enable drmaa_transfer_files. If it is not configured, "drmaa_transfer_files" is not enabled and can't be used.
+.PP
+.\"
 .\" these are optional
 .\" 
 .\" .SS "drmaa_transfer_files"

@@ -1,3 +1,5 @@
+HP-2004-04-22-0: Enhancem.: Added Docu for delegated file staging
+
 SG-2004-04-22-1: Bugfix:   fixed memory leak cluster queue modification
                  Changed:  qmaster
                  Review:   DT, EB

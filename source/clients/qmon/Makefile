@@ -109,7 +109,8 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
 QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             parse_qsub.c read_defaults.c \
             write_job_defaults.c sge_options.c usage.c \
-            sge_centry_qconf.c sge_hgroup_qconf.c
+            sge_centry_qconf.c sge_hgroup_qconf.c \
+            sge_mt_init.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             

@@ -62,6 +62,7 @@
 #include "qmon_preferences.h"
 #include "sge_feature.h"
 #include "sge_prog.h"
+#include "sge_mt_init.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -192,6 +193,8 @@ char **argv
    XrmDatabase qmon_database;
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
+
+   sge_mt_init();
 
    /* INSTALL SIGNAL HANDLER */
    qmonInstSignalHandler();

@@ -1,3 +1,6 @@
+AD-2003-10-30-1: Bugfix.:   MT initialization for 'qmon' was missing.
+                 Changed:   qmon
+
 AD-2003-10-30-0: Bugfix.:   MT initialization for sge_shepherd was incomplete.
                  Changed:   sge_shepherd
 

@@ -1,3 +1,10 @@
+JG-2004-05-13-2: Bugfix:    - for jobs that did no resource requests, the 
+                              accounting record contained an empty field (::) 
+                              which was incorrectly parsed by qacct.
+                            - spooldefaults failed reading exechosts that have 
+                              complex variables defined.
+                            - aimk clean didn't delete japi howto object code.
+
 JG-2004-05-13-1: Testsuite: testsuite install re_init failed.
 
 SG-2004-05-13-0: Bugfix:    scheduler died due to the use of a none reduced

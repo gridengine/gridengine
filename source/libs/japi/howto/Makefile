@@ -35,6 +35,15 @@
 
 JAPIHOWTO_DIR   = $(JAPILIB_DIR)/howto
 
+JAPIHOWTO_SRC   = howto1.c howto2.c howto2_1.c howto3.c howto3_1.c howto3_2.c howto4.c howto5.c howto6.c
+
+JAPIHOWTO_OBJS  = $(JAPIHOWTO_SRC:.c=.o)
+
+JAPIHOWTO_ALL   =  howto1 howto2 howto2_1 howto3 howto3_1 howto3_2 howto4 howto5 howto6
+
+japihowto_clean: 
+	$(RM) $(JAPIHOWTO_ALL) $(JAPIHOWTO_OBJS)
+
 ###############################################################################
 # rules to build object codes
 ###############################################################################

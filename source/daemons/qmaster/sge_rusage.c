@@ -84,6 +84,19 @@ reporting_get_double_usage (lList *usage_list, lList *reported_list,
             true on success
 
 */
+
+static const char *
+none_string(const char *str)
+{
+   const char *ret = str;
+
+   if (str == NULL || strlen(str) == 0) {
+      ret = NONE_STR;
+   }
+
+   return ret;
+}
+
 const char *
 sge_write_rusage(dstring *buffer, 
                  lListElem *jr, lListElem *job, lListElem *ja_task, 
@@ -91,7 +104,7 @@ sge_write_rusage(dstring *buffer,
                  bool intermediate)
 {
    lList *usage_list, *reported_list;
-   const char *s, *pe_task_id;
+   const char *pe_task_id;
 #ifdef NEC_ACCOUNTING_ENTRIES
    char arch_dep_usage_buffer[MAX_STRING_SIZE];
    dstring arch_dep_usage_dstring;
@@ -269,9 +282,9 @@ sge_write_rusage(dstring *buffer,
           usage_list_get_ulong_usage(usage_list, "ru_nsignals", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_nvcsw", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_nivcsw", 0), delimiter,
-          lGetString(job, JB_project) ? lGetString(job, JB_project) : "none", delimiter,
-          lGetString(job, JB_department) ? lGetString(job, JB_department) : "none", delimiter,
-          (s = lGetString(ja_task, JAT_granted_pe)) ? s : "none", delimiter,
+          none_string(lGetString(job, JB_project)), delimiter,
+          none_string(lGetString(job, JB_department)), delimiter,
+          none_string(lGetString(ja_task, JAT_granted_pe)), delimiter,
           sge_granted_slots(lGetList(ja_task, JAT_granted_destin_identifier_list)), delimiter,
           job_is_array(job) ? lGetUlong(ja_task, JAT_task_number) : 0, delimiter,
           reporting_get_double_usage(usage_list, reported_list, 
@@ -283,11 +296,11 @@ sge_write_rusage(dstring *buffer,
           reporting_get_double_usage(usage_list, reported_list, 
              intermediate ? USAGE_ATTR_IO : USAGE_ATTR_IO_ACCT, 
              USAGE_ATTR_IO, 0), delimiter,
-          category_str?category_str:"none", delimiter,
+          none_string(category_str), delimiter,
           reporting_get_double_usage(usage_list, reported_list, 
              intermediate ? USAGE_ATTR_IOW : USAGE_ATTR_IOW_ACCT, 
              USAGE_ATTR_IOW, 0), delimiter,
-          pe_task_id?pe_task_id:"none", delimiter,
+          none_string(pe_task_id), delimiter,
           usage_list_get_double_usage(usage_list,  
              intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0) 
 #ifdef NEC_ACCOUNTING_ENTRIES

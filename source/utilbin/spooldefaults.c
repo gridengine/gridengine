@@ -305,6 +305,15 @@ static int spool_ckpts(int argc, char *argv[])
 
 static int spool_cqueues(int argc, char *argv[])
 {
+   lList *answer_list = NULL;
+   spool_read_list(&answer_list, spool_get_default_context(), 
+                   object_type_get_master_list(SGE_TYPE_CENTRY), 
+                   SGE_TYPE_CENTRY);
+   spool_read_list(&answer_list, spool_get_default_context(), 
+                   object_type_get_master_list(SGE_TYPE_EXECHOST), 
+                   SGE_TYPE_EXECHOST);
+   answer_list_output(&answer_list);
+
    return spool_object_list(argv[2], sge_read_cqueue_list_from_disk, 
                             SGE_TYPE_CQUEUE, 
                             CQ_name, lStringT);
@@ -312,6 +321,12 @@ static int spool_cqueues(int argc, char *argv[])
 
 static int spool_exechosts(int argc, char *argv[])
 {
+   lList *answer_list = NULL;
+   spool_read_list(&answer_list, spool_get_default_context(), 
+                   object_type_get_master_list(SGE_TYPE_CENTRY), 
+                   SGE_TYPE_CENTRY);
+   answer_list_output(&answer_list);
+
    return spool_object_list(argv[2], sge_read_exechost_list_from_disk, 
                             SGE_TYPE_EXECHOST, 
                             EH_name, lHostT);

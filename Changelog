@@ -1,3 +1,6 @@
+JG-2003-01-16-0  Bugfix:    Fixed a memory leak in the "simple scheduling 
+                            interface"
+
 CR-2003-01-15-2  Testsuite: New paramter to run all tests in a subtree of
                             the checktree: check PATH RUNLEVEL
 

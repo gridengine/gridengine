@@ -1,5 +1,7 @@
-SG-2004-09-27-0: Bugfix:    fix SG-2004-08-19-0 crashed the qmaster, if qsub -w v
-                            was submitted
+JG-2004-09-30-0: Enhancem.: Added module test for libs/uti/sge_bitfield.
+
+SG-2004-09-27-0: Bugfix:    fix SG-2004-08-19-0 crashed the qmaster, if 
+                            qsub -w v was submitted
                  Changed:   scheduler                            
 
 HP-2004-08-26-1: Bugfix:    Fixed scripts/zerodepend for No-Windows version 

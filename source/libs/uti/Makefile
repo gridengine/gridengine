@@ -219,6 +219,12 @@ sge_edit.o:	$(UTILIB_DIR)/sge_edit.c
 ###############################################################################
 # test targets
 ###############################################################################
+test_sge_bitfield: test_sge_bitfield.o $(UTILIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) -lmalloc $(LIBS)
+
+test_sge_bitfield.o: $(UTILIB_DIR)/test_sge_bitfield.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_bitfield.c
+
 test_sge_dstring: test_sge_dstring.o $(UTILIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_dstring $(LFLAGS) test_sge_dstring.o $(UTILIB) $(RMONLIB) $(LIBS)
 

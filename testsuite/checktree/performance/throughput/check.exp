@@ -2579,6 +2579,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    global FLUSH_SUBMIT_SEC              ;# -1 or 0,1,2,3 ...
    global FLUSH_FINISH_SEC             ;# -1 or 0,1,2,3 ...
    global run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
+   global ts_host_config
 
    upvar $job_array_name jobs
    upvar $results_array results
@@ -2587,7 +2588,26 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    set nr_of_execd_hosts [llength $CHECK_CORE_EXECD]
    incr nr_of_execd_hosts -1
 
-   set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execd_hosts}_execds/_${end_job_count}_jobs"
+   set have_local_spool_dir 0
+   foreach elem $CHECK_CORE_EXECD {
+      set spool_dir ""
+      if { [info exists ts_host_config($elem,spooldir)] } {
+         set spool_dir $ts_host_config($elem,spooldir)
+      }
+      puts $CHECK_OUTPUT "spooldir on host $elem: $spool_dir"
+      if { $spool_dir != "" } {
+         set have_local_spool_dir 1
+      }
+   }
+  
+   if { $have_local_spool_dir == 1 } {
+      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/local_spool/_${nr_of_execd_hosts}_execds/_${end_job_count}_jobs"
+
+   } else {
+      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execd_hosts}_execds/_${end_job_count}_jobs"
+
+   }
+
    puts $CHECK_OUTPUT "saving report in directory:"
    puts $CHECK_OUTPUT $prot_output_dir
    file mkdir $prot_output_dir

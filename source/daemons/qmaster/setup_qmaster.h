@@ -36,6 +36,8 @@ int sge_setup_qmaster(char* anArgv[]);
 
 int sge_qmaster_thread_init(void);
 
+void sge_setup_job_resend(void);
+
 #endif /* __SETUP_QMASTER_H */
 
 

@@ -1,3 +1,9 @@
+AD-2004-04-22-1: Bugfix:    Changed thread startup order back to old one.
+                            Register job resend events for jobs with status
+                            'JTRANSFERING' in a separate function.
+                 Changed:   qmaster
+                 Review:    AH
+
 SG-2004-04-22-2: Bugfix:   - fixed memory leak in berkeleydb spooling for jobs
                            - fixed memory leak in qsub 
                  Changed:  qmaster, qsub

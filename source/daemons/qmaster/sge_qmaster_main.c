@@ -189,9 +189,11 @@ int main(int argc, char* argv[])
 
    setup_lock_service();
 
+   sge_setup_qmaster(argv);
+
    start_periodic_tasks();
 
-   sge_setup_qmaster(argv);
+   sge_setup_job_resend();
 
    create_and_join_threads();
 

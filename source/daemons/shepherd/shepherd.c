@@ -1006,9 +1006,19 @@ int ckpt_type
 
          /* normal exit */
          if (WIFEXITED(qrsh_exit_code)) {
+            const char *qrsh_error;
+
             exit_status = WEXITSTATUS(qrsh_exit_code);
-            shepherd_trace_sprintf("job exited normally, exit code is %d\n", 
-                                   exit_status);
+
+            qrsh_error = get_error_of_qrsh_starter();
+            if (qrsh_error != NULL) {
+               shepherd_error_sprintf("startup of qrsh job failed: "SFN"\n",
+                                      qrsh_error);
+               FREE(qrsh_error);
+            } else {
+               shepherd_trace_sprintf("job exited normally, exit code is %d\n", 
+                                      exit_status);
+            }
          }
 
          /* qrsh job was signaled */

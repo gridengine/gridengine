@@ -35,4 +35,5 @@ int qlogin_starter(const char *cwd, char *daemon);
 int write_to_qrsh(const char *data);
 void write_exit_code_to_qrsh(int exit_code);
 int get_exit_code_of_qrsh_starter(void);
+const char *get_error_of_qrsh_starter(void);
 #endif /* __QLOGIN_STARTER_H */

@@ -77,11 +77,6 @@ test <CODE>rcp</CODE> between hosts before implementing the
 file-staging procedure. Of course, the use of <CODE>rcp</CODE> is a
 security concern. However, it should be straightforward to convert
 this example to use <CODE>scp</CODE> instead of <CODE>rcp</CODE>.</P>
-<P STYLE="margin-bottom: 0in">NOTE: the prototype will only work if
-the submit user is known on the compute hosts, and if the submit
-hostname is known to the compute host. These issues are independent
-of file staging, but could present themselves in situations requiring
-a file-staging solution.</P>
 <H3 CLASS="western">Configuration</H3>
 <P STYLE="margin-bottom: 0in">The example given here is a simple job
 which transfers an input text file to the compute host, converts all

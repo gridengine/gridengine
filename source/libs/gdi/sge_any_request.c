@@ -134,7 +134,11 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 {
    int ret_val;
-   DENTER(BASIS_LAYER, "prepare_enroll");
+   u_long32 me_who;
+   cl_com_handle_t* handle = NULL;
+
+
+   DENTER(TOP_LAYER, "prepare_enroll");
 
    /* TODO: setup security for NGC */
    if (sge_security_initialize(name)) {
@@ -142,7 +146,6 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       SGE_EXIT(1);
    }
    
-
    /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
             This can only by done when the daemonize functions of SCHEDD and EXECD
             are thread save and reresolve qualified hostname for each thread */
@@ -174,9 +177,19 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       */
    }
 
+   /* TODO: implement reserved port security */
+   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
+      CRITICAL((SGE_EVENT, "reserved port security not implemented\n"));
+      /*
+      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
+      */
+   }
+   
+   me_who = uti_state_get_mewho();
+
    /* TODO: we don't need to get the qmaster name at this point (check this)*/
-   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD 
-      || uti_state_get_mewho() == SCHEDD || uti_state_get_mewho() == COMMDCNTL)) {
+   if (!(me_who == QMASTER || me_who == EXECD 
+      || me_who == SCHEDD  || me_who == COMMDCNTL)) {
       const char *masterhost; 
 
       if ((masterhost = sge_get_master(0))) {
@@ -186,13 +199,41 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       }  
    }
    
-   /* TODO: implement reserved port security */
-   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
-      CRITICAL((SGE_EVENT, "reserved port security not implemented\n"));
-      /*
-      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
-      */
-   }
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   if (handle == NULL) {
+      int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
+      if ( me_who == QMASTER ||
+           me_who == EXECD   ||
+           me_who == SCHEDD  ) {
+         my_component_id = 1;   
+      }
+
+      switch(me_who) {
+         case EXECD:
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_execd_port(), sge_get_qmaster_port(), 
+                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+            break;
+         case QMASTER:
+            DPRINTF(("creating QMASTER handle\n"));
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE,                              /* message based tcp communication                */
+                                          1, sge_get_qmaster_port(), sge_get_execd_port(),          /* create service on qmaster port,                */
+                                                                                                    /* use execd port to connect to endpoints         */
+                                          (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
+                                          1 , 0 );                                                  /* select timeout is set to 1 second 0 usec       */
+            break;
+         default:
+            /* this is for "normal" gdi clients of qmaster */
+            DPRINTF(("creating GDI handle\n"));
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0, sge_get_qmaster_port(),
+                                         (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+            break;
+      }
+      if (handle == NULL) {
+         CRITICAL((SGE_EVENT,"can't create handle\n"));
+      } else {
+         INFO((SGE_EVENT,"local component handle created for prog_name: \"%s\"\n",uti_state_get_sge_formal_prog_name() ));
+      }
+   } 
    DEXIT;
 }
 #else
@@ -335,26 +376,9 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    me_who = uti_state_get_mewho();
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
-      if ( me_who == QMASTER ||
-           me_who == EXECD   ||
-           me_who == SCHEDD  ) {
-         my_component_id = 1;   
-      }
+      CRITICAL((SGE_EVENT,"can't get communication handle\n"));
+   }
 
-      if ( me_who == EXECD ) {
-         /* execd creates service on SGE_EXECD_PORT */
-         handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_execd_port(), sge_get_qmaster_port(), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
-      } else {
-         /* this is for "normal" gdi clients of qmaster */
-         handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0, sge_get_qmaster_port(), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
-      }
-      if (handle == NULL) {
-         CRITICAL((SGE_EVENT,"can't create handle\n"));
-      } else {
-         INFO((SGE_EVENT,"local component handle created for prog_name: \"%s\"\n",uti_state_get_sge_formal_prog_name() ));
-      }
-   } 
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }

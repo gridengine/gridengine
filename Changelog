@@ -1,3 +1,9 @@
+CR-2004-02-02-0: Bugfix:    Fixed problem "can't get communication handle" when
+                            application calls check_isalive() before a communication
+                            handle is created. Now all communication handle are
+                            created in prepare_enroll()
+                 Review:    pending
+
 JG-2004-02-02-0: Enhancem.: The event client layer handles shutdown of qmaster
                             (event QMASTER_GOES_DOWN). In this case, the event
                             client will try to reregister itself at the (new) 

@@ -509,24 +509,16 @@ static void communication_setup(char **anArgv)
 
    DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n", uti_state_get_qualified_hostname()));
 
+   prepare_enroll(prognames[QMASTER], 1, NULL);
    com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
 
    if (com_handle == NULL) {
-      com_handle = cl_com_create_handle(
-          CL_CT_TCP, CL_CM_CT_MESSAGE,                     /* message based tcp communication                */
-          1, sge_get_qmaster_port(), sge_get_execd_port(), /* create service on qmaster port,                */
-                                                           /* use execd port to connect to endpoints         */
-          (char*)prognames[QMASTER], 1,                    /* this endpoint is called "qmaster" and has id 1 */
-          1 , 0 );                                         /* select timeout is set to 1 second 0 usec       */
-
-      if (com_handle == NULL) {
-         ERROR((SGE_EVENT, "could not create qmaster communication handle\n"));
-         ERROR((SGE_EVENT, "check if port %d is used by another process\n", sge_get_qmaster_port()));
-         SGE_EXIT(1);
-      }
-      /* CR - TODO: enable and test max connection close count */
-      /* cl_com_enable_max_connection_close(com_handle); */
+      ERROR((SGE_EVENT, "could not create qmaster communication handle\n"));
+      ERROR((SGE_EVENT, "check if port %d is used by another process\n", sge_get_qmaster_port()));
+      SGE_EXIT(1);
    }
+   /* CR - TODO: enable and test max connection close count */
+   /* cl_com_enable_max_connection_close(com_handle); */
    
    if (com_handle) {
       cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);

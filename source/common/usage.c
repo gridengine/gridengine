@@ -370,6 +370,10 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_clear_OPT, MSG_GDI_UTEXT_clear_OPT);
    }
 
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(cu_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_clearusage_OPT, MSG_GDI_UTEXT_clearusage_OPT);
+   }
+
    if (VALID_OPT(cwd_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_cwd_OPT, MSG_GDI_UTEXT_cwd_OPT);
    }

@@ -1,3 +1,5 @@
+SD-2002-01-09-1: Enhancem.: Added -clearusage info to qconf -help
+
 AA-2002-01-09-0: Enhancem.: openssl lib path, I18N Linux uses libc gettext
                             -> changes in aimk
 

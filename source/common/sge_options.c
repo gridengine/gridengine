@@ -440,6 +440,8 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* secl_OPT - show event client list */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* kec_OPT  - kill event client */
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* cu_OPT - SGEEE sharetree - clear all user/project usage */ 
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 /*                  
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  c  q  n  A

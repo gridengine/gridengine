@@ -190,6 +190,8 @@ typedef struct{
    int max_reservation;
    int weight_priority;
    int default_duration;
+
+   bool new_config;     /* identifies an update in the configuration */
 }config_pos_type;
 
 static bool schedd_profiling = false;
@@ -215,7 +217,7 @@ static config_pos_type pos = {true,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
-                       -1, -1, -1, -1, -1, -1};
+                       -1, -1, -1, -1, -1, -1, false};
 
 /*
  * a list of all valid "params" parameters
@@ -2028,6 +2030,14 @@ void sconf_print_config(void){
    return;
 }
 
+bool sconf_is_new_config() {
+   return pos.new_config;
+}
+
+void sconf_reset_new_config() {
+   pos.new_config = false;
+}
+
 /****** sge_schedd_conf/sconf_validate_config_() *******************************
 *  NAME
 *     sconf_validate_config_() -- validates the current config 
@@ -2056,6 +2066,8 @@ bool sconf_validate_config_(lList **answer_list){
 
    sconf_clear_pos();
 
+   pos.new_config = true; 
+   
    if (!sconf_is()){
       DPRINTF(("sconf_validate: no config to validate\n"));
       return true;

@@ -270,6 +270,8 @@ char *argv[]
    
       sched_funcs[current_scheduler].event_func();
 
+      sconf_reset_new_config();
+      
       /* output profiling information */
       if (prof_is_active()) {
          time_t now = sge_get_gmt();

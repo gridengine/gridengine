@@ -53,6 +53,16 @@ int calculate_host_tickets( lList **running, lList **hosts );
 int  sort_host_list_by_share_load ( lList *host_list,       /* EH_Type */
                                     lList *complex_list );  /* CX_Type */
 
+void sge_clear_job( lListElem *job, bool is_clear_all);
+
+lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
+                      lList *running_jobs,
+                      lList *queued_jobs,
+                      lList *finished_jobs,
+                      lList *order_list,
+                      bool update_usage_and_configuration,
+                      int seqno,
+                      bool update_execd);
 
 #endif /*  __SGEEE_H */
 

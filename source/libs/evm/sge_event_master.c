@@ -4074,7 +4074,7 @@ bool sge_commit (void)
             
             ep = lNext (ep);
          }
-         
+
          sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
          /* Since lAppendList doesn't free qlp, we don't have to store a new
           * value in Event_Queue_Key. */

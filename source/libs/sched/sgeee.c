@@ -142,7 +142,6 @@ static void task_ref_print_table(void);
 static void task_ref_print_table_entry(sge_task_ref_t *tref);
 #endif
 
-static void sge_clear_job( lListElem *job);
 static void sge_clear_ja_task ( lListElem *ja_task );
 
 static sge_task_ref_t *task_ref_get_first(u_long32 job_number, u_long32 ja_task_number);
@@ -158,15 +157,6 @@ static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double uc, dou
 
 static void get_max_ptix(double *min, double *max, lList *job_list);
 
-static lList *sge_build_sgeee_orders ( sge_Sdescr_t *lists,
-                              lList *running_jobs,
-                              lList *queued_jobs,
-                              lList *finished_jobs,
-                              lList *order_list,
-                              bool update_usage_and_configuration,
-                              int seqno, 
-                              bool max_queued_ticket_orders,
-                              bool update_execd);
 static double calc_job_tickets(sge_ref_t *ref);
 static int sge_calc_tickets (sge_Sdescr_t *lists,
                       lList *running_jobs,
@@ -2388,10 +2378,21 @@ calc_job_tickets ( sge_ref_t *ref )
  * sge_clear_job - clear tickets for job
  *--------------------------------------------------------------------*/
 
-static void
-sge_clear_job( lListElem *job )
-{
+void sge_clear_job( lListElem *job, bool is_clear_all) {
    lListElem *ja_task;
+   
+   if (is_clear_all) {
+      lSetDouble(job, JB_nppri,0.0);
+      lSetDouble(job, JB_urg,0.0);
+      lSetDouble(job, JB_nurg,0.0);
+      lSetDouble(job, JB_dlcontr,0.0);
+      lSetDouble(job, JB_wtcontr,0.0);
+      lSetDouble(job, JB_rrcontr,0.0);
+      
+      for_each(ja_task, lGetList(job, JB_ja_template)) {
+         sge_clear_ja_task(ja_task); 
+      }   
+   }
 
    for_each(ja_task, lGetList(job, JB_ja_tasks))
       sge_clear_ja_task(ja_task);
@@ -2405,7 +2406,6 @@ static void
 sge_clear_ja_task( lListElem *ja_task )
 {
    lListElem *granted_el;
-
    lSetDouble(ja_task, JAT_prio, 0);
    lSetDouble(ja_task, JAT_ntix, 0);
    lSetDouble(ja_task, JAT_tix, 0);
@@ -3808,14 +3808,13 @@ get_mod_share_tree( lListElem *node,
 *     lList * -  new order list
 *
 *******************************************************************************/
-static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
+lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
                       lList *running_jobs,
                       lList *queued_jobs,
                       lList *finished_jobs,
                       lList *order_list,
                       bool update_usage_and_configuration,
                       int seqno,
-                      bool max_queued_ticket_orders,
                       bool update_execd)
 {
    static lEnumeration *usage_what = NULL;
@@ -3830,12 +3829,9 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
    u_long32 max_pending_tasks_per_job = sconf_get_max_pending_tasks_per_job();
    static int last_seqno = 0;
 
-   static bool last_max_queued_ticket_orders=true; /* allows me to identify changes in the configuration */
-
-   double prof_job_orders=0, prof_update_orders=0;
-
+   bool max_queued_ticket_orders = sconf_get_report_pjob_tickets();
+   
    DENTER(TOP_LAYER, "sge_build_sgeee_orders");
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
 
    if (!config_what)
       config_what = lWhat("%T(%I )", SC_Type,
@@ -3895,10 +3891,9 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
  * to remove the pticket values. This prevents qstat from reporting wrong pticket values. Its only done
  * once after the config change.
  */
-   if (queued_jobs && (max_queued_ticket_orders || (max_queued_ticket_orders != last_max_queued_ticket_orders))) {
+   if (queued_jobs && (max_queued_ticket_orders || sconf_is_new_config())) {
       lListElem *qep;
       u_long32 free_qslots = 0;
-      last_max_queued_ticket_orders = max_queued_ticket_orders;
       norders = lGetNumberOfElem(order_list);
       for_each(qep, lists->queue_list)
          free_qslots += MAX(0, lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep));
@@ -3934,10 +3929,6 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
    if (finished_jobs) {
       order_list  = create_delete_job_orders(finished_jobs, order_list);
    }
-
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_job_orders = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
-   PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4); 
 
    if (update_usage_and_configuration) {
 
@@ -4032,18 +4023,6 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
       last_seqno = seqno;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_update_orders = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
-   if (prof_is_active()) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
-
-      INFO((SGE_EVENT, "PROF: update orders: job orders: %.3f s, update orders: %.3f s\n",
-               prof_job_orders, prof_update_orders));
-
-      log_state_set_log_level(saved_logginglevel);
-   }
-
    DEXIT;
    return order_list;
 }
@@ -4120,6 +4099,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                bool has_pending_jobs )
 {
    static u_long32 past = 0;
+   static u_long32 past_usage_update = 0;
    u_long32 now = sge_get_gmt();
    u_long seqno;
    lListElem *job;
@@ -4137,8 +4117,9 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    do_nprio = (sconf_get_weight_priority()!=0) || report_priority;
 
    /* clear SGEEE fields for queued jobs */
-   for_each(job, pending_jobs)
-      sge_clear_job(job);
+   for_each(job, pending_jobs){   
+      sge_clear_job(job, false);
+   }
 
    /* calculate per job static urgency values */
    if (do_nurg) {
@@ -4228,6 +4209,8 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       log_state_set_log_level(saved_logginglevel);
    }
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4)
+   
    /* somebody might have played with the system clock. */
    if (now < past)
       past = now;
@@ -4235,42 +4218,32 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    {
       u_long32 reprioritize_interval = sconf_get_reprioritize_interval(); 
       bool update_execd = ( reprioritize_interval == 0 || (now >= (past + reprioritize_interval))); 
-      if (update_execd)
+      bool update_usage = now >= (past_usage_update + 120); /* we are updating the usage every 2 min. */
+      if (update_execd){
          past = now;
-      *orderlist = sge_build_sgeee_orders(lists, running_jobs, pending_jobs, finished_jobs,
-                                        *orderlist, true, seqno, sconf_get_report_pjob_tickets(), update_execd);
-   }
-   if(!has_pending_jobs || !has_queues)
-      return 0;
+      } 
+      if (update_usage) {
+         past_usage_update = now;
+      }
+      /* we are not calculation pending tickets here, only the running, finished jobs,
+         and the sharetree changes are processed. The pending tickets are calculated at the
+         end of the scheduler cycle */
+      *orderlist = sge_build_sgeee_orders(lists, running_jobs,NULL, finished_jobs,
+                                        *orderlist, update_usage, seqno, update_execd);
 
-#if 0
-   /* 
-    * calculate the number of tickets for all jobs already 
-    * running on the host 
-    */
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
-
-   if (calculate_host_tickets(&running_jobs, 
-                              &(lists->host_list)))  {
-      DPRINTF(("no host for which to calculate host tickets\n"));
-      DEXIT;
-      return -1;
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-#endif
-
+   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    if (prof_is_active()) {
-       u_long32 saved_logginglevel = log_state_get_log_level();
+      u_long32 saved_logginglevel = log_state_get_log_level();
+      log_state_set_log_level(LOG_INFO); 
 
-       log_state_set_log_level(LOG_INFO);
-       INFO((SGE_EVENT, "PROF: active host job ticket calculation took %.3f s\n",
-             prof_get_measurement_wallclock(SGE_PROF_CUSTOM2, false, NULL)));
-       log_state_set_log_level(saved_logginglevel);
-    }
+      INFO((SGE_EVENT, "PROF: create active job orders: %.3f s\n",
+               prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL)));
 
-
-
+      log_state_set_log_level(saved_logginglevel);
+   }  
+   
    DEXIT;
    return 0;
 }
@@ -4393,7 +4366,10 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
 *     static void get_max_ptix(double *max, lList *job_list) 
 *
 *  FUNCTION
-*     Determines maximum ticket amount in the job list.
+*     Determines maximum ticket amount in the job list. The fuction
+*     runnes over all jobs and locates the min and the max value. The
+*     min value is 1 ticket smaler than the actual minimum. This ensures
+*     that the priority later is always > 0.
 *
 *  INPUTS
 *     double *min     - IN/OUT parameter for minimum
@@ -4421,6 +4397,8 @@ static void get_max_ptix(double *min, double *max, lList *job_list)
       }
    }
 
+   *min = *min -1;
+   
    return;
 }
 

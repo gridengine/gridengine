@@ -159,6 +159,9 @@ const char *get_name_of_split_value(int value);
 *                         because they are already running
 *     SPLIT_FINISHED    - Already finished jobs/tasks   
 *
+*     SPLIT_NOT_STARTED - jobs that could not be dispatched in one scheduling
+*                         run
+*
 *     SPLIT_FIRST and SPLIT_LAST might be used to build loops.
 *
 *  SEE ALSO
@@ -178,7 +181,7 @@ enum {
    SPLIT_WAITING_DUE_TO_TIME,
    SPLIT_RUNNING,
    SPLIT_FINISHED,
-
+   SPLIT_NOT_STARTED,
    SPLIT_LAST
 };
 

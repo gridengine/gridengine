@@ -88,6 +88,9 @@ const lListElem *sconf_get_config(void);
 
 lList **sconf_get_config_list(void);
 
+bool sconf_is_new_config(void); 
+void sconf_reset_new_config(void);
+
 bool sconf_is(void);
 
 u_long32 sconf_get_load_adjustment_decay_time(void);

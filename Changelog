@@ -1,3 +1,5 @@
+CR-2002-10-01-0  Bugfix:    got compiler warning "unused variable `src_qname'"
+
 EB-2002-09-25-0  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog
                             for pending jobs.
                  IZ:        388 

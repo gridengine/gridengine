@@ -346,8 +346,7 @@ int master
     */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
-      lListElem *src_qep = queue_list_locate(Master_Queue_List,
-                                             lGetString(gdil_ep, JG_qname));
+      lListElem *src_qep = queue_list_locate(Master_Queue_List, src_qname);
 
       lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
       /*

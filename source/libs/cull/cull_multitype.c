@@ -821,7 +821,7 @@ int lGetType(const lDescr *dp, int nm)
    return mt_get_type(dp[pos].mt);
 }
 
-/****** cull/multitype/lGetUlong() ********************************************
+/****** cull/multitype/lGetString() ********************************************
 *  NAME
 *     lGetString() -- Return string for specified fieldname 
 *

@@ -344,33 +344,38 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
    DENTER(TOP_LAYER, "sgeee_resort_pending_jobs");
    if (next_job) {
       u_long32 job_id = lGetUlong(next_job, JB_job_number);
-      lList *range_list = lGetList(next_job, JB_ja_n_h_ids);
-      u_long32 ja_task_id = range_list_get_first_id(range_list, NULL);
-      sge_task_ref_t *tref = task_ref_get_first(job_id, ja_task_id);
-      lListElem *ja_task_template = lFirst(lGetList(next_job, JB_ja_template));
-      lListElem *insert_jep = NULL;
+      lListElem *tmp_task = lFirst(lGetList(next_job, JB_ja_tasks));
       lListElem *jep = NULL;
-      lListElem *order = NULL;
+      lListElem *insert_jep = NULL;
       double ticket;
 
-      /*
-       * Update pending tickets in template element
-       */
-      task_ref_copy_to_ja_task(tref, ja_task_template);
+      if (tmp_task == NULL) {
+         lList *range_list = lGetList(next_job, JB_ja_n_h_ids);
+         u_long32 ja_task_id = range_list_get_first_id(range_list, NULL);
+         sge_task_ref_t *tref = task_ref_get_first(job_id, ja_task_id);
+         lListElem *ja_task_template =
+                                   lFirst(lGetList(next_job, JB_ja_template));
+         lListElem *order = NULL;
 
+         tmp_task = ja_task_template;
 
-      /* 
-       * Update pending tickets in ORT_ptickets-order which was
-       * created previously
-       */
-      for_each(order, orderlist) {
-         if (lGetUlong(order, OR_type) == ORT_ptickets &&
-             lGetUlong(order, OR_job_number) == job_id) {
-            lListElem *order_job = lFirst(lGetList(order, OR_joker));
-            lListElem *order_task = lFirst(lGetList(order_job, JB_ja_tasks));
+         /*
+          * Update pending tickets in template element
+          */
+         task_ref_copy_to_ja_task(tref, ja_task_template);
 
-            task_ref_copy_to_ja_task(tref, order_task);
-            break;
+         /* 
+          * Update pending tickets in ORT_ptickets-order which was
+          * created previously
+          */
+         for_each(order, orderlist) {
+            if (lGetUlong(order, OR_type) == ORT_ptickets &&
+                lGetUlong(order, OR_job_number) == job_id) {
+               lListElem *order_job = lFirst(lGetList(order, OR_joker));
+               lListElem *order_task = lFirst(lGetList(order_job, JB_ja_tasks));
+               task_ref_copy_to_ja_task(tref, order_task);
+               break;
+            }
          }
       }
 
@@ -378,18 +383,22 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
        * Re-Insert job at the correct possition
        */
       lDechainElem(*job_list, next_job);
-      ticket = lGetDouble(ja_task_template, JAT_ticket);
+      ticket = lGetDouble(tmp_task, JAT_ticket);
       for_each(jep, *job_list) {
-         lListElem *ja_task_template2 = lFirst(lGetList(jep, JB_ja_template));
-         double ticket2 = lGetDouble(ja_task_template2, JAT_ticket);
          u_long32 job_id2 = lGetUlong(jep, JB_job_number);
- 
+         lListElem *tmp_task2 = lFirst(lGetList(jep, JB_ja_tasks));
+         double ticket2;
+
+         if (tmp_task2 == NULL) {
+            tmp_task2 = lFirst(lGetList(jep, JB_ja_template));
+         }
+         ticket2 = lGetDouble(tmp_task2, JAT_ticket);
          if (ticket > ticket2 || (ticket == ticket2 && job_id < job_id2)) {
             break;
          }
          insert_jep = jep;
       }
- 
+
       lInsertElem(*job_list, insert_jep, next_job);
    }
    DEXIT;

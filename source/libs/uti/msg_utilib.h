@@ -235,5 +235,11 @@
 #define MSG_PROF_CYCLICNOTALLOWED_SD            _MESSAGE(49094, _(SFN": cyclic measurement for level %d requested - disabling profiling\n"))
 #define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
 
+/*
+ *
+ */
+#define MSG_UTI_INVALIDUSERNAME_S                  _MESSAGE(49096, _("invalid user name "SFQ"\n"))
+#define MSG_UTI_NOHOMEDIR_S                        _MESSAGE(49097, _("missing home directory for user "SFQ"\n"))
+
 #endif /* __MSG_UTILIB_H */
 

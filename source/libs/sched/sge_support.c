@@ -1012,8 +1012,27 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       
       nxt_job = lNext(nxt_job);
       tmp_sge_job = lCreateElem(SGEJ_Type);
-      lSetDouble(tmp_sge_job, SGEJ_ticket, 
-         lGetDouble(lFirst(lGetList(job, JB_ja_template)), JAT_ticket));
+
+      {
+         lListElem *tmp_task; /* JAT_Type */
+
+         /* 
+          * First try to find an enrolled task 
+          * It will have the most tickets
+          */
+         tmp_task = lFirst(lGetList(job, JB_ja_tasks));
+
+         /* 
+          * If there is no enrolled task than take the template element 
+          */
+         if (tmp_task == NULL) {
+            tmp_task = lFirst(lGetList(job, JB_ja_template));
+         }
+
+         lSetDouble(tmp_sge_job, SGEJ_ticket,
+                    lGetDouble(tmp_task, JAT_ticket));
+      }
+
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 1

@@ -32,8 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <unistd.h>
 #include <sys/types.h> 
+
+#include "sge_dstring.h"
+#include "sge_unistd.h"
 
 #if defined(SUN4)
    int seteuid(uid_t euid);
@@ -76,6 +78,8 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 int sge_add_group(gid_t newgid, char *err_str); 
 
 struct passwd *sge_getpwnam(const char *name); 
+
+bool sge_get_home_dir(dstring *path, const char *user);
  
 #endif /* __SGE_UIDGID_H */
 

@@ -935,7 +935,6 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
 *                          int nm, const char *dlmt) 
 *
 *  FUNCTION
-*     ??? 
 *
 *  INPUTS
 *     const char *s    - ??? 
@@ -948,16 +947,12 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
 *     int - error state 
 *         0 - OK
 *  EXAMPLE
-*     ??? 
 *
 *  NOTES
-*     ??? 
 *
 *  BUGS
-*     ??? 
 *
 *  SEE ALSO
-*     ???/???
 ******************************************************************************/
 int lString2ListNone(const char *s, lList **lpp, const lDescr *dp,
                      int nm, const char *dlmt) 

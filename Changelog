@@ -1,3 +1,12 @@
+EB-2003-04-29-0  Bugfix:    SGEEE: scheduler dispatches wrong jobs if there
+                            are jobs in the list of pending jobs which had
+                            an error state or which have been rescheduled
+                            previously
+                 Issue:     532
+                 Bugtraq:   4847814
+                 Changed:   sge_schedd, qstat, qmon
+                 Review:    AH, (SD)
+
 CR-2003-04-28-0  Testsuite: New scheduler test.
                             - testing consumables performance for scheduler
 
@@ -7,7 +16,7 @@ CR-2003-04-25-0  Testsuite: Bugfix for spool_array_to_file() when spooling
 JG-2003-04-22-0  Bugfix:    qrsh (rshd) does not set limits after setting the 
                             osjobid. This disabled limits that depend on being 
                             in a OS managed job (e.g. on SUPER-UX/SX).
-                 IZ:        #513
+                 IZ:        513
                  Review:    EB
                  Changed:   rshd
 

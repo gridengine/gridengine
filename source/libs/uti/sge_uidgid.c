@@ -1002,4 +1002,26 @@ struct passwd *sge_getpwnam(const char *name)
  
    return pw;
 }
-  
+
+bool sge_get_home_dir(dstring *path, const char *user) 
+{
+   bool ret = false;
+   struct passwd *pwd;
+
+   DENTER(TOP_LAYER, "sge_get_home_dir");
+   pwd = sge_getpwnam(user);
+   if (pwd == NULL) {
+      ERROR((SGE_EVENT, MSG_UTI_INVALIDUSERNAME_S, user));
+      ret = false;
+   } else {
+      if (pwd->pw_dir == NULL) {
+         ERROR((SGE_EVENT, MSG_UTI_NOHOMEDIR_S, user));
+         ret = false;
+      } else {
+         sge_dstring_append(path, pwd->pw_dir); 
+         ret = true;
+      }
+   }
+   DEXIT;
+   return ret;
+}

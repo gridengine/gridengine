@@ -76,7 +76,7 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
    return false;
 }
 
-/****** schedlib/ssi/sge_ssi_job_cancel() *******************************************
+/****** schedlib/ssi/sge_ssi_job_cancel() **************************************
 *  NAME
 *     sge_ssi_job_cancel() -- delete or restart a job
 *
@@ -141,7 +141,7 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
 }
 
 
-/****** libsched/ssi/sge_ssi_job_start() ********************************************
+/****** schedlib/ssi/sge_ssi_job_start() ***************************************
 *  NAME
 *     sge_ssi_job_start() -- start a job
 *

@@ -1,3 +1,6 @@
+CR-2002-06-13-6: Testsuite: testing issue #140 also for pending jobs
+                 Enhancem.: (merged from V53_beta2_BRANCH)
+
 JG-2002-06-13-0: Enhancem.  qtcsh: If a command is started in the background 
                             using qrsh, the qrsh option -nostdin is used to 
                             avoid qrsh being suspended.

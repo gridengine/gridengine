@@ -1,3 +1,5 @@
+CR-2002-06-13-0: Testsuite: error in html output in compile_source()
+
 AH-2002-06-12-1: Bugfix:    Prevent use of soft requests for consumables. This
                             addresses problems related to IZ #223 / BT #4700286.
                             However it does not introduce debitation for soft

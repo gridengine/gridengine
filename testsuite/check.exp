@@ -5643,10 +5643,10 @@ proc compile_source {} {
 
    set html_table(ROWS) $table_row
 
-   append html_body [ create_html_table html_table ]
    
    if { $compile_error != 0 } {
       mail_report $mail_subject $mail_body
+      append html_body [ create_html_table html_table ]
       update_compile_html_output $html_body
       return -1
    } 
@@ -5748,6 +5748,7 @@ proc compile_source {} {
          set was_error 1
       }
    }
+   append html_body [ create_html_table html_table ]
  
    catch { file mkdir "$CHECK_PRODUCT_ROOT/man" } 
    catch { file mkdir "$CHECK_PRODUCT_ROOT/catman" } 

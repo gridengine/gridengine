@@ -1088,6 +1088,7 @@ proc install_execd {} {
          set_error "-1" "install_execd - host $exec_host is not in execd list"
          return 
       }
+      wait_for_remote_file $exec_host $CHECK_USER "$CHECK_PRODUCT_ROOT/default/common/configuration"
       if { $check_use_installed_system != 0 } {
          set_error "0" "install_execd - no need to install execd on hosts \"$CHECK_CORE_EXECD\" - noinst parameter is set"
          puts "no need to install execd on hosts \"$CHECK_CORE_EXECD\", noinst parameter is set"
@@ -1247,6 +1248,7 @@ proc install_execd {} {
                   set_config params $exec_host
                   set local_execd_spool_set 1 
                }
+               log_user 1
                continue; 
             }
             -i $sp_id "if this is ok or stop the installation with" {

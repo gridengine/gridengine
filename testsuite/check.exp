@@ -80,13 +80,17 @@ global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
 set CHECK_SOURCE_CVS_RELEASE "maintrunc"    ;# default is "maintrunc"
 global CHECK_SOURCE_HOSTNAME       ;# name of host with cvs installed on (e.g. fangorn)
-global CHECK_SOURCE_COMPILE_HOSTS  ;# list of hostnames on which the source should be compiled
+global CHECK_SOURCE_COMPILE_HOSTS     ;# list of hostnames on which the source should be compiled
 global CHECK_AIMK_COMPILE_OPTIONS     ;# optional: aimk options
 global CHECK_DIST_INSTALL_OPTIONS     ;# optional: mydistinst options
+global CHECK_PACKAGE_DIRECTORY        ;# optional: no compile directory, use distribution (tar or sun packages)
+global CHECK_PACKAGE_TYPE             ;# zip or tar
+set CHECK_PACKAGE_TYPE "tar"
 global CHECK_QMASTER_INSTALL_OPTIONS  ;# optional: qmaster install parameter
 global CHECK_EXECD_INSTALL_OPTIONS    ;# optional: execd install parameter 
 set CHECK_AIMK_COMPILE_OPTIONS "-secure"
 set CHECK_DIST_INSTALL_OPTIONS "-allall"
+set CHECK_PACKAGE_DIRECTORY "none"
 set CHECK_QMASTER_INSTALL_OPTIONS ""
 set CHECK_EXECD_INSTALL_OPTIONS   ""
 
@@ -378,114 +382,163 @@ set CHECK_OUTPUT stdout
 
 # setup_names  (for edit setup file)
 global CHECK_SETUP_NAMES
-
+global CHECK_SETUP_CHANGES
+set CHECK_SETUP_CHANGES ""
 
 global CHECK_CURRENT_SETTINGS_VERSION
-set CHECK_CURRENT_SETTINGS_VERSION "6"
+set CHECK_CURRENT_SETTINGS_VERSION "7"
 set CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION
 
 set CHECK_SETUP_NAMES(index) "settings_version"
 set CHECK_SETUP_NAMES(settings_version) "CHECK_SETTINGS_VERSION"
+set CHECK_SETUP_NAMES(settings_version,reinstall) 0   ;# 1 = re pre install system after setup change
+                                                      ;# 2 = only shutdown system
+                                                      ;# 0 = no restarting
 
 lappend CHECK_SETUP_NAMES(index) "testsuite_root_directory"
 set CHECK_SETUP_NAMES(testsuite_root_directory) "CHECK_TESTSUITE_ROOT"
+set CHECK_SETUP_NAMES(testsuite_root_directory,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "testsuite_config_dir"
 set CHECK_SETUP_NAMES(testsuite_config_dir) "CHECK_CONFIG_DIR"
+set CHECK_SETUP_NAMES(testsuite_config_dir,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "checktree_root_directory"
 set CHECK_SETUP_NAMES(checktree_root_directory) "CHECK_CHECKTREE_ROOT"
+set CHECK_SETUP_NAMES(checktree_root_directory,reinstall) 0
 
 lappend CHECK_SETUP_NAMES(index) "results_root_directory"
 set CHECK_SETUP_NAMES(results_root_directory) "CHECK_MAIN_RESULTS_DIR"
+set CHECK_SETUP_NAMES(results_root_directory,reinstall) 0
 
 lappend CHECK_SETUP_NAMES(index) "qmaster_host"
 set CHECK_SETUP_NAMES(qmaster_host) "CHECK_CORE_MASTER"
+set CHECK_SETUP_NAMES(qmaster_host,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "list_of_execution_hosts"
 set CHECK_SETUP_NAMES(list_of_execution_hosts) "CHECK_CORE_EXECD"
+set CHECK_SETUP_NAMES(list_of_execution_hosts,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "processors_on_each_execution_host"
 set CHECK_SETUP_NAMES(processors_on_each_execution_host) "CHECK_CORE_PROCESSORS"
+set CHECK_SETUP_NAMES(processors_on_each_execution_host,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "list_of_submit_only_hosts"
 set CHECK_SETUP_NAMES(list_of_submit_only_hosts) "CHECK_SUBMIT_ONLY_HOSTS"
+set CHECK_SETUP_NAMES(list_of_submit_only_hosts,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "commd_portnumber"
 set CHECK_SETUP_NAMES(commd_portnumber) "CHECK_COMMD_PORT"
+set CHECK_SETUP_NAMES(commd_portnumber,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "product_type"
 set CHECK_SETUP_NAMES(product_type) "CHECK_PRODUCT_TYPE"
+set CHECK_SETUP_NAMES(product_type,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "product_feature"
 set CHECK_SETUP_NAMES(product_feature) "CHECK_PRODUCT_FEATURE"
+set CHECK_SETUP_NAMES(product_feature,reinstall) 1 
 
 lappend CHECK_SETUP_NAMES(index) "product_root_directory"
 set CHECK_SETUP_NAMES(product_root_directory) "CHECK_PRODUCT_ROOT"
+set CHECK_SETUP_NAMES(product_root_directory,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "source_root_directory"
 set CHECK_SETUP_NAMES(source_root_directory) "CHECK_SOURCE_DIR"
+set CHECK_SETUP_NAMES(source_root_directory,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "cvs_hostname"
 set CHECK_SETUP_NAMES(cvs_hostname) "CHECK_SOURCE_HOSTNAME"
+set CHECK_SETUP_NAMES(cvs_hostname,reinstall) 0
 
 lappend CHECK_SETUP_NAMES(index) "cvs_release_tag"
 set CHECK_SETUP_NAMES(cvs_release_tag) "CHECK_SOURCE_CVS_RELEASE"
+set CHECK_SETUP_NAMES(cvs_release_tag,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "list_of_compile_hosts"
 set CHECK_SETUP_NAMES(list_of_compile_hosts) "CHECK_SOURCE_COMPILE_HOSTS"
+set CHECK_SETUP_NAMES(list_of_compile_hosts,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "aimk_compile_options"
 set CHECK_SETUP_NAMES(aimk_compile_options) "CHECK_AIMK_COMPILE_OPTIONS"
+set CHECK_SETUP_NAMES(aimk_compile_options,reinstall) 1
 
 lappend CHECK_SETUP_NAMES(index) "dist_install_options"
 set CHECK_SETUP_NAMES(dist_install_options) "CHECK_DIST_INSTALL_OPTIONS"
+set CHECK_SETUP_NAMES(dist_install_options,reinstall) 1
+
+lappend CHECK_SETUP_NAMES(index) "package_directory"
+set CHECK_SETUP_NAMES(package_directory) "CHECK_PACKAGE_DIRECTORY"
+set CHECK_SETUP_NAMES(package_directory,reinstall) 1
+
+lappend CHECK_SETUP_NAMES(index) "package_type"
+set CHECK_SETUP_NAMES(package_type) "CHECK_PACKAGE_TYPE"
+set CHECK_SETUP_NAMES(package_type,reinstall) 1
+
 
 lappend CHECK_SETUP_NAMES(index) "qmaster_install_options"
 set CHECK_SETUP_NAMES(qmaster_install_options) "CHECK_QMASTER_INSTALL_OPTIONS"
+set CHECK_SETUP_NAMES(qmaster_install_options,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "execd_install_options"
 set CHECK_SETUP_NAMES(execd_install_options) "CHECK_EXECD_INSTALL_OPTIONS"
+set CHECK_SETUP_NAMES(execd_install_options,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "dns_domain_name"
 set CHECK_SETUP_NAMES(dns_domain_name) "CHECK_DNS_DOMAINNAME"
+set CHECK_SETUP_NAMES(dns_domain_name,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "user_environment"
 set CHECK_SETUP_NAMES(user_environment) "CHECK_REMOTE_ENVIRONMENT"
+set CHECK_SETUP_NAMES(user_environment,reinstall) 0
 
 lappend CHECK_SETUP_NAMES(index) "first_foreign_system_username"
 set CHECK_SETUP_NAMES(first_foreign_system_username) "CHECK_FIRST_FOREIGN_SYSTEM_USER"
+set CHECK_SETUP_NAMES(first_foreign_system_username,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "second_foreign_system_username"
 set CHECK_SETUP_NAMES(second_foreign_system_username) "CHECK_SECOND_FOREIGN_SYSTEM_USER"
+set CHECK_SETUP_NAMES(second_foreign_system_username,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "first_foreign_system_groupname"
 set CHECK_SETUP_NAMES(first_foreign_system_groupname) "CHECK_FIRST_FOREIGN_SYSTEM_GROUP"
+set CHECK_SETUP_NAMES(first_foreign_system_groupname,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "second_foreign_system_groupname"
 set CHECK_SETUP_NAMES(second_foreign_system_groupname) "CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
+set CHECK_SETUP_NAMES(second_foreign_system_groupname,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "default_domain"
 set CHECK_SETUP_NAMES(default_domain) "CHECK_DEFAULT_DOMAIN"
+set CHECK_SETUP_NAMES(default_domain,reinstall) 2
 
 lappend CHECK_SETUP_NAMES(index) "mailx_hostname"
 set CHECK_SETUP_NAMES(mailx_hostname) "CHECK_MAILX_HOST"
+set CHECK_SETUP_NAMES(mailx_hostname,reinstall) 0
+
 
 lappend CHECK_SETUP_NAMES(index) "mail_to"
 set CHECK_SETUP_NAMES(mail_to) "CHECK_REPORT_EMAIL_TO"
+set CHECK_SETUP_NAMES(mail_to,reinstall) 0
+
 
 lappend CHECK_SETUP_NAMES(index) "mail_cc"
 set CHECK_SETUP_NAMES(mail_cc) "CHECK_REPORT_EMAIL_CC"
+set CHECK_SETUP_NAMES(mail_cc,reinstall) 0
+
 
 lappend CHECK_SETUP_NAMES(index) "enable_error_mails"
 set CHECK_SETUP_NAMES(enable_error_mails) "CHECK_SEND_ERROR_MAILS"
+set CHECK_SETUP_NAMES(enable_error_mails,reinstall) 0
+
 
 lappend CHECK_SETUP_NAMES(index) "max_run_all_mails"
 set CHECK_SETUP_NAMES(max_run_all_mails) "CHECK_MAX_ERROR_MAILS"
-
+set CHECK_SETUP_NAMES(max_run_all_mails,reinstall) 0
 
 lappend CHECK_SETUP_NAMES(index) "use_ssh"
 set CHECK_SETUP_NAMES(use_ssh) "CHECK_USE_SSH"
+set CHECK_SETUP_NAMES(use_ssh,reinstall) 2
 
 
 # some useful functions for test implementation
@@ -828,6 +881,67 @@ proc set_root_passwd {} {
   flush $CHECK_OUTPUT
 }
 
+# 0 no action
+# 1 new pre_install
+# 2 only shutdown system
+proc get_setup_change_state {} {
+   global CHECK_OUTPUT CHECK_SETUP_CHANGES CHECK_SETUP_NAMES
+   global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION
+   global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS
+   global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
+   global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
+   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
+   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+   global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
+   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
+   global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
+   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
+   global CHECK_DEFAULT_DOMAIN
+   global CHECK_MAILX_HOST 
+   global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC  CHECK_USE_SSH CHECK_SOURCE_CVS_RELEASE
+   global CHECK_OUTPUT CHECK_SETUP_NAMES CHECK_CONFIG_DIR CHECK_SEND_ERROR_MAILS
+   global CHECK_MAX_ERROR_MAILS CHECK_HOST CHECK_USER
+   global CHECK_SETUP_CHANGES
+
+   set restart 0
+   set pre_install 0
+
+   foreach change $CHECK_SETUP_CHANGES {
+      puts $CHECK_OUTPUT "cange of $change"
+      puts $CHECK_OUTPUT "  old value: \"$CHECK_SETUP_NAMES($change,old)\""
+      puts $CHECK_OUTPUT "  new value: \"[ set $CHECK_SETUP_NAMES($change)]\""
+
+      switch -- $change {
+         "qmaster_host" { 
+            set help $CHECK_CORE_MASTER
+            set  CHECK_CORE_MASTER $CHECK_SETUP_NAMES($change,old)
+            puts $CHECK_OUTPUT "shutting down old system ..."  
+            shutdown_core_system
+            set CHECK_CORE_MASTER $help
+         }
+         "list_of_execution_hosts" {
+            set help $CHECK_CORE_EXECD
+            set  CHECK_CORE_EXECD  $CHECK_SETUP_NAMES($change,old)
+            puts $CHECK_OUTPUT "shutting down old system ..."
+            shutdown_core_system
+            set CHECK_CORE_EXECD $help
+         }
+      }
+ 
+      switch -- $CHECK_SETUP_NAMES($change,reinstall) {
+         1 { incr pre_install  }
+         2 { incr restart }
+      }
+   }
+   set CHECK_SETUP_CHANGES ""
+   if { $restart == 0 && $pre_install == 0 } { return 0 }
+   if { $pre_install > 0 } { return 1 }
+   if { $restart > 0 } { return 2 }
+
+}
+
 
 #                                                             max. column:     |
 #****** check/have_root_passwd() ******
@@ -1129,13 +1243,14 @@ proc save_defaults {} {
   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
   global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
-  global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+  global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS 
+  global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
   global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
   global CHECK_DEFAULT_DOMAIN
-  global CHECK_MAILX_HOST 
+  global CHECK_MAILX_HOST CHECK_OUTPUT
   global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC  CHECK_USE_SSH CHECK_SOURCE_CVS_RELEASE
   global CHECK_CONFIG_DIR CHECK_SEND_ERROR_MAILS CHECK_MAX_ERROR_MAILS
 
@@ -1161,6 +1276,12 @@ proc save_defaults {} {
   lappend data $CHECK_SOURCE_COMPILE_HOSTS
   lappend data $CHECK_AIMK_COMPILE_OPTIONS
   lappend data $CHECK_DIST_INSTALL_OPTIONS
+
+  if { $CHECK_SETTINGS_VERSION >= 7 } {
+     lappend data $CHECK_PACKAGE_DIRECTORY
+     lappend data $CHECK_PACKAGE_TYPE
+  }
+
   if { $CHECK_SETTINGS_VERSION >= 2 } {
      lappend data $CHECK_QMASTER_INSTALL_OPTIONS
      lappend data $CHECK_EXECD_INSTALL_OPTIONS 
@@ -1374,6 +1495,7 @@ proc read_edit_defaults_file { filename } {
    global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
    global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+   global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
    global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
    global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
@@ -1383,6 +1505,7 @@ proc read_edit_defaults_file { filename } {
    global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC  CHECK_USE_SSH CHECK_SOURCE_CVS_RELEASE
    global CHECK_OUTPUT CHECK_SETUP_NAMES CHECK_CONFIG_DIR CHECK_SEND_ERROR_MAILS
    global CHECK_MAX_ERROR_MAILS CHECK_HOST CHECK_USER
+   global CHECK_SETUP_CHANGES
 
    set return_value -1
    set product_mode_change 0
@@ -1400,6 +1523,8 @@ proc read_edit_defaults_file { filename } {
             set old_value [ set $var_name]
             set new_value $input_data($elem)
             if {[ string compare $old_value $new_value ] != 0 } {
+               lappend CHECK_SETUP_CHANGES $elem
+               set CHECK_SETUP_NAMES($elem,old) $old_value
                puts $CHECK_OUTPUT "\n$elem old value: \"$old_value\"" 
                puts $CHECK_OUTPUT "$elem new value: \"$new_value\""
                set $var_name $new_value
@@ -1424,6 +1549,23 @@ proc read_edit_defaults_file { filename } {
         return -1
    }
    
+   if { $CHECK_PACKAGE_DIRECTORY != "none" } {
+      if { [file isdirectory $CHECK_PACKAGE_DIRECTORY] != 1} {
+         puts $CHECK_OUTPUT "package_directory is no directory"
+         return -1
+      }
+      if { [check_packages_directory $CHECK_PACKAGE_DIRECTORY] != 0 } {
+         puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
+         return -1
+      }
+      if { $CHECK_PACKAGE_TYPE != "zip" && $CHECK_PACKAGE_TYPE != "tar" } {
+         puts $CHECK_OUTPUT "values for package_type are \"zip\" or \"tar\"!!!"
+         return -1
+      }
+   }
+
+
+
    if { $CHECK_FIRST_FOREIGN_SYSTEM_USER == $CHECK_USER } {
         puts $CHECK_OUTPUT "first_foreign_system_user should not be testsuite user"
         return -1
@@ -1660,6 +1802,7 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   global CHECK_PRODUCT_FEATURE  CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+  global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
   global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
@@ -1757,6 +1900,7 @@ proc load_defaults {} {
   global CHECK_PROTOCOL_DIR CHECK_CURRENT_WORKING_DIR
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+  global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
   global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
@@ -1795,6 +1939,8 @@ proc load_defaults {} {
   set CHECK_SOURCE_COMPILE_HOSTS "unknown"
   set CHECK_AIMK_COMPILE_OPTIONS "-secure"
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
+  set CHECK_PACKAGE_DIRECTORY "none"
+  set CHECK_PACKAGE_TYPE "tar"
   set CHECK_QMASTER_INSTALL_OPTIONS ""
   set CHECK_EXECD_INSTALL_OPTIONS ""
   set CHECK_DNS_DOMAINNAME ""
@@ -2098,8 +2244,62 @@ proc load_defaults {} {
             puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
             exit -1
         }
-        
-        
+        if { $CHECK_SETTINGS_VERSION == 6 } {
+            puts $CHECK_OUTPUT "this settings file has version number 6 -> upgrading to version 7"
+            set CHECK_SETTINGS_VERSION "7"
+            set CHECK_TESTSUITE_ROOT                   [lindex $data 1]
+            set CHECK_CHECKTREE_ROOT                   [lindex $data 2]
+            set CHECK_CORE_MASTER                      [lindex $data 3]
+            set CHECK_CORE_EXECD                       [lindex $data 4]
+            set CHECK_CORE_PROCESSORS                  [lindex $data 5]
+            set CHECK_SUBMIT_ONLY_HOSTS                [lindex $data 6]      ;# added for version 3
+            set CHECK_COMMD_PORT                       [lindex $data 7]
+            set CHECK_MAIN_RESULTS_DIR                 [lindex $data 8]
+            set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
+            set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
+          
+            set CHECK_PRODUCT_TYPE                     [lindex $data 9]
+            set CHECK_PRODUCT_FEATURE                  [lindex $data 10]      ;# added for version 6
+            set CHECK_PRODUCT_ROOT                     [lindex $data 11]
+            set CHECK_SOURCE_DIR                       [lindex $data 12]
+            set CHECK_SOURCE_HOSTNAME                  [lindex $data 13]
+            set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 14]
+            set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 15]
+            set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 16]
+            set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 17]      ;# added for version 2
+            set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 18]      ;# added for version 2
+            set CHECK_DNS_DOMAINNAME                   [lindex $data 19]      ;# added for version 4
+            set CHECK_REMOTE_ENVIRONMENT               [lindex $data 20]      ;# added for version 4
+            set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 21]
+            set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 22]
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 23]
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 24]
+            set CHECK_DEFAULT_DOMAIN                   [lindex $data 25]
+            set CHECK_MAILX_HOST                       [lindex $data 26]
+            set CHECK_REPORT_EMAIL_TO                  [lindex $data 27]
+            set CHECK_REPORT_EMAIL_CC                  [lindex $data 28]
+            set CHECK_SEND_ERROR_MAILS                 [lindex $data 29]
+            set CHECK_MAX_ERROR_MAILS                  [lindex $data 30]
+            set CHECK_USE_SSH                          [lindex $data 31]
+            set CHECK_SOURCE_CVS_RELEASE               [lindex $data 32]
+            set CHECK_CONFIG_DIR                       [lindex $data 33]
+
+                                  
+            puts $CHECK_OUTPUT "updating new configuration parameter \"package_directory\" ..."
+            set CHECK_PACKAGE_DIRECTORY "none"
+            puts $CHECK_OUTPUT "updating new configuration parameter \"package_type\" ..."
+            set CHECK_PACKAGE_TYPE "tar"
+
+            puts $CHECK_OUTPUT "default value of \"package_directory\" is \"$CHECK_PACKAGE_DIRECTORY\""
+            puts $CHECK_OUTPUT "default value of \"package_type\"      is \"$CHECK_PACKAGE_TYPE\""
+            wait_for_enter
+            source_procedures
+            save_defaults 
+            set CHECK_DO_SETUP 1
+            setup 
+            puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
+            exit -1
+        }
         exit -1
       } else {
         puts "could not copy defaults file"
@@ -2129,24 +2329,25 @@ proc load_defaults {} {
   set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 14]
   set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 15]
   set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 16]
-  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 17]      ;# added for version 2
-  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 18]      ;# added for version 2
-  set CHECK_DNS_DOMAINNAME                   [lindex $data 19]      ;# added for version 4
-  set CHECK_REMOTE_ENVIRONMENT               [lindex $data 20]      ;# added for version 4
-  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 21]
-  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 22]
-  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 23]
-  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 24]
-  set CHECK_DEFAULT_DOMAIN                   [lindex $data 25]
-  set CHECK_MAILX_HOST                       [lindex $data 26]
-  set CHECK_REPORT_EMAIL_TO                  [lindex $data 27]
-  set CHECK_REPORT_EMAIL_CC                  [lindex $data 28]
-  set CHECK_SEND_ERROR_MAILS                 [lindex $data 29]
-  set CHECK_MAX_ERROR_MAILS                  [lindex $data 30]
-  set CHECK_USE_SSH                          [lindex $data 31]
-  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 32]
-  set CHECK_CONFIG_DIR                       [lindex $data 33]
-
+  set CHECK_PACKAGE_DIRECTORY                [lindex $data 17]      ;# added for version 7
+  set CHECK_PACKAGE_TYPE                     [lindex $data 18]      ;# added for version 7
+  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 19]      ;# added for version 2
+  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 20]      ;# added for version 2
+  set CHECK_DNS_DOMAINNAME                   [lindex $data 21]      ;# added for version 4
+  set CHECK_REMOTE_ENVIRONMENT               [lindex $data 22]      ;# added for version 4
+  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 23]
+  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 24]
+  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 25]
+  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 26]
+  set CHECK_DEFAULT_DOMAIN                   [lindex $data 27]
+  set CHECK_MAILX_HOST                       [lindex $data 28]
+  set CHECK_REPORT_EMAIL_TO                  [lindex $data 29]
+  set CHECK_REPORT_EMAIL_CC                  [lindex $data 30]
+  set CHECK_SEND_ERROR_MAILS                 [lindex $data 31]
+  set CHECK_MAX_ERROR_MAILS                  [lindex $data 32]
+  set CHECK_USE_SSH                          [lindex $data 33]
+  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 34]
+  set CHECK_CONFIG_DIR                       [lindex $data 35]
 
   source_procedures
   get_version_info
@@ -2367,6 +2568,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_PROTOCOL_DIR CHECK_OUTPUT CHECK_CONFIG_DIR
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+  global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
   global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
   global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
@@ -2375,7 +2577,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_MAILX_HOST do_nomain
   global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC  CHECK_USE_SSH CHECK_SOURCE_CVS_RELEASE
   global check_name CHECK_ACT_LEVEL CHECK_SEND_ERROR_MAILS CHECK_MAX_ERROR_MAILS
-  global CHECK_GUILTY_CATEGORIES
+  global CHECK_GUILTY_CATEGORIES CHECK_SETUP_CHANGES
 
   puts "starting setup ..."
   if { [info exists env(GRD_ROOT) ] } {
@@ -2576,6 +2778,8 @@ proc setup { {do_only_hostname_resolving 0} } {
      puts "       compile hosts:        $CHECK_SOURCE_COMPILE_HOSTS"
      puts "       aimk compile opt.:    $CHECK_AIMK_COMPILE_OPTIONS"
      puts "       dist inst opt.:       $CHECK_DIST_INSTALL_OPTIONS"
+     puts "       package_directory:    $CHECK_PACKAGE_DIRECTORY"
+     puts "       package_type:         $CHECK_PACKAGE_TYPE"
      puts "       qmaster inst opt.:    $CHECK_QMASTER_INSTALL_OPTIONS"
      puts "       execd inst opt.:      $CHECK_EXECD_INSTALL_OPTIONS"
      puts "       dns_domain_name:      $CHECK_DNS_DOMAINNAME"
@@ -2740,6 +2944,18 @@ proc setup { {do_only_hostname_resolving 0} } {
         puts "error -> found duplicate entry of host $hostname"
         exit 1
      }
+  }
+
+  set result [get_setup_change_state]
+  if { $result == 1 } {
+     if { $CHECK_PACKAGE_DIRECTORY != "none" } {
+        prepare_packages ;# reinstall tar binaries
+     } else { 
+        compile_source 1  ;# only install binaries
+     }
+  }
+  if { $result == 2 } {
+     shutdown_core_system
   }
 }
 
@@ -5444,6 +5660,591 @@ proc wait_for_start_time { substring } {
    puts ""
 }
 
+# returns -1: error
+# returns 0 : no error
+proc prepare_packages { } {
+
+   global CHECK_PACKAGE_DIRECTORY CHECK_OUTPUT CHECK_DEFAULTS_FILE
+   global CHECK_PRODUCT_ROOT CHECK_JOB_OUTPUT_DIR CHECK_HOST CHECK_PACKAGE_TYPE
+   global CHECK_USER CHECK_PRODUCT_TYPE CHECK_CORE_EXECD CHECK_PROTOCOL_DIR
+   global CHECK_GROUP check_name CHECK_CUR_PROC_NAME
+
+   set check_name "prepare_packages"
+   set CHECK_CUR_PROC_NAME "prepare_packages"
+
+
+   #do pre checks like in compile
+   if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
+      set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
+      if { $catch_return != 0 } {
+           puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           return -1
+      } 
+   }
+
+   set have_tar 0
+   set have_zip 0
+   if { [ check_packages_directory $CHECK_PACKAGE_DIRECTORY check_tar ] == 0 } {
+      puts $CHECK_OUTPUT "found tar files"
+      set have_tar 1
+   }
+
+   if { [ check_packages_directory $CHECK_PACKAGE_DIRECTORY check_zip ] == 0 } {
+      puts $CHECK_OUTPUT "found zip files"
+      set have_zip 1
+   }
+
+   if { $have_tar == 0 && $CHECK_PACKAGE_TYPE == "tar" } {
+      add_proc_error "prepare_packages" -1 "not all tar files available"
+      return -1
+   }
+
+   if { $have_zip == 0 && $CHECK_PACKAGE_TYPE == "zip" } {
+      add_proc_error "prepare_packages" -1 "not all zip files available"
+      return -1
+   }
+
+
+   if { $have_tar == 1 && $CHECK_PACKAGE_TYPE == "tar" } {
+
+      # shutdown eventually running system
+      shutdown_core_system
+
+      set tar_files [ check_packages_directory $CHECK_PACKAGE_DIRECTORY check_both tar ]
+
+      set restore_host_aliases_file 0
+      # copy pos. host_aliases file 
+      if { [ file isfile "$CHECK_PRODUCT_ROOT/default/common/host_aliases"] == 1 } {
+         puts $CHECK_OUTPUT "saving host_aliases file ..."
+         set restore_host_aliases_file 1
+         catch { exec "cp" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
+         puts $result
+      } 
+      # now delete install directory
+      puts $CHECK_OUTPUT "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
+      if { [delete_directory "$CHECK_PRODUCT_ROOT"] != 0 } {
+         add_proc_error "prepare_packages" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
+         return -1
+      }
+      # checking permissions
+      catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
+      puts $result
+      catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
+      puts $result
+
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/default" } 
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/default/common" } 
+
+      # copy pos. host_aliases file to new product root /default/common
+      if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 && 
+           $restore_host_aliases_file == 1 } {
+         puts $CHECK_OUTPUT "restoring host_aliases file ..."
+         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" } result
+         puts $result
+      }
+
+      # copy package files to product root directory
+      puts $CHECK_OUTPUT "copy package files to product root directory ..."
+      set i 0
+      foreach file $tar_files { 
+         puts -nonewline $CHECK_OUTPUT [washing_machine $i]
+         flush $CHECK_OUTPUT
+         incr i 1
+         file copy $CHECK_PACKAGE_DIRECTORY/$file $CHECK_PRODUCT_ROOT
+      } 
+      puts $CHECK_OUTPUT ""
+
+      # gunzip package files
+      puts $CHECK_OUTPUT "gunzip package files ..."
+      set i 0
+      foreach file $tar_files { 
+         puts -nonewline $CHECK_OUTPUT [washing_machine $i]
+         flush $CHECK_OUTPUT
+         incr i 1
+         set catch_out [catch { exec "gunzip" "$CHECK_PRODUCT_ROOT/$file"  } result]
+         if { $catch_out != 0 } {
+            puts $CHECK_OUTPUT $result
+         }
+      } 
+      puts $CHECK_OUTPUT ""
+
+      # extract package files
+      puts $CHECK_OUTPUT "extract package files ..."
+      set i 0
+      foreach file $tar_files { 
+         puts -nonewline $CHECK_OUTPUT [washing_machine $i]
+         flush $CHECK_OUTPUT
+         incr i 1
+         set help [ string first ".gz" $file ]
+         incr help -1
+         set file_no_gz [string range $file 0 $help]
+         set result [ start_remote_prog $CHECK_HOST $CHECK_USER "cd" "$CHECK_PRODUCT_ROOT ; tar -xvf $CHECK_PRODUCT_ROOT/$file_no_gz" ]
+         if { $prg_exit_state != 0 } {
+            puts $CHECK_OUTPUT $result
+         }
+      } 
+      puts $CHECK_OUTPUT ""
+     
+      # delete untared package files
+      puts $CHECK_OUTPUT "delete untared package files ..."
+      foreach file $tar_files { 
+         set help [ string first ".gz" $file ]
+         incr help -1
+         set file_no_gz [string range $file 0 $help]
+         delete_file $CHECK_PRODUCT_ROOT/$file_no_gz
+      } 
+      puts $CHECK_OUTPUT ""
+
+      # checking for correct system 
+      set sys_info "unkown"
+      if { [ file isfile $CHECK_PRODUCT_ROOT/inst_sge ] } {
+         set sys_info "sge"
+      }
+      if { [ file isfile $CHECK_PRODUCT_ROOT/inst_sgeee ] } {
+         set sys_info "sgeee"
+      }
+
+      puts $CHECK_OUTPUT "system       : $sys_info"      
+
+      # checking for installed archs
+      set sys_archs [get_dir_names $CHECK_PRODUCT_ROOT/utilbin ]
+      
+      set local_host_arch [ resolve_arch $CHECK_HOST ]
+      set local_arch_ok 0
+      puts -nonewline $CHECK_OUTPUT "architectures:"
+     
+      foreach arch $sys_archs {
+         puts -nonewline $CHECK_OUTPUT " $arch"
+         if { [ string compare $arch $local_host_arch ] == 0 } {
+            set local_arch_ok 1
+         }
+      }
+      puts $CHECK_OUTPUT ""
+      
+      # check for testsuite host binaries
+      if { $local_arch_ok != 1 } {
+         add_proc_error "prepare_packages" -1 "host architecture for host $CHECK_HOST not installed"
+         return -1
+      }
+
+      # check if settings file is correct for the system
+      if { $CHECK_PRODUCT_TYPE != $sys_info } {
+         add_proc_error "prepare_packages" -1 "setup entry for product_type is \"$CHECK_PRODUCT_TYPE\", but system is \"$sys_info\""
+         return -1
+      }
+
+      # check all archs to appear in execd host list and vice versa
+      set execd_archs ""
+      foreach elem $CHECK_CORE_EXECD {
+         set host_arch [ resolve_arch $elem ]
+         if { [string compare $host_arch "unkown" ] == 0 } {
+            add_proc_error "prepare_packages" -1 "could not resolve host \"$elem\"!"
+            return -1
+         }
+         lappend execd_archs $host_arch
+         set found_arch 0
+         foreach sarch $sys_archs {
+            if { [ string compare $sarch $host_arch] == 0 } {
+               set found_arch 1
+            }
+         }
+         if { $found_arch != 1 } {
+            add_proc_error "prepare_packages" -1 "binaries for host \"$elem\" not in tar files, please add tar file"
+            return -1
+         }
+      }
+
+      foreach elem $sys_archs {
+         set found_arch 0
+         foreach execd $execd_archs {
+            if { [ string compare $elem $execd] == 0 } {
+               set found_arch 1
+            }
+         }
+         if { $found_arch != 1 } {
+            add_proc_error "prepare_packages" -1 "found no host for tar architecture \"$elem\""
+            return -1
+         }
+      } 
+
+      # try to resolve hostnames in settings file
+      set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
+      if { $catch_return != 0 } { 
+         puts "could not copy defaults file"
+         return -1
+      }
+      setup 1 
+      return 0
+   }
+
+   if { $have_zip == 1 && $CHECK_PACKAGE_TYPE == "zip" } {
+
+      # shutdown eventually running system
+      shutdown_core_system
+
+      set zip_files [ check_packages_directory $CHECK_PACKAGE_DIRECTORY check_both zip ]
+
+      set restore_host_aliases_file 0
+      # copy pos. host_aliases file 
+      if { [ file isfile "$CHECK_PRODUCT_ROOT/default/common/host_aliases"] == 1 } {
+         puts $CHECK_OUTPUT "saving host_aliases file ..."
+         set restore_host_aliases_file 1
+         catch { exec "cp" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
+         puts $result
+      } 
+      # now delete install directory
+      puts $CHECK_OUTPUT "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
+      if { [delete_directory "$CHECK_PRODUCT_ROOT"] != 0 } {
+         add_proc_error "prepare_packages" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
+         return -1
+      }
+      # checking permissions
+      catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
+      puts $result
+      catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
+      puts $result
+
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/default" } 
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/default/common" } 
+
+      # copy pos. host_aliases file to new product root /default/common
+      if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 && 
+           $restore_host_aliases_file == 1 } {
+         puts $CHECK_OUTPUT "restoring host_aliases file ..."
+         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" } result
+         puts $result
+      }
+
+      # copy package files to product root directory
+      puts $CHECK_OUTPUT "copy package files to product root directory ..."
+      set i 0
+      if { [catch { file mkdir "$CHECK_PRODUCT_ROOT/tmp_zip_copy" }] != 0 } {
+         puts $CHECK_OUTPUT "could not create directory \"$CHECK_PRODUCT_ROOT/tmp_zip_copy\""
+         return -1    
+      }
+      foreach file $zip_files { 
+         puts -nonewline $CHECK_OUTPUT [washing_machine $i]
+         flush $CHECK_OUTPUT
+         incr i 1
+         file copy $CHECK_PACKAGE_DIRECTORY/$file $CHECK_PRODUCT_ROOT/tmp_zip_copy
+      } 
+      puts $CHECK_OUTPUT ""
+
+      
+      # unzip package files
+      puts $CHECK_OUTPUT "unzip package files ..."
+      set i 0
+      foreach file $zip_files { 
+         puts -nonewline $CHECK_OUTPUT [washing_machine $i]
+         flush $CHECK_OUTPUT
+         incr i 1
+         set catch_out [catch { exec "unzip" "$CHECK_PRODUCT_ROOT/tmp_zip_copy/$file" "-d" "$CHECK_PRODUCT_ROOT/tmp_zip_copy"  } result]
+         if { $catch_out != 0 } {
+            puts $CHECK_OUTPUT $result
+         }
+      } 
+      puts $CHECK_OUTPUT ""
+
+      # delete untared package files
+      puts $CHECK_OUTPUT "delete untared package files ..."
+      foreach file $zip_files { 
+         delete_file $CHECK_PRODUCT_ROOT/tmp_zip_copy/$file
+      } 
+      puts $CHECK_OUTPUT ""
+
+
+      # now check if packages are allready installed and remove installed ones
+      set package_names [ get_dir_names $CHECK_PRODUCT_ROOT/tmp_zip_copy ]
+      puts -nonewline $CHECK_OUTPUT "Found following packages:"
+      foreach pkg $package_names {
+         puts -nonewline $CHECK_OUTPUT " $pkg" 
+      }
+      puts $CHECK_OUTPUT "\n"
+      set user_key "unknown"
+      foreach pkg $package_names {
+         puts -nonewline $CHECK_OUTPUT "Checking if package \"$pkg\" is allready installed on host \"$CHECK_HOST\" ... "
+         set output [ start_remote_prog $CHECK_HOST "root" "pkginfo" "$pkg" ]
+         if { $prg_exit_state != 0 } {
+            puts $CHECK_OUTPUT "not installed"
+         } else {
+            puts $CHECK_OUTPUT "allready installed."
+            puts $CHECK_OUTPUT "\n$output\n"
+            puts $CHECK_OUTPUT "Press \"yes\" to uninstall ALL packages listed above or \"no\" to continue ..."
+            if { $user_key == "unknown" } {
+               set user_key [ wait_for_enter 1 ]
+            }
+            if { $user_key == "yes" } {
+               puts $CHECK_OUTPUT "removing package \"$pkg\" ..."
+               set output [ start_remote_prog $CHECK_HOST "root" "pkgrm" "-n $pkg" ]
+               puts $CHECK_OUTPUT $output
+               if { $prg_exit_state != 0 } {
+                  puts $CHECK_OUTPUT "error uninstalling package \"$pkg\""
+                   puts $CHECK_OUTPUT "stop package installation"
+                   return -1
+               }
+            } else {
+               puts $CHECK_OUTPUT "will NOT remove package \"\""
+               puts $CHECK_OUTPUT "stop package installation"
+               return -1
+            }
+         }
+      }
+      
+      # now install the packages ...
+      set send_speed .1
+      set send_slow "1 $send_speed"
+      foreach pkg $package_names {
+         set id [open_remote_spawn_process "$CHECK_HOST" "root" "pkgadd" "-d $CHECK_PRODUCT_ROOT/tmp_zip_copy $pkg" ]
+         log_user 1
+         set sp_id [ lindex $id 1 ]
+         set timeout 60
+         set do_stop 0
+         set exit_state 1
+         while { $do_stop == 0 } {
+            flush $CHECK_OUTPUT
+            expect {
+               -i $sp_id full_buffer { 
+                  add_proc_error "prepare_packages" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                  close_spawn_process $id
+                  return -1
+               }
+               -i $sp_id timeout {
+                  add_proc_error "prepare_packages" -1 "unexpected timeout"
+                  close_spawn_process $id
+                  return -1
+               } 
+               -i $sp_id eof {
+                  set exit_state [close_spawn_process $id]
+                  set do_stop 1
+               } 
+               -i $sp_id "_exit_status_:*\n" {
+                  set buf $expect_out(buffer)
+                  set s_start [ string first "(" $buf ]
+                  set s_end [ string first ")" $buf ]
+                  incr s_start 1
+                  incr s_end -1
+                  set exit_state [ string range $buf $s_start $s_end ]
+                  puts $CHECK_OUTPUT "exit state is: \"$exit_state\""
+                  close_spawn_process $id
+                  set do_stop 1
+               }
+               -i $sp_id "default /gridware/sge*]" {
+                  flush $CHECK_OUTPUT
+                  if { [ string length $CHECK_PRODUCT_ROOT ] >= 5  } {
+                     send -s -i $sp_id "$CHECK_PRODUCT_ROOT\n"
+                  } else {
+                     add_proc_error "prepare_packages" -1 "can't use product root directory (shorter than 5 chars)"
+                     close_spawn_process $id
+                     return -1
+                  }
+                  flush $CHECK_OUTPUT
+               } 
+               -i $sp_id "default sgeadmin*]" {
+                  flush $CHECK_OUTPUT
+                  send -s -i $sp_id "$CHECK_USER\n"   
+                  flush $CHECK_OUTPUT
+               } 
+               -i $sp_id "Do you want to install these as setuid/setgid files*]" {
+                  flush $CHECK_OUTPUT
+                  send -s -i $sp_id "y\n"   
+                  flush $CHECK_OUTPUT
+               }
+
+
+               -i $sp_id "default adm*]" {
+                  send -s -i $sp_id "$CHECK_GROUP\n"
+                  flush $CHECK_OUTPUT
+               } 
+               -i $sp_id "Waiting for pkgadd of*" {
+                  add_proc_error "prepare_packages" -1 "$CHECK_HOST: another pkgadd session is running...\n$expect_out(buffer)"
+                  close_spawn_process $id
+                  return -1
+               }
+               -i $sp_id "*\n" { 
+                  flush $CHECK_OUTPUT
+               } 
+               -i $sp_id default {
+                  add_proc_error "prepare_packages" -1 "undefined behaviour: $expect_out(buffer)"
+                  close_spawn_process $id
+                  return -1
+               } 
+            }
+         }
+         if { $exit_state != 0 } {
+            add_proc_error "prepare_packages" -1 "exit state of pgkadd \"$pkg\" is $exit_state -> error"
+            return -1
+         }
+      }
+           
+
+
+
+      # checking for correct system 
+      set sys_info "unkown"
+      if { [ file isfile $CHECK_PRODUCT_ROOT/inst_sge ] } {
+         set sys_info "sge"
+      }
+      if { [ file isfile $CHECK_PRODUCT_ROOT/inst_sgeee ] } {
+         set sys_info "sgeee"
+      }
+
+      puts $CHECK_OUTPUT "system       : $sys_info"      
+
+      # checking for installed archs
+      set sys_archs [get_dir_names $CHECK_PRODUCT_ROOT/utilbin ]
+      
+      set local_host_arch [ resolve_arch $CHECK_HOST ]
+      set local_arch_ok 0
+      puts -nonewline $CHECK_OUTPUT "architectures:"
+     
+      foreach arch $sys_archs {
+         puts -nonewline $CHECK_OUTPUT " $arch"
+         if { [ string compare $arch $local_host_arch ] == 0 } {
+            set local_arch_ok 1
+         }
+      }
+      puts $CHECK_OUTPUT ""
+      
+      # check for testsuite host binaries
+      if { $local_arch_ok != 1 } {
+         add_proc_error "prepare_packages" -1 "host architecture for host $CHECK_HOST not installed"
+         return -1
+      }
+
+      # check if settings file is correct for the system
+      if { $CHECK_PRODUCT_TYPE != $sys_info } {
+         add_proc_error "prepare_packages" -1 "setup entry for product_type is \"$CHECK_PRODUCT_TYPE\", but system is \"$sys_info\""
+         return -1
+      }
+
+      # check all archs to appear in execd host list and vice versa
+      set execd_archs ""
+      foreach elem $CHECK_CORE_EXECD {
+         set host_arch [ resolve_arch $elem ]
+         if { [string compare $host_arch "unkown" ] == 0 } {
+            add_proc_error "prepare_packages" -1 "could not resolve host \"$elem\"!"
+            return -1
+         }
+         lappend execd_archs $host_arch
+         set found_arch 0
+         foreach sarch $sys_archs {
+            if { [ string compare $sarch $host_arch] == 0 } {
+               set found_arch 1
+            }
+         }
+         if { $found_arch != 1 } {
+            add_proc_error "prepare_packages" -1 "binaries for host \"$elem\" not in zip files, please add zip file"
+            return -1
+         }
+      }
+
+      foreach elem $sys_archs {
+         set found_arch 0
+         foreach execd $execd_archs {
+            if { [ string compare $elem $execd] == 0 } {
+               set found_arch 1
+            }
+         }
+         if { $found_arch != 1 } {
+            add_proc_error "prepare_packages" -1 "found no host for zip architecture \"$elem\""
+            return -1
+         }
+      } 
+
+      # try to resolve hostnames in settings file
+      set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
+      if { $catch_return != 0 } { 
+         puts "could not copy defaults file"
+         return -1
+      }
+      setup 1 
+      return 0
+   }
+
+   return -1
+}
+# mode : check_both, check_tar, check_zip
+# get_files : no, tar, zip
+proc check_packages_directory { path { mode "check_both" } { get_files "no" } } {
+
+   global CHECK_OUTPUT CHECK_PACKAGE_TYPE
+
+   set tar_bin_files [ get_file_names $path "sge*-bin-*.tar.gz" ] 
+   set zip_bin_files [ get_file_names $path "sge*-bin-*.zip" ]      
+   set tar_common_files [ get_file_names $path "sge*-common*.tar.gz" ] 
+   set zip_common_files [ get_file_names $path "sge*-common*.zip" ]   
+   set tar_doc_files [ get_file_names $path "sge*-doc*.tar.gz" ] 
+   set zip_doc_files [ get_file_names $path "sge*-doc*.zip" ]    
+
+   set tar_list "$tar_bin_files $tar_common_files $tar_doc_files"
+   set zip_list "$zip_bin_files $zip_common_files $zip_doc_files"
+     
+
+   set nr_tar_bin_files [ llength $tar_bin_files ]
+   set nr_zip_bin_files [ llength $zip_bin_files ] 
+   set nr_tar_common_files [ llength $tar_common_files ]
+   set nr_zip_common_files [ llength $zip_common_files ] 
+   set nr_tar_doc_files [ llength $tar_doc_files ]
+   set nr_zip_doc_files [ llength $zip_doc_files ] 
+
+   set tar_complete 0
+   set zip_complete 0
+
+   if { $tar_bin_files  > 0 && $tar_common_files > 0 && $tar_doc_files > 0 } {
+      set tar_complete 1
+   }
+   if { $zip_bin_files  > 0 && $zip_common_files > 0 && $zip_doc_files > 0 } {
+      set zip_complete 1
+   }
+
+   if { $get_files == "no" } {
+      puts $CHECK_OUTPUT "nr. of binary tar files: $nr_tar_bin_files"
+      puts $CHECK_OUTPUT "nr. of binary zip files: $nr_zip_bin_files"
+      puts $CHECK_OUTPUT "nr. of common tar files: $nr_tar_common_files"
+      puts $CHECK_OUTPUT "nr. of common zip files: $nr_zip_common_files"
+      puts $CHECK_OUTPUT "nr. of doc tar files: $nr_tar_doc_files"
+      puts $CHECK_OUTPUT "nr. of doc zip files: $nr_zip_doc_files"
+      if { $tar_complete == 1 } {
+         puts $CHECK_OUTPUT "tar files complete"
+      } else {
+         puts $CHECK_OUTPUT "tar files INCOMPLETE"
+      }
+      if { $zip_complete == 1 } {
+         puts $CHECK_OUTPUT "zip files complete"
+      } else {
+         puts $CHECK_OUTPUT "zip files INCOMPLETE"
+      }
+      
+      if { $tar_complete == 1 && $zip_complete == 1 && $mode == "check_both" } {
+         return 0
+      }
+      if { $tar_complete == 1 && $mode == "check_tar" } {
+         return 0
+      }
+      if { $zip_complete == 1 && $mode == "check_zip" } {
+         return 0
+      }
+      return -1
+   } else {
+      switch -- $get_files {
+         "tar" {
+             if { $tar_complete == 0 } {
+                add_proc_error "check_packages_directory" -1 "tar files incomplete error"
+                return ""
+             }
+             return $tar_list
+         }
+         "zip" {
+             if { $tar_complete == 0 } {
+                add_proc_error "check_packages_directory" -1 "zip files incomplete error"
+                return ""
+             }
+             return $zip_list
+         } 
+      }
+   }
+   return -1
+}
 #
 #                                                             max. column:     |
 #
@@ -5482,6 +6283,7 @@ proc compile_source { { do_only_install 0 } } {
    global CHECK_PRODUCT_FEATURE
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
+   global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_PRODUCT_FEATURE CHECK_USER
 
 
@@ -5489,6 +6291,7 @@ proc compile_source { { do_only_install 0 } } {
    set CHECK_CUR_PROC_NAME "compile_source"
    set mail_subject "testsuite error - compile_source"
    set mail_body    "date: [exec date]\n"
+
 
    set html_body [ create_html_text "date: [exec date]" 1 ]
    append html_body [ create_html_text "compiling ..." 1 ]
@@ -5498,6 +6301,19 @@ proc compile_source { { do_only_install 0 } } {
  
    set was_error 0
    set cvs_change_log ""
+
+   
+
+
+   if { $CHECK_PACKAGE_DIRECTORY != "none" } {
+       puts $CHECK_OUTPUT "can not compile -> using product packages"
+       puts $CHECK_OUTPUT "edit settings file and set package_directory to \"none\" if comilation should be possible"
+       mail_report $mail_subject "$mail_body can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" 
+       append html_body [ create_html_text "can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" ]
+       update_compile_html_output $html_body
+       return -1
+   }
+
 
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
        puts $CHECK_OUTPUT "source directory unknown - check defaults file"
@@ -6377,8 +7193,9 @@ proc menu {} {
   global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_RESULT_DIR 
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
-  global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
+  global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER CHECK_SETUP_NAMES
   global daemon_debug CHECK_DEBUG_LEVEL CHECK_DEFAULTS_FILE CHECK_DO_SETUP
+  global CHECK_PACKAGE_DIRECTORY CHECK_SETUP_CHANGES CHECK_PACKAGE_TYPE
 
   set files [  print_menu_header ]
  
@@ -6408,7 +7225,11 @@ proc menu {} {
     puts " (20) shutdown and restart master and scheduler"
     puts " (21) only start master and scheduler daemons"
     puts " (22) check messages files of execds and qmaster"
-    puts " (23) compile source code and pre install binaries"
+    if { $CHECK_PACKAGE_DIRECTORY == "none" } {
+       puts " (23) compile source code and pre install binaries"
+    } else {
+       puts " (23) install product packages"
+    }
     puts " (24) do (23), then (2)"
     puts " (25) set testsuite debug level (current value: $CHECK_DEBUG_LEVEL)"
     puts " (26) enter testsuite setup" 
@@ -6426,17 +7247,33 @@ proc menu {} {
            wait_for_enter
          }
     "23" { 
-          if { [have_root_passwd] == -1 } {
-                puts $CHECK_OUTPUT "need root access ..."
-                set_root_passwd
-           }
-           set back [compile_source]
-           if { $back != 0 } {
-              puts "--> error compiling and pre installing source code"
-           } else {
-              puts "--> source code compiled and pre installed"
-           }
-           wait_for_enter
+            if { $CHECK_PACKAGE_DIRECTORY == "none"  } {
+               # we compile the source and do a myinst
+               if { [have_root_passwd] == -1 } {
+                     puts $CHECK_OUTPUT "need root access ..."
+                     set_root_passwd
+                }
+                set back [compile_source]
+                if { $back != 0 } {
+                   puts "--> error compiling and pre installing source code"
+                } else {
+                   puts "--> source code compiled and pre installed"
+                }
+                wait_for_enter
+            } else {
+               # we have product packages
+               if { [have_root_passwd] == -1 } {
+                     puts $CHECK_OUTPUT "need root access ..."
+                     set_root_passwd
+                }
+                set back [prepare_packages]
+                if { $back != 0 } {
+                   puts "--> error installing product packages"
+                } else {
+                   puts "--> product packages pre installed"
+                }
+                wait_for_enter
+            }
          }
     "24" {
           if { [have_root_passwd] == -1 } {
@@ -6464,23 +7301,12 @@ proc menu {} {
             if { $catch_return == 0 } { 
                clear_screen
                puts "Current defaults file \n\"$CHECK_DEFAULTS_FILE\"\nsaved as\n\"${CHECK_DEFAULTS_FILE}.$new_file_extension\""
-               puts "Entering Setup at this point only works when system was compiled with testsuite!!!"
-               puts "Entering setup will shutdown current system!"
-               puts "continue (y/n)?"
-               set input [wait_for_enter 1]
-               if { $input == "y" } {
                   if { [have_root_passwd] == -1 } {
                      puts $CHECK_OUTPUT "need root access ..."
                      set_root_passwd
                   }
-                  shutdown_core_system
                   set CHECK_DO_SETUP 1 
                   setup
-                  compile_source 1  ;# only install binaries
-               } else {
-                  puts "stop"
-                  file delete ${CHECK_DEFAULTS_FILE}.$new_file_extension
-               }
             } else {
                puts "could not copy defaults file"
             }

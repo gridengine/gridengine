@@ -1,3 +1,7 @@
+CR-2002-09-24-1  Testsuite  Testsuite enhancement to test final packages
+                 Enhancem.
+                 IZ:        #369
+
 CR-2002-09-24-0  Bugfix:    using SGE_STRUCT_STAT macro instead of
                             "struct stat". Reason: compile error for
                             SOLARIS86

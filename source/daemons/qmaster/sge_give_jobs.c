@@ -613,7 +613,6 @@ u_long32 tid
 void ck_4_zombie_jobs(
 u_long now 
 ) {
-   char zombiepath[SGE_PATH_MAX];
    lListElem *dep;
    
    DENTER(TOP_LAYER, "ck_4_zombie_jobs");
@@ -621,9 +620,9 @@ u_long now
    while (Master_Zombie_List &&
             (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs)) {
       dep = lFirst(Master_Zombie_List);
-      sprintf(zombiepath, "%s/" u32, ZOMBIE_DIR, lGetUlong(dep, JB_job_number));
+      cull_remove_jobtask_from_disk(lGetUlong(dep, JB_job_number), 0,
+                                    SPOOL_HANDLE_AS_ZOMBIE);
       lRemoveElem(Master_Zombie_List, dep);
-      unlink(zombiepath);
    }
 
    DEXIT;
@@ -718,16 +717,16 @@ int spool_job
 
       now = sge_get_gmt();
       lSetUlong(jatep, JAT_start_time, now);
-      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
-      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+      job_enroll(jep, tid);
+      cull_write_jobtask_to_disk(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
    case 1:
       lSetUlong(jatep, JAT_status, JRUNNING);
       job_log(jid, tid, "job received by execd");
-      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
-      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+      job_enroll(jep, tid);
+      cull_write_jobtask_to_disk(jep, tid, SPOOL_DEFAULT);
       break;
 
    case 2:
@@ -813,8 +812,8 @@ int spool_job
       }
 
       sge_clear_granted_resources(jep, jatep, 1);
-      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
-      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+      job_enroll(jep, tid);
+      cull_write_jobtask_to_disk(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
       break;
@@ -837,8 +836,8 @@ int spool_job
       if (conf.zombie_jobs > 0)
          sge_to_zombies(jep, jatep, spool_job);
       sge_clear_granted_resources(jep, jatep, 1);
-      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
-      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+      job_enroll(jep, tid);
+      cull_write_jobtask_to_disk(jep, tid, SPOOL_DEFAULT);
       for_each(task, lGetList(jatep, JAT_task_list)) {
          lListElem* task_ja_task;
 
@@ -881,8 +880,8 @@ int spool_job
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
-      job_enroll(jep, lGetUlong(jatep, JAT_task_number));
-      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT);
+      job_enroll(jep, tid);
+      cull_write_jobtask_to_disk(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
       break;

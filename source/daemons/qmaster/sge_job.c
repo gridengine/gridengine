@@ -1255,7 +1255,7 @@ char *commproc
       SETBIT(JDELETED, state); 
       lSetUlong(t, JAT_state, state);
       /* spool job */
-      cull_write_jobtask_to_disk(j, 0, SPOOL_DEFAULT);  
+      cull_write_jobtask_to_disk(j, task_number, SPOOL_DEFAULT);  
    }
    DEXIT;
    return;

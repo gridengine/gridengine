@@ -74,7 +74,7 @@ char *commproc,
 sge_pack_buffer *pb 
 ) {
 
-   u_long32 ack_tag, ack_ulong, ack_ulong2=777;
+   u_long32 ack_tag, ack_ulong, ack_ulong2;
 
    DENTER(TOP_LAYER, "sge_c_ack");
 
@@ -182,7 +182,7 @@ u_long32 ack_ulong2
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
-      cull_write_jobtask_to_disk(jep, 0, SPOOL_DEFAULT); 
+      cull_write_jobtask_to_disk(jep, ack_ulong2, SPOOL_DEFAULT); 
       break;
    }
 

@@ -903,8 +903,9 @@ int ckpt_type
    else {
 
       pid = fork();
-      if (pid==0)
+      if (pid==0) {
          son(childname, script_file, 0);
+      }
    }
    if (pid == -1) {
       shepherd_error_sprintf("can't fork \"%s\"", childname);
@@ -1714,7 +1715,7 @@ char *childname            /* "job", "pe_start", ...     */
    int remaining_alarm;
    pid_t ctrl_pid[3];
 
-#if defined(HPUX)
+#if defined(HPUX) || defined(INTERIX)
    struct rusage rusage_hp10;
 #endif
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
@@ -1755,7 +1756,7 @@ char *childname            /* "job", "pe_start", ...     */
       npid = wait3(&status, 0, rusage);
 #endif
 
-#if defined(HPUX)
+#if defined(HPUX) || defined(INTERIX)
       /* wait3 doesn't return CPU usage */
       getrusage(RUSAGE_CHILDREN, &rusage_hp10);
 #endif
@@ -1920,7 +1921,7 @@ char *childname            /* "job", "pe_start", ...     */
    
 #endif  /* CRAY */
 
-#if defined(HPUX)
+#if defined(HPUX) || defined(INTERIX)
    rusage->ru_utime.tv_sec = rusage_hp10.ru_utime.tv_sec;
    rusage->ru_stime.tv_sec = rusage_hp10.ru_stime.tv_sec;
 #endif

@@ -521,7 +521,11 @@ static int read_ls(void)
          if (fscanf(file, "%[^\n]\n", input) != 1) {
             break;
          }
-
+#ifdef INTERIX
+         if(input[strlen(input)-1] == '\r') {
+            input[strlen(input)-1] = '\0';
+         }
+#endif
          DPRINTF(("received: >>%s<<\n", input));
 
          if (!strcmp(input, "begin") || !strcmp(input, "start")) {
@@ -550,7 +554,6 @@ static int read_ls(void)
             DTRACE;
             break;
          }
-
          tmp_list = lGetList(ls_elem, LS_incomplete);
          sge_add_str2load_report(&tmp_list, name, value, host);
       }

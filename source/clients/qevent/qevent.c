@@ -309,7 +309,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       int pid2;
       int exit_status;
 
-      #if !defined(CRAY)
+      #if !(defined(CRAY) || defined(INTERIX))
          struct rusage rusage;
       #endif
 
@@ -318,7 +318,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       #else
          int status;
       #endif
-      #if defined(CRAY)
+      #if defined(CRAY) || defined(INTERIX)
          pid2 = waitpid(pid, &status, 0);
       #else
          pid2 = wait3(&status, 0, &rusage);

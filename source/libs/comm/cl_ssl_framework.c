@@ -764,8 +764,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
       return CL_RETVAL_CREATE_SOCKET;
    }
    
-#ifndef INTERIX
-   {
+   { 
       int on = 1;
 
       if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
@@ -773,7 +772,6 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
          return CL_RETVAL_SETSOCKOPT_ERROR;
       }
    }
-#endif
 
    /* bind an address to socket */
    /* TODO FEATURE: we can also try to use a specified port range */

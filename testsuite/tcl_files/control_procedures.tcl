@@ -860,6 +860,21 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          } 
       }
 
+      "win32-x86" {
+         set myenvironment(COLUMS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-efo pid,group=\"GROUPNAMEGROUPNAMEGROUPNAME\",ppid,user=\"FULLUSERNAMEFULLUSERNAMEFULLUSERNAME\",state,stime,vsz,time,comm=\"COMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMAND\"" prg_exit_state 60 0 myenvironment]
+         set index_names "   PID GROUPNAMEGROUPNAMEGROUPNAME   PPID FULLUSERNAMEFULLUSERNAMEFULLUSERNAME STATE       STIME    VSZ     TIME COMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMANDCOMMAND"
+         set pid_pos     0
+         set gid_pos     1
+         set ppid_pos    2
+         set uid_pos     3
+         set state_pos   4
+         set stime_pos   5
+         set vsz_pos     6
+         set time_pos    7
+         set command_pos 8
+      }
+
       default { 
          add_proc_error "get_ps_info" "-1" "unknown architecture"
          set prg_exit_state 1

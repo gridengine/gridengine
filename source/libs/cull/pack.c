@@ -42,6 +42,7 @@
 
 #if defined(INTERIX)
 #include <arpa/inet.h>
+#include "misc.h"
 #endif
 
 #include "basis_types.h"
@@ -385,7 +386,7 @@ int packint(sge_pack_buffer *pb, u_long32 i)
 int packdouble(sge_pack_buffer *pb, double d) {
 /* CygWin does not know RPC u. XDR */
    char buf[32];
-#if !(defined(WIN32) || defined(INTERIX))                   /* var not needed */
+#if !(defined(WIN32))                                         /* var not needed */
    XDR xdrs;
    int doublesize;
 #endif
@@ -405,9 +406,8 @@ int packdouble(sge_pack_buffer *pb, double d) {
       }
 
       /* copy in packing buffer */
-
-#if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
-      xdrmem_create(&xdrs, (caddr_t) buf, sizeof(buf), XDR_ENCODE);
+#if !(defined(WIN32) || defined(INTERIX))                      /* XDR not called */
+      xdrmem_create(&xdrs, (caddr_t)buf, sizeof(buf), XDR_ENCODE);
 
       if (!(xdr_double(&xdrs, &d))) {
          DPRINTF(("error - XDR of double failed\n"));
@@ -422,14 +422,34 @@ int packdouble(sge_pack_buffer *pb, double d) {
          DEXIT;
          return PACK_FORMAT;
       }
+#endif/* WIN32 || INTERIX */
+#if defined(INTERIX)
+      wl_xdrmem_create(&xdrs, (caddr_t)buf, sizeof(buf), XDR_ENCODE);
 
-#endif /* WIN32 */
+      if (!(wl_xdr_double(&xdrs, &d))) {
+         DPRINTF(("error - XDR of double failed\n"));
+         wl_xdr_destroy(&xdrs);
+         DEXIT;
+         return PACK_FORMAT;
+      }
+
+      if ((doublesize = wl_xdr_getpos(&xdrs)) != DOUBLESIZE) {
+         DPRINTF(("error - size of XDRed double is %d\n", doublesize));
+         wl_xdr_destroy(&xdrs);
+         DEXIT;
+         return PACK_FORMAT;
+      }
+#endif
+
       memcpy(pb->cur_ptr, buf, DOUBLESIZE);
 /* we have to increment the buffer even through WIN32 will not use it */
       pb->cur_ptr += DOUBLESIZE;
 
-#if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
+#if !(defined(WIN32) || defined(INTERIX))                      /* XDR not called */
       xdr_destroy(&xdrs);
+#endif
+#if defined(INTERIX)
+      wl_xdr_destroy(&xdrs);
 #endif
    }
    pb->bytes_used += DOUBLESIZE;
@@ -573,7 +593,7 @@ u_long32 buf_size
 
    if (!pb->just_count) {
       /* is realloc necessary */
-#if !(defined(WIN32) || defined(INTERIX))                    /* cast */
+#if !(defined(WIN32))                                        /* cast */
       if (buf_size + (u_long32) pb->bytes_used > (u_long32) pb->mem_size) {
 #else
       if (buf_size + pb->bytes_used > pb->mem_size) {
@@ -653,7 +673,7 @@ int unpackint(sge_pack_buffer *pb, u_long32 *ip)
 int unpackdouble(sge_pack_buffer *pb, double *dp) 
 {
 
-#if !(defined(WIN32) || defined(INTERIX))                   /* var not needed */
+#if !(defined(WIN32))                                       /* var not needed */
    XDR xdrs;
    char buf[32];
 #endif
@@ -681,14 +701,29 @@ int unpackdouble(sge_pack_buffer *pb, double *dp)
       DEXIT;
       return PACK_FORMAT;
    }
-#endif /* WIN32 */
+#endif /* WIN32 || INTERIX */
+#if defined(INTERIX)
+   memcpy(buf, pb->cur_ptr, DOUBLESIZE);
+   wl_xdrmem_create(&xdrs, buf, DOUBLESIZE, XDR_DECODE);
+   if (!(wl_xdr_double(&xdrs, dp))) {
+      *dp = 0;
+      DPRINTF(("error unpacking XDRed double\n"));
+      wl_xdr_destroy(&xdrs);
+      DEXIT;
+      return PACK_FORMAT;
+   }
+#endif
+
    /* update cur_ptr & bytes_unpacked */
    pb->cur_ptr += DOUBLESIZE;
    pb->bytes_used += DOUBLESIZE;
 
 #if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
    xdr_destroy(&xdrs);
-#endif /* WIN32 */
+#endif /* WIN32 || INTERIX */
+#if defined(INTIERX)
+   wl_xdr_destroy(&xdrs);
+#endif
 
    DEXIT;
    return PACK_SUCCESS;

@@ -795,7 +795,11 @@ PrintLocalConf()
       $ECHO "conf_version           0"
    fi
    $ECHO "mailer                 $MAILER"
-   $ECHO "xterm                  $XTERM"
+   if [ "$XTERM" = "" ]; then
+      $ECHO "xterm                  none"
+   else
+      $ECHO "xterm                  $XTERM"
+   fi
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    if [ $LOCAL_EXECD_SPOOL != "undef" ]; then

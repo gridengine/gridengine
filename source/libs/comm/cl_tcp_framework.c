@@ -1201,8 +1201,7 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection 
       CL_LOG(CL_LOG_ERROR,"could not create socket");
       return CL_RETVAL_CREATE_SOCKET;
    }
-   
-#ifndef INTERIX
+
    {
       int on = 1;
 
@@ -1211,7 +1210,6 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection 
          return CL_RETVAL_SETSOCKOPT_ERROR;
       }
    }
-#endif
 
    /* bind an address to socket */
    /* TODO FEATURE: we can also try to use a specified port range */

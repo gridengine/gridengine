@@ -194,10 +194,10 @@
 #  define CPUSTATES 4 /* CPU_IDLE, CPU_USER, CPU_KERNEL, CPU_WAIT */
 #  define SGE_FSCALE 1024.0
 #elif defined(INTERIX)
-#include "interix.h"
-#include "sge_hostL.h"
-#define APP_NAME "server"
-#include "service_common.h"
+#  include "interix.h"
+#  include "sge_hostL.h"
+#  define APP_NAME "server"
+#  include "service_common.h"
 /* JUST DUMMY VALUES!!! */
 //#  define KERNEL_NAME_FILE "/unix"
 //#  define KERNEL_AVG_NAME "avenrun"
@@ -893,6 +893,8 @@ double get_cpu_load()
    int    ret_val;
    double value=-1;
 
+   return 0;
+
    /*
    kernel_fd_type kernel_fd;
    long address = 0;
@@ -1217,6 +1219,11 @@ int nelem
    elem = get_load_avg(loadavg, nelem); 
 #elif defined(INTERIX)
    char* value = NULL;
+   loadavg[0]=0;
+   loadavg[1]=0;
+   loadavg[2]=0;
+
+   return 0;
 
    fptrace("Getting %s", LOAD_ATTR_LOAD_SHORT);
    if(sge_get_load_value_interix(LOAD_ATTR_LOAD_SHORT, &value)==0) {

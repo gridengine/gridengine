@@ -836,21 +836,6 @@ proc open_remote_spawn_process { hostname
                           return ""
                       }
                    }
-                   -i $spawn_id -- "assword" {
-                      set ok 1
-                      puts $CHECK_OUTPUT "--> ERROR <--"
-                      puts $CHECK_OUTPUT "unexpected password question for user $open_remote_spawn__check_user on host $open_remote_spawn__hostname"
-                      puts $CHECK_OUTPUT "please check .rhosts file"
-                      puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
-                      flush $CHECK_OUTPUT
-                          
-                      catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
-                      puts $CHECK_OUTPUT "closing spawn process ..."
-                      flush $CHECK_OUTPUT
-                      catch { close -i $spawn_id }
-                      puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
-                      return ""
-                   }
                    -i $spawn_id -- "Terminal type?" {
                       send -i $spawn_id -- "vt100\n"
                    }
@@ -866,7 +851,21 @@ proc open_remote_spawn_process { hostname
                        send -i $spawn_id "\n"
                        debug_puts "sending new line"
                    }
-   
+                   -i $spawn_id -- "assword" {
+                      set ok 1
+                      puts $CHECK_OUTPUT "--> ERROR <--"
+                      puts $CHECK_OUTPUT "unexpected password question for user $open_remote_spawn__check_user on host $open_remote_spawn__hostname"
+                      puts $CHECK_OUTPUT "please check .rhosts file"
+                      puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
+                      flush $CHECK_OUTPUT
+                          
+                      catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
+                      puts $CHECK_OUTPUT "closing spawn process ..."
+                      flush $CHECK_OUTPUT
+                      catch { close -i $spawn_id }
+                      puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
+                      return ""
+                   }
                 }
              }
              set timeout 60

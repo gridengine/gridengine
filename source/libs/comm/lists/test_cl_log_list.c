@@ -157,7 +157,7 @@ extern int main(int argc, char** argv)
      CL_LOG_INT( CL_LOG_INFO,  "delete thread: ", id );
      CL_LOG_INT( CL_LOG_INFO,  "event calls: ", thread_p->thread_event_count );
 
-     cl_thread_list_delete_thread_by_id(thread_list, thread_p->thread_id);
+     cl_thread_list_delete_thread_by_id(thread_list, id);
      CL_LOG_INT( CL_LOG_INFO,  "thread deleted, id: ", id );
   }
 

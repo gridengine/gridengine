@@ -3664,7 +3664,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
    }
 
    if ( un_resolved_hostname != NULL || component_name != NULL || component_id != 0) {
-      CL_LOG(CL_LOG_WARNING,"message filtering not supported");
+      CL_LOG(CL_LOG_DEBUG,"message filtering not supported");
    }
    do {
       leave_reason = CL_RETVAL_OK;

@@ -99,6 +99,12 @@ proc issue_1096_run  {} {
    for { set i 0 } { $i < [llength $ts_config(execd_hosts) ]  } { incr i 1 } {
       set act_host [lindex  $ts_config(execd_hosts) $i]
       set arch [resolve_arch $act_host]
+
+      if { $arch == "win32-x86" } {
+         add_proc_error "issue_1096_run" -3 "Skipping win32-x86 architecture!" 
+         continue
+      }
+
       set qmaster_binary $ts_config(product_root)/bin/${arch}/sge_qmaster
       set qping_binary $ts_config(product_root)/bin/${arch}/qping
 

@@ -247,8 +247,7 @@ proc install_execd {} {
 
       set timeout 300
      
-      
-
+      #set CHECK_DEBUG_LEVEL 2
       set do_log_output 0 ;# 1 _LOG
       if { $CHECK_DEBUG_LEVEL == 2 } {
          set do_log_output 1

@@ -41,8 +41,12 @@
 #endif
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 int main(int argc, char *argv[]) {
+
+  int ret=0;
 
   if (argc < 2) {
      printf("Usage: fstype <directory>\n");
@@ -51,11 +55,16 @@ int main(int argc, char *argv[]) {
    else {  
 #if defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
    struct statfs buf;
-   statfs(argv[1], &buf);
+   ret = statfs(argv[1], &buf);
 #else   
    struct statvfs buf;
-   statvfs(argv[1], &buf);
+   ret = statvfs(argv[1], &buf);
 #endif
+
+   if(ret!=0) {
+      printf("Error: %s\n", strerror(errno));
+      return 2;
+   }
   
 #if defined (DARWIN) || defined(FREEBSD)
    printf("%s\n", buf.f_fstypename);
@@ -64,6 +73,10 @@ int main(int argc, char *argv[]) {
       printf("nfs\n");
    else   
       printf("%lx\n", (long unsigned int)buf.f_type);
+#elif defined(INTERIX)
+//INTERIX version doesn't work. It compiles, but doesn't work!
+//statvfs() always returns an error on mounted drives.
+   printf("%s\n", buf.f_mntfromname);
 #else
    printf("%s\n", buf.f_basetype);
 #endif

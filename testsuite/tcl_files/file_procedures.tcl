@@ -1922,8 +1922,8 @@ proc remote_delete_directory { hostname path } {
    }
 
    if { [remote_file_isdirectory $hostname $path] != 1} {
-      puts $CHECK_OUTPUT "delete_directory - no such directory: \"$path\""
-      add_proc_error "delete_directory" -1 "no such directory: \"$path\""
+      puts $CHECK_OUTPUT "remote_delete_directory - no such directory: \"$path\""
+      add_proc_error "remote_delete_directory" -1 "$hostname: no such directory: \"$path\""
       return -1     
    }
  
@@ -1938,14 +1938,14 @@ proc remote_delete_directory { hostname path } {
          start_remote_prog $hostname "ts_def_con2" "cp" "-r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
          if { $prg_exit_state != 0 } {
             puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder"
-            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder"
+            add_proc_error "remote_delete_directory" -1 "$hostname: could not mv/cp directory \"$path\" to trash folder"
             set return_value -1
          } else { 
             puts $CHECK_OUTPUT "copy ok -  removing directory"
             start_remote_prog $hostname "ts_def_con2" "rm" "-rf $path" prg_exit_state 60 0 "" 1 0 1
             if { $prg_exit_state != 0 } {
                puts $CHECK_OUTPUT "could not remove directory \"$path\""
-               add_proc_error "delete_directory" -1 "could not remove directory \"$path\""
+               add_proc_error "remote_delete_directory" -1 "$hostname: could not remove directory \"$path\""
                set return_value -1
             } else {
                puts $CHECK_OUTPUT "done"
@@ -1956,8 +1956,8 @@ proc remote_delete_directory { hostname path } {
          set return_value 0
       }
    } else {
-      puts $CHECK_OUTPUT "delete_directory - path is to short. Will not delete\n\"$path\""
-      add_proc_error "delete_directory" "-1" "path is to short. Will not delete\n\"$path\""
+      puts $CHECK_OUTPUT "remote_delete_directory - path is to short. Will not delete\n\"$path\""
+      add_proc_error "remote_delete_directory" "-1" "$hostname: path is to short. Will not delete\n\"$path\""
       set return_value -1
    }
   return $return_value
@@ -2260,7 +2260,7 @@ proc delete_directory { path } {
 
    if {[file isdirectory "$path"] != 1} {
       puts $CHECK_OUTPUT "delete_directory - no such directory: \"$path\""
-      add_proc_error "delete_directory" -1 "no such directory: \"$path\""
+      add_proc_error "delete_directory" -1 "$CHECK_HOST: no such directory: \"$path\""
       return -1     
    }
  
@@ -2313,7 +2313,7 @@ proc delete_directory { path } {
          if { $catch_return != 0 } {
             puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder!"
             puts $CHECK_OUTPUT $result
-            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder, $result"
+            add_proc_error "delete_directory" -1 "$CHECK_HOST: could not mv/cp directory \"$path\" to trash folder, $result"
             set return_value -1
          } else { 
             puts $CHECK_OUTPUT "copy ok -  removing directory"
@@ -2322,7 +2322,7 @@ proc delete_directory { path } {
             } result ] 
             if { $catch_return != 0 } {
                puts $CHECK_OUTPUT "could not remove directory \"$path\", $result"
-               add_proc_error "delete_directory" -1 "could not remove directory \"$path\", $result"
+               add_proc_error "delete_directory" -1 "$CHECK_HOST: could not remove directory \"$path\", $result"
                set return_value -1
             } else {
                puts $CHECK_OUTPUT "done"
@@ -2334,7 +2334,7 @@ proc delete_directory { path } {
       }
    } else {
       puts $CHECK_OUTPUT "delete_directory - path is to short. Will not delete\n\"$path\""
-      add_proc_error "delete_directory" "-1" "path is to short. Will not delete\n\"$path\""
+      add_proc_error "delete_directory" "-1" "$CHECK_HOST: path is to short. Will not delete\n\"$path\""
       set return_value -1
    }
   return $return_value

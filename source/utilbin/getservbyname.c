@@ -39,6 +39,10 @@
 #include "basis_types.h"
 #include "version.h"
 
+#if defined(INTERIX)
+#include <arpa/inet.h>
+#endif
+
 void usage(void)
 {
    fprintf(stderr, "Version: %s\n", GDI_VERSION);

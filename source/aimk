@@ -1302,8 +1302,58 @@ case WIN32_X86:
    set SECTARGETS  = ""
    set KLFLAGS     = ""
 
-   set COMPILE_DC     = 1
-   set MAKEWINGRIDLIB = 1
+   # Default build targets for WIN32_X86 for which we have seperate make files
+   set SGE_DEPEND       = 0
+   set QMON             = 0
+   set CORE             = 1
+   set REMOTE           = 0
+   set QMAKE            = 0
+   set QTCSH            = 0
+   set MAKESTRPTIME     = 0
+   set MAKEFNMATCH      = 0
+   set MAKEWINGRIDLIB   = 0
+   set WITH_USERMAPPING = 0 # Compile without usermapping feature
+
+   set COMPILE_DC       = 1
+   set MAKEWINGRIDLIB   = 1
+
+   # WIN32_X86 core build targets
+   if ($CORE == 1) then
+      set argv = "work getservbyname qsh qrsh qrsh_starter sge_execd sge_schedd sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel qacct qmod qhost qping adminrun checkprog checkuser filestat gethostname gethostbyname gethostbyaddr infotext now qrsh_starter sge_share_mon testsuidroot uidgid test_cl_commlib test_cl_commlib_client test_cl_hostalias_list test_cl_hostname_list test_cl_tcp_framework test_debug_client test_multithread_io test_server_connection test_status_info test_virtual_event_client test_virtual_gdi_client test_virtual_qmaster"
+
+      set TOUCH_DIR = $COMPILE_ARCH
+
+      echo touching files
+      echo TOUCH_DIR = $TOUCH_DIR
+
+      #generate all other binaries using touch
+#      touch ./3rdparty/qmake/$COMPILE_ARCH/make
+      touch $TOUCH_DIR/qmon
+      touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
+#      touch $TOUCH_DIR/qsh
+#      mkdir ./3rdparty/qtcsh/$COMPILE_ARCH
+#      touch ./3rdparty/qtcsh/$COMPILE_ARCH/tcsh
+      touch $TOUCH_DIR/sge_qmaster
+      touch $TOUCH_DIR/sge_shadowd
+
+      touch $TOUCH_DIR/berkeley_db_svc
+      touch $TOUCH_DIR/db_archive
+      touch $TOUCH_DIR/db_checkpoint
+      touch $TOUCH_DIR/db_dump
+      touch $TOUCH_DIR/db_load
+      touch $TOUCH_DIR/fstype
+#      touch $TOUCH_DIR/getservbyname
+      touch $TOUCH_DIR/loadcheck
+      touch $TOUCH_DIR/openssl
+      touch ./3rdparty/remote/$COMPILE_ARCH/rlogin
+      touch ./3rdparty/remote/$COMPILE_ARCH/rsh
+      touch ./3rdparty/remote/$COMPILE_ARCH/rshd
+      touch $TOUCH_DIR/spooldefaults
+      touch $TOUCH_DIR/spooledit
+      touch $TOUCH_DIR/spoolinit
+#      touch $TOUCH_DIR/work
+   endif
+   
 
    set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
    #set LIBS = "$LIBS -lwingrid"
@@ -1318,7 +1368,7 @@ case WIN32_X86:
       set CC  = gcc
       set CXX = gcc
       #set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -I/dev/fs/C/Program\ Files/Microsoft\ Visual\ Studio\ .NET\ 2003/Vc7/PlatformSDK/Include -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"      
+      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -D_ALL_SOURCE -D_REENTRANT $DEBUG_FLAG $CFLAGS"      
    else
       set CC  = cc
       set CXX = cc
@@ -1808,7 +1858,7 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
       default:
          set param = wingridlib
          set DEPEND = ""
-         set LIBS = "$LIBS -lwingrid" 
+         set LIBS = "$LIBS -lwingrid -lrpclib" 
       breaksw
    endsw
 

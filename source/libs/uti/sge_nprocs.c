@@ -267,6 +267,7 @@ int sge_nprocs()
    }
 #endif
 #if defined(INTERIX)
+/*
    {
       char *buf = NULL;
       if(sge_get_load_value_interix(LOAD_ATTR_NUM_PROC, &buf)==0) {
@@ -275,6 +276,8 @@ int sge_nprocs()
          nprocs = -1;
       }         
    }      
+*/
+nprocs = 1;
 #endif
 
    if (nprocs <= 0) {

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/17 11:01:57 $     Revision: $Revision: 1.33 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/26 15:27:49 $     Revision: $Revision: 1.34 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/01/17 11:01:57 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/01/26 15:27:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -873,14 +873,17 @@ Default is the job owner at the originating host.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
-.IP "\fB\-masterq queue,...\fP"
+.IP "\fB\-masterq wc_queue_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 Only meaningful for parallel jobs, i.e. together with the -pe option.
 .sp 1
-Defines or redefines a list of queues which may be used to become the so
-called
+Defines or redefines a list of cluster queues, queue domains and queue 
+instances which may be used to become the so called
 .I master queue
-of this parallel job. The
+of this parallel job. A more detailed description of \fIwc_queue_list\fP 
+can be found in
+.M sge_types 1 .
+The
 .I master queue
 is defined as
 the queue where the parallel job is started. The other queues to which the
@@ -1097,11 +1100,14 @@ allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
-.IP "\fB\-q queue,...\fP"
+.IP "\fB\-q wc_queue_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
-Defines or redefines a list of queues which may be used to execute this
-job. This parameter has all the properties of a resource request and
+Defines or redefines a list of cluster queues, queue domains or queue
+instances which may be used to execute this job. Please find a description
+of \fIwc_queue_list\fP in
+.M sge_types 1 .
+This parameter has all the properties of a resource request and
 will be merged with requirements derived from the \fB\-l\fP option
 described above.
 .sp 1
@@ -1580,7 +1586,7 @@ parameter in
 for details on the format of this file. The environment variable
 is only available for parallel jobs.
 .IP "QUEUE" 1.5i
-The name of the queue in which the job is running.
+The name of the cluster queue in which the job is running.
 .IP "REQUEST" 1.5i
 Available for batch jobs only.
 .sp 1

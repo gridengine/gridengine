@@ -48,6 +48,7 @@ COMMLIB_DIR = $(SOURCE)/libs/comm
 COMMLIB_SRC = \
          cl_tcp_framework.c \
          cl_communication.c \
+         cl_xml_parsing.c \
          cl_connection_list.c \
          cl_message_list.c \
          cl_host_list.c \
@@ -131,6 +132,8 @@ cl_tcp_framework.o: $(COMMLIB_DIR)/cl_tcp_framework.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_tcp_framework.c
 cl_communication.o: $(COMMLIB_DIR)/cl_communication.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_communication.c
+cl_xml_parsing.o: $(COMMLIB_DIR)/cl_xml_parsing.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_xml_parsing.c
 cl_connection_list.o: $(COMMLIB_DIR)/cl_connection_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_connection_list.c
 cl_message_list.o: $(COMMLIB_DIR)/cl_message_list.c 

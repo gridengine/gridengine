@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include "cl_lists.h"
+#include "cl_xml_parsing.h"
 
 
 #define CL_CT_TCP    1   /* on work */
@@ -69,54 +70,7 @@ typedef enum cl_thread_mode_def {
    CL_ONE_THREAD         /* only one trigger thread */
 } cl_thread_mode_t;
 
-typedef enum cl_bool_def {
-   CL_FALSE = 0,
-   CL_TRUE
-} cl_bool_t;
 
-typedef enum cl_xml_data_format_def {
-   CL_CM_DF_UNDEFINED = 1,
-   CL_CM_DF_BIN,
-   CL_CM_DF_XML
-} cl_xml_data_format_t;
-
-typedef enum cl_xml_mih_data_format_def {
-   CL_MIH_DF_UNDEFINED = 1,
-   CL_MIH_DF_BIN,
-   CL_MIH_DF_XML,
-   CL_MIH_DF_AM,
-   CL_MIH_DF_SIM,
-   CL_MIH_DF_SIRM,
-   CL_MIH_DF_CCM,
-   CL_MIH_DF_CCRM
-} cl_xml_mih_data_format_t;
-
-typedef enum cl_xml_ack_type_def {
-   CL_MIH_MAT_UNDEFINED = 1,
-   CL_MIH_MAT_NAK,
-   CL_MIH_MAT_ACK,
-   CL_MIH_MAT_SYNC
-} cl_xml_ack_type_t;
-
-typedef enum cl_xml_connection_type_def {
-   CL_CM_CT_UNDEFINED = 1,
-   CL_CM_CT_STREAM,
-   CL_CM_CT_MESSAGE
-}cl_xml_connection_type_t ;
-
-typedef enum cl_xml_connection_autoclose_def {
-   CL_CM_AC_UNDEFINED = 1,
-   CL_CM_AC_ENABLED,
-   CL_CM_AC_DISABLED
-}cl_xml_connection_autoclose_t;
-
-typedef enum cl_xml_connection_status_def {
-   CL_CRM_CS_UNDEFINED = 1,         /* 1 */
-   CL_CRM_CS_CONNECTED,             /* 2 */
-   CL_CRM_CS_DENIED,                /* 3 */
-   CL_CRM_CS_ENDPOINT_NOT_UNIQUE,   /* 4 */
-   CL_CRM_CS_UNSUPPORTED            /* 5 */
-}cl_xml_connection_status_t ;
 
 
 
@@ -182,12 +136,6 @@ typedef unsigned char cl_byte_t;
 
 
 
-typedef struct cl_com_endpoint {
-   /* internal identification tripple */
-   char*         comp_host;           
-   char*         comp_name;
-   unsigned long comp_id;
-} cl_com_endpoint_t ;
 
 
 
@@ -326,72 +274,6 @@ typedef struct cl_com_host_spec_type {
 } cl_com_host_spec_t;
 
 
-/* XML data types */
-typedef struct cl_com_GMSH_type {
-   unsigned long   dl;
-} cl_com_GMSH_t;
-
-
-typedef struct cl_com_CM_type {
-   char*                          version;
-   cl_xml_data_format_t           df;
-   cl_xml_connection_type_t       ct;
-   cl_xml_connection_autoclose_t  ac;
-   unsigned long                  port;  
-   cl_com_endpoint_t*             src;
-   cl_com_endpoint_t*             dst;
-   cl_com_endpoint_t*             rdata;
-} cl_com_CM_t;
-
-
-typedef struct cl_com_CRM_type {
-   char*                         version;
-   cl_xml_connection_status_t    cs_condition;
-   char*                         cs_text;
-   char*                         formats;   /* each format is seperated with "," not supported TODO  */
-   cl_com_endpoint_t*            src;
-   cl_com_endpoint_t*            dst;
-   cl_com_endpoint_t*            rdata;
-} cl_com_CRM_t;
-
-typedef struct cl_com_MIH_type {
-   char*                      version;
-   unsigned long              mid;
-   unsigned long              dl;
-   cl_xml_mih_data_format_t   df;
-   cl_xml_ack_type_t          mat;
-   unsigned long              tag;
-   unsigned long              rid;
-} cl_com_MIH_t;
-
-typedef struct cl_com_AM_type {
-   char*            version;
-   unsigned long    mid;
-} cl_com_AM_t;
-
-typedef struct cl_com_SIM_type {
-   char*            version;
-} cl_com_SIM_t;
-
-typedef struct cl_com_SIRM_type {
-   char*            version;
-   unsigned long    mid;
-   unsigned long    starttime;
-   unsigned long    runtime;
-   unsigned long    application_messages_brm;
-   unsigned long    application_messages_bwm;
-   unsigned long    application_connections_noc;
-   unsigned long    application_status;
-   char*            info;
-} cl_com_SIRM_t;
-
-typedef struct cl_com_CCM_type {
-   char*            version;
-} cl_com_CCM_t;
-
-typedef struct cl_com_CCRM_type {
-   char*            version;
-} cl_com_CCRM_t;
 
 
 

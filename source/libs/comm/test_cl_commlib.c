@@ -39,6 +39,7 @@
 #include <sys/time.h>
 
 #include "cl_commlib.h"
+#include "cl_endpoint_list.h"
 #define CL_DO_SLOW 0
 
 void sighandler_server(int sig);
@@ -123,6 +124,7 @@ extern int main(int argc, char** argv)
   cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS );
 
 
+  cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, 0 );
 
 
   while(do_shutdown != 1) {
@@ -131,6 +133,46 @@ extern int main(int argc, char** argv)
 
      CL_LOG(CL_LOG_INFO,"main()");
      cl_commlib_trigger(handle); 
+
+#if 0
+     {
+        cl_raw_list_t* tmp_endpoint_list = NULL;
+        cl_endpoint_list_elem_t* elem = NULL;
+   
+        cl_commlib_search_endpoint(handle, NULL, NULL, 1, CL_TRUE, &tmp_endpoint_list);
+        elem = cl_endpoint_list_get_first_elem(tmp_endpoint_list);
+        printf("\nconnected endpoints with id=1:\n");
+        printf("==============================\n");
+   
+        while(elem) {
+           printf("%s/%s/%d\n", elem->endpoint->comp_host, elem->endpoint->comp_name, elem->endpoint->comp_id);
+           elem = cl_endpoint_list_get_next_elem(tmp_endpoint_list, elem);
+        }
+        cl_endpoint_list_cleanup(&tmp_endpoint_list);
+   
+        cl_commlib_search_endpoint(handle, NULL, NULL, 1, CL_FALSE, &tmp_endpoint_list);
+        elem = cl_endpoint_list_get_first_elem(tmp_endpoint_list);
+        printf("\nconnected and known endpoints with id=1:\n");
+        printf("=========================================\n");
+   
+        while(elem) {
+           printf("%s/%s/%d\n", elem->endpoint->comp_host, elem->endpoint->comp_name, elem->endpoint->comp_id);
+           elem = cl_endpoint_list_get_next_elem(tmp_endpoint_list, elem);
+        }
+        cl_endpoint_list_cleanup(&tmp_endpoint_list);
+   
+        cl_commlib_search_endpoint(handle, NULL, "client", 0, CL_FALSE, &tmp_endpoint_list);
+        elem = cl_endpoint_list_get_first_elem(tmp_endpoint_list);
+        printf("\nconnected and known endpoints with comp_name=client:\n");
+        printf("=====================================================\n");
+   
+        while(elem) {
+           printf("%s/%s/%d\n", elem->endpoint->comp_host, elem->endpoint->comp_name, elem->endpoint->comp_id);
+           elem = cl_endpoint_list_get_next_elem(tmp_endpoint_list, elem);
+        }
+        cl_endpoint_list_cleanup(&tmp_endpoint_list);
+     }
+#endif
 
 #if 0
      /* TODO: check behaviour for unknown host and for a host which is down */

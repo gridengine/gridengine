@@ -316,7 +316,7 @@ void *server_thread(void *t_conf) {
       if (retval == CL_RETVAL_OK && new_con != NULL) {
          CL_LOG(CL_LOG_INFO,"new connection!!!");
 
-         retval= cl_com_tcp_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0 );
+         retval= cl_com_tcp_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT );
          if (retval != CL_RETVAL_OK) {
             cl_com_tcp_close_connection(&new_con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
@@ -460,7 +460,7 @@ void *client_thread(void *t_conf) {
             CL_LOG_STR(CL_LOG_INFO, "cl_com_close_connection() returned ", cl_get_error_text(retval) );
          } 
 
-         retval= cl_com_tcp_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0 );
+         retval= cl_com_tcp_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT );
          if (retval != CL_RETVAL_OK) {
             cl_com_tcp_close_connection(&con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");

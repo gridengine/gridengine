@@ -8,7 +8,7 @@ Content
 2) Stopping the Grid Engine cluster to schedule jobs
 3) Renaming the 'sge_commd' binary
 4) Shutting down Grid Engine qmaster and scheduler
-5) Installing the patch release and restarting Sun Grid Engine
+5) Installing the patch release and restarting Grid Engine
 
 1) Prerequisites
 -------------
@@ -83,8 +83,8 @@ Content
    your hosts are stopped.
 
 
-5) Installing the patch release and restarting Sun Grid Engine
---------------------------------------------------------------
+5) Installing the patch release and restarting Grid Engine
+----------------------------------------------------------
 
    Now please install the packages for all your binaries as user root in a
    machine where user root has read/write permission in the $SGE_ROOT

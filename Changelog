@@ -1,3 +1,7 @@
+CR-2002-09-24-0  Bugfix:    using SGE_STRUCT_STAT macro instead of
+                            "struct stat". Reason: compile error for
+                            SOLARIS86
+
 CR-2002-09-23-3  Bugfix:    2 sentences need to be i18ned in master 
                  Bugtraq:   #4746079
 

@@ -2015,7 +2015,7 @@ static int start_async_command(char *descr, char *cmd)
 
 static int checkpointed_file_exists(void)
 {
-   struct stat buf;
+   SGE_STRUCT_STAT buf;
    return ! SGE_STAT("checkpointed", &buf);
 }
 

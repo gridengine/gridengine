@@ -744,6 +744,7 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
 *     const lList *slp        - source list pointer 
 *     const lCondition *cp    - selects rows 
 *     const lDescr *dp        - descriptor for the new list
+*     const lEnumeration *enp - selects columns 
 *
 *  RESULT
 *     lList* - list containing the extracted elements

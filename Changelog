@@ -1,3 +1,10 @@
+DT-2004-04-21-0: Enhancem.: o Streamlined event master locking
+                            o Did various cosmetic fixes
+                            o Added script for submiting multiple simultaneous
+                              qsubs
+                 Changed:   EVM, cull, qmaster, GDI, JAPI, mirror, UTI, scripts
+                 Review:    SG, AD
+
 MD-2004-04-21-2: Bugfix:    removed confusing text!
                  Changed:   rc-template
 
@@ -515,7 +522,7 @@ DT-2004-3-22-0:  Bugfix:    o Added -shell y|n option to qsub and update man
                             o Made yes and no acceptable arguments to qsub y|n
                               options and update man page
                             o Minor cleanup in clients and spooling
-                 Issues:    476, 658
+                 Issues:    476, 658, 895
                  Changed:   shepherd, qsub, qsh, execd, sge_spool.c, sge_job.h
                  Review:    EB, AH
 

@@ -533,7 +533,6 @@ int japi_init(const char *contact, const char *session_key_in,
       return ret;
    }
 
-
    if (enable_wait) {
       /* spawn implementation thread japi_implementation_thread() */
       ret = japi_enable_job_wait (session_key_in, session_key_out, handler,

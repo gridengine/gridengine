@@ -1297,10 +1297,47 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 ******************************************************************************/
 int lAddList(lList *lp0, lList *lp1) 
 {
+   /* No need to do any safety checks.  lAppendList will do them for us. */
+   int res = 0;
+   
+   DENTER(CULL_LAYER, "lAddList");
+   
+   lAppendList (lp0, lp1);
+
+   lFreeList(lp1);
+
+   DEXIT;
+   return res;
+}
+
+/****** cull/list/lAppendList() ************************************************
+*  NAME
+*     lAppendList() -- Concatenate two lists 
+*
+*  SYNOPSIS
+*     int lAppendList(lList *lp0, lList *lp1) 
+*
+*  FUNCTION
+*     Concatenate two lists of equal type without throwing away the second list 
+*
+*  INPUTS
+*     lList *lp0 - first list 
+*     lList *lp1 - second list 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lAppendList() is MT safe
+******************************************************************************/
+int lAppendList(lList *lp0, lList *lp1) 
+{
    lListElem *ep;
    const lDescr *dp0, *dp1;
 
-   DENTER(CULL_LAYER, "lAddList");
+   DENTER(CULL_LAYER, "lAppendList");
 
    if (!lp1 || !lp0) {
       LERROR(LELISTNULL);
@@ -1329,8 +1366,6 @@ int lAddList(lList *lp0, lList *lp1)
          return -1;
       }
    }
-
-   lFreeList(lp1);
 
    DEXIT;
    return 0;

@@ -50,13 +50,13 @@ extern int      sge_set_event_client_data(u_long32, u_long32);
 extern void sge_add_event( u_long32, ev_event, u_long32, u_long32, 
                           const char*, const char*, const char*, lListElem*);
                           
-extern int  sge_add_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, 
+extern void sge_add_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, 
                                     const char*, const char*, const char*, lListElem*);
                                     
 extern void sge_add_list_event( u_long32, ev_event, u_long32, u_long32, 
                                const char*, const char*, const char*, lList*); 
 
-extern int  sge_handle_event_ack(u_long32, ev_event);
+extern void sge_handle_event_ack(u_long32, ev_event);
 extern void sge_deliver_events_immediately(u_long32);
 
 extern u_long32 sge_get_next_event_number(u_long32);
@@ -65,5 +65,9 @@ extern int      sge_resync_schedd(void);
 extern void sge_set_max_dynamic_event_clients(u_long32 max);
 
 extern void sge_event_shutdown(void);
+extern bool sge_commit(void);
+extern bool sge_rollback(void);
+extern void sge_set_commit_required(bool require_commit);
+extern bool sge_is_commit_required(void);
 
 #endif /* __SGE_M_EVENT_H */

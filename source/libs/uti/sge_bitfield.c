@@ -148,8 +148,8 @@ bitfield sge_bitfield_new(int size)
 *     MT-NOTE: sge_bitfield_copy() is MT safe 
 *
 *******************************************************************************/
-bool sge_bitfield_copy(bitfield source, bitfield target) {
-  
+bool sge_bitfield_copy(bitfield source, bitfield target)
+{
    if (source != NULL && target != NULL) {
       if (source->size == target->size) {
          int char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
@@ -157,6 +157,53 @@ bool sge_bitfield_copy(bitfield source, bitfield target) {
 
          return true;    
       }
+   }
+   
+   return false;
+}
+
+/****** sge_bitfield/sge_bitfield_bitwise_copy() *******************************
+*  NAME
+*     sge_bitfield_copy() -- copies a bitfield into another one. 
+*
+*  SYNOPSIS
+*     bool sge_bitfield_bitwise_copy(bitfield *source, bitfield *target) 
+*
+*  FUNCTION
+*     The memory has to be allocated before, but the bitfields can have
+*     different sizes.  If the source is longer than the target, only the bits
+*     up to target's length are copied.
+*
+*  INPUTS
+*     bitfield *source - ??? 
+*     bitfield *target - ??? 
+*
+*  RESULT
+*     bool - false, if one of the bitfields is NULL
+*
+*  NOTES
+*     MT-NOTE: sge_bitfield_bitwise_copy() is MT safe 
+*
+*******************************************************************************/
+bool sge_bitfield_bitwise_copy(bitfield source, bitfield target)
+{
+   if (source != NULL && target != NULL) {
+      int char_size = 0;
+      
+      if (source->size > target->size) {
+         /* This may result in the target getting a few more bits than it wants
+          * (if target->size isn't a multiple of 8), but that shouldn't matter
+          * because sge_bitfield_get() guards against accessing those extra
+          * bits. */
+         char_size = target->size / 8 + ((target->size % 8) > 0 ? 1 : 0);
+      }
+      else {
+         char_size = source->size / 8 + ((source->size % 8) > 0 ? 1 : 0);
+      }
+      
+      memcpy(target->bf, source->bf, char_size);
+
+      return true;    
    }
    
    return false;

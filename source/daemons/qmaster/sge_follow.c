@@ -849,7 +849,7 @@ lList **topp  /* ticket orders ptr ptr */
          sge_add_event( 0, sgeE_JATASK_ADD, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), jatp);
       }
-      if (!jatp) {
+      if (jatp == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
          sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL, lGetString(jep, JB_session), NULL);

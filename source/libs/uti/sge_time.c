@@ -126,10 +126,10 @@ u_long32 sge_get_gmt()
 #  ifdef SOLARIS
    gettimeofday(&now, NULL);
 #  else
-   struct timezone tzp;
 #     ifdef SINIX
    gettimeofday(&now);
 #     else
+   struct timezone tzp;
    gettimeofday(&now, &tzp);
 #     endif
 #  endif

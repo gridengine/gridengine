@@ -1190,13 +1190,7 @@ void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gd
       return;
    }
      
-   if (sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL) != 0)
-   {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_WARNING);
-      DEXIT;
-      return;
-   }
+   sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, aHost));
    answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

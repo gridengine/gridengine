@@ -1,3 +1,6 @@
+JG-2004-03-24-0: Bugfix:    HP11 binaries ignored SHLIB_PATH due to missing
+                            linker flag +s.
+
 AH-2004-03-24-0: Bugfix:    Earliest reservation not always found for parallel 
                             jobs.
                  Issue:     911

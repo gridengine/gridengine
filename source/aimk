@@ -1056,8 +1056,8 @@ case IRIX65:
 case HP11:
 case HP1164:
    set MAKE = gmake
-   set OFLAG = "+O2"
    set DLLIB = ""
+   set OFLAG = ""
    if ($BUILDARCH == HP11) then
       set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
       set MEMFLAG = +DD32
@@ -1066,10 +1066,17 @@ case HP1164:
       set MEMFLAG = +DD64
    endif
    if ($CC == gcc) then
+      if ( $DEBUGGED == 0 ) then
+         if ( $OPTIMIZATION != 0 ) then
+            set OFLAG = "-O2"
+         endif
+      endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
    else
-      if ($OPTIMIZATION == 0) then
-         set OFLAG = "-O"
+      if ( $DEBUGGED == 0 ) then
+         if ( $OPTIMIZATION != 0 ) then
+            set OFLAG = "+O2"
+         endif
       endif
       set CXX = "aCC"
       set CFLAGS = "-Ae $MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
@@ -1090,9 +1097,9 @@ case HP1164:
    set LIBS     = "-lnsl $LIBS"
 
    if ($BUILDARCH == HP11) then
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32"
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32 -Wl,+s"
    else
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64"
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
    endif
 
    set XMTDEF   = "-DNO_EDITRES"

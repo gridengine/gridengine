@@ -67,7 +67,8 @@
 
 int 
 sge_print_queue(lListElem *queue, lList *exechost_list, lList *complex_list, 
-                u_long32 full_listing, lList *resources, u_long32 explain_bits);
+                u_long32 full_listing, lList *resources, u_long32 explain_bits, 
+                u_long32 queue_states);
 
 void 
 sge_print_jobs_queue(lListElem *qep, lList *job_list, const lList *pe_list, 

@@ -88,7 +88,7 @@ static char hashes[] = "########################################################
 int 
 sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                 u_long32 full_listing, lList *qresource_list, 
-                u_long32 explain_bits) 
+                u_long32 explain_bits, u_long32 queue_states) 
 {
    char to_print[80];
    char arch_string[80];
@@ -100,6 +100,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    char suspend_alarm_reason[MAX_STRING_SIZE];
    dstring queue_name_buffer = DSTRING_INIT;
    const char *queue_name = NULL;
+   bool is_load_value;
+   bool has_value_from_object; 
 
    DENTER(TOP_LAYER, "sge_print_queue");
 
@@ -115,6 +117,31 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       DEXIT;
       return 1;
    }
+
+   /* compute the load and check for alarm states */
+
+   is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object);
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+      qinstance_state_set_alarm(q, true);
+      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
+                            centry_list, load_alarm_reason, 
+                            MAX_STRING_SIZE - 1, "load");
+   }
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+      qinstance_state_set_suspend_alarm(q, true);
+      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
+                            exechost_list, centry_list, suspend_alarm_reason, 
+                            MAX_STRING_SIZE - 1, "suspend");
+   }
+
+
+   
+   if (!qinstance_has_state(q, queue_states)) {
+      DEXIT;
+      return 0;
+   }
+
+   
 
    if (first_time) {
       first_time = 0;
@@ -149,19 +176,16 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    printf("%-9.9s ", to_print);   
 
    /* load avg */
-   {
-      bool has_value_from_object; 
-
-      if (!sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object)) {
-         if (has_value_from_object) {
-            sprintf(to_print, "%2.2f ", load_avg);
-         } else {
-            sprintf(to_print, "---  ");
-         }
+   if (!is_load_value) {
+      if (has_value_from_object) {
+         sprintf(to_print, "%2.2f ", load_avg);
       } else {
-         sprintf(to_print, "-NA- ");
+         sprintf(to_print, "---  ");
       }
+   } else {
+      sprintf(to_print, "-NA- ");
    }
+   
    printf("%-8.8s ", to_print);   
 
    /* arch */
@@ -171,19 +195,6 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    else
       sprintf(to_print, "-NA- ");
    printf("%-9.9s ", to_print);   
-
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
-      qinstance_state_set_alarm(q, true);
-      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
-                            centry_list, load_alarm_reason, 
-                            MAX_STRING_SIZE - 1, "load");
-   }
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
-      qinstance_state_set_suspend_alarm(q, true);
-      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
-                            exechost_list, centry_list, suspend_alarm_reason, 
-                            MAX_STRING_SIZE - 1, "suspend");
-   }
 
    {
       dstring state_string = DSTRING_INIT;

@@ -103,6 +103,8 @@ transition_is_valid_for_qinstance(u_long32 transition, lList **answer_list);
 bool
 transition_option_is_valid_for_qinstance(u_long32 option, lList **answer_list);
 
+bool qinstance_has_state(const lListElem *this_elem, u_long32 bit); 
+
 const char *
 qinstance_state_as_string(u_long32 bit);
 

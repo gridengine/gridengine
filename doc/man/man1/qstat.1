@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2003/12/15 15:42:14 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/01/07 15:12:33 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2003/12/15 15:42:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/01/07 15:12:33 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -56,6 +56,8 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -pe pe_name,...
 ] [
 .B -q queue,...
+] [
+.B -qs {a|c|d|o|s|u|A|C|D|E|S}
 ] [
 .B -r
 ] [
@@ -158,6 +160,10 @@ might get scheduled to those queues in principle.
 Specifies the queue to which job
 information is to be displayed.
 .\"
+.IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
+Similar to \fB\-f\fP. It generates the same output, but allows
+to filter for queue instances in certain states.
+.\"
 .IP "\fB\-r\fP"
 Prints extended information about the resource requirements
 of the displayed jobs. Please refer to the \fBOUTPUT FORMATS\fP
@@ -215,13 +221,13 @@ policy scheme
 .\"
 .\"
 .SH "OUTPUT FORMATS"
-Depending on the presence or absence of the \fB-alarm\fP, \fB\-f\fP or \fB\-F\fP and
+Depending on the presence or absence of the \fB-alarm\fP, \fB\-f\fP, \fB\-F\fP, or \fB\-qs\fP and
 \fB\-r\fP and \fB\-t\fP option three output formats need to be differentiated.
 .PP
 In case of a xxQS_NAME_EExx system, the \fB\-ext\fP and \fB\-urg\fP options may be used 
 to display additional information for each job.
 .\"
-.SS "\fBReduced Format (without \-f and \-F)\fP"
+.SS "\fBReduced Format (without \-f, \-F, and \-qs)\fP"
 Following the header line a line is printed for each job
 consisting of
 .IP "\(bu" 3n

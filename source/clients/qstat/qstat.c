@@ -106,7 +106,7 @@ sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource,
                 lList **pplqueueref, lList **ppluser, lList **pplqueue_user, 
                 lList **pplpe, u_long32 *pfull, u_long32 *explain_bits, 
                 u_long32 *pempty, char **hostname, u_long32 *job_info, 
-                u_long32 *group_opt, lList **ppljid);
+                u_long32 *group_opt, u_long32 *queue_states, lList **ppljid);
 
 static int qstat_usage(FILE *fp, char *what);
 static int qstat_show_job(lList *jid);
@@ -170,6 +170,7 @@ char **argv
    u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
    u_long32 explain_bits = QIM_DEFAULT;
    u_long32 group_opt = 0;
+   u_long32 queue_states = U_LONG32_MAX;
    lSortOrder *so = NULL;
    int nqueues;
    char *hostname = NULL;
@@ -218,6 +219,7 @@ char **argv
       &hostname,
       &job_info,        /* -j ..                         */
       &group_opt,       /* -g ..                         */
+      &queue_states,    /* -qs ...                       */
       &jid_list);       /* .. jid_list                   */
 
 
@@ -345,6 +347,19 @@ char **argv
       }
    }
 
+   /* only show queues in the requested state */
+/*   
+   if (queue_states != U_LONG32_MAX) {
+      for_each(cqueue, queue_list){
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         for_each(qep, qinstance_list) { 
+            if (!qinstance_has_state(qep, queue_states)) {
+               lSetUlong(qep, QU_tag, 0);
+            }   
+         }
+      }
+   }
+*/
    /* unseclect all queues not selected by a -U (if exist) */
    if (lGetNumberOfElem(queue_user_list)>0) {
       if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list))<0) {
@@ -422,7 +437,8 @@ char **argv
          lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
          for_each(qep, qinstance_list) {
-            if ((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) {
+            if (((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) &&
+                ( qinstance_has_state(qep, queue_states))){
                dstring qinstance_name = DSTRING_INIT;
 
                qinstance_get_name(qep, &qinstance_name);
@@ -602,7 +618,7 @@ char **argv
                                   &available,
                                   &temp_disabled,
                                   &manual_intervention);
-
+         
          if (first_time) {
             printf("%-36.36s %7s "
                    "%6s %6s %6s %6s %6s ",
@@ -662,9 +678,10 @@ char **argv
                continue;
             }
             else {
-               sge_print_queue(qep, exechost_list, centry_list, 
-                               full_listing, qresource_list, explain_bits);
-               print_jobs_of_queue = 1;
+               if (sge_print_queue(qep, exechost_list, centry_list, 
+                               full_listing, qresource_list, explain_bits, queue_states)) {
+                  print_jobs_of_queue = 1;
+               }   
             }
 
          }
@@ -1584,7 +1601,11 @@ lList *alp = NULL;
       /* -s [p|r|s|h|...] option */
       if (!qselect_mode && (rp = parse_until_next_opt(sp, "-s", NULL, ppcmdline, &alp)) != sp)
          continue;
-
+         
+      /* -qs [.{a|c|d|o|..] option */
+      if ((rp = parse_until_next_opt(sp, "-qs", NULL, ppcmdline, &alp)) != sp)
+         continue;
+         
       /* -explain [c|a|A...] option */
       if (!qselect_mode && (rp = parse_until_next_opt(sp, "-explain", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -1660,6 +1681,7 @@ u_long32 *pempty_qs,
 char **hostname,
 u_long32 *job_info,
 u_long32 *group_opt,
+u_long32 *queue_states,
 lList **ppljid 
 ) {
    stringT str;
@@ -1891,22 +1913,30 @@ lList **ppljid
          continue;
       }
 
-      if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
+      if (parse_string(ppcmdline, "-qs", &alp, &argstr)) {
+         *queue_states = qinstance_state_from_string(argstr, &alp);
+         (*pfull) |= QSTAT_DISPLAY_FULL;
+         full = 0;
+         FREE(argstr);
+         continue;
+      }
+
+      if (parse_string(ppcmdline, "-l", &alp, &argstr)) {
          *pplresource = centry_list_parse_from_string(*pplresource, argstr, false);
          FREE(argstr);
          continue;
       }
 
-      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppluser, ST_Type, ST_name)) 
+      if (parse_multi_stringlist(ppcmdline, "-u", &alp, ppluser, ST_Type, ST_name)) 
          continue;
       
-      if(parse_multi_stringlist(ppcmdline, "-U", &alp, pplqueue_user, ST_Type, ST_name)) 
+      if (parse_multi_stringlist(ppcmdline, "-U", &alp, pplqueue_user, ST_Type, ST_name)) 
          continue;
       
-      if(parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) 
+      if (parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) 
          continue;
       
-      if(parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name))
+      if (parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name))
          continue;
 
       if (parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
@@ -1924,6 +1954,7 @@ lList **ppljid
      DEXIT;
      return alp;
    }
+
    DEXIT;
    return alp;
 }
@@ -1974,6 +2005,7 @@ char *what
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
       fprintf(fp, "        [-pe pe_list]                   %s",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
       fprintf(fp, "        [-q destin_id_list]             %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
+      fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]              %s",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
       if (!qselect_mode) 
          fprintf(fp, "        [-r]                            %s",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
       if (!qselect_mode) {
@@ -1993,7 +2025,7 @@ char *what
          fprintf(fp, "        [-dj]                           %s",MSG_QSTAT_USAGE_DUMPCOMPLETEJOBLISTTOSTDOUT);
          fprintf(fp, "        [-dq]                           %s",MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT);
       }
-
+      fprintf(fp, "\n");
       fprintf(fp, "destin_id_list           queue[,queue,...]\n");
       fprintf(fp, "pe_list                  pe[,pe,...]\n");
       fprintf(fp, "job_identifier_list      [job_id|job_mame|pattern]{, [job_id|job_mame|pattern]}\n");

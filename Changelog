@@ -1,3 +1,7 @@
+SG-2003-01-07-1: Enhancem:  added qstat -qs and qselect -qs feature.
+                 Changed:   qstat, man-pages
+                 Review:    pending
+
 DT-2004-01-07-1: Bugfix:    Fixed install for -secure
                  Changed:   util/arch_variables, inst_sge
 

@@ -139,8 +139,35 @@
 
 #define QINSTANCE_STATE_LAYER TOP_LAYER
 
-static bool
-qinstance_has_state(const lListElem *this_elem, u_long32 bit);
+static const u_long32 states[] = {
+      QI_ALARM,
+      QI_SUSPEND_ALARM,
+      QI_CAL_SUSPENDED,
+      QI_CAL_DISABLED,
+      QI_DISABLED,
+      QI_UNKNOWN,
+      QI_ERROR,
+      QI_SUSPENDED_ON_SUBORDINATE,
+      QI_SUSPENDED,
+      QI_AMBIGUOUS,
+      QI_ORPHANED, 
+      0
+   };
+   
+static const char letters[] = {
+      'a',
+      'A',
+      'C',
+      'D',
+      'd',
+      'u',
+      'E',
+      'S',
+      's',
+      'c',
+      'o',
+      '\0'
+   };
 
 static void 
 qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit);
@@ -158,9 +185,34 @@ qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit)
    lSetUlong(this_elem, QU_state, state);
 }
 
-static bool 
-qinstance_has_state(const lListElem *this_elem, u_long32 bit) 
-{
+
+
+/****** sge_qinstance_state/qinstance_has_state() ******************************
+*  NAME
+*     qinstance_has_state() -- checks a qi for a given states 
+*
+*  SYNOPSIS
+*     bool qinstance_has_state(const lListElem *this_elem, u_long32 bit) 
+*
+*  FUNCTION
+*     Takes a state mask and a queue instance and checks wheather the queue
+*     is in at least one of the states. If the state mask contains U_LONG32_MAX
+*     the function will always return true.
+*
+*  INPUTS
+*     const lListElem *this_elem - queue instance 
+*     u_long32 bit               - state mask 
+*
+*  RESULT
+*     bool - true, if the queue instance has one of the requested states.
+*
+*  NOTES
+*     MT-NOTE: qinstance_has_state() is MT safe 
+*
+*******************************************************************************/
+bool qinstance_has_state(const lListElem *this_elem, u_long32 bit) {
+   if (bit == U_LONG32_MAX)
+      return true;
    return (lGetUlong(this_elem, QU_state) & bit) ? true : false;
 }
 
@@ -295,37 +347,67 @@ qinstance_state_as_string(u_long32 bit)
    return ret;
 }
 
+
+/****** sge_qinstance_state/qinstance_state_from_string() **********************
+*  NAME
+*     qinstance_state_from_string() -- takes a state string and returns an int 
+*
+*  SYNOPSIS
+*     u_long32 qinstance_state_from_string(const char* sstate) 
+*
+*  FUNCTION
+*     Takes a string with character representations of the different states and
+*     generates a mask with the different states.
+*
+*  INPUTS
+*     const char* sstate - each character one  state
+*
+*  RESULT
+*     u_long32 - new state or 0, if no state was set
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: qinstance_state_from_string() is MT safe 
+*
+*******************************************************************************/
+u_long32 qinstance_state_from_string(const char* sstate, lList **answer_list){
+   u_long32 ustate = 0;
+   int i;
+   int y;
+   bool found = false;
+   DENTER(QINSTANCE_STATE_LAYER, "qinstance_state_from_string");
+
+   i=-1;
+   while(sstate[++i]!='\0'){
+      y=-1;
+      found = false;
+      while(letters[++y]!='\0'){
+         if (letters[y] == sstate[i]) {
+            found = true;
+            ustate |=  states[y];
+            break;
+         }
+      }
+      if (!found){
+         answer_list_add(answer_list, MSG_QSTATE_UNKNOWNCHAR, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return U_LONG32_MAX;
+      }
+   }
+
+   if (!found)
+      ustate = U_LONG32_MAX;
+
+   DEXIT;
+   return ustate;
+}
+
+
 bool 
 qinstance_state_append_to_dstring(const lListElem *this_elem, dstring *string)
 {
-   static const u_long32 states[] = {
-      QI_ALARM,
-      QI_SUSPEND_ALARM,
-      QI_CAL_SUSPENDED,
-      QI_CAL_DISABLED,
-      QI_DISABLED,
-      QI_UNKNOWN,
-      QI_ERROR,
-      QI_SUSPENDED_ON_SUBORDINATE,
-      QI_SUSPENDED,
-      QI_AMBIGUOUS,
-      QI_ORPHANED, 
-      0
-   };
-   static const char letters[] = {
-      'a',
-      'A',
-      'C',
-      'D',
-      'd',
-      'u',
-      'E',
-      'S',
-      's',
-      'c',
-      'o',
-      '\0'
-   };
    bool ret = true;
    int i = 0;
 

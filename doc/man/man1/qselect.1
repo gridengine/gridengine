@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2003/07/30 12:21:49 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2004/01/07 15:12:32 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSELECT 1 "$Date: 2003/07/30 12:21:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSELECT 1 "$Date: 2004/01/07 15:12:32 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qselect \- select queues.
 .\"
@@ -45,6 +45,8 @@ qselect \- select queues.
 .B -pe pe_name,...
 ] [
 .B -q queue,...
+] [
+.B -s {r|p|s|z|hu|ho|hs|hj|ha|h}[+]
 ] [
 .B -U user,...
 ]
@@ -82,6 +84,9 @@ Directly specifies the queues to be included in the output. This option
 usually is only meaningful in conjunction with another
 .I qselect
 option to extract a subset of queue names from a list given by \fB\-q\fP.
+.\"
+.IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
+This option allows to filter for queue instances in certain states.
 .\"
 .IP "\fB\-U user,...\fP"
 Includes the queues to which the specified users have access in the

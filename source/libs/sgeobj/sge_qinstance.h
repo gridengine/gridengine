@@ -48,6 +48,8 @@ qinstance_list_locate(const lList *this_list, const char *hostname,
 const char *
 qinstance_get_name(const lListElem *this_elem, dstring *string_buffer);
 
+u_long32 qinstance_state_from_string(const char* state, lList **answer_list);
+
 bool
 qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                                         lList **answer_list);

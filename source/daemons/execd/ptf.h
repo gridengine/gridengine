@@ -42,17 +42,18 @@
 #include <sys/types.h>
 
 #if defined(IRIX)
+#  include <sys/types.h>
 #  include <sys/time.h>
 
    /* define some IRIX 6.[23] stuff not available in IRIX 6.4 */
    struct sched_deadline {
-        timestruc_t             dl_period;      /* size of deadline interval */
-        timestruc_t             dl_alloc;       /* cpu wanted in interval */
+        timespec_t             dl_period;      /* size of deadline interval */
+        timespec_t             dl_alloc;       /* cpu wanted in interval */
         /*
          * These fields are placeholders for future functionality.
          * They currently should be set to zero.
          */
-        timestruc_t             dl_deadline;    /* if deadline/period differ */
+        timespec_t              dl_deadline;    /* if deadline/period differ */
         int                     dl_flags;       /* control flags */
    };
 #  define DEADLINE 15

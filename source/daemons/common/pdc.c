@@ -118,11 +118,11 @@ int main(int argc,char *argv[])
 #include "sge_stat.h"
 #endif
 
-#if defined(LINUX) || defined(ALPHA) || defined(IRIX6) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD)
+#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD)
 #include "sge_os.h"
 #endif
 
-#if defined(IRIX6)
+#if defined(IRIX)
 #  define F64 "%lld"
 #  define S64 "%lli"
 #elif defined(ALPHA)
@@ -215,7 +215,7 @@ getpagesize(void)
 #  define MICROSEC2SECS(msecs) ((double)(msecs)/(double)1000000)
 #endif   
 
-#if defined(IRIX6)
+#if defined(IRIX)
 
 /*
  * This is a structure containing all the fields that we need
@@ -730,9 +730,10 @@ get_gmt(void)
    return now.tv_sec;
 }
 
+#ifdef PDC_STANDALONE
 static psSys_t sysdata;
 
-#if defined(IRIX6) || defined(CRAY)
+#if defined(IRIX) || defined(CRAY)
 static struct {
    int initialized;
    double utime;
@@ -742,6 +743,7 @@ static struct {
    double wtime;
    double ttime;
 } base;
+#endif
 #endif
 
 
@@ -769,7 +771,7 @@ psSetCollectionIntervals(int jobi, int prci, int sysi)
 #ifdef PDC_STANDALONE
 int psRetrieveSystemData(void)
 {
-#if defined(IRIX6)
+#if defined(IRIX)
    struct sysinfo si;
    struct rminfo rmi;
    struct minfo mi;
@@ -812,7 +814,7 @@ int psRetrieveSystemData(void)
    /* Time of last snap */
    sysdata.sys_tstamp = time_stamp;
 
-#if defined(IRIX6)
+#if defined(IRIX)
 
 
    if (sysmp(MP_SAGET, MPSA_SINFO, &si, sizeof(si))<0) {
@@ -1207,7 +1209,7 @@ get_numjobs(void)
    return count;
 }
 
-#ifdef IRIX6
+#ifdef IRIX
 
 /* only used on IRIX 6 */
 typedef struct {
@@ -1307,7 +1309,7 @@ in_pidlist(pid_t *pidlist, int max, pid_t pid)
    return 0;
 }
 
-#endif /* IRIX6 */
+#endif /* IRIX */
 
 static void
 free_process_list(job_elem_t *job_elem)
@@ -1324,13 +1326,13 @@ free_process_list(job_elem_t *job_elem)
 static void
 free_job(job_elem_t *job_elem)
 {
-#ifdef IRIX6
+#ifdef IRIX
    lnk_link_t *currp;
 #endif
 
    free_process_list(job_elem);
 
-#ifdef IRIX6
+#ifdef IRIX
    /* free arse list */
    while((currp=job_elem->arses.next) != &job_elem->arses) {
       LNK_DELETE(currp);
@@ -1349,7 +1351,7 @@ psRetrieveOSJobData(void)
    time_t time_stamp = get_gmt();
    static time_t next_time, pnext_time;
 
-#if defined(IRIX6)
+#if defined(IRIX)
    lnk_link_t arsess_list;
    arsess_elem_t *arse_elem;
 #elif defined(CRAY)
@@ -1369,7 +1371,7 @@ psRetrieveOSJobData(void)
    }
    next_time = time_stamp + ps_config.job_collection_interval;
 
-#if defined(IRIX6)
+#if defined(IRIX)
 
    /* go get all the array sessions */
 
@@ -1590,7 +1592,7 @@ psRetrieveOSJobData(void)
          continue;  /* skip precreated jobs */
       }
 
-#if defined(IRIX6)
+#if defined(IRIX)
 
       if ((arse_elem = find_arsess(&arsess_list, job->jd_jid)) == NULL) {
 
@@ -2040,7 +2042,7 @@ psRetrieveOSJobData(void)
 #endif
    }
 
-#ifdef IRIX6
+#ifdef IRIX
    free_arsess_list(&arsess_list);
 #endif
 
@@ -2057,7 +2059,9 @@ static time_t start_time;
 int psStartCollector(void)
 {
    static int initialized = 0;
+#ifdef PDC_STANDALONE
    int ncpus = 0;
+#endif   
 
 #if defined(ALPHA)
    int start=0;
@@ -2078,15 +2082,20 @@ int psStartCollector(void)
    LNK_INIT(&job_list);
    start_time = get_gmt();
 
+
+#ifdef PDC_STANDALONE
    /* Length of struct (set@run-time) */
    sysdata.sys_length = sizeof(sysdata);
+#endif
 
    /* page size */
    pagesize = getpagesize();
 
    /* retrieve static parameters */
-#if defined(LINUX) || defined(ALINUX) || defined(IRIX6) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD)
+#if defined(LINUX) || defined(ALINUX) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD)
+#ifdef PDC_STANDALONE
    ncpus = sge_nprocs();
+#endif   
 #elif defined(ALPHA)
    {
       /* Number of CPUs */
@@ -2128,7 +2137,9 @@ int psStartCollector(void)
    ncpus = 0; /* Set in psRetrieveSysData because it is dynamic on Cray */
 
 #endif
+#ifdef PDC_STANDALONE
    sysdata.sys_ncpus = ncpus;
+#endif   
    sprintf(ps_errstr, MSG_SGE_PSSTARTCOLLECTORSUCCESSFULLYCOMPLETED );
    return 0;
 }
@@ -2299,7 +2310,7 @@ struct psJob_s *psGetOneJob(JobID_t JobID)
 
 struct psJob_s *psGetAllJobs(void)
 {
-   psJob_t *rjob, *jobs, *ua;
+   psJob_t *rjob, *jobs;
    lnk_link_t *curr;
    long rsize;
    uint64 jobcount = 0;
@@ -2323,7 +2334,7 @@ struct psJob_s *psGetAllJobs(void)
    }
 
    /* allocate space for return data */
-   if ((ua = rjob = (psJob_t *)malloc(rsize)) == NULL)
+   if ((rjob = (psJob_t *)malloc(rsize)) == NULL)
       return rjob;
   
    /* allign adress */
@@ -2422,7 +2433,7 @@ print_job_data(psJob_t *job)
    printf("jd_length=%d\n", job->jd_length);
    printf("jd_uid="uid_t_fmt"\n", job->jd_uid);
    printf("jd_gid="uid_t_fmt"\n", job->jd_gid);
-#if defined(IRIX6) || defined(CRAY)
+#if defined(IRIX) || defined(CRAY)
    printf("jd_acid="F64"\n", job->jd_acid);
 #endif
    printf("jd_tstamp=%s\n", ctime(&job->jd_tstamp));
@@ -2431,14 +2442,14 @@ print_job_data(psJob_t *job)
    printf("jd_etime=%8.3f\n", job->jd_etime);
    printf("jd_utime_a=%8.3f\n", job->jd_utime_a);
    printf("jd_stime_a=%8.3f\n", job->jd_stime_a);
-#if defined(IRIX6)
+#if defined(IRIX)
    printf("jd_bwtime_a=%8.3f\n", job->jd_bwtime_a);
    printf("jd_rwtime_a=%8.3f\n", job->jd_rwtime_a);
 #endif
    printf("jd_srtime_a=%8.3f\n", job->jd_srtime_a);
    printf("jd_utime_c=%8.3f\n", job->jd_utime_c);
    printf("jd_stime_c=%8.3f\n", job->jd_stime_c);
-#if defined(IRIX6)
+#if defined(IRIX)
    printf("jd_bwtime_c=%8.3f\n", job->jd_bwtime_c);
    printf("jd_rwtime_c=%8.3f\n", job->jd_rwtime_c);
 #endif

@@ -32,9 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
-#ifdef SGE_MT
 #include <pthread.h>
-#endif
 
 #include "cull.h"
 #include "sgermon.h"
@@ -65,10 +63,7 @@
 #include "msg_gdilib.h"
 #include "sge_hostname.h"
 #include "cl_commlib.h"
-
-#ifdef SGE_MT
 #include "sge_mtutil.h"
-#endif
 
 #ifdef CRYPTO
 #include <openssl/evp.h>

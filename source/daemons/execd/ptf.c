@@ -41,23 +41,6 @@
 
 #include <sys/types.h>
 
-#include "sgermon.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge.h"
-#include "basis_types.h"
-#include "sge_language.h"
-#include "sge_conf.h"
-#include "msg_common.h"
-#include "msg_execd.h"
-#include "sgedefs.h"
-#include "exec_ifm.h"
-#include "pdc.h"
-#include "sge_feature.h"
-#include "sge_job.h"
-#include "sge_uidgid.h"
-#include "sge_pe_task.h"
-
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
 #if defined(IRIX) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST)
@@ -90,6 +73,8 @@
 #  include <sys/resource.h>
 #  include <sys/systeminfo.h>
 #  include <sys/sched.h>
+#  include <sys/sysmp.h>
+#  include <sys/schedctl.h>
 #endif
 
 #ifdef CRAY
@@ -119,6 +104,23 @@ int setpriority(int which, id_t who, int prio);
 #include "commlib.h"
 
 #include "ptf.h"
+
+#include "sgermon.h"
+#include "sge_time.h"
+#include "sge_log.h"
+#include "sge.h"
+#include "basis_types.h"
+#include "sge_language.h"
+#include "sge_conf.h"
+#include "msg_common.h"
+#include "msg_execd.h"
+#include "sgedefs.h"
+#include "exec_ifm.h"
+#include "pdc.h"
+#include "sge_feature.h"
+#include "sge_job.h"
+#include "sge_uidgid.h"
+#include "sge_pe_task.h"
 
 /*
  *
@@ -1499,6 +1501,7 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 int ptf_job_started(osjobid_t os_job_id, const char *task_id_str, 
                     lListElem *new_job, u_long32 jataskid)
 {
+
    lListElem *job;
 
    DENTER(TOP_LAYER, "ptf_job_started");

@@ -363,14 +363,12 @@ set   LD_WRAPPER   = ""
 set   CXX          = CC
 set   FC           = f77
 set   LFLAGS       = "-L."
-set   LIBS         = "-lm"
+set   LIBS         = "-lm -lpthread"
 set   OPTIMIZATION = 1
 set   GETTEXTBASE = "$SOURCE/3rdparty/gettext"
 set   TPLIB       = ""	# 3rdparty libs
 set   MAKESTRPTIME = 0
 set   MAKEFNMATCH = 0
-set   MTCFLAGS    = "-DSGE_MT"
-set   MTLFLAGS    = ""
 set   LOADAVGLIBS = ""
 set   XLFLAGS     = ""
 set   XLIBS       = ""
@@ -380,7 +378,6 @@ set   ARFLAGS     = rscv
 set   MAKE        = make
 set   PARALLEL    = ""
 set   USE_QMAKE   = 0
-set   MT          = 1 
 set   MESSAGES    = "../dist/locale/gridenginenotuniq.pot"
 set   MESSAGES_BIN = "gridengine.mo"
 set   SGE_DEPEND  = 0
@@ -510,7 +507,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-adoc":
       set CORE   = 0
-      set MT     = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -684,7 +680,6 @@ while ($#argv >= 1 && $?found)
       set QTCSH      = 0
       set REMOTE     = 0
       set SGE_DEPEND = 1
-      set MT = 0
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -854,12 +849,10 @@ case AIX43:
       set OFLAG    = "-O"
    endif
 
-   set MT_FLAGS = "-DGETHOSTBYADDR_M"
-
    set CC       = xlc_r
    set CXX      = xlC_r
    set MAKE     = make
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $MT_FLAGS $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
@@ -872,10 +865,7 @@ case AIX43:
    set SHAREDLD = "$SOURCE/scripts/ldAix"
    set SHARED_CFLAGS = ""
    set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
-
 case AIX51:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3 -qstrict -qmaxmem=8192"
@@ -899,13 +889,7 @@ case AIX51:
    set SHAREDLD = "xlc_r"
    set SHARED_CFLAGS = ""
    set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry $LFLAGS"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-lpthread"
    breaksw
-
 case ALPHA5:
    set COMPILE_DC = 1
 
@@ -966,14 +950,7 @@ case ALPHA5:
       set NOERR_CFLAG = "-w"
       set GCC_NOERR_CFLAGS = "$CFLAGS"
    endif
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-pthread"
-
    breaksw
-
 case DARWIN:
    set COMPILE_DC = 1
 
@@ -1046,18 +1023,12 @@ case DARWIN:
       breaksw
    endsw
 
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOSP = "-Wno-strict-prototypes"
 
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-lpthread"
-
    unset REL
    breaksw
-
 case FREEBSD_*:
    set COMPILE_DC = 1
    set MAKE = gmake
@@ -1083,25 +1054,24 @@ case FREEBSD_*:
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = " -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set RM	= "rm -f"
    breaksw 
 
 case IRIX65:
-   set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
-      set OFLAG = "-O2"
+      set OFLAG = "-O3"
    else
       set OFLAG = "-O"
    endif
 
+   set DLLIB = ""
+
    set COMPILE_DC = 1
    set MAKE = gmake
 
-   set CFLAGS   = "$OFLAG -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -n32 -mips3 -DIRIX -D$BUILDARCH -diag_suppress 1552,1185 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "-n32 -mips3 $DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set LOADAVGLIBS = "-lelf"
    set XMTDEF   = ""
@@ -1117,10 +1087,7 @@ case IRIX65:
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-KPIC"
    set SHARED_LFLAGS = "-L. -shared"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
-
 case HP10:
    set MAKE = gmake
    set DLLIB = ""
@@ -1139,8 +1106,6 @@ case HP10:
    endif
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    set SHAREDLD = ld
    if ( $CC == gcc ) then
@@ -1171,20 +1136,13 @@ case HP11:
    set OFLAG = "-O"
    set DLLIB = ""
    if ( $CC == gcc ) then
-      if ( $OPTIMIZATION == 0 ) then
-         set OFLAG = "-O2"
-      endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR $DEBUG_FLAG $CFLAGS"
    else
-      if ( $OPTIMIZATION == 1 ) then
-         set OFLAG = "+O3"
-      endif
+      set OFLAG = "+O3"
       set CXX = "aCC"
-      set CFLAGS = "-Ae $OFLAG -DHPUX -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae +DD32 $OFLAG -DHPUX -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR $DEBUG_FLAG $CFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    set SHAREDLD = ld
    if ( $CC == gcc ) then
@@ -1208,11 +1166,7 @@ case HP11:
 
    set SHAREDEXT = ".sl"
    set LFLAGS = "-L. $LFLAGS"
-
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-lpthread"
    breaksw
-
 case HP1164:
    set MAKE = gmake
    set OFLAG = "-O"
@@ -1232,8 +1186,6 @@ case HP1164:
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
    set SHAREDLD = ld
    if ( $CC == gcc ) then
       set SHARED_CFLAGS = "-fPIC"
@@ -1256,9 +1208,6 @@ case HP1164:
 
    set SHAREDEXT = ".sl"
    set LFLAGS = "-L. $LFLAGS"
-
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-lpthread"
    breaksw
 
 case ALINUX:
@@ -1316,7 +1265,7 @@ case LINUXIA64:
 
    set XMTDEF   = ""
 
-   if ($TARGET_BITS == TARGET_32BIT) then
+   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX) then
       set XLIBD    = "-L/usr/X11R6/lib"
    else
       set XLIBD    = "-L/usr/X11R6/lib64"
@@ -1335,18 +1284,7 @@ case LINUXIA64:
       set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
       set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    endif
-
-   if ($BUILDARCH != ALINUX) then
-      set MTCFLAGS = "${MTCFLAGS}"
-   else
-      set MTCFLAGS = "${MTCFLAGS} -pthread"
-   endif
-
-   set MTLFLAGS = "-lpthread"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
-
 case NECSX4:
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
@@ -1359,7 +1297,6 @@ case NECSX4:
    set MAKE = make
    set CFLAGS = "-DNECSX4 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "-hfloat0 $DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set XMTDEF   = ""
@@ -1387,7 +1324,6 @@ case NECSX5:
    set CFLAGS_NOOPT = "-DNECSX5 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -D_REENTRANT -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
    set CFLAGS = "$CFLAGS_NOOPT $OFLAG"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = ""
@@ -1398,8 +1334,6 @@ case NECSX5:
       exit 1
    endif
    set DLLIB = ""
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-lpthread"
    breaksw
 
 case SLINUX:
@@ -1434,13 +1368,8 @@ case SLINUX:
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
-
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set MTCFLAGS = "${MTCFLAGS}"
-   set MTLFLAGS = "-lpthread"
    breaksw
 
 case SOLARIS:
@@ -1543,10 +1472,6 @@ case SOLARIS86:
 
    set RANLIB   = "echo"
    set GCC_NOERR_CFLAGS = "$CFLAGS -w"
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
-
-   set MTCFLAGS = "${MTCFLAGS} -mt"
-   set MTLFLAGS = "-lpthread"
    breaksw
 
 case UNICOS*:
@@ -1581,7 +1506,6 @@ case UNICOS*:
    endsw
    set XCFLAGS  = "$XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
-   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set COMPILE_DC = 1
    if ( $SHAREDLIBS == 1 ) then
       echo creating shared libs not yet supported on $BUILDARCH
@@ -1821,16 +1745,16 @@ if ( "$CORE" == 1 ) then
    cd $COMPILE_ARCH
 
    echo ________C_O_R_E__S_Y_S_T_E_M_________
-   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
        "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-       "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
+       "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
        "GCC_NOSP=$GCC_NOSP" \
        "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
        "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
@@ -1864,7 +1788,7 @@ if ( "$QMON" == 1 ) then
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" \
       "CFLAGS=$CFLAGS" "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" "KRBLIBS=$KRBLIBS" \
-      "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "TPLIB=$TPLIB" \
       "MEMCFLAG=$MEMCFLAG"  \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
@@ -1889,9 +1813,9 @@ if ( "$QMON" == 1 ) then
        "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-       "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
+       "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
        "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
        "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
        "INTERACTTARGETS=$INTERACTTARGETS" \
@@ -1927,7 +1851,7 @@ if ( "$REMOTE" == 1) then
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
       "CFLAGS=$CFLAGS_REMOTE" "LIBS=$LIBS" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
-      "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv
 
@@ -1976,7 +1900,7 @@ if ( "$QTCSH" == 1) then
       setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}
    endif
 
-   set SGE_LIBS = "-lsge -lpthread -lcomm -lcommlists"
+   set SGE_LIBS = "-lsge -lcomm -lcommlists -lpthread"
 
    if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"

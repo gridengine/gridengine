@@ -234,7 +234,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=/usr/man:/usr/contrib/man:/usr/local/man
       SHARED_LIBRARY_PATH="SHLIB_PATH"
       ;;
-   aix42|aix43)
+   aix42|aix43|aix51)
       DEFAULTMANPATH=/usr/man
       SHARED_LIBRARY_PATH="LIBPATH"
       ;;

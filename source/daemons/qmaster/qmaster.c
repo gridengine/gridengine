@@ -825,7 +825,8 @@ lList *report_list
    lListElem *hep = NULL;
    u_long32 rep_type;
    lListElem *report;
-   int ret = 0, this_seqno, last_seqno;
+   int ret = 0;
+   u_long32 this_seqno, last_seqno;
    u_long32 rversion;
 
    DENTER(TOP_LAYER, "sge_c_report");
@@ -866,8 +867,8 @@ lList *report_list
    if ((this_seqno < last_seqno && (last_seqno - this_seqno) <= 9000) &&
       !(last_seqno > 9990 && this_seqno < 10)) {
       /* this must be an old report, log and then ignore it */
-      DPRINTF(("received old load report (%d < %d) from exec host %s\n", 
-         this_seqno, last_seqno+1, rhost));
+      DPRINTF(("received old load report ("U32CFormat"< "U32CFormat") from exec host %s\n", 
+         u32c(this_seqno), u32c(last_seqno+1), rhost));
       DEXIT;
       return;
    }

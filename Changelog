@@ -1,3 +1,7 @@
+CR-2003-04-08-3  Bugfix:    used wrong variable type (int) for return value
+                            of lGetUlong()
+                 Changed:   qmaster.c
+
 CR-2003-04-08-2  Testsuite: throughput test: 
                             - increased load_thresholds
                             - show filename of test results data in html

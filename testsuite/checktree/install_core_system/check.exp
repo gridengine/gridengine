@@ -1230,10 +1230,14 @@ proc setup_check_user_permissions {} {
      set my_command ""
      foreach host $ts_config(execd_nodes) {
         set execd_spooldir [get_execd_spool_dir $host]
-        puts $CHECK_OUTPUT "checking execd spool directory on $host: \"$execd_spooldir\""
-        set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir ; cd $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR" ]
+        puts $CHECK_OUTPUT "checking execd spool directory on $host (user=$user): \"$execd_spooldir\""
+        set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir" ]
         if { $prg_exit_state != 0 } {
-           set_error -1 "user $user has no read//exec permission to \"$execd_spooldir\" and \"$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR\" on host $host"
+           set_error -1 "user $user has no read//exec permission to \"$execd_spooldir\" on host $host: $output"
+        }
+        set output [ start_remote_prog "$host" "$user" "cd" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR" ]
+        if { $prg_exit_state != 0 } {
+           set_error -1 "user $user has no read//exec permission to \"$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR\" on host $host: $output"
         }
      }
   }

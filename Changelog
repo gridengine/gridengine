@@ -1,3 +1,11 @@
+CR-2005-04-06-0: Testsuite: install_core_system test:
+                               - splited mask check into two start_remote_prog
+                                 calls
+                               - add submit only hosts to submit host list at
+                                 execd installation
+                               - fixed bug in inst_sge version check handling
+                 Review:    MD
+
 EB-2005-04-05-0: Enhancem.: added loadsensor script for windows systems
                  Review:    HP
 

@@ -76,10 +76,16 @@ proc install_execd {} {
 
    set_error "0" "install_execd - no errors"
 
-   set catch_result [ catch { eval exec "cat $CHECK_PRODUCT_ROOT/inst_sge | grep \"SCRIPT_VERSION\" | cut -d\"=\" -f2" } INST_VERSION ]
+   set catch_result [ catch { eval exec "cat $ts_config(product_root)/inst_sge | grep \"SCRIPT_VERSION\" | cut -d\" -f2" } INST_VERSION ]
+   puts $CHECK_OUTPUT "inst_sge version: $INST_VERSION"
 
    if {! $check_use_installed_system} {
       set feature_install_options ""
+      foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
+         puts $CHECK_OUTPUT "do a qconf -as $elem ..."
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-as $elem" } result
+         puts $CHECK_OUTPUT $result
+      }
       if { $ts_config(product_feature) == "csp" } {
             set feature_install_options "-csp"
             set my_csp_host_list $ts_config(execd_nodes)
@@ -341,7 +347,7 @@ proc install_execd {} {
 
             -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK {
 
-               if { $INST_VERSION >= "4" } {
+               if { $INST_VERSION >= 4 } {
                   if { $LOCAL_ALREADY_CHECKED == 0 } {
                      set LOCAL_ALREADY_CHECKED 1
                      puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"

@@ -102,6 +102,8 @@ proc issue_1334_setup {} {
    
    add_queue "iz_1334" "@allhosts" queue_conf 1
    
+   after 2000
+   
    set_error 0 "ok"
 }
 
@@ -110,9 +112,10 @@ proc issue_1334_cleanup  {} {
    global ts_config
    global issue_1334_job_stdout_file issue_1334_job_stderr_file
    
+   delete_all_jobs
+   wait_for_end_of_all_jobs 180
    
    puts $CHECK_OUTPUT "delete test queue"
-   
    del_queue "iz_1334" "@allhosts" 0 1
    
    # delete the job stdout and stderr file

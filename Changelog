@@ -3,6 +3,15 @@ MD-2004-02-18-0: Bugfix:    - cleanup during execd uninst
                             - testsuite adaption
                  Changed:   inst_sgeee, testsuite
 
+CR-2004-02-18-1: Bugfix:    - qevent will not immediately try to re-register on
+                            event client timeout
+                            - 2nd started scheduler will exit
+                            - communication errors and event client timeout is
+                            are now handled when event client wants to get 
+                            events ( function: ec_get() )
+                 Changed:   event clients ( sge_schedd, qevent, qsub, japi lib)
+                 Review:    pending
+
 DT-2004-02-18-4: Bugfix:    Revamped JAPI signal handling to be more POSIX
                             friendly and less dangerous.
                             Reworked JAPI event client thread so that it doesn't

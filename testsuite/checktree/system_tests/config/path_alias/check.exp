@@ -89,12 +89,13 @@ proc init_level {} {
 proc path_alias_setup {} {
    
    global CHECK_JOB_OUTPUT_DIR
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_USER
    global PATH_ALIAS_OUTPUT1
    global PATH_ALIAS_OUTPUT2
    global CHECK_PRODUCT_ROOT
    global path_alias_test
    global env
+   global CHECK_CORE_EXECD
   
    set PATH_ALIAS_OUTPUT1 "$CHECK_JOB_OUTPUT_DIR/path_alias_output1"
    set PATH_ALIAS_OUTPUT2 "$CHECK_JOB_OUTPUT_DIR/path_alias_output2"
@@ -128,6 +129,21 @@ proc path_alias_setup {} {
            ([ file isfile ${file_name}] == 1) } {
          puts $CHECK_OUTPUT "moving original alias file to ${file_name}.sav"
          file rename ${file_name} ${file_name}.sav
+         foreach elem $CHECK_CORE_EXECD {
+            set counter 60
+            while { $counter > 0 } {
+               set result [start_remote_prog $elem $CHECK_USER "cat" "${file_name}"]
+               incr counter -1
+               if {  $prg_exit_state != 0 } {
+                  break;
+               }
+               sleep 1
+            }
+            if { $counter <= 0 } {
+               add_proc_error "path_alias_setup" "-1" "error moving file ${file_name} on host $elem"
+            }
+         } 
+
       }
       if { [ file isfile ${file_name}  ] != 1 } {
          set data(src-path,0)     "$PATH_ALIAS_OUTPUT1"
@@ -137,7 +153,30 @@ proc path_alias_setup {} {
          create_path_aliasing_file ${file_name} data 1
       }
    }
+   set cat_output ""
+   set old_cat_output ""
+   foreach elem $CHECK_CORE_EXECD {
+      set counter 60
+      while { $counter > 0 } {
+         set result [start_remote_prog $elem $CHECK_USER "cat" "${file_name}"]
+         incr counter -1
+         if { $prg_exit_state == 0 } {
+            break;
+         }
+         sleep 1
+      }
+      if {  $prg_exit_state != 0 } {
+         add_proc_error "path_alias_setup" "-1" "error reading file ${file_name} on host $elem"
+      }
+       
+      lappend cat_output $result
+   }
 
+   foreach elem $cat_output {
+      if { [string compare $elem $result] != 0 } {
+         add_proc_error "path_alias_setup" "-1" "error compareing output of cat command (file ${file_name})\n$result\n$elem\n"
+      }
+   }
 
    set_error 0 "ok"
 }

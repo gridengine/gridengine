@@ -1,3 +1,10 @@
+CR-2001-10-26-1: Testsuite:
+                  - bugfix for path_alias check: problems with file
+                    creating on NFS directory. The check will now make
+                    sure that the correct/updated path_alias files are 
+                    used (diffing file output on each execution host in
+                    setup procedure). 
+
 CR-2001-10-26-0: Source: 
                   - Added variable initialization
                   - Removed double defined message

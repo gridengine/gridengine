@@ -1,3 +1,6 @@
+AD-2004-02-20-1: Cleanup:   Did remove obsolete code.
+                 Changed:   shadowd
+
 AH-2004-02-20-0: Bugfix:    Made libdrmaa.so again a self-contained library 
                             that requires no other Grid Engine libraries to
                             be linked against DRMAA application.

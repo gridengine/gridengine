@@ -104,7 +104,6 @@ static int host_in_file(const char *, const char *);
 static void parse_cmdline_shadowd(int argc, char **argv);
 static int shadowd_is_old_master_enrolled(char *oldqmaster);
 
-#ifdef ENABLE_NGC
 static int shadowd_is_old_master_enrolled(char *oldqmaster)
 {
    cl_com_handle_t* handle = NULL;
@@ -141,71 +140,6 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
    DEXIT;
    return is_up_and_running;
 }
-#else
-static int shadowd_is_old_master_enrolled(char *oldqmaster)
-{
-   unsigned int alive = 0;
-   int enroll_ret;
-   int ret = 0;
-
-   DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
-
-   DPRINTF(("Try to enroll to previous master commd on host "SFQ"\n", oldqmaster));
-   set_commlib_param(CL_P_COMMDHOST, 0, oldqmaster, NULL);
-   set_commlib_param(CL_P_NAME, 0, prognames[SHADOWD], NULL);
-   set_commlib_param(CL_P_ID, 1, NULL, NULL);
-
-   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
-      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
-   }
- 
-   enroll_ret = enroll();   
-
-   switch (enroll_ret) {
-   case 0:
-      DPRINTF(("Ask commd on host "SFQ" for qmaster comproc\n", oldqmaster));
-      alive = ask_commproc(oldqmaster, prognames[QMASTER], 0);
-      leave_commd();
-      if (alive == 0) {
-         DPRINTF(("-> found comproc entry\n"));
-         ret = 1; 
-      }
-      break;   
-   case COMMD_NACK_CONFLICT:
-      /* already registered on commd host, assume he is running */
-      ret = 1;
-      break;
-
-
-
-   case CL_CONNECT:
-      /* No commd on that host - let's hope there is also no qmaster */
-   case CL_ALREADYDONE:
-      /* We are already enrolled */
-   case CL_RESOLVE:
-      /* commlib couldn't resolve name if commd host */
-   case CL_SERVICE:
-      /* getservbyname() failed */
-   case COMMD_NACK_PERM:
-      /* we didn't use reserved port, but commd expects it */
-   case COMMD_NACK_UNKNOWN_HOST:
-      /* commd couldn't resolve our name */
-   default:
-      /* Something else went wrong, usually a reason to try again */
-      ret = 0;
-      break;
-   }
-
-   if (ret) {
-      DPRINTF(("Assume that old master is still running\n"));
-   } else {
-      DPRINTF(("No Master found\n"));
-   }
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 /*----------------------------------------------------------------------------*/
 int main(

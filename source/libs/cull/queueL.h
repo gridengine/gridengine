@@ -47,13 +47,13 @@ enum {
 
 
 LISTDEF( QueueT )
-   SGE_XSTRING   ( Q_name )
-   SGE_HOST     ( Q_hostname )                    /* CR - hostname change */
-   SGE_XINT      ( Q_load )
-   SGE_XULONG    ( Q_status )
-   SGE_XLIST     ( Q_ownerlist, OwnerT )
-   SGE_XLIST     ( Q_complexname, ComplexNameT )
-   SGE_REF       ( Q_ref )
+   SGE_STRING   ( Q_name, CULL_DEFAULT )
+   SGE_HOST     ( Q_hostname, CULL_DEFAULT )                    /* CR - hostname change */
+   SGE_INT      ( Q_load, CULL_DEFAULT )
+   SGE_ULONG    ( Q_status, CULL_DEFAULT )
+   SGE_LIST     ( Q_ownerlist, OwnerT , CULL_DEFAULT)
+   SGE_LIST     ( Q_complexname, ComplexNameT, CULL_DEFAULT )
+   SGE_REF       ( Q_ref, QueueT, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF( QueueN )

@@ -41,8 +41,8 @@ enum {
 };
 
 LISTDEF( ComplexAttributeT )
-   SGE_XSTRING   ( A_name )
-   SGE_XSTRING   ( A_value )
+   SGE_STRING   ( A_name, CULL_DEFAULT )
+   SGE_STRING   ( A_value, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF( ComplexAttributeN )

@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
       UNDUMP, WHEREARGS, NM2STR, BITMASK, SPLIT, UNIQ, COPYENUM, REFERENCE
    };
    int scene, i = 0;
-   char *cp;
+   const char *cp;
 
    lList *hostlist = NULL, *queuelist = NULL, *joinedlist = NULL, *joinedsublist = NULL,
     *selectedlist = NULL, *ownerlist[3];
@@ -707,7 +707,8 @@ int main(int argc, char *argv[])
       cp = lNm2Str(Q_name);
       printf("Worked ok cp = %s, Q_name %d == lStr2Nm %d\n",
              cp, Q_name, lStr2Nm(cp));
-      printf("Nr.: %d Name: %s\n", i = lStr2Nm("Q_complexname"), lNm2Str(i));
+      i = lStr2Nm("Q_complexname");
+      printf("Nr.: %d Name: %s\n", i, lNm2Str(i));
       break;
 
    case BITMASK:

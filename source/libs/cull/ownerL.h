@@ -35,6 +35,10 @@
 #include "boundaries.h"
 #include "cull.h"
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 enum {
    O_owner = O_LOWERBOUND,    /* THIS IS VERY IMPORTANT */
         O_group
@@ -42,8 +46,8 @@ enum {
 
 
 LISTDEF( OwnerT )
-   SGE_XSTRING   ( O_owner )
-   SGE_XSTRING   ( O_group )
+   SGE_STRING   ( O_owner, CULL_DEFAULT )
+   SGE_STRING   ( O_group, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF( OwnerN )

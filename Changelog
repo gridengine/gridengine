@@ -1,3 +1,6 @@
+AA-2001-11-19-0: Qmon core dump in sharetree for empty sharetree when
+                 using Find
+
 JG-2001-11-15-0: Performance/Scalability optimization: 
                  Defined hash tables on a number of objects to speed up 
                  search operations.
@@ -11,13 +14,17 @@ EB-2001-11-13-0: Bugfix (Issue #92; Bugtraq #4525963):
                  Modified binaries:
                   - qmaster  
 
+AA-2001-11-09-0: rename of commd constants to resolve namespace conflicts for 
+                 perlgui
+                 aimk -perlgui switch to build perlgui
+                 security changes work in progress
+
 CR-2001-11-08-0: Testsuite:
                     - adapted default haftime scheduler parameter from 24 to 168
                     - new debug parameters chanched behaviour of performance 
                       test when calling open_remote_spawn_process - fixed
                     - changed deviation value for share tree check from 1% to 2%
                       
-
 CR-2001-11-08-0: Testsuite:
                     - new debuging options:
                       menu -> new points 20 and 21 

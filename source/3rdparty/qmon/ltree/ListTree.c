@@ -2998,7 +2998,11 @@ char *name;
    }
    return ret;
 #endif
-   return ListTreeFindPath(w, item, NULL, name, 0);
+
+   if (!item)
+      return NULL;
+   else   
+      return ListTreeFindPath(w, item, NULL, name, 0);
 }
 
 

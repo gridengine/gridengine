@@ -781,8 +781,12 @@ XtPointer cld, cad;
    strcpy(name, "");
    status = XmtAskForString(w, "xmtAskForString", "@{Enter item name}", name, 256, NULL);
 
-   if (status) {
+   if (status && name[0] != '\0') {
       item = ListTreeFindChildName(tree, ListTreeFirstItem(tree), name);
+      if (!item) {
+         DEXIT;
+         return;
+      }   
       strncpy(search_for, name, 256);
       matches = NULL;
       /*
@@ -795,7 +799,6 @@ XtPointer cld, cad;
    else {
       strcpy(search_for, "");
    }   
-      
 
    DEXIT;
 }

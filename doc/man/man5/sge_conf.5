@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/03/19 15:02:26 $     Revision: $Revision: 1.28 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/11 00:41:38 $     Revision: $Revision: 1.29 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/03/19 15:02:26 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/11 00:41:38 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1057,7 +1057,7 @@ for further information about sharelog.
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
 number of finshed jobs being stored. If this maximum number is reached, the
-eldest finshed job will be discarded for every now job being added to the
+eldest finshed job will be discarded for every new job being added to the
 finshed job list.
 .PP
 Changing \fBfinished_jobs\fP will take immediate effect.

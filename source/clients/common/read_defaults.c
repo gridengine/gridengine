@@ -84,10 +84,6 @@ static char *def_files[3 + 1];
 *                                parse_script_file, see there
 *     char **envp      - environment pointer 
 *
-*  NOTES
-*     path.sge_root and me.user_name will be used by this function
-*
-*     problem: make user a parameter?
 *******************************************************************************/
 void opt_list_append_opts_from_default_files(lList **pcmdline, 
                                              lList **answer_list,
@@ -110,9 +106,9 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    }
 
    /* the sge root defaults file */
-   def_files[0] = malloc(strlen(path.cell_root) + 
+   def_files[0] = malloc(strlen(path_state_get_sge_root()) + 
                          strlen(SGE_COMMON_DEF_REQ_FILE) + 2);
-   sprintf(def_files[0], "%s/%s", path.cell_root, SGE_COMMON_DEF_REQ_FILE);
+   sprintf(def_files[0], "%s/%s", path_state_get_sge_root(), SGE_COMMON_DEF_REQ_FILE);
 
    /*
     * the defaults file in the user's home directory

@@ -115,10 +115,10 @@ void sge_setup_sge_execd()
    sge_switch2start_user();
    unlink(TMP_ERR_FILE_EXECD);
    sge_switch2admin_user();
-   sge_log_set_auser(1);
+   log_state_set_log_as_admin_user(1);
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
            uti_state_get_unqualified_hostname(), ERR_FILE);
-   error_file = execd_messages_file;
+   log_state_set_log_file(execd_messages_file);
 
    sprintf(execd_spool_dir, "%s/%s", conf.execd_spool_dir, 
            uti_state_get_unqualified_hostname());

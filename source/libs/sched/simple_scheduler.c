@@ -531,13 +531,14 @@ static void delete_some_jobs()
 static bool register_scheduler()
 {
    int cl_err = 0;
+   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "register_scheduler");
 
    /* register at commd */
    sge_gdi_param(SET_MEWHO, QSCHED, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QSCHED]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QSCHED], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       DEXIT;
       return false;
    }

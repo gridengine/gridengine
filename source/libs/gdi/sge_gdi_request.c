@@ -38,8 +38,8 @@
 #	include <unistd.h>
 #endif
 #include <stdlib.h>
-#include "commlib.h"
 #include "sge_stdlib.h"
+#include "commlib.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_gdi.h"
 #include "sge_multiL.h"
@@ -64,8 +64,8 @@
 #include "msg_gdilib.h"
 
 static int sge_send_receive_gdi_request(int *commlib_error,
-                                        char *rhost, 
-                                        char *commproc, 
+                                        const char *rhost, 
+                                        const char *commproc, 
                                         u_short id, 
                                         sge_gdi_request *out, 
                                         sge_gdi_request **in);
@@ -413,11 +413,10 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 #ifdef QIDL      
       if (uti_state_get_mewho() != QMASTER)
 #endif
-         /* FIX_CONST */
          status = sge_send_receive_gdi_request(
             &commlib_error, 
-            (char*)sge_get_master(reread_qmaster_file), 
-            (char*)prognames[QMASTER], 
+            sge_get_master(reread_qmaster_file), 
+            prognames[QMASTER], 
             0, state->first, &answer);
 #ifdef QIDL
       else
@@ -592,8 +591,8 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *     sends and receives an gdi request structure 
 *
 *  INPUTS
-*     char *rhost          - ??? 
-*     char *commproc       - ??? 
+*     const char *rhost          - ??? 
+*     const char *commproc       - ??? 
 *     u_short id           - ??? 
 *     sge_gdi_request *out - ??? 
 *     sge_gdi_request **in - ??? 
@@ -608,13 +607,15 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *        -5 failed due to a received signal  
 ******************************************************************************/
 static int sge_send_receive_gdi_request(int *commlib_error,
-                                        char *rhost, 
-                                        char *commproc, 
+                                        const char *rhost, 
+                                        const char *commproc, 
                                         u_short id, 
                                         sge_gdi_request *out,
                                         sge_gdi_request **in)
 {
    int ret;
+   char rcv_rhost[MAXHOSTLEN+1];
+   char rcv_commproc[MAXCOMPONENTLEN+1];
    
    DENTER(GDI_LAYER, "sge_send_receive_gdi_request");
 
@@ -647,7 +648,10 @@ static int sge_send_receive_gdi_request(int *commlib_error,
       }   
    }
 
-   while (!(ret = sge_get_gdi_request(commlib_error, rhost, commproc, &id, in))) {
+   strcpy(rcv_rhost, rhost);
+   strcpy(rcv_commproc, commproc);
+
+   while (!(ret = sge_get_gdi_request(commlib_error, rcv_rhost, rcv_commproc, &id, in))) {
       DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
             (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
       DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
@@ -773,8 +777,8 @@ int sge_send_gdi_request(int sync, const char *rhost, const char *commproc,
 *     ??? 
 *
 *  INPUTS
-*     char *host            - ??? 
-*     char *commproc        - ??? 
+*     const char *host            - ??? 
+*     const char *commproc        - ??? 
 *     u_short *id           - ??? 
 *     sge_gdi_request** arp - ??? 
 *

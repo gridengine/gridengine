@@ -626,7 +626,7 @@ lWriteListTo(environmentList, stderr);
    if ((cp=getenv("COMMD_PORT")) && strlen(cp))
       var_list_set_string(&environmentList, "COMMD_PORT", cp);
      
-   var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path.sge_root);
+   var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path_state_get_sge_root());
 
    var_list_set_int(&environmentList, "NQUEUES", 
       lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)));
@@ -1156,7 +1156,7 @@ lWriteListTo(environmentList, stderr);
             fprintf(fp, "qrsh_control_port=%s\n", lGetString(elem, VA_value));
          }
         
-         sprintf(daemon, "%s/utilbin/%s/", path.sge_root, arch);
+         sprintf(daemon, "%s/utilbin/%s/", path_state_get_sge_root(), arch);
         
          if(JOB_TYPE_IS_QLOGIN(jb_now)) {
             fprintf(fp, "qlogin_daemon=%s\n", conf.qlogin_daemon);
@@ -1247,7 +1247,7 @@ lWriteListTo(environmentList, stderr);
    }
    else if (do_credentials && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       sprintf(dce_wrapper_cmd, "/%s/utilbin/%s/starter_cred",
-              path.sge_root, arch);
+              path_state_get_sge_root(), arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          sprintf(err_str, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
          DEXIT;
@@ -1299,9 +1299,13 @@ lWriteListTo(environmentList, stderr);
 
    /* send mail to users if requested */
    if(petep == NULL) {
+      dstring ds;
+      char buffer[128];
+      sge_dstring_init(&ds, buffer, sizeof(buffer));
+
       mail_users = lGetList(jep, JB_mail_list);
       mail_options = lGetUlong(jep, JB_mail_options);
-      strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
+      strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
       if (VALID(MAIL_AT_BEGINNING, mail_options)) {
          if (job_is_array(jep)) {
             sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(job_id),

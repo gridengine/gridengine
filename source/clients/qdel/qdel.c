@@ -70,13 +70,12 @@ int main(int argc, char **argv) {
    int wait;
    unsigned long status = 0;
    bool have_master_privileges;
-   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
    sge_gdi_param(SET_MEWHO, QDEL, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QDEL]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QDEL], &alp) != AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

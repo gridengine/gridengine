@@ -69,13 +69,12 @@ char **argv
    lList *alp = NULL, *pcmdline = NULL;
    lListElem *aep, *rep;
    const char *actionstr;
-   int cl_err = 0;
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
    sge_gdi_param(SET_MEWHO, QMOD, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QMOD]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QMOD], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

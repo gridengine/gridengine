@@ -42,6 +42,7 @@
 #	include <winsock2.h>
 #endif 
 
+#include "sge_dstring.h"
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_log.h"
@@ -55,7 +56,9 @@ int gettimeofday(struct timeval *tz, struct timezone *tzp);
 #endif
  
 #define NESTLEVEL 5
- 
+
+/* MT-NOTE: stopwatch profiling used in qmaster, qstat and qmon only */
+/* MT-NOTE: stopwatch is phased out and will be replaced by libs/uti/sge_profiling */
 static struct tms begin[NESTLEVEL];
 static struct tms end[NESTLEVEL];
  
@@ -121,23 +124,14 @@ u_long32 sge_get_gmt()
    struct timeval now;
 
 #  ifdef SOLARIS
-
    gettimeofday(&now, NULL);
-
 #  else
-
    struct timezone tzp;
-
 #     ifdef SINIX
-
    gettimeofday(&now);
-
 #     else
-
    gettimeofday(&now, &tzp);
-
 #     endif
-
 #  endif
 
    return (u_long32)now.tv_sec;
@@ -157,7 +151,7 @@ u_long32 sge_get_gmt()
 *     sge_ctime() -- Convert time value into string 
 *
 *  SYNOPSIS
-*     char* sge_ctime(time_t i) 
+*     const char* sge_ctime(time_t i, dstring *buffer) 
 *
 *  FUNCTION
 *     Convert time value into string 
@@ -166,24 +160,24 @@ u_long32 sge_get_gmt()
 *     time_t i - 0 or time value 
 *
 *  RESULT
-*     char* - time string (current time if 'i' was 0) 
+*     const char* - time string (current time if 'i' was 0) 
+*     dstring *buffer - buffer provided by caller
 *
 *  SEE ALSO
 *     uti/time/sge_ctime32()
 ******************************************************************************/
-char *sge_ctime(time_t i) 
+const char *sge_ctime(time_t i, dstring *buffer) 
 {
    struct tm *tm;
-   static char str[128];
 
    if (!i)
       i = sge_get_gmt();
    tm = localtime(&i);
-   sprintf(str, "%02d/%02d/%04d %02d:%02d:%02d",
+   sge_dstring_sprintf(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
            tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
            tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-   return str;
+   return sge_dstring_get_string(buffer);
 }
 
 /****** uti/time/sge_ctime32() ************************************************
@@ -191,7 +185,7 @@ char *sge_ctime(time_t i)
 *     sge_ctime32() -- Convert time value into string (64 bit time_t) 
 *
 *  SYNOPSIS
-*     char* sge_ctime32(u_long32 *i) 
+*     const char* sge_ctime32(u_long32 *i, dstring *buffer) 
 *
 *  FUNCTION
 *     Convert time value into string. This function is needed for 
@@ -201,21 +195,36 @@ char *sge_ctime(time_t i)
 *
 *  INPUTS
 *     u_long32 *i - 0 or time value 
+*     dstring *buffer - buffer provided by caller
 *
 *  RESULT
-*     char* - time string (current time if 'i' was 0)
+*     const char* - time string (current time if 'i' was 0)
 * 
+*  NOTE
+*     MT-NOTE: if ctime_r() is not available sge_ctime32() is not MT save
+*     MT-NOTE: currently sge_ctime32() is used only in qacct and commd
+*
 *  SEE ALSO
 *     uti/time/sge_ctime()
 ******************************************************************************/
-char *sge_ctime32(u_long32 *i) 
+const char *sge_ctime32(u_long32 *i, dstring *buffer) 
 {
+   const char *s;
+   char str[128]; 
 #if SOLARIS64
    volatile
 #endif
    time_t temp = *i;
 
-   return ctime((time_t *)&temp);
+#if 0
+   /* if ctime_r() does not exist a mutex must be used to guard *all* ctime() calls */
+   s = ctime((time_t *)&temp);
+#else 
+   s = ctime_r((time_t *)&temp, str);
+#endif
+   if (!s)
+      return NULL;
+   return sge_dstring_copy_string(buffer, s);
 }
 
 /****** uti/time/sge_at_time() ************************************************
@@ -223,33 +232,31 @@ char *sge_ctime32(u_long32 *i)
 *     sge_at_time() -- ??? 
 *
 *  SYNOPSIS
-*     char* sge_at_time(time_t i) 
+*     const char* sge_at_time(time_t i, dstring *buffer) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
 *     time_t i - 0 or time value 
+*     dstring *buffer - buffer provided by caller
 *
 *  RESULT
-*     char* - time string (current time if 'i' was 0) 
+*     const char* - time string (current time if 'i' was 0) 
 *
 *  SEE ALSO
 *     uti/time/sge_ctime() 
 ******************************************************************************/
-char *sge_at_time(time_t i) 
+const char *sge_at_time(time_t i, dstring *buffer) 
 {
    struct tm *tm;
-   static char str[128];
 
    if (!i)
       i = sge_get_gmt();
    tm = localtime(&i);
-   sprintf(str, "%04d%02d%02d%02d%02d.%02d",
+   return sge_dstring_sprintf(buffer, "%04d%02d%02d%02d%02d.%02d",
            tm->tm_year+1900, tm->tm_mon + 1, tm->tm_mday,
            tm->tm_hour, tm->tm_min, tm->tm_sec);
-
-   return str;
 }
 
 /****** uti/time/sge_stopwatch_log() ******************************************

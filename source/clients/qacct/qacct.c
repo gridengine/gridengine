@@ -57,6 +57,7 @@
 #include "sge_log.h"
 #include "qm_name.h"
 #include "basis_types.h"
+#include "sge_dstring.h"
 #include "sge_time.h"
 #include "msg_history.h"
 #include "msg_clients_common.h"
@@ -173,16 +174,20 @@ char **argv
    lList *complex_list, *queue_list, *exechost_list;
    lList *complex_dirs, *queue_dirs, *exechost_dirs;
    lList *sorted_list = NULL;
+   lList *alp = NULL;
    lListElem *queue_host, *global_host;
    int is_path_setup = 0;   
    u_long32 line = 0;
-   int cl_err = 0;
+   dstring ds;
+   char buffer[128];
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QACCT]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 
@@ -534,11 +539,11 @@ char **argv
    ** mounted directory.
    */
    if (!acctfile[0]) {
-     DPRINTF(("path.acct_file: %s\n", \
-        (path.acct_file ? path.acct_file : "(NULL)")));
-     strcpy(acctfile, path.acct_file);
+     const char *acct_file = path_state_get_acct_file();
+     DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
+     strcpy(acctfile, acct_file);
      if (historyflag) {
-        path.history_dir = history_path;
+        path_state_set_history_dir(history_path);
      }
      else if (nohistflag) {
         prepare_enroll(prognames[QACCT], 0, NULL);
@@ -613,7 +618,7 @@ char **argv
       /* lDumpList(stdout, complex_options, 0); */
       if (!is_path_setup) {
          if (historyflag) {
-            path.history_dir = history_path;
+            path_state_set_history_dir(history_path);
          }
          else {
             if (nohistflag) {
@@ -633,25 +638,25 @@ char **argv
       }
       
       if (!nohistflag) {
-         c_dir = malloc(strlen(path.history_dir) + strlen(STR_DIR_COMPLEXES) + 3);
+         c_dir = malloc(strlen(path_state_get_history_dir()) + strlen(STR_DIR_COMPLEXES) + 3);
          if (!c_dir) {
             ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
             SGE_EXIT(1);
          }
-         q_dir = malloc(strlen(path.history_dir) + strlen(STR_DIR_QUEUES) + 3);
+         q_dir = malloc(strlen(path_state_get_history_dir()) + strlen(STR_DIR_QUEUES) + 3);
          if (!q_dir) {
             ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
             FREE(c_dir);
             SGE_EXIT(1);
          }
-         e_dir = malloc(strlen(path.history_dir) + strlen(STR_DIR_EXECHOSTS) + 3);
+         e_dir = malloc(strlen(path_state_get_history_dir()) + strlen(STR_DIR_EXECHOSTS) + 3);
          if (!e_dir) {
             ERROR((SGE_EVENT, MSG_MEMORY_CANTALLOCATEMEMORY));
             FREE(c_dir);
             FREE(q_dir);
             SGE_EXIT(1);
          }
-         strcpy(c_dir, path.history_dir);
+         strcpy(c_dir, path_state_get_history_dir());
          if (*c_dir && c_dir[strlen(c_dir) - 1] != '/') {
             strcat(c_dir, "/");
          }
@@ -745,13 +750,13 @@ char **argv
       }
       if ((begin_time != -1) && ((time_t) dusage.start_time < begin_time)) { 
          DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time)));
+            sge_ctime32(&dusage.start_time, &ds)));
          DPRINTF(("job count starts %s\n", ctime(&begin_time)));
          continue;
       }
       if ((end_time != -1) && ((time_t) dusage.start_time > end_time)) {
          DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time)));
+            sge_ctime32(&dusage.start_time, &ds)));
          DPRINTF(("job count ends %s", ctime(&end_time)));
          continue;
       }
@@ -803,7 +808,7 @@ char **argv
             i_ret = make_complex_list(complex_dirs, dusage.start_time, &complex_list);
             if (i_ret) {
                ERROR((SGE_EVENT, MSG_HISTORY_COMPLEXSTRUCTUREREFTOXCANTBEASSEMBLEDY_SI , 
-                  sge_ctime32(&dusage.start_time), i_ret));
+                  sge_ctime32(&dusage.start_time, &ds), i_ret));
                ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
                SGE_EXIT(1);
             }
@@ -811,7 +816,7 @@ char **argv
                   dusage.start_time, &queue, 0);
             if (i_ret || !queue) {
                ERROR((SGE_EVENT, MSG_HISTORY_QUEUECONFIGFORXREFTOYCANTBEASSEMBLEDY_SSI , \
-                  dusage.qname, sge_ctime32(&dusage.start_time), i_ret));
+                  dusage.qname, sge_ctime32(&dusage.start_time, &ds), i_ret));
                ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
                lFreeList(complex_list);
                SGE_EXIT(1);         
@@ -822,7 +827,7 @@ char **argv
 
             if (i_ret || !queue_host) {
                ERROR((SGE_EVENT, MSG_HISTORY_HOSTCONFIGFORHOSTXREFTOYCANTBEASSEMBLEDYFORJOBZ_SSIU, 
-                     dusage.hostname, sge_ctime32(&dusage.start_time), 
+                     dusage.hostname, sge_ctime32(&dusage.start_time, &ds), 
                      i_ret, u32c(dusage.job_number)));
                ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
                SGE_EXIT(1);
@@ -833,7 +838,7 @@ char **argv
 
             if (i_ret || !global_host) {
                ERROR((SGE_EVENT, MSG_HISTORY_GLOBALHOSTCONFIGFORGLOBALHOSTXREFTOYCANTBEASSEMBLEDYFORJOBZ_SSID , \
-                     dusage.hostname, sge_ctime32(&dusage.start_time), i_ret, u32c(dusage.job_number)));
+                     dusage.hostname, sge_ctime32(&dusage.start_time, &ds), i_ret, u32c(dusage.job_number)));
                ERROR((SGE_EVENT, MSG_HISTORY_USENOHISTTOREFTOCURCOMPLEXCONFIG ));
                SGE_EXIT(1);
             }
@@ -1549,8 +1554,12 @@ FILE *fp
 static void showjob(
 sge_rusage_type *dusage 
 ) {
+   dstring ds;
+   char buffer[128];
+
    char maxvmem_usage[1000];
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    printf("==============================================================\n");
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_QNAME, (dusage->qname ? dusage->qname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_HOSTNAME, (dusage->hostname ? dusage->hostname : MSG_HISTORY_SHOWJOB_NULL));
@@ -1573,15 +1582,15 @@ sge_rusage_type *dusage
 
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_ACCOUNT, (dusage->account ? dusage->account : MSG_HISTORY_SHOWJOB_NULL ));
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_PRIORITY, dusage->priority);
-   printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_QSUBTIME,    sge_ctime32(&dusage->submission_time));
+   printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_QSUBTIME,    sge_ctime32(&dusage->submission_time, &ds));
 
    if (dusage->start_time)
-      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_STARTTIME, sge_ctime32(&dusage->start_time));
+      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_STARTTIME, sge_ctime32(&dusage->start_time, &ds));
    else
       printf("%-13.12s-/-\n",MSG_HISTORY_SHOWJOB_STARTTIME);
 
    if (dusage->end_time)
-      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_ENDTIME, sge_ctime32(&dusage->end_time));
+      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_ENDTIME, sge_ctime32(&dusage->end_time, &ds));
    else
       printf("%-13.12s-/-\n",MSG_HISTORY_SHOWJOB_ENDTIME);
 

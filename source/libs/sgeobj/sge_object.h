@@ -94,4 +94,8 @@ void
 object_delete_range_id(lListElem *object, lList **answer_list, 
                        const int rnm, const u_long32 id);
 
+int 
+object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
+                            u_long32 step);
+
 #endif /* __SGE_OBJECT_H */

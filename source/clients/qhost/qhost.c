@@ -101,7 +101,7 @@ char **argv
    lList *ql = NULL;
    lList *jl = NULL;
    lList *pel = NULL;
-   lList *alp;
+   lList *alp = NULL;
    lListElem *aep;
    lListElem *ep;
    u_long32 status = STATUS_OK;
@@ -111,13 +111,12 @@ char **argv
    u_long32 show = 0;
    lCondition *where = NULL;
    int print_header = 1;
-   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qhost");
   
    sge_gdi_param(SET_MEWHO, QHOST, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QHOST]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QHOST], &alp) != AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

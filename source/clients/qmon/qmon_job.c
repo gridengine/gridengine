@@ -1418,10 +1418,14 @@ lListElem *jep
 
    static char info[60000];
    char buf[1024];
+   dstring ds;
+   char buffer[128];
 
 /*    int status; */
 
    DENTER(GUI_LAYER, "qmonJobShowBrowserInfo");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    sprintf(info, WIDTH"%d\n", "\n","Job:", (int)lGetUlong(jep, JB_job_number));
    sprintf(info, WIDTH"%s\n", info, "Job Name:", 
@@ -1458,10 +1462,10 @@ lListElem *jep
 
 
    sprintf(info, WIDTH"%s\n", info, "Submission Time:", 
-               sge_ctime(lGetUlong(jep, JB_submission_time)));
+               sge_ctime(lGetUlong(jep, JB_submission_time), &ds));
 
    sprintf(info, WIDTH"%s\n", info, "Start Time:", 
-      lGetUlong(jep, JB_start_time) ? sge_ctime(lGetUlong(jep, JB_start_time)):
+      lGetUlong(jep, JB_start_time) ? sge_ctime(lGetUlong(jep, JB_start_time), &ds):
       "-none-");
 #endif
 

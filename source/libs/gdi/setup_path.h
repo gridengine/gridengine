@@ -43,14 +43,11 @@
 #define COMMON_DIR                "common"
 #define CONF_FILE                 "configuration"
 #define SCHED_CONF_FILE           "sched_configuration"
-#define KEY_FILE                  "key"
 #define ACCT_FILE                 "accounting"
 #define STAT_FILE                 "statistics"
 #define LOCAL_CONF_DIR            "local_conf"
 #define HISTORY_DIR               "history"
 #define SHADOW_MASTERS_FILE       "shadow_masters"
-#define LICENSE_FILE              "license"
-#define MASTER_IOR_FILE           "master.ior"
 
 #ifndef WIN32NATIVE
 #  define PATH_SEPARATOR "/"
@@ -60,28 +57,35 @@
 #  define PATH_SEPARATOR_CHAR '\\'
 #endif      
 
-typedef struct _sge_path_type {
-    char       *sge_root;
-    char       *cell_root;
-    char       *conf_file;
-    char       *sched_conf_file;
-    char       *act_qmaster_file;
-    char       *acct_file;
-    char       *stat_file;
-    char       *local_conf_dir;
-    char       *key_file;
-    char       *history_dir;
-    char       *execd_args;
-    char       *shadow_masters_file;
-    char       *license_file;
-    char       *product_mode_file;
-    char       *get_token_cmd;
-    char       *master_ior_file;
-} sge_path_type;
+#if defined(SGE_MT)
+void path_init_mt(void);
+#endif
 
-extern sge_path_type path;
+const char *path_state_get_sge_root(void);
+const char *path_state_get_cell_root(void);
+const char *path_state_get_conf_file(void);
+const char *path_state_get_sched_conf_file(void);
+const char *path_state_get_act_qmaster_file(void);
+const char *path_state_get_acct_file(void);
+const char *path_state_get_stat_file(void);
+const char *path_state_get_local_conf_dir(void);
+const char *path_state_get_history_dir(void);
+const char *path_state_get_shadow_masters_file(void);
+const char *path_state_get_product_mode_file(void);
 
-void sge_setup_paths(const char *cell, sge_path_type *p, lList **alpp);
+void path_state_set_sge_root(const char *path);
+void path_state_set_cell_root(const char *path);
+void path_state_set_conf_file(const char *path);
+void path_state_set_sched_conf_file(const char *path);
+void path_state_set_act_qmaster_file(const char *path);
+void path_state_set_acct_file(const char *path);
+void path_state_set_stat_file(const char *path);
+void path_state_set_local_conf_dir(const char *path);
+void path_state_set_history_dir(const char *path);
+void path_state_set_shadow_masters_file(const char *path);
+void path_state_set_product_mode_file(const char *path);
+
+int sge_setup_paths(const char *cell, lList **alpp);
 
 #ifdef WIN32NATIVE
 void sge_delete_paths ();

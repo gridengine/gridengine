@@ -116,8 +116,12 @@ int is_array
    FILE *fp;
    int start = 0;
    const char *job_owner;   
+   dstring ds;
+   char buffer[128];
 
    DENTER(TOP_LAYER, "job_related_adminmail");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    DPRINTF(("sizeof(admail_times) : %d\n", sizeof(admail_times)));
    if (first) {
@@ -138,11 +142,11 @@ int is_array
    if (!(h=lGetHost(jr, JR_host_name)))
       h = MSG_MAIL_UNKNOWN_NAME;
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
-      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
+      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
-      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
+      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 

@@ -84,6 +84,7 @@
 #include "sge_confL.h"
 #include "sge_spoolingL.h"
 #include "sge_mailrecL.h"
+#include "sge_japiL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -208,6 +209,10 @@ extern "C" {
       {SPR_LOWERBOUND, SPRS, SPRN},     /* Spooling rule */
       {SPT_LOWERBOUND, SPTS, SPTN},     /* Spooling object type */
       {SPTR_LOWERBOUND, SPTRS, SPTRN},     /* Spooling rules for object type */
+
+      {JJ_LOWERBOUND, JJS, JJN},        /* JAPI job */
+      {JJAT_LOWERBOUND, JJATS, JJATN},  /* JAPI array task */
+      {NSV_LOWERBOUND, NSVS, NSVN},     /* named string vector */
       {0, 0, NULL}
    };
 

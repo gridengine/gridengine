@@ -33,6 +33,8 @@
 #	include <unistd.h>
 #	include <sys/time.h>
 #	include <time.h>
+#  include <stdlib.h>
+#  include <errno.h>
 #endif /* WIN32NATIVE */
 
 #include <sys/types.h>
@@ -40,6 +42,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#if defined (SGE_MT)
+#include <pthread.h>
+#endif
 
 #include "sge.h"
 #include "sge_log.h"
@@ -47,21 +52,345 @@
 #include "sge_prog.h"
 #include "sge_uidgid.h"
 
+#include "sge_uti_state.h"
+
 #include "msg_utilib.h"
+
 
 static void sge_do_log(int log_level, int levelchar, const char *err_str, 
                        const char *newline);
 
-u_long32 logginglevel = LOG_WARNING;
+struct log_state_t {
+    u_long32         log_level;
+    char             log_buffer[4*MAX_STRING_SIZE]; /* formerly known as SGE_EVENT */
+    char            *log_file;
+    int              log_as_admin_user;
+    int              verbose;
+    int              gui_log;
+    trace_func_type  trace_func;
+};
 
-stringTlong SGE_EVENT;
-char *error_file = TMP_ERR_FILE_SNBU;
-static int log_as_admin_user = 0;
-static int verbose = 1;
-static int qmon_log = 0;
+#if defined(SGE_MT)
+static pthread_key_t   log_state_key;
+#else
+static struct log_state_t log_state_opaque = {
+   LOG_WARNING, "", TMP_ERR_FILE_SNBU, 0, 1, 0, NULL };
+struct log_state_t *log_state = &log_state_opaque;
+#endif
 
-/* to unify commd trace() concept with sge_log() */
-trace_func_type trace_func = NULL;
+
+#if defined(SGE_MT)
+static void log_state_init(struct log_state_t* state) {
+   state->log_level      = LOG_WARNING;
+   strcpy(state->log_buffer, "");
+   state->log_file          = TMP_ERR_FILE_SNBU;
+   state->log_as_admin_user = 0;
+   state->verbose           = 0;
+   state->gui_log           = 0;
+   state->trace_func        = NULL;
+}
+
+static void log_state_destroy(void* state) {
+   free(state);
+}
+ 
+void log_init_mt(void) {
+   pthread_key_create(&log_state_key, &log_state_destroy);
+} 
+
+#endif
+
+/****** uti/log/log_state_get_log_buffer() ******************************************
+*  NAME
+*     log_state_get_log_buffer() -- Return a buffer that can be used to build logging 
+*                                   strings
+*
+*  SYNOPSIS
+*     char *log_state_get_log_buffer(void) 
+*
+*  FUNCTION
+*     Return a buffer that can be used to build logging strings
+*
+*  RESULT
+*     char * 
+*
+******************************************************************************/
+char *log_state_get_log_buffer(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_buffer");
+   return log_state->log_buffer;
+}
+
+/****** uti/log/log_state_get_log_level() ******************************************
+*  NAME
+*     log_state_get_log_level() -- Return log level.
+*
+*  SYNOPSIS
+*     u_long32 log_state_get_log_level(void) 
+*
+*  FUNCTION
+*     Return log level
+*
+*  RESULT
+*     u_long32
+*
+******************************************************************************/
+u_long32 log_state_get_log_level(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_level");
+   return log_state->log_level;
+}
+
+/****** uti/log/log_state_get_log_file() ******************************************
+*  NAME
+*     log_state_get_log_file() -- Return path to log file in use.
+*
+*  SYNOPSIS
+*     const char *log_state_get_log_file(void) 
+*
+*  FUNCTION
+*     Return path to log file in use.
+*
+*  RESULT
+*     const char * 
+*
+******************************************************************************/
+const char *log_state_get_log_file(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_file");
+   return log_state->log_file;
+}
+
+/****** uti/log/log_state_get_log_verbose() ******************************************
+*  NAME
+*     log_state_get_log_verbose() -- Is verbose logging enabled?
+*
+*  SYNOPSIS
+*     int log_state_get_log_verbose(void) 
+*
+*  FUNCTION
+*     Is verbose logging enabled? 
+*     With verbose logging enabled not only ERROR/CRITICAL messages are 
+*     printed to stderr but also WARNING/INFO.
+*
+*  RESULT
+*     int - 0 or 1 
+*
+*  SEE ALSO
+*     uti/log/log_state_set_log_verbose()
+******************************************************************************/
+int log_state_get_log_verbose(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_verbose");
+   return log_state->verbose;
+}
+
+/****** uti/log/log_state_get_log_gui() ******************************************
+*  NAME
+*     log_state_get_log_gui() -- Is GUI logging enabled?
+*
+*  SYNOPSIS
+*     int log_state_get_log_gui(void) 
+*
+*  FUNCTION
+*     Is GUI logging enabled? 
+*     With GUI logging enabled messages are printed to stderr/stdout.  
+*
+*  RESULT
+*     int - 0 or 1 
+*
+*  SEE ALSO
+*     uti/log/log_state_set_log_gui()
+******************************************************************************/
+int log_state_get_log_gui(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_gui");
+   return log_state->gui_log;
+}
+
+/****** uti/log/log_state_get_log_trace_func() ******************************************
+*  NAME
+*     log_state_get_log_trace_func() -- Return additional trace function in use.
+*
+*  SYNOPSIS
+*     trace_func_type log_state_get_log_trace_func(void) 
+*
+*  FUNCTION
+*     Return additional trace function in use.
+*     E.g. commd uses it to call a function implementing commdcntl -t message logging.
+*     The trace func is needed to unify commd trace() concept with sge_log().
+*
+*  RESULT
+*     trace_func_type 
+*
+*  SEE ALSO
+*     uti/log/log_state_set_log_trace_func()
+******************************************************************************/
+trace_func_type log_state_get_log_trace_func(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_trace_func");
+   return log_state->trace_func;
+}
+
+/****** uti/log/log_state_get_log_as_admin_user() ******************************************
+*  NAME
+*     log_state_get_log_as_admin_user() -- Needs sge_log() to change into admin user?
+*
+*  SYNOPSIS
+*     trace_func_type log_state_get_log_as_admin_user(void) 
+*
+*  FUNCTION
+*     Returns whether logging shall be done as admin user.
+*
+*  RESULT
+*     int
+*
+*  SEE ALSO
+*     uti/log/log_state_set_log_as_admin_user()
+******************************************************************************/
+int log_state_get_log_as_admin_user(void)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_get_log_as_admin_user");
+   return log_state->log_as_admin_user;
+}
+
+/****** uti/log/log_state_set_log_level() *****************************************
+*  NAME
+*     log_state_set_log_level() -- Set log level to be used.
+*
+*  SYNOPSIS
+*     void log_state_set_log_level(int i) 
+*
+*  FUNCTION
+*     Set log level to be used.
+*
+*  INPUTS
+*     u_long32 
+*
+*  SEE ALSO
+*     uti/log/log_state_get_log_level() 
+******************************************************************************/
+void log_state_set_log_level(u_long32 i)
+{ 
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_level");
+   log_state->log_level = i;
+}
+
+/****** uti/log/log_state_set_log_file() *****************************************
+*  NAME
+*     log_state_set_log_file() -- Set log file to be used.
+*
+*  SYNOPSIS
+*     void log_state_set_log_file(int i) 
+*
+*  FUNCTION
+*     Set path of log file to be used. 
+*
+*  INPUTS
+*     char * 
+*
+*  SEE ALSO
+*     uti/log/log_state_get_log_file() 
+******************************************************************************/
+void log_state_set_log_file(char *file)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_file");
+   log_state->log_file = file;
+}
+
+
+/****** uti/log/log_state_set_log_verbose() *****************************************
+*  NAME
+*     log_state_set_log_verbose() -- Enable/disable verbose logging 
+*
+*  SYNOPSIS
+*     void log_state_set_log_verbose(int i) 
+*
+*  FUNCTION
+*     Enable/disable verbose logging 
+*
+*  INPUTS
+*     int i - 0 or 1  
+*
+*  SEE ALSO
+*     uti/log/log_state_get_log_verbose() 
+******************************************************************************/
+void log_state_set_log_verbose(int i)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_verbose");
+   log_state->verbose = i;
+}
+
+/****** uti/log/log_state_set_log_gui() ********************************************
+*  NAME
+*     log_state_set_log_gui() -- Enable/disable logging for GUIs 
+*
+*  SYNOPSIS
+*     void log_state_set_log_gui(int i) 
+*
+*  FUNCTION
+*     Enable/disable logging for GUIs 
+*     With GUI logging enabled messages are printed to stderr/stdout.  
+*
+*  INPUTS
+*     int i - 0 or 1 
+******************************************************************************/
+void log_state_set_log_gui(int i)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_gui");
+   log_state->gui_log = i;
+}   
+
+/****** uti/log/log_state_set_log_trace_func() ******************************************
+*  NAME
+*     log_state_set_log_trace_func() -- Install additional trace function to be used.
+*
+*  SYNOPSIS
+*     void log_state_set_log_trace_func(void) 
+*
+*  FUNCTION
+*     Return additional trace function in use.
+*     E.g. commd uses it to have sge_log() call a function implementing 
+*     commdcntl -t message logging.
+*
+*  INPUTS
+*     trace_func_type
+*
+*  SEE ALSO
+*     uti/log/log_state_get_log_trace_func()
+******************************************************************************/
+void log_state_set_log_trace_func(trace_func_type func)
+{
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_trace_func");
+   log_state->trace_func = func;
+}
+
+
+/****** uti/log/log_state_set_log_as_admin_user() *****************************
+*  NAME
+*     log_state_set_log_as_admin_user() -- Enable/Disable logging as admin user 
+*
+*  SYNOPSIS
+*     void log_state_set_log_as_admin_user(int i)
+*
+*  FUNCTION
+*     This function enables/disables logging as admin user. This 
+*     means that the function/macros switches from start user to 
+*     admin user before any messages will be written. After that 
+*     they will switch back to 'start' user. 
+*
+*  INPUTS
+*     int i - 0 or 1 
+*  
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user
+*     uti/uidgid/sge_switch2start_user
+******************************************************************************/
+void log_state_set_log_as_admin_user(int i) {
+   GET_SPECIFIC(struct log_state_t, log_state, log_state_init, log_state_key, "log_state_set_log_as_admin_user");
+   log_state->log_as_admin_user = i;
+}
+
 
 #ifndef WIN32NATIVE
 
@@ -76,12 +405,12 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
 
    /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
 
-   if (log_as_admin_user && geteuid() == 0) {
+   if (log_state_get_log_as_admin_user() && geteuid() == 0) {
       sge_switch2admin_user();
       switch_back = 1;
    }
 
-   if ((fd = open(error_file, O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
+   if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
       now = time((time_t *) NULL);
       tmp_ctime = ctime(&now);
       sprintf(tmp_date, "%s", tmp_ctime);
@@ -98,7 +427,7 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
       close(fd);
    }
 
-   if (log_as_admin_user && switch_back) {
+   if (log_state_get_log_as_admin_user() && switch_back) {
       sge_switch2start_user();
    }
 
@@ -107,89 +436,6 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str,
 
 #endif
 
-/****** uti/log/sge_log_set_qmon() ********************************************
-*  NAME
-*     sge_log_set_qmon() -- Enable/disable logging for GUIs 
-*
-*  SYNOPSIS
-*     void sge_log_set_qmon(int i) 
-*
-*  FUNCTION
-*     Enable/disable logging for GUIs 
-*
-*  INPUTS
-*     int i - 0 or 1 
-******************************************************************************/
-void sge_log_set_qmon(int i)
-{
-   qmon_log = i;
-}   
-
-/****** uti/log/sge_log_set_verbose() *****************************************
-*  NAME
-*     sge_log_set_verbose() -- Enable/disable verbose logging 
-*
-*  SYNOPSIS
-*     void sge_log_set_verbose(int i) 
-*
-*  FUNCTION
-*     Enable/disable verbose logging 
-*
-*  INPUTS
-*     int i - 0 or 1  
-*
-*  SEE ALSO
-*     uti/log/sge_log_is_verbose() 
-******************************************************************************/
-void sge_log_set_verbose(int i) 
-{
-   verbose = i;
-}
-
-/****** uti/log/sge_log_is_verbose() ******************************************
-*  NAME
-*     sge_log_is_verbose() -- Is verbose logging enabled?
-*
-*  SYNOPSIS
-*     int sge_log_is_verbose(void) 
-*
-*  FUNCTION
-*     Is verbose logging enabled? 
-*
-*  RESULT
-*     int - 0 or 1 
-*
-*  SEE ALSO
-*     uti/log/sge_log_set_verbose()
-******************************************************************************/
-int sge_log_is_verbose(void) 
-{
-   return verbose;
-}
-
-/****** uti/log/sge_log_set_auser() *******************************************
-*  NAME
-*     sge_log_set_auser() -- Enable/Disable logging as admin user 
-*
-*  SYNOPSIS
-*     void sge_log_set_auser(int i)
-*
-*  FUNCTION
-*     This function enables/disables logging as admin user. This 
-*     means that the function/macros switches from start user to 
-*     admin user before any messages will be written. After that 
-*     they will switch back to 'start' user. 
-*
-*  INPUTS
-*     int i - 0 or 1 
-*  
-*  SEE ALSO
-*     uti/uidgid/sge_switch2admin_user
-*     uti/uidgid/sge_switch2start_user
-******************************************************************************/
-void sge_log_set_auser(int i) {
-   log_as_admin_user = i;
-}
 
 /****** uti/log/sge_log() *****************************************************
 *  NAME
@@ -246,24 +492,26 @@ int sge_log(int log_level, const char *mesg, const char *file__,
 
    /* 
     * commd remote monitoring is in effect independently 
-    * of the current logginglevel 
+    * of the current log_level 
     */
-   if (uti_state_get_mewho() == COMMD && trace_func && log_level >= LOG_DEBUG) {
-      trace_func(mesg);
+   if (uti_state_get_mewho() == COMMD && log_level >= LOG_DEBUG) {
+      trace_func_type t = log_state_get_log_trace_func();
+      if (t)
+         t(mesg);
    }
 
    /* quick exit if nothing to log */
 #ifndef WIN32NATIVE
-   if (log_level > MAX(logginglevel, LOG_WARNING)) {
+   if (log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
       return 0;
    }
 #else /* WIN32NATIVE */
-   if ((u_long32)log_level > MAX(logginglevel, LOG_WARNING)) {
+   if ((u_long32)log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
 	   return 0;
    }
 #endif /* WIN32NATIVE */
 
-   if (uti_state_get_mewho() == QMON && !qmon_log) {
+   if (uti_state_get_mewho() == QMON && !log_state_get_log_gui()) {
       return 0;
    }
 
@@ -301,7 +549,7 @@ int sge_log(int log_level, const char *mesg, const char *file__,
 #ifndef WIN32NATIVE
    /* avoid double output in debug mode */
    if (!uti_state_get_daemonized() && !rmon_condition(LAYER, INFOPRINT) && 
-       (verbose || log_level == LOG_ERR || log_level == LOG_CRIT)) {
+       (log_state_get_log_verbose() || log_level == LOG_ERR || log_level == LOG_CRIT)) {
       fprintf(stderr, "%s%s%s", levelstring, mesg, newline);
    } 
    if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||

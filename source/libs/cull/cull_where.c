@@ -432,6 +432,7 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
 *     const char *fmt - format string
 *                       %I                         - JB_job_number
 *                                                    (!= lList)
+*                       %T                         - JB_Type (Descriptor)
 *                       ==, <, >, <=, >=, !=, ==   - comp. operator
 *                       %s                         - string
 *                       %d                         - int

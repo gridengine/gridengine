@@ -223,10 +223,11 @@ void qmonInitSge( char *progname)
    int error = 0;
    DENTER(GUI_LAYER, "qmonInitSge");
    
-   sge_log_set_qmon(True);
+   log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON]))) {
+   if ((error=sge_gdi_setup(prognames[QMON], NULL))) {
+
       /* fills SGE_EVENT with diagnosis information */
       if (error == AE_QMASTER_DOWN ||
           error == CL_FIRST_FREE_EC+2 || 
@@ -234,11 +235,11 @@ void qmonInitSge( char *progname)
          error = -1;  /* this error code is ambiguous, make 
                          no suggestions in error message */ 
       }
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(error,SGE_EVENT));
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(error, SGE_EVENT));
       fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }
-   sge_log_set_qmon(False);
+   log_state_set_log_gui(False);
 
    DEXIT;
 }

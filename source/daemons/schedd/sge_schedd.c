@@ -88,8 +88,6 @@ static void schedd_exit_func(int i);
 static int sge_setup_sge_schedd(void);
 int daemonize_schedd(void);
 
-extern char *error_file;
-
 
 /* array used to select from different scheduling alorithms */
 sched_func_struct sched_funcs[] =
@@ -131,11 +129,11 @@ char *argv[]
 
 
    /* Initialize path for temporary logging until we chdir to spool */
-   error_file = TMP_ERR_FILE_SCHEDD;
+   log_state_set_log_file(TMP_ERR_FILE_SCHEDD);
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
-   sge_install_exit_func(schedd_exit_func);
+   uti_state_set_exit_func(schedd_exit_func);
    sge_setup_sig_handlers(SCHEDD);
 
    sge_setup(SCHEDD, NULL);
@@ -148,7 +146,7 @@ char *argv[]
 
    lInit(nmv);
 
-   feature_initialize_from_file(path.product_mode_file);
+   feature_initialize_from_file(path_state_get_product_mode_file(), NULL);
    sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
 
@@ -461,7 +459,6 @@ const char *alg_name
 static int sge_setup_sge_schedd()
 {
    int ret;
-   extern u_long32 logginglevel;
    u_long32 saved_logginglevel;
    char err_str[1024];
 
@@ -498,16 +495,16 @@ static int sge_setup_sge_schedd()
    sge_switch2start_user();
    unlink(TMP_ERR_FILE_SCHEDD);
    sge_switch2admin_user();
-   sge_log_set_auser(1);
-   error_file = ERR_FILE;
+   log_state_set_log_as_admin_user(1);
+   log_state_set_log_file(ERR_FILE);
    /* suppress the INFO messages during setup phase */
-   saved_logginglevel = logginglevel;
-   logginglevel = LOG_WARNING;
+   saved_logginglevel = log_state_get_log_level();
+   log_state_set_log_level(LOG_WARNING);
    if ((ret = sge_ck_qmaster(NULL)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));
       SGE_EXIT(1);
    }
-   logginglevel = saved_logginglevel;
+   log_state_set_log_level(saved_logginglevel);
 
    DEXIT;
    return (ret == 0 ? 0 : 1);

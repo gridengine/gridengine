@@ -44,7 +44,6 @@
 
 
 
-void error(char *str);
 void LOG(char *str, int level);
 void setlog(int level);
 

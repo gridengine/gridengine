@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-#if !defined(SGE_MT)
+#if defined(SGE_MT)
 void cull_init_mt(void);
 #endif
 

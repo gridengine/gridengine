@@ -41,6 +41,7 @@
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "msg_common.h"
+#include "sge_answer.h"
 
 extern char **environ;
 
@@ -49,13 +50,14 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv)
 {
-   int cl_err = 0, ret;
+   int ret;
+   lList *alp = NULL;
    
    DENTER_MAIN(TOP_LAYER, "qconf");
 
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QCONF]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

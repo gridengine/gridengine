@@ -101,7 +101,7 @@ char *rhost
 
    {
       char common_dir[SGE_PATH_MAX];
-      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path.cell_root, COMMON_DIR);
+      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path_state_get_cell_root(), COMMON_DIR);
       if (write_sched_configuration(1, 2, common_dir, lFirst(*confl)) == NULL) {
          answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;

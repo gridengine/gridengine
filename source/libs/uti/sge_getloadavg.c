@@ -206,6 +206,7 @@ static int getkval(unsigned long offset, int *ptr, int size, char *refstr);
 
 #endif 
 
+/* MT-NOTE: code basing on kernel_initialized global variable needs not to be MT safe */
 static int kernel_initialized = 0;
 
 #if !defined(LINUX)

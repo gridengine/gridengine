@@ -684,3 +684,58 @@ object_delete_range_id(lListElem *object, lList **answer_list,
    lXchgList(object, rnm, &range_list);
 }
 
+/****** sgeobj/object/object_set_range_id() **********************************
+*  NAME
+*     object_set_range_id() -- store the initial range ids in "job"
+*
+*  SYNOPSIS
+*     int object_set_range_id(lListElem *job, u_long32 start, 
+*                                 u_long32 end, u_long32 step) 
+*
+*  FUNCTION
+*     The function stores the initial range id values ("start", "end" 
+*     and "step") in the range list of an object. It should only be used 
+*     in functions initializing objects range lists.
+*
+*  INPUTS
+*     lListElem *object - object to handle
+*     const int rnm     - attribute containing the range list
+*     u_long32 start    - first id 
+*     u_long32 end      - last id 
+*     u_long32 step     - step size 
+*
+*  RESULT
+*     int - 0 -> OK
+*           1 -> no memory
+******************************************************************************/
+int object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
+                            u_long32 step)
+{
+   lListElem *range_elem;  /* RN_Type */
+   int ret = 0;
+ 
+   range_elem = lFirst(lGetList(object, rnm));
+   if (range_elem == NULL) {
+      lList *range_list;
+ 
+      range_elem = lCreateElem(RN_Type);
+      range_list = lCreateList("task id range", RN_Type);
+      if (range_elem == NULL || range_list == NULL) {
+         range_elem = lFreeElem(range_elem);
+         range_list = lFreeList(range_list);
+
+         /* No memory */
+         ret = 1;
+      } else {
+         lAppendElem(range_list, range_elem);
+         lSetList(object, rnm, range_list);
+      }
+   }
+   if (range_elem != NULL) {
+      lSetUlong(range_elem, RN_min, start);
+      lSetUlong(range_elem, RN_max, end);
+      lSetUlong(range_elem, RN_step, step);
+   }
+   return ret;
+}          
+

@@ -1131,11 +1131,15 @@ int nm
 ) {
 
    String str;
-   
+   dstring ds;
+   char buffer[128];
+
    DENTER(GUI_LAYER, "PrintTime");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    if (lGetUlong(ep, nm))
-      str = XtNewString(sge_ctime(lGetUlong(ep, nm)));
+      str = XtNewString(sge_ctime(lGetUlong(ep, nm), &ds));
    else
       str = XtNewString("");
 
@@ -1178,14 +1182,18 @@ int nm
 ) {
 
    String str;
+   dstring ds;
+   char buffer[128];
 
    DENTER(GUI_LAYER, "PrintTime");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (job_is_zombie_job(ep)) {
       str = XtNewString("NA");
    } else {
       if (jat && lGetUlong(jat, nm)) {
-         str = XtNewString(sge_ctime(lGetUlong(jat, nm)));
+         str = XtNewString(sge_ctime(lGetUlong(jat, nm), &ds));
       } else {
          str = XtNewString("");
       }

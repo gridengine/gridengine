@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <signal.h>
 
+#include "sge_dstring.h"
 #include "basis_types.h"
 #include "err_trace.h"
 #include "sge_time.h"
@@ -92,9 +93,13 @@ void shepherd_error(char *str)
 
 void shepherd_error_impl(char *str, int do_exit) 
 {
+   dstring ds;
+   char buffer[128];
    char header_str[256];
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
      
-   sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0), geteuid(), getpid());
+   sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0, &ds), geteuid(), getpid());
          
    sh_str2file(header_str, str, "error");
 
@@ -146,8 +151,12 @@ int shepherd_trace(const char *str)
 {
    int ret, switch_back = 0;
    char header_str[256];
+   dstring ds;
+   char buffer[128];
 
-   sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0), geteuid(), getpid());
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0, &ds), geteuid(), getpid());
 
    if (shep_log_as_admin_user && geteuid() == 0) {
       sge_switch2admin_user();
@@ -175,6 +184,10 @@ static int sh_str2file(char *header_str, const char *str, char *file)
    static int called = 0;
    FILE *fp;
    int old_umask;
+   dstring ds;
+   char buffer[128];
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    /* 
     *  after changing into the jobs cwd we need an 
@@ -198,7 +211,7 @@ static int sh_str2file(char *header_str, const char *str, char *file)
       if (panic_fp) {
          fprintf(panic_fp, "%s ["uid_t_fmt":"pid_t_fmt"]: "
                  "PANIC: can't open %s file \"%s\": %s\n",
-                 sge_ctime(0), geteuid(), getpid(), file, tmppath, strerror(errno));
+                 sge_ctime(0, &ds), geteuid(), getpid(), file, tmppath, strerror(errno));
          fclose(panic_fp);
       }
       return 1;

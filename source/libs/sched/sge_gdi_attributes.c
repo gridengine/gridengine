@@ -64,7 +64,7 @@ const char *attr_name
 
    DENTER(TOP_LAYER, "sge_gdi_myhost_scaling");
   
-   sge_gdi_setup("scaling");
+   sge_gdi_setup("scaling", NULL);
    scaling = sge_gdi_host_scaling(uti_state_get_qualified_hostname(), attr_name);
    sge_gdi_shutdown();
 
@@ -79,7 +79,7 @@ const char *attr_name
 
    DENTER(TOP_LAYER, "sge_gdi_myhost_attribute");
 
-   sge_gdi_setup("attributes");
+   sge_gdi_setup("attributes", NULL);
    attr = sge_gdi_host_attribute(uti_state_get_qualified_hostname(), attr_name);
    sge_gdi_shutdown();
 
@@ -100,7 +100,7 @@ u_long32 jobid
       DEXIT;
       return 0; 
    } 
-   sge_gdi_setup("nslots");
+   sge_gdi_setup("nslots", NULL);
    nslots = sge_gdi_host_nslots(uti_state_get_qualified_hostname(), jobid);
 
    sge_gdi_shutdown();

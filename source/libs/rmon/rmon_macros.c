@@ -59,6 +59,11 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 #endif
+
+#ifdef SGE_MT
+#include <pthread.h>
+#endif
+
 #include "basis_types.h"
 #include "rmon_h.h"
 #include "rmon_def.h"
@@ -71,7 +76,7 @@
 #endif
 
 #ifdef SGE_MT
-#include <pthread.h>
+/* MT-NOTE: rmon_mutex guards access to global variable msgbuf */
 pthread_mutex_t rmon_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 

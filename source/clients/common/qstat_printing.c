@@ -39,6 +39,7 @@
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
+#include "sge_dstring.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
@@ -894,8 +895,13 @@ char *indent
    int tsk_ext;
    u_long tickets,otickets,dtickets,stickets,ftickets;
    int is_zombie_job;
+   dstring ds;
+   char buffer[128];
 
    DENTER(TOP_LAYER, "sge_print_job");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    is_zombie_job = job_is_zombie_job(job);
 
    queue_name = qep ? lGetString(qep, QU_qname) : NULL;
@@ -989,9 +995,9 @@ char *indent
 
    /* start/submit time */
    if (!lGetUlong(jatep, JAT_start_time) )
-      printf("%s ", sge_ctime(lGetUlong(job, JB_submission_time)));
+      printf("%s ", sge_ctime(lGetUlong(job, JB_submission_time), &ds));
    else
-      printf("%s ", sge_ctime(lGetUlong(jatep, JAT_start_time)));
+      printf("%s ", sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
 
    /* is job logically running */
    running = lGetUlong(jatep, JAT_status)==JRUNNING || 
@@ -1033,7 +1039,7 @@ char *indent
       if (!lGetUlong(job, JB_deadline) )
          printf("                    ");
       else
-         printf("%s ", sge_ctime(lGetUlong(job, JB_deadline)));
+         printf("%s ", sge_ctime(lGetUlong(job, JB_deadline), &ds));
 
       /* scaled cpu usage */
       if (!(up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_CPU))) 

@@ -2094,8 +2094,6 @@ lListElem *complex
 **
 ** RETURN
 **
-** EXTERNAL
-**   path.history_dir
 ** DESCRIPTION
 **   finds or creates a version subdirectory
 **   creates all necessary directories
@@ -2119,27 +2117,28 @@ lListElem **pversion_subdir
 
    if (!*pldir) {
       char *str_dir;
+      const char *history_dir = path_state_get_history_dir();
       SGE_STRUCT_STAT sbuf;
 
-      if (!path.history_dir || !*path.history_dir) {
+      if (!history_dir || !*history_dir) {
          ERROR((SGE_EVENT, MSG_HISTORY_PREPAREVERSIONSUBDIRNOHISTSUBDIRCONFIGURED));
 	 DEXIT;
          return -2;
       }
-      if (SGE_STAT(path.history_dir, &sbuf)) {
+      if (SGE_STAT(history_dir, &sbuf)) {
 /*         WARNING((SGE_EVENT, "history directory doesn't exist - making\n")); */
          /*
          ** problem: do we want to exit on errors here?
          */
-         sge_mkdir(path.history_dir, 0755, 1);
+         sge_mkdir(history_dir, 0755, 1);
       }
-      str_dir = malloc(strlen(path.history_dir) + strlen(sname) + 3);
+      str_dir = malloc(strlen(history_dir) + strlen(sname) + 3);
       if (!str_dir) {
          ERROR((SGE_EVENT, MSG_HISTORY_PREPAREVERSIONSUBDIRMEMORYALLOCFAILED ));
 	 DEXIT;
          return -3;
       }
-      strcpy(str_dir, path.history_dir);
+      strcpy(str_dir, history_dir);
       if (*str_dir && str_dir[strlen(str_dir) - 1] != '/') {
          strcat(str_dir, "/");
       }
@@ -2206,8 +2205,6 @@ lListElem **pversion_subdir
 **   name            -   name of object
 ** RETURN
 **
-** EXTERNAL
-**   path.history_dir
 ** DESCRIPTION
 **   finds out if there is a history entry for the object
 **   this function is useful if you want to make sure there
@@ -2221,6 +2218,7 @@ const char *sname,
 const char *name 
 ) {
    char *str_dir;
+   const char *history_dir = path_state_get_history_dir();
    SGE_STRUCT_STAT sbuf;
 
    DENTER(TOP_LAYER, "is_object_in_history");
@@ -2230,7 +2228,7 @@ const char *name
       DEXIT;
       return 0;
    }
-   if (!path.history_dir || !*path.history_dir) {
+   if (!history_dir || !*history_dir) {
       ERROR((SGE_EVENT,
         MSG_HISTORY_ISOBJECTINHISTORYNOHISTSUBDIRCONFIGURED ));
       DEXIT;
@@ -2239,14 +2237,14 @@ const char *name
    /*
    ** test for existence of history path
    */
-   if (SGE_STAT(path.history_dir, &sbuf)) {
+   if (SGE_STAT(history_dir, &sbuf)) {
       DPRINTF(("%s object %s cannot be in history because "
-         "history dir %s does not exist\n", sname, name, path.history_dir));
+         "history dir %s does not exist\n", sname, name, history_dir));
       DEXIT;
       return 0;
    }
 
-   str_dir = malloc(strlen(path.history_dir) + strlen(sname) + strlen(name) + 4);
+   str_dir = malloc(strlen(history_dir) + strlen(sname) + strlen(name) + 4);
    if (!str_dir) {
       ERROR((SGE_EVENT, MSG_HISTORY_PREPAREVERSIONSUBDIR ));
       DEXIT;
@@ -2256,7 +2254,7 @@ const char *name
    /*
    ** test for existence of history subdirectories (category)
    */
-   strcpy(str_dir, path.history_dir);
+   strcpy(str_dir, history_dir);
    if (*str_dir && str_dir[strlen(str_dir) - 1] != '/') {
       strcat(str_dir, "/");
    }

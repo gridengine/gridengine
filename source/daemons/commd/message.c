@@ -337,6 +337,10 @@ message *mp,
 FILE *fp 
 ) {
    u_long status;
+   dstring ds;
+   char buffer[128];
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    fprintf(fp, "from:\n");
    print_commproc(&mp->from, fp);
@@ -349,7 +353,7 @@ FILE *fp
            mp->fromfd, mp->tag, status, message_status_string(mp));
    fprintf(fp, "flags: %s, creation date: %s\n",
            (mp->flags & COMMD_SYNCHRON) ? "SYNCHRON" : "ASYNCHRON",
-           sge_ctime32(& mp->creation_date));
+           sge_ctime32(&mp->creation_date, &ds));
 
    if (mp->flags & COMMD_ENROLL)
       fprintf(fp, "ENROLL ");

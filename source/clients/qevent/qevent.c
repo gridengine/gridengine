@@ -45,6 +45,7 @@
 
 #include "msg_clients_common.h"
 
+#include "sge_answer.h"
 #include "sge_mirror.h"
 #include "sge_event.h"
 #include "sge_event_client.h"
@@ -148,14 +149,14 @@ bool print_jatask_event(sge_event_type type, sge_event_action action,
 
 int main(int argc, char *argv[])
 {
-   int cl_err = 0;
+   lList *alp = NULL;
    u_long32 timestamp;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QEVENT], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

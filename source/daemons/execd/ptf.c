@@ -1535,16 +1535,15 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
       
    /* If the value has changed set pri_max/pri_min/pri_range and log */
    if (pri_max != pri_max_tmp || pri_min != pri_min_tmp) {
-      extern u_long32 logginglevel;
-      u_long32 old_ll = logginglevel;
+      u_long32 old_ll = log_state_get_log_level();
       
       pri_max = pri_max_tmp;
       pri_min = pri_min_tmp;
       pri_range = pri_min - pri_max;
    
-      logginglevel = LOG_INFO;   
+      log_state_set_log_level(LOG_INFO);   
       INFO((SGE_EVENT, MSG_PRIO_PTFMINMAX_II, (int) pri_max, (int) pri_min));
-      logginglevel = old_ll;
+      log_state_set_log_level(old_ll);   
    }
 
    /* Set the priority for each job */

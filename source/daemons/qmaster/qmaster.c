@@ -194,7 +194,7 @@ char **argv
    umask(022);
    
    /* Initialize path for temporary logging until we chdir to spool */
-   error_file = TMP_ERR_FILE_QMASTER;
+   log_state_set_log_file(TMP_ERR_FILE_QMASTER);
 
 #ifdef QIDL
    commlib_init();
@@ -260,7 +260,7 @@ New behaviour:
     */
    in_main_loop = 0;
    
-   sge_install_exit_func(qmaster_exit_func);
+   uti_state_set_exit_func(qmaster_exit_func);
    sge_setup_sig_handlers(QMASTER);
    
    lInit(nmv);
@@ -890,7 +890,7 @@ static void makedirs()
    DENTER(TOP_LAYER, "makedirs");
    
    /* Implicitely creats cell_root and common dir */
-   sge_mkdir(path.local_conf_dir, 0755, 1);
+   sge_mkdir(path_state_get_local_conf_dir(), 0755, 1);
    
    DEXIT;
 }

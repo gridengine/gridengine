@@ -102,7 +102,7 @@ char qmaster_out_file[SGE_PATH_MAX];
 
 int main(int argc, char **argv);
 static void shadowd_exit_func(int i);
-static int check_if_valid_shadow(char *shadow_master_file);
+static int check_if_valid_shadow(const char *shadow_master_file);
 static int compare_qmaster_names(char *);
 static int host_in_file(const char *, const char *);
 static void parse_cmdline_shadowd(int argc, char **argv);
@@ -217,7 +217,7 @@ char **argv
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
-   error_file = TMP_ERR_FILE_SHADOWD;
+   log_state_set_log_file(TMP_ERR_FILE_SHADOWD);
 
    /* minimal setup */
    sge_setup(SHADOWD, NULL);
@@ -227,7 +227,7 @@ char **argv
       char *conf_string;
       pid_t shadowd_pid;
 
-      if ((conf_string = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
+      if ((conf_string = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE,
             conf_string, uti_state_get_unqualified_hostname());
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
@@ -250,16 +250,16 @@ char **argv
    priority_tags[1] = TAG_FINISH_REQUEST;
    prepare_enroll(prognames[SHADOWD], 1, priority_tags);
 
-   sge_install_exit_func(shadowd_exit_func);
+   uti_state_set_exit_func(shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
 
    lInit(nmv);
 
    parse_cmdline_shadowd(argc, argv);
 
-   if (!(cp = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
+   if (!(cp = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, 
-         path.conf_file));
+         path_state_get_conf_file()));
       DEXIT;
       SGE_EXIT(1);
    }
@@ -270,7 +270,7 @@ char **argv
       SGE_EXIT(1);
    }
 
-   admin_user = read_adminuser_from_configuration(NULL, path.conf_file, 
+   admin_user = read_adminuser_from_configuration(NULL, path_state_get_conf_file(), 
       SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
 
    if (sge_set_admin_username(admin_user, err_str)) {
@@ -287,8 +287,8 @@ char **argv
    sprintf(qmaster_out_file, "messages_qmaster.%s", uti_state_get_unqualified_hostname());
    sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_MODE_APPEND);
    unlink(TMP_ERR_FILE_SHADOWD);
-   sge_log_set_auser(1);
-   error_file = shadow_err_file;
+   log_state_set_log_as_admin_user(1);
+   log_state_set_log_file(shadow_err_file);
 
    FD_ZERO(&fds);
    if ((fd=commlib_state_get_sfd())>=0) {
@@ -309,13 +309,12 @@ char **argv
       sleep(check_interval);
 
       if (shut_me_down) {
-         extern u_long32 logginglevel;
-         u_long32 old_ll = logginglevel;
-         logginglevel = LOG_INFO;
+         u_long32 old_ll = log_state_get_log_level();
+         log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
                feature_get_product_name(FS_VERSION),
                feature_get_featureset_name(feature_get_active_featureset_id())));
-         logginglevel = old_ll;
+         log_state_set_log_level(old_ll);
          SGE_EXIT(0);
       }   
 
@@ -335,7 +334,7 @@ char **argv
             DPRINTF(("heartbeat not changed since seconds: %d\n", 
                (int) (now - last)));
             delay = delay_time;
-            if (!(ret = check_if_valid_shadow(path.shadow_masters_file))) {
+            if (!(ret = check_if_valid_shadow(path_state_get_shadow_masters_file()))) {
                if (qmaster_lock(QMASTER_LOCK_FILE)) {
                   ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
                } else {
@@ -428,8 +427,8 @@ char *oldqmaster
  
  DENTER(TOP_LAYER, "compare_qmaster_names");
  
- if (get_qm_name(newqmaster, path.act_qmaster_file, NULL)) {
-    WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADACTQMASTERFILEX_S, path.act_qmaster_file)); 
+ if (get_qm_name(newqmaster, path_state_get_act_qmaster_file(), NULL)) {
+    WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADACTQMASTERFILEX_S, path_state_get_act_qmaster_file())); 
     DEXIT;
     return -1;
  }
@@ -449,7 +448,7 @@ char *oldqmaster
  *        -2 if lock file exits or master was running on same machine
  *-----------------------------------------------------------------*/
 static int check_if_valid_shadow(
-char *shadow_master_file 
+const char *shadow_master_file 
 ) {
    struct hostent *hp;
    char *cp, *cp2;
@@ -464,8 +463,8 @@ char *shadow_master_file
    }   
 
    /* we can't read act_qmaster file */
-   if (get_qm_name(oldqmaster, path.act_qmaster_file, NULL)) {
-      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADACTQMASTERFILEX_S, path.act_qmaster_file));
+   if (get_qm_name(oldqmaster, path_state_get_act_qmaster_file(), NULL)) {
+      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADACTQMASTERFILEX_S, path_state_get_act_qmaster_file()));
       DEXIT;
       return -1;
    }
@@ -474,7 +473,7 @@ char *shadow_master_file
    hp = sge_gethostbyname(oldqmaster);
    if (hp == (struct hostent *) NULL) {
       WARNING((SGE_EVENT, MSG_SHADOWD_CANTRESOLVEHOSTNAMEFROMACTQMASTERFILE_SS, 
-              path.act_qmaster_file, oldqmaster));
+              path_state_get_act_qmaster_file(), oldqmaster));
       DEXIT;
       return -1;
    }
@@ -494,13 +493,13 @@ char *shadow_master_file
    }
 
    /* we can't get binary path */
-   if (!(cp = sge_get_confval("binary_path", path.conf_file))) {
-      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path.conf_file));
+   if (!(cp = sge_get_confval("binary_path", path_state_get_conf_file()))) {
+      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path_state_get_conf_file()));
       DEXIT;
       return -1;
    } else {
       sprintf(binpath, cp); /* copy global configuration path */
-      sprintf(localconffile, "%s/%s", path.local_conf_dir, uti_state_get_qualified_hostname());
+      sprintf(localconffile, "%s/%s", path_state_get_local_conf_dir(), uti_state_get_qualified_hostname());
       cp2 = sge_get_confval("binary_path", localconffile);
       if (cp2) {
          strcpy(binpath, cp2); /* overwrite global configuration path */

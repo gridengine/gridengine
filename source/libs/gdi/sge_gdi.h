@@ -150,7 +150,7 @@ typedef struct {
 /* to be used for initializing state_gdi_multi */
 #define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
 
-int sge_gdi_setup(const char *programname);
+int sge_gdi_setup(const char *programname, lList **alpp);
 
 int sge_gdi_param(int, int, char *);
 

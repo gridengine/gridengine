@@ -1289,32 +1289,7 @@ void job_get_submit_task_ids(const lListElem *job, u_long32 *start,
 int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
                             u_long32 step)
 {
-   lListElem *range_elem;  /* RN_Type */
-   int ret = 0;
- 
-   range_elem = lFirst(lGetList(job, JB_ja_structure));
-   if (range_elem == NULL) {
-      lList *range_list;
- 
-      range_elem = lCreateElem(RN_Type);
-      range_list = lCreateList("task id range", RN_Type);
-      if (range_elem == NULL || range_list == NULL) {
-         range_elem = lFreeElem(range_elem);
-         range_list = lFreeList(range_list);
-
-         /* No memory */
-         ret = 1;
-      } else {
-         lAppendElem(range_list, range_elem);
-         lSetList(job, JB_ja_structure, range_list);
-      }
-   }
-   if (range_elem != NULL) {
-      lSetUlong(range_elem, RN_min, start);
-      lSetUlong(range_elem, RN_max, end);
-      lSetUlong(range_elem, RN_step, step);
-   }
-   return ret;
+   return object_set_range_id(job, JB_ja_structure, start, end, step);
 }          
 
 /****** sgeobj/job/job_get_smallest_unenrolled_task_id() **********************

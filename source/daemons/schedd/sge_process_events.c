@@ -146,12 +146,16 @@ int event_handler_default_scheduler()
 {
    int ret;
    sge_Sdescr_t copy;
+   dstring ds;
+   char buffer[128];
 
    DENTER(TOP_LAYER, "event_handler_default_scheduler");
+   
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (__CONDITION(INFOPRINT)) {
       DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n", 
-               sge_at_time(0)));
+               sge_at_time(0, &ds)));
    }
 
    if (rebuild_categories) {

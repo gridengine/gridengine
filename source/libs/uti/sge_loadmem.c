@@ -55,6 +55,7 @@ static int page2M_right(int size);
 
 #define page2M(size) ((*p_page2M)(size))
 
+/* MT-NOTE: only execd and utilities use code that depends on the modules global variables */
 
 static int pageshift;
 

@@ -127,10 +127,10 @@ u_long32 now
    DENTER(TOP_LAYER, "log_stat_file");
 
    if (!last_stat_log_time || now > (last_stat_log_time + conf.stat_log_time)) {
-      if (SGE_STAT(path.stat_file, &statbuf)) {
-         close(creat(path.stat_file, 0644));
+      if (SGE_STAT(path_state_get_stat_file(), &statbuf)) {
+         close(creat(path_state_get_stat_file(), 0644));
       }
-      fp = fopen(path.stat_file, "a");
+      fp = fopen(path_state_get_stat_file(), "a");
       if (fp) {
          for_each(qep, Master_Queue_List) {
             memset(str, 0, sizeof(str));
@@ -175,7 +175,7 @@ u_long32 now
          fclose(fp);
       }
       else {
-         ERROR((SGE_EVENT, MSG_FILE_OPEN_S, path.stat_file));
+         ERROR((SGE_EVENT, MSG_FILE_OPEN_S, path_state_get_stat_file()));
       }
       last_stat_log_time = now;
    }

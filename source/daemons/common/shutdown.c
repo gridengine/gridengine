@@ -41,18 +41,17 @@
 
 void starting_up()
 {
-   extern u_long32 logginglevel;
-   u_long32 old_ll = logginglevel;
+   u_long32 old_ll = log_state_get_log_level();
 
    DENTER(TOP_LAYER, "starting_up");
 
-   logginglevel = LOG_INFO;
+   log_state_set_log_level(LOG_INFO);
 
    INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_SS, 
          feature_get_product_name(FS_VERSION),
          feature_get_featureset_name(feature_get_active_featureset_id())));
 
-   logginglevel = old_ll;
+   log_state_set_log_level(old_ll);
 
    DEXIT;
    return;
@@ -61,23 +60,22 @@ void starting_up()
 /******************************************************************************/
 void sge_shutdown()
 {
-   extern u_long32 logginglevel;
-   u_long32 old_ll = logginglevel;
+   u_long32 old_ll = log_state_get_log_level();
 
    DENTER(TOP_LAYER, "sge_shutdown");
 
-   logginglevel = LOG_INFO;
+   log_state_set_log_level(LOG_INFO);
    INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
          feature_get_product_name(FS_VERSION),
          feature_get_featureset_name(feature_get_active_featureset_id())));
-   logginglevel = old_ll;
+   log_state_set_log_level(old_ll);
 
 #ifdef WIN32NATIVE 
    /*
    ** free previously allocated mem to make win compiler happy
    */
    sge_delete_paths();
-   sge_deleteme();
+/*    sge_deleteme(); */
 #endif   
 
    DEXIT;

@@ -46,6 +46,7 @@
 #include "basis_types.h"
 #include "sge_dstring.h"
 #include "msg_utilib.h"
+#include "sge_prog.h"
 
 typedef enum {
    FILE_TYPE_NOT_EXISTING,
@@ -53,11 +54,11 @@ typedef enum {
    FILE_TYPE_DIRECTORY
 } file_type_t; 
 
+/* MT-NOTE: This module is MT safe */
+
 static int sge_domkdir(const char *, int, int);
 
 static file_type_t sge_get_file_type(const char *name);  
-
-static sge_exit_func_t exit_func = NULL;
 
 static file_type_t sge_get_file_type(const char *name)
 {
@@ -185,7 +186,7 @@ int sge_unlink(const char *prefix, const char *suffix)
 ******************************************************************************/
 void sge_sleep(int sec, int usec) 
 {
-   static struct timeval timeout;
+   struct timeval timeout;
  
    timeout.tv_sec = sec;
    timeout.tv_usec = usec;
@@ -290,43 +291,13 @@ int sge_chdir(const char *dir)
 ******************************************************************************/
 void sge_exit(int i) 
 {
-   if (exit_func) {
+   sge_exit_func_t exit_func = uti_state_get_exit_func();
+   if (exit_func) 
       exit_func(i);
-   }
  
-   DCLOSE;
    exit(i);
 }
  
-/****** uti/unistd/sge_install_exit_func() ************************************
-*  NAME
-*     sge_install_exit_func() -- Installs a new exit handler 
-*
-*  SYNOPSIS
-*     sge_exit_func_t sge_install_exit_func(sge_exit_func_t new) 
-*
-*  FUNCTION
-*     Installs a new exit handler and returns the old one. Exit function
-*     will be called be sge_exit()
-*
-*  INPUTS
-*     sge_exit_func_t new - new function pointer 
-*
-*  RESULT
-*     sge_exit_func_t - old function pointer 
-*
-*  SEE ALSO
-*     uti/unistd/sge_exit() 
-******************************************************************************/
-sge_exit_func_t sge_install_exit_func(sge_exit_func_t new) 
-{
-   sge_exit_func_t old;
- 
-   old = exit_func;
-   exit_func = new;
- 
-   return old;
-}          
 
 /****** uti/unistd/sge_mkdir() ************************************************
 *  NAME

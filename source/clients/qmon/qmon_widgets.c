@@ -308,6 +308,10 @@ Cardinal size
 ) {
    int value = 0;
    String str = NULL;
+   dstring ds;
+   char buffer[128];
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (type != QmonQCardinal )  {
       XmtWarningMsg("XmtDialogSetDialogValues", "TimeInput",
@@ -323,8 +327,8 @@ Cardinal size
    else
       return;
 
-   if (value != 0)
-      str = sge_at_time(value);
+   if (value != 0 && sge_at_time(value, &ds)!=NULL) 
+      str = buffer;
 
    if (str)
       XmtInputFieldSetString(w, str);

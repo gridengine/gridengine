@@ -142,7 +142,7 @@ char *rhost
 
     
 
-   if (sge_unlink(path.local_conf_dir, config_name)) {
+   if (sge_unlink(path_state_get_local_conf_dir(), config_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DEL_CONFIG_DISK_SS, config_name, strerror(errno)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -302,15 +302,15 @@ char *rhost
    }
     
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
-      strcpy(fname, path.cell_root);
+      strcpy(fname, path_state_get_cell_root());
       strcat(fname, "/common");
       strcat(fname, "/.");
       strcat(fname, "configuration");
-      strcpy(real_fname, path.conf_file);
+      strcpy(real_fname, path_state_get_conf_file());
       sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
    } else {
-      sprintf(fname, "%s/.%s", path.local_conf_dir, config_name);
-      sprintf(real_fname, "%s/%s", path.local_conf_dir, config_name);
+      sprintf(fname, "%s/.%s", path_state_get_local_conf_dir(), config_name);
+      sprintf(real_fname, "%s/%s", path_state_get_local_conf_dir(), config_name);
    }
    
    DPRINTF(("path.conf_file: %s\n", fname));   

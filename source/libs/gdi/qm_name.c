@@ -64,7 +64,7 @@ int read_master_file
       return cached_master_name;
    }
 
-   if (get_qm_name(cached_master_name, path.act_qmaster_file, err_str)) {
+   if (get_qm_name(cached_master_name, path_state_get_act_qmaster_file(), err_str)) {
       ERROR((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S , err_str));
       DEXIT;
       return NULL;
@@ -97,7 +97,8 @@ char *err_str
    
    if (!master_host || !master_file) {
       if (err_str)
-         sprintf(err_str, MSG_GDI_NULLPOINTERPASSED );
+         if (master_host)
+            sprintf(err_str, MSG_GDI_NULLPOINTERPASSED );
       DEXIT;
       return -1;
    }

@@ -131,6 +131,10 @@ lList **orderlist
    now = sge_get_gmt();
    for_each (qep, queue_list) {
       u_long32 interval;
+      dstring ds;
+      char buffer[128];
+
+      sge_dstring_init(&ds, buffer, sizeof(buffer));
 
       /* are suspend thresholds enabled? */
       parse_ulong_val(NULL, &interval, TYPE_TIM,
@@ -147,11 +151,11 @@ lList **orderlist
          (lGetUlong(qep, QU_last_suspend_threshold_ckeck) + 
          interval> now)) {
          char tmp[128];
-         strcpy(tmp, sge_ctime(lGetUlong(qep, QU_last_suspend_threshold_ckeck)));
+         strcpy(tmp, sge_ctime(lGetUlong(qep, QU_last_suspend_threshold_ckeck), &ds));
          DPRINTF(("queue was last checked at %s (interval = %s, now = %s)\n",
             tmp,
             lGetString(qep, QU_suspend_interval),
-            sge_ctime(now)));
+            sge_ctime(now, &ds)));
          continue;
       }
 

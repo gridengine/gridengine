@@ -67,7 +67,6 @@
 
 const char *const policy_hierarchy_chars = "OFSD";
 
-extern u_long32 logginglevel;
 extern u_long32 loggingfacility;
 lList *Master_Config_List = NULL; 
 
@@ -291,17 +290,17 @@ lList *sge_set_defined_defaults(lList *lpCfg)
       first = false;
 
       pConf = getConfEntry("qmaster_spool_dir", conf_entries);
-      pConf->value = malloc(strlen(path.cell_root) + strlen(SPOOL_DIR) + 
+      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 
                               strlen(QMASTER_DIR) + 3);
-      sprintf(pConf->value, "%s/%s/%s", path.cell_root, SPOOL_DIR, QMASTER_DIR);
+      sprintf(pConf->value, "%s/%s/%s", path_state_get_cell_root(), SPOOL_DIR, QMASTER_DIR);
 
       pConf = getConfEntry("execd_spool_dir", conf_entries);
-      pConf->value = malloc(strlen(path.cell_root) + strlen(SPOOL_DIR) + 2);
-      sprintf(pConf->value, "%s/%s", path.cell_root, SPOOL_DIR);
+      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2);
+      sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SPOOL_DIR);
 
       pConf = getConfEntry("binary_path", conf_entries);
-      pConf->value = malloc(strlen(path.sge_root) + strlen(SGE_BIN) + 2);
-      sprintf(pConf->value, "%s/%s", path.sge_root, SGE_BIN);
+      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SGE_BIN) + 2);
+      sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SGE_BIN);
    }
    else if (lpCfg)
       lFreeList(lpCfg);
@@ -339,7 +338,6 @@ int type
    lListElem *ep;
    const char *s;
 
-   char SGE_EVENT[MAX_STRING_SIZE];
 #ifndef NO_SGE_COMPILE_DEBUG
    char SGE_FUNC[] = "";   
 #endif
@@ -347,14 +345,14 @@ int type
    if ((ep = lGetElemStr(lp_cfg, CF_name, name))) {
       s = lGetString(ep, CF_value);
       if (s) {
-         int old_verbose = sge_log_is_verbose();
+         int old_verbose = log_state_get_log_verbose();
   
          /* prevent logging function from writing to stderr
           * but log into log file 
           */
-         sge_log_set_verbose(0);
+         log_state_set_log_verbose(0);
          INFO((SGE_EVENT, MSG_GDI_USING_SS, s, name));
-         sge_log_set_verbose(old_verbose);
+         log_state_set_log_verbose(old_verbose);
       }
       if (cpp)
          *cpp = sge_strdup(*cpp, s);
@@ -377,7 +375,7 @@ lList *lpCfg
    
    /* get following logging entries logged if log_info is selected */
    chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
-   logginglevel = mconf->loglevel;
+   log_state_set_log_level(mconf->loglevel);
    
    chg_conf_val(lpCfg, "qmaster_spool_dir", &mconf->qmaster_spool_dir, NULL, 0);
    chg_conf_val(lpCfg, "execd_spool_dir", &mconf->execd_spool_dir, NULL, 0);

@@ -117,6 +117,9 @@
 *  FUNCTION
 *     profiling_started is set to true, if profiling is enabled.
 *     The other global variables are only for internal use.
+*
+*  NOTES
+*     MT-NOTE: access to profiling module global variables only in qmaster
 *******************************************************************************/
 bool profiling_started = false;
 

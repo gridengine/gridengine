@@ -47,8 +47,6 @@
 **
 ** RETURN
 **
-** EXTERNAL
-**   path.cell_root
 ** DESCRIPTION
 **   determines if a load value is configured as static
 **   

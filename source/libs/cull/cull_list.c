@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -106,27 +107,27 @@ static void cull_state_init(struct cull_state_t* state) {
 *
 ******************************************************************************/
 int cull_state_get_lerrno(void) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "get_lerrno");
    return cull_state->lerrno;
 }
 
 const char *cull_state_get_noinit(void) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "get_noinit");
    return cull_state->noinit;
 }
 
 const lSortOrder *cull_state_get_global_sort_order(void) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "get_global_sort_order");
    return cull_state->global_sort_order;
 }
 
 int cull_state_get_chunk_size(void) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "get_chunck_size");
    return cull_state->chunk_size;
 }
 
 const lNameSpace *cull_state_get_name_space(void) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "get_name_space");
    return cull_state->name_space;
 }
 
@@ -140,37 +141,37 @@ const lNameSpace *cull_state_get_name_space(void) {
 ******************************************************************************/
 
 void cull_state_set_lerrno(
-int errno
+int i
 ) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
-   cull_state->lerrno = errno;
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "set_lerrno");
+   cull_state->lerrno = i;
 }
 
 void cull_state_set_noinit(
 char *s
 ) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "set_noinit");
    strcpy(cull_state->noinit, s);
 }
 
 void cull_state_set_global_sort_order(
 const lSortOrder *so
 ) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "set_global_sort_order");
    cull_state->global_sort_order = so;
 }
 
 void cull_state_set_chunk_size(
 int chunk_size
 ) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "set_chunck_size");
    cull_state->chunk_size = chunk_size;
 }
 
 void cull_state_set_name_space(
 const lNameSpace  *ns
 ) {
-   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key, "set_name_space");
    cull_state->name_space = ns;
 }
 

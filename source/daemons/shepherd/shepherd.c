@@ -474,7 +474,7 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
 
  If the "exit_status"-file exists the shepherd has terminated regular.
  If exit_status==0 everything is fine. If exit_status!=0 a problem occured.
- The error_file should give hints what happened.
+ The error file should give hints what happened.
  exit_status values: see shepherd_states header file
 
  ************************************************************************/

@@ -111,7 +111,7 @@ static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
 
-#define VERBOSE_LOG(x) if(sge_log_is_verbose()) { fprintf x; fflush(stderr); }
+#define VERBOSE_LOG(x) if(log_state_get_log_verbose()) { fprintf x; fflush(stderr); }
 
 /****** Interactive/qsh/--Interactive ***************************************
 *
@@ -975,7 +975,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
          /* use path $ROOT/utilbin/$ARCH/sessionType */
          static char cmdpath[1024];
 
-         sprintf(cmdpath, "%s/utilbin/%s/%s", path.sge_root, sge_get_arch(), session_type);
+         sprintf(cmdpath, "%s/utilbin/%s/%s", path_state_get_sge_root(), sge_get_arch(), session_type);
          client_name = cmdpath;
       } else {
          /* try to find telnet in PATH */
@@ -1203,7 +1203,6 @@ int main(int argc, char **argv)
    lListElem *ep = NULL;
 
    int sock;
-   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
@@ -1223,8 +1222,8 @@ int main(int argc, char **argv)
    }
 
    sge_gdi_param(SET_MEWHO, my_who, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[my_who]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[my_who], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 
@@ -1244,9 +1243,9 @@ int main(int argc, char **argv)
    ** qrsh: quiet
    */
    if(is_rsh) {
-      sge_log_set_verbose(0); 
+      log_state_set_log_verbose(0); 
    } else {
-      sge_log_set_verbose(1);
+      log_state_set_log_verbose(1);
    }
 
    /*
@@ -1332,7 +1331,7 @@ int main(int argc, char **argv)
    /* set verbosity */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-verbose"))) {
       lRemoveElem(opts_cmdline, ep);
-      sge_log_set_verbose(1);
+      log_state_set_log_verbose(1);
    }
 
    /* parse -noshell */
@@ -1705,7 +1704,7 @@ int main(int argc, char **argv)
   
          if (!lp_poll || !(jep = lFirst(lp_poll))) {
             WARNING((SGE_EVENT, "\n"));
-            sge_log_set_verbose(1);
+            log_state_set_log_verbose(1);
             WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, uti_state_get_sge_formal_prog_name()));
             do_exit = 1;
             exit_status = 1;

@@ -299,20 +299,20 @@ lListElem *jatep
    DENTER(TOP_LAYER, "sge_log_dusage");
 
    write_comment = 0;
-   if (SGE_STAT(path.acct_file, &statbuf)) {
+   if (SGE_STAT(path_state_get_acct_file(), &statbuf)) {
       write_comment = 1;
    }     
 
-   fp = fopen(path.acct_file, "a");
+   fp = fopen(path_state_get_acct_file(), "a");
    if (!fp) {
-      ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, path.acct_file, strerror(errno)));
+      ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, path_state_get_acct_file(), strerror(errno)));
       DEXIT;
       return;
    }
 
    if (write_comment && (sge_spoolmsg_write(fp, COMMENT_CHAR, 
          feature_get_product_name(FS_VERSION)) < 0)) {
-      ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path.acct_file)); 
+      ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path_state_get_acct_file())); 
       fclose(fp);
       DEXIT;
       return;
@@ -324,7 +324,7 @@ lListElem *jatep
    fclose(fp);
 
    if (write_result == EOF) {
-      ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path.acct_file));
+      ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path_state_get_acct_file()));
       DEXIT;
       return;
    } else if (write_result == -2) {

@@ -33,11 +33,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#if defined(SGE_MT)
+#include <pthread.h>
+#endif
+
 
 #include "sge_hostname.h"
 #include "sgermon.h"
@@ -47,6 +52,8 @@
 #include "sge_unistd.h"
 #include "sge_string.h"
 #include "sge_prog.h"
+
+#include "sge_uti_state.h"
 
 #include "msg_utilib.h"
 
@@ -58,13 +65,12 @@ extern int h_errno;
 
 extern void trace(char *);
 
+
+/* MT-NOTE: hostlist used only in qmaster, commd and some utilities */
 static host *hostlist = NULL;
 
+/* MT-NOTE: localhost used only in commd */
 static host *localhost = NULL;
-
-/* compare hosts with FQDN or not */
-static int fqdn_cmp = 0;
-static char *default_domain = NULL;   
 
 static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom);
 static int matches_addr(struct hostent *he, char *addr);
@@ -95,34 +101,52 @@ int gethostname(char *name, int namelen);
 ******************************************************************************/
 host *uti_state_get_localhost(void)
 {
+   /* so far called only by commd */ 
    return localhost;
 }
 
 const char *uti_state_get_default_domain(void)
 {
-   return default_domain;
+   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
+   return uti_state->default_domain;
 }
 
 int uti_state_get_fqdn_cmp(void)
 {
-   return fqdn_cmp;
+   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
+   return uti_state->fqdn_cmp;
 }
-
 
 void uti_state_set_default_domain(const char *s)
 {
-   default_domain = sge_strdup(default_domain, s);
+   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
+   uti_state->default_domain = sge_strdup(uti_state->default_domain, s);
 }
 
 void uti_state_set_fqdn_cmp(int value)
 {
-   fqdn_cmp = value;
+   GET_SPECIFIC(struct uti_state_t, uti_state, uti_state_init, uti_state_key, "uti_state_get_qualified_hostname");
+   uti_state->fqdn_cmp = value;
 }
 
 
 #define MAX_RESOLVER_BLOCKING 15
 
-/* should use gethostbyname_r() instead */
+/****** uti/host/sge_gethostbyname() ****************************************
+*  NAME
+*     sge_gethostbyname() -- gethostbyname() wrapper
+*
+*  SYNOPSIS
+*     struct hostent *sge_gethostbyname(const char *name)
+*
+*  FUNCTION
+*     Wrapps gethostbyname() function calls, measures time spent 
+*     in gethostbyname() and logs when very much time has passed.
+*
+*  NOTES
+*     MT-NOTE: gethostbyname() is not MT safe, should use gethostbyname_r() instead 
+*     MT-NOTE: sge_gethostbyname() used only in qmaster, commd and some utilities 
+*******************************************************************************/
 static struct hostent *sge_gethostbyname(const char *name)
 {
    struct hostent *he;
@@ -150,7 +174,21 @@ static struct hostent *sge_gethostbyname(const char *name)
    return he;
 }
 
-/* should use gethostbyaddr_r() instead */
+/****** uti/host/sge_gethostbyname() ****************************************
+*  NAME
+*     sge_gethostbyaddr() -- gethostbyname() wrapper
+*
+*  SYNOPSIS
+*     struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
+*
+*  FUNCTION
+*     Wrapps gethostbyaddr() function calls, measures time spent 
+*     in gethostbyaddr() and logs when very much time has passed.
+*
+*  NOTES
+*     MT-NOTE: gethostbyaddr() is not MT safe, should use gethostbyaddr_r() instead 
+*     MT-NOTE: sge_gethostbyaddr() used only in qmaster, commd and some utilities 
+*******************************************************************************/
 static struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 {
    struct hostent *he;
@@ -794,7 +832,7 @@ void sge_hostcpy(char *dst, const char *raw)
 {
    char *s;
  
-   if (!fqdn_cmp) {
+   if (!uti_state_get_fqdn_cmp()) {
  
       /* standard: simply ignore FQDN */
  
@@ -802,14 +840,14 @@ void sge_hostcpy(char *dst, const char *raw)
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
-   } else if (default_domain && SGE_STRCASECMP(default_domain, "none")) {
+   } else if (uti_state_get_default_domain() && SGE_STRCASECMP(uti_state_get_default_domain(), "none")) {
  
       /* exotic: honor FQDN but use default_domain */
  
       if (!strchr(raw, '.')) {
          strncpy(dst, raw, MAXHOSTLEN);
          strncat(dst, ".", MAXHOSTLEN);
-         strncat(dst, default_domain, MAXHOSTLEN);
+         strncat(dst, uti_state_get_default_domain(), MAXHOSTLEN);
       } else {
          strncpy(dst, raw, MAXHOSTLEN);
       }

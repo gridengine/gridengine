@@ -80,6 +80,8 @@ u_long32 gdi_state_get_request_id(void);
 int gdi_state_get_daemon_first(void);
 int gdi_state_get_first_time(void);
 int gdi_state_get_commd_state(void);
+int gdi_state_get_program_id(void);
+int gdi_state_get_isalive(void);
 int gdi_state_get_ec_config_changed(void);
 int gdi_state_get_ec_need_register(void);
 lListElem *gdi_state_get_ec(void);
@@ -89,6 +91,8 @@ void gdi_state_set_request_id(u_long32 id);
 void gdi_state_set_daemon_first(int i);
 void gdi_state_set_first_time(int i);
 void gdi_state_set_commd_state(int i);
+void gdi_state_set_program_id(int i);
+void gdi_state_set_isalive(int i);
 void gdi_state_set_ec_config_changed(int i);
 void gdi_state_set_ec_need_register(int i);
 void gdi_state_set_ec(lListElem *ec);
@@ -164,7 +168,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
 int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
 
 /* setup.c */
-void sge_setup(u_long32 sge_formal_prog_name, lList **alpp);
+int sge_setup(u_long32 sge_formal_prog_name, lList **alpp);
 int reresolve_me_qualified_hostname(void);
 
 /* sge_ack.c */

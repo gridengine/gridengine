@@ -159,7 +159,7 @@ char **argv
    umask(022);
       
    /* Initialize path for temporary logging until we chdir to spool */
-   error_file = TMP_ERR_FILE_EXECD;
+   log_state_set_log_file(TMP_ERR_FILE_EXECD);
 
 #if RAND_ERROR
    rand_error = 1;
@@ -167,7 +167,7 @@ char **argv
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
-   sge_install_exit_func(execd_exit_func);
+   uti_state_set_exit_func(execd_exit_func);
    sge_setup_sig_handlers(EXECD);
 
    memset(priority_tags, 0, sizeof(priority_tags));

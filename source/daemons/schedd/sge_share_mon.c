@@ -555,7 +555,7 @@ main(int argc, char **argv)
    if ((argc - optind) > 0)
        names = &argv[optind];
 
-   sge_gdi_setup("sge_share_mon");
+   sge_gdi_setup("sge_share_mon", NULL);
 
    if (header)
       print_hdr(outfile, &format);

@@ -32,7 +32,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/types.h>
+#if defined(SGE_MT)
+#include <pthread.h>
+#endif
 
 #include "sgermon.h"
 #include "basis_types.h"
@@ -44,39 +48,216 @@
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_dstring.h"
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
 
-sge_path_type path = { NULL };
+struct path_state_t {
+    char       *sge_root;      
+    char       *cell_root;
+    char       *conf_file;
+    char       *sched_conf_file;
+    char       *act_qmaster_file;
+    char       *acct_file;
+    char       *stat_file;
+    char       *local_conf_dir;
+    char       *history_dir;
+    char       *shadow_masters_file;
+    char       *product_mode_file;
+};
 
-/*-----------------------------------------------------------------------
- * sge_setup_paths
- * set SGE_ROOT and SGE_CELL dependent path components
- * spool directory may later be overridden by global configuration
- * This routine may be called as often as is is necessary.
- * The alpp is used by caller to indicate if setup function should exit
- * on errror.
- *-----------------------------------------------------------------------*/
-void sge_setup_paths(
+#if defined(SGE_MT)
+static pthread_key_t   path_state_key;
+#else
+static struct path_state_t path_state_opaque = {
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+struct path_state_t *path_state = &path_state_opaque;
+#endif
+
+#if defined(SGE_MT)
+static void path_state_init(struct path_state_t* state) {
+   memset(state, 0, sizeof(struct path_state_t));
+}
+
+static void path_state_destroy(void* state) {
+   FREE(((struct path_state_t*)state)->sge_root);
+   FREE(((struct path_state_t*)state)->cell_root);
+   FREE(((struct path_state_t*)state)->conf_file);
+   FREE(((struct path_state_t*)state)->sched_conf_file);
+   FREE(((struct path_state_t*)state)->act_qmaster_file);
+   FREE(((struct path_state_t*)state)->acct_file);
+   FREE(((struct path_state_t*)state)->stat_file);
+   FREE(((struct path_state_t*)state)->local_conf_dir);
+   FREE(((struct path_state_t*)state)->history_dir);
+   FREE(((struct path_state_t*)state)->shadow_masters_file);
+   FREE(((struct path_state_t*)state)->product_mode_file);
+   free(state);
+}
+ 
+void path_init_mt(void) {
+   pthread_key_create(&path_state_key, &path_state_destroy);
+} 
+#endif
+
+const char *path_state_get_sge_root(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sge_root");
+   return path_state->sge_root;
+}
+const char *path_state_get_cell_root(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_cell_root");
+   return path_state->cell_root;
+}
+const char *path_state_get_conf_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_conf_file");
+   return path_state->conf_file;
+}
+const char *path_state_get_sched_conf_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sched_conf_file");
+   return path_state->sched_conf_file;
+}
+const char *path_state_get_act_qmaster_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_act_qmaster_file");
+   return path_state->act_qmaster_file;
+}
+const char *path_state_get_acct_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_acct_file");
+   return path_state->acct_file;
+}
+const char *path_state_get_stat_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_stat_file");
+   return path_state->stat_file;
+}
+const char *path_state_get_local_conf_dir(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_local_conf_dir");
+   return path_state->local_conf_dir;
+}
+const char *path_state_get_history_dir(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_history_dir");
+   return path_state->history_dir;
+}
+const char *path_state_get_shadow_masters_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_shadow_masters_file");
+   return path_state->shadow_masters_file;
+}
+const char *path_state_get_product_mode_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_product_mode_file");
+   return path_state->product_mode_file;
+}
+
+
+
+
+void path_state_set_sge_root(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_sge_root");
+   path_state->sge_root = sge_strdup(path_state->sge_root, path);
+}
+void path_state_set_cell_root(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_cell_root");
+   path_state->cell_root = sge_strdup(path_state->cell_root, path);
+}
+void path_state_set_conf_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_conf_file");
+   path_state->conf_file = sge_strdup(path_state->conf_file, path);
+}
+void path_state_set_sched_conf_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_sched_conf_file");
+   path_state->sched_conf_file = sge_strdup(path_state->sched_conf_file, path);
+}
+void path_state_set_act_qmaster_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_act_qmaster_file");
+   path_state->act_qmaster_file = sge_strdup(path_state->act_qmaster_file, path);
+}
+void path_state_set_acct_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_acct_file");
+   path_state->acct_file = sge_strdup(path_state->acct_file, path);
+}
+void path_state_set_stat_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_stat_file");
+   path_state->stat_file = sge_strdup(path_state->stat_file, path);
+}
+void path_state_set_local_conf_dir(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_local_conf_dir");
+   path_state->local_conf_dir = sge_strdup(path_state->local_conf_dir, path);
+}
+void path_state_set_history_dir(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_history_dir");
+   path_state->history_dir = sge_strdup(path_state->history_dir, path);
+}
+void path_state_set_shadow_masters_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_shadow_masters_file");
+   path_state->shadow_masters_file = sge_strdup(path_state->shadow_masters_file, path);
+}
+void path_state_set_product_mode_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_product_mode_file");
+   path_state->product_mode_file = sge_strdup(path_state->product_mode_file, path);
+}
+
+/****** setup_path/sge_setup_paths() *******************************************
+*  NAME
+*     sge_setup_paths() -- setup global pathes 
+*
+*  SYNOPSIS
+*     int sge_setup_paths(const char *sge_cell, lList **alpp) 
+*
+*  FUNCTION
+*     Set SGE_ROOT and SGE_CELL dependent path components. The spool 
+*     directory may later be overridden by global configuration.
+*     This routine may be called as often as is is necessary.
+*
+*  INPUTS
+*     const char *sge_cell - the SGE cell to be used
+* 
+*  OUTPUT
+*     lList **alpp         - The answer list. Also used by caller to indicate 
+*                            if setup function should exit on errror or not.
+*
+*  RESULT
+*     int - 0 on success 
+*
+*******************************************************************************/
+int sge_setup_paths(
 const char *sge_cell,
-sge_path_type *p,
 lList **alpp 
 ) {
    char *cell_root;
    const char *sge_root;
    char *common_dir;
    SGE_STRUCT_STAT sbuf;
-   int cell_root_len, common_len;
-   char buffer[1024];
+   char buffer[2*1024];
+   dstring bw;
    
    DENTER(TOP_LAYER, "sge_setup_paths");
-   
+  
+   sge_dstring_init(&bw, buffer, sizeof(buffer)); 
+
    if (!(sge_root = sge_get_root_dir(alpp?0:1, buffer, sizeof(buffer)-1))) {
       /* in exit-on-error case program already exited */
       answer_list_add(alpp, buffer, STATUS_EDISK, 0);
       DEXIT;
-      return;
+      return -1;
    }
 
    if (SGE_STAT(sge_root, &sbuf)) {
@@ -84,7 +265,7 @@ lList **alpp
       if (alpp) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
-         return;
+         return -1;
       }   
       else
          SGE_EXIT(1);
@@ -95,7 +276,7 @@ lList **alpp
       if (alpp) { 
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
-         return;
+         return -1;
       }
       else
          SGE_EXIT(1);
@@ -108,7 +289,7 @@ lList **alpp
       if (alpp) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
-         return;
+         return -1;
       }
       else
          SGE_EXIT(1);
@@ -123,7 +304,7 @@ lList **alpp
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
-            return;
+            return -1;
          }
          else
             SGE_EXIT(1);
@@ -139,7 +320,7 @@ lList **alpp
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
-            return;
+            return -1;
          }
          else
             SGE_EXIT(1);
@@ -148,95 +329,66 @@ lList **alpp
    }       
    FREE(common_dir);
 
-   cell_root_len = strlen(cell_root) + 2;               /* slash and 0 Byte */
-   common_len    = cell_root_len + strlen(COMMON_DIR) + 1; /* slash */
+   path_state_set_sge_root(sge_root);
+   path_state_set_cell_root(cell_root);
+  
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, CONF_FILE);
+   path_state_set_conf_file(sge_dstring_get_string(&bw));
 
-   FREE(p->sge_root);
-   p->sge_root = sge_strdup(p->sge_root, sge_root);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SCHED_CONF_FILE);
+   path_state_set_sched_conf_file(sge_dstring_get_string(&bw));
    
-   FREE(p->cell_root);
-   p->cell_root = cell_root;
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, ACT_QMASTER_FILE);
+   path_state_set_act_qmaster_file(sge_dstring_get_string(&bw));
    
-   FREE(p->conf_file);        
-   p->conf_file = malloc(cell_root_len + common_len + strlen(CONF_FILE));
-   sprintf(p->conf_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, CONF_FILE);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, ACCT_FILE);
+   path_state_set_acct_file(sge_dstring_get_string(&bw));
 
-   FREE(p->sched_conf_file);
-   p->sched_conf_file = 
-      malloc(cell_root_len + common_len + strlen(SCHED_CONF_FILE));
-   sprintf(p->sched_conf_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, 
-           SCHED_CONF_FILE);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, STAT_FILE);
+   path_state_set_stat_file(sge_dstring_get_string(&bw));
    
-   FREE(p->act_qmaster_file);
-   p->act_qmaster_file = malloc(cell_root_len + common_len + 
-                                strlen(ACT_QMASTER_FILE));
-   sprintf(p->act_qmaster_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, 
-           ACT_QMASTER_FILE);
-   
-   FREE(p->acct_file);
-   p->acct_file = malloc(cell_root_len + common_len + strlen(ACCT_FILE));
-   sprintf(p->acct_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, ACCT_FILE);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, LOCAL_CONF_DIR);
+   path_state_set_local_conf_dir(sge_dstring_get_string(&bw));
 
-   FREE(p->stat_file);        
-   p->stat_file = malloc(cell_root_len + common_len + strlen(STAT_FILE));
-   sprintf(p->stat_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, STAT_FILE);
-   
-   FREE(p->local_conf_dir);
-   p->local_conf_dir = malloc(cell_root_len + common_len + strlen(LOCAL_CONF_DIR) + 1);
-   sprintf(p->local_conf_dir, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, LOCAL_CONF_DIR);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, HISTORY_DIR);
+   path_state_set_history_dir(sge_dstring_get_string(&bw));
 
-   FREE(p->history_dir);
-   p->history_dir = malloc(cell_root_len + common_len + strlen(HISTORY_DIR));
-   sprintf(p->history_dir, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, HISTORY_DIR);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SHADOW_MASTERS_FILE);
+   path_state_set_shadow_masters_file(sge_dstring_get_string(&bw));
 
-   FREE(p->shadow_masters_file);        
-   p->shadow_masters_file = malloc(cell_root_len + common_len + strlen(SHADOW_MASTERS_FILE) + 1);
-   sprintf(p->shadow_masters_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SHADOW_MASTERS_FILE);
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, PRODUCT_MODE_FILE);
+   path_state_set_product_mode_file(sge_dstring_get_string(&bw));
+   FREE(cell_root);
 
-   FREE(p->license_file);        
-   p->license_file = malloc(cell_root_len + common_len + strlen(LICENSE_FILE) + 1);
-   sprintf(p->license_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, LICENSE_FILE);
-
-   FREE(p->product_mode_file);        
-   p->product_mode_file = malloc(cell_root_len + common_len + strlen(PRODUCT_MODE_FILE) + 1);
-   sprintf(p->product_mode_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, PRODUCT_MODE_FILE);
-
-   FREE(p->master_ior_file);        
-   p->master_ior_file = malloc(cell_root_len + common_len + strlen(MASTER_IOR_FILE) + 1);
-   sprintf(p->master_ior_file, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, MASTER_IOR_FILE);
-
-   DPRINTF(("sge_root         >%s<\n", p->sge_root));
-   DPRINTF(("cell_root           >%s<\n", p->cell_root));
-   DPRINTF(("conf_file           >%s<\n", p->conf_file));
-   DPRINTF(("act_qmaster_file    >%s<\n", p->act_qmaster_file));
-   DPRINTF(("acct_file           >%s<\n", p->acct_file));
-   DPRINTF(("stat_file           >%s<\n", p->stat_file));
-   DPRINTF(("local_conf_dir      >%s<\n", p->local_conf_dir));
-   DPRINTF(("history_dir         >%s<\n", p->history_dir));
-   DPRINTF(("shadow_masters_file >%s<\n", p->shadow_masters_file));
-   DPRINTF(("product_mode_file   >%s<\n", p->product_mode_file));
-   DPRINTF(("master_ior_file     >%s<\n", p->master_ior_file));
+   DPRINTF(("sge_root         >%s<\n", path_state_get_sge_root()));
+   DPRINTF(("cell_root           >%s<\n", path_state_get_cell_root()));
+   DPRINTF(("conf_file           >%s<\n", path_state_get_conf_file()));
+   DPRINTF(("act_qmaster_file    >%s<\n", path_state_get_act_qmaster_file()));
+   DPRINTF(("acct_file           >%s<\n", path_state_get_acct_file()));
+   DPRINTF(("stat_file           >%s<\n", path_state_get_stat_file()));
+   DPRINTF(("local_conf_dir      >%s<\n", path_state_get_local_conf_dir()));
+   DPRINTF(("history_dir         >%s<\n", path_state_get_history_dir()));
+   DPRINTF(("shadow_masters_file >%s<\n", path_state_get_shadow_masters_file()));
+   DPRINTF(("product_mode_file   >%s<\n", path_state_get_product_mode_file()));
    
    DEXIT;
+   return 0;
 }
 
 #ifdef WIN32NATIVE
-void sge_delete_paths ()
+void sge_delete_paths()
 {
-	FREE(path.sge_root);
-	FREE(path.cell_root);
-	FREE(path.conf_file);
-	FREE(path.sched_conf_file);
-	FREE(path.act_qmaster_file);
-	FREE(path.acct_file);
-	FREE(path.stat_file);
-	FREE(path.local_conf_dir);
-	FREE(path.history_dir);
-	FREE(path.shadow_masters_file);
-	FREE(path.license_file);
-	FREE(path.product_mode_file);
-	FREE(path.qmaster_args);
-	FREE(path.schedd_args);
-	FREE(path.master_ior_file); 
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sge_root");
+	FREE(path_state->sge_root);
+	FREE(path_state->cell_root);
+	FREE(path_state->conf_file);
+	FREE(path_state->sched_conf_file);
+	FREE(path_state->act_qmaster_file);
+	FREE(path_state->acct_file);
+	FREE(path_state->stat_file);
+	FREE(path_state->local_conf_dir);
+	FREE(path_state->history_dir);
+	FREE(path_state->shadow_masters_file);
+	FREE(path_state->product_mode_file);
 }
 #endif /* WIN32NATIVE */

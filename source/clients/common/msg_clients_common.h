@@ -48,7 +48,6 @@
 #define MSG_GDI_EXECHOSTSGEGDIFAILED              _MESSAGE(1010, _("exec host: sge_gdi failed\n"))
 #define MSG_GDI_COMPLEXSGEGDIFAILED              _MESSAGE(1011, _("complex: sge_gdi failed\n"))
 #define MSG_GDI_SCHEDDCONFIGSGEGDIFAILED    _MESSAGE(1012, _("scheduler configuration: sge_gdi failed\n"))
-#define MSG_GDI_SGE_SETUP_FAILED_S    _MESSAGE(1013, _("sge_gdi_setup failed: "SFN"\n"))
 
 /*
  * qstat_printing.c

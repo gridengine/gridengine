@@ -34,6 +34,11 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#ifdef SGE_MT
+#include <pthread.h>
+#endif
+
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
@@ -42,6 +47,11 @@
 
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
+
+#ifdef SGE_MT
+/* MT-NOTE: language_mutex guards all language module function calls */
+pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 /*
  *  environment variable "SGE_ENABLE_MSG_ID"
@@ -115,6 +125,9 @@ static bool sge_are_language_functions_installed = false;
 *  RESULT
 *     int state         -  true for seccess, false on error.
 *
+*  NOTES
+*     MT-NOTE: sge_init_languagefunc() is guarded by language_mutex
+*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -137,6 +150,10 @@ int sge_init_languagefunc(char *package, char *localeDir)
   int   stop = 0;
 
   DENTER(TOP_LAYER, "sge_init_language");
+
+#ifdef SGE_MT
+   pthread_mutex_lock(&language_mutex);
+#endif
 
   DPRINTF(("****** starting localization procedure ... **********\n"));
 
@@ -363,6 +380,10 @@ int sge_init_languagefunc(char *package, char *localeDir)
     DPRINTF(("****** starting localization procedure ... failed  **\n"));
   }
 
+#ifdef SGE_MT
+   pthread_mutex_unlock(&language_mutex);
+#endif
+
   DEXIT;
   return (success);
 }
@@ -389,6 +410,9 @@ int sge_init_languagefunc(char *package, char *localeDir)
 *     bindtextdomain_func_type - pointer for bindtextdomain()
 *     textdomain_func_type     - pointer for textdomain()
 *
+*  NOTES
+*     MT-NOTE: sge_init_language_func() is guarded by language_mutex
+*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -403,6 +427,10 @@ void sge_init_language_func(gettext_func_type new_gettext,
                             bindtextdomain_func_type new_bindtextdomain,
                             textdomain_func_type new_textdomain) 
 {
+#ifdef SGE_MT
+   pthread_mutex_lock(&language_mutex);
+#endif
+
    /* initialize the functions pointer to NULL */
    sge_language_functions.gettext_func = NULL;
    sge_language_functions.setlocale_func = NULL;
@@ -428,6 +456,11 @@ void sge_init_language_func(gettext_func_type new_gettext,
    if (new_textdomain != NULL) {
       sge_language_functions.textdomain_func = new_textdomain;
    } 
+
+#ifdef SGE_MT
+   pthread_mutex_unlock(&language_mutex);
+#endif
+
 }
 
 /****** uti/language/sge_set_message_id_output() *******************************
@@ -445,6 +478,9 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *  INPUTS
 *     int flag - 0 = off ; 1 = on
 *
+*  NOTES
+*     MT-NOTE: sge_set_message_id_output() is guarded by language_mutex
+*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -455,11 +491,21 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *     uti/language/sge_set_message_id_output()
 *******************************************************************************/
 void sge_set_message_id_output(int flag) {
+
+#ifdef SGE_MT
+   pthread_mutex_lock(&language_mutex);
+#endif
+
    if (flag == 0) {
       sge_message_id_view_flag = 0;
    } else {
       sge_message_id_view_flag = 1;
    }
+
+#ifdef SGE_MT
+   pthread_mutex_unlock(&language_mutex);
+#endif
+
 }
 /****** uti/language/sge_get_message_id_output() *******************************
 *  NAME
@@ -475,6 +521,9 @@ void sge_set_message_id_output(int flag) {
 *  RESULT
 *     int - value of sge_message_id_view_flag
 *
+*  NOTES
+*     MT-NOTE: sge_get_message_id_output() is guarded by language_mutex
+*     
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()
@@ -485,13 +534,25 @@ void sge_set_message_id_output(int flag) {
 *     uti/language/sge_set_message_id_output()
 *******************************************************************************/
 int sge_get_message_id_output(void) {
-   if (sge_enable_msg_id_to_every_message == 1) {
-      return 1;
-   } 
-   if (sge_enable_msg_id == 0) {
-      return 0;
-   } 
-   return sge_message_id_view_flag;
+
+   int ret;
+
+#ifdef SGE_MT
+   pthread_mutex_lock(&language_mutex);
+#endif
+
+   if (sge_enable_msg_id_to_every_message == 1) 
+      ret = 1; 
+   else if (sge_enable_msg_id == 0)
+      ret = 0;
+   else
+      ret = sge_message_id_view_flag;
+
+#ifdef SGE_MT
+   pthread_mutex_unlock(&language_mutex);
+#endif
+
+   return ret;
 }
 
 /****** uti/language/sge_gettext() *********************************************
@@ -554,6 +615,7 @@ const char *sge_gettext(char *x) {
 *******************************************************************************/
 const char *sge_gettext_(int msg_id, const char *msg_str) 
 {
+   /* extern */
 #ifndef __SGE_COMPILE_WITH_GETTEXT__
    return msg_str;
 #else
@@ -649,6 +711,9 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 *  RESULT
 *     char*   - pointer internationalized message
 *
+*  NOTE
+*     MT-NOTE: not guarded b/c sge_gettext__() is used only in infotext utility
+* 
 *  SEE ALSO
 *     uti/language/sge_init_language()
 *     uti/language/sge_init_language_func()

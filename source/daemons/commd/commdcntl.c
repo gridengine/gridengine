@@ -77,7 +77,7 @@ char **argv
    ** determine service, (will set CL_P_RESERVED_PORT from product mode file)
    */
    sge_gdi_param(SET_MEWHO,COMMDCNTL,NULL);
-   sge_gdi_setup(prognames[COMMDCNTL]); 
+   sge_gdi_setup(prognames[COMMDCNTL], NULL); 
 
    /*
    **  always set CL_P_RESERVED_PORT

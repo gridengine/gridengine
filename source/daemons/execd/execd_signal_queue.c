@@ -359,7 +359,11 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        const char *job_master_queue = NULL;
        const char *job_owner = NULL; 
        const char *mail_type = "unknown";
+
+       dstring ds;
+       char buffer[128];
       
+       sge_dstring_init(&ds, buffer, sizeof(buffer));
 
 
        /* get values */       
@@ -394,8 +398,8 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
 
        /* make human readable time format */
-       sprintf(job_sub_time_str ,"%s",sge_ctime(job_sub_time ));
-       sprintf(job_exec_time_str,"%s",sge_ctime(job_exec_time));
+       sprintf(job_sub_time_str ,"%s",sge_ctime(job_sub_time, &ds));
+       sprintf(job_exec_time_str,"%s",sge_ctime(job_exec_time, &ds));
 
        if (signal == SGE_SIGSTOP) {
           /* suspended */

@@ -60,8 +60,6 @@ int stored_errno = 0;
 #   define MIN(a,b) (((a)<(b))?(a):(b))       
 #endif
 
-extern int commlib_debug;
-
 /***********************************************************************/
 /* (un)pack routines for communication over network                    */
 /*                                                                     */

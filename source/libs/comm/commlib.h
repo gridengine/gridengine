@@ -109,14 +109,12 @@ extern "C" {
 
 typedef int (*sge_log_ftype)(int, const char*, const char*, const char*, int); 
 
-extern char COMMLIB_BUFFER[2048];
-
 #define COMMLIB_CRITICAL(x) \
    { \
       sge_log_ftype local_sge_log; \
-      if ((local_sge_log = commlib_state_logging_function())) { \
+      if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
-         local_sge_log(LOG_CRIT, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
+         local_sge_log(LOG_CRIT, SGE_EVENT, __FILE__,"commlib_function",__LINE__); \
       } \
    }     
 
@@ -125,7 +123,7 @@ extern char COMMLIB_BUFFER[2048];
       sge_log_ftype local_sge_log; \
       if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
-         local_sge_log(LOG_ERR, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
+         local_sge_log(LOG_ERR, SGE_EVENT, __FILE__,"commlib_function",__LINE__); \
       } \
    } 
 
@@ -134,7 +132,7 @@ extern char COMMLIB_BUFFER[2048];
       sge_log_ftype local_sge_log; \
       if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
-         local_sge_log(LOG_WARNING, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
+         local_sge_log(LOG_WARNING, SGE_EVENT, __FILE__,"commlib_function",__LINE__); \
       } \
    }     
 
@@ -143,7 +141,7 @@ extern char COMMLIB_BUFFER[2048];
       sge_log_ftype local_sge_log; \
       if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
-         local_sge_log(LOG_NOTICE, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
+         local_sge_log(LOG_NOTICE, SGE_EVENT, __FILE__,"commlib_function",__LINE__); \
       } \
    }     
 
@@ -152,7 +150,7 @@ extern char COMMLIB_BUFFER[2048];
       sge_log_ftype local_sge_log; \
       if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
-         local_sge_log(LOG_INFO, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
+         local_sge_log(LOG_INFO, SGE_EVENT, __FILE__,"commlib_function",__LINE__); \
       } \
    }     
 
@@ -161,12 +159,12 @@ extern char COMMLIB_BUFFER[2048];
       sge_log_ftype local_sge_log; \
       if ((local_sge_log = commlib_state_get_logging_function())) { \
          sprintf x; \
-         local_sge_log(LOG_DEBUG, COMMLIB_BUFFER, __FILE__,"commlib_function",__LINE__); \
+         local_sge_log(LOG_DEBUG, SGE_EVENT, __FILE__,"commlib_function",__LINE__); \
       } \
    }     
 
 #if defined(SGE_MT)
-void commlib_init(void);
+void commlib_init_mt(void);
 #endif
 
 int set_commlib_param(int param, int intval, const char *strval, int *intval_array);

@@ -82,14 +82,13 @@ char **argv
    int do_exit = 0;
    int scheduled = 0;
    int just_verify;
-   int cl_err = 0;
    int tmp_ret;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
 
    sge_gdi_param(SET_MEWHO, QSUB, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QSUB]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QSUB], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

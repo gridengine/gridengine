@@ -89,9 +89,6 @@
 #   define GETPGRP getpgrp()
 #endif
 
-typedef void (*sge_exit_func_t)(int);
-
-sge_exit_func_t sge_install_exit_func(sge_exit_func_t);     
 
 void sge_exit(int i);
 

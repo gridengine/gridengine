@@ -84,7 +84,7 @@ int schedd_log(const char *logstr) {
       answer_list_add(monitor_alpp, logloglog, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    } else {
       if (!*schedd_log_file) {
-         sprintf(schedd_log_file, "%s/%s/%s", path.cell_root, "common", SCHED_LOG_NAME);
+         sprintf(schedd_log_file, "%s/%s/%s", path_state_get_cell_root(), "common", SCHED_LOG_NAME);
          DPRINTF(("schedd log file >>%s<<\n", schedd_log_file));
       }
 

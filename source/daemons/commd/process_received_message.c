@@ -895,9 +895,9 @@ void trace(const char *str)
          shutdown(message_tracefd, 2);
          close(message_tracefd);
          message_tracefd = -1;
-         trace_func = NULL;
+         log_state_set_log_trace_func(NULL);
          DEBUG((SGE_EVENT, "broken pipe to trace module->closing my side of connection"));
-         trace_func = trace;
+         log_state_set_log_trace_func(trace);
       }
    }
    DEXIT;

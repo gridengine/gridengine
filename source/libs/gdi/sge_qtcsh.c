@@ -80,7 +80,7 @@ print_func_t ostream
    const char *task_name;
 
    /* cell global settings */
-   sprintf(fname, "%s/common/qtask", path.cell_root);
+   sprintf(fname, "%s/common/qtask", path_state_get_cell_root());
 
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
@@ -362,7 +362,7 @@ print_func_t ostream
    lList *alp = NULL;
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if (sge_gdi_setup("qtcsh")==AE_OK) {
+   if (sge_gdi_setup("qtcsh", NULL)==AE_OK) {
       if (init_qtask_config(&alp, ostream)) {
          const char *s;
          if (!alp || !(aep=lFirst(alp)) || !(s=lGetString(aep, AN_text)))

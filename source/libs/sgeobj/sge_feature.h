@@ -97,7 +97,7 @@ extern lList *Master_FeatureSet_List;
 
 void feature_initialize(void);
  
-int feature_initialize_from_file(const char *filename);
+int feature_initialize_from_file(const char *filename, lList **alpp);
  
 int feature_initialize_from_string(const char *mode);
  

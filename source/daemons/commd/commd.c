@@ -86,8 +86,6 @@ int main(int argc, char **argv);
 static int memorylack = 0;
 extern message *message_list;
 extern commproc *commprocs;
-/* int commlib_debug = 0; */
-extern int commlib_debug;
 static int sockfd = 0;          /* socket we wait on for incoming connections */
 message *termination_message = NULL;
 int message_tracefd = -1;
@@ -98,7 +96,6 @@ char *actmasterfile = NULL;     /* File with actual qmaster name */
 char *product_mode_file = NULL; /* File with actual product mode */
 u_long too_many_fds_open = 0;   /* time at which too many fds were open */
 
-extern u_long32 logginglevel;
 char logfile[256] = "/tmp/commd.errors";
 
 /*---------------------------------------------------------------*/
@@ -152,8 +149,8 @@ char **argv
    }          
 
    /* temporary logfile until we are daemonized */
-   error_file = logfile;
-   trace_func = trace;
+   log_state_set_log_file(logfile);
+   log_state_set_log_trace_func(trace);
    
    /* determine service from our program name */
    
@@ -202,8 +199,8 @@ char **argv
       if (!strcmp("-ll", *argp)) {
          argp++;
          if (*argp) {
-            logginglevel = atoi(*argp);
-            if (logginglevel < 2 || logginglevel > 7)
+            log_state_set_log_level(atoi(*argp));
+            if (log_state_get_log_level() < 2 || log_state_get_log_level() > 7)
                commd_usage(stderr, argv);
          }      
          else
@@ -333,7 +330,7 @@ char **argv
 
    /* path for log file */
    sprintf(logfile, "/tmp/commd/err.%d", (int) getpid());
-   error_file = logfile;
+   log_state_set_log_file(logfile);
    
    /* log the port number */
    if (port)

@@ -292,7 +292,7 @@ int path_alias_list_initialize(lList **path_alias_list,
          DEXIT;
          return -1;
       }
-      sprintf(filename[0], "%s/%s", path.cell_root, PATH_ALIAS_COMMON_FILE);
+      sprintf(filename[0], "%s/%s", path_state_get_cell_root(), PATH_ALIAS_COMMON_FILE);
       sprintf(filename[1], "%s/%s", pwd->pw_dir, PATH_ALIAS_HOME_FILE);
    }
 

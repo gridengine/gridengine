@@ -150,7 +150,6 @@ extern "C" {
 
 #define MAX_STRING_SIZE 2048
 typedef char stringT[MAX_STRING_SIZE];
-typedef char stringTlong[4*MAX_STRING_SIZE];
 
 #define INTSIZE     4           /* (4) 8 bit bytes */
 #if defined(_UNICOS)
@@ -222,17 +221,38 @@ typedef char stringTlong[4*MAX_STRING_SIZE];
 #endif
 
 #if defined(SGE_MT)
-#define GET_SPECIFIC(type, variable, init_func, key) \
+#define GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \
    if(!pthread_getspecific(key)) { \
-      variable = (type *)malloc (sizeof(type)); \
+      variable = (type *)malloc(sizeof(type)); \
       init_func(variable); \
-      pthread_setspecific(key, (void*)variable); \
+      if (pthread_setspecific(key, (void*)variable)) { \
+         sprintf(SGE_EVENT, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(errno)); \
+         sge_log(LOG_CRIT, SGE_EVENT,__FILE__,func_name,__LINE__); \
+         abort(); \
+      } \
    } \
    else \
       variable = pthread_getspecific(key)
 #else
-#define GET_SPECIFIC(type, variable, init_func, key)
+#define GET_SPECIFIC(type, variable, init_func, key, func_name)
+#endif
+
+#if defined(SGE_MT)
+#define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name) \
+   type * variable; \
+   if(!pthread_getspecific(key)) { \
+      variable = (type *)malloc(sizeof(type)); \
+      init_func(variable); \
+      if (pthread_setspecific(key, (void*)variable)) { \
+         fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(errno)); \
+         abort(); \
+      } \
+   } \
+   else \
+      variable = pthread_getspecific(key)
+#else
+#define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name)
 #endif
 
 #endif /* __BASIS_TYPES_H */

@@ -99,7 +99,13 @@ enum {
 };
 
 
+typedef void (*sge_exit_func_t)(int);
+
 extern const char *prognames[];
+
+#if defined(SGE_MT)
+void uti_init_mt(void);
+#endif
 
 void sge_getme(u_long32 sge_formal_prog_name);
 
@@ -109,18 +115,19 @@ const char *uti_state_get_unqualified_hostname(void);
 u_long32 uti_state_get_mewho(void);
 u_long32 uti_state_get_uid(void);
 u_long32 uti_state_get_gid(void);
-u_long32 uti_state_get_daemonized(void);
+int uti_state_get_daemonized(void);
 const char *uti_state_get_user_name(void);
 const char *uti_state_get_default_cell(void);
+int uti_state_get_exit_on_error(void);
+sge_exit_func_t uti_state_get_exit_func(void);
 
 void uti_state_set_qualified_hostname(const char *s);
-void uti_state_set_daemonized(u_long32 daemonized);
-
+void uti_state_set_daemonized(int daemonized);
+void uti_state_set_mewho(u_long32 who);
+void uti_state_set_exit_on_error(int i);
+void uti_state_set_exit_func(sge_exit_func_t f);
 
  
-#ifdef WIN32NATIVE
-void sge_deleteme ();
-#endif
 
 #endif /* __SGE_PROGNAMES_H */
 

@@ -1,3 +1,6 @@
+AH-2003-02-21-0  Enhancem.: Initial step to JAPI job API that will be used
+                            for implementing DRMAA interface
+
 EB-2003-02-21-0  Cleanup:   replaced int by bool where applicable
 
 EB-2003-02-20-1  Enhancem.  Enabled hostgroup code

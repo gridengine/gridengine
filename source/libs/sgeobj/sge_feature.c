@@ -190,13 +190,17 @@ void feature_initialize(void)
 *  INPUTS
 *     char *filename - product mode filename 
 *
+*  OUTPUT
+*     lList** alpp - in case of error used to return answer list containg
+*                    diagnosis information
+*
 *  RESULT
 *        0 OK
 *       -1 invalid filename
 *       -2 file doesn't exist
 *       -3 unknown mode-string in file
 ******************************************************************************/
-int feature_initialize_from_file(const char *filename) 
+int feature_initialize_from_file(const char *filename, lList** alpp) 
 {
    int ret;
 
@@ -206,12 +210,13 @@ int feature_initialize_from_file(const char *filename)
       FILE *fp;
 
       if (!filename) {
+         answer_list_add(alpp, MSG_GDI_NULL_FEATURE, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = -1;
       } else {
          fp = fopen(filename, "r");
          if (!fp) {
-            ERROR((SGE_EVENT, MSG_GDI_PRODUCTMODENOTSETFORFILE_S, 
-               filename));
+            ERROR((SGE_EVENT, MSG_GDI_PRODUCTMODENOTSETFORFILE_S, filename));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             ret = -2;
          } else {
             char mode[128];
@@ -223,6 +228,7 @@ int feature_initialize_from_file(const char *filename)
 
             if (ret == -3) {
                ERROR((SGE_EVENT, MSG_GDI_CORRUPTPRODMODFILE_S, filename));  
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             } else if (ret == 0) {
                already_read_from_file = 1;
             }

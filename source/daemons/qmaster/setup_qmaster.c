@@ -158,7 +158,7 @@ int sge_setup_qmaster()
    ** get cluster configuration
    */
    read_all_configurations(&Master_Config_List, 
-                           path.conf_file, path.local_conf_dir);
+                           path_state_get_conf_file(), path_state_get_local_conf_dir());
    ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
    if (ret) {
       if (ret == -3)
@@ -207,8 +207,8 @@ int sge_setup_qmaster()
    sge_switch2start_user();
    unlink(TMP_ERR_FILE_QMASTER);   
    sge_switch2admin_user();
-   sge_log_set_auser(1);
-   error_file = ERR_FILE;
+   log_state_set_log_as_admin_user(1);
+   log_state_set_log_file(ERR_FILE);
 
    /* 
    ** increment the heartbeat as early as possible 
@@ -220,7 +220,7 @@ int sge_setup_qmaster()
    /* 
    ** write our host name to the act_qmaster file 
    */
-   if (write_qm_name(uti_state_get_qualified_hostname(), path.act_qmaster_file, err_str)) {
+   if (write_qm_name(uti_state_get_qualified_hostname(), path_state_get_act_qmaster_file(), err_str)) {
       ERROR((SGE_EVENT, "%s\n", err_str));
       SGE_EXIT(1);
    }
@@ -450,8 +450,8 @@ int sge_setup_qmaster()
     
    {
       char common_dir[SGE_PATH_MAX];
-      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path.cell_root, COMMON_DIR); 
-      Master_Sched_Config_List = read_sched_configuration(common_dir, path.sched_conf_file, 1, &alp);
+      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path_state_get_cell_root(), COMMON_DIR); 
+      Master_Sched_Config_List = read_sched_configuration(common_dir, path_state_get_sched_conf_file(), 1, &alp);
    }
    if (!Master_Sched_Config_List) {
       ERROR((SGE_EVENT, "%s\n", lGetString(lFirst(alp), AN_text)));

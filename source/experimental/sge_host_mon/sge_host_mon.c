@@ -988,7 +988,7 @@ int main(int argc, char **argv)
    if ((name_count = argc - optind) > 0)
        names = &argv[optind];
 
-   sge_gdi_setup("sge_host_mon");
+   sge_gdi_setup("sge_host_mon", NULL);
 
    if (header)
       print_host_hdr(outfile, &format);

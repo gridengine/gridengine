@@ -131,7 +131,6 @@ char **argv
    lSortOrder *so = NULL;
    int nqueues;
    char *hostname = NULL;
-   int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -140,8 +139,8 @@ char **argv
 #endif
    
    sge_gdi_param(SET_MEWHO, QSTAT, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QSTAT]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QSTAT], &alp)!=AE_OK) {
+      answer_exit_if_not_recoverable(lFirst(alp));
       SGE_EXIT(1);
    }
 

@@ -49,6 +49,7 @@ typedef struct config_entry {
    struct config_entry *next;
 } config_entry;
 
+/* MT-NOTE: only execd and shepherd depend on config_list global variable */
 static config_entry *config_list = NULL;
 
 /* these variables may get used to replace variables in pe_start */

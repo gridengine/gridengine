@@ -58,10 +58,28 @@
 extern long compression_level;
 extern long compression_threshold;
 
-static int init_hostcpy_policy(void);
+static int init_hostcpy_policy(lList **alpp);
 
-/*******************************************************************/
-void sge_setup(
+/****** setup/sge_setup() ******************************************************
+*  NAME
+*     sge_setup() -- Setup of some SGE components
+*
+*  SYNOPSIS
+*     int sge_setup(u_long32 sge_formal_prog_name, lList **alpp) 
+*
+*  FUNCTION
+*     Setup of some SGE components
+*
+*  INPUTS
+*     u_long32 sge_formal_prog_name - The formal program name.
+*     lList **alpp                  - returns diagnosis information 
+*                                     in case of an error.
+*
+*  RESULT
+*     int - 0 on success
+*
+*******************************************************************************/
+int sge_setup(
 u_long32 sge_formal_prog_name,
 lList **alpp 
 ) {
@@ -72,43 +90,51 @@ lList **alpp
    */
    if (sge_run_as_user()) {   
       CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
+      if (!uti_state_get_exit_on_error()) {
+         answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return -1;
+      }
       SGE_EXIT(1);
    }   
 
    sge_getme(sge_formal_prog_name);
-   memset(&path, 0, sizeof(path));
-   /* gdi lib call */ 
-   sge_setup_paths(uti_state_get_default_cell(), &path, alpp);
 
-   if (alpp && *alpp){
+   if (sge_setup_paths(uti_state_get_default_cell(), alpp)) {
       DEXIT;
-      return;
+      return -1;
    }
 
-   /* gdi lib call */ 
-   if (feature_initialize_from_file(path.product_mode_file)) {
+   if (feature_initialize_from_file(path_state_get_product_mode_file(), alpp)) {
+      if (!uti_state_get_exit_on_error()) {
+         DEXIT;
+         return -1;
+      }
       SGE_EXIT(1);
    }
 
    /* initialize hostcompare policy consisting 
       of default_domain and ignore_fqdn settings */
-   if (init_hostcpy_policy()) {
+   if (init_hostcpy_policy(alpp)) {
+      if (!uti_state_get_exit_on_error()) {
+         DEXIT;
+         return -1;
+      }
       SGE_EXIT(1);
    }
       
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
-   /* gdi lib call */
    if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == SHADOWD) && !sge_get_master(1)) {
-      if (alpp) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
-                     path.act_qmaster_file));
-   /* gdi lib call */
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      if (!uti_state_get_exit_on_error()) {
+         if (alpp) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
+                        path_state_get_act_qmaster_file()));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+         }
          DEXIT;
-         return;
+         return -1;
       }
-      else
-         SGE_EXIT(1);
+      SGE_EXIT(1);
    }
 
 #ifdef COMMCOMPRESS
@@ -139,7 +165,7 @@ lList **alpp
 #endif
 
    DEXIT;
-   return;
+   return 0;
 }
 
 int reresolve_me_qualified_hostname()
@@ -167,7 +193,7 @@ int reresolve_me_qualified_hostname()
 
 /* initialize policy used in hostcpy() consisting of
    default_domain and ignore_fqdn settings */
-static int init_hostcpy_policy(void)
+static int init_hostcpy_policy(lList **alpp)
 {
    const char *name[2] = { "ignore_fqdn", "default_domain" };
    u_long32 uval;
@@ -175,9 +201,10 @@ static int init_hostcpy_policy(void)
 
    DENTER(TOP_LAYER, "init_hostcpy_policy");
 
-   if (sge_get_confval_array(path.conf_file, 2, name, value)) {
+   if (sge_get_confval_array(path_state_get_conf_file(), 2, name, value)) {
       ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
-      path.conf_file));
+      path_state_get_conf_file()));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }

@@ -1749,9 +1749,12 @@ lListElem *jr
    const char *q, *h, *u;
    lListElem *ep;
    const char *pe_task_id_str;
+   dstring ds;
+   char buffer[128];
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    mail_users = lGetList(jep, JB_mail_list);
    mail_options = lGetUlong(jep, JB_mail_options); 
    pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
@@ -1770,12 +1773,12 @@ lListElem *jr
     */
 
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
-      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
+      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
-      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
+      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 

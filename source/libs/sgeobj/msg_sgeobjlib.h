@@ -191,5 +191,6 @@
 #define MSG_EVENT_DELPETASK_US                     _MESSAGE(64164, _(U32CFormat". EVENT DEL PETASK "SFN""))
 #define MSG_EVENT_NOTKNOWN_I                       _MESSAGE(64165, _("%d. EVENT ????????"))
 
+#define MSG_GDI_NULL_FEATURE                       _MESSAGE(64166, _("NULL ptr passed to feature_initialize_from_file()"))
 
 #endif /* __MSG_SGEOBJLIB_H */

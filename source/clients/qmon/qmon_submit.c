@@ -87,7 +87,6 @@
 #include "sge_afsutil.h"
 #include "sge_range.h"
 #include "sge_path_alias.h"
-#include "setup_path.h"
 #include "qm_name.h"
 #include "sge_security.h" 
 #include "sge_job.h"
@@ -1160,12 +1159,16 @@ XtPointer cld, cad;
    char message[] = "@{submit.asksubmittime.Enter the submit time in the\nfollowing format: [[CC]]YY]MMDDhhmm[.ss]\nor leave the current time and press ok}";
    char exec_time[128];
    lList *alp = NULL;
+   dstring ds;
+   char buffer[128];
 
    DENTER(GUI_LAYER, "qmonSubmitExecTime");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    XmtDialogGetDialogValues(submit_layout, &SMData);
 
-   strcpy(exec_time, sge_at_time(SMData.execution_time));    
+   strcpy(exec_time, sge_at_time(SMData.execution_time, &ds));    
 
    status = XmtAskForString(w, NULL, message, 
                            exec_time, sizeof(exec_time), 
@@ -1199,9 +1202,12 @@ XtPointer cld, cad;
    char deadline_time[128];
    char *set_deadline_time = NULL;
    lList *alp = NULL;
+   dstring ds;
+   char buffer[128];
 
    DENTER(GUI_LAYER, "qmonSubmitDeadline");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    XmtDialogGetDialogValues(submit_layout, &SMData);
 
    set_deadline_time = XmtInputFieldGetString(submit_deadline);
@@ -1209,7 +1215,7 @@ XtPointer cld, cad;
    if (set_deadline_time && set_deadline_time[0] != '\0')
       strcpy(deadline_time, set_deadline_time);
    else   
-      strcpy(deadline_time, sge_at_time(0));    
+      strcpy(deadline_time, sge_at_time(0, &ds));    
 
    status = XmtAskForString(w, NULL, message, 
                            deadline_time, sizeof(deadline_time), 

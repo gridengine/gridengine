@@ -224,12 +224,11 @@ int scheduler(sge_Sdescr_t *lists) {
    }
 #endif
    if(profiling_started) {
-      extern u_long32 logginglevel;
-      u_long32 saved_logginglevel = logginglevel;
+      u_long32 saved_logginglevel = log_state_get_log_level();
 
       PROFILING_STOP_MEASUREMENT;
 
-      logginglevel = LOG_INFO;
+      log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(x), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          profiling_get_measurement_wallclock(),
          profiling_get_measurement_utime(),
@@ -255,7 +254,7 @@ int scheduler(sge_Sdescr_t *lists) {
          lGetNumberOfElem(lists->ckpt_list),
          lGetNumberOfElem(lists->running_per_user)
       ));
-      logginglevel = saved_logginglevel;
+      log_state_set_log_level(saved_logginglevel);
    }
 
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), &orderlist);
@@ -484,13 +483,12 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
       if (do_profiling) {
          clock_t now = times(&tms_buffer);
-         extern u_long32 logginglevel;
-         u_long32 saved_logginglevel = logginglevel;
+         u_long32 saved_logginglevel = log_state_get_log_level();
 
-         logginglevel = LOG_INFO;
+         log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, "SGEEE pending job ticket calculation took %.3f s\n",
                (now - start) * 1.0 / CLK_TCK ));
-         logginglevel = saved_logginglevel;
+         log_state_set_log_level(saved_logginglevel);
       }
    }
 
@@ -525,13 +523,12 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
       if (do_profiling) {
          clock_t now = times(&tms_buffer);
-         extern u_long32 logginglevel;
-         u_long32 saved_logginglevel = logginglevel;
+         u_long32 saved_logginglevel = log_state_get_log_level();
 
-         logginglevel = LOG_INFO;
+         log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, "SGEEE active job ticket calculation took %.3f s\n",
                (now - start) * 1.0 / CLK_TCK ));
-         logginglevel = saved_logginglevel;
+         log_state_set_log_level(saved_logginglevel);
       }
 
       /* 
@@ -562,13 +559,12 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
       if (do_profiling) {
          clock_t now = times(&tms_buffer);
-         extern u_long32 logginglevel;
-         u_long32 saved_logginglevel = logginglevel;
+         u_long32 saved_logginglevel = log_state_get_log_level();
 
-         logginglevel = LOG_INFO;
+         log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, "SGEEE job sorting took %.3f s\n",
                (now - start) * 1.0 / CLK_TCK ));
-         logginglevel = saved_logginglevel;
+         log_state_set_log_level(saved_logginglevel);
       }
 
    }  /* if sgeee_mode */
@@ -918,13 +914,12 @@ SKIP_THIS_JOB:
 
    if (sgeee_mode && do_profiling) {
       clock_t now = times(&tms_buffer);
-      extern u_long32 logginglevel;
-      u_long32 saved_logginglevel = logginglevel;
+      u_long32 saved_logginglevel = log_state_get_log_level();
 
-      logginglevel = LOG_INFO;
+      log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, "SGEEE job dispatching took %.3f s\n",
             (now - start) * 1.0 / CLK_TCK ));
-      logginglevel = saved_logginglevel;
+      log_state_set_log_level(saved_logginglevel);
    }
 
    lFreeList(user_list);

@@ -48,7 +48,6 @@
 #include "sge_time.h"
 #include "msg_commd.h"
 
-extern int commlib_debug;
 
 static void new_entry(const char *commproc, u_short id, const char *host, 
                       u_long time);
@@ -88,10 +87,6 @@ const char *host
 
    /* FIX_CONST */
    time = last_heard_from_((char*)commproc, id, (char*)host);
-   if (commlib_debug) {
-      printf(MSG_COMMLIB_LAST_HEARD_USIS ,
-         u32c (time), commproc ? commproc : "", (int) (id ? *id : 0) , host ? host : "");
-   }
    return time;
 }
 
@@ -167,10 +162,6 @@ int set_last_heard_from(const char *commproc, u_short id, const char *host,
 
    ret = set_last_heard_from_(commproc, id, host, time);
 
-   if (commlib_debug) {
-      printf(MSG_COMMLIB_SET_LAST_HEARD_ISIU ,
-             ret, commproc ? commproc : "", (int) id, host ? host : "", u32c (time));
-   }
    return ret;
 }
 
@@ -226,10 +217,6 @@ static entry *find_entry(const char *commproc, u_short id, const char *host,
       if (now - ptr->time > commlib_state_get_lt_heard_from_timeout()) {
 #endif
 
-         if (commlib_debug) {
-            printf(MSG_COMMLIB_DROPPING_SISUU ,
-                   ptr->commproc, (int) ptr->id, ptr->host, u32c (ptr->time), u32c(now));
-         }
 
          /* to old -> drop */
          free(ptr->commproc);
@@ -327,9 +314,6 @@ int reset_last_heard()
 
    /* eat all */
    while ((ptr = commlib_state_get_list())) {
-      if (commlib_debug)
-         printf(MSG_COMMLIB_RESET_LAST_HEARD_SISU 
-            , ptr->commproc, (int) ptr->id, ptr->host, u32c(ptr->time));
 
       /* to old -> drop */
       free(ptr->commproc);

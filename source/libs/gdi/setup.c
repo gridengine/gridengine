@@ -51,9 +51,14 @@
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_prog.h"
+#include "sge_parse_num_par.h"
+#include "sge_hostname.h"
+#include "sge_spool.h"
 
 extern long compression_level;
 extern long compression_threshold;
+
+static int init_hostcpy_policy(void);
 
 /*******************************************************************/
 void sge_setup(
@@ -86,6 +91,11 @@ lList **alpp
       SGE_EXIT(1);
    }
 
+   /* initialize hostcompare policy consisting 
+      of default_domain and ignore_fqdn settings */
+   if (init_hostcpy_policy()) {
+      SGE_EXIT(1);
+   }
       
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    /* gdi lib call */
@@ -154,4 +164,30 @@ int reresolve_me_qualified_hostname()
    DPRINTF(("me.qualified_hostname: %s\n", me.qualified_hostname));
    DEXIT;
    return CL_OK;
+}
+
+/* initialize policy used in hostcpy() consisting of
+   default_domain and ignore_fqdn settings */
+static int init_hostcpy_policy(void)
+{
+   const char *name[2] = { "ignore_fqdn", "default_domain" };
+   u_long32 uval;
+   char value[2][1025];
+
+   DENTER(TOP_LAYER, "init_hostcpy_policy");
+
+   if (get_confval_array(path.conf_file, 2, name, value)) {
+      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
+      path.conf_file));
+      DEXIT;
+      return -1;
+   }
+
+   DPRINTF(("ignore_fqdn: %s default_domain: %s\n", value[0], value[1]));
+   parse_ulong_val(NULL, &uval, TYPE_BOO, value[0], NULL, 0);
+   fqdn_cmp = !uval;
+   default_domain = sge_strdup(default_domain, value[1]);
+
+   DEXIT;
+   return 0;
 }

@@ -725,6 +725,10 @@ char *sge_host_get_mainname(host *h)
 *
 *  RESULT
 *     const char* - resolved hostname 
+*
+*  BUGS
+*     As it uses gethostbyname() it overwrites the buffer 
+*     used by this function to return struct hostent *he !
 ******************************************************************************/
 const char *sge_host_resolve_name_local(const char *unresolved)
 {  

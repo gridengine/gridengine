@@ -513,6 +513,7 @@ int truncate_stderr_out
       strcpy(argv0, shell_basename);
 
    sge_set_def_sig_mask(0, NULL);
+   sge_unblock_all_signals();
    
    /*
    ** prepare xterm title for interactive jobs

@@ -60,8 +60,6 @@ int answer_error;
 
    ret = get_merged_configuration(&execd_config_list);
 
-   /* EB */
-
    /*
    ** admin mail block is released on new conf
    */

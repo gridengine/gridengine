@@ -232,6 +232,7 @@
 /* 
 ** gdilib/setup.c
 */
+#define MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S             _("can't read \"%s\" - host compare policy not set.")
 #define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _("%s is not a valid SGE_COMPRESSION_LEVEL\n")
 #define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _("Setting compression level to "U32CFormat"\n")
 #define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _("%s is not a valid SGE_COMPRESSION_THRESHOLD\n")

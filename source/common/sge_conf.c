@@ -193,7 +193,6 @@ typedef struct {
 static void setConfFromCull(sge_conf_type *mconf, lList *lpCfg);
 static tConfEntry *getConfEntry(char *name, tConfEntry conf_entries[]);
 static void clean_conf(sge_conf_type *conf);
-static void chg_conf_val(lList *lp_cfg, char *name, char **field, u_long32 *val, int type);
 
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
@@ -322,7 +321,7 @@ lList *sge_set_defined_defaults(lList *lpCfg)
  * value (if string) from *cpp and writes new value into *cpp
  * logging is done to file
  *----------------------------------------------------*/
-static void chg_conf_val(
+void chg_conf_val(
 lList *lp_cfg,
 char *name,
 char **cpp,

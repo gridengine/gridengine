@@ -159,7 +159,7 @@ int sge_unlink(const char *prefix, const char *suffix)
    status = unlink(str);
  
    if (status) {
-      ERROR((SGE_EVENT, "ERROR: "SFN"\n", strerror(errno)));
+      ERROR((SGE_EVENT, "ERROR: unlinking "SFQ": "SFN"\n", str, strerror(errno)));
       DEXIT;
       return -1;
    } else {

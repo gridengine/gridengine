@@ -312,7 +312,7 @@ char **argv
       }
 
       if (i) {             
-         ERROR((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
+         WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
 
          if (shut_me_down == 1) {
             sge_shutdown();

@@ -92,6 +92,8 @@ u_long32 sge_sys_str2signal(const char *str);
 typedef void (*err_func_t)(char *s);
  
 void sge_set_def_sig_mask(int, err_func_t);
+void sge_unblock_all_signals(void);
+
 
 #endif /* __SGE_SIGNAL_H */
 

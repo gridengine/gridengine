@@ -4158,6 +4158,7 @@ char *fname
       const char *cp = NULL;
 
       sge_set_def_sig_mask(0, NULL);   
+      sge_unblock_all_signals();
       setuid(getuid());
       setgid(getgid());
 

@@ -1,3 +1,15 @@
+AH-2002-03-25-3  Bugfix:    gethostbyname -aname was broken
+                 Optimiz.:  Ensure global conf is read only one time by
+                            AH-2002-03-22-0 code
+
+AH-2002-03-25-2  Bugfix:    Ensure shepherd mapping signals do not hit shepherd
+                            itself because of signal handler not installed when 
+                            signals are released by sigprocmask(2)
+
+AH-2002-03-25-1  Bugfix:    Retrieve ignore_fqdn and default_domain at client/daemon
+                            startup from global cluster config to overcome problems
+                            with hashing of hostnames in certain cases.
+
 JG-2002-03-25-0  Testsuite: Bugfix: In a cluster with very similar hostnames
                             testsuite wrongly reused open remote connections.
 

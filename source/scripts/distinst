@@ -868,7 +868,7 @@ if [ $instcommon = true ]; then
       MakeDir examples
       MakeDir examples/jobs      
       Execute cp dist/examples/jobs/*.sh $DEST_SGE_ROOT/examples/jobs
-      Execute chmod 755 dist/examples/jobs/*.sh
+      Execute chmod 755 $DEST_SGE_ROOT/examples/jobs/*.sh
       MakeDir examples/drmaa
       Execute cp libs/japi/example.c $DEST_SGE_ROOT/examples/drmaa
       Execute cp libs/japi/howto/*.c $DEST_SGE_ROOT/examples/drmaa

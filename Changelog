@@ -1,3 +1,15 @@
+AA-2001-11-30-3: Feature:   Security changes:
+                            - Makefiles, aimk, aimk.site
+                              additions for CSP and Kerberos security 
+
+AA-2001-11-30-2: Feature:   Security changes:
+                            - Kerberos Makefiles, make it compilable with
+                              const change
+
+AA-2001-11-30-1: Feature:   Security changes:
+                            - qtcsh Makefiles removed EXTRALIBS in gethost
+                              buildrule for compilation in sec modes
+
 AA-2001-11-30-0: Feature:   Security changes:
                             - introduced new product modes 
                               sge-csp and sgeee-csp belonging to feature

@@ -245,8 +245,6 @@ int truncate_stderr_out
       shepherd_error(err_str);
    }
 
-   setrlimits(!strcmp(childname, "job"));
-
    umask(022);
 
    if (!strcmp(childname, "job")) {
@@ -256,6 +254,8 @@ int truncate_stderr_out
       }   
    }
    
+   setrlimits(!strcmp(childname, "job"));
+
    set_environment();
 
    /* make job owner the owner of error/trace file. So we can write

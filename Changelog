@@ -1,3 +1,7 @@
+SD-2002-02-18-2: Bugfix:    - Set resource limits after setting the OS
+                              job id in builtin_starter.c so that job
+                              resource limits will work on the SX-6.
+
 CR-2002-02-18-1: Testsuite: added new check_function in qdel test
                          
 

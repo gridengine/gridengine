@@ -1,3 +1,5 @@
+CR-2002-12-09-1  Testsuite: migration test now L10N compatible
+
 CR-2002-12-09-0  Testsuite: Removing evtl. existing access lists in 
                             install_core_system check 
 

@@ -4172,7 +4172,7 @@ proc mqattr { attribute entry queue_list } {
 # -1 on error
 # 0 on success
   
-  global CHECK_PRODUCT_ROOT CHECK_ARCH
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER
 
   puts "Trying to change attribute $attribute of queues $queue_list to $entry."
 
@@ -4192,14 +4192,13 @@ proc mqattr { attribute entry queue_list } {
   
   foreach elem $help {
      set queue_name [lindex $queue_list $counter]
-     set tosearch "modified \"$queue_name\""       ;# string we want to see
-     set position [string last "$tosearch" "$elem"];# stores the position of $tosearch
-         if { $position < 0 } {
-            puts "Could not modify queue $queue_name."
-            set return_value -1                    ;# if one operation fails, we return -1
-         } else {
-            puts "Modified queue $queue_name successfully."
-         }
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $queue_name "*"]
+     if { [ string match "*$MODIFIED*" $elem ] != 1 } {
+        puts $CHECK_OUTPUT "Could not modify queue $queue_name."
+        set return_value -1
+     } else {
+        puts "Modified queue $queue_name successfully."
+     }
      incr counter 1
    }                                       
 

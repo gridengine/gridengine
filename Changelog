@@ -1,3 +1,8 @@
+AH-2004-03-04-0: Bugfix:    qselect/qstat -l selection wrongly considers 
+                            load and utilization
+                 Issue:     771
+                 Review:    AS
+
 CR-2004-03-04-0  Bugfix:    Rolled back change from CR-2004-03-02-2:
                             all clients will now log error and critical 
                             messages to stderr again. 
@@ -5,7 +10,6 @@ CR-2004-03-04-0  Bugfix:    Rolled back change from CR-2004-03-02-2:
                             Submitted cleanup issue: #744
                  Changed:   all qXXXX clients
                  
-
 MD-2004-03-04-1: Bugfix:    - Pattern matching for -l q= doesn't work 
                               per default 
                  Issue:     759
@@ -153,6 +157,7 @@ DT-2004-03-02-2: Bugfix:    o Fixed broken build
                  Changed:   Flatfile spooling, libsched
                  Issue:    760
 
+>>>>>>> 1.1649
 AH-2004-03-02-0: Enhancem.: Completed qstat -j schedd messages
                             Fixed broken qsub -w e|w option
                  Bugfix:    Fixed schedd problem with jobs exceeding their

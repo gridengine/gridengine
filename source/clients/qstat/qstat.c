@@ -102,7 +102,7 @@ static lList *
 sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource, 
                 lList **pplqueueref, lList **ppluser, lList **pplqueue_user, 
                 lList **pplpe, u_long32 *pfull, u_long32 *explain_bits, 
-                u_long32 *pempty, char **hostname, u_long32 *job_info, 
+                char **hostname, u_long32 *job_info, 
                 u_long32 *group_opt, u_long32 *queue_states, lList **ppljid, u_long32 *isXML);
 
 static int qstat_usage(FILE *fp, char *what);
@@ -141,7 +141,7 @@ char **argv
    lList *pe_list = NULL, *ckpt_list = NULL, *ref_list = NULL; 
    lList *alp = NULL, *pcmdline = NULL;
    bool a_cqueue_is_selected = true;
-   u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
+   u_long32 full_listing = QSTAT_DISPLAY_ALL, job_info = 0;
    u_long32 explain_bits = QI_DEFAULT;
    u_long32 group_opt = 0;
    u_long32 queue_states = U_LONG32_MAX;
@@ -189,7 +189,6 @@ char **argv
       &peref_list,      /* -pe pe_list                   */
       &full_listing,    /* -ext                          */
       &explain_bits,    /* -explain                      */
-      &empty_qs,        /* -empty                        */
       &hostname,
       &job_info,        /* -j ..                         */
       &group_opt,       /* -g ..                         */
@@ -326,7 +325,7 @@ char **argv
    }
    /* unseclect all queues not selected by a -l (if exist) */
    if (lGetNumberOfElem(resource_list)) {
-      if (select_by_resource_list(resource_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
+      if (select_by_resource_list(resource_list, exechost_list, queue_list, centry_list, 1)<0) {
          SGE_EXIT(1);
       }
    }   
@@ -1456,7 +1455,6 @@ lList **pplqueue_user,
 lList **pplpe,
 u_long32 *pfull,
 u_long32 *explain_bits,
-u_long32 *pempty_qs,
 char **hostname,
 u_long32 *job_info,
 u_long32 *group_opt,

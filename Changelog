@@ -1,3 +1,10 @@
+AA-2003-01-24-0  Bugfix:    qsub -C option analogue was missing in qmon
+                            remove #$ in submit dialogue's Prefix field
+                            to achieve same functionality as qsub -C before
+                            loading job with the file dialogue
+                 Review:    JG
+                 Changed:   qmon
+
 CR-2003-01-23-0  Testsuite: Bugfix for "check" command line option
 
 EB-2003-01-23-1  Bugfix:    execd does process tracking even if no job has to 

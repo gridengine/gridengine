@@ -1588,10 +1588,11 @@ int read_defaults
    */
 
    dir_pre = XmtInputFieldGetString(submit_prefix);
+   dir_pre = qmon_trim(dir_pre);
    if (dir_pre && dir_pre[0] != '\0')
-      strcpy(prefix, dir_pre);
+      strncpy(prefix, dir_pre, sizeof(prefix)-1);
    else
-      strcpy(prefix, default_prefix);
+      prefix[0] = '\0';
 
    if (read_defaults) {
       opt_list_append_opts_from_default_files(&cmdline, &alp, environ);
@@ -1609,7 +1610,7 @@ int read_defaults
    ** stage one of script file parsing
    */ 
    if (ISSET(submit_mode_data.sub_mode, SUBMIT_SCRIPT)) {
-      alp = parse_script_file(filename, prefix, &cmdline, environ, 
+      alp = parse_script_file(filename, (prefix[0] ? prefix : NULL), &cmdline, environ, 
                               FLG_HIGHER_PRIOR);
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -1677,6 +1678,7 @@ tSMEntry *data
    
    memset((void*)data, 0, sizeof(tSMEntry));
    data->verify_mode = SKIP_VERIFY;
+   data->directive_prefix = XtNewString("#$");
 
    DEXIT;
 }
@@ -1984,7 +1986,10 @@ int save
    reduced_job = !(submit_mode_data.mode != SUBMIT_QALTER_PENDING && submit_mode_data.mode != SUBMIT_QALTER_RUNNING ); 
 
    if (!reduced_job) {
-      lSetString(jep, JB_directive_prefix, data->directive_prefix);
+      if (data->directive_prefix && data->directive_prefix[0] != '\0')
+         lSetString(jep, JB_directive_prefix, data->directive_prefix);
+      else   
+         lSetString(jep, JB_directive_prefix, NULL);
    
       if (!save && !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
          /* Job Script/Name */

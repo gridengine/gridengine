@@ -150,7 +150,7 @@ void te_register_event_handler(te_handler_t aHandler, te_type_t aType)
    Handler_Tbl.list[Handler_Tbl.num].type    = aType;
    Handler_Tbl.list[Handler_Tbl.num].handler = aHandler;
    Handler_Tbl.num++;
-   
+
    DPRINTF(("%s: handler #%d for event type %d\n", SGE_FUNC, (Handler_Tbl.num - 1), aType));
 
    sge_mutex_unlock("handler_table_mutex", SGE_FUNC, __LINE__, &Handler_Tbl.mutex);
@@ -1035,7 +1035,7 @@ static void scan_table_and_deliver(te_event_t anEvent)
    if (handler != NULL) {
       handler(anEvent);
    } else {
-      WARNING((SGE_EVENT, MSG_SYSTEM_RECEIVEDUNKNOWNEVENT));
+      WARNING((SGE_EVENT, MSG_SYSTEM_RECEIVEDUNKNOWNEVENT_I, anEvent->type ));
    }
 
    if (RECURRING_EVENT == anEvent->mode)

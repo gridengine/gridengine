@@ -620,7 +620,7 @@ int isowner
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             if (!strcmp(qname, lGetString(gdil_ep, JG_qname))) {
                /* 3: JOB_FINISH reports aborted */
-               sge_commit_job(jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+               sge_commit_job(jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
                break;
             }
          }

@@ -73,6 +73,7 @@
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
 #include "sge_any_request.h"
 #include "sge.h"
+#include "sge_qmod_qmaster.h"
 
 
 /*
@@ -638,6 +639,8 @@ static void start_periodic_tasks(void)
 
    te_register_event_handler(sge_calendar_event_handler, TYPE_CALENDAR_EVENT);
 
+   te_register_event_handler(resend_signal_event, TYPE_SIGNAL_RESEND_EVENT);
+
    te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT);
    ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");
    te_add_event(ev);
@@ -990,7 +993,7 @@ static bool should_terminate(void)
 static void* signal_thread(void* anArg)
 {
    enum { true = 1 };
-
+   bool is_continue = true;
    sigset_t sig_set;
    int sig_num;
 
@@ -1002,7 +1005,7 @@ static void* signal_thread(void* anArg)
    sigaddset(&sig_set, SIGINT);
    sigaddset(&sig_set, SIGTERM);
 
-   while (true)
+   while (is_continue)
    {
       sigwait(&sig_set, &sig_num);
 
@@ -1013,8 +1016,7 @@ static void* signal_thread(void* anArg)
          case SIGTERM:
             wait_for_thread_termination();
             set_signal_thread(INVALID_THREAD);
-            DEXIT;
-            return NULL;
+            is_continue = false;
          default:
             ERROR((SGE_EVENT, MSG_QMASTER_UNEXPECTED_SIGNAL_I, sig_num));
       }

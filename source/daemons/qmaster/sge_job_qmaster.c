@@ -1000,6 +1000,7 @@ int sub_command
                   sge_add_event( start_time, sgeE_JATASK_DEL, 
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
+                  /* TODO: change to _EE ????*/                                
                   sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
                                  COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
                                  COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
@@ -1086,7 +1087,7 @@ int sub_command
                                                 alpp, ruser,
                                                 lGetUlong(idep, ID_force));
                   } else {
-                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED, spool_job | COMMIT_NEVER_RAN);
+                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN);
                      showmessage = 1;
                      if (!alltasks) {
                         range_list_insert_id(&range_list, NULL, task_number);
@@ -1502,7 +1503,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                    ruser, u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
          answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
@@ -1523,7 +1524,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                    ruser, u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
       } else {

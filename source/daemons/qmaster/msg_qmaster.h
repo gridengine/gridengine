@@ -648,7 +648,7 @@
 ** sge_qmaster_timed_event.c
 */
 #define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system clock has been put back (%d seconds)\n"))
-#define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT       _MESSAGE(33664, _("received unkown event\n"))
+#define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT_I       _MESSAGE(33664, _("received unkown event: %d\n"))
 
 /*
  * misc

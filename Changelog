@@ -1,3 +1,9 @@
+MD-2004-07-08-0: Bugfix:    Qmaster requires a local conf in order to start
+                 Issue:     1104 
+                 Bugtraq:   5071987
+                 Review:    CR
+                 Changed:   qmaster_configuration
+
 JG-2004-07-07-0: Bugfix:    Fixed the build for AIX.
 
 JG-2004-07-06-2: Bugfix:    Fixed the build for HPUX.

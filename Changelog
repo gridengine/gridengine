@@ -1,4 +1,9 @@
-CR-2004-04-15-1: Enhancem.: - always increment auto client id pointer to ensure
+CR-2004-04-16-0: Bugfix:    - flush unsent messages when a connection is going
+                              down. ( Event clients will now correct unreqister
+                              at qmaster )
+                 Changed:   commlib
+
+CR-2004-04-15-1: Bugfix:    - always increment auto client id pointer to ensure
                               that event clients won't reconnect with a client
                               id from a former connection
                  Changed:   commlib 

@@ -867,8 +867,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
    cl_connection_list_elem_t* elem = NULL;
    cl_thread_settings_t* thread_settings = NULL;
    struct timeval now;
-   int ccrm_received = 0;
-   int ccm_sent = 0;
+   cl_bool_t connection_list_empty = CL_FALSE;
+   cl_bool_t trigger_write = CL_FALSE;
    int ret_val;
 
 
@@ -891,39 +891,42 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
       handle->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout;
    }
 
-   handle->do_shutdown = 1;
+   handle->do_shutdown = 1; /* stop accepting new connections */
 
-   /* stop accepting new connections */
-   while( ccrm_received != 1) {
-      ccrm_received = 1;
-      ccm_sent = 0;
+   /* wait for empty connection list */
+   while( connection_list_empty == CL_FALSE) {
+      cl_bool_t ignore_timeout = cl_com_get_ignore_timeouts_flag();
+      connection_list_empty = CL_TRUE;
+      trigger_write = CL_FALSE;
 
       cl_raw_list_lock(handle->connection_list);
       elem = cl_connection_list_get_first_elem(handle->connection_list);
       while(elem) {
+         connection_list_empty = CL_FALSE;
          if ( elem->connection->data_flow_type == CL_CM_CT_MESSAGE) {
             if ( elem->connection->connection_state     == CL_COM_CONNECTED && 
-                 elem->connection->connection_sub_state == CL_COM_WORK)        {
+                 elem->connection->connection_sub_state == CL_COM_WORK      &&   
+                 elem->connection->ccm_received         == 0)        {
                cl_commlib_send_ccm_message(elem->connection);
-               ccm_sent = 1;
+               trigger_write = CL_TRUE;
                elem->connection->connection_sub_state = CL_COM_SENDING_CCM;
             }
-
-            CL_LOG_STR(CL_LOG_INFO,"waiting for connection close response messages ...", cl_com_get_connection_state(elem->connection));
-            if (elem->connection->connection_state == CL_COM_CONNECTED && 
-                elem->connection->connection_sub_state != CL_COM_DONE ) {
-               ccrm_received = 0;  /* no ccrm message received */  
+            CL_LOG_STR(CL_LOG_ERROR,"waiting for ccrm, current connection state is", cl_com_get_connection_state(elem->connection));
+            if ( ignore_timeout == CL_TRUE ) {
+               CL_LOG(CL_LOG_WARNING,"we are connected, don't ignore timeouts");
+               ignore_timeout = CL_FALSE;
             }
-         }
-         if ( elem->connection->connection_state == CL_COM_CONNECTING) {
-            CL_LOG(CL_LOG_INFO,"waiting for client to connect ...");
-            ccrm_received = 0;  /* wait for connection establish, then send close */
          }
          elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
       }
       cl_raw_list_unlock(handle->connection_list);
 
-      if ( ccrm_received != 1) {
+
+      /*
+       * If there are still connections, trigger read/write of messages and
+       * return for messages (if return_for_messages is set)
+       */
+      if ( connection_list_empty == CL_FALSE) {
          int return_value = CL_RETVAL_OK;
          /* still waiting for messages */
          switch(cl_com_create_threads) {
@@ -959,7 +962,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                cl_commlib_trigger(handle);
                break;
             case CL_ONE_THREAD:
-               if (ccm_sent == 1) {
+               if (trigger_write == CL_TRUE) {
                   cl_thread_trigger_event(handle->write_thread);
                }
 
@@ -1003,11 +1006,14 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                break;
          }
       }
- 
+
+      /*
+       * check timeouts
+       */
       gettimeofday(&now,NULL);
-      if (handle->shutdown_timeout <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
+      if (handle->shutdown_timeout <= now.tv_sec || ignore_timeout == CL_TRUE  ) {
          CL_LOG(CL_LOG_ERROR,"got timeout while waiting for close response message");
-         ccrm_received = 1;
+         break;
       }
    }
 
@@ -2514,11 +2520,22 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
          next_message_list_elem = cl_message_list_get_next_elem(connection->send_message_list, message_list_elem );
          if (message->message_state == CL_MS_PROTOCOL) {
             timeout_time = (message->message_send_time).tv_sec + connection->handler->acknowledge_timeout;
-            if ( timeout_time <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
+            if ( timeout_time <= now.tv_sec ) {
                CL_LOG_INT(CL_LOG_ERROR,"ack timeout for message", message->message_id);
                cl_message_list_remove_message(connection->send_message_list, message,0 );
                cl_com_free_message(&message);
-            } 
+            } else {
+               if ( cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                  if ( connection->connection_state == CL_COM_CONNECTED &&
+                       connection->connection_sub_state == CL_COM_WORK ) {
+                     CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set, but this connection is connected and waiting for ack - continue waiting");
+                  } else {
+                     CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set and connection is not connected - ignore timeout");
+                     cl_message_list_remove_message(connection->send_message_list, message,0 );
+                     cl_com_free_message(&message);
+                  }
+               } 
+            }
          }
          message_list_elem = next_message_list_elem;
       }
@@ -4057,7 +4074,8 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
       if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
          if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
             if (connection->connection_state == CL_COM_CONNECTED &&
-                connection->connection_sub_state == CL_COM_WORK) {
+                connection->connection_sub_state == CL_COM_WORK  &&
+                connection->ccm_received         == 0) {
                cl_commlib_send_ccm_message(connection);
                connection->connection_sub_state = CL_COM_SENDING_CCM;
                CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );

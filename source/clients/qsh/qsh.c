@@ -1181,8 +1181,9 @@ int main(int argc, char **argv)
    int do_exit = 0;
    int exit_status = 0;
    int is_qlogin = 0;
-   int is_rsh    = 0;
+   int is_rsh = 0;
    int is_rlogin = 0;
+   int is_qsh = 0;
    int just_verify = 0;
    int inherit_job  = 0;
    int existing_job = 0;
@@ -1208,15 +1209,16 @@ int main(int argc, char **argv)
    /*
    ** get command name: qlogin, qrsh or qsh
    */
-   if(!strcmp(sge_basename(argv[0], '/'), "qlogin")) {
+   if (!strcmp(sge_basename(argv[0], '/'), "qlogin")) {
       is_qlogin = 1;
       my_who = QLOGIN;
-   } else {
-      if(!strcmp(sge_basename(argv[0], '/'), "qrsh")) {
-         is_qlogin = 1;
-         is_rsh    = 1;
-         my_who = QRSH;
-      }   
+   } else if (!strcmp(sge_basename(argv[0], '/'), "qrsh")) {
+      is_qlogin = 1;
+      is_rsh    = 1;
+      my_who = QRSH;
+   } else if (!strcmp(sge_basename(argv[0], '/'), "qsh")) {
+      is_qsh = 1; 
+      my_who = QSH;
    }
 
    sge_gdi_param(SET_MEWHO, my_who, NULL);
@@ -1285,11 +1287,11 @@ int main(int argc, char **argv)
     * We will read commandline options from scripfile if the script
     * itself should be handled as script not as binary
     */
-   if (is_rsh && 
+   if (is_qsh || is_qlogin || (is_rsh && 
        ((!opt_list_has_X(opts_cmdline, "-b") && 
          !opt_list_has_X(opts_defaults, "-b")) ||
         opt_list_is_X_true(opts_cmdline, "-b") || 
-        opt_list_is_X_true(opts_defaults, "-b"))) {
+        opt_list_is_X_true(opts_defaults, "-b")))) {
       DPRINTF(("Ignoring script parameter\n"));
    } else {
       lListElem *inherit_ep = lGetElemStr(opts_cmdline, SPA_switch, "-inherit");

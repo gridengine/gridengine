@@ -1,3 +1,7 @@
+EB-2002-11-25-0  Bugfix:    qsh -q hostname is not working
+                 IZ:        #429
+                 Review:    JG
+
 CR-2002-11-25-0  Testsuite: test binary_submission -> added version check -
                                check works only for 
                                sge/ee version > SGE(EE) 5.3p2
@@ -10,11 +14,12 @@ CR-2002-11-22-3  Testsuite: qmod - reschedule test:
 CR-2002-11-22-2  Testsuite: qrsh output change in maintrunc - adapted changes
                             into testsuite
 
-CR-2002-11-22-0  Bugfix:    Uninitialized pointer caused segmentation fault in qsh/qrsh
-                            on submit only hosts.
+CR-2002-11-22-0  Bugfix:    Uninitialized pointer caused segmentation fault in 
+                            qsh/qrsh on submit only hosts.
                  Testsuite: more info output for submit_hosts test
 
-CR-2002-11-21-1  Testsuite: new testsuite configuration parameter: add_compile_archs
+CR-2002-11-21-1  Testsuite: new testsuite configuration parameter: 
+                            add_compile_archs
                               - new ts_config_version is 1.2
                               - Forced compilation for specified architectures
                               

@@ -2730,7 +2730,6 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
-            free (abs_path);
 
             fscanf(fp, "%s", buffer);
             if (strcmp(buffer, mirror_text)) {
@@ -2814,7 +2813,6 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
-            free (abs_path);
 
             fscanf(fp, "%10c", buffer);
             buffer[10] = '\0';
@@ -2968,7 +2966,6 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
                continue;
             }
-            free (abs_path);
 
             fscanf(fp, "%14c%*[^\n]\n", buffer);
             buffer[14] = '\0';

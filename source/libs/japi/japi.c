@@ -367,7 +367,10 @@ int japi_init_mt(dstring *diag)
    feature_mt_init();
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   gdi_errno = sge_gdi_setup("japi", &alp);
+   if ( uti_state_get_mewho() == QUSERDEFINED) { 
+      sge_gdi_param(SET_MEWHO, JAPI, NULL);
+   } 
+   gdi_errno = sge_gdi_setup(uti_state_get_sge_formal_prog_name(), &alp);
    if (gdi_errno!=AE_OK && gdi_errno != AE_ALREADY_SETUP) {
       answer_to_dstring(lFirst(alp), diag);
       lFreeList(alp);
@@ -3549,6 +3552,8 @@ static void *japi_implementation_thread(void *p)
    int cl_errno, stop_ec = 0;
    int parameter, ed_time = 30, flush_delay_rate = 6;
    const char *s;
+   bool up_and_running = false;
+
 
    DENTER(TOP_LAYER, "japi_implementation_thread");
 
@@ -3556,7 +3561,11 @@ static void *japi_implementation_thread(void *p)
 
    /* needed to init comlib per thread globals */
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if (sge_gdi_setup("japi_ec", &alp)!=AE_OK) {
+   if ( uti_state_get_mewho() == QUSERDEFINED) { 
+      sge_gdi_param(SET_MEWHO, JAPI_EC, NULL);
+   } 
+
+   if (sge_gdi_setup(uti_state_get_sge_formal_prog_name(), &alp)!=AE_OK) {
       DPRINTF(("error: sge_gdi_setup() failed for event client thread\n"));
       if (p) {
          lListElem *aep = lFirst(alp);
@@ -3568,7 +3577,6 @@ static void *japi_implementation_thread(void *p)
       goto SetupFailed;
    }
    log_state_set_log_gui(0);
-
 
    /* JAPI parameters passed through environment */
    if ((s=getenv("SGE_JAPI_EDTIME"))) {
@@ -3585,7 +3593,7 @@ static void *japi_implementation_thread(void *p)
 
    /* register at qmaster as event client */
    DPRINTF(("registering as event client ...\n"));
-   ec_prepare_registration(EV_ID_ANY, "japi");
+   ec_prepare_registration(EV_ID_ANY, uti_state_get_sge_formal_prog_name());
    ec_set_edtime(ed_time); 
    ec_set_busy_handling(EV_THROTTLE_FLUSH); 
    ec_set_flush_delay(flush_delay_rate); 
@@ -3653,12 +3661,6 @@ static void *japi_implementation_thread(void *p)
    }
    japi_ec_id = ec_get_id();
 
-   /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
-   DPRINTF(("signalling event client thread is up and running\n"));
-   JAPI_LOCK_EC_STATE();
-   japi_ec_state = JAPI_EC_UP;
-      pthread_cond_signal(&japi_ec_state_starting_cv);
-   JAPI_UNLOCK_EC_STATE();
 
 #ifdef ENABLE_NGC
    DPRINTF(("my formal prog name is \"%s\"\n",(char*)uti_state_get_sge_formal_prog_name()));
@@ -3769,6 +3771,17 @@ static void *japi_implementation_thread(void *p)
                      pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
 
                   JAPI_UNLOCK_JOB_LIST();
+
+                  if (!up_and_running) {
+                     /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
+                     DPRINTF(("signalling event client thread is up and running\n"));
+
+                     JAPI_LOCK_EC_STATE();
+                     japi_ec_state = JAPI_EC_UP;
+                        pthread_cond_signal(&japi_ec_state_starting_cv);
+                     JAPI_UNLOCK_EC_STATE();
+                     up_and_running = true;
+                  }
                }
                break;
 

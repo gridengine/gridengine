@@ -1,3 +1,10 @@
+CR-2004-01-16-1: Bugfix:    - JAPI: ensure japi_init()/drmaa_init() does not 
+                              return before initial event arrived
+                            - new formal prog names: "JAPI" and "JAPI_EC" as
+                              default program names for uninitialized japi 
+                              clients ("unknown" endpoint id's).
+                            - removed unallowed free() call in test_drmaa binary
+
 DT-2004-01-16-0: Bugfix:    Fixed uninitialized read in new commlib on Solaris 9
                  Changed:   cl_host_list.c
 
@@ -35,7 +42,6 @@ SG-2004-01-15-1: Bugfix:    fixed qdel -uall and qdel -u NAME
                  Changed:   qdel, man pages
 
 SG-2004-01-15-0: Bugfix:    fixed the build
-
 
 CR-2004-01-15-3: Bugfix:    - code clean up (function names)
 

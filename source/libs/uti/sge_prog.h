@@ -75,7 +75,7 @@ enum {
  EXECD           ,       /* 19 */
  MAX_ANCILLARY   = EXECD , /* 19 */
  QEVENT,                 /* 20 */
- QUSERDEFINED   ,        /* 21 */
+ QUSERDEFINED    ,       /* 21 */
  ALL_OPT         ,       /* 22 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
@@ -96,7 +96,9 @@ enum {
  PVM_RMANAGER    ,       /* 36 */
  QHOST           ,       /* 37 */
  COMMDCNTL       ,       /* 38 */ 
- SPOOLDEFAULTS           /* 39 */
+ SPOOLDEFAULTS   ,       /* 39 */
+ JAPI            ,       /* 40 */
+ JAPI_EC                 /* 41 */
 };
 
 

@@ -92,7 +92,9 @@ const char *prognames[] =
    "unknown"	,       /* 36  */
    "qhost"		,       /* 37  */
    "commdcntl" ,       /* 38  */
-   "spoolinit"         /* 39  */
+   "spoolinit" ,       /* 39  */
+   "japi"      ,       /* 40  */
+   "japi_ec"           /* 41  */
 };
  
 typedef struct {

@@ -284,7 +284,7 @@ Qmon*cluster_global_layout.cluster_qmaster_spool_dir_label.labelString: @{Master
 Qmon*cluster_global_layout.cluster_execd_spool_dir_label.labelString: @{Execd Spool Dir}
 Qmon*cluster_global_layout.cluster_admin_user_label.labelString: @{Admin User}
 Qmon*cluster_global_layout.cluster_admin_mail_label.labelString: @{Admin Mail}
-Qmon*cluster_global_layout.cluster_login_shells.labelString: @{Login Shells}
+Qmon*cluster_global_layout.cluster_login_shells_label.labelString: @{Login Shells}
 
 Qmon*cluster_global_layout.cluster_min_uid*columns: 5
 Qmon*cluster_global_layout.cluster_min_gid*columns: 5

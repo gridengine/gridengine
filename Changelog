@@ -1,3 +1,7 @@
+AA-2002-07-15-0: Bugfix:    l10n wrong widget name in qmon_cluster.ad file
+                            dist/locale/en/qmon_messages.ad added as l10n
+                            translation template
+
 EB-2002-07-11-0: Bugfix:    qacct displays incorrect accounting information
                  Issue:     #314
                  Bugtraq:   #4713013

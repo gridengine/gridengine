@@ -1,4 +1,9 @@
-RC-2004-01-20-0: Enhancem.: use sysconf(_SC_NPROCESSORS_ONLN) to get nprocs on Linux.
+EB-2004-01-21-0: Bugfix:   Queue selection did not work in combination
+                           with cluster queue printing (qstat -g c -q <QI>)
+                 Changed:  qstat
+
+RC-2004-01-20-0: Enhancem.: use sysconf(_SC_NPROCESSORS_ONLN) to get nprocs on 
+                            Linux.
                  Changed:   libs/uti/sge_nprocs.c
 
 CR-2004-01-20-1: Enhancem.: communication lib: status information response
@@ -11,18 +16,18 @@ JM-2004-01-20-3: Bugfix:    The aimk configurations for AIX4[123] and AIX51
                  Changed:   aimk
                  Reviewed:  RH, AS
 
-JM-2004-01-20-2: Bugfix:    The setrlimitj() call under SUPER-UX must be surrounded
-                            by sge_switch2start_user() and sge_switch2admin_user()
-                            to be effective.
+JM-2004-01-20-2: Bugfix:    The setrlimitj() call under SUPER-UX must be 
+                            surrounded by sge_switch2start_user() and 
+                            sge_switch2admin_user() to be effective.
                  Changed:   daemons/shepherd/setrlimits.c
                  Reviewed:  SD
 
-CR-2004-01-20-0: Cleanup:  - enabled threads for communication in qmaster
-                           - hostname resolving (still no alias file support)
-                           - communication log can now be switched on/off
-                             with environment variable "SGE_NGC_DEBUG"
-                           - sge_gethostbyname() and sge_gethostbyaddr() now
-                             always return a copy of the hostent struct
+CR-2004-01-20-0: Cleanup:   - enabled threads for communication in qmaster
+                            - hostname resolving (still no alias file support)
+                            - communication log can now be switched on/off
+                              with environment variable "SGE_NGC_DEBUG"
+                            - sge_gethostbyname() and sge_gethostbyaddr() now
+                              always return a copy of the hostent struct
 
 JM-2004-01-20-1: Enhancem:  Revise japi.c to use rand_r() instead of
                             (s)random() which are not reentrant. 'id'
@@ -32,6 +37,7 @@ JM-2004-01-20-1: Enhancem:  Revise japi.c to use rand_r() instead of
                  Reviewed:  AH
 
 EB-2004-01-20-1: Enhancem.: new switch "qconf -sick"
+                 Changed:   qconf
 
 AD-2004-01-20-0: Enhancem:  Did add 'sge_log_tee' script.
                  Changed:   util

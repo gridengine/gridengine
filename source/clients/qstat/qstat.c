@@ -166,7 +166,8 @@ char **argv
    lList *jid_list = NULL, *queue_user_list = NULL, *peref_list = NULL;
    lList *pe_list = NULL, *ckpt_list = NULL, *ref_list = NULL; 
    lList *alp = NULL, *pcmdline = NULL;
-   int a_queue_was_selected = 0;
+   bool a_qinstance_is_selected = false;
+   bool a_cqueue_is_selected = false;
    u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
    u_long32 explain_bits = QIM_DEFAULT;
    u_long32 group_opt = 0;
@@ -438,20 +439,24 @@ char **argv
 
    for_each(cqueue, queue_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      bool tmp_a_qinstance_is_selected = false;
 
       for_each(qep, qinstance_list) {
          if (lGetUlong(qep, QU_tag) & TAG_SHOW_IT) {
-            a_queue_was_selected = 1;
+            tmp_a_qinstance_is_selected = true;
             
             break;
          }
       }
-      if (a_queue_was_selected > 0) {
-         break;
+      a_qinstance_is_selected |= tmp_a_qinstance_is_selected;
+      if (!tmp_a_qinstance_is_selected) {
+         lSetUlong(cqueue, CQ_tag, TAG_DEFAULT);
+      } else {
+         a_cqueue_is_selected |= true;
       }
    }
 
-   if (!a_queue_was_selected && qselect_mode) {
+   if (!a_qinstance_is_selected && qselect_mode) {
       fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION);
       SGE_EXIT(1);
    }
@@ -473,7 +478,7 @@ char **argv
       SGE_EXIT(0);
    }
 
-   if (!a_queue_was_selected && 
+   if (!a_qinstance_is_selected && 
       (full_listing&(QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL))) {
       SGE_EXIT(0);
    }
@@ -515,14 +520,12 @@ char **argv
 
 
    if (lGetNumberOfElem(peref_list) || lGetNumberOfElem(queueref_list) || 
-         lGetNumberOfElem(resource_list) || lGetNumberOfElem(queue_user_list)) {
+       lGetNumberOfElem(resource_list) || lGetNumberOfElem(queue_user_list)) {
       /*
       ** unselect all pending jobs that fit in none of the selected queues
       ** that way the pending jobs are really pending jobs for the queues 
       ** printed
       */
-
-      DTRACE;
 
       set_qs_state(QS_STATE_EMPTY);
       for_each(jep, job_list) {
@@ -554,8 +557,6 @@ char **argv
             }
          }   
 
-         DTRACE;
-         
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if (!show_job && !(lGetUlong(jatep, JAT_status) == JRUNNING || (lGetUlong(jatep, JAT_status) == JTRANSFERING))) {
                DPRINTF(("show task "u32"."u32"\n",
@@ -606,90 +607,91 @@ char **argv
     *         print these jobs if necessary
     *
     */
-   DTRACE;
    correct_capacities(exechost_list, centry_list);
    if ((group_opt & GROUP_CQ_SUMMARY) != 0) {
       for_each (cqueue, queue_list) {
-         double load = 0.0;
-         u_long32 used, total;
-         u_long32 temp_disabled, available, manual_intervention;
-         u_long32 suspend_manual, suspend_threshold, suspend_on_subordinate;
-         u_long32 suspend_calendar, unknown, load_alarm;
-         u_long32 disabled_manual, disabled_calendar, ambiguous;
-         u_long32 orphaned, error;
-         bool is_load_available;
-         bool show_states = full_listing & QSTAT_DISPLAY_EXTENDED;
+         if (lGetUlong(cqueue, CQ_tag) != TAG_DEFAULT) {
+            double load = 0.0;
+            u_long32 used, total;
+            u_long32 temp_disabled, available, manual_intervention;
+            u_long32 suspend_manual, suspend_threshold, suspend_on_subordinate;
+            u_long32 suspend_calendar, unknown, load_alarm;
+            u_long32 disabled_manual, disabled_calendar, ambiguous;
+            u_long32 orphaned, error;
+            bool is_load_available;
+            bool show_states = full_listing & QSTAT_DISPLAY_EXTENDED;
 
-         cqueue_calculate_summary(cqueue,
-                                  exechost_list,
-                                  centry_list,
-                                  &load,
-                                  &is_load_available,
-                                  &used,
-                                  &total,
-                                  &suspend_manual,
-                                  &suspend_threshold,
-                                  &suspend_on_subordinate,
-                                  &suspend_calendar,
-                                  &unknown,
-                                  &load_alarm,
-                                  &disabled_manual,
-                                  &disabled_calendar,
-                                  &ambiguous,
-                                  &orphaned,
-                                  &error,
-                                  &available,
-                                  &temp_disabled,
-                                  &manual_intervention);
-         
-         if (first_time) {
-            printf("%-36.36s %7s "
-                   "%6s %6s %6s %6s %6s ",
-                   "CLUSTER QUEUE", "LOAD", 
-                   "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
+            cqueue_calculate_summary(cqueue,
+                                     exechost_list,
+                                     centry_list,
+                                     &load,
+                                     &is_load_available,
+                                     &used,
+                                     &total,
+                                     &suspend_manual,
+                                     &suspend_threshold,
+                                     &suspend_on_subordinate,
+                                     &suspend_calendar,
+                                     &unknown,
+                                     &load_alarm,
+                                     &disabled_manual,
+                                     &disabled_calendar,
+                                     &ambiguous,
+                                     &orphaned,
+                                     &error,
+                                     &available,
+                                     &temp_disabled,
+                                     &manual_intervention);
+            
+            if (first_time) {
+               printf("%-36.36s %7s "
+                      "%6s %6s %6s %6s %6s ",
+                      "CLUSTER QUEUE", "LOAD", 
+                      "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
+               if (show_states) {
+                  printf("%5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s", 
+                         "s", "A", "S", "C", "u", "a", "d", "D", "c", "o", "E");
+               }
+               printf("\n");
+               printf("--------------------");
+               printf("--------------------");
+               printf("--------------------");
+               printf("-------------------");
+               if (show_states) {
+                  printf("--------------------");
+                  printf("--------------------");
+                  printf("--------------------");
+                  printf("------");
+               }
+               printf("\n");
+               first_time = false;
+            }
+            printf("%-36.36s ", lGetString(cqueue, CQ_name));
+            if (is_load_available) {
+               printf("%7.2f ", load);
+            } else {
+               printf("%7s ", "-NA-");
+            }
+            printf("%6d ", (int)used);
+            printf("%6d ", (int)available);
+            printf("%6d ", (int)total);
+            printf("%6d ", (int)temp_disabled);
+            printf("%6d ", (int)manual_intervention);
             if (show_states) {
-               printf("%5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s", 
-                      "s", "A", "S", "C", "u", "a", "d", "D", "c", "o", "E");
+               printf("%5d ", (int)suspend_manual);
+               printf("%5d ", (int)suspend_threshold);
+               printf("%5d ", (int)suspend_on_subordinate);
+               printf("%5d ", (int)suspend_calendar);
+               printf("%5d ", (int)unknown);
+               printf("%5d ", (int)load_alarm);
+               printf("%5d ", (int)disabled_manual);
+               printf("%5d ", (int)disabled_calendar);
+               printf("%5d ", (int)ambiguous);
+               printf("%5d ", (int)orphaned);
+               printf("%5d ", (int)error);
             }
             printf("\n");
-            printf("--------------------");
-            printf("--------------------");
-            printf("--------------------");
-            printf("-------------------");
-            if (show_states) {
-               printf("--------------------");
-               printf("--------------------");
-               printf("--------------------");
-               printf("------");
-            }
-            printf("\n");
-            first_time = false;
          }
-         printf("%-36.36s ", lGetString(cqueue, CQ_name));
-         if (is_load_available) {
-            printf("%7.2f ", load);
-         } else {
-            printf("%7s ", "-NA-");
-         }
-         printf("%6d ", (int)used);
-         printf("%6d ", (int)available);
-         printf("%6d ", (int)total);
-         printf("%6d ", (int)temp_disabled);
-         printf("%6d ", (int)manual_intervention);
-         if (show_states) {
-            printf("%5d ", (int)suspend_manual);
-            printf("%5d ", (int)suspend_threshold);
-            printf("%5d ", (int)suspend_on_subordinate);
-            printf("%5d ", (int)suspend_calendar);
-            printf("%5d ", (int)unknown);
-            printf("%5d ", (int)load_alarm);
-            printf("%5d ", (int)disabled_manual);
-            printf("%5d ", (int)disabled_calendar);
-            printf("%5d ", (int)ambiguous);
-            printf("%5d ", (int)orphaned);
-            printf("%5d ", (int)error);
-         }
-         printf("\n");
       } 
    } else {
       for_each(qep, queue_list) {

@@ -188,65 +188,65 @@ NAMEEND
 /* They might have to be addapted as well.             */
 
 typedef enum {
-   sgeE_ALL_EVENTS,                 /* + = impl. and tested, - = not available */
+   sgeE_ALL_EVENTS,                 /*0 + = impl. and tested, - = not available */
 
-   sgeE_ADMINHOST_LIST,             /* + send admin host list at registration */
-   sgeE_ADMINHOST_ADD,              /* + event add admin host */
-   sgeE_ADMINHOST_DEL,              /* + event delete admin host */
-   sgeE_ADMINHOST_MOD,              /* - event modify admin host */
+   sgeE_ADMINHOST_LIST,             /*1 + send admin host list at registration */
+   sgeE_ADMINHOST_ADD,              /*2 + event add admin host */
+   sgeE_ADMINHOST_DEL,              /*3 + event delete admin host */
+   sgeE_ADMINHOST_MOD,              /*4 - event modify admin host */
 
-   sgeE_CALENDAR_LIST,              /* + send calendar list at registration */
-   sgeE_CALENDAR_ADD,               /* + event add calendar */
-   sgeE_CALENDAR_DEL,               /* + event delete calendar */
-   sgeE_CALENDAR_MOD,               /* + event modify calendar */
+   sgeE_CALENDAR_LIST,              /*5 + send calendar list at registration */
+   sgeE_CALENDAR_ADD,               /*6 + event add calendar */
+   sgeE_CALENDAR_DEL,               /*7 + event delete calendar */
+   sgeE_CALENDAR_MOD,               /*8 + event modify calendar */
 
-   sgeE_CKPT_LIST,                  /* + send ckpt list at registration */
-   sgeE_CKPT_ADD,                   /* + event add ckpt */
-   sgeE_CKPT_DEL,                   /* + event delete ckpt */
-   sgeE_CKPT_MOD,                   /* + event modify ckpt */
+   sgeE_CKPT_LIST,                  /*9 + send ckpt list at registration */
+   sgeE_CKPT_ADD,                   /*10 + event add ckpt */
+   sgeE_CKPT_DEL,                   /*11 + event delete ckpt */
+   sgeE_CKPT_MOD,                   /*12 + event modify ckpt */
 
-   sgeE_CENTRY_LIST,                /* + send complex list at registration */
-   sgeE_CENTRY_ADD,                 /* + event add complex */
-   sgeE_CENTRY_DEL,                 /* + event delete complex */
-   sgeE_CENTRY_MOD,                 /* + event modify complex */
+   sgeE_CENTRY_LIST,                /*13 + send complex list at registration */
+   sgeE_CENTRY_ADD,                 /*14 + event add complex */
+   sgeE_CENTRY_DEL,                 /*15+ event delete complex */
+   sgeE_CENTRY_MOD,                 /*16 + event modify complex */
 
-   sgeE_CONFIG_LIST,                /* + send config list at registration */
-   sgeE_CONFIG_ADD,                 /* + event add config */
-   sgeE_CONFIG_DEL,                 /* + event delete config */
-   sgeE_CONFIG_MOD,                 /* + event modify config */
+   sgeE_CONFIG_LIST,                /*17 + send config list at registration */
+   sgeE_CONFIG_ADD,                 /*18 + event add config */
+   sgeE_CONFIG_DEL,                 /*19 + event delete config */
+   sgeE_CONFIG_MOD,                 /*20 + event modify config */
 
-   sgeE_EXECHOST_LIST,              /* + send exec host list at registration */
-   sgeE_EXECHOST_ADD,               /* + event add exec host */
-   sgeE_EXECHOST_DEL,               /* + event delete exec host */
-   sgeE_EXECHOST_MOD,               /* + event modify exec host */
+   sgeE_EXECHOST_LIST,              /*21 + send exec host list at registration */
+   sgeE_EXECHOST_ADD,               /*22 + event add exec host */
+   sgeE_EXECHOST_DEL,               /*23 + event delete exec host */
+   sgeE_EXECHOST_MOD,               /*24 + event modify exec host */
 
-   sgeE_GLOBAL_CONFIG,              /* + global config changed, replace by sgeE_CONFIG_MOD */
+   sgeE_GLOBAL_CONFIG,              /*25 + global config changed, replace by sgeE_CONFIG_MOD */
 
-   sgeE_JATASK_ADD,                 /* + event add array job task */
-   sgeE_JATASK_DEL,                 /* + event delete array job task */
-   sgeE_JATASK_MOD,                 /* + event modify array job task */
+   sgeE_JATASK_ADD,                 /*26 + event add array job task */
+   sgeE_JATASK_DEL,                 /*27 + event delete array job task */
+   sgeE_JATASK_MOD,                 /*28 + event modify array job task */
 
-   sgeE_PETASK_ADD,                 /*   event add a new pe task */
-   sgeE_PETASK_DEL,                 /*   event delete a pe task */
+   sgeE_PETASK_ADD,                 /*29   event add a new pe task */
+   sgeE_PETASK_DEL,                 /*30   event delete a pe task */
 
-   sgeE_JOB_LIST,                   /* + send job list at registration */
-   sgeE_JOB_ADD,                    /* + event job add (new job) */
-   sgeE_JOB_DEL,                    /* + event job delete */
-   sgeE_JOB_MOD,                    /* + event job modify */
-   sgeE_JOB_MOD_SCHED_PRIORITY,     /* + event job modify priority */
-   sgeE_JOB_USAGE,                  /* + event job online usage */
-   sgeE_JOB_FINAL_USAGE,            /* + event job final usage report after job end */
-   sgeE_JOB_FINISH,                 /* + job finally finished or aborted (user view) */
+   sgeE_JOB_LIST,                   /*31 + send job list at registration */
+   sgeE_JOB_ADD,                    /*32 + event job add (new job) */
+   sgeE_JOB_DEL,                    /*33 + event job delete */
+   sgeE_JOB_MOD,                    /*34 + event job modify */
+   sgeE_JOB_MOD_SCHED_PRIORITY,     /*35 + event job modify priority */
+   sgeE_JOB_USAGE,                  /*36 + event job online usage */
+   sgeE_JOB_FINAL_USAGE,            /*37 + event job final usage report after job end */
+   sgeE_JOB_FINISH,                 /*38 + job finally finished or aborted (user view) */
 
-   sgeE_JOB_SCHEDD_INFO_LIST,       /* + send job schedd info list at registration */
-   sgeE_JOB_SCHEDD_INFO_ADD,        /* - event jobs schedd info added */
-   sgeE_JOB_SCHEDD_INFO_DEL,        /* - event jobs schedd info deleted */
-   sgeE_JOB_SCHEDD_INFO_MOD,        /* + event jobs schedd info modified */
+   sgeE_JOB_SCHEDD_INFO_LIST,       /*39 + send job schedd info list at registration */
+   sgeE_JOB_SCHEDD_INFO_ADD,        /*40 - event jobs schedd info added */
+   sgeE_JOB_SCHEDD_INFO_DEL,        /*41 - event jobs schedd info deleted */
+   sgeE_JOB_SCHEDD_INFO_MOD,        /*42 + event jobs schedd info modified */
 
-   sgeE_MANAGER_LIST,               /* + send manager list at registration */
-   sgeE_MANAGER_ADD,                /* + event add manager */
-   sgeE_MANAGER_DEL,                /* + event delete manager */
-   sgeE_MANAGER_MOD,                /* - event modify manager */
+   sgeE_MANAGER_LIST,               /*43 + send manager list at registration */
+   sgeE_MANAGER_ADD,                /*44 + event add manager */
+   sgeE_MANAGER_DEL,                /*45 + event delete manager */
+   sgeE_MANAGER_MOD,                /*46- event modify manager */
 
    sgeE_OPERATOR_LIST,              /* + send operator list at registration */
    sgeE_OPERATOR_ADD,               /* + event add operator */

@@ -1,3 +1,8 @@
+SG-2004-09-08-0: Cleanup:   - improved the locking in the event master
+                            - filters now for subscribed events
+                 Changed:   qmaster
+                 Review:    JG
+
 SG-2004-09-08-0: Cleanup:   improved the loging
                  Changed:   all
                  Review:    AA

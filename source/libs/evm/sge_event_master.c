@@ -145,8 +145,8 @@ typedef struct {
    pthread_cond_t   waitfield_cond_var;    /* used for waiting                                          */
    pthread_cond_t   cond_var;              /* used for waiting                                          */
    pthread_mutex_t  cond_mutex;            /* used for mutual exclusion. only use in internal functions */
-   pthread_mutex_t  ack_mutex;             /* used for mutual exclusion. only use in internal functions */
-   pthread_mutex_t  send_mutex;            /* used for mutual exclusion. only use in internal functions */
+   pthread_mutex_t  ack_mutex;             /* gards the ack list                                        */
+   pthread_mutex_t  send_mutex;            /* gards the event send list                                 */
    
    u_long32         max_event_clients;     /* contains the max number of custom event clients, the      */
                                            /* scheduler is not accounted for. protected by mutex.       */
@@ -202,6 +202,15 @@ typedef struct {
    bool             indices_dirty;         /* whether the clients_indices array needs to be updated     */
                                            /* protected by mutex                                        */
 } event_master_control_t;
+
+
+/*
+ * contains the number of event clients that have subscribt a specific event
+ */
+typedef struct {
+   pthread_mutex_t  subscribed_events_mutex;
+   int   subscribed_events[sgeE_EVENTSIZE];
+}subscribed_control_t;
 
 /****** Eventclient/Server/-Event_Client_Server_Defines ************************
 *  NAME
@@ -380,6 +389,8 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  *******************************************************************/
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
+static subscribed_control_t Subscribed_Control;
+
 static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
                                                 NULL,
                                                 PTHREAD_MUTEX_INITIALIZER,
@@ -401,6 +412,7 @@ static void       event_master_once_init(void);
 static void       init_send_events(void); 
 static void*      send_thread(void*);
 static bool       should_exit(void);
+static int        get_number_of_subscriptions(u_long32 event_type);
 static void       send_events(lListElem *report, lList *report_list);
 static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*);
@@ -496,7 +508,8 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       lSetString(clio, EV_name, name);
    }
    
-   if ((id < EV_ID_ANY) || (id >= EV_ID_FIRST_DYNAMIC)) { /* invalid request */
+   /* EV_ID_ANY is 0, therefor the compare is always true (Irix complained) */
+   if (/*(id < EV_ID_ANY) ||*/ (id >= EV_ID_FIRST_DYNAMIC)) { /* invalid request */
       ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, u32c(id)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -1299,6 +1312,10 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
    
    pthread_once(&Event_Master_Once, event_master_once_init);
 
+   if (get_number_of_subscriptions(type) <= 0) {
+      return true; /* no event client has this event subscribed */
+   }
+
    if (element != NULL) {
       /* ignore the sublist in case of the following events. We have
          extra events to handle the sub-lists */
@@ -1363,6 +1380,10 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
    DENTER (TOP_LAYER, "sge_add_event_for_client");
    
    pthread_once(&Event_Master_Once, event_master_once_init);
+
+   if (get_number_of_subscriptions(type) <= 0) {
+      return true; /* no event client has this event subscribed */
+   }
 
    /* This doesn't check whether the id is too large, which is a possibility.
     * The problem is that to do the check, I'd have to grab the lock, which
@@ -1441,8 +1462,13 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
    lList *temp_sub_lp = NULL;
    int sub_list_elem = 0;
    lListElem *element = NULL;   
+   
    pthread_once(&Event_Master_Once, event_master_once_init);
 
+   if (get_number_of_subscriptions(type) <= 0) {
+      return true; /* no event client has this event subscribed */
+   }
+  
    if (list != NULL) {
       lp = lCreateListHash("Events", lGetListDescr(list), false); 
       if (lp == NULL) {
@@ -1563,11 +1589,11 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
    
    if (is_add_direct) {
-      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+      sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
       lAppendElem (Master_Control.send_events, evp);
 
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+      sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
       if (aClientID != EV_ID_ANY) {
          /* If we don't already hold the lock, grab it. */
@@ -1610,23 +1636,24 @@ static void process_sends ()
    lListElem *send = NULL;
    lListElem *event = NULL;
    lList *event_list = NULL;
-   lListElem *lastElem = NULL;
    u_long32 ec_id = 0;
    const char *session = NULL;
-   ev_event type = 0;
+   ev_event type = sgeE_ALL_EVENTS;
    int count = 0;
+   lList *temp_send_events = NULL;
+   lList *new_send_events = lCreateListHash("Events_To_Send", EV_Type, false);
    
    DENTER(TOP_LAYER, "process_sends");
 
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-   lastElem = lLast (Master_Control.send_events);
-   send = lFirst (Master_Control.send_events);
-   
-   while (send != NULL) {
-      send = lDechainElem (Master_Control.send_events, send);
+   sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+      temp_send_events = Master_Control.send_events;
+      Master_Control.send_events = new_send_events;
+      new_send_events = NULL;
+   sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+
+   while ((send = lFirst (temp_send_events)) != NULL) {
+      send = lDechainElem (temp_send_events, send);
       
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-   
       ec_id = lGetUlong (send, EV_id);
       session = lGetString (send, EV_session);
       event_list = lGetList (send, EV_events);
@@ -1702,23 +1729,10 @@ static void process_sends ()
          unlock_client(ec_id);
       } /* else */
 
-      if (send != lastElem) {
-         send = lFreeElem (send);
-
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                        &Master_Control.send_mutex);
-
-         send = lFirst (Master_Control.send_events);
-      }
-      else {
-         send = lFreeElem (send);
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                        &Master_Control.send_mutex);
-      }
+      send = lFreeElem (send);
    } /* while */
 
-   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
-                       &Master_Control.send_mutex);
+   temp_send_events = lFreeList(temp_send_events);                   
    DEXIT;
    return;
 } /* process_sends() */
@@ -1751,8 +1765,6 @@ static void process_sends ()
 *  NOTES
 *     MT-NOTE: sge_handle_event_ack() is MT safe.
 *
-*  SEE ALSO
-*     Eventclient/Server/sge_get_next_event_number()
 *
 *******************************************************************************/
 void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
@@ -1781,11 +1793,11 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    lSetUlong (evp, EV_id, aClientID);
    lSetList (evp, EV_events, etlp);
    
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
+   sge_mutex_lock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
    
    lAppendElem (Master_Control.ack_events, evp);
    
-   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
+   sge_mutex_unlock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
    
    DEXIT;
 }
@@ -1796,59 +1808,23 @@ static void process_acks(void)
    lListElem *client = NULL;
    lListElem *ack = NULL;
    u_long32 ec_id = 0;
-   lListElem *lastElem = NULL;
-/* See comment on ifdef below. */
-#if 0
-   int num_acks = 0;
-#endif
+   lList *temp_ack_list = NULL;
+   lList *new_ack_list = lCreateListHash("Events_To_ACK", EV_Type, false);
 
    DENTER(TOP_LAYER, "process_acks");
 
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
-   lastElem = lLast(Master_Control.ack_events);
-   ack = lFirst (Master_Control.ack_events);
+   sge_mutex_lock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
+      temp_ack_list = Master_Control.ack_events;
+      Master_Control.ack_events = new_ack_list;
+      new_ack_list = NULL;
+   sge_mutex_unlock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
+
+   while ((ack = lFirst(temp_ack_list)) != NULL) {
+      ack = lDechainElem (temp_ack_list, ack);
    
-   while (ack != NULL) {
-      ack = lDechainElem (Master_Control.ack_events, ack);
-/* See comment on ifdef below. */
-#if 0
-      /* It's OK to calculate this here and then let go of the lock because the
-       * worst that can happen if we're wrong is that the thread blocks on a
-       * client that it could have skipped.  Otherwise, we'd have to do some
-       * more locking and unlocking later, which is more overhead. */
-      num_acks = lGetNumberOfElem (Master_Control.ack_events);
-#endif
-   
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
-      
       ec_id = lGetUlong (ack, EV_id);
       
-/* Using soft locks, i.e. lock_client (id, false), can cause events to get out
- * of order.  At the moment, they really aren't needed because only one thread
- * is working on clients on a regular basis.  This may, however, be needed in
- * the future, at which point the ordering problem will have to be solved. */
-#if 1
       lock_client(ec_id, true);
-#else         
-      /* If this client is already locked, reappend the element to the end of
-       * the list so we can try again later.  If this is the only element in
-       * the ack list, block until the client is available to avoid a
-       * spinlock.  We don't need to make a copy because the element isn't being
-       * freed in this case. */
-      if (num_acks == 0) {
-         lock_client(ec_id, true);
-      }
-      else if (!lock_client(ec_id, false)) {
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                        &Master_Control.ack_mutex);
-         
-         lAppendElem (Master_Control.ack_events, ack);
-         /* Get next ack. */
-         ack = lFirst (Master_Control.ack_events);
-         
-         continue; /* while */
-      }
-#endif
 
       /* Either way, if we're here, the client is locked. */
       client = get_event_client (ec_id);
@@ -1882,23 +1858,10 @@ static void process_acks(void)
          unlock_client(ec_id);
       } /* else */
 
-      if (ack != lastElem) { 
-
-         ack = lFreeElem (ack);
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                        &Master_Control.ack_mutex);
-
-         ack = lFirst (Master_Control.ack_events);
-      }
-      else {
-         ack = lFreeElem (ack);
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                        &Master_Control.ack_mutex);
-      }
+      ack = lFreeElem (ack);
    } /* while */
 
-  sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
-                       &Master_Control.ack_mutex);
+   temp_ack_list = lFreeList(temp_ack_list);
    
    DEXIT;
 } /* sge_handle_event_ack() */
@@ -1939,11 +1902,11 @@ void sge_deliver_events_immediately(u_long32 aClientID)
    }
    else {
       flush_events(client, 0);
-      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+      sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       Master_Control.is_flush = true;
       Master_Control.delivery_signaled = true;
       pthread_cond_signal(&Master_Control.cond_var);
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+      sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
    }   
 
    unlock_client(aClientID);
@@ -1952,54 +1915,6 @@ void sge_deliver_events_immediately(u_long32 aClientID)
    return;
 } /* sge_deliver_event_immediately() */
 
-/****** Eventclient/Server/sge_get_next_event_number() *************************
-*  NAME
-*     sge_get_next_event_number() -- next event number for an event client
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     u_long32 
-*     sge_get_next_event_number(u_long32 client_id) 
-*
-*  FUNCTION
-*     Retrieves the next serial event number for an event client.
-*
-*  INPUTS
-*     u_long32 client_id - id of the event client
-*
-*  RESULT
-*     u_long32 - serial number for next event to deliver
-*
-*  MT-NOTE: sge_get_next_event_number() is MT safe.
-*
-*  BUGBUG-AD: Change signature of this function to allow for better error 
-*  BUGBUG-AD: handling!
-*
-*******************************************************************************/
-u_long32 sge_get_next_event_number(u_long32 aClientID) 
-{
-   lListElem *client;
-   u_long32 ret = EACCES;
-
-   DENTER(TOP_LAYER, "sge_get_next_event_number");
-
-   pthread_once(&Event_Master_Once, event_master_once_init);
-
-   lock_client(aClientID, true);
-
-   if ((client = get_event_client (aClientID)) != NULL) {
-      ret = lGetUlong(client, EV_next_number);
-   }
-   else {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(aClientID), SGE_FUNC));
-   }
-
-   unlock_client(aClientID);
-
-   DEXIT;
-   return ret;
-} /* sge_get_next_event_number() */
 
 /****** evm/sge_event_master/sge_resync_schedd() *******************************
 *  NAME
@@ -2144,6 +2059,17 @@ static void event_master_once_init(void)
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
    pthread_create(&Event_Thread, &attr, send_thread, NULL);
 
+/* init the event subscription counter */
+   {
+      int i;
+      pthread_mutex_init(&Subscribed_Control.subscribed_events_mutex, NULL);
+
+      for (i = 0; i < sgeE_EVENTSIZE; i++) {
+         Subscribed_Control.subscribed_events[i] = 0;
+      }
+   }
+
+
    DEXIT;
    return;
 } /* event_master_one_init() */
@@ -2236,7 +2162,7 @@ static void* send_thread(void *anArg)
    lAppendElem(report_list, report);
 
    while (!should_exit()) {
-      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+      sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
@@ -2271,7 +2197,7 @@ static void* send_thread(void *anArg)
        * we are delivering events now, though we can reset the flush.
        */
       Master_Control.is_flush = false;
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
+      sge_mutex_unlock("event_master_const_mutex", SGE_FUNC, __LINE__,
                        &Master_Control.cond_mutex);
 
       /* If the client array has changed, rebuild the indices. */
@@ -2379,17 +2305,29 @@ static void remove_event_client(lListElem *client, int aClientID) {
          u32c(lGetUlong(client, EV_id))));
 
    if (old_sub) {
+
+      sge_mutex_lock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
+                  &Subscribed_Control.subscribed_events_mutex);  
+      
       for (i=0; i<sgeE_EVENTSIZE; i++){ 
-         if (old_sub[i].where)
+         if (old_sub[i].subscription == EV_SUBSCRIBED){
+            Subscribed_Control.subscribed_events[i]--;
+         }
+         if (old_sub[i].where) {
             lFreeWhere(old_sub[i].where);
-         if (old_sub[i].what)
+         }   
+         if (old_sub[i].what) {
             lFreeWhat(old_sub[i].what);
+         }   
          if (old_sub[i].descr){
             cull_hash_free_descr(old_sub[i].descr);
             free(old_sub[i].descr);
          }
       } 
-
+      
+      sge_mutex_unlock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
+                    &Subscribed_Control.subscribed_events_mutex);
+      
       free(old_sub);
       lSetRef(client, EV_sub_array, NULL);
    }
@@ -2404,6 +2342,41 @@ static void remove_event_client(lListElem *client, int aClientID) {
    return;
 }
 
+/****** evm/sge_event_master/get_number_of_subscriptions() ******************
+*  NAME
+*     get_number_of_subscriptions() -- returns the number of event clients, 
+*                                        that have a given event subscribed
+*
+*  SYNOPSIS
+*     static int get_number_of_subscriptions(u_long32 event_type)
+*
+*  FUNCTION
+*     returns the number of events clients subscribing a given event.
+*
+*  INPUTS
+*     u_long32 event_type - event number
+*
+*  RESULT
+*    int - number of event clients 
+*
+*  NOTES
+*     MT-NOTE: get_number_of_subscriptions() is MT safe 
+*
+*******************************************************************************/
+
+static int get_number_of_subscriptions(u_long32 event_type) {
+   int ret = 0;
+
+   sge_mutex_lock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
+                  &Subscribed_Control.subscribed_events_mutex);  
+   
+   ret = Subscribed_Control.subscribed_events[event_type];
+
+   sge_mutex_unlock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
+                    &Subscribed_Control.subscribed_events_mutex);
+   
+   return ret;
+}
 
 
 /****** evm/sge_event_master/send_events() *************************************
@@ -2751,12 +2724,16 @@ static void build_subscription(lListElem *event_el)
       sub_array[i].subscription = EV_NOT_SUBSCRIBED;
       sub_array[i].blocked = false;
    }
+  
+   sge_mutex_lock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
+                  &Subscribed_Control.subscribed_events_mutex);
    
    for_each(sub_el, subscription){
       const lListElem *temp = NULL;
       u_long32 event = lGetUlong(sub_el, EVS_id);   
       
       sub_array[event].subscription = EV_SUBSCRIBED; 
+      Subscribed_Control.subscribed_events[event]++;
       sub_array[event].flush = lGetBool(sub_el, EVS_flush);
       sub_array[event].flush_time = lGetUlong(sub_el, EVS_interval);
      
@@ -2773,10 +2750,15 @@ static void build_subscription(lListElem *event_el)
    if (old_sub_array) {
       int i;
       for (i=0; i<sgeE_EVENTSIZE; i++){ 
-         if (old_sub_array[i].where)
+         if (sub_array[i].subscription == EV_SUBSCRIBED){
+            Subscribed_Control.subscribed_events[i]--;
+         }
+         if (old_sub_array[i].where) {
             lFreeWhere(old_sub_array[i].where);
-         if (old_sub_array[i].what)
+         }   
+         if (old_sub_array[i].what) {
             lFreeWhat(old_sub_array[i].what);
+         }   
          if (old_sub_array[i].descr){
             cull_hash_free_descr(old_sub_array[i].descr);
             free(old_sub_array[i].descr);
@@ -2784,6 +2766,10 @@ static void build_subscription(lListElem *event_el)
       }
       free(old_sub_array);
    }
+  
+   sge_mutex_unlock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
+                    &Subscribed_Control.subscribed_events_mutex);
+
    
    lSetRef(event_el, EV_sub_array, sub_array);
    lSetBool(event_el, EV_changed, false);
@@ -3662,10 +3648,7 @@ if (id < 1) {
    /* If wait is true, this client is guaranteed to be unlocked at thi
     * point. */
    if (sge_bitfield_get (Master_Control.lockfield, (int)id - 1)) {
-/* DEBUG */
-#if 0 
-DPRINTF (("value: 0\n"));
-#endif
+
       sge_mutex_unlock("event_master_mutex", "lock_client", __LINE__, &Master_Control.mutex);
       DEXIT;
       return false;
@@ -3674,10 +3657,6 @@ DPRINTF (("value: 0\n"));
    sge_bitfield_set (Master_Control.lockfield, (int)id - 1);   
    sge_mutex_unlock("event_master_mutex", "lock_client", __LINE__, &Master_Control.mutex);
    
-/* DEBUG */
-#if 0
-DPRINTF (("value: 1\n"));
-#endif
    DEXIT;
    return true;
 }
@@ -4009,9 +3988,9 @@ bool sge_commit (void)
             ep = lNext(ep);
          }
 
-         sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+         sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
          lAppendList (Master_Control.send_events, Master_Control.transaction_events);
-         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+         sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
          
          if (flush) {
             set_flush();
@@ -4097,11 +4076,11 @@ static void set_flush (void)
 {
    DENTER (TOP_LAYER, "set_flush");
    
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+   sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
    Master_Control.is_flush = true;
    Master_Control.delivery_signaled = true;
    pthread_cond_signal(&Master_Control.cond_var);
-   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+   sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
    
    DEXIT;
 }

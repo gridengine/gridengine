@@ -206,8 +206,6 @@ enum {
    qs_args_OPT,  /* -qs_args option for qsub, qalter */
    mqattr_OPT,   /* modify particular queue attribute */
    Mqattr_OPT,   /* modify particular queue attributes from file */
-   meattr_OPT,   /* modify particular exec server attribute */
-   Meattr_OPT,   /* modify particular exec server attributes from file */
    sss_OPT,      /* show scheduler state */
    ssconf_OPT,   /* show scheduler configuration */
 

@@ -1,3 +1,6 @@
+EB-2001-08-30-0: Removed help output from qconf concerning 'meattr' 
+                 and 'Meattr' (Issue# 50)
+
 AA-2001-08-28-0: Fixed task array job handling in qmon submit dialogue (Issue# 48)
 
 EB-2001-08-27-0: Fixed segmentation fault in qstat, qhost, qmon (Issue# 48)
@@ -9,6 +12,7 @@ EB-2001-08-27-0: Fixed segmentation fault in qstat, qhost, qmon (Issue# 48)
 CR-2001-08-23-2: Testsuite:
                  - using full path name for files to check in procedure
                    check_executable_files 
+
 
 CR-2001-08-23-1: Testsuite:
                  - removed add_proc_error call in compile_source procedure

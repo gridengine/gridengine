@@ -1,3 +1,6 @@
+AD-2003-10-08-0: Bugfix.:   Fixed the build
+                 Changed:   msg_utilbin.h
+
 AD-2003-10-07-0: Bugfix.:   'UTILIB_DRMAA_OBJS' did contain 'config_file.o' two
                             times. This caused link problems later on because
                             of multiple symbol definitions. 

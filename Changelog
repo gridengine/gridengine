@@ -1,5 +1,5 @@
 EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
-                 Issue:    #199
+                 Issue:    #198
 
 CR-2002-03-20-1  Testsuite: sending "vt100" when client host is using tset
                             for terminal settings.

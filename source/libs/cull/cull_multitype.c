@@ -46,6 +46,7 @@
 #include "cull_listP.h"
 #include "cull_whatP.h"
 #include "cull_lerrnoP.h"
+#include "cull_hash.h"
 #include "sge_string.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
@@ -303,7 +304,7 @@ const lDescr *dp
    returns a pointer to a copied descriptor, has to be freed by the
    user
 
-   returns NULL in cas of error, a pointer otherwise
+   returns NULL in case of error, a pointer otherwise
 
  */
 
@@ -330,6 +331,15 @@ const lDescr *dp
       goto error;
    }
    memcpy(new, dp, sizeof(lDescr) * (i + 1));
+
+   /* copy hashing information */
+   for(i = 0; dp[i].mt != lEndT; i++) {
+      if(dp[i].hash != NULL) {
+         new[i].hash = cull_hash_copy_descr(&dp[i]);
+      } else {
+         new[i].hash = NULL;
+      }
+   }
 
    DEXIT;
    return new;
@@ -917,6 +927,7 @@ int value
       DEXIT;
       return -1;
    }
+
    ep->cont[pos].i = value;
 
    DEXIT;
@@ -991,7 +1002,17 @@ lUlong value
       return -1;
    }
 
+   /* remove old hash entry */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_remove(ep, pos);
+   }
+   
    ep->cont[pos].ul = value;
+
+   /* create entry in hash table */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_insert(ep, pos);
+   }
 
    DEXIT;
    return 0;
@@ -1031,8 +1052,18 @@ lUlong value
       return -1;
    }
 
+   /* remove old hash entry */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_remove(ep, pos);
+   }
+   
    ep->cont[pos].ul = value;
 
+   /* create entry in hash table */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_insert(ep, pos);
+   }
+   
    DEXIT;
    return 0;
 }
@@ -1085,8 +1116,18 @@ const char *value
    else
       str = NULL;               /* value is NULL */
 
+   /* remove old hash entry */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_remove(ep, pos);
+   }
+   
    ep->cont[pos].str = str;
 
+   /* create entry in hash table */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_insert(ep, pos);
+   }
+   
    DEXIT;
    return 0;
 }
@@ -1143,8 +1184,18 @@ const char *value
    else
       str = NULL;               /* value is NULL */
 
+   /* remove old hash entry */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_remove(ep, pos);
+   }
+   
    ep->cont[pos].str = str;
 
+   /* create entry in hash table */
+   if(ep->descr[pos].hash != NULL) {
+      cull_hash_insert(ep, pos);
+   }
+   
    DEXIT;
    return 0;
 }
@@ -2060,11 +2111,16 @@ const lList *lp,
 int nm,
 const char *str 
 ) {
+   const void *iterator;
+   return lGetElemStrFirst(lp, nm, str, &iterator);
+}
+
+lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void **iterator)
+{
    lListElem *ep;
    int str_pos;
-   char *s;
 
-   DENTER(CULL_LAYER, "lGetElemStr");
+   DENTER(CULL_LAYER, "lGetElemStrFirst");
    if (!str) {
       DPRINTF(("error: NULL ptr passed to lGetElemStr\n"));
       DEXIT;
@@ -2087,15 +2143,75 @@ const char *str
       return NULL;
    }
 
-   /* seek for element */
-   for_each(ep, lp) {
-      s = lGetPosString(ep, str_pos);
-      if (s && !strcmp(s, str)) {
-         DEXIT;
-         return ep;
+   *iterator = NULL;
+
+   if(lp->descr[str_pos].hash != NULL) {
+      /* hash access */
+      ep = cull_hash_first(lp, str_pos, (void *)str, iterator);
+      DEXIT;
+      return ep;
+   } else {
+      /* seek for element */
+      for_each(ep, lp) {
+         const char *s = lGetPosString(ep, str_pos);
+         if (s && !strcmp(s, str)) {
+            *iterator = ep;
+            DEXIT;
+            return ep;
+         }
       }
    }
 
+   DEXIT;
+   return NULL;
+}
+
+lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void **iterator)
+{
+   lListElem *ep;
+   int str_pos;
+
+   DENTER(CULL_LAYER, "lGetElemStrNext");
+   if (!str) {
+      DPRINTF(("error: NULL ptr passed to lGetElemStr\n"));
+      DEXIT;
+      return NULL;
+   }
+
+   /* empty list ? */
+   if (!lp) {
+      DEXIT;
+      return NULL;
+   }
+
+   /* get position of nm in sdp */
+   str_pos = lGetPosInDescr(lGetListDescr(lp), nm);
+
+   /* run time type checking */
+   if (str_pos < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
+      DEXIT;
+      return NULL;
+   }
+
+   if(lp->descr[str_pos].hash != NULL) {
+      /* hash access */
+      ep = cull_hash_next(lp, str_pos, (void *)str, iterator);
+      DEXIT;
+      return ep;
+   } else {
+      /* seek for element */
+      for (ep = (lListElem *)*iterator; ep; ep = ep->next) {
+         const char *s = lGetPosString(ep, str_pos);
+         if (s && !strcmp(s, str)) {
+            *iterator = ep;
+            DEXIT;
+            return ep;
+         }
+      }
+   }
+
+   *iterator = NULL;
    DEXIT;
    return NULL;
 }
@@ -2484,11 +2600,16 @@ const lList *lp,
 int nm,
 lUlong val 
 ) {
+   const void *iterator;
+   return lGetElemUlongFirst(lp, nm, val, &iterator);
+}
+
+lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **iterator)
+{
    lListElem *ep;
    int val_pos;
-   lUlong s;
 
-   DENTER(CULL_LAYER, "lGetElemUlong");
+   DENTER(CULL_LAYER, "lGetElemUlongFirst");
 
    /* empty list ? */
    if (!lp) {
@@ -2506,15 +2627,64 @@ lUlong val
       return NULL;
    }
 
-   /* seek for element */
-   for_each(ep, lp) {
-      s = lGetPosUlong(ep, val_pos);
-      if (s == val) {
-         DEXIT;
-         return ep;
+   *iterator = NULL;
+
+   if(lp->descr[val_pos].hash != NULL) {
+      /* hash access */
+      ep = cull_hash_first(lp, val_pos, (void*)(long)val, iterator);
+      DEXIT;
+      return ep;
+   } else {
+      /* seek for element */
+      for_each(ep, lp) {
+         lUlong s = lGetPosUlong(ep, val_pos);
+         if (s == val) {
+            *iterator = ep;
+            DEXIT;
+            return ep;
+         }
       }
    }
 
+   DEXIT;
+   return NULL;
+}
+
+lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **iterator)
+{
+   lListElem *ep;
+   int val_pos;
+
+   DENTER(CULL_LAYER, "lGetElemUlongNext");
+
+   /* get position of nm in sdp */
+   val_pos = lGetPosInDescr(lGetListDescr(lp), nm);
+
+   /* run time type checking */
+   if (val_pos < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_GETELEMULONGERRORXRUNTIMETYPE_S, lNm2Str(nm)));
+      DEXIT;
+      return NULL;
+   }
+
+   if(lp->descr[val_pos].hash != NULL) {
+      /* hash access */
+      ep = cull_hash_next(lp, val_pos, (void*)(long)val, iterator);
+      DEXIT;
+      return ep;
+   } else {
+      /* seek for element */
+      for (ep = (lListElem *)*iterator; ep; ep = ep->next) {
+         lUlong s = lGetPosUlong(ep, val_pos);
+         if (s == val) {
+            *iterator = ep;
+            DEXIT;
+            return ep;
+         }
+      }
+   }
+
+   *iterator = NULL;
    DEXIT;
    return NULL;
 }
@@ -2820,7 +2990,7 @@ const char *str
          hostdup(s, cmphost);
          equal = !SGE_STRCASECMP(cmphost, uhost);
 
-         DPRINTF(("hostcmp(%s, %s) equal = %d\n", cmphost, uhost, equal));
+/*          DPRINTF(("hostcmp(%s, %s) equal = %d\n", cmphost, uhost, equal)); */
          if (equal) {
             DEXIT;
             return ep;

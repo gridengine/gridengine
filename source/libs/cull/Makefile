@@ -37,6 +37,7 @@ CULLLIB_DIR   = $(SDIR)/libs/cull
 CULLLIB 	= libcull$(LIBEXT)
 
 CULLLIB_SRC 	= cull_list.c \
+                  cull_hash.c \
                   cull_where.c \
                   cull_parse.c \
                   cull_what.c \
@@ -93,6 +94,9 @@ include $(CULLLIB_DIR)/cull_dependencies
 ###############################################################################
 cull_list.o: $(CULLLIB_DIR)/cull_list.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_list.c
+
+cull_hash.o: $(CULLLIB_DIR)/cull_hash.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_hash.c
 
 cull_where.o: $(CULLLIB_DIR)/cull_where.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_where.c

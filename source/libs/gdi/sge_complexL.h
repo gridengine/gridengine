@@ -112,8 +112,8 @@ enum {
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
-   SGE_STRING(CE_name)          /* full name of attribute */
-   SGE_STRING(CE_shortcut)      /* shortcut name of attribute */
+   SGE_KSTRINGHU(CE_name)          /* full name of attribute */
+   SGE_KSTRINGHU(CE_shortcut)      /* shortcut name of attribute */
    SGE_ULONG(CE_valtype)        /* type */
    SGE_STRING(CE_stringval)     /* non overwritten value */
    SGE_XDOUBLE(CE_doubleval)    /* parsed CE_stringval */

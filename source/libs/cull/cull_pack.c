@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -39,8 +40,10 @@
 
 #include "sgermon.h"
 #include "cull_list.h"
+#include "cull_hash.h"
 #include "cull_lerrnoP.h"
 #include "cull_listP.h"
+#include "cull_hashP.h"
 #include "cull_multitypeP.h"
 #include "cull_whatP.h"
 #include "cull_whereP.h"
@@ -207,24 +210,49 @@ lDescr **dpp
       return PACK_ENOMEM;
    }
 
+   memset(dp, 0, sizeof(lDescr) * (n + 1));
+
+   dp[n].nm = NoName;
+   dp[n].mt = lEndT;
+   dp[n].hash = NULL;
+
    /* read in n lDescr fields */
    for (i = 0; i < n; i++) {
       if ((ret = unpackint(pb, &temp))) {
+         cull_hash_free_descr(dp);
          free(dp);
          DEXIT;
          return ret;
       }
       dp[i].nm = temp;
+
       if ((ret = unpackint(pb, &temp))) {
+         cull_hash_free_descr(dp);
          free(dp);
          DEXIT;
          return ret;
       }
       dp[i].mt = temp;
-   }
 
-   dp[n].nm = NoName;
-   dp[n].mt = lEndT;
+      if ((ret = unpackint(pb, &temp))) {
+         cull_hash_free_descr(dp);
+         free(dp); 
+         DEXIT;
+      }
+      if(temp < 0) {  /* no hashing */
+         dp[i].hash = NULL;  
+      } else {         /* create hashing info */
+         if((dp[i].hash = (lHash *) malloc(sizeof(lHash))) == NULL) {
+            cull_hash_free_descr(dp);
+            free(dp);
+            LERROR(LEMALLOC);
+            DEXIT;
+            return PACK_ENOMEM;
+         }
+         dp[i].hash->unique = temp;
+         dp[i].hash->table = NULL;
+      } 
+   }
 
    *dpp = dp;
 
@@ -265,6 +293,18 @@ const lDescr *dp
       if ((ret = packint(pb, dp[i].mt))) {
          DEXIT;
          return ret;
+      }
+      /* pack hashing information: -1 = no hash, 0 = non unique, 1 = unique */
+      if(dp[i].hash == NULL) {
+         if((ret = packint(pb, -1))) {
+            DEXIT;
+            return ret;
+         }
+      } else {
+         if((ret = packint(pb, dp[i].hash->unique))) {
+            DEXIT;
+            return ret;
+         }
       }
    }
 
@@ -585,9 +625,10 @@ lList **lpp
       return ret;
    }
 
+   cull_hash_create_hashtables(lp);
+
    /* unpack each list element */
    for (i = 0; i < n; i++) {
-
       if ((ret = cull_unpack_elem(pb, &ep, lp->descr))) {
          lFreeList(lp);
          DEXIT;

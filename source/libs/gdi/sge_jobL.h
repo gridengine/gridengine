@@ -268,7 +268,7 @@ enum {
 };
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
-   SGE_KULONG(JB_job_number)
+   SGE_KULONGH(JB_job_number)
    SGE_XSTRING(JB_job_file)            /* unused */
    SGE_XSTRING(JB_exec_file)
    SGE_STRING(JB_script_file)

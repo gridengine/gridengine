@@ -54,7 +54,7 @@ enum {
 };
 
 ILISTDEF(CAL_Type, Calendar, SGE_CALENDAR_LIST)
-   SGE_KSTRING(CAL_name)
+   SGE_KSTRINGHU(CAL_name)
    SGE_STRING(CAL_year_calendar)
    SGE_STRING(CAL_week_calendar)
    /* non spooling fields */

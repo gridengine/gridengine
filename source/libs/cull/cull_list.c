@@ -49,6 +49,7 @@
 #include "cull_multitypeP.h"
 #include "cull_whatP.h"
 #include "cull_lerrnoP.h"
+#include "cull_hash.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
 
@@ -659,7 +660,7 @@ FILE *fp
 lListElem *lCreateElem(
 const lDescr *dp 
 ) {
-   int n;
+   int n, i;
    lListElem *ep;
 
    DENTER(CULL_LAYER, "lCreateElem");
@@ -687,6 +688,13 @@ const lDescr *dp
       return NULL;
    }
    memcpy(ep->descr, dp, sizeof(lDescr) * (n + 1));
+
+   /* copy hashing info in descriptor */
+   for (i = 0; i <= n; i++) {
+      if(dp[i].hash != NULL) {
+         ep->descr[i].hash = cull_hash_copy_descr(&dp[i]);
+      }
+   }
                   
    ep->status = FREE_ELEM;
    if (!(ep->cont = (lMultiType *) calloc(1, sizeof(lMultiType) * n))) {
@@ -754,6 +762,13 @@ const lDescr *descr
    for (i = 0; i <= n; i++) {
       lp->descr[i].mt = descr[i].mt;
       lp->descr[i].nm = descr[i].nm;
+
+      /* copy hashing information and create hashtable if necessary */
+      if(descr[i].hash != NULL) {
+         lp->descr[i].hash = cull_hash_create(&descr[i]);
+      } else {
+         lp->descr[i].hash = NULL;
+      }
    }
 
    DEXIT;
@@ -821,6 +836,11 @@ lListElem *ep
    }
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
+      /* remove element from hash tables */
+      if(ep->descr[i].hash != NULL) {
+         cull_hash_remove(ep, i);
+      }
+      
       switch (ep->descr[i].mt) {
 
       case lIntT:
@@ -849,8 +869,10 @@ lListElem *ep
    }
 
    /* lFreeElem is not responsible for descriptor array */
-   if (ep->status == FREE_ELEM)
+   if (ep->status == FREE_ELEM) {
+      cull_hash_free_descr(ep->descr); 
       free(ep->descr);
+   }   
 
    if (ep->cont)
       free(ep->cont);
@@ -876,11 +898,16 @@ lList *lp
       return NULL;
    }
 
+   /* remove all hash tables */
+   cull_hash_free_descr(lp->descr);
+
    while (lp->first)
       lRemoveElem(lp, lp->first);
 
-   if (lp->descr)
+   if (lp->descr) {
       free(lp->descr);
+   }   
+
    if (lp->listname)
       free(lp->listname);
    free(lp);
@@ -1072,10 +1099,15 @@ lListElem *new
       lp->first = new;
    }
 
-   if (new->status == FREE_ELEM)
+   if (new->status == FREE_ELEM) {
+      cull_hash_free_descr(new->descr);
       free(new->descr);
+   }   
    new->status = BOUND_ELEM;
    new->descr = lp->descr;
+
+   cull_hash_elem(new);
+   
    lp->nelem++;
 
    DEXIT;
@@ -1123,10 +1155,15 @@ lListElem *ep
       ep->prev = ep->next = NULL;
    }
 
-   if (ep->status == FREE_ELEM)
+   if (ep->status == FREE_ELEM) {
+      cull_hash_free_descr(ep->descr);
       free(ep->descr);
+   }
    ep->status = BOUND_ELEM;
    ep->descr = lp->descr;
+
+   cull_hash_elem(ep);
+   
    lp->nelem++;
 
    DEXIT;
@@ -1191,6 +1228,8 @@ lListElem *lDechainElem(
 lList *lp,
 lListElem *ep 
 ) {
+   int i;
+
    DENTER(CULL_LAYER, "lDechainElem");
 
    if (!lp) {
@@ -1217,6 +1256,13 @@ lListElem *ep
       ep->next->prev = ep->prev;
    else
       lp->last = ep->prev;
+
+   /* remove hash entries */
+   for(i = 0; ep->descr[i].mt != lEndT; i++) {
+      if(ep->descr[i].hash != NULL) {
+         cull_hash_remove(ep, i);
+      }
+   }
 
    /* NULL the ep next and previous pointers */
    ep->prev = ep->next = (lListElem *) NULL;

@@ -1,3 +1,13 @@
+JG-2001-10-16-0: Implemented the use of hash tables for cull lists.
+                 The list definition (libs/gdi/sge_*L.h) contains information, 
+                 for which data fields hash tables shall be generated.
+                 Hash tables are created and maintained by the cull list 
+                 access functions (lCreateList, lAppendElem etc.) and are used
+                 by the cull search functions (lGetElem*).
+                 Defined default hash tables for the most used cull lists.
+                 Increased the GDI version - the spooling file format and
+                 the message format changed.
+
 EB-2001-10-11-1: Changed MAX_SEQNUM from 999,999 to 9,999,999.
                  - changed qstat output format
 

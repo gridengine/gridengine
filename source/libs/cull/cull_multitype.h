@@ -124,6 +124,8 @@ int unknownType(const char *str);
 lListElem* lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp);
 int lDelElemStr(lList **lpp, int nm, const char *str); 
 lListElem *lGetElemStr(const lList *lp, int nm, const char *str);
+lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void **iterator);
+lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void **iterator);
 lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - 
@@ -143,6 +145,8 @@ lListElem *lGetSubStr(const lListElem *ep, int nm, const char *str, int snm);
 lListElem* lAddElemUlong(lList **lpp, int nm, lUlong val, const lDescr *dp);
 int lDelElemUlong(lList **lpp, int nm, lUlong val); 
 lListElem *lGetElemUlong(const lList *lp, int nm, lUlong val);
+lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **iterator);
+lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **iterator);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - 
 

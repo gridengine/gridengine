@@ -1,6 +1,5 @@
-#ifndef _SGE_CKPTL_H_
-#define _SGE_CKPTL_H_
-
+#ifndef __CULL_HASH_H
+#define __CULL_HASH_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -33,68 +32,26 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_boundaries.h"
-#include "cull.h"
+#include "sge_hash.h"
+#include "cull_hashP.h"
+#include "cull_list.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
-/* *INDENT-OFF* */ 
-
-/* 
- * This is the list type to hold the checkpointing
- * object for the interfaces to the various
- * supported checkpointing mechanisms.
- */
-
-enum {
-   CK_name = CK_LOWERBOUND,
-   CK_interface,
-   CK_ckpt_command,
-   CK_migr_command,
-   CK_rest_command,
-   CK_ckpt_dir,
-   CK_queue_list,
-   CK_when,
-   CK_signal,
-   CK_job_pid,
-   CK_clean_command
-};
-
-ILISTDEF(CK_Type, Checkpoint, SGE_CKPT_LIST)
-   SGE_KSTRINGHU(CK_name)
-   SGE_STRING(CK_interface)
-   SGE_STRING(CK_ckpt_command)
-   SGE_STRING(CK_migr_command)
-   SGE_STRING(CK_rest_command)
-   SGE_STRING(CK_ckpt_dir)
-   SGE_XLIST(CK_queue_list, QR_Type)
-   SGE_ILIST(CK_queue_list, QU_Type)
-   SGE_STRING(CK_when)
-   SGE_STRING(CK_signal)
-   SGE_XULONG(CK_job_pid)
-   SGE_STRING(CK_clean_command)
-LISTEND 
-
-NAMEDEF(CKN)
-   NAME("CK_name")
-   NAME("CK_interface")
-   NAME("CK_ckpt_command")
-   NAME("CK_migr_command")
-   NAME("CK_rest_command")
-   NAME("CK_ckpt_dir")
-   NAME("CK_queue_list")
-   NAME("CK_when")
-   NAME("CK_signal")
-   NAME("CK_job_pid")
-   NAME("CK_clean_command")
-NAMEEND
-
-/* *INDENT-ON* */  
-
-#define CKS sizeof(CKN)/sizeof(char*)
+lHash *cull_hash_copy_descr(const lDescr *descr);
+lHash *cull_hash_create(const lDescr *descr);
+void cull_hash_insert(const lListElem *ep, const int pos);
+void cull_hash_remove(const lListElem *ep, const int pos);
+void cull_hash_elem(const lListElem *ep);
+lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, const void **iterator);
+lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const void **iterator);
+void cull_hash_free_descr(lDescr *descr);
+void cull_hash_create_hashtables(lList *lp);
 #ifdef  __cplusplus
 }
 #endif
-#endif                          /* _SGE_CKPTL_H_ */
+
+#endif /* #ifndef __CULL_HASH_H */
+

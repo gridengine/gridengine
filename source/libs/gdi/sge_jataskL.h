@@ -71,7 +71,7 @@ enum {
 };
 
 SLISTDEF(JAT_Type, Task)
-   SGE_KULONG(JAT_task_number)
+   SGE_KULONGHU(JAT_task_number)
    SGE_RULONG(JAT_status)
    SGE_RULONG(JAT_start_time)
    SGE_RULONG(JAT_hold)       /* -h holdlist specifies hold *

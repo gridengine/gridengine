@@ -198,8 +198,8 @@ enum {
 };
 
 ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
-   SGE_KSTRING(QU_qname)      /* name of Q */
-   SGE_STRING(QU_qhostname)   /* qualified hostname */
+   SGE_KSTRINGHU(QU_qname)      /* name of Q */
+   SGE_STRINGH(QU_qhostname)   /* qualified hostname */
    SGE_STRING(QU_tmpdir)      /* temporary WD */
    SGE_STRING(QU_shell)
    SGE_XSTRING(QU_klog)

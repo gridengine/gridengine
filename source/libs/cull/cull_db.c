@@ -45,6 +45,7 @@
 #include "cull_whatP.h"
 #include "cull_multitypeP.h"
 #include "cull_lerrnoP.h"
+#include "cull_hash.h"
 #include "sge_string.h"
 
 /* -------- intern prototypes --------------------------------- */
@@ -518,7 +519,9 @@ const lEnumeration *enp
       DEXIT;
       return NULL;
    }
+
    /* free the descriptor, it has been copied by lCreateList */
+   cull_hash_free_descr(dp);
    free(dp);
 
    /*
@@ -605,6 +608,11 @@ int *indexp
       for (i = 0; sdp[i].mt != lEndT; i++) {
          ddp[*indexp].mt = sdp[i].mt;
          ddp[*indexp].nm = sdp[i].nm;
+         if(sdp[i].hash != NULL) {
+            ddp[*indexp].hash = cull_hash_copy_descr(&sdp[i]);
+         } else {
+            ddp[*indexp].hash = NULL;
+         }
          (*indexp)++;
       }
       break;
@@ -615,6 +623,12 @@ int *indexp
              ep[i].nm == sdp[ep[i].pos].nm) {
             ddp[*indexp].mt = sdp[ep[i].pos].mt;
             ddp[*indexp].nm = sdp[ep[i].pos].nm;
+            if(sdp[ep[i].pos].hash != NULL) {
+               ddp[*indexp].hash = cull_hash_copy_descr(&sdp[ep[i].pos]);
+            } else {
+               ddp[*indexp].hash = NULL;
+            }
+ 
             (*indexp)++;
          }
          else {
@@ -627,6 +641,7 @@ int *indexp
    /* copy end mark */
    ddp[*indexp].mt = lEndT;
    ddp[*indexp].nm = NoName;
+   ddp[*indexp].hash = NULL;
 
    /* 
       We don't do (*indexp)++ in order to end up correctly if

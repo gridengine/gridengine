@@ -50,7 +50,8 @@ extern "C" {
 /* v5.2:       0x10000002 */
 /* v5.2.3:     0x10000003 */
 /* v5.3 alpha1 0x100000F0 */
-#define GRM_GDI_VERSION 0x100000F1
+/* before hash 0x100000F1 */
+#define GRM_GDI_VERSION 0x100000F2
 
 
 /* sge_gdi_request.c */

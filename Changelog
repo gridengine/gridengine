@@ -1,5 +1,8 @@
+CR-2004-01-19-2: Cleanup:   commlib now uses sge_gethostbyaddr() and
+                            sge_gethostbyname() from util library
+
 CR-2004-01-19-1: Bugfix:    fixed memory leak in sge_gethostbyaddr() and
-                            sge_sgehostbyname()
+                            sge_gethostbyname()
                  Changed:   lib util
                  Review:    DT
 

@@ -143,20 +143,20 @@ cl_commlib.o: $(NGCLIB_DIR)/cl_commlib.c
 
 #---------------------------------------------------------------------
 # test programs
-test_cl_tcp_framework: test_cl_tcp_framework.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
-test_cl_commlib: test_cl_commlib.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
-test_cl_commlib_client: test_cl_commlib_client.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
-test_cl_hostname_list: test_cl_hostname_list.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
-test_cl_hostalias_list: test_cl_hostalias_list.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
-test_multithread_io: test_multithread_io.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_multithread_io $(LFLAGS) test_multithread_io.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
-test_status_info: test_status_info.o $(NGCLIB) $(NGCLISTSLIB)
-	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB)
+test_cl_tcp_framework: test_cl_tcp_framework.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_cl_commlib: test_cl_commlib.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_cl_commlib_client: test_cl_commlib_client.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB)  $(RMONLIB)
+	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_cl_hostname_list: test_cl_hostname_list.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB)  $(RMONLIB)
+	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_cl_hostalias_list: test_cl_hostalias_list.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_multithread_io: test_multithread_io.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_multithread_io $(LFLAGS) test_multithread_io.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_status_info: test_status_info.o $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(MTLFLAGS) $(LIBS) $(NGCLIB) $(NGCLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 
 
 

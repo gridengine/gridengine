@@ -51,6 +51,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "sge_hostname.h"
+
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -2808,6 +2810,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
 }
 
 
+
 /* free  cl_com_hostent_t structure 
   
    params: 
@@ -2817,6 +2820,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
       - *hostent is set to NULL
       - int - CL_RETVAL_XXXX error number
 */
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -2830,16 +2834,58 @@ int cl_com_free_hostent(cl_com_hostent_t **hostent_p) {  /* CR check */
    if (*hostent_p == NULL) {
       return CL_RETVAL_PARAMS; /* no memory to free ? */
    }
-   if ((*hostent_p)->he) {
-      free((*hostent_p)->he);
+
+   /* free hostent structure */
+   if ( (*hostent_p)->he_data_buffer == NULL ) {
+      /* data buffer is null, we have to free the complete hostent structure */
+      if ((*hostent_p)->he) {
+         struct hostent *he = (*hostent_p)->he;
+         char** help = NULL;
+         /* free hostent struct content */         
+
+         free(he->h_name);
+         he->h_name = NULL;
+
+         if (he->h_aliases != NULL) {
+            help = he->h_aliases;
+            while(*help) {
+               free(*help++);
+            }
+            free(he->h_aliases);
+         }
+         he->h_aliases = NULL;
+
+         if (he->h_addr_list != NULL) {
+            help = he->h_addr_list;
+            while(*help) {
+               free(*help++);
+            }
+            free(he->h_addr_list);
+         }
+         he->h_addr_list = NULL;
+
+         /* free hostent struct */
+         free((*hostent_p)->he);
+         (*hostent_p)->he = NULL;
+      }
+   } else {
+      /* data buffer is used for the hostent struct, we just delete the data
+         buffer and the struct */
+      if ((*hostent_p)->he) {
+         free((*hostent_p)->he);
+      }
+      if ((*hostent_p)->he_data_buffer) {
+         free((*hostent_p)->he_data_buffer);
+      }
    }
-   if ((*hostent_p)->he_data_buffer) {
-      free((*hostent_p)->he_data_buffer);
-   }
+
+   /* finally free the struct */
    free(*hostent_p);
    *hostent_p = NULL;
    return CL_RETVAL_OK;
 }
+
+
 
 int cl_com_free_hostspec(cl_com_host_spec_t **hostspec) {
 
@@ -2889,6 +2935,8 @@ int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr ) {  /* 
 
 
 
+
+#if 0
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -2972,8 +3020,58 @@ static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
    cl_com_print_host_info(hostent_p);
    return CL_RETVAL_OK;
 }
+#endif
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_gethostbyname()"
+static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
+
+   int he_error = 0;
+   struct hostent* he = NULL;
+   cl_com_hostent_t *hostent_p = NULL;   
+
+   /* check parameters */
+   if (hostent == NULL || host == NULL) {
+      CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
+      return CL_RETVAL_PARAMS;    /* we don't accept NULL pointers */
+   }
+   if (*hostent != NULL) {
+      CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
+      return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
+   }
+
+   /* get memory for cl_com_hostent_t struct */
+   hostent_p = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
+   if (hostent_p == NULL) {
+      CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_MALLOC));
+      return CL_RETVAL_MALLOC;          /* could not get memory */ 
+   }
+   hostent_p->he = NULL;
+   hostent_p->he_data_buffer = NULL;
+   
+   /* use sge_gethostbyname() */
+   he = sge_gethostbyname(host);
+   if (he == NULL) {
+      CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
+      cl_com_free_hostent(&hostent_p);       /* could not find host */
+      return CL_RETVAL_UNKOWN_HOST_ERROR;
+   } else {
+      hostent_p->he = he;
+   }
+
+   if (hostent_p->he->h_addr == NULL) {
+      cl_com_free_hostent(&hostent_p);
+      return CL_RETVAL_IP_NOT_RESOLVED_ERROR;
+   }
+
+   *hostent = hostent_p;
+   cl_com_print_host_info(hostent_p);
+   return CL_RETVAL_OK;
+}
 
 
+#if 0
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -3062,7 +3160,59 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
    cl_com_print_host_info(hostent_p);
    return CL_RETVAL_OK;
 }
+#endif
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_gethostbyaddr()"
+static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent ) {
+
+
+   int he_error = 0;
+   struct hostent *he = NULL; 
+   cl_com_hostent_t *hostent_p = NULL;   
+
+
+   /* check parameters */
+   if (hostent == NULL || addr == NULL) {
+      CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
+      return CL_RETVAL_PARAMS;    /* we don't accept NULL pointers */
+   }
+   if (*hostent != NULL) {
+      CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
+      return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
+   }
+
+   /* get memory for cl_com_hostent_t struct */
+   hostent_p = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
+   if (hostent_p == NULL) {
+      CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_MALLOC));
+      return CL_RETVAL_MALLOC;          /* could not get memory */ 
+   }
+   hostent_p->he = NULL;
+   hostent_p->he_data_buffer = NULL;
+
+   /* use sge_gethostbyaddr() */  
+   he = sge_gethostbyaddr(addr);
+   
+   if (he == NULL) {
+      CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
+      cl_com_free_hostent(&hostent_p);       /* could not find host */
+      return CL_RETVAL_UNKOWN_HOST_ERROR;
+   } else {
+      hostent_p->he = he;
+   }
+   
+   if (hostent_p->he->h_addr == NULL) {
+      cl_com_free_hostent(&hostent_p);
+      return CL_RETVAL_IP_NOT_RESOLVED_ERROR;
+   }
+
+   *hostent = hostent_p;
+   cl_com_print_host_info(hostent_p);
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -3459,7 +3609,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
       resolve_host = 0;
 
 
-      if (elem_host->creation_time + ldata->entry_life_time < now.tv_sec) {
+      if (elem_host->creation_time + ldata->entry_life_time < now.tv_sec ) {
          /* max entry life time reached, remove entry */
          if (elem_host->unresolved_name != NULL) {
             CL_LOG_STR(CL_LOG_WARNING,"entry life timeout for elem:", elem_host->unresolved_name);
@@ -3660,8 +3810,6 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname) {
          return CL_RETVAL_MALLOC;
       }
       memcpy(hostspec->in_addr,addr,sizeof(struct in_addr) );
-
-      
 
       /* resolve host with cl_com_gethostbyaddr() */
       retval = cl_com_gethostbyaddr(addr, &hostent);

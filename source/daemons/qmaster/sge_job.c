@@ -2838,7 +2838,7 @@ int *trigger
             granted = sge_replicate_queues_suitable4job(Master_Queue_List, 
                   jep, NULL, pep, ckpt_ep, scheddconf.queue_sort_method,
                   Master_Complex_List, Master_Exechost_List, 
-                  Master_Userset_List, NULL, 0, &prev_dipatch_type);
+                  Master_Userset_List, NULL, 0, &prev_dipatch_type, 0);
             ngranted = nslots_granted(granted, NULL);
             granted = lFreeList(granted);
 

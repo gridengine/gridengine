@@ -327,9 +327,8 @@ int answer_error
 
 
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-      notify_ptf();
-   }
+   notify_ptf();
+
    if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
       switch2start_user();
       ptf_update_job_usage();

@@ -57,16 +57,17 @@ extern "C" {
 
 #define USAGE_ATTR_CPU_ACCT "acct_cpu"
 
-/* integral memory usage */
+/* these are used for accounting */
 #define USAGE_ATTR_MEM_ACCT "acct_mem"
 #define USAGE_ATTR_IO_ACCT  "acct_io"
 #define USAGE_ATTR_IOW_ACCT "acct_iow"
+#define USAGE_ATTR_MAXVMEM_ACCT "acct_maxvmem"
 
 /* actual amount of used memory */
 #define USAGE_ATTR_VMEM     "vmem"
 
 /* max. vmem */
-#define USAGE_ATTR_HIMEM    "himem"
+#define USAGE_ATTR_MAXVMEM    "maxvmem"
 
 
 /* 

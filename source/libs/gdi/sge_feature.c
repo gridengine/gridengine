@@ -60,37 +60,35 @@ static char product_name_and_version[256] = "";
 
 static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
 /*  FEATURE_UNINITIALIZED                                          */
-/*  |  FEATURE_USE_OSJOB_ID                                        */
-/*  |  |  FEATURE_REPRIORISATION                                   */
-/*  |  |  |  FEATURE_REPORT_USAGE                                  */
-/*  |  |  |  |  FEATURE_SPOOL_ADD_ATTR                             */
-/*  |  |  |  |  |  FEATURE_SGEEE                                   */
-/*  |  |  |  |  |  |                                               */
-/*  |  |  |  |  |  |    FEATURE_NO_SECURITY                        */
-/*  |  |  |  |  |  |    |  FEATURE_AFS_SECUIRITY                   */
-/*  |  |  |  |  |  |    |  |  FEATURE_DCE_SECURITY                 */
-/*  |  |  |  |  |  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
-/*  |  |  |  |  |  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
-/*  |  |  |  |  |  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
-/*  v  v  v  v  v  v    v  v  v  v  v  v                           */
-                                          
-   {0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
-   {0, 1, 0, 1, 0, 0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGE                 */
-   {0, 1, 1, 1, 1, 1,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
-   {0, 1, 0, 1, 0, 0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGE_AFS             */
-   {0, 1, 1, 1, 1, 1,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
-   {0, 1, 0, 1, 0, 0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGE_DCE             */
-   {0, 1, 1, 1, 1, 1,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
-   {0, 1, 0, 1, 0, 0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGE_KERBEROS        */
-   {0, 1, 1, 1, 1, 1,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
-   {0, 1, 0, 1, 0, 0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGE_RESERVED_PORT   */
-   {0, 1, 1, 1, 1, 1,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
-   {0, 1, 0, 1, 0, 0,   0, 0, 0, 0, 0, 1},   /* FEATURESET_SGE_CSP   */
-   {0, 1, 1, 1, 1, 1,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
+/*  |  FEATURE_REPRIORISATION                                   */
+/*  |  |  FEATURE_REPORT_USAGE                                  */
+/*  |  |  |  FEATURE_SPOOL_ADD_ATTR                             */
+/*  |  |  |  |  FEATURE_SGEEE                                   */
+/*  |  |  |  |  |                                               */
+/*  |  |  |  |  |    FEATURE_NO_SECURITY                        */
+/*  |  |  |  |  |    |  FEATURE_AFS_SECUIRITY                   */
+/*  |  |  |  |  |    |  |  FEATURE_DCE_SECURITY                 */
+/*  |  |  |  |  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
+/*  |  |  |  |  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
+/*  |  |  |  |  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
+/*  v  v  v  v  v    v  v  v  v  v  v                           */
+                                       
+   {0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
+   {0, 0, 1, 0, 0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGE                 */
+   {0, 1, 1, 1, 1,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
+   {0, 0, 1, 0, 0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGE_AFS             */
+   {0, 1, 1, 1, 1,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
+   {0, 0, 1, 0, 0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGE_DCE             */
+   {0, 1, 1, 1, 1,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
+   {0, 0, 1, 0, 0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGE_KERBEROS        */
+   {0, 1, 1, 1, 1,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
+   {0, 0, 1, 0, 0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGE_RESERVED_PORT   */
+   {0, 1, 1, 1, 1,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
+   {0, 0, 1, 0, 0,   0, 0, 0, 0, 0, 1},   /* FEATURESET_SGE_CSP   */
+   {0, 1, 1, 1, 1,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
 };
 
 static feature_names_t feature_list[] = {
-   {FEATURE_USE_OSJOB_ID,           "use_osjob_id"},
    {FEATURE_REPRIORISATION,         "repriorisation"},
    {FEATURE_REPORT_USAGE,           "report_usage"},
    {FEATURE_NO_SECURITY,            "no_security"},

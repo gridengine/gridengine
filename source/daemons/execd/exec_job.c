@@ -1114,7 +1114,7 @@ char *err_str
 
 #  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
 
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
+   {
       lList *rlp = NULL;
       lList *alp = NULL;
       gid_t temp_id;

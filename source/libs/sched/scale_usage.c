@@ -77,6 +77,7 @@ lList *previous  /* HS_Type */
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_IO)  ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_IOW) ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_VMEM) ||
+          !strcmp(lGetString(prev, UA_name), USAGE_ATTR_MAXVMEM) ||
           !strcmp(lGetString(prev, UA_name), USAGE_ATTR_MEM)) {
          if ((ep=lGetSubStr(jatep, UA_name, lGetString(prev, UA_name), 
              JAT_scaled_usage_list)))

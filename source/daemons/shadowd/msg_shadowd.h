@@ -42,7 +42,6 @@
 #define MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I   _("found running shadowd with pid %d - not starting")
 #define MSG_SHADOWD_CANTCHANGETOQMASTERSPOOLDIRX_S       _("can't change to qmaster spool directory: %s")
 #define MSG_SHADOWD_CANTSWITCHTOADMIN_USER       _("can't switch to admin_user")
-#define MSG_SHADOWD_STARTINGUP       _("starting up")
 #define MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER       _("failed to lock qmaster -- somebody else was faster")
 #define MSG_SHADOWD_CANTSTARTQMASTER       _("can't start qmaster")
 #define MSG_SHADOWD_DELAYINGSHADOWFUNCTIONFOR10MINUTES       _("delaying shadow function for 10 minutes")

@@ -560,31 +560,29 @@ DTRACE;
    /* display online job usage separately for each array job but summarized over all pe_tasks */
 #define SUM_UP_USAGE(pe_task, dst, attr) \
       if ((uep=lGetSubStr(pe_task, UA_name, attr, JAT_scaled_usage_list))) { \
-         DPRINTF(("usage for %s = %f\n", attr, lGetDouble(uep, UA_value))); \
          dst += lGetDouble(uep, UA_value); \
-      } else { \
-         DPRINTF(("no usage for %s\n", attr)); \
       }
 
    if (feature_is_enabled(FEATURE_REPORT_USAGE) 
        && lGetPosViaElem(job, JB_ja_tasks)>=0) {
       lListElem *uep, *jatep, *pe_task_ep;
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
-         double cpu, mem, io, vmem;
-         static char cpu_usage[100], vmem_usage[100];
+         double cpu, mem, io, vmem, maxvmem;
+         static char cpu_usage[100], vmem_usage[100], maxvmem_usage[100];
 
          if (!lPrev(jatep))
             printf("usage %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
          else
             printf("      %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
 
-         cpu = mem = io = vmem = 0.0;
+         cpu = mem = io = vmem = maxvmem = 0.0;
 
          /* master task */
          SUM_UP_USAGE(jatep, cpu, USAGE_ATTR_CPU);
          SUM_UP_USAGE(jatep, vmem, USAGE_ATTR_VMEM);
          SUM_UP_USAGE(jatep, mem, USAGE_ATTR_MEM);
          SUM_UP_USAGE(jatep, io, USAGE_ATTR_IO);
+         SUM_UP_USAGE(jatep, maxvmem, USAGE_ATTR_MAXVMEM);
 
          /* slave tasks */
          for_each (pe_task_ep, lGetList(jatep, JAT_task_list)) {
@@ -592,12 +590,14 @@ DTRACE;
             SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), vmem, USAGE_ATTR_VMEM);
             SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), mem, USAGE_ATTR_MEM);
             SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_IO);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_MAXVMEM);
          }
 
-         printf("cpu=%s, vmem=%s, mem=%-5.5f GBs, io=%-5.5f\n",
+         printf("cpu=%s, mem=%-5.5f GBs, io=%-5.5f, vmem=%s, maxvmem=%s\n",
             resource_descr(cpu, TYPE_TIM, cpu_usage),
-            resource_descr(vmem, TYPE_MEM, vmem_usage),
-            mem, io);
+            mem, io,
+            (vmem == 0.0) ? "N/A": resource_descr(vmem, TYPE_MEM, vmem_usage),
+            (maxvmem == 0.0) ? "N/A": resource_descr(maxvmem, TYPE_MEM, maxvmem_usage));
       }
    }
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2001/11/29 09:36:27 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/01/24 17:50:17 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2001/11/29 09:36:27 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/01/24 17:50:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1036,52 +1036,6 @@ are not re-runable.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
-.IP "\fB\-t n[-m[:s]]\fP"
-Available for \fIqsub\fP and \fIqalter\fP only.
-.sp 1
-Submits a so called \fIJob Array\fP, i.e. an array of identical tasks being
-only differentiated by an index number and being treated by xxQS_NAMExx
-almost like a series of jobs. The option argument to \fB\-t\fP specifies
-the number of job array tasks and the index number which will be associated
-with the tasks. The index numbers will be exported to the job tasks via the
-environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP.
-.sp 1
-The task id range specified in the option argument
-may be a single number, a simple range of the form
-n-m or a range with a step size. Hence, the task id range specified by
-2-10:2 would result in the task id indexes 2, 4, 6, 8, and 10,
-i.e. in a total of 5 tasks identical tasks with the environment variable
-xxQS_NAME_Sxx_TASK_ID containing one of the 5 index numbers each.
-.sp 1
-All job array tasks inherit the same resource requests and attribute
-definitions as specified in the \fIqsub\fP or \fIqalter\fP command line,
-except for the \fB\-t\fP option. The tasks are scheduled independently and,
-provided enough resources, concurrently very much like separate jobs.
-However, a job array or a sub-array thereof can be accessed as a total by
-commands like
-.M qmod 1
-or
-.M qdel 1 .
-See the corresponding manual pages for further detail.
-.sp 1
-Job arrays are commonly used to execute the same type of operation on
-varying input data sets correlated with the task index number. The number
-of tasks in a job array is unlimited.
-.sp 1
-STDOUT and STDERR of job array tasks will be written into different files
-with the default location
-.sp 1
-.nf
-<jobname>.['e'|'o']<job_id>'.'<task_id>
-.fi
-.sp 1
-In order to change this default, the \fB\-e\fP and \fB\-o\fP options (see
-above) can be used together with the pseudo environment variables $HOME,
-$USER, $JOB_ID, $JOB_NAME, $HOSTNAME, and $xxQS_NAME_Sxx_TASK_ID.
-.sp 1
-Note, that you can use the output redirection to divert the output of all
-tasks into the same file, but the result of this is undefined.
-.\"
 .IP "\fB\-sc variable[=value],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
@@ -1144,6 +1098,52 @@ started on behalf of the interactive job.
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
+.\"
+.IP "\fB\-t n[-m[:s]]\fP"
+Available for \fIqsub\fP and \fIqalter\fP only.
+.sp 1
+Submits a so called \fIJob Array\fP, i.e. an array of identical tasks being
+only differentiated by an index number and being treated by xxQS_NAMExx
+almost like a series of jobs. The option argument to \fB\-t\fP specifies
+the number of job array tasks and the index number which will be associated
+with the tasks. The index numbers will be exported to the job tasks via the
+environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP.
+.sp 1
+The task id range specified in the option argument
+may be a single number, a simple range of the form
+n-m or a range with a step size. Hence, the task id range specified by
+2-10:2 would result in the task id indexes 2, 4, 6, 8, and 10,
+i.e. in a total of 5 tasks identical tasks with the environment variable
+xxQS_NAME_Sxx_TASK_ID containing one of the 5 index numbers each.
+.sp 1
+All job array tasks inherit the same resource requests and attribute
+definitions as specified in the \fIqsub\fP or \fIqalter\fP command line,
+except for the \fB\-t\fP option. The tasks are scheduled independently and,
+provided enough resources, concurrently very much like separate jobs.
+However, a job array or a sub-array thereof can be accessed as a total by
+commands like
+.M qmod 1
+or
+.M qdel 1 .
+See the corresponding manual pages for further detail.
+.sp 1
+Job arrays are commonly used to execute the same type of operation on
+varying input data sets correlated with the task index number. The number
+of tasks in a job array is unlimited.
+.sp 1
+STDOUT and STDERR of job array tasks will be written into different files
+with the default location
+.sp 1
+.nf
+<jobname>.['e'|'o']<job_id>'.'<task_id>
+.fi
+.sp 1
+In order to change this default, the \fB\-e\fP and \fB\-o\fP options (see
+above) can be used together with the pseudo environment variables $HOME,
+$USER, $JOB_ID, $JOB_NAME, $HOSTNAME, and $xxQS_NAME_Sxx_TASK_ID.
+.sp 1
+Note, that you can use the output redirection to divert the output of all
+tasks into the same file, but the result of this is undefined.
 .\"
 .IP "\fB\-u username,... | -uall\fP"
 Available for \fIqalter\fP only. Changes are only made on those

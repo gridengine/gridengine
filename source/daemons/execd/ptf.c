@@ -374,11 +374,13 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
       usage = lCreateElem(UA_Type);
       lSetString(usage, UA_name, USAGE_ATTR_VMEM);
       lSetDouble(usage, UA_value, 0);
+      DPRINTF(("adding usage attribute %s\n", USAGE_ATTR_VMEM));
       lAppendElem(usage_list, usage);
 
       usage = lCreateElem(UA_Type);
-      lSetString(usage, UA_name, USAGE_ATTR_HIMEM);
+      lSetString(usage, UA_name, USAGE_ATTR_MAXVMEM);
       lSetDouble(usage, UA_value, 0);
+      DPRINTF(("adding usage attribute %s\n", USAGE_ATTR_MAXVMEM));
       lAppendElem(usage_list, usage);
 #endif
    }
@@ -1128,7 +1130,7 @@ static void ptf_get_usage_from_data_collector(void)
             }
 
             /* set himem usage */
-            if ((usage = lGetElemStr(usage_list, UA_name, USAGE_ATTR_HIMEM))) {
+            if ((usage = lGetElemStr(usage_list, UA_name, USAGE_ATTR_MAXVMEM))) {
                lSetDouble(usage, UA_value, jobs->jd_himem);
             }
 
@@ -1939,6 +1941,8 @@ int ptf_get_usage(lList **job_usage_list)
    lListElem *job, *new_job, *osjob, *new_ja_task;
    lEnumeration *what;
 
+   DENTER(TOP_LAYER, "ptf_get_usage");
+
    what = lWhat("%T(%I %I %I)", JB_Type, JB_job_number, JB_ja_tasks,
                 JB_pe_task_id_str);
 
@@ -1955,6 +1959,7 @@ int ptf_get_usage(lList **job_usage_list)
             int insert = 1;
 
             for_each(tmp_job, temp_usage_list) {
+
                if (lGetUlong(tmp_job, JB_job_number) == job_id &&
                    lGetString(tmp_job, JB_pe_task_id_str) &&
                    lGetString(osjob, JO_task_id_str) &&
@@ -1963,6 +1968,15 @@ int ptf_get_usage(lList **job_usage_list)
 
                   new_ja_task = lCreateElem(JAT_Type);
                   lSetUlong(new_ja_task, JAT_task_number, ja_task_id);
+
+#if 0
+                  {
+                     lListElem *uep;
+                     for_each (uep, lGetList(osjob, JO_usage_list))
+                        printf("%s=%f%c", lGetString(uep, UA_name),
+                                             lGetDouble(uep, UA_value), lNext(uep)?',':'\n');
+                  }
+#endif
                   lSetList(new_ja_task, JAT_usage_list,
                            lCopyList(NULL, lGetList(osjob, JO_usage_list)));
                   lAppendElem(lGetList(tmp_job, JB_ja_tasks), new_ja_task);
@@ -1994,6 +2008,7 @@ int ptf_get_usage(lList **job_usage_list)
    lFreeList(temp_usage_list);
    lFreeWhat(what);
 
+   DEXIT;
    return 0;
 }
 

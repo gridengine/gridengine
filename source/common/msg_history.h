@@ -138,7 +138,6 @@
 #define MSG_HISTORY_PE              "PE"
 #define MSG_HISTORY_SLOTS           "SLOTS"
 #define MSG_HISTORY_TOTSYSTEMUSAGE  _("Total System Usage\n")
-#define MSG_HISTORY_REALOWNERSYSTEMCPUMEMORYIO  _("         REAL         OWNER        SYSTEM           CPU             MEMORY                 IO")
 #define MSG_HISTORY_USAGE           _("usage:"    )
 #define MSG_HISTORY_A_OPT_USAGE     _("jobs accounted to the given account\n"      )
 #define MSG_HISTORY_help_OPT_USAGE  _("display this message\n"  )
@@ -204,6 +203,7 @@
 #define MSG_HISTORY_SHOWJOB_MEM               "mem"
 #define MSG_HISTORY_SHOWJOB_IO                "io"
 #define MSG_HISTORY_SHOWJOB_IOW               "iow"
+#define MSG_HISTORY_SHOWJOB_MAXVMEM           "maxvmem"
 #define MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED      _("get_all_lists: failed to get complex list\n")
 #define MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED     _("get_all_lists: failed to get exechost list\n")
 #define MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED        _("get_all_lists: failed to get queue list\n")

@@ -133,7 +133,6 @@ char *argv[]
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
 
-
    /* Initialize path for temporary logging until we chdir to spool */
    error_file = TMP_ERR_FILE_SCHEDD;
 
@@ -178,6 +177,7 @@ char *argv[]
       sge_daemonize(get_commlib_state_closefd()?NULL:&fds);
    }
 
+   starting_up();
    sge_log_pid(SCHEDD_PID_FILE);
 
 #if RAND_ERROR
@@ -250,9 +250,16 @@ char *argv[]
             WARNING((SGE_EVENT, MSG_SCHEDD_REREGISTER_ERROR));
          } else if (ret == 1) {        /* schedd parameter changed */
             INFO((SGE_EVENT, MSG_SCHEDD_REREGISTER_PARAM));
-         } else /* (ret == 2) */ {     /* shutdown order from qmaster */           
-            INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN));
+         } 
+#if 0
+         else /* (ret == 2) */ {     /* shutdown order from qmaster */           
+            extern u_long32 logginglevel;
+            u_long32 old_ll = logginglevel;
+            logginglevel = LOG_INFO;
+            INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, feature_get_product_name(FS_VERSION)));
+            logginglevel = old_ll;
          }
+#endif
       }
    }
 }

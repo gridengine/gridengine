@@ -277,16 +277,15 @@ char **argv
 
    /* at this point we are sure we are the only sge_execd */
    /* first we have to report any reaped children that might exist */
-   INFO((SGE_EVENT, MSG_EXECD_STARTINGUP_S, feature_get_product_name(FS_VERSION)));
+
+   starting_up();
 
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-      if (ptf_init()) {
-         CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTPTF));
-         SGE_EXIT(1);
-      }
-      INFO((SGE_EVENT, MSG_EXECD_STARTPDCANDPTF));
-   }         
+   if (ptf_init()) {
+      CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTPTF));
+      SGE_EXIT(1);
+   }
+   INFO((SGE_EVENT, MSG_EXECD_STARTPDCANDPTF));
 #endif
 
    Master_Job_List = lCreateList("Master_Job_List", JB_Type);
@@ -351,9 +350,7 @@ int i
    sge_ls_stop(0);
 
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-      ptf_stop();
-   }  
+   ptf_stop();
 #endif
 
    DEXIT;

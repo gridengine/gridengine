@@ -65,6 +65,7 @@
 #include "setup_path.h"
 #include "sge_pids.h"
 #include "sge_log_pid.h"
+#include "shutdown.h"
 
 #include "msg_gdilib.h"
 #include "sge_language.h"
@@ -212,7 +213,7 @@ char **argv
    sge_daemonize(get_commlib_state_closefd()?NULL:&fds);
    sge_log_pid(shadowd_pidfile);
 
-   WARNING((SGE_EVENT, MSG_SHADOWD_STARTINGUP));
+   starting_up();
    
    sge_setup_sig_handlers(SHADOWD);
 
@@ -224,7 +225,11 @@ char **argv
       sleep(CHECK_INTERVAL);
 
       if (shut_me_down) {
-         WARNING((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN));
+         extern u_long32 logginglevel;
+         u_long32 old_ll = logginglevel;
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, feature_get_product_name(FS_VERSION)));
+         logginglevel = old_ll;
          SGE_EXIT(0);
       }   
 

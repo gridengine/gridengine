@@ -127,6 +127,7 @@ struct drusage {
    double   mem;
    double   io;
    double   iow;
+   double   maxvmem;
    sge_all_rusage_type *arch_dep_usage;/* pointer to a structure with
                                           architecture dependend usage
                                           information

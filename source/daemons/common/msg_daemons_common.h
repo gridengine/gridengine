@@ -42,7 +42,8 @@
 ** global deamon messages
 */
 #define MSG_MASTER    _("master")
-#define MSG_SHADOWD_CONTROLLEDSHUTDOWN       _("controlled shutdown")
+#define MSG_STARTUP_STARTINGUP_S           _("starting up %s")
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_S   _("controlled shutdown %s")
 #define MSG_ERROR_CANTSWITCHTOADMINUSER    _("can't switch to amin_user")
 
 /*

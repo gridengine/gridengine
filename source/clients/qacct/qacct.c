@@ -67,6 +67,7 @@
 #include "sge_stat.h" 
 #include "msg_history.h"
 #include "msg_clients_common.h"
+#include "sge_parse_num_par.h"
 
 static void show_the_way(FILE *fp);
 static void showjob(sge_rusage_type *dusage);
@@ -1164,28 +1165,14 @@ char **argv
       if (!dashcnt)
          printf(MSG_HISTORY_TOTSYSTEMUSAGE );
 
-      /*if (!feature_is_enabled(FEATURE_SGEEE)) {
-         printf(MSG_HISTORY_REALCPUMEMORYIO );
-         dashcnt+=65;
-      } else {
-         printf(MSG_HISTORY_REALOWNERSYSTEM );
-         dashcnt+=41;
-      }*/
-      /*   title = MSG_HISTORY_REALOWNERSYSTEMCPUMEMORYIO;*/
-      if (!feature_is_enabled(FEATURE_SGEEE)) 
-         sprintf(title_array,"%13.13s %13.13s %13.13s",
-                "WALLCLOCK",
-                "UTIME",
-                "STIME");
-      else          
-         sprintf(title_array,"%13.13s %13.13s %13.13s %13.13s %18.18s %18.18s %18.18s",
-                        "WALLCLOCK", 
-                        "UTIME", 
-                        "STIME", 
-                        "CPU", 
-                        "MEMORY", 
-                        "IO",
-                        "IOW");
+      sprintf(title_array,"%13.13s %13.13s %13.13s %13.13s %18.18s %18.18s %18.18s",
+                     "WALLCLOCK", 
+                     "UTIME", 
+                     "STIME", 
+                     "CPU", 
+                     "MEMORY", 
+                     "IO",
+                     "IOW");
                         
       printf("%s\n", title_array);
 
@@ -1272,42 +1259,30 @@ char **argv
             printf("%6"fu32, lGetUlong(ep, QAJ_slots));
          }         
             
-            
          if (hostflag || queueflag || groupflag || ownerflag || projectflag || 
              departmentflag || granted_peflag || slotsflag) {
-             if (!feature_is_enabled(FEATURE_SGEEE))  
-                printf("%13.0f %13.0f %13.0f\n",
-                      lGetDouble(ep, QAJ_ru_wallclock),
-                      lGetDouble(ep, QAJ_ru_utime),
-                      lGetDouble(ep, QAJ_ru_stime));
-             else
-                printf("%13.0f %13.0f %13.0f %13.0f %18.3f %18.3f %18.3f\n",
-                      lGetDouble(ep, QAJ_ru_wallclock),
-                      lGetDouble(ep, QAJ_ru_utime),
-                      lGetDouble(ep, QAJ_ru_stime),
-                      lGetDouble(ep, QAJ_cpu),
-                      lGetDouble(ep, QAJ_mem),
-                      lGetDouble(ep, QAJ_io),
-                      lGetDouble(ep, QAJ_iow));
+             printf("%13.0f %13.0f %13.0f %13.0f %18.3f %18.3f %18.3f\n",
+                   lGetDouble(ep, QAJ_ru_wallclock),
+                   lGetDouble(ep, QAJ_ru_utime),
+                   lGetDouble(ep, QAJ_ru_stime),
+                   lGetDouble(ep, QAJ_cpu),
+                   lGetDouble(ep, QAJ_mem),
+                   lGetDouble(ep, QAJ_io),
+                   lGetDouble(ep, QAJ_iow));
+                   
             ep = lNext(ep);
             if (!ep)
                break;
          }
          else {
-            if (!feature_is_enabled(FEATURE_SGEEE))
-               printf("%13.0f %13.0f %13.0f\n",
-                   totals.ru_wallclock,
-                   totals.ru_utime,
-                   totals.ru_stime);
-            else
-               printf("%13.0f %13.0f %13.0f %13.0f %18.3f %18.3f %18.3f\n",
-                   totals.ru_wallclock,
-                   totals.ru_utime,
-                   totals.ru_stime,
-                   totals.cpu,
-                   totals.mem,
-                   totals.io,                                                
-                   totals.iow);
+            printf("%13.0f %13.0f %13.0f %13.0f %18.3f %18.3f %18.3f\n",
+                totals.ru_wallclock,
+                totals.ru_utime,
+                totals.ru_stime,
+                totals.cpu,
+                totals.mem,
+                totals.io,                                                
+                totals.iow);
             break;
          }
       } /* end while */
@@ -1388,6 +1363,8 @@ FILE *fp
 static void showjob(
 sge_rusage_type *dusage 
 ) {
+   char maxvmem_usage[1000];
+
    printf("==============================================================\n");
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_QNAME, (dusage->qname ? dusage->qname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_HOSTNAME, (dusage->hostname ? dusage->hostname : MSG_HISTORY_SHOWJOB_NULL));
@@ -1447,12 +1424,11 @@ sge_rusage_type *dusage
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUNVCSW,      dusage->ru_nvcsw);      /* voluntary context switches */
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_RUNIVCSW,     dusage->ru_nivcsw);     /* involuntary */
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      printf("%-13.12s%-13.0f\n",   MSG_HISTORY_SHOWJOB_CPU,          dusage->cpu);
-      printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MEM,          dusage->mem);
-      printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IO,           dusage->io);
-      printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IOW,          dusage->iow);
-   }   
+   printf("%-13.12s%-13.0f\n",   MSG_HISTORY_SHOWJOB_CPU,          dusage->cpu);
+   printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MEM,          dusage->mem);
+   printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IO,           dusage->io);
+   printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IOW,          dusage->iow);
+   printf("%-13.12s%s\n",  MSG_HISTORY_SHOWJOB_MAXVMEM,      resource_descr(dusage->maxvmem, TYPE_MEM, maxvmem_usage));
 }
 
 /*

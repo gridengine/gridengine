@@ -594,7 +594,7 @@ lList **lpp
       sharetree_reserved_usage = 0;
 #else
       acct_reserved_usage = 0;
-      sharetree_reserved_usage = 1;
+      sharetree_reserved_usage = (feature_is_enabled(FEATURE_SGEEE)!=0);
 #endif
       notify_kill_type = 1;
       notify_susp_type = 1;

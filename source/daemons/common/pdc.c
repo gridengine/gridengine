@@ -642,7 +642,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
             jobcount++;
 
 #           if 0
-               printf("%d. jid=%d himem=%d etime=%d\n", jobcount,
+               printf("%d. jid=%d maxvmem=%d etime=%d\n", jobcount,
                       acct.accteoj.ace_jobid, acct.accteoj.ace_himem,
                       acct.accteoj.ace_etime);
 #           endif

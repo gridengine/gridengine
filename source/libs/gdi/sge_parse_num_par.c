@@ -361,55 +361,60 @@ char *buffer
    int secs, minutes, hours, days;
    char c;
    static char text[100];
-  
+
+   DENTER(TOP_LAYER, "resource_descr");
+
    if (!buffer)
       buffer = text;
 
-   if (dval==DBL_MAX) 
+   if (dval==DBL_MAX) {
+      DEXIT;
       return "infinity";
-   else {
-      switch (type) {
-      case TYPE_TIM:
-         secs = dval;
+   }
 
-         days    = secs/(60*60*24);
-         secs   -= days*(60*60*24);
+   switch (type) {
+   case TYPE_TIM:
+      secs = dval;
 
-         hours   = secs/(60*60);
-         secs   -= hours*(60*60);
+      days    = secs/(60*60*24);
+      secs   -= days*(60*60*24);
 
-         minutes = secs/60;
-         secs   -= minutes*60;
- 
-         if (days) 
-            sprintf(buffer, "%d:%02d:%02d:%02d", days, hours, minutes, secs);
-         else
-            sprintf(buffer, "%2.2d:%2.2d:%2.2d", hours, minutes, secs);
-         break;
+      hours   = secs/(60*60);
+      secs   -= hours*(60*60);
 
-      case TYPE_MEM:
-         c = '\0';
+      minutes = secs/60;
+      secs   -= minutes*60;
 
-         if (fabs(dval) >= (double)1024*1024*1024) {
-            dval /= 1024*1024*1024;
-            c = 'G';
-         } else if (fabs(dval) >= (double)1024*1024) {
-            dval /= 1024*1024;
-            c = 'M';
-         } else if (fabs(dval) >= (double)1024) {
-            dval /= 1024;
-            c = 'K';
-         }
-         if (c) {
-            sprintf(buffer, "%f%c", dval, c);
-            break;
-         } 
-      default: 
-         sprintf(buffer, "%f", dval);
+      if (days) 
+         sprintf(buffer, "%d:%02d:%02d:%02d", days, hours, minutes, secs);
+      else
+         sprintf(buffer, "%2.2d:%2.2d:%2.2d", hours, minutes, secs);
+      break;
+
+   case TYPE_MEM:
+      c = '\0';
+
+      if (fabs(dval) >= (double)1024*1024*1024) {
+         dval /= 1024*1024*1024;
+         c = 'G';
+      } else if (fabs(dval) >= (double)1024*1024) {
+         dval /= 1024*1024;
+         c = 'M';
+      } else if (fabs(dval) >= (double)1024) {
+         dval /= 1024;
+         c = 'K';
+      }
+      if (c) {
+         sprintf(buffer, "%.2f%c", dval, c);
          break;
       }
-      return buffer;
+   default:
+      sprintf(buffer, "%f", dval);
+      break;
    }
+
+   DEXIT;
+   return buffer;
 }
 
 

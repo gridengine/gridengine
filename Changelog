@@ -1,3 +1,10 @@
+AH-2002-01-24-0: Enhancem.: - added 'maxvmem' as new per job usage information
+                              in qmon and accounting 
+                            - fix problem with wrong 'maxvmem' information
+                              in job finish mail for non-pdc architectures
+                            - ensure daemons log 'starting up'/'controlled shutdown'
+                              messages independently of the configured log_level
+
 SD-2002-01-24-4: Bugfix:    IRIX C compiler didn't like default: 
                             followed directly by a } in a switch
                             statement.

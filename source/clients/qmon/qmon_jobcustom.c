@@ -77,6 +77,7 @@
 #include "utility.h"
 #include "sge_range.h"
 #include "sge_job_jatask.h"
+#include "sge_parse_num_par.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -105,8 +106,13 @@ static String PrintMailOptions(lListElem *ep, lListElem *jat, lList *eleml, int 
 static String PrintPathList(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintCPU(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintMEM(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintVMEM(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintMAXVMEM(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintIO(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintMailList(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintMEMValue(lListElem *ep, lListElem *jat, lList *eleml, int
+nm, const char *s);
+
 static String PrintPERange(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintJobArgs(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintPredecessors(lListElem *ep, lListElem *jat, lList *eleml, int nm);
@@ -129,7 +135,7 @@ static HashTable JobColumnPrintHashTable = NULL;
 static HashTable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
-#define SGEEE_FIELDS      13
+#define SGEEE_FIELDS    10
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -157,6 +163,11 @@ static tJobField job_items[] = {
    { 0, JB_pe, "@{PE}", 10, 30, PrintString },
    { 0, JB_pe_range, "@{PERange}", 15, 30, PrintPERange },
    { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessors },
+   { 0, JAT_scaled_usage_list, "@{CPU}", 10, 30, PrintCPU },
+   { 0, JAT_scaled_usage_list, "@{MEM}", 10, 30, PrintMEM },
+   { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
+   { 0, JAT_scaled_usage_list, "@{VMEM}", 10, 30, PrintVMEM },
+   { 0, JAT_scaled_usage_list, "@{MAXVMEM}", 10, 30, PrintMAXVMEM },
 /**** SGE specific fields *****/
    { 0, JAT_ticket, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
@@ -167,10 +178,7 @@ static tJobField job_items[] = {
    { 0, JB_override_tickets, "@{OverrideTickets}", 15, 30, PrintUlong },
    { 0, JB_project, "@{Project}", 10, 30, PrintString },
    { 0, JB_department, "@{Department}", 10, 30, PrintString },
-   { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime },
-   { 0, JAT_scaled_usage_list, "@{CPU}", 10, 30, PrintCPU },
-   { 0, JAT_scaled_usage_list, "@{MEM}", 10, 30, PrintMEM },
-   { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
+   { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime }
 };
 
 /*
@@ -556,12 +564,44 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
+   return PrintMEMValue(ep, jat, eleml, nm, USAGE_ATTR_MEM);
+}   
+
+/*-------------------------------------------------------------------------*/
+static String PrintVMEM(
+lListElem *ep,
+lListElem *jat,
+lList *eleml,
+int nm 
+) {
+   return PrintMEMValue(ep, jat, eleml, nm, USAGE_ATTR_VMEM);
+}   
+
+/*-------------------------------------------------------------------------*/
+static String PrintMAXVMEM(
+lListElem *ep,
+lListElem *jat,
+lList *eleml,
+int nm 
+) {
+   return PrintMEMValue(ep, jat, eleml, nm, USAGE_ATTR_MAXVMEM);
+}   
+
+/*-------------------------------------------------------------------------*/
+static String PrintMEMValue(
+lListElem *ep,
+lListElem *jat,
+lList *eleml,
+int nm,
+const char *field 
+) {
    String str;
    lListElem *up = NULL;
    char buf[1024];
    u_long32 running;
+   static char mem_usage[100];
 
-   DENTER(GUI_LAYER, "PrintMEM");
+   DENTER(GUI_LAYER, "PrintMEMValue");
 
    if (job_is_zombie_job(ep)) {
       str = XtNewString("NA");
@@ -582,11 +622,15 @@ int nm
                   lGetUlong(jat, JAT_status)==JTRANSITING;
 
       /* scaled mem usage */
-      if (!(up = lGetSubStr(jat, UA_name, USAGE_ATTR_MEM,
+      if (!(up = lGetSubStr(jat, UA_name, field,
          JAT_scaled_usage_list)))
          sprintf(buf, "%-7.7s", running?"NA":"");
       else
+#if 0
          sprintf(buf, "%-5.5f", lGetDouble(up, UA_value));
+#else
+         sprintf(buf, "%s", resource_descr(lGetDouble(up, UA_value), TYPE_MEM, mem_usage));
+#endif
 
       str = XtNewString(buf);
    }

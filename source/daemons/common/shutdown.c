@@ -33,19 +33,41 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_feature.h"
 #include "shutdown.h"
 #include "sge_exit.h"
 #include "setup_path.h"
 #include "sge_getme.h"
 #include "msg_daemons_common.h"
 
+void starting_up()
+{
+   extern u_long32 logginglevel;
+   u_long32 old_ll = logginglevel;
+
+   DENTER(TOP_LAYER, "starting_up");
+
+   logginglevel = LOG_INFO;
+
+   INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_S, feature_get_product_name(FS_VERSION)));
+
+   logginglevel = old_ll;
+
+   DEXIT;
+   return;
+}
+
 /******************************************************************************/
 void sge_shutdown()
 {
+   extern u_long32 logginglevel;
+   u_long32 old_ll = logginglevel;
 
    DENTER(TOP_LAYER, "sge_shutdown");
 
-   INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN));
+   logginglevel = LOG_INFO;
+   INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, feature_get_product_name(FS_VERSION)));
+   logginglevel = old_ll;
 
 #ifdef WIN32NATIVE 
    /*

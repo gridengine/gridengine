@@ -292,7 +292,6 @@
 #define MSG_EXECD_NOPROGNAMEPROD_S    _("program name '%s' does not match product mode") 
 #define MSG_COM_CANTSTARTCOMMD        _("can't start commd")
 #define MSG_COM_CANTENROLL2COMMD_S    _("can't enroll to commd: %s")
-#define MSG_EXECD_STARTINGUP_S        _("starting up %s")
 #define MSG_EXECD_NOSTARTPTF          _("could not start priority translation facility (ptf)")
 #define MSG_EXECD_STARTPDCANDPTF      _("successfully started PDC and PTF")
 #define MSG_COM_RECEIVEREQUEST_S      _("can't receive request: %s")

@@ -208,23 +208,21 @@ int job_initialize_job(lListElem *job)
       {
          int ret;
          /* register still running jobs at ptf */
-         if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-            if (lGetUlong(ja_task, JAT_status) == JRUNNING) {
-               ret = register_at_ptf(job, ja_task, NULL);
-               if (ret) {
-                  ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU,
-                        (ret == 1 ? MSG_DELAYED : MSG_FAILED), u32c(job_id)));
-               }
+         if (lGetUlong(ja_task, JAT_status) == JRUNNING) {
+            ret = register_at_ptf(job, ja_task, NULL);
+            if (ret) {
+               ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU,
+                     (ret == 1 ? MSG_DELAYED : MSG_FAILED), u32c(job_id)));
             }
-            for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
-               if (lGetUlong(lFirst(lGetList(pe_task, JB_ja_tasks)),
-                     JAT_status) == JRUNNING) {
-                  ret=register_at_ptf(job, ja_task, pe_task);
-                  if (ret) {
-                     ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS,
-                        (ret == 1 ? MSG_DELAYED : MSG_FAILED),
-                        u32c(job_id), lGetString(pe_task, JB_pe_task_id_str)));
-                  }
+         }
+         for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+            if (lGetUlong(lFirst(lGetList(pe_task, JB_ja_tasks)),
+                  JAT_status) == JRUNNING) {
+               ret=register_at_ptf(job, ja_task, pe_task);
+               if (ret) {
+                  ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS,
+                     (ret == 1 ? MSG_DELAYED : MSG_FAILED),
+                     u32c(job_id), lGetString(pe_task, JB_pe_task_id_str)));
                }
             }
          }

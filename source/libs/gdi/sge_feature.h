@@ -69,8 +69,6 @@ typedef enum {
 
 typedef enum {
    FEATURE_UNINITIALIZED,
-   FEATURE_USE_OSJOB_ID,            /* jobs will get a unique job id during 
-                                       startup */
    FEATURE_REPRIORISATION,          /* PTFs auto repriorisation */
    FEATURE_REPORT_USAGE,            /* PDC data collection and
                                        usage reports from execd to master */

@@ -111,7 +111,8 @@ enum {
    QAJ_cpu,
    QAJ_mem,
    QAJ_io,
-   QAJ_iow
+   QAJ_iow,
+   QAJ_maxvmem
 };
 
 LISTDEF(QAJ_Type)
@@ -132,6 +133,7 @@ LISTDEF(QAJ_Type)
    SGE_DOUBLE(QAJ_mem)
    SGE_DOUBLE(QAJ_io)
    SGE_DOUBLE(QAJ_iow)
+   SGE_DOUBLE(QAJ_maxvmem)
 LISTEND 
 
 NAMEDEF(QAJN)
@@ -152,6 +154,7 @@ NAMEDEF(QAJN)
    NAME("QAJ_mem")
    NAME("QAJ_io")
    NAME("QAJ_iow")
+   NAME("QAJ_maxvmem")
 NAMEEND
 
 /* *INDENT-ON* */

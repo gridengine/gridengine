@@ -763,7 +763,6 @@
 #define MSG_STARTUP_SETUPFAILED              _("setup failed")
 #define MSG_QIDL_CANTINITIALIZEQIDL              _("cannot initialze qidl")
 #define MSG_QIDL_CANTSPAWNTHREADFORCORBASERVER              _("cannot spawn thread for corba server")
-#define MSG_STARTUP_STARTINGUP_S            _("starting up %s")
 #define MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI           _("Failed in sge_unpack_gdi_request (%s/%s/%d)\n")
 #define MSG_CULL_FAILEDINCULLUNPACKLISTREPORT              _("Failed in cull_unpack_list report\n")
 #define MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES              _("shutting down qmaster requires manager privileges\n")

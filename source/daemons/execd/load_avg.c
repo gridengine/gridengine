@@ -49,7 +49,6 @@
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
-/* #include "execd_license.h" */
 #include "sge_arch.h"
 #include "sge_nprocs.h"
 #include "sge_getloadavg.h"
@@ -652,18 +651,30 @@ static void update_job_usage()
          }
 
          /* replace cpu/mem/io with newer values */
-         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_CPU, JAT_usage_list)))
+         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_CPU, JAT_usage_list))) {
+            DPRINTF(("added/updated 'cpu' usage: %f\n", lGetDouble(uep, UA_value)));
             add_usage(jr, USAGE_ATTR_CPU, NULL, lGetDouble(uep, UA_value));
-         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_MEM, JAT_usage_list)))
+         }
+         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_MEM, JAT_usage_list))) {
+            DPRINTF(("added/updated 'mem' usage: %f\n", lGetDouble(uep, UA_value)));
             add_usage(jr, USAGE_ATTR_MEM, NULL, lGetDouble(uep, UA_value));
-         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_IO, JAT_usage_list)))
+         }
+         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_IO, JAT_usage_list))) {
+            DPRINTF(("added/updated 'io' usage: %f\n", lGetDouble(uep, UA_value)));
             add_usage(jr, USAGE_ATTR_IO, NULL, lGetDouble(uep, UA_value));
-         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_IOW, JAT_usage_list)))
+         }
+         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_IOW, JAT_usage_list))) {
+            DPRINTF(("added/updated 'iow' usage: %f\n", lGetDouble(uep, UA_value)));
             add_usage(jr, USAGE_ATTR_IOW, NULL, lGetDouble(uep, UA_value));
-         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_VMEM, JAT_usage_list)))
+         }
+         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_VMEM, JAT_usage_list))) {
+            DPRINTF(("added/updated 'vmem' usage: %f\n", lGetDouble(uep, UA_value)));
             add_usage(jr, USAGE_ATTR_VMEM, NULL, lGetDouble(uep, UA_value));
-         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_HIMEM, JAT_usage_list)))
-            add_usage(jr, USAGE_ATTR_HIMEM, NULL, lGetDouble(uep, UA_value));
+         }
+         if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_MAXVMEM, JAT_usage_list))) {
+            DPRINTF(("added/updated 'maxvmem' usage: %f\n", lGetDouble(uep, UA_value)));
+            add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
+         }
 
          DPRINTF(("---> updating job report usage for job "u32" task \"%s\"\n",
              jobid, taskidstr?taskidstr:""));
@@ -682,7 +693,7 @@ lList **job_usage_list
 ) {
    lList *temp_job_usage_list, *new_ja_task_list;
    lListElem *q=NULL, *jep, *gdil_ep, *jatep, *new_job, *new_ja_task;
-   double cpu_val, vmem_val, io_val, iow_val, vmem;
+   double cpu_val, vmem_val, io_val, iow_val, vmem, maxvmem;
    u_long32 jobid;
    char err_str[128];
    const char *taskidstr;
@@ -767,7 +778,7 @@ lList **job_usage_list
          /* calc reserved CPU time */
          cpu_val = total_slots * wall_clock_time;
 
-         io_val = iow_val = 0;
+         io_val = iow_val = maxvmem = 0;
 
 #ifdef COMPILE_DC
          if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
@@ -779,6 +790,8 @@ lList **job_usage_list
                         lGetDouble(uep, UA_value) : 0;
                iow_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IOW))) ?
                         lGetDouble(uep, UA_value) : 0;
+               maxvmem = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_MAXVMEM))) ?
+                        lGetDouble(uep, UA_value) : 0;
                lFreeList(jul);
             }
          }
@@ -786,14 +799,30 @@ lList **job_usage_list
 
          /* create the reserved usage list */
          ul = lCreateList("usage_list", UA_Type);
-         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_CPU, UA_Type);
+
+         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_CPU)))
+            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_CPU, UA_Type);
          lSetDouble(u, UA_value, cpu_val);
-         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MEM, UA_Type);
+         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MEM)))
+            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MEM, UA_Type);
          lSetDouble(u, UA_value, vmem_val);
-         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IO, UA_Type);
+         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IO)))
+            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IO, UA_Type);
          lSetDouble(u, UA_value, io_val);
-         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IOW, UA_Type);
+         if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IOW)))
+            u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IOW, UA_Type);
          lSetDouble(u, UA_value, iow_val);
+
+         if (vmem != DBL_MAX) {
+            if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
+               u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
+            lSetDouble(u, UA_value, vmem);
+         }
+         if (maxvmem != 0) {
+            if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
+               u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
+            lSetDouble(u, UA_value, maxvmem);
+         }
          lSetList(new_ja_task, JAT_usage_list, ul);
       }
    }

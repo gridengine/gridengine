@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2001/11/28 17:28:25 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2002/01/24 17:50:17 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCOUNTING 5 "$Date: 2001/11/28 17:28:25 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCOUNTING 5 "$Date: 2002/01/24 17:50:17 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 accounting \- xxQS_NAMExx accounting file format
@@ -141,8 +141,8 @@ The io wait time in seconds.
 .IP "\fBpe_taskid\fP"
 If this identifier is set the task was part of a parallel job and was 
 passed to xxQS_NAME_EExx via the qrsh -inherit interface.
-.IP "\fBvmem\fP"
-The maximum vmem size in Gbytes.
+.IP "\fBmaxvmem\fP"
+The maximum vmem size in bytes.
 .fi
 .\"
 .\"

@@ -429,8 +429,7 @@ char **argv
    /* initiate a transition from SGE to SGE3E mode for all execd's */
    master_notify_execds();
 
-  
-   INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_S, feature_get_product_name(FS_VERSION)));
+   starting_up();
 
    in_main_loop = 1;
 

@@ -115,7 +115,7 @@ char *category_str
    else
       usage_list = lGetList(jatp, JAT_usage_list);
 
-#if 0
+#if 1
    {
       lListElem *ep;
 
@@ -232,7 +232,7 @@ char *category_str
           category_str?category_str:"none",
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IOW_ACCT, ep, 0),
           "none", 
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_VMEM, ep, 0)
+          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_MAXVMEM_ACCT, ep, 0)
 #ifdef NEC_ACCOUNTING_ENTRIES
           ,arch_dep_usage_string
 #endif 
@@ -267,7 +267,8 @@ sge_rusage_type *d
     */
    pc = strtok(szLine, ":");
    if (!pc) {
-      return (-3);
+      DEXIT;
+      return -1;
    }
    d->qname = sge_strdup(d->qname, pc);
    
@@ -276,7 +277,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-4);
+      DEXIT;
+      return -1;
    }
    d->hostname = sge_strdup(d->hostname, pc);
 
@@ -285,7 +287,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-8);
+      DEXIT;
+      return -1;
    }
    d->group = sge_strdup(d->group, pc);
           
@@ -295,7 +298,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-9);
+      DEXIT;
+      return -1;
    }
    d->owner = sge_strdup(d->owner, pc);
 
@@ -304,7 +308,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-10);
+      DEXIT;
+      return -1;
    }
    d->job_name = sge_strdup(d->job_name, pc);
 
@@ -313,7 +318,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-15);
+      DEXIT;
+      return -1;
    }
    
    d->job_number = atol(pc);
@@ -323,7 +329,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-12);
+      DEXIT;
+      return -1;
    }
    d->account = sge_strdup(d->account, pc);
 
@@ -332,7 +339,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-13);
+      DEXIT;
+      return -1;
    }
    d->priority = atol(pc);
 
@@ -341,7 +349,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-17);
+      DEXIT;
+      return -1;
    }
    d->submission_time = atol(pc);
 
@@ -350,7 +359,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-19);
+      DEXIT;
+      return -1;
    }
    d->start_time = atol(pc);
 
@@ -359,7 +369,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-21);
+      DEXIT;
+      return -1;
    }
    d->end_time = atol(pc);
 
@@ -368,7 +379,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-23);
+      DEXIT;
+      return -1;
    }
    d->failed = atol(pc);
 
@@ -377,7 +389,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-23);
+      DEXIT;
+      return -1;
    }
    d->exit_status = atol(pc);
 
@@ -386,7 +399,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-25);
+      DEXIT;
+      return -1;
    }
    d->ru_wallclock = atol(pc); 
 
@@ -395,7 +409,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-       return (-27);
+      DEXIT;
+      return -1;
    }
    d->ru_utime = atol(pc);
 
@@ -404,7 +419,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-29);
+      DEXIT;
+      return -1;
    }
    d->ru_stime = atol(pc);
 
@@ -413,7 +429,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-31);
+      DEXIT;
+      return -1;
    }
    d->ru_maxrss = atol(pc);
 
@@ -422,7 +439,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-33);
+      DEXIT;
+      return -1;
    }
    d->ru_ixrss = atol(pc);
 
@@ -431,7 +449,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-35);
+      DEXIT;
+      return -1;
    }
    d->ru_ismrss = atol(pc);
 
@@ -440,7 +459,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-37);
+      DEXIT;
+      return -1;
    }
    d->ru_idrss = atol(pc);
 
@@ -449,7 +469,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-39);
+      DEXIT;
+      return -1;
    }
    d->ru_isrss = atol(pc);
    
@@ -458,7 +479,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-41);
+      DEXIT;
+      return -1;
    }
    d->ru_minflt = atol(pc);
 
@@ -467,7 +489,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-43);
+      DEXIT;
+      return -1;
    }
    d->ru_majflt = atol(pc);
 
@@ -476,7 +499,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-45);
+      DEXIT;
+      return -1;
    }
    d->ru_nswap = atol(pc);
 
@@ -485,7 +509,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-47);
+      DEXIT;
+      return -1;
    }
    d->ru_inblock = atol(pc);
 
@@ -494,7 +519,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-49);
+      DEXIT;
+      return -1;
    }
    d->ru_oublock = atol(pc);
 
@@ -503,7 +529,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-51);
+      DEXIT;
+      return -1;
    }
    d->ru_msgsnd = atol(pc);
 
@@ -512,7 +539,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-53);
+      DEXIT;
+      return -1;
    }
    d->ru_msgrcv = atol(pc);
 
@@ -521,7 +549,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-55);
+      DEXIT;
+      return -1;
    }
    d->ru_nsignals = atol(pc);
 
@@ -530,7 +559,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-57);
+      DEXIT;
+      return -1;
    }
    d->ru_nvcsw = atol(pc);
 
@@ -539,7 +569,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-59);
+      DEXIT;
+      return -1;
    }
    d->ru_nivcsw = atol(pc);
 
@@ -548,7 +579,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      return (-61);
+      DEXIT;
+      return -1;
    }
    d->project = sge_strdup(d->project, pc);
 
@@ -557,7 +589,8 @@ sge_rusage_type *d
     */
    pc = strtok(NULL, ":\n");
    if (!pc) {
-      return (-63);
+      DEXIT;
+      return -1;
    }
    d->department = sge_strdup(d->department, pc);
 
@@ -594,8 +627,7 @@ sge_rusage_type *d
    /* skip pe_taskid */
    pc=strtok(NULL, ":");
 
-   /* skip vmem */
-   pc=strtok(NULL, ":");
+   d->maxvmem = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* ... */ 
 

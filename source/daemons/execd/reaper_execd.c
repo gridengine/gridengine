@@ -325,10 +325,8 @@ lListElem *jr
                                                         JB_ja_tasks, JAT_Type);
   
    if ((ptf_error=ptf_job_complete(cull_job))) {
-      if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-         ERROR((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
-            u32c(jobid), ptf_errstr(ptf_error)));
-      }
+      ERROR((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
+         u32c(jobid), ptf_errstr(ptf_error)));
    } else if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
       lList *to_add = NULL;
 
@@ -390,16 +388,14 @@ int is_array
       pe_task_id_str?pe_task_id_str:"master"));
 
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-      unregister_from_ptf(jobid, jataskid, jr);
-   }
+   unregister_from_ptf(jobid, jataskid, jr);
 #else
    lDelSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage);
    lDelSubStr(jr, UA_name, USAGE_ATTR_MEM, JR_usage);
    lDelSubStr(jr, UA_name, USAGE_ATTR_IO, JR_usage);
    lDelSubStr(jr, UA_name, USAGE_ATTR_IOW, JR_usage);
    lDelSubStr(jr, UA_name, USAGE_ATTR_VMEM, JR_usage);
-   lDelSubStr(jr, UA_name, USAGE_ATTR_HIMEM, JR_usage);
+   lDelSubStr(jr, UA_name, USAGE_ATTR_MAXVMEM, JR_usage);
 #endif
 
 #if 0  
@@ -1618,7 +1614,7 @@ lListElem *jr
    double ru_cpu, pdc_cpu;
    double cpu, r_cpu,
           mem, r_mem,
-          io, iow, r_io, r_iow;
+          io, iow, r_io, r_iow, maxvmem, r_maxvmem;
    double h_vmem = 0, s_vmem = 0;
    int slots;
    char *s;
@@ -1661,6 +1657,9 @@ lListElem *jr
    /* r_iow  = 0 */
    r_iow = iow;
 
+   /* maxvmem */
+   r_maxvmem = maxvmem = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_MAXVMEM, JR_usage))?lGetDouble(uep, UA_value):0);
+
    DPRINTF(("CPU/MEM/IO: M(%f/%f/%f) R(%f/%f/%f) acct: %s stree: %s\n",
          cpu, mem, io, r_cpu, r_mem, r_io,
          acct_reserved_usage?"R":"M", sharetree_reserved_usage?"R":"M"));
@@ -1670,25 +1669,31 @@ lListElem *jr
       add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, r_io);
       add_usage(jr, USAGE_ATTR_IOW_ACCT, NULL, r_iow);
+      if (r_maxvmem != DBL_MAX)
+         add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, r_maxvmem);
    } else {
       add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, cpu);
       add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, mem);
       add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, io);
       add_usage(jr, USAGE_ATTR_IOW_ACCT, NULL, iow);
+      if (maxvmem != DBL_MAX)
+         add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, maxvmem);
    }
 
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-      if (sharetree_reserved_usage) {
-         add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
-         add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
-         add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);
-         add_usage(jr, USAGE_ATTR_IOW, NULL, r_iow);
-      } else {
-         add_usage(jr, USAGE_ATTR_CPU, NULL, cpu);
-         add_usage(jr, USAGE_ATTR_MEM, NULL, mem);
-         add_usage(jr, USAGE_ATTR_IO,  NULL, io);
-         add_usage(jr, USAGE_ATTR_IOW, NULL, iow);
-      }
+   if (sharetree_reserved_usage) {
+      add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
+      add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
+      add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);
+      add_usage(jr, USAGE_ATTR_IOW, NULL, r_iow);
+      if (r_maxvmem!= DBL_MAX)
+         add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, r_maxvmem);
+   } else {
+      add_usage(jr, USAGE_ATTR_CPU, NULL, cpu);
+      add_usage(jr, USAGE_ATTR_MEM, NULL, mem);
+      add_usage(jr, USAGE_ATTR_IO,  NULL, io);
+      add_usage(jr, USAGE_ATTR_IOW, NULL, iow);
+      if (maxvmem!= DBL_MAX)
+         add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, maxvmem);
    }
 
    DEXIT;
@@ -1725,7 +1730,9 @@ lListElem *jr
    char utime[128];
    char stime[128];
    char pdc_usage[1024];
+   char buf0[100], buf1[100];
    u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
+   double ru_cpu = 0.0, ru_maxvmem = 0.0;
    int exit_status = -1, signo = -1;
    const char *q, *h, *u;
    lListElem *ep;
@@ -1771,22 +1778,18 @@ lListElem *jr
    else
       ru_wallclock = 0;
 
-   if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-      double ru_cpu = -1, ru_himem = -1;
-      char buf0[100], buf1[100];
+   if ((ep=lGetSubStr(jr, UA_name, USAGE_ATTR_CPU_ACCT, JR_usage)))
+      ru_cpu = lGetDouble(ep, UA_value);
+   if ((ep=lGetSubStr(jr, UA_name, USAGE_ATTR_MAXVMEM_ACCT, JR_usage)))
+      ru_maxvmem = lGetDouble(ep, UA_value);
 
-      if ((ep=lGetSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage)))
-         ru_cpu = lGetDouble(ep, UA_value);
-      if ((ep=lGetSubStr(jr, UA_name, USAGE_ATTR_HIMEM, JR_usage)))
-         ru_himem = lGetDouble(ep, UA_value);
-
+   {
       sprintf(pdc_usage,
-         " cpu              = %s\n"
+         " CPU              = %s\n"
          " Max vmem         = %s\n",
-            (ru_cpu   == -1) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
-            (ru_himem == -1) ? "NA":resource_descr(ru_himem, TYPE_MEM, buf1));
-   } else
-      pdc_usage[0] = '\0';
+            (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
+            (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1));
+   }
 
    jobid = lGetUlong(jr, JR_job_number);
    taskid = lGetUlong(jr, JR_ja_task_number);

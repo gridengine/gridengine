@@ -1,3 +1,8 @@
+CR-2004-12-02-3: Bugfix:    fix of CR-2004-12-02-2 (end of string character
+                            would not been written when dst_len is reached)
+                 Changed:   utilib
+                 Review:    RH
+
 CR-2004-12-02-2: Bugfix:    replace_params() in utilib did not check dst_len
                             parameter.
                  Changed:   utilib

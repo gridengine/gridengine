@@ -97,7 +97,7 @@ proc submit_hosts_setup {} {
       if { $submit_hosts_use_local_conf != 0 } {
          puts $CHECK_OUTPUT "generating local cluster configuration for host $submit_host"
          set used_arch [resolve_arch $submit_host]
-         create_shell_script $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh "echo" "WRAPPER_SCRIPT ; $CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/rsh \$\*"
+         create_shell_script $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh "echo" "WRAPPER_SCRIPT ; $CHECK_PRODUCT_ROOT/utilbin/$used_arch/rsh \$\*"
          set new_conf(rsh_command) $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh
          set_config new_conf $submit_host 1 
       } else {

@@ -512,10 +512,10 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
 
       /* check for duplicate names */
       next_centry_elem = lFirst(*this_list);
-      while ((centry_elem = next_centry_elem)) {
+      while (centry_elem = next_centry_elem) {
          lListElem *cmp_elem = lFirst(*this_list);
             
-         while(centry_elem != cmp_elem){
+         while((centry_elem != cmp_elem)){
             const char *name1 = NULL;
             const char *name2 = NULL;
             const char *shortcut1 = NULL;
@@ -536,30 +536,32 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
             if (name1 == NULL) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_CENTRY_NULL_NAME_S,
-                                       name1);
-               cont = false;
+                                       MSG_CENTRY_NULL_NAME);
+               DEXIT;
+               return false;
             }                  
             else if (name2 == NULL) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
-                                       MSG_CENTRY_NULL_NAME_S,
-                                       name2);
-               cont = false;
+                                       MSG_CENTRY_NULL_NAME);
+               DEXIT;
+               return false;
             }                  
             else if (shortcut1 == NULL) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_CENTRY_NULL_SHORTCUT_S,
-                                       shortcut1);
-               cont = false;
+                                       name1);
+               DEXIT;
+               return false;
             }                  
             else if (shortcut2 == NULL) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_CENTRY_NULL_SHORTCUT_S,
-                                       shortcut2);
-               cont = false;
+                                       name2);
+               DEXIT;
+               return false;
             }                  
             else if ((strcmp (name1, name2) == 0) ||
                      (strcmp(name1, shortcut2) == 0) ||

@@ -1,3 +1,9 @@
+RH-2004-08-12-0: Bugfix:     Refix Issue 1161
+                 Issue:      1161
+                 Bugtraq:    5080856
+                 Review:     CR
+                 Changed:    qconf
+
 CR-2004-08-11-4: Testsuite: - fixed bug which caused error in qmod reschedule
                               test
                             - fixed tcl bug in issue test 193

@@ -1493,8 +1493,8 @@ proc mail_report { subject body } {
 proc send_mail { address cc subject body } {
 
   global CHECK_TESTSUITE_ROOT CHECK_MAILX_HOST CHECK_OUTPUT
-  global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_USER
-  global write_mail_to_file CHECK_MAIL_OUTPUT_FILE
+  global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_USER CHECK_MAX_ERROR_MAILS
+  global write_mail_to_file CHECK_MAIL_OUTPUT_FILE CHECK_ENABLE_MAIL
 
 
   if { $write_mail_to_file != 0 } {
@@ -1549,14 +1549,24 @@ proc send_mail { address cc subject body } {
      set mail_args "-s \"$new_subject\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
   }
   set mail_output [ start_remote_prog $CHECK_MAILX_HOST $CHECK_USER "mailx" "$mail_args" prg_exit_state 60 0 "" 1 0 ]
-  file delete "$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp" 
 
   if { $prg_exit_state != 0 } {
      puts $CHECK_OUTPUT "--> send_mail - could not send mail:\n$mail_output"
   } else {
      puts $CHECK_OUTPUT "--> send_mail - mail sent to $address"
      incr CHECK_MAILS_SENT 1
+     if { $CHECK_MAILS_SENT == $CHECK_MAX_ERROR_MAILS } {
+        if { [string compare $cc "none"] != 0 } {
+           set mail_args "-s \"max mail count reached\" -c \"$cc\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
+        } else {
+           set mail_args "-s \"max mail count reached\" \"$address\" < \"$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp\""
+        }
+        start_remote_prog $CHECK_MAILX_HOST $CHECK_USER "mailx" "$mail_args" prg_exit_state 60 0 "" 1 0 
+        set CHECK_ENABLE_MAIL 0
+     }  
   }
+  file delete "$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp" 
+
 
 }
 
@@ -10671,11 +10681,6 @@ proc run_tests { path runcompleted } {
 
            # start tests
            foreach check $checks_to_do {
-              if { $CHECK_MAILS_SENT > $CHECK_MAX_ERROR_MAILS } {
-                 mail_report "testsuite - disable mail report" "\nreached max. mail count limit" 
-                 set CHECK_ENABLE_MAIL 0
-              }   
-
               set test_result [ run_test $check $runcompleted ]
 
               switch -- $test_result {

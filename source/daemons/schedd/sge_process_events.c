@@ -609,9 +609,7 @@ int sge_process_all_events(lList *event_list)
 
       case sgeE_JOB_ADD:
          {
-#if 0 /* EB: review with AH */
-            u_long32 is_running;
-#endif
+            u_long32 start, end, step;
 
             if (!n) {
                ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDJOBGOTNONEWJOB_IUU ,
@@ -620,58 +618,26 @@ int sge_process_all_events(lList *event_list)
                goto Error;
             }
 
-#if 0 /* EB: review with AH */ 
-            ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
-            if (ep) {
-               for_each(ja_task, lGetList(ep, JB_ja_tasks)) {
-                  if (lGetUlong(ja_task, JAT_task_number) == intkey2)
-                     break;
-               }
-               if (!ja_task) {
-                  DPRINTF(("Did not find ja task %d in job %d\n", intkey2, intkey));
-                  DEXIT;
-                  goto Error;
-               }
-            } else {
-               u_long32 start, end, step;
-#endif 
-
             if (!lists.job_list)
                lists.job_list = lCreateList("new job list", JB_Type);
             data_list = lGetList(event, ET_new_version);
             ep = lDechainElem(data_list, lFirst(data_list));
 
-#if 0 /* EB: review with AH */
-               /* initialize JB_nrunning */
-               for_each (ja_task, lGetList(ep, JB_ja_tasks)) {
-                  is_running = running_status(lGetUlong(ja_task, JAT_status));
-                  if (is_running && !sge_mode && user_sort)
-                     at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
+            /* put it in sort order into the list */
+            lAppendElem(lists.job_list, ep);
+         
+            /* add job category */
+            sge_add_job_category(ep, lists.acl_list);
+            if (!sge_mode)
+               at_register_job_array(ep);
 
-                  job_log(lGetUlong(ep, JB_job_number), lGetUlong(ja_task, JAT_task_number), "arrived at schedd");
-               }
-#endif
-
-               /* put it in sort order into the list */
-               lAppendElem(lists.job_list, ep);
-            
-               /* add job category */
-               sge_add_job_category(ep, lists.acl_list);
-               if (!sge_mode)
-                  at_register_job_array(ep);
-
-               job_get_submit_task_ids(ep, &start, &end, &step);
-               if (job_is_array(ep)) {
-                  DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", lGetUlong(ep, JB_job_number),
-                     start, end, step));
-               } else {
-                  DPRINTF(("Added job "u32"\n", lGetUlong(ep, JB_job_number)));
-               } 
-
-#if 0 /* EB: review with AH */
-            }
-#endif
-
+            job_get_submit_task_ids(ep, &start, &end, &step);
+            if (job_is_array(ep)) {
+               DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", lGetUlong(ep, JB_job_number),
+                  start, end, step));
+            } else {
+               DPRINTF(("Added job "u32"\n", lGetUlong(ep, JB_job_number)));
+            } 
          }
          break;
 
@@ -1542,27 +1508,16 @@ int sge_process_all_events(lList *event_list)
                         at_dec_job_counter(lGetUlong(ep, JB_priority), 
                                            lGetString(ep, JB_owner), 1);
                      lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
-#if 0 /* EB: review with AH */  
-                     /* delete job category if necessary and delete job */
-                     if (job_get_ja_tasks(ep) == 0) {
-                        sge_delete_job_category(ep);
-                        if (!sge_mode)
-                           at_unregister_job_array(ep);
-                        lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
-                     } 
-#endif
                   }
                } else {
                   job_delete_not_enrolled_ja_task(ep, NULL, intkey2);
                }
-#if 1 /* EB: review with AH */
                if (job_get_ja_tasks(ep) == 0) {
                   sge_delete_job_category(ep);
                   if (!sge_mode)
                      at_unregister_job_array(ep);
                   lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
                }
-#endif 
             }
          }
          break;

@@ -1,4 +1,10 @@
-CR-2003-01-29-0  Testsuite: Troughput performance test: Test connection to
+CR-2003-01-30-0  Testsuite: Throughput performance test: 
+                               - medium test:
+                                 submit 8000 jobs, enable queues at 4000 
+                                 pending jobs
+                               - use execd_params SHARETREE_RESERVED_USAGE=true
+
+CR-2003-01-29-0  Testsuite: Throughput performance test: Test connection to
                             execd host before start to submit jobs (it was 
                             possible to lose the first job submits)
 

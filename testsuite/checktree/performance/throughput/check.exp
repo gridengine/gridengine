@@ -111,19 +111,19 @@ proc init_level {} {
         return 0  
      }
      "100"  { 
-        set end_job_count            10000         ;# number of jobs
+        set end_job_count            8000         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  5000         ;# after witch job, enable queues
+        set enable_queues_job_count  4000         ;# after witch job, enable queues
         set throughput_sharetree     0
         set throughput_subdir        "functional"
         return 0  
      }
      "101"  { 
-        set end_job_count            10000         ;# number of jobs
+        set end_job_count            8000         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  5000         ;# after witch job, enable queues
+        set enable_queues_job_count  4000         ;# after witch job, enable queues
 
         set throughput_sharetree     1
         set throughput_subdir        "functional_sharetree"
@@ -179,6 +179,9 @@ proc throughput_setup_sharetree {} {
    global CHECK_HOST
 
    puts $CHECK_OUTPUT "setup sharetree ..."
+
+   
+
 
    puts $CHECK_OUTPUT "   adding projects ..."
    set prj_setup(name) "project1"
@@ -274,11 +277,20 @@ proc setup_queues {} {
    get_config stored_configuration
    set myconfig(loglevel)         "log_warning"
    set my_schedd_params "PROFILE=1"
-   if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
-      set myconfig(schedd_params)    "$stored_configuration(schedd_params),$my_schedd_params"
-   } else {
-      set myconfig(schedd_params)    "$stored_configuration(schedd_params),$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
+   if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
+      append my_schedd_params ",$stored_configuration(schedd_params)"
    }
+   if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
+      set myconfig(schedd_params)    "$my_schedd_params"
+   } else {
+      set myconfig(schedd_params)    "$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
+   }
+   set my_execd_params "SHARETREE_RESERVED_USAGE=true"
+   if { [string compare "none" $stored_configuration(execd_params)] != 0 } {
+      append my_execd_params ",$stored_configuration(execd_params)"
+   }
+   set myconfig(execd_params) "$my_execd_params"
+
    set_config myconfig
  
    set my_schedd_config(schedule_interval)    "$SCHEDULE_INTERVAL"

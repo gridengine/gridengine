@@ -1,3 +1,8 @@
+CR-2004-01-15-2: Bugfix:    - fixed event client where subscription 
+                              ( abort() error because a used list was not subscribed)
+                            - set synchron receive timeout of communication lib to
+                              2 * event timeout
+
 CR-2004-01-15-1: Enhancem.: - new function: cl_com_set_synchron_receive_timeout()
                             - some code clean up (function names)
 

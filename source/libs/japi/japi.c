@@ -818,8 +818,8 @@ int japi_exit(bool close_session, dstring *diag)
     * This function would then be called here instead.
     */
 #ifdef ENABLE_NGC
-   if (cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0) != NULL) {
-      if ((cl_errno=cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0))!=CL_RETVAL_OK) {
+   if (cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0) != NULL) {
+      if ((cl_errno=cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),0))!=CL_RETVAL_OK) {
          if (cl_errno != CL_RETVAL_OK) {
             sge_dstring_sprintf(diag, "leave_commd() failed: %s", cl_get_error_text(cl_errno));
             DEXIT;
@@ -3593,14 +3593,29 @@ static void *japi_implementation_thread(void *p)
    ec_subscribe(sgeE_JOB_LIST);
    
 {
+   const int job_nm[] = {       
+      JB_job_number, 
+      JB_project, 
+      JB_ja_tasks,
+      JB_ja_structure,
+      JB_ja_n_h_ids,
+      JB_ja_u_h_ids,
+      JB_ja_s_h_ids,
+      JB_ja_o_h_ids,   
+      JB_ja_template,
+      NoName
+   };
    lCondition *where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key );
-   lEnumeration *what = lWhat("%T(%I)", JB_Type, JB_job_number);
+   lEnumeration *what = NULL;/* lWhat("%T(%I)", JB_Type, JB_job_number); */
+
+   what =  lIntVector2What(JB_Type, job_nm); 
 
    lListElem *where_el = lWhereToElem(where);
    lListElem *what_el = lWhatToElem(what);
    
-   ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
+   ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el); 
    
+
    where = lFreeWhere(where);
    what = lFreeWhat(what);
    if (where_el)
@@ -3642,6 +3657,12 @@ static void *japi_implementation_thread(void *p)
    japi_ec_state = JAPI_EC_UP;
       pthread_cond_signal(&japi_ec_state_starting_cv);
    JAPI_UNLOCK_EC_STATE();
+
+#ifdef ENABLE_NGC
+   DPRINTF(("my formal prog name is \"%s\"\n",(char*)uti_state_get_sge_formal_prog_name()));
+   cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),ed_time*2);
+#endif
+
 
    while (!stop_ec) {
       int ec_get_ret;
@@ -3841,7 +3862,7 @@ static void *japi_implementation_thread(void *p)
     * disconnect from commd
     */
 #ifdef ENABLE_NGC
-   if ((cl_errno=cl_commlib_shutdown_handle(cl_com_get_handle((char*)prognames[uti_state_get_mewho()] ,0),0)) != CL_RETVAL_OK) {
+   if ((cl_errno=cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),0)) != CL_RETVAL_OK) {
       DPRINTF(("cl_commlib_shutdown_handle() failed: %s", cl_get_error_text(cl_errno)));
       DEXIT;
       return p;

@@ -1,3 +1,6 @@
+CR-2003-06-30-1: Testsuite: qevent -ts option was not working for sge system
+                 Changed:   qevent
+
 AH-2003-06-30-0: Bugfix:    Fixed bug "sge_schedd dies...".
                  Issue:     545
                  Bugtraq:   4859658

@@ -182,6 +182,12 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
          Global_jobs_registered--;
          fflush(stdout);  
+         if (!feature_is_enabled(FEATURE_SGEEE)) {
+            /* sge has no sgeE_JOB_FINAL_USAGE event */
+            fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id, u32c(timestamp));
+            Global_jobs_running--;
+            fflush(stdout);  
+         }
       }
 
 

@@ -8,8 +8,8 @@
 <td>
 
 <br><br>
-This HOWTO discusses the pro's and con's of different approaches
-for managing resources. It originates from a response on the
+This HOWTO discusses the PROs and CONs of different approaches
+for managing resources. It originates from a response to the
 question &quot;How can I minimize the delay of a load sensor tracking
 software licenses?&quot; asked in the <A HREF="http://supportforum.sun.com/gridengine/">Sun
 SupportForum</A>. The answer was:</P>
@@ -22,7 +22,7 @@ consumption.</P>
 	resources</A> (CR). Floating licenses can easily be managed with a
 	global CR. Node-locked licenses can be managed in an analogous
 	fashion. If you don't consider interactive use of your licenses you
-	usually need only CR's and don't have to bother about load sensors
+	usually need only CRs and don't have to bother about load sensors
 	delay.</P>
 </UL>
 <UL>
@@ -34,23 +34,23 @@ consumption.</P>
 	<P>to achieve also interactive license consumption being gathered by
 	Grid Engine. To make the use of qrsh invisible for your users the
 	qrsh command can be either put in a script wrapper behaving like the
-	original application does or you can use qtcsh to achieve
+	original application, or you can use qtcsh to achieve
 	transparency.</P>
 </UL>
 <UL>
-	<LI><P>If it is not practicable for you to cause interactive
-	license-bound jobs to be started through Grid Engine you can use the
+	<LI><P>If it is not practicable for you to start interactive
+	license-bound jobs through Grid Engine you can use the
 	consumable resource setup as described above in combination with
 	your load sensor for the same resource attribute. Grid Engine uses
 	both information sources and does its best to derive from this how
-	much of the resource is really available. Unfortunately due to the
-	load sensors delay it can't be 100% excluded in this case that batch
-	jobs are dispatched and started though the license has been grasped
-	by an interactive job. However batch jobs can then react on this
-	situation by explicitly triggering a rerun by returning 99 as an
+	much of the resource is really available. Unfortunately, due to the
+	loadsensor's delay, it can't be 100% excluded that batch
+	jobs are dispatched and started although the license has been aquired
+	by an interactive job. In this situation, however, batch jobs can react
+	by explicitly triggering a rerun returning 99 as an
 	exit status (collision detection). Load correction can sometimes
 	help to reduce the number of reruns but it is only a solution, if
-	you have a mostly homogenous job profile.</P>
+	you have an almost homogenous job profile.</P>
 </UL>
 <P>
 </table>

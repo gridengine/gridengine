@@ -285,21 +285,19 @@ lListElem *jatep
       ** is not found in the next statement
       */
       if (general_failure && general_failure!=GFSTATE_JOB) {  
-         dstring *error = NULL;
-         char *buffer = NULL;
+         dstring error = DSTRING_INIT; 
 
-         sge_dstring_init(error, buffer, 100);
-         sge_dstring_sprintf(error, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid));
+         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid));
          
          /* general error -> this queue cant run any job */
          qinstance_state_set_error(queueep, true);
          reporting_create_queue_record(NULL, queueep, timestamp);
-         qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(error));
+         qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
          spool_queueep = true;
          /*ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, 
                 lGetString(queueep, QU_qname), u32c(jobid)));  */
-         ERROR((SGE_EVENT, sge_dstring_get_string(error)));      
-         sge_dstring_free(error);
+         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
+         sge_dstring_free(&error);
       }
       /*
       ** in this case we have to halt all queues on this host
@@ -311,10 +309,7 @@ lListElem *jatep
          if (hep != NULL) {
             lListElem *cqueue = NULL;
             const char *host = lGetHost(hep, EH_name);
-            dstring *error = NULL;
-            char *buffer = NULL;            
-         
-            sge_dstring_init(error, buffer, 100);
+            dstring error = DSTRING_INIT;
          
             for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
                lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -333,10 +328,9 @@ lListElem *jatep
                   qinstance_state_set_error(qinstance, true);
                   reporting_create_queue_record(NULL, qinstance, timestamp);
 
-                  sge_dstring_clear(error);
-                  sge_dstring_sprintf(error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), u32c(jobid), host);
-                  qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(error)); 
-                  ERROR((SGE_EVENT, sge_dstring_get_string(error)));
+                  sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), u32c(jobid), host);
+                  qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error)); 
+                  ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
                   if (qinstance != queueep) {
                      sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
                                      0, 0, lGetString(qinstance, QU_qname), 
@@ -345,7 +339,7 @@ lListElem *jatep
                   }
                }
             }
-            sge_dstring_free(error);
+            sge_dstring_free(&error);
          }
       }
 

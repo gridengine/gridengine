@@ -10,7 +10,7 @@ MD-2004-01-29-0: Bugfix:    - fixed sgeee option in sge_config, distinst
                  Changed:   sge_config, distinst 
 
 SG-2004-01-29-0: Enhancem.: Added qstat -explain E support.
-                 Review:    pending
+                 Review:    JG
                  Changed:   qmaster, qstat
 
 CR-2004-01-29-0: Enhancem.: - host aliases file support (part II)

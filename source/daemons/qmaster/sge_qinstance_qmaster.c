@@ -574,6 +574,7 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
           */
          if (did_something) {
             qinstance_increase_qversion(this_elem);
+            reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
             ret &= sge_event_spool(answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
                                    lGetHost(this_elem, QU_qhostname), NULL,

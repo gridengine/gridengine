@@ -56,7 +56,7 @@
 #define MSG_QMOD_us_OPT_USAGE_J   _MESSAGE(11022, _("unsuspend jobs\n"))
 #define MSG_QMOD_us_OPT_USAGE_Q   _MESSAGE(11023, _("unsuspend queues\n"))
 
-#define MSG_QMOD_err_OPT_ISAGE    _MESSAGE(11024, _("set error statei\n"))
+#define MSG_QMOD_err_OPT_ISAGE    _MESSAGE(11024, _("set error state\n"))
 #define MSG_QMOD_o_OPT_ISAGE      _MESSAGE(11025, _("set orphaned state\n"))
 #define MSG_QMOD_do_OPT_ISAGE     _MESSAGE(11026, _("delete orphaned  state\n"))
 #define MSG_QMOD_u_OPT_ISAGE      _MESSAGE(11027, _("set unknown state\n"))

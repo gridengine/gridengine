@@ -1,3 +1,7 @@
+CR-2002-11-25-0  Testsuite: test binary_submission -> added version check -
+                               check works only for 
+                               sge/ee version > SGE(EE) 5.3p2
+
 CR-2002-11-22-3  Testsuite: qmod - reschedule test:
                                parallel job test should not submit job with
                                -t 1 parameter (-t 1 is now a task job, this

@@ -57,16 +57,18 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
          const lListElem *element = lFirst(host_list);
          int nm = NoName;
 
-         if (object_has_type(element, EH_Type)) {
-            nm = object_get_primary_key(EH_Type);
-         } else if (object_has_type(element, AH_Type)) {
-            nm = object_get_primary_key(AH_Type);
-         } else if (object_has_type(element, SH_Type)) {
-            nm = object_get_primary_key(SH_Type);
-         }
+         if (element != NULL) {
+            if (object_has_type(element, EH_Type)) {
+               nm = object_get_primary_key(EH_Type);
+            } else if (object_has_type(element, AH_Type)) {
+               nm = object_get_primary_key(AH_Type);
+            } else if (object_has_type(element, SH_Type)) {
+               nm = object_get_primary_key(SH_Type);
+            }
 
-         DPRINTF(("%p %d\n", descr, nm));
-         ret = lGetElemHost(host_list, nm, hostname);
+            DPRINTF(("%p %d\n", descr, nm));
+            ret = lGetElemHost(host_list, nm, hostname);
+         }
       }
    } else {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));

@@ -38,8 +38,7 @@
 #include "cull_list.h"
 #include "sge_jobL.h"
 #include "sge_queueL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
+#include "sge_ja_task.h"
 #include "sge_job_jatask.h"
 #include "sge_range.h"
 #include "sge_htable.h"
@@ -51,7 +50,7 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_prog.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
@@ -1520,82 +1519,6 @@ int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
    return ret;
 }                
 
-/****** gdi/job_jatask/jatask_list_print_to_string() **************************
-*  NAME
-*     jatask_list_print_to_string() -- print task id ranges into string 
-*
-*  SYNOPSIS
-*     void jatask_list_print_to_string(const lList *task_list, 
-*                                      dstring *range_string) 
-*
-*  FUNCTION
-*     The ids of all tasks contained in 'task_list' will be printed
-*     into 'range_string'. 
-*
-*  INPUTS
-*     const lList *task_list - JAT_Type list 
-*     dstring *range_string  - dynamic string 
-******************************************************************************/
-void jatask_list_print_to_string(const lList *task_list, dstring *range_string)
-{
-   lListElem *ja_task = NULL;    /* JAT_Type */
-   lList *range_list = NULL;     /* RN_Type */
-
-   DENTER(TOP_LAYER, "jatask_list_print_to_string");
-   for_each(ja_task, task_list) {
-      u_long32 tid = lGetUlong(ja_task, JAT_task_number);
-
-      range_list_insert_id(&range_list, NULL, tid);      
-   } 
-   range_sort_uniq_compress(range_list, NULL); 
-   range_list_print_to_string(range_list, range_string, 0); 
-   range_list = lFreeList(range_list);
-   DEXIT;
-}
-
-/****** gdi/job_jatask/ja_task_list_split_group() *****************************
-*  NAME
-*     ja_task_list_split_group() -- Splits a list into two parts
-*
-*  SYNOPSIS
-*     lList* ja_task_list_split_group(lList **task_list)
-*
-*  FUNCTION
-*     All tasks which have the same state (JAT_status, JAT_state) like
-*     the first element of 'task_list' will be removed from 'task_list'
-*     and returned by this function.
-*
-*  INPUTS
-*     lList **task_list - JAT_Type list
-*
-*  RESULT
-*     lList* - JAT_Type list (elements with equivalent state)
-*
-*  SEE ALSO
-*     gdi/range/RN_Type
-******************************************************************************/
-lList* ja_task_list_split_group(lList **task_list)
-{
-   lList *ret_list = NULL;
-
-   if (task_list && *task_list) {
-      lListElem *first_task = lFirst(*task_list);
-
-      if (first_task) {
-         u_long32 status = lGetUlong(first_task, JAT_status); 
-         u_long32 state = lGetUlong(first_task, JAT_state); 
-         u_long32 hold = lGetUlong(first_task, JAT_hold);
-         lCondition *where = NULL;
-
-         where = lWhere("%T(%I != %u || %I != %u || %I != %u)", JAT_Type,
-                        JAT_status, status, JAT_state, state,
-                        JAT_hold, hold);
-         lSplit(task_list, &ret_list, NULL, where);
-         where = lFreeWhere(where);
-      }
-   }
-   return ret_list;
-}                     
 
 /****** gdi/job_jatask/job_initialize_id_lists() ******************************
 *  NAME

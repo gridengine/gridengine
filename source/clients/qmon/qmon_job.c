@@ -1238,7 +1238,7 @@ XtPointer cld, cad;
       }
 
       if (lGetNumberOfElem(jl) == 1 && job_is_array(job)) {
-         jatask_list_print_to_string(lGetList(selected_job, JB_ja_tasks), 
+         ja_task_list_print_to_string(lGetList(selected_job, JB_ja_tasks), 
                                      &dyn_tasks);
          sge_dstring_append(&dyn_oldtasks, dyn_tasks.s);
       }

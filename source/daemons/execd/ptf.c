@@ -2011,7 +2011,7 @@ int ptf_get_usage(lList **job_usage_list)
          }
 
          if(pe_task_id != NULL) {
-            tmp_pe_task = search_petask_from_jatask(tmp_ja_task, pe_task_id);
+            tmp_pe_task = ja_task_search_pe_task(tmp_ja_task, pe_task_id);
             if(tmp_pe_task == NULL) {
                tmp_pe_task = lAddSubStr(tmp_ja_task, PET_id, pe_task_id, JAT_task_list, PET_Type);
             }

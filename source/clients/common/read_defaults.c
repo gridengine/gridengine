@@ -37,7 +37,7 @@
 
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
+#include "sge_answer.h"
 #include "parse_job_cull.h"
 #include "read_defaults.h"
 #include "setup_path.h"

@@ -36,17 +36,13 @@
 #include <limits.h>
 
 #include "sge_prog.h"
-#include "sge_answerL.h"
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "setup_path.h"
 #include "qm_name.h"
-#include "msg_gdilib.h"
 #include "commlib.h"
 #include "sge_string.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
@@ -55,6 +51,9 @@
 #include "sge_hostname.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 extern long compression_level;
 extern long compression_threshold;

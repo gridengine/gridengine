@@ -60,15 +60,16 @@
 #include "sge_os.h"
 #include "shutdown.h"
 #include "sge_uidgid.h"
-#include "msg_gdilib.h"
 #include "sge_language.h"
-#include "msg_daemons_common.h"
-#include "msg_shadowd.h"
 #include "sge_string.h"
 #include "usage.h"
 #include "sge_io.h"
 #include "sge_spool.h"
 #include "sge_hostname.h"
+
+#include "msg_common.h"
+#include "msg_daemons_common.h"
+#include "msg_shadowd.h"
 
 #ifndef FALSE
 #   define FALSE 0

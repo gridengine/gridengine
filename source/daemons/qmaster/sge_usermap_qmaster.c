@@ -43,7 +43,6 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_conf.h"
 #include "read_write_ume.h"
 #include "sge_log.h"
@@ -57,7 +56,6 @@
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_utilib.h"
 
 #ifndef __SGE_NO_USERMAPPING__
 extern lList *Master_Usermapping_Entry_List;

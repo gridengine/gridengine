@@ -44,7 +44,6 @@
 #include "sge_gdi_intern.h"
 #include "sge_c_gdi.h"
 #include "sge_multiL.h"
-#include "sge_answerL.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -61,7 +60,8 @@
 #ifdef QIDL
 #include "qidl_c_gdi.h"
 #endif
-#include "msg_utilib.h"
+
+#include "msg_common.h"
 #include "msg_gdilib.h"
 
 static int sge_send_receive_gdi_request(int *commlib_error,

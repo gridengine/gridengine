@@ -70,10 +70,13 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_var.c \
          sge_path_alias.c \
          sge_job_jatask.c \
+         sge_ja_task.c \
          sge_pe_task.c \
          sge_suser.c \
          sge_answer.c \
          sge_schedd_conf.c \
+         sge_pe.c \
+         sge_queue.c \
          version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
@@ -212,6 +215,9 @@ sge_path_alias.o: $(GDILIB_DIR)/sge_path_alias.c
 sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_jatask.c
 
+sge_ja_task.o: $(GDILIB_DIR)/sge_ja_task.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ja_task.c
+
 sge_pe_task.o: $(GDILIB_DIR)/sge_pe_task.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_pe_task.c
 
@@ -223,6 +229,12 @@ sge_answer.o: $(GDILIB_DIR)/sge_answer.c
 
 sge_schedd_conf.o: $(GDILIB_DIR)/sge_schedd_conf.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_schedd_conf.c
+
+sge_pe.o: $(GDILIB_DIR)/sge_pe.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_pe.c
+
+sge_queue.o: $(GDILIB_DIR)/sge_queue.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_queue.c
 
 sge_event.o: $(GDILIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c

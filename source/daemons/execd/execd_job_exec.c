@@ -39,10 +39,10 @@
        
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_queueL.h"
 #include "slots_used.h"
 #include "dispatcher.h"
@@ -63,13 +63,14 @@
 #include "setup_path.h"
 #include "jb_now.h"
 #include "sge_security.h"
-#include "msg_common.h"
-#include "msg_execd.h"
 #include "sge_job_jatask.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
-#include "sge_varL.h"
+#include "sge_var.h"
 #include "get_path.h"
+
+#include "msg_common.h"
+#include "msg_execd.h"
 
 extern volatile int jobs_to_start;
 extern lList *Master_Job_List;

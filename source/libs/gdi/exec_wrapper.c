@@ -39,7 +39,6 @@
 #include <errno.h>
 
 #include "sge_confL.h"
-#include "sge_answerL.h"
 #include "sge_answer.h"
 #include "read_object.h"
 #include "sge_gdi_intern.h"
@@ -50,8 +49,9 @@
 #include "setup_path.h"
 #include "sge_uidgid.h"
 #include "sge_prog.h"
+#include "sge_answer.h"
 
-#include "msg_utilib.h"
+#include "msg_common.h"
 
 /* module global variables */
 static lList *task_config = NULL;

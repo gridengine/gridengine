@@ -36,7 +36,7 @@
 
 #include "sge_conf.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sgermon.h"
 #include "sge_log.h"

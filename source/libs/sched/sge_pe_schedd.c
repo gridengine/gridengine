@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_jobL.h"
 #include "sge_hostL.h"
 #include "sgermon.h"

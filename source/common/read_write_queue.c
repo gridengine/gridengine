@@ -39,7 +39,7 @@
 #include "commlib.h"
 #include "sge_gdi_intern.h"
 #include "sge_queueL.h"
-#include "sge_answerL.h"
+#include "sge_answer.h"
 #include "sge_confL.h"
 #include "sge_hostL.h"
 #include "sge_usersetL.h"

@@ -46,7 +46,6 @@
 #include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
 #include "sge_confL.h"
 #include "sge_usageL.h"
 #include "sge_userprjL.h"

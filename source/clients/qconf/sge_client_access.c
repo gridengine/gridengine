@@ -34,7 +34,6 @@
 
 #include "sge_gdi_intern.h"
 #include "sge_usersetL.h"
-#include "sge_answerL.h"
 #include "sge_client_access.h"
 #include "sgermon.h"
 #include "sge_log.h"

@@ -38,7 +38,6 @@
 #include <pwd.h>
 
 #include "sge.h"
-#include "sge_answerL.h"
 #include "sge_usersetL.h"
 #include "sge_userprjL.h"
 #include "sge_gdi_intern.h"
@@ -60,9 +59,6 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_parse_num_par.h"
 #include "setup_path.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "sge_m_event.h"
 #include "sge_string.h"
 #include "reschedule.h"
@@ -72,6 +68,9 @@
 #include "sge_uidgid.h" 
 #include "sge_spool.h"
 #include "sge_answer.h"
+
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    

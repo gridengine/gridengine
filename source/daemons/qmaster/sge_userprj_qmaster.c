@@ -45,7 +45,6 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_conf.h"
 #include "sge_hostL.h"
 #include "sge_usageL.h"
@@ -63,15 +62,14 @@
 #include "sge_log.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
 extern lList *Master_Sharetree_List;
 extern lList *Master_Project_List;
 extern lList *Master_User_List;
-extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
 extern lList *Master_User_List;
 

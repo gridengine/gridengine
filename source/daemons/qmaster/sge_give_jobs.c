@@ -36,10 +36,9 @@
 #include <errno.h>
 #include <time.h>
 
-#include "sge_answerL.h"
 #include "sge_hostL.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_usageL.h"
 #include "sge_queueL.h"
@@ -87,7 +86,7 @@
 #include "mail.h"
 #include "reschedule.h"
 #include "sge_security.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_range.h"
@@ -97,15 +96,15 @@
 #include "sge_io.h"
 #include "sge_hostname.h"
 #include "sge_schedd_conf.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
 #endif
 
-extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
-extern lList *Master_Pe_List;
 extern lList *Master_Complex_List;
 extern lList *Master_Exechost_List;
 
@@ -543,7 +542,7 @@ const char *queue
       }
 
       if (lGetString(jatep, JAT_granted_pe)) {
-         if (!(pe = sge_locate_pe(lGetString(jatep, JAT_granted_pe)))) {
+         if (!(pe = pe_locate(lGetString(jatep, JAT_granted_pe)))) {
             ERROR((SGE_EVENT, MSG_JOB_NOPE4TJ_SUU, 
                   lGetString(jep, JB_pe), u32c(jobid), u32c(jataskid)));
             lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
@@ -1014,7 +1013,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
    /* free granted resources of the parallel environment */
    if (lGetString(ja_task, JAT_granted_pe)) {
       if (incslots) {
-         lListElem *pe = sge_locate_pe(lGetString(ja_task, JAT_granted_pe));
+         lListElem *pe = pe_locate(lGetString(ja_task, JAT_granted_pe));
 
          if (!pe) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S,

@@ -34,19 +34,18 @@
 #include "def.h"
 #include "sge_conf.h"
 #include "sge.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_queueL.h"
 #include "sge_hostL.h"
 #include "sge_time.h"
 #include "sge_log.h"
-#include "sge_answerL.h"
 #include "sge_orderL.h"
 #include "sge_usersetL.h"
 #include "sge_userprjL.h"
 #include "sge_usageL.h"
-#include "sge_schedconfL.h"
+#include "sge_schedd_conf.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_host.h"
@@ -227,7 +226,7 @@ lList **topp  /* ticket orders ptr ptr */
       sge_clear_tags();
 
       if (lGetString(jep, JB_pe)) {
-         pe = sge_locate_pe(or_pe);
+         pe = pe_locate(or_pe);
          if (!pe) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, or_pe));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

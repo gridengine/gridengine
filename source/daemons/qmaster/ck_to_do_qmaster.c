@@ -55,9 +55,8 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 #include "sge_job_queue.h"
+#include "sge_queue.h"
 
-
-extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 
 static void log_consumables(FILE *fp, lList *actual, lList *total); 

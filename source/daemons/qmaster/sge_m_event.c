@@ -1,4 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
+ /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -50,6 +50,7 @@
 #include "sge_security.h"
 #include "sge_answer.h"
 #include "msg_qmaster.h"
+#include "sge_queue.h"
 #ifdef QIDL
 #include "qidl_c_gdi.h"
 #endif
@@ -61,7 +62,7 @@ extern lList *Master_Usermapping_Entry_List;
 
 
 
-/****** Eventclient/Server/--Event_Client_Server *****************************************
+/****** Eventclient/Server/--Event_Client_Server ******************************
 *  NAME
 *     Event Client Interface -- Server Functionality
 *
@@ -139,7 +140,7 @@ static void check_send_new_subscribed_list(const char *old_subscription, const c
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
 
-/****** Eventclient/Server/-Event_Client_Server_Global_Variables *****************************************
+/****** Eventclient/Server/-Event_Client_Server_Global_Variables **************
 *  NAME
 *     -Global_Variables() -- global Variables
 *
@@ -156,7 +157,6 @@ static void check_send_new_subscribed_list(const char *old_subscription, const c
 *     extern lList *Master_Operator_List;
 *     extern lList *Master_Pe_List;
 *     extern lList *Master_Project_List;
-*     extern lList *Master_Queue_List;
 *     extern lList *Master_Sched_Config_List;
 *     extern lList *Master_Sharetree_List;
 *     extern lList *Master_Submithost_List;
@@ -185,7 +185,6 @@ extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;
 extern lList *Master_Pe_List;
 extern lList *Master_Project_List;
-extern lList *Master_Queue_List;
 extern lList *Master_Sched_Config_List;
 extern lList *Master_Sharetree_List;
 extern lList *Master_Submithost_List;

@@ -39,8 +39,7 @@
 #include "sge_queueL.h"
 #include "sge_hostL.h"
 #include "sge_userprjL.h"
-#include "sge_peL.h"
-#include "sge_answerL.h"
+#include "sge_pe.h"
 #include "sge_usersetL.h"
 #include "sge_queue_qmaster.h"
 #include "sge_m_event.h"
@@ -54,15 +53,13 @@
 #include "valid_queue_user.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 
-#include "msg_utilib.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-extern lList *Master_Queue_List;
 extern lList *Master_Project_List;
 extern lList *Master_Userset_List;
-extern lList *Master_Pe_List;
 
 extern lList *Master_Userset_List;
 extern lList *Master_Pe_List;

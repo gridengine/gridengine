@@ -39,12 +39,11 @@
 #include "sge_queueL.h"
 #include "symbols.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_stringL.h"
 #include "sge_identL.h"
-#include "sge_answerL.h"
 #include "sge_hostL.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sec.h"
 #include "sge_signal.h"
 #include "sge_prog.h"
@@ -64,8 +63,6 @@
 #include "sge_time.h"
 #include "sge_rangeL.h"
 #include "time_event.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "reschedule.h"
 #include "sge_security.h"
 #include "sge_job_jatask.h"
@@ -74,8 +71,11 @@
 #include "sge_complexL.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_queue.h"
 
-extern lList *Master_Queue_List;
+#include "msg_common.h"
+#include "msg_qmaster.h"
+
 extern lList *Master_Job_List;
 
 
@@ -1330,7 +1330,7 @@ lListElem *qep
             since they are not known to the apropriate execd - we should
             omit signalling in this case to prevent waste of communication bandwith */ 
          if (!(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-             !(pe=sge_locate_pe(pe_name)) /* ||
+             !(pe=pe_locate(pe_name)) /* ||
              ** signal also jobs, that are not slave controlled
              ** master task must be signaled in every case (JG)
              !lGetUlong(pe, PE_control_slaves) */)
@@ -1380,7 +1380,7 @@ lListElem *jatep
       in case of slave controlled jobs */
    if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 || 
          !(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-         !(pe=sge_locate_pe(pe_name)) ||
+         !(pe=pe_locate(pe_name)) ||
          !lGetUlong(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
          if ((mq = sge_locate_queue(qname = lGetString(gdil_ep, JG_qname)))) {

@@ -50,12 +50,12 @@
 #include "sge_qexec.h"
 #include "sge_qexecL.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_stringL.h"
 #include "msg_gdilib.h"
 #include "sge_security.h"
-#include "sge_varL.h"
+#include "sge_var.h"
 
 #include "jb_now.h"
 

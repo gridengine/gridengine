@@ -69,9 +69,10 @@
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "basis_types.h"
-#include "msg_utilib.h"
-#include "msg_execd.h"
 #include "sge_language.h"
+
+#include "msg_common.h"
+#include "msg_execd.h"
 
 #ifdef COMPILE_DC
 #   include "ptf.h"
@@ -91,9 +92,6 @@ char execd_spool_dir[SGE_PATH_MAX];
 lList *execd_config_list = NULL;
 lList *Master_Job_List = NULL;
 lList *Master_Zombie_List = NULL;
-
-/* this pointer is always NULL within execd */
-lList *Master_Pe_List = NULL;
 
 static void execd_exit_func(int i);
 static void execd_register(void);

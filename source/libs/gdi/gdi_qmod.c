@@ -32,7 +32,6 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "gdi_qmod.h"
-#include "sge_answerL.h"
 #include "sgermon.h"
 #include "parse.h"
 #include "msg_gdilib.h"

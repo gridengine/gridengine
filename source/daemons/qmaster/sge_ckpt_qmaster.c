@@ -34,12 +34,11 @@
 
 #include "sge.h"
 #include "def.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_ckptL.h"
 #include "sge_jobL.h"
 #include "sge_queueL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
+#include "sge_ja_task.h"
 #include "sge_usersetL.h"
 #include "sge_ckpt_qmaster.h"
 #include "job_log.h"
@@ -61,7 +60,6 @@
 #include "sge_answer.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
 /* #include "pw_def.h" */

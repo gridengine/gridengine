@@ -37,7 +37,6 @@
 #include "sge_log.h"
 #include "sge_jobL.h"
 #include "sge_queueL.h" 
-#include "msg_utilib.h" 
 
 static void sge_get_states(int nm, char *str, u_long32 op); 
 

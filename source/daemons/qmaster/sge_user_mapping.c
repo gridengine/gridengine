@@ -51,7 +51,6 @@
 #include "sge_usermapL.h"
 #include "commlib.h"
 #include "sge_log.h"
-#include "sge_answerL.h"
 #include "sge_groups.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"

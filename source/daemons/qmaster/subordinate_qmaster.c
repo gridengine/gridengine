@@ -37,7 +37,6 @@
 #include "sge_conf.h"
 #include "sge_jobL.h"
 #include "sge_queueL.h"
-#include "sge_answerL.h"
 #include "slots_used.h"
 #include "sge_sched.h"
 #include "sge_signal.h"
@@ -48,9 +47,7 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
-
-extern lList *Master_Queue_List;
-
+#include "sge_queue.h"
 
 /* ------------------------------------------------
 

@@ -89,9 +89,6 @@
 #include "sge_feature.h"
 #include "sge_user_mapping.h"
 #include "sge_groups.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "sge_language.h"
 #include "sge_bitop.h"
 #include "setup_path.h"
@@ -102,6 +99,9 @@
 #include "sge_spool.h"
 #include "sge_os.h"
 #include "sge_answer.h"
+
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 #ifdef PW
 /* The license key - to be replaced when serialized */
@@ -130,9 +130,7 @@ lList *Master_Job_List                 = NULL;
 lList *Master_Job_Schedd_Info_List     = NULL;
 lList *Master_Manager_List             = NULL;
 lList *Master_Operator_List            = NULL;
-lList *Master_Pe_List                  = NULL;
 lList *Master_Project_List             = NULL;
-lList *Master_Queue_List               = NULL;
 lList *Master_Sched_Config_List        = NULL;
 lList *Master_Sharetree_List           = NULL;
 lList *Master_Submithost_List          = NULL;

@@ -46,7 +46,7 @@
 #include "sge_string.h"
 #include "msg_execd.h"
 #include "sge_job_jatask.h"
-#include "sge_pe_task.h"
+#include "sge_ja_task.h"
 
 lList *jr_list = NULL;
 int flush_jr = 0;
@@ -101,7 +101,7 @@ lListElem *jep
       if (jatep != NULL) { 
          lListElem *petep = NULL;
          if(petaskid != NULL) {
-            petep = search_petask_from_jatask(jatep, petaskid);
+            petep = ja_task_search_pe_task(jatep, petaskid);
          }   
          init_from_job(jr, jep, jatep, petep);
       }

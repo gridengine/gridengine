@@ -39,7 +39,6 @@
 #include "sge_log.h"
 #include "sgermon.h"
 #include "sge_queueL.h"
-#include "sge_answerL.h"
 #include "sge_calendarL.h"
 #include "sge_m_event.h"
 #include "time_event.h"
@@ -51,16 +50,16 @@
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
+
 #ifdef QIDL
    #include "qidl_c_gdi.h"
 #endif
 
 extern lList* Master_Calendar_List;
-extern lList* Master_Queue_List;
 
 
 enum {

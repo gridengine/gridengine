@@ -39,7 +39,6 @@
 
 #include "sge.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
 #include "qmon_prefL.h"
 #include "sge_complexL.h"
 #include "sge_stringL.h"

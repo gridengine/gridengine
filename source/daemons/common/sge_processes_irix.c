@@ -85,7 +85,6 @@ int dummy_processes_irix_c; /* Just for compilers complaining about empty files 
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "basis_types.h"
-#include "msg_utilib.h"
 
 extern void shepherd_trace(char *str);
 

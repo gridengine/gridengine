@@ -35,10 +35,11 @@
 #include "sge_share_tree_nodeL.h"
 #include "sge_jobL.h"
 #include "cull.h"
-#include "msg_schedd.h"
 #include "sge_event.h"
 
-/****** Eventclient/event_text() *************************************************
+#include "msg_gdilib.h"
+
+/****** Eventclient/event_text() **********************************************
 *  NAME
 *     event_text() -- deliver event description
 *
@@ -55,13 +56,11 @@
 *     const char* - pointer to the descriptive string.
 *
 *  NOTES
-*     The result points to a static buffer. Subsequent calls to event_text
-*     will overwrite previous results.
-*
+*     The result points to a static buffer. Subsequent calls to i
+*     event_text will overwrite previous results.
 *******************************************************************************/
-const char *event_text(
-const lListElem *event 
-) {
+const char *event_text(const lListElem *event) 
+{
    static char buffer[1024];
    u_long32 type, intkey, number, intkey2;
    int n=0;

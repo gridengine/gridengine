@@ -37,20 +37,19 @@
        
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
 #include "sge_paL.h"
 #include "sge_path_alias.h"
 #include "sge_log.h"
 #include "resolve_host.h"
 #include "setup_path.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_daemons_common.h"
 #include "sge_string.h" 
 #include "sge_uidgid.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
+
+#include "msg_common.h"
+#include "msg_daemons_common.h"
 
 /****** gdi/path_alias/-PathAlias *********************************************
 *  NAME

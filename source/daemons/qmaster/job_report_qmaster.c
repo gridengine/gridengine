@@ -35,9 +35,9 @@
 #include "sge_log.h"
 #include "sge.h"
 #include "def.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_hostL.h"
 #include "sge_usageL.h"
@@ -252,7 +252,7 @@ sge_pack_buffer *pb
 
                   /* do we expect a pe task report from this host? */
                   if (lGetString(jatep, JAT_granted_pe)
-                        && (pe=sge_locate_pe(lGetString(jatep, JAT_granted_pe)))
+                        && (pe=pe_locate(lGetString(jatep, JAT_granted_pe)))
                         && lGetUlong(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                     
@@ -444,7 +444,7 @@ sge_pack_buffer *pb
             } else {
                lListElem *pe;
                if ( lGetString(jatep, JAT_granted_pe)
-                  && (pe=sge_locate_pe(lGetString(jatep, JAT_granted_pe)))
+                  && (pe=pe_locate(lGetString(jatep, JAT_granted_pe)))
                   && lGetUlong(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                   /* here we get usage of tasks that ran on slave/master execd's 

@@ -46,11 +46,13 @@
 #include "sge_parse_num_par.h"
 #include "sge_static_load.h"
 #include "sge_complex.h"
-#include "msg_schedd.h"
 #include "sge_language.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_schedd_conf.h"
+
+#include "msg_common.h"
+#include "msg_schedd.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 

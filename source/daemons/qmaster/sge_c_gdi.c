@@ -64,13 +64,15 @@
 #include "qmaster.h"
 #include "resolve_host.h"
 #include "sge_user_mapping.h"
-#include "msg_utilib.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
 #include "sge_time.h"  
 #include "version.h"  
 #include "sge_security.h"  
 #include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
+
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -84,12 +86,10 @@ extern lList *Master_Config_List;
 extern lList *Master_Sched_Config_List;
 extern lList *Master_Complex_List;
 extern lList *Master_Job_List;
-extern lList *Master_Queue_List;
 extern lList *Master_Submithost_List;
 extern lList *Master_Adminhost_List;
 extern lList *Master_Exechost_List;
 extern lList *Master_Ckpt_List;
-extern lList *Master_Pe_List;
 extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;
 extern lList *Master_Calendar_List;

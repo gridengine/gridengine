@@ -38,21 +38,7 @@
 
 #include "sge_pe_task.h"
 
-#include "sge_jataskL.h"
 #include "sge_usageL.h"
-
-lListElem *search_petask_from_jatask(const lListElem *jatep, const char *petaskid)
-{
-   if(jatep != NULL) {
-      lList *petasks = lGetList(jatep, JAT_task_list);
-      if(petasks != NULL) {
-         return lGetElemStr(petasks, PET_id, petaskid);
-      }
-   }
-
-   return NULL;
-}
-
 
 /****** gdi/pe_task/pe_task_sum_past_usage() *******************************
 *  NAME

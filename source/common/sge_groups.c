@@ -50,7 +50,6 @@
 #include "sge_groupL.h"
 #include "commlib.h"
 #include "sge_log.h"
-#include "sge_answerL.h"
 #include "sge_answer.h"
 #include "msg_common.h"
 

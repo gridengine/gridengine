@@ -41,7 +41,6 @@
 #include "sge_confL.h"
 #include "sge_usersetL.h"
 #include "sge_userprjL.h"
-#include "sge_answerL.h"
 #include "cull.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"

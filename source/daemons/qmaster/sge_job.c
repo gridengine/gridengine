@@ -48,13 +48,12 @@
 #include "sec.h"
 #include "mail.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_queueL.h"
-#include "sge_answerL.h"
 #include "sge_requestL.h"
 #include "sge_complexL.h"
 #include "sge_ckptL.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_userprjL.h"
 #include "sge_job_refL.h"
 #include "sge_host.h"
@@ -84,10 +83,6 @@
 #include "sge_afsutil.h"
 #include "sge_ulongL.h"
 #include "setup_path.h"
-#include "msg_schedd.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "sge_string.h"
 #include "jb_now.h"
 #include "sge_security.h"
@@ -98,12 +93,14 @@
 #include "sge_suser.h"
 #include "sge_io.h"
 #include "sge_hostname.h"
-#include "sge_varL.h"
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
+#include "sge_queue.h"
 
-extern lList *Master_Queue_List;
+#include "msg_common.h"
+#include "msg_qmaster.h"
+
 extern lList *Master_Exechost_List;
 extern lList *Master_Complex_List;
 extern lList *Master_Project_List;
@@ -113,7 +110,6 @@ extern lList *Master_Sharetree_List;
 extern lList *Master_Job_List;
 extern lList *Master_Job_Schedd_Info_List;
 extern lList *Master_Zombie_List;
-extern lList *Master_Pe_List;
 
 extern int enable_forced_qdel;
 
@@ -356,7 +352,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    pe_name = lGetString(jep, JB_pe);
    if (pe_name) {
       lListElem *pep;
-      pep = sge_match_pe(pe_name);
+      pep = pe_match(pe_name);
       if (!pep) {
          ERROR((SGE_EVENT, MSG_JOB_PEUNKNOWN_S, pe_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -2595,7 +2591,7 @@ int *trigger
 
       DPRINTF(("got new JB_pe\n")); 
       pe_name = lGetString(jep, JB_pe);
-      if (pe_name && !sge_match_pe(pe_name)) {
+      if (pe_name && !pe_match(pe_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
                MSG_OBJ_PE, pe_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -2788,8 +2784,10 @@ static int job_verify_name(const lListElem *job, lList **alpp,
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    } else {
-      /* !!!! maybe we should define a hash table on JB_job_name or JB_owner */
-      /* and use lGetElemStrFirst/Next here */
+      /* 
+       * EB (256): maybe we should define a hash table on JB_job_name 
+       * or JB_owner and use lGetElemStrFirst/Next here 
+       */
       for_each (jep, Master_Job_List) {
          const char *jep_name = lGetString(jep, JB_job_name);
          const char *jep_owner = lGetString(jep, JB_owner);
@@ -2802,7 +2800,8 @@ static int job_verify_name(const lListElem *job, lList **alpp,
                ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU, 
                       job_name, job_descr, u32c(lGetUlong(jep, JB_job_number)), 
                       u32c(succ_jid)));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
+                               ANSWER_QUALITY_ERROR);
                ret = STATUS_EUNKNOWN;
                break;
             }
@@ -3183,7 +3182,7 @@ int *trigger
          /* parallel */
          if ((pe_name=lGetString(jep, JB_pe))) {
             if (!sge_is_pattern(pe_name))
-               pep = sge_locate_pe(pe_name);
+               pep = pe_locate(pe_name);
             else {
                /* use the first matching pe if we got a wildcard -pe requests */
                for_each (pep, Master_Pe_List) {

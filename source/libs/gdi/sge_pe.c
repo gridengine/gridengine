@@ -29,66 +29,64 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <string.h>
 
-#include "sge_all_listsL.h"
-#include "sge_host.h"
-#include "sge_m_event.h"
-#include "commlib.h"
+#include <fnmatch.h>
+
 #include "sgermon.h"
 #include "sge_log.h"
+#include "def.h"   
+#include "cull_list.h"
 
-#include "msg_common.h"
+#include "sge_pe.h"
 
-extern lList *Master_Exechost_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Submithost_List;
+lList *Master_Pe_List = NULL;
 
+/****** gdi/pe/pe_match() *****************************************************
+*  NAME
+*     pe_match() -- Find a PE matching a wildcard expression 
+*
+*  SYNOPSIS
+*     lListElem* pe_match(const char *wildcard) 
+*
+*  FUNCTION
+*     Try to find a PE that matches the given "wildcard" expression.
+*
+*  INPUTS
+*     const char *wildcard - Wildcard expression 
+*
+*  RESULT
+*     lListElem* - PE_Type object or NULL
+*******************************************************************************/
+lListElem *pe_match(const char *wildcard) 
+{
+   lListElem *pep;
 
-/* ------------------------------------------------------------ */
-
-lListElem *sge_locate_host(
-const char *unique,
-u_long32 target 
-) {
-   lListElem *ep = NULL;
-   lList *host_list = NULL;
-   int nm = 0;
-   lDescr *type = NULL;
-
-   DENTER(CULL_LAYER, "sge_locate_host");
-
-   if (!unique) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      DEXIT;
-      return NULL;
+   for_each (pep, Master_Pe_List) {
+      if (!fnmatch(wildcard, lGetString(pep, PE_name), 0)) {
+         return pep;
+      }
    }
-
-   switch ( target ) {
-   case SGE_EXECHOST_LIST:
-      host_list = Master_Exechost_List;
-      nm = EH_name;
-      type = EH_Type;
-      break;
-   case SGE_ADMINHOST_LIST:
-      host_list = Master_Adminhost_List;
-      nm = AH_name;
-      type = AH_Type;
-      break;
-   case SGE_SUBMITHOST_LIST:
-      host_list = Master_Submithost_List;
-      nm = SH_name;
-      type = SH_Type;
-      break;
-   default:
-     DEXIT;
-     return NULL;
-   }
-
-   ep = lGetElemHost(host_list, nm, unique);
-
-   DEXIT;
-   return ep;
+   return NULL;
 }
 
+/****** gdi/pe/pe_locate() ****************************************************
+*  NAME
+*     pe_locate() -- Locate a certain PE 
+*
+*  SYNOPSIS
+*     lListElem* pe_locate(const char *pe_name) 
+*
+*  FUNCTION
+*     Locate the PE with the name "pe_name". 
+*
+*  INPUTS
+*     const char *pe_name - PE name 
+*
+*  RESULT
+*     lListElem* - PE_Type object or NULL
+*******************************************************************************/
+lListElem *pe_locate(const char *pe_name) 
+{
+   return lGetElemStr(Master_Pe_List, PE_name, pe_name);
+}
 

@@ -38,7 +38,7 @@
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "sge_schedconfL.h"
+#include "sge_schedd_conf.h"
 #include "sge_jobL.h"
 #include "sge_userprjL.h"
 #include "sge_share_tree_nodeL.h"

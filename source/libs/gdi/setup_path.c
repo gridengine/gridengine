@@ -39,16 +39,15 @@
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "msg_utilib.h"
-#include "msg_gdilib.h"
-#include "msg_common.h"
 #include "setup_path.h"
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+
+#include "msg_gdilib.h"
+#include "msg_common.h"
 
 sge_path_type path = { NULL };
 

@@ -49,7 +49,6 @@
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 
-#include "msg_utilib.h"
 #include "msg_common.h"
 #include "msg_commd.h"
 

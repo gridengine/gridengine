@@ -34,7 +34,7 @@
 
 #include "sge_job_reportL.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_usageL.h"
 #include "sge_rusage.h"
 #include "sgermon.h"

@@ -34,7 +34,6 @@
 #include <Xmt/Dialogs.h>
 
 #include "sge_gdi.h"
-#include "sge_answerL.h"
 #include "sge_complexL.h"
 #include "sge_hostL.h"
 #include "sge_stringL.h"

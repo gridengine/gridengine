@@ -1,3 +1,9 @@
+EB-2002-06-23-0: Cleanup:   Moved/renamed functions
+                            Moved messages into correct msg_* files
+                            Added ADOC comments
+                 Issue:     #278, #281, #282
+                            
+
 EB-2002-06-17-0: Enhancem.: Now it is possible to address pe tasks with
                             the spooling functions for jobs.
 

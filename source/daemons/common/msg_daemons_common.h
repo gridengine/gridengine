@@ -145,5 +145,10 @@
 #define MSG_CONF_REFVAR_S             _("referenced variable %20.20s... expands max. length")
 #define MSG_CONF_UNKNOWNVAR_S         _("unknown variable \"%s\"")
 
+/* 
+ * sge_category.c
+ */ 
+#define MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U  _("failed building category string for job "U32CFormat"\n")
+
 #endif /* MSG_DAEMONS_COMMON_H */
 

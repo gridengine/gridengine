@@ -40,7 +40,7 @@
 #include "sge.h"
 #include "sge_gdi.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_hostL.h"
 #include "sge_complexL.h"
 #include "sge_answer.h"

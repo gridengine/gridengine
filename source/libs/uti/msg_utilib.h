@@ -34,15 +34,6 @@
 
 #include "basis_types.h"
 
-/*
-** sge_text() messages (more than once used)
-*/
-#define MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S  _(""SFN" is already running\n")
-#define MSG_SGETEXT_NOCOMMD                     _("can't connect commd.\n")
-#define MSG_SGETEXT_NOMEM                       _("out of memory\n")
-#define MSG_SGETEXT_CANT_OPEN_SS                      _("can't open "SFQ" ("SFN")\n")
-#define MSG_SGETEXT_NULLPTRPASSED_S             _("NULL ptr passed to "SFN"()\n")
-#define MSG_SGETEXT_MISSINGCULLFIELD_SS         _("missing cull field "SFQ" in "SFN"()\n")
 
 /* 
 ** utilib/sge_afsutil.c
@@ -178,7 +169,6 @@
 */ 
 #define MSG_POINTER_SETADMINUSERNAMEFAILED      _("set_admin_username() with zero length username")
 #define MSG_SYSTEM_ADMINUSERNOTEXIST_S          _("admin_user "SFQ" does not exist")
-#define MSG_SYSTEM_CANTRUNASCALLINGUSER         _("cannot run as calling user")
 #define MSG_SWITCH_USER_NOT_INITIALIZED         _("Module 'sge_switch_user' not initialized")
 #define MSG_SWITCH_USER_NOT_ROOT                _("User 'root' did not start the application\n")
 
@@ -198,7 +188,6 @@
 */ 
 #define MSG_SYSTEM_GETPWUIDFAILED_US               _("getpwuid("pid_t_fmt") failed: "SFN"\n")
 #define MSG_SYSTEM_GETGRGIDFAILED_US               _("getgrgid("pid_t_fmt") failed: "SFN"\n")
-#define MSG_SYSTEM_GETPWNAMFAILED_S   _("can't get password entry for user "SFQ". Either the user does not exist or NIS error!") 
 #define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _("tried to change uid/gid without being root")
 #define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _("gid of user "SFN" ("gid_t_fmt") less than minimum allowed in conf (%d)")
 #define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _("uid of user "SFN" ("uid_t_fmt") less than minimum allowed in conf (%d)")

@@ -39,13 +39,12 @@
 #include "sge_time.h"
 #include "sge_feature.h"
 #include "sge_hostL.h"
-#include "sge_answerL.h"
 #include "sge_load_reportL.h"
 #include "sge_usersetL.h"
 #include "sge_queueL.h"
 #include "sge_identL.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_userprjL.h"
 #include "commlib.h"
 #include "sge_host.h"
@@ -81,11 +80,11 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
-extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 extern lList *Master_Exechost_List;
 extern lList *Master_Adminhost_List;

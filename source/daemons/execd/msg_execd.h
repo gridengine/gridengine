@@ -46,7 +46,6 @@
 */
 #define MSG_FILE_RECURSIVERMDIR_SS       _("recursive rmdir(%s): %s\n")
 
-
 /*
 ** setup_execd.c
 */
@@ -55,9 +54,7 @@
 #define MSG_DELAYED    _("delayed")
 #define MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS    _("%s registering job \""U32CFormat"\" task %s at ptf during startup")
 #define MSG_ANSWER_KEEPINGCHANNELFDXOPEN_I    _("keeping channel fd #%d open\n")
-
-
-
+#define MSG_SGETEXT_NOCOMMD                     _("can't connect commd.\n")
 
 /*
 ** reaper_execd.c

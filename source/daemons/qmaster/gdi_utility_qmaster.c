@@ -36,7 +36,6 @@
 #include "sge_string.h"
 #include "sge_complex.h"
 #include "sge_log.h"
-#include "sge_answerL.h"
 #include "sge_complexL.h"
 #include "gdi_utility_qmaster.h"
 #include "sge_gdi_intern.h"

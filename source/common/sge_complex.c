@@ -37,7 +37,6 @@
 #include "sge_gdi_intern.h"
 #include "resolve_host.h"
 #include "sge_complexL.h"
-#include "sge_answerL.h"
 #include "sge_sched.h"
 #include "cull.h"
 #include "commlib.h"

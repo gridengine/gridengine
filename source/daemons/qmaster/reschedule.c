@@ -58,8 +58,8 @@
 #include "sge_job_jatask.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 
-extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 extern lList *Master_Exechost_List;
 

@@ -37,7 +37,6 @@
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "parse_qsubL.h"
-#include "sge_answerL.h"
 #include "sge_resource.h"
 #include "sge_parse_date_time.h"
 #include "parse_job_cull.h"

@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_orderL.h"
 #include "sge_orders.h"
 #include "interactive_sched.h"

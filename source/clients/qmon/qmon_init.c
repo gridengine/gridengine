@@ -67,10 +67,10 @@
 #include "qmon_util.h"
 #include "sge_log.h"
 #include "sge_unistd.h"
-#include "msg_clients_common.h"
-#include "msg_gdilib.h"
-#include "msg_common.h"
 #include "qm_name.h"
+
+#include "msg_clients_common.h"
+#include "msg_common.h"
 
 static String icon_names[] = {
    "21cal",

@@ -34,7 +34,7 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_jobL.h"
 #include "sge_queueL.h"
 #include "sge_ckptL.h"
@@ -50,8 +50,8 @@
 #include "sge_sched.h"            /*added to support SGE*/
 #include "schedd_conf.h"      /*added to support SGE*/
 #include "schedd_message.h"
-#include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "cull_lerrnoP.h"
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"

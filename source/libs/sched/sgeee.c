@@ -61,9 +61,9 @@
 
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_schedconfL.h"
+#include "sge_schedd_conf.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_userprjL.h"
 #include "sge_share_tree_nodeL.h"
 /* #include "sge_sharetree.h" */

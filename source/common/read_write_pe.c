@@ -36,9 +36,9 @@
 #include <unistd.h>
 
 #include "sge.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_confL.h"
-#include "sge_answerL.h"
+#include "sge_answer.h"
 #include "sge_usersetL.h"
 #include "read_write_pe.h"
 #include "sge_string.h"

@@ -1,5 +1,3 @@
-#ifndef __SGE_VAR_H
-#define __SGE_VAR_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,37 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_jobL.h"
-#include "sge_varL.h"
+#include "sgermon.h"
+#include "sge_log.h"
+#include "def.h"
+#include "cull_list.h"
+#include "sge_queue.h"
 
-#define VAR_PREFIX "__SGE_PREFIX__"
-#define VAR_COMPLEX_PREFIX "SGE_COMPLEX_"
+lList *Master_Queue_List = NULL;
 
-void var_list_dump_to_file(const lList *varl, FILE *file);
-
-void var_list_copy_complex_vars_and_value(lList *varl,
-                                          const lList* src_varl,
-                                          const lList* cplx_list);
-
-void var_list_copy_prefix_vars(lList *varl, 
-                               const lList *src_varl,
-                               const char *prefix, 
-                               const char *new_prefix);
-
-const char* var_list_get_string(lList *varl, const char *name);
-
-void var_list_set_string(lList **varl, const char *name, const char *value);
-
-void var_list_set_int(lList **varl, const char *name, int value);
-
-void var_list_set_u32(lList **varl, const char *name, u_long32 value);
-
-void var_list_set_sharedlib_path(lList **varl);
-
-void var_list_remove_prefix_vars(lList *varl, const char *prefix);
-
-void var_list_split_prefix_vars(lList *varl,
-                                lList **pefix_vars,
-                                const char *prefix);
-
-#endif /* __SGE_VAR_H */

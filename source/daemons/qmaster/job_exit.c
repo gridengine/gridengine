@@ -36,7 +36,7 @@
 #include "def.h"
 #include "sge.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_hostL.h"
 #include "sge_queueL.h"
 #include "sge_job_report.h"
@@ -68,8 +68,8 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_hostname.h"
+#include "sge_queue.h"
 
-extern lList *Master_Queue_List;
 extern lList *Master_Userset_List;
 
 /************************************************************************

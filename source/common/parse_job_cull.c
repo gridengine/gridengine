@@ -40,8 +40,7 @@
 #include "symbols.h"
 #include "sge_gdi_intern.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
+#include "sge_ja_task.h"
 #include "sge_rangeL.h"
 #include "sge_string.h"
 #include "sge_time.h"
@@ -66,7 +65,6 @@
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_prog.h"
-#include "sge_varL.h"
 #include "sge_var.h"
 #include "sge_answer.h"
 

@@ -41,7 +41,8 @@
 #include "sge_prog.h"
 #include "sge_options.h"
 #include "sge_unistd.h"
-#include "msg_gdilib.h"
+
+#include "msg_common.h"
 
 static void print_marked(FILE *fp);
 static char* get_argument_syntax(int nr);

@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/job_jatask/PET_Type ************************************************
+/****** gdi/pe_task/--PET_Type ************************************************
 *  NAME
 *     PET_Type - CULL pe task element 
 *
@@ -191,7 +191,7 @@ NAMEEND
 
 #define PETS sizeof(PETN)/sizeof(char*)
 
-/****** gdi/job_jatask/PETR_Type ************************************************
+/****** gdi/pe_task/--PETR_Type ***********************************************
 *  NAME
 *     PET_Type - CULL pe task request element 
 *

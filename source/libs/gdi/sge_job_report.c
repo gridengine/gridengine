@@ -37,8 +37,8 @@
 #include "sge_usageL.h"
 #include "sge_job_report.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 
 void print_usage(
 FILE *fp,

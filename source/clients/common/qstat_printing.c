@@ -607,7 +607,7 @@ u_long32 group_opt
          lList *task_group = NULL;
 
          while ((task_group = ja_task_list_split_group(&ja_task_list))) {
-            jatask_list_print_to_string(task_group, &dyn_task_str);
+            ja_task_list_print_to_string(task_group, &dyn_task_str);
 
             sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, 
                           &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");

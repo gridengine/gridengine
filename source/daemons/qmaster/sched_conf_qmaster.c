@@ -35,9 +35,8 @@
 #include <errno.h>
 
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_confL.h"
-#include "sge_schedconfL.h"
+#include "sge_schedd_conf.h"
 #include "sge_usageL.h"
 #include "sge_hostL.h"
 #include "sge_complexL.h"
@@ -48,7 +47,7 @@
 #include "sge_log.h"
 #include "setup_path.h"
 #include "sge_answer.h"
-#include "msg_utilib.h"
+
 #include "msg_qmaster.h"
 #include "msg_common.h"
 

@@ -40,10 +40,10 @@
 #include "qm_name.h"
 #include "pack.h"
 #include "sge_feature.h"
-#include "msg_utilib.h"
-#include "msg_gdilib.h"
 #include "sge_security.h"
 #include "sge_unistd.h"
+
+#include "msg_gdilib.h"
 
 static void sge_log_commd_state_transition(int cl_err);
 enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};

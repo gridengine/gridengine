@@ -33,7 +33,7 @@
 
 #include "sge.h"
 #include "def.h"
-#include "sge_answerL.h"
+#include "basis_types.h"
 #include "job_log.h"
 #include "sge_queue_qmaster.h"
 #include "sge_host_qmaster.h"
@@ -43,11 +43,12 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "gdi_utility_qmaster.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
+#include "sge_answer.h"
 #include "sge_feature.h"         
-#include "msg_gdilib.h"
 #include "version.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 #define FEATURESET_DEFAULT FEATURESET_SGE
 

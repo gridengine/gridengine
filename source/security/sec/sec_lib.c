@@ -54,7 +54,6 @@
 #include "sge_unistd.h"
 
 #include "msg_sec.h"
-#include "msg_gdilib.h"
 #include "msg_utilib.h"
 
 #include "sec_crypto.h"          /* lib protos      */

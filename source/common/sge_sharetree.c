@@ -42,7 +42,6 @@
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_confL.h"
 #include "sge_usageL.h"
 #include "sge_share_tree_nodeL.h"

@@ -1256,7 +1256,7 @@ XtPointer cld, cad;
          } 
          updateJobList();
 /*          strcpy(task_str, ""); */
-/*          jatask_list_print_to_string(lGetList(lFirst(lp), JB_ja_tasks), task_str); */
+/*          ja_task_list_print_to_string(lGetList(lFirst(lp), JB_ja_tasks), task_str); */
 /*          XmtMsgLinePrintf(submit_message, "Job %d (%s) submitted",  */
 /*                 (int)lGetUlong(lFirst(lp), JB_job_number), task_str); */
          XmtMsgLinePrintf(submit_message, "Job %d submitted", 
@@ -1698,7 +1698,7 @@ char *prefix
       data->job_script = NULL;
 
    if (job_is_array(jep))
-      jatask_list_print_to_string(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
+      ja_task_list_print_to_string(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
    tmp_string = sge_dstring_get_string(&dyn_job_tasks);
    if (tmp_string && tmp_string[0] != '\0')
       data->job_tasks = XtNewString(tmp_string);

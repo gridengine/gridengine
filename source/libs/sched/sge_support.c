@@ -57,7 +57,7 @@
 #include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_schedconfL.h"
+#include "sge_schedd_conf.h"
 #include "sge_jobL.h"
 #include "sge_userprjL.h"
 #include "sge_share_tree_nodeL.h"

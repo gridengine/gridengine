@@ -35,12 +35,11 @@
 
 #include "basis_types.h"
 
+#define MSG_SGETEXT_MISSINGCULLFIELD_SS         _("missing cull field "SFQ" in "SFN"()\n")
 #define MSG_SGETEXT_CANTSPOOL_SS                _("qmaster is unable to spool "SFN" "SFQ"\n")
 #define MSG_OBJ_JOBS    _("jobs")
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS       _("cannot resolve %s name "SFQ": %s")
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS       _("cannot resolve %s name "SFQ)
-
-
 
 /*
 ** sge_ckptobj.c

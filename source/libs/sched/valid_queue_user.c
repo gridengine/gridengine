@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sge_answerL.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"

@@ -49,8 +49,8 @@
 #include "symbols.h"
 #include "config.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_job_report.h"
 #include "sge_os.h"
 #include "sge_log.h"
@@ -91,7 +91,6 @@
 #include "sge_job_jatask.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
-#include "sge_varL.h"
 #include "sge_var.h"
 
 #ifdef COMPILE_DC

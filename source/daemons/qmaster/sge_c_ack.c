@@ -34,7 +34,7 @@
 #include "sge.h"
 #include "sge_jobL.h"
 #include "sge_job.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_queueL.h"
 #include "sge_give_jobs.h"
 #include "sge_m_event.h"
@@ -47,8 +47,8 @@
 #include "time_event.h"
 #include "msg_qmaster.h"
 #include "sge_job_jatask.h"
+#include "sge_queue.h"
 
-extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);

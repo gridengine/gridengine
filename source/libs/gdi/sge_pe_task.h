@@ -36,10 +36,12 @@
 
 #define PE_TASK_PAST_USAGE_CONTAINER "past_usage"
 
-lListElem *search_petask_from_jatask(const lListElem *jatep, const char *petaskid);
+lListElem *pe_task_sum_past_usage(lListElem *container, 
+                                  const lListElem *pe_task);
 
-lListElem *pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task);
 lListElem *pe_task_sum_past_usage_all(lList *pe_task_list);
-lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task);
+
+lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, 
+                                       const lListElem *pe_task);
 
 #endif /* __SGE_PETASK_H */

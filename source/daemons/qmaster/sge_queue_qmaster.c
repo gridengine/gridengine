@@ -37,14 +37,13 @@
 #include "def.h"
 #include "commlib.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_hostL.h"
 #include "sge_complexL.h"
 #include "sge_queueL.h"
-#include "sge_answerL.h"
 #include "sge_requestL.h"
 #include "sge_calendarL.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_userprjL.h"
 #include "sge_usersetL.h"
 #include "sge_peL.h"
@@ -82,8 +81,9 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
 #ifdef QIDL
@@ -97,9 +97,7 @@ static void clear_unknown(lListElem *qep);
 
 static u_long32 sge_get_queue_number(void);
 
-extern lList *Master_Queue_List;
 extern lList *Master_Ckpt_List;
-extern lList *Master_Pe_List;
 
 extern lList *Master_Complex_List;
 extern lList *Master_Job_List;

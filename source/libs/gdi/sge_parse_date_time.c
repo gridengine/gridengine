@@ -34,7 +34,6 @@
 
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_parse_date_time.h"
 #include "sge_string.h"
 #include "sge_log.h"

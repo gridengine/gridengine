@@ -34,7 +34,7 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "gdi_checkpermissions.h"
-#include "sge_answerL.h"
+#include "sge_answer.h"
 #include "sge_permissionL.h"
 #include "sgermon.h"
 

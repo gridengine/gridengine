@@ -102,6 +102,8 @@
 #include "sge_io.h"
 #include "sge_sharetree_qmaster.h"
 #include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;
@@ -109,13 +111,11 @@ extern lList *Master_Userset_List;
 extern lList *Master_Sched_Config_List;
 extern lList *Master_User_List;
 extern lList *Master_Config_List;
-extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 extern lList *Master_Adminhost_List;
 extern lList *Master_Submithost_List;
 extern lList *Master_Exechost_List;
 extern lList *Master_Ckpt_List;
-extern lList *Master_Pe_List;
 extern lList *Master_Manager_List;
 extern lList *Master_Operator_List;
 extern lList *Master_Calendar_List;

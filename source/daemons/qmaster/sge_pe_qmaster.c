@@ -35,10 +35,9 @@
 
 #include "sge.h"
 #include "def.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
+#include "sge_ja_task.h"
 #include "sge_usersetL.h"
 #include "sge_pe_qmaster.h"
 #include "job_log.h"
@@ -56,11 +55,10 @@
 #include "gdi_utility_qmaster.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
-extern lList *Master_Pe_List;
 extern lList *Master_Userset_List;
 extern lList *Master_Job_List;
 
@@ -259,7 +257,7 @@ char *rhost
       return STATUS_EUNKNOWN;
    }
 
-   if ((ep=sge_locate_pe(pe))==NULL) {
+   if ((ep=pe_locate(pe))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -285,24 +283,6 @@ char *rhost
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
-}
-
-/* try to find a pe that matches with 
-   requested wildcard expression for pe */ 
-lListElem *sge_match_pe(
-const char *wildcard 
-) {
-   lListElem *pep;
-   for_each (pep, Master_Pe_List)
-      if (!fnmatch(wildcard, lGetString(pep, PE_name), 0))
-         return pep;
-   return NULL;
-}
-
-lListElem *sge_locate_pe(
-const char *pe_name 
-) {
-   return lGetElemStr(Master_Pe_List, PE_name, pe_name);
 }
 
 void debit_all_jobs_from_pes(

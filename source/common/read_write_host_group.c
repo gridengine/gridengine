@@ -41,7 +41,6 @@
 #include "sge_groupL.h"
 #include "sge_stringL.h"
 #include "sge_confL.h"
-#include "sge_answerL.h"
 #include "read_write_host_group.h"
 #include "sge_string.h"
 #include "sge_log.h"

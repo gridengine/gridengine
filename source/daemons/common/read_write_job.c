@@ -38,7 +38,7 @@
 #include "sge.h"
 #include "sge_log.h"
 #include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sgermon.h"
 #include "cull_file.h"
 #include "cull_list.h"
@@ -48,7 +48,7 @@
 #include "sge_stringL.h"
 #include "sge_job.h"
 #include "sge_job_jatask.h"
-#include "sge_answerL.h"
+#include "sge_answer.h"
 #include "msg_qmaster.h"
 #include "msg_common.h"
 #include "sge_suser.h"
@@ -56,6 +56,7 @@
 #include "sge_unistd.h"
 #include "sge_job.h"
 #include "sge_pe_task.h"
+#include "sge_pe.h"
 
 extern lList *Master_Job_List;
 
@@ -93,7 +94,6 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
 
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;
-extern lList *Master_Pe_List;
 
 /* Here we cache the path of the last task spool dir that has been created.
    In case a task spool dir is removed the cache is no longer a proof of the

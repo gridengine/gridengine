@@ -39,13 +39,12 @@
 #include "sge_manop.h"
 #include "read_write_manop.h"
 #include "sge_manopL.h"
-#include "sge_answerL.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"
 #include "sge_answer.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
 extern lList *Master_Manager_List;

@@ -38,7 +38,6 @@
 #include "symbols.h"
 #include "sge_gdi_intern.h"
 #include "sge_jobL.h"
-#include "sge_answerL.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
@@ -61,7 +60,6 @@
 #include "jb_now.h"
 #include "sge_stdlib.h"
 #include "sge_prog.h"
-#include "sge_varL.h"
 #include "sge_var.h"
 #include "sge_answer.h"
 

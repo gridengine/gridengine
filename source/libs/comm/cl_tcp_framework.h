@@ -46,6 +46,8 @@ int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd);
 int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port);
 int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port);
 int cl_com_tcp_set_connect_port(cl_com_connection_t* connection, int port);
+int cl_com_tcp_get_client_socket_in_port(cl_com_connection_t* connection, int* port);
+
 
 int cl_com_tcp_setup_connection(cl_com_connection_t** connection, 
                                 int server_port, 

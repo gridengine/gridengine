@@ -176,8 +176,6 @@ extern int main(int argc, char** argv)
   }
 
   
-  cl_com_set_debug_client_mode(handle, CL_DEBUG_CLIENT_ON);
-
   cl_com_get_service_port(handle,&i), 
 
 

@@ -46,8 +46,47 @@ void sighandler_client(int sig);
 static int pipe_signal = 0;
 static int hup_signal = 0;
 static int do_shutdown = 0;
-
 static cl_com_handle_t* handle = NULL; 
+
+#define ARGUMENT_COUNT 13
+char*  cl_values[ARGUMENT_COUNT];
+int    cl_show[]         = {1,1,1,1,1,1,1,1,1,1,1,1 ,1};
+int    cl_alignment[]    = {1,1,1,1,1,1,1,1,1,1,1,0 ,0};
+int    cl_column_width[] = {0,0,0,0,0,0,0,0,0,0,0,40,10};
+char*  cl_description[] = {  
+                       "time of debug output creation",
+                       "endpoint service name where debug client is connected",
+                       "message direction",
+                       "name of participating communication endpoint",
+                       "message data format",
+                       "message acknowledge type",
+                       "message tag information",
+                       "message id",
+                       "message response id",
+                       "message length",
+                       "time when message was sent/received",
+                       "commlib xml protocol output",
+                       "additional information"
+};
+
+char* cl_names[] = {
+                       "time",
+                       "local",
+                       "d.",
+                       "remote",
+                       "format",
+                       "ack type",
+                       "msg tag",
+                       "msg id",
+                       "msg rid",
+                       "msg len",
+                       "msg time",
+                       "msg xml protocol dump",
+                       "info"
+};
+   
+
+
 
 void sighandler_client(
 int sig 
@@ -67,17 +106,108 @@ int sig
    do_shutdown = 1;
 }
 
+void printf_fill_up(char* name, int length, char c, int before) {
+   int n = strlen(name);
+   int i;
+
+   if (before == 0) {
+      printf("%c%s%c",c,name,c);
+   }
+   for (i=0;i<(length-n);i++) {
+      printf("%c",c);
+   }
+   if (before != 0) {
+      printf("%c%s%c",c,name,c);
+   }
+
+}
+
+void convert_time(char* buffer, char* dest) {
+   time_t i;
+   char* help;
+   char* help2;
+#ifdef HAS_LOCALTIME_R
+   struct tm tm_buffer;
+#endif
+   struct tm *tm;
+   help=strtok(buffer, ".");
+   help2=strtok(NULL,".");
+   i = atoi(help);
+#ifndef HAS_LOCALTIME_R
+   tm = localtime(&i);
+#else
+   tm = (struct tm *)localtime_r(&i, &tm_buffer);
+#endif
+
+#if 0
+   sprintf(dest, "%04d%02d%02d%02d%02d.%02d",
+           tm->tm_year+1900, tm->tm_mon + 1, tm->tm_mday,
+           tm->tm_hour, tm->tm_min, tm->tm_sec);
+#endif
+   sprintf(dest, "%02d:%02d:%02d.%s", tm->tm_hour, tm->tm_min, tm->tm_sec, help2);
+}
 
 void print_line(char* buffer) {
+   int i=0;
+   int max_name_length = 0;
+   static int show_header = 1;
+   char  time[512];
+   char  msg_time[512];
 
-   printf(buffer);
+   for (i=0;i<ARGUMENT_COUNT;i++) {
+      if (max_name_length < strlen(cl_names[i])) {
+         max_name_length = strlen(cl_names[i]);
+      }
+   }
    
-/*
-   value=strtok(buffer, " \n");
-   while( (value=strtok(NULL, " \n"))) {
-      printf("value:%s\n", value);
-   } 
-*/
+
+   i=0;
+   cl_values[i++]=strtok(buffer, "\t");
+   while( (cl_values[i++]=strtok(NULL, "\t\n")));
+
+   
+   convert_time(cl_values[0], time);
+   cl_values[0] = msg_time;
+
+   convert_time(cl_values[10], msg_time);
+   cl_values[10] = msg_time;
+
+
+   for(i=0;i<ARGUMENT_COUNT;i++) {
+      if (cl_column_width[i] < strlen(cl_values[i])) {
+         cl_column_width[i] = strlen(cl_values[i]);
+      }
+      if (cl_column_width[i] < strlen(cl_names[i])) {
+         cl_column_width[i] = strlen(cl_names[i]);
+      }
+   }
+
+   if (show_header == 1) {
+      for (i=0;i<ARGUMENT_COUNT;i++) {
+         if (cl_show[i]) {
+            printf_fill_up(cl_names[i],cl_column_width[i],' ',cl_alignment[i]);
+            printf("|");
+         }
+      }
+      printf("\n");
+      for (i=0;i<ARGUMENT_COUNT;i++) {
+         if (cl_show[i]) {
+            printf_fill_up("",cl_column_width[i],'-',cl_alignment[i]);
+            printf("|");
+         }
+      }
+      printf("\n");
+
+      show_header = 0;
+   }
+   for (i=0;i<ARGUMENT_COUNT;i++) {
+      if (cl_show[i]) {
+         printf_fill_up(cl_values[i],cl_column_width[i],' ',cl_alignment[i]);
+         printf("|");
+      }
+   }
+   printf("\n");
+
 }
 
 
@@ -116,7 +246,7 @@ extern int main(int argc, char** argv)
   cl_com_setup_commlib(CL_NO_THREAD ,atoi(argv[1]), NULL );
 
   printf("setting up handle for connect port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_STREAM, CL_FALSE, atoi(argv[2]), /* CL_TCP_RESERVED_PORT */ CL_TCP_DEFAULT,"debug_client", 0, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_STREAM, CL_FALSE, atoi(argv[2]), /* CL_TCP_DEFAULT*/ CL_TCP_RESERVED_PORT ,"debug_client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);

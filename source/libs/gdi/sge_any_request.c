@@ -434,9 +434,6 @@ void prepare_enroll(const char *name)
             handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE,execd_port , CL_TCP_DEFAULT,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
-#ifdef ENABLE_DEBUG_CLIENT
-            cl_com_set_debug_client_mode(handle, CL_DEBUG_CLIENT_ON);
-#endif
             if (handle == NULL) {
                switch (commlib_error) {
                   default:
@@ -457,9 +454,6 @@ void prepare_enroll(const char *name)
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
                                           1 , 0 );           
                                        /* select timeout is set to 1 second 0 usec       */
-#ifdef ENABLE_DEBUG_CLIENT
-            cl_com_set_debug_client_mode(handle, CL_DEBUG_CLIENT_ON);
-#endif
             if (handle == NULL) {
                switch (commlib_error) {
                   default:

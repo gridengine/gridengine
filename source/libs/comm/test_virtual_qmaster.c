@@ -142,7 +142,6 @@ extern int main(int argc, char** argv)
      exit(1);
   }
 
-  cl_com_set_debug_client_mode(handle, CL_DEBUG_CLIENT_ON);
   cl_com_get_service_port(handle,&i), 
   printf("server running on host \"%s\", port %d, component name is \"%s\", id is %ld\n", 
          handle->local->comp_host, 

@@ -1459,21 +1459,6 @@ int cl_com_get_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autocl
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_com_set_debug_client_mode()"
-int cl_com_set_debug_client_mode(cl_com_handle_t* handle, cl_debug_client_t mode) {
-   /* debug_client_mode */
-
-   if (handle == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-   handle->debug_client_mode = mode;
-   return CL_RETVAL_OK;
-}
-
-
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
 #define __CL_FUNCTION__ "cl_com_set_max_connection_close_mode()"
 int cl_com_set_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t mode) {
 
@@ -2956,6 +2941,8 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
    cl_string_list_elem_t* string_elem = NULL;
    char* log_string = NULL;
    cl_bool_t list_empty = CL_FALSE;
+   cl_bool_t flushed_client = CL_FALSE;
+   cl_bool_t had_data_to_flush = CL_FALSE;
    
 
    if (handle == NULL) {
@@ -2988,6 +2975,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
       if (string_elem != NULL) {
          cl_raw_list_remove_elem(handle->debug_list, string_elem->raw_elem);
          log_string = string_elem->string;
+         had_data_to_flush = CL_TRUE;
          free(string_elem);
       } else {
          list_empty = CL_TRUE;
@@ -2998,31 +2986,29 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
          elem = cl_connection_list_get_first_elem(handle->connection_list);
          while(elem) {
             cl_com_connection_t* connection = elem->connection;
-            if (connection->data_flow_type == CL_CM_CT_STREAM) {
-               if (connection->remote != NULL && connection->remote->comp_name != NULL) {
-                  if (strcmp(connection->remote->comp_name, "debug_client") == 0) {
-                     cl_com_message_t* message = NULL;
-                     char* message_text = strdup(log_string);
-   
-                     if (message_text != NULL) {
-                        
-                        CL_LOG_STR_STR_INT(CL_LOG_INFO, "flushing debug client:",
-                                           connection->remote->comp_host,
-                                           connection->remote->comp_name,
-                                           (int)connection->remote->comp_id);
+            if (connection->data_flow_type == CL_CM_CT_STREAM && connection->connection_state == CL_CONNECTED) {
+               if (strcmp(connection->remote->comp_name, CL_COM_DEBUG_CLIENT_NAME) == 0) {
+                  cl_com_message_t* message = NULL;
+                  char* message_text = strdup(log_string);
+
+                  if (message_text != NULL) {
+                     CL_LOG_STR_STR_INT(CL_LOG_INFO, "flushing debug client:",
+                                        connection->remote->comp_host,
+                                        connection->remote->comp_name,
+                                        (int)connection->remote->comp_id);
+                  
+                     cl_raw_list_lock(connection->send_message_list);
                      
-                        cl_raw_list_lock(connection->send_message_list);
-                        
-                        cl_com_setup_message(&message,
-                                             connection,
-                                             (cl_byte_t*) message_text,
-                                             strlen(message_text),
-                                             CL_MIH_MAT_NAK,
-                                             0,
-                                             0);
-                        cl_message_list_append_message(connection->send_message_list,message,0);
-                        cl_raw_list_unlock(connection->send_message_list);
-                     }
+                     cl_com_setup_message(&message,
+                                          connection,
+                                          (cl_byte_t*) message_text,
+                                          strlen(message_text),
+                                          CL_MIH_MAT_NAK,
+                                          0,
+                                          0);
+                     cl_message_list_append_message(connection->send_message_list,message,0);
+                     cl_raw_list_unlock(connection->send_message_list);
+                     flushed_client = CL_TRUE;
                   }
                }
             }
@@ -3033,6 +3019,11 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
       }
    }
    
+   if ( had_data_to_flush == CL_TRUE && flushed_client == CL_FALSE ) {
+      /* no connected debug clients, turn off debug message flushing */
+      CL_LOG(CL_LOG_ERROR,"disable debug client message creation");
+      handle->debug_client_mode = CL_DEBUG_CLIENT_OFF;
+   }
 
    if (lock_list == CL_TRUE) {
       cl_raw_list_unlock(handle->connection_list);

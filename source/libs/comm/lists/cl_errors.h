@@ -123,9 +123,11 @@
 #define CL_RETVAL_TO_LESS_FILEDESCRIPTORS     (CL_RETVAL_START_ID + 87)
 #define CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED   (CL_RETVAL_START_ID + 88)
 #define CL_RETVAL_CREATE_RESERVED_PORT_SOCKET (CL_RETVAL_START_ID + 89)
+#define CL_RETVAL_NO_RESERVED_PORT_CONNECTION (CL_RETVAL_START_ID + 90)
+#define CL_RETVAL_NO_LOCAL_HOST_CONNECTION    (CL_RETVAL_START_ID + 91)
 
 
-#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 90)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 92)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
 
 int         cl_is_commlib_error(int error_id);

@@ -329,6 +329,12 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_CREATE_RESERVED_PORT_SOCKET: {
          return MSG_CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
       }
+      case CL_RETVAL_NO_RESERVED_PORT_CONNECTION: {
+         return MSG_CL_RETVAL_NO_RESERVED_PORT_CONNECTION;
+      }
+      case CL_RETVAL_NO_LOCAL_HOST_CONNECTION: {
+         return MSG_CL_RETVAL_NO_LOCAL_HOST_CONNECTION;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

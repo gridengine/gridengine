@@ -145,7 +145,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    char xml_buffer[512];
 
    const char*     message_tag = NULL;
-   char*           xml_data = "<not available>";
+   char*           xml_data = "n.a.";
    char*           snd_host = "?";
    char*           snd_comp = "?";
    unsigned long   snd_id   = 0;
@@ -179,10 +179,10 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    if (ms->message_send_time.tv_sec != 0) {
       outgoing = CL_TRUE;
       msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
-      snprintf(message_time,256,"snd: %.6f", msg_time);
+      snprintf(message_time,256,"%.6f", msg_time);
    } else {
       msg_time = ms->message_receive_time.tv_sec + (ms->message_receive_time.tv_usec / 1000000.0);
-      snprintf(message_time,256,"rcv: %.6f", msg_time);
+      snprintf(message_time,256,"%.6f", msg_time);
    }
    if (outgoing == CL_TRUE) {
       direction = "->";
@@ -214,7 +214,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    if (ms != NULL) {
       char* info=(char*)message;
       if (info == NULL) {
-         info = "no info";
+         info = "n.a.";
       }
 
       if (connection->tag_name_func != NULL && ms->message_tag != 0) {
@@ -239,7 +239,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
 
       if (message_tag == NULL) {
          /* INFO: this output format has to change when CL_DEFINE_MAX_MESSAGE_ID is changed */
-         snprintf(tmp_buffer,1024,"%.6f %30s %s %30s: %4s %4s tag:%25lu id:%6lu rid:%6lu len:%6lu %s %s (%s)\n", 
+           snprintf(tmp_buffer,1024,"%.6f\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%lu\t%s\t%s\t%s\n",
                                            time_now,
                                            sender,
                                            direction,
@@ -255,7 +255,8 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
                                            info ); 
        } else {
           /* INFO: this output format has to change when CL_DEFINE_MAX_MESSAGE_ID is changed */
-         snprintf(tmp_buffer,1024,"%.6f %30s %s %30s: %4s %4s tag:%25s id:%6lu rid:%6lu len:%6lu %s %s (%s)\n", 
+           snprintf(tmp_buffer,1024,"%.6f\t%s\t%s\t%s\t%s\t%s\t%s\t%lu\t%lu\t%lu\t%s\t%s\t%s\n",
+
                                            time_now,
                                            sender,
                                            direction,
@@ -1200,6 +1201,28 @@ int cl_com_connection_get_service_port(cl_com_connection_t* connection, int* por
       }
       case CL_CT_SSL: {
          return cl_com_ssl_get_service_port(connection,port);
+      }
+      case CL_CT_UNDEFINED: {
+         break;
+      }
+   }
+   return CL_RETVAL_UNKNOWN;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_connection_get_client_socket_in_port()"
+int cl_com_connection_get_client_socket_in_port(cl_com_connection_t* connection, int* port) {
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   switch(connection->framework_type) {
+      case CL_CT_TCP: {
+         return cl_com_tcp_get_client_socket_in_port(connection,port);
+      }
+      case CL_CT_SSL: {
+         return cl_com_ssl_get_client_socket_in_port(connection,port);
       }
       case CL_CT_UNDEFINED: {
          break;
@@ -3678,6 +3701,105 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                CL_LOG(CL_LOG_WARNING,"connection list has no handler");
             } 
+         }
+
+         if ( connection->crm_state == CL_CRM_CS_CONNECTED) {
+            /*************************************
+            * check new debug client             *
+            *************************************/
+            if (connection->data_flow_type == CL_CM_CT_STREAM) {
+               CL_LOG(CL_LOG_ERROR,"new STREAM connection");
+               if (strcmp(connection->remote->comp_name, CL_COM_DEBUG_CLIENT_NAME) == 0) {
+                  int in_port = 0;
+                  int ret = 0;
+                  cl_bool_t client_ok = CL_TRUE;
+                  if ( (ret=cl_com_connection_get_client_socket_in_port(connection, &in_port)) != CL_RETVAL_OK) {
+                     CL_LOG_STR(CL_LOG_ERROR,"could not get client in socket connect port:", cl_get_error_text(ret));
+                  }
+                  CL_LOG_INT(CL_LOG_ERROR,"new debug client connection from port", in_port );
+                  
+                  /* check debug client reserved port */
+                  if (in_port <= 0 || in_port >= IPPORT_RESERVED) {
+                     CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
+                     client_ok = CL_FALSE;
+                     snprintf(tmp_buffer,
+                           256, 
+                           MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
+                           connection->receiver->comp_host,
+                           connection->receiver->comp_name,
+                           u32c(connection->receiver->comp_id));
+
+                     cl_com_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+
+                     connection->crm_state = CL_CRM_CS_DENIED;
+                     connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
+
+                     /* overwrite and free last error */            
+                     if ( connection->crm_state_error != NULL) {
+                        free(connection->crm_state_error);
+                        connection->crm_state_error = NULL;     
+                     }
+
+                     connection->crm_state_error = strdup(tmp_buffer);
+                     
+                     if (connection->crm_state_error == NULL) {
+                        connection_status_text = MSG_CL_TCP_FW_RESERVED_PORT_CONNECT_ERROR;
+                     } else {
+                        connection_status_text = connection->crm_state_error;
+                     }
+                     CL_LOG(CL_LOG_ERROR, connection_status_text );
+
+                  }
+
+                  /* check debug client host name */
+                  if (cl_com_compare_hosts(connection->remote->comp_host,connection->local->comp_host) != CL_RETVAL_OK) {
+                     CL_LOG(CL_LOG_ERROR,"new debug client connection is not from local host");
+                     client_ok = CL_FALSE;
+
+                     snprintf(tmp_buffer,
+                           256, 
+                           MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS,
+                           connection->receiver->comp_host,
+                           connection->receiver->comp_name,
+                           u32c(connection->receiver->comp_id),
+                           connection->local->comp_host);
+
+                     cl_com_push_application_error(CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
+
+                     connection->crm_state = CL_CRM_CS_DENIED;
+                     connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
+
+                     /* overwrite and free last error */            
+                     if ( connection->crm_state_error != NULL) {
+                        free(connection->crm_state_error);
+                        connection->crm_state_error = NULL;     
+                     }
+
+                     connection->crm_state_error = strdup(tmp_buffer);
+                     
+                     if (connection->crm_state_error == NULL) {
+                        connection_status_text = MSG_CL_TCP_FW_LOCAL_HOST_CONNECT_ERROR;
+                     } else {
+                        connection_status_text = connection->crm_state_error;
+                     }
+                     CL_LOG(CL_LOG_ERROR, connection_status_text );
+                  }
+
+                  if (client_ok == CL_TRUE) {
+                     cl_com_handle_t* handler = NULL;
+
+                     /* enable debug message creation in handler */
+                     /* this is switched off automatically in cl_commlib_handle_debug_clients() */
+                     handler = connection->handler;
+                     if (handler != NULL) {
+                        if ( handler->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
+                           CL_LOG(CL_LOG_ERROR,"enable debug client message creation");
+                           handler->debug_client_mode = CL_DEBUG_CLIENT_ON;
+                        }
+                     }
+                  }
+               }
+            }
          }
    
          if ( connection->crm_state == CL_CRM_CS_CONNECTED ) {

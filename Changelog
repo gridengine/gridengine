@@ -1,3 +1,7 @@
+CR-2004-11-05-0: Enhancm.:  qping -dump (communication traffic) option
+                 Changed:   qping
+                 Review:    AA
+
 JG-2004-11-05-0: Bugfix:    Scheduler didn't respect usage of tightly integrated
                             tasks and logged error messages.
                  Changed:   qmaster, scheduler

@@ -125,6 +125,8 @@
 #define MSG_CL_RETVAL_TO_LESS_FILEDESCRIPTORS     _MESSAGE(80087, _("operating system provides to less file descriptors"))
 #define MSG_CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED   _MESSAGE(80088, _("debug client mode not active"))
 #define MSG_CL_RETVAL_CREATE_RESERVED_PORT_SOCKET _MESSAGE(80089, _("can't create reserved port socket"))
+#define MSG_CL_RETVAL_NO_RESERVED_PORT_CONNECTION _MESSAGE(80090, _("client did not use reserved port < 1024"))
+#define MSG_CL_RETVAL_NO_LOCAL_HOST_CONNECTION    _MESSAGE(80091, _("client is not connected from local host"))
 
 
 

@@ -157,6 +157,7 @@ int cl_com_connection_set_connect_port(cl_com_connection_t* connection, int port
 
 int cl_com_connection_get_service_port(cl_com_connection_t* connection, int* port);
 int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd);
+int cl_com_connection_get_client_socket_in_port(cl_com_connection_t* connection, int* port);
 
 
 /* setup service */

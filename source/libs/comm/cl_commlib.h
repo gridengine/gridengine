@@ -42,6 +42,7 @@
 
 
 
+#define CL_COM_DEBUG_CLIENT_NAME "debug_client"
 
 /* commlib init and hostlist functions */
 cl_raw_list_t* cl_com_get_host_list(void);
@@ -111,7 +112,6 @@ int cl_com_set_status_func(cl_app_status_func_t status_func);
 /* application can set an error function */
 int cl_com_set_error_func(cl_error_func_t error_func);
 int cl_com_set_tag_name_func(cl_tag_name_func_t tag_name_func);
-int cl_com_set_debug_client_mode(cl_com_handle_t* handle, cl_debug_client_t mode);
 int cl_com_setup_callback_functions(cl_com_connection_t* connection);
 
 

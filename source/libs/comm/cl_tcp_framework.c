@@ -62,6 +62,7 @@ typedef struct cl_com_tcp_private_type {
    /* TCP/IP specific */
    int           server_port;         /* used port for server setup */
    int           connect_port;        /* port to connect to */
+   int           connect_in_port;     /* port from where client is connected (used for reserved port check) */
    int           sockfd;              /* socket file descriptor */
    struct sockaddr_in client_addr;    /* used in connect for storing client addr of connection partner */ 
 } cl_com_tcp_private_t;
@@ -72,6 +73,10 @@ static int cl_com_tcp_free_com_private(cl_com_connection_t* connection);
 
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_fd()"
 int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL || fd == NULL ) {
@@ -85,6 +90,10 @@ int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
    return CL_RETVAL_UNKNOWN;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_service_port()"
 int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL || port == NULL ) {
@@ -98,6 +107,28 @@ int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port) {
    return CL_RETVAL_UNKNOWN;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_client_socket_in_port()"
+int cl_com_tcp_get_client_socket_in_port(cl_com_connection_t* connection, int* port) {
+   cl_com_tcp_private_t* private = NULL;
+   if (connection == NULL || port == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if ( (private=cl_com_tcp_get_private(connection)) != NULL) {
+      *port = private->connect_in_port;
+      return CL_RETVAL_OK;
+   }
+   return CL_RETVAL_UNKNOWN;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_get_connect_port()"
 int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL || port == NULL ) {
@@ -111,6 +142,10 @@ int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port) {
    return CL_RETVAL_UNKNOWN;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_tcp_set_connect_port()"
 int cl_com_tcp_set_connect_port(cl_com_connection_t* connection, int port) {
    cl_com_tcp_private_t* private = NULL;
    if (connection == NULL) {
@@ -1375,6 +1410,8 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
       if (new_sfd > -1) {
           char* resolved_host_name = NULL;
+          cl_com_tcp_private_t* tmp_private = NULL;
+
           cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
           if (resolved_host_name != NULL) {
              CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
@@ -1395,7 +1432,6 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
 #endif
           /* here we can investigate more information about the client */
           /* ntohs(cli_addr.sin_port) ... */
-          CL_LOG_INT(CL_LOG_WARNING,"client uses port=", ntohs(cli_addr.sin_port));
 
           tmp_connection = NULL;
           /* setup a tcp connection where autoclose is still undefined */
@@ -1419,7 +1455,13 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
           tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
           /* setup cl_com_tcp_private_t */
-          cl_com_tcp_get_private(tmp_connection)->sockfd = new_sfd;   /* fd from accept() call */
+          tmp_private = cl_com_tcp_get_private(tmp_connection);
+          if (tmp_private != NULL) {
+             tmp_private->sockfd = new_sfd;   /* fd from accept() call */
+             tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
+             CL_LOG_INT(CL_LOG_WARNING,"client uses port=", tmp_private->connect_in_port);
+          }
+
           *new_connection = tmp_connection;
           return CL_RETVAL_OK;
       }

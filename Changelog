@@ -1,3 +1,6 @@
+CR-2003-04-25-0  Testsuite: Bugfix for spool_array_to_file() when spooling
+                            without comment.
+
 JG-2003-04-22-0  Bugfix:    qrsh (rshd) does not set limits after setting the 
                             osjobid. This disabled limits that depend on being 
                             in a OS managed job (e.g. on SUPER-UX/SX).

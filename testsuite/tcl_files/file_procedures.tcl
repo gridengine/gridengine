@@ -501,7 +501,9 @@ proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
          set obj_start [search_for_obj_start file_dat $obj]
          set obj_end   [search_for_obj_end file_dat $obj]
          for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-            incr i 1
+            if { [string first "#" $file_dat($i) ] == 0 } {
+               incr i 1
+            }
             set spec [unpack_data_line $file_dat($i)]
             incr i 1
             set spec_data [unpack_data_line $file_dat($i)]
@@ -521,6 +523,7 @@ proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
          } 
       }
    }
+
 
    # puts $CHECK_OUTPUT "saving new data ..."
    # here we store the new data
@@ -545,6 +548,7 @@ proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
       set new_file_dat($act_line) "OBJ_END:$obj_name:"
       set new_file_dat(0) $act_line
    }
+
 
    # now write tmp new file_dat
    save_file $filename.tmp new_file_dat

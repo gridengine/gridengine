@@ -1140,8 +1140,6 @@ void
 remove_from_reschedule_unknown_list(lListElem *host, u_long32 job_number,
                                     u_long32 task_number)
 {
-   lListElem* ruep = NULL;
-
    DENTER(TOP_LAYER, "remove_from_reschedule_unknown_list");
    if (host) {
       lList *unknown_list = lGetList(host, EH_reschedule_unknown_list);

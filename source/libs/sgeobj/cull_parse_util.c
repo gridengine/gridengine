@@ -1253,10 +1253,11 @@ u_long32 flags
                /*
                ** was freed by lAddList
                */
+               lp = NULL;
+               
                if (flags & FLG_LIST_MERGE_DOUBLE_KEY) {
                   cull_compress_definition_list(destlist, nm_var, nm_value, 1);
                }
-               lp = NULL;
             }
          }
       } else if (flags & FLG_LIST_MERGE) {

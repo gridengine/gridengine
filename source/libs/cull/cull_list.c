@@ -722,7 +722,7 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
          fprintf(out, "%s%-20.20s (Bool)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
          break;
       case lCharT:
-         fprintf(out, "%s%-20.20s (Char)    %c = %c\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i));
+         fprintf(out, "%s%-20.20s (Char)    %c = %c\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', isprint (lGetPosChar(ep, i)) ? lGetPosChar(ep, i) : '?');
          break;
       case lRefT:
          fprintf(out, "%s%-20.20s (Ref)     %c = %p\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));

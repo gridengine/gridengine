@@ -966,13 +966,13 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
    if (range_list != NULL && *range_list != NULL) {
       lListElem *next_range = lFirst(*range_list);
 
-      while ((range = next_range)) {
+      while ((range = next_range) != NULL) {
          u_long32 start, end, step;
 
          next_range = lNext(range);
          range_get_all_ids(range, &start, &end, &step);
          if (id >= start && id <= end && ((id - start) % step) == 0) {
-            if (id == start && id == end) {
+            if ((id == start) && ((id == end) || (id + step > end))) {
                lRemoveElem(*range_list, range);
                break;
             } else if (id == start) {

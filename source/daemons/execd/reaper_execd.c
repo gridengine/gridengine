@@ -192,17 +192,21 @@ void sge_reap_children_execd()
                Break = 1;
                break;
             }
+            
             for_each(petep, lGetList(jatep, JAT_task_list)) {
-               if (lGetUlong(petep, PET_pid) == pid) 
+               if (lGetUlong(petep, PET_pid) == pid) {
                   break;
+               }
             }
+            
             if (petep) {
                Break = 1;
                break;
             }
          }
-         if (Break)
+         if (Break) {
             break;
+         }
       }
 
       /* was it a job ? */
@@ -543,14 +547,17 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
-      /* DT: TODO: What does this check mean? */
-      if (!*error) {
+      if (*error != NULL) {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id));
       }
+      
       ERROR((SGE_EVENT, SFQ, error));
-      if (!failed)
+      
+      if (!failed) {
          failed = SSTATE_FAILURE_AFTER_JOB;
+      }
+      
       DTRACE;
    }
 
@@ -672,10 +679,14 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_NO_SHELL:
       {
          int job_caused_failure = 0;
-         lListElem *job = job_list_locate(Master_Job_List, job_id); 
-         lListElem *ja_task = job_search_task(job, NULL, ja_task_id);
+         lListElem *job = NULL; 
+         lListElem *ja_task = NULL;
          lListElem *master_queue = NULL;
 
+         if ((job = job_list_locate(Master_Job_List, job_id)) != NULL) { 
+            ja_task = job_search_task(job, NULL, ja_task_id);
+         }
+         
          if (job && ja_task) {
             master_queue = responsible_queue(job, ja_task, NULL);
          }
@@ -754,7 +765,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       ** this is no error, because not all failures apply to general_failure
       */
       break;
-   }
+   } /* switch */
+   
    lSetUlong(jr, JR_general_failure, general_failure);
    DPRINTF(("job report for job "SFN": general_failure = %ld\n", 
             job_get_id_string(job_id, ja_task_id, pe_task_id),
@@ -1105,7 +1117,7 @@ int failed
    u_long32 jobid, jataskid;
    const char *petaskid = NULL;
 
-   DENTER(TOP_LAYER, "execd_job_start_failure");
+   DENTER(TOP_LAYER, "execd_job_failure");
 
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);

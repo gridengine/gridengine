@@ -182,7 +182,7 @@ public abstract class DRMAASession {
 	 * <LI>AuthorizationException</LI>
 	 * </UL>
 	 */
-	public abstract Set runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DRMAAException;
+	public abstract List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DRMAAException;
 	
    /** Start, stop, restart, or kill the job identified by 'jobId'.
 	 * If 'jobId' is JOB_IDS_SESSION_ALL, then this routine acts on all jobs

@@ -183,10 +183,10 @@ public class SGESession extends DRMAASession {
 	//      System.out.println("Call to drmaa_init");
 	//   }
 	
-	public Set runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DRMAAException {
+	public List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DRMAAException {
 		String[] jobIds = this.nativeRunBulkJobs (((SGEJobTemplate)jt).getId (), start, end, incr);
 		
-		return new TreeSet (Arrays.asList (jobIds));
+		return Arrays.asList (jobIds);
 	}
 	
 	private native String[] nativeRunBulkJobs (int jtId, int start, int end, int incr) throws DRMAAException;

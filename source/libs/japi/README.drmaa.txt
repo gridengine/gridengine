@@ -13,7 +13,7 @@ DRMAA is a specification developed by a working group in the Global Grid Forum
    Independent Software Vendors (ISVs)."
 
 Simply put, DRMAA is an API for submitting and controling jobs.  DRMAA has been
-implemented in several lanuages and for several DRMs.  The N1 Grid Engine 6.0
+implemented in several lanuages and for several DRMs.  The Grid Engine 6.0
 release includes a C implementation, or C binding.
 
 For more information about DRMAA and the various bindings that are available,
@@ -31,7 +31,7 @@ website:
 
 Getting Started
 ===============
-The N1 Grid Engine 6.0 release includes a DRMAA C binding.  To develop
+The Grid Engine 6.0 release includes a DRMAA C binding.  To develop
 applications that utilize the C binding, you will need two files.  The first is
 the DRMAA header file, drmaa.h.  You will find this file under the <???>
 directory in the distribution.  You will need to include this file from any
@@ -68,7 +68,7 @@ compiler/linker that you want to link in this library, e.g. by passing the
 
 Getting Support
 ===============
-If you're having trouble with the DRMAA library included with the N1 Grid Engine
+If you're having trouble with the DRMAA library included with the Grid Engine
 6.0 release, please visit:
 
    http://gridengine.sunsource.net/servlets/ProjectIssues

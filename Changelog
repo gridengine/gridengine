@@ -1,3 +1,16 @@
+DT-2004-05-14-0: Bugfix:    o Fixed the way the last element is removed from a
+                            range
+                            o Execd now reuses existing job structures for
+                              array job tasks
+                            o Fixed character printing problem in lWriteElem
+                            o Updated DRMAA README
+                            o Updated DRMAA Java binding
+                            o Checked in missing Java binding class
+                            o Miscelaneous cleanup
+                 Changed:   range, execd, CULL, JAPI, DRMAA
+                 Issue:     1031, 1034, 1035
+                 Review:    pending
+
 JG-2004-05-13-2: Bugfix:    - for jobs that did no resource requests, the 
                               accounting record contained an empty field (::) 
                               which was incorrectly parsed by qacct.

@@ -2226,6 +2226,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    bool sync_all = false;
    int drmaa_errno, i;
    int wait_result;
+   struct timespec ts;
 
    DENTER(TOP_LAYER, "japi_synchronize");
 
@@ -2267,6 +2268,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    for (i=0; job_ids[i]; i++) {
       if (!strcmp(job_ids[i], DRMAA_JOB_IDS_SESSION_ALL)) {
          sync_all = true;
+         break;
       }
       else {
          if ((drmaa_errno=japi_parse_jobid(job_ids[i], NULL, NULL, NULL, 
@@ -2279,51 +2281,47 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
       }
    }
 
-   {
-      struct timespec ts;
+   if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) 
+      sge_relative_timespec(timeout, &ts);
 
-      if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) 
-         sge_relative_timespec(timeout, &ts);
+   JAPI_LOCK_JOB_LIST();
 
-      JAPI_LOCK_JOB_LIST();
+   while ((wait_result=japi_synchronize_retry(sync_all, job_ids, dispose) == JAPI_WAIT_UNFINISHED)) {
 
-      while ((wait_result=japi_synchronize_retry(sync_all, job_ids, dispose) == JAPI_WAIT_UNFINISHED)) {
-
-         /* must return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE when event client 
-            thread was shutdown during japi_wait() use japi_ec_state ?? */
-         /* has japi_exit() been called meanwhile ? */
-         JAPI_LOCK_EC_STATE();
-         if (japi_ec_state != JAPI_EC_UP) {
-            JAPI_UNLOCK_EC_STATE();
-            JAPI_UNLOCK_JOB_LIST();
-            japi_dec_threads(SGE_FUNC);
-            japi_standard_error(DRMAA_ERRNO_EXIT_TIMEOUT, diag);
-            
-            JAPI_UNLOCK_EC_STATE();
-            JAPI_UNLOCK_JOB_LIST();
-            DEXIT;
-            return DRMAA_ERRNO_EXIT_TIMEOUT;
-         }
+      /* must return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE when event client 
+         thread was shutdown during japi_wait() use japi_ec_state ?? */
+      /* has japi_exit() been called meanwhile ? */
+      JAPI_LOCK_EC_STATE();
+      if (japi_ec_state != JAPI_EC_UP) {
          JAPI_UNLOCK_EC_STATE();
+         JAPI_UNLOCK_JOB_LIST();
+         japi_dec_threads(SGE_FUNC);
+         japi_standard_error(DRMAA_ERRNO_EXIT_TIMEOUT, diag);
 
-         if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
-            if (pthread_cond_timedwait(&Master_japi_job_list_finished_cv, 
-                     &Master_japi_job_list_mutex, &ts)==ETIMEDOUT) {
-               DPRINTF(("got a timeout while waiting for job(s) to finish\n"));
-               wait_result = JAPI_WAIT_TIMEOUT; 
-               break;
-            } 
-         } else
-            pthread_cond_wait(&Master_japi_job_list_finished_cv, &Master_japi_job_list_mutex);
+         JAPI_UNLOCK_EC_STATE();
+         JAPI_UNLOCK_JOB_LIST();
+         DEXIT;
+         return DRMAA_ERRNO_EXIT_TIMEOUT;
       }
+      JAPI_UNLOCK_EC_STATE();
 
-      JAPI_UNLOCK_JOB_LIST();
-
-      if (wait_result == JAPI_WAIT_TIMEOUT)
-         drmaa_errno = DRMAA_ERRNO_EXIT_TIMEOUT;
-      else 
-         drmaa_errno = DRMAA_ERRNO_SUCCESS;
+      if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
+         if (pthread_cond_timedwait(&Master_japi_job_list_finished_cv, 
+                  &Master_japi_job_list_mutex, &ts)==ETIMEDOUT) {
+            DPRINTF(("got a timeout while waiting for job(s) to finish\n"));
+            wait_result = JAPI_WAIT_TIMEOUT; 
+            break;
+         } 
+      } else
+         pthread_cond_wait(&Master_japi_job_list_finished_cv, &Master_japi_job_list_mutex);
    }
+
+   JAPI_UNLOCK_JOB_LIST();
+
+   if (wait_result == JAPI_WAIT_TIMEOUT)
+      drmaa_errno = DRMAA_ERRNO_EXIT_TIMEOUT;
+   else 
+      drmaa_errno = DRMAA_ERRNO_SUCCESS;
 
    /* remove reaped jobs from library session data */
    japi_dec_threads(SGE_FUNC);
@@ -2420,7 +2418,7 @@ static int japi_synchronize_all_retry(bool dispose)
 #endif
       jobid = lGetUlong(japi_job, JJ_jobid);
       not_yet_finished = lGetList(japi_job, JJ_not_yet_finished_ids);
-      if (not_yet_finished) {
+      if (not_yet_finished != NULL) {
          DPRINTF(("job "u32" still has unfinished tasks: "u32"\n", 
             jobid, range_list_get_first_id(not_yet_finished, NULL)));
          all_finished = false;
@@ -2841,7 +2839,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
             if (task != NULL) {
                break;
             }
-            if (lGetList(job, JJ_not_yet_finished_ids)) {
+            if (lGetList(job, JJ_not_yet_finished_ids) != NULL) {
                not_yet_reaped = 1;
             }
          }

@@ -1,3 +1,8 @@
+AH-2001-07-26-1: - improved handling of waitpid() result in execd to trace into
+                   the problem of shepherds considered to be finished by failure
+                   (Origin 2000, Irix 6.5.10f)
+                 - fixed typo in setfileperm.sh
+
 JG-2001-07-26-0: (Issue# 15): startup_template: replaced fixed path by reference
                  to SGE_ROOT
 
@@ -9,6 +14,8 @@ EB-2001-07-25-0: (Issue# 5) qmaster - qconf:
 
 CR-2001-07-23-0: Bugfix: qstat -j (Issue#: 2) causes 
                  "operation not implemented for target" error
+
+------------------------ start of TV53_alpha1_fixes_BRANCH ------------------
 
 EB-2001-07-23-0: Changes some html files
                  - link to contributor agreement

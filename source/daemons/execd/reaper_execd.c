@@ -164,6 +164,12 @@ void sge_reap_children_execd()
          continue;
       }
 
+#ifdef WIFCONTINUED
+      if (WIFCONTINUED(status)) {
+         DPRINTF(("PID %d WIFCONTINUED\n", pid));
+         continue;
+      }
+#endif
 
       if (WIFSIGNALED(status)) {
          child_signal = WTERMSIG(status);
@@ -173,11 +179,14 @@ void sge_reap_children_execd()
          core_dumped = status & 80;
 #endif
          failed = ESSTATE_DIED_THRU_SIGNAL;
-      }
-      else {
+      } else if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);
          if (exit_status)
             failed = ESSTATE_SHEPHERD_EXIT;
+      } else {
+         /* not signaled and not exited - so what else happend with this guy? */
+         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_PI, pid, status));
+         continue;
       }
    
       /* search whether it was a job or one of its tasks */

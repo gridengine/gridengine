@@ -2061,6 +2061,47 @@ void ptf_show_registered_jobs(void)
    DEXIT;
 }
 
+void ptf_unregister_registered_job(u_long32 job_id, u_long32 ja_task_id ) {
+  lListElem *job;
+   lListElem *next_job;
+
+   DENTER(TOP_LAYER, "ptf_unregister_registered_job");
+
+   next_job = lFirst(ptf_jobs);
+   while ((job = next_job)) {
+      lList *os_job_list;
+      lListElem *os_job;
+      lListElem *next_os_job;
+
+      next_job = lNext(job);
+
+      if ( lGetUlong( job, JL_job_ID) == job_id ) {
+         DPRINTF(("PTF: found job id "U32CFormat"\n", job_id));
+         os_job_list = lGetList(job, JL_OS_job_list);
+         next_os_job = lFirst(os_job_list);
+         while ((os_job = next_os_job)) {
+            next_os_job = lNext(os_job);
+            if ( lGetUlong( os_job , JO_ja_task_ID ) == ja_task_id ) {
+               DPRINTF(("PTF: found job task id "U32CFormat"\n", ja_task_id));
+               psIgnoreJob(ptf_get_osjobid(os_job));
+               DPRINTF(("PTF: Notify PDC to remove data for osjobid " u32 "\n",
+                        lGetUlong(os_job, JO_OS_job_ID)));
+               lDechainElem(os_job_list, os_job);
+               lFreeElem(os_job);
+            }
+         }
+
+         if ( lFirst(os_job_list) == NULL) {
+            DPRINTF(("PTF: No more os_job_list entries, removing job\n"));
+            DPRINTF(("PTF: Removing job " u32 "\n", lGetUlong(job, JL_job_ID)));
+            lDechainElem(ptf_jobs, job);
+            lFreeElem(job);
+         }
+      }
+   }
+   DEXIT;
+}
+
 void ptf_unregister_registered_jobs(void)
 {
    lListElem *job;

@@ -2309,7 +2309,7 @@ char *dest_str
       return 2;
    }
 
-   i_ret = cull_parse_string_list(str_str, "destin ident list", QR_Type, rule, lpp);
+   i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
       FREE(s);
       FREE(str_str);

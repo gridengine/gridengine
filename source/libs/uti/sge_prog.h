@@ -95,7 +95,8 @@ enum {
  QIDLD           ,       /* 35 */
  PVM_RMANAGER    ,       /* 36 */
  QHOST           ,       /* 37 */
- COMMDCNTL               /* 38 */ 
+ COMMDCNTL       ,       /* 38 */ 
+ SPOOLDEFAULTS           /* 39 */
 };
 
 

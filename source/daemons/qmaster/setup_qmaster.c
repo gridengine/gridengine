@@ -427,7 +427,12 @@ int sge_setup_qmaster()
    /* scheduler configuration stuff */
    DPRINTF(("scheduler config -----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   /* JG: TODO: reading the schedd configuration may fail, 
+    * as it is not created at install time.
+    * The corresponding error message is confusing, so do not output the error.
+    * Better: Create config at install time (trough spooldefaults)
    answer_list_output(&answer_list);
+    */
    if (lGetNumberOfElem(Master_Sched_Config_List) == 0) {
       lListElem *ep = schedd_conf_create_default();
 

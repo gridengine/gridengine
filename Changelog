@@ -1,3 +1,11 @@
+JG-2003-05-15-0: Bugfix:    - Installation of SGE(EE) as non root user failed,
+                              as an admin user called "none" was created instead
+                              of the install user's name.
+                            - removed confusing error messages about changing 
+                              into the spool directory and scheduler 
+                              configuration not existing
+                 Review:    CR
+
 EB-2003-05-15-0: Enhancem.: Move queue_list from PE/CKPT to queue configuartion
                             (part 2/2: move pe/ckpt references into QU_Type)
 

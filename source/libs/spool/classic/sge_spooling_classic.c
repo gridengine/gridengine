@@ -282,9 +282,9 @@ spool_classic_default_startup_func(lList **answer_list,
       url = lGetString(rule, SPR_url);
       if (strcmp(cwd, url) != 0) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS, 
-                                 url, cwd);
+                                 ANSWER_QUALITY_INFO, 
+                                 MSG_SPOOL_CHANGINGTOSPOOLDIRECTORY_S,
+                                 url);
          if(sge_chdir(url) != 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 

@@ -181,8 +181,10 @@ static int spool_manops(sge_object_type type)
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTREADADMINUSER));
          ret = EXIT_FAILURE;
       } else {
-         if (value[0] != NULL) {
+         if (value[0] != NULL && strcasecmp(value[0], "none") != 0) {
             ret = spool_manop(value[0], type);
+         } else {
+            ret = spool_manop(uti_state_get_user_name(), type);
          }
 
       }
@@ -236,6 +238,8 @@ int main(int argc, char *argv[])
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    lInit(nmv);
+
+   sge_getme(SPOOLDEFAULTS);
 
    if (sge_setup_paths(sge_get_default_cell(), NULL)) {
       ret = EXIT_FAILURE;

@@ -89,7 +89,7 @@
  * libs/spool/sge_spooling_classic.c
  */ 
 
-#define MSG_SPOOL_STARTEDINWRONGDIRECTORY_SS _MESSAGE(61039, _("process should start in the spool directory "SFQ", but we are in "SFQ"; changing to spool directory\n")) 
+#define MSG_SPOOL_CHANGINGTOSPOOLDIRECTORY_S _MESSAGE(61039, _("changing to spool directory "SFN"\n")) 
 #define MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR _MESSAGE(61040, _("incorrect paths given for common and/or spool directory\n"))
 #define MSG_SPOOL_COMMONDIRDOESNOTEXIST_S  _MESSAGE(61047, _("common directory "SFQ" does not exist\n"))
 #define MSG_SPOOL_SPOOLDIRDOESNOTEXIST_S  _MESSAGE(61041, _("spool directory "SFQ" does not exist\n"))

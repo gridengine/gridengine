@@ -91,7 +91,7 @@ Content
 
        #include "header.h"
 
-   See <<here_link_to_andre's_doc>> for more information about
+   See http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/sge_depend/sge_depend.html?content-type=text/htmlhttp://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/3rdparty/sge_depend/sge_depend.html?content-type=text/html for more information about
    'sge_depend'.
 
    To build 'sge_depend' enter:

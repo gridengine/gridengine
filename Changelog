@@ -1,44 +1,51 @@
-RH-2004-08-16-1: Bugfix:     Type in man qhost(1) fixed.
-                 Changed:    qhost(1)
+AS-2004-06-08-0: CVS        Created V60u1_TAG
+---------------------------------------------
+
+AS-2004-08-16-1: Bugfix:    README-Autoinstall.txt was missing in distribution
+                 Changed:   doc/README-Autoinstall.txt
+                 Issue:     1106
+
+RH-2004-08-16-1: Bugfix:    Typo in man qhost(1) fixed. (not part of Sun patch)
+                 Changed:   qhost(1)
                  
-RH-2004-08-16-0: Bugfix:     Typo in man qconf(1) fixed
-                 Changed:    qconf(1)
+RH-2004-08-16-0: Bugfix:    Typo in man qconf(1) fixed. (not part of Sun patch)
+                 Changed:   qconf(1)
 
-CR-2004-08-13-0: Bugfix:     Fixed build on linuxamd
+CR-2004-08-13-0: Bugfix:    Fixed build on linuxamd
 
-AA-2004-08-12-0: Bugfix:     - qmon_help.ad help corrections
-                             - sge_centry_qconf.c missing parentheses break build
-                             - qmon_calendar.c NONE strings were missing for added calendars
-                             - qmon_ckpt.c Reschedule flag is part of Signal When flags
-                             - qmon_cluster.c delegated_file_staging flag added
-                             - qmon_manop.c set corresponding tab when invoked from Policy dialog
-                               dialog resize
-                             - qmon_util.c hostgroups with @f* were not displayed
-                 Issues:     reported during tests             
-                 Review:     CR
-                 Changed:    qmon
+AA-2004-08-12-0: Bugfix:    - qmon_help.ad help corrections
+                            - sge_centry_qconf.c missing parentheses break build
+                            - qmon_calendar.c NONE strings were missing for added calendars
+                            - qmon_ckpt.c Reschedule flag is part of Signal When flags
+                            - qmon_cluster.c delegated_file_staging flag added
+                            - qmon_manop.c set corresponding tab when invoked from Policy dialog
+                              dialog resize
+                            - qmon_util.c hostgroups with @f* were not displayed
+                 Issues:    reported during tests             
+                 Review:    CR
+                 Changed:   qmon
                  
-MD-2004-08-12-0: Bugfix:     changed wrong directory of qping binary
-                             autoinst shadowd
-                 Changed:    inst_sge
+MD-2004-08-12-0: Bugfix:    changed wrong directory of qping binary
+                            autoinst shadowd
+                 Changed:   inst_sge
 
-RH-2004-08-12-0: Bugfix:     Refix Issue 1161
-                 Issue:      1161
-                 Bugtraq:    5080856
-                 Review:     CR
-                 Changed:    qconf
+RH-2004-08-12-0: Bugfix:    Refix Issue 1161
+                 Issue:     1161
+                 Bugtraq:   5080856
+                 Review:    CR
+                 Changed:   qconf
 
 MD-2004-08-11-1: Bugfix:    - sge backup cannot override older backups
-                 Issue:       1222
-                 Bugtraq:     5085508
-                 Review:      HP
-                 Changed:     inst_sge
+                 Issue:     1222
+                 Bugtraq:   5085508
+                 Review:    HP
+                 Changed:   inst_sge
 
 MD-2004-08-11-0: Bugfix:    - sge_inst restore does not work
-                 Issue:       1219
-                 Bugtraq:     5085507
-                 Review:      HP
-                 Changed:     inst_sge
+                 Issue:     1219
+                 Bugtraq:   5085507
+                 Review:    HP
+                 Changed:   inst_sge
 
 DT-2004-08-11-0: Bugfix.:   o Rolled back dangerous fix from DT-2004-07-21-1
                  Doc.:      o Cleaned up man3, man8, and submit.1 man pages
@@ -369,7 +376,7 @@ SG-2004-07-12-0: Bugfix:    - qstat -j -xml printed unparsable xml-output
                               queue field.
                  Changed:   qstat, detailed_job_info.xsd
                  Issue:     1144
-                 Bugtraq:   -NA-
+                 Bugtraq:   5085392
                  Review:    AA
 
 AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat

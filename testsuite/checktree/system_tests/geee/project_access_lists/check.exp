@@ -360,9 +360,9 @@ proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
       if { $E_ok == 1 } {
          test_job_run "$id_string (E)" $job_id_E
       } else {
-         set NOT_THE_CORRECT_PROJECT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS] ]
-         set NOT_ALLOWED_TO_RUN      [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXCLPRJ_SS] ]
-         set NO_PERMISSION           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_S] ]
+         set NOT_THE_CORRECT_PROJECT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS] "*" "*" "*"]
+         set NOT_ALLOWED_TO_RUN      [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXCLPRJ_SSS] "*" "*" "*"]
+         set NO_PERMISSION           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*"]
 
          if { [check_user_job_info $job_id_E] } {
             add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_E (E) should not run"

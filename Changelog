@@ -1,3 +1,10 @@
+CR-2002-11-25-1  Testsuite: a) start_remote_tcl_prog() in shadowd test broken, 
+                 Bugfix:       because of new testsuite configuration file 
+                               setup (checked in CR-2002-11-20-0). 
+                            b) project_access_lists test used wrong sge_macro()
+                               call for 5.3p2 system
+                            
+
 EB-2002-11-25-1  Bugfix:    qstat -f output broken for pe jobs on same queue
                  IZ:        #430
                  Review:    CR

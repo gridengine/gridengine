@@ -125,12 +125,18 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
  
    log_user 1
-   puts "start_remote_tcl_prog!"
+   puts $CHECK_OUTPUT "--- start_remote_tcl_prog start ---"
    set tcl_bin [ get_binary_path $host "expect"]
    set tcl_prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remote_tcl_command.sh"
    set tcl_testhome "$CHECK_TESTSUITE_ROOT"
    set tcl_defaults  "$CHECK_DEFAULTS_FILE"
    
+   debug_puts "tcl_bin: \"$tcl_bin\""
+   debug_puts "tcl_prog: \"$tcl_prog\""
+   debug_puts "tcl_testhome: \"$tcl_testhome\""
+   debug_puts "tcl_defaults: \"$tcl_defaults\""
+
+
    set debug_arg ""
    if { $CHECK_DEBUG_LEVEL != 0 } {
       set debug_arg "debug"
@@ -145,7 +151,9 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
    if { [string first "Error in procedure" $result] >= 0 } {
       add_proc_error "start_remote_tcl_prog" -2 "error in $tcl_file, proc $tcl_procedure $tcl_procargs"
    }
+   puts $result
    log_user 1
+   puts $CHECK_OUTPUT "--- start_remote_tcl_prog end   ---"
    return $result
 }
 

@@ -1717,6 +1717,60 @@ proc save_defaults {} {
   debug_puts "saved $data"
 }
 
+
+#****** check/get_testsuite_root_dir_from_file() *******************************
+#  NAME
+#     get_testsuite_root_dir_from_file() -- get testsuite root directory
+#
+#  SYNOPSIS
+#     get_testsuite_root_dir_from_file { filename } 
+#
+#  FUNCTION
+#     This procedure greps for the testsuite configuration in the given file.
+#     It only returns the testsuite root directory. This function is used
+#     to setup the CHECK_TESTSUITE_ROOT variable before sourcing the
+#     file procedures script in the tcl_directory.
+#
+#  INPUTS
+#     filename - path to testsuite configuration file (defaults file)
+#
+#  RESULT
+#     testsuite root directory path
+#
+#  SEE ALSO
+#     check/setup2
+#     check/source_procedures
+#*******************************************************************************
+proc get_testsuite_root_dir_from_file { filename } {
+
+   if { [file isfile $filename] != 1 } {
+      return "no_such_file" 
+   }
+   set file [open $filename "r"]
+   set found_object 0
+   set next 0
+   while { [gets $file line] >= 0 } {
+      if { $next == 1 } {
+         break
+      }
+      if { [ string first "OBJ_START:testsuite configuration:" $line] >= 0 } { 
+         set found_object 1
+      }
+      if { [ string first ":testsuite_root_dir:" $line] >= 0 && $found_object == 1 } {
+         set next 1
+      }
+   }
+   if { $next == 1 } {
+      set start [ string first ":" $line ]
+      set end   [ string last ":" $line ]   
+      incr start 1
+      incr end -1
+      return [string range $line $start $end]
+   } 
+   close $file
+   return "testsuite_root_dir_not_found"
+}
+
 #                                                             max. column:     |
 #****** check/source_procedures() ******
 # 
@@ -1747,8 +1801,20 @@ proc save_defaults {} {
 #     ???/???
 #*******************************
 proc source_procedures {} {
-  global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_TCL_SCRIPTFILE_DIR be_quiet
+  global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_TCL_SCRIPTFILE_DIR be_quiet CHECK_DEFAULTS_FILE
   puts $CHECK_OUTPUT "------ SOURCEING TCL SCRIPT FILES --------------"
+  puts $CHECK_OUTPUT "testsuite root: $CHECK_TESTSUITE_ROOT"
+  if { [ file isfile $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/file_procedures.tcl ] != 1 } {
+
+     set CHECK_TESTSUITE_ROOT [get_testsuite_root_dir_from_file $CHECK_DEFAULTS_FILE]
+     if { [ file isfile $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/file_procedures.tcl ] != 1 } {
+        puts $CHECK_OUTPUT "testsuite root: $CHECK_TESTSUITE_ROOT"
+        puts $CHECK_OUTPUT "could not open file: $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/file_procedures.tcl"
+        exit -1
+     }
+     puts $CHECK_OUTPUT "reading testsuite root directory from defaults file \"$CHECK_DEFAULTS_FILE\""
+     puts $CHECK_OUTPUT "testsuite root: $CHECK_TESTSUITE_ROOT"
+  }
   source $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/file_procedures.tcl
   set tcl_files [ get_file_names "$CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR" "*.tcl" ]
   foreach elem $tcl_files {
@@ -8759,7 +8825,7 @@ proc setup2 { } {
    global CHECK_SEND_ERROR_MAILS 
    global CHECK_MAX_ERROR_MAILS
    global CHECK_USE_SSH 
-   
+ 
    source_procedures
   
    # unset old system environment
@@ -8898,7 +8964,6 @@ proc setup2 { } {
 #         }
 #         puts "use_ssh:              $ssh_state_text"        
 #      }
-      
       
       enhanced_setup
       if { $CHECK_DO_SETUP == 1 } {
@@ -14437,8 +14502,8 @@ for { set i 0 } { $i < $argc } { incr i } {
 
 # load defaults file
 #__setup   ;# old setup
-setup2
 
+setup2
 if { $do_category == 1 } {
    set CHECK_GUILTY_CATEGORIES $do_category_list
 }
@@ -14536,5 +14601,4 @@ if {$do_nomain == 0} {
 #  wait_for_enter 1
   menu 
 }
-
 

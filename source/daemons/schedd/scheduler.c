@@ -798,11 +798,8 @@ SKIP_THIS_JOB:
 
       /* drop idle jobs that exceed maxujobs limit */
       /* should be done after resort_job() 'cause job is referenced */
-      if (sgeee_mode) {
-         job_lists_split_with_reference_to_max_running(splitted_job_lists,
-                                                       &user_list,
-                                                       scheddconf.maxujobs);
-      }
+      job_lists_split_with_reference_to_max_running(splitted_job_lists,
+                                        &user_list, scheddconf.maxujobs);
       lFreeElem(job);
 
       /*------------------------------------------------------------------ 

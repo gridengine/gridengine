@@ -1,3 +1,5 @@
+AH-2002-04-29-0: Enhancem.  make maxujobs limitation work SGE and SGEEE mode
+
 AH-2002-04-26-0: Bugfix:    - queue nsuspend > 1 was not used to suspend
                               multiple jobs in a queue at a time in case of a
                               suspend threshold alarm.

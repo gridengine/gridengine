@@ -725,7 +725,7 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
    lListElem *range, *prev_range, *next_range;
    int inserted = 0;
-   DENTER(TOP_LAYER, "range_insert_id");
+   DENTER(CULL_LAYER, "range_insert_id");
 
 #if 0 /* EB: debug */
 {

@@ -1,8 +1,9 @@
+AA-2002-06-19-0: I18N:      gettext build script
+
 CR-2002-06-17-2: Bugfix:    removed old i18n setup code
 
 CR-2002-06-17-1: Bugfix:    Don't produce infotext error message "Binary not
                             compiled with gettext!"
-
 
 AA-2002-06-14-0: FIX:       Job dependency display in qmon
                  Issue:     #275 affects only qmon

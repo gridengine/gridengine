@@ -1,0 +1,15 @@
+#!/bin/sh
+
+BUILD_ARCH=$1
+
+rm -rf $BUILD_ARCH
+mkdir $BUILD_ARCH
+cd $BUILD_ARCH
+
+if [ $BUILD_ARCH = "SOLARIS64" ]; then
+   CFLAGS="-fast -xarch=v9"
+   LDFLAGS="-xarch=v9"
+   export CFLAGS LDFLAGS
+fi   
+../configure --srcdir=.. --prefix=`pwd` --enable-shared --with-included-gettext
+make install

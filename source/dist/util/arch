@@ -146,6 +146,9 @@ if [ -x /bin/uname ]; then
    Linux,ia64)
       ARCH=ia64linux
       ;;
+   Linux,x86_64)
+      ARCH=linuxamd64
+      ;;
    Linux,*)
       rev="`/bin/uname -r`"
       case $rev in

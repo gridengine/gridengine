@@ -36,6 +36,9 @@
 #include <string.h>
 
 #include "basis_types.h"
+#if defined(INTERIX)
+#  include "misc.h"
+#endif
 
 /*-------------------------------------------*/
 void usage(void)
@@ -53,7 +56,15 @@ int main(int argc, char *argv[])
  if (!strcmp(argv[1], "-uid"))
     printf(uid_t_fmt"\n", getuid());
  else if (!strcmp(argv[1], "-euid"))
+#if defined(INTERIX)
+    if(wl_is_user_id_superuser(geteuid())) {
+       printf("0\n");
+    } else {
+       printf(uid_t_fmt"\n", geteuid());
+    }
+#else
     printf(uid_t_fmt"\n", geteuid());
+#endif
  else if (!strcmp(argv[1], "-gid"))
     printf(gid_t_fmt"\n", getgid());
  else if (!strcmp(argv[1], "-egid"))

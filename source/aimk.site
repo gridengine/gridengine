@@ -1,4 +1,4 @@
- #___INFO__MARK_BEGIN__
+#___INFO__MARK_BEGIN__
 ##########################################################################
 #
 #  The Contents of this file are made available subject to the terms of
@@ -34,7 +34,7 @@
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6c/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6g/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is

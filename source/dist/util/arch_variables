@@ -75,6 +75,11 @@ case $ARCH in
       RC_FILE=insserv-linux
       RC_PREFIX=/etc/init.d
       RC_DIR=unused
+   elif [ -x /usr/sbin/update-rc.d ]; then
+      # Debian uses update-rc.d to add startup scripts
+      RC_FILE=update-rc.d
+      RC_PREFIX=/etc/init.d
+      RC_DIR=unused
    else
       RC_FILE=sysv_rc
       RC_PREFIX=/etc/rc.d

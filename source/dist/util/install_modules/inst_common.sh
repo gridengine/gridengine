@@ -987,6 +987,12 @@ AddSGEStartUpScript()
       echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+   elif [ "$RC_FILE" = "update-rc.d" ]; then
+      # let Debian install scripts according to defaults
+      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /usr/sbin/update-rc.d $STARTUP_FILE_NAME
+      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95
    elif [ "$RC_FILE" = "freebsd" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}

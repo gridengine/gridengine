@@ -39,10 +39,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-#include "commd.h"
-#include "commd_error.h"
 #include "sge_hostname.h"
-#include "debug_malloc.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_language.h"
@@ -51,7 +48,7 @@
 #include "sge_string.h"
 #include "sge_prog.h"
 
-#include "msg_commd.h"
+#include "msg_utilib.h"
 
 #define ALIAS_DELIMITER "\n\t ,;"
 

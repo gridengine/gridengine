@@ -76,7 +76,6 @@
 #define MSG_COMMD_DUMPTOFILE                          _("dump to file /tmp/commd/commd.dump")
 #define MSG_FILE_TOMANYFDSSTART                       _("start of \"too may open fds open\" {")
 #define MSG_FILE_TOMANYFDSEND                         _("end of \"too may open fds open\" }")
-#define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _("can't malloc() for path to host alias file")
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE _("can't malloc() for path to act_qmaster file")
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOPRODMODFILE    _("can't malloc() for path to product mode file")
 
@@ -165,13 +164,6 @@
 #define MSG_COMMPROC_NONE                         _("none")
 #define MSG_COMMPROC_ON_HOST_S                    _("on host %s\n")
 #define MSG_COMMPROC_INACTIVEFOR_SIU              _("commproc %s:%d was inactive for "U32CFormat" seconds" )
-
-
-/* 
-** commd/host.c
-*/ 
-#define MSG_NET_GETHOSTNAMEFAILED                  _("gethostname failed")
-#define MSG_NET_RESOLVINGLOCALHOSTFAILED           _("failed resolving local host")
 
 /* 
 ** commd/process_received_message.c

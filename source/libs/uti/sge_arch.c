@@ -41,7 +41,6 @@
 #include "msg_utilib.h"
 #include "sgermon.h"
 #include "msg_common.h"
-#include "msg_commd.h"
 #include "sge_unistd.h"
 #include "sge_arch.h"
 

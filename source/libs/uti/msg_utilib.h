@@ -62,7 +62,7 @@
 #define MSG_SGECODINEROOTNOTEQUIV   _("SGE_ROOT and CODINE_ROOT are not equivalent\n")
 #define MSG_GRDCODINEROOTNOTEQUIV   _("GRD_ROOT and CODINE_ROOT are not equivalent\n")
 #define MSG_UNKNOWNERRORINSGEROOT   _("Unknown error in function sge_sge_root()\n")
-
+#define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _("can't malloc() for path to host alias file")
 
 /* 
 ** utilib/sge_nprocs.c
@@ -242,6 +242,12 @@
 #define MSG_POINTER_SUFFIXISNULLINSGEUNLINK        _("suffix == NULL in sge_unlink()\n") 
 #define MSG_VAR_PATHISNULLINSGEMKDIR            _("path == NULL in sge_mkdir()")
 #define MSG_FILE_CREATEDIRFAILED_SS             _("can't create directory \"%s\": %s\n")
+
+/*
+** utilib/sge_hostname.c
+*/
+#define MSG_NET_GETHOSTNAMEFAILED                  _("gethostname failed")
+#define MSG_NET_RESOLVINGLOCALHOSTFAILED           _("failed resolving local host")
 
 #endif /* __MSG_UTILIB_H */
 

@@ -52,7 +52,7 @@ QSTAT_OBJS = $(QSTAT_SRC:.c=.o)
 
 QSTAT_ADD_OBJS = $(QSTAT_ADD_SRC:.c=.o)
 
-QSTAT_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lngc -lngclists -luti -llck -lrmon $(DLLIB)
+QSTAT_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
 
 QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \

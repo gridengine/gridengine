@@ -44,7 +44,7 @@ include $(SDIR)/daemons/shepherd/Makefile
 ###############################################################################
 daemons: daemons_common execd qmaster schedd shadowd shepherd
 
-daemons_clean: daemons_common_clean ngclib_clean ngclistslib_clean execd_clean qmaster_clean schedd_clean shadowd_clean shepherd_clean
+daemons_clean: daemons_common_clean commlib_clean commlistslib_clean execd_clean qmaster_clean schedd_clean shadowd_clean shepherd_clean
 
 daemons_depend: daemons_common_depend execd_depend qmaster_depend schedd_depend shadowd_depend shepherd_depend
 

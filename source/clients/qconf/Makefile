@@ -50,7 +50,7 @@ QCONF_OBJS = $(QCONF_SRC:.c=.o)
 
 QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o)
 
-QCONF_ADD_LIBS = -lspoolf -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lngc -lngclists -luti -llck -lrmon $(DLLIB)
+QCONF_ADD_LIBS = -lspoolf -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
 
 QCONF_LIB_DEPENDS = $(SPOOLFLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 

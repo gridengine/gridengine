@@ -36,7 +36,7 @@
 include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/commlib_v1.0/Makefile
+include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/gdi/Makefile
 include $(SDIR)/libs/evc/Makefile
@@ -55,14 +55,14 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib rmonlib schedlib utilib lcklib japilib ngclib $(SGELIB)
+libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib rmonlib schedlib utilib lcklib japilib commlib $(SGELIB)
 
-libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean ngclib_clean ngclistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean japilib_clean $(SGELIB)_clean
+libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean japilib_clean $(SGELIB)_clean
 
 $(SGELIB)_clean: 
 	$(RM) libsge.a libsge$(SHAREDEXT)
 
-libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend lcklib_depend japilib_depend ngclib_depend ngclistslib_depend
+libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend lcklib_depend japilib_depend commlib_depend commlistslib_depend
 
 libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_messages mirlib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages lcklib_messages japilib_messages
 

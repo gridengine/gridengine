@@ -68,8 +68,8 @@ files=" \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
        libs/rmon/rmon_dependencies  \
-       libs/commlib_v1.0/ngclib_dependencies  \
-       libs/commlib_v1.0/lists/ngclistslib_dependencies  \
+       libs/comm/commlib_dependencies  \
+       libs/comm/lists/commlistslib_dependencies \
        libs/lck/lck_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \

@@ -604,7 +604,7 @@ const char *target    /* prognames[QSTD|EXECD] */
 
 #ifdef ENABLE_NGC
    /* TODO: check this */
-   CRITICAL((SGE_EVENT,"set_last_heard_from() not suppored by NGC"));
+   CRITICAL((SGE_EVENT,"set_last_heard_from() not suppored by commlib"));
 #else
    /* tell commlib, that this guys will vanish */
    if (target)

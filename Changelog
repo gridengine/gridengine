@@ -1,3 +1,8 @@
+DT-2004-06-01-2: Bugfix:    o Fixing DT-2004-06-01-1
+                            - NOTE: checking *so* I can compile and test
+                 Changed:   qsub
+                 Issue:     Related to 1075
+
 DT-2004-06-01-1: Bugfix:    o Better handling of errors in qsub
                             - NOTE: checking *so* I can compile and test
                  Changed:   qsub, JAPI

@@ -216,7 +216,8 @@
 #define MSG_PROF_NOTACTIVE_S                    _MESSAGE(49093, _(SFN": profiling is not active\n"))
 #define MSG_PROF_CYCLICNOTALLOWED_SD            _MESSAGE(49094, _(SFN": cyclic measurement for level %d requested - disabling profiling\n"))
 #define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
-
+#define MSG_PROF_MAXTHREADSEXCEEDED_S           _MESSAGE(49096, _(SFN": maximum number of threads mas been exceeded\n"))
+#define MSG_PROF_NULLLEVELNAME_S                _MESSAGE(49097, _(SFN": the assigned level name is NULL\n"))
 /*
  * libs/uti/sge_bootstrap
  */

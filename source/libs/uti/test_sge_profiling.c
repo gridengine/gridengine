@@ -39,6 +39,7 @@
 
 #include "sge_profiling.h"
 
+int   do_test (void);
 void* do_sleep(void*);
 void* do_calc(void*);
 void* do_calc2(void*);
@@ -47,6 +48,30 @@ void* do_malloc(void*);
 
 int main(int argc, char *argv[])
 {
+   int ret = 0;
+   
+   /* First with profiling enabled */
+   printf ("Testing with profiling enabled.\n");
+   ret = do_test ();
+   
+   if (ret == 0) {
+      /* Then with profiling disabled */
+      printf ("Testing with profiling disabled.\n");
+      sge_prof_set_enabled (false);
+      ret = do_test ();
+   }
+   
+   if (ret == 0) {
+      /* Then again with profiling re-enabled */
+      printf ("Testing with profiling re-enabled.\n");
+      sge_prof_set_enabled (true);
+      ret = do_test ();
+   }
+   
+   return ret;
+}
+
+int do_test () {
    pthread_t sleep_thread, calc_thread, calc2_thread, malloc_thread;
 
    dstring error = DSTRING_INIT;

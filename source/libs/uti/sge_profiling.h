@@ -131,13 +131,9 @@ typedef struct {
    dstring info_string;
 } sge_prof_info_t;
 
+void sge_prof_set_enabled(bool enabled);
 void sge_prof_setup(void);
-void init_array_first(void);
-void init_array(pthread_t num);
-void init_thread_info(void);
 void sge_prof_cleanup(void);
-int get_prof_info_thread_id(pthread_t thread_num);
-/*sge_thread_info_t** get_thread_info(void);*/
 bool thread_prof_active_by_id(pthread_t thread_id);
 bool thread_prof_active_by_name(const char* thread_name);
 void set_thread_name(pthread_t thread_id, const char* thread_name);

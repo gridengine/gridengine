@@ -63,6 +63,7 @@
 #include "sge_prog.h"
 #include "sge_string.h"
 #include "sge_uidgid.h"
+#include "sge_profiling.h"
 
 /* RMON */
 #include "sgermon.h"
@@ -287,6 +288,9 @@ int drmaa_init(const char *contact, char *error_diagnosis,
       diagp = &diag;
    }
  
+   /* Disable profiling for DRMAA clients. */
+   sge_prof_set_enabled (false);
+   
    DRMAA_LOCK_ENVIRON();
    set_session = getenv(session_key_env_var)?true:false;
    if (set_session)
@@ -2512,7 +2516,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
     * An error state does not exist with DRMAA jobs.
     * This setting is necessary to ensure e.g. jobs
     * with a wrong input path specification fail when
-    * doing drmaa_wait(). A SGE job template attribute
+    * doing drmaa_wait(). An SGE job template attribute
     * could be supported to enable SGE error state.
     */
    JOB_TYPE_SET_NO_ERROR (jb_now);
@@ -2597,29 +2601,6 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    } else {
       const char *path = NULL;
 
-/* I've decided that rather than working magic behind the scenes, I will do this
- * as simply as possible and just document the expected behavior. */
-#if 0
-      /* BUGFIX: #658
-       * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
-       * If another option level disables binary mode, I have to remove this
-       * option.  This means that "-b n" trumps both the default "-b y" and the
-       * default "-shell n".
-       * Technically, this is not necessary since -shell is ignored if -b y is
-       * not set, but if -b n is set, and then overridden with -b y, I don't
-       * want the -shell n to still be hanging around. */
-      ep = lGetElemStr(opts_default, SPA_switch, "-shell");
-      lRemoveElem(opts_default, ep);
-#endif
-
-      /* If the scriptfile is to be parsed for options, we have to set the
-       * cwd.  In DRMAA, the script path is assumed to be relative to the
-       * working directory.  Therefore, if a DRMAA_WD is given, we must
-       * chdir() to that directory before trying to parse (and hence find) the
-       * script.  If the working directory is not given, the job will be run in
-       * the user's home directory, presumably.  The exception is if -cwd is
-       * set from the DRMAA_NATIVE_SPECIFICATION or in a default file, in which
-       * case we don't need to chdir() at all. */
       if (opt_list_has_X (opts_drmaa, "-wd")) {
          ep = lGetElemStr(opts_drmaa, SPA_switch, "-wd");
          path = lGetString(ep, SPA_argval_lStringT);

@@ -120,9 +120,20 @@
 *     uti/profiling/prof_get_info_string()
 *
 *  NOTES
-*     MT-NOTE: this module is MT safe, if sge_prof_setup() is called before
-*              profiling is started!
+*     MT-NOTE: this module is MT safe, if sge_prof_setup() and/or
+*              sge_set_profiling_enabled() are called before
+*              profiling is started and sge_prof_cleanup() is called after
+*              all threads which make profiling calls have been stopped!
 *              sge_prof_cleanup() is used to free  the profiling array 
+*
+*  TODO
+*     - Replace all pthread_mutex_(un)lock() calls with sge_mutex_(un)lock()
+*     - Separate public and private interfaces so that thread index can be
+*       passed around instead of always being rediscovered
+*     - Replace static array with thread specific storage?
+*     - Nested measurements can result in negative numbers ( A->B->B )
+*     - Document static functions
+*     - Print levels without names
 *******************************************************************************/
 
 /****** uti/profiling/-Profiling-Defines ***************************************
@@ -161,7 +172,13 @@ static pthread_mutex_t           thread_times_mutex = PTHREAD_MUTEX_INITIALIZER;
 static sge_thread_alive_times_t  thread_times;     /* this struct is initalized in sge_update_thread_alive_time() */
 static bool                      thread_times_init_done = false;
 
-static void           prof_info_init(prof_level level, pthread_t thread_id);
+static void        prof_info_init(prof_level level, pthread_t thread_id);
+static void        prof_info_level_init(prof_level i, int thread_num);
+static void        prof_reset_thread(int thread_num, prof_level level);
+static void        init_array(pthread_t num);
+static void        init_array_first(void);
+static void        init_thread_info(void);
+static int         get_prof_info_thread_id(pthread_t thread_num);
 
 static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...);
 
@@ -169,13 +186,41 @@ static sge_prof_info_t **theInfo = NULL;
 static sge_thread_info_t *thrdInfo = NULL;
 
 pthread_mutex_t thrdInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_key_t thread_id_key;
+
+static bool profiling_enabled = true;
 
 /*
  * TODO: If application starts more than MAX_THREAD_NUM threads,
  *       this value must be increased:
  *
  */ 
-int MAX_THREAD_NUM = 256;
+int MAX_THREAD_NUM = 16;
+
+/****** uti/profiling/sge_prof_set_enabled() ***********************************
+*  NAME
+*     sge_prof_set_enabled() -- enables/disables profiling
+*
+*  SYNOPSIS
+*     void sge_prof_set_enabled(bool enabled)
+*
+*  FUNCTION
+*     Enables/disables profiling completely.  Profiling is enabled by
+*     default.  This method is the fix to Issue 1471.
+*
+*  INPUTS
+*     bool enabled   Whether profiling should be enabled
+*  RESULT
+*
+*  NOTES
+*     MT-NOTE: sge_prof_set_enabled() is MT safe only if called before any other
+*              profiling calls
+*
+*  SEE ALSO
+*******************************************************************************/
+void sge_prof_set_enabled(bool enabled) {
+   profiling_enabled = enabled;
+}
 
 /****** uti/profiling/sge_prof_setup() ************************************
 *  NAME
@@ -192,18 +237,19 @@ int MAX_THREAD_NUM = 256;
 *  RESULT
 *
 *  NOTES
-*     MT-NOTE: sge_prof_setup() is MT safe
+*     MT-NOTE: sge_prof_setup() is MT safe only if called before any other
+*              profiling calls other than sge_prof_set_enabled()
 *
 *  SEE ALSO
 *******************************************************************************/
 void sge_prof_setup(void) {
-
-   pthread_mutex_lock(&thrdInfo_mutex); 
+   if (!profiling_enabled) {
+      return;
+   }
+   
    init_thread_info();
    init_array_first();
    init_array(pthread_self());
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
 }
 
 
@@ -234,21 +280,28 @@ void sge_prof_setup(void) {
 *******************************************************************************/
 bool prof_set_level_name(prof_level level, const char *name, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
-   bool ret = false;
-
-   init_array(thread_id);
-
-   thread_num = get_prof_info_thread_id(thread_id);
+   bool ret = true;
 
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_set_level_name", level);
-   } else {
-        if (name != NULL) {
-           theInfo[thread_num][level].name = name;
-           ret = true;
-        }
+      ret = false;
+   } else if (name == NULL) {
+      prof_add_error_sprintf(error, MSG_PROF_NULLLEVELNAME_S, "prof_set_level_name");
+      ret = false;
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
+      
+      init_array(thread_id); 
+
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         ret = false;
+      } else {
+         theInfo[thread_num][level].name = name;
+      }
    }
    
    return ret;
@@ -278,16 +331,22 @@ bool prof_set_level_name(prof_level level, const char *name, dstring *error)
 bool prof_is_active(prof_level level)
 {
    int thread_num;
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
+   bool ret = false;
 
-   init_array(thread_id);
-   thread_num = get_prof_info_thread_id(thread_id);
+   if (profiling_enabled && (level < SGE_PROF_ALL)) {
+      thread_id = pthread_self();
+      
+      init_array(thread_id); 
 
-   if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-      return false;
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM)) {
+         ret = theInfo[thread_num][level].prof_is_started;
+      }
    }
    
-   return theInfo[thread_num][level].prof_is_started;
+   return ret;
 }
 
 /****** uti/profiling/prof_start() ****************************************
@@ -319,55 +378,64 @@ bool prof_is_active(prof_level level)
 *******************************************************************************/
 bool prof_start(prof_level level, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
-   bool ret = false;
+   bool ret = true;
 
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start", level);
+      ret = false;
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-   init_array(thread_id);
+      init_array(thread_id); 
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      thread_num = get_prof_info_thread_id(thread_id);
 
-   if (theInfo[thread_num][level].prof_is_started) {
-      prof_add_error_sprintf(error, MSG_PROF_ALREADYACTIVE_S, "prof_start");
-   } else {
-      struct tms tms_buffer;
-      prof_level i;
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_start");
+         ret = false;
+      } else if (theInfo[thread_num][level].prof_is_started) {
+         prof_add_error_sprintf(error, MSG_PROF_ALREADYACTIVE_S, "prof_start");
+         ret = false;
+      } else {
+         struct tms tms_buffer;
+         prof_level i;
+         clock_t start_time = times(&tms_buffer);
 
-      if (level == SGE_PROF_ALL) {
-         for (i = 0; i <= SGE_PROF_ALL; i++) {
-            /* we have no actual profiling level */
-            theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
+         if (level == SGE_PROF_ALL) {
+            for (i = 0; i <= SGE_PROF_ALL; i++) {
+               /* get start time */
+               theInfo[thread_num][i].start_clock = start_time;
 
+               /* initialize names and reset all data */
+               ret = prof_reset(i, error);
+
+               theInfo[thread_num][i].prof_is_started = true;
+
+               theInfo[thread_num][i].ever_started = true;
+            } 
+         } else {
             /* get start time */
-            theInfo[thread_num][i].start_clock = times(&tms_buffer);
+            theInfo[thread_num][level].start_clock = start_time;
 
             /* initialize names and reset all data */
-            ret = prof_reset(i, error);
+            ret = prof_reset(level, error);
 
-            theInfo[thread_num][i].prof_is_started = true;
+            theInfo[thread_num][level].prof_is_started = true;
+            /* TODO
+             * Is there a reason we do this?  This flag in never cleared. */
+            theInfo[thread_num][SGE_PROF_ALL].prof_is_started = true;
 
-            theInfo[thread_num][i].ever_started = true;
-         } 
-      } else {
+            theInfo[thread_num][level].ever_started = true;
+         }
+         
          /* we have no actual profiling level */
          theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
 
-         /* get start time */
-         theInfo[thread_num][level].start_clock = times(&tms_buffer);
-
-         /* initialize names and reset all data */
-         ret = prof_reset(level, error);
-
-         theInfo[thread_num][level].prof_is_started = true;
-         theInfo[thread_num][SGE_PROF_ALL].prof_is_started = true;
-
-         theInfo[thread_num][level].ever_started = true;
-        }
-
-      /* implicitly start the OTHER level */
-      prof_start_measurement(SGE_PROF_OTHER, error);
-
+         /* implicitly start the OTHER level */
+         prof_start_measurement(SGE_PROF_OTHER, error);
+      }
    }
 
    return ret;
@@ -405,31 +473,38 @@ bool prof_start(prof_level level, dstring *error)
 *******************************************************************************/
 bool prof_stop(prof_level level, dstring *error)
 {  
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
-   bool ret = false;
+   bool ret = true;
    prof_level i;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop", level);
+      ret = false;
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
+      
+      init_array(thread_id); 
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      thread_num = get_prof_info_thread_id(thread_id);
 
-   if (!theInfo[thread_num][level].prof_is_started) {
-      prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop");
-   } else {
-      prof_stop_measurement(SGE_PROF_OTHER, error);
-
-      if (level == SGE_PROF_ALL) {
-         for (i = 0; i <= SGE_PROF_ALL; i++) {
-            theInfo[thread_num][i].prof_is_started = false;
-            ret = true;
-         }
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_stop");
+         ret = false;
+      } else if (!theInfo[thread_num][level].prof_is_started) {
+         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop");
+         ret = false;
       } else {
-         theInfo[thread_num][level].prof_is_started = false;
-         ret = true;
-        }
+         prof_stop_measurement(SGE_PROF_OTHER, error);
+
+         if (level == SGE_PROF_ALL) {
+            for (i = 0; i <= SGE_PROF_ALL; i++) {
+               theInfo[thread_num][i].prof_is_started = false;
+            }
+         } else {
+            theInfo[thread_num][level].prof_is_started = false;
+         }
+      }
    }
 
    return ret;
@@ -462,32 +537,36 @@ bool prof_stop(prof_level level, dstring *error)
 *******************************************************************************/
 bool prof_start_measurement(prof_level level, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
-   bool ret = false;
-
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
+   bool ret = true;
 
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start_measurement", level);
-   } else if (!theInfo[thread_num][level].prof_is_started) { 
-      prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
-   } else {
+      ret = false;
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
+      
+      init_array(thread_id); 
 
-      if (theInfo[thread_num][SGE_PROF_ALL].akt_level == level) {
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_start_measurement");
+         ret = false;
+      } else if (!theInfo[thread_num][level].prof_is_started) { 
+         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
+         ret = false;
+      } else if (theInfo[thread_num][SGE_PROF_ALL].akt_level == level) {
          /* multiple start_measurement calls within one level are allowed */
          theInfo[thread_num][level].nested_calls++;
-         ret = true;
       } else if (theInfo[thread_num][level].pre != SGE_PROF_NONE) {
          /* we cannot yet handle cyclic measurements between multiple levels
           * produce an error and stop profiling
           */
          prof_add_error_sprintf(error, MSG_PROF_CYCLICNOTALLOWED_SD, "prof_start_measurement", level);
          prof_stop(level, error);
+         ret = false;
       } else {
          theInfo[thread_num][level].pre = theInfo[thread_num][SGE_PROF_ALL].akt_level;
          theInfo[thread_num][SGE_PROF_ALL].akt_level = level;
@@ -498,8 +577,6 @@ bool prof_start_measurement(prof_level level, dstring *error)
          theInfo[thread_num][level].sub = 0;
          theInfo[thread_num][level].sub_utime = 0;
          theInfo[thread_num][level].sub_utime= 0;
-
-         ret = true;
       }
    }
 
@@ -534,55 +611,61 @@ bool prof_start_measurement(prof_level level, dstring *error)
 *******************************************************************************/
 bool prof_stop_measurement(prof_level level, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
-   bool ret = false;
-
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
+   bool ret = true;
 
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop_measurement", level);
-   } else if (!theInfo[thread_num][level].prof_is_started) {
-      prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop_measurement");
-   } else {
-      clock_t time, utime, stime;
+      ret = false;
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
+      
+      init_array(thread_id); 
 
-      if (theInfo[thread_num][level].nested_calls > 0) {
-         theInfo[thread_num][level].nested_calls--;
-         ret = true;
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_stop_measurement");
+         ret = false;
+      } else if (!theInfo[thread_num][level].prof_is_started) {
+         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop_measurement");
+         ret = false;
       } else {
-         theInfo[thread_num][level].end = times(&(theInfo[thread_num][level].tms_end));
-         time  = theInfo[thread_num][level].end - theInfo[thread_num][level].start;
-         utime = theInfo[thread_num][level].tms_end.tms_utime - theInfo[thread_num][level].tms_start.tms_utime;
-         stime = theInfo[thread_num][level].tms_end.tms_stime - theInfo[thread_num][level].tms_start.tms_stime;
+         clock_t time, utime, stime;
 
-         theInfo[thread_num][level].total += time;
-         theInfo[thread_num][level].total_utime += utime;
-         theInfo[thread_num][level].total_stime += stime;
-
-
-         if (theInfo[thread_num][level].pre != SGE_PROF_NONE) {
-            prof_level pre = theInfo[thread_num][level].pre;
-
-            theInfo[thread_num][pre].sub += time;
-            theInfo[thread_num][pre].sub_utime += utime;
-            theInfo[thread_num][pre].sub_stime += stime;
-
-            theInfo[thread_num][pre].sub_total += time;
-            theInfo[thread_num][pre].sub_total_utime += utime;
-            theInfo[thread_num][pre].sub_total_stime += stime;
-            
-            theInfo[thread_num][SGE_PROF_ALL].akt_level = theInfo[thread_num][level].pre;
-            theInfo[thread_num][level].pre = SGE_PROF_NONE;
+         if (theInfo[thread_num][level].nested_calls > 0) {
+            theInfo[thread_num][level].nested_calls--;
+printf ("%d %d -- previous level is %d\n", thread_num, level, level);
          } else {
-            theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
-         }
+            theInfo[thread_num][level].end = times(&(theInfo[thread_num][level].tms_end));
+            time  = theInfo[thread_num][level].end - theInfo[thread_num][level].start;
+            utime = theInfo[thread_num][level].tms_end.tms_utime - theInfo[thread_num][level].tms_start.tms_utime;
+            stime = theInfo[thread_num][level].tms_end.tms_stime - theInfo[thread_num][level].tms_start.tms_stime;
 
-         ret = true;
+            theInfo[thread_num][level].total += time;
+            theInfo[thread_num][level].total_utime += utime;
+            theInfo[thread_num][level].total_stime += stime;
+
+
+            if (theInfo[thread_num][level].pre != SGE_PROF_NONE) {
+               prof_level pre = theInfo[thread_num][level].pre;
+printf ("%d %d -- previous level is %d\n", thread_num, level, pre);
+
+               theInfo[thread_num][pre].sub += time;
+               theInfo[thread_num][pre].sub_utime += utime;
+               theInfo[thread_num][pre].sub_stime += stime;
+
+               theInfo[thread_num][pre].sub_total += time;
+               theInfo[thread_num][pre].sub_total_utime += utime;
+               theInfo[thread_num][pre].sub_total_stime += stime;
+
+               theInfo[thread_num][SGE_PROF_ALL].akt_level = theInfo[thread_num][level].pre;
+               theInfo[thread_num][level].pre = SGE_PROF_NONE;
+            } else {
+               theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
+            }
+         }
       }
    }
 
@@ -611,85 +694,94 @@ bool prof_stop_measurement(prof_level level, dstring *error)
 *******************************************************************************/
 bool prof_reset(prof_level level, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
    int c;
    bool ret = true;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
-
-   if (theInfo[thread_num][SGE_PROF_ALL].akt_level > SGE_PROF_OTHER) {
-      prof_add_error_sprintf(error, MSG_PROF_RESETWHILEMEASUREMENT_S, "prof_reset");
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_reset", level);
       ret = false;
-   } else {
-      struct tms tms_buffer;
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-      if (theInfo[thread_num][level].prof_is_started) {
-         ret = prof_stop_measurement(SGE_PROF_OTHER, error);
-      }
-      if (level == SGE_PROF_ALL) {
-         for (c = 0; c <= SGE_PROF_ALL; c++) {
-            theInfo[thread_num][c].start = 0;
-            theInfo[thread_num][c].end = 0;
-            theInfo[thread_num][c].tms_start.tms_utime = 0;
-            theInfo[thread_num][c].tms_start.tms_stime = 0;
-            theInfo[thread_num][c].tms_start.tms_cutime = 0;
-            theInfo[thread_num][c].tms_start.tms_cstime = 0;
-            theInfo[thread_num][c].tms_end.tms_utime = 0;
-            theInfo[thread_num][c].tms_end.tms_stime = 0;
-            theInfo[thread_num][c].tms_end.tms_cutime = 0;
-            theInfo[thread_num][c].tms_end.tms_cstime = 0;
-            theInfo[thread_num][c].total = 0;
-            theInfo[thread_num][c].total_utime = 0;
-            theInfo[thread_num][c].total_stime = 0;
-   
-            theInfo[thread_num][c].pre = SGE_PROF_NONE;
-            theInfo[thread_num][c].sub = 0;
-            theInfo[thread_num][c].sub_utime = 0;
-            theInfo[thread_num][c].sub_stime = 0;
-            theInfo[thread_num][c].sub_total = 0;
-            theInfo[thread_num][c].sub_total_utime = 0;
-            theInfo[thread_num][c].sub_total_stime = 0;
+      init_array(thread_id); 
 
-            theInfo[thread_num][c].start_clock = times(&tms_buffer);
-         }
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_reset");
+         ret = false;
+      } else if (theInfo[thread_num][SGE_PROF_ALL].akt_level > SGE_PROF_OTHER) {
+         prof_add_error_sprintf(error, MSG_PROF_RESETWHILEMEASUREMENT_S, "prof_reset");
+         ret = false;
       } else {
-         theInfo[thread_num][level].start = 0;
-         theInfo[thread_num][level].end = 0;
-         theInfo[thread_num][level].tms_start.tms_utime = 0;
-         theInfo[thread_num][level].tms_start.tms_stime = 0;
-         theInfo[thread_num][level].tms_start.tms_cutime = 0;
-         theInfo[thread_num][level].tms_start.tms_cstime = 0;
-         theInfo[thread_num][level].tms_end.tms_utime = 0;
-         theInfo[thread_num][level].tms_end.tms_stime = 0;
-         theInfo[thread_num][level].tms_end.tms_cutime = 0;
-         theInfo[thread_num][level].tms_end.tms_cstime = 0;
-         theInfo[thread_num][level].total = 0;
-         theInfo[thread_num][level].total_utime = 0;
-         theInfo[thread_num][level].total_stime = 0;
+         if (theInfo[thread_num][level].prof_is_started) {
+            ret = prof_stop_measurement(SGE_PROF_OTHER, error);
+         }
+         if (level == SGE_PROF_ALL) {
+            for (c = 0; c <= SGE_PROF_ALL; c++) {
+               prof_reset_thread (thread_num, c);
+            }
+         } else {
+            prof_reset_thread (thread_num, level);
+         }
 
-         theInfo[thread_num][level].pre = SGE_PROF_NONE;
-         theInfo[thread_num][level].sub = 0;
-         theInfo[thread_num][level].sub_utime = 0;
-         theInfo[thread_num][level].sub_stime = 0;
-         theInfo[thread_num][level].sub_total = 0;
-         theInfo[thread_num][level].sub_total_utime = 0;
-         theInfo[thread_num][level].sub_total_stime = 0;
-
-         theInfo[thread_num][level].start_clock = times(&tms_buffer);
-      }
-
-      if (theInfo[thread_num][level].prof_is_started) {
-         ret = prof_start_measurement(SGE_PROF_OTHER, error);
+         if (theInfo[thread_num][level].prof_is_started) {
+            ret = prof_start_measurement(SGE_PROF_OTHER, error);
+         }
       }
    }
 
    return ret;
 }
+
+/****** uti/profiling/prof_reset_thread() **************************************
+*  NAME
+*     prof_reset_thread() -- reset usage information
+*
+*  SYNOPSIS
+*     bool prof_reset_thread(int thread_num, prof_level level) 
+*
+*  FUNCTION
+*     Reset usage and timing information for a single thread and level to 0.
+*
+*  INPUTS
+*     int thread_num    the thread to reset
+*     prof_level level  the profiling level to reset
+*
+*  NOTES
+*     MT-NOTE: prof_reset() is MT safe
+*******************************************************************************/
+static void prof_reset_thread(int thread_num, prof_level level)
+{
+   struct tms tms_buffer;
+
+   theInfo[thread_num][level].start = 0;
+   theInfo[thread_num][level].end = 0;
+   theInfo[thread_num][level].tms_start.tms_utime = 0;
+   theInfo[thread_num][level].tms_start.tms_stime = 0;
+   theInfo[thread_num][level].tms_start.tms_cutime = 0;
+   theInfo[thread_num][level].tms_start.tms_cstime = 0;
+   theInfo[thread_num][level].tms_end.tms_utime = 0;
+   theInfo[thread_num][level].tms_end.tms_stime = 0;
+   theInfo[thread_num][level].tms_end.tms_cutime = 0;
+   theInfo[thread_num][level].tms_end.tms_cstime = 0;
+   theInfo[thread_num][level].total = 0;
+   theInfo[thread_num][level].total_utime = 0;
+   theInfo[thread_num][level].total_stime = 0;
+
+   theInfo[thread_num][level].pre = SGE_PROF_NONE;
+   theInfo[thread_num][level].sub = 0;
+   theInfo[thread_num][level].sub_utime = 0;
+   theInfo[thread_num][level].sub_stime = 0;
+   theInfo[thread_num][level].sub_total = 0;
+   theInfo[thread_num][level].sub_total_utime = 0;
+   theInfo[thread_num][level].sub_total_stime = 0;
+
+   theInfo[thread_num][level].start_clock = times(&tms_buffer);
+}
+
 /****** uti/profiling/prof_get_measurement_wallclock() ********************
 *  NAME
 *     prof_get_measurement_wallclock() -- return wallclock of a measurement
@@ -719,28 +811,34 @@ bool prof_reset(prof_level level, dstring *error)
 *******************************************************************************/
 double prof_get_measurement_wallclock(prof_level level, bool with_sub, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
    clock_t clock = 0;
-
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
-
+   double ret = 0.0;
+   
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_wallclock", level);
-   } else {
-      
-      clock = theInfo[thread_num][level].end - theInfo[thread_num][level].start;
-   
-      if (!with_sub) {
-         clock -= theInfo[thread_num][level].sub;
-      }
-   }
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+      init_array(thread_id); 
+
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_wallclock");
+      } else {
+         clock = theInfo[thread_num][level].end - theInfo[thread_num][level].start;
+
+         if (!with_sub) {
+            clock -= theInfo[thread_num][level].sub;
+         }
+      }
+
+      ret = clock * 1.0 / sysconf(_SC_CLK_TCK);
+   }
+   
+   return ret;
 }
 
 /****** uti/profiling/prof_get_measurement_utime() ************************
@@ -769,28 +867,34 @@ double prof_get_measurement_wallclock(prof_level level, bool with_sub, dstring *
 *******************************************************************************/
 double prof_get_measurement_utime(prof_level level, bool with_sub, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
    clock_t clock = 0;
-
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
-
+   double ret = 0.0;
+   
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_utime", level);
-   } else {
-      
-      clock = (theInfo[thread_num][level].tms_end.tms_utime - theInfo[thread_num][level].tms_start.tms_utime);
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-      if (!with_sub) {
-         clock -= theInfo[thread_num][level].sub_utime;
+      init_array(thread_id); 
+
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_utime");
+      } else {
+         clock = (theInfo[thread_num][level].tms_end.tms_utime - theInfo[thread_num][level].tms_start.tms_utime);
+
+         if (!with_sub) {
+            clock -= theInfo[thread_num][level].sub_utime;
+         }
       }
-   }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+      ret = clock * 1.0 / sysconf(_SC_CLK_TCK);
+   }
+   
+   return ret;
 }
 
 /****** uti/profiling/prof_get_measurement_stime() ************************
@@ -819,29 +923,34 @@ double prof_get_measurement_utime(prof_level level, bool with_sub, dstring *erro
 *******************************************************************************/
 double prof_get_measurement_stime(prof_level level, bool with_sub, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
    clock_t clock = 0;
-
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
-
+   double ret = 0.0;
 
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_stime", level);
-   } else {
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-      clock = (theInfo[thread_num][level].tms_end.tms_stime - theInfo[thread_num][level].tms_start.tms_stime);
+      init_array(thread_id); 
 
-      if (!with_sub) {
-         clock -= theInfo[thread_num][level].sub_stime;
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_stime");
+      } else {
+         clock = (theInfo[thread_num][level].tms_end.tms_stime - theInfo[thread_num][level].tms_start.tms_stime);
+
+         if (!with_sub) {
+            clock -= theInfo[thread_num][level].sub_stime;
+         }
       }
-   }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+      ret = clock * 1.0 / sysconf(_SC_CLK_TCK);
+   }
+   
+   return ret;
 }
 
 /****** uti/profiling/prof_get_total_wallclock() **************************
@@ -869,25 +978,31 @@ double prof_get_measurement_stime(prof_level level, bool with_sub, dstring *erro
 
 double prof_get_total_wallclock(prof_level level, dstring *error)
 {
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
    double ret = 0.0;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+   if (level >= SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_wallclock", level);
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      init_array(thread_id); 
 
-   if (!theInfo[thread_num][level].prof_is_started) {
-      prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_get_total_wallclock");
-   } else {
-      struct tms tms_buffer;
-      clock_t now;
+      thread_num = get_prof_info_thread_id(thread_id);
 
-      now = times(&tms_buffer);
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_wallclock");
+      } else if (!theInfo[thread_num][level].prof_is_started) {
+         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_get_total_wallclock");
+      } else {
+         struct tms tms_buffer;
+         clock_t now;
 
-      ret = (now - theInfo[thread_num][level].start_clock) * 1.0 / sysconf(_SC_CLK_TCK);
+         now = times(&tms_buffer);
+
+         ret = (now - theInfo[thread_num][level].start_clock) * 1.0 / sysconf(_SC_CLK_TCK);
+      }
    }
 
    return ret;
@@ -924,20 +1039,12 @@ static double _prof_get_total_busy(prof_level level, bool with_sub, dstring *err
    int thread_num;
    clock_t clock = 0;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
    thread_num = get_prof_info_thread_id(thread_id);
 
-   if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "_prof_get_total_busy", level);
-   } else {
-      clock = theInfo[thread_num][level].total;
+   clock = theInfo[thread_num][level].total;
 
-      if (!with_sub) {
-         clock -= theInfo[thread_num][level].sub_total;
-      }
+   if (!with_sub) {
+      clock -= theInfo[thread_num][level].sub_total;
    }
 
    return clock * 1.0 / sysconf(_SC_CLK_TCK);
@@ -946,23 +1053,29 @@ static double _prof_get_total_busy(prof_level level, bool with_sub, dstring *err
 double prof_get_total_busy(prof_level level, bool with_sub, dstring *error)
 {
    double ret = 0.0;
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_busy", level);
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
+      
+      init_array(thread_id); 
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      thread_num = get_prof_info_thread_id(thread_id);
 
-   if (level == SGE_PROF_ALL) {
-      prof_level i;
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_busy");
+      } else if (level == SGE_PROF_ALL) {
+         prof_level i;
 
-      for (i = 0; i < SGE_PROF_ALL; i++) {
-         ret += _prof_get_total_busy(i, with_sub, error);
+         for (i = 0; i < SGE_PROF_ALL; i++) {
+            ret += _prof_get_total_busy(i, with_sub, error);
+         }
+      } else {
+         ret = _prof_get_total_busy(level, with_sub, error);
       }
-   } else {
-      ret = _prof_get_total_busy(level, with_sub, error);
    }
 
    return ret;
@@ -1000,14 +1113,10 @@ static double _prof_get_total_utime(prof_level level, bool with_sub, dstring *er
 
    thread_num = get_prof_info_thread_id(thread_id);
 
-   if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_utime", level);
-   } else {
-      clock = theInfo[thread_num][level].total_utime;
+   clock = theInfo[thread_num][level].total_utime;
 
-      if (!with_sub) {
-         clock -= theInfo[thread_num][level].sub_total_utime;
-      }
+   if (!with_sub) {
+      clock -= theInfo[thread_num][level].sub_total_utime;
    }
 
    return clock * 1.0 / sysconf(_SC_CLK_TCK);
@@ -1016,23 +1125,29 @@ static double _prof_get_total_utime(prof_level level, bool with_sub, dstring *er
 double prof_get_total_utime(prof_level level, bool with_sub, dstring *error)
 {
    double ret = 0.0;
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_utime", level);
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      init_array(thread_id); 
 
-   if (level == SGE_PROF_ALL) {
-      prof_level i;
+      thread_num = get_prof_info_thread_id(thread_id);
 
-      for (i = 0; i < SGE_PROF_ALL; i++) {
-         ret += _prof_get_total_utime(i, with_sub, error);
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_utime");         
+      } else if (level == SGE_PROF_ALL) {
+         prof_level i;
+
+         for (i = 0; i < SGE_PROF_ALL; i++) {
+            ret += _prof_get_total_utime(i, with_sub, error);
+         }
+      } else {
+         ret = _prof_get_total_utime(level, with_sub, error);
       }
-   } else {
-      ret = _prof_get_total_utime(level, with_sub, error);
    }
 
    return ret;
@@ -1068,17 +1183,12 @@ static double _prof_get_total_stime(prof_level level, bool with_sub, dstring *er
    int thread_num;
    clock_t clock = 0;
 
-
    thread_num = get_prof_info_thread_id(thread_id);
 
-   if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_stime", level);
-   } else {
-      clock = theInfo[thread_num][level].total_stime;
+   clock = theInfo[thread_num][level].total_stime;
 
-      if (!with_sub) {
-         clock -= theInfo[thread_num][level].sub_total_stime;
-      }
+   if (!with_sub) {
+      clock -= theInfo[thread_num][level].sub_total_stime;
    }
 
    return clock * 1.0 / sysconf(_SC_CLK_TCK);
@@ -1087,20 +1197,29 @@ static double _prof_get_total_stime(prof_level level, bool with_sub, dstring *er
 double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)
 {
    double ret = 0.0;
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
 
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_stime", level);
+   } else if (profiling_enabled) {
+      thread_id = pthread_self();
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      init_array(thread_id); 
 
-   if (level == SGE_PROF_ALL) {
-      prof_level i;
+      thread_num = get_prof_info_thread_id(thread_id);
 
-      for (i = 0; i < SGE_PROF_ALL; i++) {
-         ret += _prof_get_total_stime(i, with_sub, error);
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_stime");
+      } else if (level == SGE_PROF_ALL) {
+         prof_level i;
+
+         for (i = 0; i < SGE_PROF_ALL; i++) {
+            ret += _prof_get_total_stime(i, with_sub, error);
+         }
+      } else {
+         ret = _prof_get_total_stime(level, with_sub, error);
       }
-   } else {
-      ret = _prof_get_total_stime(level, with_sub, error);
    }
 
    return ret;
@@ -1154,10 +1273,6 @@ _prof_get_info_string(prof_level level, dstring *info_string, bool with_sub, dst
    const char *ret = NULL;
    double busy, utime, stime, utilization;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
    thread_num = get_prof_info_thread_id(thread_id);
 
    busy        = prof_get_total_busy(level, with_sub, error);
@@ -1178,55 +1293,64 @@ _prof_get_info_string(prof_level level, dstring *info_string, bool with_sub, dst
 const char *
 prof_get_info_string(prof_level level, bool with_sub, dstring *error)
 {   
-   pthread_t thread_id = pthread_self();
+   pthread_t thread_id;
    int thread_num;
    const char *ret = NULL;
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id);
-   pthread_mutex_unlock(&thrdInfo_mutex);
-
-   thread_num = get_prof_info_thread_id(thread_id);
-
-   /* total summary: one line for each level, one line for summary */
-   if (level == SGE_PROF_ALL) {
-      double busy, utime, stime, utilization;
-      prof_level i;
-      dstring total_string = DSTRING_INIT;
-
-      for (i = 0; i <= SGE_PROF_ALL; i++) {
-         /* clear previous contents */
-         sge_dstring_clear(&(theInfo[thread_num][i].info_string));
-      }
-
-      prof_stop_measurement(SGE_PROF_OTHER, error);
-
-      busy        = prof_get_total_busy(SGE_PROF_ALL, with_sub, error);
-      utime       = prof_get_total_utime(SGE_PROF_ALL, with_sub, error);
-      stime       = prof_get_total_stime(SGE_PROF_ALL, with_sub, error);
-      utilization = busy > 0 ? (utime + stime) / busy * 100 : 0;
-      
-      for (i = 0; i < SGE_PROF_ALL; i++) {
-         if (theInfo[thread_num][i].name != NULL && theInfo[thread_num][i].ever_started == true) {
-            _prof_get_info_string(i, &theInfo[thread_num][SGE_PROF_ALL].info_string, with_sub, error);
-         }
-      }
-
-      prof_start_measurement(SGE_PROF_OTHER, error);
-
-      sge_dstring_sprintf(&total_string, PROF_GET_INFO_FORMAT,
-         "total", busy, utime, stime, utilization, level);
-
-      ret = sge_dstring_append_dstring(&theInfo[thread_num][SGE_PROF_ALL].info_string, &total_string);
-
-      sge_dstring_free(&total_string);
+   if (level > SGE_PROF_ALL) {
+      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_info_string", level);
+      ret = sge_dstring_get_string (error);
+   } else if (!profiling_enabled) {
+      ret = "Profiling disabled";
    } else {
+      thread_id = pthread_self();
 
-      /* clear previous contents */
-      sge_dstring_clear(&(theInfo[thread_num][level].info_string));
+      init_array(thread_id); 
 
-      if (theInfo[thread_num][level].name != NULL) {
-         ret = _prof_get_info_string(level, &theInfo[thread_num][level].info_string, with_sub, error);
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
+         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_info_string");
+      /* total summary: one line for each level, one line for summary */
+      } else if (level == SGE_PROF_ALL) {
+         double busy, utime, stime, utilization;
+         prof_level i;
+         dstring total_string = DSTRING_INIT;
+
+         for (i = 0; i <= SGE_PROF_ALL; i++) {
+            /* clear previous contents */
+            sge_dstring_clear(&(theInfo[thread_num][i].info_string));
+         }
+
+         prof_stop_measurement(SGE_PROF_OTHER, error);
+
+         busy        = prof_get_total_busy(SGE_PROF_ALL, with_sub, error);
+         utime       = prof_get_total_utime(SGE_PROF_ALL, with_sub, error);
+         stime       = prof_get_total_stime(SGE_PROF_ALL, with_sub, error);
+         utilization = busy > 0 ? (utime + stime) / busy * 100 : 0;
+
+         for (i = 0; i < SGE_PROF_ALL; i++) {
+            if (theInfo[thread_num][i].name != NULL && theInfo[thread_num][i].ever_started == true) {
+               _prof_get_info_string(i, &theInfo[thread_num][SGE_PROF_ALL].info_string, with_sub, error);
+            }
+         }
+
+         prof_start_measurement(SGE_PROF_OTHER, error);
+
+         sge_dstring_sprintf(&total_string, PROF_GET_INFO_FORMAT,
+            "total", busy, utime, stime, utilization, level);
+
+         ret = sge_dstring_append_dstring(&theInfo[thread_num][SGE_PROF_ALL].info_string, &total_string);
+
+         sge_dstring_free(&total_string);
+      } else {
+
+         /* clear previous contents */
+         sge_dstring_clear(&(theInfo[thread_num][level].info_string));
+
+         if (theInfo[thread_num][level].name != NULL) {
+            ret = _prof_get_info_string(level, &theInfo[thread_num][level].info_string, with_sub, error);
+         }
       }
    }
 
@@ -1257,31 +1381,35 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
 {
    bool ret = false;
    int thread_num;
-   char* message;
-   char* pos;
-   pthread_t thread_id = pthread_self();
+   char* message = NULL;
+   char* pos = NULL;
+   pthread_t thread_id;
 
    DENTER(TOP_LAYER, "prof_output_info");
 
-   pthread_mutex_lock(&thrdInfo_mutex); 
-   init_array(thread_id); 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+   
+   if (profiling_enabled && (level < SGE_PROF_ALL)) {
+      thread_id = pthread_self();
 
-   thread_num = get_prof_info_thread_id(thread_id);
+      init_array(thread_id); 
 
-   if (prof_is_active(level)) {
-      const char *info_message;
-      u_long32 saved_logginglevel = log_state_get_log_level();
+      thread_num = get_prof_info_thread_id(thread_id);
 
-      log_state_set_log_level(LOG_INFO);
-      info_message = prof_get_info_string(level, with_sub, NULL);
-      INFO((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
-      for (message = strtok_r((char*)info_message, "\n", &pos); message; message = strtok_r(NULL, "\n", &pos)) {
-         INFO((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
+      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) &&
+          prof_is_active(level)) {
+         const char *info_message = NULL;
+         u_long32 saved_logginglevel = log_state_get_log_level();
+
+         log_state_set_log_level(LOG_INFO);
+         info_message = prof_get_info_string(level, with_sub, NULL);
+         INFO((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
+         for (message = strtok_r((char*)info_message, "\n", &pos); message; message = strtok_r(NULL, "\n", &pos)) {
+            INFO((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
+         }
+
+         log_state_set_log_level(saved_logginglevel);
+         ret = true;
       }
-
-      log_state_set_log_level(saved_logginglevel);
-      ret = true;
    }
 
    DEXIT;
@@ -1317,169 +1445,123 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
 
    thread_num = get_prof_info_thread_id(thread_id);
 
-   if (level == SGE_PROF_ALL) {
-      for (i = 0; i <= SGE_PROF_ALL; i++) {
-         switch (i) {
-           case SGE_PROF_OTHER:
-             theInfo[thread_num][i].name = "other";
-             break;
-           case SGE_PROF_COMMUNICATION:
-             theInfo[thread_num][i].name = "communication";
-             break;
-           case SGE_PROF_PACKING:
-             theInfo[thread_num][i].name = "packing";
-             break;
-           case SGE_PROF_EVENTCLIENT:
-             theInfo[thread_num][i].name = "eventclient";
-             break;
-           case SGE_PROF_EVENTMASTER:
-             theInfo[thread_num][i].name = "eventmaster";
-             break;
-           case SGE_PROF_MIRROR:
-             theInfo[thread_num][i].name = "mirror";
-             break;
-           case SGE_PROF_SPOOLING:
-             theInfo[thread_num][i].name = "spooling";
-             break;
-           case SGE_PROF_SPOOLINGIO:
-             theInfo[thread_num][i].name = "spooling-io";
-             break;
-           case SGE_PROF_JOBSCRIPT:
-             theInfo[thread_num][i].name = "spooling-script";
-             break;
-           case SGE_PROF_GDI:
-             theInfo[thread_num][i].name = "gdi";
-             break;
-           case SGE_PROF_GDI_REQUEST:
-             theInfo[thread_num][i].name = "gdi_request";
-             break;
-           case SGE_PROF_HT_RESIZE:
-             theInfo[thread_num][i].name = "ht-resize";
-             break;
-           case SGE_PROF_ALL:
-             theInfo[thread_num][i].name = "all";
-             break;
-           default:
-             theInfo[thread_num][i].name = NULL; /* "custom"*/  
-             break;
+   if (level <= SGE_PROF_ALL) {
+      if (level == SGE_PROF_ALL) {
+         for (i = 0; i <= SGE_PROF_ALL; i++) {
+            prof_info_level_init (i, thread_num);
          }
+      } else {
+         prof_info_level_init (i, thread_num);
+      }     
 
-            theInfo[thread_num][i].nested_calls = 0;
-            theInfo[thread_num][i].start = 0;
-            theInfo[thread_num][i].end = 0;
-            theInfo[thread_num][i].tms_start.tms_utime = 0;
-            theInfo[thread_num][i].tms_start.tms_stime = 0;
-            theInfo[thread_num][i].tms_start.tms_cutime = 0;
-            theInfo[thread_num][i].tms_start.tms_cstime = 0;
-            theInfo[thread_num][i].tms_end.tms_utime = 0;
-            theInfo[thread_num][i].tms_end.tms_stime = 0;
-            theInfo[thread_num][i].tms_end.tms_cutime = 0;
-            theInfo[thread_num][i].tms_end.tms_cstime = 0;
-            theInfo[thread_num][i].total = 0;
-            theInfo[thread_num][i].total_utime = 0;
-            theInfo[thread_num][i].total_stime = 0;
-
-            theInfo[thread_num][i].pre = SGE_PROF_NONE;
-            theInfo[thread_num][i].sub = 0;
-            theInfo[thread_num][i].sub_utime = 0;
-            theInfo[thread_num][i].sub_stime = 0;
-            theInfo[thread_num][i].sub_total = 0;
-            theInfo[thread_num][i].sub_total_utime = 0;
-            theInfo[thread_num][i].sub_total_stime = 0;
-            
-            theInfo[thread_num][i].prof_is_started = false;
-            theInfo[thread_num][i].start_clock = 0;
-            theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
-            theInfo[thread_num][i].ever_started = false;
-
-            theInfo[thread_num][i].info_string.s = NULL;
-            theInfo[thread_num][i].info_string.length = 0;
-            theInfo[thread_num][i].info_string.size = 0;
-            theInfo[thread_num][i].info_string.is_static = false;
-
-      }
-
-   } else {
-
-         switch (level) {
-           case SGE_PROF_OTHER:
-             theInfo[thread_num][level].name = "other";
-             break;
-           case SGE_PROF_COMMUNICATION:
-             theInfo[thread_num][level].name = "communication";
-             break;
-           case SGE_PROF_PACKING:
-             theInfo[thread_num][level].name = "packing";
-             break;
-           case SGE_PROF_EVENTCLIENT:
-             theInfo[thread_num][level].name = "eventclient";
-             break;
-           case SGE_PROF_EVENTMASTER:
-             theInfo[thread_num][level].name = "eventmaster";
-             break;
-           case SGE_PROF_MIRROR:
-             theInfo[thread_num][level].name = "mirror";
-             break;
-           case SGE_PROF_SPOOLING:
-             theInfo[thread_num][level].name = "spooling";
-             break;
-           case SGE_PROF_SPOOLINGIO:
-             theInfo[thread_num][level].name = "spooling-io";
-             break;
-           case SGE_PROF_GDI:
-             theInfo[thread_num][level].name = "gdi";
-             break;
-           case SGE_PROF_GDI_REQUEST:
-             theInfo[thread_num][level].name = "gdi_request";
-             break;
-           case SGE_PROF_HT_RESIZE:
-             theInfo[thread_num][level].name = "ht-resize";
-             break;
-           case SGE_PROF_ALL:
-             theInfo[thread_num][level].name = "all";
-             break;
-           default:
-             theInfo[thread_num][level].name = NULL; /*"custom"*/;  
-             break;
-         }
-
-         theInfo[thread_num][level].nested_calls = 0;
-         theInfo[thread_num][level].start = 0;
-         theInfo[thread_num][level].end = 0;
-         theInfo[thread_num][level].tms_start.tms_utime = 0;
-         theInfo[thread_num][level].tms_start.tms_stime = 0;
-         theInfo[thread_num][level].tms_start.tms_cutime = 0;
-         theInfo[thread_num][level].tms_start.tms_cstime = 0;
-         theInfo[thread_num][level].tms_end.tms_utime = 0;
-         theInfo[thread_num][level].tms_end.tms_stime = 0;
-         theInfo[thread_num][level].tms_end.tms_cutime = 0;
-         theInfo[thread_num][level].tms_end.tms_cstime = 0;
-         theInfo[thread_num][level].total = 0;
-         theInfo[thread_num][level].total_utime = 0;
-         theInfo[thread_num][level].total_stime = 0;
-
-         theInfo[thread_num][level].pre = SGE_PROF_NONE;
-         theInfo[thread_num][level].sub = 0;
-         theInfo[thread_num][level].sub_utime = 0;
-         theInfo[thread_num][level].sub_stime = 0;
-         theInfo[thread_num][level].sub_total = 0;
-         theInfo[thread_num][level].sub_total_utime = 0;
-         theInfo[thread_num][level].sub_total_stime = 0;
-         
-         theInfo[thread_num][level].prof_is_started = false;
-         theInfo[thread_num][level].start_clock = 0;
-         theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
-         theInfo[thread_num][level].ever_started = false;
-
-         theInfo[thread_num][level].info_string.s = NULL;
-         theInfo[thread_num][level].info_string.length = 0;
-         theInfo[thread_num][level].info_string.size = 0;
-         theInfo[thread_num][level].info_string.is_static = false;
-     }     
-
+      theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
+   }
+   
    return;
 }
 
+/****** uti/profiling/prof_info_level_init() ******************************
+*  NAME
+*     prof_info_level_init() -- initialize the sge_sge_prof_info_t struc array with default values 
+*
+*  SYNOPSIS
+*     static void prof_info_level_init(prof_level level) 
+*
+*  FUNCTION
+*     initialize the sge_sge_prof_info_t struct array with default values
+*
+*  INPUTS
+*     prof_level i
+*     int thread_num
+*
+*  RESULT
+*     initialized sge_sge_prof_info_t array for the given profiling level
+*
+*  EXAMPLE
+*
+*  NOTES
+*     MT-NOTE: prof_info_level_init() is MT safe
+*******************************************************************************/
+static void prof_info_level_init(prof_level i, int thread_num)
+{
+   switch (i) {
+     case SGE_PROF_OTHER:
+       theInfo[thread_num][i].name = "other";
+       break;
+     case SGE_PROF_COMMUNICATION:
+       theInfo[thread_num][i].name = "communication";
+       break;
+     case SGE_PROF_PACKING:
+       theInfo[thread_num][i].name = "packing";
+       break;
+     case SGE_PROF_EVENTCLIENT:
+       theInfo[thread_num][i].name = "eventclient";
+       break;
+     case SGE_PROF_EVENTMASTER:
+       theInfo[thread_num][i].name = "eventmaster";
+       break;
+     case SGE_PROF_MIRROR:
+       theInfo[thread_num][i].name = "mirror";
+       break;
+     case SGE_PROF_SPOOLING:
+       theInfo[thread_num][i].name = "spooling";
+       break;
+     case SGE_PROF_SPOOLINGIO:
+       theInfo[thread_num][i].name = "spooling-io";
+       break;
+     case SGE_PROF_JOBSCRIPT:
+       theInfo[thread_num][i].name = "spooling-script";
+       break;
+     case SGE_PROF_GDI:
+       theInfo[thread_num][i].name = "gdi";
+       break;
+     case SGE_PROF_GDI_REQUEST:
+       theInfo[thread_num][i].name = "gdi_request";
+       break;
+     case SGE_PROF_HT_RESIZE:
+       theInfo[thread_num][i].name = "ht-resize";
+       break;
+     case SGE_PROF_ALL:
+       theInfo[thread_num][i].name = "all";
+       break;
+     default:
+       theInfo[thread_num][i].name = NULL; /* "custom"*/  
+       break;
+   }
+
+   theInfo[thread_num][i].nested_calls = 0;
+   theInfo[thread_num][i].start = 0;
+   theInfo[thread_num][i].end = 0;
+   theInfo[thread_num][i].tms_start.tms_utime = 0;
+   theInfo[thread_num][i].tms_start.tms_stime = 0;
+   theInfo[thread_num][i].tms_start.tms_cutime = 0;
+   theInfo[thread_num][i].tms_start.tms_cstime = 0;
+   theInfo[thread_num][i].tms_end.tms_utime = 0;
+   theInfo[thread_num][i].tms_end.tms_stime = 0;
+   theInfo[thread_num][i].tms_end.tms_cutime = 0;
+   theInfo[thread_num][i].tms_end.tms_cstime = 0;
+   theInfo[thread_num][i].total = 0;
+   theInfo[thread_num][i].total_utime = 0;
+   theInfo[thread_num][i].total_stime = 0;
+
+   theInfo[thread_num][i].pre = SGE_PROF_NONE;
+   theInfo[thread_num][i].sub = 0;
+   theInfo[thread_num][i].sub_utime = 0;
+   theInfo[thread_num][i].sub_stime = 0;
+   theInfo[thread_num][i].sub_total = 0;
+   theInfo[thread_num][i].sub_total_utime = 0;
+   theInfo[thread_num][i].sub_total_stime = 0;
+
+   theInfo[thread_num][i].prof_is_started = false;
+   theInfo[thread_num][i].start_clock = 0;
+   theInfo[thread_num][i].ever_started = false;
+
+   theInfo[thread_num][i].info_string.s = NULL;
+   theInfo[thread_num][i].info_string.length = 0;
+   theInfo[thread_num][i].info_string.size = 0;
+   theInfo[thread_num][i].info_string.is_static = false;
+
+}
 
 /****** uti/profiling/init_array() ******************************
 *  NAME
@@ -1503,51 +1585,65 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
 *  NOTES
 *     MT-NOTE: init_array() is MT safe
 *******************************************************************************/
-void init_array(pthread_t num) {
+static void init_array(pthread_t num) {
 
    int i, c;
+   
    DENTER(CULL_LAYER,"init_array");
+   
    if (sge_prof_array_initialized == 0) {
-      ERROR((SGE_EVENT,"Profiling array is not initialized!\n"));
-      DEXIT;
-      exit(1);
+      CRITICAL((SGE_EVENT,"Profiling array is not initialized!\n"));
+      abort();
    }
 
+   pthread_mutex_lock(&thrdInfo_mutex);
+      
    for (i = 0; i < MAX_THREAD_NUM; i++) {
       if (theInfo[i] != NULL && theInfo[i][SGE_PROF_ALL].thread_id == num) {
-         DEXIT;
-         return;
-      }
-
-      if (theInfo[i] == NULL) {
+         break;
+      } else if (theInfo[i] == NULL) {
          theInfo[i] = (sge_prof_info_t*)sge_malloc((SGE_PROF_ALL + 1) * sizeof(sge_prof_info_t));
+         memset (theInfo[i], 0, (SGE_PROF_ALL + 1) * sizeof(sge_prof_info_t));
+
          for (c = 0; c <= SGE_PROF_ALL; c++) {
              theInfo[i][c].thread_id = num;
          }
+
+         /* Rather than wasting memory pointing to a malloced int, it's safe and
+          * much easier to just store the int directly in the thread local
+          * storage. */
+         pthread_setspecific (thread_id_key, (void *)i);
+         
          prof_info_init(SGE_PROF_ALL, num);
-         DEXIT;
-         return;
+
+         break;
       }
    }
-}
+      
+   pthread_mutex_unlock(&thrdInfo_mutex);
 
+   DEXIT;
+   return;
+   
+}
 
 /* per process initialization */
-void init_array_first(void) {
+static void init_array_first(void) {
 
-   int i;
+   if (sge_prof_array_initialized == 0) {
+      pthread_mutex_lock(&thrdInfo_mutex);
 
-   if (theInfo == NULL) {
-     theInfo = (sge_prof_info_t**)sge_malloc(MAX_THREAD_NUM * sizeof(sge_prof_info_t*));
+      if (pthread_key_create (&thread_id_key, NULL) == 0) {
+         theInfo = (sge_prof_info_t**)sge_malloc(MAX_THREAD_NUM * sizeof(sge_prof_info_t*));
+         memset (theInfo, 0, MAX_THREAD_NUM * sizeof(sge_prof_info_t*));
+         sge_prof_array_initialized = 1;
+      }
 
-     for (i = 0; i < MAX_THREAD_NUM; i++) {
-        theInfo[i] = NULL;
-     }
-      sge_prof_array_initialized = 1;
+      pthread_mutex_unlock(&thrdInfo_mutex);
    }
 
-
 }
+
 /****** uti/profiling/init_thread_info() ******************************
 *  NAME
 *     init_thread_info() -- mallocs memory for the thread_info_t array 
@@ -1569,11 +1665,20 @@ void init_array_first(void) {
 *  NOTES
 *     MT-NOTE: init_thread_info() is MT safe
 *******************************************************************************/
-void init_thread_info(void) {
+static void init_thread_info(void) {
+
+   if (!profiling_enabled) {
+      return;
+   }
+   
+   pthread_mutex_lock(&thrdInfo_mutex);
 
    if (thrdInfo == NULL) {
       thrdInfo = (sge_thread_info_t*)sge_malloc(MAX_THREAD_NUM * sizeof(sge_thread_info_t));
+      memset (thrdInfo, 0, MAX_THREAD_NUM * sizeof(sge_thread_info_t));
    }
+
+   pthread_mutex_unlock(&thrdInfo_mutex);
 
 }
 
@@ -1602,6 +1707,10 @@ void init_thread_info(void) {
 *******************************************************************************/
 sge_thread_info_t* get_thread_info(void) {
 
+   if (!profiling_enabled) {
+      return NULL;
+   }
+   
    init_thread_info();
    return thrdInfo;
 
@@ -1635,18 +1744,26 @@ void set_thread_name(pthread_t thread_id, const char* thread_name) {
 
    int thread_num;
 
-
-   pthread_mutex_lock(&thrdInfo_mutex);
-
+   if (!profiling_enabled) {
+      return;
+   }
+   
    init_thread_info();
+
+   init_array(thread_id); 
+
    thread_num = get_prof_info_thread_id(thread_id);
 
-   thrdInfo[thread_num].thrd_id = thread_id;
-   thrdInfo[thread_num].thrd_name = thread_name;
-   thrdInfo[thread_num].prof_is_active = false;
-   thrdInfo[thread_num].is_terminated = 0;
+   if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM)) {
+      pthread_mutex_lock(&thrdInfo_mutex);
 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+      thrdInfo[thread_num].thrd_id = thread_id;
+      thrdInfo[thread_num].thrd_name = thread_name;
+      thrdInfo[thread_num].prof_is_active = false;
+      thrdInfo[thread_num].is_terminated = 0;
+
+      pthread_mutex_unlock(&thrdInfo_mutex);
+   }
 }
 
 
@@ -1677,15 +1794,20 @@ void set_thread_prof_status_by_id(pthread_t thread_id, bool prof_status) {
 
    int thread_num;
 
-   pthread_mutex_lock(&thrdInfo_mutex);
-
+   if (!profiling_enabled) {
+      return;
+   }
+   
    init_thread_info();
+
+   init_array(thread_id); 
+
    thread_num = get_prof_info_thread_id(thread_id);
 
+   pthread_mutex_lock(&thrdInfo_mutex);
+
    if (thrdInfo[thread_num].thrd_id == thread_id) {
-
       thrdInfo[thread_num].prof_is_active = prof_status;
-
    }
 
    pthread_mutex_unlock(&thrdInfo_mutex);
@@ -1722,13 +1844,17 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
 
    int i;
 
-   if (thread_name == NULL) {
+   if (!profiling_enabled) {
+      return 0;
+   }   
+   else if (thread_name == NULL) {
       return 1;
    }
-   pthread_mutex_lock(&thrdInfo_mutex);
 
    init_thread_info();
 
+   pthread_mutex_lock(&thrdInfo_mutex);
+   
    for (i = 0; i < MAX_THREAD_NUM; i++) {
       if (thrdInfo[i].thrd_name != NULL) {
          if (strstr(thrdInfo[i].thrd_name, thread_name)) {
@@ -1740,7 +1866,9 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
    }
 
    pthread_mutex_unlock(&thrdInfo_mutex);
+
    return 0;
+
 }
 
 
@@ -1768,20 +1896,29 @@ void sge_prof_cleanup(void) {
 
    int c, i;
 
+   if (!profiling_enabled) {
+      return;
+   }
+   
    pthread_mutex_lock(&thrdInfo_mutex);
 
+   pthread_key_delete (thread_id_key);
+   
    for (c = 0; c < MAX_THREAD_NUM; c++) {
       for (i = 0; i <= SGE_PROF_ALL; i++) {
          if ( theInfo[c] != NULL) {
             sge_dstring_free(&theInfo[c][i].info_string);
          }
       }
-       free(theInfo[c]);
+      
+      FREE(theInfo[c]);
    }
 
-   free(theInfo);
-   free(thrdInfo);
-
+   FREE(theInfo);
+   FREE(thrdInfo);
+   
+   sge_prof_array_initialized = 0;
+   
    pthread_mutex_unlock(&thrdInfo_mutex);
 
 }
@@ -1809,15 +1946,23 @@ void sge_prof_cleanup(void) {
 bool thread_prof_active_by_id(pthread_t thread_id) {
 
    int thread_num;
-   bool ret;
+   bool ret = false;
 
-   pthread_mutex_lock(&thrdInfo_mutex);
+   if (profiling_enabled) {
+      init_thread_info();
 
-   init_thread_info();
-   thread_num = get_prof_info_thread_id(thread_id);
-   ret = thrdInfo[thread_num].prof_is_active;
+      init_array(thread_id); 
 
-   pthread_mutex_unlock(&thrdInfo_mutex);
+      thread_num = get_prof_info_thread_id(thread_id);
+
+      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM)) {
+         pthread_mutex_lock(&thrdInfo_mutex);
+
+         ret = thrdInfo[thread_num].prof_is_active;
+
+         pthread_mutex_unlock(&thrdInfo_mutex);
+      }
+   }
 
    return ret;
 
@@ -1846,39 +1991,35 @@ bool thread_prof_active_by_id(pthread_t thread_id) {
 *******************************************************************************/
 bool thread_prof_active_by_name(const char* thread_name) {
 
-   int c;
    bool ret = false;
 
-   if (thread_name == NULL) {
-      return false;
-   }
+   if (profiling_enabled && (thread_name != NULL)) {
+      int c;
 
-   pthread_mutex_lock(&thrdInfo_mutex);
+      init_thread_info();
 
-   init_thread_info();
-   for (c = 0; c < MAX_THREAD_NUM; c++) {
-      if (thrdInfo[c].thrd_name != NULL && strstr(thrdInfo[c].thrd_name, thread_name)) {
-         ret = thrdInfo[c].prof_is_active;
-         break;
+      pthread_mutex_lock(&thrdInfo_mutex);
+
+      for (c = 0; c < MAX_THREAD_NUM; c++) {
+         if (thrdInfo[c].thrd_name != NULL && strstr(thrdInfo[c].thrd_name, thread_name)) {
+            ret = thrdInfo[c].prof_is_active;
+            break;
+         }
       }
+
+      pthread_mutex_unlock(&thrdInfo_mutex);
    }
-   pthread_mutex_unlock(&thrdInfo_mutex);      
+   
    return ret;
 }
 
 
-int get_prof_info_thread_id(pthread_t thread_num) {
-   int c;
+static int get_prof_info_thread_id(pthread_t thread_num) {
+   int ret = -1;
+   
+   ret = (int)pthread_getspecific (thread_id_key);
 
-   init_array(thread_num); 
-
-   for (c = 0; c < MAX_THREAD_NUM; c++) {
-      if (theInfo[c] != NULL && theInfo[c][SGE_PROF_OTHER].thread_id == thread_num) {
-         return c; 
-      }
-   }
-
-   return -1;
+   return ret;
 }
 
 
@@ -1940,7 +2081,8 @@ void sge_unlock_alive_time_mutex(void) {
 sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
    if (thread_times_init_done == true) {
       return &thread_times;
-   } 
+   }
+
    return NULL;
 }
 
@@ -1967,7 +2109,10 @@ sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
 *     MT-NOTE: sge_update_thread_alive_time() is MT safe
 *******************************************************************************/
 void sge_update_thread_alive_time(sge_thread_name_t thread) {
-   DENTER(TOP_LAYER, "sge_update_thread_alive_time");
+   if (!profiling_enabled) {
+      return;
+   }
+
    pthread_mutex_lock(&thread_times_mutex);  
    if ( thread_times_init_done == false ) {
       /* init sge_thread_alive_times_t struct */
@@ -1995,6 +2140,7 @@ void sge_update_thread_alive_time(sge_thread_name_t thread) {
 
       thread_times_init_done = true;
    }
+
    switch(thread) {
       case SGE_MASTER_EVENT_DELIVER_THREAD:
          gettimeofday(&(thread_times.event_deliver_thread.timestamp),NULL);
@@ -2012,8 +2158,8 @@ void sge_update_thread_alive_time(sge_thread_name_t thread) {
          gettimeofday(&(thread_times.execd_main.timestamp),NULL);
          break;
    }
+
    pthread_mutex_unlock(&thread_times_mutex);  
-   DEXIT;  
 }
 
 /****** uti/profiling/thread_start_stop_profiling() ****************************
@@ -2036,6 +2182,10 @@ void sge_update_thread_alive_time(sge_thread_name_t thread) {
 void 
 thread_start_stop_profiling(void)
 {
+   if (!profiling_enabled) {
+      return;
+   }
+   
    if (thread_prof_active_by_id(pthread_self())) {
       prof_start(SGE_PROF_ALL, NULL);
    } else {
@@ -2088,4 +2238,3 @@ thread_output_profiling(const char *title, time_t *next_prof_output)
       }
    }
 }
-

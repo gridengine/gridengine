@@ -143,6 +143,12 @@ test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB)
 test_drmaa_sync.o: $(JAPILIB_DIR)/test_drmaa_sync.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_sync.c
 
+test_drmaa_mcpu: test_drmaa_mcpu.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_mcpu.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+
+test_drmaa_mcpu.o: $(JAPILIB_DIR)/test_drmaa_mcpu.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_mcpu.c
+
 example: example.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
 

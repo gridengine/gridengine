@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <errno.h>
+#include <pthread.h>
 
 #ifdef SOLARISAMD64
 #  include <sys/stream.h>
@@ -53,10 +54,12 @@
 #include "sge_uidgid.h"
 #include "sge_prog.h"
 #include "sge_conf.h"
+#include "lck/sge_mtutil.h"
 
 #include "msg_common.h"
 
 /* module global variables */
+static pthread_mutex_t qtask_mutex = PTHREAD_MUTEX_INITIALIZER;
 static lList *task_config = NULL;
 static int mode_verbose = 0;
 static int mode_remote = 1;
@@ -65,8 +68,6 @@ static int mode_immediate = 1;
 
 /* prevent remote execution before everything is initialized */
 static int catch_exec_initialized = 0;
-
-
 
 static int init_qtask_config(lList **alpp, print_func_t ostream);
 
@@ -91,8 +92,7 @@ static int init_qtask_config(lList **alpp, print_func_t ostream);
 *     ??? 
 *
 *  NOTES
-*     MT-NOTES: init_qtask_config() is not MT safe as it uses unsafe 
-*     MT-NOTES: sge_getpwnam()
+*     MT-NOTES: init_qtask_config() is not MT safe as it uses global variables
 *
 *  BUGS
 *     ??? 
@@ -111,6 +111,9 @@ print_func_t ostream
    lList *clp_cluster = NULL, *clp_user = NULL;
    lListElem *nxt, *cep_dest, *cep, *next;
    const char *task_name;
+#ifdef HAS_GETPWNAM_R
+   struct passwd pw_struct;
+#endif
 
    /* cell global settings */
    sprintf(fname, "%s/common/qtask", path_state_get_cell_root());
@@ -140,8 +143,14 @@ print_func_t ostream
 
    }
 
+#ifdef HAS_GETPWNAM_R
+   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+#else
+   pwd = sge_getpwnam(uti_state_get_user_name());
+#endif
+   
    /* user settings */
-   if (!(pwd = sge_getpwnam(uti_state_get_user_name()))) {
+   if (pwd == NULL) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , uti_state_get_user_name()));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
@@ -432,25 +441,24 @@ lList *alp /* For returning error information */
    /* If the task_config has not been filled yet, fill it.  We call
     * init_qtask_config() instead of sge_init() because we don't need to setup
     * the GDI.  We just need the qtask arguments. */
-   if (!task_config) {
+   /* We lock this part because multi-threaded DRMAA apps can have problems
+    * here.  Once we're past this part, qtask_config's read-only, so we don't
+    * have any more problems. */
+   sge_mutex_lock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
+    
+   if (task_config == NULL) {
       /* Just using printf here since we don't really have an exciting function
        * like xprintf to pass in.  This was really meant for use with qtsch. */
       if (init_qtask_config (&alp, (print_func_t)printf)) {
-         const char *s;
-         lListElem *aep;
-         
-         if (!alp || !(aep=lFirst(alp)) || !(s=lGetString(aep, AN_text))) {
-            s = "unknown reason";
-         }
-
+         sge_mutex_unlock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
          DEXIT;
          return args;
       }
    }
 
+   sge_mutex_unlock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
+    
    if (!(task=lGetElemStr(task_config, CF_name, taskname))) {
-      if (mode_verbose)
-         fprintf(stderr, "unknown qtask name: %s\n", taskname);
       DEXIT;
       return args;
    }

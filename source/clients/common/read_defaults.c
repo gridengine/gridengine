@@ -571,7 +571,9 @@ void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *
       if ((scriptfile != NULL) && (path != NULL) && (scriptfile[0] != '/') &&
           (strncmp (scriptfile, "$HOME/", 6) != 0) &&
           (strcmp (scriptfile, "$HOME") != 0)) {
-         scriptpath = strdup (path);
+         /* Malloc space for the path, the filename, the \0, and perhaps a / */
+         scriptpath = (char *)malloc(sizeof(char) * (strlen(path) + strlen(scriptfile) + 2));
+         strcpy (scriptpath, path);
          
          /* If the last character is not a slash, add one. */
          if (scriptpath[strlen (scriptpath) - 1] != '/') {
@@ -579,6 +581,8 @@ void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *
          }
          
          strcat (scriptpath, scriptfile);
+      } else {
+         scriptpath = strdup (scriptfile);
       }
    }
    

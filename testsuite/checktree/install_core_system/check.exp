@@ -2605,6 +2605,12 @@ proc setup_schedconf {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
   global CHECK_PRODUCT_TYPE 
 
+  # always create global complex list
+  set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
+  set_complex host_complex global 1
+  set host_complex(complex1) ""
+  set_complex host_complex global
+
   # reset_schedd_config has global error reporting
   get_schedd_config old_config
   reset_schedd_config 

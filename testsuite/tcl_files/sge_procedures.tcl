@@ -1498,13 +1498,15 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 #     set_complex mycomplex host
 #
 #*******************************************************************************
-proc set_complex { change_array complex_list } {
+proc set_complex { change_array complex_list { create 0 } } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]
 
-  get_complex old_values $complex_list
+  if { $create == 0 } {
+     get_complex old_values $complex_list
+  }
 
   set vi_commands ""
   foreach elem $values {
@@ -1527,7 +1529,12 @@ proc set_complex { change_array complex_list } {
   set MODIFIED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_MODIFIEDIN]]
   set ADDED       [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_ADDEDTO]]
 
-  set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
+
+  if { $create == 0 } {
+     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
+  } else {
+     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ac $complex_list" $vi_commands $ADDED $EDIT_FAILED $MODIFIED ]
+  }
   if { $result != 0  } {
      add_proc_error "set_complex" -1 "could not modify complex $complex_list ($result)"
   }

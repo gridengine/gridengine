@@ -1,3 +1,6 @@
+CR-2003-04-28-0  Testsuite: New scheduler test.
+                            - testing consumables performance for scheduler
+
 CR-2003-04-25-0  Testsuite: Bugfix for spool_array_to_file() when spooling
                             without comment.
 

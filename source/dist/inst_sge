@@ -2053,9 +2053,11 @@ THIRD_PARTY_FILES=openssl
    done
 
    for f in $THIRD_PARTY_FILES; do
-      if [ ! -f $V5UTILBIN/$f ]; then
-        missing=true
-        Translate 0 "missing program %s in directory %s" $f $V5BIN
+      if [ $f = openssl -a $csp = true ]; then
+         if [ ! -f $V5UTILBIN/$f ]; then
+           missing=true
+           Translate 0 "missing program %s in directory %s" $f $V5BIN
+         fi
       fi
    done
 

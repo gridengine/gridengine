@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/11/21 13:48:06 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/11/28 13:43:02 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/11/21 13:48:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/11/28 13:43:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -80,7 +80,9 @@ xxQS_NAMExx cluster:
 .SH "\fBqmaster_spool_dir\fP"
 The location where the master spool directory resides. Only the
 .M xxqs_name_sxx_qmaster 8
-needs to have access to this directory. It needs read/write permission for
+and 
+.M xxqs_name_sxx_shadowd 8
+need to have access to this directory. It needs read/write permission for
 root, however. The master spool directory \- in particular the jobs
 directory and the message
 log file \- may become quite large depending on the size of the
@@ -89,9 +91,8 @@ and regularly clean off the log files, e.g. via a
 .M cron 8
 job.
 .PP
-Changing the master spool directory will have an effect after restarting
-.M xxqs_name_sxx_qmaster 8
-only.
+Being a parameter set at installation time changing \fBqmaster_spool_dir\fP
+in a running system is not supported.
 .PP
 The default location for the
 master spool directory is <xxqs_name_sxx_root>/<cell>/spool/qmaster.
@@ -117,10 +118,8 @@ contains all information spooled to disk. Thus, it is possible for the
 same directory path
 (the root access restrictions mentioned above need to be met, however).
 .PP
-Changing the execution daemon spool directory will have an effect after
-restarting
-.M xxqs_name_sxx_execd 8
-only.
+Being a parameter set at installation time changing the global \fBexecd_spool_dir\fP
+in a running system is not supported.
 .PP
 The default location for the execution daemon spool
 directory is <xxqs_name_sxx_root>/<cell>/spool.
@@ -987,9 +986,11 @@ where the root account does not have the corresponding file access
 permissions (e.g. on a shared file system without global root read/write
 access).
 .PP
-Changing \fBadmin_user\fP will take immediate effect, but if access to the
-xxQS_NAMExx spooling area is interrupted, this will result in unpredictable
-behaviour.
+Being a parameter set at installation time changing \fBadmin_user\fP in
+a running system is not supported. Changing it manually on a shut-down cluster
+is possible, but if access to the xxQS_NAMExx spooling area is interrupted, 
+this will result in unpredictable behaviour.
+
 The \fBadmin_user\fP parameter has no default value, but instead it is
 defined during the master installation procedure.
 .PP
@@ -1165,10 +1166,10 @@ parameter will have no effect if
 .B ignore_fqdn
 is set to "true".
 .sp 1
-Changing
+Being a parameter set at installation time changing
 .B default_domain
-will take immediate effect. The default for
-.B ignore_fqdn
+in a running system is not supported. The default for
+.B default_domain
 is "none", in which case it will not be used.
 .PP
 This value is a global configuration parameter only. It cannot be

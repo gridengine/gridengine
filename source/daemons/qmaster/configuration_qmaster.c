@@ -280,13 +280,35 @@ char *rhost
       return STATUS_EEXIST;
    }
 
+#if 0    /* CR - This can't be done so easy, look at issue #79 for
+                 further explanations  */
+   {
+      /* check if someone tries to delete local configuration
+      with a local execd_spool_dir */
+
+      lList *listEntries = NULL;
+      const char* help = NULL;
+      listEntries = lGetList(ep,CONF_entries);      
+      if (lGetElemStr(listEntries, CF_name, "execd_spool_dir") != NULL) {
+         ERROR((SGE_EVENT, MSG_CONF_DELLOCCONFFORXWITHEXECDSPOOLDENIED_S, config_name));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         DEXIT;
+         return STATUS_EEXIST;
+      }
+   }
+#endif   
+
+    
+
    if (sge_unlink(path.local_conf_dir, config_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DEL_CONFIG_DISK_SS, config_name, strerror(errno)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
       return STATUS_EDISK;
    }
-   
+  
+
+    
    /* now remove it from our internal list*/
    lRemoveElem(Master_Config_List, ep);
 
@@ -353,6 +375,63 @@ char *rhost
       added = TRUE; 
    }
    else {
+      added = FALSE;
+   }
+
+   if (added == FALSE) {
+      /* check for unchangeable parameters */
+      lList *oldEntryList  = NULL;
+      lList *newEntryList  = NULL;
+      lListElem *oldEntryListElem  = NULL;
+      lListElem *newEntryListElem  = NULL;
+      lListElem *elemPointer = NULL;
+      const char *oldEntry = NULL;
+      const char *newEntry = NULL;
+      const char *paraName = NULL;
+      int paramPos = 0;
+      char  *deniedParams[] = { 
+          "execd_spool_dir", 
+          "qmaster_spool_dir", 
+          "admin_user",
+          "default_domain",
+          "ignore_fqdn",
+          NULL 
+      };
+
+      oldEntryList = lGetList(ep   , CONF_entries); 
+      newEntryList = lGetList(confp, CONF_entries);
+
+     
+       
+      while ( deniedParams[paramPos] != NULL ) {
+         /* execd_spool_dir */
+         paraName = deniedParams[paramPos];
+         oldEntry = NULL;
+         newEntry = NULL;
+   
+         oldEntryListElem = lGetElemStr(oldEntryList , CF_name, paraName );
+         newEntryListElem = lGetElemStr(newEntryList , CF_name, paraName );
+         if ((newEntryListElem != NULL) && (oldEntryListElem != NULL)) {
+            oldEntry = lGetString(oldEntryListElem, CF_value);
+            newEntry = lGetString(newEntryListElem, CF_value);
+         }
+         if ((newEntry != NULL) && (oldEntry != NULL)) { 
+            DPRINTF(("paraName = %s\n",paraName));
+            DPRINTF(("oldEntry = %s\n",oldEntry));
+            DPRINTF(("newEntry = %s\n",newEntry));
+   
+            if (strcmp(oldEntry,newEntry) != 0) {
+                ERROR((SGE_EVENT, MSG_CONF_CHANGEPARAMETERXONLYSUPONSHUTDOWN_S, paraName ));
+                sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+                DEXIT;
+                return STATUS_EUNKNOWN;
+            }
+         }
+         paramPos++;
+      }  /* while */
+   }
+
+   if (added == FALSE) {
       const char *const name = "reschedule_unknown";
       lListElem *old_reschedule_unknown = NULL;
       lListElem *new_reschedule_unknown = NULL;
@@ -370,9 +449,8 @@ char *rhost
                reschedule_unknown_changed));
       old_conf_version = lGetUlong(ep, CONF_version);
       lRemoveElem(Master_Config_List, ep);
-      added = FALSE;
    }       
-   
+
    ep = lCopyElem(confp);
    lAppendElem(Master_Config_List, ep);
    if (added == FALSE) {

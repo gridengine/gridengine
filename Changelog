@@ -1,3 +1,6 @@
+CR-2004-02-03-1  Bugfix:    Fixed build for tru64 
+                            (no prototype for "sge_get_execd_port()")
+
 CR-2004-02-03-0  Testsuite: HTML compile output links of compile output HTML file
                             are now relative to HTML-directory.
 

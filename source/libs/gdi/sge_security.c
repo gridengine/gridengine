@@ -60,8 +60,10 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 
+
 #include "msg_common.h"
 #include "msg_gdilib.h"
+#include "sge_hostname.h"
 #include "cl_commlib.h"
 
 #ifdef SGE_MT

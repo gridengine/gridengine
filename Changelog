@@ -8,6 +8,7 @@ SG-2005-03-02-0: Bugfix:   fixed build for lx24-amd
 RD-2005-03-01-1: Enhancem.: -purge switch added
                             purge host specific cluster queue profiles
                  Issue:     1453            
+                 Bugtraq:   6234836
                  Review:    MD
 
 JG-2005-02-28-1: Testsuite: Adding high numbers of hosts during qmaster 

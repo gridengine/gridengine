@@ -237,7 +237,6 @@ proc path_alias_main {} {
       set output [ lindex $output 0 ]
       if { [ string first "$PATH_ALIAS_OUTPUT2" $output ] < 0 } {
          add_proc_error "path_alias_main" -1 "host: $elem\nqrsh -cwd directory is\n\"$output\"\n instead of \n\"$PATH_ALIAS_OUTPUT2\""
-         wait_for_enter
       }
 
       puts $CHECK_OUTPUT "qsh ..."

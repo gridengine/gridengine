@@ -460,7 +460,6 @@ proc auto_reschedule_unknown_check {} {
          set j_state [ is_job_running $job_id2 "Sleeper" ]
          if { $j_state != 1 } {
             add_proc_error "auto_reschedule_unknown_check" -1 "job $job_id2 should still run(2)"
-            wait_for_enter
             break
          } else {
             set to_go [ expr ( $my_timeout - [timestamp] ) ]

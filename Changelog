@@ -1,3 +1,5 @@
+CR-2002-03-05-0: Testsuite: - removed forgotten wait_for_enter calls()
+
 CR-2002-03-04-1: Testsuite: - sge/ee installation path (product root) should
                               not be longer than 60 chars ( workaround, because
                               output of ps -ef command is truncated on some

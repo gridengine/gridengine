@@ -5253,31 +5253,29 @@ proc compile_source {} {
    set mail_subject "testsuite error - compile_source"
    set mail_body    "date: [exec date]\n"
 
-   set html_body [ print_html_text "date: [exec date]" 1 ]
+   set html_body [ create_html_text "date: [exec date]" 1 ]
     
-
- 
    set was_error 0
    set cvs_change_log ""
 
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
        puts $CHECK_OUTPUT "source directory unknown - check defaults file"
        mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
-       append html_body "source directory unknown - check defaults file"
+       append html_body [ create_html_text "source directory unknown - check defaults file" ]
        update_compile_html_output $html_body
        return -1
    }
    if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
        puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
        mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
-       append html_body "host for cvs checkout unknown - check defaults file"
+       append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
        update_compile_html_output $html_body
        return -1
    }
    if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
        puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
        mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
-       append html_body "host list to compile for unknown - check defaults file"
+       append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
        update_compile_html_output $html_body
        return -1
    }
@@ -5286,7 +5284,7 @@ proc compile_source {} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
            puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
-           append html_body "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           append html_body [ create_html_text "could not create directory \"$CHECK_PROTOCOL_DIR\"" ]
            update_compile_html_output $html_body
            return -1
       } 
@@ -5304,7 +5302,7 @@ proc compile_source {} {
       set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs update -dP" ]
       if { $prg_exit_state != 0 } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
-         append html_body "cvs update -dP error:\n$output"
+         append html_body [ create_html_text "cvs update -dP error:\n$output" ]
          update_compile_html_output $html_body
  
          return -1
@@ -5332,7 +5330,7 @@ proc compile_source {} {
          puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
          flush $CHECK_OUTPUT
          mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
-         append html_body "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
+         append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
          exit 1 
       }
       if { $testsuite_update == 1 } {
@@ -5381,7 +5379,7 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "------------------------------------------"
    if { $prg_exit_state != 0 } {
       mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
-      append html_body "aimk -only-depend on host $depend_host_name returned:\n$output"
+      append html_body [ create_html_text "aimk -only-depend on host $depend_host_name returned:\n$output" ]
       update_compile_html_output $html_body
 
       return -1
@@ -5399,7 +5397,7 @@ proc compile_source {} {
 
    if { $prg_exit_state != 0 } {
       mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
-      append html_body "aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
+      append html_body [ create_html_text "aimk $my_compile_options depend on host $depend_host_name returned:\n$output" ]
       update_compile_html_output $html_body
 
       return -1

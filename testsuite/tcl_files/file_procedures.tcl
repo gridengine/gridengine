@@ -195,6 +195,28 @@ proc get_file_names { path {ext "*"} } {
 }
 
 
+#****** file_procedures/generate_html_file() ***********************************
+#  NAME
+#     generate_html_file() -- generate html file
+#
+#  SYNOPSIS
+#     generate_html_file { file headliner content } 
+#
+#  FUNCTION
+#     This procedure creates the html file with the given headline and
+#     text content.
+#
+#  INPUTS
+#     file      - html file name to create
+#     headliner - headline text
+#     content   - html body
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
 proc generate_html_file { file headliner content } {
 
    global CHECK_USER
@@ -234,45 +256,63 @@ proc generate_html_file { file headliner content } {
 
 }
 
+#****** file_procedures/create_html_table() ************************************
+#  NAME
+#     create_html_table() -- returns tcl array in html format
+#
+#  SYNOPSIS
+#     create_html_table { array_name } 
+#
+#  FUNCTION
+#     This procedure tries to transform the given array into an html table
+#
+#  INPUTS
+#     array_name - table content
+#
+#     table(COLS) = nr. of columns
+#     table(ROWS) = nr. of rows
+#     table(ROW number,BGCOLOR) = Background color for row
+#     table(ROW number,FNCOLOR) = Fontcolor of row
+#     table(ROW number,1 up to $COLS) = content
+#
+#
+#  RESULT
+#     html format
+#
+#  EXAMPLE
+#     set test_table(COLS) 2
+#     set test_table(ROWS) 3
+#     set test_table(1,BGCOLOR) "#3366FF"
+#     set test_table(1,FNCOLOR) "#66FFFF"
+#     set test_table(1,1) "Host"
+#     set test_table(1,2) "State"
+#   
+#     set test_table(2,BGCOLOR) "#009900"
+#     set test_table(2,FNCOLOR) "#FFFFFF"
+#     set test_table(2,1) "host1"
+#     set test_table(2,2) "ok"
+#     
+#     set test_table(3,BGCOLOR) "#CC0000"
+#     set test_table(3,FNCOLOR) "#FFFFFF"
+#     set test_table(3,1) "host2"
+#     set test_table(3,2) [create_html_link "linktext" "test.html"]
+#   
+#     set my_content    [ create_html_text "Date: [exec date]" ]
+#     append my_content [ create_html_text "some text ..." ]
+#     append my_content [ create_html_table test_table ]
+#     generate_html_file test.html "My first HTML example!!!" $my_content
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
 proc create_html_table { array_name } {
    upvar $array_name table
 
-#  table(COLS) = columns
-#  table(ROWS) = rows
-#  table(ROW number,BGCOLOR) = Background color for row
-#  table(ROW number,FNCOLOR) = Fontcolor of row
-#  table(ROW number,1 until number of COLS) = content
-#    
-# example:
-#  set test_table(COLS) 2
-#  set test_table(ROWS) 3
-#  set test_table(1,BGCOLOR) "#3366FF"
-#  set test_table(1,FNCOLOR) "#66FFFF"
-#  set test_table(1,1) "Host"
-#  set test_table(1,2) "State"
-#
-#  set test_table(2,BGCOLOR) "#009900"
-#  set test_table(2,FNCOLOR) "#FFFFFF"
-#  set test_table(2,1) "Balrog"
-#  set test_table(2,2) "ok"
-#  
-#  set test_table(3,BGCOLOR) "#CC0000"
-#  set test_table(3,FNCOLOR) "#FFFFFF"
-#  set test_table(3,1) "Elendil"
-#  set test_table(3,2) [create_html_link "linktext" "/home/cr114091/test.html"]
-#
-#
-#  set my_content    [ print_html_text "Date: [exec date]" ]
-#  append my_content [ print_html_text "Blah Blah ..." ]
-#  append my_content [ create_html_table test_table ]
-#  generate_html_file test.html "Ueberschrift" $my_content
-#
-
-
    set back ""
-
    append back "\n<center><table BORDER=0 COLS=${table(COLS)} WIDTH=\"80%\" NOSAVE >\n" 
-
    for {set row 1} { $row <= $table(ROWS) } { incr row 1 } {
       append back "<tr ALIGN=CENTER VALIGN=CENTER BGCOLOR=\"$table($row,BGCOLOR)\" NOSAVE>\n"
       for {set col 1} { $col <= $table(COLS) } { incr col 1 } {
@@ -284,6 +324,29 @@ proc create_html_table { array_name } {
    return $back
 }
 
+#****** file_procedures/create_html_link() *************************************
+#  NAME
+#     create_html_link() -- create html link
+#
+#  SYNOPSIS
+#     create_html_link { linktext linkref } 
+#
+#  FUNCTION
+#     This procedure returns a html format for a "link"
+#
+#  INPUTS
+#     linktext - text to display for link
+#     linkref  - link to destination
+#
+#  RESULT
+#     html format
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
 proc create_html_link { linktext linkref } {
    set back ""
 
@@ -292,7 +355,30 @@ proc create_html_link { linktext linkref } {
    return $back
 }
 
-proc print_html_text { content { center 0 } } {
+#****** file_procedures/create_html_text() *************************************
+#  NAME
+#     create_html_text() -- create html text
+#
+#  SYNOPSIS
+#     create_html_text { content { center 0 } } 
+#
+#  FUNCTION
+#     This procedure returns a html format for "text"
+#
+#  INPUTS
+#     content      - text 
+#     { center 0 } - if not 0: center text
+#
+#  RESULT
+#     html format
+#
+#  SEE ALSO
+#     file_procedures/generate_html_file()
+#     file_procedures/create_html_table()
+#     file_procedures/create_html_link()
+#     file_procedures/create_html_text()
+#*******************************************************************************
+proc create_html_text { content { center 0 } } {
    set back ""
 
    if { $center != 0 } {

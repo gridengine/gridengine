@@ -1,3 +1,5 @@
+CR-2002-05-29-1: Testsuite: - docu of HTML procedures
+
 CR-2002-05-29-0: Testsuite: - added prototype functions for HTML generation
                  Enhancem.: - new parameter for testsuite: html_dir
                             - compile_source() procedure will generate HTML

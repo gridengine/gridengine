@@ -818,3 +818,9 @@ TEMPLATE_ATTR_IMPL(usrlist_attr, const char *, AUSRLIST_Type, AUSRLIST_href, AUS
 
 TEMPLATE_ATTR_IMPL(prjlist_attr, const char *, APRJLIST_Type, APRJLIST_href, APRJLIST_value) 
 
+TEMPLATE_ATTR_IMPL(celist_attr, const char *, ACELIST_Type, ACELIST_href, ACELIST_value) 
+
+TEMPLATE_ATTR_IMPL(solist_attr, const char *, ASOLIST_Type, ASOLIST_href, ASOLIST_value) 
+
+TEMPLATE_ATTR_IMPL(qtlist_attr, const char *, AQTLIST_Type, AQTLIST_href, AQTLIST_value) 
+

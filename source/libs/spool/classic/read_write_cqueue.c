@@ -329,6 +329,41 @@ int parsing_type
                                          APRJLIST_href)) ? -1 : 0;
    }
 
+   /* --------- CQ_load_thresholds */
+   if (ret == 0) {
+      ret = (!set_conf_celist_attr_list(alpp, clpp, fields, "load_thresholds",
+                                        ep, CQ_load_thresholds, ACELIST_Type, 
+                                        ACELIST_href)) ? -1 : 0;
+   }
+   
+   /* --------- CQ_suspend_thresholds */
+   if (ret == 0) {
+      ret = (!set_conf_celist_attr_list(alpp, clpp, fields, "suspend_thresholds",
+                                        ep, CQ_suspend_thresholds, ACELIST_Type, 
+                                        ACELIST_href)) ? -1 : 0;
+   }
+   
+   /* --------- CQ_consumable_config_list */
+   if (ret == 0) {
+      ret = (!set_conf_celist_attr_list(alpp, clpp, fields, "complex_values",
+                                        ep, CQ_consumable_config_list, 
+                                        ACELIST_Type, ACELIST_href)) ? -1 : 0;
+   }
+   
+   /* --------- CQ_consumable_config_list */
+   if (ret == 0) {
+      ret = (!set_conf_solist_attr_list(alpp, clpp, fields, "subordinate_list",
+                                        ep, CQ_subordinate_list, 
+                                        ASOLIST_Type, ASOLIST_href)) ? -1 : 0;
+   }
+   
+   /* --------- CQ_qtype */
+   if (ret == 0) {
+      ret = (!set_conf_qtlist_attr_list(alpp, clpp, fields, "qtype",
+                                        ep, CQ_qtype, 
+                                        AQTLIST_Type, AQTLIST_href)) ? -1 : 0;
+   }
+
 #if 0 /* EB: TODO: APIBASE */
    /* --------- CU_ruser_list */
    if (ret == 0) {
@@ -409,13 +444,13 @@ write_cqueue(int spool, int how, const lListElem *ep)
    }
 
    {
-      FPRINTF((fp, "qname            %s\n", 
+      FPRINTF((fp, "qname              %s\n", 
                lGetString(ep, CQ_name))); 
    }
    {
       const lList *ulng_attr_list = lGetList(ep, CQ_seq_no);
 
-      FPRINTF((fp, "seq_no           "));
+      FPRINTF((fp, "seq_no             "));
       if (ulng_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -429,7 +464,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *ulng_attr_list = lGetList(ep, CQ_nsuspend);
 
-      FPRINTF((fp, "nsuspend         "));
+      FPRINTF((fp, "nsuspend           "));
       if (ulng_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -443,7 +478,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *ulng_attr_list = lGetList(ep, CQ_job_slots);
 
-      FPRINTF((fp, "slots            "));
+      FPRINTF((fp, "slots              "));
       if (ulng_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -457,7 +492,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *ulng_attr_list = lGetList(ep, CQ_fshare);
 
-      FPRINTF((fp, "fshare           "));
+      FPRINTF((fp, "fshare             "));
       if (ulng_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -471,7 +506,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *ulng_attr_list = lGetList(ep, CQ_oticket);
 
-      FPRINTF((fp, "oticket          "));
+      FPRINTF((fp, "oticket            "));
       if (ulng_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -485,7 +520,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *bool_attr_list = lGetList(ep, CQ_rerun);
 
-      FPRINTF((fp, "rerun            "));
+      FPRINTF((fp, "rerun              "));
       if (bool_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -500,7 +535,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_fsize);
 
-      FPRINTF((fp, "s_fsize          "));
+      FPRINTF((fp, "s_fsize            "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -515,7 +550,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_h_fsize);
 
-      FPRINTF((fp, "h_fsize          "));
+      FPRINTF((fp, "h_fsize            "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -530,7 +565,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_data);
 
-      FPRINTF((fp, "s_data           "));
+      FPRINTF((fp, "s_data             "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -545,7 +580,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_h_data);
 
-      FPRINTF((fp, "h_data           "));
+      FPRINTF((fp, "h_data             "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -560,7 +595,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_stack);
 
-      FPRINTF((fp, "s_stack          "));
+      FPRINTF((fp, "s_stack            "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -575,7 +610,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_h_stack);
 
-      FPRINTF((fp, "h_stack          "));
+      FPRINTF((fp, "h_stack            "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -590,7 +625,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_core);
 
-      FPRINTF((fp, "s_core           "));
+      FPRINTF((fp, "s_core             "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -605,7 +640,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_h_core);
 
-      FPRINTF((fp, "h_core           "));
+      FPRINTF((fp, "h_core             "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -620,7 +655,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_rss);
 
-      FPRINTF((fp, "s_rss            "));
+      FPRINTF((fp, "s_rss              "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -635,7 +670,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_h_rss);
 
-      FPRINTF((fp, "h_rss            "));
+      FPRINTF((fp, "h_rss              "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -650,7 +685,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_s_vmem);
 
-      FPRINTF((fp, "s_vmem           "));
+      FPRINTF((fp, "s_vmem             "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -665,7 +700,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *mem_attr_list = lGetList(ep, CQ_h_vmem);
 
-      FPRINTF((fp, "h_vmem           "));
+      FPRINTF((fp, "h_vmem             "));
       if (mem_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -680,7 +715,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *time_attr_list = lGetList(ep, CQ_s_rt);
 
-      FPRINTF((fp, "s_rt             "));
+      FPRINTF((fp, "s_rt               "));
       if (time_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -695,7 +730,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *time_attr_list = lGetList(ep, CQ_h_rt);
 
-      FPRINTF((fp, "h_rt             "));
+      FPRINTF((fp, "h_rt               "));
       if (time_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -710,7 +745,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *time_attr_list = lGetList(ep, CQ_s_cpu);
 
-      FPRINTF((fp, "s_cpu            "));
+      FPRINTF((fp, "s_cpu              "));
       if (time_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -725,7 +760,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *time_attr_list = lGetList(ep, CQ_h_cpu);
 
-      FPRINTF((fp, "h_cpu            "));
+      FPRINTF((fp, "h_cpu              "));
       if (time_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -740,7 +775,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *inter_attr_list = lGetList(ep, CQ_suspend_interval);
 
-      FPRINTF((fp, "suspend_interval "));
+      FPRINTF((fp, "suspend_interval   "));
       if (inter_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -755,7 +790,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *inter_attr_list = lGetList(ep, CQ_min_cpu_interval);
 
-      FPRINTF((fp, "min_cpu_interval "));
+      FPRINTF((fp, "min_cpu_interval   "));
       if (inter_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -770,7 +805,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *inter_attr_list = lGetList(ep, CQ_notify);
 
-      FPRINTF((fp, "notify           "));
+      FPRINTF((fp, "notify             "));
       if (inter_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -785,7 +820,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_tmpdir);
 
-      FPRINTF((fp, "tmpdir           "));
+      FPRINTF((fp, "tmpdir             "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -800,7 +835,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_pe_list);
 
-      FPRINTF((fp, "pe_list          "));
+      FPRINTF((fp, "pe_list            "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -814,7 +849,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_ckpt_list);
 
-      FPRINTF((fp, "ckpt_list        "));
+      FPRINTF((fp, "ckpt_list          "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -828,7 +863,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_owner_list);
 
-      FPRINTF((fp, "owner_list       "));
+      FPRINTF((fp, "owner_list         "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -842,7 +877,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_acl);
 
-      FPRINTF((fp, "user_lists       "));
+      FPRINTF((fp, "user_lists         "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -856,7 +891,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_xacl);
 
-      FPRINTF((fp, "xuser_lists      "));
+      FPRINTF((fp, "xuser_lists        "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -870,7 +905,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_projects);
 
-      FPRINTF((fp, "projects         "));
+      FPRINTF((fp, "projects           "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
@@ -884,11 +919,81 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       const lList *str_attr_list = lGetList(ep, CQ_xprojects);
 
-      FPRINTF((fp, "xprojects        "));
+      FPRINTF((fp, "xprojects          "));
       if (str_attr_list != NULL) {
          dstring string = DSTRING_INIT;
 
          prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_load_thresholds);
+
+      FPRINTF((fp, "load_thresholds    "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         celist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_suspend_thresholds);
+
+      FPRINTF((fp, "suspend_thresholds "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         celist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_consumable_config_list);
+
+      FPRINTF((fp, "complex_values     "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         celist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_subordinate_list);
+
+      FPRINTF((fp, "subordinate_list   "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         solist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
+   }
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_qtype);
+
+      FPRINTF((fp, "qtype              "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         solist_attr_list_append_to_dstring(str_attr_list, &string);
          FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
          sge_dstring_free(&string);
       } else {

@@ -466,6 +466,63 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       }
    }
    
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_load_thresholds);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+   
+         lSetList(cqueue, CQ_load_thresholds, lCopyList("", list));
+      }
+   }
+
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_suspend_thresholds);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+   
+         lSetList(cqueue, CQ_suspend_thresholds, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_consumable_config_list);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+   
+         lSetList(cqueue, CQ_consumable_config_list, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_subordinate_list);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+   
+         lSetList(cqueue, CQ_subordinate_list, lCopyList("", list));
+      }
+   }
+   
+   if (ret) {
+      DTRACE;
+      pos = lGetPosViaElem(reduced_elem, CQ_qtype);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+   
+         lSetList(cqueue, CQ_qtype, lCopyList("", list));
+      }
+   }
+
+   lWriteElemTo(cqueue, stderr);
+   
    DEXIT;
    if (ret) {
       return 0;

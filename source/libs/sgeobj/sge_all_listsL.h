@@ -217,6 +217,9 @@ extern "C" {
       {ASTRLIST_LOWERBOUND, ASTRLISTS, ASTRLISTN}, /* CQ ST_Type-list sublist */
       {AUSRLIST_LOWERBOUND, AUSRLISTS, AUSRLISTN}, /* CQ US_Type-list sublist */
       {APRJLIST_LOWERBOUND, APRJLISTS, APRJLISTN}, /* CQ UP_Type-list sublist */
+      {ACELIST_LOWERBOUND, ACELISTS, ACELISTN},    /* CQ CE_Type-list sublist */
+      {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
+      {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */
       {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
 

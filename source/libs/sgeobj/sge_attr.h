@@ -94,6 +94,12 @@ TEMPLATE_ATTR_PROTO(usrlist_attr, const char *)
 
 TEMPLATE_ATTR_PROTO(prjlist_attr, const char *)                    
 
+TEMPLATE_ATTR_PROTO(celist_attr, const char *)                    
+
+TEMPLATE_ATTR_PROTO(solist_attr, const char *)                    
+
+TEMPLATE_ATTR_PROTO(qtlist_attr, const char *)                    
+
 #undef ATTR_TYPE_PROTOTYPES 
 
 #endif /* __SGE_ATTR_H__ */

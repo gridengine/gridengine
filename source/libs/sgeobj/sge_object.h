@@ -251,6 +251,18 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
                               const lDescr *descr, int nm);
 
 bool
+object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string);
+
+bool
+object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string);
+
+bool
+object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string);
+
+bool
 object_set_any_type(lListElem *this_elem, int name, void *value);
 
 void

@@ -63,6 +63,8 @@
 #include "sge_cqueue.h"
 #include "sge_parse_num_par.h"
 #include "sge_utility.h"
+#include "cull_parse_util.h"
+#include "parse.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -458,6 +460,74 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
             result = sge_dstring_get_string(&tmp_dstring);
          }
          break;
+      case ACELIST_value:
+         {
+            lList *list = lGetList(object, nm);
+            lListElem *elem = NULL;
+            bool printed = false;
+
+            for_each(elem, list) {
+               if (printed) {
+                  sge_dstring_sprintf_append(&tmp_dstring, ",");
+               } 
+               sge_dstring_sprintf_append(&tmp_dstring, "%s=",  
+                                          lGetString(elem, CE_name));
+               if (lGetString(elem, CE_stringval) != NULL) {
+                  sge_dstring_sprintf_append(&tmp_dstring, "%s", 
+                                             lGetString(elem, CE_stringval));
+               } else {
+                  sge_dstring_sprintf_append(&tmp_dstring, "%f", 
+                                             lGetString(elem, CE_doubleval));
+               }
+               printed = true;
+            }
+            if (!printed) {
+               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
+            }
+            result = sge_dstring_get_string(&tmp_dstring);
+         }
+         break;
+      case ASOLIST_value:
+         {
+            lList *list = lGetList(object, nm);
+            lListElem *elem = NULL;
+            bool printed = false;
+
+            for_each(elem, list) {
+               sge_dstring_sprintf_append(&tmp_dstring, "%s",
+                                          lGetString(elem, SO_qname));
+               if (lGetUlong(elem, SO_threshold)) {
+                  sge_dstring_sprintf_append(&tmp_dstring, "="u32"%s",
+                                             lGetUlong(elem, SO_threshold),
+                                             lNext(elem)?",":"");
+               }
+               printed = true;
+            }
+            if (!printed) {
+               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
+            }
+            result = sge_dstring_get_string(&tmp_dstring);
+         } 
+         break;
+      case AQTLIST_value:
+         {
+            u_long32 qtype = lGetUlong(object, nm);
+            const char **ptr = NULL; 
+            u_long32 bitmask = 1;
+            bool qtype_defined = false;
+
+            for (ptr = queue_types; **ptr != '\0'; ptr++) {
+               if (bitmask & qtype) {
+                  qtype_defined = true;
+                  sge_dstring_sprintf_append(&tmp_dstring, "%s ", *ptr);
+               }
+               bitmask <<= 1;
+            };
+            if (!qtype_defined) {
+               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
+            }
+         }
+         break;
    }
 
    /* we had a special case - append to result dstring */
@@ -750,6 +820,15 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
       case APRJLIST_value:
          ret = object_parse_list_from_string(object, answer_list, nm, value,
                                              UP_Type, UP_name);
+         break;
+      case ACELIST_value:
+         ret = object_parse_celist_from_string(object, answer_list, nm, value);
+         break;
+      case ASOLIST_value:
+         ret = object_parse_solist_from_string(object, answer_list, nm, value);
+         break;
+      case AQTLIST_value:
+         ret = object_parse_qtlist_from_string(object, answer_list, nm, value);
          break;
       default:
          ret = object_parse_raw_field_from_string(object, answer_list, nm, 
@@ -1298,6 +1377,131 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
    DEXIT;
    return ret;
 }
+
+bool
+object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string)
+{
+   static intprt_type rule[] = {CE_name, CE_stringval, 0};
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_celist_from_string");
+   if (this_elem != NULL && string != NULL) {
+      lList *tmp_list = NULL;
+      int pos = lGetPosViaElem(this_elem, name);
+
+      if (!cull_parse_definition_list((char *)string, &tmp_list, "", CE_Type, rule)) {
+         lSetPosList(this_elem, pos, tmp_list);
+      } else {
+         tmp_list = lFreeList(tmp_list);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_solist_from_string");
+   if (this_elem != NULL && string != NULL) {
+      lList *tmp_list = NULL;
+      lListElem *tmp_elem = NULL;
+      int pos = lGetPosViaElem(this_elem, name);
+
+      lString2List(string, &tmp_list, SO_Type, SO_qname, ", \t");
+      if (tmp_list != NULL) {
+         if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_qname))) {
+            tmp_list = lFreeList(tmp_list);
+         } else {
+            for_each(tmp_elem, tmp_list) {
+               const char *queue_value = lGetString(tmp_elem, SO_qname);
+               const char *queuename = sge_strtok(queue_value, ":=");
+               const char *value_str = sge_strtok(NULL, ":=");
+
+               lSetString(tmp_elem, SO_qname, queuename);
+               if (value_str != NULL) {
+                  char *endptr = NULL;
+                  u_long32 value = strtol(value_str, &endptr, 10);
+
+                  if (*endptr == NULL) {
+                     lSetUlong(tmp_elem, SO_threshold, value);
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_ERRORPARSINGVALUEFORNM_SS,
+                                       string, lNm2Str(name));
+                     ret = false;
+                     break;
+                  }
+               } else {
+                  /*
+                   * No value is explicitely allowed
+                   */
+               } 
+            } 
+            if (ret) {
+               lSetPosList(this_elem, pos, tmp_list);
+            }
+         }
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
+                                int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "object_parse_qtlist_from_string");
+   if (this_elem != NULL && string != NULL) {
+      u_long32 value;
+      int pos = lGetPosViaElem(this_elem, name);
+
+      if (!sge_parse_bitfield_str(string, queue_types, &value, "", 
+                                 answer_list, true)) {
+         lSetPosUlong(this_elem, pos, value);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
 
 bool
 object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,

@@ -212,6 +212,57 @@ NAMEEND
 
 #define APRJLISTS sizeof(APRJLISTN)/sizeof(char*)
 
+enum {
+   ACELIST_href = ACELIST_LOWERBOUND,
+   ACELIST_value
+};
+
+LISTDEF(ACELIST_Type)
+   SGE_HOST(ACELIST_href, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(ACELIST_value, CE_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(ACELISTN)
+   NAME("ACELIST_href")
+   NAME("ACELIST_value")
+NAMEEND
+
+#define ACELISTS sizeof(ACELISTN)/sizeof(char*)
+
+enum {
+   ASOLIST_href = ASOLIST_LOWERBOUND,
+   ASOLIST_value
+};
+
+LISTDEF(ASOLIST_Type)
+   SGE_HOST(ASOLIST_href, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(ASOLIST_value, SO_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(ASOLISTN)
+   NAME("ASOLIST_href")
+   NAME("ASOLIST_value")
+NAMEEND
+
+#define ASOLISTS sizeof(ASOLISTN)/sizeof(char*)
+
+enum {
+   AQTLIST_href = AQTLIST_LOWERBOUND,
+   AQTLIST_value
+};
+
+LISTDEF(AQTLIST_Type)
+   SGE_HOST(AQTLIST_href, CULL_HASH | CULL_UNIQUE)
+   SGE_ULONG(AQTLIST_value, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(AQTLISTN)
+   NAME("AQTLIST_href")
+   NAME("AQTLIST_value")
+NAMEEND
+
+#define AQTLISTS sizeof(AQTLISTN)/sizeof(char*)
+
 /* *INDENT-ON* */  
 
 #ifdef  __cplusplus

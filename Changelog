@@ -1,18 +1,17 @@
 CR-2004-10-08-0: Enhancem.: implemented application status callback 
                             function for qmaster. 
                             CR-2004-10-07-1 (Part II)
-                 Review:    pending
+                 Review:    MD
                  Changed:   qmaster utilib
-                 Issue:     -
-                 Bugtraq:   -
+                 Issue:     1294
+                 Bugtraq:   6176115
 
 CR-2004-10-07-1: Enhancem.: application status callback function now
                             supports status string (Part I)
                  Review:    AA
                  Changed:   commlib
-                 Issue:     -
-                 Bugtraq:   -
-                            
+                 Issue:     1294
+                 Bugtraq:   6176115
 
 DT-2004-10-07-0: Bugfix:    o Removed slots from complex values list of
                               queue instances in qconf

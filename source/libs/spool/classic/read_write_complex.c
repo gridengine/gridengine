@@ -220,69 +220,6 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          else
             SGE_EXIT(1);
       }
-#if 0 /* EB: TODO: remove */
-      /* VALUE */
-      if (((s = sge_strtok(cp, " \t\n")) && (*s != '#'))) {
-
-         lSetString(ep, CE_stringval, s);    /* save string representation */
-
-         switch (type) {
-         case TYPE_INT:
-         case TYPE_TIM:
-         case TYPE_MEM:
-         case TYPE_BOO:
-         case TYPE_DOUBLE:
-            if (!parse_ulong_val(&dval, NULL, type, s, SGE_EVENT, sizeof(SGE_EVENT)-1)) {
-               SGE_LOG(LOG_ERR, SGE_EVENT);
-               ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-               if (alpp) {
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  lp = lFreeList(lp);
-                  DEXIT;
-                  return NULL;
-               }
-               else
-                  SGE_EXIT(1);
-
-            }
-            lSetDouble(ep, CE_doubleval, dval);
-            break;
-         case TYPE_HOST:
-            /* resolve hostname and store it */
-            ret = sge_resolve_host(ep, CE_stringval);
-            if (ret) {
-               if (ret == COMMD_NACK_UNKNOWN_HOST) {
-                  ERROR((SGE_EVENT, MSG_COM_COMMDLOCKED));
-                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
-               } else {
-                  ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-                  ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
-               }
-               if (alpp) {
-                  answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-                  lp = lFreeList(lp);
-                  DEXIT;
-                  return NULL;
-               }
-               else
-                  SGE_EXIT(1);
-            }
-            break;
-         }
-      }
-      else {
-         ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
-      }
-
-#endif
       
       /* RELOP */
       if (((s = sge_strtok(cp, " \t\n"))) && (*s != '#')) {

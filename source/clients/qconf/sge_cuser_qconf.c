@@ -43,6 +43,7 @@
 #include "spool/classic/read_write_ume.h"
 
 #include "msg_common.h"
+#include "msg_qconf.h"
 
 #ifndef __SGE_NO_USERMAPPING__
 
@@ -180,8 +181,7 @@ bool cuser_modify(lList **answer_list, const char *name)
       lListElem *cuser = cuser_get_via_gdi(answer_list, name);
 
       if (cuser == NULL) {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "User mapping entry "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, MSG_CUSER_DOESNOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -211,8 +211,7 @@ bool cuser_modify_from_file(lList **answer_list, const char *filename)
 
       cuser = cull_read_in_ume(NULL, filename, 1, 0, 0, NULL); 
       if (cuser == NULL) {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "User mapping file "SFQ" is not correct\n", filename);
+         sprintf(SGE_EVENT, MSG_CUSER_FILENOTCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -257,8 +256,7 @@ bool cuser_show(lList **answer_list, const char *name)
          write_ume(0, 0, cuser);
          cuser = lFreeElem(cuser);
       } else {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Cluster user "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, MSG_CUSER_DOESNOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
          ret = false;

@@ -1117,7 +1117,6 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
                  !strcasecmp(string, "no") || !strcasecmp(string, "n")) {
          lSetPosBool(this_elem, pos, false);
       } else {
-         /* EB: TODO: error handling */
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_ERRORPARSINGVALUEFORNM_SS,
@@ -1125,7 +1124,6 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_ERRORPARSINGVALUEFORNM_SS,
@@ -1150,7 +1148,6 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
       if (sscanf(string, u32, &value) == 1) {
          lSetPosUlong(this_elem, pos, value);
       } else {
-         /* EB: TODO: error handling */
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_ERRORPARSINGVALUEFORNM_SS,
@@ -1158,7 +1155,10 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1186,7 +1186,10 @@ object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1214,7 +1217,10 @@ object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1242,7 +1248,10 @@ object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1270,7 +1279,10 @@ object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1298,7 +1310,10 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
          ret = false;
       }
    } else {
-      /* EB: TODO: error handling */
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
       ret = false;
    }
    DEXIT;
@@ -1380,17 +1395,12 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
    DEXIT;
 }
 
-void attr_mod_sub_list(
-lList **alpp,
-lListElem *this_elem,
-int this_elem_name,
-int this_elem_primary_key,
-lListElem *delta_elem,
-int sub_command,
-char *sub_list_name,
-char *object_name,
-int no_info
-) {
+void 
+attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
+                  int this_elem_primary_key, lListElem *delta_elem,
+                  int sub_command, char *sub_list_name, char *object_name,
+                  int no_info) 
+{
    DENTER(OBJECT_LAYER, "attr_mod_sub_list");
 
    if (lGetPosViaElem(delta_elem, this_elem_name) < 0) {
@@ -1448,7 +1458,8 @@ int no_info
                   if (!no_info && sub_command == SGE_GDI_APPEND) {
                      INFO((SGE_EVENT, SFQ" already exists in "SFQ" of "SFQ"\n",
                            rstring, sub_list_name, object_name));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                     ANSWER_QUALITY_INFO);
                   }
 
                   lFreeElem(old_sub_elem);
@@ -1499,7 +1510,8 @@ int no_info
                      INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
                         "Adding new element(s).\n",
                         sub_list_name, object_name));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                     ANSWER_QUALITY_INFO);
                   }
                   lSetList(this_elem, this_elem_name, lCopyList("",
                      lGetList(delta_elem, this_elem_name)));
@@ -1510,7 +1522,8 @@ int no_info
                      INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
                         " - Adding new element.\n", rstring,
                         sub_list_name, object_name));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                     ANSWER_QUALITY_INFO);
                   }
                   new_sub_elem =
                      lDechainElem(reduced_sublist, reduced_element);

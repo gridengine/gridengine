@@ -187,8 +187,7 @@ centry_modify(lList **answer_list, const char *name)
       lListElem *centry = centry_get_via_gdi(answer_list, name);
 
       if (centry == NULL) {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Complex entry "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, MSG_CENTRY_DOESNOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -219,8 +218,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
 
       centry = cull_read_in_centry(NULL, filename, 1, 0, 0, NULL); 
       if (centry == NULL) {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Complex file "SFQ" is not correct\n", filename);
+         sprintf(SGE_EVENT, MSG_CENTRY_FILENOTCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -267,8 +265,7 @@ centry_show(lList **answer_list, const char *name)
          write_centry(0, 0, centry);
          centry = lFreeElem(centry);
       } else {
-         /* EB: TODO move to msg file */
-         sprintf(SGE_EVENT, "Complex entry "SFQ" does not exist\n", name);
+         sprintf(SGE_EVENT, MSG_CENTRY_DOESNOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
          ret = false;
@@ -460,7 +457,7 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
          if (lGetNumberOfElem(*answer_list) == 0) {
             answer_list_add_sprintf(answer_list, STATUS_OK, 
                                     ANSWER_QUALITY_INFO, 
-                                    MSG_COMPLATTRNOTCHANGED);
+                                    MSG_CENTRY_NOTCHANGED);
          }
       }
    }
@@ -498,9 +495,9 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
       lList *old_centry_list = centry_list_get_via_gdi(answer_list); 
 
       if (centry_list == NULL) {
-         /* EB: TODO move to msg file */
          answer_list_add_sprintf(answer_list, STATUS_ERROR1, 
-                                 ANSWER_QUALITY_ERROR, "Complex attribute file "SFQ" is not correct\n", filename);
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_CENTRY_FILENOTCORRECT_S, filename);
          ret = false;
       } 
       if (ret) { 

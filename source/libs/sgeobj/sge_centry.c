@@ -634,7 +634,7 @@ centry_list_are_queues_requestable(const lList *this_list)
       lListElem *centry = centry_list_locate(this_list, "qname");
       
       if (centry != NULL) {
-         ret = (lGetUlong(centry, CE_requestable) == REQU_NO);
+         ret = (lGetUlong(centry, CE_requestable) != REQU_NO);
       }
    }
    DEXIT;

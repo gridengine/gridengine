@@ -1,5 +1,5 @@
-#ifndef __SGE_HOSTGROUPL_H
-#define __SGE_HOSTGROUPL_H
+#ifndef __SGE_HROUPL_H
+#define __SGE_HROUPL_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -42,6 +42,85 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
+/****** sgeobj/hgroup/--HGRP_Type *********************************************
+*  NAME
+*     HGRP_Type - CULL hostgroup element
+*
+*  ELEMENTS
+*     SGE_HOST(HGRP_name)
+*        Name of the hostgroup
+*
+*     SGE_LIST(HGRP_host_list)
+*        List of hostnames and/or hostgroup names
+*     
+*  FUNCTION 
+*
+*     HGRP_Type elements are used to define groups of hosts. Each group
+*     will be identified by a unique name.
+*     Each hostgroup might refer to none, one or multiple hosts and/or
+*     hostgroups. This object makes it possible to define a network of
+*     hostgroups and hosts.
+*
+*     
+*                       --------------                                 
+*                       |            |
+*                       V            | 1:x
+*                 ------------- <----| 
+*                 | HGRP_Type |               ------------
+*                 ------------- <-----------> | hostname |
+*                                    1:x      ------------
+*     
+*     Example
+*
+*        Following diagram shows a network of 9 hostgroups (A; B; C; 
+*        D; E; G; H; I). Each of those groups references one host 
+*        (A -> a; B -> b; C -> c; ...). Additionally some of those 
+*        hostgroups refer to one (A -> C; B -> C; C -> E; ...) or two 
+*        hostgroups (E -> F,G; F -> H,I)
+*
+*                 -----                           -----
+*                 | A | -- a                      | H | -- h
+*                 ----- \                       / -----
+*                         -----           -----
+*                         | C | -- c      | F | -- f
+*                         -----         / -----
+*                 ----- /       \ -----         \ -----
+*                 | B | -- b      | E | -- e      | I | -- i
+*                 -----           -----           -----
+*                         ----- /       \ -----
+*                         | D | -- d      | G | -- g
+*                         -----           -----
+*
+*     Several functions exist to create such networks and to find
+*     certain sets of hosts and hostgroups within such a network:
+*
+*     hgroup_find_references("E", &answer, master_list, &hosts, &groups)
+*        hosts -> e 
+*        groups -> F, G
+* 
+*     hgroup_find_all_references("E", &answer, master_list, &hosts, &groups)
+*        hosts -> e, f, g, h, i
+*        groups -> F, G, H, I
+*
+*     hgroup_find_referencees("E", &answer, master_list, &groups)
+*        groups -> C, D
+*
+*     hgroup_find_all_referencees("E", &answer, master_list, &groups)
+*        groups -> A, B, C, D
+*
+*  SEE ALSO
+*     sgeobj/hgroup/correct_hgroup_name()
+*     sgeobj/hgroup/hgroup_list_get_master_list()
+*     sgeobj/hgroup/hgroup_list_locate()
+*     sgeobj/hgroup/hgroup_correct_name()
+*     sgeobj/hgroup/hgroup_create()
+*     sgeobj/hgroup/hgroup_add_references()
+*     sgeobj/hgroup/hgroup_find_all_references()
+*     sgeobj/hgroup/hgroup_find_references()
+*     sgeobj/hgroup/hgroup_find_all_referencees()
+*     sgeobj/hgroup/hgroup_find_referencees()
+*     sgeobj/hgroup/hgroup_list_exists()
+*******************************************************************************/
 enum {
    HGRP_name = HGRP_LOWERBOUND,
    HGRP_host_list
@@ -65,4 +144,4 @@ NAMEEND
 }
 #endif
 
-#endif /* __SGE_HOSTGROUPL_H */
+#endif /* __SGE_HGROUPL_H */

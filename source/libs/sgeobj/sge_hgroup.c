@@ -487,6 +487,29 @@ hgroup_find_referencees(const lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/hgroup/hgroup_list_exists() *************************************
+*  NAME
+*     hgroup_list_exists() -- Do hostgroups really exist. 
+*
+*  SYNOPSIS
+*     bool 
+*     hgroup_list_exists(const lList *this_list, 
+*                        lList **answer_list, 
+*                        const lList *href_list) 
+*
+*  FUNCTION
+*     This functions returns true if all hostgroups given by the parameter
+*     "href_list" exist in "this_list". If one or more objects are missing
+*     a corresponding error message will be returned via "answer_list".
+*
+*  INPUTS
+*     const lList *this_list - HGRP_Type
+*     lList **answer_list    - AN_Type 
+*     const lList *href_list - HR_Type 
+*
+*  RESULT
+*     bool - true or false
+*******************************************************************************/
 bool
 hgroup_list_exists(const lList *this_list, lList **answer_list,
                    const lList *href_list)

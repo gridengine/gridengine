@@ -1,3 +1,10 @@
+EB-2003-07-17-0: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
+                            * job was rejected because requests a queue
+                              while queues are configured as requestable
+                            * Moved messages into msg_*.h files
+                            * Added ADOC comments
+                 Changed:   sge_qmaster
+
 CR-2003-07-17-0: Testsuite: install_core_system can now handle new complex
                             behaviour.
 

@@ -89,8 +89,6 @@ static int sge_calc_sharetree_targets(lListElem *root, sge_Sdescr_t *lists,
                            lList *decay_list, u_long curr_time,
                            u_long seqno);
 
-static lListElem *locate_user_or_project(lList *user_list, const char *name);
-
 static void free_fcategories(lList **fcategories);
 static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **root, int dependent); 
 static void copy_ftickets(sge_ref_list_t *source, sge_ref_list_t *dest);

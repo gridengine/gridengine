@@ -49,8 +49,8 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv)
 {
-   int cl_err = 0;
-   int tmp_cl_err = 0;
+   int cl_err = 0, ret;
+   
    DENTER_MAIN(TOP_LAYER, "qconf");
 
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
@@ -62,13 +62,9 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QCONF);
 
-   tmp_cl_err = reresolve_me_qualified_hostname();
-   if (tmp_cl_err != CL_OK) {
-      if (tmp_cl_err == CL_CONNECT) {
-         /* fills SGE_EVENT with diagnosis information */
-         generate_commd_port_and_service_status_message(SGE_EVENT);
-         fprintf(stderr, SGE_EVENT);
-      } 
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      generate_commd_port_and_service_status_message(ret, SGE_EVENT);
+      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }   
 

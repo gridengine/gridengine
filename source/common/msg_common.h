@@ -48,11 +48,13 @@
 #define MSG_NULL                   _("(NULL)")
 #define MSG_SMALLNULL                       _("(null)")
 
-#define MSG_SGETEXT_NOQMASTER                       _("unable to contact qmaster\n")
-#define MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS   _("unable to contact qmaster: NO port - check "SFQ" variable or services file for "SFQ" service\n")
-#define MSG_SGETEXT_NOQMASTER_PORT_ENV_SIS          _("unable to contact qmaster on port "SFN":%d - check "SFQ" variable\n")
-#define MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SISS _("unable to contact qmaster on port "SFN":%d - service entry "SFQ", no local "SFQ" variable\n")
-
+#define MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS   _("unable to contact commd on qmaster host "SFQ" - can't resolve service "SFQ"\n")
+#define MSG_SGETEXT_NOQMASTER_PORT_ENV_SI           _("unable to contact commd on qmaster host "SFQ" using port %d\n")
+#define MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS  _("unable to contact commd on qmaster host "SFQ" using port %d (service "SFQ")\n")
+#define MSG_SGETEXT_NOQMASTER_REACHABLE             _("unable to contact qmaster\n")
+#define MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_SS  _("unable to contact qmaster on host "SFQ" - commlib error: "SFQ"\n")
+#define MSG_SGETEXT_NOQMASTER_SUBSCR_AT_COMMD_S     _("unable to contact qmaster on host "SFQ" - qmaster not enrolled at commd\n")
+#define MSG_SGETEXT_NOQMASTER_RESOLVING_ERROR_S     _("unable to contact qmaster host "SFQ" - hostname resolving error\n")
 
 
 #define MSG_FILE_CANTOPENDIRECTORYX_SS                         _("can't open directory \"%s\": %s\n")

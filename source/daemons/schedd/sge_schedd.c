@@ -219,6 +219,9 @@ char *argv[]
             last_list = sge_get_gmt();
             check_qmaster = 0;
          } else {
+            if (ret > 0) { /* we had an commlib error code return, so we */
+               sleep(1);   /* don't tantalize cpu on errors */
+            }
             if (last_list && (sge_get_gmt() > last_list + ec_get_edtime() * 10)) {
                DPRINTF(("QMASTER ALIVE TIMEOUT EXPIRED\n"));
                ec_mark4registration();

@@ -1,3 +1,26 @@
+CR-2002-03-26-3  Merge:     merge from V53_beta2_BRANCH
+                 Bugfix:    - wrong error handling if qmaster is down and
+                              user tries qdel -f 
+                            - changed code formating
+                 Bugfix:    qstat -f -> 
+                            8 x times logging: "... neither submit nor admin host"
+
+                 Bugfix:    can't resolve hostname "%-.100s" from act_qmaster file
+                            message
+
+                 Bugfix:    qacct output formatting
+
+                 Bugfix:    changed error messages when master commd is not
+                            reachable.
+
+                 Bugfix:    removed forgotten #if0 - #endif statement which
+                            chauses scheduler to abort() on testsuite's 
+                            path_alias check.
+
+                 Bugfix:    scheduler generates high CPU load for 1-2 minutes
+                            when sge_commd is killed.
+                 Issue:     #197
+               
 JG-2002-03-26-0  Testsuite: Installation with many hosts did not work due to
                             some buffer (commandline?) being too small.
                             Pass hostnames to install_qmaster in a file.

@@ -194,9 +194,9 @@ int recvfromcommd(unsigned char **buffer,
                   u_short *headerlen, 
                   u_long32 *buflen
 #ifdef COMMLIB_ENABLE_DEBUG
-                  , const char *context_string
+               , const char *context_string
 #endif
-                  );
+                 );
 void closeconnection(int force);
 
 
@@ -602,7 +602,7 @@ u_short compressed
 #ifdef COMMLIB_ENABLE_DEBUG
                      , "send_message_(#01)"
 #endif
-          );
+                     );
       if (i == COMMD_NACK_ENROLL) {
          if (retry <= max_retrys) {
             force_reenroll();
@@ -660,7 +660,7 @@ u_short compressed
 #ifdef COMMLIB_ENABLE_DEBUG
                         , "send_message_(#1)"
 #endif
-                       );
+                        );
       set_commlib_state_timeout(old_param_timeout);
 
       DPRINTF(("send_message: acknowledge recvfromcommd returned %d\n", i));
@@ -876,7 +876,6 @@ u_short *compressed
                      , "receive_message_(#01)"
 #endif
                     );
-
       if (i) {
 #ifndef WIN32NATIVE
          sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -896,7 +895,7 @@ u_short *compressed
       i = recvfromcommd(&ackcharptr, NULL, 1, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
                         , "receive_message_(#1)"
-#endif 
+#endif
                         );
 
       if (i) {
@@ -941,11 +940,11 @@ u_short *compressed
    /* acknowledge says everything is fine -> receive message */
 
    i = recvfromcommd((unsigned char **) buffer, header, 0, &flags,
-                      &headerlen, buflen
+                     &headerlen, buflen
 #ifdef COMMLIB_ENABLE_DEBUG
                       , "receive_message_(#2)"
-#endif 
-                    ); 
+#endif
+                    );
    if (i) {
 #ifndef WIN32NATIVE
       sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -957,9 +956,9 @@ u_short *compressed
    /* acknowledge receive - should we use a cookie instaed of a zero byte ? */
    i = send2commd(ackcharptr, 1
 #ifdef COMMLIB_ENABLE_DEBUG
-                     , "receive_message_(#01)"
+                  , "receive_message_(#01)"
 #endif
-                 );
+                  );
    closeconnection(0);
 #ifndef WIN32NATIVE
    sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -1119,14 +1118,14 @@ int *tag_priority_list
 #ifdef COMMLIB_ENABLE_DEBUG
                      , "enroll_(#01)"
 #endif
-                 );
-
+                  );
    if (!i) {
       i = recvfromcommd(&bufptr, NULL, 1, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
                         , "enroll_(#1)"
-#endif 
+#endif
                         );
+
       if (i) {
 #ifndef WIN32NATIVE
          sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -1145,7 +1144,7 @@ int *tag_priority_list
       i = recvfromcommd(&bufptr, NULL, 2, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
                         , "enroll_(#2)"
-#endif 
+#endif
                         );
    }
 
@@ -1333,9 +1332,9 @@ static int leave_()
 
    i = send2commd(prolog_header, PROLOGLEN+headerlen
 #ifdef COMMLIB_ENABLE_DEBUG
-                     , "leave_commd (#01)"
+                  , "leave_commd (#01)"
 #endif
-   );
+                  );
    if (i) {
 #ifndef WIN32NATIVE
       sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -1349,6 +1348,7 @@ static int leave_()
                      , "leave_commd (#1)"
 #endif
                      );
+
    if (i) {
 #ifndef WIN32NATIVE
 	  sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -1460,7 +1460,7 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
    unsigned char *cp;
    DENTER(COMMD_LAYER, "cntl_");
 
-   if ((i = get_environments())) { 
+   if ((i = get_environments())) {
       /* look for port and host of commd */
       DEXIT;
       return i;
@@ -1519,12 +1519,13 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
       if (!i) {
          fprintf(stderr, MSG_COMMLIB_LOST_CONNECTION);
 #ifdef COMMLIB_ENABLE_DEBUG
-         INFO((SGE_EVENT, "cntl_ returns CL_READ #1: %s\n", 
+         INFO((SGE_EVENT, "cntl_ returns CL_READ #1: %s\n",
                   strerror(stored_errno)));
-#endif 
+#endif
          DEXIT;
          return CL_READ;
       }
+      DEXIT;
       return 0;
    }
 
@@ -1533,8 +1534,8 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
       i = recvfromcommd(&bufptr, NULL, 4, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
                         , "cntl_ (#2)"
-#endif                   
-                        ); 
+#endif
+                        );
       if (i) {
          closeconnection(0);
          DEXIT;
@@ -1581,7 +1582,7 @@ int send2commd(unsigned char *buffer, int buflen
 #ifdef COMMLIB_ENABLE_DEBUG
                , const char *context_string
 #endif
-               ) {
+) {
 #ifndef WIN32                   /* var not needed */
    int port = IPPORT_RESERVED - 1;
 #endif
@@ -1686,6 +1687,7 @@ int send2commd(unsigned char *buffer, int buflen
                case -1:
                   /* select error */
                   DPRINTF(("select returns %d: %s\n", si, strerror(errno)));
+                  DPRINTF(("now closing connection with closeconnection(1)\n"));
                   closeconnection(1);
                   DEXIT;
                   return CL_CONNECT;
@@ -1800,12 +1802,12 @@ int send2commd(unsigned char *buffer, int buflen
    if n==0 receive message format PROLOG+HEADER+BUFFER (buffer has to be freed
    by caller, header is given by caller) and return pointers to buffer
  **********************************************************************/
-int recvfromcommd(unsigned char **buffer, unsigned char *header,
-                  int n, u_long32 *flags, u_short *headerlen, u_long32 *buflen 
+int recvfromcommd(unsigned char **buffer, unsigned char *header, int n,
+                  u_long32 *flags, u_short *headerlen, u_long32 *buflen 
 #ifdef COMMLIB_ENABLE_DEBUG
                   , const char *context_string
 #endif
-                 ) {
+                  ) {
    unsigned char prolog[PROLOGLEN], *cp;
    char *bptr = NULL;
    int i;
@@ -1878,8 +1880,8 @@ int recvfromcommd(unsigned char **buffer, unsigned char *header,
        (i = readnbytes_nb(get_commlib_state_sfd(), bptr, *buflen, 60))) {
       free(bptr);
       if (i == -2) {
-         DEXIT;
          closeconnection(0);
+         DEXIT;
          return CL_READ_TIMEOUT;
       }
       closeconnection(1);
@@ -2086,7 +2088,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
    i = recvfromcommd((unsigned char **) &headerptr, NULL, 2, NULL, NULL, NULL
 #ifdef COMMLIB_ENABLE_DEBUG
                      , "getuniquehostname (#2)"
-#endif 
+#endif
                      );
    if (i) {
       closeconnection(0);
@@ -2138,13 +2140,15 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 *     char* buffer - buffer for error message 
 *
 *******************************************************************************/
-void generate_commd_port_and_service_status_message(char* buffer) {
+void generate_commd_port_and_service_status_message(int commlib_error, char* buffer) {
    int port             = 0;
    char *service        = NULL;
    char *commdhost      = NULL;
    char *commd_port_env = NULL;
 
    DENTER(TOP_LAYER, "generate_commd_port_and_service_status_message");
+
+   DPRINTF(("commlib_error =  %d\n",commlib_error));
 
    port           = get_commlib_state_commdport();
    service        = get_commlib_state_commdservice();
@@ -2159,15 +2163,36 @@ void generate_commd_port_and_service_status_message(char* buffer) {
    }
 
    if (buffer != NULL) {
-      if ( port < 0 ) {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,"COMMD_PORT", service);
-      } else if ( commd_port_env != NULL ) { 
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SIS,commdhost,port,"COMMD_PORT");
-      } else if ( commd_port_env == NULL ) {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SISS,commdhost,port,service,"COMMD_PORT");
-      } else {
-         sprintf(buffer, MSG_SGETEXT_NOQMASTER);
+      /* commlib error is negative, we don't know why we can't reach qmaster*/
+      if ( commlib_error < 0 ) {
+         sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE );
+         DEXIT;
+         return;
       }
+
+      /* commlib error is 0 (CL_OK), there was no commlib error */
+      if ( commlib_error == CL_OK || 
+           commlib_error == CL_CONNECT || 
+           commlib_error == CL_SERVICE ||
+           ( commlib_error >= CL_FIRST_FREE_EC && commlib_error != COMMD_NACK_UNKNOWN_RECEIVER) ) {
+
+         if ( port < 0 ) {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,commdhost, service);
+         } else if ( commd_port_env != NULL ) { 
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_ENV_SI,commdhost,port);
+         } else {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS,commdhost,port,service);
+         } 
+
+      } else {
+         if (commlib_error == COMMD_NACK_UNKNOWN_RECEIVER) {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_SUBSCR_AT_COMMD_S, commdhost );
+         } else if ( commlib_error == CL_RESOLVE ) {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_RESOLVING_ERROR_S, commdhost );
+         } else {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_SS, commdhost , cl_errstr(commlib_error) );
+         }
+      } 
    }
    DEXIT;
 }
@@ -2221,12 +2246,19 @@ static int get_environments()
          return 0;
       }
 
+#if 0
+     /* not supported by rest of current infrastructure  */
       if (!((cp = getenv("COMMD_SERVICE")))) {
          cp = get_commlib_state_commdservice();
          if (cp[0] == '\0')
             cp = "unknown_service";
       }
+#endif
 
+     cp = get_commlib_state_commdservice();
+     if (cp[0] == '\0')
+        cp = "unknown_service";
+        
       nisretry = MAXNISRETRY;   /* NIS sometimes neede several attempts */
       while (nisretry-- && !((se = getservbyname(cp, "tcp"))));
       if (!se)

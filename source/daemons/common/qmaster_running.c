@@ -157,7 +157,7 @@ int *enrolled
       break;
    case CL_RESOLVE:
       /* commlib couldn't resolve name if commd host */
-      strcpy(err_str, MSG_QMASTER_CANTRESOLVEHOSTNAMEXFROMACTQMASTERFILE_S);
+      sprintf(err_str, MSG_QMASTER_CANTRESOLVEHOSTNAMEXFROMACTQMASTERFILE_S, master);
       ret = -2;
       break;
    case CL_SERVICE:

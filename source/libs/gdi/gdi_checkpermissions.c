@@ -149,7 +149,7 @@ int sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
 *     gdilib/sge_gdi_get_mapping_name()
 *     gdilib/PERM_LOWERBOUND
 ******************************************************************************/
-int sge_gdi_check_permission(int option) {
+int sge_gdi_check_permission(lList **alpp, int option) {
   int access_status = FALSE;
   int failed_checks = 0;
   lList* alp = NULL;
@@ -163,8 +163,9 @@ int sge_gdi_check_permission(int option) {
 
   if (permList == NULL) {
      DPRINTF(("Permlist is NULL\n"));
-     lFreeList(alp);
-     alp = NULL;
+     alpp = &alp;
+/*     lFreeList(alp);   do not free answer list, client must do that !
+     alp = NULL; */
      failed_checks++;
      return -10;
   } else {

@@ -2759,7 +2759,7 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
    DENTER(GDI_LAYER, "sec_handle_announce");
 
    if (uti_state_get_mewho() == QMASTER) {
-      if (buffer && buflen) {   
+      if (buffer && buflen) {
          /* 
          ** someone wants to announce to master
          */
@@ -2768,26 +2768,25 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
             i = -1;
             goto error;
          }
-      }
-      else {         
+      } else {
+         unsigned char dummy_buffer[] = "dummy buffer";
          /* 
          ** a sec_decrypt error has occured
          */
          ngc_error = cl_commlib_send_message(cl_handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                              CL_MIH_MAT_NAK,
-                                             (unsigned char*)buffer,buflen,
+                                             dummy_buffer, strlen((const char*) dummy_buffer) + 1,
                                              &mid, response_id, TAG_SEC_ANNOUNCE,
                                              1, 0);
+
          if (ngc_error != CL_RETVAL_OK) {
             i = -1;
             goto error;
          }
       }
-   }
-   else if (gsd.is_daemon) {
+   } else if (gsd.is_daemon) {
       sec_state_set_connect(0);
-   }
-   else {
+   } else {
       printf("You should reconnect - please try command again!\n");
       sec_state_set_connect(0);
 

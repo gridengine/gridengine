@@ -3678,7 +3678,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
 
 
    /* check acknowledge method */
-   if (ack_type == CL_MIH_MAT_UNDEFINED) {
+   if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || size == 0 ) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_PARAMS));
       return CL_RETVAL_PARAMS;
    }

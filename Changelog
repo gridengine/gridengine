@@ -1,3 +1,9 @@
+MD-2004-03-08-0: Bugfix:    qmaster crash in csp mode, if unsecure execd's
+                            are trying to connect to the qmaster
+                 Issue:     801
+                 Changed:   sec_lib, commlib
+                 Review:    CR
+
 JG-2004-03-08-1: Bugfix:    Added missing validation of database handle in 
                             spooling write function.
                  Cleanup:   Changed output level of a number of communication 

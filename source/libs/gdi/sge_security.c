@@ -425,7 +425,7 @@ u_short *compressed
 
    ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
 
-   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
+   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND ) {
       if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
           /* The connection was closed, reopen it */
           ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
@@ -439,7 +439,7 @@ u_short *compressed
       }
    }
 
-   if (message != NULL) {
+   if (message != NULL && ret == CL_RETVAL_OK) {
       *buffer = (char *)message->message;
       message->message = NULL;
       *buflen = message->message_length;

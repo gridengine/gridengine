@@ -1,3 +1,7 @@
+SD-2002-01-10-1: Enhancem: Added SGEEE policy hierarchy support (not yet activated)
+                           Minor GSS security modules update
+                 Bugfix:   Fixed uninitialized structure in sge_calc_tickets
+
 EB-2002-01-10-0: Bugfix:   qrsh -notify <command>
 
 EB-2002-01-09-0: Bugfix:   qselect -pe 

@@ -129,8 +129,16 @@ enum {
                               * calculated during scheduling of pending
                               * jobs, set in schedd, not stored to qmaster,
                               * not spooled */
+   STN_sort,                 /* value for sorting jobs attached to a node,
+                              * calculated during scheduling of pending
+                              * jobs, set in schedd, not stored to qmaster,
+                              * not spooled */
    STN_ref,                  /* Temporary index reference back into the
                               * array of pending jobs, used during
+                              * scheduling of pending jobs, set in schedd,
+                              * not stored to qmaster, not spooled */
+   STN_tickets,              /* Temporary storage of pending tickets from
+                              * higher level policies, used during
                               * scheduling of pending jobs, set in schedd,
                               * not stored to qmaster, not spooled */
    STN_jobid,                /* Job number of a temporary job node,
@@ -178,7 +186,9 @@ ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
    SGE_DOUBLE(STN_ltt)                                                    
    SGE_DOUBLE(STN_oltt)                                                   
    SGE_DOUBLE(STN_shr)                                                    
+   SGE_DOUBLE(STN_sort)                                                    
    SGE_XULONG(STN_ref)                                                    
+   SGE_DOUBLE(STN_tickets)                                                    
    SGE_XULONG(STN_jobid)                                                  
    SGE_XULONG(STN_taskid)                                                 
    SGE_RLIST(STN_usage_list,UA_Type)                                     
@@ -220,7 +230,9 @@ NAMEDEF(STNN)
    NAME("STN_ltt")
    NAME("STN_oltt")
    NAME("STN_shr")
+   NAME("STN_sort")
    NAME("STN_ref")
+   NAME("STN_tickets")
    NAME("STN_jobid")
    NAME("STN_taskid")
    NAME("STN_usage_list")

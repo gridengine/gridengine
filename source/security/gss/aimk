@@ -40,14 +40,15 @@
 set noglob
 
 if (! $?SGE_ROOT) then
-      echo Please set your SGE_ROOT environment variable before calling aimk
-      echo
-      exit 1
+   echo Please set your SGE_ROOT environment variable before calling aimk
+   echo
+   exit 1
 endif
 
-#set KRB_HOME = /krb5/
-
-set KRB_HOME = /usr/local/
+if (! $?KRB_HOME) then
+   #set KRB_HOME = /krb5/
+   set KRB_HOME = /usr/local/
+endif
 
 # common compiler and linker settings 
 #
@@ -99,7 +100,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-gss"
       set argv     = ($argv[2-])
-      set CFLAGS  = "-DKERBEROS ­I$KRB_HOME/include/gssapi -I$KRB_HOME/include $CFLAGS"
+      set CFLAGS  = "-DKERBEROS -I$KRB_HOME/include/gssapi -I$KRB_HOME/include $CFLAGS"
       set LFLAGS  = "-L$KRB_HOME/lib $LFLAGS"
       set LIBS    = "$LIBS -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
       breaksw
@@ -207,11 +208,11 @@ case rs6000:
 case solaris:
 #   set CC   = "gcc"
    if ( $CC == gcc ) then
-      set CFLAGS   = "-DSOLARIS -O -Wall -Wstrict-prototypes $DEBUG_FLAG $CFLAGS"
+      set CFLAGS   = "-DSOLARIS -O -Wall $DEBUG_FLAG $CFLAGS"
    else
       set CFLAGS = "-std1 -DSOLARIS -O $DEBUG_FLAG $CFLAGS"
    endif
-   set LIBS = "$LIBS -lsocket -lnsl"         
+   set LIBS = "$LIBS -lresolv -lsocket -lnsl"         
 	set STATIC   = "-nostartfiles"
    breaksw
 

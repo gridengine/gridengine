@@ -81,6 +81,7 @@ typedef struct {
    double project_fshare;     /* job's share of project functional shares */
    double jobclass_fshare;    /* job's share of jobclass functional shares */
    double job_fshare;         /* job's share of job functional shares */
+   double tickets;            /* job's pending tickets from hierarchical policies */
    sge_task_ref_t *tref;
 } sge_ref_t;
 

@@ -144,6 +144,13 @@
        o  the queue name,
 ! this changes into
 !      o  the queue instance name
+       o  the  queue  type  -  one   of   B(atch),   I(nteractive),
+          C(heckpointing),  P(arallel),  T(ransfer) or combinations
+          thereof,
+! this changes into
+!      o  the  queue  type  -  one   of   B(atch),   I(nteractive),
+!         C(heckpointing),  P(arallel),  T(ransfer), combinations
+!         thereof or N(one),
        o  the load average of the queue host,
 ! this changes into
        o  the normalized load average (np_load_avg) of the queue host,
@@ -211,7 +218,7 @@
 
 ! This is replaced by the following text:
 !
-!    -g   g|d,... 
+!    -g   c|d,... 
 !
 !         This option is used to control grouping of the qstat output.
 !         Depending on the option arguments different groupings is
@@ -423,7 +430,7 @@
 !
 !    -shgrpl <show host group lists>
 !         Displays a name list  of  all  currently  defined  host
-!         groups which have a guilty host group configuration.
+!         groups which have a valid host group configuration.
 !
 
       -Aattr obj_spec fname obj_instance,...
@@ -441,8 +448,8 @@
 !            - queue instance
 
 
-      -Dattr obj_spec fname queue,...
-      -dattr obj_spec attr_name val queue,...
+      -Dattr obj_spec fname obj_instance,...
+      -dattr obj_spec attr_name val obj_instance,...
 
 !     as obj_spec also 'hostgroup' can be specified
 !
@@ -455,8 +462,8 @@
 !            - queue domain configuration 
 !            - queue instance
 
-      -Mattr obj_spec fname queue,...
-      -mattr obj_spec attr_name val queue,...
+      -Mattr obj_spec fname obj_instance,...
+      -mattr obj_spec attr_name val obj_instance,...
 
 !     as obj_spec also 'hostgroup' can be specified
 !
@@ -469,10 +476,10 @@
 !            - queue domain configuration 
 !            - queue instance
 
-      -Rattr obj_spec fname queue,...
-      -rattr obj_spec attr_name val queue,...
-      -Mqattr fname queue,...
-      -mqattr attr_name queue,...  
+      -Rattr obj_spec fname obj_instance,...
+      -rattr obj_spec attr_name val obj_instance,...
+      -Mqattr fname obj_instance,...
+      -mqattr attr_name obj_instance,...  
 
 !     as obj_spec also 'hostgroup' can be specified
 !
@@ -628,7 +635,7 @@ FILES
 ! There is no need to change the interface description about forced 
 ! atttributes. Nevertheless there is a change in how forced attributes 
 ! are configured. In 6.0 it will be necessary to specify also 
-! non-consumable forced attributes in the under 'complex_values' of
+! non-consumable forced attributes under 'complex_values' of
 ! queue/exechost. This is necessary to allow the 5.3 'complex_list' 
 ! queue/exechost attribute be removed.
 
@@ -911,13 +918,13 @@ FORMAT
 !  pe_list
 !    The list of administrator defined parallel environments
 !    to be associated with the queue instances of the cluster queue. 
-!    The default is NONE. (--> parallel queue type??)
+!    The default is NONE.
 !
 !  New configuration attribute:
 !  ckpt_list
 !    The list of administrator defined checkpoint interfaces 
 !    to be associated with the queue instances of the cluster queue. 
-!    The default is NONE. (--> checkpoint queue type??)
+!    The default is NONE.
 
 host_conf(5)
 
@@ -994,7 +1001,7 @@ FILES
       dialogue. The queue configuration dialogue must provide a view to show
       the resulting settings for each host of a cluster queue
   
-   c) Beneth the existing queue instance related "Queue control" dialogue,
+   c) Beneath the existing queue instance related "Queue control" dialogue,
       qmon should offer second view reflecting the state of a cluster queue
       similar to what qstat -g c (see above under qstat(1)) shows.
     
@@ -1044,6 +1051,11 @@ FILES
       a convenient enhancement to the installation procedure. Creation
       of both user defined and system provided host groups ('all' host 
       group, OS arch specific ones?) could be arranged and controlled. 
+
+   Discussion so far about necessary changes in the installation procedure 
+   have shown that the 'make' PE object must be associated with at least
+   one queue instance per host that is installed. This is necessary because
+   the means to associate a PE with all queues will no longer be available.
 
 6. Changes in the test suite
 
@@ -1114,7 +1126,7 @@ FILES
    a) For host groups the GRP_Type sublists GRP_member_list, 
       GRP_subgroup_list and GRP_supergroup must contain elements of type 
       SGE_HOST(). To ensure hostgroups are treated correclty by CULL 
-      mechanisms a host group name must always stored be together with 
+      mechanisms a host group name must always be stored together with 
       a "@" character. The CULL mechanisms in question are the CULL host 
       compare operation (lWhere "h=" operator) expressions and hashing. Also 
       the CULL wildcard compare operation (lWhere "p=" operator) must reflect 
@@ -1587,8 +1599,8 @@ FILES
    * sgeE_CLUSTERQUEUE_MOD(cluster_queue)
 
      This event is sent each time when an existing cluster queue configuration 
-     and/or it's state changes. It contains only the full cluster queues 
-     configuration, but no per queue instance information.
+     changes. It contains only the full cluster queues configuration, but no 
+     per queue instance information.
 
    * sgeE_QUEUEINSTANCE_ADD(cluster_queue, queue_instances)
 

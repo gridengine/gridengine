@@ -143,7 +143,7 @@ enum {
 };
 
 SLISTDEF(QU_Type, QInstance)
-   SGE_HOST(QU_qhostname, CULL_SPOOL) 
+   SGE_HOST(QU_qhostname, CULL_HASH | CULL_SPOOL) 
    SGE_STRING(QU_qname, CULL_SPOOL)
    SGE_STRING(QU_full_name, CULL_PRIMARY_KEY)
    SGE_ULONG(QU_tag, CULL_DEFAULT)

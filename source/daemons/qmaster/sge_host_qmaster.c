@@ -745,9 +745,9 @@ lList *lp
       } 
 
       /* replace old load value or add a new one */
-      lep = lGetSubCaseStr(*hepp, HL_name, name, EH_load_list);  
+      lep = lGetSubStr(*hepp, HL_name, name, EH_load_list);  
 
-      if (!lep) {
+      if (lep == NULL) {
          lep = lAddSubStr(*hepp, HL_name, name, EH_load_list, HL_Type);
          DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", 
                lGetHost(ep, LR_host), name, value));
@@ -755,20 +755,19 @@ lList *lp
          if (is_static) {
             statics_changed = true;
          } else {
-            if (!global)
+            if (!global) {
                added_non_static = true; /* triggers clearing of unknown state */
+            }
          }
-      }
-      else {
-         const char *oldval;
+      } else {
+         if (is_static) {
+            const char *oldval = lGetString(lep, HL_value);
+            if (sge_strnullcmp(oldval, value) != 0) {
+               statics_changed = true;
 
-         oldval = lGetString(lep, HL_value);
-         if (sge_is_static_load_value(name) && 
-             (oldval != value) && (!oldval || strcmp(value, oldval))) {
-            statics_changed = true;
-
-            DPRINTF(("%s: updating STATIC lv: "SFQ" = "SFQ" oldval: "SFQ"\n", 
-                    lGetHost(ep, LR_host), name, value, oldval));
+               DPRINTF(("%s: updating STATIC lv: "SFQ" = "SFQ" oldval: "SFQ"\n", 
+                       lGetHost(ep, LR_host), name, value, oldval));
+            }
          }
       }
       /* copy value */

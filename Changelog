@@ -1,3 +1,9 @@
+JG-2004-09-28-0: Enhancem.: Cleanup in qrsh_starter.
+                            Cleanup and speedup in load report processing.
+                            Add hashtables on cluster queue and queue instance
+                            attributes.
+                 Review:    SG
+
 SG-2004-09-27-0: Tuning:    improved ticket order generation
                  Changed:   qmaster, scheduler
                  Review:    JG

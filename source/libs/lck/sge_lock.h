@@ -70,6 +70,11 @@ typedef enum {
    NUM_OF_TYPES = 29
 } sge_locktype_t;
 
+#if defined(LINUX)
+#undef LOCK_READ
+#undef LOCK_WRITE
+#endif
+
 typedef enum {
    LOCK_READ  = 1, /* shared  */
    LOCK_WRITE = 2  /* exclusive */

@@ -62,6 +62,7 @@
 #include "shutdown.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
 
 
 typedef struct {
@@ -293,7 +294,7 @@ static void daemonize_qmaster(void)
 
    if((pid = fork()) != 0) {
       if (pid < 0) {
-         CRITICAL((SGE_EVENT, "fork did fail", strerror(errno)));
+         CRITICAL((SGE_EVENT, MSG_PROC_FIRSTFORKFAILED_S , strerror(errno)));
       }
       exit(0); /* parent terminates */
    }
@@ -304,7 +305,7 @@ static void daemonize_qmaster(void)
 
    if((pid = fork()) != 0) {
       if (pid < 0) {
-         CRITICAL((SGE_EVENT, "fork did fail", strerror(errno)));
+         CRITICAL((SGE_EVENT, MSG_PROC_SECONDFORKFAILED_S , strerror(errno)));
       }
       exit(0); /* child 1 terminates */
    }

@@ -1,3 +1,5 @@
+CR-2004-12-03-1: Cleanup:   fixed mistake in writing
+
 CR-2004-12-03-0: Bugfix:    rollback of CR-2004-12-02-3 and CR-2004-12-02-2
                             adding the dst_len check caused problems, because
                             some invoking function are not setting the correct

@@ -155,7 +155,7 @@
 #define MSG_GDI_SINGLE_THREADED_STARTUP      _MESSAGE(43296, _("starting up communication without threads\n"))
 #define MSG_GDI_CANT_GET_COM_HANDLE_SSUUS    _MESSAGE(43297, _("communication error for \""SFN"/"SFN"/"U32CFormat"\" running on port "U32CFormat": "SFQ"\n"))
 #define MSG_GDI_CANT_CONNECT_HANDLE_SSUUS    _MESSAGE(43298, _("communication error for \""SFN"/"SFN"/"U32CFormat"\" using connect port "U32CFormat": "SFQ"\n"))
-#define MSG_GDI_HANDLE_CREATED_FOR_S         _MESSAGE(43300, _("created communication handel for component name "SFQ"\n"))
+#define MSG_GDI_HANDLE_CREATED_FOR_S         _MESSAGE(43300, _("created communication handle for component name "SFQ"\n"))
 #define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S   _MESSAGE(43301, _("alive check of qmaster failed for component "SFQ"\n"))
 #define MSG_GDI_QMASTER_STILL_RUNNING        _MESSAGE(43302, _("qmaster is still running\n"))
 #define MSG_GDI_ENDPOINT_UPTIME_UU           _MESSAGE(43303, _("endpoint is up since "U32CFormat" seconds and has status "U32CFormat"\n"))

@@ -1045,6 +1045,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
    }
 
    sge_dstring_free(&field_buffer);
+   sge_dstring_free(&tmp_buffer);
 
    DEXIT;
    return true;

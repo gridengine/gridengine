@@ -326,6 +326,7 @@ char *argv[]
    lListElem *hep=NULL, *ep=NULL, *argep=NULL, *aep=NULL, *newep = NULL;
    const char *host = NULL;
    char *filename;
+   const char *filename_stdout;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
 
@@ -465,6 +466,7 @@ char *argv[]
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
             if (answer_list_output(&alp)) {
+               FREE (filename);
                sge_error_and_exit(NULL);
             }
 
@@ -474,12 +476,14 @@ char *argv[]
             status = sge_edit(filename);
             if (status < 0) {
                unlink(filename);
+               FREE (filename);
                if (sge_error_and_exit(MSG_PARSE_EDITFAILED))
                   continue;
             }
 
             if (status > 0) {
                unlink(filename);
+               FREE (filename);
                if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED))
                   continue;
             }
@@ -490,6 +494,7 @@ char *argv[]
                                             CK_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
+            FREE (filename);
             
             if (answer_list_output(&alp)) {
                ep = lFreeElem (ep);
@@ -919,12 +924,13 @@ char *argv[]
         
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
-         
-         ep = edit_userprj(ep, 1);
+
+         newep = edit_userprj(ep, 1);
+         ep = lFreeElem(ep);
 
          /* send it to qmaster */
          lp = lCreateList("User list to add", UP_Type); 
-         lAppendElem(lp, ep);
+         lAppendElem(lp, newep);
 
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
@@ -956,11 +962,12 @@ char *argv[]
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
          
-         ep = edit_userprj(ep, 0);
+         newep = edit_userprj(ep, 0);
+         ep = lFreeElem(ep);
 
          /* send it to qmaster */
          lp = lCreateList("Project list to add", UP_Type); 
-         lAppendElem(lp, ep);
+         lAppendElem(lp, newep);
 
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
@@ -3645,10 +3652,11 @@ char *argv[]
          }
 
          ep = lFirst(lp);
-         filename = (char *)spool_flatfile_write_object(&alp, ep, false,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, false,
                                               CAL_fields, &qconf_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII,
                                               NULL, false);
+         FREE (filename_stdout);
          if (answer_list_output(&alp)) {
             sge_error_and_exit(NULL);
          }
@@ -3777,10 +3785,11 @@ char *argv[]
          }
 
          ep = lFirst(lp);
-         (char *)spool_flatfile_write_object(&alp, ep, false,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, false,
                                              CK_fields, &qconf_sfi,
                                              SP_DEST_STDOUT, SP_FORM_ASCII,
                                              NULL, false);
+         FREE (filename_stdout);
          if (answer_list_output(&alp)) {
             sge_error_and_exit (NULL);
          }
@@ -3902,10 +3911,11 @@ char *argv[]
          
          {
             spooling_field *fields = sge_build_EH_field_list (false, true, false);
-            spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
+            filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
                                         SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                         false);
             FREE (fields);
+            FREE (filename_stdout);
             
             if (answer_list_output(&alp)) {
                sge_error_and_exit (NULL);
@@ -3983,11 +3993,12 @@ char *argv[]
          
          {
             spooling_field *fields = sge_build_PE_field_list (false, true);
-            (char *)spool_flatfile_write_object(&alp, ep, false,
+            filename_stdout = spool_flatfile_write_object(&alp, ep, false,
                                                  fields, &qconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII,
                                                  NULL, false);
             FREE (fields);
+            FREE (filename_stdout);
             
             if (answer_list_output(&alp)) {
                sge_error_and_exit(NULL);
@@ -4032,10 +4043,11 @@ char *argv[]
          }
          alp = lFreeList(alp);
  
-         spool_flatfile_write_object(&alp, lFirst(lp), false, SC_fields,
+         filename_stdout = spool_flatfile_write_object(&alp, lFirst(lp), false, SC_fields,
                                      &qconf_comma_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
-         
+        
+         FREE (filename_stdout);
          if (answer_list_output(&alp)) {
             fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
             spp++;
@@ -4043,6 +4055,7 @@ char *argv[]
          }
 
          lp = lFreeList(lp);
+
          spp++;
          continue;
       }
@@ -4189,11 +4202,12 @@ char *argv[]
 
          fields = sge_build_STN_field_list (false, true);
          id_sharetree (ep, 0);
-         spool_flatfile_write_object(&alp, ep, true, fields,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, true, fields,
                                      &qconf_name_value_list_sfi,
                                      SP_DEST_STDOUT, SP_FORM_ASCII, 
                                      NULL, false);
          FREE (fields);
+         FREE (filename_stdout);
          
          if (answer_list_output(&alp)) {
             sge_error_and_exit(NULL);
@@ -4829,6 +4843,7 @@ char *argv[]
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
+         answer_list = lFreeList(answer_list);
          continue;
       }
 
@@ -4846,6 +4861,8 @@ char *argv[]
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
+
+         answer_list = lFreeList(answer_list);
          continue;
       }
 
@@ -5021,10 +5038,11 @@ char *argv[]
             
             /* print to stdout */
             fields = sge_build_UP_field_list (0, 1);
-            spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
+            filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
             alp = lFreeList(alp);
+            FREE (filename_stdout);
          }
          spp++;
          continue;
@@ -5064,10 +5082,11 @@ char *argv[]
          
          /* print to stdout */
          fields = sge_build_UP_field_list (0, 0);
-         spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII, 
                                               NULL, false);
          alp = lFreeList(alp);
+         FREE (filename_stdout);
 
          spp++;
          continue;
@@ -5909,6 +5928,7 @@ lList *arglp
    int fail = 0;
    const char *acl_name = NULL;
    int first_time = 1;
+   const char *filename_stdout;
 
    DENTER(TOP_LAYER, "print_acl");
 
@@ -5935,10 +5955,11 @@ lList *arglp
             printf("\n");
          }
          
-         spool_flatfile_write_object(&alp, ep, false, US_fields, &qconf_param_sfi,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, false, US_fields, &qconf_param_sfi,
                                      SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                      false);
          alp = lFreeList (alp);
+         FREE (filename_stdout);
       }
    }
 
@@ -6073,11 +6094,12 @@ const char *config_name
    DENTER(TOP_LAYER, "print_config");
 
    /* get config */
-   if (!strcasecmp(config_name, "global"))
+   if (!strcasecmp(config_name, "global")) {
       cfn = SGE_GLOBAL_NAME;
-   else
+   } else {
       cfn = config_name;   
-   
+   }
+
    where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
@@ -6089,8 +6111,9 @@ const char *config_name
    if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       fail = 1;
-   }
-   else {
+   } else {
+      const char *filename_stdout;
+
       if (!(ep = lFirst(lp))) {
          fprintf(stderr, MSG_ANSWER_CONFIGXNOTDEFINED_S, cfn);
          DEXIT;
@@ -6099,9 +6122,10 @@ const char *config_name
       printf("%s:\n", cfn);
       
       fields = sge_build_CONF_field_list (false);
-      spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
+      filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
                                   SP_DEST_STDOUT, SP_FORM_ASCII, NULL, false);
       FREE (fields);
+      FREE (filename_stdout);
       
       if (answer_list_output(&alp)) {
          sge_error_and_exit(NULL);
@@ -6222,6 +6246,7 @@ u_long32 flags
          unlink(tmpname);
          failed = true;
          FREE (fields);
+         FREE (tmpname);
       }
       if (status < 0) {
          fprintf(stderr, MSG_PARSE_EDITFAILED);
@@ -6269,13 +6294,14 @@ u_long32 flags
       else {
          fprintf(stderr, MSG_ANSWER_ERRORREADINGTEMPFILE);
          unlink(tmpname);
+         FREE (tmpname);
          failed = true;
          DEXIT;
          return failed;
       }
       unlink(tmpname);
-   }
-   else {
+      FREE (tmpname);
+   } else {
       fields_out[0] = NoName;
       fields = sge_build_CONF_field_list (false);
       ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,

@@ -135,6 +135,8 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
          gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, gdi_command,
                                    &cqueue_list, NULL, NULL);
          answer_list_replace(answer_list, &gdi_answer_list);
+         lDechainElem(cqueue_list, this_elem);
+         cqueue_list = lFreeList(cqueue_list);
       }
    }
    DEXIT;
@@ -161,10 +163,11 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
       where = lFreeWhere(where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
-         ret = lFirst(cqueue_list);
+         ret = lDechainElem(cqueue_list, lFirst(cqueue_list));
       } else {
          answer_list_replace(answer_list, &gdi_answer_list);
       }
+      cqueue_list = lFreeList(cqueue_list);
    } 
    DEXIT;
    return ret;
@@ -477,6 +480,8 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       } 
+
+      cqueue = lFreeElem(cqueue);
    }  
   
    DEXIT;
@@ -505,7 +510,7 @@ cqueue_modify(lList **answer_list, const char *name)
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
-      if (cqueue) {
+      if (cqueue != NULL) {
          cqueue = lFreeElem(cqueue);
       }
    }
@@ -574,6 +579,8 @@ cqueue_delete(lList **answer_list, const char *name)
       if (cqueue != NULL) {
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_DEL); 
       }
+
+      cqueue = lFreeElem(cqueue);
    }
    DEXIT;
    return ret;
@@ -637,6 +644,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                  QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
+                           const char *filename_stdout;
                            spooling_field *fields = sge_build_QU_field_list
                                                                   (true, false);
 
@@ -653,15 +661,19 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                               fprintf(stdout, "\n");
                            }
                            
-                           spool_flatfile_write_object(answer_list, qinstance,
+                           filename_stdout = spool_flatfile_write_object(
+                                                       answer_list, qinstance,
                                                        false, fields,
                                                        &cqqconf_sfi,
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
                            FREE (fields);
+                           FREE (filename_stdout);
                            
                            if (answer_list_output(answer_list)) {
+                              href_list = lFreeList(href_list);
+                              qref_list = lFreeList(qref_list);
                               DEXIT;
                               SGE_EXIT(1);
                            }
@@ -738,16 +750,19 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
 
                   cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
                   if (cqueue != NULL) {
+                     const char *outname;
+
                      if (is_first) {
                         is_first = false; 
                      } else {
                         fprintf(stdout, "\n");
                      }
 
-                     spool_flatfile_write_object(answer_list, cqueue, false,
-                                                 CQ_fields, &cqqconf_sfi,
+                     outname = spool_flatfile_write_object(answer_list, cqueue, 
+                                                 false, CQ_fields, &cqqconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
+                     FREE(outname);
                            
                      if (answer_list_output(answer_list)) {
                         DEXIT;

@@ -1,3 +1,8 @@
+JG-2004-12-07-0: Bugfix:    Fixed memory leaks in qconf.
+                            Changed version string in maintrunk.
+                            Fixed clean rule for qmaster Makefile.
+                 Review:    CR
+
 HP-2004-12-06-0: Bugfix:    replaced statvfs with wl_statvfs for Interix,
                             fixed DECODE of xdr_double().
                  Review:    EB

@@ -111,7 +111,6 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    *load_alarm_reason = 0;
    *suspend_alarm_reason = 0;
-   queue_name = qinstance_get_name(q, &queue_name_buffer);
 
    /* make it possible to display any load value in qstat output */
    if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
@@ -121,6 +120,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       DEXIT;
       return 1;
    }
+
+   queue_name = qinstance_get_name(q, &queue_name_buffer);
 
    /* compute the load and check for alarm states */
 
@@ -307,6 +308,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    }
 
+   sge_dstring_free(&queue_name_buffer);
    DEXIT;
    return 1;
 }

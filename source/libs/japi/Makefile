@@ -46,7 +46,7 @@ DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCL
                 $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
                 $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS) 
 
-JAPI_ALL 	  = test_drmaa japilib drmaalib example
+JAPI_ALL      = japilib drmaalib test_drmaa example
 
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 

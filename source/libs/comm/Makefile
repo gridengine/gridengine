@@ -73,9 +73,8 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-comm_all: test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
-     test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
-     commlib commlists_all
+comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+     test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info
 
 depend: commlib_depend commlistslib_depend
 
@@ -133,12 +132,6 @@ cl_handle_list.o: $(COMMLIB_DIR)/cl_handle_list.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_handle_list.c
 cl_commlib.o: $(COMMLIB_DIR)/cl_commlib.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_commlib.c
-
-
-
-
-
-
 
 #---------------------------------------------------------------------
 # test programs

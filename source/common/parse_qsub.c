@@ -1761,31 +1761,24 @@ DTRACE;
             }
          }
          else {
-            for (; *sp; sp++) {
-               lList *jid_list = NULL;
+            lList *jid_list = NULL;
 
-               if (!strcmp(*sp, "--")) {
-                  ep_opt = sge_add_noarg(pcmdline, 0, *sp, NULL);
-                  break;
-               }
-               i_ret = cull_parse_jid_hold_list(&jid_list, *sp);
+            if (!strcmp(*sp, "--")) {
+               ep_opt = sge_add_noarg(pcmdline, 0, *sp, NULL);
+               break;
+            }
+            i_ret = cull_parse_jid_hold_list(&jid_list, *sp);
 
-               if (i_ret) {
-                  sprintf(str,MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S,
-                          *sp);
-                  answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return answer;
-               }
-               ep_opt = sge_add_arg(pcmdline, 0, lListT, STR_PSEUDO_JOBID, *sp);
-               lSetList(ep_opt, SPA_argval_lListT, jid_list);
+            if (i_ret) {
+               sprintf(str,MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S,
+                       *sp);
+               answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return answer;
             }
-            if (!*sp)
-               continue;
-            for (sp++; *sp; sp++) {
-               ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_JOBARG, NULL);
-               lSetString(ep_opt, SPA_argval_lStringT, *sp);
-            }
+            ep_opt = sge_add_arg(pcmdline, 0, lListT, STR_PSEUDO_JOBID, *sp);
+            lSetList(ep_opt, SPA_argval_lListT, jid_list);
+            sp++;
          }
          continue;
       }

@@ -123,10 +123,9 @@ char **argv
       sge_usage(stdout);
       SGE_EXIT(1);
    }
-  
    alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, 
                                     &all_users);
-
+   
    DPRINTF(("all_jobs = %d, all_user = %d\n", all_jobs, all_users));
 
    if (request_list && verify) {
@@ -233,6 +232,7 @@ int *all_users
 
    int job_field[100];
    int me_who;
+   bool is_hold_option = false;
 
    DENTER(TOP_LAYER, "qalter_parse_job_parameter"); 
 
@@ -374,7 +374,7 @@ int *all_users
    /* STR_PSEUDO_JOBID */
    if (lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBID)) {
       lList *jid_list = NULL;
-      if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true)) {
+      if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true, 0)) {
          DEXIT;
          return answer;
       }                                                 
@@ -422,7 +422,7 @@ int *all_users
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       lListElem *jid;
-
+      is_hold_option = true;
       for_each (jid, lGetList(job, JB_job_identifier_list)) {
          lSetUlong(jid, ID_force, (u_long32) lGetInt(ep, SPA_argval_lIntT));
       }
@@ -754,13 +754,11 @@ int *all_users
       }
 
       /* build task list from ID_Type from JB_job_identifier */
-      /*
-      if (!lGetList(ep, ID_ja_structure)) {
+      
+      if (is_hold_option && !lGetList(ep, ID_ja_structure)) {
          task = lAddElemUlong(&task_list, JAT_task_number, 0, task_descr);      
          lSetUlong(task, JAT_hold, lGetUlong(ep, ID_force));
-      } else {
-      */
-      if (lGetList(ep, ID_ja_structure)) {
+      } else if (lGetList(ep, ID_ja_structure)) {
          lListElem *range;
          for_each(range, lGetList(ep, ID_ja_structure)) {
             u_long32 start = lGetUlong(range, RN_min);

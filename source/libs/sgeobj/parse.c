@@ -33,6 +33,7 @@
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "sgermon.h"
 #include "sge_string.h"
@@ -53,6 +54,8 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+#include "sgeobj/sge_ja_task.h"
+
 /*-------------------------------------------------------------------------*/
 /* use cstring_list_parse_from_string() if you need a parsing function */
 static void sge_parse_string_list(lList **lp, const char *str, int field, 
@@ -68,77 +71,6 @@ static void sge_parse_string_list(lList **lp, const char *str, int field,
    }
 
    DEXIT;
-}
-
-/* CLEANUP: Following function should be moved to the sge_jatask module */
-
-/*
- * return   -1 no valid JobTask-Identifier
- *          1  ok
- */
-int sge_parse_jobtasks(
-lList **ipp,          /* ID_Type List */
-lListElem **idp,     /* New ID_Type-Elem parsed from str_jobtask */
-const char *str_jobtask,   
-lList **alpp,
-bool include_names
-) {
-   char *token;
-   char *job_str, *str;
-   lList *task_id_range_list = NULL;
-
-/*
-   Digit = '0' | '1' | ... | '9' .
-   JobId = Digit { Digit } .
-   TaskIdRange = TaskId [ '-' TaskId [  ':' Digit ] ] .
-   JobTasks = JobId [ '.' TaskIdRange ] .
-*/
-
-   DENTER(TOP_LAYER, "sge_parse_jobtasks");
-
-   /*
-   ** dup the input string for tokenizing
-   */
-   str = strdup(str_jobtask);
-   if (str) {
-      token = strtok(str, " ."); 
-   }
-   job_str = str;
-
-   if ((token = strtok(NULL, ""))) {
-      range_list_parse_from_string(&task_id_range_list, alpp, token,
-                                   0, 1, INF_NOT_ALLOWED);
-      if (*alpp || !task_id_range_list) {
-         /*
-         ** free the dupped string
-         */
-         free(str);
-         DEXIT;
-         return -1;
-      }
-   }
-
-   if (!include_names && !atol(job_str) && strcmp(job_str, "all")
-   ) {
-      /*
-      ** free the dupped string
-      */
-         
-      free(str);
-      DEXIT;
-      return -1;
-   }
-      
-   *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
-   if (*idp)
-      lSetList(*idp, ID_ja_structure, task_id_range_list);
-  
-   /*
-   ** free the dupped string
-   */
-   free(str); 
-   DEXIT;
-   return 1;
 }
 
 /***************************************************************************/
@@ -455,20 +387,33 @@ lList **ppcmdline,
 const char *opt,
 lList **alpp,
 lList **ppdestlist,
-bool include_names
+bool include_names,
+u_long32 action
 ) {
    lListElem *ep, *sep, *idp;
    char str[256];
    int ret = false;
+   bool is_run_once = false;
 
    DENTER(TOP_LAYER, "parse_multi_jobtaskslist");
    while ((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
+      lListElem *arrayDef = lNext(ep);
+      lList *arrayDefList = NULL;
+
       ret = true;
+      is_run_once = true;
+      if ((arrayDef != NULL) && lGetUlong(arrayDef, SPA_number) ==  t_OPT) {
+         arrayDefList = lGetList(arrayDef, SPA_argval_lListT);
+      }
       for_each(sep, lGetList(ep, SPA_argval_lListT)) {
          lList *tmp_alp = NULL;
-      
+         lList *tempArrayList = NULL;
+     
+         if ((arrayDefList != NULL) && (lNext(sep) == NULL)) {
+            tempArrayList = arrayDefList;
+         }   
          if (sge_parse_jobtasks(ppdestlist, &idp, 
-               lGetString(sep, ST_name), &tmp_alp, include_names) == -1) {
+               lGetString(sep, ST_name), &tmp_alp, include_names, tempArrayList) == -1) {
             sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
                lGetString(sep, ST_name));
             answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -477,9 +422,27 @@ bool include_names
             DEXIT;
             return false;
          }
+         lSetUlong(idp, ID_action, action);
+      }
+      if (arrayDefList != NULL) {
+         lRemoveElem(*ppcmdline, arrayDef);
+         arrayDef = NULL;
+         arrayDefList = NULL;
       }
       lRemoveElem(*ppcmdline, ep);
    }
+   
+   if (is_run_once && (ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
+      sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(lFirst(lGetList(ep, SPA_argval_lListT)), ST_name));
+      answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      while ((ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
+         lRemoveElem(*ppcmdline, ep);
+      }  
+      
+      DEXIT;
+      return false;
+   }
+   
    DEXIT;
    return ret;
 }

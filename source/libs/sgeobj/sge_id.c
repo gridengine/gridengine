@@ -40,6 +40,7 @@
 #include "sge_id.h"
 #include "sge_str.h"
 #include "sge_qinstance_state.h"
+#include "sgeobj/sge_ja_task.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -70,7 +71,7 @@ id_list_build_from_str_list(lList **id_list,
           * Try to parse and add jid/taskid
           * or add string (queue pattern) 
           */
-         sge_parse_jobtasks(id_list, &new_id, string, answer_list, false);
+         sge_parse_jobtasks(id_list, &new_id, string, answer_list, false, NULL);
          if (new_id == NULL) {
             new_id = lAddElemStr(id_list, ID_str, string, ID_Type);
          }

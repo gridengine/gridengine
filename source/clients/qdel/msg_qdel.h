@@ -46,7 +46,7 @@
 #define MSG_QDEL_del_list_2_OPT_USAGE    _MESSAGE(7011, _("delete all jobs of current user\n"))
 #define MSG_QDEL_del_list_3_OPT_USAGE    _MESSAGE(7012, _("delete all jobs of users specified in list\n"))
 #define MSG_QDEL_del_list_4_OPT_USAGE    _MESSAGE(7013, _("delete all jobs of all users\n"))
-
+#define MSG_QDEL_del_task_id_ranke_OPT_USAGE _MESSAGE(7014, _("specify a task_id_range for a job name\n"))
 
 #endif /* __MSG_QDEL_H */
 

@@ -1,3 +1,8 @@
+SG-2004-01-26-0: Enhancem.: Introcuded a "-t" option in qdel, qmod, qalter to
+                            work on array taskes.
+                 Changed.   qalter, qdel, qmod
+                 Review:    DT
+
 AD-2004-01-26-6: Bugfix:    Make sure, 'cl_com_cleanup_commlib()' is invoked
                             only once during sge_qmaster shutdown.
                  Changed:   qmaster, gdi

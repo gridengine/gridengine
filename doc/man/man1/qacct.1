@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2001/07/20 08:18:58 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2002/07/11 15:21:09 $     Revision: $Revision: 1.4.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2001/07/20 08:18:58 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2002/07/11 15:21:09 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -199,12 +199,12 @@ listed for each number of queue slots separately.
 .IP "\fB\-t task_id_range_list\fP
 Only available together with the \fB\-j\fP option described above.
 .sp 1
-The \fB\-t\fP switch specifies the job array task range, for which
+The \fB\-t\fP switch specifies the array job task range, for which
 accounting information should be printed. Syntax and semantics of
 \fBtask_id_range_list\fP are identical to that one described under the
 \fB\-t\fP option to
 .M qsub 1 .
-Please see there also for further information on job arrays.
+Please see there also for further information on array jobs.
 .\"
 .IP "\fB\-P\fP [\fBProject\fP]"
 The name of the project for which usage is summarized.

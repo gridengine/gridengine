@@ -1,3 +1,8 @@
+EB-2002-07-11-0: Bugfix:    qacct displays incorrect accounting information
+                 Issue:     #314
+                 Bugtraq:   #4713013
+                 Changed:   qacct
+
 AH-2002-07-10-4: Enhancem.: Further improved load alarm/suspend alarm
                             diagnosis messages
                  Changed:   sge_schedd
@@ -22,6 +27,11 @@ CR-2002-07-08-0  Enhancem.: I18N : modified Makefiles for lost lib_messages
 
 AA-2002-07-08-0  Enhancem.: I18N : fontlist converter for mb locales
                                    not complete, Qmon.i18n added
+
+EB-2002-07-04-0: Doc:       renamed "job array" to "array job" in
+                            the manual pages
+                 Changed:   qacct.1 qdel.1 qhold.1 qmod.1 qrls.1 qstat.1 
+                            submit.1 accounting.5 sge_conf.5
 
 CR-2002-07-04-1  Enhancem.: I18N : removed redefined message macro
                                    definitions (part 2)
@@ -145,11 +155,11 @@ JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines
                  Issue:     #246
 
 SD-2002-06-04-0: Bugfix:    Removed max_jobs reference from 5.3 branch
-		 Issue:	    #273
-	         Bugtraq:   #4696766
+                 Issue:     #273
+	              Bugtraq:   #4696766
 
 SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
-		 Issue:	    #273
+		           Issue:	    #273
                  Bugtraq:   #4696766
 
 JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/05/22 06:47:16 $     Revision: $Revision: 1.9.2.5 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/07/11 15:21:09 $     Revision: $Revision: 1.9.2.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/05/22 06:47:16 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/07/11 15:21:09 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -236,7 +236,7 @@ command-line.
 .PP
 .I Qalter
 can be used to change the attributes of pending jobs. Once a job is 
-executing, changes are no longer possible. For job arrays, for which a part
+executing, changes are no longer possible. For array jobs, for which a part
 of the tasks can be pending and another part can be running (see the 
 \fB\-t\fP option below), modifications with
 .I qalter
@@ -536,7 +536,7 @@ the specified host.
 .sp 1
 By default the file name for standard
 error has the form \fIjob_name.\fPe\fIjob_id\fP and
-\fIjob_name.\fPe\fIjob_id\fP.\fBtask_id\fP for job array tasks (see
+\fIjob_name.\fPe\fIjob_id\fP.\fBtask_id\fP for array job tasks (see
 \fB\-t\fP option below).
 .sp 1
 If \fBpath\fP is a directory, the standard error stream of the
@@ -553,7 +553,7 @@ $USER	user ID of job owner
 $JOB_ID	current job ID
 $JOB_NAME	current job name (see \fB\-N\fP option)
 $HOSTNAME	name of the execution host
-$TASK_ID	job array task index number
+$TASK_ID	array job task index number
 .fi
 .sp 1
 Alternatively to $HOME the tilde sign "~" can be used as common in
@@ -645,7 +645,7 @@ An alternate means to assign hold is provided by the
 .M qhold 1
 facility.
 .sp 1
-If the job is a job array (see the \fB\-t\fP option below), all tasks
+If the job is a array job (see the \fB\-t\fP option below), all tasks
 specified via \fB\-t\fP are affected by the \fB\-h\fP operation
 simultaneously.
 .\"
@@ -923,7 +923,7 @@ the standard error stream.
 .sp 1
 By default the file name for standard
 output has the form \fIjob_name.\fPo\fIjob_id\fP and
-\fIjob_name.\fPo\fIjob_id\fP.\fBtask_id\fP for job array tasks (see
+\fIjob_name.\fPo\fIjob_id\fP.\fBtask_id\fP for array job tasks (see
 \fB\-t\fP option below).
 .sp 1
 .I Qalter
@@ -1122,10 +1122,10 @@ however.
 .IP "\fB\-t n[-m[:s]]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
-Submits a so called \fIJob Array\fP, i.e. an array of identical tasks being
+Submits a so called \fIArray Job\fP, i.e. an array of identical tasks being
 only differentiated by an index number and being treated by xxQS_NAMExx
 almost like a series of jobs. The option argument to \fB\-t\fP specifies
-the number of job array tasks and the index number which will be associated
+the number of array job tasks and the index number which will be associated
 with the tasks. The index numbers will be exported to the job tasks via the
 environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP.
 .sp 1
@@ -1136,22 +1136,22 @@ n-m or a range with a step size. Hence, the task id range specified by
 i.e. in a total of 5 tasks identical tasks with the environment variable
 xxQS_NAME_Sxx_TASK_ID containing one of the 5 index numbers each.
 .sp 1
-All job array tasks inherit the same resource requests and attribute
+All array job tasks inherit the same resource requests and attribute
 definitions as specified in the \fIqsub\fP or \fIqalter\fP command line,
 except for the \fB\-t\fP option. The tasks are scheduled independently and,
 provided enough resources, concurrently very much like separate jobs.
-However, a job array or a sub-array thereof can be accessed as a total by
+However, a array job or a sub-array thereof can be accessed as a total by
 commands like
 .M qmod 1
 or
 .M qdel 1 .
 See the corresponding manual pages for further detail.
 .sp 1
-Job arrays are commonly used to execute the same type of operation on
+Array jobs are commonly used to execute the same type of operation on
 varying input data sets correlated with the task index number. The number
-of tasks in a job array is unlimited.
+of tasks in a array job is unlimited.
 .sp 1
-STDOUT and STDERR of job array tasks will be written into different files
+STDOUT and STDERR of array job tasks will be written into different files
 with the default location
 .sp 1
 .nf
@@ -1274,10 +1274,10 @@ Specified by the following form:
 .ta 0.0i
 .sp 1
 If present, the \fItask_range\fP restricts the effect of the 
-operation to the job array task range specified as suffix to the job id
+operation to the array job task range specified as suffix to the job id
 (see the \fB\-t\fP option to
 .M qsub 1
-for further details on job arrays).
+for further details on array jobs).
 .sp 1
 The task range specifier has the
 form n[-m[:s]]. The range may be a single number, a  simple
@@ -1418,8 +1418,8 @@ to store job related data during job
 execution. This directory is owned by root or by a xxQS_NAMExx administrative
 account and commonly is not open for read or write access to regular users.
 .IP xxQS_NAME_Sxx_TASK_ID 1.5i
-The index number of the current job array task (see \fB\-t\fP option
-above). This is an unique number in each job array and can be used to
+The index number of the current array job task (see \fB\-t\fP option
+above). This is an unique number in each array job and can be used to
 reference different input data records, for example. This environment
 variable is set to "undefined" for non-array jobs.
 .IP "ENVIRONMENT" 1.5i

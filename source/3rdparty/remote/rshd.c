@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.2.2.1 2002/04/19 11:57:07 joga Exp $	*/
+/*	$Id: rshd.c,v 1.2.2.2 2002/05/31 08:32:20 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -149,6 +149,7 @@ extern int killpg(int pgrp, int sig);
 
 int	keepalive = 1;
 int	check_all;
+int   check_nologin = 1;
 int	log_success;		/* If TRUE, log all successful accesses */
 int	sent_null;
 
@@ -166,7 +167,7 @@ static char	*topdomain __P((char *));
 static void	 usage __P((void));
 int	main __P((int, char *[]));
 
-#define	OPTIONS	"ahlnL"
+#define	OPTIONS	"ahilnL"
 
 int check_rhosts_file = 1;
    
@@ -200,6 +201,9 @@ main(argc, argv)
 			break;
 		case 'L':
 			log_success = 1;
+			break;
+		case 'i':
+			check_nologin = 0;
 			break;
 		case 'h':
 		default:
@@ -482,7 +486,7 @@ fail:
 		exit(1);
 	}
 
-	if (pwd->pw_uid && !access(_PATH_NOLOGIN, F_OK)) {
+	if (check_nologin && pwd->pw_uid && !access(_PATH_NOLOGIN, F_OK)) {
 		error("Logins currently disabled.\n");
 		exit(1);
 	}

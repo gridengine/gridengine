@@ -510,12 +510,6 @@ XtPointer cld
                                     &exechost_reporting_variables,
                            NULL);
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-      ** we have to unmanage the ScrolledWindow parent, not the text widget
-      */
-      XtUnmanageChild(XtParent(exechost_usage_scaling));
-   }
    XtAddCallback(exechost_list, XmNbrowseSelectionCallback,
                      qmonExecHostSelect, NULL);
 
@@ -649,54 +643,50 @@ XtPointer cld, cad;
       XmTextInsert(exechost_access, pos, buf);
       pos += strlen(buf);
 
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         /*
-         ** projects
-         */
-         lsl = lGetList(ehp, EH_prj);
-         sprintf(buf, "%-15.15s", "Projects");
-         for_each(ep, lsl) {
-            strcat(buf, " ");
-            strcat(buf, lGetString(ep, UP_name));
-         }
-         if (!lGetNumberOfElem(lsl))
-            strcat(buf, " NONE");
-         strcat(buf, "\n");
-         XmTextInsert(exechost_access, pos, buf);
-         pos += strlen(buf);
-
-         /*
-         ** xprojects
-         */
-         lsl = lGetList(ehp, EH_xprj);
-         sprintf(buf, "%-15.15s", "XProjects");
-         for_each(ep, lsl) {
-            strcat(buf, " ");
-            strcat(buf, lGetString(ep, UP_name));
-         }
-         if (!lGetNumberOfElem(lsl))
-            strcat(buf, " NONE");
-         strcat(buf, "\n");
-         XmTextInsert(exechost_access, pos, buf);
-         pos += strlen(buf);
+      /*
+      ** projects
+      */
+      lsl = lGetList(ehp, EH_prj);
+      sprintf(buf, "%-15.15s", "Projects");
+      for_each(ep, lsl) {
+         strcat(buf, " ");
+         strcat(buf, lGetString(ep, UP_name));
       }
+      if (!lGetNumberOfElem(lsl))
+         strcat(buf, " NONE");
+      strcat(buf, "\n");
+      XmTextInsert(exechost_access, pos, buf);
+      pos += strlen(buf);
+
+      /*
+      ** xprojects
+      */
+      lsl = lGetList(ehp, EH_xprj);
+      sprintf(buf, "%-15.15s", "XProjects");
+      for_each(ep, lsl) {
+         strcat(buf, " ");
+         strcat(buf, lGetString(ep, UP_name));
+      }
+      if (!lGetNumberOfElem(lsl))
+         strcat(buf, " NONE");
+      strcat(buf, "\n");
+      XmTextInsert(exechost_access, pos, buf);
+      pos += strlen(buf);
 
       XmTextEnableRedisplay(exechost_access);
     
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         usl = lGetList(ehp, EH_usage_scaling_list);
-         XmTextDisableRedisplay(exechost_usage_scaling);
-         pos = 0;
-         XmTextSetString(exechost_usage_scaling, "");
-         for_each(ep, usl) {
-            sprintf(buf, "%-15.15s   %3.2f\n", lGetString(ep, HS_name),
-                     lGetDouble(ep, HS_value));
-            XmTextInsert(exechost_usage_scaling, pos, buf);
-            pos += strlen(buf);
-         }
-         XmTextEnableRedisplay(exechost_usage_scaling);
-
+      usl = lGetList(ehp, EH_usage_scaling_list);
+      XmTextDisableRedisplay(exechost_usage_scaling);
+      pos = 0;
+      XmTextSetString(exechost_usage_scaling, "");
+      for_each(ep, usl) {
+         sprintf(buf, "%-15.15s   %3.2f\n", lGetString(ep, HS_name),
+                  lGetDouble(ep, HS_value));
+         XmTextInsert(exechost_usage_scaling, pos, buf);
+         pos += strlen(buf);
       }
+      XmTextEnableRedisplay(exechost_usage_scaling);
+
    }
    DEXIT;
 }
@@ -745,15 +735,6 @@ Widget parent
                            "reporting_variables_remove", &reporting_variables_remove,
                            NULL);
 
-   /*
-   ** unmanage eh_usage_scaling for C4 mode
-   */
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      XtUnmanageChild(eh_usage_scaling);
-      XtUnmanageChild(eh_project);
-      XmTabDeleteFolder(eh_folder, eh_project);
-   }
-
    XtAddCallback(eh_ok, XmNactivateCallback, 
                      qmonExecHostOk, NULL);
    XtAddCallback(eh_cancel, XmNactivateCallback, 
@@ -767,12 +748,6 @@ Widget parent
 
    XtAddCallback(complexes_ccl, XmNselectCellCallback,
                   qmonLoadSelectEntry, NULL);
-#if 0
-   XtAddCallback(consumable_delete, XmNactivateCallback,
-                  qmonLoadDelLines, (XtPointer) complexes_ccl);
-   XtAddCallback(complexes_ccl, XmNenterCellCallback,
-                  qmonLoadNoEdit, NULL);
-#endif
    XtAddCallback(complexes_ccl, XmNlabelActivateCallback,
                   qmonLoadNames, NULL);
 
@@ -790,19 +765,17 @@ Widget parent
    XtAddCallback(reporting_variables_remove, XmNactivateCallback, 
                      qmonExecHostReportVarRemove, NULL);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-      ** Project & Xproject
-      */
-      XtAddCallback(project_toggle, XmtNvalueChangedCallback, 
-                        qmonExecHostProjectToggle, NULL);
-      XtAddCallback(project_add, XmNactivateCallback, 
-                        qmonExecHostProjectAdd, NULL);
-      XtAddCallback(project_remove, XmNactivateCallback, 
-                        qmonExecHostProjectRemove, NULL);
-      XtAddCallback(project_dialog, XmNactivateCallback, 
-                        qmonPopupProjectConfig, NULL);
-   }
+   /*
+   ** Project & Xproject
+   */
+   XtAddCallback(project_toggle, XmtNvalueChangedCallback, 
+                     qmonExecHostProjectToggle, NULL);
+   XtAddCallback(project_add, XmNactivateCallback, 
+                     qmonExecHostProjectAdd, NULL);
+   XtAddCallback(project_remove, XmNactivateCallback, 
+                     qmonExecHostProjectRemove, NULL);
+   XtAddCallback(project_dialog, XmNactivateCallback, 
+                     qmonPopupProjectConfig, NULL);
 
    XtAddEventHandler(XtParent(eh_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
@@ -941,23 +914,21 @@ static lList* qmonExecHostGetAsk(void)
       /*
       ** usage scaling
       */
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         host_data.usage_scaling_list = 
-                     lSelectDestroy(host_data.usage_scaling_list,
-                                          where);
-      
-         lSetList(lFirst(lp), EH_usage_scaling_list, 
-                           host_data.usage_scaling_list);
-         host_data.usage_scaling_list = NULL;
+      host_data.usage_scaling_list = 
+                  lSelectDestroy(host_data.usage_scaling_list,
+                                       where);
+   
+      lSetList(lFirst(lp), EH_usage_scaling_list, 
+                        host_data.usage_scaling_list);
+      host_data.usage_scaling_list = NULL;
 
-         /*
-         ** (x)project 
-         */
-         lSetList(lFirst(lp), EH_prj, host_data.prj);
-         host_data.prj = NULL;
-         lSetList(lFirst(lp), EH_xprj, host_data.xprj);
-         host_data.xprj = NULL;
-      }
+      /*
+      ** (x)project 
+      */
+      lSetList(lFirst(lp), EH_prj, host_data.prj);
+      host_data.prj = NULL;
+      lSetList(lFirst(lp), EH_xprj, host_data.xprj);
+      host_data.xprj = NULL;
    }
                
    DEXIT;
@@ -1077,54 +1048,51 @@ StringConst name
 
    
    
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   /*
+   ** build the usage scaling list, we have three entries at the moment:
+   ** cpu, io, mem
+   */
+   usl = lCreateElemList("UsageScalingList", HS_Type, 3);
+   ep = lFirst(usl);
+   lSetString(ep, HS_name, USAGE_ATTR_CPU);
+   lSetDouble(ep, HS_value, 1.0);
+   ep = lNext(ep);
+   lSetString(ep, HS_name, USAGE_ATTR_MEM);
+   lSetDouble(ep, HS_value, 1.0);
+   ep = lNext(ep);
+   lSetString(ep, HS_name, USAGE_ATTR_IO);
+   lSetDouble(ep, HS_value, 1.0);
+
+   if (ehp) {
       /*
-      ** build the usage scaling list, we have three entries at the moment:
-      ** cpu, io, mem
+      ** get the usage scaling list from host
       */
-      usl = lCreateElemList("UsageScalingList", HS_Type, 3);
-      ep = lFirst(usl);
-      lSetString(ep, HS_name, USAGE_ATTR_CPU);
-      lSetDouble(ep, HS_value, 1.0);
-      ep = lNext(ep);
-      lSetString(ep, HS_name, USAGE_ATTR_MEM);
-      lSetDouble(ep, HS_value, 1.0);
-      ep = lNext(ep);
-      lSetString(ep, HS_name, USAGE_ATTR_IO);
-      lSetDouble(ep, HS_value, 1.0);
-
-      if (ehp) {
-         /*
-         ** get the usage scaling list from host
-         */
-         ehul = lGetList(ehp, EH_usage_scaling_list);
-         
-         for_each (ep, ehul) {
-            usep = lGetElemStr(usl, HS_name, lGetString(ep, HS_name));
-            lSetDouble(usep, HS_value, lGetDouble(ep, HS_value));
-         }
-      }
-
-      /* 
-      ** set now fully configured usage scaling list 
-      */
-      host_data.usage_scaling_list = lFreeList(host_data.usage_scaling_list);
-      host_data.usage_scaling_list = usl;
-
-      /*
-      ** set (x)project
-      */
-      if (ehp) {
-         host_data.prj = lGetList(ehp, EH_prj);
-         host_data.xprj = lGetList(ehp, EH_xprj);
-      }
-      else {
-         host_data.prj = NULL;
-         host_data.xprj = NULL;
-      }
-
-   }
+      ehul = lGetList(ehp, EH_usage_scaling_list);
       
+      for_each (ep, ehul) {
+         usep = lGetElemStr(usl, HS_name, lGetString(ep, HS_name));
+         lSetDouble(usep, HS_value, lGetDouble(ep, HS_value));
+      }
+   }
+
+   /* 
+   ** set now fully configured usage scaling list 
+   */
+   host_data.usage_scaling_list = lFreeList(host_data.usage_scaling_list);
+   host_data.usage_scaling_list = usl;
+
+   /*
+   ** set (x)project
+   */
+   if (ehp) {
+      host_data.prj = lGetList(ehp, EH_prj);
+      host_data.xprj = lGetList(ehp, EH_xprj);
+   }
+   else {
+      host_data.prj = NULL;
+      host_data.xprj = NULL;
+   }
+
    /*
    ** set the values in the matrices
    */
@@ -1140,12 +1108,10 @@ StringConst name
    */
    qmonHostAvailableReportVars();
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-      ** fill the project list
-      */
-      qmonHostAvailableProjects();
-   }
+   /*
+   ** fill the project list
+   */
+   qmonHostAvailableProjects();
 
    DEXIT;
 }

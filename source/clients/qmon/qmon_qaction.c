@@ -1035,10 +1035,6 @@ Widget parent
                               NULL); 
 
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-/*       XtUnmanageChild(project_config); */
-         XmTabDeleteFolder(cq_folder, project_config);
-   }
    /*
    ** callbacks
    */
@@ -1185,19 +1181,17 @@ Widget parent
    XtAddCallback(access_dialog, XmNactivateCallback, 
                      qmonPopupManopConfig, (XtPointer)2);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-      ** Project & Xproject
-      */
-      XtAddCallback(project_toggle, XmtNvalueChangedCallback, 
-                        qmonQCProjectToggle, NULL);
-      XtAddCallback(project_add, XmNactivateCallback, 
-                        qmonQCProjectAdd, NULL);
-      XtAddCallback(project_remove, XmNactivateCallback, 
-                        qmonQCProjectRemove, NULL);
-      XtAddCallback(project_dialog, XmNactivateCallback, 
-                        qmonPopupProjectConfig, NULL);
-   }
+   /*
+   ** Project & Xproject
+   */
+   XtAddCallback(project_toggle, XmtNvalueChangedCallback, 
+                     qmonQCProjectToggle, NULL);
+   XtAddCallback(project_add, XmNactivateCallback, 
+                     qmonQCProjectAdd, NULL);
+   XtAddCallback(project_remove, XmNactivateCallback, 
+                     qmonQCProjectRemove, NULL);
+   XtAddCallback(project_dialog, XmNactivateCallback, 
+                     qmonPopupProjectConfig, NULL);
 
    /*
    ** Owner

@@ -140,8 +140,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             MSG_QSTAT_PRT_STATES);
    }
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-             (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    printf("----------------------------------------------------------------------------%s\n", 
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
@@ -354,7 +353,6 @@ int indent
    int task_running;
    const char *str;
    lListElem *ep;
-   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lList *usage_list;
    lList *scaled_usage_list;
 
@@ -377,8 +375,7 @@ int indent
       printf(QSTAT_INDENT "Sub-tasks:           %-12.12s %5.5s %s %-4.4s %-6.6s\n", 
              "task-ID",
              "state",
-             sgeee_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     "
-                 : "",
+             USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     ",
              "stat",
              "failed");
    }
@@ -416,7 +413,7 @@ int indent
    job_get_state_string(task_state_string, tstate);
    printf("%-5.5s ", task_state_string); 
 
-   if (sgeee_mode) {
+   {
       lListElem *up;
 
       /* scaled cpu usage */
@@ -653,8 +650,7 @@ u_long32 group_opt
 
    DENTER(TOP_LAYER, "sge_print_jobs_pending");
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) 
-              && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    nxt = lFirst(job_list);
    while ((jep=nxt)) {
@@ -861,10 +857,9 @@ u_long32 group_opt) {
 
    DENTER(TOP_LAYER, "sge_print_jobs_finished");
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-               (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   {
       for_each (jep, job_list) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if (shut_me_down) {
@@ -915,8 +910,7 @@ u_long32 group_opt) {
 
    DENTER(TOP_LAYER, "sge_print_jobs_error");
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) 
-              && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    for_each (jep, job_list) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -964,8 +958,7 @@ u_long32 group_opt
       return;
    }
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-               (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    for_each (jep, zombie_list) { 
       lList *z_ids = NULL;
@@ -1028,7 +1021,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_urg, sge_pri, sge_ext, sgeee_mode;
+   int sge_urg, sge_pri, sge_ext;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -1052,11 +1045,10 @@ int slots_per_line  /* number of slots to be printed in slots column
       queue_name = NULL; 
    }
 
-   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
-   sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
-   sge_urg = sgeee_mode && (full_listing & QSTAT_DISPLAY_URGENCY);
-   sge_pri = sgeee_mode && (full_listing & QSTAT_DISPLAY_PRIORITY);
+   sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
+   sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);
 
    if (first_time) {
       first_time = 0;
@@ -1064,7 +1056,7 @@ int slots_per_line  /* number of slots to be printed in slots column
          printf("%s%-7.7s %s %s%s%s%s%s %-10.10s %-12.12s %s%-5.5s %s%s%s%s%s%s%s%s%s%-10.10s %s %s%s%s%s%s%s", 
                indent,
                   "job-ID",
-               sgeee_mode?"prior ":"prior",
+               "prior ",
                (sge_pri||sge_urg)?" nurg   ":"",
                sge_pri?" npprior":"",
                (sge_pri||sge_ext)?" ntckts ":"",
@@ -1088,7 +1080,7 @@ int slots_per_line  /* number of slots to be printed in slots column
                   "ja-task-ID ", 
                tsk_ext?"task-ID ":"",
                tsk_ext?"state ":"",
-               tsk_ext?(sgeee_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "") : "",
+               tsk_ext?USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "",
                tsk_ext?"stat ":"",
                tsk_ext?"failed ":"" );
 
@@ -1111,7 +1103,7 @@ int slots_per_line  /* number of slots to be printed in slots column
       printf("        "); 
 
    /* per job priority information */
-   if (sgeee_mode) {
+   {
 
       if (print_jobid)
          printf("%7.5f ", lGetDouble(jatep, JAT_prio)); /* nprio 0.0 - 1.0 */
@@ -1163,10 +1155,6 @@ int slots_per_line  /* number of slots to be printed in slots column
       }
 
    } 
-   else {
-      /* job priority */
-      printf("%5d ", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY); 
-   }
 
    if (print_jobid) {
       /* job name */
@@ -1476,7 +1464,7 @@ int slots_per_line  /* number of slots to be printed in slots column
                lGetString(job, JB_checkpoint_name)); 
 
          sge_show_ce_type_list_line_by_line(QSTAT_INDENT "Hard Resources:   ",
-               QSTAT_INDENT2, lGetList(job, JB_hard_resource_list), sgeee_mode?true:false, centry_list,
+               QSTAT_INDENT2, lGetList(job, JB_hard_resource_list), true, centry_list,
                sge_job_slot_request(job, pe_list)); 
 
          /* display default requests if necessary */

@@ -253,17 +253,6 @@ Widget parent
                            "sconf_job_info", &sconf_job_info,
                            "sconf_job_range", &sconf_job_range,
                            NULL);
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      Widget *items = NULL;
-
-      XtUnmanageChild(sconf_reprioritize_interval);
-      XtUnmanageChild(sconf_reprioritize_intervalPB);
-      XtVaGetValues( sconf_queue_sort_method,
-                     XmtNitemWidgets, &items,
-                     NULL);
-      if (items && items[2])
-         XtUnmanageChild(items[2]);
-   }
 
    XtAddCallback(sconf_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
@@ -444,10 +433,8 @@ lListElem *sep
    data.load_formula = sge_strdup(data.load_formula, 
                               (StringConst)lGetString(sep, SC_load_formula));
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
+   data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
                               (StringConst)lGetString(sep, SC_reprioritize_interval));
-   }
 
 /**
 printf("->data.algorithm: '%s'\n", data.algorithm ? data.algorithm : "-NA-");
@@ -582,15 +569,13 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    }
    lSetString(sep, SC_load_formula, data.load_formula);
   
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      if (!data.reprioritize_interval|| 
-            data.reprioritize_interval[0] == '\0') {
-         qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
-         DEXIT;
-         return False;
-      }
-      lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
+   if (!data.reprioritize_interval|| 
+         data.reprioritize_interval[0] == '\0') {
+      qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
+      DEXIT;
+      return False;
    }
+   lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
    /*
    ** schedd_job_info needs some extras
    ** see comment for schedd_job_info in qmonScheddSet

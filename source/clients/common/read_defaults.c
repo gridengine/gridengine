@@ -227,11 +227,8 @@ static char *get_user_home_defaults_file_path(lList **answer_list)
       if (*file && (file[strlen(file) - 1] != '/')) {
          strcat(file, "/");
       }
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         strcat(file, GRD_HOME_DEF_REQ_FILE);
-      } else {
-         strcat(file, COD_HOME_DEF_REQ_FILE);
-      }
+
+      strcat(file, GRD_HOME_DEF_REQ_FILE);
    }
    
    DEXIT;
@@ -289,11 +286,8 @@ static char *get_cwd_defaults_file_path(lList **answer_list)
       if (*file && (file[strlen(file) - 1] != '/')) {
          strcat(file, "/");
       }
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         strcat(file, GRD_HOME_DEF_REQ_FILE); 
-      } else {
-         strcat(file, COD_HOME_DEF_REQ_FILE);
-      }
+
+      strcat(file, GRD_HOME_DEF_REQ_FILE); 
    }
    
    DEXIT;

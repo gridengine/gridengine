@@ -712,12 +712,7 @@ char **argv
    }
 
    if (lGetNumberOfElem(job_list)>0 ) {
-      if (feature_is_enabled(FEATURE_SGEEE))
          sgeee_sort_jobs(&job_list);
-      else {
-         so = sge_job_sort_order(lGetListDescr(job_list));
-         lSortList(job_list, so);
-      }
    }
 
    if ((group_opt & GROUP_CQ_SUMMARY) == 0) {
@@ -1623,7 +1618,7 @@ u_long32 *isXML
          continue;
       }
 
-      if (!qselect_mode && feature_is_enabled(FEATURE_SGEEE)) {
+      if (!qselect_mode ) {
          if(parse_flag(ppcmdline, "-urg", &alp, &full)) {
             if(full) {
                (*pfull) |= QSTAT_DISPLAY_URGENCY;
@@ -1633,7 +1628,7 @@ u_long32 *isXML
          }
       }
 
-      if (!qselect_mode && feature_is_enabled(FEATURE_SGEEE)) {
+      if (!qselect_mode ) {
          if(parse_flag(ppcmdline, "-pri", &alp, &full)) {
             if(full) {
                (*pfull) |= QSTAT_DISPLAY_PRIORITY;

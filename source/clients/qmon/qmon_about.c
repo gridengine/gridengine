@@ -56,14 +56,11 @@ void qmonAboutMsg(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   int sgeee_mode; 
    dstring ds;
    char buffer[256];
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
-   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
-
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,

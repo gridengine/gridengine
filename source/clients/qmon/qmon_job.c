@@ -330,13 +330,8 @@ Widget parent
    rw[1] = NULL;
 
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      XtUnmanageChild(job_tickets);
-   }
-   else {
-      XtAddCallback(job_tickets, XmNactivateCallback,
-                     qmonPopupTicketOverview, NULL);
-   }
+   XtAddCallback(job_tickets, XmNactivateCallback,
+                  qmonPopupTicketOverview, NULL);
 
    /* start the needed timers and the corresponding update routines */
    XtAddCallback(qmon_job, XmNpopupCallback, 
@@ -658,12 +653,7 @@ void updateJobList(void)
    ** sort the jobs according to priority
    */
    if (lGetNumberOfElem(jl)>0 ) {
-      if (feature_is_enabled(FEATURE_SGEEE))
-         sgeee_sort_jobs(&jl);
-      else if ((job_so = sge_job_sort_order(lGetListDescr(jl)))) {
-         lSortList(jl, job_so);
-         lFreeSortOrder(job_so);
-      }
+      sgeee_sort_jobs(&jl);
    }
  
    /*

@@ -814,7 +814,7 @@ u_long32 flags
 /*----------------------------------------------------------------------------*/
       /* "-js jobshare */
 
-      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-js", *sp)) {
+      if (!strcmp("-js", *sp)) {
          u_long32 jobshare;
 
          sp++;
@@ -1139,7 +1139,7 @@ u_long32 flags
 /*----------------------------------------------------------------------------*/
       /* "-ot override tickets */
 
-      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-ot", *sp)) {
+      if (!strcmp("-ot", *sp)) {
          int otickets;
 
          sp++;

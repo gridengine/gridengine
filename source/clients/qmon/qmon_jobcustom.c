@@ -139,8 +139,6 @@ static htable JobColumnPrintHashTable = NULL;
 static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
-/* #define SGEEE_FIELDS    10 */
-#define SGEEE_FIELDS    18
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -177,7 +175,7 @@ static tJobField job_items[] = {
    { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
    { 0, JAT_scaled_usage_list, "@{VMEM}", 10, 30, PrintVMEM },
    { 0, JAT_scaled_usage_list, "@{MAXVMEM}", 10, 30, PrintMAXVMEM },
-/**** SGEEE specific fields *****/
+/**** EE specific fields *****/
    { 0, JAT_tix, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_ntix, "@{N Ticket}", 10, 30, PrintDouble},
    { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
@@ -190,7 +188,7 @@ static tJobField job_items[] = {
    { 0, JB_department, "@{Department}", 10, 30, PrintString },
    { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime },
    { 0, JB_nppri, "@{N Priority}", 10, 30, PrintDouble },
-/**** SGEEE urgency specific fields *****/
+/**** EE urgency specific fields *****/
    { 0, JB_nurg, "@{N Urgency}", 10, 30, PrintDouble },
    { 0, JB_urg, "@{Urgency}", 10, 30, PrintDoubleOpti },
    { 0, JB_rrcontr, "@{rrcontr}", 10, 30, PrintDoubleOpti },
@@ -1164,22 +1162,18 @@ int nm
 
    DENTER(GUI_LAYER, "PrintPriority");
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      sprintf(buf, "%d", (int)lGetUlong(ep, nm) - BASE_PRIORITY);
-   } else {
-      if (!jat) {
-         lListElem *first_elem = lFirst(eleml);
+   if (!jat) {
+      lListElem *first_elem = lFirst(eleml);
 
-         if (object_has_type(first_elem, JAT_Type)) {
-            jat = lFirst(eleml);
-         } else if (object_has_type(first_elem, RN_Type)) {
-            u_long32 task_id = range_list_get_first_id(eleml, NULL);
+      if (object_has_type(first_elem, JAT_Type)) {
+         jat = lFirst(eleml);
+      } else if (object_has_type(first_elem, RN_Type)) {
+         u_long32 task_id = range_list_get_first_id(eleml, NULL);
 
-            jat = job_get_ja_task_template(ep, task_id);       
-         }
+         jat = job_get_ja_task_template(ep, task_id);       
       }
-      sprintf(buf, "%7.5f", lGetDouble(jat, JAT_prio));
-   }   
+   }
+   sprintf(buf, "%7.5f", lGetDouble(jat, JAT_prio));
 
    str = XtNewString(buf);
 
@@ -1614,8 +1608,6 @@ int how
    DENTER(GUI_LAYER, "qmonWhatSetItems");
 
    num_jobs = XtNumber(job_items);
-   if (!feature_is_enabled(FEATURE_SGEEE))
-      num_jobs -= SGEEE_FIELDS;
 
 #if 0
    if (how == FILL_ALL)

@@ -266,8 +266,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
 
    DENTER(TOP_LAYER, "sge_print_jobs_pending");
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) 
-              && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    if (*target_list == NULL){
       *target_list = lCreateList("job-list", XMLE_Type);
@@ -522,7 +521,7 @@ int slots_per_line  /* number of slots to be printed in slots column
 ) {
    char state_string[8];
    u_long32 jstate;
-   int sge_urg, sge_ext, sge_pri, sgeee_mode;
+   int sge_urg, sge_ext, sge_pri;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -552,11 +551,10 @@ int slots_per_line  /* number of slots to be printed in slots column
       queue_name = NULL; 
    }
 
-   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
-   sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
-   sge_urg = sgeee_mode && (full_listing & QSTAT_DISPLAY_URGENCY);
-   sge_pri = sgeee_mode && (full_listing & QSTAT_DISPLAY_PRIORITY);
+   sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
+   sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);
 
    /* job number / ja task id */
    if (print_jobid){
@@ -564,7 +562,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    }
 
    /* per job priority information */
-   if (sgeee_mode) {
+   {
       if (print_jobid)
          xml_append_Attr_D(attributeList, "JAT_prio", lGetDouble(jatep, JAT_prio));
 
@@ -590,10 +588,6 @@ int slots_per_line  /* number of slots to be printed in slots column
          }
       } 
    } 
-   else {
-      /* job priority */
-      xml_append_Attr_I(attributeList, "JB_priority", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY);
-   }
 
    if (print_jobid) {
       /* job name */
@@ -948,7 +942,6 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
    u_long32 tstate, tstatus;
    int task_running;
    lListElem *ep;
-   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lList *usage_list;
    lList *scaled_usage_list;
 
@@ -1001,7 +994,7 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
    job_get_state_string(task_state_string, tstate);
    xml_append_Attr_S(attributeList, "state", task_state_string);
 
-   if (sgeee_mode) {
+   {
       lListElem *up;
 
       /* scaled cpu usage */
@@ -1050,10 +1043,9 @@ static void xml_print_jobs_finished(lList *job_list, const lList *pe_list, const
       *target_list = lCreateList("Job-List", XMLE_Type);
    }
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-            (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   {
       for_each (jep, job_list) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if (shut_me_down) {
@@ -1115,8 +1107,7 @@ static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const l
       *target_list = lCreateList("Job-List", XMLE_Type);
    }
    
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) 
-              && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    for_each (jep, job_list) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -1174,8 +1165,7 @@ static void xml_print_jobs_zombie(lList *zombie_list, const lList *pe_list, cons
       *target_list = lCreateList("Job-List", XMLE_Type);
    }
    
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-               (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    for_each (jep, zombie_list) { 
       lList *z_ids = NULL;
@@ -1246,8 +1236,7 @@ lList **target_list
       *target_list = lCreateList("job-list", XMLE_Type);
    }
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-               (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
    
    qnm = qinstance_get_name(qep, &queue_name_buffer);
 
@@ -1475,8 +1464,7 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
                             MAX_STRING_SIZE - 1, "suspend");
    }
 
-   sge_ext = feature_is_enabled(FEATURE_SGEEE) && 
-             (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    
    xml_append_Attr_S(attributeList, "name", queue_name);        

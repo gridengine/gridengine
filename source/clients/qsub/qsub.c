@@ -183,11 +183,6 @@ char **argv
    DPRINTF (("Job is%s immediate\n", is_immediate ? "" : " not"));
 
    DPRINTF(("Everything ok\n"));
-#ifndef NO_SGE_COMPILE_DEBUG
-   if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
-      lWriteElemTo(job, stdout);
-   }
-#endif
 
    if (lGetUlong(job, JB_verify)) {
       cull_show_job(job, 0);

@@ -747,19 +747,8 @@ Widget parent
    ** in SGE mode the project field and the deadline time have to be
    ** displayed, otherwise they are unmanaged
    */
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      XtVaGetValues( submit_deadline,
-                     XmtNlayoutIn, &submit_deadline_row,
-                     NULL);
-      XtUnmanageChild(submit_deadline_row);
-      XtUnmanageChild(submit_project);
-      XtUnmanageChild(submit_projectPB);
-   }
-   else {
-      XtAddCallback(submit_deadlinePB, XmNactivateCallback, 
-                     qmonSubmitDeadline, NULL);
-   }
-   
+   XtAddCallback(submit_deadlinePB, XmNactivateCallback, 
+                  qmonSubmitDeadline, NULL);
    XtManageChild(submit_layout);
 
    /* callbacks */
@@ -982,25 +971,23 @@ int submode
    */
    XtSetSensitive(submit_restart, sensitive2);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-      ** set sensitivity of deadline field
-      */
-      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-               uti_state_get_user_name())) {
-         if (sensitive) {      
-            XtSetSensitive(submit_deadline, sensitive2);
-            XtSetSensitive(submit_deadlinePB, sensitive2);
-         }   
-         else {
-            XtSetSensitive(submit_deadline, sensitive);
-            XtSetSensitive(submit_deadlinePB, sensitive);
-         }   
-      }
+   /*
+   ** set sensitivity of deadline field
+   */
+   if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+            uti_state_get_user_name())) {
+      if (sensitive) {      
+         XtSetSensitive(submit_deadline, sensitive2);
+         XtSetSensitive(submit_deadlinePB, sensitive2);
+      }   
       else {
-         XtSetSensitive(submit_deadline, False);
-         XtSetSensitive(submit_deadlinePB, False);
-      }
+         XtSetSensitive(submit_deadline, sensitive);
+         XtSetSensitive(submit_deadlinePB, sensitive);
+      }   
+   }
+   else {
+      XtSetSensitive(submit_deadline, False);
+      XtSetSensitive(submit_deadlinePB, False);
    }
 
    /*
@@ -1429,23 +1416,23 @@ XtPointer cld, cad;
       for (i=0; fixed_qalter_fields[i]!= NoName; i++)
          nm_set((int*)qalter_fields, (int)fixed_qalter_fields[i]);
 
-      /* in case of SGEEE the deadline initiation time 
-         can be modified if the user is a deadline user */
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         qmonMirrorMultiAnswer(USERSET_T, &alp);
-         if (alp) {
-            qmonMessageBox(w, alp, 0);
-            /* set default cursor */
-            XmtDisplayDefaultCursor(w);
-            alp = lFreeList(alp);
-            DEXIT;
-            return;
-         }
-
-         if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-               uti_state_get_user_name())) 
-            nm_set((int*)qalter_fields, JB_deadline);
+      /* 
+      ** the deadline initiation time 
+      ** can be modified if the user is a deadline user 
+      */
+      qmonMirrorMultiAnswer(USERSET_T, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         /* set default cursor */
+         XmtDisplayDefaultCursor(w);
+         alp = lFreeList(alp);
+         DEXIT;
+         return;
       }
+
+      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+            uti_state_get_user_name())) 
+         nm_set((int*)qalter_fields, JB_deadline);
 
       if (!(what = lIntVector2What(JB_Type, (int*) qalter_fields))) {
          DPRINTF(("lIntVector2What failure\n"));

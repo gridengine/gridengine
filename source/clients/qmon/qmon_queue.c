@@ -376,13 +376,8 @@ Widget parent
                                      NULL);
 
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      XtUnmanageChild(queue_tickets);
-   }
-   else {
-      XtAddCallback(queue_tickets, XmNactivateCallback,
-                     qmonPopupTicketOverview, NULL);
-   }
+   XtAddCallback(queue_tickets, XmNactivateCallback,
+                  qmonPopupTicketOverview, NULL);
 
    XtAddCallback(queue_add, XmNactivateCallback, 
                      qmonQCPopup, NULL);

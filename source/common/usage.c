@@ -300,11 +300,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Ap_OPT_FNAME , MSG_GDI_UTEXT_Ap_OPT_FNAME );
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(aprj_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(aprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_APRJ , MSG_GDI_UTEXT_APRJ );
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Aprj_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Aprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Aprj , MSG_GDI_UTEXT_Aprj );
    }
 
@@ -320,17 +320,17 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_as_OPT_HOSTNAME , MSG_GDI_UTEXT_as_OPT_HOSTNAME);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(astnode_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(astnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ASTNODE_NODE_SHARES_LIST , MSG_GDI_UTEXT_ASTNODE_NODE_SHARES_LIST );
       MARK(OA_NODE_SHARES_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(astree_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(astree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Astree_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Astree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ASTREE_FNAME, MSG_GDI_UTEXT_ASTREE_FNAME);
    }
 
@@ -354,11 +354,11 @@ FILE *fp
    }
 #endif 
  
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(aus_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(aus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_AUSER , MSG_GDI_UTEXT_AUSER );
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Aus_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Aus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Auser , MSG_GDI_UTEXT_Auser );
    }
 
@@ -388,7 +388,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_clear_OPT, MSG_GDI_UTEXT_clear_OPT);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(cu_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(cu_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_clearusage_OPT, MSG_GDI_UTEXT_clearusage_OPT);
    }
 
@@ -458,7 +458,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dhgrp_OPT, MSG_GDI_UTEXT_dhgrp_OPT);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dl_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(dl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dl_OPT_DATE_TIME , MSG_GDI_UTEXT_dl_OPT_DATE_TIME );
       MARK(OA_DATE_TIME);
    }
@@ -477,7 +477,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dp_OPT_PE_NAME, MSG_GDI_UTEXT_dp_OPT_PE_NAME );
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dprj_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(dprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dprj_OPT_PROJECT, MSG_GDI_UTEXT_dprj_OPT_PROJECT );
       MARK(OA_PROJECT_LIST);
    }
@@ -492,13 +492,13 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_ds_OPT_HOST_LIST, MSG_GDI_UTEXT_ds_OPT_HOST_LIST);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dstnode_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(dstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_DSTNODE_NODELIST, MSG_GDI_UTEXT_DSTNODE_NODELIST);
       MARK(OA_NODE_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dstree_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(dstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_DSTREE  , MSG_GDI_UTEXT_DSTREE );
    }
 
@@ -518,7 +518,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_dumap_OPT, MSG_GDI_UTEXT_dumap_OPT );
    }
 #endif
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(dus_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(dus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_DUSER_USER, MSG_GDI_UTEXT_DUSER_USER );
       MARK(OA_USER_LIST);
    }
@@ -533,7 +533,7 @@ FILE *fp
       }
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(ext_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(ext_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ext_OPT, MSG_GDI_UTEXT_ext_OPT );
    }
 
@@ -597,7 +597,7 @@ FILE *fp
       }
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(js_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(js_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_js_OPT_YN , MSG_GDI_UTEXT_js_OPT_YN );
    }
 
@@ -717,11 +717,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Mp_OPT_FNAME , MSG_GDI_UTEXT_Mp_OPT_FNAME );
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mprj_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(mprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_mprj_OPT_PROJECT, MSG_GDI_UTEXT_mprj_OPT_PROJECT);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mprj_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Mprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Mprj_OPT_PROJECT, MSG_GDI_UTEXT_Mprj_OPT_PROJECT);
    }
 
@@ -733,18 +733,18 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Mq_OPT_FNAME, MSG_GDI_UTEXT_Mq_OPT_FNAME);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstnode_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(mstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTNODE_NODE_SHARES_LIST, 
          MSG_GDI_UTEXT_MSTNODE_NODE_SHARES_LIST );
       MARK(OA_NODE_SHARES_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mstree_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Mstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTREE_FNAME, MSG_GDI_UTEXT_MSTREE_FNAME);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstree_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(mstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTREE , MSG_GDI_UTEXT_MSTREE );
    }
 
@@ -768,11 +768,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_mumap_OPT, MSG_GDI_UTEXT_mumap_OPT);
    }
 #endif
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mus_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(mus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_muser_OPT_USER, MSG_GDI_UTEXT_muser_OPT_USER);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mus_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(Mus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Muser_OPT_USER, MSG_GDI_UTEXT_Muser_OPT_USER);
    }
 
@@ -807,11 +807,11 @@ FILE *fp
       MARK(OA_PATH_LIST);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(ot_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(ot_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ot_OPT_TICKETS, MSG_GDI_UTEXT_ot_OPT_TICKETS);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(P_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(P_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_P_OPT_PROJECT_NAME, 
          MSG_GDI_UTEXT_P_OPT_PROJECT_NAME);
    }
@@ -996,11 +996,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_spl_OPT , MSG_GDI_UTEXT_spl_OPT );
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sprj_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(sprj_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sprj_OPT_PROJECT, MSG_GDI_UTEXT_sprj_OPT_PROJECT);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sprjl_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(sprjl_OPT, uti_state_get_mewho())) {
       PRINTITD( MSG_GDI_USAGE_sprjl_OPT, MSG_GDI_UTEXT_sprjl_OPT);
    }
 
@@ -1026,21 +1026,21 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_ssconf_OPT , MSG_GDI_UTEXT_ssconf_OPT );
    } 
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sstnode_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(sstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sstnode_OPT_NODE_LIST, 
          MSG_GDI_UTEXT_sstnode_OPT_NODE_LIST);
       MARK(OA_NODE_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(rsstnode_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(rsstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_rsstnode_OPT_NODE_LIST, 
          MSG_GDI_UTEXT_rsstnode_OPT_NODE_LIST);
       MARK(OA_NODE_LIST);
       MARK(OA_NODE_PATH);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sstree_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(sstree_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sstree_OPT, MSG_GDI_UTEXT_sstree_OPT);
    }
 
@@ -1059,7 +1059,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_sumapl_OPT, MSG_GDI_UTEXT_sumapl_OPT);
    }
 #endif
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(sus_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(sus_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_suser_OPT_USER, MSG_GDI_UTEXT_suser_OPT_USER);
       MARK(OA_USER_LIST);
    }
@@ -1068,7 +1068,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_sul_OPT, MSG_GDI_UTEXT_sul_OPT);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(susl_OPT, uti_state_get_mewho())) {
+   if (VALID_OPT(susl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_suserl_OPT, MSG_GDI_UTEXT_suserl_OPT);
    }
 

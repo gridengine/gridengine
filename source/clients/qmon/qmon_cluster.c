@@ -736,24 +736,6 @@ Widget parent
                                     &cluster_auto_user_delete_timePB,
                            NULL);
 
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      XtUnmanageChild(cluster_enforce_project);
-      XtUnmanageChild(cluster_enforce_user);
-      XtUnmanageChild(cluster_auto_user_defaults_label);
-      XtUnmanageChild(cluster_auto_user_oticket);
-      XtUnmanageChild(cluster_auto_user_fshare);
-      XtUnmanageChild(cluster_auto_user_default_project);
-      XtUnmanageChild(cluster_auto_user_delete_time);
-      XtUnmanageChild(cluster_auto_user_delete_timePB);
-      XtVaGetValues( cluster_projectsPB,
-                     XmtNlayoutIn, &cluster_projects_col,
-                     NULL);
-      XtUnmanageChild(cluster_projects_col);
-      XtVaGetValues( cluster_xprojectsPB,
-                     XmtNlayoutIn, &cluster_xprojects_col,
-                     NULL);
-      XtUnmanageChild(cluster_xprojects_col);
-   }
 
    if (!feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtVaGetValues( cluster_set_token_cmd,
@@ -775,14 +757,12 @@ Widget parent
    XtAddCallback(cluster_xusersPB, XmNactivateCallback, 
                      qmonClusterAskForUsers, (XtPointer)cluster_xusers);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      XtAddCallback(cluster_projectsPB, XmNactivateCallback, 
-                    qmonClusterAskForProjects, (XtPointer)cluster_projects);
-      XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
-                    qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
-      XtAddCallback(cluster_auto_user_delete_timePB, XmNactivateCallback, 
-                    qmonClusterTime, (XtPointer)cluster_auto_user_delete_time);
-   }
+   XtAddCallback(cluster_projectsPB, XmNactivateCallback, 
+                 qmonClusterAskForProjects, (XtPointer)cluster_projects);
+   XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
+                 qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
+   XtAddCallback(cluster_auto_user_delete_timePB, XmNactivateCallback, 
+                 qmonClusterTime, (XtPointer)cluster_auto_user_delete_time);
 
    XtAddCallback(cluster_load_report_timePB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_load_report_time);
@@ -1015,20 +995,18 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_reporting_params, mode);
    XtSetSensitive(cluster_reporting_params_label, mode);
   
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      XtSetSensitive(cluster_enforce_project, mode);
-      XtSetSensitive(cluster_enforce_user, mode);
-      XtSetSensitive(cluster_projects, mode);
-      XtSetSensitive(cluster_projectsPB, mode);
-      XtSetSensitive(cluster_xprojects, mode);
-      XtSetSensitive(cluster_xprojectsPB, mode);
-      XtSetSensitive(cluster_auto_user_defaults_label, mode);
-      XtSetSensitive(cluster_auto_user_fshare, mode);
-      XtSetSensitive(cluster_auto_user_oticket, mode);
-      XtSetSensitive(cluster_auto_user_default_project, mode);
-      XtSetSensitive(cluster_auto_user_delete_time, mode);
-      XtSetSensitive(cluster_auto_user_delete_timePB, mode);
-   }
+   XtSetSensitive(cluster_enforce_project, mode);
+   XtSetSensitive(cluster_enforce_user, mode);
+   XtSetSensitive(cluster_projects, mode);
+   XtSetSensitive(cluster_projectsPB, mode);
+   XtSetSensitive(cluster_xprojects, mode);
+   XtSetSensitive(cluster_xprojectsPB, mode);
+   XtSetSensitive(cluster_auto_user_defaults_label, mode);
+   XtSetSensitive(cluster_auto_user_fshare, mode);
+   XtSetSensitive(cluster_auto_user_oticket, mode);
+   XtSetSensitive(cluster_auto_user_default_project, mode);
+   XtSetSensitive(cluster_auto_user_delete_time, mode);
+   XtSetSensitive(cluster_auto_user_delete_timePB, mode);
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtSetSensitive(cluster_set_token_cmd, mode);
@@ -1678,75 +1656,73 @@ int local
          lDelElemStr(&confl, CF_name, "gid_range");
       }
 
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         if (clen->enforce_project >= 0 && 
-               clen->enforce_project < sizeof(enforce_project))
-            str = enforce_project[clen->enforce_project];
-         ep = lGetElemStr(confl, CF_name, "enforce_project");
-         lSetString(ep, CF_value, str);
+      if (clen->enforce_project >= 0 && 
+            clen->enforce_project < sizeof(enforce_project))
+         str = enforce_project[clen->enforce_project];
+      ep = lGetElemStr(confl, CF_name, "enforce_project");
+      lSetString(ep, CF_value, str);
 
-         if (clen->enforce_user >= 0 && 
-               clen->enforce_user < sizeof(enforce_user))
-            str = enforce_user[clen->enforce_user];
-         ep = lGetElemStr(confl, CF_name, "enforce_user");
-         lSetString(ep, CF_value, str);
+      if (clen->enforce_user >= 0 && 
+            clen->enforce_user < sizeof(enforce_user))
+         str = enforce_user[clen->enforce_user];
+      ep = lGetElemStr(confl, CF_name, "enforce_user");
+      lSetString(ep, CF_value, str);
 
-         /*
-         ** (x)projects
-         */
-         strcpy(buf, "none");
-         first = True;
-         for_each(uep, clen->cluster_projects) {
-            if (first) {
-               first = False;
-               strcpy(buf, lGetString(uep, UP_name));
-            }
-            else {
-               strcat(buf, " "); 
-               strcat(buf, lGetString(uep, UP_name));
-            }
+      /*
+      ** (x)projects
+      */
+      strcpy(buf, "none");
+      first = True;
+      for_each(uep, clen->cluster_projects) {
+         if (first) {
+            first = False;
+            strcpy(buf, lGetString(uep, UP_name));
          }
-         ep = lGetElemStr(confl, CF_name, "projects");
-         lSetString(ep, CF_value, buf);
-
-         strcpy(buf, "none");
-         first = True;
-         for_each(uep, clen->cluster_xprojects) {
-            if (first) {
-               first = False;
-               strcpy(buf, lGetString(uep, UP_name));
-            }
-            else {
-               strcat(buf, " "); 
-               strcat(buf, lGetString(uep, UP_name));
-            }
+         else {
+            strcat(buf, " "); 
+            strcat(buf, lGetString(uep, UP_name));
          }
-         ep = lGetElemStr(confl, CF_name, "xprojects");
-         lSetString(ep, CF_value, buf);
-
-         ep = lGetElemStr(confl, CF_name, "auto_user_fshare");
-         sprintf(buf, "%d", clen->auto_user_fshare);
-         lSetString(ep, CF_value, buf);
-
-         ep = lGetElemStr(confl, CF_name, "auto_user_oticket");
-         sprintf(buf, "%d", clen->auto_user_oticket);
-         lSetString(ep, CF_value, buf);
-         
-         ep = lGetElemStr(confl, CF_name, "auto_user_delete_time");
-         if (check_white(clen->auto_user_delete_time)) {
-            strcpy(errstr, "No whitespace allowed in value for auto_user_delete_time");
-            goto error;
-         }
-         lSetString(ep, CF_value, clen->auto_user_delete_time);
-
-         ep = lGetElemStr(confl, CF_name, "auto_user_default_project");
-         if (clen->auto_user_default_project && clen->auto_user_default_project[0] != '\0') {
-            lSetString(ep, CF_value, clen->auto_user_default_project);
-         }
-         else
-            lSetString(ep, CF_value, "none");
-         
       }
+      ep = lGetElemStr(confl, CF_name, "projects");
+      lSetString(ep, CF_value, buf);
+
+      strcpy(buf, "none");
+      first = True;
+      for_each(uep, clen->cluster_xprojects) {
+         if (first) {
+            first = False;
+            strcpy(buf, lGetString(uep, UP_name));
+         }
+         else {
+            strcat(buf, " "); 
+            strcat(buf, lGetString(uep, UP_name));
+         }
+      }
+      ep = lGetElemStr(confl, CF_name, "xprojects");
+      lSetString(ep, CF_value, buf);
+
+      ep = lGetElemStr(confl, CF_name, "auto_user_fshare");
+      sprintf(buf, "%d", clen->auto_user_fshare);
+      lSetString(ep, CF_value, buf);
+
+      ep = lGetElemStr(confl, CF_name, "auto_user_oticket");
+      sprintf(buf, "%d", clen->auto_user_oticket);
+      lSetString(ep, CF_value, buf);
+      
+      ep = lGetElemStr(confl, CF_name, "auto_user_delete_time");
+      if (check_white(clen->auto_user_delete_time)) {
+         strcpy(errstr, "No whitespace allowed in value for auto_user_delete_time");
+         goto error;
+      }
+      lSetString(ep, CF_value, clen->auto_user_delete_time);
+
+      ep = lGetElemStr(confl, CF_name, "auto_user_default_project");
+      if (clen->auto_user_default_project && clen->auto_user_default_project[0] != '\0') {
+         lSetString(ep, CF_value, clen->auto_user_default_project);
+      }
+      else
+         lSetString(ep, CF_value, "none");
+      
 
       /*
       **  additional config parameters
@@ -2067,52 +2043,50 @@ tCClEntry *clen
       clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
-         str = (StringConst)lGetString(ep, CF_value);
-      if (str && !strcasecmp(str, "true"))
-         clen->enforce_project = 0;
-      else
-         clen->enforce_project = 1;
+   if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
+      str = (StringConst)lGetString(ep, CF_value);
+   if (str && !strcasecmp(str, "true"))
+      clen->enforce_project = 0;
+   else
+      clen->enforce_project = 1;
 
-      if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
-         str = (StringConst)lGetString(ep, CF_value);
-      if (str && !strcasecmp(str, "true"))
-         clen->enforce_user = 0;
-      else if (str && !strcasecmp(str, "auto"))
-         clen->enforce_user = 2;
-      else
-         clen->enforce_user = 1;
+   if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
+      str = (StringConst)lGetString(ep, CF_value);
+   if (str && !strcasecmp(str, "true"))
+      clen->enforce_user = 0;
+   else if (str && !strcasecmp(str, "auto"))
+      clen->enforce_user = 2;
+   else
+      clen->enforce_user = 1;
 
-      if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
-         clen->cluster_projects = lFreeList(clen->cluster_projects);
-         lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
-                              UP_Type, UP_name, NULL);
-      }
-
-      if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
-         clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
-         lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
-                              UP_Type, UP_name, NULL);
-      }
-
-      if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
-         auto_user_oticket = (StringConst)lGetString(ep, CF_value);
-         clen->auto_user_oticket = auto_user_oticket ? atoi(auto_user_oticket) : 0;
-      }
-
-      if ((ep = lGetElemStr(confl, CF_name, "auto_user_fshare"))) {
-         auto_user_fshare = (StringConst)lGetString(ep, CF_value);
-         clen->auto_user_fshare = auto_user_fshare ? atoi(auto_user_fshare) : 0;
-      }
-
-      if ((ep = lGetElemStr(confl, CF_name, "auto_user_default_project")))
-         clen->auto_user_default_project = XtNewString(lGetString(ep, CF_value));
-
-      if ((ep = lGetElemStr(confl, CF_name, "auto_user_delete_time")))
-         clen->auto_user_delete_time = XtNewString(lGetString(ep, CF_value));
-
+   if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
+      clen->cluster_projects = lFreeList(clen->cluster_projects);
+      lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
+                           UP_Type, UP_name, NULL);
    }
+
+   if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
+      clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+      lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
+                           UP_Type, UP_name, NULL);
+   }
+
+   if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
+      auto_user_oticket = (StringConst)lGetString(ep, CF_value);
+      clen->auto_user_oticket = auto_user_oticket ? atoi(auto_user_oticket) : 0;
+   }
+
+   if ((ep = lGetElemStr(confl, CF_name, "auto_user_fshare"))) {
+      auto_user_fshare = (StringConst)lGetString(ep, CF_value);
+      clen->auto_user_fshare = auto_user_fshare ? atoi(auto_user_fshare) : 0;
+   }
+
+   if ((ep = lGetElemStr(confl, CF_name, "auto_user_default_project")))
+      clen->auto_user_default_project = XtNewString(lGetString(ep, CF_value));
+
+   if ((ep = lGetElemStr(confl, CF_name, "auto_user_delete_time")))
+      clen->auto_user_delete_time = XtNewString(lGetString(ep, CF_value));
+
 
    if ((ep = lGetElemStr(confl, CF_name, "qmaster_params")))
       clen->qmaster_params = XtNewString(lGetString(ep, CF_value));

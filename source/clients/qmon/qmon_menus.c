@@ -312,16 +312,6 @@ DTRACE;
    }
 
    /*
-   ** unmanage SGE specific stuff if necessary
-   */
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      XtUnmanageChild(task_menu_items[XtNumber(task_menu_items)-4].w);
-      XtUnmanageChild(XmtNameToWidget(MainRowCol, "*TICKET_OVERVIEW"));
-      XtUnmanageChild(task_menu_items[XtNumber(task_menu_items)-3].w);
-      XtUnmanageChild(XmtNameToWidget(MainRowCol, "*PROJECT_CONFIG"));
-   }
-
-   /*
    ** manage menubar and task buttons
    */
    XtManageChild(menubar);

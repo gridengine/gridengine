@@ -209,15 +209,6 @@ lList **answerp
 
    sge_stopwatch_start(0);
 
-   /*
-   ** mask the sgeee lists in SGE mode
-   */
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
-      selector &= ~PROJECT_T;
-      selector &= ~SHARETREE_T;
-      selector &= ~USER_T;
-   }   
-
    for (i=0; i<XtNumber(QmonMirrorList); i++) {
       if (selector & (1<<i))
          count++;

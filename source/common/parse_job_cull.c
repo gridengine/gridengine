@@ -268,11 +268,9 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
-         lSetUlong(*pjob, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
-      }
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
+      lSetUlong(*pjob, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
+      lRemoveElem(cmdline, ep);
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-c"))) {
@@ -461,18 +459,14 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
-         lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
-      }
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
+      lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
+      lRemoveElem(cmdline, ep);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
-         lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
-         lRemoveElem(cmdline, ep);
-      }
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
+      lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
+      lRemoveElem(cmdline, ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-pe"))) {

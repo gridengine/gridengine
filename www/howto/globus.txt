@@ -1,0 +1,558 @@
+                   Globus and Sun Grid Engine
+
+                        11 Jan. 2002
+
+               Yoshio Tanaka (yoshio.tanaka@aist.go.jp)
+                  National Inst. of AIST, Japan
+
+# This howto describes the integration with SGE and Globus version 1.
+
+- Overview
+Sun Grid Engine (SGE) can be used as a globus jobmanager.  The
+jobmanager type for SGE is `grd'.  The globus toolkit includes job
+script files for SGE (globus-script-grd-{submit,poll,rm,queue*).
+
+- Installation, deployment and run
+In order to enable SGE jobmanager, following steps are required:
+
+0. When installing the globus toolkit (when running globus-build
+   command), you need to set your executable search path and other
+   environmental conditions properly.  This can be done by executing
+   the command
+   % source ${SGE_ROOT}/default/common/settings.csh
+     or
+   # . ${SGE_ROOT}/default/common/settings.sh
+
+1. For the globus build, no additional options are required for
+   enabling SGE in the globus environment.
+
+2. Before deploying the globus, you should edit the
+   ${GLOBUS_INSTALL_PATH}/etc/globus-services.conf.  See the Globus
+   Toolkit System Administration Guide, page 30.  For example, for SGE
+   jobmanager on the host xxx.aist.go.jp, you would add the line:
+
+xxx.aist.go.jp jobmanager-grd stderr_log,local_cred - ${libexecdir}/globus-jobmanager globus-jobmanager -conf ${sysconfdir}/globus-jobmanager.conf -type grd -rdn jobmanager-grd -machine-type cluster
+
+3. Deploy the globus by running globus-local-deploy command and start
+   the gatekeeper.  These are regular procedures for running globus
+   gatekeeper.
+
+4. In order to use SGE jobmanager, you have to specify the jobmanager
+   as a gatekeeper contact.  Following is a sample command line
+   sequence for contacting to SGE jobmanager:
+
+% globus-job-submit "xxx.aist.go.jp:/jobmanager-grd" a.out
+
+- Enhancement of the job script for enabling jobarray submission
+The original version of the job script (globus-script-grd-submit.in)
+does not support the jobarray submission.  In order to enable jobarray 
+submission, we've slightly modified the job script for SGE jobmanager
+in the globus package at:
+
+${GLOBUS_SRC_DIR}/ResourceManagement/gram/libraries/job_manager/globus-script-grd-submit.in
+
+Here are a brief comment for my modification:
+
+----------------------------------------------------------------------
+Globus supports the following four jobtypes.
+
+jobtype 0 = mpi
+jobtype 1 = single
+jobtype 2 = multiple
+jobtype 3 = condor
+
+These jobtypes are assinged to grami_job_type variable by GRAM.
+In order to enable jobarray submissions, I took the following
+approach:
+
+If jobtype ($grami_job_type) is single and count ($grami_count) is 1,
+grd_jobtype is set to "single".
+If jobtype ($grami_job_type) is single and count ($grami_count) is not
+1, grd_jobtype is set to "jobarray".
+
+Therefore, there could be the following five jobtypes:
+
+# 5 jobtypes exist               GRD result
+# -----------------              ------------------
+# jobtype 0 = mpi         -----> run mpirun
+# jobtype 1 = single      -----> submit one copy of grd script (if grami_count = 1)
+# jobtype 1 = jobarray    -----> submit jobarray (if grami_count != 1)
+# jobtype 2 = multiple    -----> submit count copy(s) of grd script
+# jobtype 3 = condor      -----> ERROR
+
+In order to submit jobarray through SGE gram, user have to specify
+the resource like this:
+
+% globusrun -r "host.xxx.yyy:/jobmanager-grd" \
+'&(jobtype=single)(count=10)(executable=a.out)'
+
+When the SGE gram is invoked on host.xxx.yyy, the script file for SGE
+qsub command includes the following line:
+
+#$ -t 10
+
+When the user wish to specify the base index and stride for jobarray
+submission, ex.
+
+qsub -t 1001:1019:2
+
+the user can specify them as environment variables like this:
+
+% globusrun -r "host.xxx.yyy:/jobmanager-grd" \
+'&(jobtype=single)(count=10)\
+  (environments=(GRD_JOBARRAY_BASE 1001)(GRD_JOBARRAY_STRIDE 2))\
+  (executable=a.out)'
+
+In this case, the script file includes the following line:
+
+#$ -t 1001:1019:2
+
+1019 is automatically calculated by jobarray_base, count, and
+jobarray_stride.
+
+GRD_JOBARRAY_STRIDE is an optional and it's default value is 1.
+----------------------------------------------------------------------
+
+Attached is a modified globus-script-grd-submit.in file.  In order to
+enable jobarray submission, replace this file with the original
+version and re-install/re-deploy the globus toolkit.
+
+----------------------------------------------------------------------
+#! @SH@ -f
+#
+# This script builds a shell job script which is supplied as input
+# to the GRD qsub command. The script is built based on information
+# obtained from a file passed as the script's argument. This file
+# contains a list of environment variables which are set by way
+# of "sourcing" the file from this script. The evironment variables
+# set as a result of this action are then used to characterize the
+# user's job request. Once the job script has been submitted the
+# GRD job id is appended to the file passed as an argument to this
+# script to be used by other scripts at a later time.
+
+# The temporary job script is created for the submission and then removed 
+# at the end of this script. 
+
+# Inserted by configure.
+@globus_script_initializer@
+
+. ${libexecdir}/globus-gram-constants
+	
+qsub=${GLOBUS_SH_QSUB-qsub}
+qselect=${GLOBUS_SH_QSELECT-qselect}
+awk=${GLOBUS_SH_AWK-awk}
+sed=${GLOBUS_SH_SED-sed}
+mpirun=${GLOBUS_SH_MPIRUN-mpirun}
+rm=${GLOBUS_SH_RM-rm}
+expr=${GLOBUS_SH_EXPR-expr}
+test=${GLOBUS_SH_TEST-test}
+SH=@SH@
+
+#        File name to be used for temporary job script
+GRD_JOB_SCRIPT="${local_tmpdir}/grd_job_script."$$
+
+arg_file=$1
+
+#        Check for the argument file. If it does not exist
+#        then return with an error immediately
+if [ ! -f $arg_file ] ; then
+   echo GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_BAD_SCRIPT_ARG_FILE
+   exit 1
+fi
+ 
+#        Source the argument file to set environment variables
+#        defining all the job arguments
+. $arg_file
+
+#        If a logfile name has been defined then activate debug mode
+
+if [ $grami_logfile = "/dev/null" ] ; then
+    DEBUG_ECHO=:
+else
+    DEBUG_ECHO=echo
+fi
+
+$DEBUG_ECHO "JM_SCRIPT: in grd_submit">> $grami_logfile
+
+$DEBUG_ECHO ""                                            >> $grami_logfile
+$DEBUG_ECHO ============================================  >> $grami_logfile
+$DEBUG_ECHO "JM_SCRIPT: ====argument file contents===="   >> $grami_logfile
+if [ "$DEBUG_ECHO" = "echo" ] ; then
+   cat $arg_file                                          >> $grami_logfile
+fi
+$DEBUG_ECHO "JM_SCRIPT: ====argument file contents===="   >> $grami_logfile
+$DEBUG_ECHO ""                                            >> $grami_logfile
+
+#assumption is that the qsub path will take the form
+# /<dir>/<dir>.../<grd_root>/bin/<grd_arch>/qsub
+# so parse the command from the end to get the GRD ROOT dir.
+#
+# from the qsub path, remove the last slash and all that follows it.
+# Leaving the directory.  Not all systems have dirname.
+grd_dir=`echo $qsub | $sed 's|/[^/][^/]*$||'`
+
+# remove everything up to the last slash.  Leaving the grd arch value.
+grd_arch=`echo $grd_dir | $sed 's|.*/||'`
+
+#remove the next 2 subdir (e.g. <bin>/<arch>) leaving the grd_root
+grd_dir=`echo $grd_dir | $sed 's|/[^/][^/]*$||'`
+GRD_ROOT=`echo $grd_dir | $sed 's|/[^/][^/]*$||'`
+. $GRD_ROOT/default/common/settings.sh
+
+#        The following several lines of code can be used to perform 2
+#        additional error checks prior to job submission. The first check is
+#        for the existance of the directory which the user requested
+#        be the working directory. If it does not exist the script
+#        returns an error and the job is not submitted. The second check
+#        is for existance of the file requested by the user to be used for
+#        stdin. If the file does not exist the scripts returns an error and
+#        the job is not submitted.
+
+#        These checks are only valid if performed on the file system to be used
+#        by the host on which the job will run. But, this file system may not
+#        be shared with host from which the job is submitted. Therefore, the
+#        check does not make sense. If however the host from which the job 
+#        will be submitted (i.e. the host running the globus gatekeeper)
+#        shares file systems with all the hosts which may potentially
+#        run the job these checks can be used. In order to have the job
+#        manager perform these checks the following 2 sections of code
+#        should *not* be commented out.
+
+
+#        Check for existance of directory
+
+#$DEBUG_ECHO "JM_SCRIPT: testing for existance of directory $grami_directory" >> $grami_logfile
+#if [ -d $grami_directory ]; then
+#   $DEBUG_ECHO "JM_SCRIPT: directory $grami_directory found" >> $grami_logfile
+#    cd $grami_directory
+#else
+#   $DEBUG_ECHO "JM_SCRIPT: directory $grami_directory DOES NOT exist; exiting with exit code 1" >> $grami_logfile
+#   echo GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_BAD_DIRECTORY
+#   exit 1
+#fi
+#
+#         Check for existance of stdin file if not /dev/null
+#
+#if [ $grami_stdin != "/dev/null" ]; then
+#    $DEBUG_ECHO "JM_SCRIPT: testing for existance of stdin file $grami_stdin" >> $grami_logfile
+#    if [ -r $grami_stdin ]; then
+#        $DEBUG_ECHO "JM_SCRIPT: stdin file $grami_stdin found and is readable" >> $grami_logfile
+#    else
+#        $DEBUG_ECHO "JM_SCRIPT: stdin file $grami_stdin DOES NOT exist or is not readable; exiting with exit code 1" >> $grami_logfile
+#        echo GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_STDIN_NOT_FOUND
+#        exit 1
+#    fi
+#fi
+
+
+#	Check for non supported parameters here. That is, if any of the RSL
+#	parameters which GRD can not support have been requested return an error.
+#	Currently all RSL attributes are supported by GRD
+
+# if (unsupported parameters found)
+#     $DEBUG_ECHO "JM_SCRIPT: unsupported parameters found. Exiting with error." >> $grami_logfile
+# else
+#     $DEBUG_ECHO "JM_SCRIPT: No unsupported parameters found" \
+#                 >> $grami_logfile
+# fi
+#
+
+$DEBUG_ECHO "JM_SCRIPT: testing for unsupported parameters" >> $grami_logfile
+$DEBUG_ECHO "JM_SCRIPT: No unsupported parameters found" >> $grami_logfile
+
+# Verify existance of queue if queue parameter is not NULL
+
+$DEBUG_ECHO "JM_SCRIPT: testing for queue attribute specification" \
+            >> $grami_logfile
+
+if [ ! -z "${grami_queue}" ]; then
+    $DEBUG_ECHO "JM_SCRIPT: testing for existance of GRD queue $grami_queue" \
+                >> $grami_logfile
+    status=`$qselect -q $grami_queue`
+    if ($test "$?" -eq "0") then
+        $DEBUG_ECHO "JM_SCRIPT: GRD queue $grami_queue found" >> $grami_logfile
+    else
+        $DEBUG_ECHO "GRD queue [$grami_queue] DOES NOT exist" >> $grami_logfile
+        $DEBUG_ECHO "exiting with exit code 1" >> $grami_logfile
+        echo GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_INVALID_QUEUE
+        exit 1
+    fi
+else
+    $DEBUG_ECHO "JM_SCRIPT: no queue attribute specified" >> $grami_logfile
+fi
+
+#
+# Modified by Yoshio Tanaka for jobarray submission.
+# if ((jobtype == single) && (count == 1)) then (jobtype = single)
+# if ((jobtype == single) && (count != 1)) then (jobtype = jobarray)
+#
+# 5 jobtypes exist               GRD result
+# -----------------              ------------------
+# jobtype 0 = mpi         -----> run mpirun
+# jobtype 1 = single      -----> submit one copy of grd script (if grami_count = 1)
+# jobtype 1 = jobarray    -----> submit jobarray (if grami_count != 1)
+# jobtype 2 = multiple    -----> submit count copy(s) of grd script
+# jobtype 3 = condor      -----> ERROR
+$DEBUG_ECHO "JM_SCRIPT: testing jobtype" >> $grami_logfile
+if [ $grami_job_type = "0" ] ; then
+    grd_jobtype="mpi"
+elif [ $grami_job_type = "1" ] ; then
+  if [ $grami_count = "1" ] ; then
+    grd_jobtype="single"
+  else
+    grd_jobtype="jobarray"
+  fi
+elif [ $grami_job_type = "2" ] ; then
+    grd_jobtype="multiple"
+elif [ $grami_job_type = "3" ] ; then
+   $DEBUG_ECHO "JM_SCRIPT: ERROR: jobtype parameter not supported"
+               >> $grami_logfile
+   echo "GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_JOBTYPE_NOT_SUPPORTED"
+   exit 1
+else
+   $DEBUG_ECHO "JM_SCRIPT: invalid jobtype parameter" >> $grami_logfile
+   echo GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_INVALID_JOBTYPE
+   exit 1
+fi
+# end of modification
+
+#         Determining cpu time limit
+
+$DEBUG_ECHO "JM_SCRIPT: testing for cpu time limit" >> $grami_logfile
+if [ $grami_max_time -eq 0 ] ; then
+    cpu_time=0
+    $DEBUG_ECHO "JM_SCRIPT: No cpu time specified, using [unlimitd] cpu time" \
+                >> $grami_logfile
+else
+    cpu_time="$grami_max_time"
+    $DEBUG_ECHO "JM_SCRIPT: using $cpu_time minutes for max cpu time" \
+                >> $grami_logfile
+fi
+
+#       Determining memory limit
+#	min memory is *NOT* supported
+#       Globus default RSL attribute memory units are in Mbytes
+#       GRD default memory attribute units are in Kbytes...
+#       so a conversion from Mbytes to Kbytes must be made
+
+Kb=1024
+
+$DEBUG_ECHO "JM_SCRIPT: testing for maximum memory limit" >> $grami_logfile
+if [ $grami_max_memory -eq 0 ] ; then
+    max_memory=0
+    $DEBUG_ECHO "JM_SCRIPT: no maximum memory requested specified" \
+                >> $grami_logfile
+else
+    max_memory=`$expr "$grami_max_memory" \* "$Kb"`
+    $DEBUG_ECHO "JM_SCRIPT: requested $grami_max_memory Mb for max memory" \
+                >> $grami_logfile
+    $DEBUG_ECHO "JM_SCRIPT: converting Mb to GRD default unit of Kb" \
+                >> $grami_logfile
+    $DEBUG_ECHO "JM_SCRIPT: using $max_memory Kb for maximum memory" \
+                >> $grami_logfile
+fi
+
+$DEBUG_ECHO "JM_SCRIPT: testing for minimum memory limit" >> $grami_logfile
+if [ $grami_min_memory -eq 0 ] ; then
+    $DEBUG_ECHO "JM_SCRIPT: no minimum memory requested specified" \
+                >> $grami_logfile
+else
+    $DEBUG_ECHO "JM_SCRIPT: requested $grami_min_memory Mb for min memory" \
+                >> $grami_logfile
+    $DEBUG_ECHO "JM_SCRIPT: minimum memory request is not supported" \
+                >> $grami_logfile
+    $DEBUG_ECHO "JM_SCRIPT: minimum memory request is being ignored" \
+                >> $grami_logfile
+fi
+
+#         Start building job script
+$DEBUG_ECHO "JM_SCRIPT: starting to build GRD job script" >> $grami_logfile
+echo "#!${SH}" >> $GRD_JOB_SCRIPT
+
+echo "# GRD batch job script built by Globus job manager\n\n" >> $GRD_JOB_SCRIPT
+
+echo "#$ -S ${SH}" >> $GRD_JOB_SCRIPT
+
+if [ ! -z "${grami_queue}" ] ; then
+    echo "#$ -q $grami_queue" >> $GRD_JOB_SCRIPT
+fi
+
+if [ ! -z "${grami_project}" ] ; then
+    echo "#$ -P $grami_project" >> $GRD_JOB_SCRIPT
+fi
+
+if [ $cpu_time -ne 0 ] ; then
+    echo "#$ -l h_cpu=$cpu_time" >> $GRD_JOB_SCRIPT
+fi
+
+if [ $max_memory -ne 0 ] ; then
+    echo "#$ -l h_data=$max_memory" >> $GRD_JOB_SCRIPT
+fi
+
+# NOTE: stdin supported below by redirection
+# echo "#$ -i $grami_stdin" >> $GRD_JOB_SCRIPT
+
+echo "#$ -o $grami_stdout" >> $GRD_JOB_SCRIPT
+echo "#$ -e $grami_stderr" >> $GRD_JOB_SCRIPT
+
+
+# Below is a while loop to reformat the environment variable 
+# string to the format needed for the GRD job script. The environment
+# variables for the GRD job will be set during the execution
+# of the job script. The loop obtains environment variable information
+# from the variable $grami_env. The information is then written
+# to the GRD job script one line per variable in the form:
+
+# env_variable=env_value; export env_variable
+
+# where...
+
+# env_variable is the name of the environment variable
+# env_value is the value of the environment variable
+
+$DEBUG_ECHO "JM_SCRIPT: checking environment" >> $grami_logfile
+#
+#loop through all the environment variables.  Variables and values are seperate
+#arguments.  While assembling var/value pairs add the specific syntax
+#required for this scheduling system.
+#
+new_grami_env=""
+ 
+#
+# Modified by Yoshio Tanaka for jobarray submission
+# environment variables GRD_JOBARRAY_BASE and GRD_JOBARRAY_STRIDE
+# are retrieved into local variables
+# 
+grd_pe= 
+grd_jobarray_base=
+grd_jobarray_stride=1
+if [ ! -z "${grami_env}" ] ; then
+   eval set -- ${grami_env}
+   x=0
+   while [ "$#" -ne 0 ]; do
+      if [ $x = 0 ] ; then
+         save_variable=$1
+         x=1
+      else
+         x=0
+         echo "${save_variable}=$1; export ${save_variable}" >> $GRD_JOB_SCRIPT
+	 case ${save_variable} in
+	 	GRD_PE) grd_pe=$1;;
+		GRD_JOBARRAY_BASE) grd_jobarray_base=$1;;
+		GRD_JOBARRAY_STRIDE) grd_jobarray_stride=$1;;
+		*) ;;
+	 esac
+      fi
+ 
+      shift
+   done
+fi
+# end of modification
+
+$DEBUG_ECHO "JM_SCRIPT: done checking environment" >> $grami_logfile
+
+#
+# Added by Yoshio Tanaka for jobarray submission
+# count represents the number of elements of jobarray
+# environment variables GRD_JOBARRAY_BASE and GRD_JOBARRAY_STRIDE
+# 
+if [ $grd_jobtype = "jobarray" ] ; then
+  if [ -z "$grd_jobarray_base" ] ; then
+    echo "#$ -t $grami_count" >> $GRD_JOB_SCRIPT
+  else
+    grd_jobarray_margin=`expr $grami_count - 1`
+    grd_jobarray_last=`expr "$grd_jobarray_base" + "$grd_jobarray_margin" \* "$grd_jobarray_stride"`
+    echo "#$ -t $grd_jobarray_base:$grd_jobarray_last:$grd_jobarray_stride" >> $GRD_JOB_SCRIPT
+  fi
+fi
+# end of addition
+
+new_grami_args=""
+if [ ! -z "${grami_args}" ] ; then
+   eval set -- ${grami_args}
+   new_grami_args="$*"
+fi
+
+$DEBUG_ECHO "JM_SCRIPT: done setting new_grami_args" >> $grami_logfile
+
+# handle CPU count here because we need an env var
+
+if [ -n "$grd_pe" ] ; then
+   echo "#$ -pe $grd_pe $grami_count" >> $GRD_JOB_SCRIPT
+fi
+
+#else
+#   $DEBUG_ECHO "JM_SCRIPT: ERROR: User must set GRD_PE env var to use count"
+#               >> $grami_logfile
+#   echo "GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_JOBTYPE_NOT_SUPPORTED"
+#   exit 1
+#fi
+
+# Set up GRD environment
+
+$DEBUG_ECHO "JM_SCRIPT: before settings.sh" >> $grami_logfile
+$DEBUG_ECHO "JM_SCRIPT: PATH=$PATH" >> $grami_logfile
+
+echo ". $GRD_ROOT/default/common/settings.sh" >> $GRD_JOB_SCRIPT
+
+$DEBUG_ECHO "JM_SCRIPT: after settings.sh" >> $grami_logfile
+$DEBUG_ECHO "JM_SCRIPT: PATH=$PATH" >> $grami_logfile
+
+# Determine directory to be used as working directory 
+
+echo "# Changing to directory as requested by user" >> $GRD_JOB_SCRIPT
+echo "cd $grami_directory" >> $GRD_JOB_SCRIPT
+ 
+# Determining job request type
+
+echo "# Executing job as requested by user" >> $GRD_JOB_SCRIPT
+if [ $grd_jobtype = "mpi" ] ; then
+    echo "${mpirun} -np $grami_count $grami_program $new_grami_args" \
+         >> $GRD_JOB_SCRIPT
+elif [ $grd_jobtype = "multiple" ] ; then
+    counter=0
+    while ($test "$counter" -lt "$grami_count")
+    do
+       $DEBUG_ECHO "JM_SCRIPT: in loop counter is $counter " >> $grami_logfile
+       echo "$grami_program $new_grami_args < ${grami_stdin} &" \
+            >> $GRD_JOB_SCRIPT
+       counter=`$expr $counter + 1`
+    done
+    echo "wait" >> $GRD_JOB_SCRIPT;
+else
+    echo "$grami_program $new_grami_args < ${grami_stdin}" >> $GRD_JOB_SCRIPT
+fi
+
+$DEBUG_ECHO "JM_SCRIPT: GRD job script successfully built" >> $grami_logfile
+$DEBUG_ECHO "JM_SCRIPT: submitting GRD job script" >> $grami_logfile
+$DEBUG_ECHO "JM_SCRIPT: GRD_JOB_SCRIPT is $GRD_JOB_SCRIPT" >> $grami_logfile
+
+# Execute qsub command
+
+$DEBUG_ECHO "JM_SCRIPT: ${qsub} $GRD_JOB_SCRIPT" >> $grami_logfile
+status=`${qsub} $GRD_JOB_SCRIPT`
+cc=$?
+
+$DEBUG_ECHO "JM_SCRIPT: cc=$cc" >> $grami_logfile
+
+if ($test "$cc" -eq "0") then
+   job_id=`echo $status | ${awk} '{print $3}'`
+   echo "grami_job_id=${job_id}" >> $arg_file
+   $DEBUG_ECHO "JM_SCRIPT: job $job_id submitted successfully!" \
+               >> $grami_logfile
+   $DEBUG_ECHO "JM_SCRIPT: returning job state: $GLOBUS_GRAM_CLIENT_JOB_STATE_PENDING" >> $grami_logfile
+   echo "GRAM_SCRIPT_JOB_ID:$job_id"
+   echo "GRAM_SCRIPT_SUCCESS:$GLOBUS_GRAM_CLIENT_JOB_STATE_PENDING"
+else
+   $DEBUG_ECHO "JM_SCRIPT: job *NOT* submitted successfully!" >> $grami_logfile
+   echo "GRAM_SCRIPT_ERROR:$GLOBUS_GRAM_CLIENT_ERROR_JOB_EXECUTION_FAILED"
+   $DEBUG_ECHO "JM_SCRIPT: status=$status" >> $grami_logfile
+fi
+
+# Remove temporary job script file
+${rm} $GRD_JOB_SCRIPT
+
+$DEBUG_ECHO "JM_SCRIPT: exiting gram_script_grd_submit\n\n" >> $grami_logfile
+
+exit
+----------------------------------------------------------------------

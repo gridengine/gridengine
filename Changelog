@@ -1,3 +1,12 @@
+JG-2003-07-22-0: Bugfix     "*_RESERVED_USAGE gives wrong values for PE jobs" 
+                            was fixed for 5.3p4, but the value for vmem in case 
+                            of loosely integrated parallel jobs with the pe 
+                            parameter job_is_first_task = FALSE still was 
+                            incorrect.
+                 Issue:     580
+                 Review:    EB
+                 Changed:   sge_execd
+
 MD-2003-07-21-0: Bugfix	    fixed datatype IA64 Port
 
 SG-2003-07-17-1: Bugfix     fixed the build (removed printf statements)

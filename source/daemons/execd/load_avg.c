@@ -792,10 +792,20 @@ calculate_reserved_usage(const lListElem *ja_task, const lListElem *pe_ja_task,
        * loop over granted_destin_identifier_list and sum up limits * nslots
        * of each queue.
        */
+      lListElem *master_queue = lFirst(lGetList(ja_task, 
+                                       JAT_granted_destin_identifier_list));
+
       for_each (gdil_ep, lGetList(ja_task, 
                                   JAT_granted_destin_identifier_list)) {
          nslots = lGetUlong(gdil_ep, JG_slots);
          total_slots += nslots;
+
+         /* for loose integration with job_is_first_task:
+          * account vmem for one additional slot in the master queue
+          */
+         if (gdil_ep == master_queue && pe != NULL && lGetUlong(pe, PE_job_is_first_task) == 0) {
+            nslots++;
+         }
 
          vmem += calculate_reserved_vmem(lFirst(lGetList(gdil_ep, JG_queue)), 
                                          nslots);

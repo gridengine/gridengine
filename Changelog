@@ -1,7 +1,7 @@
 SD-2002-01-23-3: Bugfix:   Fixed setting of shared override tickets in
                            SGEEE_CLASSIC_SCHEDULING mode.
 
-EB-2002-01-21-0: Enhancem.: max_u_jobs parameter to limit the maximum number
+EB-2002-01-23-1: Enhancem.: max_u_jobs parameter to limit the maximum number
                             of jobs for a user.
 
 EB-2002-01-23-0: Bugfix:    qsub -e/o <path longer than MAX_STRING_SIZE>
@@ -46,7 +46,6 @@ JG-2002-01-22-0: Bugfix:    Tight integration using the mpi scripts:
                             second level qrsh call and qrsh tried to allocate
                             this TASK_ID a second time.
 
->>>>>>> 1.266
 CR-2002-01-21-1: Testsuite: - setup checking length of product_root_directory
                             - setting default load_thresholds to "np_load_avg=11.00"
                             - Bugfix in submit hosts test 
@@ -136,7 +135,6 @@ SD-2002-01-15-1: Enhancem.: NEC SX-6 compilation changes:
 EB-2002-01-15-0: Enhancem.: 'qdel all' and 'qdel -uall' requests will
                             be split up into multiple requests
 
->>>>>>> 1.259
 JG-2002-01-15-1: Bugfix:   qconf -mattr only handled string attributes, changing
                            attributes of other datatypes made qconf dump core.
 
@@ -191,9 +189,6 @@ SD-2002-01-10-1: Enhancem: Added SGEEE policy hierarchy support (not yet activat
 
 EB-2002-01-10-0: Bugfix:   qrsh -notify <command>
 
-EB-2002-01-09-0: Bugfix:   qselect -pe 
-                 Bugtraq:  #4584673
-
 CR-2002-01-10-0: Testsuite:
                  Enhancem.: settings file parameter "user_environment"
                             Testsuite will read users environment value
@@ -208,6 +203,9 @@ JG-2002-01-10-1: Testsuite: Make the number of parallel rlogin sessions
 
 JG-2002-01-10-0: Enhancem.: Additional check of the host parameter to 
                             qconf -ke - only accepts non option parameter.
+
+EB-2002-01-09-0: Bugfix:   qselect -pe 
+                 Bugtraq:  #4584673
 
 SD-2002-01-09-1: Enhancem.: Added -clearusage info to qconf -help
 

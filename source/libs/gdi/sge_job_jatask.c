@@ -1833,9 +1833,9 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 *  RESULT
 *     const char* - pointer to a static buffer. It is valid until the next
 *                   call of the function.
-*
 *******************************************************************************/
-const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
+const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
+                              const char *pe_task_id)
 {
    static dstring id = DSTRING_INIT;
 

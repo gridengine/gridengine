@@ -975,12 +975,14 @@ int sub_command
 
                   njobs++; 
 
-                  /* if task is already in status deleted and was signaled
-                   * only recently, do nothing
+                  /* 
+                   * if task is already in status deleted and was signaled
+                   * only recently and deletion is not forced, do nothing
                    */
                   if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
                      (lGetUlong(tmp_task, JAT_state) & JDELETED &&
-                      lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt()
+                      lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
+                      !lGetUlong(idep, ID_force)
                      )
                     ) {
                      continue;

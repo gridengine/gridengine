@@ -453,7 +453,7 @@
 #define MSG_JOB_CLEARERRORJOB_SSU     _MESSAGE(33380, _(SFN"@"SFN" cleared error state of job "U32CFormat"\n"))
 #define MSG_JOB_NOERRORSTATETASK_UU   _MESSAGE(33381, _("Job-array task "U32CFormat"."U32CFormat" is not in error state\n"))
 #define MSG_JOB_NOERRORSTATEJOB_UU    _MESSAGE(33382, _("Job "U32CFormat" is not in error state\n"))
-#define MSG_QUEUE_NORESCHEDULEQPERMS_SS  _MESSAGE(33391, _(SFN" - you have no permission to reschedule jobs of queue "SFQ"\n"))
+#define MSG_QUEUE_NORESCHEDULEQPERMS_SS  _MESSAGE(33391, _(SFN" - you have no permission to reschedule jobs of queue instance "SFQ"\n"))
 #define MSG_QUEUE_NOCLEANQPERMS       _MESSAGE(33407, _("cleaning a queue requires manager privileges\n"))
 #define MSG_QUEUE_CLEANQ_SSS          _MESSAGE(33408, _(SFN"@"SFN" cleaned queue "SFQ"\n"))
 #define MSG_JOB_NOFORCESUSPENDTASK_SUU     _MESSAGE(33409, _(SFN" - can't force suspension job-array task "U32CFormat"."U32CFormat"\n"))

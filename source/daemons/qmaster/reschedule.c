@@ -61,6 +61,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
 #include "sge_cqueue.h"
+#include "sge_lock.h"
 #include "configuration_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
@@ -114,6 +115,8 @@ void reschedule_unknown_event(te_event_t anEvent)
 
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
+
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
  
    /*
     * is the automatic rescheduling disabled
@@ -183,11 +186,16 @@ void reschedule_unknown_event(te_event_t anEvent)
    lFreeList(answer_list);
    
    free((char*)hostname);
+   
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    DEXIT;
    return;
 
 Error:
    free((char*)hostname);
+   
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   DEXIT;
    return;
 }
  
@@ -214,11 +222,8 @@ Error:
 *******************************************************************************/
 int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer) 
 {
-   lListElem *hep = NULL;        /* EH_Type */
-   lListElem *qep = NULL;        /* QU_Type */
    lListElem *jep;               /* JB_Type */
-   const char *hostname = NULL;
-   int ret = 0;
+   int ret = 1;
  
    DENTER(TOP_LAYER, "reschedule_jobs");
  
@@ -227,26 +232,16 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
     * running on that host. if it is of type QU_Type than we will
     * only reschedule the jobs for that queue
     */
-   if (object_has_type(ep, EH_Type)) {
-      hep = ep;
-      qep = NULL;
-      hostname = lGetHost(ep, EH_name);
-   } else if (object_has_type(ep, QU_Type)) {
-      qep = ep;
-      hostname = lGetHost(qep, QU_qhostname);
-      hep = host_list_locate(Master_Exechost_List, hostname);
-   } else {
-      ret = 1;
-   }
- 
-   if (!ret) {
+   if (object_has_type(ep, EH_Type) ||
+       object_has_type(ep, QU_Type)) {
       /*
        * Find all jobs currently running on the host/queue
        * append the jobids/taskids into a sublist of the exechost object
        */
       for_each(jep, Master_Job_List) {
          reschedule_job(jep, NULL, ep, force, answer);
-      }                      
+      }      
+      ret = 0;
    }
  
    DEXIT;

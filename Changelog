@@ -1,8 +1,15 @@
+EB-2005-02-07-0: Enhancem.: merged changes for win32-x86 from 
+                            V60_win_alpha_BRANCH which will be part of the
+                            command.tar.gz
+                 Changed:   dist/util/arch_variables 
+                            dist/util/install_modules/inst_common.sh
+                 Review:    HP
+
 MD-2005-01-31-0: Bugfix:    distinst assumes certain files always exist
                  Issue:     1361
                  Review:    AS
 
-AS-2005-01-25-0  Bugfix:    set file permissions in destination directory"
+AS-2005-01-25-0: Bugfix:    set file permissions in destination directory"
                  Changed:   scripts/distinst
                  Review:    MD
 

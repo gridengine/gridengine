@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/04/19 10:52:06 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/05/28 10:36:20 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_wait 3 "$Date: 2004/04/19 10:52:06 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_wait 3 "$Date: 2004/05/28 10:36:20 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -220,9 +220,10 @@ extracted using
 .M drmaa_get_next_attr_value 3 . 
 Each string returned by
 .M drmaa_get_next_attr_value 3
-complies with the format <name>=<value>. The string 
-portions <name> and <value> specify name and amount of the resources consumed by 
-the job, respectively.
+will be of the format <name>=<value>, where <name> and <value> specify name and
+amount of resources consumed by the job, respectively.  See
+.M accounting 5
+for an explanation of the resource information.
 .PP
 .\"
 .\" 

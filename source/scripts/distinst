@@ -356,11 +356,11 @@ elif [ $cmdname = myinst ]; then
    setfileperm=false
 elif [ $cmdname = sgeinst ]; then 
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGE53beta2
+   VERSIONDIR=SGE53final
    SGE_PRODUCT_MODE=sge
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
-   VERSIONDIR=SGEEE53beta2
+   VERSIONDIR=SGEEE53final
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
 else

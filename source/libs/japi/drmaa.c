@@ -3140,13 +3140,29 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
-   /* BUGFIX: #658
-    * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
-    * Later in drmaa_job2sge_job if binary mode is disabled, I also have to
-    * remove this option. */
+   /* Bugfix: Issuezilla #658
+    * In order to work around Bug #476, I set DRMAA to not spawn an exec
+    * shell. */
    DPRINTF (("disabling execution shell\n"));
    ep_opt = sge_add_arg (opts, shell_OPT, lIntT, "-shell", "n");
 
+   /* Bugfix: Issuezilla #1151
+    * Not only should -w e be allowed, it should be set by default.  The main
+    * reason for this is to make the API friendlier.  Without -w e set by
+    * default, jobs which will never be scheduled can be submitted without
+    * a problem, but the API is not rich enough to allow the application to
+    * discover post-facto that the jobs will never run.  With -w e jobs that
+    * will never be scheduled cannot be submitted, a fact that the application
+    * will note immediately without further need of explanation.  The main
+    * argument against setting -w e by default is performance overhead.  In the
+    * end we decided for setting -w e by default because developer experience
+    * is very important, and if the performance overhead becomes too great, the
+    * option can always be turned off in the native specification or job
+    * category. */
+   DPRINTF (("disabling submission of unschedulable jobs\n"));
+   ep_opt = sge_add_arg (opts, w_OPT, lIntT, "-w", "e");
+   lSetInt (ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
+   
    DEXIT;
 }
 

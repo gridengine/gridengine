@@ -155,7 +155,7 @@
 #define MSG_GDI_KEYSTR_BRACES          _MESSAGE(33099, _("Braces"))
 #define MSG_GDI_KEYSTR_PARENTHESIS     _MESSAGE(33100, _("Parenthesis"))
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
-#define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33101, _("Pipe"))
+#define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
 
 /*
 ** ck_to_do_qmaster.c

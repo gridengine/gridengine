@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/07/19 09:31:08 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/07/21 16:36:56 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/07/19 09:31:08 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/07/21 16:36:56 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -131,10 +131,11 @@ options set in the script file, options set by the drmaa_job_category
 attribute, options set by the drmaa_native_specification attribute, and options
 set through other DRMAA attributes.
 .PP
-By default DRMAA sets three options for all jobs.  There are "-p 0", "-b yes",
-and "-shell no".  This means that by default, all jobs will have priority 0,
-all jobs will be treated as binary, i.e. no scripts args will be parsed, and
-all jobs will be executed without a wrapper shell.
+By default DRMAA sets four options for all jobs.  These are "-p 0", "-b yes",
+"-shell no", and "-w e".  This means that by default, all jobs will have
+priority 0, all jobs will be treated as binary, i.e. no scripts args will be
+parsed, all jobs will be executed without a wrapper shell, and jobs which are
+unschedulable will cause a submit error.
 .PP
 The
 .M sge_request 5

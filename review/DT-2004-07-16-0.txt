@@ -69,12 +69,12 @@ Successfull execution
 5.2 [X] no - comment: 
 
 5.3 If 5.2 = no: Testsuite issue created
-5.3 [ ] yes
-5.3 [X] no - comment: Will be created as soon as I can get the testsuite setup
+5.3 [X] yes
+5.3 [ ] no - comment:
 
 5.4 Testsuite run successfull
-5.4 [ ] yes
-5.4 [X] no - comment: See 5.3
+5.4 [X] yes
+5.4 [ ] no - comment:
 
 
 6 Comments

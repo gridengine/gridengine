@@ -516,29 +516,34 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
          lListElem *cmp_elem = lFirst(*this_list);
             
          while(centry_elem != cmp_elem){
-            bool duplicate_name=false;
-            const char *name;        
+            const char *name1 = NULL;
+            const char *name2 = NULL;
+            const char *shortcut1 = NULL;
+            const char *shortcut2 = NULL;
 
-            if (strcmp( (name = lGetString(centry_elem, CE_name)), lGetString(cmp_elem, CE_name)) == 0){
-               duplicate_name = true;
-            }
-            else if (strcmp( (name = lGetString(centry_elem, CE_name)), lGetString(cmp_elem, CE_shortcut)) == 0){
-               duplicate_name = true;
-            }
-            else if (strcmp( (name = lGetString(centry_elem, CE_shortcut)), lGetString(cmp_elem, CE_name)) == 0){
-               duplicate_name = true;
-            }
-            else if (strcmp( (name =lGetString(centry_elem, CE_shortcut)), lGetString(cmp_elem, CE_shortcut)) == 0){
-               duplicate_name = true;
-            }
+            /* Bugfix: Issuezilla 1161
+             * Previously it was assumed that name and shortcut would never be
+             * NULL.  In the course of testing for duplicate names, each name
+             * would potentially be accessed twice.  Now, in order to check for
+             * NULL without making a mess, I access each name exactly once.  In
+             * some cases, that may be 50% more than the previous code, but in
+             * what I expect is the usual case, it will be 50% less. */
+            name1 = lGetString(centry_elem, CE_name);
+            name2 = lGetString(cmp_elem, CE_name);
+            shortcut1 = lGetString(centry_elem, CE_shortcut);
+            shortcut2 = lGetString(cmp_elem, CE_shortcut);
             
-            if (duplicate_name){
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_ANSWER_COMPLEXXALREADYEXISTS_S, name);
+            if (((name1 != NULL) && (name2 != NULL) && (strcmp(name1, name2) == 0)) ||
+                ((name1 != NULL) && (shortcut2 != NULL) && (strcmp(name1, shortcut2) == 0)) ||
+                ((shortcut1 != NULL) && (name2 != NULL) && (strcmp(shortcut1, name2) == 0)) ||
+                ((shortcut1 != NULL) && (shortcut2 != NULL) && (strcmp(shortcut1, shortcut2) == 0))) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_ANSWER_COMPLEXXALREADYEXISTS_S, name1);
                cont = false;
             } 
+            
             cmp_elem = lNext(cmp_elem);
          }
-
+         
          if (!centry_elem_validate(centry_elem, NULL, answer_list)){
             cont = false;
          }

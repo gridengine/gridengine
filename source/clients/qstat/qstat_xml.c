@@ -864,9 +864,21 @@ int slots_per_line  /* number of slots to be printed in slots column
 
          ql = lGetList(job, JB_hard_resource_list);
          if (ql) {
+            int slots = sge_job_slot_request(job, pe_list);
             for_each(qrep, ql){
+               const char* name = lGetString(qrep, CE_name);
+               double uc;
+               lListElem *centry = centry_list_locate(centry_list, name);
+              
+               if (centry == NULL) {
+printf("ignore: %s\n", name);                  
+                  continue;
+               }   
+                  
+               uc = centry_urgency_contribution(slots, name, lGetDouble(qrep, CE_doubleval), centry);
                xmlElem = xml_append_Attr_S(attributeList, "hard_request", lGetString(qrep, CE_stringval)); 
-               xml_addAttribute(xmlElem, "name", lGetString(qrep, CE_name));
+               xml_addAttribute(xmlElem, "name", name);
+               xml_addAttributeD(xmlElem, "resource_contribution", uc); 
             }
          }
          

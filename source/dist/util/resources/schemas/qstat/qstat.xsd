@@ -157,6 +157,7 @@
             <xsd:documentation></xsd:documentation>
          </xsd:annotation>
          <xsd:attribute name="name" type="xsd:string" use="required"/>
+          <xsd:attribute name="resource_contribution" type="xsd:float" use="implied"/>
       </xsd:complexType>
    </xsd:element>
 

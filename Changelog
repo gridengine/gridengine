@@ -1,3 +1,8 @@
+SG-2004-04-11-0: Bugfix:    The xml-output in qstat and the qstat xml schema
+                            files were not up to date 
+                 Changed:   qstat, qstat schema
+                 Issue:     964
+
 RC-2004-04-11-1: Bugfix:    Fixed a minor typo in manpage
                  Changed:   sge_conf.5
 

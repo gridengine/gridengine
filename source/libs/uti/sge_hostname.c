@@ -230,18 +230,22 @@ struct hostent *sge_gethostbyname(const char *name)
    DPRINTF (("Getting host by name - Solaris\n"));
    {
       char buffer[4096];
-      
+      struct hostent *help_he = NULL;
+
       he = (struct hostent *)malloc (sizeof (struct hostent));
       /* On Solaris, this function returns the pointer to my struct on success
        * and NULL on failure. */
-      he = gethostbyname_r (name, he, buffer, 4096, &l_errno);
+      help_he = gethostbyname_r (name, he, buffer, 4096, &l_errno);
       
       /* Since he contains pointers into buffer, and buffer goes away when we
        * exit this code block, we make a deep copy to return. */
-      if (he != NULL) {
+      if (help_he != NULL) {
          struct hostent *new_he = sge_copy_hostent (he);
          FREE (he);
          he = new_he;
+      } else {
+         FREE (he);
+         he = NULL;
       }
    }
 #endif
@@ -465,18 +469,21 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    DPRINTF (("Getting host by addr - Solaris\n"));
    {
       char buffer[4096];
-      
+      struct hostent *help_he = NULL;
       he = (struct hostent *)malloc (sizeof (struct hostent));
       /* On Solaris, this function returns the pointer to my struct on success
        * and NULL on failure. */
-      he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
+      help_he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
       
       /* Since he contains pointers into buffer, and buffer goes away when we
        * exit this code block, we make a deep copy to return. */
-      if (he != NULL) {
-         struct hostent *new_he = sge_copy_hostent (he);
+      if (help_he != NULL) {
+         struct hostent *new_he = sge_copy_hostent (help_he);
          FREE (he);
          he = new_he;
+      } else {
+         FREE (he);
+         he = NULL;
       }
    }
 #endif
@@ -488,7 +495,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
       struct hostent_data he_data;
       
       he = (struct hostent *)malloc (sizeof (struct hostent));
-      if (gethostbyname_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
+      if (gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
          /* If this function fails, free he so that we can test if it's NULL
           * later in the code. */
          FREE (he);

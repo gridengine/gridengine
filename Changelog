@@ -1,3 +1,8 @@
+CR-2004-01-19-1: Bugfix:    fixed memory leak in sge_gethostbyaddr() and
+                            sge_sgehostbyname()
+                 Changed:   lib util
+                 Review:    DT
+
 EB-2004-01-19-1: Bugfix:    non-existing complex attributes were not
                             rejected during cqueue modification
                  Changes:   sge_qmaster, qconf

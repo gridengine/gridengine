@@ -1,8 +1,8 @@
 DT-2004-10-07-0: Bugfix:    o Enabled qsub/qrsh -v VAR again
                  Review:    CR
                  Changed:   qsub/qrsh
-                 Issue:     1198
-                 Bugtraq:   6174326
+                 Issue:     1255
+                 Bugtraq:   6174331
 
 DT-2004-10-04-0: Bugfix:    o Fixed qmaster crash
                  Changed:   sge_host.c

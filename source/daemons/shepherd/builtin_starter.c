@@ -177,9 +177,9 @@ int truncate_stderr_out
    ppid = getppid();
    pgrp = GETPGRP;
 
-/* #ifdef SOLARIS    */
-/*    if(!qlogin_starter) */
-/* #endif    */
+#ifdef SOLARIS
+   if(!qlogin_starter || is_rsh)
+#endif
    if ((newpgrp = setsid()) < 0) {
       sprintf(err_str, "setsid() failed, errno=%d", errno);
       shepherd_error(err_str);

@@ -6,11 +6,13 @@
 %{
 /* need this for the call to atof() below */
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "sge_spooling_flatfile_scanner.h"
 
 #define YY_BREAK
+#define YY_NO_UNPUT
 
 int spool_line;
 bool spool_return_whitespace;

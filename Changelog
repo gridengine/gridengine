@@ -1,4 +1,7 @@
-EB-2002-12-10-0  Bugfix:    job logging file exists but is empty in certain
+EB-2002-12-11-1  Bugfix:    Eleminated compilation warnings for architecture
+                            glinux in combination with gcc 3.2
+
+EB-2002-12-11-0  Bugfix:    job logging file exists but is empty in certain
                             configurations
                  IZ:        #439
                  Bugtraq:   #4791908

@@ -826,8 +826,8 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
    function_ret = SGE_EM_OK;
 
    for_each(event, event_list) {
-      num_events++;
       sge_mirror_error ret = SGE_EM_OK;
+      num_events++;
 
       switch(lGetUlong(event, ET_type)) {
          case sgeE_ADMINHOST_LIST:

@@ -566,12 +566,13 @@ char *err_str
 
          old_qrsh_command_s = var_list_get_string(environmentList, var_name);
          if (old_qrsh_command_s != NULL) {
-            const char delim[2] = {0xFF, '\0'};
+            char delim[2];
             const char *buffer;
             const char *token;
             int is_first_token = 1;
             dstring new_qrsh_command = DSTRING_INIT;
 
+            sprintf(delim, "%c", 0xff);
             sge_dstring_copy_string(&old_qrsh_command, old_qrsh_command_s);
             buffer = sge_dstring_get_string(&old_qrsh_command);
             token = sge_strtok(buffer, delim);

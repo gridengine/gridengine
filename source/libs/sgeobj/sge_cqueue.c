@@ -147,6 +147,65 @@ lList *Master_CQueue_List = NULL;
 
 /* EB: ADOC: add commets */
 
+lEnumeration *
+enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
+{
+   lEnumeration *ret;
+   dstring format_string = DSTRING_INIT;
+   lDescr *descr = CQ_Type;
+   int name_array[100];
+   int names = -1;
+   int attr;
+
+   DENTER(CQUEUE_LAYER, "enumeration_create_reduced_cq");
+   for_each_attr(attr, descr) {
+      if (names == -1) {
+         sge_dstring_sprintf(&format_string, "%s", "%T(");
+      }
+      if ((attr == CQ_name) ||
+          (fetch_all_qi && attr == CQ_qinstances) ||
+          (fetch_all_nqi && attr != CQ_qinstances)) {
+         names++;
+         name_array[names] = attr;
+         sge_dstring_sprintf_append(&format_string, "%s", "%I");
+      }
+   }
+   sge_dstring_sprintf_append(&format_string, "%s", ")");
+   ret = _lWhat(sge_dstring_get_string(&format_string), CQ_Type, 
+                name_array, ++names);
+   sge_dstring_free(&format_string);
+   
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/cqueue/cqueue_name_split() *************************************
+*  NAME
+*     cqueue_name_split() -- Get the CQ and host part of a QI name 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_name_split(const char *name, 
+*                       dstring *cqueue_name, 
+*                       dstring *host_domain, 
+*                       bool *has_hostname, 
+*                       bool *has_domain) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const char *name     - CQ/QD or QI name 
+*     dstring *cqueue_name - CQ part of the name 
+*     dstring *host_domain - host or hostgroup or nothing 
+*     bool *has_hostname   - is "host_domain" a hostname 
+*     bool *has_domain     - if "host_domain" a hostgroup 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*******************************************************************************/
 bool
 cqueue_name_split(const char *name, 
                   dstring *cqueue_name, dstring *host_domain, 
@@ -188,38 +247,25 @@ cqueue_name_split(const char *name,
    return ret;
 }
 
-lEnumeration *
-enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
-{
-   lEnumeration *ret;
-   dstring format_string = DSTRING_INIT;
-   lDescr *descr = CQ_Type;
-   int name_array[100];
-   int names = -1;
-   int attr;
-
-   DENTER(CQUEUE_LAYER, "enumeration_create_reduced_cq");
-   for_each_attr(attr, descr) {
-      if (names == -1) {
-         sge_dstring_sprintf(&format_string, "%s", "%T(");
-      }
-      if ((attr == CQ_name) ||
-          (fetch_all_qi && attr == CQ_qinstances) ||
-          (fetch_all_nqi && attr != CQ_qinstances)) {
-         names++;
-         name_array[names] = attr;
-         sge_dstring_sprintf_append(&format_string, "%s", "%I");
-      }
-   }
-   sge_dstring_sprintf_append(&format_string, "%s", ")");
-   ret = _lWhat(sge_dstring_get_string(&format_string), CQ_Type, 
-                name_array, ++names);
-   sge_dstring_free(&format_string);
-   
-   DEXIT;
-   return ret;
-}
-
+/****** sgeobj/cqueue/cqueue_create() *****************************************
+*  NAME
+*     cqueue_create() -- Create a new cluster queue object 
+*
+*  SYNOPSIS
+*     lListElem *
+*     cqueue_create(lList **answer_list, 
+*                   const char *name) 
+*
+*  FUNCTION
+*     Returns a new cluster queue object with the name "name". 
+*
+*  INPUTS
+*     lList **answer_list - AN_Type list 
+*     const char *name    - cluster queue name 
+*
+*  RESULT
+*     lListElem * - CQ_Type object or NULL
+*******************************************************************************/
 lListElem *
 cqueue_create(lList **answer_list, const char *name)
 {
@@ -242,6 +288,26 @@ cqueue_create(lList **answer_list, const char *name)
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_is_href_referenced() *****************************
+*  NAME
+*     cqueue_is_href_referenced() -- is a host/hostgroup referenced in cqueue 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_is_href_referenced(const lListElem *this_elem, 
+*                               const lListElem *href) 
+*
+*  FUNCTION
+*     Is the given "href" (host or hostgroup referenece) used in the
+*     definition of the cluster queue "this_elem"?
+*
+*  INPUTS
+*     const lListElem *this_elem - CQ_Type 
+*     const lListElem *href      - HR_Type 
+*
+*  RESULT
+*     bool - true if it is referenced
+*******************************************************************************/
 bool 
 cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
 {
@@ -262,6 +328,26 @@ cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
    return ret;
 } 
 
+/****** sgeobj/cqueue/cqueue_is_hgroup_referenced() ***************************
+*  NAME
+*     cqueue_is_hgroup_referenced() -- is a hgroup referenced in cqueue 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_is_hgroup_referenced(const lListElem *this_elem, 
+*                                 const lListElem *hgroup) 
+*
+*  FUNCTION
+*     Is the given "hgroup" object referenced in the cluster queue
+*     "this_elem".  
+*
+*  INPUTS
+*     const lListElem *this_elem - CQ_Type 
+*     const lListElem *hgroup    - HGRP_Type 
+*
+*  RESULT
+*     bool - true if "hgroup" is referenced
+*******************************************************************************/
 bool 
 cqueue_is_hgroup_referenced(const lListElem *this_elem, const lListElem *hgroup)
 {
@@ -282,6 +368,26 @@ cqueue_is_hgroup_referenced(const lListElem *this_elem, const lListElem *hgroup)
    return ret;
 } 
 
+/****** sgeobj/cqueue/cqueue_is_a_href_referenced() ***************************
+*  NAME
+*     cqueue_is_a_href_referenced() -- Is one href referenced 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_is_a_href_referenced(const lListElem *this_elem, 
+*                                 const lList *href_list) 
+*
+*  FUNCTION
+*     Is at least one host reference contained in "href_list" referenced
+*     in the cluster queue "this_elem" 
+*
+*  INPUTS
+*     const lListElem *this_elem - CQ_Type object
+*     const lList *href_list     - HR_Type list 
+*
+*  RESULT
+*     bool - at least one object is referenced
+*******************************************************************************/
 bool 
 cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list)
 {
@@ -300,6 +406,29 @@ cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list)
    return ret;
 } 
 
+/****** sgeobj/cqueue/cqueue_set_template_attributes() ************************
+*  NAME
+*     cqueue_set_template_attributes() -- Set default attributes 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_set_template_attributes(lListElem *this_elem, 
+*                                    lList **answer_list) 
+*
+*  FUNCTION
+*     This function initializes all attributes of an empty cluster
+*     queue with default values. Please note that "this_elem" has to
+*     be "empty" before this function is called.  
+*
+*  INPUTS
+*     lListElem *this_elem - CQ_Type 
+*     lList **answer_list  - AN_Type 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*******************************************************************************/
 bool
 cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
 {
@@ -620,6 +749,25 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_list_add_cqueue() ********************************
+*  NAME
+*     cqueue_list_add_cqueue() -- Add a cluster queue to its master list 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_list_add_cqueue(lListElem *queue) 
+*
+*  FUNCTION
+*     Add a cluster queue in its master list. 
+*
+*  INPUTS
+*     lListElem *queue - CQ_Type 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*******************************************************************************/
 bool
 cqueue_list_add_cqueue(lListElem *queue)
 {
@@ -645,12 +793,51 @@ cqueue_list_add_cqueue(lListElem *queue)
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_list_locate() ************************************
+*  NAME
+*     cqueue_list_locate() -- Find a cluster queue in list 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     cqueue_list_locate(const lList *this_list, 
+*                        const char *name) 
+*
+*  FUNCTION
+*    Find the cluster queue with name "name" in the list "this_list". 
+*
+*  INPUTS
+*     const lList *this_list - CQ_Type list 
+*     const char *name       - cluster queue name 
+*
+*  RESULT
+*     lListElem * - cluster queue object or NULL
+*******************************************************************************/
 lListElem *
 cqueue_list_locate(const lList *this_list, const char *name)
 {
    return lGetElemStr(this_list, CQ_name, name);
 }
 
+/****** sgeobj/cqueue/cqueue_locate_qinstance() *******************************
+*  NAME
+*     cqueue_locate_qinstance() -- returns one qinstance from a cqueue 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     cqueue_locate_qinstance(const lListElem *this_elem, 
+*                             const char *hostname) 
+*
+*  FUNCTION
+*     Finds the queue instance locateted on the host "hostname" of a
+*     given cluster queue "this_elem". 
+*
+*  INPUTS
+*     const lListElem *this_elem - CQ_Type object 
+*     const char *hostname       - resolved hostname  
+*
+*  RESULT
+*     lListElem * - qinstance object or NULL
+*******************************************************************************/
 lListElem *
 cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname)
 {
@@ -659,6 +846,38 @@ cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname)
    return qinstance_list_locate(qinstance_list, hostname, NULL);
 }
 
+/****** sgeobj/cqueue/cqueue_verify_attributes() ******************************
+*  NAME
+*     cqueue_verify_attributes() -- check all cluster queue attributes 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_verify_attributes(lListElem *cqueue, 
+*                              lList **answer_list, 
+*                              lListElem *reduced_elem, 
+*                              bool in_master) 
+*
+*  FUNCTION
+*     Check all cluster queue settings (and correct them if possible).
+*
+*        - test that there is exact one default setting 
+*        - check that there is only one setting for used hgroups/hosts
+*        - resolve hostnames
+*        - test attribute values  
+*
+*  INPUTS
+*     lListElem *cqueue       - CQ_Type object to be verified 
+*     lList **answer_list     - AN_Type list 
+*     lListElem *reduced_elem - reduced CQ_Type. Containes
+*                               only those attributes to be checked  
+*     bool in_master          - true if this function is called in the
+*                               master code 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*******************************************************************************/
 bool 
 cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem, bool in_master)
@@ -746,7 +965,10 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                      }
                   }
                }
-
+         
+               /*
+                * Call native verify function if it is possible
+                */
                if (ret && 
                    cqueue_attribute_array[index].verify_function != NULL &&
                    (cqueue_attribute_array[index].verify_client || in_master)) {

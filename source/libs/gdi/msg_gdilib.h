@@ -285,6 +285,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST     "host_list               all | hostname[,hostname,...]" 
 
 
 
@@ -504,7 +505,7 @@
 #define MSG_GDI_USAGE_jid_OPT_JID                        "[-jid jid]"
 
 
-#define MSG_GDI_USAGE_ke_OPT_HOSTS                       "[-ke[j] [<host> ...]]"
+#define MSG_GDI_USAGE_ke_OPT_HOSTS                       "[-ke[j] host_list"
 #define MSG_GDI_UTEXT_ke_OPT_HOSTS                       _("shutdown execution daemon(s)")
 
 #define MSG_GDI_USAGE_k_OPT_MASTERORSCHEDULINGDAEMON     "[-k{m|s}]"

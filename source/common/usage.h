@@ -81,6 +81,7 @@ enum {
    OA_OBJECT_ID_LIST,
    OA_PROJECT_LIST,
    OA_EVENTCLIENT_LIST,
+   OA_HOST_LIST,
    OA__END
 };
 

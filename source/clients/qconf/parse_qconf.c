@@ -1658,7 +1658,8 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-      /* -kec [<id> ...] */
+      /* -kec <id> ... */
+      /* <id> may be "all" */
       /* parse before -ke[j] */
 
       if (!strncmp("-kec", *spp, 4)) {
@@ -1686,7 +1687,8 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-      /* -ke[j] [<host> ...] */
+      /* -ke[j] <host> ... */
+      /* <host> may be "all" */
       if (!strncmp("-k", *spp, 2)) {
          int opt = EXECD_KILL;
          /* no adminhost/manager check needed here */
@@ -1706,16 +1708,15 @@ DPRINTF(("ep: %s %s\n",
             opt |= JOB_KILL;
          }
 
-         /* namelist is optional ! */
-         if (*(spp+1) && !sge_next_is_an_opt(spp)) {
+         spp = sge_parser_get_next(spp);
+
+         if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
+            alp = gdi_kill(NULL, me.default_cell, 0, opt);
+         } else {   
             /* found namelist -> process */
-            spp = sge_parser_get_next(spp);
             lString2List(*spp, &lp, EH_Type, EH_name, ", ");
             alp = gdi_kill(lp, me.default_cell, 0, opt);
          }
-         else {
-            alp = gdi_kill(NULL, me.default_cell, 0, opt);
-         }      
 
          for_each(aep, alp) {
             sge_get_recoverable(aep);

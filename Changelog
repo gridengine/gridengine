@@ -1,3 +1,8 @@
+JG-2002-09-09-0: Enhancem.: qconf -ke has to be called with a host(list) or
+                            the keyword "all". qconf -ke without hostlist no
+                            longer kills all hosts.
+                 Issue:     #83           
+
 CR-2002-01-08-0: Testsuite: 
                     - New settings file version "4" because of new parameters
                       "dns_domain_name" and "user_environment".
@@ -116,6 +121,7 @@ JG-2001-12-17-1: Testsuite: Testsuite framework will output stack trace
                             if a TCL error causes a test to fail.
 
 JG-2001-12-17-0: Feature:   Implemented starter_method for qrsh.
+                 Issue:     #6
 
 EB-2001-12-17-0: Feature:   Compatibility mode (sge_request, SGE_*)
 
@@ -504,6 +510,7 @@ AH-2001-11-20-0: Bugfix:    Use kstat interface instead of kvm interface for
                  Bugtraq:   #4528905
 
 SD-2001-11-19-0: Feature:   Added support for queue starter_method
+                 Issue:     #6
 
 AA-2001-11-19-0: Bugfix:    Qmon core dump in sharetree for empty sharetree
                             when using Find

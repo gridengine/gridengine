@@ -149,6 +149,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST;
      case OA_EVENTCLIENT_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST;
+     case OA_HOST_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST;
 
      default:
          break; 
@@ -580,6 +582,7 @@ FILE *fp
    if (VALID_OPT(ke_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_ke_OPT_HOSTS, MSG_GDI_UTEXT_ke_OPT_HOSTS );
       PRINTITD(MSG_GDI_USAGE_k_OPT_MASTERORSCHEDULINGDAEMON, MSG_GDI_UTEXT_k_OPT_MASTERORSCHEDULINGDAEMON );
+      MARK(OA_HOST_LIST);
    }
 
    if (VALID_OPT(kec_OPT, me.who)) {

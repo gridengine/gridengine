@@ -1,3 +1,6 @@
+CR-2003-07-25-0: Testsuite: - using -now no option for qrsh in 
+                              qmod reschedule test
+
 EB-2003-07-25-0: Enhancem.: GDIBASE: additional sublist type 
 
 CR-2003-07-23-0: Testsuite: - new procedure: get_complex_version()

@@ -750,8 +750,8 @@ proc reschedule_checkpointing_forced {} {
 #
 proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
-   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SCRIPT_FILE_DIR CHECK_CORE_EXECD
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SCRIPT_FILE_DIR CHECK_CORE_EXECD CHECK_HOST
    
 
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
@@ -764,23 +764,31 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       return -3
    }
 
+#-  open_remote_spawn_process
+
+   set qrsh_id    [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -now no -q $rerun_queue" ]
+   set qrsh_id2   [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -now no -q $rerun_queue sleep 10000" ]
+   set qsh_id     [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh -now no -q $rerun_queue" ]
+     
+#   have_root_passwd
+
    
-   set qrsh_id    [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -q $rerun_queue" ]
-   set qrsh_id2   [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -q $rerun_queue sleep 10000" ]
-   set qsh_id     [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh -q $rerun_queue" ]
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required for submitting qlogin"
       set no_jobs 3
+      set qlogin_id -1
    } else {
 
       set qlogin_out_file [get_tmp_file_name "" "qlogin" "txt" ]
 
-      set qlogin_id  [ open_spawn_process "$CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
+      puts $CHECK_OUTPUT "try to $CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue"
+
+      set qlogin_id  [ open_spawn_process "$CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -now no -q $rerun_queue" ]
       set no_jobs 4
       set result ""
       set my_timeout [timestamp]
       incr my_timeout 60
-      while { [ string first "login:" $result] < 0 } {     
+      while { [ string first "login:" $result] < 0 } {
          sleep 2
          catch { eval exec "cat $qlogin_out_file" } result
          puts $CHECK_OUTPUT $result
@@ -821,8 +829,6 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       if { [ string first "closed" $result] >= 0 } {
           add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error, connection closed"
       }
-
-
    } 
 
 
@@ -886,8 +892,10 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    close_spawn_process $qrsh_id2 1
    close_spawn_process $qsh_id 1
    if { [have_root_passwd] != -1 } {
-      send -i $qlogin_id "\003"
-      close_spawn_process $qlogin_id 1
+      if { $qlogin_id != -1 } {
+         send -i $qlogin_id "\003"
+         close_spawn_process $qlogin_id 1
+      }
    }
    set_error 0 "ok"
 

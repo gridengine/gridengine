@@ -2204,6 +2204,8 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
       /* commlib error is negative, we don't know why we can't reach qmaster*/
       if ( commlib_error < 0 ) {
          sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE );
+         DEXIT;
+         return;
       }
 
       /* commlib error is 0 (CL_OK), there was no commlib error */

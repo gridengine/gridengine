@@ -1359,7 +1359,7 @@ XtPointer cld, cad;
             }
          }
 
-lWriteListTo(jl, stdout);
+/* lWriteListTo(jl, stdout); */
 
          alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
       

@@ -951,7 +951,17 @@ void XmListAddItemUniqueSorted(Widget list, String item)
    DENTER(GUI_LAYER, "AddItemUniqueSorted");
 
    if (item && item[0] != '\0') {
-      xmitem = XmtCreateLocalizedXmString(list, item);
+      /*
+      ** fix the strange behavior of @f* hostgroup names, this is caused
+      ** by the Xmt font converter that interpretes @f as the beginning of
+      ** a font change
+      */
+      char buf[10000];
+      if (item[0] == '@')
+         sprintf(buf, "@%s", item);
+      else
+         sprintf(buf, item);
+      xmitem = XmtCreateLocalizedXmString(list, buf);
       if (XmListItemExists(list, xmitem)) {
          XmStringFree(xmitem);
          DEXIT;

@@ -111,6 +111,7 @@ typedef struct _tCClEntry {
    lList *cluster_xprojects;
    int enforce_project;
    int enforce_user;
+   int dfs;
    String qmaster_params;
    String reporting_params;
    String execd_params;
@@ -215,6 +216,10 @@ XtResource ccl_resources[] = {
       
    { "logmail", "logmail", XtRInt, 
       sizeof(int), XtOffsetOf(tCClEntry, logmail), 
+      XtRImmediate, NULL },
+
+   { "dfs", "dfs", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, dfs), 
       XtRImmediate, NULL },
 
    { "max_aj_instances", "max_aj_instances", XtRInt, 
@@ -359,6 +364,7 @@ static Widget cluster_reschedule_unknown = 0;
 static Widget cluster_reschedule_unknownPB = 0;
 static Widget cluster_shell_start_mode = 0;
 static Widget cluster_loglevel = 0;
+static Widget cluster_dfs = 0;
 static Widget cluster_enforce_project = 0;
 static Widget cluster_enforce_user = 0;
 
@@ -656,6 +662,7 @@ Widget parent
                            "cluster_host", &cluster_host,
                            "cluster_ok", &cluster_ok,
                            "cluster_cancel", &cluster_cancel,
+                           "cluster_dfs", &cluster_dfs,
                            "cluster_enforce_project", &cluster_enforce_project,
                            "cluster_enforce_user", &cluster_enforce_user,
                            "cluster_usersPB", &cluster_usersPB,
@@ -980,6 +987,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_reporting_params, mode);
    XtSetSensitive(cluster_reporting_params_label, mode);
   
+   XtSetSensitive(cluster_dfs, mode);
    XtSetSensitive(cluster_enforce_project, mode);
    XtSetSensitive(cluster_enforce_user, mode);
    XtSetSensitive(cluster_projects, mode);
@@ -1075,6 +1083,7 @@ int local
    };
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
+   static String dfs[] = { "true", "false" };
    static String enforce_project[] = { "true", "false" };
    static String enforce_user[] = { "true", "false", "auto" };
    String str = NULL;
@@ -1314,6 +1323,18 @@ int local
       }
 
 #if 0
+      if (clen->dfs == 0) {
+         ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "delegated_file_staging");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, "true");
+         lAppendElem(lp, new);
+      }
+
       if (clen->starter_method && clen->starter_method[0] != '\0'
            /* && strcmp(lGetString(ep, CF_value), clen->starter_method)*/) {
          ep = lGetElemStr(confl, CF_name, "starter_method");
@@ -1633,6 +1654,13 @@ int local
       } else {
          lDelElemStr(&confl, CF_name, "gid_range");
       }
+
+      if (clen->dfs >= 0 && 
+            clen->dfs < sizeof(dfs))
+         str = dfs[clen->dfs];
+      ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
+      lSetString(ep, CF_value, str);
+
 
       if (clen->enforce_project >= 0 && 
             clen->enforce_project < sizeof(enforce_project))
@@ -2017,6 +2045,13 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
       clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
+   if ((ep = lGetElemStr(confl, CF_name, "delegated_file_staging")))
+      str = (StringConst)lGetString(ep, CF_value);
+   if (str && !strcasecmp(str, "true"))
+      clen->dfs = 0;
+   else
+      clen->dfs = 1;
+
 
    if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
       str = (StringConst)lGetString(ep, CF_value);
@@ -2205,6 +2240,7 @@ tCClEntry *clen
    clen->cluster_xusers = lFreeList(clen->cluster_xusers);
    clen->cluster_projects = lFreeList(clen->cluster_projects);
    clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+   clen->dfs = 1;    
    clen->enforce_project = 1;    
    clen->enforce_user = 1;    
 

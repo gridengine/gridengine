@@ -171,6 +171,7 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_auto_user_fshare = auto_user_fshare; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_loglevel = loglevel , \
+                  cluster_dfs = dfs , \
                   cluster_enforce_project = enforce_project, \
                   cluster_enforce_user = enforce_user; \
    StringList     cluster_users = cluster_users, \
@@ -226,6 +227,7 @@ Qmon*cluster_global_layout.layout: \
             Caption tl "@{Log Level}" cluster_loglevel \
          } \
          Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
+         Fixed Caption tl "@{Delegated File Staging}" cluster_dfs \
          <> \
       } \
       ## \
@@ -321,6 +323,10 @@ Qmon*cluster_global_layout.cluster_loglevel.strings: \
 
 Qmon*cluster_global_layout.cluster_logmail.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_logmail.strings: \
+   "@{True}", "@{False}"
+
+Qmon*cluster_global_layout.cluster_dfs.chooserType: ChooserOption
+Qmon*cluster_global_layout.cluster_dfs.strings: \
    "@{True}", "@{False}"
 
 

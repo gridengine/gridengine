@@ -144,7 +144,7 @@ int scheduler(sge_Sdescr_t *lists) {
    lList *running_list = NULL;                     /* JB_Type */
    lList *error_list = NULL;                       /* JB_Type */
    lList *hold_list = NULL;                        /* JB_Type */
-   lList *not_started_list = lCreateList("", JB_Type); /* JB_Type */
+   lList *not_started_list = NULL; /* JB_Type */
    int prof_job_count;
 
    int i;
@@ -818,6 +818,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          else {
          /* prevent that we get the same job next time again */
             lDechainElem(*(splitted_job_lists[SPLIT_PENDING]),orig_job);
+            if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
+               *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
+            }
             lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
          }
          orig_job = NULL;
@@ -826,7 +829,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          break;
       }
 
-      lFreeElem(job);
+      job = lFreeElem(job);
 
       /*------------------------------------------------------------------ 
        * SGEEE mode - if we dispatch a job sub-task and the job has more

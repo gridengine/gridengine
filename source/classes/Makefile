@@ -84,10 +84,10 @@ jdrmaa_meta_clean:
 jdrmaa: jdrmaa_jar jdrmaa_lib
 
 jdrmaa_jar: jdrmaa_jar_clean jdrmaa_classes jdrmaa_meta
-	$(JAVA_HOME)/bin/jar cvf drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class META-INF
+	$(JAVA_HOME)/$(JAVA_BINDIR)/jar cvf drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class META-INF
 
 jdrmaa_classes:
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java
 
 jdrmaa_meta: jdrmaa_meta_clean
 	@mkdir META-INF
@@ -98,7 +98,7 @@ jdrmaa_meta: jdrmaa_meta_clean
 # rules to build library
 ###############################################################################
 jdrmaa_lib: $(JDRMAALIB_OBJS) drmaalib
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libjdrmaa$(SHAREDEXT) $(JDRMAALIB_OBJS) -ldrmaa -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libjdrmaa$(JAVA_SHAREDEXT) $(JDRMAALIB_OBJS) -ldrmaa -lc $(DLLIB)
 
 ###############################################################################
 # rules to build object codes
@@ -110,102 +110,102 @@ com_sun_grid_drmaa_SGESession.o: $(SRC_DIR)/com_sun_grid_drmaa_SGESession.c
 # rules to build classes
 ###############################################################################
 AuthorizationException.class: $(CLASSES_DIR)/org/ggf/drmaa/AuthorizationException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/AuthorizationException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/AuthorizationException.java
 
 ConflictingAttributeValuesException.class: $(CLASSES_DIR)/org/ggf/drmaa/ConflictingAttributeValuesException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/ConflictingAttributeValuesException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/ConflictingAttributeValuesException.java
 
 DRMAAException.class: $(CLASSES_DIR)/org/ggf/drmaa/DRMAAException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMAAException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMAAException.java
 
 DRMAASession.class: $(CLASSES_DIR)/org/ggf/drmaa/DRMAASession.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMAASession.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMAASession.java
 
 DRMAASessionFactory.class: $(CLASSES_DIR)/org/ggf/drmaa/DRMAASessionFactory.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMAASessionFactory.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMAASessionFactory.java
 
 DRMCommunicationException.class: $(CLASSES_DIR)/org/ggf/drmaa/DRMCommunicationException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMCommunicationException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMCommunicationException.java
 
 DRMSExitException.class: $(CLASSES_DIR)/org/ggf/drmaa/DRMSExitException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMSExitException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMSExitException.java
 
 DRMSInitException.class: $(CLASSES_DIR)/org/ggf/drmaa/DRMSInitException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMSInitException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DRMSInitException.java
 
 DefaultContactStringException.class: $(CLASSES_DIR)/org/ggf/drmaa/DefaultContactStringException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DefaultContactStringException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DefaultContactStringException.java
 
 DeniedByDRMException.class: $(CLASSES_DIR)/org/ggf/drmaa/DeniedByDRMException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DeniedByDRMException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/DeniedByDRMException.java
 
 ExitTimeoutException.class: $(CLASSES_DIR)/org/ggf/drmaa/ExitTimeoutException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/ExitTimeoutException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/ExitTimeoutException.java
 
 InconsistentStateException.class: $(CLASSES_DIR)/org/ggf/drmaa/InconsistentStateException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InconsistentStateException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InconsistentStateException.java
 
 InternalException.class: $(CLASSES_DIR)/org/ggf/drmaa/InternalException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InternalException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InternalException.java
 
 InvalidArgumentException.class: $(CLASSES_DIR)/org/ggf/drmaa/InvalidArgumentException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidArgumentException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidArgumentException.java
 
 InvalidAttributeException.class: $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeException.java
 
 InvalidAttributeFormatException.class: $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeFormatException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeFormatException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeFormatException.java
 
 InvalidAttributeValueException.class: $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeValueException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeValueException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidAttributeValueException.java
 
 InvalidContactStringException.class: $(CLASSES_DIR)/org/ggf/drmaa/InvalidContactStringException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidContactStringException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidContactStringException.java
 
 InvalidJobException.class: $(CLASSES_DIR)/org/ggf/drmaa/InvalidJobException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidJobException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/InvalidJobException.java
 
 JobInfo.class: $(CLASSES_DIR)/org/ggf/drmaa/JobInfo.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/JobInfo.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/JobInfo.java
 
 JobTemplate.class: $(CLASSES_DIR)/org/ggf/drmaa/JobTemplate.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/JobTemplate.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/JobTemplate.java
 
 NoActiveSessionException.class: $(CLASSES_DIR)/org/ggf/drmaa/NoActiveSessionException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/NoActiveSessionException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/NoActiveSessionException.java
 
 NoResourceUsageDataException.class: $(CLASSES_DIR)/org/ggf/drmaa/NoResourceUsageDataException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/NoResourceUsageDataException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/NoResourceUsageDataException.java
 
 SessionAlreadyActiveException.class: $(CLASSES_DIR)/org/ggf/drmaa/SessionAlreadyActiveException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/SessionAlreadyActiveException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/SessionAlreadyActiveException.java
 
 SessionException.class: $(CLASSES_DIR)/org/ggf/drmaa/SessionException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/SessionException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/SessionException.java
 
 TryLaterException.class: $(CLASSES_DIR)/org/ggf/drmaa/TryLaterException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/TryLaterException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/TryLaterException.java
 
 UnsupportedAttributeException.class: $(CLASSES_DIR)/org/ggf/drmaa/UnsupportedAttributeException.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/UnsupportedAttributeException.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/UnsupportedAttributeException.java
 
 SGEJobInfo.class: $(CLASSES_DIR)/com/sun/grid/drmaa/SGEJobInfo.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGEJobInfo.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGEJobInfo.java
 
 SGEJobTemplate.class: $(CLASSES_DIR)/com/sun/grid/drmaa/SGEJobTemplate.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGEJobTemplate.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGEJobTemplate.java
 
 SGESession.class: $(CLASSES_DIR)/com/sun/grid/drmaa/SGESession.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGESession.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGESession.java
 
 SGESessionFactory.class: $(CLASSES_DIR)/com/sun/grid/drmaa/SGESessionFactory.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGESessionFactory.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/com/sun/grid/drmaa/SGESessionFactory.java
 
 #------------------------------------------------------------------------------
 
 test_jdrmaa: $(CLASSES_DIR)/TestDRMAA.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/TestDRMAA.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/TestDRMAA.java
 
 jdrmaa_example: $(CLASSES_DIR)/DRMAAExample.java
-	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/DRMAAExample.java
+	$(JAVA_HOME)/$(JAVA_BINDIR)/javac -classpath . -d . $(CLASSES_DIR)/DRMAAExample.java

@@ -108,6 +108,13 @@ echo "   setenv \$shlib_path_name \$SGE_ROOT/lib/\$ARCH"         >> $SP_CSH
 echo "endif"                                                     >> $SP_CSH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_CSH
 
+if [ -f "$SGE_ROOT/lib/drmaa.jar" ]; then
+   echo 'if ( $?CLASSPATH == 1) then'                            >> $SP_CSH
+   echo "   setenv CLASSPATH \$SGE_ROOT/lib/drmaa.jar:\$CLASSPATH" >> $SP_CSH
+   echo "else"                                                   >> $SP_CSH
+   echo "   setenv CLASSPATH \$SGE_ROOT/lib/drmaa.jar"           >> $SP_CSH
+   echo "endif"                                                  >> $SP_CSH
+fi
 
 
 echo "SGE_ROOT=$SGE_ROOT; export SGE_ROOT"                        > $SP_SH
@@ -152,3 +159,13 @@ echo "   eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH:\$old_value" >> $SP_SH
 echo "fi"                                                        >> $SP_SH
 echo "export \$shlib_path_name"                                  >> $SP_SH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_SH
+
+if [ -f "$SGE_ROOT/lib/drmaa.jar" ]; then
+   echo "if [ \"\$CLASSPATH\" = \"\" ]; then"                    >> $SP_SH
+   echo "   CLASSPATH=\$SGE_ROOT/lib/drmaa.jar"                  >> $SP_SH
+   echo "else"                                                   >> $SP_SH
+   echo "   CLASSPATH=\$SGE_ROOT/lib/drmaa.jar:\$CLASSPATH"      >> $SP_SH
+   echo "fi"                                                     >> $SP_SH
+   echo "export CLASSPATH"                                       >> $SP_SH
+fi
+

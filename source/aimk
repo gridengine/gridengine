@@ -396,6 +396,9 @@ set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
 set JAVA             = 0
+set JAVA_BINDIR      = "bin"
+set JAVA_INCL        = "include"
+set JAVA_SHAREDEXT   = ""
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -874,10 +877,6 @@ if ( $JAVA == 1 || $BUILDJAVADOC == 1 ) then
    if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
       exit
-   else
-      if ($JAVA == 1) then
-         set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/include"
-      endif
    endif
 endif
 
@@ -1070,6 +1069,9 @@ case DARWIN:
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
+   set JAVA_BINDIR = "Commands"
+   set JAVA_INCL = "Versions/1.3.1/Headers"
+   set JAVA_SHAREDEXT = ".jnilib"
    unset REL
    breaksw
 
@@ -1587,8 +1589,15 @@ default:
    exit 1
 endsw
 
-if ($JAVA == 1 && "$JAVA_ARCH" != "") then
-   set CFLAGS = "$CFLAGS -I${JAVA_HOME}/include/${JAVA_ARCH}"
+if ($JAVA == 1) then
+   set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
+   if ("$JAVA_ARCH" != "") then
+      set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
+   endif
+endif
+
+if ($JAVA_SHAREDEXT == "") then
+   set JAVA_SHAREDEXT = "$SHAREDEXT"
 endif
 
 set MAKEOPT = "$MAKEOPT $PARALLEL"
@@ -1732,15 +1741,15 @@ if ( "$BUILDJAVADOC" == 1 ) then
 
    cd $SOURCE/$COMPILE_ARCH
 
-   if ( ! -d ../../doc/javadoc ) then
+   if ( ! -d ../../doc/javadocs ) then
       echo " INFO: JavaDoc directory does not exist. Creating"
-      mkdir ../../doc/javadoc
+      mkdir ../../doc/javadocs
    else
       echo " INFO: clearing old JavaDoc directory."
-      rm -Rf ../../doc/javadoc/*
+      rm -Rf ../../doc/javadocs/*
    endif
 
-   $JAVA_HOME/bin/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadoc -version org.ggf.drmaa
+   $JAVA_HOME/$JAVA_BINDIR/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadocs -version -subpackages org.ggf.drmaa, com.sun.grid.drmaa -exclude com.sun.grid.drmaa.howto
 
    if ( $status != 0 ) then
       echo not done
@@ -1953,6 +1962,7 @@ if ( "$CORE" == 1 ) then
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
+         "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          $argv
    if ( $status != 0 ) then
       echo not done
@@ -1960,6 +1970,7 @@ if ( "$CORE" == 1 ) then
    endif
 
    if ( $JAVA == 1 ) then
+      echo _________D_R_M_A_A__J A_V_A_______________
       $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
             "LD_WRAPPER=$LD_WRAPPER" \
             "CFLAGS=$CFLAGS $CORE_INCLUDE" \
@@ -1982,9 +1993,8 @@ if ( "$CORE" == 1 ) then
             "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
             "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
             "SPOOLLIBEXT=$SPOOLLIBEXT" \
-            "DLLIB=$DLLIB" \
-            "MEMCFLAG=$MEMCFLAG" \
-            "CORE_INCLUDE=$CORE_INCLUDE" \
+            "DLLIB=$DLLIB" "MEMCFLAG=$MEMCFLAG" "CORE_INCLUDE=$CORE_INCLUDE" \
+            "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
             classes_all
       if ( $status != 0 ) then
          echo not done

@@ -42,6 +42,7 @@ public class TestDRMAA {
    private static DRMAASession session = null;
    private static LinkedList jobIds = null;
    private static final Object lock = new Object ();
+   private static String script = null;
    
    /** Creates a new instance of TestDRMAA */
    public TestDRMAA () throws Exception {
@@ -54,7 +55,7 @@ public class TestDRMAA {
       String arg = null;
       int duration = 300;
       
-      if ((args.length < 1) || (args.length > 2)) {
+      if ((args.length < 2) || (args.length > 3)) {
          printUsage ();
          System.exit (1);
       }
@@ -63,11 +64,12 @@ public class TestDRMAA {
          System.exit (0);
       }
 
-      arg = args[0];
+      script = args[0];
+      arg = args[1];
       
-      if (args.length >= 1) {
+      if (args.length > 2) {
          try {
-            duration = Integer.parseInt (args[1]);
+            duration = Integer.parseInt (args[2]);
          }
          catch (NumberFormatException e) {
             printUsage ();
@@ -110,7 +112,7 @@ public class TestDRMAA {
    }
 
    private static void printUsage () {
-      System.out.println ("java TestDRMAA codes [duration]");
+      System.out.println ("java TestDRMAA script codes [duration]");
       System.out.println ("\tcodes: <number><code>[:codes]");
       System.out.println ("\tnumber: 1-9,0=10 -- number of instances");
       System.out.println ("\tcode: W|Y|D|H|P|s|b|w|y|d|h|p");
@@ -285,7 +287,7 @@ public class TestDRMAA {
          
          log ("SubmitWaitTester");
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 5, false);
+         jt = createJobTemplate (script, 5, false);
       }
       
       public void test () throws DRMAAException {
@@ -336,7 +338,7 @@ public class TestDRMAA {
 
          log ("BulkSubmitSyncTester");
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 5, true);
+         jt = createJobTemplate (script, 5, true);
       }
       
       public void test () throws DRMAAException {
@@ -366,7 +368,7 @@ public class TestDRMAA {
          
          this.sleep = sleep;
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", sleep, true);
+         jt = createJobTemplate (script, sleep, true);
       }
       
       public void test () throws DRMAAException {
@@ -390,7 +392,7 @@ public class TestDRMAA {
          
          this.sleep = sleep;
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", sleep, false);
+         jt = createJobTemplate (script, sleep, false);
       }
       
       public void test () throws DRMAAException {
@@ -467,7 +469,7 @@ public class TestDRMAA {
          
          log ("SubmitDeleteTester");
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 600, false);
+         jt = createJobTemplate (script, 600, false);
       }
       
       public void test () throws DRMAAException {
@@ -489,7 +491,7 @@ public class TestDRMAA {
 
          log ("SubmitHoldReleaseTester");
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 60, false);
+         jt = createJobTemplate (script, 60, false);
       }
       
       public void test () throws DRMAAException {
@@ -523,7 +525,7 @@ public class TestDRMAA {
 
          log ("SubmitSuspendResumeTester");
          
-         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 60, false);
+         jt = createJobTemplate (script, 60, false);
       }
       
       public void test () throws DRMAAException {
@@ -669,11 +671,11 @@ public class TestDRMAA {
    private static class ShutdownHook extends Thread {
       public void run () {
          try {
-            session.exit ();
             System.out.println ("0: Exiting");
+            session.exit ();
          }
          catch (DRMAAException e) {
-            //Don't care
+            e.printStackTrace ();
          }
       }
    }

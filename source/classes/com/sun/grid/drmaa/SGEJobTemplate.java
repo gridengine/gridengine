@@ -648,7 +648,7 @@ public class SGEJobTemplate extends JobTemplate {
     * @return How to direct the job's standard output or null if it has not been
     * set
 	 */
-   public String getOututPath () {
+   public String getOutputPath () {
       return (String)this.getAttribute (OUTPUT_PATH).get (0);
    }
    

@@ -1200,12 +1200,15 @@ for i in $ARCH; do
          case $i in 
          hp10|hp11|hp11-64)
             shlibext="sl"
+            jnilibext="sl"
             ;;
          darwin)
             shlibext="dylib"
+            jnilibext="jnilib"
             ;;
          *)
             shlibext="so"
+            jnilibext="so"
             ;;
          esac
 
@@ -1282,7 +1285,7 @@ for i in $ARCH; do
          done
 
          for lib in $JDRMAA_SHARED_LIBRARIES; do
-            libname=$lib.$shlibext
+            libname=$lib.$jnilibext
             if [ -f $libname ]; then
                InstallProg $libname
             fi

@@ -1,3 +1,12 @@
+DT-2004-09-13-0: Bugfix:    o Fixed "delete all" bug in JAPI
+                            o Fixed locking bugs in JAPI
+                            o Tested DRMAA-J on all platforms
+                            - No J2SE 1.4 on Tru64 5.0 and AIX 4.3
+                            o Fixed attribute getter error in DRMAA-J
+                            o Added libjdrmaa to CLASSPATH in settings.sh|csh
+                 Changed:   JAPI, DRMAA, aimk, distinst, create_settings.sh
+                 Review:    EB
+
 SG-2004-09-13-0: Bugfix:    fixed memory leak in the scheduler
                  Changed:   scheduler
                  Review:    DT

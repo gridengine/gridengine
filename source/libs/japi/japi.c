@@ -341,7 +341,8 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
 static int japi_gdi_control_error2japi_error(lListElem *aep, dstring *diag, int drmaa_control_action);
 static int japi_clean_up_jobs (int flag, dstring *diag);
 static int japi_read_dynamic_attributes(dstring *diag);
-static int do_gdi_delete (lList **id_list, int action, dstring *diag);
+static int do_gdi_delete (lList **id_list, int action, bool delete_all,
+                          dstring *diag);
 static int japi_stop_event_client (void);
 
 
@@ -859,10 +860,11 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
 
          /* a session key is built from <unqualified hostname>.<pid>.<number> */
          sge_dstring_sprintf(&tmp_session_key, "%s."pid_t_fmt".%.6d", 
-               uti_state_get_unqualified_hostname(), getpid(), id);
+                             uti_state_get_unqualified_hostname(), getpid(),
+                             id);
          sge_dstring_sprintf(&tmp_session_path, "%s/%s/%s", 
-               pwd->pw_dir, JAPI_SESSION_SUBDIR, 
-                  sge_dstring_get_string(&tmp_session_key));
+                             pwd->pw_dir, JAPI_SESSION_SUBDIR,
+                             sge_dstring_get_string(&tmp_session_key));
          ret = sge_mkdir(sge_dstring_get_string(&tmp_session_path), S_IRWXU, 0, 0);
 
          if (ret == 0) {
@@ -2010,11 +2012,13 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             int count = 0;
             char buffer[1024];
             dstring job_task_specifier;
-            lListElem *japi_job = lFirst (Master_japi_job_list);
+            lListElem *japi_job = NULL;
 
             sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
 
             JAPI_LOCK_JOB_LIST();
+            japi_job = lFirst (Master_japi_job_list);
+            
             while (!done) {
                count = 0;
                
@@ -2053,7 +2057,6 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                }
 
                if (id_list) {
-                  /* This function frees id_list */
                   int ret = DRMAA_ERRNO_SUCCESS;                  
                   lList *idlp = NULL;
                   lListElem *idp = NULL;
@@ -2071,7 +2074,8 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                   }
 
                   JAPI_ENTER_CR();
-                  ret = do_gdi_delete (&id_list, drmaa_action, diag);
+                  /* This function frees id_list */
+                  ret = do_gdi_delete (&id_list, drmaa_action, true, diag);
                   JAPI_EXIT_CR();
 
                   if (ret != DRMAA_ERRNO_SUCCESS) {
@@ -2122,7 +2126,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
             JAPI_ENTER_CR();
             /* This function frees id_list */
-            ret = do_gdi_delete (&id_list, drmaa_action, diag);
+            ret = do_gdi_delete (&id_list, drmaa_action, false, diag);
             JAPI_EXIT_CR();
 
             if (ret != DRMAA_ERRNO_SUCCESS) {
@@ -2324,8 +2328,6 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
          japi_dec_threads(SGE_FUNC);
          japi_standard_error(DRMAA_ERRNO_EXIT_TIMEOUT, diag);
 
-         JAPI_UNLOCK_EC_STATE();
-         JAPI_UNLOCK_JOB_LIST();
          DEXIT;
          return DRMAA_ERRNO_EXIT_TIMEOUT;
       }
@@ -4588,8 +4590,6 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
    
    /* If there are any pending jobs, and a flag is set, kill them. */
    if ((flag == JAPI_EXIT_KILL_PENDING) || (flag == JAPI_EXIT_KILL_ALL)) {
-      japi_job = lFirst (Master_japi_job_list);
-      
       if (flag == JAPI_EXIT_KILL_PENDING) {
          DPRINTF (("Stopping all pending jobs in this session.\n"));
       }
@@ -4598,6 +4598,8 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
       }
       
       JAPI_LOCK_JOB_LIST();
+      japi_job = lFirst (Master_japi_job_list);
+      
       while (!done) {
          count = 0;
          
@@ -4654,7 +4656,7 @@ static int japi_clean_up_jobs(int flag, dstring *diag)
 
          if (id_list) {
             /* This function frees id_list. */
-            ret = do_gdi_delete (&id_list, DRMAA_CONTROL_TERMINATE, diag);
+            ret = do_gdi_delete (&id_list, DRMAA_CONTROL_TERMINATE, true, diag);
 
             if (ret != DRMAA_ERRNO_SUCCESS) {
                break; /* while */
@@ -4847,7 +4849,8 @@ static int japi_read_dynamic_attributes(dstring *diag)
 *     do_gdi_delete() -- Delete the job list
 *
 *  SYNOPSIS
-*     static int do_gdi_delete (lList **id_list, int action, dstring diag)
+*     static int do_gdi_delete (lList **id_list, int action, bool delete_all,
+*                               dstring diag)
 *
 *  FUNCTION
 *     Deletes all the jobs in the job id list, converts and GDI errors into
@@ -4856,6 +4859,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
 *  INPUTS
 *     lList **id_list   - List of job ids to delete.  Gets freed.
 *     int action        - The action that caused this delete
+*     bool delete_all   - Whether this call is deleting all jobs in the session
 *
 *  OUTPUT
 *     dstring *diag - returns diagnosis information - on error
@@ -4867,7 +4871,8 @@ static int japi_read_dynamic_attributes(dstring *diag)
 *  NOTES
 *     MT-NOTES: do_gdi_delete() is MT safe
 *******************************************************************************/
-static int do_gdi_delete (lList **id_list, int action, dstring *diag)
+static int do_gdi_delete (lList **id_list, int action, bool delete_all,
+                          dstring *diag)
 {
    lList *alp = NULL;
    lListElem *aep = NULL;
@@ -4878,7 +4883,16 @@ static int do_gdi_delete (lList **id_list, int action, dstring *diag)
    *id_list = lFreeList(*id_list);
 
    for_each (aep, alp) {
-      if (lGetUlong(aep, AN_status) != STATUS_OK) {
+      int status = lGetUlong(aep, AN_status);
+      
+   /* If we're doing a bulk delete (i.e. deleting all jobs in the session), we
+    * have a problem in that the list we have of the jobs in out session could
+    * be out of sync with reality.  That means we may try to delete a job that
+    * no longer exists.  Since we're just trying to kill all the jobs, it's not
+    * an error if the job doesn't exist when we try to delete it.  Therefore,
+    * if we see such as error, we ignore it.  Otherwise, a busy system will
+    * return a DRMAA_ERRNO_INVALID_JOB error by every control(ALL, TERM). */
+      if ((status != STATUS_OK) && !(delete_all && (status == STATUS_EEXIST))) {
          int ret = japi_gdi_control_error2japi_error(aep, diag, action);
          alp = lFreeList(alp);
          DEXIT;

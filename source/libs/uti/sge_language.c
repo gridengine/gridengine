@@ -297,13 +297,13 @@ char *localeDir
      } else {
         DPRINTF(("setlocale() returns NULL\n"));
      }
-     sge_language_functions.bindtextdomain_func(packName, locDir );
+     help1 = sge_language_functions.bindtextdomain_func(packName, locDir );
      if (help1 != NULL) {
         DPRINTF(("bindtextdomain() returns \"%s\"\n",help1));
      }else {
         DPRINTF(("bindtextdomain() returns NULL\n"));
      }
-     sge_language_functions.textdomain_func(packName);
+     help1 = sge_language_functions.textdomain_func(packName);
      if (help1 != NULL) {
         DPRINTF(("textdomain() returns \"%s\"\n",help1));
      }else {

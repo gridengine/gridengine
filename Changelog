@@ -1,3 +1,5 @@
+AS-2002-01-23-1: Enhancem. set execd priority not higher than PTF_MAX_PRIORITY
+
 SD-2002-01-23-2: Bugfix:   Initialize rusage structure to zeroes
 
 AA-2002-01-23-1: Feature:  Security:
@@ -26,6 +28,9 @@ CR-2002-01-22-0: Testsuite: - install_core_system check will now use default
                             - re_init cluster after tcl_error will now restore
                               cluster configuration for most parameters
 
+AS-2002-01-21-2: Feature:  updated version and GDI version
+
+AS-2002-01-21-0: Bugfix:   fixed typo in scripts/distinst
 
 JG-2002-01-22-0: Bugfix:    Tight integration using the mpi scripts: 
                             starting a task from within a task failed, as the 
@@ -122,6 +127,7 @@ SD-2002-01-15-1: Enhancem.: NEC SX-6 compilation changes:
 EB-2002-01-15-0: Enhancem.: 'qdel all' and 'qdel -uall' requests will
                             be split up into multiple requests
 
+>>>>>>> 1.259
 JG-2002-01-15-1: Bugfix:   qconf -mattr only handled string attributes, changing
                            attributes of other datatypes made qconf dump core.
 

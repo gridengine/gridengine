@@ -1,3 +1,6 @@
+CR-2004-11-22-0: Testsuite: fixed remote login testsuite problem
+                 Review:    JG
+
 JG-2004-11-22-0: Bugfix:    fixed a memory leak in mirror interface.
                  Review:    SG
                  Testsuite: Fixed test system_tests/config/path_alias.

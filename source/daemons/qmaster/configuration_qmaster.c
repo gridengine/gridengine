@@ -114,32 +114,8 @@ lList **lpp
    if (el)
       lAppendElem(*lpp, el);
    else {
-      lList *lpDefaults = NULL;
-      char config_str[1024], real_config_str[1024];
-
-      WARNING((SGE_EVENT, MSG_CREATINGGLOBALCONF));
-      lpDefaults = sge_set_defined_defaults(lpDefaults);
-   
-      el = lCreateElem(CONF_Type);
-      lSetHost(el, CONF_hname, SGE_GLOBAL_NAME);
-      lSetList(el, CONF_entries, lCopyList("global config", lpDefaults));
-      lAppendElem(*lpp, el);
-      lFreeList(lpDefaults);
-      
-      sprintf(config_str, "%s/%s/.%s", path.cell_root, 
-            "common", "configuration"); 
-      sprintf(real_config_str, "%s", path.conf_file); 
-      if ((ret=write_configuration(1, NULL, config_str, el, NULL, 
-         FLG_CONF_SPOOL))) {
-         /* answer list gets filled in write_configuration() */
-         DEXIT;
-         return ret;
-      } else {
-         if (rename(config_str, real_config_str) == -1) {
-            DEXIT;
-            return 1;
-         }
-      }
+      DEXIT;
+      SGE_EXIT(1);
    }
 
    if (!admin_user_initialized) {

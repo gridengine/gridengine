@@ -232,15 +232,14 @@ u_long32 flags
                   DEXIT;
                   return NULL;
                } else {
-                  /* gids < 100 are not allowed */
                   lListElem *rep;
 
                   for_each (rep, rlp) {
                      long min;
 
                      min = lGetUlong(rep, RN_min);
-                     if (min < 100) {
-                        WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, 100));
+                     if (min < GID_RANGE_NOT_ALLOWED_ID) {
+                        WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
                         lFreeList(alp);
                         lFreeList(lp);
                         fclose(fp);

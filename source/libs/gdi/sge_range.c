@@ -720,6 +720,38 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
    return ret;
 }
 
+/****** gdi/range/range_list_containes_id_less_than() *************************
+*  NAME
+*     range_list_containes_id_less_than() -- is one id less than the given id
+*
+*  SYNOPSIS
+*     int range_list_containes_id_less_than(const lList *range_list, 
+*                                           u_long32 id) 
+*
+*  FUNCTION
+*     Is at least one id in the "range_list" less than "id" 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list 
+*     u_long32 id             - number 
+*
+*  RESULT
+*     int - 0 or 1
+*******************************************************************************/
+int range_list_containes_id_less_than(const lList *range_list, u_long32 id)
+{
+   lListElem *range = NULL;
+   int ret = 0;
+
+   for_each(range, range_list) {
+      if (range_containes_id_less_than(range, id)) {
+         ret = 1;
+         break;
+      }
+   }
+   return ret;
+}
+
 /****** gdi/range/range_list_is_empty() ***************************************
 *  NAME
 *     range_list_is_empty() -- check if id lists containes ids 
@@ -742,6 +774,38 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
 int range_list_is_empty(const lList *range_list)
 {
    return (range_list_get_number_of_ids(range_list) == 0);
+}
+
+/****** gdi/range/range_containes_id_less_than() ******************************
+*  NAME
+*     range_containes_id_less_than() -- at least one id less than given id 
+*
+*  SYNOPSIS
+*     int range_containes_id_less_than(const lListElem *range, u_long32 id) 
+*
+*  FUNCTION
+*     This function tests if at least one id in "range" is less than "id" 
+*
+*  INPUTS
+*     const lListElem *range - RN_Type element 
+*     u_long32 id            - number 
+*
+*  RESULT
+*     int - 0 or 1 
+*******************************************************************************/
+int range_containes_id_less_than(const lListElem *range, u_long32 id)
+{
+   int ret = 0;
+
+   if (range) {
+      u_long32 start, end, step;
+
+      range_get_all_ids(range, &start, &end, &step);
+      if (start < id) {
+         ret = 1;
+      }
+   }
+   return ret;
 }
 
 /****** gdi/range/range_is_id_within() *****************************************

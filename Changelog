@@ -1,3 +1,9 @@
+EB-2002-08-21-0  Bugfix:    qmaster error message during startup: global
+                            configuration doesn't exist - creating
+                 Bugtraq:   #4665780
+                 Issues:    #226
+                 Changed:   sge_qmaster, qconf, qmon
+
 AA-2002-08-21-0  Bugfix:    gid_range bugfix for SGE mode in qmon
                  Bugtraq:   #4731288
                  Issues:    #355

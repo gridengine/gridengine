@@ -1,3 +1,7 @@
+AH-2004-04-16-0: Bugfix:    -soft submit option broken
+                 Issue:     917
+                 Review:    TBD
+
 JG-2004-04-16-0: Bugfix:    Fixed build process for shared libs on AIX43 and 
                             AIX51.
                             Changed README for berkeleydb: Berkeley DB has to be

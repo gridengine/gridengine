@@ -115,6 +115,7 @@ typedef struct {
    lList      *gdil;              /* the resources (JG_Type)                        */
    int        slots;              /* total number of slots                          */
    u_long32   start;              /* jobs start time                                */
+   int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task);

@@ -313,6 +313,8 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             /* determine earliest start time with that PE */
             result = sge_select_pe_time(best);
             if (result != 0) {
+               DPRINTF(("### first ### reservation in PE \"%s\" at "u32" with %d soft violations\n",
+                     lGetString(best->pe, PE_name), best->start, best->soft_violations));
                best_result = sge_best_result(best_result, result);
                continue;
             }
@@ -329,8 +331,11 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                continue;
             }
 
-            if (tmp.start < best->start) {
+            if (tmp.start < best->start || 
+                  (tmp.start == best->start && tmp.soft_violations < best->soft_violations)) {
                assignment_copy(best, &tmp, true);
+               DPRINTF(("### better ### reservation in PE \"%s\" at "u32" with %d soft violations\n",
+                     lGetString(best->pe, PE_name), best->start, best->soft_violations));
             }
          }
       }
@@ -352,6 +357,8 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                best_result = sge_best_result(best_result, result);
                continue;
             }
+            DPRINTF(("### first ### assignment in PE \"%s\" with %d soft violations\n",
+                  lGetString(best->pe, PE_name), best->soft_violations));
          } else {
             sge_assignment_t tmp;
             assignment_copy(&tmp, best, false);
@@ -364,8 +371,11 @@ int sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                continue;
             }
 
-            if (tmp.slots > best->slots) {
+            if (tmp.slots > best->slots || 
+                  (tmp.start == best->start && tmp.soft_violations < best->soft_violations)) {
                assignment_copy(best, &tmp, true);
+               DPRINTF(("### better ### assignment in PE \"%s\" with %d soft violations\n",
+                     lGetString(best->pe, PE_name), best->soft_violations));
             }
          }
       }
@@ -2327,7 +2337,7 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
 {
    lListElem *category = lGetRef(a->job, JB_category);
    bool now_assignment = (a->start == DISPATCH_TIME_NOW);
-/*    bool soft_requests = job_has_soft_requests(a->job); */
+   bool soft_requests = job_has_soft_requests(a->job);
    bool use_category = now_assignment && (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
    int result;
    u_long32 job_id = lGetUlong(a->job, JB_job_number);
@@ -2413,7 +2423,7 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
                       lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at)));
             best_queue_result = 0;
 
-            if (now_assignment /* && !soft_requests */ ) {
+            if (now_assignment && !soft_requests ) {
                fast_track_exit = true;
                break;
             }
@@ -2752,9 +2762,10 @@ bool *previous_load_inited)
             /* prepare sort by sequence number of queues */
             lSetUlong(qep, QU_host_seq_no, *host_seqno);
 
-            DPRINTF(("QUEUE %s TIME: %d + %d -> %d  QEND: %d + %d -> %d\n", qname, 
+            DPRINTF(("QUEUE %s TIME: %d + %d -> %d  QEND: %d + %d -> %d (%d soft violations)\n", qname, 
                accu_queue_slots,      qslots,      accu_queue_slots+       qslots, 
-               accu_queue_slots_qend, qslots_qend, accu_queue_slots_qend + qslots_qend)); 
+               accu_queue_slots_qend, qslots_qend, accu_queue_slots_qend + qslots_qend,
+               (int)lGetUlong(qep, QU_soft_violation))); 
             accu_queue_slots      += qslots;
             accu_queue_slots_qend += qslots_qend;
             lSetUlong(qep, QU_tag,      qslots);
@@ -3021,24 +3032,28 @@ lList **ignore_queues
    if (result == 0) {
       lListElem *category = lGetRef(job, JB_category);
       bool use_category = now_assignment && (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
-/*       bool soft_requests = job_has_soft_requests(a->job); */
+      bool soft_requests = job_has_soft_requests(a->job);
       lListElem *qep;
       u_long32 job_start_time = MAX_ULONG32;
+      u_long32 min_soft_violations = MAX_ULONG32;
+      lListElem *best_queue = NULL;
 
       if (!now_assignment) {
-         lListElem *earliest_queue = NULL;
          for_each (qep, a->queue_list) {
             DPRINTF(("    Q: %s "u32" "u32" (jst: "u32")\n", lGetString(qep, QU_full_name), 
                      lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at), job_start_time));
-            if (lGetUlong(qep, QU_tag) && job_start_time > lGetUlong(qep, QU_available_at)) {
+            if (lGetUlong(qep, QU_tag) && 
+               ((job_start_time > lGetUlong(qep, QU_available_at)) ||
+               (soft_requests && min_soft_violations > lGetUlong(qep, QU_soft_violation) && 
+                  job_start_time == lGetUlong(qep, QU_available_at)))) {
                DPRINTF(("--> yep!\n"));
-               earliest_queue = qep;
+               best_queue = qep;
                job_start_time = lGetUlong(qep, QU_available_at);
+               min_soft_violations = lGetUlong(qep, QU_soft_violation);
             }
          }
-         if (earliest_queue) {
-            qep = earliest_queue;
-            DPRINTF(("earliest queue \"%s\" at "u32"\n", lGetString(qep, QU_full_name), job_start_time));
+         if (best_queue) {
+            DPRINTF(("earliest queue \"%s\" at "u32"\n", lGetString(best_queue, QU_full_name), job_start_time));
          } else {
             DPRINTF(("no earliest queue found!\n"));
          }
@@ -3046,26 +3061,34 @@ lList **ignore_queues
          for_each (qep, a->queue_list)
             if (lGetUlong(qep, QU_tag)) {
                job_start_time = lGetUlong(qep, QU_available_at);
-               break;
+               if (soft_requests) {
+                  if (lGetUlong(qep, QU_soft_violation) < min_soft_violations) {
+                     best_queue = qep;
+                     min_soft_violations = lGetUlong(qep, QU_soft_violation);
+                  }
+               } else {
+                  best_queue = qep;
+                  break;
+               }
             }
       }
 
-      if (!qep) {
+      if (!best_queue) {
          DEXIT;
          return -1; /* should never happen */
       }
       {
          lListElem *gdil_ep;
          lList *gdil = NULL;
-         const char *qname = lGetString(qep, QU_full_name);
-         const char *eh_name = lGetHost(qep, QU_qhostname);
+         const char *qname = lGetString(best_queue, QU_full_name);
+         const char *eh_name = lGetHost(best_queue, QU_qhostname);
 
          DPRINTF((u32": 1 slot in queue %s@%s user %s %s for "u32"\n",
             job_id, qname, eh_name, lGetString(job, JB_owner), 
                   now_assignment?"scheduled":"reserved", job_start_time));
 
          gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
-         lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
+         lSetUlong(gdil_ep, JG_qversion, lGetUlong(best_queue, QU_version));
          lSetHost(gdil_ep, JG_qhostname, eh_name);
          lSetUlong(gdil_ep, JG_slots, 1);
 
@@ -3297,6 +3320,7 @@ sge_assignment_t *a
    int allocation_rule, minslots;
    bool need_master_host = (lGetList(a->job, JB_master_hard_queue_list)!=NULL);
    int host_seq_no = 1;
+   int total_soft_violations = 0;
    
    DENTER(TOP_LAYER, "sge_tags2gdil");
 
@@ -3422,6 +3446,7 @@ sge_assignment_t *a
             if (slots != 0) {
                accu_host_slots += slots;
                host_slots -= slots;
+               total_soft_violations += slots * lGetUlong(qep, QU_soft_violation);
 
                /* build gdil for that queue */
                DPRINTF((u32": %d slots in queue %s@%s user %s (host_slots = %d)\n", 
@@ -3457,6 +3482,7 @@ sge_assignment_t *a
 
    a->gdil = lFreeList(a->gdil);
    a->gdil = gdil;
+   a->soft_violations = total_soft_violations;
 
    DEXIT;
    return 0;
@@ -3572,7 +3598,7 @@ bool allow_non_requestable)
 
    *slots = qslots;
    *slots_qend = qslots_qend;
-   *violations = sge_soft_violations(NULL, *violations, job, NULL, config_attr, 
+   *violations = sge_soft_violations(qep, *violations, job, NULL, config_attr, 
          actual_attr, centry_list, DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG);
 
    if (result == 0) {

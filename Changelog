@@ -1,3 +1,5 @@
+JG-2004-04-06-1: Cleanup:   Some cleanup in berkeley db spooling.
+
 EB-2004-04-06-0: Bugfix:    Usage retrieval/logging problems with tight PE jobs
                  Issue:     929
                  Changed:   sge_execd

@@ -34,22 +34,21 @@
 #include <string.h>
 #include <time.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
-#include "sge_dstring.h"
-#include "sge_profiling.h"
-#include "sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_unistd.h"
 
-#include "sge_object.h"
-
-#include "sge_cqueue.h"
-#include "sge_host.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_qinstance.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_qinstance.h"
 
 #include "spool/sge_spooling_utilities.h"
 #include "spool/sge_spooling_database.h"
@@ -60,16 +59,6 @@
 
 #include "spool/berkeleydb/sge_bdb.h"
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
-
-/* JG: TODO: the following defines should better be parameters to
- *           the berkeley db spooling
- */
-
-/* how often will the transaction log be cleared */
-#define BERKELEYDB_CLEAR_INTERVAL 300
-
-/* how often will the database be checkpointed (cache written to disk) */
-#define BERKELEYDB_CHECKPOINT_INTERVAL 60
 
 static const char *spooling_method = "berkeleydb";
 
@@ -116,14 +105,10 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
 
    DENTER(TOP_LAYER, "spool_berkeleydb_create_context");
 
-   /* check input parameter (*/
-   if (args == NULL) {
-/*      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_POSTGRES_INVALIDARGSTOCREATESPOOLINGCONTEXT); */
-   } else {
+   /* check input parameter */
+   if (args != NULL) {
       lListElem *rule, *type;
-      struct bdb_info *info;
+      bdb_info info;
       char *server = NULL;
       char *path   = NULL;
       
@@ -211,11 +196,11 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
                                       const lListElem *rule, bool check)
 {
    bool ret = true;
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_startup_func");
 
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
    ret = spool_berkeleydb_check_version(answer_list);
 
@@ -269,12 +254,12 @@ spool_berkeleydb_default_shutdown_func(lList **answer_list,
    bool ret = true;
    const char *url;
 
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_shutdown_func");
 
    url = lGetString(rule, SPR_url);
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -335,11 +320,11 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
 {
    bool ret = true;
 
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_maintenance_func");
 
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
    switch (cmd) {
       case SPM_init:
@@ -398,12 +383,12 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
 {
    bool ret = true;
    const char *url;
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_trigger_func");
 
    url = lGetString(rule, SPR_url);
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
@@ -421,18 +406,7 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
    }
 
    if (ret) {
-      if (info->next_clear <= trigger) {
-         ret = spool_berkeleydb_clear_log(answer_list, info, url);
-         info->next_clear = trigger + BERKELEYDB_CLEAR_INTERVAL;
-      }
-
-      if (info->next_checkpoint <= trigger) {
-         ret = spool_berkeleydb_checkpoint(answer_list, info);
-         info->next_checkpoint = trigger + BERKELEYDB_CHECKPOINT_INTERVAL;
-      }
-
-      /* set time of next trigger */
-      *next_trigger = MIN(info->next_clear, info->next_checkpoint); 
+      ret = spool_berkeleydb_trigger(answer_list, info, trigger, next_trigger);
    }
 
    DEXIT;
@@ -473,11 +447,11 @@ spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule,
 {
    bool ret = true;
 
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_transaction_func");
 
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -565,11 +539,11 @@ spool_berkeleydb_default_list_func(lList **answer_list,
    const lDescr *descr;
    const char *table_name;
 
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_list_func");
 
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
    descr = object_type_get_descr(object_type);
    table_name = object_type_get_name(object_type);
 
@@ -791,11 +765,11 @@ spool_berkeleydb_default_read_func(lList **answer_list,
    bool ret = true;
    lListElem *ep = NULL;
 
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_read_func");
 
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -876,14 +850,14 @@ spool_berkeleydb_default_write_func(lList **answer_list,
 {
    bool ret = true;
    bool local_transaction = false; /* did we start a transaction? */
-   struct bdb_info *info;
+   bdb_info info;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_write_func");
 
    DPRINTF(("spool_berkeleydb_default_write_func called for %s with key %s\n",
             object_type_get_name(object_type), key != NULL ? key : "<null>"));
 
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
@@ -1022,7 +996,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
    bool ret = true;
    bool local_transaction = false; /* did we start a transaction? */
    const char *table_name;
-   struct bdb_info *info;
+   bdb_info info;
 
    dstring dbkey_dstring;
    char dbkey_buffer[MAX_STRING_SIZE];
@@ -1031,7 +1005,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_berkeleydb_default_delete_func");
 
    sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
-   info = (struct bdb_info *)lGetRef(rule, SPR_clientdata);
+   info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 

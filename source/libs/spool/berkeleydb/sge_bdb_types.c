@@ -47,18 +47,28 @@
 #include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 #include "spool/berkeleydb/sge_bdb_types.h"
 
-/* JG: TODO: use incomplete type for bdb_info in header, see 
- * sge_qmaster_timed_event.h
- */
+struct _bdb_info {
+   pthread_mutex_t   mtx;                 /* lock access to this object */
+   pthread_key_t     key;                 /* for thread specific data */
+  
+   const char *      server;              /* server, in case of RPC mechanism */
+   const char *      path;                /* the database path */
 
-struct bdb_connection {
+   DB_ENV *          env;                 /* global database environment */
+   DB *              db;                  /* global database object */
+
+   time_t            next_clear;          /* time of next logfile clear */
+   time_t            next_checkpoint;     /* time of next checkpoint */
+};
+
+typedef struct bdb_connection {
    DB_ENV *    env;                 /* thread specific database environment */
    DB *        db;                  /* thread specific database object */
    DB_TXN *    txn;                 /* transaction handle, always per thread */
-};
+} bdb_connection;
 
 static void
-bdb_init_connection(struct bdb_connection *con);
+bdb_init_connection(bdb_connection *con);
 
 static void 
 bdb_destroy_connection(void *connection);
@@ -68,7 +78,7 @@ bdb_destroy_connection(void *connection);
 *     bdb_create() -- create Berkeley DB specific data structures
 *
 *  SYNOPSIS
-*     struct bdb_info * 
+*     bdb_info 
 *     bdb_create(const char *server, const char *path) 
 *
 *  FUNCTION
@@ -92,16 +102,16 @@ bdb_destroy_connection(void *connection);
 *     const char *path   - path to the database
 *
 *  RESULT
-*     struct bdb_info * - pointer to a newly created and initialized structure
+*     bdb_info - pointer to a newly created and initialized structure
 *
 *  NOTES
 *     MT-NOTE: bdb_create() is MT safe 
 *******************************************************************************/
-struct bdb_info *
+bdb_info
 bdb_create(const char *server, const char *path) 
 {
    int ret;
-   struct bdb_info *info = (struct bdb_info *) malloc(sizeof(struct bdb_info));
+   bdb_info info = (bdb_info) malloc(sizeof(struct _bdb_info));
 
    pthread_mutex_init(&(info->mtx), NULL);
    ret = pthread_key_create(&(info->key), bdb_destroy_connection);
@@ -125,7 +135,7 @@ bdb_create(const char *server, const char *path)
 *     MT-NOTE: bdb_init_connection() is MT safe 
 */
 static void
-bdb_init_connection(struct bdb_connection *con)
+bdb_init_connection(bdb_connection *con)
 {
    con->env = NULL;
    con->db  = NULL;
@@ -145,7 +155,7 @@ bdb_destroy_connection(void *connection)
     * shutdown function.
     * But we can generate an error, if there is still something open.
     */
-   struct bdb_connection *con = (struct bdb_connection *)connection;
+   bdb_connection *con = (bdb_connection *)connection;
 
    DENTER(TOP_LAYER, "bdb_destroy_connection");
 
@@ -170,14 +180,14 @@ bdb_destroy_connection(void *connection)
 *
 *  SYNOPSIS
 *     const char * 
-*     bdb_get_server(struct bdb_info *info) 
+*     bdb_get_server(bdb_info info) 
 *
 *  FUNCTION
 *     Returns the hostname of a Berkeley DB RPC server, if the RPC mechanism
 *     is used, else NULL.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *
 *  RESULT
 *     const char * - hostname or NULL
@@ -186,7 +196,7 @@ bdb_destroy_connection(void *connection)
 *     MT-NOTE: bdb_get_server() is MT safe 
 *******************************************************************************/
 const char *
-bdb_get_server(struct bdb_info *info)
+bdb_get_server(bdb_info info)
 {
    return info->server;
 }
@@ -197,14 +207,14 @@ bdb_get_server(struct bdb_info *info)
 *
 *  SYNOPSIS
 *     const char * 
-*     bdb_get_path(struct bdb_info *info) 
+*     bdb_get_path(bdb_info info) 
 *
 *  FUNCTION
 *     Returns the path to a Berkeley DB database.
 *     If the RPC mechanism is used, this is the last component of the path.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *
 *  RESULT
 *     const char * - path to the database.
@@ -213,7 +223,7 @@ bdb_get_server(struct bdb_info *info)
 *     MT-NOTE: bdb_get_path() is MT safe 
 *******************************************************************************/
 const char *
-bdb_get_path(struct bdb_info *info)
+bdb_get_path(bdb_info info)
 {
    return info->path;
 }
@@ -223,7 +233,7 @@ bdb_get_path(struct bdb_info *info)
 *     bdb_get_env() -- get Berkeley DB database environment
 *
 *  SYNOPSIS
-*     DB_ENV * bdb_get_env(struct bdb_info *info) 
+*     DB_ENV * bdb_get_env(bdb_info info) 
 *
 *  FUNCTION
 *     Returns the Berkeley DB database environment set earlier using 
@@ -231,7 +241,7 @@ bdb_get_path(struct bdb_info *info)
 *     If the RPC mechanism is used, the environment is stored per thread.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *
 *  RESULT
 *     DB_ENV * - the database environment
@@ -243,14 +253,14 @@ bdb_get_path(struct bdb_info *info)
 *     spool/berkeleydb/bdb_set_env()
 *******************************************************************************/
 DB_ENV *
-bdb_get_env(struct bdb_info *info)
+bdb_get_env(bdb_info info)
 {
    DB_ENV *env = NULL;
 
    if (info->server == NULL) {
       env = info->env;
    } else {
-      GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, 
+      GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                    "bdb_get_env");
       env = con->env;
    }
@@ -264,14 +274,14 @@ bdb_get_env(struct bdb_info *info)
 *
 *  SYNOPSIS
 *     DB * 
-*     bdb_get_db(struct bdb_info *info) 
+*     bdb_get_db(bdb_info info) 
 *
 *  FUNCTION
 *     Return the Berkeleyd BD database handle set earlier using bdb_set_db().
 *     If the RPC mechanism is used, the database handle is stored per thread.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *
 *  RESULT
 *     DB * - the database handle
@@ -283,14 +293,14 @@ bdb_get_env(struct bdb_info *info)
 *     spool/berkeleydb/bdb_set_db()
 *******************************************************************************/
 DB *
-bdb_get_db(struct bdb_info *info)
+bdb_get_db(bdb_info info)
 {
    DB *db = NULL;
 
    if (info->server == NULL) {
       db = info->db;
    } else {
-      GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, 
+      GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                    "bdb_get_db");
       db = con->db;
    }
@@ -304,14 +314,14 @@ bdb_get_db(struct bdb_info *info)
 *
 *  SYNOPSIS
 *     DB_TXN * 
-*     bdb_get_txn(struct bdb_info *info) 
+*     bdb_get_txn(bdb_info info) 
 *
 *  FUNCTION
 *     Returns a transaction handle set earlier with bdb_set_txn().
 *     Each thread can have one transaction open.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *
 *  RESULT
 *     DB_TXN * - a transaction handle
@@ -323,11 +333,23 @@ bdb_get_db(struct bdb_info *info)
 *     spool/berkeleydb/bdb_set_txn()
 *******************************************************************************/
 DB_TXN *
-bdb_get_txn(struct bdb_info *info)
+bdb_get_txn(bdb_info info)
 {
-   GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, 
+   GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                 "bdb_get_txn");
    return con->txn;
+}
+
+time_t
+bdb_get_next_clear(bdb_info info)
+{
+   return info->next_clear;
+}
+
+time_t
+bdb_get_next_checkpoint(bdb_info info)
+{
+   return info->next_checkpoint;
 }
 
 /****** spool/berkeleydb/bdb_set_env() *****************************************
@@ -336,7 +358,7 @@ bdb_get_txn(struct bdb_info *info)
 *
 *  SYNOPSIS
 *     void 
-*     bdb_set_env(struct bdb_info *info, DB_ENV *env) 
+*     bdb_set_env(bdb_info info, DB_ENV *env) 
 *
 *  FUNCTION
 *     Sets the Berkeley DB environment.
@@ -344,7 +366,7 @@ bdb_get_txn(struct bdb_info *info)
 *     per thread.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *     DB_ENV *env           - the environment handle to set
 *
 *  NOTES
@@ -354,12 +376,12 @@ bdb_get_txn(struct bdb_info *info)
 *     spool/berkeleydb/bdb_get_env()
 *******************************************************************************/
 void
-bdb_set_env(struct bdb_info *info, DB_ENV *env)
+bdb_set_env(bdb_info info, DB_ENV *env)
 {
    if (info->server == NULL) {
       info->env  = env;
    } else {
-      GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, 
+      GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                    "bdb_set_env");
       con->env = env;
    }
@@ -371,7 +393,7 @@ bdb_set_env(struct bdb_info *info, DB_ENV *env)
 *
 *  SYNOPSIS
 *     void 
-*     bdb_set_db(struct bdb_info *info, DB *db) 
+*     bdb_set_db(bdb_info info, DB *db) 
 *
 *  FUNCTION
 *     Sets the Berkeley DB database handle.
@@ -379,7 +401,7 @@ bdb_set_env(struct bdb_info *info, DB_ENV *env)
 *     opened per thread.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *     DB *db                - the database handle to store
 *
 *  NOTES
@@ -389,12 +411,12 @@ bdb_set_env(struct bdb_info *info, DB_ENV *env)
 *     spool/berkeleydb/bdb_get_db()
 *******************************************************************************/
 void
-bdb_set_db(struct bdb_info *info, DB *db)
+bdb_set_db(bdb_info info, DB *db)
 {
    if (info->server == NULL) {
       info->db  = db;
    } else {
-      GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, 
+      GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                    "bdb_set_db");
       con->db = db;
    }
@@ -406,14 +428,14 @@ bdb_set_db(struct bdb_info *info, DB *db)
 *
 *  SYNOPSIS
 *     void 
-*     bdb_set_txn(struct bdb_info *info, DB_TXN *txn) 
+*     bdb_set_txn(bdb_info info, DB_TXN *txn) 
 *
 *  FUNCTION
 *     Stores a Berkeley DB transaction handle.
 *     It is always stored in thread local storage.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *     DB_TXN *txn           - the transaction handle to store
 *
 *  NOTES
@@ -423,11 +445,23 @@ bdb_set_db(struct bdb_info *info, DB *db)
 *     spool/berkeleydb/bdb_get_txn()
 *******************************************************************************/
 void
-bdb_set_txn(struct bdb_info *info, DB_TXN *txn)
+bdb_set_txn(bdb_info info, DB_TXN *txn)
 {
-   GET_SPECIFIC(struct bdb_connection, con, bdb_init_connection, info->key, 
+   GET_SPECIFIC(bdb_connection, con, bdb_init_connection, info->key, 
                 "bdb_set_txn");
    con->txn = txn;
+}
+
+void
+bdb_set_next_clear(bdb_info info, const time_t next)
+{
+   info->next_clear = next;
+}
+
+void
+bdb_set_next_checkpoint(bdb_info info, const time_t next)
+{
+   info->next_checkpoint = next;
 }
 
 /****** spool/berkeleydb/bdb_get_dbname() **************************************
@@ -436,7 +470,7 @@ bdb_set_txn(struct bdb_info *info, DB_TXN *txn)
 *
 *  SYNOPSIS
 *     const char * 
-*     bdb_get_dbname(struct bdb_info *info, dstring *buffer) 
+*     bdb_get_dbname(bdb_info info, dstring *buffer) 
 *
 *  FUNCTION
 *     Return a meaningfull name for a database connection.
@@ -445,7 +479,7 @@ bdb_set_txn(struct bdb_info *info, DB_TXN *txn)
 *     A dstring buffer has to be provided by the caller.
 *
 *  INPUTS
-*     struct bdb_info *info - the database object
+*     bdb_info info - the database object
 *     dstring *buffer       - buffer to hold the database name
 *
 *  RESULT
@@ -455,7 +489,7 @@ bdb_set_txn(struct bdb_info *info, DB_TXN *txn)
 *     MT-NOTE: bdb_get_dbname() is MT safe 
 *******************************************************************************/
 const char *
-bdb_get_dbname(struct bdb_info *info, dstring *buffer)
+bdb_get_dbname(bdb_info info, dstring *buffer)
 {
    const char *ret;
    const char *server = bdb_get_server(info);
@@ -473,7 +507,7 @@ bdb_get_dbname(struct bdb_info *info, dstring *buffer)
 }
 
 void
-bdb_lock_info(struct bdb_info *info)
+bdb_lock_info(bdb_info info)
 {
    DENTER(TOP_LAYER, "bdb_lock_info");
    sge_mutex_lock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));
@@ -481,7 +515,7 @@ bdb_lock_info(struct bdb_info *info)
 }
 
 void
-bdb_unlock_info(struct bdb_info *info)
+bdb_unlock_info(bdb_info info)
 {
    DENTER(TOP_LAYER, "bdb_unlock_info");
    sge_mutex_unlock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));

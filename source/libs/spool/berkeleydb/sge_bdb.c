@@ -33,25 +33,21 @@
 #include <errno.h>
 #include <string.h>
 
-/* rmon */
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_log.h"
 
-/* uti */
-#include "sge_profiling.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
 
-/* cull */
-#include "cull.h"
+#include "cull/cull.h"
 
-/* sgeobj */
-#include "sge_answer.h"
-#include "sge_cqueue.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
-#include "sge_object.h"
-#include "sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_str.h"
 
 /* local */
 #include "msg_common.h"
@@ -67,11 +63,17 @@ static const int pack_part = 0;
 #endif
 
 static void 
-spool_berkeleydb_error_close(struct bdb_info *info);
+spool_berkeleydb_error_close(bdb_info info);
 
 static void
-spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_handle_bdb_error(lList **answer_list, bdb_info info,
                                   int bdb_errno);
+
+static bool
+spool_berkeleydb_clear_log(lList **answer_list, bdb_info info);
+
+static bool
+spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info);
 
 /****** spool/berkeleydb/spool_berkeleydb_check_version() **********************
 *  NAME
@@ -132,14 +134,14 @@ spool_berkeleydb_check_version(lList **answer_list)
 *
 *  SYNOPSIS
 *     bool spool_berkeleydb_create_environment(lList **answer_list, struct 
-*     bdb_info *info, const char *url) 
+*     bdb_info info, const char *url) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
 *     lList **answer_list   - ??? 
-*     struct bdb_info *info - ??? 
+*     bdb_info info - ??? 
 *     const char *url       - ??? 
 *
 *  RESULT
@@ -158,7 +160,7 @@ spool_berkeleydb_check_version(lList **answer_list)
 *     ???/???
 *******************************************************************************/
 bool spool_berkeleydb_create_environment(lList **answer_list, 
-                                         struct bdb_info *info)
+                                         bdb_info info)
 { 
    bool ret = true;
    int dbret;
@@ -327,7 +329,7 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
 }
 
 bool 
-spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_open_database(lList **answer_list, bdb_info info, 
                                bool create)
 {
    bool ret = true;
@@ -428,7 +430,7 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
 }
 
 bool 
-spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_close_database(lList **answer_list, bdb_info info,
                                 const char *url)
 {
    bool ret = true;
@@ -498,7 +500,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info) 
+*     spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info) 
 *
 *  FUNCTION
 *     Starts a transaction.
@@ -507,7 +509,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *
 *  RESULT
 *     bool - true on success, else false
@@ -519,7 +521,7 @@ spool_berkeleydb_close_database(lList **answer_list, struct bdb_info *info,
 *     spool/berkeleydb/spool_berkeleydb_end_transaction()
 *******************************************************************************/
 bool
-spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
+spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
@@ -583,7 +585,7 @@ spool_berkeleydb_start_transaction(lList **answer_list, struct bdb_info *info)
 }
 
 bool
-spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_end_transaction(lList **answer_list, bdb_info info, 
                                  bool commit)
 {
    bool ret = true;
@@ -648,124 +650,33 @@ spool_berkeleydb_end_transaction(lList **answer_list, struct bdb_info *info,
    return ret;
 }
 
-bool
-spool_berkeleydb_clear_log(lList **answer_list, struct bdb_info *info, 
-                           const char *url)
+bool 
+spool_berkeleydb_trigger(lList **answer_list, bdb_info info, 
+                         time_t trigger, time_t *next_trigger)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger");
 
-   /* only necessary for local spooling */
-   if (bdb_get_server(info) == NULL) {
-      DB_ENV *env;
-
-      /* check connection */
-      env = bdb_get_env(info);
-      if (env == NULL) {
-         dstring dbname_dstring = DSTRING_INIT;
-         const char *dbname;
-      
-         dbname = bdb_get_dbname(info, &dbname_dstring);
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                 dbname);
-         sge_dstring_free(&dbname_dstring);
-         ret = false;
-      }
-
-      if (ret) {
-         int dbret;
-         char **list;
-
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = env->log_archive(env, &list, DB_ARCH_ABS);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S,
-                                    db_strerror(dbret));
-            ret = false;
-         }
-
-         if (ret && list != NULL) {
-            char **file;
-
-            for (file = list; *file != NULL; file++) {
-               if (remove(*file) != 0) {
-                  dstring error_dstring = DSTRING_INIT;
-
-                  answer_list_add_sprintf(answer_list, STATUS_EDISK, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_ERRORDELETINGFILE_SS,
-                                          *file,
-                                          sge_strerror(errno, &error_dstring));
-                  sge_dstring_free(&error_dstring);
-                  ret = false;
-                  break;
-               }
-            }
-
-            free(list);
-         }
-      }
+   if (bdb_get_next_clear(info) <= trigger) {
+      ret = spool_berkeleydb_clear_log(answer_list, info);
+      bdb_set_next_clear(info, trigger + BERKELEYDB_CLEAR_INTERVAL);
    }
 
-   DEXIT;
-   return ret;
-}
-
-bool
-spool_berkeleydb_checkpoint(lList **answer_list, struct bdb_info *info)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
-
-   /* only necessary for local spooling */
-   if (bdb_get_server(info) == NULL) {
-      DB_ENV *env;
-
-      env = bdb_get_env(info);
-      if (env == NULL) {
-      dstring dbname_dstring = DSTRING_INIT;
-      const char *dbname;
-      
-         dbname = bdb_get_dbname(info, &dbname_dstring);
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                 dbname);
-         sge_dstring_free(&dbname_dstring);
-         ret = false;
-      }
-
-      if (ret) {
-         int dbret;
-
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = env->txn_checkpoint(env, 0, 0, 0);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_CANNOTCHECKPOINT_S,
-                                    db_strerror(dbret));
-            ret = false;
-         } 
-      }
+   if (bdb_get_next_checkpoint(info) <= trigger) {
+      ret = spool_berkeleydb_checkpoint(answer_list, info);
+      bdb_set_next_checkpoint(info, trigger + BERKELEYDB_CHECKPOINT_INTERVAL);
    }
+
+   /* set time of next trigger */
+   *next_trigger = MIN(bdb_get_next_clear(info), bdb_get_next_checkpoint(info));
 
    DEXIT;
    return ret;
 }
 
 bool 
-spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                            lList **list, const lDescr *descr,
                            const char *key)
 {
@@ -887,7 +798,7 @@ spool_berkeleydb_read_list(lList **answer_list, struct bdb_info *info,
 }
 
 bool 
-spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                               const lListElem *object, const char *key)
 {
    bool ret = true;
@@ -899,11 +810,8 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
     * into a temporary list and spool this copy.
     */
    if (object->status == FREE_ELEM) {
-      /* JG: TODO: do not copy elem */
-      lListElem *tmp_object = lCopyElem(object);
       tmp_list = lCreateList("tmp", object->descr);
-      lAppendElem(tmp_list, tmp_object);
-      object = tmp_object;
+      lAppendElem(tmp_list, (lListElem *)object);
    }
 
    {
@@ -981,7 +889,8 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
    }
 
    if (tmp_list != NULL) {
-      lFreeList(tmp_list);
+      lDechainElem(tmp_list, (lListElem *)object);
+      tmp_list = lFreeList(tmp_list);
    }
 
    DEXIT;
@@ -989,7 +898,7 @@ spool_berkeleydb_write_object(lList **answer_list, struct bdb_info *info,
 }
 
 bool
-spool_berkeleydb_write_pe_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_pe_task(lList **answer_list, bdb_info info,
                                const lListElem *object, 
                                u_long32 job_id, u_long32 ja_task_id,
                                const char *pe_task_id)
@@ -1013,7 +922,7 @@ spool_berkeleydb_write_pe_task(lList **answer_list, struct bdb_info *info,
 }
 
 bool
-spool_berkeleydb_write_ja_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_ja_task(lList **answer_list, bdb_info info,
                                const lListElem *object, 
                                u_long32 job_id, u_long32 ja_task_id)
 {
@@ -1042,7 +951,7 @@ spool_berkeleydb_write_ja_task(lList **answer_list, struct bdb_info *info,
 }
 
 bool
-spool_berkeleydb_write_job(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_write_job(lList **answer_list, bdb_info info,
                            const lListElem *object, 
                            u_long32 job_id, bool only_job)
 {
@@ -1084,7 +993,7 @@ spool_berkeleydb_write_job(lList **answer_list, struct bdb_info *info,
 }
 
 bool
-spool_berkeleydb_write_cqueue(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_write_cqueue(lList **answer_list, bdb_info info, 
                               const lListElem *object, const char *key)
 {
    bool ret = true;
@@ -1116,7 +1025,7 @@ spool_berkeleydb_write_cqueue(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
+*     spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
 *                                    const char *key, bool sub_objects) 
 *
 *  FUNCTION
@@ -1126,7 +1035,7 @@ spool_berkeleydb_write_cqueue(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *     const char *key       - key
 *     bool sub_objects      - use key as pattern?
 *
@@ -1137,7 +1046,7 @@ spool_berkeleydb_write_cqueue(lList **answer_list, struct bdb_info *info,
 *     MT-NOTE: spool_berkeleydb_delete_object() is MT safe 
 *******************************************************************************/
 bool
-spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_delete_object(lList **answer_list, bdb_info info, 
                                const char *key, bool sub_objects)
 {
    bool ret = true;
@@ -1271,7 +1180,7 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
+*     spool_berkeleydb_delete_pe_task(lList **answer_list, bdb_info info,
 *                                     const char *key, bool sub_objects) 
 *
 *  FUNCTION
@@ -1286,7 +1195,7 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *     const char *key       - key
 *     bool sub_objects      - interpret key as pattern?
 *
@@ -1300,7 +1209,7 @@ spool_berkeleydb_delete_object(lList **answer_list, struct bdb_info *info,
 *     spool/berkeleydb/spool_berkeleydb_delete_object()
 *******************************************************************************/
 bool
-spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_pe_task(lList **answer_list, bdb_info info,
                                 const char *key, bool sub_objects)
 {
    bool ret = true;
@@ -1324,7 +1233,7 @@ spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
+*     spool_berkeleydb_delete_ja_task(lList **answer_list, bdb_info info,
 *                                     const char *key, bool sub_objects) 
 *
 *  FUNCTION
@@ -1337,7 +1246,7 @@ spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *     const char *key       - key
 *     bool sub_objects      - use key as pattern?
 *
@@ -1352,7 +1261,7 @@ spool_berkeleydb_delete_pe_task(lList **answer_list, struct bdb_info *info,
 *     spool/berkeleydb/spool_berkeleydb_delete_pe_task()
 *******************************************************************************/
 bool
-spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_ja_task(lList **answer_list, bdb_info info,
                                 const char *key, bool sub_objects)
 {
    bool ret = true;
@@ -1380,7 +1289,7 @@ spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info, 
+*     spool_berkeleydb_delete_job(lList **answer_list, bdb_info info, 
 *                                 const char *key, bool sub_objects) 
 *
 *  FUNCTION
@@ -1392,7 +1301,7 @@ spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *     const char *key       - key (job_number)
 *     bool sub_objects      - is the given key a pattern?
 *
@@ -1407,7 +1316,7 @@ spool_berkeleydb_delete_ja_task(lList **answer_list, struct bdb_info *info,
 *     spool/berkeleydb/spool_berkeleydb_delete_ja_task()
 *******************************************************************************/
 bool
-spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_job(lList **answer_list, bdb_info info,
                             const char *key, bool sub_objects)
 {
    bool ret = true;
@@ -1435,7 +1344,7 @@ spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
 *
 *  SYNOPSIS
 *     bool 
-*     spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
+*     spool_berkeleydb_delete_cqueue(lList **answer_list, bdb_info info,
 *                                    const char *key) 
 *
 *  FUNCTION
@@ -1443,7 +1352,7 @@ spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
 *
 *  INPUTS
 *     lList **answer_list   - used to return error messages
-*     struct bdb_info *info - database handle
+*     bdb_info info - database handle
 *     const char *key       - key (name) of cluster queue to delete
 *
 *  RESULT
@@ -1456,7 +1365,7 @@ spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
 *     spool/berkeleydb/spool_berkeleydb_delete_object()
 *******************************************************************************/
 bool
-spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_delete_cqueue(lList **answer_list, bdb_info info,
                                const char *key)
 {
    bool ret = true;
@@ -1484,7 +1393,7 @@ spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
 /* ---- static functions ---- */
 
 static void 
-spool_berkeleydb_error_close(struct bdb_info *info)
+spool_berkeleydb_error_close(bdb_info info)
 {
    DB_ENV *env;
    DB     *db;
@@ -1511,7 +1420,7 @@ spool_berkeleydb_error_close(struct bdb_info *info)
 }
 
 static void
-spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info, 
+spool_berkeleydb_handle_bdb_error(lList **answer_list, bdb_info info, 
                                   int bdb_errno)
 {
    /* we lost the connection to a RPC server */
@@ -1537,7 +1446,7 @@ spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info,
 
 bool 
 spool_berkeleydb_check_reopen_database(lList **answer_list, 
-                                       struct bdb_info *info)
+                                       bdb_info info)
 {
    bool ret = true;
    DB_ENV *env;
@@ -1565,7 +1474,7 @@ spool_berkeleydb_check_reopen_database(lList **answer_list,
 }
 
 bool 
-spool_berkeleydb_read_keys(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
                            lList **list, const char *key)
 {
    bool ret = true;
@@ -1647,7 +1556,7 @@ spool_berkeleydb_read_keys(lList **answer_list, struct bdb_info *info,
 }
 
 lListElem *
-spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
+spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                              const char *key)
 {
    lListElem *ret = NULL;
@@ -1727,6 +1636,121 @@ spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
           * clear_packbuffer(&pb);
           */
 
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
+
+   /* only necessary for local spooling */
+   if (bdb_get_server(info) == NULL) {
+      DB_ENV *env;
+
+      /* check connection */
+      env = bdb_get_env(info);
+      if (env == NULL) {
+         dstring dbname_dstring = DSTRING_INIT;
+         const char *dbname;
+      
+         dbname = bdb_get_dbname(info, &dbname_dstring);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                                 dbname);
+         sge_dstring_free(&dbname_dstring);
+         ret = false;
+      }
+
+      if (ret) {
+         int dbret;
+         char **list;
+
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = env->log_archive(env, &list, DB_ARCH_ABS);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S,
+                                    db_strerror(dbret));
+            ret = false;
+         }
+
+         if (ret && list != NULL) {
+            char **file;
+
+            for (file = list; *file != NULL; file++) {
+               if (remove(*file) != 0) {
+                  dstring error_dstring = DSTRING_INIT;
+
+                  answer_list_add_sprintf(answer_list, STATUS_EDISK, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_ERRORDELETINGFILE_SS,
+                                          *file,
+                                          sge_strerror(errno, &error_dstring));
+                  sge_dstring_free(&error_dstring);
+                  ret = false;
+                  break;
+               }
+            }
+
+            free(list);
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
+
+   /* only necessary for local spooling */
+   if (bdb_get_server(info) == NULL) {
+      DB_ENV *env;
+
+      env = bdb_get_env(info);
+      if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+      
+         dbname = bdb_get_dbname(info, &dbname_dstring);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                                 dbname);
+         sge_dstring_free(&dbname_dstring);
+         ret = false;
+      }
+
+      if (ret) {
+         int dbret;
+
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = env->txn_checkpoint(env, 0, 0, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_CANNOTCHECKPOINT_S,
+                                    db_strerror(dbret));
+            ret = false;
+         } 
       }
    }
 

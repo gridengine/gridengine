@@ -1,3 +1,6 @@
+CR-2004-08-10-0: Testsuite: shutdown_core_system will now wait for qmaster
+                            shutdown when qconf -km is used
+
 CR-2004-08-09-0: Bugfix:    fixed fix for CR-2004-08-05-2
                             execd may exit when hostname resolving is changed
                             or not available.

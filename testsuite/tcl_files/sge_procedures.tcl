@@ -5813,6 +5813,7 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
    if { $prg_exit_state != 0 } {
       set qmaster_pid -1
    }
+ 
 
    get_ps_info $qmaster_pid $hostname
    if { ($ps_info($qmaster_pid,error) == 0) } {
@@ -5823,7 +5824,9 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
 
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" } result
          puts $CHECK_OUTPUT $result
-         sleep 10
+
+         wait_till_qmaster_is_down $hostname
+       
          shutdown_system_daemon $hostname qmaster
       } else {
          add_proc_error "shutdown_qmaster" "-1" "qmaster pid $qmaster_pid not found"
@@ -5903,8 +5906,29 @@ proc shutdown_all_shadowd { hostname } {
          } else {
              start_remote_prog "$hostname" "$CHECK_USER" "kill" "$ps_info(pid,$elem)"
          }
-      } else {
-         add_proc_error "shutdown_all_shadowd" "-2" "could not shutdown all shadowd daemons"
+      } 
+   }
+
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
+         add_proc_error "shutdown_all_shadowd" "-3" "could not shutdown shadowd at host $elem with term signal"
+         puts $CHECK_OUTPUT "Killing process with kill signal [ set ps_info(pid,$elem) ] ..."
+         if { [ have_root_passwd ] == -1 } {
+            set_root_passwd 
+         }
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+             start_remote_prog "$hostname" "root" "kill" "-9 $ps_info(pid,$elem)"
+         } else {
+             start_remote_prog "$hostname" "$CHECK_USER" "kill" "-9 $ps_info(pid,$elem)"
+         }
+      } 
+   }
+
+   foreach elem $new_index {
+      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
+         add_proc_error "shutdown_all_shadowd" "-1" "could not shutdown shadowd at host $elem with kill signal"
       }
    }
 
@@ -6133,7 +6157,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 5  ;# give the schedd and execd's some time to shutdown
+   sleep 15 ;# give the schedd and execd's some time to shutdown
 
    puts $CHECK_OUTPUT "killing qmaster ..."
 
@@ -6149,7 +6173,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 10  ;# give the qmaster some time to shutdown
+   wait_till_qmaster_is_down $CHECK_CORE_MASTER
 
    if { $ts_config(gridengine_version) == 53 } {
       puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
@@ -6255,6 +6279,45 @@ proc add_operator { anOperator } {
    }
 }
 
+
+proc wait_till_qmaster_is_down { host } {
+   global ts_config CHECK_OUTPUT
+
+   set process_names "sge_qmaster" 
+   
+   if { [string match "csp" $ts_config(product_feature)] } {
+      set my_timeout [ expr ( [timestamp] + 90 ) ] 
+   } else {
+      set my_timeout [ expr ( [timestamp] + 45 ) ] 
+   }
+
+   while { 1 } {
+      set found_p [ ps_grep "$ts_config(product_root)/" $host ]
+      set nr_of_found_qmaster_processes_or_threads 0
+
+      foreach process_name $process_names {
+         puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
+         foreach elem $found_p {
+            if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
+               puts $CHECK_OUTPUT "actual ps info: $ps_info(string,$elem)"
+               if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
+                  incr nr_of_found_qmaster_processes_or_threads 1
+                  puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
+                  puts $CHECK_OUTPUT $ps_info(string,$elem)
+               }
+            }
+         }
+      }
+      if { [timestamp] > $my_timeout } {
+         add_proc_error "wait_till_qmaster_is_down" -3 "timeout while waiting for qmaster going down"
+         return -1
+      }
+      if { $nr_of_found_qmaster_processes_or_threads == 0 } {
+         puts $CHECK_OUTPUT "no qmaster processes running"
+         return 0      
+      }
+   }
+}
 
 #                                                             max. column:     |
 #****** sge_procedures/delete_operator() ******

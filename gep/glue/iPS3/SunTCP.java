@@ -1411,7 +1411,7 @@ public class SunTCP extends HttpServlet {
    private void htmlHeader(PrintWriter page, String title, String headInfo) {
       page.println("<html><head>" + headInfo + "</head><body bgcolor=FFFFFF>");
       page.println("<table border=0 cellpadding=2 cellspacing=0 width=100% bgcolor=888888>");    
-      page.println("<tr><td bgcolor=FF9966><font color=FFFFFF><b>SunTCP "
+      page.println("<tr><td bgcolor=FF9966><font color=FFFFFF><b>GEP "
                  + title + "</b></font></td></tr><tr><td bgcolor=DDDDDD>");    
    }
   

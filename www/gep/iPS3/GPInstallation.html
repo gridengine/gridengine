@@ -24,7 +24,7 @@
 
 <center>
 <h1>
-Technical Computing Portal</h1></center>
+Grid Engine Portal</h1></center>
 
 <center>
 <h1>
@@ -33,59 +33,45 @@ Installation Guide</h1></center>
 <center><a href="mailto:dan.fraser@sun.com">Dan.Fraser@Sun.COM</a>
 <p><a href="mailto:ron.selva@sun.com">Ron.Selva@Sun.COM</a></center>
 
-<p><b><font color="#FF0000">Note 1:&nbsp; It is anticipated that the Technical
-Computing Portal will be renamed the Sun Grid Portal .&nbsp; The final
-approval to rename the Technical Computing Portal has not yet been granted.&nbsp;
-For the purposes of this installation guide, it is assumed that Sun Grid
-Portal will become the official name.</font></b>
-<p><b><font color="#FF0000">Note 2:&nbsp; To be consistent with Sun policies
-regarding third party, open source, or shareware software, and to comply
-with the Sun open source/shareware review and approval process, we have
-removed both the O'Reilly Servlet and the VNC shareware software from the
-Sun Grid Portal distribution.&nbsp; This installation guide has been modified
-to include instructions for downloading the software from the respective
-sites and for the specific steps to be followed for incorporating the software
-for use with the Sun Grid Portal.&nbsp; Please refer to Step 3 of the Installation
-Procedure (Sun Grid Portal Integration (Glue) Package) for additional details.</font></b>
-<h1>
+<h1 CLASS="western">
 Table of Contents</h1>
 
 <div ID="Table of Contents1">
-<div STYLE="margin-bottom: 0in"><a href="#Introduction & Technical Acknowledgments">Introduction
-&amp; Technical Acknowledgments</a>
-<blockquote><a href="#Solution Components Detail">Solution Components Detail</a>
-<br><a href="#Data Set">Data Set</a>
-<br><a href="#Compute Engine">Compute Engine</a>
-<br><a href="#Java Servlet">Java Servlet</a>
-<br><a href="#Portal Environment">Portal Environment</a>
-<br><a href="#Multi- Domain Environment">Multi- Domain Environment</a></blockquote>
+<div STYLE="margin-bottom: 0in"><a href="#IntroductionTechnicalAcknowledgments">Introduction
+&amp; Technical Acknowledgments</a><a href="#SolutionComponentsDetail"></a>
+<p><a href="#SolutionComponentsDetail">Solution Components Detail</a>
+<blockquote><a href="#DataSet">Data Set</a>
+<br><a href="#ComputeEngine">Compute Engine</a>
+<br><a href="#JavaServlet">Java Servlet</a>
+<br><a href="#PortalEnvironment">Portal Environment</a>
+<br><a href="#MultiDomainEnvironment">Multi- Domain Environment</a></blockquote>
 </div>
 
-<div STYLE="margin-bottom: 0in"><a href="#Installation Procedure">Installation
+<div STYLE="margin-bottom: 0in"><a href="#InstallationProcedure">Installation
 Procedure</a>
-<blockquote><a href="#Installation Procedure Summary">Installation Procedure
+<blockquote><a href="#InstallationProcedureSummary">Installation Procedure
 Summary</a>
-<br><a href="#Step 1: Grid Engine">Step 1: Grid Engine</a>
-<br><a href="#Step 2: iPlanet Portal Server">Step 2: SunONE Portal Server</a>
-<br><a href="#Step 3: Install the SGP integration (Glue) package.">Step
-3: Sun Grid Portal Integration (Glue) Package</a>
-<br><a href="#Step 4: Configure iPlanet Portal Server.">Step 4: Configure
-SunONE Portal Server</a>
-<br><a href="#Step 5: Using Grid Portal">Step 5: Using Sun Grid Portal</a>
-<br><a href="#Step 6: Register New Applications with SGP">Step 6: Register
-New Applications with Sun Grid Portal</a></blockquote>
+<br><a href="#Step1GridEngine">Step 1: Grid Engine</a>
+<br><a href="#Step2SunONEPortalServer">Step 2: SunONE Portal Server</a>
+<br><a href="#Step3GEPIntegration(Glue)package">Step 3: Grid Engine Portal
+Integration (Glue) Package</a>
+<br><a href="#Step4ConfigureSunONEPortalServer">Step 4: Configure SunONE
+Portal Server</a>
+<br><a href="#Step5UsingGridEnginePortal">Step 5: Using Grid Engine Portal</a>
+<br><a href="#Step6RegisterNewApplicationswithGEP">Step 6: Register New
+Applications with Grid Engine Portal</a></blockquote>
 </div>
-<a href="#A Tip for Developers">A Tip for Developers</a>
-<p><a href="#Appendix A: Adding Channels Manually">Appendix A: Adding Channels
+<a href="#ATipforDevelopers">A Tip for Developers</a>
+<p><a href="#AppendixAAddingChannelsManually">Appendix A: Adding Channels
 Manually</a>
-<p><a href="#Appendix B - Screen shots">Appendix B: Screen shots</a></div>
+<p><a href="#AppendixBScreenshots">Appendix B: Screen Shots</a></div>
 
 <br>&nbsp;
-<h1>
-<a NAME="Introduction & Technical Acknowledgments"></a>Introduction &amp;
+<h1 CLASS="western">
+<a NAME="IntroductionTechnicalAcknowledgments"></a>Introduction &amp;
 Technical Acknowledgments</h1>
 
-<div STYLE="margin-bottom: 0in">The Sun Grid Portal (SGP) solution enables
+<div STYLE="margin-bottom: 0in">The Grid Engine Portal (GEP) solution enables
 organizations to provide flexible, secure and managed access to High Performance
 Computing resources. The solution is designed to be implemented in a variety
 of environments, from University and Research Institutes to Commercial
@@ -103,35 +89,35 @@ shown in illustration 1.</div>
 that need to be integrated in the solution.
 
 <p STYLE="margin-bottom: 0in">We would like to especially thank those who
-made significant technical contributions to the SGP:
+made significant technical contributions to the GEP:
 <ul STYLE="margin-left: 0.2in">
 <div STYLE="margin-bottom: 0in">Fr&eacute;d&eacute;ric Parient&eacute;
-for his vision and foundational implementation of the SGP servlet source
+for his vision and foundational implementation of the GEP servlet source
 code.</div>
 </ul>
 
 <ul STYLE="margin-left: 0.2in">
 <div STYLE="margin-bottom: 0in">David Bunker for the practical implementation
-of SunONE Portal Server with the SGP code and significant documentation
+of SunONE Portal Server with the GEP code and significant documentation
 contributions.</div>
 </ul>
 
 <ul STYLE="margin-left: 0.2in">
 <div STYLE="margin-bottom: 0in">Eric Sharakan for adding &amp; documenting
-(single-sign-on) X-window support to SGP.</div>
+(single-sign-on) X-window support to GEP.</div>
 </ul>
 
 <h1 CLASS="western">
-<a NAME="Solution Components Detail"></a>Solution Components Detail</h1>
+<a NAME="SolutionComponentsDetail"></a>Solution Components Detail</h1>
 
 <h2 CLASS="western">
-<a NAME="Data Set"></a>Data Set</h2>
+<a NAME="DataSet"></a>Data Set</h2>
 The Data Set layer represents the information that is processed by the
 compute engine. It includes the raw data that is accessed by applications
 for compare and process operations, the input arguments and parameters
 and the output from the processing commands.
 <h2 CLASS="western">
-<a NAME="Compute Engine"></a>Compute Engine</h2>
+<a NAME="ComputeEngine"></a>Compute Engine</h2>
 The Compute Engine layer is essentially Grid Engine. Grid Engine is a distributed
 application processing solution from Sun Microsystems. Grid Engine controls
 the submission of jobs to the Grid Cluster and Grid Cells (Sub Clusters),
@@ -140,7 +126,7 @@ administration, management and auditing of these jobs to and from processing
 queues. Grid Engine can be integrated with other applications used in the
 processing of compute intensive problems.
 <h2 CLASS="western">
-<a NAME="Java Servlet"></a>Java Servlet</h2>
+<a NAME="JavaServlet"></a>Java Servlet</h2>
 
 <div STYLE="margin-bottom: 0in">The Java Servlets used in this solution
 have been created by Sun Microsystems to provide an interface between the
@@ -151,14 +137,14 @@ with Grid Engine's functions and SunONE Portal Server's APIs to provide
 Content Provider windows to the portal environment.</div>
 
 <h2 CLASS="western">
-<a NAME="Portal Environment"></a>Portal Environment</h2>
+<a NAME="PortalEnvironment"></a>Portal Environment</h2>
 The Portal Environment is provided using the SunONE Portal Server. Portal
 Server provides the capabilities of personalization, customization, security
 and aggregation to a Java enabled web browser. Portal Server can be deployed
 in a multi-domain scenario, utilizing varying authentication methods and
 role functions within each domain.
 <h2 CLASS="western">
-<a NAME="Multi- Domain Environment"></a>Multi- Domain Environment</h2>
+<a NAME="MultiDomainEnvironment"></a>Multi- Domain Environment</h2>
 The Multi-Domain Environment enables organizations to provision specific
 content, manage multiple authentication and security structures and create
 a personalized and customizable user experience with consistent look and
@@ -190,22 +176,22 @@ the portal framework with different authentication methods; sub-roles;
 and users within the role structure with differing authentication methods.
 <br>&nbsp;
 <h1 CLASS="western">
-<a NAME="Installation Procedure"></a>Installation Procedure</h1>
+<a NAME="InstallationProcedure"></a>Installation Procedure</h1>
 
 <h2 CLASS="western">
-<a NAME="Installation Procedure Summary"></a>Installation Procedure Summary</h2>
+<a NAME="InstallationProcedureSummary"></a>Installation Procedure Summary</h2>
 We will assume that the computer hardware, base operating system (including
 latest patches) and network configuration has been completed.
 <p>Step 1: Install Grid Engine (and Sun ClusterTools w/ loose integration
 for MPI support).
 <p>Step 2: Install SunONE Portal Server.
-<p>Step 3: Install the Sun Grid Portal Integration Package.
+<p>Step 3: Install the Grid Engine Portal Integration Package.
 <p>Step 4: Adjust the configuration of SunONE Portal Server.
-<p>Step 5: Test the Sun Grid Portal
-<p>Step 6: Register new applications with Sun Grid Portal
+<p>Step 5: Test the Grid Engine Portal
+<p>Step 6: Register new applications with Grid Engine Portal
 <br>&nbsp;
 <h2 CLASS="western">
-<a NAME="Step 1: Grid Engine"></a>Step 1: Grid Engine</h2>
+<a NAME="Step1GridEngine"></a>Step 1: Grid Engine</h2>
 
 <ol>Download the latest version of Grid Engine from <a href="http://www.sun.com/">http://www.sun.com/gridware.</a>
 
@@ -227,12 +213,12 @@ directions in the <b>README</b> file.</ol>
 </ol>
 
 <h2 CLASS="western">
-<a NAME="Step 2: iPlanet Portal Server"></a>Step 2: SunONE Portal Server</h2>
+<a NAME="Step2SunONEPortalServer"></a>Step 2: SunONE Portal Server</h2>
 
 <div STYLE="margin-bottom: 0in">Download SunONE Portal Server 3.0, SP3A
 (or later release) from <a href="http://www.iplanet.com/">http://www.iplanet.com</a>.
-The SP3A (or later) release is required for X-windows support in SGP. Note,
-however, that SGP has not yet been integrated with SunONE Portal Server
+The SP3A (or later) release is required for X-windows support in GEP. Note,
+however, that GEP has not yet been integrated with SunONE Portal Server
 6.0, although that work is in progress.&nbsp; Since the exact questions
 that are asked when installing SunONE Portal Server vary with the type
 and version of installation, the following is only a general guide. Most
@@ -240,7 +226,7 @@ demo users can take all the defaults except for the <b>root of the profile
 role tree </b>as indicated below. Using the <b>ipsinstall</b> script, first
 install the Server component, then if desired install the Gateway component.
 These can be installed on the same system or different systems. The Gateway
-must be installed for X-windows graphics support, but other SGP functions
+must be installed for X-windows graphics support, but other GEP functions
 work fine without a gateway. Without a Gateway, the access page uses the
 ordinary "http://...." instead of "https://....".</div>
 
@@ -284,7 +270,7 @@ both names such as the following:
 <ul STYLE="margin-left: 0.2in">
 <div STYLE="margin-bottom: 0in">When specifying the <b>root of the profile
 role tree </b>the default may be something like <b>sun.com</b> which is
-unacceptable, since the SGP requires this name to be a valid username.
+unacceptable, since the GEP requires this name to be a valid username.
 Here instead of the default, use <b>suntcp</b>. Whatever name is used however
 must be the same when later installing the gateway.</div>
 </ul>
@@ -345,16 +331,15 @@ Once this change has been made to these scripts, restart both the server
 and gateway as described above.</div>
 
 <h2 CLASS="western">
-<a NAME="Step 3: Install the SGP integration (Glue) package."></a>Step
-3: Sun Grid Portal Integration (Glue) Package.</h2>
+<a NAME="Step3GEPIntegration(Glue)package"></a>Step 3: Grid Engine Portal
+Integration (Glue) Package.</h2>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">The
-following files will need to be downloaded before you start the Sun Grid
+following files will need to be downloaded before you start the Grid Engine
 Portal installation process.&nbsp; For the purposes of this installation
 guide, it will be assumed that all of these files will be downoaded into
 the <b>/tmp</b> directory.
-<p>First, download the Sun Grid Portal&nbsp; installation package that
-you received from the SGP development team (<b>gridportal.tar.gz</b>).
+<p>First, download the Grid Engine Portal&nbsp; installation package (<b>gridportal.tar.gz</b>).
 <br>&nbsp;</div>
 
 <div STYLE="margin-bottom: 0in">Next,&nbsp; after carefully reading the
@@ -415,7 +400,7 @@ cd /export/GridPortal</font></div>
 <div STYLE="background: #e6e6e6; color: #000000"><font color="#000000">#
 gzip -dc /tmp/gridportal.tar.gz | tar xvf -</font>
 <p><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp; </font><font color="#FF0000">(Prior
-to the official open-source release of Sun Grid Portal, the </font><b><font color="#000000">gridportal.tar.gz</font></b><font color="#FF0000">
+to the official open-source release of Grid Engine Portal, the </font><b><font color="#000000">gridportal.tar.gz</font></b><font color="#FF0000">
 file includes a&nbsp;</font>
 <br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; directory named
 </font><b><font color="#000000">infotext</font></b><font color="#FF0000">
@@ -427,7 +412,7 @@ early releases of Sun Grid Engine 5.3 or prior releases of Sun Grid Engine.&nbsp
 binaries were not supplied in these prior releases of Sun Grid Engine,
 but&nbsp;</font>
 <br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; are needed for
-the purposes of this Sun Grid Portal installation.&nbsp; Check the </font><b><font color="#000000">SGE_ROOT/utilbin</font></b>
+the purposes of this Grid Engine Portal installation.&nbsp; Check the </font><b><font color="#000000">SGE_ROOT/utilbin</font></b>
 <br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; directory for
 the presence of the
 </font><b><font color="#000000">infotext</font></b><font color="#FF0000">
@@ -590,23 +575,7 @@ web server ... done.</font></div>
 gateway ... done.</font></div>
 
 <div STYLE="background: #e6e6e6; color: #000000"><font color="#000000">Do
-you want to install channels (y/n) [n]>>&nbsp;</font><font color="#000000"></font>
-<p><font color="#000000">&nbsp; </font><font color="#FF0000">Note: If this
-is the first time you have installed the Grid Portal software, you should
-answer yes to the above</font>
-<br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-question.&nbsp; The Grid Portal channels will then be automatically installed.&nbsp;
-Alternatively, you can answer</font>
-<br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-no to the question above, but you will then have to go through the tedious
-process of adding the</font>
-<br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-channels manually, as described in Appendix A.&nbsp; If this is a re-install
-of the Grid Portal software, and</font>
-<br><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-the channels have already been installed previously, you can answer no
-to this question.</font>
-<br><font color="#000000"></font>&nbsp;</div>
+you want to install channels (y/n) [n]>>&nbsp;</font></div>
 
 <div STYLE="background: #e6e6e6; color: #000000"><font color="#000000">The
 installation has completed.</font></div>
@@ -632,23 +601,26 @@ to the user's environment (.cshrc or .profile or similar):</div>
 
 <div STYLE="margin-bottom: 0in">&nbsp;
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>setenv SGP_ROOT /export/GridPortal</b>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <b>setenv VNC_ROOT $SGP_ROOT/vnc_sun4_sosV_5.5</b>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 or
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>export SGP_ROOT=/export/GridPortal</b>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <b>export VNC_ROOT=$SGP_ROOT/vnc_sun4_sosV_5.5</b>
 <p>Finally, set the <b>PATH</b> variable as follows:
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <b>SGP_PATH=/export/GridPortal</b>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <b>PATH=$PATH:$SGP_ROOT/vnc_sun4_sosV_5.5:/usr/openwin/bin</b>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <b>export PATH SGP_PATH</b>
 <p>[For debugging purposes, the output logs from the VNC software are stored
 in this user's directory under the hidden directory ".vnc".]
@@ -657,7 +629,6 @@ in this user's directory under the hidden directory ".vnc".]
 # $SGP_ROOT/bin/gethomedir $SGP_ROOT <i>username</i></b>
 <p>This should return the following output:
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>/export/GridPortal/workspace/username</b></div>
 
 <p><br>Next the channels can be added.&nbsp; If this is a clean install
@@ -665,13 +636,13 @@ of SunONE Portal Server SP4 (i.e., no additional channels have been added
 to the portal server) then you can say yes when asked for installing channels
 during installation. Otherwise you MUST manually add the channels by following
 the steps in Appendix A.
-<p>If you have previously installed earlier versions of Sun Grid Portal
+<p>If you have previously installed earlier versions of Grid Engine Portal
 (then known as the Technical Computing Portal), you will need to delete
 the<b> suntcp.jar</b> file from <b>/opt/SUNWips/lib</b>.
 <br>&nbsp;
 <h2 CLASS="western">
-<a NAME="Step 4: Configure iPlanet Portal Server."></a>Step 4: Configure
-SunONE Portal Server</h2>
+<a NAME="Step4ConfigureSunONEPortalServer"></a>Step 4: Configure SunONE
+Portal Server</h2>
 
 <div STYLE="margin-bottom: 0in">Limit the portal server so that it accepts
 only UNIX authentication (this simplifies user login by eliminating one
@@ -722,7 +693,7 @@ the Applications tab by clicking on the key next to <b>Applications</b></div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">Decide
 how many simultaneous X server sessions you want to support (one X server
-session corresponds to one logged in SGP user). Add netlet rules as shown
+session corresponds to one logged in GEP user). Add netlet rules as shown
 , following the pattern for as many simultaneous sessions as desired (incrementing
 the port numbers by one for each subsequent rule) based on the portal server
 hostname (in this example <b>mercury</b> -- you can also use <b>mercury.sun.com</b>).
@@ -753,7 +724,7 @@ be done to set the changes)</font></b></div>
 </ol>
 
 <h2 CLASS="western">
-<a NAME="Step 5: Using Grid Portal"></a>Step 5: Using Sun Grid Portal</h2>
+<a NAME="Step5UsingGridEnginePortal"></a>Step 5: Using Grid Engine Portal</h2>
 Access SunONE Portal Server via the link <b>https://mercury.sun.com/</b>.
 When you login, a small <b>Netlet</b> window will pop up. The first time
 it runs, it will pop up a series of dialogs asking for additional permissions.
@@ -799,7 +770,7 @@ the user's home directory. An example file might look like:
 <br>Qmon_project qmon
 <br>P1002129493410 New Project name
 <p>where the first entry on each line corresponds to a specific directory
-that was created by SGP in the user's workspace (e.g. <b>/export/GridPortal/workspace/username/suntcp/Fasta_project</b>)
+that was created by GEP in the user's workspace (e.g. <b>/export/GridPortal/workspace/username/suntcp/Fasta_project</b>)
 and the second string (separated by a tab) corresponds to the name of the
 project that is used in the <b>Project List</b> channel. If there are no
 Projects, then you can add a project by clicking on the <b>Create new project</b>
@@ -811,7 +782,7 @@ multiple spaces in place of tabs.)</font></b>
 <p>Finally the <b>Application List </b>channel should contain a list of
 applications that was installed in the Application directory <b>(/export/GridPortal/apps)
 </b>during
-the SGP installation process.&nbsp; If there are no applications, make
+the GEP installation process.&nbsp; If there are no applications, make
 sure the application files were installed correctly in the applications
 directory.
 <p>Now you are ready to run a job. Click the <b>Submit new job</b> link
@@ -833,11 +804,12 @@ which project directory you just used, then go to the appropriate project
 directory.
 <p>Two files that should be in this directory are<b> .suntcp-su</b> and
 <b>.suntcp-qsub</b>.
-The Grid Portal executes the <b>.suntcp-su</b> script, which in turn executes
-the <b>.suntcp-qsub</b> script. Try executing these by hand. Any errors
-detected should indicate possible errors in the Grid Engine, SunONE Portal
-Server or Grid Portal setup. Common errors include incorrect permission
-settings on the application or queue problems with Grid Engine.
+The Grid Engine Portal executes the <b>.suntcp-su</b> script, which in
+turn executes the <b>.suntcp-qsub</b> script. Try executing these by hand.
+Any errors detected should indicate possible errors in the Grid Engine,
+SunONE Portal Server or Grid Engine Portal setup. Common errors include
+incorrect permission settings on the application or queue problems with
+Grid Engine.
 <p>Next try submitting a job that uses an X-windows interface. Go to the
 <b>Qmon</b>
 subdirectory of the applications directory. Create a <b>qmon</b> project
@@ -865,7 +837,7 @@ X will use the existing session.
 crashes, or you inadvertently close the window, you can restart the applet
 one of two ways: via the <b>Launch Xvnc server</b> bookmark in your Bookmarks
 channel, or by attempting to launch another X-based application. Either
-way, SGP notices you already have a session active, and provides you a
+way, GEP notices you already have a session active, and provides you a
 link to just restart the viewer applet. Click that link, and you should
 find the X display exactly as you left it.
 <p>The X session automatically terminates when you logout of the portal.
@@ -875,12 +847,12 @@ any jobs running under it, it is not recommended to rely on this behavior.
 It's better to make sure your X-based jobs are no longer running before
 killing the X session explicitly or logging out.
 <h2 CLASS="western">
-<a NAME="Step 6: Register New Applications with SGP"></a>Step 6: Register
-New Applications with Sun Grid Portal</h2>
+<a NAME="Step6RegisterNewApplicationswithGEP"></a>Step 6: Register New
+Applications with Grid Engine Portal</h2>
 
-<div CLASS="western">Registering applications with SGP involves editing
+<div CLASS="western">Registering applications with GEP involves editing
 two files and (if desired) creating a form. (Note: Use only characters
-a-z 0-9, space, tab, and underscore in the SGP files. Characters such as
+a-z 0-9, space, tab, and underscore in the GEP files. Characters such as
 quotation marks or apostrophes can cause errors)</div>
 
 <ol>Edit the <b>.suntcp-list</b> file in the applications directory specified
@@ -925,28 +897,44 @@ for creating the execution line arguments. (Technical note: the<b> form.elements
 element is reserved to make sure the form returns to the proper location.
 Do not modify the lines of code that use this element. Begin modifying
 the [1] element.)
-<h2 CLASS="western">
-<a NAME="A Tip for Developers"></a>A Tip for Developers</h2>
+<h1 CLASS="western">
+<a NAME="ATipforDevelopers"></a>A Tip for Developers</font></h1>
 
-<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">The
-source code for the Grid Portal may be found in two separate source files
-- <b>SunTCP.java</b> and <b>AdminTCP.java</b>.&nbsp; These files are located
-in the <b>/export/GridPortal</b> directory.&nbsp; Modifications can be
-made to these source files and then installed in an updated version of
-the Grid Portal by running the <b>make</b> command using&nbsp; the file
-<b>MakeTCPmods
-(</b>which also can be found in<b> </b>the<b> /export/GridPortal
-</b>directory)
-as the input file for the <b>make</b> command:
-<p><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-make -f MakeTCPmods</b></div>
+<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">To
+build Grid Engine Portal from scratch, checkout the sources from <b>gridengine-private.sunsource.net</b>.&nbsp;
+Make sure that <b>/opt/SUNWips/lib/*</b> are readable and the O'Reilly
+servlet is in the classpath.</div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;
-<br>You will then need to restart the portal server and gateway as previously
+<br><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% cd gridengine-private/gp</b></div>
+
+<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% unzip /tmp/cos-27May2002.zip lib/cos.jar</b></div>
+
+<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% cd glue</b></div>
+
+<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% make distclean</b></div>
+
+<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% make dist</b></div>
+
+<div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;
+<br>This generates the distribution <b>gridportal.tar.gz</b>. This file
+is installed as outlined earlier.&nbsp; Alternatively, if you have already
+installed GEP previously and want to modify the Java source code (either
+<b>AdminTCP.java</b>
+or <b>SunTCP.java</b>) and then implement those modifications in the existing
+installed software, just execute the commands above followed by the command:
+<p><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cp classes/suntcp.jar /export/GridPortal/lib</b>
+<p>You will then need to restart the portal server and gateway as previously
 described.</div>
 
 <h1 CLASS="western" STYLE="page-break-before: always">
-<a NAME="Appendix A: Adding Channels Manually"></a>Appendix A: Adding Channels
+<a NAME="AppendixAAddingChannelsManually"></a>Appendix A: Adding Channels
 Manually</h1>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">In
@@ -1018,7 +1006,7 @@ Desktop Channel Wizard</b></div>
 Channel name: <b>suntcpApplicationList</b></div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;&nbsp;&nbsp;
-Channel description: <b>List of applications available through the SGP</b></div>
+Channel description: <b>List of applications available through the GEP</b></div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;&nbsp;&nbsp;
 Select
@@ -1049,7 +1037,7 @@ Channel Wizard</b></div>
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;&nbsp;&nbsp;
 Channel name<b>: suntcpJobList</b>
 <br>&nbsp;&nbsp;&nbsp; Channel description:<b> List of running jobs in
-the SGP portal</b></div>
+the GEP</b></div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;&nbsp;&nbsp;
 Select
@@ -1157,7 +1145,7 @@ Channel Wizard</b></div>
 Channel name:<b> suntcpAdminApplicationList</b></div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;&nbsp;&nbsp;
-Channel description<b>: List of applications available through the SGP</b></div>
+Channel description<b>: List of applications available through the GEP</b></div>
 
 <div STYLE="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none">&nbsp;&nbsp;&nbsp;
 Select
@@ -1183,7 +1171,7 @@ Select
 Desktop Channel Wizard</b>
 <br>&nbsp;&nbsp;&nbsp; Channel name: <b>suntcpAdminJobControl</b>
 <br>&nbsp;&nbsp;&nbsp; Channel description: <b>Monitoring console for jobs
-submitted through the SGP</b>
+submitted through the GEP</b>
 <br>&nbsp;&nbsp;&nbsp; Select
 <b>URL scraper</b>
 <br>&nbsp;&nbsp;&nbsp; Select
@@ -1270,7 +1258,7 @@ is important. Changes are not updated until Logout.)</font></b></div>
 </ol>
 
 <h1 CLASS="western">
-<a NAME="Appendix B - Screen shots"></a>Appendix B - Screen shots</h1>
+<a NAME="AppendixBScreenshots"></a>Appendix B - Screen Shots</h1>
 The image below is the authentication window for a domain created during
 a Proof of Concept project undertaken by Sun Microsystems and the University
 of Queensland in Australia. This domain is for the Institute for Molecular
@@ -1290,7 +1278,7 @@ Biology and uses UNIX as an authentication method into their NIS domain.
 
 <p STYLE="page-break-before: always">The image below shows the <b>Admin</b>
 user window for the IMB domain.&nbsp; (Note that the channel names are
-slightly different from what you will see when you install the SGP software)
+slightly different from what you will see when you install the GEP software)
 <p>Note that all five applications as channels have been provisioned into
 this role user. You can see that in the <b>Job List </b>window there is
 a <b>Submit

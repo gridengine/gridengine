@@ -1,0 +1,16 @@
+<!-- These settings are for use with the iPlanet Portal Server, as part of
+     the Technical Computing Portal project.  We always set the encodings to
+     hextile.  This is necessary because this applet connects to the netlet
+     applet on localhost, so it mistakenly thinks the X server and client
+     are on the same machine, which would normally result in raw encoding
+     (i.e. no compression). -->
+<HTML>
+<TITLE>
+$USER's $DESKTOP desktop ($DISPLAY)
+</TITLE>
+<APPLET CODE=vncviewer.class ARCHIVE=vncviewer.jar
+        WIDTH=$APPLETWIDTH HEIGHT=$APPLETHEIGHT>
+<param name=PORT value=$PORT>
+<param name="encodings" value=hextile>
+</APPLET>
+</HTML>

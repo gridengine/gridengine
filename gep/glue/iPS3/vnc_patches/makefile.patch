@@ -1,0 +1,37 @@
+*** vnc_sun4_sosV_5.5/vnc_javasrc/makefile	Thu Jul 11 15:02:27 2002
+--- vnc_sun4_SunTCP/vnc_javasrc/makefile	Mon Jun  3 16:39:44 2002
+***************
+*** 2,9 ****
+  .SUFFIXES: .java .class
+  
+  .java.class:
+! 	javac -O $<
+  
+  CLASSES = vncviewer.class rfbProto.class authenticationPanel.class \
+  	  vncCanvas.class optionsFrame.class clipboardFrame.class \
+  	  animatedMemoryImageSource.class DesCipher.class
+--- 2,11 ----
+  .SUFFIXES: .java .class
+  
+  .java.class:
+! 	javac -classpath ../classes:. -d ../classes $<
+  
++ VPATH = ../classes
++ 
+  CLASSES = vncviewer.class rfbProto.class authenticationPanel.class \
+  	  vncCanvas.class optionsFrame.class clipboardFrame.class \
+  	  animatedMemoryImageSource.class DesCipher.class
+***************
+*** 11,14 ****
+  all: $(CLASSES) vncviewer.jar
+  
+  vncviewer.jar: $(CLASSES)
+! 	jar cf $@ $(CLASSES)
+--- 13,19 ----
+  all: $(CLASSES) vncviewer.jar
+  
+  vncviewer.jar: $(CLASSES)
+! 	(cd ../classes; jar cf $@ $(CLASSES))
+! 
+! clean:
+! 	rm -rf ../classes/*.class ../classes/*.jar

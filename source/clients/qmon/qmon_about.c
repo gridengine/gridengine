@@ -45,7 +45,16 @@
 #include "sge_me.h"
 
 static char about[] = 
-   "@fBWelcome %s@@%s to %s qmon\n\n(c) 2000 SUN Microsystems, Inc. All rights reserved.\nUse is subject to license terms. Third party software, including font\ntechnology, is copyrighted and licensed from Sun suppliers. Portions may be\nderived from Berkeley BSD systems, licensed from U. of CA. Sun, Sun\nMicrosystems, the Sun Logo, Solaris and Sun TM %s are trademarks or\nregistered trademarks of Sun Microsystems, Inc. in the U.S. and other\ncountries. Federal Acquisitions: Commercial software--Government Users\nSubject to Standard License Terms and Conditions.\n";
+   "@fBWelcome %s@@%s to %s qmon\n\n\
+   Copyright © 2001 Sun Microsystems, Inc. All rights reserved. Use is subject\n\
+   to license terms. Third-party software, including font technology, is\n\
+   copyrighted and licensed from Sun suppliers. Portions may be derived from\n\
+   Berkeley BSD systems, licensed from U. of CA. Sun, Sun Microsystems and the\n\
+   Sun logo are trademarks or registered trademarks of Sun Microsystems, Inc.\n\
+   in the U.S. and other countries. All SPARC trademarks are used under license\n\
+   and are trademarks or registered trademarks of SPARC International, Inc. in\n\
+   the U.S. and other countries. Federal Acquisitions: Commercial Software -\n\
+   Government Users Subject to Standard License Terms and Conditions.\n";
 
   
 
@@ -62,8 +71,8 @@ XtPointer cld, cad;
    XmtDisplayMessage(w, "about_msg", "Help", about, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, me.user_name, me.qualified_hostname, 
-                     feature_get_product_name(FS_SHORT_VERSION), 
-                     feature_get_product_name(FS_SHORT));
+                     feature_get_product_name(FS_LONG_VERSION), 
+                     feature_get_product_name(FS_LONG));
 
    DEXIT;
 }

@@ -1,3 +1,10 @@
+SG-2004-04-09-2: Bugfix:    If the qmaster is killed while jobs are deleted,
+                            timed_event_thread error messages are reported
+                            when the qmaster is starting up again. The order
+                            in which the threads are stared has been changed.
+                 Review:    AH
+                 Changed:   qmaster
+
 SG-2004-04-09-1: Bugfix:    - added the event handler for reschedule jobs
                             - fixed the TYPE_SIGNAL_RESEND_EVENT event
                  Review:    CR

@@ -187,11 +187,11 @@ int main(int argc, char* argv[])
 
    start_heartbeat();
 
-   sge_setup_qmaster(argv);
-
    setup_lock_service();
 
    start_periodic_tasks();
+
+   sge_setup_qmaster(argv);
 
    create_and_join_threads();
 

@@ -49,6 +49,10 @@ void suser_decrease_job_counter(lListElem *suser);
 
 u_long32 suser_get_job_counter(lListElem *suser);
 
+int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs);
+
+int suser_job_count(const lListElem *job);
+
 int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
                            int force_registration);
 

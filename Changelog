@@ -1,3 +1,13 @@
+SG-2003-07-03-0: Bugfix:    max jobs allowed per user
+                            The sge_add_job had multiple exits after the max_u_job
+                            counter was increased. This was fixed. 
+                            For some reason, this feature was disabled in the maintrunk.
+                            I enabled it.
+                          
+                 Bugtrag:   4886026
+                 Issue:     576
+                 Review:    AS
+                 Changed:   qmaster
 EB-2003-07-01-0: Bugfix:    SGEEE: qmaster crashed on qdel of tightly
                             integrated parallel job
                  Bugtraq:   4883714

@@ -311,7 +311,7 @@
 #define MSG_JOB_MORETASKSTHAN_U       _MESSAGE(33204, _("job rejected: You try to submit a job with more than "U32CFormat" tasks\n"))
 #define MSG_JOB_UID2LOW_II            _MESSAGE(33205, _("job rejected: your user id %d is lower than minimum user id %d of cluster configuration\n"))
 #define MSG_JOB_GID2LOW_II            _MESSAGE(33206, _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration\n"))
-#define MSG_JOB_ALLOWEDJOBSPERUSER    _MESSAGE(33207, _("job rejected: Only "U32CFormat" jobs are allowed per user\n"))
+#define MSG_JOB_ALLOWEDJOBSPERUSER_UU  _MESSAGE(33207, _("job rejected: Only "U32CFormat" jobs are allowed per user (current job count: "U32CFormat")\n"))
 #define MSG_JOB_ALLOWEDJOBSPERCLUSTER _MESSAGE(33208, _("job rejected: Only "U32CFormat" jobs are allowed per cluster\n"))
 #define MSG_JOB_QNOTREQUESTABLE       _MESSAGE(33209, _("job was rejected because job requests a queue while queues are not configured as requestable\n"))
 #define MSG_JOB_QUNKNOWN_S            _MESSAGE(33210, _("job was rejected because job requests unknown queue "SFQ"\n"))

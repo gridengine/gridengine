@@ -207,13 +207,15 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       DEXIT;
       return STATUS_NOTOK_DOAGAIN;
    }
-   
-   /* check conf.max_u_jobs */
-   if (suser_register_new_job(jep, conf.max_u_jobs, 0)) {
-      INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, u32c(conf.max_u_jobs)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_NOTOK_DOAGAIN;
+
+   if((lGetUlong(jep, JB_verify_suitable_queues) != JUST_VERIFY)) {
+      if(suser_check_new_job(jep, conf.max_u_jobs) != 0) {
+         INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER_UU, u32c(conf.max_u_jobs), 
+                                                         u32c(suser_job_count(jep))));
+         answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_NOTOK_DOAGAIN;
+      }
    }
 
    if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
@@ -684,7 +686,10 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
+   
+   /** increase user counter */
+   suser_register_new_job(jep, conf.max_u_jobs, 0); 
+   
    /* JG: TODO: error handling: 
     * if job can't be spooled, no event is sent (in sge_event_spool)
     * if job can't be added to master list, it remains spooled

@@ -4226,13 +4226,15 @@ proc unsuspend_job { job } {
 #     delete_job -- delete job with jobid
 #
 #  SYNOPSIS
-#     delete_job { jobid } 
+#     delete_job { jobid { wait_for_end 0 }} 
 #
 #  FUNCTION
 #     This procedure will delete the job with the given jobid
 #
 #  INPUTS
-#     jobid - job identification number
+#     jobid              - job identification number
+#     { wait_for_end 0 } - optional, if not 0: wait for end of job 
+#                          (till qstat -f $jobid returns "job not found")
 #
 #  RESULT
 #     0   - ok
@@ -4241,7 +4243,7 @@ proc unsuspend_job { job } {
 #  SEE ALSO
 #     sge_procedures/submit_job()
 #*******************************
-proc delete_job { jobid } {
+proc delete_job { jobid { wait_for_end 0 }} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
 
    # spawn process
@@ -4275,6 +4277,18 @@ proc delete_job { jobid } {
    log_user 1
    if { $result != 0 } {
       add_proc_error "delete_job" -1 "could not delete job $jobid"
+   }
+   if { $wait_for_end != 0 } {
+      set my_timeout [timestamp]
+      incr my_timeout 60
+      while { [get_qstat_j_info $jobid ] != 0 } {
+          puts $CHECK_OUTPUT "waiting for jobend ..."
+          sleep 1
+          if { [timestamp] > $my_timeout } {
+             add_proc_error "delete_job" -1 "timeout while waiting for jobend"
+             break;
+          }
+      }
    }
    return $result
 }
@@ -5641,6 +5655,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
   }
   return 0
 }
+
 
 #                                                             max. column:     |
 #****** sge_procedures/get_version_info() ******

@@ -1,3 +1,5 @@
+JG-2003-02-06-1  CVS:       Created VMAIN_STABLE_2_TAG
+
 JG-2003-02-06-0  Bugfix:    For tightly integrated parallel jobs, the handling
                             of a task exit could be done multiple times
                             resulting in too much accounting entries, probably

@@ -2080,7 +2080,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
    }
    
    if (minor != NULL) {
-      *minor = 8;
+      *minor = 95;
    }
 
    return DRMAA_ERRNO_SUCCESS;

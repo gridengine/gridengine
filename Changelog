@@ -1,3 +1,6 @@
+DT-2004-05-28-0: Bugfix:    o Fixed DRMAA C binding revision number
+                 Changed:   DRMAA
+
 JG-2004-05-28-0: Bugfix:    Fixed memory leaks in fileparsing and in japi.
                  Enhancem.: Reduced stack memory usage of static dstrings.
                  Review:    SG
@@ -18,6 +21,7 @@ DT-2004-05-27-0: Bugfix:    o Added DRMAA example programs to distinst
                             o Updated DRMAA README
                  Changed:   distinst, docs
                  Issue:     952
+                 Review:    AS
 
 JG-2004-05-27-1: Bugfix:    Fixed memory leaks in scheduler.
                  Review:    SG

@@ -1199,7 +1199,7 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 
    DENTER(TOP_LAYER, "sge_set_auth_info");
 
-   sprintf(buffer, "%d %d %s %s", uid, gid, user, group);
+   sprintf(buffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group);
    if (!sge_encrypt(buffer, sizeof(buffer), obuffer, sizeof(obuffer))) {
       DEXIT;
       return -1;
@@ -1228,7 +1228,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
       return -1;
    }   
 
-   if (sscanf(dbuffer, "%d %d %s %s", uid, gid, user, group) != 4) {
+   if (sscanf(dbuffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group) != 4) {
       DEXIT;
       return -1;
    }   

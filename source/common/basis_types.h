@@ -142,13 +142,13 @@ extern "C" {
 #  define uid_t_fmt pid_t_fmt
 #endif
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX)
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) || defined(INTERIX)
 #  define pid_t_fmt    "%ld"
 #else
 #  define pid_t_fmt    "%d"
 #endif
 
-#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) 
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX) || defined(INTERIX)
 #  define gid_t_fmt    "%ld"
 #elif defined(LINUX86) || defined(FREEBSD)
 #  define gid_t_fmt    "%u"

@@ -40,6 +40,10 @@
 #include <rpc/rpc.h>
 #include <rpc/types.h>
 
+#if defined(INTERIX)
+#include <arpa/inet.h>
+#endif
+
 #include "basis_types.h"
 #include "sgermon.h"
 #include "cull_listP.h"
@@ -580,7 +584,7 @@ int packint(sge_pack_buffer *pb, u_long32 i)
 int packdouble(sge_pack_buffer *pb, double d) {
 /* CygWin does not know RPC u. XDR */
    char buf[32];
-#ifndef WIN32                   /* var not needed */
+#if !(defined(WIN32) || defined(INTERIX))                   /* var not needed */
    XDR xdrs;
    int doublesize;
 #endif
@@ -609,7 +613,7 @@ int packdouble(sge_pack_buffer *pb, double d) {
 
       /* copy in packing buffer */
 
-#ifndef WIN32                   /* XDR not called */
+#if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
       xdrmem_create(&xdrs, (caddr_t) buf, sizeof(buf), XDR_ENCODE);
 
       if (!(xdr_double(&xdrs, &d))) {
@@ -639,7 +643,7 @@ int packdouble(sge_pack_buffer *pb, double d) {
          pb->cur_ptr += DOUBLESIZE;
       }
 
-#ifndef WIN32                   /* XDR not called */
+#if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
       xdr_destroy(&xdrs);
 #endif
    }
@@ -822,7 +826,7 @@ u_long32 buf_size
       else
 #endif
       {
-#ifdef WIN32                    /* cast */
+#if !(defined(WIN32) || defined(INTERIX))                    /* cast */
          if (buf_size + (u_long32) pb->bytes_used > (u_long32) pb->mem_size) {
 #else
          if (buf_size + pb->bytes_used > pb->mem_size) {
@@ -929,7 +933,7 @@ int unpackint(sge_pack_buffer *pb, u_long32 *ip)
 int unpackdouble(sge_pack_buffer *pb, double *dp) 
 {
 
-#ifndef WIN32                   /* var not needed */
+#if !(defined(WIN32) || defined(INTERIX))                   /* var not needed */
    XDR xdrs;
    char buf[32];
 #endif
@@ -979,7 +983,7 @@ int unpackdouble(sge_pack_buffer *pb, double *dp)
       /* copy double */
 
       /* CygWin does not know RPC u. XDR */
-#ifndef WIN32                   /* XDR not called */
+#if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
       memcpy(buf, pb->cur_ptr, DOUBLESIZE);
       xdrmem_create(&xdrs, buf, DOUBLESIZE, XDR_DECODE);
       if (!(xdr_double(&xdrs, dp))) {
@@ -995,7 +999,7 @@ int unpackdouble(sge_pack_buffer *pb, double *dp)
    }
    pb->bytes_used += DOUBLESIZE;
 
-#ifndef WIN32                   /* XDR not called */
+#if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
    xdr_destroy(&xdrs);
 #endif /* WIN32 */
 

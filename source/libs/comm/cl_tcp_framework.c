@@ -199,7 +199,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
          cl_com_tcp_get_private(connection)->sockfd = -1;
          return CL_RETVAL_SETSOCKOPT_ERROR;
-      }  
+      }
    
       /* this is a non blocking socket */
       if ( fcntl(sockfd, F_SETFL, O_NONBLOCK) != 0) {
@@ -999,7 +999,6 @@ int cl_com_tcp_receive_message(cl_com_connection_t* connection, int timeout_time
 #define __CL_FUNCTION__ "cl_com_tcp_connection_request_handler_setup()"
 int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,cl_com_endpoint_t* local_endpoint ) {  /* CR check */
    int sockfd = 0;
-   int on = 1;
    struct sockaddr_in serv_addr;
 
    CL_LOG(CL_LOG_INFO,"setting up request handler ...");
@@ -1023,12 +1022,18 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       CL_LOG(CL_LOG_ERROR,"could not create socket");
       return CL_RETVAL_CREATE_SOCKET;
-   }   
-
-   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
-      CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
-      return CL_RETVAL_SETSOCKOPT_ERROR;
    }
+   
+#ifndef INTERIX
+   {
+      int on = 1;
+
+      if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
+         CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
+         return CL_RETVAL_SETSOCKOPT_ERROR;
+      }
+   }
+#endif
 
    /* bind an address to socket */
    /* TODO FEATURE: we can also try to use a specified port range */

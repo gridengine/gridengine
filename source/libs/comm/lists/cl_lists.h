@@ -33,12 +33,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
+#if !defined(_WIN32)
 
 /* this is the main header file for lib ngclists */
-
 #include <pthread.h>
-
 
 #include "cl_errors.h"
 #include "cl_list_types.h"
@@ -48,9 +46,20 @@
 #include "cl_log_list.h"
 #include "cl_string_list.h"
 
+#else
+#define CL_LOG(log_type, log_text)              /* cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, NULL) */
+#define CL_LOG_STR(log_type, log_text, log_str) /* cl_log_list_log(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
+#define CL_LOG_INT(log_type, log_text, log_str) /* cl_log_list_log_int(log_type, __LINE__ , __CL_FUNCTION__ ,__FILE__ , log_text, log_str )*/
+
+/* log_types */
+#define CL_LOG_OFF     0
+#define CL_LOG_ERROR   1
+#define CL_LOG_WARNING 2
+#define CL_LOG_INFO    3
+#define CL_LOG_DEBUG   4
 
 
-
+#endif
 
 #endif /* __CL_LISTS_H */
 

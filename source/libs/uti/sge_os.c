@@ -304,7 +304,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 ******************************************************************************/
 int sge_daemonize(fd_set *keep_open)
 {
-#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX))
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
    int fd;
 #endif
  
@@ -339,7 +339,7 @@ int sge_daemonize(fd_set *keep_open)
  
    SETPGRP;                      
  
-#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX))
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
    if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
       /* disassociate contolling tty */
       ioctl(fd, TIOCNOTTY, (char *) NULL);

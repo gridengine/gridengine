@@ -63,6 +63,11 @@
 #include "qlogin_starter.h"
 #include "sge_unistd.h"
 
+#if defined(INTERIX)
+#  include "misc.h"
+#endif
+
+
 extern pid_t coshepherd_pid;
 extern int   shepherd_state;  /* holds exit status for shepherd_error() */
 int foreground = 1;           /* usability of stderr/out */
@@ -82,6 +87,7 @@ static int   sh_str2file(const char *header_str, const char *str, FILE *fp);
 static FILE* shepherd_trace_init_intern(char *trace_file_name);
 static void  shepherd_trace_chown_intern(const char* job_owner, FILE* fp);
 static bool  nfs_mounted(const char *path);
+
 
 /******************************************************************************
 * "Public" functions 
@@ -335,7 +341,7 @@ void shepherd_write_exit_status( const char *exit_status )
 		 */
 		if( getuid()==0 ) {
 			old_euid = geteuid();
-			seteuid( 0 );
+         seteuid(0);
 		}	
 		/* File was closed (e.g. by an exec()) but fp was not set to NULL */
 		if( shepherd_exit_status_fp 
@@ -662,6 +668,8 @@ static bool nfs_mounted(const char *path)
    ret = (strcmp("nfs", buf.f_fstypename)==0);
 #elif defined(LINUX)
    ret = (buf.f_type == 0x6969);
+#elif defined(INTERIX)
+   ret = (buf.f_type == wl_get_buf_f_type());
 #else
    ret = (strncmp("nfs", buf.f_basetype, 3)==0);
 #endif

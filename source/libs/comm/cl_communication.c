@@ -236,187 +236,6 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -464,9 +283,6 @@ void cl_com_dump_endpoint(cl_com_endpoint_t* endpoint, const char* text) {  /* C
    }
 
 }
-
-
-
 
 
 #ifdef __CL_FUNCTION__
@@ -556,7 +372,6 @@ int cl_com_create_message(cl_com_message_t** message) {
    (*message)->message = NULL;
    return CL_RETVAL_OK;
 }
-
 
 
 
@@ -912,7 +727,6 @@ const char* cl_com_get_data_flow_type(cl_com_connection_t* connection) {  /* CR 
       }
    }
 }
-
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -2519,7 +2333,8 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
             free(alias_name);
             alias_name = NULL;
          } else {
-            if ( strcasecmp(hostname , hostent->he->h_name ) != 0 ) {
+            if ( strcasecmp(hostname , hostent->he->h_name ) != 0 
+              && strcasecmp(hostent->he->h_name,"localhost")!=0 ) {
                resolve_name_ok = 0;
             }
          }

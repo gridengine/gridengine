@@ -42,6 +42,15 @@
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif 
 
+#if defined(INTERIX)
+#  define seteuid(euid) setreuid(-1, euid)
+#  define setegid(egid) setregid(-1, egid)
+#endif
+
+#if defined(INTERIX)
+#   define getgrgid_r getgrgid_nomembers_r
+#endif
+
 #ifndef MAX_NIS_RETRIES
 #   define MAX_NIS_RETRIES 10
 #endif    

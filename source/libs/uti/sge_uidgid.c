@@ -622,7 +622,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, char *err_str,
                            int use_qsub_gid, gid_t qsub_gid)
 {
-#ifndef WIN32 /* var not needed */
+#if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
    int status;
 #endif
    struct passwd *pw;
@@ -671,8 +671,8 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
          return 1;
       }
    }
- 
-#ifndef WIN32 /* initgroups not called */
+
+#if !(defined(WIN32) || defined(INTERIX)) /* initgroups not called */
    status = initgroups(pw->pw_name, pw->pw_gid);
  
    /* Why am I doing it this way?  Good question,
@@ -826,7 +826,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
       free(list);
       return -1;
    }   
-
+#if !defined(INTERIX)
    if (groups < max_groups) {
       list[groups] = add_grp_id;
       groups++;
@@ -848,7 +848,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
       free(list);
       return -1;
    }                      
-
+#endif
    free(list);
    return 0;
 }  

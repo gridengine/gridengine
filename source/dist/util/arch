@@ -249,6 +249,9 @@ SUPER-UX)
       ;;
    esac
    ;;
+Interix)
+   ARCH=Interix-$osmachine-$osrelease
+   ;;
 *)
    if [ -f /unicos ]; then
       if [ "`$UNAME -m`" = "CRAY TS" ]; then

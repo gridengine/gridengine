@@ -219,6 +219,10 @@ case "tru64":
    set BUILDARCH = ALPHA5
    set TARGET_BITS = TARGET_32BIT
    breaksw
+case "Interix-x86-3.5":
+   set BUILDARCH = INTERIX
+   set TARGET_BITS = TARGET_32BIT
+   breaksw   
 default:
    echo cannot compile - no mapping for architecture \"$buildarch\" defined yet
    exit 1
@@ -372,6 +376,7 @@ set QMAKE            = 1
 set QTCSH            = 1
 set MAKESTRPTIME     = 0
 set MAKEFNMATCH      = 0
+set MAKEWINGRIDLIB   = 0
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 
 # Default Flags and Libraries 
@@ -1189,11 +1194,11 @@ case HP1164:
    set SHAREDEXT = ".sl"
    set JAVA_ARCH = "hp-ux"
    breaksw
+   
 case ALINUX:
 case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
-
    set COMPILE_DC = 1
 
    if ($OPTIMIZATION == 1) then
@@ -1280,6 +1285,74 @@ case LINUXIA64:
    endif
    set JAVA_ARCH = "linux"
    breaksw
+   
+case INTERIX:
+   set COMPILE_DC     = 1
+   set MAKEWINGRIDLIB = 1
+
+   set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
+   #set LIBS = "$LIBS -lwingrid"
+
+   if ($OPTIMIZATION == 1) then
+      set OFLAG = "-O3"
+   else
+      set OFLAG = "-O"
+   endif
+
+   if ($CC == gcc) then
+      set CC  = gcc
+      set CXX = gcc
+      #set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -D$BUILDARCH -D$COMPILE_ARCH -DGETHOSTBYNAME_M -I/dev/fs/C/Program\ Files/Microsoft\ Visual\ Studio\ .NET\ 2003/Vc7/PlatformSDK/Include -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -D$BUILDARCH -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"      
+   else
+      set CC  = cc
+      set CXX = cc
+      set CFLAGS = "-X /Wall -X /WX $OFLAG -D$BUILDARCH -D$COMPILE_ARCH $DEBUG_FLAG $CFLAGS"
+   endif
+
+   if ($DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set OFLAG = ""
+   endif
+   if ($GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   if ( -f /lib/libc.so.6 ) then
+      strings /lib/libc.so.6 | grep "GNU C Library" | grep '2.[234]' >& /dev/null
+      if ($status == 0) then
+         set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+      endif
+   endif
+
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set SHAREDLD = $CC
+#   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
+
+   set NOERR_CFLAG = "-Wno-error"
+   set NOERR_PROTO = "-Wno-strict-prototypes"
+#   set LIBS     = "-lgcc -ldb -ll -lm -lpthread -lpsxdll -lc -lrpclib -lsocket -ly -lfrtbegin -litcl3.2 -litk3.2 -lg2c $LIBS"
+   
+      
+   set XMTDEF   = ""
+
+   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX) then
+      set XLIBD    = "-L/usr/X11R6/lib"
+   else
+      set XLIBD    = "-L/usr/X11R6/lib64"
+   endif
+
+   set XLFLAGS  = "$XLIBD"
+
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include -I/usr/local/include/bind"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
+   breaksw
+   
 case NECSX4:
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
@@ -1685,6 +1758,54 @@ if ( "$SGE_DEPEND" == 1 ) then
 
    cd $COMPILE_ARCH
    $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$MAKEWINGRIDLIB" == 1 ) then
+   echo _________L_I_B__W_I_N_G_R_I_D_____________
+
+   cd $COMPILE_ARCH
+
+   switch ( "$argv" )
+      case clean:
+         set param = clean
+         set DEPEND = ""
+      breaksw
+
+      case depend:
+         set param = depend
+         set DEPEND = "../3rdparty/sge_depend/$COMPILE_ARCH/sge_depend -l -S -Y $DEPEND_FLAGS"
+      breaksw
+
+      case messages:
+         set param = messages
+         set DEPEND = ""
+      breaksw
+
+      default:
+         set param = wingridlib
+         set DEPEND = ""
+         set LIBS = "$LIBS -lwingrid" 
+      breaksw
+   endsw
+
+   
+  $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
+      "COMPILE_ARCH=$COMPILE_ARCH" \
+      "CFLAGS=$CFLAGS $CORE_INCLUDE" "SOURCE=$SOURCE" \
+      "KRBLIBS=$KRBLIBS" \
+      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "DEPEND_FLAGS=$DEPEND_FLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" \
+      "SDIR=$SDIR" "DEPEND=$DEPEND" $param
 
    if ( $status != 0 ) then
       echo not done

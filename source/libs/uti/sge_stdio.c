@@ -143,7 +143,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    char arg0[256];
    struct passwd *pw;
    char err_str[256];
-#ifndef WIN32 /* var not needed */
+#if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
    int res;
 #endif /* WIN32 */
    uid_t myuid;
@@ -219,7 +219,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             }                             
             sprintf(err_str, "%s %d\n", pw->pw_name, (int)pw->pw_gid);
             write(2, err_str, strlen(err_str));
-#ifndef WIN32 /* initgroups not called */
+#if !(defined(WIN32) || defined(INTERIX))  /* initgroups not called */
             res = initgroups(pw->pw_name,pw->pw_gid);
 #  if defined(SVR3) || defined(sun)
             if (res<0)

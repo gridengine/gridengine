@@ -43,6 +43,9 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#if defined(INTERIX)
+#include <arpa/inet.h>
+#endif
 
 #include "basis_types.h"
 #include "symbols.h"

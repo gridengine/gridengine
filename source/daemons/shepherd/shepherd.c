@@ -543,6 +543,7 @@ int main(int argc, char **argv)
 	shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    shepherd_trace_sprintf("shepherd called with uid = "uid_t_fmt", euid = "uid_t_fmt, 
                           getuid(), geteuid());
 
@@ -1306,9 +1307,9 @@ static void forward_signal_to_job(int pid, int timeout,
 
          if((fp = fopen(qrsh_pid_file, "r")) != NULL) {
             /* file contains a valid pid */
-            if(fscanf(fp, "%d", &qrsh_pid) == 1) {            
+            if(fscanf(fp, pid_t_fmt, &qrsh_pid) == 1) {            
                /* set pid from qrsh_starter as job_pid */
-               sprintf(buffer, "%d", qrsh_pid);
+               sprintf(buffer, pid_t_fmt, qrsh_pid);
                add_config_entry("job_pid", buffer); /* !!! should better be add_or_replace */
                replace_qrsh_pid = 0;
             }
@@ -1745,7 +1746,7 @@ char *childname            /* "job", "pe_start", ...     */
       if (ckpt_interval && rest_ckpt_interval)
          alarm(rest_ckpt_interval);
 
-#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
       npid = waitpid(-1, &status, 0);
 #else
       npid = wait3(&status, 0, rusage);

@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/tcp.h>
 #include <errno.h>
@@ -425,10 +425,12 @@ int qlogin_starter(const char *cwd, char *daemon)
                    getuid(), geteuid(), getgid(), getegid()));
    
    /* must be root because we must access /dev/something */
+#if !defined(INTERIX)
    if (setgid(0) || setuid(0) || setegid(0) || seteuid(0)) {
       SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
       return 4;
    }
+#endif
 
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));

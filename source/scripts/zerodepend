@@ -72,6 +72,7 @@ files=" \
        libs/comm/commlib_dependencies  \
        libs/comm/lists/commlistslib_dependencies \
        libs/lck/lck_dependencies  \
+       libs/wingrid/wingrid_dependencies \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
        security/sec/sec_dependencies \

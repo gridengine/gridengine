@@ -79,7 +79,7 @@
 #   define SETPGRP setpgrp()
 #elif defined(__sgi)
 #   define SETPGRP BSDsetpgrp(getpid(),getpid())
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(INTERIX)
 #   define SETPGRP setsid()
 #else
 #   define SETPGRP setpgrp(getpid(),getpid())

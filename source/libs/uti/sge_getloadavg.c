@@ -193,6 +193,17 @@
 #  define KERNEL_AVG_TYPE long long
 #  define CPUSTATES 4 /* CPU_IDLE, CPU_USER, CPU_KERNEL, CPU_WAIT */
 #  define SGE_FSCALE 1024.0
+#elif defined(INTERIX)
+#include "interix.h"
+#include "sge_hostL.h"
+#define APP_NAME "server"
+#include "service_common.h"
+/* JUST DUMMY VALUES!!! */
+//#  define KERNEL_NAME_FILE "/unix"
+//#  define KERNEL_AVG_NAME "avenrun"
+//#  define KERNEL_AVG_TYPE long long
+//#  define CPUSTATES 4 /* CPU_IDLE, CPU_USER, CPU_KERNEL, CPU_WAIT */
+//#  define SGE_FSCALE 1024.0
 #endif
 
 #if defined(SOLARIS) || defined(SOLARIS64) || defined(FREEBSD)
@@ -201,8 +212,10 @@ typedef kvm_t* kernel_fd_type;
 typedef int kernel_fd_type;
 #endif
 
+#if !defined(INTERIX)
 #ifdef SGE_LOADCPU
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
+#endif
 #endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
@@ -872,7 +885,35 @@ double get_cpu_load()
    }
    return cpu_load;
 }
+#elif defined(INTERIX)
+/* NOT WORKING! JUST A DUMMY! */
+double get_cpu_load()
+{
+   char*  load_value = NULL;
+   int    ret_val;
+   double value=-1;
 
+   /*
+   kernel_fd_type kernel_fd;
+   long address = 0;
+   */
+/*   
+   static long cpu_time[CPUSTATES];
+   static long cpu_old[CPUSTATES];
+   static long cpu_diff[CPUSTATES];
+   double cpu_states[CPUSTATES];
+*/   
+   /*double cpu_load;*/
+/*
+   percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff);
+   return 0;
+*/   
+   ret_val = sge_get_load_value_interix(LOAD_ATTR_CPU_PERCENTAGE, &load_value);
+   if(ret_val==0 && load_value!=NULL) {
+      sscanf(load_value, "%lf", &value);
+   }
+   return value;
+}
 #endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARIS64)) || defined(TEST_AIX51)
@@ -1148,7 +1189,6 @@ int nelem
    }
    return 0;
 }
-
 #endif 
 
 
@@ -1169,12 +1209,39 @@ int sge_getloadavg(
 double loadavg[],
 int nelem 
 ) {
-   int elem = 0;   
+   int   elem = 0;   
 
 #if defined(SOLARIS64) || defined(FREEBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
 #elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
    elem = get_load_avg(loadavg, nelem); 
+#elif defined(INTERIX)
+   char* value = NULL;
+
+   fptrace("Getting %s", LOAD_ATTR_LOAD_SHORT);
+   if(sge_get_load_value_interix(LOAD_ATTR_LOAD_SHORT, &value)==0) {
+      if(value!=NULL) {
+         sscanf(value, "%lf", &loadavg[0]);
+         fptrace("%s: %lf", LOAD_ATTR_LOAD_SHORT, loadavg[0]);
+         elem++;
+      }         
+   }
+   fptrace("Getting %s", LOAD_ATTR_LOAD_MEDIUM);   
+   if(sge_get_load_value_interix(LOAD_ATTR_LOAD_MEDIUM, &value)==0) {
+      if(value!=NULL) {
+         sscanf(value, "%lf", &loadavg[1]);
+         fptrace("%s: %lf", LOAD_ATTR_LOAD_MEDIUM, loadavg[1]);         
+         elem++;      
+      }         
+   }
+   fptrace("Getting %s", LOAD_ATTR_LOAD_LONG);   
+   if(sge_get_load_value_interix(LOAD_ATTR_LOAD_LONG, &value)==0) {
+      if(value!=NULL) {
+         sscanf(value, "%lf", &loadavg[2]);
+         fptrace("%s: %lf", LOAD_ATTR_LOAD_LONG, loadavg[2]);         
+         elem++;      
+      }         
+   }
 #else
    elem = -1;    
 #endif
@@ -1222,7 +1289,7 @@ int sge_getcpuload(double *cpu_load)
    DEXIT;
    return ret;
 }
-
+#if !defined(INTERIX)
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
 {
    int i;
@@ -1263,6 +1330,7 @@ static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
    return total_change;
 }       
 
+#endif
 #endif
 
 #ifdef TEST
@@ -1310,5 +1378,4 @@ char *envp[]
    exit(0);
 }
 #endif /* TEST */
-
 

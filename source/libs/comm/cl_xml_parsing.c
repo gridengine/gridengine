@@ -33,9 +33,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+
+#if !defined(WIN32)
+#include <unistd.h>
 #include <strings.h>
+#endif
 
 #include "cl_lists.h"
 #include "cl_errors.h"

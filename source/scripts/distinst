@@ -225,6 +225,8 @@ SetArchBin()
       ARCHBIN=FREEBSD_PPC
    elif [ $i = fbsd-sparc64 ]; then
       ARCHBIN=FREEBSD_SPARC64
+   elif [ $i = interix ]; then
+      ARCHBIN=INTERIX
    else
       echo No ARCHBIN name for \"$i\"
       if [ $exit_on_error = true ]; then

@@ -64,6 +64,7 @@
 #include "sge_report.h"
 
 #include "msg_execd.h"
+#include "msg_daemons_common.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -380,13 +381,13 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        }
        /* check strings */
        if (job_name == NULL) {
-           job_name = "unknown";
+           job_name = MSG_MAIL_UNKNOWN_NAME;
        }
        if (job_master_queue == NULL) {
-           job_master_queue = "unknown";
+           job_master_queue = MSG_MAIL_UNKNOWN_NAME;
        }
        if (job_owner == NULL) {
-           job_owner = "unknown";
+           job_owner = MSG_MAIL_UNKNOWN_NAME;
        }
 
 
@@ -398,32 +399,32 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
           /* suspended */
           if (job_is_array(jep)) {
               sprintf(mail_subject,
-                      "Job-array task "u32"."u32" ("SFN") Suspended",
-                      jobid, 
-                      taskid, 
+                      MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS,
+                      u32c(jobid), 
+                      u32c(taskid), 
                       job_name);
           } else {
               sprintf(mail_subject,
-                      "Job "u32" ("SFN") Suspended",
-                      jobid, 
+                      MSG_MAIL_SUBJECT_JOB_SUSP_US,
+                      u32c(jobid), 
                       job_name);
           }
-          mail_type = "job suspend";
+          mail_type = MSG_MAIL_TYPE_SUSP;
        } else if (signal == SGE_SIGCONT ) {
           /* continued */
           if (job_is_array(jep)) {
               sprintf(mail_subject,
-                      "Job-array task "u32"."u32" ("SFN") Continued",
-                      jobid, 
-                      taskid, 
+                      MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS,
+                      u32c(jobid), 
+                      u32c(taskid), 
                       job_name);
           } else {
               sprintf(mail_subject,
-                      "Job "u32" ("SFN") Continued",
-                      jobid, 
+                      MSG_MAIL_SUBJECT_JOB_CONT_US,
+                      u32c(jobid), 
                       job_name);
           }
-          mail_type = "job continue";
+          mail_type = MSG_MAIL_TYPE_CONT;
        } else {
           DPRINTF(("no suspend or continue signaling\n"));
           DEXIT;
@@ -432,11 +433,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
        /* create mail body */
        sprintf(mail_body,
-               "%s\n"     /* subject again */
-               " Master queue    = "SFN"\n"    /* JAT_master_queue" */
-               " Owner           = "SFN"\n"    /* JB_owner */
-               " Submission time = "SFN"\n"    /* JB_submission_time */
-               " Start time      = "SFN"\n",   /* JB_execution_time"  */
+               MSG_MAIL_BODY_SSSSS,
                mail_subject,
                job_master_queue,
                job_owner,

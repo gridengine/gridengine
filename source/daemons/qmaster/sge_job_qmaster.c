@@ -95,6 +95,7 @@
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 
 extern int enable_forced_qdel;
 
@@ -1328,7 +1329,7 @@ char *commproc
          strcat(sge_mail_body, MSG_MAIL_BECAUSE);
          strcat(sge_mail_body, err_str);
       }
-      cull_mail( mail_users, sge_mail_subj, sge_mail_body, "job abortion");
+      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_ABORT);
    }
 
    if (commproc) {

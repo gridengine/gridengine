@@ -134,22 +134,22 @@ int is_array
    }
 
    if (!(q=lGetString(jr, JR_queue_name)))
-      q = "<unknown>";
+      q = MSG_MAIL_UNKNOWN_NAME;
    if (!(h=lGetHost(jr, JR_host_name)))
-      h = "<unknown>";
+      h = MSG_MAIL_UNKNOWN_NAME;
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
       strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
-      strcpy(sge_mail_start, "unknown");
+      strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
       strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value)));
    else   
-      strcpy(sge_mail_end, "unknown");
+      strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);
    if (!( job_owner = lGetString(jr, JR_owner)))
-      job_owner = "<unknown>";
+      job_owner = "MSG_MAIL_UNKNOWN_NAME";
 
    failed = lGetUlong(jr, JR_failed);
    general = lGetUlong(jr, JR_general_failure);
@@ -190,7 +190,7 @@ int is_array
          admail_times[failed] = now;
       }
       if (!(err_str=lGetString(jr, JR_err_str)))
-         err_str = "<unknown reason>";
+         err_str = MSG_MAIL_UNKNOWN_REASON;
 
       ret = cull_parse_mail_list(&lp_mail, conf.administrator_mail);
       if (ret) {
@@ -271,7 +271,8 @@ int is_array
          }
       }
 
-      cull_mail(lp_mail, sge_mail_subj, sge_mail_body_total, "admin mail");
+      cull_mail(lp_mail, sge_mail_subj, sge_mail_body_total, 
+                MSG_MAIL_TYPE_ADMIN);
 
       if (sge_mail_body_total)
          free((char*)sge_mail_body_total);

@@ -1,3 +1,7 @@
+CR-2004-03-08-0: Bugfix:    setting default acknowledge timeout from 15 to 
+                            60 seconds.
+                 Changed:   commlib
+
 DT-2004-03-08-0: Bugfix:    o Fixed logic hole in japi_wait().
                  Changed:   JAPI
                  Issue:     798

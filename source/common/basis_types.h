@@ -65,6 +65,10 @@ typedef enum {
 #define U32CFormat "%ld"
 #define u32c(x)  (unsigned long)(x)
 
+#define X32CFormat "%lx"
+#define x32c(x)  (unsigned long)(x)
+
+
 #if defined(IRIX6) || defined(IRIX64)
 #define u64 "%lld"
 #define u64c(x)  (unsigned long long)(x)

@@ -64,7 +64,7 @@
 #define MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS _MESSAGE(17026, _("\ncannot get connection to "SFQ" at host "SFQ"\n"))
 #define MSG_QSH_ERRORREADINGCONTEXTFROMQLOGIN_STARTER_S _MESSAGE(17027, _("\nerror reading job context from "SFQ"\n"))
 #define MSG_QSH_LINEFEED _MESSAGE(17028, _("\n"))
-#define MSG_QSH_UNKNOWNJOBSTATUS_X _MESSAGE(17029, _("unknown job status " x32 "\n"))
+#define MSG_QSH_UNKNOWNJOBSTATUS_X _MESSAGE(17029, _("unknown job status " X32CFormat "\n"))
 #define MSG_QSH_SENDINGTASKTO_S _MESSAGE(17030, _("Starting server daemon at host "SFQ"\n"))
 #define MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S _MESSAGE(17031, _("Server daemon successfully started with task id "SFQ"\n"))
 #define MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S _MESSAGE(17032, _("cleaning up after abnormal exit of "SFN"\n"))

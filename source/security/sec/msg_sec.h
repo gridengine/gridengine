@@ -75,7 +75,7 @@
 #define MSG_SEC_SENDRESPONSEFAILED_SIS   _MESSAGE(55036, _("Send response to ("SFN":%d:"SFN") failed\n"))
 #define MSG_SEC_RESPONSEFAILED_SIS       _MESSAGE(55037, _("sec_respond_announce to ("SFN":%d:"SFN") failed\n"))
 #define MSG_SEC_SUMMONSESFAILED_SIS      _MESSAGE(55038, _("Failed send summonses for announce to ("SFN":%d:"SFN")\n"))
-#define MSG_SEC_ANNOUNCEFAILED           _MESSAGE(55039, _("Anounce failed\n"))
+#define MSG_SEC_ANNOUNCEFAILED           _MESSAGE(55039, _("Announce failed\n"))
 #define MSG_SEC_SETSECDATAFAILED         _MESSAGE(55040, _("failed to set security data\n"))
 #define MSG_SEC_MSGENCFAILED             _MESSAGE(55041, _("failed encrypt message\n"))
 #define MSG_SEC_CONNIDSETFAILED          _MESSAGE(55042, _("failed set connection ID\n"))

@@ -44,7 +44,7 @@ void schedd_mes_initialize(void);
 
 void schedd_mes_release(void);
 
-lListElem *schedd_mes_get(void);
+lListElem *schedd_mes_obtain_package(void);
 
 void schedd_add_message(u_long32 job_number, u_long32 message_number, ...);
 

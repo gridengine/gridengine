@@ -1477,65 +1477,64 @@ pid_t ctrl_pid[3];
 
          case SIGSTOP:
             strcat(err_str, "SIGSTOP");
-            if ((override_signal = search_nonone_conf_val("suspend_method"))) {
-               if (override_signal[0] != '/') {
-                  /* deliver the specified signal instead */
-                  sig = shepherd_sys_str2signal(override_signal);
-                  SHEPHERD_TRACE((err_str, "%s SIGSTOP - overridden with signal %s = %d)", 
-                     kill_str, override_signal, sig));
-               } else {
-                  /* start the resume method instead of signalling */
-                  SHEPHERD_TRACE((err_str, "%s SIGSTOP - delegated to command %s)", 
-                        kill_str, override_signal));
-                  if (ctrl_pid[1] == -999) {
-                     replace_params(override_signal, command, sizeof(command)-1, ctrl_method_variables);
-                     ctrl_pid[1] = start_async_command("suspend_method", command);
-                     sig = -1;
-                  } else {
-                     SHEPHERD_TRACE((err_str, "Skipped start of resume: previous "
-                           "command (pid= "pid_t_fmt") is still active", ctrl_pid[1])); 
-                  }
+            if (notify) {
+               int notify_susp_type;
+               int notify_susp_signal;
+               char *tmp_str;
+
+               /* detect and prevent repeated initiation of notify mechanism 
+                  as this can delay final job suspension endlessly */
+               if (*postponed_signal == SIGKILL || *postponed_signal == SIGSTOP) {
+                  SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of suspension notify", 
+                        sys_sig2str(*postponed_signal)));
+                  alarm(remaining_alarm);
+                  return;
                }
-            } else {
-               /* default signalling method */
-               if (notify) {
-                  int notify_susp_type;
-                  int notify_susp_signal;
-                  char *tmp_str;
 
-                  /* detect and prevent repeated initiation of notify mechanism 
-                     as this can delay final job suspension endlessly */
-                  if (*postponed_signal == SIGKILL || *postponed_signal == SIGSTOP) {
-                     SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of suspension notify", 
-                           sys_sig2str(*postponed_signal)));
-                     alarm(remaining_alarm);
-                     return;
-                  }
+               /* default signal for suspend notification */ 
+               notify_signal = SIGUSR1;
+               notify_susp_type = 1;
 
-                  /* default signal for suspend notification */ 
-                  notify_signal = SIGUSR1;
-                  notify_susp_type = 1;
-
-                  /* shall we deliver an other signal or nothing */
-                  tmp_str = search_conf_val("notify_susp_type");
+               /* shall we deliver an other signal or nothing */
+               tmp_str = search_conf_val("notify_susp_type");
+               if (tmp_str) {
+                  notify_susp_type = atol(tmp_str);
+               }
+               if (notify_susp_type == 0) {
+                  tmp_str = search_conf_val("notify_susp");
                   if (tmp_str) {
-                     notify_susp_type = atol(tmp_str);
+                     notify_susp_signal = sys_str2signal(tmp_str);
+                     SHEPHERD_TRACE((err_str, "%s %s) notification for delayed (%d s) SIGSTOP.",
+                        kill_str, tmp_str, notify));
+                     notify_signal = notify_susp_signal;
                   }
-                  if (notify_susp_type == 0) {
-                     tmp_str = search_conf_val("notify_susp");
-                     if (tmp_str) {
-                        notify_susp_signal = sys_str2signal(tmp_str);
-                        SHEPHERD_TRACE((err_str, "%s %s) notification for delayed (%d s) SIGSTOP.",
-                           kill_str, tmp_str, notify));
-                        notify_signal = notify_susp_signal;
+               } else if (notify_susp_type == 1) {
+                  SHEPHERD_TRACE((err_str, "%s SIGUSR1) notification for delayed (%d s) SIGSTOP",
+                     kill_str, notify));
+               } else if (notify_susp_type == 2) {
+                  deliver_signal = 0;
+                  SHEPHERD_TRACE((err_str, "NO notification for delayed (%d s) SIGSTOP!", notify));
+               }      
+            } else {
+               if ((override_signal = search_nonone_conf_val("suspend_method"))) {
+                  if (override_signal[0] != '/') {
+                     /* deliver the specified signal instead */
+                     sig = shepherd_sys_str2signal(override_signal);
+                     SHEPHERD_TRACE((err_str, "%s SIGSTOP - overridden with signal %s = %d)",
+                        kill_str, override_signal, sig));
+                  } else {
+                     /* start the resume method instead of signalling */
+                     SHEPHERD_TRACE((err_str, "%s SIGSTOP - delegated to command %s)",
+                           kill_str, override_signal));
+                     if (ctrl_pid[1] == -999) {
+                        replace_params(override_signal, command, sizeof(command)-1, ctrl_method_variables);
+                        ctrl_pid[1] = start_async_command("suspend_method", command);
+                        sig = -1;
+                     } else {
+                        SHEPHERD_TRACE((err_str, "Skipped start of resume: previous "
+                              "command (pid= "pid_t_fmt") is still active", ctrl_pid[1]));
                      }
-                  } else if (notify_susp_type == 1) {
-                     SHEPHERD_TRACE((err_str, "%s SIGUSR1) notification for delayed (%d s) SIGSTOP",
-                        kill_str, notify));
-                  } else if (notify_susp_type == 2) {
-                     deliver_signal = 0;
-                     SHEPHERD_TRACE((err_str, "NO notification for delayed (%d s) SIGSTOP!", notify));
-                  }      
+                  }
                } else {
                   SHEPHERD_TRACE((err_str, "%s SIGSTOP)", kill_str));
                }
@@ -1543,66 +1542,66 @@ pid_t ctrl_pid[3];
             break;
          case SIGKILL:
             signalled_ckpt_job = 0;
-            if ((override_signal = search_nonone_conf_val("terminate_method"))) {
-               if (override_signal[0] != '/') {
-                  /* deliver the specified signal instead */
-                  sig = shepherd_sys_str2signal(override_signal);
-                  SHEPHERD_TRACE((err_str, "%s SIGKILL - overridden with signal %s = %d)", 
-                     kill_str, override_signal, sig));
-               } else {
-                  /* start the resume method instead of signalling */
-                  SHEPHERD_TRACE((err_str, "%s SIGKILL - delegated to command %s)", 
-                          kill_str, override_signal));
-                  if (ctrl_pid[2] == -999) {
-                     replace_params(override_signal, command, sizeof(command)-1, ctrl_method_variables);
-                     ctrl_pid[2] = start_async_command("terminate_method", command);
-                     sig = -1;
-                  }
-                  else {
-                     SHEPHERD_TRACE((err_str, "Skipped start of terminate: previous "
-                           "command (pid= "pid_t_fmt") is still active", ctrl_pid[2])); 
-                  }
+            if (notify) {
+               int notify_kill_type;
+               int notify_kill_signal;
+               char *tmp_str; 
+
+               /* detect and prevent repeated initiation of notify mechanism 
+                  as this can delay final job termination endlessly */
+               if (*postponed_signal == SIGKILL) {
+                  SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of termination notify",
+                      sys_sig2str(*postponed_signal)));
+                  alarm(remaining_alarm);
+                  return;
                }
-            } else {
-               if (notify) {
-                  int notify_kill_type;
-                  int notify_kill_signal;
-                  char *tmp_str; 
 
-                  /* detect and prevent repeated initiation of notify mechanism 
-                     as this can delay final job termination endlessly */
-                  if (*postponed_signal == SIGKILL) {
-                     SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of termination notify",
-                         sys_sig2str(*postponed_signal)));
-                     alarm(remaining_alarm);
-                     return;
-                  }
+               /* default signal for kill notification */
+               notify_signal = SIGUSR2;
+               notify_kill_type = 1;
 
-                  /* default signal for kill notification */
-                  notify_signal = SIGUSR2;
-                  notify_kill_type = 1;
+               /* shall we deliver an other signal or nothing */
+               tmp_str = search_conf_val("notify_kill_type");
+               if (tmp_str) {
+                  notify_kill_type = atol(tmp_str);
+               }
 
-                  /* shall we deliver an other signal or nothing */
-                  tmp_str = search_conf_val("notify_kill_type");
+               if (notify_kill_type == 0) {
+                  tmp_str = search_conf_val("notify_kill");
                   if (tmp_str) {
-                     notify_kill_type = atol(tmp_str);
+                     notify_kill_signal = sys_str2signal(tmp_str);
+                     SHEPHERD_TRACE((err_str, "%s %s) notification for delayed (%d s) SIGKILL.",
+                        kill_str, tmp_str, notify));
+                     notify_signal = notify_kill_signal;
                   }
-
-                  if (notify_kill_type == 0) {
-                     tmp_str = search_conf_val("notify_kill");
-                     if (tmp_str) {
-                        notify_kill_signal = sys_str2signal(tmp_str);
-                        SHEPHERD_TRACE((err_str, "%s %s) notification for delayed (%d s) SIGKILL.",
-                           kill_str, tmp_str, notify));
-                        notify_signal = notify_kill_signal;
+               } else if (notify_kill_type == 1) {
+                  SHEPHERD_TRACE((err_str, "%s SIGUSR2) notification for delayed (%d s) SIGKILL",
+                     kill_str, notify));
+               } else if (notify_kill_type == 2) {
+                  deliver_signal = 0;
+                  SHEPHERD_TRACE((err_str, "NO notification for delayed (%d s) SIGKILL!", notify));
+               }                       
+            } else {
+               if ((override_signal = search_nonone_conf_val("terminate_method"))) {
+                  if (override_signal[0] != '/') {
+                     /* deliver the specified signal instead */
+                     sig = shepherd_sys_str2signal(override_signal);
+                     SHEPHERD_TRACE((err_str, "%s SIGKILL - overridden with signal %s = %d)", 
+                        kill_str, override_signal, sig));
+                  } else {
+                     /* start the resume method instead of signalling */
+                     SHEPHERD_TRACE((err_str, "%s SIGKILL - delegated to command %s)", 
+                             kill_str, override_signal));
+                     if (ctrl_pid[2] == -999) {
+                        replace_params(override_signal, command, sizeof(command)-1, ctrl_method_variables);
+                        ctrl_pid[2] = start_async_command("terminate_method", command);
+                        sig = -1;
                      }
-                  } else if (notify_kill_type == 1) {
-                     SHEPHERD_TRACE((err_str, "%s SIGUSR2) notification for delayed (%d s) SIGKILL",
-                        kill_str, notify));
-                  } else if (notify_kill_type == 2) {
-                     deliver_signal = 0;
-                     SHEPHERD_TRACE((err_str, "NO notification for delayed (%d s) SIGKILL!", notify));
-                  }                       
+                     else {
+                        SHEPHERD_TRACE((err_str, "Skipped start of terminate: previous "
+                              "command (pid= "pid_t_fmt") is still active", ctrl_pid[2])); 
+                     }
+                  }
                } else {
                   SHEPHERD_TRACE((err_str, "%s SIGKILL)", kill_str));
                }

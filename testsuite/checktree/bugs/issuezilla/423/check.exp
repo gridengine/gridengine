@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_423_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_423"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "qsub -t n-m:0 should not cause floating point exception in qmaster"
 

@@ -72,10 +72,14 @@ proc test_file { me two} {
 }
 
 proc get_macro_messages_file_name { } {
-  global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE
+  global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE CHECK_OUTPUT
   
+  puts $CHECK_OUTPUT "checking messages file ..."
+  if { [ file isdirectory $CHECK_PROTOCOL_DIR] != 1 } {
+     file mkdir $CHECK_PROTOCOL_DIR
+     puts $CHECK_OUTPUT "creating directory: $CHECK_PROTOCOL_DIR"
+  }
   set filename $CHECK_PROTOCOL_DIR/source_code_macros_${CHECK_SOURCE_CVS_RELEASE}.dump
-  
   return $filename
 }
 
@@ -177,6 +181,13 @@ proc check_c_source_code_files_for_macros {} {
 
    set search_list [search_for_macros_in_c_source_code_files $c_files $search_list ]
    set search_list [search_for_macros_in_c_source_code_files $second_run_files $search_list ]
+
+   
+   # remove SGE_INFOTEXT_TESTSTRING_S_L10N from searchlist
+   set index [lsearch -exact $search_list "SGE_INFOTEXT_TESTSTRING_S_L10N"]
+   if { $index >= 0 } {
+      set search_list [lreplace $search_list $index $index]
+   }
 
    set answer ""
    foreach macro $search_list {
@@ -404,6 +415,7 @@ proc update_macro_messages_list {} {
   puts $CHECK_OUTPUT "parsed $count messages."
 
   puts $CHECK_OUTPUT "saving macro file ..."
+  
   set macro_messages_list(source_code_directory) $CHECK_SOURCE_DIR
   
   spool_array_to_file $filename "macro_messages_list" macro_messages_list

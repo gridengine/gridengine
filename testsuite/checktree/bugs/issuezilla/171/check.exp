@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_171_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_171"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "qalter -h xxx should not cause qmaster core if task is not existing"
 

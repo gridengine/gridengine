@@ -2020,10 +2020,11 @@ proc add_queue { change_array {fast_add 0} } {
      puts $CHECK_OUTPUT $result
      set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
      set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $default_array(qname) $QUEUE ]
-     if { [string first "added" $result ] < 0 && [string first $ADDED $result] < 0 } {
+
+     if { [string match "*$ADDED" $result ] == 0 } {
         add_proc_error "add_queue" "-1" "qconf error or binary not found"
         return
-     }
+     } 
      return
   }
 
@@ -2145,7 +2146,8 @@ proc add_exechost { change_array {fast_add 0} } {
      set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Ae ${tmpfile}" } result ]
      puts $CHECK_OUTPUT $result
      set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S] "*"
-     if { [string first "added" $result ] < 0 &&  [string first $ADDED $result ] < 0 } {
+
+     if { [string match "*$ADDED" $result] == 0 } {
         add_proc_error "add_exechost" "-1" "qconf error or binary not found"
         return
      }
@@ -2321,7 +2323,8 @@ proc del_access_list { list_name } {
   set USER [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_USERSET]]
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $list_name $USER]
   puts $CHECK_OUTPUT $REMOVED
-  if { [string first "removed" $result ] < 0 && [string first $REMOVED $result ] < 0} {
+
+  if { [ string match "*REMOVED" $result ] == 0 } {
      add_proc_error "add_access_list" "-1" "could not delete access_list $list_name"
      return -1
   }
@@ -2374,10 +2377,11 @@ proc del_queue { q_name } {
 
   set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
-  if { [string first "removed" $result ] < 0 && [string first $REMOVED $result ] < 0 } {
+
+  if { [string match "*$REMOVED" $result ] == 0 } {
      add_proc_error "del_queue" "-1" "could not delete queue $q_name"
      return -1
-  }
+  } 
   return 0
 }
 
@@ -2708,7 +2712,8 @@ proc disable_queue { queuelist } {
            # try to find localized output
            foreach q_name $queues {
               set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
-              if { [ string first $HAS_DISABLED $result ] >= 0 } {
+               
+              if { [ string match "*$HAS_DISABLED" $result ] } {
                  incr nr_disabled 1
                  break
               } 
@@ -2794,7 +2799,7 @@ proc enable_queue { queuelist } {
            # try to find localized output
            foreach q_name $queues {
               set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER "*" ]
-              if { [ string first $BEEN_ENABLED $result ] >= 0 } {
+              if { [ string match "*$BEEN_ENABLED" $result ] } {
                  incr nr_enabled 1
                  break
               } 
@@ -6371,10 +6376,11 @@ proc startup_execd { hostname } {
 
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
-   if { [string first "execd is already running" $output] >= 0 &&  [string first $ALREADY_RUNNING $output] >= 0 } {
+   if { [string match "*$ALREADY_RUNNING" $output ] } {
       add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
       return -1
    }
+
    return 0
 }
 

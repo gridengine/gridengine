@@ -1,3 +1,9 @@
+SG-2004-08-19-0: Bugfix:     scheduling weirdness with wild-card PE's 
+                 Changed:    scheduler
+                 Review:     DT, AH
+                 Issue:      1216
+                 Bugtraq:    5089222
+
 AS-2004-08-17-0: CVS        Created V60u1_TAG
 ---------------------------------------------
 
@@ -75,7 +81,7 @@ CR-2004-08-09-0: Bugfix:    fixed fix for CR-2004-08-05-2
 
 SG-2004-08-09-0: Bugfix:    the reporting file was not written correctly under
                             linux on opteron.
-                 Issze:     1207
+                 Issue:     1207
                  Bugtraq:   5084317
                  Review:    AA
 

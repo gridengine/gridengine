@@ -118,7 +118,7 @@ enum {
 
 
 /************    scheduling constants   *****************************************/
-/* priorities are in the range from -1024 to 1023 */
+/* priorities are in the range from -1023 to 1024 */
 /* to put them in into u_long we need to add 1024 */
 #define BASE_PRIORITY  1024
 

@@ -55,10 +55,7 @@ enum {
    CT_refcount,              /* number of jobs referencing the string */
    CT_count,                 /* number of jobs used in this schuling run, if -1, than CT_refcount is used */ 
    CT_rejected,              /* has this category been rejected as it can not be dispached now */
-   CT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
-   CT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
-   CT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
-   CT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
+   CT_cache,                 /* stores all info, which cannot run this job category */ 
    CT_messages_added,        /* if true, the scheduler info messages have been added for this category */
    CT_resource_contribution, /* resource request dependent contribution on urgency 
                                 this value is common with all jobs of a category */
@@ -70,10 +67,7 @@ ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_ULONG(CT_refcount, CULL_DEFAULT)
    SGE_INT(CT_count, CULL_DEFAULT)
    SGE_ULONG(CT_rejected, CULL_DEFAULT)
-   SGE_LIST(CT_ignore_queues, CTI_Type, CULL_DEFAULT)
-   SGE_LIST(CT_ignore_hosts, CTI_Type, CULL_DEFAULT)
-   SGE_LIST(CT_queue_violations, CTQV_Type, CULL_DEFAULT)
-   SGE_LIST(CT_job_messages, MES_Type, CULL_DEFAULT)
+   SGE_LIST(CT_cache, CCT_Type, CULL_DEFAULT)
    SGE_BOOL(CT_messages_added, CULL_DEFAULT)
    SGE_DOUBLE(CT_resource_contribution, CULL_DEFAULT)
    SGE_BOOL(CT_rc_valid, CULL_DEFAULT)
@@ -84,15 +78,45 @@ NAMEDEF(CTN)
    NAME("CT_refcount")
    NAME("CT_count")
    NAME("CT_rejected")
-   NAME("CT_ignore_queues")
-   NAME("CT_ignore_hosts")
-   NAME("CT_queue_violations")
-   NAME("CT_job_messages")
+   NAME("CT_cache")
    NAME("CT_messages_added")
    NAME("CT_resource_contribution")
    NAME("CT_rc_valid")
 NAMEEND
 
+#define CTS sizeof(CTN)/sizeof(char*)
+
+/**
+ * 
+ * The caching of dispatch results has to be done per PE. For jobs, which
+ * do not request a PE, the pe_name is set to "NONE".
+ *
+ */
+enum {
+   CCT_pe_name = CCT_LOWERBOUND,   /* pe name */
+   CCT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
+   CCT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
+   CCT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
+   CCT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
+};
+
+ILISTDEF(CCT_Type, Categories, SGE_CT_LIST)
+   SGE_STRING(CCT_pe_name, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(CCT_ignore_queues, CTI_Type, CULL_DEFAULT)
+   SGE_LIST(CCT_ignore_hosts, CTI_Type, CULL_DEFAULT)
+   SGE_LIST(CCT_queue_violations, CTQV_Type, CULL_DEFAULT)
+   SGE_LIST(CCT_job_messages, MES_Type, CULL_DEFAULT)
+LISTEND 
+
+NAMEDEF(CCTN)
+   NAME("CCT_pe_name")
+   NAME("CCT_ignore_queues")
+   NAME("CCT_ignore_hosts")
+   NAME("CCT_queue_violations")
+   NAME("CCT_job_messages")
+NAMEEND
+
+#define CCTS sizeof(CCTN)/sizeof(char*)
 
 /**
  * the following data structures describe the ignore_* lists
@@ -134,7 +158,6 @@ NAMEEND
 
 /* *INDENT-ON* */
 
-#define CTS sizeof(CTN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

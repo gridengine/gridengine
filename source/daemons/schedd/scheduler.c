@@ -221,8 +221,14 @@ int scheduler(sge_Sdescr_t *lists) {
       lFreeWhat(what);
    }
 
+   /**
+    * the actual scheduling 
+    */
    dispatch_jobs(lists, &orders, splitted_job_lists);
 
+   /**
+    * post processing 
+    */
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), *(splitted_job_lists[SPLIT_RUNNING]), &(orders.jobStartOrderList));
 
    /* send job_start_orders */

@@ -81,6 +81,7 @@
 #include "sge_str.h"
 #include "sge_load.h"
 #include "sge_lock.h"
+#include "configuration_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"

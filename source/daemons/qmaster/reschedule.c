@@ -61,6 +61,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
 #include "sge_cqueue.h"
+#include "configuration_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"

@@ -330,7 +330,8 @@ ErrUsage()
              "              [-afs] [-host] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -x         install execution host\n" \
-             "   -ux        unistall execution host\n" \
+             "   -ux        uninstall execution host\n" \
+             "   -sm        install shadow host\n" \
              "   -host      hostname for unistallation (eg. exec host)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -file      configuration file for automatic installation\n" \
@@ -341,16 +342,16 @@ ErrUsage()
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   sge_config -sgeee -m -x\n" \
-             "                          Installs qmaster and exechost on localhost\n" \
-             "                          in sgeee-mode\n" \
-             "   sge_config -sgeee -m -x -auto\n" \
-             "                          Installs qmaster and exechost using the default\n" \
-             "                          configuration file sge_config_modules/sge.conf\n" \
-             "   sge_config -sgeee -ux -host hostname\n" \
-             "                          Uninstalls execd on given executionhost\n" \
-             "   sge_config -sgeee -ux -host hostname -log\n" \
-             "                          Uninstalls execd logging to unistall.log" $myname 
+             "   sge_config -m -x\n" \
+             "                       Installs qmaster and exechost on localhost\n" \
+             "                       in sgeee-mode\n" \
+             "   sge_config -m -x -auto\n" \
+             "                       Installs qmaster and exechost using the default\n" \
+             "                       configuration file sge_config_modules/sge.conf\n" \
+             "   sge_config -ux -host hostname\n" \
+             "                       Uninstalls execd on given executionhost\n" \
+             "   sge_config -ux -host hostname -log\n" \
+             "                       Uninstalls execd logging to unistall.log" $myname 
 
    exit 1
 }

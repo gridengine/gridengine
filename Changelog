@@ -1,3 +1,6 @@
+MD-2004-01-28-1: Bugfix:    - changed option -s to -sm (install shadow master) 
+                 Changed:   sge_config_common.sh, sge_config
+
 MD-2004-01-28-0: Bugfix:    - spooling without rpc-server damaged
                               berkeleydb configuration -> no spooling
                             - default domain input didn't work  

@@ -138,7 +138,7 @@ while [ $ARGC != 0 ]; do
      EXECD="uninstall"
      . ./sge_config_modules/sge_config_execd_uninst.sh
      ;;
-   -s)
+   -sm)
      SHADOW="install"
      #echo Install Shadowhost
      ;;

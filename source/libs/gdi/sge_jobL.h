@@ -58,7 +58,7 @@ extern "C" {
 #define JERROR                               0x00008000
 #define JSUSPENDED_ON_THRESHOLD              0x00010000
 /*
-   SGE: qmaster delays job removal till schedd 
+   SGEEE: qmaster delays job removal till schedd 
    does no longer need this finished job 
 */  
 #define JFINISHED                            0x00010000

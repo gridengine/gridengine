@@ -68,6 +68,7 @@
 #include "sge_job_jatask.h"
 #include "get_path.h"
 #include "sge_job_queue.h"
+#include "sge_job_jatask.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
@@ -604,8 +605,8 @@ u_long32 group_opt
             FoundTasks && ja_task_list) {
          lList *task_group = NULL;
 
-         while ((task_group = split_task_group(&ja_task_list))) {
-            get_taskrange_str(task_group, &dyn_task_str);
+         while ((task_group = ja_task_list_split_group(&ja_task_list))) {
+            jatask_list_print_to_string(task_group, &dyn_task_str);
 
             sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, 
                           &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");

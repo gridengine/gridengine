@@ -1,3 +1,5 @@
+EB-2002-04-16-0: Cleanup:   building range strings for enrolled tasks
+
 JG-2002-04-16-0: Enhancem.: In simulation mode (qmaster_param simulate_hosts=1)
                             one qsub call can submit any number of identical 
                             jobs by setting the job context variable 

@@ -88,10 +88,6 @@ u_long32 range_list_get_number_of_ids(const lList *range_list);
  
 u_long32 range_get_number_of_ids(const lListElem *range);
 
-void get_taskrange_str(lList *task_list, dstring *taskrange_str);
-
-lList* split_task_group(lList **in_list);
-
 void range_correct_end(lListElem *range);   
 
 #endif /* __SGE_RANGE_H */

@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/       
 
 #include "sge_htable.h"
+#include "sge_dstring.h"
 
 int job_is_enrolled(const lListElem *job, 
                     u_long32 ja_task_number);
@@ -117,5 +118,9 @@ u_long32 job_get_biggest_enrolled_task_id(const lListElem *job);
 
 int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
                               int force_registration);   
+
+void jatask_list_print_to_string(const lList *task_list, dstring *range_string);
+
+lList* ja_task_list_split_group(lList **task_list);
 
 #endif /* __SGE_JOB_JATASK_H */    

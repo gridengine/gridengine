@@ -871,7 +871,7 @@ int nm
    }
    else if (eleml) {
       buf[0] = '\0';
-      get_taskrange_str(eleml, buf);
+      jatask_list_print_to_string(eleml, buf);
    }
 
    str = XtNewString(buf);
@@ -925,7 +925,7 @@ int nm
          lListElem *first_elem = lFirst(eleml);
 
          if (is_obj_of_type(first_elem, JAT_Type)) {
-            get_taskrange_str(eleml, &dyn_buf2);
+            jatask_list_print_to_string(eleml, &dyn_buf2);
          } else if (is_obj_of_type(first_elem, RN_Type)) {
             range_list_print_to_string(eleml, &dyn_buf2);
          }

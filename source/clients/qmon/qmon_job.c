@@ -748,7 +748,7 @@ void updateJobList(void)
             lList *task_group;
 
             lSplit(&ptasks, NULL, NULL, where_notexiting);
-            while (( task_group = split_task_group(&ptasks))) {
+            while (( task_group = ja_task_list_split_group(&ptasks))) {
                qmonJobToMatrix(job_pending_jobs, jep, NULL, task_group,
                               JOB_DISPLAY_MODE_PENDING, pow);
                task_group = lFreeList(task_group);
@@ -1238,7 +1238,8 @@ XtPointer cld, cad;
       }
 
       if (lGetNumberOfElem(jl) == 1 && job_is_array(job)) {
-         get_taskrange_str(lGetList(selected_job, JB_ja_tasks), &dyn_tasks);
+         jatask_list_print_to_string(lGetList(selected_job, JB_ja_tasks), 
+                                     &dyn_tasks);
          sge_dstring_append(&dyn_oldtasks, dyn_tasks.s);
       }
 

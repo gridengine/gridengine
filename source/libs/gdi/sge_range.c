@@ -1153,123 +1153,6 @@ error:
                   STATUS_ERROR1, NUM_AN_ERROR);
 }
 
-/****** gdi/range/get_taskrange_str() *****************************************
-*  NAME
-*     get_taskrange_str() -- print task id ranges into string 
-*
-*  SYNOPSIS
-*     void get_taskrange_str(lList* task_list, 
-*                            dstring *dyn_taskrange_str) 
-*
-*  FUNCTION
-*     The ids of all tasks contained in 'task_list' will be printed
-*     into 'dyn_taskrange_str' 
-*
-*  INPUTS
-*     lList* task_list           - JAT_Type list
-*     dstring *dyn_taskrange_str - dynamic string 
-*
-*  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
-void get_taskrange_str(lList* task_list, dstring *dyn_taskrange_str) 
-{
-   lListElem *jatep, *nxt_jatep;
-   u_long32 before_last_id = (u_long32)-1;
-   u_long32 last_id = (u_long32)-1;
-   u_long32 id = (u_long32)-1;
-   int diff = -1;      
-   int last_diff = -1;      
-   u_long32 end = (u_long32)-1;
-   u_long32 start = (u_long32)-1;
-   u_long32 step = (u_long32)-1;
-   int state = 1;
-   int counter = 0;
-   int new_start=0;
-
-   lPSortList(task_list, "%I+", JAT_task_number);
-
-   nxt_jatep = lFirst(task_list); 
-   while((jatep=nxt_jatep)) {
-      if (nxt_jatep)
-         nxt_jatep = lNext(nxt_jatep);
-
-      if (last_id!=-1)
-         before_last_id = last_id;
-      if (id!=-1)
-         last_id = id;
-      if (jatep)
-         id = lGetUlong(jatep, JAT_task_number);
-      if (diff)
-         last_diff = diff;
-      if ((last_id != -1) && (id != -1))
-         diff = id - last_id;
-
-      if (last_diff != diff && !new_start) {
-         if (state == 1) {
-            state = 2;
-            start = last_id;
-            counter = 0;
-         } else if (state == 2) {
-            end = last_id;
-            step = (start!=end)?last_diff:0;
-            counter = 0;
-            new_start = 1;
-            add_taskrange_str(start, end, step, dyn_taskrange_str); 
-#if 0
-            fprintf (stderr, "=>start: %ld, end: %ld, step: %ld\n", start, end, step);
-#endif
-
-            start = id;
-         }
-      } else
-         new_start = 0;
-      counter++;
-#if 0
-      fprintf(stderr, "b-id: %+ld l-id: %+ld id: %+ld ld: %+d, d: %+d st: %+d \t start: %ld end: %ld c: %d\n", 
-         before_last_id, last_id, id, last_diff, diff, state, start, end, counter);
-#endif
-   }
-
-   if (before_last_id==-1 && last_id==-1 && id!=-1) {
-      start = end = id;
-      step = 0;
-      add_taskrange_str(start, end, step, dyn_taskrange_str); 
-   } else if (before_last_id==-1 && last_id!=-1 && id!=-1) {
-      start = last_id;
-      end = id;
-      step = end-start;
-      add_taskrange_str(start, end, step, dyn_taskrange_str); 
-   } else if (before_last_id!=-1 && last_id!=-1 && id!=-1) {
-      if (last_diff != diff) {
-         if (counter == 1) {
-            end = id;
-            step = diff;
-#if 0
-            fprintf (stderr, "1 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
-#endif
-         } else {
-            end = id;
-            step = diff;
-#if 0
-            fprintf (stderr, "2 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
-#endif
-         }  
-      } else {
-         end = id;
-         step = diff;
-#if 0
-         fprintf (stderr, "3 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
-#endif
-      }
-      add_taskrange_str(start, end, step, dyn_taskrange_str); 
-   }
-#if 0
-   fprintf (stderr, "=>start: %ld, end: %ld, step: %ld\n", start, end, step);
-   fprintf(stderr, "String: %s\n", dyn_taskrange_str->s);
-#endif
-} 
-
 /****** gdi/range/add_taskrange_str() *****************************************
 *  NAME
 *     add_taskrange_str() -- Appends a range to a dynamic string 
@@ -1292,12 +1175,9 @@ void get_taskrange_str(lList* task_list, dstring *dyn_taskrange_str)
 *  SEE ALSO
 *     gdi/range/RN_Type 
 ******************************************************************************/
-static void add_taskrange_str(
-u_long32 start,
-u_long32 end,
-int step,
-dstring *dyn_taskrange_str 
-) {
+static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
+                              dstring *dyn_taskrange_str) 
+{
    char tail[256]="";
 
    if (dyn_taskrange_str->size > 0) {
@@ -1312,45 +1192,4 @@ dstring *dyn_taskrange_str
       sprintf(tail, u32"-"u32":%d", start, end, step); 
    }
    sge_dstring_append(dyn_taskrange_str, tail);
-}
-
-/****** gdi/range/split_task_group() *******************************************
-*  NAME
-*     split_task_group() -- Splits a list into two parts
-*
-*  SYNOPSIS
-*     lList* split_task_group(lList **in_list) 
-*
-*  FUNCTION
-*     All tasks which have the same state (JAT_status, JAT_state) like
-*     the first element of 'in_list' will be removed from 'in_list' 
-*     and returned by this function.
-*
-*  INPUTS
-*     lList **in_list - JAT_Type list 
-*
-*  RESULT
-*     lList* - JAT_Type list (elements with equivalent state)
-*
-*  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
-lList* split_task_group(lList **in_list) 
-{
-   lCondition *where = NULL;
-   lList *out_list = NULL;
-   u_long32 status = 0, state = 0;
-
-   if (in_list && *in_list) {
-      status = lGetUlong(lFirst(*in_list), JAT_status);
-      state = lGetUlong(lFirst(*in_list), JAT_state);
-      
-      where = lWhere("%T(%I != %u || %I != %u)", JAT_Type,
-                        JAT_status, status, JAT_state, state);
-      lSplit(in_list, &out_list, NULL, where);
-
-      where = lFreeWhere(where);
-   }
-
-   return out_list;
 }

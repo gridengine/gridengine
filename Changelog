@@ -1,3 +1,6 @@
+CR-2004-12-01-1: Enhancem.: improved performance of lGetElemStrLike()
+                 Review:    HP
+
 SG-2004-12-01-0: Enhancem.: limited the amount of data send to change the busy
                             state in the event client.
                  Review:    EB

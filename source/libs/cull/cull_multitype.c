@@ -3996,6 +3996,7 @@ lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str)
    int pos;
    const char *s;
    int dataType;
+   size_t str_pos = 0;
    const lDescr *listDescriptor;
 
 
@@ -4029,13 +4030,12 @@ lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str)
       return NULL;
    }
 
-   
-
    /* seek for element */
+   str_pos = strlen(str)-1;
    for_each(ep, lp) {
       s = lGetPosString(ep, pos);
       if (s && (!strcmp(s, str) ||
-            (str[strlen(str)-1] == '*' && !strncmp(s, str, strlen(str)-1)))) {
+            (str[str_pos] == '*' && !strncmp(s, str, str_pos)))) {
          DEXIT;
          return ep;
       }

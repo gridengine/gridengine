@@ -1,3 +1,5 @@
+CR-2002-07-25-2: Merge:     Added some sge_ca options from maintrunc 
+
 CR-2002-07-25-1: I18N:      English messages show up when running install 
                             in localized environment    
                  Bugtraq:   #4719203

@@ -1954,8 +1954,11 @@ InitCA()
 
    # Initialize CA, make directories and get DN info
    #
-   util/sgeCA/sge_ca -init
+   util/sgeCA/sge_ca -init -days 365
 
+   if [ $? != 0 ]; then
+      CAErrUsage
+   fi
    $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
@@ -2101,7 +2104,6 @@ fi
 #---------------------------------------
 # setup INFOTEXT end
 #---------------------------------------
-
 
 
 HOST=`$V5UTILBIN/gethostname -name`

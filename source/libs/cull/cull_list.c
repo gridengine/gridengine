@@ -40,6 +40,7 @@
 #include "msg_cull.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "cull_db.h"
 #include "cull_sortP.h"
 #include "cull_where.h"
 #include "cull_listP.h"
@@ -58,8 +59,8 @@
 #define CULL_BASIS_LAYER CULL_LAYER
 
 
-static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
-static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
+static void lWriteList_(const lList *lp, dstring *buffer, int nesting_level);
+static void lWriteElem_(const lListElem *lp, dstring *buffer, int nesting_level);
 
 /****** cull/list/-Field_Attributes *************************************************
 *  NAME
@@ -167,8 +168,7 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
    }
 
    for (index = 0; index<max ; index++) { 
-
-      if (lCopySwitch(ep, new, index, index, isHash) != 0) {
+      if (lCopySwitch(ep, new, index, index, isHash, NULL) != 0) {
          lFreeElem(new);
 
          LERROR(LECOPYSWITCH);
@@ -266,7 +266,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
    switch (enp[0].pos) {
    case WHAT_ALL:               /* all fields of element src is copied */
       for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, i, *jp, isHash) != 0) {
+         if (lCopySwitch(src, dst, i, *jp, isHash, enp[0].ep) != 0) {
             LERROR(LECOPYSWITCH);
             DEXIT;
             return -1;
@@ -283,7 +283,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 
    default:                     /* copy only the in enp enumerated elems */
       for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, enp[i].pos, *jp, isHash) != 0) {
+         if (lCopySwitch(src, dst, enp[i].pos, *jp, isHash, enp[i].ep) != 0) {
             LERROR(LECOPYSWITCH);
             DEXIT;
             return -1;
@@ -316,6 +316,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 *     lListElem *dep       - destination element 
 *     int src_idx          - source index 
 *     int dst_idx          - destination index 
+*     lEnumeration *ep     - enumeration oiter to be used for sublists
 *     bool                 - create Hash or not
 *
 *  RESULT
@@ -324,7 +325,7 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 *        -1 - Error
 *******************************************************************************/
 int lCopySwitch(const lListElem *sep, lListElem *dep, 
-                int src_idx, int dst_idx, bool isHash) 
+                int src_idx, int dst_idx, bool isHash, lEnumeration *ep) 
 {
    lList *tlp;
    lListElem *tep;
@@ -359,14 +360,15 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
    case lListT:
       if ((tlp = sep->cont[src_idx].glp) == NULL) 
          dep->cont[dst_idx].glp = NULL;
-      else  
-         dep->cont[dst_idx].glp = lCopyListHash(NULL, tlp, isHash);
+      else { 
+         dep->cont[dst_idx].glp = lSelectHash(NULL, tlp, NULL, ep, isHash);
+      }
       break;
    case lObjectT:
       if ((tep = sep->cont[src_idx].obj) == NULL) {
          dep->cont[dst_idx].obj = NULL;
       } else {
-         lListElem *new = lCopyElemHash(tep, isHash);
+         lListElem *new = lSelectElem(tep, NULL, ep, isHash);
          new->status = OBJECT_ELEM;
          dep->cont[dst_idx].obj = new;
       }   
@@ -617,10 +619,12 @@ const lDescr *lGetElemDescr(const lListElem *ep)
 ******************************************************************************/
 void lWriteElem(const lListElem *ep) 
 {
+   dstring buffer = DSTRING_INIT;
+
    DENTER(CULL_LAYER, "lWriteElem");
-
-   lWriteElem_(ep, 0, NULL);
-
+   lWriteElem_(ep, &buffer, 0);   
+   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer); 
    DEXIT;
 }
 
@@ -641,21 +645,22 @@ void lWriteElem(const lListElem *ep)
 ******************************************************************************/
 void lWriteElemTo(const lListElem *ep, FILE *fp) 
 {
+   dstring buffer = DSTRING_INIT;
+
    DENTER(CULL_LAYER, "lWriteElemTo");
-
-   lWriteElem_(ep, 0, fp);
-
+   lWriteElem_(ep, &buffer, 0);
+   fprintf(fp, "%s", sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer);
    DEXIT;
 }
 
-static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp) 
+static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level) 
 {
    int i;
    char space[128];
    lList *tlp;
    lListElem *tep;
    const char *str;
-   FILE *out;
 
    DENTER(CULL_LAYER, "lWriteElem");
 
@@ -670,9 +675,7 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
    }
    space[i] = '\0';
 
-   out = (NULL != fp) ? fp : stderr;
-
-   fprintf(out, "%s-------------------------------\n", space);
+   sge_dstring_sprintf_append(buffer, "%s-------------------------------\n", space);
 
    for (i = 0; ep->descr[i].mt != lEndT; i++)
    {
@@ -680,52 +683,52 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
 
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
-         fprintf(out, "%s%-20.20s (Integer) %c = %d\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Integer) %c = %d\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
-         fprintf(out, "%s%-20.20s (Ulong)   %c = " u32"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " u32"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
-         fprintf(out, "%s%-20.20s (String)  %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (String)  %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
          break;
       case lHostT:
          str = lGetPosHost(ep, i);
-         fprintf(out, "%s%-20.20s (Host)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Host)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
          break;
       case lListT:
          tlp = lGetPosList(ep, i);
-         fprintf(out, "%s%-20.20s (List)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (List)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
          if (tlp) {
-            lWriteList_(tlp, nesting_level + 1, out);
-            fprintf(out, "%s}\n", space);
+            lWriteList_(tlp, buffer, nesting_level + 1);
+            sge_dstring_sprintf_append(buffer, "%s}\n", space);
          }
          break;
       case lObjectT:
          tep = lGetPosObject(ep, i);
-         fprintf(out, "%s%-20.20s (Object)  %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Object)  %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
          if (tep) {
-            lWriteElem_(tep, nesting_level + 1, out);
-            fprintf(out, "%s}\n", space);
+            lWriteElem_(tep, buffer, nesting_level + 1);
+            sge_dstring_sprintf_append(buffer, "%s}\n", space);
          }
          break;
       case lFloatT:
-         fprintf(out, "%s%-20.20s (Float)   %c = %f\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Float)   %c = %f\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
          break;
       case lDoubleT:
-         fprintf(out, "%s%-20.20s (Double)  %c = %f\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Double)  %c = %f\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
          break;
       case lLongT:
-         fprintf(out, "%s%-20.20s (Long)    %c = %ld\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Long)    %c = %ld\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
          break;
       case lBoolT:
-         fprintf(out, "%s%-20.20s (Bool)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Bool)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
          break;
       case lCharT:
-         fprintf(out, "%s%-20.20s (Char)    %c = %c\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', isprint (lGetPosChar(ep, i)) ? lGetPosChar(ep, i) : '?');
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Char)    %c = %c\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', isprint (lGetPosChar(ep, i)) ? lGetPosChar(ep, i) : '?');
          break;
       case lRefT:
-         fprintf(out, "%s%-20.20s (Ref)     %c = %p\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ref)     %c = %p\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
          break;
       default:
          unknownType("lWriteElem");
@@ -751,10 +754,12 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
 ******************************************************************************/
 void lWriteList(const lList *lp) 
 {
+   dstring buffer = DSTRING_INIT;
+
    DENTER(CULL_LAYER, "lWriteList");
-
-   lWriteList_(lp, 0, NULL);
-
+   lWriteList_(lp, &buffer, 0);
+   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer);
    DEXIT;
    return;
 }
@@ -775,40 +780,38 @@ void lWriteList(const lList *lp)
 *******************************************************************************/
 void lWriteListTo(const lList *lp, FILE *fp) 
 {
+   dstring buffer = DSTRING_INIT;
+
    DENTER(CULL_LAYER, "lWriteListTo");
-
-   lWriteList_(lp, 0, fp);
-
+   lWriteList_(lp, &buffer, 0);
+   fprintf(fp, "%s", sge_dstring_get_string(&buffer) ?  sge_dstring_get_string(&buffer) : "");
+   sge_dstring_free(&buffer);
    DEXIT;
    return;
 }
 
-static void lWriteList_(const lList *lp, int nesting_level, FILE *fp) 
+static void lWriteList_(const lList *lp, dstring *buffer, int nesting_level) 
 {
    lListElem *ep;
    char indent[128];
    int i;
-   FILE *out;
 
    DENTER(CULL_LAYER, "lWriteList_");
-
    if (!lp) {
       LERROR(LELISTNULL);
       DEXIT;
       return;
    }
-
    for (i = 0; i < nesting_level * 3; i++) {
       indent[i] = ' ';
    }
    indent[i] = '\0';
 
-   out = (NULL != fp) ? fp : stderr;
-
-   fprintf(out, "\n%sList: <%s> %c #Elements: %d\n", indent, lGetListName(lp), lp->changed ? '*' : ' ', lGetNumberOfElem(lp));
-
+   sge_dstring_sprintf_append(buffer, "\n%sList: <%s> %c #Elements: %d\n",    
+                              indent, lGetListName(lp), 
+                              lp->changed ? '*' : ' ', lGetNumberOfElem(lp));
    for_each(ep, lp) {
-      lWriteElem_(ep, nesting_level, out);
+      lWriteElem_(ep, buffer, nesting_level);
    }
    DEXIT;
 }
@@ -1261,11 +1264,8 @@ int lAddList(lList *lp0, lList *lp1)
    int res = 0;
    
    DENTER(CULL_LAYER, "lAddList");
-   
-   lAppendList (lp0, lp1);
-
+   res = lAppendList (lp0, lp1);
    lFreeList(lp1);
-
    DEXIT;
    return res;
 }

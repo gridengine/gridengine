@@ -1,5 +1,5 @@
-#ifndef __CULL_H
-#define __CULL_H
+#ifndef __CULL_WHAT_ELEM_H
+#define __CULL_WHAT_ELEM_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,23 +32,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-#include "cull_listP.h"
 #include "cull_list.h"
-#include "cull_where.h"
-#include "cull_what.h"
-#include "cull_what_elem.h"
-#include "cull_what_print.h"
-#include "cull_db.h"
-#include "cull_multitype.h"
-#include "cull_dump_scan.h"
-#include "cull_lerrno.h"
-#include "cull_pack.h"
-#include "cull_sort.h"
-#include "cull_tree.h"
-#include "cull_hash.h"
-#include "cull_state.h"
-#include "pack.h"
 
-#endif /* __CULL_H */
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+lListElem *lWhatToElem(const lEnumeration *where);
+lEnumeration *lWhatFromElem(const lListElem *what);
+
+#ifdef  __cplusplus
+}
+#endif
+
+#endif /* __CULL_WHAT_ELEM_H */
 

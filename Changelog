@@ -1,3 +1,9 @@
+EB-2004-09-15-0: Enhancem.: qstat requests only that attributes of JB_Type
+                            and JAT_Type elements which are really needed 
+                            to execute qstat successfully
+                 Changed:   all 
+                 Review:    SG
+
 SG-2004-09-15-1: Bugfix:    - fixed a locking issue in the loging.
                  Changed:   qmaster
                  Review:    CR

@@ -46,6 +46,7 @@ QSTAT_ADD_SRC = \
                sig_handlers.c \
                usage.c sge_options.c \
                sge_mt_init.c \
+               qstat_filter.c \
                qstat_xml.c
 
 QSTAT_OBJS = $(QSTAT_SRC:.c=.o)
@@ -92,5 +93,8 @@ include $(QSTAT_DIR)/qstat_dependencies
 qstat.o: 	$(QSTAT_DIR)/qstat.c
 		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat.c
       
+qstat_filter.o: 	$(QSTAT_DIR)/qstat_filter.c
+		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat_filter.c
+
 qstat_xml.o: 	$(QSTAT_DIR)/qstat_xml.c
 		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat_xml.c

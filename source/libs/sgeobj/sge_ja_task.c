@@ -151,9 +151,10 @@ lList* ja_task_list_split_group(lList **ja_task_list)
          u_long32 status = lGetUlong(first_task, JAT_status); 
          u_long32 state = lGetUlong(first_task, JAT_state); 
          u_long32 hold = lGetUlong(first_task, JAT_hold);
+         lDescr *descr = lGetElemDescr(first_task);
          lCondition *where = NULL;
 
-         where = lWhere("%T(%I != %u || %I != %u || %I != %u)", JAT_Type,
+         where = lWhere("%T(%I != %u || %I != %u || %I != %u)", descr,
                         JAT_status, status, JAT_state, state,
                         JAT_hold, hold);
          lSplit(ja_task_list, &ret_list, NULL, where);

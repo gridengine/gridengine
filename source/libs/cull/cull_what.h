@@ -38,11 +38,13 @@
 extern "C" {
 #endif
 
+#include "sge_dstring.h"
+
 #define WHAT_ALL                        -1
 #define WHAT_NONE                       -2
 
-void lWriteWhatTo(const lEnumeration *ep, FILE *fp);
 lEnumeration *lWhat(const char *fmt, ...);
+
 lEnumeration *_lWhat(const char *fmt, const lDescr *dp, const int *nm_list, int nm);
 lEnumeration *lWhatAll(void);
 lEnumeration *lFreeWhat(lEnumeration *ep);
@@ -53,8 +55,9 @@ int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp);
 lEnumeration *lIntVector2What(const lDescr *dp, const int intv[]);
 void nm_set(int job_field[], int nm);
 
-lListElem *lWhatToElem(const lEnumeration *where);
-lEnumeration *lWhatFromElem(const lListElem *what);
+int lMergeWhat(lEnumeration **what1, lEnumeration **what2);
+int lWhatSetSubWhat(lEnumeration *what1, int nm, lEnumeration **what2);
+
 #ifdef  __cplusplus
 }
 #endif

@@ -338,14 +338,15 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
    return ret;
 }   
   
-static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
-                                              sge_mirror_callback callback_before, 
-                                              sge_mirror_callback callback_after, 
-                                              void *clientdata,
-                                              const lCondition *where, const lEnumeration *what)
+static sge_mirror_error 
+_sge_mirror_subscribe(sge_object_type type, 
+                      sge_mirror_callback callback_before, 
+                      sge_mirror_callback callback_after, 
+                      void *clientdata,
+                      const lCondition *where, const lEnumeration *what)
 {
-lListElem *what_el = lWhatToElem(what);
-lListElem *where_el = lWhereToElem(where);
+   lListElem *what_el = lWhatToElem(what);
+   lListElem *where_el = lWhereToElem(where);
 
    /* type already has been checked before */
    switch(type) {

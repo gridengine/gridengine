@@ -79,6 +79,8 @@
 #include "sge_cqueue_qstat.h"
 #include "sge_qref.h"
 #include "qstat_xml.h"
+#include "qstat_filter.h"
+
 #include "cull/cull_xml.h"
 
 #include "sge_mt_init.h"
@@ -244,7 +246,7 @@ char **argv
          peref_list,
          user_list,
          full_listing); 
-   
+
       if (!sconf_set_config(&schedd_config, &answer_list)){
          answer_list_output(&answer_list);
          schedd_config = lFreeList(schedd_config);
@@ -523,7 +525,7 @@ char **argv
          }
       }
    }
-    
+
 /*    TODO                                            */    
 /*    is correct_capacities needed here ???           */    
    correct_capacities(exechost_list, centry_list);
@@ -728,6 +730,7 @@ char **argv
          XML_out = tempXML;
       }
    }
+    
 
    /*
     *
@@ -863,8 +866,8 @@ u_long32 show
 ) {
    lCondition *where= NULL, *nw = NULL, *qw = NULL, *pw = NULL; 
    lCondition *jw = NULL, *zw = NULL, *gc_where = NULL;
-   lEnumeration *q_all, *pe_all, *ckpt_all, *acl_all, *j_all, *ce_all;
-   lEnumeration *eh_all, *sc_what, *z_all, *gc_what, *hgrp_what;
+   lEnumeration *q_all, *pe_all, *ckpt_all, *acl_all, *ce_all;
+   lEnumeration *eh_all, *sc_what, *gc_what, *hgrp_what;
    lList *alp = NULL;
    lListElem *aep = NULL;
    lListElem *ep = NULL;
@@ -907,63 +910,9 @@ u_long32 show
          show |= ~(QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_FINISHED);
       }
 
-      {
-            const int job_nm[] = {
-            JB_job_number, 
-            JB_owner,
-            JB_script_file,
-            JB_group,
-            JB_type,
-
-            JB_pe,
-            JB_checkpoint_name,
-            JB_jid_request_list,
-            JB_jid_predecessor_list,
-            JB_env_list,
-            JB_priority,
-
-            JB_jobshare,
-            JB_job_name,
-            JB_project,
-            JB_department,
-            JB_submission_time,
-
-            JB_deadline,
-            JB_override_tickets,
-            JB_pe_range,
-            JB_hard_resource_list,
-            JB_soft_resource_list,
-            
-            JB_hard_queue_list,
-            JB_soft_queue_list,
-            JB_master_hard_queue_list,
-            JB_ja_structure,
-            JB_ja_tasks,
-
-            JB_ja_n_h_ids,
-            JB_ja_u_h_ids,
-            JB_ja_o_h_ids,
-            JB_ja_s_h_ids,
-            JB_ja_z_ids,
-
-            JB_ja_template,
-            JB_execution_time,
-            JB_nppri,
-            JB_nurg,
-            JB_urg,
-            JB_rrcontr,
-
-            JB_dlcontr,
-            JB_wtcontr,
-            NoName
-         };
-  
-      j_all =  lIntVector2What(JB_Type, job_nm);
-
-      }
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
-                           NULL, jw, j_all, NULL, &state);
-      j_all = lFreeWhat(j_all);
+                           NULL, jw, qstat_get_JB_Type_filter(), NULL, &state);
+
       jw = lFreeWhere(jw);
 
       if (alp) {
@@ -983,62 +932,9 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      {
-            const int job_nm[] = {    
-            JB_job_number,
-            JB_owner,
-            JB_group,
-            JB_type,
-            JB_pe,
-            
-            JB_checkpoint_name,
-            JB_jid_predecessor_list,
-            JB_jid_request_list,
-            JB_env_list,
-            JB_priority,
-            JB_jobshare,
-            
-            JB_job_name,
-            JB_project,
-            JB_department,
-            JB_submission_time,
-            JB_deadline,
-            
-            JB_override_tickets,
-            JB_pe_range,
-            JB_hard_resource_list,
-            JB_soft_resource_list,
-            JB_hard_queue_list,
-            
-            JB_soft_queue_list,
-            JB_master_hard_queue_list,
-            JB_ja_structure,
-            JB_ja_n_h_ids,
-            JB_ja_u_h_ids,
-            
-            JB_ja_o_h_ids,
-            JB_ja_s_h_ids,
-            JB_ja_z_ids,
-            JB_ja_template,
-            JB_ja_tasks,
-            
-            JB_execution_time,
-            JB_nppri,
-            JB_nurg,
-            JB_urg,
-            JB_rrcontr,
-            JB_dlcontr,
-
-            JB_wtcontr, 
-            NoName
-         };
-  
-      z_all =  lIntVector2What(JB_Type, job_nm);
-      }
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
-                           NULL, zw, z_all, NULL, &state);
-      z_all = lFreeWhat(z_all);
+                           NULL, zw, qstat_get_JB_Type_filter(), NULL, &state);
       zw = lFreeWhere(zw);
 
       if (alp) {
@@ -1498,6 +1394,8 @@ u_long32 *isXML
 
    DENTER(TOP_LAYER, "sge_parse_qstat");
 
+   qstat_filter_add_core_attributes();
+
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
@@ -1630,6 +1528,7 @@ u_long32 *isXML
       }
 
       if(parse_flag(ppcmdline, "-ext", &alp, &full)) {
+         qstat_filter_add_ext_attributes();
          if(full) {
             (*pfull) |= QSTAT_DISPLAY_EXTENDED;
             full = 0;
@@ -1639,6 +1538,7 @@ u_long32 *isXML
 
       if (!qselect_mode ) {
          if(parse_flag(ppcmdline, "-urg", &alp, &full)) {
+            qstat_filter_add_urg_attributes(); 
             if(full) {
                (*pfull) |= QSTAT_DISPLAY_URGENCY;
                full = 0;
@@ -1649,6 +1549,7 @@ u_long32 *isXML
 
       if (!qselect_mode ) {
          if(parse_flag(ppcmdline, "-pri", &alp, &full)) {
+            qstat_filter_add_pri_attributes();
             if(full) {
                (*pfull) |= QSTAT_DISPLAY_PRIORITY;
                full = 0;
@@ -1658,6 +1559,7 @@ u_long32 *isXML
       }
 
       if(parse_flag(ppcmdline, "-r", &alp, &full)) {
+         qstat_filter_add_r_attributes();
          if(full) {
             (*pfull) |= QSTAT_DISPLAY_RESOURCES;
             full = 0;
@@ -1682,6 +1584,7 @@ u_long32 *isXML
       }
 
       if (parse_string(ppcmdline, "-l", &alp, &argstr)) {
+         qstat_filter_add_l_attributes();
          *pplresource = centry_list_parse_from_string(*pplresource, argstr, false);
          FREE(argstr);
          continue;
@@ -1696,8 +1599,10 @@ u_long32 *isXML
       if (parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) 
          continue;
       
-      if (parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name))
+      if (parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name)) {
+         qstat_filter_add_q_attributes();
          continue;
+      }
 
       if (parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
          *group_opt |= parse_group_options(plstringopt, &alp);

@@ -1,5 +1,5 @@
-#ifndef __CULL_H
-#define __CULL_H
+#ifndef __MSG_QSTAT_FILTER_H
+#define __MSG_QSTAT_FILTER_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,23 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+void qstat_filter_add_core_attributes(void);
+void qstat_filter_add_ext_attributes(void);
+void qstat_filter_add_pri_attributes(void);
+void qstat_filter_add_urg_attributes(void);
+void qstat_filter_add_l_attributes(void);
+void qstat_filter_add_q_attributes(void);
+void qstat_filter_add_r_attributes(void);
 
-#include "cull_listP.h"
-#include "cull_list.h"
-#include "cull_where.h"
-#include "cull_what.h"
-#include "cull_what_elem.h"
-#include "cull_what_print.h"
-#include "cull_db.h"
-#include "cull_multitype.h"
-#include "cull_dump_scan.h"
-#include "cull_lerrno.h"
-#include "cull_pack.h"
-#include "cull_sort.h"
-#include "cull_tree.h"
-#include "cull_hash.h"
-#include "cull_state.h"
-#include "pack.h"
+lEnumeration *qstat_get_JB_Type_filter(void);
 
-#endif /* __CULL_H */
-
+#endif /* __MSG_QSTAT_FILTER_H */

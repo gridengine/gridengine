@@ -229,7 +229,7 @@ lListElem *lCopyElemHash(const lListElem *src, bool isHash);
 int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp);
 
 int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, const lEnumeration *ep, bool isHash);
-int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash);
+int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash, lEnumeration *ep);
 
 int lAppendElem(lList *lp, lListElem *ep);
 lListElem *lDechainElem(lList *lp, lListElem *ep);

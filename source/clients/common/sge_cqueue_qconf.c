@@ -125,6 +125,7 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
 
          cqueue_list = lCreateList("", CQ_Type);
          lAppendElem(cqueue_list, this_elem);
+
          gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, gdi_command,
                                    &cqueue_list, NULL, NULL);
          answer_list_replace(answer_list, &gdi_answer_list);

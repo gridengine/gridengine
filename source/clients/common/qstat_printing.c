@@ -760,7 +760,7 @@ int queue_name_length
                                 pe_list, "", group_opt, 0, queue_name_length);
                } else {
                   if (!ja_task_list) {
-                     ja_task_list = lCreateList("", JAT_Type);
+                     ja_task_list = lCreateList("", lGetElemDescr(jatep));
                   }
                   lAppendElem(ja_task_list, lCopyElem(jatep));
                   FoundTasks = 1;

@@ -38,6 +38,7 @@
 #	include <unistd.h>
 #endif
 #include <stdlib.h>
+
 #include "sge_stdlib.h"
 #include "commlib.h"
 #include "sge_gdiP.h"
@@ -335,6 +336,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       goto error;
    }
    
+
    request->op = cmd;
    request->target = target;
    request->version = GRM_GDI_VERSION;

@@ -54,6 +54,8 @@
 #include "cull_packL.h"
 #include "msg_gdilib.h"
 
+static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app);
+
 /****** cull/what/nm_set() ****************************************************
 *  NAME
 *     nm_set() -- Build a int vector 
@@ -124,6 +126,11 @@ int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp)
 
    n = lCountWhat(enp, src_dp);
 
+   if (n == 0) {
+      DEXIT;
+      return 0;
+   }
+
    /* create new partial descriptor */
    if (!(*dst_dpp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
       DEXIT;
@@ -140,7 +147,7 @@ int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp)
    to choose special fields of a list element.
  */
 lEnumeration *_lWhat(const char *fmt, const lDescr *dp, 
-                            const int *nm_list, int nr_nm) 
+                     const int *nm_list, int nr_nm) 
 {
    int neg = 0;
    int i, j, k, n, size = 0;
@@ -198,10 +205,12 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep[0].pos = WHAT_ALL;
       ep[0].nm = -99;
       ep[0].mt = -99;
+      ep[0].ep = NULL;
       eat_token(&state);
       ep[1].pos = 0;
       ep[1].nm = NoName;
       ep[1].mt = lEndT;
+      ep[1].ep = NULL;
       DEXIT;
       return ep;
 
@@ -209,10 +218,12 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep[0].pos = WHAT_NONE;
       ep[0].nm = -99;
       ep[0].mt = -99;
+      ep[0].ep = NULL;
       eat_token(&state);
       ep[1].pos = 0;
       ep[1].nm = NoName;
       ep[1].mt = lEndT;
+      ep[1].ep = NULL;
       DEXIT;
       return ep;
 
@@ -245,7 +256,8 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
          error_status = LENAMENOT;
          goto error;
       }
-      ep[i].mt = dp[ep[i].pos].mt;
+      ep[i].mt = dp[ep[i].pos].mt; 
+      ep[i].ep = NULL;
 
       if (scan(NULL, &state) != FIELD) {
          error_status = LESYNTAX;
@@ -258,6 +270,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
    ep[n].pos = 0;
    ep[n].nm = NoName;
    ep[n].mt = lEndT;
+   ep[n].ep = NULL;
 
    if (neg) {
       if (scan(NULL, &state) != KET) {
@@ -280,11 +293,13 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
          ep2[k].pos = i;
          ep2[k].nm = dp[i].nm;
          ep2[k].mt = dp[i].mt;
+         ep2[k].ep = NULL;
          k++;
       }
       ep2[k].pos = 0;
       ep2[size].nm = NoName;
       ep2[size].mt = lEndT;
+      ep2[size].ep = NULL;
       lFreeWhat(ep);
       ep = ep2;
    }
@@ -309,82 +324,191 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
 
 /****** cull/what/lWhat() *****************************************************
 *  NAME
-*     lWhat() -- Creates a enumeration array. 
+*     lWhat() -- Create a ne enumeration 
 *
 *  SYNOPSIS
-*     lEnumeration* lWhat(const char *fmt, ...) 
+*     lEnumeration *lWhat(const char *fmt, ...) 
 *
 *  FUNCTION
-*     Creates a enumeration array. This is used in lSelect and 
-*     lJoin to choose special fields of alist element.  
+*     Create a new enumeration. fmt describes the format of the enumeration 
 *
 *  INPUTS
-*     const char *fmt - format string 
-*     ...             - additional arguments 
+*     const char *fmt - format string: 
+*
+*                          element := type "(" attribute_list ")" .
+*                          type := "%T" .
+*                          attribute_list := "ALL" | "NONE" | attributes .
+*                          attributes = { "%I" | "%I" "->" element } .
+*
+*                       examples:
+*                          1) "%T(NONE)"
+*                          2) "%T(ALL)"
+*                          3) "%T(%I%I)"
+*                          4) "%T(%I%I->%T(%I%I))"
+*
+*     ...             - varibale list of arguments
+*              
+*                       varargs corresponding to examples above:
+*                          1) JB_Type
+*                          2) JB_Type
+*                          3) JB_Type JB_job_numer JB_ja_tasks
+*                          4) JB_Type JB_job_numer JB_ja_tasks
+*                                JAT_Type JAT_task_number JAT_status
+*                       
 *
 *  RESULT
-*     lEnumeration* - enumeration 
-******************************************************************************/
-lEnumeration *lWhat(const char *fmt,...)
+*     lEnumeration* - new enumeration
+*
+*  NOTES
+*     "%I" is equivalent with "%I->%T(ALL)" 
+*     "" is NOT equivalent with "%I->%T(NONE)"
+*******************************************************************************/
+lEnumeration *lWhat(const char *fmt, ...)
 {
-   int i, n;
-   const char *s;
-   lDescr *dp = NULL;
-   lEnumeration *ep;
-   int *nm_list = NULL;
-   int nr_nm;
+   lEnumeration *enumeration = NULL;
    va_list ap;
-   int error_status;
+   cull_parse_state state;
 
    DENTER(CULL_LAYER, "lWhat");
    va_start(ap, fmt);
 
    if (!fmt) {
-      error_status = LENOFORMATSTR;
-      goto error;
+      LERROR(LENOFORMATSTR);
+      DEXIT;
+      return NULL;
    }
-   /* how many fields are selected (for malloc) */
-   for (n = 0, s = fmt; *s; s++)
-      if (*s == '%')
-         n++;
+   /* 
+      initialize scan function, the actual token is scanned again 
+      in the subscope fuction. There we call eat_token to go ahead
+    */
+   memset(&state, 0, sizeof(state));
+   scan(fmt, &state);
+   
+   /* parse */
+   enumeration = subscope_lWhat(&state, &ap);
 
-   if (n <= 0) {
-      /* possibly %T is missing */
-      error_status = LESYNTAX;
-      goto error;
+   if (!enumeration) {
+      LERROR(LEPARSECOND);
+      DEXIT;
+      return NULL;
    }
-
-   dp = va_arg(ap, lDescr *);
-
-   /* malloc space for an int array */
-   nr_nm = n - 1;
-   if (nr_nm) {
-      if (!(nm_list = (int *) malloc(sizeof(int) * nr_nm))) {
-         error_status = LEMALLOC;
-         goto error;
-      }
-   }
-   /* read variable argument list into int array nm_list */
-   for (i = 0; i < nr_nm; i++) {
-      nm_list[i] = va_arg(ap, int);
-   }
-
-   /* this function does parse and create the lEnumeration structure */
-   ep = _lWhat(fmt, dp, nm_list, nr_nm);
-
-   if (nm_list)
-      free(nm_list);
-   va_end(ap);
 
    DEXIT;
-   return ep;
+   return enumeration;
+}
 
- error:
-   LERROR(error_status);
-   va_end(ap);
-   DPRINTF(("error_status = %d\n", error_status));
+static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
+{
+   lDescr *dp = NULL;
+   lEnumeration *enumeration = NULL;
+   int token;
+   lEnumeration ep[1000];
+   int next_id = 0;
+   int i;
+
+   DENTER(CULL_LAYER, "subscope_lWhat");
+
+   if (scan(NULL, state) != TYPE) {
+      LERROR(LESYNTAX);
+      DEXIT;
+      return NULL;
+   }
+   eat_token(state);                 /* eat %T */
+   if (!(dp = va_arg(*app, lDescr *))) {
+      LERROR(LEDESCRNULL);
+      DEXIT;
+      return NULL;
+   }
+
+   if (scan(NULL, state) != BRA) {
+      LERROR(LESYNTAX);
+      DEXIT;
+      return NULL;
+   }
+   eat_token(state);                 /* eat ( */
+
+   token = scan(NULL, state);
+
+   if (token == CULL_ALL) {
+      ep[next_id].pos = WHAT_ALL;
+      ep[next_id].nm = -99;
+      ep[next_id].mt = -99;
+      ep[next_id].ep = NULL;
+      next_id++;
+      eat_token(state);
+   } else if (token == CULL_NONE) {
+      ep[next_id].pos = WHAT_NONE;
+      ep[next_id].nm = -99;
+      ep[next_id].mt = -99;
+      ep[next_id].ep = NULL;
+      next_id++;
+      eat_token(state);
+   } else {
+      do {
+         int nm;
+
+         if (token != FIELD) {
+            LERROR(LESYNTAX);         
+            DEXIT;
+            return NULL;
+         }
+         eat_token(state);                 /* eat %I */
+
+         /* find field in current descriptor */ 
+         nm = va_arg(*app, int);     
+         for (i = 0; dp[i].nm != NoName; i++) { 
+            if (dp[i].nm == nm) {
+               ep[next_id].pos = i;
+               ep[next_id].nm = nm;
+               ep[next_id].mt = dp[i].mt;
+               break;
+            } 
+         }
+
+         token = scan(NULL, state);
+         if (token == SUBSCOPE) {
+            eat_token(state);                 /* eat -> */
+            ep[next_id].ep = subscope_lWhat(state, app);
+            token = scan(NULL, state);
+         } else {
+            ep[next_id].ep = NULL;
+         }
+         next_id++;
+
+      } while (token == FIELD);
+   }
+
+   /* add last element */
+   ep[next_id].pos = 0;
+   ep[next_id].nm = NoName;
+   ep[next_id].mt = lEndT;
+   ep[next_id].ep = NULL;
+   next_id++;
+
+   if (scan(NULL, state) != KET) {
+      LERROR(LESYNTAX);
+      DEXIT;
+      return NULL;
+   }
+   eat_token(state);                 /* eat ) */
+
+   /* make copy of local data */
+   enumeration = malloc(sizeof(lEnumeration) * next_id);
+   if (enumeration == NULL) {
+      LERROR(LEMALLOC);
+      DEXIT;
+      return NULL;
+   }
+
+   for (i = 0; i < next_id; i++) {  
+      enumeration[i].pos = ep[i].pos;
+      enumeration[i].nm = ep[i].nm;
+      enumeration[i].mt = ep[i].mt;
+      enumeration[i].ep = ep[i].ep;
+   }
+
    DEXIT;
-   return NULL;
+   return enumeration;
 }
 
 /****** cull/what/lWhatAll() *****************************************************
@@ -420,9 +544,11 @@ lEnumeration *lWhatAll()
    ep[0].pos = WHAT_ALL;
    ep[0].nm = -99;
    ep[0].mt = -99;
+   ep[0].ep = NULL;
    ep[1].pos = 0;
    ep[1].nm = NoName;
    ep[1].mt = lEndT;
+   ep[1].ep = NULL;
 
    DEXIT;
    return ep;
@@ -452,79 +578,23 @@ lEnumeration *lWhatAll()
 ******************************************************************************/
 lEnumeration *lFreeWhat(lEnumeration *ep) 
 {
+   int i;
+
    DENTER(CULL_LAYER, "lFreeWhat");
 
    if (!ep) {
       DEXIT;
       return NULL;
    }
+   for (i = 0; ep[i].mt != lEndT; i++) {
+      if (ep[i].ep != NULL) {
+         ep[i].ep = lFreeWhat(ep[i].ep);
+      }
+   }
    free(ep);
 
    DEXIT;
    return NULL;
-}
-
-/****** cull/what/lWriteWhatTo() **********************************************
-*  NAME
-*     lWriteWhatTo() -- Writes a enumeration array to a file stream 
-*
-*  SYNOPSIS
-*     void lWriteWhatTo(const lEnumeration *ep, FILE *fp) 
-*
-*  FUNCTION
-*     Writes a enumeration array to a file stream 
-*
-*  INPUTS
-*     const lEnumeration *ep - enumeration 
-*     FILE *fp               - file stream 
-******************************************************************************/
-void lWriteWhatTo(const lEnumeration *ep, FILE *fp) 
-{
-   int i;
-
-   DENTER(CULL_LAYER, "lWriteWhatTo");
-
-   if (!ep) {
-      LERROR(LEENUMNULL);
-      DEXIT;
-      return;
-   }
-   for (i = 0; ep[i].mt != lEndT; i++) {
-      switch (ep[i].pos) {
-      case WHAT_NONE:
-         if (!fp) {
-            DPRINTF(("nm: %6d %-20.20s mt: %d pos: %d\n", ep[i].nm,
-                  "NONE", ep[i].mt, ep[i].pos));
-         }
-         else {
-            fprintf(fp, "nm: %6d %-20.20s mt: %d pos: %d\n", ep[i].nm,
-                  "NONE", ep[i].mt, ep[i].pos);
-         }
-         break;
-      case WHAT_ALL:
-         if (!fp) {
-            DPRINTF(("nm: %6d %-20.20s mt: %d pos: %d\n", ep[i].nm,
-                  "ALL", ep[i].mt, ep[i].pos));
-         }
-         else {
-            fprintf(fp, "nm: %6d %-20.20s mt: %d pos: %d\n", ep[i].nm,
-                  "ALL", ep[i].mt, ep[i].pos);
-         }
-         break;
-      default:
-         if (!fp) {
-            DPRINTF(("nm: %6d %-20.20s mt: %d pos: %d\n", ep[i].nm,
-                  lNm2Str(ep[i].nm), ep[i].mt, ep[i].pos));
-         }
-         else {
-            fprintf(fp, "nm: %6d %-20.20s mt: %d pos: %d\n", ep[i].nm,
-                  lNm2Str(ep[i].nm), ep[i].mt, ep[i].pos);
-         }
-      }
-   }
-
-   DEXIT;
-   return;
 }
 
 /****** cull/what/lCountWhat() ************************************************
@@ -572,7 +642,8 @@ int lCountWhat(const lEnumeration *enp, const lDescr *dp)
       }
       break;
    default:
-      for (n = 0; enp[n].nm != NoName; n++);
+      for (n = 0; enp[n].nm != NoName; n++)
+         ;
    }
 
    DEXIT;
@@ -620,6 +691,7 @@ lEnumeration *lCopyWhat(const lEnumeration *ep)
       copy[i].pos = ep[i].pos;
       copy[i].nm = ep[i].nm;
       copy[i].mt = ep[i].mt;
+      copy[i].ep = lCopyWhat(ep[i].ep);
    }
 
    DEXIT;
@@ -669,78 +741,130 @@ lEnumeration *lIntVector2What(const lDescr *dp, const int intv[])
    return what;
 }
 
-lListElem *lWhatToElem(const lEnumeration *what){
-   lListElem *whatElem = NULL;
-   sge_pack_buffer pb;
-   int size;
-   DENTER(CULL_LAYER, "lWhatToElem");
-   
-   /* 
-    * retrieve packbuffer size to avoid large realloc's while packing 
-    */
-   init_packbuffer(&pb, 0, 1);
-   if (cull_pack_enum(&pb, what) == PACK_SUCCESS) {
-      size = pb_used(&pb);
-      clear_packbuffer(&pb);
+int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
+{
+   int ret = 0;
+
+   DENTER(CULL_LAYER, "lMergeWhat");
+   if (*what1 == NULL || 
+       (*what1)[0].pos == WHAT_NONE ||
+       (*what2)[0].pos == WHAT_ALL) {
+      /*
+       * what1 is empty or what2 containes all attributes
+       */
+      *what1 = lFreeWhat(*what1);
+      *what1 = *what2;
+      *what2 = NULL;
+   } else if ((*what1)[0].pos == WHAT_ALL) {
+      /*
+       * what1 contailes already all elements
+       */
+      *what2 = lFreeWhat(*what2);
+   } else {
+      lEnumeration tmp_result[1000];
+      int next_id = 0;
+      int i, j;
 
       /*
-       * now we do the real packing
+       * Add all elements of what1 
        */
-      if (init_packbuffer(&pb, size, 0) == PACK_SUCCESS) {
-         if (cull_pack_enum(&pb, what) == PACK_SUCCESS) {
-            whatElem = lCreateElem(PACK_Type);
-            lSetUlong(whatElem, PACK_id, SGE_WHAT);
-#ifdef COMMCOMPRESS 
-            if(pb.mode == 0) {
-               if(flush_packbuffer(&pb) == PACK_SUCCESS){
-                  setByteArray( (char*)pb.head_ptr,  pb.cpr.total_out, whereElem, PACK_String);
-                  lSetBool(whatElem, PACK_Compressed, true);
-                }
-                else
-                  whatElem = lFreeElem(whatElem);
-            }
-            else
-#endif
-            {
-               setByteArray( (char*)pb.head_ptr, pb.bytes_used, whatElem, PACK_string);
-               lSetBool(whatElem, PACK_compressed, false);
+      for (i = 0; (*what1)[i].mt != lEndT; i++) { 
+         tmp_result[next_id].pos = (*what1)[i].pos;
+         tmp_result[next_id].mt = (*what1)[i].mt;
+         tmp_result[next_id].nm = (*what1)[i].nm;
+         tmp_result[next_id].ep = (*what1)[i].ep;
+         (*what1)[i].ep = NULL;
+         next_id++;
+      }
+      *what1 = lFreeWhat(*what1);
+
+      /*
+       * Add only those of what2 which are not already contained in what1
+       * honour subwhat's
+       */
+      for (i = 0; (*what2)[i].mt != lEndT; i++) {
+         bool skip = false;
+
+         for (j = 0; tmp_result[j].mt != lEndT; j++) {
+            if (tmp_result[j].mt == (*what2)[i].mt &&
+                tmp_result[j].nm == (*what2)[i].nm &&
+                tmp_result[j].pos == (*what2)[i].pos) {
+               if (tmp_result[next_id].ep != NULL && (*what2)[i].ep != NULL) {
+                  lMergeWhat(&(tmp_result[next_id].ep), &((*what2)[i].ep));
+               } else {
+                  tmp_result[next_id].ep = NULL;
+               }
+
+               skip = true;
+               break;
             }
          }
+         if (!skip) {
+            tmp_result[next_id].pos = (*what2)[i].pos;
+            tmp_result[next_id].mt = (*what2)[i].mt;
+            tmp_result[next_id].nm = (*what2)[i].nm;
+            if (tmp_result[next_id].ep != NULL && (*what2)[i].ep != NULL) {
+               lMergeWhat(&(tmp_result[next_id].ep), &((*what2)[i].ep));
+            } else { 
+               tmp_result[next_id].ep = NULL;
+            }
+            next_id++;
+         }
       }
-      clear_packbuffer(&pb); 
+      /* add last element */
+      tmp_result[next_id].pos = 0;
+      tmp_result[next_id].nm = NoName;
+      tmp_result[next_id].mt = lEndT;
+      tmp_result[next_id].ep = NULL;
+      next_id++;
+      *what2 = lFreeWhat(*what2);
+
+      /*
+       * create result what 
+       */
+      *what1 = malloc(sizeof(lEnumeration) * next_id);
+      if (*what1 != NULL) {
+         for (i = 0; i < next_id; i++) {
+            (*what1)[i].pos = tmp_result[i].pos;
+            (*what1)[i].nm = tmp_result[i].nm;
+            (*what1)[i].mt = tmp_result[i].mt;
+            (*what1)[i].ep = tmp_result[i].ep;
+         }
+      } else {
+         LERROR(LEMALLOC);
+         DTRACE;
+         ret = -1;
+      }
    }
    DEXIT;
-   return whatElem;
+   return ret;
 }
 
-lEnumeration *lWhatFromElem(const lListElem *what){
-   lEnumeration *cond = NULL;
-   sge_pack_buffer pb;
-   int size=0;
-   char *buffer;
-   bool compressed = false;
-   int ret=0;
-   DENTER(CULL_LAYER, "lWhatFromCull");
-   
-   if (lGetUlong(what, PACK_id) == SGE_WHAT) {
-      compressed = lGetBool(what, PACK_compressed);
-      size = getByteArray(&buffer, what, PACK_string);
-      if (size <= 0){
-         ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
+int lWhatSetSubWhat(lEnumeration *what1, int nm, lEnumeration **what2)
+{
+   int ret = -1;
+   int i;
+
+   DENTER(CULL_LAYER, "lWhatSetSubWhat");
+   if (what1 != NULL && what2 != NULL) {
+      for (i = 0; what1[i].mt != lEndT; i++) {
+         if (what1[i].nm == nm) {
+            if (what1[i].ep != NULL) {
+               what1[i].ep = lFreeWhat(what1[i].ep);
+            }
+            what1[i].ep = *what2;
+            *what2 = NULL; 
+            ret = 0;
+            break;
+         } 
       }
-      else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size, compressed)) == PACK_SUCCESS){
-         cull_unpack_enum(&pb, &cond);
-         clear_packbuffer(&pb); 
+      if (*what2 != NULL) {
+         *what2 = lFreeWhat(*what2);
       }
-      else {
-         FREE(buffer);
-         ERROR((SGE_EVENT, MSG_PACK_ERRORUNPACKING_S, cull_pack_strerror(ret)));
-      }
-   }
-   else {
-      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, (long)lGetUlong(what, PACK_id), SGE_WHAT));
    }
    DEXIT;
-   return cond;
+   return ret;
 }
+
+
 

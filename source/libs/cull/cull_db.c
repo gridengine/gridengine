@@ -473,7 +473,7 @@ int lSplit(lList **slp, lList **ulp, const char *ulp_name,
    lListElem *ep, *next;
    int has_been_allocated = 0;
 
-   DENTER(CULL_LAYER, "lSplit");
+   DENTER(TOP_LAYER, "lSplit");
 
    /*
       iterate through the source list call lCompare and chain all elems
@@ -486,6 +486,7 @@ int lSplit(lList **slp, lList **ulp, const char *ulp_name,
 
    for (ep = lFirst(*slp); ep; ep = next) {
       next = ep->next;          /* this is important, cause the elem is dechained */
+
       if (!lCompare(ep, cp)) {
          if (ulp && !*ulp) {
             *ulp = lCreateList(ulp_name ? ulp_name : "ulp", (*slp)->descr);
@@ -498,9 +499,9 @@ int lSplit(lList **slp, lList **ulp, const char *ulp_name,
          if (ulp) {
             ep = lDechainElem(*slp, ep);
             lAppendElem(*ulp, ep);
-         }
-         else
+         } else {
             lRemoveElem(*slp, ep);
+         }
       }
    }
 
@@ -548,20 +549,21 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
    return slp;
 }
 
-/****** cull/db/lSelectElem() *****************************************************
+/****** cull/db/lSelectElem() *************************************************
 *  NAME
 *     lSelectElem() -- Extracts some elements fulfilling a condition 
 *
 *  SYNOPSIS
 *     lListElem* lSelect(const lListElem *slp, 
-*                    const lCondition *cp, const lEnumeration *enp, bool isHash) 
+*                        const lCondition *cp, 
+*                        const lEnumeration *enp, bool isHash) 
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
 *     fulfilling the condition 'cp'. 
 *
 *  INPUTS
-*     const lListElem *slp        - source list pointer 
+*     const lListElem *slp    - source list pointer 
 *     const lCondition *cp    - selects rows 
 *     const lEnumeration *enp - selects columns 
 *     bool isHash             - create hash or not
@@ -570,50 +572,58 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
 *     lListElem* - list containing the extracted elements
 ******************************************************************************/
 lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
-               const lEnumeration *enp, bool isHash) 
+                       const lEnumeration *enp, bool isHash) 
 {
    lListElem *new = NULL;
-   lDescr *dp;
-   int n, index = 0;
+
    DENTER(CULL_LAYER, "lSelectElem");
-   if (!slp || !enp) {
+
+   if (!slp) {
       DEXIT;
       return NULL;
    }
-   /* create new lList with partial descriptor */
-   if ((n = lCountWhat(enp, slp->descr)) <= 0) {
-      LERROR(LECOUNTWHAT);
-      DEXIT;
-      return NULL;
-   }
-   if (!(dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
-   }
-   /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
-   if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
-      LERROR(LEPARTIALDESCR);
+   if (enp != NULL) {
+      lDescr *dp;
+      int n, index = 0;
+
+      /* create new lList with partial descriptor */
+      if ((n = lCountWhat(enp, slp->descr)) <= 0) {
+         LERROR(LECOUNTWHAT);
+         DEXIT;
+         return NULL;
+      }
+      if (!(dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
+         LERROR(LEMALLOC);
+         DEXIT;
+         return NULL;
+      }
+      /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
+      if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
+         LERROR(LEPARTIALDESCR);
+         free(dp);
+         DEXIT;
+         return NULL;
+      }
+      /* create reduced element */
+      new = lSelectElemD(slp, cp, dp, enp, isHash);
+      /* free the descriptor, it has been copied by lCreateList */
+      cull_hash_free_descr(dp);
       free(dp);
-      DEXIT;
-      return NULL;
+   } else {
+      /* no enumeration => make a copy of element */
+      new = lCopyElemHash(slp, isHash);
    }
-   /* create reduced element */
-   new = lSelectElemD(slp, cp, dp, enp, isHash);
-   /* free the descriptor, it has been copied by lCreateList */
-   cull_hash_free_descr(dp);
-   free(dp);
    DEXIT;
    return new;
 }
 
-/****** cull/db/lSelectElemD() *****************************************************
+/****** cull/db/lSelectElemD() ************************************************
 *  NAME
 *     lSelectElemD() -- Extracts some elements fulfilling a condition 
 *
 *  SYNOPSIS
 *     lListElem* lSelectElemD(const lListelem *slp, 
-*                    const lCondition *cp, const lEnumeration *enp) 
+*                             const lCondition *cp, const lEnumeration *enp) 
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
@@ -655,7 +665,7 @@ lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
          DEXIT;
          return NULL;
       }
-    }
+   }
    DEXIT;
    return new;
 }
@@ -686,7 +696,7 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
    return lSelectHash(name, slp, cp, enp, true);               
 }               
 
-/****** cull/db/lSelectHash() *****************************************************
+/****** cull/db/lSelectHash() *************************************************
 *  NAME
 *     lSelectHash() -- Extracts some elements fulfilling a condition 
 *
@@ -709,7 +719,7 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
 *     lList* - list containing the extracted elements
 ******************************************************************************/
 lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp,
-               const lEnumeration *enp, bool isHash) 
+                   const lEnumeration *enp, bool isHash) 
 {
 
    lList *dlp = (lList *) NULL;
@@ -718,38 +728,42 @@ lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp,
 
    DENTER(CULL_LAYER, "lSelectHash");
 
-   if (!slp || !enp) {
+   if (!slp) {
       DEXIT;
       return NULL;
    }
 
-   /* create new lList with partial descriptor */
-   if ((n = lCountWhat(enp, slp->descr)) <= 0) {
-      LERROR(LECOUNTWHAT);
-      DEXIT;
-      return NULL;
-   }
+   if (enp != NULL) {
+      /* create new lList with partial descriptor */
+      if ((n = lCountWhat(enp, slp->descr)) <= 0) {
+         LERROR(LECOUNTWHAT);
+         DEXIT;
+         return NULL;
+      }
 
-   if (!(dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
-   }
+      if (!(dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
+         LERROR(LEMALLOC);
+         DEXIT;
+         return NULL;
+      }
 
-   /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
-   index = 0;
-   if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
-      LERROR(LEPARTIALDESCR);
+      /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
+      index = 0;
+      if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
+         LERROR(LEPARTIALDESCR);
+         free(dp);
+         DEXIT;
+         return NULL;
+      }
+
+      dlp = lSelectD(name, slp, cp, dp, enp, isHash);
+      
+      /* free the descriptor, it has been copied by lCreateList */
+      cull_hash_free_descr(dp);
       free(dp);
-      DEXIT;
-      return NULL;
+   } else {
+      dlp = lCopyListHash("", slp, isHash);
    }
-
-   dlp = lSelectD(name, slp, cp, dp, enp, isHash);
-   
-   /* free the descriptor, it has been copied by lCreateList */
-   cull_hash_free_descr(dp);
-   free(dp);
 
    DEXIT;
    return dlp;
@@ -901,8 +915,7 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
             ddp[*indexp].ht = NULL;
  
             (*indexp)++;
-         }
-         else {
+         } else {
             LERROR(LEENUMDESCR);
             DEXIT;
             return -1;

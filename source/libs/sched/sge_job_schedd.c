@@ -458,14 +458,16 @@ void split_jobs(lList **job_list, lList **answer_list,
             target = &(target_tasks[SPLIT_ERROR]);
          } 
          if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_TIME] &&
-             (lGetUlong(job, JB_execution_time) > sge_get_gmt())) {
+             (lGetUlong(job, JB_execution_time) > sge_get_gmt()) &&
+             (ja_task_status == JIDLE)) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is waiting due to time.\n", ja_task_id));
 #endif
             target = &(target_tasks[SPLIT_WAITING_DUE_TO_TIME]);
          }
          if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_PREDECESSOR] &&
-             (lGetList(job, JB_jid_predecessor_list) != NULL)) {
+             (lGetList(job, JB_jid_predecessor_list) != NULL) &&
+             (ja_task_status == JIDLE)) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is waiting due to pred.\n", ja_task_id));
 #endif

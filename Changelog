@@ -1,9 +1,11 @@
 EB-2003-03-26-1  Bugfix:    maxujobs does not count suspended jobs
                             or running/suspended jobs which have an hold 
-                            applied
+                            applied, a new starttime attached or new
+                            job dependencies defined after the job has been 
+                            started.
                  Issue:     #511
                  Changed:   sge_schedd
-                 Review:    STILL HAS TO BE DONE
+                 Review:    AH 
 
 JG-2003-03-26-3  Bugfix:    spooling integrity improvement was missing for 
                             sharetree, projects and users

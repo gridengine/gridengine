@@ -572,7 +572,7 @@ spool_classic_default_read_func(const lListElem *type, const lListElem *rule,
                                        1, NULL);
          break;
       case SGE_TYPE_USER:
-         ep = cull_read_in_userprj(USER_DIR, key, 1, 0, NULL);
+         ep = cull_read_in_userprj(USER_DIR, key, 1, 1, NULL);
          break;
       case SGE_TYPE_USERSET:
          ep = cull_read_in_userset(USERSET_DIR, key, 1, 0, NULL); 
@@ -702,14 +702,21 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_manop(1, SGE_OPERATOR_LIST);
          break;
       case SGE_TYPE_SHARETREE:
-         write_sharetree(NULL, object, SHARETREE_FILE, NULL, 1, 1, 1);
+         sge_dstring_sprintf(&file_name, ".%s", SHARETREE_FILE);
+         if(write_sharetree(NULL, object, (char *)sge_dstring_get_string(&file_name), NULL, 1, 1, 1) == 0) {
+            rename(sge_dstring_get_string(&file_name), SHARETREE_FILE);
+         }
          break;
       case SGE_TYPE_PE:
          write_pe(1, 2, object);
          break;
       case SGE_TYPE_PROJECT:
-         sge_dstring_sprintf(&file_name, "%s/%s", PROJECT_DIR, key);
-         write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 0);
+         sge_dstring_sprintf(&file_name, "%s/.%s", PROJECT_DIR, key);
+         sge_dstring_sprintf(&real_name, "%s/%s", PROJECT_DIR, key);
+         if(write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 0) == 0) {
+            rename(sge_dstring_get_string(&file_name), 
+                   sge_dstring_get_string(&real_name));
+         }
          break;
       case SGE_TYPE_QUEUE:
          sge_dstring_sprintf(&file_name, "%s", key);
@@ -722,8 +729,12 @@ spool_classic_default_write_func(const lListElem *type, const lListElem *rule,
          write_host(1, 2, object, SH_name, NULL);
          break;
       case SGE_TYPE_USER:
-         sge_dstring_sprintf(&file_name, "%s/%s", USER_DIR, key);
-         write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 0);
+         sge_dstring_sprintf(&file_name, "%s/.%s", USER_DIR, key);
+         sge_dstring_sprintf(&real_name, "%s/%s", USER_DIR, key);
+         if(write_userprj(NULL, object, sge_dstring_get_string(&file_name), NULL, 1, 1) == 0) {
+            rename(sge_dstring_get_string(&file_name), 
+                   sge_dstring_get_string(&real_name));
+         }
          break;
       case SGE_TYPE_USERSET:
          sge_dstring_sprintf(&file_name, "%s/.%s", USERSET_DIR, key);

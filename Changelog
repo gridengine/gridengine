@@ -1,3 +1,10 @@
+JG-2003-03-26-0  Bugfix:    spooling integrity improvement was missing for 
+                            sharetree, projects and users
+                 Issue:     #501
+                 Bugtraq:   #4822746
+                 Changed:   sge_qmaster
+                 Review:    EB
+
 AH-2003-03-26-2  Bugfix:    NOTIFY_SUSP signal only sent for first suspension of job
                  Isssue:    #510
                  Bugtraq:   #4835832

@@ -1,4 +1,7 @@
-JG-2002-09-09-0: Enhancem.: qconf -ke has to be called with a host(list) or
+AA-2002-01-09-0: Enhancem.: openssl lib path, I18N Linux uses libc gettext
+                            -> changes in aimk
+
+JG-2002-01-09-0: Enhancem.: qconf -ke has to be called with a host(list) or
                             the keyword "all". qconf -ke without hostlist no
                             longer kills all hosts.
                  Issue:     #83           

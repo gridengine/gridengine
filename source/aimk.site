@@ -34,9 +34,7 @@
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-#set OPENSSL_HOME = /home/aa114085/OPENSOURCE/gridengine/source/openssl/$buildarch
-set OPENSSL_HOME = /vol2/tools/SW/openssl-engine-0.9.6b/$buildarch
-#set OPENSSL_HOME = /usr/src/openssl-0.9.6 
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6c/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is

@@ -251,7 +251,7 @@ set   FC           = f77
 set   LFLAGS       = "-L."
 set   LIBS         = "-lm"
 set   OPTIMIZATION = 0
-set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.35"
+set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.40"
 set   MAKEZLIB    = 0
 set   ZLIBBASE    = ""
 set   PTHRDSFLAGS = ""
@@ -345,7 +345,7 @@ set   XINCD  = "-I../3rdparty/qmon/Xbae -I../3rdparty/qmon/iconlist -I../3rdpart
 if ( $?MY_XINCD ) then
    set XINCD = "-I${MY_XINCD} ${XINCD}"
 endif
-set   XMTINCD  = "-DXMT_HAS_STRERROR -I../3rdparty/qmon/Xmt310"
+set   XMTINCD  = "-DHAVE_MEMMOVE -DXMT_HAS_STRERROR -I../3rdparty/qmon/Xmt310"
 set   XmtFileRootDir = ""
 set   XmtFileSearchPath = ""
 #set   REPLAYXT_SUPPORT = 0
@@ -701,6 +701,10 @@ endif
 if ($?nomk) then
    echo $COMPILE_ARCH
    exit 0
+endif
+
+if ( "$CC" == "insure" ) then
+   set COMPILE_ARCH = ${COMPILE_ARCH}.insure
 endif
 
 if ( ! -d $COMPILE_ARCH ) then
@@ -1100,7 +1104,7 @@ case LINUX6:
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
-   set LIBS     = "$LIBS"
+   set LIBS     = "-lefence $LIBS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
@@ -1406,7 +1410,7 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" ) then
+      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "LINUX6" ) then
          set LIBINTL = ""
       else
          set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
@@ -1485,7 +1489,7 @@ endif
 if ( "$BUILDGETTEXT" == 1 ) then
    echo ________G_E_T_T_E_X_T___________
 
-   cd $SOURCE/3rdparty/gettext-0.10.35
+   cd $SOURCE/3rdparty/gettext-0.10.40
    $SOURCE/scripts/install.gridware $COMPILE_ARCH
    if ( $status != 0 ) then
       echo not done

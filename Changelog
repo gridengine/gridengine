@@ -1,7 +1,7 @@
 CR-2004-07-24-1: Bugfix:    schedd and qmaster get out of sync - no scheduling
                             for long time
                  Changed:   communication lib
-                 Issue:     1041
+                 Issue:     1141
                  Bugtraq:   5077589
                  Review:    JG
 

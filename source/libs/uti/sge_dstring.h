@@ -51,15 +51,20 @@
 ******************************************************************************/
 
 #include <stdarg.h>
+
+#include "basis_types.h"
+
 #include "sge_stdlib.h"
 
-#define DSTRING_INIT {NULL, 0, 0}
+#define DSTRING_INIT {NULL, 0, 0, false}
 
 typedef struct {
-   char *s; /* refers to allocated buffer with dynamic dstrings
-               refers to static buffer with static dstrings */
-   size_t size; /*  */
-   int is_static;
+   char *s;        /* refers to allocated buffer with dynamic dstrings
+                    *  or static buffer with static dstrings 
+                    */
+   size_t length;  /* length of the string */
+   size_t size;    /* size of the string buffer */
+   bool is_static;  /* is it a static or a dynamic buffer? */
 } dstring;
 
 /* DSTRING_INIT counterpart when static buffers are wrapped with dstring */

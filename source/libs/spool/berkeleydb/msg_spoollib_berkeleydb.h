@@ -59,5 +59,8 @@
 #define MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S _MESSAGE(70022, _("error retrieving berkeley db log archive: "SFN"\n"))
 #define MSG_BERKELEY_CANNOTCHECKPOINT_S _MESSAGE(70023, _("error checkpointing berkeley db: "SFN"\n"))
 #define MSG_BERKELEY_TRANSACTIONEINVAL _MESSAGE(70024, _("invalid transaction command\n"))
+#define MSG_BERKELEY_USINGBDBVERSION_S _MESSAGE(70025, _("using BerkeleyDB version "SFN"\n"))
+#define MSG_BERKELEY_WRONGBDBVERSIONEXPECTING_SDD  _MESSAGE(70026, _("wrong BerkeleyDB version: Using "SFN", but exect major version = %d, minor version >= %d\n"))
+
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

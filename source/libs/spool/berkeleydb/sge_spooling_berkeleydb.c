@@ -60,6 +60,12 @@
 
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
 
+/*
+ * Berkeley DB version: we require a specific version
+ */
+#define BDB_MAJOR_VERSION 4
+#define BDB_MINOR_VERSION 0
+
 /* JG: TODO: the following defines should better be parameters to
  *           the berkeley db spooling
  */
@@ -226,6 +232,34 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
    return ret;
 }
 
+bool
+spool_berkeleydb_check_version(lList **answer_list)
+{
+   bool ret = true;
+   const char *version;
+   int major, minor;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_check_version");
+   
+   version = db_version(&major, &minor, NULL);
+
+   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                           ANSWER_QUALITY_INFO, 
+                           MSG_BERKELEY_USINGBDBVERSION_S,
+                           version);
+
+   if (major != BDB_MAJOR_VERSION || minor < BDB_MINOR_VERSION) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_WRONGBDBVERSIONEXPECTING_SDD,
+                              version, BDB_MAJOR_VERSION, BDB_MINOR_VERSION);
+      ret = false;
+   }
+  
+   DEXIT;
+   return ret;
+}
+
 /****** spool/berkeleydb/spool_berkeleydb_default_startup_func() **************
 *  NAME
 *     spool_berkeleydb_default_startup_func() -- setup 
@@ -270,7 +304,11 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
    url = lGetString(rule, SPR_url);
    db = (bdb_info *)lGetRef(rule, SPR_clientdata);
 
-   ret = spool_berkeleydb_create_environment(answer_list, db, url);
+   ret = spool_berkeleydb_check_version(answer_list);
+
+   if (ret) {
+      ret = spool_berkeleydb_create_environment(answer_list, db, url);
+   }
 
    if (ret) {
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);

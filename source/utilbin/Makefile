@@ -187,7 +187,7 @@ spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
 
 #---------------------------------------------------------------------
 spoolinit:   spoolinit.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
-		$(CC) -o $@ spoolinit.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcom -luti -llck -lrmon  $(SLIBS) $(LIBS)
+		$(CC) -o $@ spoolinit.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcom -luti -llck -lrmon  $(SLIBS) $(LIBS)
 
 spoolinit.o: $(UTILBIN_DIR)/spoolinit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spoolinit.c

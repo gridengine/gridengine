@@ -1,3 +1,9 @@
+JG-2003-11-03-0: Enhancem.: Check version of BerkeleyDB.
+                            Some cleanup and improvement of the dstring 
+                            implementation, test program for dstrings.
+                 Issue:     265
+                              
+
 AD-2003-11-03-0: Bugfix.:   Using DENTER/DEXIT from within a signal handler
                             does lead to a deadlock.
                  Changed:   sig_handlers.c

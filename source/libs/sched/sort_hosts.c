@@ -173,9 +173,16 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       return ERROR_LOAD_VAL;
    }
 
-   /* + and - have the lowest precedence. all else are equal,
+   /* 
+    * + and - have the lowest precedence. all else are equal,
     * thus formula is delimited by + or - signs
+    * if the load formula begins with a "-" we need to multiply the
+    * first load value with -1
     */
+   if (tf[0] == '-') {
+      next_op = LOAD_OP_MINUS;
+   }
+
    for (cp=strtok(tf, "+-"); cp; cp = strtok(NULL, "+-")) {
 
       /* ---------------------------------------- */

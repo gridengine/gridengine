@@ -1,3 +1,8 @@
+EB-2004-04-20-1: Bugfix:    load formula of the scheduler
+                 Issue:     330
+                 Changed:   sge_schedd, sge_qmaster
+                 Review:    SG
+
 JG-2004-04-20-2: Enhancem.: qmake: In dynamic allocation mode it is now possible
                             to specify resource requests for individual make 
                             rules.
@@ -34,7 +39,7 @@ SG-2004-04-20-0: Bugfix:    fixed the scheduler profiling
 
 AA-2004-04-20-0: Bugfix:    compiler problem fixes
                             
-EB-2004-04-19-0: Bugfix:    stale resource_unknown_list
+EB-2004-04-20-0: Bugfix:    stale resource_unknown_list
                  Issue:     942
                  Changed:   sge_qmaster
                  Review:    JG

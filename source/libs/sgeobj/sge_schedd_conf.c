@@ -473,8 +473,8 @@ const char *sconf_get_param(const char *name){
 bool sconf_is_valid_load_formula_(lList **answer_list,
                                   lList *centry_list)
 {
-   return sconf_is_valid_load_formula( lFirst(Master_Sched_Config_List),
-                                    answer_list, centry_list);
+   return sconf_is_valid_load_formula(lFirst(Master_Sched_Config_List),
+                                      answer_list, centry_list);
 }
 /****** sge_schedd_conf/sconf_is_valid_load_formula() ********************
 *  NAME
@@ -527,6 +527,68 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
 
    /* Check complex attributes and type */
    if (ret == true) {
+#if 1
+      const char *term_delim = "+-";
+      const char *term, *next_term;
+      struct saved_vars_s *term_context = NULL;
+
+      next_term = sge_strtok_r(load_formula, term_delim, &term_context);
+      while ((term = next_term) && ret == true) {
+         const char *fact_delim = "*";
+         const char *fact, *next_fact, *end;
+         lListElem *cmplx_attr = NULL;
+         struct saved_vars_s *fact_context = NULL;
+         
+         next_term = sge_strtok_r(NULL, term_delim, &term_context);
+
+         fact = sge_strtok_r(term, fact_delim, &fact_context);
+         next_fact = sge_strtok_r(NULL, fact_delim, &fact_context);
+         end = sge_strtok_r(NULL, fact_delim, &fact_context);
+
+         /* first factor has to be a complex attr */
+         if (fact != NULL) {
+            cmplx_attr = centry_list_locate(centry_list, fact);
+
+            if (cmplx_attr != NULL) {
+               int type = lGetUlong(cmplx_attr, CE_valtype);
+
+               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, 
+                                         fact));
+                  answer_list_add(answer_list, SGE_EVENT, 
+                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+            } else {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, 
+                              fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+         /* is weighting factor a number? */
+         if (next_fact != NULL) {
+            if (!sge_str_is_number(next_fact)) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WEIGHTFACTNONUMB_S, 
+                              next_fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+
+         /* multiple weighting factors? */
+         if (end != NULL) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false;
+         }
+         sge_free_saved_vars(fact_context);
+      }
+      sge_free_saved_vars(term_context);
+#else
       const char *delimitor = "+-*";
       const char *attr, *next_attr;
 
@@ -553,6 +615,7 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
             ret = false;
          }
       }
+#endif
    }
    DEXIT;
    return ret;

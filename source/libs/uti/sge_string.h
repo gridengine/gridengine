@@ -94,6 +94,8 @@ char **string_list(char *str, char *delis, char **pstr);
 
 const char *sge_strerror(int errnum, dstring *buffer);
 
+bool sge_str_is_number(const char *string);
+
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)
 #else

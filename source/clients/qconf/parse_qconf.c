@@ -4564,7 +4564,7 @@ static int show_eventclients()
       for_each (ep, lp) {
          printf("%8d ", (int)lGetUlong(ep, EV_id));
          printf("%-15s ", lGetString(ep, EV_name));
-         printf("%-25s\n", lGetString(ep, EV_host));
+         printf("%-25s\n", lGetHost(ep, EV_host));
       }
    }
    else

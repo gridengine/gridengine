@@ -1,3 +1,6 @@
+SG-2004-01-17-2: Bugfix:    type mismatch in sge_security (pointer instead
+                            of unsigned long) 
+
 DT-2004-01-17-0: Bugfix:    Added function to add two lists together while
                             treaing them as sets, i.e. element uniqueness is
                             maintained.  Also changed exec_job to add the

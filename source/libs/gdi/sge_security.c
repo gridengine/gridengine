@@ -62,6 +62,7 @@
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
+#include "cl_commlib.h"
 
 #ifdef SGE_MT
 #include "sge_mtutil.h"
@@ -278,7 +279,7 @@ u_short *compressed
 
 
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-   ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,fromid , synchron, 0 ,&message, &sender );
+   ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
    if (message != NULL) {
       *buffer = message->message;
       message->message = NULL;

@@ -1,3 +1,9 @@
+EB-2002-09-02-1  Bugfix:    qmod help output is incomplete
+                 Issue:     #354
+                 Bugtraq:   #4741230
+                 Review:    AH
+                 Changed:   qmod
+
 EB-2002-09-02-0  Bugfix:    load formula of the scheduler
                  Issue:     #330
                  Bugtraq:   #4740578

@@ -197,6 +197,7 @@ if [ $QMASTER = "install" ]; then
  fi
 
  WelcomeTheUser
+ CheckForLocalHostResolving
  CheckWhoInstallsSGE
  ProcessSGERoot 
  GetQmasterPort
@@ -245,6 +246,7 @@ if [ $EXECD = "install" ]; then
       if [ $h = `hostname` ]; then
   
          WelcomeTheUserExecHost
+         CheckForLocalHostResolving
          CheckWhoInstallsSGE 
          ProcessSGERoot
          CheckQmasterInstallation
@@ -274,6 +276,7 @@ if [ $EXECD = "install" ]; then
  
  else
       WelcomeTheUserExecHost
+      CheckForLocalHostResolving
       CheckWhoInstallsSGE 
       ProcessSGERoot
       CheckQmasterInstallation

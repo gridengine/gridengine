@@ -58,7 +58,8 @@
 #define MSG_QSH_ERRORREADINGRETURNCODEOFREMOTECOMMAND _("error reading returncode of remote command\n")
 #define MSG_QSH_MALLOCFAILED _("malloc failed!\n")
 #define MSG_QSH_CANNOTFORKPROCESS_S _("cannot fork process: %s")
-#define MSG_QSH_EXITEDONSIGNAL_SI _("%s exited on signal %d\n")
+#define MSG_QSH_EXITEDWITHCODE_SI _("%s exited with exit code %d\n")
+#define MSG_QSH_EXITEDONSIGNAL_SIS _("%s exited on signal %d (%s)\n")
 #define MSG_QSH_INHERITBUTJOB_IDNOTSET_SSS _("\"%s\" called with option \"%s\", but \"%s\" not set in environment\n")
 #define MSG_QSH_INVALIDJOB_ID_SS _("invalid \"%s\" %s\n")
 #define MSG_QSH_INHERITUSAGE_SS _("usage with \"%s\" option: \"%s\"\n")
@@ -69,6 +70,8 @@
 #define MSG_QSH_UNKNOWNJOBSTATUS_X _("unknown job status " x32 "\n")
 #define MSG_QSH_SENDINGTASKTO_S _("Starting server daemon at host \"%s\"\n")
 #define MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_U _("Server daemon successfully started with task id " U32CFormat "\n")
+#define MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S _("cleaning up after abnormal exit of %s\n")
+#define MSG_QSH_READINGEXITCODEFROMSHEPHERD  _("reading exit code from shepherd ... ")
 
 
 

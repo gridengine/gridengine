@@ -78,6 +78,8 @@
 #include "sge_set_def_sig_mask.h"
 #include "sge_qexec.h"
 #include "qm_name.h"
+#include "sge_pgrp.h"
+#include "sge_signal.h"
 
 #include "jb_now.h"
 #include "sge_security.h"
@@ -487,7 +489,7 @@ static char *read_from_qrsh_socket(int msgsock)
 *
 *  RESULT
 *     the returncode of the client program,
-*     1, if the read failed
+*     -1, if the read failed
 *
 *  SEE ALSO
 *     Interactive/qsh/-Defines
@@ -503,6 +505,8 @@ static int get_remote_exit_code(int sock)
 
    DENTER(TOP_LAYER, "get_remote_exit_code");
    
+   VERBOSE_LOG((stderr, MSG_QSH_READINGEXITCODEFROMSHEPHERD));
+
    msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT);
    if(msgsock != -1) {
       char *s_ret = read_from_qrsh_socket(msgsock);
@@ -512,6 +516,7 @@ static int get_remote_exit_code(int sock)
             fprintf(stderr, message);
             *message = 0;
          }
+         VERBOSE_LOG((stderr, "%s\n", s_ret));
          DEXIT;
          return atoi(s_ret);
       }
@@ -519,7 +524,7 @@ static int get_remote_exit_code(int sock)
 
    ERROR((SGE_EVENT, MSG_QSH_ERRORREADINGRETURNCODEOFREMOTECOMMAND));
    DEXIT;
-   return 1;
+   return -1;
 }
 
 /****** Interactive/qsh/quote_argument() ***************************************
@@ -714,21 +719,31 @@ static int start_client_program(const char *client_name,
       while(1) {
          int status;
 
+      /* Always try to get exit code (or error) from shepherd.
+       * If rsh didn't return EXIT_SUCCESS or didn't exit (!WIFEXITED), 
+       * output a message "cleaning up ..." and delete the job
+       */
          if(waitpid(child_pid, &status, 0) == child_pid) {
+            int ret = -1;  /* default: delete job */
+
             if(WIFEXITED(status)) {
-               int ret = WEXITSTATUS(status);
-               if(is_rsh && !ret) {
-                  ret = get_remote_exit_code(sock);
-               }
-               DEXIT;
-               return ret;
+               ret = WEXITSTATUS(status);
+               VERBOSE_LOG((stderr, MSG_QSH_EXITEDWITHCODE_SI, client_name, ret));
             }
 
             if(WIFSIGNALED(status)) {
-               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SI, client_name, (int)WTERMSIG(status)));
-               DEXIT;
-               return EXIT_FAILURE;
+               int code = WTERMSIG(status);
+               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, code, sys_sig2str(code)));
+               /* if not qrsh <command>: use default: delete job */
             }
+
+            /* get exit code from shepherd for qrsh <command> */
+            if(is_rsh) {
+               ret = get_remote_exit_code(sock);
+            }
+
+            DEXIT;
+            return ret;
          }
       }
    } else {
@@ -774,6 +789,7 @@ static int start_client_program(const char *client_name,
       fflush(stdout); fflush(stderr);
       }
 #endif
+      SETPGRP;
       execvp(args[0], args);
       ERROR((SGE_EVENT, MSG_EXEC_CANTEXECXYZ_SS, args[0], strerror(errno)));
       DEXIT;
@@ -1691,6 +1707,12 @@ char **argv
 
                exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                                   is_rsh, is_rlogin, nostdin, noshell, sock);
+               if(exit_status < 0) {
+                  WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, client_name));
+                  delete_job(job_id, lp_jobs);
+                  exit_status = EXIT_FAILURE;
+               }
+
                do_exit = 1;
                continue;
             }   

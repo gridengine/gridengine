@@ -55,11 +55,11 @@ typedef struct {
    u_short snd_id;                 /* sender identifier; 0 -> all */
    int tag;                        /* message tag; TAG_NONE -> all */
    sge_pack_buffer buf;            /* message buffer */
-} msg_t;
+} struct_msg_t;
 
 static int determine_timeout(void);
-static void do_gdi_request(msg_t *aMsg);
-static void do_report_request(msg_t *aMsg);
+static void do_gdi_request(struct_msg_t *aMsg);
+static void do_report_request(struct_msg_t *aMsg);
 
 
 /****** sge_qmaster_process_message/sge_qmaster_process_message() **************
@@ -96,11 +96,11 @@ void *sge_qmaster_process_message(void *anArg)
 {
    int old, new; /* timeout values */
    int res;
-   msg_t msg;
+   struct_msg_t msg;
 
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
-   memset((void*)&msg, 0, sizeof(msg_t));
+   memset((void*)&msg, 0, sizeof(struct_msg_t));
    
    old = commlib_state_get_timeout_srcv();
    new = determine_timeout();
@@ -194,7 +194,7 @@ static int determine_timeout(void)
 *     do_gdi_request() -- Process GDI request messages
 *
 *  SYNOPSIS
-*     static void do_gdi_request(msg_t *aMsg) 
+*     static void do_gdi_request(struct_msg_t *aMsg) 
 *
 *  FUNCTION
 *     Process GDI request messages (TAG_GDI_REQUEST). Unpack a GDI request from
@@ -202,7 +202,7 @@ static int determine_timeout(void)
 *     response to 'commd'.
 *
 *  INPUTS
-*     msg_t *aMsg - GDI request message
+*     struct_msg_t *aMsg - GDI request message
 *
 *  RESULT
 *     void - none
@@ -214,7 +214,7 @@ static int determine_timeout(void)
 *     list of 'sge_gdi_request' structures.
 *
 *******************************************************************************/
-static void do_gdi_request(msg_t *aMsg)
+static void do_gdi_request(struct_msg_t *aMsg)
 {
    enum { ASYNC = 0, SYNC = 1 };
 
@@ -265,7 +265,7 @@ static void do_gdi_request(msg_t *aMsg)
 *     do_report_request() -- Process execd load report 
 *
 *  SYNOPSIS
-*     static void do_report_request(msg_t *aMsg) 
+*     static void do_report_request(struct_msg_t *aMsg) 
 *
 *  FUNCTION
 *     Process execd load reports (TAG_REPORT_REQUEST). Unpack a CULL list with
@@ -273,13 +273,13 @@ static void do_gdi_request(msg_t *aMsg)
 *     execd load report.
 *
 *  INPUTS
-*     msg_t *aMsg - execd load report message
+*     struct_msg_t *aMsg - execd load report message
 *
 *  RESULT
 *     void - none 
 *
 *******************************************************************************/
-static void do_report_request(msg_t *aMsg)
+static void do_report_request(struct_msg_t *aMsg)
 {
    lList *rep = NULL;
 

@@ -48,14 +48,15 @@
 
 /* the access tree */
 static lList *priority_group_list = NULL;
+static lSortOrder *so_pgr = NULL; 
+static lSortOrder *so_usr = NULL;
+static lSortOrder *so_jrl = NULL;
 
-static lSortOrder *so_pgr = NULL, 
-           *so_usr = NULL, 
-           *so_jrl = NULL;
 static lListElem *current_pgrp = NULL;
 
 static void at_job_counter_impl(u_long32 priority, const char *owner, int slots);
 static lListElem *at_first_in_jrl(lListElem *jrl_container, int nm_jrl, int nm_sort, int nm_curr, lList *job_list);
+
 static void at_trace(void);
 
 /*

@@ -1,14 +1,14 @@
+EB-2003-09-05-0: Bugfix:    Broken build 
+
 EB-2003-09-04-0: Enhancem.: partially implemented qmasters gdi part for
                             queue instance creation according to CQ changes 
 
 AD-2003-09-03-1: Cleanup:   Rearrangement of high level message handling code.
-
                  Changed:   sge_qmaster
                  Review:    AH
 
 AD-2003-09-03-0: Bugfix:    Fixed build on Mac OS X. Removed unused variable.
-
-                 Changed:   sge_cqueue.c
+                 Changed:   sge_qmaster, qconf 
 
 AH-2003-09-03-0: Doc.:      Documented that qrsh are not re-runnable. 
 
@@ -19,12 +19,11 @@ EB-2003-08-29-0: Enhancem.: partially implemented qmasters gdi part for CQ
 AD-2003-08-27-2: Cleanup:   Rearrangement of several qmaster functions in
                             preparation for the multi threaded version of
                             qmaster. This is an interim commit.
-
                  Changed:   sge_qmaster
                  Review:    AH
 
-                 Bugfix:    Handling of commd message priorities was inconsistent.
-
+                 Bugfix:    Handling of commd message priorities was 
+                            inconsistent.
                  Changed:   sge_qmaster
                  Issue:     561
                  Review:    AH

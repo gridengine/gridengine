@@ -1365,7 +1365,7 @@ case WIN32_X86:
       touch $TOUCH_DIR/qmon
       mkdir ./3rdparty/qmon/$COMPILE_ARCH/
       touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
-      touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
+      mkdir ./3rdparty/qtcsh/$COMPILE_ARCH
       touch ./3rdparty/qtcsh/$COMPILE_ARCH/tcsh
       touch $TOUCH_DIR/sge_qmaster
       touch $TOUCH_DIR/sge_shadowd

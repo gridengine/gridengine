@@ -68,4 +68,10 @@
  * messages common to different spooling methods
  */
 #define MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S  _MESSAGE(59900, _("(un)spooling objects of type "SFQ" not supported\n"))
+#define MSG_ATTRIBUTENOTINOBJECT_S _MESSAGE(59901, _("attribute "SFQ" is not part of current object\n"))
+#define MSG_CANTREADSUBLISTASPRIMARYKEYVALUEUNKNOWN_S _MESSAGE(59902, _("can't unspool sublist "SFQ" as primary key value is not (yet) known\n"))
+#define MSG_CANTOPENTRANSACTIONALREADYOPEN _MESSAGE(59903, _("can't open a transaction - it is already open\n"))
+#define MSG_CANTCLOSETRANSACTIONNONEOPEN _MESSAGE(59904, _("can't close a transaction - we have no transaction open\n"))
+#define MSG_OBJECTWITHPRIMARYKEYUNKNOWN_S _MESSAGE(59905, _("object with primary key "SFQ" unknown to database spooling\n"))
+#define MSG_PARENTKEYORIDNULL _MESSAGE(59906, _("required primary key or database id of the parent object is NULL\n"))
 #endif /* __MSG_SPOOLLIB_H */

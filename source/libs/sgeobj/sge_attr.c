@@ -433,14 +433,16 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
       const char *href = lGetHost(attr, href_nm);
 
       if (href != NULL && !strcmp(href, HOSTREF_DEFAULT)) {
-         object_append_field_to_dstring(attr, NULL, &default_string, value_nm);
+         object_append_field_to_dstring(attr, NULL, &default_string, value_nm,
+                                        '\0');
          found_default = true;
       } else if (sge_is_hgroup_ref(href)) {
          if (found_group) {
             sge_dstring_sprintf_append(&group_string, "%s", comma);
          }
          sge_dstring_sprintf_append(&group_string, "[%s=", href);
-         object_append_field_to_dstring(attr, NULL, &group_string, value_nm);
+         object_append_field_to_dstring(attr, NULL, &group_string, value_nm, 
+                                        '\0');
          sge_dstring_sprintf_append(&group_string, "]");
          found_group = true;
       } else {
@@ -448,7 +450,8 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
             sge_dstring_sprintf_append(&host_string, "%s", comma);
          }
          sge_dstring_sprintf_append(&host_string, "[%s=", href);
-         object_append_field_to_dstring(attr, NULL, &host_string, value_nm);
+         object_append_field_to_dstring(attr, NULL, &host_string, value_nm,
+                                        '\0');
          sge_dstring_sprintf_append(&host_string, "]");
          found_host = true;
       }

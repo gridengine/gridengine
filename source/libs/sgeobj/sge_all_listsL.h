@@ -209,7 +209,8 @@ extern "C" {
       {SPC_LOWERBOUND, SPCS, SPCN},     /* Spooling context */
       {SPR_LOWERBOUND, SPRS, SPRN},     /* Spooling rule */
       {SPT_LOWERBOUND, SPTS, SPTN},     /* Spooling object type */
-      {SPTR_LOWERBOUND, SPTRS, SPTRN},     /* Spooling rules for object type */
+      {SPTR_LOWERBOUND, SPTRS, SPTRN},  /* Spooling rules for object type */
+      {SPM_LOWERBOUND, SPMS, SPMN},     /* Mapping object->id */
 
       {JJ_LOWERBOUND, JJS, JJN},        /* JAPI job */
       {JJAT_LOWERBOUND, JJATS, JJATN},  /* JAPI array task */

@@ -36,6 +36,8 @@
 #include "sge_time.h"
 #include "sge_profiling.h"
 
+#include "sig_handlers.h"
+
 #include "sge_event.h"
 #include "sge_event_client.h"
 
@@ -1210,7 +1212,7 @@ static bool sge_mirror_process_shutdown(sge_object_type type,
 
    DPRINTF(("shutting down sge mirror\n"));
    sge_mirror_shutdown();
-   SGE_EXIT(0);
+   shut_me_down = 1;
    DEXIT;
    return true;
 }

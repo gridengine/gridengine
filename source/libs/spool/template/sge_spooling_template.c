@@ -165,10 +165,22 @@ spool_template_default_list_func(lList **answer_list,
                                  const lListElem *rule, lList **list, 
                                  const sge_object_type event_type)
 {
+   bool ret = true;
+
    DENTER(TOP_LAYER, "spool_template_default_list_func");
 
+   switch (event_type) {
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
+         break;
+   }
+
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/template/spool_template_default_read_func() *****************
@@ -211,6 +223,15 @@ spool_template_default_read_func(lList **answer_list,
    lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "spool_template_default_read_func");
+
+   switch (event_type) {
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         break;
+   }
 
    DEXIT;
    return ep;
@@ -259,10 +280,22 @@ spool_template_default_write_func(lList **answer_list,
                                   const char *key, 
                                   const sge_object_type event_type)
 {
+   bool ret = true;
+
    DENTER(TOP_LAYER, "spool_template_default_write_func");
 
+   switch (event_type) {
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
+         break;
+   }
+
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/template/spool_template_default_delete_func() ***************
@@ -305,10 +338,22 @@ spool_template_default_delete_func(lList **answer_list,
                                    const char *key, 
                                    const sge_object_type event_type)
 {
+   bool ret = true;
+
    DENTER(TOP_LAYER, "spool_template_default_delete_func");
 
+   switch (event_type) {
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
+         break;
+   }
+
    DEXIT;
-   return true;
+   return ret;
 }
 
 /****** spool/template/spool_template_default_verify_func() ****************
@@ -356,6 +401,16 @@ spool_template_default_verify_func(lList **answer_list,
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_template_default_verify_func");
+
+   switch (event_type) {
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
+         break;
+   }
 
    DEXIT;
    return ret;

@@ -333,6 +333,29 @@ NAMEEND
 
 /* *INDENT-ON* */
 
+enum {
+   SPM_key = SPM_LOWERBOUND,     /* pointer to object */
+   SPM_id,                       /* id of object in database */
+   SPM_tag,                      /* tagging of keys to find deleted objects */
+   SPM_sublist                   /* list of keys from subobjects */
+};
+
+LISTDEF(SPM_Type)
+   SGE_STRING(SPM_key, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(SPM_id, CULL_DEFAULT)
+   SGE_BOOL(SPM_tag, CULL_DEFAULT)
+   SGE_LIST(SPM_sublist, SPM_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(SPMN)
+   NAME("SPM_key")
+   NAME("SPM_id")
+   NAME("SPM_tag")
+   NAME("SPM_sublist")
+NAMEEND
+
+#define SPMS sizeof(SPMN)/sizeof(char *)
+
 #ifdef  __cplusplus
 }
 #endif

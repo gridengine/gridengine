@@ -155,7 +155,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
    int i, j, size;
    int strip = 0;
 
-   DENTER(TOP_LAYER, "spool_get_fields_to_spool");
+   DENTER(TOP_LAYER, "_spool_get_fields_to_spool");
 
    /* we don't check descr and instr, as we know they are ok
     * (it's a static function)

@@ -227,6 +227,8 @@ int mt_get_type(int mt);
 int mt_do_hashing(int mt);
 int mt_is_unique(int mt);
 
+bool lListElem_is_pos_changed(const lListElem *ep, int pos);
+
 bool lList_clear_changed_info(lList *lp);
 bool lListElem_clear_changed_info(lListElem *lp);
 

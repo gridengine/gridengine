@@ -46,5 +46,26 @@
 ****************************************************************************
 */
 
+#include "basis_types.h"
+#include "cull.h"
+#include "sge_dstring.h"
+#include "spool/sge_spooling_utilities.h"
+
+bool
+spool_sql_create_insert_statement(lList **answer_list, 
+                                  dstring *field_dstring, 
+                                  dstring *value_dstring, 
+                                  spooling_field *fields, 
+                                  const lListElem *object, 
+                                  bool *data_written);
+
+bool
+spool_sql_create_update_statement(lList **answer_list, 
+                                  dstring *update_dstring, 
+                                  spooling_field *fields, 
+                                  const lListElem *object,
+                                  bool *data_written);
+
+
 #endif /* __SGE_SPOOLING_SQL_H */    
 

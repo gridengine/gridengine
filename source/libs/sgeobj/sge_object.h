@@ -182,7 +182,8 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer);
 
 const char *
 object_append_field_to_dstring(const lListElem *object, lList **answer_list, 
-                               dstring *buffer, const int nm);
+                               dstring *buffer, const int nm,
+                               char string_quotes);
 
 bool 
 object_parse_field_from_string(lListElem *object, lList **answer_list, 

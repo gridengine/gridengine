@@ -2438,6 +2438,12 @@ int mt_is_unique(int mt)
    return mt & CULL_UNIQUE;
 }
 
+bool 
+lListElem_is_pos_changed(const lListElem *ep, int pos)
+{
+   return (sge_bitfield_get(ep->changed, pos) > 0); 
+}
+
 /****** cull_list/lList_clear_changed_info() ***********************************
 *  NAME
 *     lList_clear_changed_info() -- clear changed info of a list

@@ -479,18 +479,26 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *  NOTES
 *     For sublists, subobjects and references NULL is returned.
 *
+*  BUGS
+*     For the handled special cases, the dstring is cleared,
+*     the default handling appends to the dstring buffer.
+*
 *  SEE ALSO
 *     sgeobj/object/--GDI-object-Handling
 *     sgeobj/object/object_parse_field_from_string()
 *******************************************************************************/
 const char * 
 object_append_field_to_dstring(const lListElem *object, lList **answer_list, 
-                               dstring *buffer, const int nm)
+                               dstring *buffer, const int nm, 
+                               char string_quotes)
 {
    const char *str;
    const char *result = NULL;
    const lDescr *descr;
    int pos, type;
+   char tmp_buf[MAX_STRING_SIZE];
+   dstring tmp_dstring;
+   bool quote_special_case = false;
 
    DENTER(OBJECT_LAYER, "object_append_field_to_dstring");
 
@@ -517,15 +525,18 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
     *          Instead, multiple boolean fields should be created:
     *          QU_batch, QU_parallel, ...
     */
+
+   sge_dstring_init(&tmp_dstring, tmp_buf, sizeof(tmp_buf));
+    
    switch (nm) {
       case CE_valtype:
          result = map_type2str(lGetUlong(object, nm));
-         DEXIT;
-         return result;
+         quote_special_case = true;
+         break;
       case CE_relop:
          result = map_op2str(lGetUlong(object, nm));
-         DEXIT;
-         return result;
+         quote_special_case = true;
+         break;
       case CE_request:
          if (lGetBool(object, CE_forced)) {
             result = "FORCED";
@@ -534,83 +545,95 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          } else {
             result = "NO";
          }
-         DEXIT;
-         return result;
+         quote_special_case = true;
+         break;
       case CE_consumable:
          if (lGetBool(object, nm)) {
             result = "YES";
          } else {
             result = "NO";
          }
-         DEXIT;
-         return result;
+         quote_special_case = true;
+         break;
       case QU_qtype:
-         queue_print_qtype_to_dstring(object, buffer, false);
+         queue_print_qtype_to_dstring(object, &tmp_dstring, false);
          result = sge_dstring_get_string(buffer); 
-         DEXIT;
-         return result;
+         quote_special_case = true;
+         break;
       case US_type:
-         result = userset_get_type_string(object, answer_list, buffer);
-         DEXIT;
-         return result;
-   }
-
-   /* read data */
-   switch (type) {
-      case lFloatT:
-         sge_dstring_sprintf_append(buffer, "%f", lGetPosFloat(object, pos));
-         break;
-      case lDoubleT:
-         sge_dstring_sprintf_append(buffer, "%lf", lGetPosDouble(object, pos));
-         break;
-      case lUlongT:
-         sge_dstring_sprintf_append(buffer, U32CFormat, lGetPosUlong(object, pos));
-         break;
-      case lLongT:
-         sge_dstring_sprintf_append(buffer, "%ld", lGetPosLong(object, pos));
-         break;
-      case lCharT:
-         sge_dstring_sprintf_append(buffer, "%c", lGetPosChar(object, pos));
-         break;
-      case lBoolT:
-         sge_dstring_sprintf_append(buffer, "%s", 
-                             lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR);
-         break;
-      case lIntT:
-         sge_dstring_sprintf_append(buffer, "%d", lGetPosInt(object, pos));
-         break;
-      case lStringT:
-         str = lGetPosString(object, pos);
-         sge_dstring_sprintf_append(buffer, "%s", str != NULL ? str : NONE_STR);
-         break;
-      case lHostT:
-         str = lGetPosHost(object, pos);
-         sge_dstring_sprintf_append(buffer, "%s", str != NULL ? str : NONE_STR);
-         break;
-      case lListT:
-      case lObjectT:
-      case lRefT:
-         /* what do to here? */
-         break;
-      default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_INVALIDCULLDATATYPE_D, type);
+         result = userset_get_type_string(object, answer_list, &tmp_dstring);
+         quote_special_case = true;
          break;
    }
 
-   switch (type) {
-      case lFloatT:
-      case lDoubleT:
-      case lUlongT:
-      case lLongT:
-      case lCharT:
-      case lIntT:
-      case lStringT:
-      case lHostT:
-      case lBoolT:
-         result = sge_dstring_get_string(buffer);
-         break;
+   /* we had a special case - append to result dstring */
+   if (result != NULL) {
+      if (quote_special_case && string_quotes != '\0') {
+         result = sge_dstring_sprintf_append(buffer, "%c%s%c", string_quotes, 
+                                             result, string_quotes);
+      } else { 
+         result = sge_dstring_append(buffer, result);
+      }
+   } else {
+      /* no special case: read and copy data from object */
+      switch (type) {
+         case lFloatT:
+            result = sge_dstring_sprintf_append(buffer, "%f", lGetPosFloat(object, pos));
+            break;
+         case lDoubleT:
+            result = sge_dstring_sprintf_append(buffer, "%lf", lGetPosDouble(object, pos));
+            break;
+         case lUlongT:
+            result = sge_dstring_sprintf_append(buffer, U32CFormat, lGetPosUlong(object, pos));
+            break;
+         case lLongT:
+            result = sge_dstring_sprintf_append(buffer, "%ld", lGetPosLong(object, pos));
+            break;
+         case lCharT:
+            result = sge_dstring_sprintf_append(buffer, "%c", lGetPosChar(object, pos));
+            break;
+         case lBoolT:
+            result = sge_dstring_sprintf_append(buffer, "%s", 
+                                lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR);
+            break;
+         case lIntT:
+            result = sge_dstring_sprintf_append(buffer, "%d", lGetPosInt(object, pos));
+            break;
+         case lStringT:
+            str = lGetPosString(object, pos);
+            if (string_quotes != '\0') {
+               result = sge_dstring_sprintf_append(buffer, "%c%s%c", 
+                                      string_quotes,
+                                      str != NULL ? str : NONE_STR,
+                                      string_quotes);
+            } else {
+               result = sge_dstring_sprintf_append(buffer, "%s", 
+                                      str != NULL ? str : NONE_STR);
+            }
+            break;
+         case lHostT:
+            str = lGetPosHost(object, pos);
+            if (string_quotes != '\0') {
+               result = sge_dstring_sprintf_append(buffer, "%c%s%c", 
+                                      string_quotes,
+                                      str != NULL ? str : NONE_STR,
+                                      string_quotes);
+            } else {
+               result = sge_dstring_sprintf_append(buffer, "%s", 
+                                      str != NULL ? str : NONE_STR);
+            }
+            break;
+         case lListT:
+         case lObjectT:
+         case lRefT:
+            /* what do to here? */
+            break;
+         default:
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_INVALIDCULLDATATYPE_D, type);
+            break;
+      }
    }
 
    DEXIT;

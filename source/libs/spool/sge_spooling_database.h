@@ -32,6 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
+#include "cull.h"
+
+#include "spool/sge_spooling_utilities.h"
+
 /****** spool/--Spooling-Database ************************************
 *
 *  NAME
@@ -45,6 +49,58 @@
 *     spool/postgres/--Spooling-Postgres
 ****************************************************************************
 */
+
+bool
+spool_database_initialize(lList **answer_list, lListElem *rule);
+
+void *
+spool_database_get_handle(const lListElem *rule);
+bool 
+spool_database_set_handle(const lListElem *rule, void *handle);
+
+void 
+spool_database_set_history(const lListElem *rule, bool value);
+bool
+spool_database_get_history(const lListElem *rule);
+
+const char *spool_database_get_table_name(const spooling_field *fields);
+const char *spool_database_get_id_field(const spooling_field *fields);
+const char *spool_database_get_parent_id_field(const spooling_field *fields);
+const char *spool_database_get_valid_field(const spooling_field *fields);
+const char *spool_database_get_created_field(const spooling_field *fields);
+const char *spool_database_get_deleted_field(const spooling_field *fields);
+int spool_database_get_key_nm(const spooling_field *fields);
+
+spooling_field *
+spool_database_get_fields(const lListElem *rule, sge_object_type type);
+
+bool 
+spool_database_store_id(lList **answer_list, const spooling_field *fields, 
+                        const char *parent_key, const char *key, 
+                        const char *id, bool tag);
+
+const char *
+spool_database_get_id(lList **answer_list, const spooling_field *fields, 
+                      const char *parent_key, const char *key, bool tag);
+
+bool
+spool_database_delete_id(lList **answer_list, 
+                         const spooling_field *fields, 
+                         const char *parent_key, 
+                         const char *key);
+
+bool 
+spool_database_tag_id(lList **answer_list, const spooling_field *fields, 
+                      const char *parent_key, const char *key, bool value);
+
+lList *
+spool_database_get_id_list(lList **answer_list, 
+                           const spooling_field *fields, 
+                           const char *parent_key);
+
+bool 
+spool_database_object_changed(lList **answer_list, const lListElem *object, 
+                              const spooling_field *fields);
 
 #endif /* __SGE_SPOOLING_DATABASE_H */    
 

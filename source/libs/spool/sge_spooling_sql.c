@@ -33,7 +33,108 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_object.h"
+
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"
 
 #include "spool/sge_spooling_sql.h"
+
+bool
+spool_sql_create_insert_statement(lList **answer_list, 
+                                  dstring *field_dstring, 
+                                  dstring *value_dstring, 
+                                  spooling_field *fields, 
+                                  const lListElem *object, 
+                                  bool *data_written)
+{
+   bool ret = true;
+   bool first_field = true;
+   int i;
+   const lDescr *descr;
+
+   DENTER(TOP_LAYER, "spool_sql_create_insert_statement");
+
+   *data_written = false;
+
+   descr = lGetElemDescr(object);
+
+   for (i = 0; fields[i].nm != NoName; i++) {
+      int pos, type;
+      pos = lGetPosInDescr(descr, fields[i].nm);
+      if (pos < 0) {
+/*          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, */
+/*                                  ANSWER_QUALITY_ERROR, */
+/*                                  MSG_ATTRIBUTENOTINOBJECT_S, lNm2Str(nm)); */
+         continue;
+      }
+
+      type = mt_get_type(descr[pos].mt);
+      if (type != lListT) {
+         if (!first_field) {
+            sge_dstring_append(field_dstring, ", ");
+            sge_dstring_append(value_dstring, ", ");
+         }
+         /* JG: TODO: check for NULL value */
+         sge_dstring_append(field_dstring, fields[i].name);
+         object_append_field_to_dstring(object, answer_list, value_dstring, 
+                                        fields[i].nm, '\'');
+         *data_written = true;
+         first_field = false;
+      } else {
+      }
+
+   }
+
+   DEXIT;
+   return ret;
+}
+
+bool
+spool_sql_create_update_statement(lList **answer_list, 
+                                  dstring *update_dstring, 
+                                  spooling_field *fields, 
+                                  const lListElem *object,
+                                  bool *data_written)
+{
+   bool ret = true;
+   bool first_field = true;
+   int i;
+   const lDescr *descr;
+
+   DENTER(TOP_LAYER, "spool_sql_create_update_statement");
+
+   *data_written = false;
+
+   descr = lGetElemDescr(object);
+
+   for (i = 0; fields[i].nm != NoName; i++) {
+      int pos, type;
+      pos = lGetPosInDescr(descr, fields[i].nm);
+      if (pos < 0) {
+/*          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, */
+/*                                  ANSWER_QUALITY_ERROR, */
+/*                                  MSG_ATTRIBUTENOTINOBJECT_S, lNm2Str(nm)); */
+         continue;
+      }
+
+      type = mt_get_type(descr[pos].mt);
+      if (type != lListT) {
+         if (lListElem_is_pos_changed(object, pos)) {
+            if (!first_field) {
+               sge_dstring_append(update_dstring, ", ");
+            }
+            sge_dstring_sprintf_append(update_dstring, "%s = ", fields[i].name);
+            object_append_field_to_dstring(object, answer_list, update_dstring, 
+                                           fields[i].nm, '\'');
+            *data_written = true;
+            first_field = false;
+         }
+      }
+   }
+  
+   DEXIT;
+   return ret;
+}
+
+

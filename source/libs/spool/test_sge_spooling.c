@@ -48,6 +48,7 @@
 
 #include "setup.h"
 
+#include "sge_answer.h"
 #include "sge_profiling.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
@@ -102,76 +103,95 @@ static bool read_spooled_data(void)
 
    /* cluster configuration */
    spool_read_list(&answer_list, context, &Master_Config_List, SGE_TYPE_CONFIG);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
 
    /* cluster configuration */
    spool_read_list(&answer_list, context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(Master_Sched_Config_List)));
 
    /* complexes */
    spool_read_list(&answer_list, context, &Master_Complex_List, SGE_TYPE_COMPLEX);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Complex_List\n", lGetNumberOfElem(Master_Complex_List)));
 
    /* hosts */
    spool_read_list(&answer_list, context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Exechost_List\n", lGetNumberOfElem(Master_Exechost_List)));
    spool_read_list(&answer_list, context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Adminhost_List\n", lGetNumberOfElem(Master_Adminhost_List)));
    spool_read_list(&answer_list, context, &Master_Submithost_List, SGE_TYPE_SUBMITHOST);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Submithost_List\n", lGetNumberOfElem(Master_Submithost_List)));
 
    /* managers */
    spool_read_list(&answer_list, context, &Master_Manager_List, SGE_TYPE_MANAGER);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Manager_List\n", lGetNumberOfElem(Master_Manager_List)));
 
    /* host groups */
    spool_read_list(&answer_list, context, &Master_HGroup_List, SGE_TYPE_HGROUP);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_HGroup_List)));
 
    /* operators */
    spool_read_list(&answer_list, context, &Master_Operator_List, SGE_TYPE_OPERATOR);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Operator_List\n", lGetNumberOfElem(Master_Operator_List)));
 
    /* usersets */
    spool_read_list(&answer_list, context, &Master_Userset_List, SGE_TYPE_USERSET);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Userset_List\n", lGetNumberOfElem(Master_Userset_List)));
 
    /* calendars */
    spool_read_list(&answer_list, context, &Master_Calendar_List, SGE_TYPE_CALENDAR);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Calendar_List\n", lGetNumberOfElem(Master_Calendar_List)));
 
 #ifndef __SGE_NO_USERMAPPING__
    /* user mapping */
    spool_read_list(&answer_list, context, &Master_Cuser_List, SGE_TYPE_CUSER);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Cuser_List\n", lGetNumberOfElem(Master_Cuser_List)));
 #endif
 
    /* queues */
    spool_read_list(&answer_list, context, &Master_Queue_List, SGE_TYPE_QUEUE);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Queue_List\n", lGetNumberOfElem(Master_Queue_List)));
 
    /* pes */
    spool_read_list(&answer_list, context, &Master_Pe_List, SGE_TYPE_PE);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Pe_List\n", lGetNumberOfElem(Master_Pe_List)));
 
    /* ckpt */
    spool_read_list(&answer_list, context, &Master_Ckpt_List, SGE_TYPE_CKPT);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Ckpt_List\n", lGetNumberOfElem(Master_Ckpt_List)));
 
    /* jobs */
    spool_read_list(&answer_list, context, &Master_Job_List, SGE_TYPE_JOB);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Job_List\n", lGetNumberOfElem(Master_Job_List)));
 
    /* user list */
    spool_read_list(&answer_list, context, &Master_User_List, SGE_TYPE_USER);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_User_List\n", lGetNumberOfElem(Master_User_List)));
 
    /* project list */
    spool_read_list(&answer_list, context, &Master_Project_List, SGE_TYPE_PROJECT);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Project_List\n", lGetNumberOfElem(Master_Project_List)));
 
    /* sharetree */
    spool_read_list(&answer_list, context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
+   answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Sharetree_List\n", lGetNumberOfElem(Master_Sharetree_List)));
 
    return true;
@@ -207,6 +227,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                if(new_ep == NULL) {
                   /* object not contained in new list, delete it */
                   spool_delete_object(&answer_list, context, type, lGetHost(ep, key_nm));
+                  answer_list_output(&answer_list);
                }
             }   
 
@@ -222,6 +243,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                if(old_ep == NULL || 
                   spool_compare_objects(&answer_list, context, type, ep, old_ep) != 0)  {
                   spool_write_object(&answer_list, context, ep, key, type);
+                  answer_list_output(&answer_list);
                }
             }
             break;
@@ -245,6 +267,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                if(new_ep == NULL) {
                   /* object not contained in new list, delete it */
                   spool_delete_object(&answer_list, context, type, lGetString(ep, key_nm));
+                  answer_list_output(&answer_list);
                }
             }
 
@@ -260,6 +283,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                if(old_ep == NULL || 
                   spool_compare_objects(&answer_list, context, type, ep, old_ep) != 0)  {
                   spool_write_object(&answer_list, context, ep, key, type);
+                  answer_list_output(&answer_list);
                }
             }
             break;
@@ -283,6 +307,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 
                   job_key = job_get_key(job_id, ja_task_id, pe_task_id);
                   spool_delete_object(&answer_list, context, type, job_key);
+                  answer_list_output(&answer_list);
                }
                break;
             case SGE_TYPE_JOB:
@@ -294,6 +319,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 
                   job_key = job_get_key(job_id, 0, NULL);
                   spool_delete_object(&answer_list, context, type, job_key);
+                  answer_list_output(&answer_list);
                }
                break;
 
@@ -329,9 +355,11 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   /* delete sharetree */
                   spool_delete_object(&answer_list, context, type, SHARETREE_FILE);
+                  answer_list_output(&answer_list);
                } else {
                   /* spool sharetree */
                   spool_write_object(&answer_list, context, ep, NULL, type);
+                  answer_list_output(&answer_list);
                }
                break;
             case SGE_TYPE_MANAGER:
@@ -345,6 +373,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   ep = lFirst(*master_list);
                   if(ep != NULL) {
                      spool_write_object(&answer_list, context, ep, NULL, type);
+                     answer_list_output(&answer_list);
                   }
                }   
             default:
@@ -374,6 +403,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_HGROUP:
                key = lGetString(event, ET_strkey);
                spool_delete_object(&answer_list, context, type, key);
+               answer_list_output(&answer_list);
 
             default:
                break;
@@ -397,6 +427,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                }
 
                spool_write_object(&answer_list, context, ep, key, type);
+               answer_list_output(&answer_list);
                break;
 
             case SGE_TYPE_CALENDAR:
@@ -423,6 +454,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                }
 
                spool_write_object(&answer_list, context, ep, key, type);
+               answer_list_output(&answer_list);
                break;
 
             case SGE_TYPE_SCHEDD_CONF:
@@ -434,6 +466,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   return false;
                }
                spool_write_object(&answer_list, context, ep, NULL, type);
+               answer_list_output(&answer_list);
                break;
             case SGE_TYPE_JATASK:
             case SGE_TYPE_PETASK:
@@ -450,6 +483,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   ep = lGetElemUlong(Master_Job_List, JB_job_number, job_id);
                   job_key = job_get_key(job_id, ja_task_id, pe_task_id);
                   spool_write_object(&answer_list, context, ep, job_key, type);
+                  answer_list_output(&answer_list);
                }
                break;
             
@@ -497,6 +531,7 @@ int main(int argc, char *argv[])
 
    /* initialize spooling */
    spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2]); 
+   answer_list_output(&answer_list);
    if(spooling_context == NULL) {
       SGE_EXIT(EXIT_FAILURE);
    }
@@ -504,8 +539,10 @@ int main(int argc, char *argv[])
    spool_set_default_context(spooling_context);
 
    if(!spool_startup_context(&answer_list, spooling_context)) {
+      answer_list_output(&answer_list);
       SGE_EXIT(EXIT_FAILURE);
    }
+   answer_list_output(&answer_list);
    
    /* read spooled data from disk */
    read_spooled_data();
@@ -528,6 +565,9 @@ int main(int argc, char *argv[])
    }
 
    sge_mirror_shutdown();
+
+   spool_shutdown_context(&answer_list, spooling_context);
+   answer_list_output(&answer_list);
 
    DEXIT;
    return EXIT_SUCCESS;

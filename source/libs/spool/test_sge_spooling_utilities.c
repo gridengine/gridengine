@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
       nm = descr[i].nm;
       name = lNm2Str(nm);
       value = object_append_field_to_dstring(queue, &answer_list, 
-                                             &queue_str, nm);
+                                             &queue_str, nm, '\0');
       reread_value = NULL;
 
       if(value != NULL) {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "setting value for field %s failed\n", name);
          } else {
             reread_value = object_append_field_to_dstring(copy, &answer_list, 
-                                                          &copy_str, nm);
+                                                          &copy_str, nm, '\0');
          }
       }
 

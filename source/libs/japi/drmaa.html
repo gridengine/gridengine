@@ -29,6 +29,14 @@ standards body working group refer to the page of the
 <A HREF="http://www.drmaa.org">GGF DRMAA working group</A>
 .
 </P>
+<H1>Documentation</H1>
+<P>The following DRMAA related documentation is recommended
+<A HREF="http://www.drmaa.org/docs/ggf-rec-drmaa-1_0.pdf">DRMAA 1.0 language independent specification</A>,
+<A HREF="https://forge.gridforum.org/tracker/?group_id=90&atid=608&aid=214">DRMAA C language binding specification</A> 
+and 
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those with drmaa_* prefixes)</A> 
+<P ALIGN=CENTER STYLE="text-decoration: none">Copyright 2003 Sun Microsystems, Inc. All rights reserved.</P>
+.</P>
 <H1>Availability</H1>
 <P>At this stage DRMAA is only available as a source snapshot from the "maintrunk" of the Grid Engine.
 In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in time the following Grid Engine binary architectures are know to be working:</P>
@@ -48,9 +56,7 @@ In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in t
 <P>For building 
 The steps described in the 
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/README.BUILD">Grid Engine build page</A> 
-are the same that also must be followed 
-
-for building the DRMAA build targets. In case of 
+are the same that also must be followed for building the DRMAA build targets. In case of 
 Grid Engine binary architectures where the Port is already done the command</P>
 <UL>
    aimk 
@@ -65,32 +71,6 @@ of DRMAA build targets for not yet ported binary architectures
    aimk -no-mt 
 </UL>
 <P>can be used.</P>
-<H1>Bugs</H1>
-You can file bugs to Grid Engine Issuezilla "drmaa" subcomponent. Before doing so please have a 
-look at the TODO list below and watch out for already submitted "drmaa" bugs. If you're not sure 
-whether you found a bug sending mail to 
-<A HREF="http://gridengine.sunsource.net/project/gridengine/maillist.html">dev@gridengine.sunsource.net Mailinglist</A> 
-is recommended.
-<H1>TODO</H1>
-This list contains items that are not yet implemented but required for a DRMAA 1.0 compliant 
-implementation:
-<UL>
-   <LI><P>shared drmaa library (currently only static library linking can be used)</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_job_category"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_native_specification"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_v_env"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_v_email"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_block_email"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_start_time"</P>
-   <LI><P>implement drmaa_wait(3) output parameter rusage</P>
-   <LI><P>drmaa_wait(3) does not yet return DRMAA_ERRNO_NO_RUSAGE as foreseen by spec</P>
-</UL>
-<H1>Documentation</H1>
-The following DRMAA related documentation is recommended
-<A HREF="http://www.drmaa.org/docs/ggf-rec-drmaa-1_0.pdf">DRMAA 1.0 language independent specification</A>,
-<A HREF="https://forge.gridforum.org/tracker/?group_id=90&atid=608&aid=214">DRMAA C language binding specification</A> 
-and 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those with drmaa_* prefixes)</A> 
 <H1>Example application</H1>
 <P>The C test program 
 <A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/libs/japi/example.c">example.c</A>
@@ -110,6 +90,44 @@ remote nodes.</P>
    aimk -no-mt example
 </UL>
 This is necessary because "example" is not part of the standard build procedure.</P>
-<P ALIGN=CENTER STYLE="text-decoration: none">Copyright 2003 Sun Microsystems, Inc. All rights reserved.</P>
+<H1>Bugs</H1>
+You can file bugs to Grid Engine Issuezilla "drmaa" subcomponent. Before doing so please have a 
+look at the TODO list below and watch out for already submitted "drmaa" bugs. If you're not sure 
+whether you found a bug sending mail to 
+<A HREF="http://gridengine.sunsource.net/project/gridengine/maillist.html">dev@gridengine.sunsource.net Mailinglist</A> 
+is recommended.
+<H1>Notes on implementation</H1>
+<P>The Grid Engine implementation of DRMAA bases on Grid Engine 
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/japi.html?content-type=text/html">Job
+API library (JAPI)</A>. Regarding the interfaces operations Grid Engine JAPI library and DRMAA library have lots 
+of similarities. The big difference amongst them is that JAPI allows any characteristic of the Grid Engine job 
+that is submitted through JAPI be influenced, whereas DRMAA allows only those characteristics be influenced that 
+are interfaced by DRMAA. Note that this ostensible drawback of DRMAA library is not as meaningful as it seems: 
+Firstly DRMAA job template attributes "drmaa_job_category" and "drmaa_native_specification" will allow nearly all 
+of the qsub(1) job characteristics be influenced. And secondly by building an integration upon DRMAA library you 
+don't need to change your application code each time when a new Grid Engine version is released. When using JAPI 
+library interface you must be prepared to change your application code. This is because JAPI directly exports Grid 
+Engine internal data structures and these usually are subject of change with new releases. Note that DRMAA library
+inherits MT safety from JAPI library.</P>
+<H1>TODO</H1>
+This list contains items that are not yet implemented but required for a DRMAA 1.0 compliant 
+implementation:
+<UL>
+   <LI><P>shared drmaa library (currently only static library linking can be used)</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_job_category"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_native_specification"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_v_env"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_v_email"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_block_email"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_start_time"</P>
+   <LI><P>implement drmaa_wait(3) output parameter rusage</P>
+   <LI><P>drmaa_wait(3) does not yet return DRMAA_ERRNO_NO_RUSAGE as foreseen by spec</P>
+</UL>
+<H1>Grid Engine DRMAA library QA effort</H1>
+<P>The DRMAA application "test_drmaa" is used by Grid Engine testsuite QA tool to ensure quality of DRMAA 
+library. It covers a growing number of tests. There are so-called standalone tests that can
+be accomplished autonomously by the test_drmaa application. To run all these tests standalone "test_drmaa" 
+can be started with the "ALL_AUTOMATED" option plus some option arguments. To run all so far implemented tests 
+related to DRMAA choose "api/drmaa" in testsuite and have testsuite do the work for you.</P>
 </BODY>
 </HTML>

@@ -78,7 +78,7 @@ set CHECK_HTML_DIRECTORY ""
 # globals for source code specific staff
 global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
-set CHECK_SOURCE_CVS_RELEASE "maintrunc"    ;# default is "maintrunc"
+set CHECK_SOURCE_CVS_RELEASE "maintrunk"    ;# default is "maintrunk"
 global CHECK_SOURCE_HOSTNAME       ;# name of host with cvs installed on (e.g. fangorn)
 global CHECK_SOURCE_COMPILE_HOSTS     ;# list of hostnames on which the source should be compiled
 global CHECK_AIMK_COMPILE_OPTIONS     ;# optional: aimk options
@@ -6033,7 +6033,7 @@ proc compile_source { { do_only_install 0 } } {
    set file_list {}
    set file_name_list {}
  
-   set cvs_tag "maintrunc"
+   set cvs_tag "maintrunk"
    if { [ file isfile "${CHECK_SOURCE_DIR}/CVS/Tag" ] } {
       set cvs_tag "no_tag_dir" 
       set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]

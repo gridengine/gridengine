@@ -382,7 +382,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $VERIFY_FILE_PERMISSIONS { 
-         if { $ts_config(package_type) == "tar" } {
+         if { $ts_config(package_type) == "tar" || $ts_config(package_type) == "create_tar" } {
             set input "$ANSWER_YES"
          } else {
             set input "$ANSWER_NO"

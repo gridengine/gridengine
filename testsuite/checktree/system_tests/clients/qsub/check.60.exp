@@ -193,3 +193,77 @@ proc check_qhold_jobname {} {
    set_error 0 "no errors"
 }
 
+#                                                             max. column:     |
+#****** qsub/check_option_v() ******
+# 
+#  NAME
+#     check_option_v -- ??? 
+#
+#  SYNOPSIS
+#     check_option_v { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_option_v {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST CHECK_ARCH 
+   global job_output_dir actual_host
+
+   # first clean up output directory:  
+   setup_output_directory
+
+   set option "-v DISPLAY,test_var1=hello=world,test_var2=hello=my=friend"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
+
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-j" "$result"} qstat_out]
+
+   if { [string match *DISPLAY,test_var1=hello=world,test_var2=hello=my=friend* $qstat_out] == 0 } {
+      set_error -1 "-v option failed, equal sign within variable values not supported"
+      return
+   }
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
+}
+

@@ -276,3 +276,41 @@ proc check_qhold_jobname {} {
    set_error 0 "no errors"
 }
 
+proc check_option_v {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
+   global job_output_dir actual_host
+
+   # first clean up output directory:  
+   setup_output_directory
+
+   set option "-v DISPLAY"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
+
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
+}
+

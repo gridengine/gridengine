@@ -1164,6 +1164,11 @@ proc config_source_cvs_release { only_check name config_array } {
 
    upvar $config_array config
 
+   # fix "maintrunc" typo - it will be written the next time the config is modified
+   if { $config($name) == "maintrunc" } {
+      set config($name) "maintrunk"
+   }
+
    if { ! [file isdirectory $config(source_dir)] } {
       puts $CHECK_OUTPUT "source directory $config(source_dir) doesn't exist"
       return -1
@@ -1183,14 +1188,14 @@ proc config_source_cvs_release { only_check name config_array } {
                set value [ string range $result 1 end ]
             }
          } else {
-            set value "maintrunc" 
+            set value "maintrunk" 
          }
       }
    }
    if { $only_check == 0 } {
       # do setup  
       puts $CHECK_OUTPUT "" 
-      puts $CHECK_OUTPUT "Please enter cvs release tag (\"maintrunc\" specifies no tag)"
+      puts $CHECK_OUTPUT "Please enter cvs release tag (\"maintrunk\" specifies no tag)"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
       puts $CHECK_OUTPUT "(default: $value)"
       puts -nonewline $CHECK_OUTPUT "> "

@@ -1507,7 +1507,7 @@ proc qrsh_batch {} {
       if { $error } {
          add_proc_error "qrsh_batch" -1 "skipping test on host $host"
          close_spawn_process $qrsh_id
-         enable_queue $host.q
+         enable_queue $queue
          continue
       }
 
@@ -1518,12 +1518,16 @@ proc qrsh_batch {} {
       if { [get_extended_job_info $job_id] == 0} {
          set_error -1 "no job info for job $job_id - skipping test on host $host"
          close_spawn_process $qrsh_id
+         delete_job $job_id
+         enable_queue $queue
          continue
       }
 
       if { $job_info(state) != "qw" } {
          set_error -1 "state of job is $job_info(state), should be qw, skipping test on host $host"
          close_spawn_process $qrsh_id
+         delete_job $job_id
+         enable_queue $queue
          continue
       }
       

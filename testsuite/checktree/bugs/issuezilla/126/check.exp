@@ -264,7 +264,7 @@ proc issue_126_cleanup  {} {
 
    delete_all_jobs
 
-   foreach queue "q1 q2" {
+   foreach queue "q2 q1" {
       set result [del_queue [get_requestable_queue $queue $check_126_host] \
                   "" 1 1]
       if { $result != 0 } {

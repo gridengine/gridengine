@@ -57,8 +57,8 @@ set check_init_level_procedure "share_tree_init_level"
 set check_name            "share_tree"
 set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   100
-set check_description(0)  "Testing grd share_tree (functional test)"
-set check_description(100)  "Testing grd share_tree"
+set check_description(0)  "Testing geee share_tree (functional test)"
+set check_description(100)  "Testing geee share_tree"
 
 # define test's dependencies
 set check_needs           "init_core_system" 

@@ -861,6 +861,11 @@ proc qconf_de_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER CHECK env ts_config
    puts $CHECK_OUTPUT "testing qconf -de ..."
 
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error 0 "test doesn't apply for SGE 5.3"
+      return
+   }
+
    # Setup
    set execd [lindex $ts_config(execd_hosts) 0]
    set arch [resolve_arch $ts_config(master_host)]

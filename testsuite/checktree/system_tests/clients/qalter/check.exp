@@ -1798,30 +1798,35 @@ proc qalter_a {} {
 #     ???/???
 #*******************************
 proc qalter_t {} {
+   global ts_config
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD submitresult
    global check_errno hold_job_T
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
-   set option "-h n"
-   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4" } qalteroutput ]
-   if {$qalterresult == 1} {
-      set_error -1 "qalter $option - $qalteroutput"
-      return
-   }
+   if { $ts_config(gridengine_version) == 53 } {
+      set_error 0 "qalter -t not available for SGE(EE) 5.3"
+   } else {
+      set option "-h n"
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4" } qalteroutput ]
+      if {$qalterresult == 1} {
+         set_error -1 "qalter $option - $qalteroutput"
+         return
+      }
 
-# Test invalid uses
-   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4 -t 1-4" } qalteroutput ]
-   if {$qalterresult == 0} {
-      set_error -1 "qalter $option - allowed invalid -t switch"
-      return
-   }
+   # Test invalid uses
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4 -t 1-4" } qalteroutput ]
+      if {$qalterresult == 0} {
+         set_error -1 "qalter $option - allowed invalid -t switch"
+         return
+      }
 
-   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option -t 1-4 $hold_job_T -t 1-4" } qalteroutput ]
-   if {$qalterresult == 0} {
-      set_error -1 "qalter $option - allowed invalid -t switch"
-      return
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option -t 1-4 $hold_job_T -t 1-4" } qalteroutput ]
+      if {$qalterresult == 0} {
+         set_error -1 "qalter $option - allowed invalid -t switch"
+         return
+      }
+      set_error 0 "qalter $option - no errors"
    }
-   set_error 0 "qalter $option - no errors"
 
    return
 }

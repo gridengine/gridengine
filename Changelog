@@ -1,3 +1,5 @@
+JG-2004-07-07-0: Bugfix:    Fixed the build for AIX.
+
 CR-2004-07-06-0: Bugfix:    qmaster clients may not reconnect after qmaster 
                             outage
                  Changed:   communication library (commlib)

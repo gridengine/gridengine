@@ -4,19 +4,7 @@ How to use the review form
 - cvs add review/<Changelog-ID>.txt
 - complete the form and check it in with the changed sources.
 
-1 please fill in the required information
-
-1.1 IssueZilla ID
-
-1.2 Bugtraq ID, if available
-
-1.3 one line summary/issue title
-
-1.4 ID from the Changelog file (e.g. JG-2002-07-31-0). 
-
-1.5 Use the sunsource user name(s)
-
-1.6 Use the sunsource user name(s)
+1 Please copy the complete Changelog entry for the corresponding checkin.
 
 
 2 Check all features and properties defined in the specification.
@@ -26,6 +14,7 @@ How to use the review form
 
 3.1 Does the issue make necessary any changes in the user or admin guide? 
     If yes, have the changes been documented and communicated to the doc writer?
+    This is done by creating a Bugster CR in the doc subcategory.
 
 3.2 Are any man page updates necessary? 
     If yes, have they been done?
@@ -46,6 +35,41 @@ How to use the review form
 3.5 If messages changed, check if they are correct and meaningful.
     Output formats shall only be changed if unavoidable - such changes have to 
     be documented.
+    Attention: Output (e.g. from qstat) may be part of the documentation. Please
+    communicate changes to the doc writer (see also 3.1).
+
+3.6 Bugster Change Request
+    - A CR in Bugster has to be created
+       - for all bugs
+       - for feature development, improvements, ...
+       - for all changes to files that shall go into a patch
+
+    - Is the Synopsis meaningfull and understandable?
+    - Has the version information been set (Release, CommitToFix, 
+      FixedInRelease)?
+    - Is the status set to "8-Fix Available"?
+    - If there is an Issuezilla Entry: Has the Hook5 field been set to the 
+      Issue Number?
+    - Is the CR-Number referenced in Changelog?
+    - If documentation is affected, or messages have changed: Is this documented
+      in Bugster ("More Info" Tab, "Fix affects ...").
+
+
+3.7 Issuezilla
+    - An Issuezilla Entry has to be created
+       - for bugs (if they are copied from Bugster, please remove customer 
+         related info)
+    - We have no Issuezilla Entries for
+       - ARCo
+       - GEMM
+       - Windows Port
+       - Doc Issues
+
+    - Is the Synopsis meaningfull and understandable?
+    - Has the version information been set (Version, Target Milestone, 
+      comment "Fixed in xyz")?
+    - Is the Issue Number referenced in Changelog?
+    
 
 4 Check source code (diff)
 

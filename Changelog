@@ -1,3 +1,6 @@
+JG-2004-12-17-0: QA:        Improved review template and help text.
+                 Review:    AS
+
 JG-2004-12-16-0: Testsuite: Bugfix in performance/throughput check.
 
 MD-2004-12-16-0: Bugfix:    - permission problem at rc-script gen.

@@ -188,7 +188,8 @@ enum {
    DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD state. */
    DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD state. */
    DRMAA_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for drmaa_synchronize or drmaa_wait. */
-
+   DRMAA_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a job has finished but no rusage and stat data could be provided. */
+   
    DRMAA_NO_ERRNO
 };
 

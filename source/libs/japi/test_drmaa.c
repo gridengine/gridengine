@@ -3748,13 +3748,16 @@ static int test(int *argc, char **argv[], int parse_args)
 
          printf("Job with job id %s finished\n", jobid);
 
-         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+         if (drmaa_errno == DRMAA_ERRNO_NO_RUSAGE) {
+            fprintf(stderr, "drmaa_wait(%s) did not return usage information.\n", jobid);
+            return 1;
+         }
+         else if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
             return 1;
          }
-         
-         if (rusage == NULL) {
-            fprintf (stderr, "drmaa_wait(%s) did not return usage information\n", jobid);
+         else if (rusage == NULL) {
+            fprintf (stderr, "drmaa_wait(%s) did not return usage information and did not return DRMAA_ERRNO_NO_RUSAGE\n", jobid);
             return 1;
          }
          
@@ -4022,6 +4025,7 @@ const struct drmaa_errno_descr_s {
   { "DRMAA_ERRNO_HOLD_INCONSISTENT_STATE",      DRMAA_ERRNO_HOLD_INCONSISTENT_STATE },
   { "DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE",   DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE },
   { "DRMAA_ERRNO_EXIT_TIMEOUT",                 DRMAA_ERRNO_EXIT_TIMEOUT },
+  { "DRMAA_ERRNO_NO_RUSAGE",                    DRMAA_ERRNO_NO_RUSAGE },
   { NULL, 0 }
 };
 

@@ -2139,7 +2139,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    if ((ep=lGetElemStr (drmaa_jt->strings, VA_variable, DRMAA_NATIVE_SPECIFICATION))) {
       const char *value = lGetString (ep, VA_value);
       int num_args = sge_quick_count_num_args (value);
-      char *args[num_args + 1];
+      /* Needed to make AIX51 happy */
+      char **args = (char **)malloc (sizeof (char *) * (num_args + 1));
       
       DPRINTF (("processing %s = \"%s\"\n", DRMAA_NATIVE_SPECIFICATION, value));
       
@@ -2155,6 +2156,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
+      
+      FREE (args);
    }
 
    if ((drmaa_errno = opt_list_append_opts_from_drmaa_attr

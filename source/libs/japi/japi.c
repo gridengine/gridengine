@@ -2116,6 +2116,7 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
 * 
 *     DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
 *     DRMAA_ERRNO_AUTH_FAILURE
+*     DRMAA_ERRNO_NO_RUSAGE
 *
 *  MUTEXES
 *      japi_session_mutex -> japi_threads_in_session_mutex
@@ -2139,6 +2140,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
    int drmaa_errno, wait_result;
    bool waited_is_task_array;
    u_long32 waited_jobid, waited_taskid;
+   bool got_usage_info = false;
 
    DENTER(TOP_LAYER, "japi_wait");
 
@@ -2222,23 +2224,30 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
          lListElem *sep = NULL;
          char buffer[256];
          
-         slp = lCreateList ("Usage List", ST_Type);
-         
-         if (*rusage == NULL) {
-            *rusage = japi_allocate_string_vector (JAPI_ITERATOR_STRINGS);
+         if (rusagep != NULL) {
+            slp = lCreateList ("Usage List", ST_Type);
+            got_usage_info = true;
+
+            if (*rusage == NULL) {
+               *rusage = japi_allocate_string_vector (JAPI_ITERATOR_STRINGS);
+            }
+            else {
+               (*rusage)->it.si.strings = lFreeList ((*rusage)->it.si.strings);
+               (*rusage)->it.si.next_pos = NULL;
+            }
+
+            for_each (uep, rusagep) {
+               sep = lCreateElem (ST_Type);
+               lAppendElem (slp, sep);
+
+               sprintf (buffer, "%s=%.4f", lGetString (uep, UA_name), lGetDouble (uep, UA_value));
+               lSetString (sep, ST_name, strdup (buffer));
+            }
+
+            (*rusage)->iterator_type = JAPI_ITERATOR_STRINGS;
+            (*rusage)->it.si.strings = slp;
+            (*rusage)->it.si.next_pos = lFirst (slp);
          }
-         
-         for_each (uep, rusagep) {
-            sep = lCreateElem (ST_Type);
-            lAppendElem (slp, sep);
-            
-            sprintf (buffer, "%s=%.4f", lGetString (uep, UA_name), lGetDouble (uep, UA_value));
-            lSetString (sep, ST_name, strdup (buffer));
-         }
-         
-         (*rusage)->iterator_type = JAPI_ITERATOR_STRINGS;
-         (*rusage)->it.si.strings = slp;
-         (*rusage)->it.si.next_pos = lFirst (slp);
       }
 
       JAPI_UNLOCK_JOB_LIST();
@@ -2271,7 +2280,14 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat, signed long ti
    }
 
    DEXIT;
-   return DRMAA_ERRNO_SUCCESS;
+   
+   if (!got_usage_info) {
+      japi_standard_error (DRMAA_ERRNO_NO_RUSAGE, diag);
+      return DRMAA_ERRNO_NO_RUSAGE;
+   }
+   else {
+      return DRMAA_ERRNO_SUCCESS;
+   }
 }
 
 /****** JAPI/japi_wait_retry() *************************************************
@@ -2375,13 +2391,17 @@ u_long32 *wjobidp, u_long32 *wtaskidp, bool *wis_task_arrayp, int *wait_status, 
       *wait_status = lGetUlong(task, JJAT_stat);
 
    if (rusagep != NULL) {
-      lList *usage_copy = lCopyList ("Usage List", lGetList (task, JJAT_rusage));
+      lList *usage = lGetList (task, JJAT_rusage);
       
-      if (*rusagep == NULL) {
-         *rusagep = usage_copy;
-      }
-      else {
-         lAddList (*rusagep, usage_copy);
+      if (usage != NULL) {
+         lList *usage_copy = lCopyList ("Usage List", usage);
+
+         if (*rusagep == NULL) {
+            *rusagep = usage_copy;
+         }
+         else {
+            lAddList (*rusagep, usage_copy);
+         }
       }
    }
 
@@ -3173,7 +3193,7 @@ int japi_wifcoredump(int *core_dumped, int stat, dstring *diag)
 void japi_standard_error(int drmaa_errno, dstring *diag)
 {
    if (diag)
-      sge_dstring_copy_string(diag, drmaa_strerror(drmaa_errno));
+      sge_dstring_copy_string(diag, japi_strerror(drmaa_errno));
 }
 
 
@@ -3235,6 +3255,7 @@ const char *japi_strerror(int drmaa_errno)
       { DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, "The job cannot be moved to a HOLD state." },
       { DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, "The job is not in a HOLD state." },
       { DRMAA_ERRNO_EXIT_TIMEOUT, "time-out condition" },
+      { DRMAA_ERRNO_NO_RUSAGE, "no usage information was returned for the completed job" },
 
       { DRMAA_NO_ERRNO, NULL }
    };
@@ -3588,6 +3609,8 @@ static void *japi_implementation_thread(void *p)
                   japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, intkey);
                   if (japi_job) {
                      if (range_list_is_id_within(lGetList(japi_job, JJ_not_yet_finished_ids), intkey2)) {
+                        lList *usage = NULL;
+                        
                         /* remove task from not yet finished job id list */
                         object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, intkey2);
 
@@ -3596,7 +3619,12 @@ static void *japi_implementation_thread(void *p)
                         japi_task = lAddSubUlong(japi_job, JJAT_task_id, intkey2, JJ_finished_tasks, JJAT_Type);
                         lSetUlong(japi_task, JJAT_stat, wait_status);
                         lSetString(japi_task, JJAT_failed_text, err_str);
-                        lSetList(japi_task, JJAT_rusage, lCopyList ("job usage", lGetList (jr, JR_usage)));
+                        
+                        usage = lGetList (jr, JR_usage);
+                        
+                        if (usage != NULL)  {
+                           lSetList(japi_task, JJAT_rusage, lCopyList ("job usage", usage));
+                        }
                         
                         /* signal all application threads waiting for a job to finish */
                         pthread_cond_broadcast(&Master_japi_job_list_finished_cv);

@@ -1,3 +1,8 @@
+DT-2003-11-25-0: Enhancem.: Fixed broken build (AIX51) and added proper error
+                            handling for drmaa_wait when no usage information
+                            is available.
+                 Changed:   japi.c, drmaa.c, drmaa.h, test_drmaa.c
+
 JG-2003-11-25-0: Testsuite: Cleanup of testsuite configuration.
 
 JG-2003-11-24-1: Bugfix:    Fixed memory leak from JG-2003-11-24-0.

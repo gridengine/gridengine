@@ -1179,25 +1179,31 @@ case SOLARIS86:
       set WITH_GETTEXT = 0
    endif
 
-   set OFLAG = "-O"
+   if ( $CC == gcc ) then
+      set OFLAG = "-O3"
+   else
+      set OFLAG = "-xO4"
+   endif
+
    if ( $OPTIMIZATION == 1 ) then
-      if ( $CC == gcc ) then
-         set OFLAG = "-O3"
-      else
-         set OFLAG = "-xO4"
-         if ( $BUILDARCH == SOLARIS || $BUILDARCH == SOLARIS64 ) then
-            set OFLAG = "$OFLAG -xchip=ultra2"
-         endif   
-      endif
+      if ( $BUILDARCH == SOLARIS || $BUILDARCH == SOLARIS64 ) then
+         set OFLAG = "$OFLAG -xchip=ultra2"
+      endif   
    endif
 
    if ( $GPROFFED == 1 ) then
+      set OFLAG = "-O"
       if ( $CC == gcc ) then
          set DEBUG_FLAG = "-g -pg"
          set LIBS = "$LIBS -ldl"
       else
          set DEBUG_FLAG = "-g -xpg"
       endif
+   endif
+
+   if ( $DEBUGGED == 1 ) then
+      set DEBUG_FLAG = "-g"
+      set OFLAG = ""
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"

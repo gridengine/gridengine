@@ -277,6 +277,8 @@ static int japi_init_mt(void)
 *  MUTEXES
 *      japi_session_mutex -> japi_ec_state_mutex
 *
+*  NOTES
+*      MT-NOTE: japi_init() is MT safe
 *******************************************************************************/
 int japi_init(const char *contact, char *error_diagnosis, size_t error_diag_len)
 {
@@ -372,6 +374,8 @@ int japi_init(const char *contact, char *error_diagnosis, size_t error_diag_len)
 *  MUTEXES
 *      japi_session_mutex -> japi_threads_in_session_mutex
 *
+*  NOTES
+*      MT-NOTE: japi_exit() is MT safe
 *******************************************************************************/
 int japi_exit(char *error_diagnosis, size_t error_diag_len)
 {
@@ -430,6 +434,9 @@ int japi_exit(char *error_diagnosis, size_t error_diag_len)
 *
 *  FUNCTION
 *  RESULT
+*
+*  NOTES
+*      MT-NOTE: japi_allocate_job_template() is MT safe
 *******************************************************************************/
 int japi_allocate_job_template(drmaa_job_template_t **jtp, char *error_diagnosis, size_t error_diag_len)
 {
@@ -459,6 +466,9 @@ int japi_allocate_job_template(drmaa_job_template_t **jtp, char *error_diagnosis
 *     drmaa_job_template_t *jt - job template to be deleted
 *
 *  RESULT
+*
+*  NOTES
+*      MT-NOTE: japi_delete_job_template() is MT safe
 *******************************************************************************/
 int japi_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len)
 {
@@ -495,6 +505,9 @@ int japi_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, si
 *     const char *value  - value
 *
 *  RESULT
+*
+*  NOTES
+*      MT-NOTE: japi_set_attribute() is MT safe
 *******************************************************************************/
 int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *value, char *error_diagnosis, size_t error_diag_len)
 {
@@ -532,6 +545,8 @@ int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *v
  * If 'name' is an existing non-vector attribute name in the job 
  * template 'jt', then the value of 'name' is returned; otherwise, 
  * NULL is returned.
+ *
+ *      MT-NOTE: japi_get_attribute() is MT safe
  */ 
 int japi_get_attribute(drmaa_job_template_t *jt, const char *name, char *value, 
    size_t value_len, char *error_diagnosis, size_t error_diag_len)
@@ -541,6 +556,8 @@ int japi_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
 
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed. 
+ *
+ *      MT-NOTE: japi_set_vector_attribute() is MT safe
  */
 int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, 
       char *value[], char *error_diagnosis, size_t error_diag_len)
@@ -576,6 +593,8 @@ int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
 /* 
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
+ *
+ *      MT-NOTE: japi_get_vector_attribute() is MT safe
  */
 int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name /* , vector of attribute values */, char *error_diagnosis, size_t error_diag_len)
 {
@@ -588,6 +607,8 @@ int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name /* , ve
  * Returns the set of supported attribute names whose associated   
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
+ *
+ *      MT-NOTE: japi_get_attribute_names() is MT safe
  */
 int japi_get_attribute_names( /* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len)
 {
@@ -597,7 +618,10 @@ int japi_get_attribute_names( /* vector of attribute name (string vector), */ ch
 /*
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
- * attribute names and native attribute names. */
+ * attribute names and native attribute names. 
+ *
+ *      MT-NOTE: japi_get_vector_attribute_names() is MT safe
+ */
 int japi_get_vector_attribute_names(/* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len)
 {
    return DRMAA_ERRNO_SUCCESS;
@@ -624,6 +648,9 @@ int japi_get_vector_attribute_names(/* vector of attribute name (string vector),
 *      japi_session_mutex -> japi_threads_in_session_mutex
 *      Master_japi_job_list_mutex
 *      japi_threads_in_session_mutex
+*
+*  NOTES
+*      MT-NOTE: japi_run_job() is MT safe
 *******************************************************************************/
 int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len)
 {
@@ -805,6 +832,8 @@ int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char
 *  INPUTS
 *  RESULT
 *
+*  NOTES
+*      MT-NOTE: japi_run_bulk_jobs() is MT safe
 *******************************************************************************/
 int japi_run_bulk_jobs(/* vector of job ids (string vector), */ drmaa_job_template_t *jt, 
       int start, int end, int incr, char *error_diagnosis, size_t error_diag_len)
@@ -866,6 +895,8 @@ int japi_run_bulk_jobs(/* vector of job ids (string vector), */ drmaa_job_templa
 *  INPUTS
 *  RESULT
 *
+*  NOTES
+*      MT-NOTE: japi_control() is MT safe
 *******************************************************************************/
 int japi_control(const char *jobid, int action, char *error_diagnosis, size_t error_diag_len)
 {
@@ -899,7 +930,36 @@ enum {
 };
 
 
-static int japi_wait_retry(int wait4any, int jobid, int taskid, lListElem **japi_jobp, lListElem **japi_taskp)
+/****** japi/japi_wait_retry() *************************************************
+*  NAME
+*     japi_wait_retry() -- seek for job_id in JJ_finished_jobs of all jobs
+*
+*  SYNOPSIS
+*     static int japi_wait_retry(lList *japi_job_list, int wait4any, int jobid, 
+*     int taskid, lListElem **japi_jobp, lListElem **japi_taskp) 
+*
+*  FUNCTION
+*     Search the passed japi_job_list for finished jobs matching the wait4any/
+*     jobid/taskid condition.
+*
+*  INPUTS
+*     lList *japi_job_list   - The JJ_Type japi joblist that is searched.
+*     int wait4any           - 0 any finished job/task is fine
+*     int jobid              - specifies which job is searched
+*     int taskid             - specifies which task is searched
+*     lListElem **japi_jobp  - returns the finished job
+*     lListElem **japi_taskp - returns for array jobs the task that finished
+*
+*  RESULT
+*     static int - JAPI_WAIT_ALLFINISHED = there is nothing more to wait for
+*                  JAPI_WAIT_UNFINISHED  = no job/task finished, but there are still unfinished tasks
+*                  JAPI_WAIT_FINISHED    = got a finished task
+*
+*  NOTES
+*     MT-NOTE: japi_wait_retry() is MT safe
+*******************************************************************************/
+static int japi_wait_retry(lList *japi_job_list, int wait4any, int jobid, int taskid, 
+      lListElem **japi_jobp, lListElem **japi_taskp)
 {
    lListElem *job, *task; 
    
@@ -909,7 +969,7 @@ static int japi_wait_retry(int wait4any, int jobid, int taskid, lListElem **japi
    if (wait4any) {
       int not_yet_reaped = 0;
 
-      for_each (job, Master_japi_job_list) {
+      for_each (job, japi_job_list) {
          task = lFirst(lGetList(job, JJ_finished_tasks));
          if (task) 
             break;
@@ -927,7 +987,7 @@ static int japi_wait_retry(int wait4any, int jobid, int taskid, lListElem **japi
          }
       }
    } else {
-      job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
+      job = lGetElemUlong(japi_job_list, JJ_jobid, jobid);
       if (!job) {
          DEXIT;
          return JAPI_WAIT_ALLFINISHED;
@@ -978,6 +1038,9 @@ static int japi_wait_retry(int wait4any, int jobid, int taskid, lListElem **japi
 *
 *  MUTEXES
 *      japi_session_mutex -> japi_threads_in_session_mutex
+*
+*  NOTES
+*     MT-NOTE: japi_synchronize() is MT safe
 *******************************************************************************/
 int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len)
 {
@@ -1061,6 +1124,9 @@ int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *er
 *  MUTEXES
 *      japi_session_mutex -> japi_threads_in_session_mutex
 *      Master_japi_job_list_mutex -> japi_ec_state_mutex
+*
+*  NOTES
+*     MT-NOTE: japi_wait() is MT safe
 *******************************************************************************/
 int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, signed long timeout, 
    /* rusage: vector of job ids (string vector), */ char *error_diagnosis, size_t error_diag_len)
@@ -1104,7 +1170,7 @@ int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *
    { 
       JAPI_LOCK_JOB_LIST();
 
-      while ((wait_result=japi_wait_retry(wait4any, jobid, taskid, &japi_job, &japi_task)) == JAPI_WAIT_UNFINISHED) {
+      while ((wait_result=japi_wait_retry(Master_japi_job_list, wait4any, jobid, taskid, &japi_job, &japi_task)) == JAPI_WAIT_UNFINISHED) {
 
          /* must return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE when event client 
             thread was shutdown during japi_wait() use japi_ec_state ?? */
@@ -1171,6 +1237,8 @@ int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *
 *  INPUTS
 *  RESULT
 *
+*  NOTES
+*     MT-NOTE: japi_job_ps() is MT safe
 *******************************************************************************/
 int japi_job_ps(const char *job_id, int *remote_ps, char *error_diagnosis, size_t error_diag_len)
 {
@@ -1211,6 +1279,8 @@ int japi_job_ps(const char *job_id, int *remote_ps, char *error_diagnosis, size_
 *  INPUTS
 *  RESULT
 *
+*  NOTES
+*     MT-NOTE: japi_strerror() is MT safe
 *******************************************************************************/
 const char *japi_strerror(int drmaa_errno)
 {
@@ -1273,6 +1343,8 @@ const char *japi_strerror(int drmaa_errno)
 *  INPUTS
 *  RESULT
 *
+*  NOTES
+*     MT-NOTE: implementation_thread() is MT safe
 *******************************************************************************/
 static void *implementation_thread(void *p)
 {

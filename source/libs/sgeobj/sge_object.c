@@ -691,6 +691,9 @@ object_delete_range_id(lListElem *object, lList **answer_list,
 *  RESULT
 *     int - 0 -> OK
 *           1 -> no memory
+*
+*  NOTES
+*     MT-NOTE: object_set_range_id() is MT safe
 ******************************************************************************/
 int 
 object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,

@@ -1286,6 +1286,9 @@ void job_get_submit_task_ids(const lListElem *job, u_long32 *start,
 *  RESULT
 *     int - 0 -> OK
 *           1 -> no memory
+*
+*  NOTES
+*     MT-NOTE: job_set_submit_task_ids() is MT safe
 ******************************************************************************/
 int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
                             u_long32 step)

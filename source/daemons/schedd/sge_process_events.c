@@ -999,6 +999,7 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
    sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */
 

@@ -200,18 +200,20 @@ hgroup_list_locate(const lList *this_list, const char *group)
 *     lList **answer_list     - AN_Type list 
 *     const char *name        - name 
 *     lList *href_or_groupref - list of hosts for this hgroup 
+*     bool is_name_validate   - if true, the hgrp name is validated. Should be done all the time,
+*                               there is only one case in qconf in that the name has to be ignored.
 *
 *  RESULT
 *     lListElem* - new element or NULL 
 *******************************************************************************/
 lListElem *
-hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
+hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref, bool is_name_validate)
 {
    lListElem *ret = NULL;  /* HGRP_Type */
 
    DENTER(HGROUP_LAYER, "hgroup_create");
    if (name != NULL) {
-      if( hgroup_check_name( answer_list, name ) == TRUE ) {
+      if(!is_name_validate || hgroup_check_name(answer_list, name) ) {
          ret = lCreateElem(HGRP_Type);
          if (ret != NULL) {
             lSetHost(ret, HGRP_name, name);

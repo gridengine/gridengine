@@ -45,7 +45,7 @@ bool hgroup_check_name(lList **answer_list, const char* name);
 
 lListElem *
 hgroup_create(lList **answer_list, const char *name, 
-              lList *hostref_or_groupref);
+              lList *hostref_or_groupref, bool is_name_validate);
 
 bool 
 hgroup_add_references(lListElem *this_elem, lList **answer_list,

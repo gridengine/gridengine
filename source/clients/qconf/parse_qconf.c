@@ -4823,14 +4823,19 @@ DPRINTF(("ep: %s %s\n",
       if (strcmp("-ahgrp", *spp) == 0) {
          lList *answer_list = NULL;
          char* group = "@template";
+         bool is_validate_name = false; /* This boolean is needed to create a
+                                           hgrp templete. One could have done
+                                           it with a string compare deep in
+                                           the code. I prefered this way. */
 
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             group = *spp;
+            is_validate_name = true;
          }
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
-         hgroup_add(&answer_list, group);
+         hgroup_add(&answer_list, group, is_validate_name);
          show_gdi_request_answer(answer_list);
          spp++;
          continue;

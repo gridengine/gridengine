@@ -38,7 +38,7 @@
 
 # Reset PATH to a safe value  
 #
-PATH=/bin:/usr/bin
+PATH=/bin:/usr/bin:/usr/ucb
 
 # Easy way to prevent clearing of screen
 #
@@ -120,11 +120,51 @@ InitCA()
    $ECHO "-----------------------------------"   
    $ECHO
 
-   MakeCert daemon root "SGE Daemon" none
+ 
+   MakeCert daemon $ME "SGE Daemon" none
+   MakeCert user $ME "SGE install user" none
 
-   # Remove this to a differnt function
-   MakeCert user $ADMINUSER "SGE Admin user" noemail
+   if [ "$ADMINUSER" != default ]; then
+      MakeCert user $ADMINUSER "SGE admin user" none
+   fi
 }
+
+#--------------------------------------------------------------------------
+# InstallKey
+#
+InstallKey
+{
+   if [ $1 = daemon ]; then
+      keyfile=$CALOCALTOP/private/key.pem
+      certfile=$CATOP/certs/cert.pem
+      randfile=$CALOCALTOP/private/rand.seed
+      HOMEDIR=`grep '^root:' /etc/passwd | cut -f6 -d:`
+   else
+      keyfile=$CALOCALTOP/userkeys/$ME/key.pem
+      certfile=$CALOCALTOP/userkeys/$ME/cert.pem
+      randfile=$CALOCALTOP/userkeys/$ME/rand.seed
+      HOMEDIR=/tmp/undef
+   fi
+
+   basedir=$HOMEDIR/.sge/$CA_PORT/$SGE_CELL
+   if [ ! -d $basedir ]; then
+      $V5UTILBIN/adminrun $2 $MKDIR -p $basedir
+   fi
+
+   if [ ! -d $basedir/certs ]; then
+      $V5UTILBIN/adminrun $2 $MKDIR $basedir/certs
+   fi
+
+   if [ ! -d $basedir/private ]; then
+      $V5UTILBIN/adminrun $2 $MKDIR $basedir/private
+   fi
+
+   if [ -f $basedir/private/key.pem ]; then
+      $V5UTILBIN/adminrun $2 rm -f $basedir/private/key.pem
+      $V5UTILBIN/adminrun 
+   fi
+}
+
 
 #--------------------------------------------------------------------------
 # MakeCAcert create CA certificate and private key
@@ -507,6 +547,13 @@ if [ $euid = 0 ]; then
 else
    CALOCALTOP=/tmp/sgeCA/$CA_PORT/$SGE_CELL
    rootinstalls=false
+fi
+
+ME=`whoami`
+
+if [ "$ME" = "" ]; then
+   Translate 0 "Can't determine usernames with \"%s\" command. Exit" whoami
+   exit 1
 fi
 
 CAKEY=cakey.pem

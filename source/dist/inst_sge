@@ -168,10 +168,10 @@ SelectHostNameResolving()
    $ECHO
    if [ $? = 0 ]; then
       IGNORE_FQDN_DEFAULT=true
-      Translate 4 "Ignoring DNS domain name when comparing host names"
+      Translate 0 "Ignoring domainname when comparing hostnames."
    else
       IGNORE_FQDN_DEFAULT=false
-      Translate 4 "The DNS domain name is not ignored when comparing host names"
+      Translate 0 "The domainname is not ignored when comparing hostnames."
    fi
    $ECHO
    WaitClear clear
@@ -203,16 +203,17 @@ CheckCellDirectory()
       fi
       check_cell_error=1
    fi
-
+   
 
    if [ $check_cell_error != 0 ]; then
+      transsaved="$transout"
       $ECHO ""
       Translate 0 "Checking cell directory"
       $ECHO "$LINES-----------------"
       $ECHO ""
       Translate 0 "Cannot find required files. The following error was returned:"
       $ECHO ""
-      $ECHO "$transout"
+      $ECHO "$transsaved"
       $ECHO ""
       Translate 0 "Please make sure that you have installed the qmaster host before"
       Translate 0 "installing an execd host."
@@ -494,9 +495,11 @@ PrintConf()
    $ECHO "load_report_time       00:00:40"
    $ECHO "stat_log_time          48:00:00"
    $ECHO "max_unheard            00:05:00"
+   $ECHO "reschedule_unknown     00:00:00"
    $ECHO "loglevel               log_warning"
    if [ $inst = sgeee ]; then
       $ECHO "enforce_project        false"
+      $ECHO "enforce_user           false"
    fi
    $ECHO "administrator_mail     $CFG_MAIL_ADDR"
    if [ $afs = true ]; then
@@ -860,7 +863,7 @@ AddDefaultComplexes()
    Translate 0 "Adding default complexes >host< and >queue<"
    for c in host queue; do
       if [ -f $QMDIR/complexes/$c -a -s $QMDIR/complexes/$c ]; then
-         Translate 4 "Complex >%s< already exists - should complex be preserved" "" "" $c
+         Translate 4 "Complex >%s< already exists - should complex be preserved" $c
          YesNo "$transout" y
          if [ $? = 1 ]; then
             Translate 0 "Overwriting existing complex >%s<" $c
@@ -1034,20 +1037,11 @@ GiveHints()
       Translate 0 "if you are a %s user." "sh/ksh"
       $ECHO ""
       Translate 0 " This will set or expand the following environment variables" 
-      Translate 0 "\$$QSYST_ROOT (always necessary)"
-      $ECHO "   - \$$QSYST_ROOT    $transout"
-
-      Translate 0 "(if you are using a cell other than >default<)"
-      $ECHO "   - \$$QSYST_CELL    $transout"
-
-      $ECHO "   - \$COMMD_PORT  \c"
-      Translate 0 "(if you haven't added the service %s)" "$QSYST_SERVICE"
-
-      $ECHO "   - \$PATH/\$path  \c"
-      Translate 0 "(to find the %s binaries)" "$QSYST"
-
-      $ECHO "   - \$MANPATH     \c"
-      Translate 0 "(to access the %s manual pages)" "$QSYST"
+      Translate 0 "   - %s    (always necessary)" \$$QSYST_ROOT
+      Translate 0 "   - %s    (if you are using a cell other than >default<)" \$$QSYST_CELL
+      Translate 0 "   - %s     (if you haven't added the service %s)" \$COMMD_PORT "$QSYST_SERVICE"
+      Translate 0 "     %s     (to find the %s binaries)" "\$PATH/\$path" "$QSYST"
+      Translate 0 "   - %s     (to access the %s manual pages)" \$MANPATH "$QSYST"
 
       $ECHO ""
 
@@ -1499,8 +1493,7 @@ CheckQmasterInstallation()
    $ECHO "$LINES------"
    $ECHO ""
    Translate 0 "Please enter cell name which you used for %s qmaster installation" "$QSYST"
-   Translate 0 "or <RETURN> to use default cell"
-   $ECHO "$transout >default< >> \c"
+   Translate 2 "or press <RETURN> to use default cell >default< >> "
    INP=`Enter ""`
    if [ "$INP" = "" ]; then
       eval $QSYST_CELL=default
@@ -1700,7 +1693,7 @@ AddHostsFromFile()
       Translate 0 "Adding admin and submit hosts from file"
       $ECHO "---------------------------------------"
       $ECHO ""
-      Translate 0 "Please enter the file name which contains the host list:"
+      Translate 4 "Please enter the file name which contains the host list:"
       $ECHO "$transout \c"
       file=`Enter none`
       if [ "$file" = "none" -o ! -f "$file" ]; then
@@ -2129,7 +2122,9 @@ SetPermissions()
 
    if [ $euid != 0 ]; then
       Translate 0 "You are not installing as user %s" root
-      Translate 0 "\nCan't set the file owner/group and permissions"
+      $ECHO
+      Translate 0 "Can't set the file owner/group and permissions"
+      $ECHO
       WaitClear clear 
       return 0
    else
@@ -2218,7 +2213,7 @@ SetPermissions()
 
       WaitClear clear
    else
-      Translate 0 "We will not verify your file permissions. Hit <RETURN> to continue >>"
+      Translate 4 "We will not verify your file permissions. Hit <RETURN> to continue >>"
       WaitClear clear "\n$transout \c"
    fi
 }
@@ -2454,9 +2449,9 @@ master)
    AddDefaultComplexes
    AddDefaultDepartement
    AddCommonFiles
-   InitCA
    CreateSettingsFile
    WaitClear clear
+   InitCA
    AddQsystStartUpScript $euid true
    StartQmaster
    AddHosts

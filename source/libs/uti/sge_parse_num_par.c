@@ -30,19 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* sge_parse_num_par.c - parse numeric strings containing octal, decimal
- *                   (integer and fixed float) and hex constants as
- *    added field processors describing ranges of processor nodes
- *
- */
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 #include <float.h>
-
 
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
@@ -52,7 +45,7 @@
 #include "sge_parse_num_par.h"
 #include "symbols.h"
 
-#include "msg_sgeobjlib.h"
+#include "msg_utilib.h"
 
 
 #if defined(IRIX6)
@@ -88,9 +81,9 @@
 double strtod(const char *str, char **ptr);
 #endif
 
-static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
-                                  const char *str, const char *where, 
-                                  char *err_str, int err_len);
+u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
+                           const char *str, const char *where, 
+                           char *err_str, int err_len);
 
 static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
                              const char *where, char *err_str, int err_len);
@@ -145,10 +138,7 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
    char dummy[10];
    u_long32 dummy_uval;
 
-   DENTER(CULL_LAYER, "parse_ulong_val");
-
    if (!s) {
-      DEXIT;
       return 0;
    }
 
@@ -212,42 +202,34 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
    default:
       break;
    }
-   DEXIT;
    return retval;
 }
 
 /*----------------------------------------------------------------------*/
-int sge_parse_loglevel_val(
-u_long32 *uval, 
-const char *s 
-) {
-  int retval = 1;
+bool sge_parse_loglevel_val(u_long32 *uval, const char *s) 
+{
+   bool ret = true;
 
-  DENTER(BASIS_LAYER, "sge_parse_loglevel_val");
-
-  if (!s) {
-     retval = 0;
-  } else {
-     if (!strcasecmp("log_crit", s))
-        *uval = LOG_CRIT;
-     else if (!strcasecmp("log_err", s))
-        *uval = LOG_ERR;
-     else if (!strcasecmp("log_warning", s))
-        *uval = LOG_WARNING;
-     else if (!strcasecmp("log_notice", s))
-        *uval = LOG_NOTICE;
-     else if (!strcasecmp("log_info", s))
-        *uval = LOG_INFO;
-     else if (!strcasecmp("log_debug", s))
-        *uval = LOG_DEBUG;
-     else
-        retval = 0;
-   
-  }
-
-  DEXIT;
-  return retval;
-
+   if (s == NULL) {
+      ret = false;
+   } else {
+      if (!strcasecmp("log_crit", s)) {
+         *uval = LOG_CRIT;
+      } else if (!strcasecmp("log_err", s)) {
+         *uval = LOG_ERR;
+      } else if (!strcasecmp("log_warning", s)) {
+         *uval = LOG_WARNING;
+      } else if (!strcasecmp("log_notice", s)) {
+         *uval = LOG_NOTICE;
+      } else if (!strcasecmp("log_info", s)) {
+         *uval = LOG_INFO;
+      } else if (!strcasecmp("log_debug", s)) {
+         *uval = LOG_DEBUG;
+      } else {
+         ret = false;
+      }
+   }
+   return ret;
 }
 
 
@@ -263,16 +245,12 @@ int sge_parse_checkpoint_attr(const char *attr_str)
 {
    int opr;
 
-   DENTER(TOP_LAYER, "sge_parse_checkpoint_attr");
-
    if (attr_str == NULL) {
-      DEXIT;
       return 0;
    }
 
    /* May be it's a time value */
    if (isdigit((int) *attr_str) || (*attr_str == ':')) {
-      DEXIT;
       return 0;
    }
 
@@ -295,54 +273,7 @@ int sge_parse_checkpoint_attr(const char *attr_str)
       attr_str++;
    }
 
-   DEXIT;
    return opr;
-}
-
-const char *get_checkpoint_when(int bitmask) 
-{
-   int i = 0;
-   static char when[32];
-   DENTER(TOP_LAYER, "get_checkpoint_string");
-   
-   if (is_checkpoint_when_valid(bitmask) && !(bitmask & NO_CHECKPOINT)) {
-      if (bitmask & CHECKPOINT_SUSPEND) {
-         when[i++] = CHECKPOINT_SUSPEND_SYM;
-      }
-      if (bitmask & CHECKPOINT_AT_SHUTDOWN) {
-         when[i++] = CHECKPOINT_AT_SHUTDOWN_SYM;
-      }
-      if (bitmask & CHECKPOINT_AT_MINIMUM_INTERVAL) {
-         when[i++] = CHECKPOINT_AT_MINIMUM_INTERVAL_SYM;
-      }
-      if (bitmask & CHECKPOINT_AT_AUTO_RES) {
-         when[i++] = CHECKPOINT_AT_AUTO_RES_SYM;
-      }
-   } else {
-      when[i++] = NO_CHECKPOINT_SYM;
-   } 
-   when[i] = '\0'; 
-
-   DEXIT;
-   return when;
-}
-
-int is_checkpoint_when_valid(int bitmask) 
-{
-   int ret = 0;
-   int mask = 0;
-   DENTER(TOP_LAYER, "is_checkpoint_when_valid");
-
-   mask = CHECKPOINT_SUSPEND | CHECKPOINT_AT_SHUTDOWN 
-      | CHECKPOINT_AT_MINIMUM_INTERVAL | CHECKPOINT_AT_AUTO_RES;
-
-   if (bitmask == NO_CHECKPOINT 
-       || ((bitmask & mask) == bitmask)) {
-      ret = 1;
-   }
-
-   DEXIT;
-   return ret;
 }
 
 char *resource_descr(double dval, u_long32 type, char *buffer) 
@@ -351,13 +282,10 @@ char *resource_descr(double dval, u_long32 type, char *buffer)
    char c;
    static char text[100];
 
-   DENTER(GDI_LAYER, "resource_descr");
-
    if (!buffer)
       buffer = text;
 
    if (dval==DBL_MAX) {
-      DEXIT;
       return "infinity";
    }
 
@@ -402,27 +330,7 @@ char *resource_descr(double dval, u_long32 type, char *buffer)
       break;
    }
 
-   DEXIT;
    return buffer;
-}
-
-
-/* 
- * compare two sge_rlim_t values  
- * 
- * returns
- * r1 <  r2      < 0   
- * r1 == r2      == 0   
- * r1 >  r2      > 0   
- */
-int rlimcmp(sge_rlim_t r1, sge_rlim_t r2) {
-   if (r1 == r2)
-      return 0;
-   if (r1==RLIM_INFINITY)
-      return 1;
-   if (r2==RLIM_INFINITY)
-      return -1;
-   return (r1>r2)?1:-1;
 }
 
 /* 
@@ -558,9 +466,10 @@ static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
  *
  **********************************************************************/
 
-static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
-                                  const char *str, const char *where, 
-                                  char *err_str, int err_len)
+u_long32 
+sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
+                  const char *str, const char *where, 
+                  char *err_str, int err_len)
 {
    double dummy;
    sge_rlim_t rlim, rlmuli;
@@ -568,8 +477,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
    u_long32 ldummy;
    char *dptr;
    double muli;
-
-   DENTER(CULL_LAYER, "sge_parse_num_val");
 
    if (!rlimp)
       rlimp = &rlim;
@@ -584,19 +491,16 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          agree. */
       *dvalp = 1;
       *rlimp = 1;
-      DEXIT;
       return 1;
    }
    else if (!strcasecmp(str, "false")) {
       *dvalp = 0;
       *rlimp = 0;
-      DEXIT;
       return 0;
    }
    else if (!strcasecmp(str, "infinity")) {
       *dvalp = DBL_MAX;       /* use this for comparing limits */
       *rlimp = RLIM_INFINITY; /* use this for limit setting */
-      DEXIT;
 #ifndef CRAY      
       return 0xFFFFFFFF;      /* return max ulong in 32 bit */
 #else
@@ -612,7 +516,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          sprintf(tmp, MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS , where, str);
          strncpy(err_str, tmp, err_len-1);
          err_str[err_len-1] = '\0';
-         DEXIT;
          return 0;
       }
       ldummy = (u_long32)(3600 * t);
@@ -623,7 +526,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
          strncpy(err_str, tmp, err_len-1);
          err_str[err_len-1] = '\0';
-         DEXIT;
          return 0;
       }
       /* now go for the minutes */
@@ -633,7 +535,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          sprintf(tmp, MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS , where, str);
          strncpy(err_str, tmp, err_len-1);
          err_str[err_len-1] = '\0';
-         DEXIT;
          return 0;
       }
       ldummy += (u_long32)(60 * t);
@@ -644,7 +545,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
          strncpy(err_str, tmp, err_len-1);
          err_str[err_len-1] = '\0';
-         DEXIT;
          return 0;
       }
       /* the seconds finally */
@@ -665,7 +565,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          dptr++;
       }
 
-      DEXIT;
       return (ldummy);
 
    }
@@ -691,7 +590,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS , where, str);
          strncpy(err_str, tmp, err_len-1);
          err_str[err_len-1] = '\0';
-         DEXIT;
          return 0;
       }
 
@@ -702,7 +600,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *dvalp =              *dvalp * muli;
       *rlimp = mul_infinity(*rlimp, rlmuli);
 
-      DEXIT;
       return (u_long32)dummy;
 
    }
@@ -719,7 +616,6 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
          sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS , where, str);
          strncpy(err_str, tmp, err_len-1);
          err_str[err_len-1] = '\0';
-         DEXIT;
          return 0;
       }
       /* OK, we got it */
@@ -729,44 +625,7 @@ static u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *rlimp = mul_infinity(*rlimp, rlmuli);
       *dvalp *= muli;
 
-      DEXIT;
       return (u_long32)ldummy;
    }
 }
-
-
-/* -----------------------------------------
-
-NAME
-   sge_parse_limit()
-
-DESCR
-   is a wrapper around sge_parse_num_val()
-   for migration to code that returns an
-   error and does not exit() 
-
-PARAM
-   uvalp - where to write the parsed value
-   s     - string to parse
-
-RETURN
-      1 - ok, value in *uvalp is valid
-      0 - parsing error
-
-*/
-int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str, 
-                    int error_len) 
-{
-   DENTER(CULL_LAYER, "sge_parse_limit");
-
-   /*
-   ** error handling should be added here, but how ????
-   */
-   sge_parse_num_val(rlvalp, NULL, s, s, error_str, error_len);
-
-   DEXIT;
-   return 1;
-}
-
-
 

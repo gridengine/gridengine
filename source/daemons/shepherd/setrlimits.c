@@ -68,12 +68,63 @@
 #include "setjoblimit.h"
 #include "sge_uidgid.h"
 #include "sge_os.h"
+#include "sge_parse_num_par.h"
 
 #ifndef CRAY
 static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);
 
 static int get_resource_info(u_long32 resource, char **name, int *resource_type);
 #endif
+
+static int rlimcmp(sge_rlim_t r1, sge_rlim_t r2);
+static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
+                           int error_len);
+
+/*
+ * compare two sge_rlim_t values
+ *
+ * returns
+ * r1 <  r2      < 0
+ * r1 == r2      == 0
+ * r1 >  r2      > 0
+ */
+static int rlimcmp(sge_rlim_t r1, sge_rlim_t r2) 
+{
+   if (r1 == r2)
+      return 0;
+   if (r1==RLIM_INFINITY)
+      return 1;
+   if (r2==RLIM_INFINITY)
+      return -1;
+   return (r1>r2)?1:-1;
+}
+
+/* -----------------------------------------
+
+NAME
+   sge_parse_limit()
+
+DESCR
+   is a wrapper around sge_parse_num_val()
+   for migration to code that returns an
+   error and does not exit()
+
+PARAM
+   uvalp - where to write the parsed value
+   s     - string to parse
+
+RETURN
+      1 - ok, value in *uvalp is valid
+      0 - parsing error
+
+*/
+static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
+                    int error_len)
+{
+   sge_parse_num_val(rlvalp, NULL, s, s, error_str, error_len);
+
+   return 1;
+}
 
 void setrlimits(
 int trace_rlimit 

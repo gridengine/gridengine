@@ -58,6 +58,7 @@
 #include "sge_job.h"
 #include "sge_utility.h"
 #include "sge_todo.h"
+#include "symbols.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -438,4 +439,51 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    DEXIT;
    return;
 }                 
+
+const char *get_checkpoint_when(int bitmask)
+{
+   int i = 0;
+   static char when[32];
+   DENTER(TOP_LAYER, "get_checkpoint_string");
+
+   if (is_checkpoint_when_valid(bitmask) && !(bitmask & NO_CHECKPOINT)) {
+      if (bitmask & CHECKPOINT_SUSPEND) {
+         when[i++] = CHECKPOINT_SUSPEND_SYM;
+      }
+      if (bitmask & CHECKPOINT_AT_SHUTDOWN) {
+         when[i++] = CHECKPOINT_AT_SHUTDOWN_SYM;
+      }
+      if (bitmask & CHECKPOINT_AT_MINIMUM_INTERVAL) {
+         when[i++] = CHECKPOINT_AT_MINIMUM_INTERVAL_SYM;
+      }
+      if (bitmask & CHECKPOINT_AT_AUTO_RES) {
+         when[i++] = CHECKPOINT_AT_AUTO_RES_SYM;
+      }
+   } else {
+      when[i++] = NO_CHECKPOINT_SYM;
+   }
+   when[i] = '\0';
+
+   DEXIT;
+   return when;
+}
+
+int is_checkpoint_when_valid(int bitmask)
+{
+   int ret = 0;
+   int mask = 0;
+   DENTER(TOP_LAYER, "is_checkpoint_when_valid");
+
+   mask = CHECKPOINT_SUSPEND | CHECKPOINT_AT_SHUTDOWN
+      | CHECKPOINT_AT_MINIMUM_INTERVAL | CHECKPOINT_AT_AUTO_RES;
+
+   if (bitmask == NO_CHECKPOINT
+       || ((bitmask & mask) == bitmask)) {
+      ret = 1;
+   }
+
+   DEXIT;
+   return ret;
+}
+
 

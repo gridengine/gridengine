@@ -57,7 +57,6 @@ SGEOBJLIB_SRC = \
          sge_manop.c \
          sge_object.c \
          sge_parse_date_time.c \
-         sge_parse_num_par.c \
          sge_path_alias.c \
          sge_pe.c \
          sge_pe_task.c \
@@ -172,9 +171,6 @@ sge_object.o: $(SGEOBJLIB_DIR)/sge_object.c
 
 sge_parse_date_time.o: $(SGEOBJLIB_DIR)/sge_parse_date_time.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_parse_date_time.c
-
-sge_parse_num_par.o: $(SGEOBJLIB_DIR)/sge_parse_num_par.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_parse_num_par.c
 
 sge_path_alias.o: $(SGEOBJLIB_DIR)/sge_path_alias.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_path_alias.c

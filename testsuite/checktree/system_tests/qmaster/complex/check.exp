@@ -149,10 +149,10 @@ proc complex_loadsensor_test {} {
    if { $prg_exit_state != 0 } {
         shutdown_system_daemon $host execd
    }
-   wait_for_unknown_load 100 "${host}.q"
+   wait_for_unknown_load 180 "${host}.q"
 
    startup_execd $host
-   wait_for_load_from_all_queues 100 
+   wait_for_load_from_all_queues 180 
 
    get_qconf_se_info $host
    if { [string first "test_arch=TEST_ARCH" $qconf_se_info(load_values) ] < 0 } {
@@ -244,10 +244,10 @@ proc complex_cleanup  {} {
    if { $prg_exit_state != 0 } {
         shutdown_system_daemon $host execd
    }
-   wait_for_unknown_load 600 "${host}.q"
+   wait_for_unknown_load 180 "${host}.q"
 
    startup_execd $host
-   wait_for_load_from_all_queues 100 
+   wait_for_load_from_all_queues 180
 
    set_queue "$host.q" complex_old_queue_config
 

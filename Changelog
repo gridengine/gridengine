@@ -1,3 +1,7 @@
+CR-2002-11-26-0  Testsuite: increased timeouts in qmaster complex check. Old
+                            timeout was too short to let the execd load values
+                            timeout at qmaster.
+
 CR-2002-11-25-1  Testsuite: a) start_remote_tcl_prog() in shadowd test broken, 
                  Bugfix:       because of new testsuite configuration file 
                                setup (checked in CR-2002-11-20-0). 

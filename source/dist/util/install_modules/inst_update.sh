@@ -604,7 +604,7 @@ UpdateHints()
                 "within the qmaster spool directory. This file shows you the name and\n" \
                 "of cemplexes and the values which have been concerned of the upgrade.\n" \
                 "Please log in to your executions hosts now and install the execution daemon\n" \
-                "with install_execd. If you're using loadsensor scripts for your execution hosts,\n" \
+                "with inst_sge -x -upd. If you're using loadsensor scripts for your execution hosts,\n" \
                 "please copy these scripts to the new location and adapt the path \nto the new location!\n" \
                 "Thank you very much for using SGE 6.0 and have fun!\n\n" 
 }

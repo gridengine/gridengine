@@ -1,3 +1,7 @@
+CR-2002-03-21-1  Bugfix:   removed forgotten #if0 - #endif statement which
+                           chauses scheduler to abort() on testsuite's 
+                           path_alias check.
+
 JG-2002-03-21-0  Bugfix:   prioritization of messages to qmaster could block
                            reports from execd's to qmaster and make the system
                            unusable.

@@ -96,7 +96,7 @@
      information.
    - Each QI object containes the hostname and a set of attributes necessary to
      administer QIs
-   - For client applications it is only possible to address CQs (not CIs)
+   - For client applications it is only possible to address CQs (not QIs)
    - The GDI subcommand can be used to modify object entries of a sublist    
 
    Client modification
@@ -125,7 +125,7 @@
    - shows a list of all existing CQs
     
    cq-option:
-   - CQNs or CINs
+   - CQNs or QINs
     
    NEW-option (-scql [ClusterQueueList]):
    - show a list of all existing QIs
@@ -159,14 +159,14 @@
    qsub, qalter, qsh, qrsh, qacct, qlogin
    --------------------------------------
     
-   q-Option bzw. -masterq:
-   - list of "QueueNamen"
+   q-Option resp. -masterq:
+   - list of "QueueName"
     
    l-Option:
    - List of CQNs
     
    qmod
-   - List of "QueueNamen"
+   - List of "QueueName"
     
    qhost
    -----
@@ -181,7 +181,7 @@
    -------
     
    q-Option:
-   - List of "QueueNamen"
+   - List of "QueueName"
    - List of QINs
     
    QMon

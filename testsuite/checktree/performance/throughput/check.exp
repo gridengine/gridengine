@@ -402,6 +402,7 @@ proc run_throughput_test {} {
    # translate jobs submit output string
    set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
    set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+   set COULD_NOT_SUBMIT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER]]
 
 
    # start event client (if compiled) 
@@ -428,7 +429,7 @@ proc run_throughput_test {} {
    # prepare job arguments 
    set my_job "\$SGE_ROOT/examples/jobs/sleeper.sh"
 
-   set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)\n"
+   set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
 
    
    # open shell on each execd host, used for submitting jobs
@@ -531,6 +532,7 @@ proc run_throughput_test {} {
        sleep 1
    }
 
+   sleep 5
    # variables set not in main loop for speed reasons
    set event_and_msg_id_list $event_client_id
    lappend event_and_msg_id_list $schedd_messages_id
@@ -540,33 +542,52 @@ proc run_throughput_test {} {
    # job list where job start event was faster than submit
    set job_buffer_data_index 0
    set job_buffer_data ""
-
+   set max_errors 10
+   set resend_buffer ""
 
    # here the throughput test starts
    while { $result(jobs_done) < $end_job_count } {
-
        # submit jobs (via expect chanels)
        if { $sent_jobs < $end_job_count } {
-           # get first host in next_submit_list hand submit job on that host
-           set sub_host   [lindex $next_submit_list 0 ]       
-           set host_index [lsearch $host_list $sub_host]
-           if { $host_index >= 0 } {
-              set spawn_id [lindex $spawn_list $host_index]
-              set next_submit_list [lrange $next_submit_list 1 end]
-              if { $throughput_sharetree == 1 } {
-                 set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
-                 set my_job_command "qsub -o /dev/null -e /dev/null -P project${numb} $my_job $result(job_run_time)\n"
-                 set job_data($sent_jobs,project) $numb
-              } 
-              send -i $spawn_id $my_job_command
-              set job_data($sent_jobs,state) "submit"
-#              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
-              set job_data($sent_jobs,job_id) "-"
-              set job_data($sent_jobs,submit_start_time) [timestamp]
-              set job_data($sent_jobs,submit_end_time) 0
-              set job_data($sent_jobs,run_start_time) 0
-              set job_data($sent_jobs,run_end_time) 0
-              incr sent_jobs 1
+           if { [llength $resend_buffer] == 0 } {
+              # get first host in next_submit_list hand submit job on that host
+              set sub_host   [lindex $next_submit_list 0 ]       
+              set host_index [lsearch $host_list $sub_host]
+              if { $host_index >= 0 } {
+                 set spawn_id [lindex $spawn_list $host_index]
+                 set next_submit_list [lrange $next_submit_list 1 end]
+                 if { $throughput_sharetree == 1 } {
+                    set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
+                    set my_job_command "qsub -o /dev/null -e /dev/null -P project${numb} $my_job $result(job_run_time)"
+                    set job_data($sent_jobs,project) $numb
+                 } 
+                 set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
+                 send -i $spawn_id "$my_job_command ; echo \"_:>${my_job_command}<:_>>\"\$?\"<<\"\n"
+                 set job_data($sent_jobs,state) "submit"
+   #              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
+                 set job_data($sent_jobs,job_id) "-"
+                 set job_data($sent_jobs,submit_start_time) [timestamp]
+                 set job_data($sent_jobs,submit_end_time) 0
+                 set job_data($sent_jobs,run_start_time) 0
+                 set job_data($sent_jobs,run_end_time) 0
+                 incr sent_jobs 1
+#                 puts $CHECK_OUTPUT "submitted job from host $sub_host, expect id: $spawn_id"
+              }
+           } else {
+              # resend job
+              set resend_spawn_id [lindex $resend_buffer 0]
+              set resend_command [lindex $resend_buffer 1 ]
+
+              puts $CHECK_OUTPUT "resending of command to spawn id $resend_spawn_id ..."
+              puts $CHECK_OUTPUT $resend_command
+             
+              send -i $resend_spawn_id "$resend_command ; echo \"_:>${resend_command}<:_>>\"\$?\"<<\"\n"
+              set resend_buffer [lreplace $resend_buffer 0 1]
+           }
+       } else {
+           # maybe we lost a job ??? through expect ??? or due to an error ???
+           if { $result(jobs_done) !=  $end_job_count } {
+
            }
        }
        # enable queues when $enable_queues_job_count is reached
@@ -597,7 +618,8 @@ proc run_throughput_test {} {
             set host_name [lindex $host_list $host_nr]
             add_proc_error "run_throughput_test" -1 "$host_name EOF : $expect_out(buffer)"
          }
-         -i $spawn_list -- "$JOB_SUBMITTED\r\n" {
+         #  -i $spawn_list -- "$JOB_SUBMITTED\r\n"
+         -i $spawn_list -- "*\r\n" {
             set output $expect_out(0,string) 
             set output [ split $output "\n" ]
             foreach help $output {
@@ -670,10 +692,47 @@ proc run_throughput_test {} {
                   }
 
                } else {
-#                  puts $CHECK_OUTPUT "no match: >$line<"
+                  if { [string length $line] > 0 } {
+                     if { [ string match "*>>*<<*" $line] } {
+                         # exit state of last submit
+                         set exit_state_start [string first ">>" $line]
+                         incr exit_state_start 2
+                         set exit_state_end [string first "<<" $line]
+                         incr exit_state_end -1
+                         set exit_state [string range $line $exit_state_start $exit_state_end]
+                         if { [string first "?" $exit_state] < 0 } {
+                            if { $exit_state != 0 } {
+                               puts $CHECK_OUTPUT "exit_state: >$exit_state< line: $line"
+                               set command_start [string first "_:>" $line]
+                               incr command_start 3
+                               set command_end [string first "<:_" $line]
+                               incr command_end -1
+                               set command_string [string range $line $command_start $command_end]
+                               lappend resend_buffer "$expect_out(spawn_id)"
+                               lappend resend_buffer "$command_string"
+   
+                               add_proc_error "run_throughput_test" -3 "submit exit state is $exit_state, expect id: $expect_out(spawn_id), sent jobs: $sent_jobs"
+
+                               
+                               incr max_errors -1
+                               if { $max_errors < 0 } {
+                                  add_proc_error "run_throughput_test" -1 "to much submit errors - break"
+                                  foreach elem $remote_spawn_list {
+                                     close_spawn_process $elem
+                                  }
+                                  close_spawn_process $event_client_sid
+                                  close_spawn_process $schedd_messages_sid
+                                  set_error -1 "error"
+                                  return -1
+                               }
+                            }
+                         }
+                     }
+                  }
                }
             }
          }
+
          # here we expect event client
          -i $event_and_msg_id_list -- full_buffer {
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
@@ -782,7 +841,7 @@ proc run_throughput_test {} {
        }
        set result(test_run_time) $time_now
        save_current_system_status results_list result
-   }
+   } 
 
    create_reports results_list job_data schedd_data
 

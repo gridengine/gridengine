@@ -1,3 +1,10 @@
+AH-2004-10-18-0: Bugfix:    meaningless job error state diagnosis text in 
+                            qstat -j  
+                 Review:    JG
+                 Changed:   execd
+                 Issue:     1299
+                 Bugtraq:   6180529
+
 JG-2004-10-15-0: Testsuite: Fixed csp installation, installation of SGE(EE) 5.3, 
                             package generation for SGEEE 5.3.
 

@@ -2193,6 +2193,7 @@ void ptf_unregister_registered_jobs(void)
    }
    ptf_jobs = lFreeList(ptf_jobs);
    DPRINTF(("PTF: All jobs unregistered from PTF\n"));
+   DEXIT;
 }
 
 int ptf_is_running(void)

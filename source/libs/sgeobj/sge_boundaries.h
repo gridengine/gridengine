@@ -185,8 +185,12 @@ enum NameSpaceBoundaries {
    ST_LOWERBOUND = JC_UPPERBOUND + 1,
    ST_UPPERBOUND = ST_LOWERBOUND + 1*BASIC_UNIT - 1,
 
+   /* string list */
+   STU_LOWERBOUND = ST_UPPERBOUND + 1,
+   STU_UPPERBOUND = STU_LOWERBOUND + 1*BASIC_UNIT - 1,
+
    /* jobs granted destination identifier list */
-   JG_LOWERBOUND = ST_UPPERBOUND + 1,
+   JG_LOWERBOUND = STU_UPPERBOUND + 1,
    JG_UPPERBOUND = JG_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* history directory list */

@@ -296,8 +296,8 @@ char **argv
    }
    run_server_test(port,repeat);
    fflush(stdout);
+   DEXIT;
    return 0;
-
 }
 
 void run_server_test(int port, int repeat) {

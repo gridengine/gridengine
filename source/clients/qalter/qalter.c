@@ -179,6 +179,7 @@ char **argv
    }
 
    SGE_EXIT(ret);
+   DEXIT;
    return 0;
 }
 

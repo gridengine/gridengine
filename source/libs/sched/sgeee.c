@@ -4311,6 +4311,7 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
       log_state_set_log_level(saved_logginglevel);
    }
 
+   DEXIT;
    return order_list;
 }
 

@@ -137,6 +137,7 @@ extern "C" {
       {CONF_LOWERBOUND, CONFS, CONFN},  /* config */
       {CF_LOWERBOUND, CFS, CFN},        /* config list */
       {ST_LOWERBOUND, STS, STN},        /* string list */
+      {STU_LOWERBOUND, STUS, STUN},     /* unique string list */
       {JG_LOWERBOUND, JGS, JGN},        /* jobs sublist of granted destinatin 
                                          * identifiers */
       {SO_LOWERBOUND, SOS, SON},        /* subordinate configuration list */

@@ -4531,6 +4531,7 @@ static int sge_error_and_exit(const char *ptr) {
 
    fflush(stderr);
    SGE_EXIT(1);
+   DEXIT;
    return 1; /* to prevent warning */
 }
 

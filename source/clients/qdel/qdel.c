@@ -275,6 +275,7 @@ error_exit:
    lFreeList(ref_list);
    sge_gdi_shutdown();
    SGE_EXIT(1); 
+   DEXIT;
    return 1;
 }
 

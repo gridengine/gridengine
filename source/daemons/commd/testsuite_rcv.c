@@ -319,6 +319,7 @@ char **argv
       } 
    }
    fflush(stdout);
+   DEXIT;
    return 0;
 }
 

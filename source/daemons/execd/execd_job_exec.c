@@ -266,11 +266,12 @@ int slave
    lSetUlong(jatep, JAT_status, slave?JSLAVE:JIDLE);
 
    /* now we have a queue and a job filled */
-   if (feature_is_enabled(FEATURE_SGEEE))
+   if (feature_is_enabled(FEATURE_SGEEE)) {
       DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"< with "u32" tickets\n", jobid, jataskid,
                (u_long32)lGetDouble(jatep, JAT_ticket)));
-   else
+   } else {
       DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"<\n", jobid, jataskid));
+   }   
 
    job_log(jobid, jataskid, MSG_COM_RECEIVED);
 

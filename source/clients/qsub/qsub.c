@@ -291,6 +291,7 @@ DTRACE;
    lFreeList(alp);
    lFreeList(opts_all);
    SGE_EXIT(status==STATUS_OK && scheduled ?0:1); /* 0 means ok - others are errors */
+   DEXIT;
    return 0;
 }
 

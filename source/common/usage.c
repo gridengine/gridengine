@@ -1137,6 +1137,7 @@ FILE *fp
    fflush(fp);
 
    SGE_EXIT(1);
+   DEXIT;
 }
 
 static void usage_silent(

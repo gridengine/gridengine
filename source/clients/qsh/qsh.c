@@ -1765,6 +1765,7 @@ int main(int argc, char **argv)
    }
 
    SGE_EXIT(exit_status);
+   DEXIT;
    return exit_status;
 }
 

@@ -366,5 +366,6 @@ int main(int argc, char *argv[])
    answer_list_output(&answer_list);
 
    SGE_EXIT(ret);
+   DEXIT;
    return ret;
 }

@@ -91,7 +91,7 @@ int had_free_epoch
       { TYPE_JOB_RESEND_EVENT, resend_job },
       { TYPE_RESCHEDULE_UNKNOWN_EVENT, reschedule_unknown_event },
       { TYPE_SPOOLING_TRIGGER, deliver_spooling_trigger },
-      { TYPE_REPORTING_TRIGGER, deliver_reporting_trigger },
+      { TYPE_REPORTING_TRIGGER, reporting_deliver_trigger },
       { 0, NULL }
    };
    te_deliver(now, te_tab);

@@ -252,6 +252,7 @@ char **argv
    lFreeList(alp);
 
    SGE_EXIT(status==STATUS_OK?0:1); /* 0 means ok - others are errors */
+   DEXIT;
    return 0;
 }
 
@@ -432,6 +433,7 @@ u_long32 show
       }
       
    }
+   DEXIT;
 }
 
 
@@ -596,10 +598,12 @@ FILE *fp
    fprintf(fp, "  [-F [resource_attribute]]  %s", MSG_QHOST_F_OPT_USAGE); 
    fprintf(fp, "  [-u user[,user,...]]       %s", MSG_QHOST_u_OPT_USAGE); 
 
-   if (fp==stderr)
+   if (fp==stderr) {
       SGE_EXIT(1);
-   else 
+   } else {
       SGE_EXIT(0);   
+   }
+   DEXIT;
 }
 
 /****

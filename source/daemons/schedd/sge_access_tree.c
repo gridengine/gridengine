@@ -448,11 +448,12 @@ lListElem *at_get_actual_job_array(lList *job_list)
                    else take the next job array */
          job_array = at_first_in_jrl(current_pgrp, PGR_subordinated_list, 
             PGR_sort_me, PGR_current, job_list);
-         if (job_array)
+         if (job_array) {
             DPRINTF(("FCFS: "u32"\n", lGetUlong(job_array, JB_job_number)));
-         else
+         } else {
             DPRINTF(("FCFS: no more jobs in priority group "u32"\n", 
                   lGetUlong(current_pgrp, PGR_priority)));
+         }         
       } else {
          lListElem *user;
          usl = lGetList(current_pgrp, PGR_subordinated_list);
@@ -489,11 +490,12 @@ lListElem *at_get_actual_job_array(lList *job_list)
             while (user && lGetUlong(user, USR_nrunning_dl) == current_min_jobs_per_user) {
                t_job_array = at_first_in_jrl(user, USR_job_references, USR_sort_me, USR_current, job_list);
 
-               if (t_job_array)
+               if (t_job_array) {
                   DPRINTF(("USERSORT: %s "u32"\n", lGetString(user, USR_name),
                         lGetUlong(t_job_array, JB_job_number)));
-               else
+               } else {
                   DPRINTF(("USERSORT: no more jobs of user %s\n", lGetString(user, USR_name)));
+               }   
 
                if (!job_array || (t_job_array &&
                      (lGetUlong(t_job_array, JB_submission_time) < lGetUlong(job_array, JB_submission_time)

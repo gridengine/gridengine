@@ -114,10 +114,11 @@ sge_write_rusage(dstring *buffer,
    {
       lListElem *ep;
 
-      if (usage_list)
+      if (usage_list) {
          DPRINTF(("received usage attributes:\n"));
-      else
+      } else {
          DPRINTF(("empty usage list\n"));
+      }   
 
       for_each (ep, usage_list) {
          DPRINTF(("    \"%s\" = %f\n",

@@ -167,7 +167,7 @@ lListElem *jatep
          (failed && !lGetString(jep, JB_exec_file)) ||
          (failed && general_failure==GFSTATE_JOB && JOB_TYPE_IS_NO_ERROR(lGetUlong(jep, JB_type)))) {
       job_log(jobid, jataskid, MSG_LOG_JREMOVED);
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
 
       sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT |
       COMMIT_NEVER_RAN);
@@ -182,7 +182,7 @@ lListElem *jatep
       job_log(jobid, jataskid, MSG_LOG_JERRORSET);
       DPRINTF(("set job "u32"."u32" in ERROR state\n", lGetUlong(jep, JB_job_number),
          jataskid));
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT);
    }
@@ -195,7 +195,7 @@ lListElem *jatep
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
    }
       /*
@@ -212,7 +212,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
@@ -227,7 +227,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
@@ -241,7 +241,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
@@ -250,7 +250,7 @@ lListElem *jatep
        */
    else {
       job_log(jobid, jataskid, MSG_LOG_EXITED);
-      sge_create_acct_record(NULL, jr, jep, jatep);
+      reporting_create_acct_record(NULL, jr, jep, jatep);
       sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT);
    }
 

@@ -133,7 +133,7 @@ int main(int argc, char **argv)
    in_main_loop = 1;
 
    /* initialize accounting and reporting file generation */
-   sge_initialize_reporting(NULL);
+   reporting_initialize(NULL);
 
    while (true) {
       time_t now;
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
          sge_shutdown_persistence(NULL);
 
          /* shutdown reporting, flush buffers */
-         sge_shutdown_reporting(NULL);
+         reporting_shutdown(NULL);
 
          sge_shutdown();
       }

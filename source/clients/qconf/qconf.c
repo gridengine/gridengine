@@ -81,9 +81,11 @@ int main(int argc, char **argv)
       SGE_EXIT(1);
    }
 
-   if (sge_parse_qconf(++argv))
+   if (sge_parse_qconf(++argv)) {
       SGE_EXIT(1);
-   else
+   } else {
       SGE_EXIT(0);
+   }
+   DEXIT;
    return 0;
 }

@@ -63,10 +63,11 @@ void trace_jr()
    for_each (jr, jr_list) {
       const char *s;
 
-      if ((s=lGetString(jr, JR_pe_task_id_str)))
+      if ((s=lGetString(jr, JR_pe_task_id_str))) {
          DPRINTF(("Jobtask "u32"."u32" task %s\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number), s));
-      else
+      } else {
          DPRINTF(("Jobtask "u32"."u32"\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number)));
+      }   
    }
    DEXIT;
 }

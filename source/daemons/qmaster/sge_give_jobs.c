@@ -99,6 +99,7 @@
 #include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #ifdef QIDL
@@ -549,6 +550,7 @@ u_long32 ja_task_id
    DENTER(TOP_LAYER, "cancel_job_resend");
    DPRINTF(("CANCEL JOB RESEND "u32"/"u32"\n", jid, ja_task_id)); 
    te_delete(TYPE_JOB_RESEND_EVENT, NULL, jid, ja_task_id);
+   DEXIT;
 }
 
 /* 
@@ -567,6 +569,7 @@ u_long32 ja_task_id
 
    te_delete(TYPE_JOB_RESEND_EVENT, NULL, jid, ja_task_id);
    te_add(TYPE_JOB_RESEND_EVENT, now + seconds, jid, ja_task_id, NULL);
+   DEXIT;
 }
 
 
@@ -668,14 +671,17 @@ sge_commit_flags_t commit_flags
    int no_events = (commit_flags & COMMIT_NO_EVENTS);
    int unenrolled_task = (commit_flags & COMMIT_UNENROLLED_TASK);
    int handle_zombies = (conf.zombie_jobs > 0);
-   time_t now = 0;
+   u_long32 now = 0;
    const char *session;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = jatep?lGetUlong(jatep, JAT_task_number):0;
    session = lGetString(jep, JB_session);
+
+   now = sge_get_gmt();
 
    switch (mode) {
    case COMMIT_ST_SENT:
@@ -700,6 +706,8 @@ sge_commit_flags_t commit_flags
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep );
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+               answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
 
@@ -708,6 +716,8 @@ sge_commit_flags_t commit_flags
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
                              qep_QU_qhostname, NULL, NULL, hep);
+               reporting_create_host_consumable_record(&answer_list, hep, now);
+               answer_list_output(&answer_list);
                lListElem_clear_changed_info(hep);
             }
 
@@ -718,7 +728,6 @@ sge_commit_flags_t commit_flags
          }
       }
 
-      now = sge_get_gmt();
       /* 
        * Would be nice if we could use a more accurate start time that could be reported 
        * by execd. However this would constrain time synchronization between qmaster and 
@@ -1073,6 +1082,8 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
    u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
    lList *gdi_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
    lListElem *ep;
+   lList *answer_list = NULL;
+   u_long32 now;
  
    DENTER(TOP_LAYER, "sge_clear_granted_resources");
 
@@ -1081,6 +1092,8 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
       DEXIT;
       return;
    }
+
+   now = sge_get_gmt();
 
    /* unsuspend queues on subordinate */
    usos_using_gdil(gdi_list, job_id);
@@ -1102,18 +1115,22 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             /* undebit consumable resources */ 
             host = host_list_locate(Master_Exechost_List, "global");
             if (debit_host_consumable(job, host, 
-                                      Master_CEntry_List, -tmp_slot)) {
+                                      Master_CEntry_List, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, host);
+               reporting_create_host_consumable_record(&answer_list, host, now);
+               answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             host = host_list_locate(Master_Exechost_List, queue_hostname);
             if (debit_host_consumable(job, host, 
-                                      Master_CEntry_List, -tmp_slot)) {
+                                      Master_CEntry_List, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
+               reporting_create_host_consumable_record(&answer_list, host, now);
+               answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             debit_queue_consumable(job, queue, Master_CEntry_List, -tmp_slot);

@@ -432,10 +432,11 @@ sge_pack_buffer *pb
             /* must be retry of execds job exit */ 
             /* or job was deleted using "qdel -f" */
             /* while execd was down or .. */
-            if (!jatep)
+            if (!jatep) {
                DPRINTF(("exiting job "u32" does not exist\n", jobid));
-            else
+            } else {
                DPRINTF(("exiting job "u32"."u32" does not exist\n", jobid, jataskid));
+            }   
          } else {
             /* job exited */  
             if (!pe_task_id_str) {
@@ -540,7 +541,7 @@ sge_pack_buffer *pb
                            jobid, jataskid, pe_task_id_str));
                         lSetUlong(petask, PET_status, JFINISHED);
 
-                        sge_create_acct_record(NULL, jr, jep, jatep);
+                        reporting_create_acct_record(NULL, jr, jep, jatep);
 
                         /* add tasks (scaled) usage to past usage container */
                         {

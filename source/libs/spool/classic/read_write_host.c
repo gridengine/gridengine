@@ -52,6 +52,7 @@
 #include "sge_userset.h"
 #include "sge_host.h"
 #include "sge_centry.h"
+#include "sge_str.h"
 
 #include "sge_static_load.h"
 
@@ -198,6 +199,13 @@ _Insight_set_option("suppress", "PARM_NULL");
          /* --------- EH_resource_capability_factor */
          if (!set_conf_double(alpp, clpp, fields, "resource_capability_factor",
                   ep, EH_resource_capability_factor, 0)) {
+            DEXIT;
+            return -1;
+         }
+
+         /* --------- EH_report_variables */
+         if (!set_conf_list(alpp, clpp, fields, "report_variables", ep, 
+                  EH_report_variables, STU_Type, STU_name)) {
             DEXIT;
             return -1;
          }
@@ -484,6 +492,13 @@ char *file
          /* print resource capability factor */
          FPRINTF((fp, "resource_capability_factor %f\n", 
                   lGetDouble(ep, EH_resource_capability_factor)));
+
+         /* print reporting variable list */
+         ret = fprint_cull_list(fp,  "report_variables           ", 
+            lGetList(ep, EH_report_variables), STU_name);
+         if (ret == -1) {
+            goto FPRINTF_ERROR;
+         } 
       }
    }    /* only exec host */
 

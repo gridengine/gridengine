@@ -156,6 +156,7 @@ char **argv
    lFreeList(ref_list);
    lFreeList(pcmdline); 
    SGE_EXIT(0);
+   DEXIT;
    return 0;
 }
 

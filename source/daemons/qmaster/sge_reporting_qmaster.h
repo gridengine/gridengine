@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <time.h>
-
 #include "cull.h"
 
 #include "sge_dstring.h"
@@ -41,38 +39,29 @@
 #include "sge_object.h"
 
 bool
-sge_initialize_reporting(lList **answer_list);
+reporting_initialize(lList **answer_list);
 
 bool
-sge_shutdown_reporting(lList **answer_list);
+reporting_shutdown(lList **answer_list);
 
 void
-deliver_reporting_trigger(u_long32 type, u_long32 when, 
+reporting_deliver_trigger(u_long32 type, u_long32 when, 
                           u_long32 uval0, u_long32 uval1, const char *key);
 
 bool
-sge_create_acct_record(lList **answer_list, 
+reporting_create_acct_record(lList **answer_list, 
                        lListElem *job_report, 
                        lListElem *job, lListElem *ja_task);
 
-bool 
-sge_create_reporting_record(lList **answer_list, 
-                            sge_object_type object_type,
-                            const char *data);
+bool
+reporting_create_host_record(lList **answer_list,
+                             const lListElem *host,
+                             u_long32 report_time);
 
-bool 
-sge_flush_accounting_data(lList **answer_list);
-
-bool 
-sge_flush_reporting_data(lList **answer_list);
-
-bool 
-sge_flush_report_file(lList **answer_list, dstring *contents, 
-                      const char *filename);
-
-bool 
-sge_flush_reporting(lList **answer_list, time_t flush, time_t *next_flush);
-
+bool
+reporting_create_host_consumable_record(lList **answer_list,
+                                        const lListElem *host,
+                                        u_long32 report_time);
 
 #endif /* _SGE_REPORTING_QMASTER_H_ */
 

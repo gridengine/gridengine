@@ -873,6 +873,7 @@ char **argv
          reset_measurement_data();
       }
    }
+   DEXIT;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -893,6 +894,7 @@ char **argv
    fprintf(out, "    -a   %s", MSG_COMMD_a_OPT_USAGE);
    fprintf(out, "    -dhr %s", MSG_COMMD_dhr_OPT_USAGE);
    SGE_EXIT(1);
+   DEXIT;
 }
 
 /* If this function is called, we have a real problem.

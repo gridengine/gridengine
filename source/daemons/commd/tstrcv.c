@@ -240,5 +240,6 @@ char **argv
    if (i)
       printf(MSG_ERROR_S , cl_errstr(i));
 
+   DEXIT;
    return retval ? retval : i;
 }

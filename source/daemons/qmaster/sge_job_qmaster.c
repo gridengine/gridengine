@@ -1475,6 +1475,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                       ANSWER_QUALITY_INFO);
    }
    job_mark_job_as_deleted(j, t);
+   DEXIT;
 }
 
 void job_mark_job_as_deleted(lListElem *j,

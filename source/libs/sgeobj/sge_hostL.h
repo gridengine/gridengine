@@ -124,12 +124,13 @@ enum {
                                       * EH_reschedule_unknown this list
                                       * contains all jobs which will be
                                       * rescheduled automatically */
-   EH_report_seqno           /* sequence number of the last report
+   EH_report_seqno,          /* sequence number of the last report
                               * (job/load/..) qmaster received from the
                               * execd. This seqno is used to detect old
                               * reports, because reports are send
                               * asynchronous and we have no guarantee that 
                               * they arrive in order at qmaster */
+   EH_report_variables       /* list of variables written to the report file */
 };
 
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
@@ -176,6 +177,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_ULONG(EH_reschedule_unknown, CULL_DEFAULT)
    SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT) /* JG: TODO: shall it be spooled? Problem: composed primary key */
    SGE_ULONG(EH_report_seqno, CULL_DEFAULT)
+   SGE_LIST(EH_report_variables, STU_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(EHN)
@@ -222,6 +224,7 @@ NAMEDEF(EHN)
    NAME("EH_reschedule_unknown")
    NAME("EH_reschedule_unknown_list")
    NAME("EH_report_seqno")
+   NAME("EH_report_variables")
 NAMEEND
 
 #define EHS sizeof(EHN)/sizeof(char*)

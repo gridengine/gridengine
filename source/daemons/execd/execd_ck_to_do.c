@@ -171,10 +171,11 @@ static void notify_ptf()
          }
       }
 
-      if (waiting4osjid)
+      if (waiting4osjid) {
          DPRINTF(("still waiting for osjobids\n"));
-      else
+      } else {
          DPRINTF(("got all osjobids\n"));
+      }   
    }
 
    DEXIT;

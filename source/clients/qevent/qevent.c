@@ -573,6 +573,7 @@ int main(int argc, char *argv[])
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
    SGE_EXIT(1);
+   DEXIT;
    return 1;
 }
 

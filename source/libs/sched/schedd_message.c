@@ -566,5 +566,7 @@ void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number)
    if (tmp_sme && tmp_list){
       lSetList(tmp_sme, SME_message_list, tmp_list); 
    }
+
+   DEXIT;
 }
 

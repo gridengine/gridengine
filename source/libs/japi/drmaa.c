@@ -231,6 +231,7 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
    sge_dstring_free(&session_key_out);
    sge_dstring_free(&env_var);
 
+   DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 
@@ -577,6 +578,7 @@ int drmaa_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
 
    if (!value || !name || !jt) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
+      DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    }
 
@@ -585,10 +587,12 @@ int drmaa_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
    /* search name in string_vectors */
    if (!(va = lGetElemStr(jt->strings, VA_variable, name))) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE, diagp);
+      DEXIT;
       return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
    }
   
    sge_dstring_copy_string(&val, lGetString(va, VA_value));
+   DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 

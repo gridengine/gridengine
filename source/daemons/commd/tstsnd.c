@@ -266,6 +266,7 @@ char **argv
             if (i) {
                printf(MSG_ERROR_S , cl_errstr(i));
                leave_commd();
+               DEXIT;
                return i;
             }
             printf(MSG_NET_UNIQUEHOSTNAMEIS_S , host);
@@ -282,6 +283,7 @@ char **argv
             if (i) {
                printf(MSG_ERROR_S , cl_errstr(i));
                leave_commd();
+               DEXIT;
                return i;
             }
          }
@@ -293,5 +295,6 @@ char **argv
    if (i)
       printf(MSG_ERROR_S , cl_errstr(i));
 
+   DEXIT;
    return 0;
 }

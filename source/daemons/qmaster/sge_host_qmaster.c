@@ -82,8 +82,10 @@
 #include "qmaster_to_execd.h"
 #include "sge_todo.h"
 #include "sge_centry.h"
+#include "sge_str.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -460,6 +462,13 @@ int sub_command
          attr_mod_double(ep, new_host, EH_resource_capability_factor, 
             "resource_capability_factor");
       }
+
+      if (lGetPosViaElem(ep, EH_report_variables)>=0) {
+         attr_mod_sub_list(alpp, new_host, EH_report_variables, STU_name, ep,
+            sub_command, "report_variables", SGE_OBJ_EXECHOST, 0);
+         /* JG: TODO: we have to check for valid centry names */
+      }
+
    }
 
    DEXIT;
@@ -602,9 +611,13 @@ lList *lp
    lListElem *ep, **hepp = NULL;
    lListElem *lep;
    lListElem *global_ep = NULL, *host_ep = NULL;
-   int added_non_static = 0, statics_changed = 0;
+   bool added_non_static = false, statics_changed = false;
 
    DENTER(TOP_LAYER, "sge_update_load_values");
+
+   /* JG: TODO: this time should better come with the report.
+    *           it is the time when the reported values were valid.
+    */
    now = sge_get_gmt();
 
    /* loop over all received load values */
@@ -664,8 +677,8 @@ lList *lp
 
          sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), NULL, *hepp);
 
-         added_non_static = 0;
-         statics_changed = 0;
+         added_non_static = false;
+         statics_changed = false;
          *hepp = NULL;
          report_host = NULL;
       }
@@ -693,10 +706,10 @@ lList *lp
                lGetHost(ep, LR_host), name, value));
 
          if (is_static) {
-            statics_changed = 1;
+            statics_changed = true;
          } else {
             if (!global)
-               added_non_static = 1; /* triggers clearing of unknown state */
+               added_non_static = true; /* triggers clearing of unknown state */
          }
       }
       else {
@@ -705,7 +718,7 @@ lList *lp
          oldval = lGetString(lep, HL_value);
          if (sge_is_static_load_value(name) && 
              (oldval != value) && (!oldval || strcmp(value, oldval))) {
-            statics_changed = 1;
+            statics_changed = true;
 
             DPRINTF(("%s: updating STATIC lv: "SFQ" = "SFQ" oldval: "SFQ"\n", 
                     lGetHost(ep, LR_host), name, value, oldval));
@@ -714,7 +727,6 @@ lList *lp
       /* copy value */
       lSetString(lep, HL_value, value); 
       lSetUlong(lep, HL_last_update, now);
-
    }
 
    /* output error from previous host, if any */
@@ -738,6 +750,8 @@ lList *lp
                       0, 0, SGE_GLOBAL_NAME, NULL, NULL,
                       global_ep, NULL, NULL, true, false);
       answer_list_output(&answer_list);
+      reporting_create_host_record(&answer_list, global_ep, now);
+      answer_list_output(&answer_list);
    }
 
    /*
@@ -749,6 +763,8 @@ lList *lp
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(host_ep, EH_name), NULL, NULL,
                       host_ep, NULL, NULL, true, statics_changed);
+      answer_list_output(&answer_list);
+      reporting_create_host_record(&answer_list, host_ep, now);
       answer_list_output(&answer_list);
    }
 

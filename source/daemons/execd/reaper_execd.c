@@ -510,11 +510,12 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             *new_line = '\0';
          DPRINTF(("ERRORFILE: %256s\n", error));
       }
-      else if (feof(fp)) 
+      else if (feof(fp)) {
          DPRINTF(("empty error file\n"));
-      else
+      } else {
          ERROR((SGE_EVENT, MSG_JOB_CANTREADERRORFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      }      
       fclose(fp);
    }
    else {
@@ -1630,10 +1631,11 @@ int usage_mul_factor
    {
       lListElem *ep;
 
-      if (lGetList(jr, JR_usage))
+      if (lGetList(jr, JR_usage)) {
          DPRINTF(("resulting usage attributes:\n"));
-      else
+      } else {
          DPRINTF(("empty usage list\n"));
+      }   
 
       for_each (ep, lGetList(jr, JR_usage)) {
          DPRINTF(("    \"%s\" = %f\n",

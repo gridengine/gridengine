@@ -256,6 +256,7 @@ char *argv[]
          }
       }
    }
+   DEXIT;
 }
 
 /*************************************************************/
@@ -269,6 +270,7 @@ static void usage(FILE *fp)
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
    SGE_EXIT(1);
+   DEXIT;
 }
 
 /*************************************************************/

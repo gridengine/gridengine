@@ -1147,6 +1147,7 @@ char **argv
    ** problem: other clients evaluate some status here
    */
    SGE_EXIT(0);
+   DEXIT;
    return 0;
 }
 
@@ -1351,10 +1352,12 @@ FILE *fp
    fprintf(fp, " [[-f] acctfile]              %s", MSG_HISTORY_f_OPT_USAGE );
    fprintf(fp, " begin_time, end_time         %s", MSG_HISTORY_beginend_OPT_USAGE );
   
-   if (fp==stderr)
+   if (fp==stderr) {
       SGE_EXIT(1);
-   else 
+   } else {
       SGE_EXIT(0);   
+   }
+   DEXIT;
 }
 
 

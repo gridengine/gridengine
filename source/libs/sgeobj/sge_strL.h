@@ -59,9 +59,29 @@ NAMEDEF(STN)
    NAME("ST_name")
 NAMEEND
 
+#define STS sizeof(STN)/sizeof(char*)
+#ifdef  __cplusplus
+}
+#endif
+
+/*
+ * String list with unique strings
+ */
+enum {
+   STU_name = ST_LOWERBOUND
+};
+
+LISTDEF(STU_Type)
+   SGE_STRING(STU_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
+LISTEND 
+
+NAMEDEF(STUN)
+   NAME("STU_name")
+NAMEEND
+
 /* *INDENT-ON* */ 
 
-#define STS sizeof(STN)/sizeof(char*)
+#define STUS sizeof(STUN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

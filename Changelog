@@ -1,3 +1,9 @@
+MD-2004-07-22-2  Bugfix:    reprioritize_interval descr in sched_conf(5) needs improvement
+                 Changed:   man5/sched_conf.5
+                 Issue:     1040
+                 Bugtraq:   5077165
+                 Review:    JG
+
 MD-2004-07-22-1: Bugfix:    NO_REPRIORITATION should be removed from man pages
                  Changed:   man5/queue_conf.5, man5/sge_conf.5, sge_priority.5
                  Issue:     1097

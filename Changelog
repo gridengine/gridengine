@@ -1,3 +1,7 @@
+SD-2002-01-25-2: Bugfix:    Changed aimk variable name GCC_NO_STRICT_PROTO to
+                             GCC_NO_STRICT_PROT variable because /bin/csh on the SX-6
+                             only allows 18 character variable names.
+
 AH-2002-01-25-1: Bugfix:    Removed last reference of no longer existing QSI from man pages.
                             The QSI functionality is replaced by {starter,terminate,suspend,
                             resume}_method functionality

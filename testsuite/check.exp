@@ -1399,8 +1399,8 @@ proc read_edit_defaults_file { filename } {
         return -1
    }
  
-   if { [string length "$CHECK_PRODUCT_ROOT/bin/solaris64/sge_qmaster"] > 79 } {
-        puts $CHECK_OUTPUT "path for product_root_directory is to long"
+   if { [string length "$CHECK_PRODUCT_ROOT/bin/solaris64/sge_qmaster"] > 60 } {
+        puts $CHECK_OUTPUT "path for product_root_directory is to long (60 chars)"
         return -1
    }
 

@@ -91,6 +91,17 @@ Using per job attributes:
    It is possible to override attributes on a lower level or on the same level. 
    More about it later.
 
+   The fact, that all consumables are per job attributes posses a problem, when
+   one wants to do licence managing with parallel jobs. Therefor it would be nice
+   to have it configurable if a consumable is a per job attribute or per slot 
+   attribute.
+
+   Wor kpackage:
+      => Decide, what is the right way of doing it
+      => Adding a flag which can be set by a user, if an attribute is a per 
+         slot or perjob attribute.
+
+
 
 2. Restrictions:
 ----------------
@@ -105,20 +116,20 @@ Using per job attributes:
    Type	     : every type from the list (string, host, cstring, int, double,
                                           boolean, memory, time)
    Consumable : can only be defined for: int, double, memory, time
+                If a consumable is not requestable, it has to have a default value.
+                If a consumable is forced, it must not have a default value.
 
    Relational operator:
       - for consumables:              only <=
       - for non consumables:
          - string, host, cstring:     only ==, !=
-         - boolean:	                only ==
+         - boolean:	                 only ==
          - int, double, memory, time: ==, !=, <=, <, =>, >
 
    Requestable	   : for all attribute
    default value 	: only for consumables
 
    Work package:
-      => a function in the master demon to check if the configuration changes
-         are valid
       => changing the qmon interface to offer the user only the valid choices
 
 Build in values:
@@ -127,11 +138,7 @@ Build in values:
    Besides the overall attribute restrictions, we have one additional ones for
    the system build-in attributes. One can not change the type of a build in
    attribute. The system relies on the type and will not function anymore, if
-   one changes the type.
-
-   Work package:
-      => ensure, that the build-in attribute type is not changed.
- 
+   one changes the type. A build-in value can also not be deleted.
 
 3. Overriding attributes:
 -------------------------
@@ -142,7 +149,7 @@ Build in values:
    and load values or resource limits on the same level. Overriding a per slot 
    attribute with a per slot attribute and a per job attribute with an per slot 
    attribute is no problem. Based on the specification does a per job attribute 
-   never be override with a per  slot attribute. But a per job attribute can be 
+   never be override with a per slot attribute. But a per job attribute can be 
    overridden with a per slot attribute. In this case the per slot attribute 
    changes into a  per job attribute. This happens, when a load value is 
    overridden with a fixed value. 
@@ -235,8 +242,28 @@ Build in values:
    (saving 3 elements)
 
    Work package:
-      => Phase 1: changing the job request structure, most benefit
+      => Phase 1: changing the job request structure
       => Phase 2: changing the attribute configuration structure
 
 
+5. Scheduler attribute matching:
+--------------------------------
 
+   As written before, the matching of attribute requests by a job a matched in
+   in a strict hierarchy. When a match fails, the underlying levels are not
+   evaluated any further. Right now, this is done for every job, even so the
+   jobs might be in the same job category, which means, that they have the same
+   requests. 
+   To speed up this process, one can store the information, which queue cannot 
+   run which job category. When this is known, the jobs are only tested against 
+   the queues, which were capable of running this job in the previous test. List 
+   of queues to test will get shorter and shorter, while jobs are dispatched.
+
+   The same is true for soft requests. Once all queues are validated and the 
+   number of mismatches is computed, it is true for all other jobs from the 
+   same job category.  This saves a lot of matching time with the soft requests.
+
+   Work package:
+      => implement the storage of not usable queues in the job categories for 
+         jobs with only hard requests.
+      => implement the storage of mismatches per queue for soft requests.

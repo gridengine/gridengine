@@ -1,4 +1,8 @@
-AS-2003-02-10-0  Changed:   set version to 5.3p3
+AS-2003-02-10-1  Bugfix:    scripts/util/arch: backed out hp11-64 and aix51
+                            detection since no port available yet
+                 IZ:        #486
+                 
+AS-2003-02-10-0  Changed:   libs/gdi/version.c: set version to 5.3p3
 
 CR-2003-02-07-1  Bugfix:    Compile warnings for ALINUX fixed
 

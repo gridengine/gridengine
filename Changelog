@@ -1,3 +1,11 @@
+CR-2004-10-07-1: Enhancem.: application status callback function now
+                            supports status string (Part I)
+                 Review:    AA
+                 Changed:   commlib
+                 Issue:     -
+                 Bugtraq:   -
+                            
+
 DT-2004-10-07-0: Bugfix:    o Removed slots from complex values list of
                               queue instances in qconf
                             o Enabled qsub/qrsh -v VAR again

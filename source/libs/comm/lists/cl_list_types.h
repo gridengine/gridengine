@@ -99,7 +99,7 @@ typedef enum cl_log_list_flush_method_type {
 
 /* function return value  function typedef              func parameter */
 typedef int               (*cl_log_func_t)              (cl_raw_list_t* log_list);
-typedef unsigned long     (*cl_app_status_func_t)       (void);
+typedef unsigned long     (*cl_app_status_func_t)       (char** info_message);
 typedef void              (*cl_error_func_t)            (int cl_error, const char* error_message);
 
 typedef struct cl_log_list_data_type {                      /* list specific data */

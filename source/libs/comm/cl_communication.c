@@ -1089,6 +1089,31 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_free_handle_statistic()"
+int cl_com_free_handle_statistic(cl_com_handle_statistic_t** statistic) {
+
+   if ( statistic == NULL) {
+      return CL_RETVAL_PARAMS; /* no pointer pointer */
+   }
+
+   if ( *statistic == NULL ) {
+      return CL_RETVAL_PARAMS; /* no memory to free */
+   }
+
+   if ( (*statistic)->application_info != NULL ) {
+      free( (*statistic)->application_info);
+      (*statistic)->application_info = NULL;
+   }
+   free(*statistic);
+   *statistic = NULL;
+   return CL_RETVAL_OK;
+
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_free_hostent()"
 int cl_com_free_hostent(cl_com_hostent_t **hostent_p) {  /* CR check */
 

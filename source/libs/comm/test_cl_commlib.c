@@ -46,6 +46,7 @@ void sighandler_server(int sig);
 static int pipe_signal = 0;
 static int hup_signal = 0;
 static int do_shutdown = 0;
+static int received_qping = 0;
 
 void sighandler_server(
 int sig 
@@ -65,7 +66,13 @@ int sig
    do_shutdown = 1;
 }
 
-unsigned long my_application_status(void) {
+unsigned long my_application_status(char** info_message) {
+   if ( info_message != NULL ) {
+      *info_message = strdup("not specified (state 1)");
+   }
+   if (received_qping++ > 10) {
+      do_shutdown = 1;
+   }
    return (unsigned long)1;
 }
 

@@ -175,6 +175,7 @@ typedef struct cl_com_handle_statistic_type {
    unsigned long    unsend_message_count;      /* nr of messages to send */
    unsigned long    unread_message_count;      /* nr of buffered received messages, waiting for application to pick it up */
    unsigned long    application_status;        /* status of application */
+   char*            application_info;          /* application info message */
 } cl_com_handle_statistic_t;
 
 typedef struct cl_com_connection_type cl_com_connection_t;

@@ -727,7 +727,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
 
    new_handle->messages_ready_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->messages_ready_mutex == NULL) {
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -740,7 +740,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
    new_handle->connection_list_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->connection_list_mutex == NULL) {
       free(new_handle->messages_ready_mutex);
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -757,7 +757,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
          free(new_handle->messages_ready_mutex); 
       }
       free(new_handle->connection_list_mutex);
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -777,7 +777,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
       if (mutex_ret_val != EBUSY) {
          free(new_handle->messages_ready_mutex); 
       }
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -799,7 +799,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
       if (mutex_ret_val != EBUSY) {
          free(new_handle->messages_ready_mutex); 
       }
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -822,7 +822,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
       if (mutex_ret_val != EBUSY) {
          free(new_handle->messages_ready_mutex); 
       }
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -846,7 +846,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
       if (mutex_ret_val != EBUSY) {
          free(new_handle->messages_ready_mutex); 
       }
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -891,7 +891,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
                if (mutex_ret_val != EBUSY) {
                   free(new_handle->messages_ready_mutex); 
                }
-               free(new_handle->statistic);
+               cl_com_free_handle_statistic(&(new_handle->statistic));
                free(new_handle);
                cl_raw_list_unlock(cl_com_handle_list);
                if (commlib_error) {
@@ -915,7 +915,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
                if (mutex_ret_val != EBUSY) {
                   free(new_handle->messages_ready_mutex); 
                }
-               free(new_handle->statistic);
+               cl_com_free_handle_statistic(&(new_handle->statistic));
                free(new_handle);
                cl_raw_list_unlock(cl_com_handle_list);
                if (commlib_error) {
@@ -947,7 +947,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
             if (mutex_ret_val != EBUSY) {
                free(new_handle->messages_ready_mutex); 
             }
-            free(new_handle->statistic);
+            cl_com_free_handle_statistic(&(new_handle->statistic));
             free(new_handle);
             cl_raw_list_unlock(cl_com_handle_list);
             if (commlib_error) {
@@ -1048,7 +1048,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
       if (mutex_ret_val != EBUSY) {
          free(new_handle->messages_ready_mutex); 
       }
-      free(new_handle->statistic);
+      cl_com_free_handle_statistic(&(new_handle->statistic));
       free(new_handle);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
@@ -1343,8 +1343,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
             handle->connection_list_mutex = NULL;
          }
       }
-      free(handle->statistic);
-      handle->statistic = NULL;
+      cl_com_free_handle_statistic(&(handle->statistic));
       free(handle);
       return CL_RETVAL_OK;
    } 
@@ -2536,8 +2535,12 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                }
                if (connection->handler != NULL) { 
                   cl_com_handle_t* handle = connection->handler;
+                  char* application_info = "not available";
                   
                   cl_commlib_calculate_statistic(handle,0);
+                  if ( handle->statistic->application_info != NULL ) {
+                     application_info = handle->statistic->application_info;
+                  }
 
 
                   gettimeofday(&now,NULL);
@@ -2552,7 +2555,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                                                                handle->statistic->unsend_message_count,
                                                                handle->statistic->nr_of_connections, 
                                                                handle->statistic->application_status,
-                                                               "ok");
+                                                               application_info);
                } else {
                   cl_commlib_send_sirm_message(connection, message, 0, 0 ,0 ,0 , 0, 0, "get status info error");
                }
@@ -2928,9 +2931,13 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list
    gettimeofday(&now,NULL);
    /* get application status */
    pthread_mutex_lock(&cl_com_application_mutex);
-   handle->statistic->application_status = 0;
+   handle->statistic->application_status = 99999;
    if (cl_com_application_status_func != NULL) {
-      handle->statistic->application_status = cl_com_application_status_func();
+      if ( handle->statistic->application_info != NULL ) {
+         free(handle->statistic->application_info);
+         handle->statistic->application_info = NULL;
+      }
+      handle->statistic->application_status = cl_com_application_status_func(&(handle->statistic->application_info));
    } 
    pthread_mutex_unlock(&cl_com_application_mutex);
 
@@ -3027,6 +3034,10 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list
    snprintf(help,256,"    %ld" , handle->statistic->application_status);
    CL_LOG_STR(CL_LOG_INFO,"application state:",help);
 
+   if ( handle->statistic->application_info != NULL ) {
+      snprintf(help,256,"    %s" , handle->statistic->application_info);
+      CL_LOG_STR(CL_LOG_INFO,"application state:",help);
+   }
 
    handle->statistic->bytes_sent = 0;
    handle->statistic->bytes_received = 0;

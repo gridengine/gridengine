@@ -1,5 +1,5 @@
-#ifndef __SGE_QSIL_H
-#define __SGE_QSIL_H
+#ifndef __SGE_PAL_H
+#define __SGE_PAL_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -42,51 +42,59 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
-/* 
- * this data structures describes a qsi command set element
- */
+/****** gdi/path_alias/--PA_Type **********************************************
+*  NAME 
+*     RN_Type - CULL path alias element
+*
+*  ELEMENTS
+*     SGE_STRING(PA_origin)
+*        original path        
+*
+*     SGE_HOST(PA_submit_host)
+*        submit hostname
+*
+*     SGE_HOST(PA_exec_host)
+*        destination execution host
+*
+*     SGE_STRING(PA_translation)
+*        path translation for the original path
+*
+*  FUNCTION
+*     CULL element holding information necessary to realize 
+*     path aliasing. (Find more information in the --PathAlias
+*     ADOC comment)
+*
+*  SEE ALSO
+*     gdi/path_alias/--PathAlias
+*     gdi/path_alias/path_alias_read_from_file()
+*     gdi/path_alias/path_alias_list_initialize()
+*     gdi/path_alias/path_alias_list_get_path()
+******************************************************************************/
 enum {
-   CS_qs_name = CS_LOWERBOUND,
-   CS_transfer_queue,
-   CS_commands,
-   CS_load_values
+   PA_origin = PA_LOWERBOUND,
+   PA_submit_host,
+   PA_exec_host,
+   PA_translation
 };
 
-SLISTDEF(CS_Type, QueueingSystem)
-   SGE_STRING(CS_qs_name)        /* Foreign QS name */
-   SGE_STRING(CS_transfer_queue)      /* name of transfer queue */
-   SGE_TLIST(CS_commands, CO_Type)    /* list of supported commands */
-   SGE_LIST(CS_load_values)      /* load value list */
+SLISTDEF(PA_Type, PathAlias)
+   SGE_STRING(PA_origin)
+   SGE_HOST(PA_submit_host) 
+   SGE_HOST(PA_exec_host) 
+   SGE_STRING(PA_translation)
 LISTEND 
 
-NAMEDEF(CSN)
-   NAME("CS_qs_name")
-   NAME("CS_transfer_queue")
-   NAME("CS_commands")
-   NAME("CS_load_values")
+NAMEDEF(PAN)
+   NAME("PA_origin")
+   NAME("PA_submit_host")
+   NAME("PA_exec_host")
+   NAME("PA_translation")
 NAMEEND
 
-#define CSS sizeof(CSN)/sizeof(char*)
+/* *INDENT-ON* */  
 
-enum {
-   CO_name,
-   CO_command
-};
-
-SLISTDEF(CO_Type, QSCommand)
-   SGE_STRING(CO_name)           /* name */
-   SGE_STRING(CO_command)        /* command string */
-LISTEND 
-
-NAMEDEF(CON)
-   NAME("CO_name")
-   NAME("CO_command")
-NAMEEND
-
-/* *INDENT-ON* */
-
-#define COS sizeof(CON)/sizeof(char*)
+#define PAS sizeof(PAN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif
-#endif                          /* __SGE_QSIL_H */
+#endif                          /* __SGE_PAL_H */

@@ -54,15 +54,12 @@
 #define FEATURESET_DEFAULT FEATURESET_SGE
 
 #ifdef ADD_SUN_COPYRIGHT
-#  define GEEE_LONGNAME "Sun Grid Engine, Enterprise Edition"
-#  define GE_LONGNAME "Sun Grid Engine"
+#  define GE_LONGNAME "N1 Grid Engine"
+#  define GE_SHORTNAME "N1GE"
 #else
-#  define GEEE_LONGNAME "Grid Engine Enterprise Edition"
 #  define GE_LONGNAME "Grid Engine"
+#  define GE_SHORTNAME "SGE"
 #endif
-
-#define GEEE_SHORTNAME "SGEEE"
-#define GE_SHORTNAME "SGE"
 
 struct feature_state_t {
     int    already_read_from_file;
@@ -436,8 +433,8 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    DENTER(TOP_LAYER, "feature_get_product_name");
 
    if (feature_get_active_featureset_id() != FEATURE_UNINITIALIZED ) {
-      short_name = GEEE_SHORTNAME;
-      long_name  = GEEE_LONGNAME;
+      short_name = GE_SHORTNAME;
+      long_name  = GE_LONGNAME;
    }
    version = GDI_VERSION; 
 

@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define GDI_VERSION "pre6.0 (Maintrunk)"
+#define GDI_VERSION "6.0 Beta"
 
 #endif /* __VERISON_H */

@@ -94,7 +94,7 @@ int sge_get_qmaster_port(void) {
       int nisretry = SGE_MAXNISRETRY;
       while (nisretry-- && !((se = getservbyname("sge_qmaster", "tcp"))));
       if (se != NULL) {
-         int_port = se->s_port;
+         int_port = ntohs(se->s_port);
       }
    }
 
@@ -123,7 +123,7 @@ int sge_get_execd_port(void) {
       int nisretry = SGE_MAXNISRETRY;
       while (nisretry-- && !((se = getservbyname("sge_execd", "tcp"))));
       if (se != NULL) {
-         int_port = se->s_port;
+         int_port = ntohs(se->s_port);
       }
    }
 

@@ -32,7 +32,7 @@
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"
-#include "read_write_host_group.h"
+#include "spool/classic/read_write_host_group.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "sge_unistd.h"

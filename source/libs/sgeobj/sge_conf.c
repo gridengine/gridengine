@@ -41,7 +41,6 @@
 #include "cull.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
-#include "rw_configuration.h"
 #include "sge_feature.h"
 #include "sgermon.h"
 #include "sge_log.h"

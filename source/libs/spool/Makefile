@@ -38,13 +38,15 @@ SPOOLLIB = libspool$(QIDLEXT)$(LIBEXT)
 include $(SDIR)/libs/spool/classic/Makefile
 include $(SDIR)/libs/spool/dynamic/Makefile
 include $(SDIR)/libs/spool/flatfile/Makefile
+include $(SDIR)/libs/spool/postgres/Makefile
 
 SPOOLLIB_DIR = $(SDIR)/libs/spool
 
 SPOOLLIB_SRC = \
          sge_spooling.c \
-         sge_spooling_loader.c \
+         sge_spooling_database.c \
          sge_spooling_utilities.c \
+         sge_spooling_sql.c \
          sge_dirent.c
 
 SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
@@ -52,15 +54,15 @@ SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoollib: $(SPOOLLIB) spoolclib spoolflib
+spoollib: $(SPOOLLIB) $(SPOOLING_DEPS)
 
-spoollib_clean: spooldlib_clean spoolclib_clean spoolflib_clean
+spoollib_clean: spooldlib_clean spoolclib_clean spoolflib_clean spoolplib_clean
 		$(RM) $(SPOOLLIB_OBJS) libspool.a libspool$(SHAREDEXT)
 
-spoollib_depend: spoolclib_depend spoolflib_depend
+spoollib_depend: spoolclib_depend spoolflib_depend spoolplib_depend
 		$(DEPEND) -f$(SPOOLLIB_DIR)/spool_dependencies $(SPOOLLIB_DIR)/*.c
 
-spoollib_messages: spoolclib_messages spoolflib_messages
+spoollib_messages: spoolclib_messages spoolflib_messages spoolplib_messages
 	@echo Creating $@
 	@for i in `ls $(SPOOLLIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -87,6 +89,12 @@ include $(SPOOLLIB_DIR)/spool_dependencies
 sge_spooling.o: $(SPOOLLIB_DIR)/sge_spooling.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling.c
 
+sge_spooling_database.o: $(SPOOLLIB_DIR)/sge_spooling_database.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_database.c
+
+sge_spooling_sql.o: $(SPOOLLIB_DIR)/sge_spooling_sql.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_sql.c
+
 sge_spooling_utilities.o: $(SPOOLLIB_DIR)/sge_spooling_utilities.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_utilities.c
 
@@ -95,8 +103,8 @@ sge_dirent.o   : $(SPOOLLIB_DIR)/sge_dirent.c
 
 #---------------------------------------------------------------------
 # test programs
-test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLING_DEPS) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 test_sge_spooling.o: $(SPOOLLIB_DIR)/test_sge_spooling.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling.c

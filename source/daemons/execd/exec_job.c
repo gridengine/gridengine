@@ -58,7 +58,6 @@
 #include "get_path.h"
 #include "sge_job_qmaster.h"
 #include "tmpdir.h"
-#include "read_write_queue.h"
 #include "exec_job.h"
 #include "sge_path_alias.h"
 #include "slots_used.h"

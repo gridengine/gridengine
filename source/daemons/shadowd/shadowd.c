@@ -55,7 +55,7 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "commlib.h"
-#include "rw_configuration.h"
+#include "spool/classic/rw_configuration.h"
 #include "sge_all_listsL.h"
 #include "sge_feature.h"
 #include "setup_path.h"

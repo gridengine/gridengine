@@ -37,7 +37,6 @@
 #include "sgermon.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
-#include "sched_conf.h"
 #include "sched_conf_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_sched.h"
@@ -46,7 +45,7 @@
 #include "sge_answer.h"
 #include "sge_complex.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 #include "msg_qmaster.h"
 #include "msg_common.h"

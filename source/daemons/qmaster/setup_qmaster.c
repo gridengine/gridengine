@@ -52,7 +52,6 @@
 #include "configuration_qmaster.h"
 #include "qmaster_heartbeat.h"
 #include "qm_name.h"
-#include "sched_conf.h"
 #include "sched_conf_qmaster.h"
 #include "sge_sharetree.h"
 #include "sge_sharetree_qmaster.h"
@@ -94,8 +93,8 @@
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
 
-#include "sge_spooling.h"
-#include "sge_spooling_loader.h"
+#include "spool/sge_spooling.h"
+#include "spool/dynamic/sge_spooling_loader.h"
 
 #include "msg_common.h"
 

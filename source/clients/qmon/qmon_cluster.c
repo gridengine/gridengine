@@ -71,7 +71,7 @@
 #include "qmon_globals.h"
 #include "sge_feature.h"
 #include "sge_host.h"
-#include "rw_configuration.h"
+#include "spool/classic/rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
 

@@ -66,7 +66,7 @@
 #include "sig_handlers.h"
 #include "startprog.h"
 #include "usage.h"
-#include "read_write_job.h"
+#include "spool/classic/read_write_job.h"
 #include "sge_os.h"
 #include "sge_stdlib.h"
 #include "sge_spool.h"

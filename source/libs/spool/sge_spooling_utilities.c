@@ -41,9 +41,9 @@
 #include "sge_utility.h"
 
 #include "msg_common.h"
-#include "msg_spoollib.h"
+#include "spool/msg_spoollib.h"
 
-#include "sge_spooling_utilities.h"
+#include "spool/sge_spooling_utilities.h"
 
 const spool_instr spool_config_subinstr = {
    CULL_SUBLIST,

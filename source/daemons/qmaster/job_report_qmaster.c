@@ -63,7 +63,7 @@
 #include "sge_job.h"
 #include "sge_report.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, const char *task_str);
 

@@ -178,8 +178,8 @@ infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
 
 #---------------------------------------------------------------------
-spooldefaults:   spooldefaults.o  version.o $(SPOOLING_DEPS) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
-		$(CC) -o $@ spooldefaults.o version.o $(LFLAGS) $(SPOOLING_LIBS) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+spooldefaults:   spooldefaults.o  version.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ spooldefaults.o version.o $(LFLAGS) $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooldefaults.c

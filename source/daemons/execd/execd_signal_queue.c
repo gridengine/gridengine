@@ -47,7 +47,7 @@
 #include "commlib.h"
 #include "execd_signal_queue.h"
 #include "sig_handlers.h"
-#include "read_write_job.h"
+#include "spool/classic/read_write_job.h"
 #include "sge_prog.h"
 #include "symbols.h"
 #include "sge_time.h"

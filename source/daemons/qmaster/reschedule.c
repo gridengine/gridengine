@@ -62,7 +62,7 @@
 #include "sge_queue.h"
 #include "sge_ckpt.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 u_long32 add_time = 0;
 

@@ -80,10 +80,11 @@
 #include "read_write_host_group.h"
 #include "sched_conf.h"
 
-#include "sge_spooling_classic.h"
+#include "msg_common.h"
+#include "spool/classic/msg_spoollib_classic.h"
 
-#include <msg_common.h>
-#include "msg_spoollib_classic.h"
+#include "spool/classic/sge_spooling_classic.h"
+
 /****** spool/classic/--Classic-Spooling ***************************************
 *
 *  NAME

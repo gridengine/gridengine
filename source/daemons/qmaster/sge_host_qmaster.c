@@ -82,7 +82,7 @@
 #include "qmaster_to_execd.h"
 #include "sge_todo.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

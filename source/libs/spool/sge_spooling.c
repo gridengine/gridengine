@@ -37,9 +37,9 @@
 
 #include "sge_answer.h"
 
-#include "msg_spoollib.h"
+#include "spool/msg_spoollib.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 lListElem *Default_Spool_Context;
 

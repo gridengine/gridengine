@@ -50,7 +50,7 @@
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
-#include "read_write_job.h"
+#include "spool/classic/read_write_job.h"
 #include "sge_feature.h"
 #include "sge_conf.h"
 #include "sge_prog.h"

@@ -83,7 +83,7 @@
 #include "sge_security.h" 
 #include "sge_feature.h"
 #include "sge_spool.h"
-#include "read_write_job.h"
+#include "spool/classic/read_write_job.h"
 #include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"

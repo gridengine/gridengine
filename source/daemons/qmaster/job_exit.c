@@ -70,7 +70,7 @@
 #include "sge_userset.h"
 #include "sge_todo.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 /************************************************************************
  Master routine for job exit

@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/       
 
 #include "sge_mirror.h"
-#include "sge_spoolingL.h"
+#include "spool/sge_spoolingL.h"
 
 /****** spool/--Spooling ***************************************
 *

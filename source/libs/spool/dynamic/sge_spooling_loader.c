@@ -51,17 +51,22 @@
 
 #include "sge_answer.h"
 
+#include "spool/sge_spooling.h"
+
 #ifdef SPOOLING_classic
-#include "sge_spooling_classic.h"
+#include "spool/classic/sge_spooling_classic.h"
 #endif
 #ifdef SPOOLING_flatfile
-#include "sge_spooling_flatfile.h"
+#include "spool/flatfile/sge_spooling_flatfile.h"
+#endif
+#ifdef SPOOLING_postgres
+#include "spool/postgres/sge_spooling_postgres.h"
 #endif
 
-#include "msg_spoollib.h"
-#include "msg_spoollib_dynamic.h"
+#include "spool/msg_spoollib.h"
+#include "spool/dynamic/msg_spoollib_dynamic.h"
 
-#include "sge_spooling.h"
+#include "spool/dynamic/sge_spooling_loader.h"
 
 /****** spool/dynamic/spool_create_dynamic_context() *********************
 *  NAME
@@ -118,6 +123,10 @@ spool_create_dynamic_context(lList **answer_list,
 #ifdef SPOOLING_flatfile
    spooling_name = "flatfile";
    create_context = spool_flatfile_create_context;
+#endif
+#ifdef SPOOLING_postgres
+   spooling_name = "postgres";
+   create_context = spool_postgres_create_context;
 #endif
 #ifdef SPOOLING_dynamic
    {

@@ -42,7 +42,7 @@
 #include "sge_object.h"
 #include "sge_queue.h"
 
-#include "sge_spooling_utilities.h"
+#include "spool/sge_spooling_utilities.h"
 
 int main(int argc, char *argv[])
 {

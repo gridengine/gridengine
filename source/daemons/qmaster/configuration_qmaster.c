@@ -47,7 +47,6 @@
 #include "cull.h"
 #include "sge_host.h"
 #include "config_file.h"
-#include "rw_configuration.h"
 #include "sge_userset_qmaster.h"
 #include "sge_utility.h"
 #include "sge_userprj_qmaster.h"
@@ -66,7 +65,7 @@
 #include "sge_userset.h"
 #include "sge_host.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

@@ -52,7 +52,7 @@
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

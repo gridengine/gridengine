@@ -48,8 +48,8 @@
 #include "sge_all_listsL.h"
 #include "sge_manop.h"
 
-#include "sge_spooling.h"
-#include "sge_spooling_loader.h"
+#include "spool/sge_spooling.h"
+#include "spool/dynamic/sge_spooling_loader.h"
 
 #include "msg_utilbin.h"
 

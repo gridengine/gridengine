@@ -40,7 +40,6 @@
 
 #include "sge_gdi.h"
 #include "sge_answer.h"
-#include "read_object.h"
 #include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"

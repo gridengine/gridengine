@@ -77,6 +77,7 @@
 #include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_object.h"
+#include "sge_ulong.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

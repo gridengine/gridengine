@@ -49,7 +49,7 @@
 #include "sge_job.h"
 #include "sge_queue.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);

@@ -97,7 +97,7 @@
 #include "sge_cuser.h"
 #include "sge_todo.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"

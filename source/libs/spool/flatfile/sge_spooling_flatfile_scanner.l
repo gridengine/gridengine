@@ -15,7 +15,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "sge_spooling_flatfile_scanner.h"
+#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
 
 #define YY_BREAK
 #define YY_NO_UNPUT

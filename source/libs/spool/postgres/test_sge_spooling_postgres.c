@@ -46,7 +46,6 @@
 #include "sge_queue.h"
 
 #include "spool/sge_spooling_utilities.h"
-#include "spool/template/sge_spooling_template.h"
 
 int main(int argc, char *argv[])
 {

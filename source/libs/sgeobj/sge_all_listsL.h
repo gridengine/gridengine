@@ -82,7 +82,7 @@
 #include "sge_calendarL.h"
 #include "sge_hgroupL.h"
 #include "sge_confL.h"
-#include "sge_spoolingL.h"
+#include "spool/sge_spoolingL.h"
 #include "sge_mailrecL.h"
 #include "sge_japiL.h"
 #include "sge_hrefL.h"

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 
 const char *get_spooling_method(void);
 

@@ -69,8 +69,8 @@
 #include "msg_clients_common.h"
 
 #include "sge_mirror.h"
-#include "sge_spooling.h"
-#include "sge_spooling_loader.h"
+#include "spool/sge_spooling.h"
+#include "spool/dynamic/sge_spooling_loader.h"
 #include "sge_event.h"
 
 /* JG: TODO: This should be a public interface in libspool

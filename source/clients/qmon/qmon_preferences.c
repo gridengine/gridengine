@@ -43,7 +43,7 @@
 #include "qmon_preferences.h"
 #include "sge_string.h"
 #include "config.h"
-#include "read_object.h"
+#include "spool/classic/read_object.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "version.h"

@@ -54,7 +54,7 @@
 #include "sge_unistd.h"
 #include "sge_dstring.h"
 #include "sge_hostname.h"
-#include "sge_dirent.h"
+#include "spool/sge_dirent.h"
 
 #include "sge_answer.h"
 #include "sge_object.h"
@@ -81,15 +81,15 @@
 #include "sge_select_queue.c"
 
 /* includes for old job spooling */
-#include "read_write_job.h"
+#include "spool/classic/read_write_job.h"
 
 #include "msg_common.h"
-#include "msg_spoollib.h"
-#include "msg_spoollib_classic.h"
-#include "msg_spoollib_flatfile.h"
+#include "spool/msg_spoollib.h"
+#include "spool/classic/msg_spoollib_classic.h"
+#include "spool/flatfile/msg_spoollib_flatfile.h"
 
-#include "sge_spooling_flatfile.h"
-#include "sge_spooling_flatfile_scanner.h"
+#include "spool/flatfile/sge_spooling_flatfile.h"
+#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
 
 #ifdef DEBUG_FLATFILE
 bool flatfile_debugging = true;

@@ -59,7 +59,7 @@
 #include "execd_signal_queue.h"
 #include "symbols.h"
 #include "exec_job.h"
-#include "read_write_job.h"
+#include "spool/classic/read_write_job.h"
 #include "execution_states.h"
 #include "msg_execd.h"
 #include "sge_string.h"

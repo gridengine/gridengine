@@ -1,5 +1,5 @@
-#ifndef __SGE_SPOOLING_TEMPLATE_H 
-#define __SGE_SPOOLING_TEMPLATE_H 
+#ifndef __SGE_SPOOLING_POSTGRES_H 
+#define __SGE_SPOOLING_POSTGRES_H 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -35,18 +35,24 @@
 #include "cull.h"
 
 #include "spool/sge_spooling.h"
-#include "spool/sge_spooling_utilities.h"
 
-/****** spool/flatfile/--Spooling-Template ************************************
+/****** spool/postgres/--Spooling-Postgres ************************************
 *
 *  NAME
-*     xxx spooling - spooling of data in xxx
+*     postgres pooling - spooling of data in PostgreSQL database
 *
 *  FUNCTION
 *     The module provides functions and a spooling framework instantiation
-*     for data input/output xxxx
+*     for data input/output into a PostgreSQL database.
+*
+*     Database access is based on PostgreSQL's libpq interface.
+*
+*     This spooling framework instantiation has been developed using 
+*     version 7.3.2 of the PostgreSQL database.
 *
 *  SEE ALSO
+*     spool/--Spooling-Database
+*     spool/--Spooling-SQL-Database
 ****************************************************************************
 */
 
@@ -54,43 +60,43 @@ const char *
 get_spooling_method(void);
 
 lListElem *
-spool_template_create_context(lList **answer_list, const char *args);
+spool_postgres_create_context(lList **answer_list, const char *args);
 
 bool 
-spool_template_default_startup_func(lList **answer_list, 
+spool_postgres_default_startup_func(lList **answer_list, 
                                     const lListElem *rule);
 
 bool 
-spool_template_common_startup_func(lList **answer_list, 
+spool_postgres_common_startup_func(lList **answer_list, 
                                    const lListElem *rule);
 
 bool 
-spool_template_default_list_func(lList **answer_list, 
+spool_postgres_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 
                                  const sge_object_type event_type);
 lListElem *
-spool_template_default_read_func(lList **answer_list, 
+spool_postgres_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, const char *key, 
                                  const sge_object_type event_type);
 bool 
-spool_template_default_write_func(lList **answer_list, 
+spool_postgres_default_write_func(lList **answer_list, 
                                   const lListElem *type, 
                                   const lListElem *rule, 
                                   const lListElem *object, const char *key, 
                                   const sge_object_type event_type);
 bool 
-spool_template_default_delete_func(lList **answer_list, 
+spool_postgres_default_delete_func(lList **answer_list, 
                                    const lListElem *type, 
                                    const lListElem *rule, 
                                    const char *key, 
                                    const sge_object_type event_type);
 bool
-spool_template_default_verify_func(lList **answer_list, 
+spool_postgres_default_verify_func(lList **answer_list, 
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    lListElem *object,
                                    const sge_object_type event_type);
 
-#endif /* __SGE_SPOOLING_TEMPLATE_H */    
+#endif /* __SGE_SPOOLING_POSTGRES_H */    

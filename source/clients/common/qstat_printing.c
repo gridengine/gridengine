@@ -721,7 +721,8 @@ int queue_name_length
          }
 
          if (!(lGetUlong(jatep, JAT_suitable) & TAG_FOUND_IT) && 
-            VALID(JQUEUED, lGetUlong(jatep, JAT_state))) {
+            VALID(JQUEUED, lGetUlong(jatep, JAT_state)) &&
+            !VALID(JFINISHED, lGetUlong(jatep, JAT_status))) {
             lSetUlong(jatep, JAT_suitable, 
             lGetUlong(jatep, JAT_suitable)|TAG_FOUND_IT);
 
@@ -1624,4 +1625,42 @@ int queue_name_length
    return 1;
 }
 
+/* print display bitmask */
+void qstat_display_bitmask_to_str(u_long32 bitmask, dstring *string)
+{
+   bool found = false;
+   int i;
+   static const struct qstat_display_bitmask_s {
+      u_long32 mask;
+      char *name;
+   } bitmasks[] = {
+      { QSTAT_DISPLAY_USERHOLD,      "USERHOLD" },
+      { QSTAT_DISPLAY_SYSTEMHOLD,    "SYSTEMHOLD" },
+      { QSTAT_DISPLAY_OPERATORHOLD,  "OPERATORHOLD" },
+      { QSTAT_DISPLAY_JOBHOLD,       "JOBHOLD" },
+      { QSTAT_DISPLAY_STARTTIMEHOLD, "STARTTIMEHOLD" },
+      { QSTAT_DISPLAY_HOLD,          "HOLD" },
+      { QSTAT_DISPLAY_PENDING,       "PENDING" },
+      { QSTAT_DISPLAY_RUNNING,       "RUNNING" },
+      { QSTAT_DISPLAY_SUSPENDED,     "SUSPENDED" },
+      { QSTAT_DISPLAY_ZOMBIES,       "ZOMBIES" },
+      { QSTAT_DISPLAY_FINISHED,      "FINISHED" },
+      { 0,                           NULL }
+   };
 
+   sge_dstring_clear(string);
+
+   for (i=0; bitmasks[i].mask !=0 ; i++) {
+      if ((bitmask & bitmasks[i].mask)) {
+         if (found)
+            sge_dstring_append(string, " ");
+         sge_dstring_append(string, bitmasks[i].name);
+         found = true;
+      }
+   }
+
+   if (!found)
+      sge_dstring_copy_string(string, "<NONE>");
+
+   return;
+}

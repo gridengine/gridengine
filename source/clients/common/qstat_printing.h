@@ -60,7 +60,8 @@
 #define QSTAT_DISPLAY_PRIORITY      (1<<18)
 
 #define QSTAT_DISPLAY_HOLD          (QSTAT_DISPLAY_USERHOLD|QSTAT_DISPLAY_SYSTEMHOLD|QSTAT_DISPLAY_OPERATORHOLD|QSTAT_DISPLAY_JOBHOLD|QSTAT_DISPLAY_STARTTIMEHOLD)
-#define QSTAT_DISPLAY_ALL           (QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_SUSPENDED|QSTAT_DISPLAY_RUNNING)
+#define QSTAT_DISPLAY_ALL
+(QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_SUSPENDED|QSTAT_DISPLAY_RUNNING|QSTAT_DISPLAY_FINISHED)
 
 #define TAG_DEFAULT       0x00
 #define TAG_SHOW_IT       0x01
@@ -105,5 +106,8 @@ sge_print_jobs_zombie(lList *zombie_list, const lList *pe_list,
 const char* 
 sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p, 
                            dstring *resource_string_p);
+
+void
+qstat_display_bitmask_to_str(u_long32 bitmask, dstring *string);
 
 #endif /* __QSTAT_PRINTING_H */

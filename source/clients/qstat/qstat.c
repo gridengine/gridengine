@@ -371,7 +371,8 @@ char **argv
    */
    for_each (jep, job_list) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         lSetUlong(jatep, JAT_suitable, TAG_SHOW_IT);
+         if (!(lGetUlong(jatep, JAT_status) & JFINISHED))
+            lSetUlong(jatep, JAT_suitable, TAG_SHOW_IT);
       }
    }
 
@@ -421,9 +422,6 @@ char **argv
             const lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
             for_each(qep, qinstance_list) {
-/*               u_long32 now_time = DISPATCH_TIME_NOW;
-               int dummy = 0;
-*/
 
                if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
                   continue;
@@ -900,33 +898,6 @@ u_long32 show
 
       if (show & QSTAT_DISPLAY_SUSPENDED) {
          show |= ~(QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_FINISHED);
-      }
-      if (show & QSTAT_DISPLAY_FINISHED) {
-         show |= ~QSTAT_DISPLAY_PENDING;
-      }
-      if (!(show & QSTAT_DISPLAY_RUNNING)) {
-
-         DPRINTF(("==> No running/transiting jobs\n"));
-
-         nw = lWhere("%T(%I->%T(!(%I m= %u || %I m= %u))",
-                     JB_Type, JB_ja_tasks, JAT_Type,
-                     JAT_status, JRUNNING, JAT_status, JTRANSFERING);
-
-         if (!jw)
-            jw = nw;
-         else
-            jw = lAndWhere(jw, nw);
-      }
-      if (!(show & QSTAT_DISPLAY_FINISHED)) {
-
-         DPRINTF(("==> No finished jobs\n"));
-
-         nw = lWhere("%T(%I->%T(!(%I m= %u)))", JB_Type, JB_ja_tasks,
-            JAT_Type, JAT_status, JFINISHED);
-         if (!jw)
-            jw = nw;
-         else
-            jw = lAndWhere(jw, nw);
       }
       {
             const int job_nm[] = {

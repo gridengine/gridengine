@@ -124,7 +124,7 @@ static mirror_entry mirror_base[SGE_EMT_ALL] = {
    { &Master_Ckpt_List,              "CKPT",              CK_Type,   CK_name,         NULL, generic_update_master_list,            NULL, NULL },
    { &Master_Complex_List,           "COMPLEX",           CX_Type,   CX_name,         NULL, generic_update_master_list,         NULL, NULL },
    { &Master_Config_List,            "CONFIG",            CONF_Type, CONF_hname,      NULL, generic_update_master_list,          NULL, NULL },
-/*    { NULL,                           "GLOBAL_CONFIG",     NULL,      -1,              NULL,                                     NULL, NULL, NULL }, */
+   { NULL,                           "GLOBAL_CONFIG",     NULL,      -1,              NULL,                                     NULL, NULL, NULL },
    { &Master_Exechost_List,          "EXECHOST",          EH_Type,   EH_name,         NULL, host_update_master_list,            NULL, NULL },
    { NULL,                           "JATASK",            JAT_Type,  JAT_task_number, NULL, ja_task_update_master_list,         NULL, NULL },
    { NULL,                           "PETASK",            PET_Type,  PET_id,          NULL, pe_task_update_master_list,         NULL, NULL },

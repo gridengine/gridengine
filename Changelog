@@ -1,3 +1,7 @@
+JG-2002-05-27-0: Bugfix:    qsh ignored -S <shell> in sge_request(5) files
+                 Issue:     #250
+                 Bugtraq:   #4682966
+
 AA-2002-05-27-0: I18N.:     I18N/L10N changes
 
 CR-2002-05-24-1: Enhancem.: merged L10N Changes for install scripts from

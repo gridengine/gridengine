@@ -1,3 +1,6 @@
+DT-2004-06-08-0: Bugfix:    o Backed out AS-2004-06-03-0 for DRMAA README.
+                 Changed:   docs
+
 SG-2004-06-09-3: Enhancem.: updated doc/devel/review.txt
                  Review:    JG
 

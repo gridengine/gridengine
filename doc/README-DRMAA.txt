@@ -85,7 +85,7 @@ Content
       http://gridengine.sunsource.net/project/gridengine/howto/drmaa.html
 
    Once you're familiar with the DRMAA API, you're ready to begin
-   development of your Java application.  Every source file which will call
+   development of your application.  Every source file which will call
    functions from the DRMAA library will need to include the line:
 
       #include "drmaa.h"

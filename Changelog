@@ -1,3 +1,5 @@
+AA-2002-03-11-0: Bugfix:    iremoved qs_args from qmon
+
 AS-2002-03-08-2: Doc:       document location of PE stderr/out files in
                             qsub(1) and sge_pe(5)
                  Issue:     #94

@@ -58,7 +58,6 @@ typedef struct _tSMEntry {
    lList    *master_queue_list;       /* QR_Type */
    lList    *env_list;              /* Environment */
    lList    *ctx_list;              /* Context */
-   lList    *qs_args;               /* qs_args */
    lList    *hold_jid;              /* JB_jid_predecessor_list */
    int      mail_options;
    int      merge_output;

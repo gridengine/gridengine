@@ -235,7 +235,6 @@ Qmon*submit_detail.xmtChildren: \
                      submit_hard_queue_list = hard_queue_list, \
                      submit_soft_queue_list = soft_queue_list, \
                      submit_master_queue_list = master_queue_list, \
-                     submit_qs_args = qs_args, \
                      submit_hold_jid = hold_jid, \
                      submit_env = env_list, \
                      submit_ctx = ctx_list; \
@@ -291,10 +290,6 @@ Qmon*submit_detail.layout: \
          } \
          Row { \
             Caption tl "@{Master Queue List}" Fixed 30 em submit_master_queue_list \
-            <> \
-         } \
-         Row { \
-            Caption tl "@{Transfer QS Arguments}" Fixed 30 em submit_qs_args \
             <> \
          } \
          Row { \

@@ -237,10 +237,6 @@ XtResource sm_resources[] = {
       sizeof(lList*), XtOffsetOf(tSMEntry, master_queue_list),
       XtRImmediate, NULL },
 
-   { "qs_args", "qs_args", QmonRST_Type,
-      sizeof(lList*), XtOffsetOf(tSMEntry, qs_args),
-      XtRImmediate, NULL },
-
    { "hold_jid", "hold_jid", QmonRJRE_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, hold_jid),
       XtRImmediate, NULL },
@@ -916,7 +912,7 @@ int submode
    XtSetSensitive(submit_stdoutputPB, sensitive2);
    XtSetSensitive(submit_stdoutputPB, sensitive2);
    XtSetSensitive(submit_output_merge, sensitive2);
-   XtSetSensitive(submit_now, sensitive2);
+/*    XtSetSensitive(submit_now, sensitive2); */
 
    /*
    ** detail submit dialogue section, mail allowed only for abort
@@ -1305,7 +1301,6 @@ XtPointer cld, cad;
          JB_hard_queue_list,
          JB_soft_queue_list,
          JB_master_hard_queue_list,
-         JB_qs_args,
          JB_jid_predecessor_list,
          JB_shell_list,
          JB_env_list,
@@ -1654,8 +1649,6 @@ tSMEntry *data
 
    data->master_queue_list = lFreeList(data->master_queue_list);
 
-   data->qs_args = lFreeList(data->qs_args);
-
    data->hold_jid = lFreeList(data->hold_jid);
 
    data->env_list = lFreeList(data->env_list);
@@ -1789,9 +1782,6 @@ char *prefix
 
    data->master_queue_list = lCopyList("JB_master_hard_queue_list", 
                                     lGetList(jep, JB_master_hard_queue_list));;
-
-   data->qs_args = lCopyList("JB_qs_args", 
-                                    lGetList(jep, JB_qs_args));;
 
    data->hold_jid = lCopyList("JB_jid_predecessor_list", 
                                     lGetList(jep, JB_jid_predecessor_list));;
@@ -2175,11 +2165,6 @@ int save
             data->master_queue_list ? "NOT NULL" : "NULL"));
    lSetList(jep, JB_master_hard_queue_list, 
                lCopyList("master_hard_queue_list", data->master_queue_list));
-
-   DPRINTF(("data->qs_args is %s\n", 
-            data->qs_args ? "NOT NULL" : "NULL"));
-   lSetList(jep, JB_qs_args, 
-               lCopyList("qs_args", data->qs_args));
 
    DPRINTF(("data->hold_jid is %s\n", 
             data->hold_jid ? "NOT NULL" : "NULL"));

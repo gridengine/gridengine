@@ -764,15 +764,18 @@ char **argv
       }
       
       if (complexflag) {
+         dstring qi = DSTRING_INIT;
          lListElem *queue;
          int selected;
-      
-         queue = cqueue_list_locate_qinstance(queue_list, dusage.qname);
+     
+         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname ); 
+         queue = cqueue_list_locate_qinstance(queue_list, sge_dstring_get_string(&qi));
          if (!queue) {
             WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
                       (int)dusage.job_number, dusage.qname));
             continue;
-         } 
+         }
+         sge_dstring_free(&qi); 
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 

@@ -1,3 +1,9 @@
+EB-2004-09-06-0: Buffix:     qacct -l is not working
+                 Review:     SG
+                 Issue:      1261
+                 Bugtraq:    5095907
+                 Changed:    qacct
+
 JG-2004-09-06-0: Testsuite: Enhanced / fixed test performance/throughput:
                             - reduced performance impact of testsuite monitoring
                               on the Grid Engine performance

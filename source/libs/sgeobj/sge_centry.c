@@ -36,6 +36,7 @@
 #include "cull_list.h"
 
 #include "commd_message_flags.h"
+#include "cull_parse_util.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
 #include "sge_parse_num_par.h"
@@ -47,7 +48,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define CENTRY_LAYER TOP_LAYER
+#define CENTRY_LAYER BASIS_LAYER
 
 lList *Master_CEntry_List = NULL;
 
@@ -696,6 +697,144 @@ centry_list_are_queues_requestable(const lList *this_list)
    }
    DEXIT;
    return ret;
+}
+
+const char *
+centry_list_append_to_dstring(const lList *this_list, dstring *string)
+{
+   const char *ret = NULL;
+
+   DENTER(CENTRY_LAYER, "centry_list_append_to_dstring");
+   if (this_list != NULL && string != NULL) {
+      lListElem *elem = NULL;
+      bool printed = false;
+
+      for_each(elem, this_list) {
+         if (printed) {
+            sge_dstring_sprintf_append(string, ",");
+         }
+         sge_dstring_sprintf_append(string, "%s=", lGetString(elem, CE_name));
+         if (lGetString(elem, CE_stringval) != NULL) {
+            sge_dstring_sprintf_append(string, "%s",
+                                       lGetString(elem, CE_stringval));
+         } else {
+            sge_dstring_sprintf_append(string, "%f", 
+                                       lGetString(elem, CE_doubleval));
+         }
+         printed = true;
+      }
+      if (!printed) {
+         sge_dstring_sprintf_append(string, "NONE");
+      }
+      ret = sge_dstring_get_string(string);
+   }
+   DEXIT;
+   return ret;
+}
+
+/* EB: TODO: CLEANUP: should be replaced by centry_list_append_to_dstring() */
+int
+centry_list_append_to_string(lList *this_list, char *buff, 
+                             u_long32 max_len)
+{
+   int attr_fields[] = { CE_name, CE_stringval, 0 };
+   const char *attr_delis[] = {"=", ",", "\n"};
+   int ret;
+
+   DENTER(TOP_LAYER, "centry_list_append_to_string");
+
+   if (buff)
+      buff[0] = '\0';
+
+   lPSortList(this_list, "%I+", CE_name);
+
+   ret = uni_print_list(NULL, buff, max_len, this_list, attr_fields, attr_delis, 0);
+   if (ret) {
+      DEXIT;
+      return ret;
+   }
+
+   DPRINTF(("buff: %s\n", buff));
+   DEXIT;
+   return 0;
+}
+
+/* EB: TODO: CLEANUP: add answer_list remove SGE_EVENT */
+/*
+ * NOTE
+ *    MT-NOTE: function is not MT safe
+ */
+lList *
+centry_list_parse_from_string(lList *complex_attributes,
+                              const char *str, bool check_value) 
+{
+   const char *cp;
+
+   DENTER(TOP_LAYER, "centry_list_parse_from_string");
+
+   /* allocate space for attribute list if no list is passed */
+   if (complex_attributes == NULL) {
+      if ((complex_attributes = lCreateList("", CE_Type)) == NULL) {
+         ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRLIST));
+         DEXIT;
+         return NULL;
+      }
+   }
+
+   /* str now points to the attr=value pairs */
+   while ((cp = sge_strtok(str, ", "))) {
+      lListElem *complex_attribute;
+      const char *attr;
+      char *value;
+
+      str = NULL;       /* for the next strtoks */
+
+      if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
+         ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
+         lFreeList(complex_attributes);
+         DEXIT;
+         return NULL;
+      }
+
+      /*
+      ** recursive strtoks didnt work
+      */
+      attr = cp;
+      if ((value = strchr(cp, '='))) {
+         *value++ = 0;
+      }
+
+      if (attr == NULL || *attr == '\0') {
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
+         lFreeList(complex_attributes);
+         DEXIT;
+         return NULL;
+      }
+
+      if ((check_value) && (value == NULL || *value == '\0')) {
+         ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
+         lFreeList(complex_attributes);
+         DEXIT;
+         return NULL;
+      }
+
+      lSetString(complex_attribute, CE_name, attr);
+      lSetString(complex_attribute, CE_stringval, value);
+
+      lAppendElem(complex_attributes, complex_attribute);
+   }
+
+   DEXIT;
+   return complex_attributes;
+}
+
+void
+centry_list_remove_duplicates(lList *this_list) 
+{
+   DENTER(TOP_LAYER, "centry_list_remove_duplicates");
+   cull_compress_definition_list(this_list, CE_name, CE_stringval, 0);
+   DEXIT;
+   return;
 }
 
 

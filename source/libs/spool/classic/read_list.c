@@ -71,7 +71,7 @@
 #include "sge_utility.h"
 #include "sge_todo.h"
 
-#include "sge_stringL.h"
+#include "sge_str.h"
 
 #include "sge_queue_event_master.h"
 
@@ -791,6 +791,7 @@ int sge_read_cqueue_list_from_disk(void)
 #endif
 
                sge_read_qinstance_list_from_disk(qep);
+               cqueue_mod_qinstances(qep, NULL, qep, NULL, NULL);
                cqueue_list_add_cqueue(qep);
 
 #if 0 /* EB: TODO: APIBASE */

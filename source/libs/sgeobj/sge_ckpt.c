@@ -46,7 +46,7 @@
 #include "sge_utility.h"
 #include "sge_ckpt.h"
 #include "symbols.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

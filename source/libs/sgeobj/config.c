@@ -46,7 +46,7 @@
 #include "sge_attr.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
-#include "sge_complexL.h"
+#include "sge_centryL.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -643,7 +643,7 @@ const char *key,
 lListElem *ep,
 int name_nm,
 lDescr *descr,
-intprt_type *interpretation_rule 
+int *interpretation_rule 
 
 ) {
 #ifdef __INSIGHT__

@@ -293,4 +293,8 @@ bool
 object_has_differences(lListElem *this_elem, lList **answer_list,
                        lListElem *old_elem, bool modify_changed_flag);
 
+bool
+object_list_has_differences(lList *this_elem, lList **answer_list,
+                            lList *old_elem, bool modify_changed_flag);
+
 #endif /* __SGE_OBJECT_H */

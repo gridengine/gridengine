@@ -66,7 +66,7 @@
 #include "sge_prog.h"
 #include "config.h"
 #include "mail.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_messageL.h"
 #include "sge_string.h"
 #include "sge_security.h"

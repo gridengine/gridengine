@@ -40,11 +40,78 @@
 #include "sge_attr.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define QINSTANCE_LAYER BASIS_LAYER
+#define QINSTANCE_LAYER TOP_LAYER
+
+const char *queue_types[] = {
+   "BATCH",
+   "INTERACTIVE",
+   ""
+};
+
+const char *
+so_list_append_to_dstring(const lList *this_list, dstring *string)
+{
+   const char *ret = NULL;
+
+   DENTER(BASIS_LAYER, "so_list_append_to_dstring");
+   if (this_list != NULL && string != NULL) {
+      lListElem *elem = NULL;
+      bool printed = false;
+
+      for_each(elem, this_list) {
+         sge_dstring_sprintf_append(string, "%s", lGetString(elem, SO_name));
+         if (lGetUlong(elem, SO_threshold)) {
+            sge_dstring_sprintf_append(string, "="u32"%s",
+                                       lGetUlong(elem, SO_threshold),
+                                       lNext(elem) ? "," : "");
+         }
+         printed = true;
+      }
+      if (!printed) {
+         sge_dstring_sprintf_append(string, "NONE");
+      }
+      ret = sge_dstring_get_string(string);
+   }
+   DEXIT;
+   return ret;
+}
+
+const char *
+qtype_append_to_dstring(u_long32 qtype, dstring *string)
+{
+   const char *ret = NULL;
+
+   DENTER(BASIS_LAYER, "qtype_append_to_dstring");
+   if (string != NULL) {
+      const char **ptr = NULL;
+      u_long32 bitmask = 1;
+      bool qtype_defined = false;
+
+      for (ptr = queue_types; **ptr != '\0'; ptr++) {
+         if (bitmask & qtype) {
+            if (qtype_defined) {
+               sge_dstring_sprintf_append(string, " ");
+            }
+            sge_dstring_sprintf_append(string, "%s", *ptr);
+            qtype_defined = true;
+         }
+         bitmask <<= 1;
+      };
+      if (!qtype_defined) {
+         sge_dstring_sprintf_append(string, "NONE");
+      }
+      ret = sge_dstring_get_string(string);
+   }
+   DEXIT;
+   return ret;
+}
+
+
 
 lListElem * 
 qinstance_create(const lListElem *cqueue, lList **answer_list,
@@ -64,7 +131,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
       bool tmp_is_ambiguous = false;
       bool tmp_has_changed = false;
 
-      qinstance_modify(ret, answer_list, cqueue, 
+      qinstance_modify_attribute(ret, answer_list, cqueue, 
                        cqueue_attribute_array[index].qinstance_attr,
                        cqueue_attribute_array[index].cqueue_attr, 
                        cqueue_attribute_array[index].href_attr,
@@ -85,20 +152,21 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
 }
 
 bool
-qinstance_modify(lListElem *this_elem, lList **answer_list,
-                 const lListElem *cqueue, 
-                 int attribute_name, 
-                 int cqueue_attibute_name,
-                 int sub_host_name, int sub_value_name,
-                 int subsub_key, bool *is_ambiguous, bool *has_changed)
+qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
+                           const lListElem *cqueue, 
+                           int attribute_name, 
+                           int cqueue_attibute_name,
+                           int sub_host_name, int sub_value_name,
+                           int subsub_key, bool *is_ambiguous, 
+                           bool *has_changed)
 {
-#if 0 /* EB: debug */
+#if 1 /* EB: debug */
 #define QINSTANCE_MODIFY_DEBUG
 #endif
    bool ret = true;
   
 #ifdef QINSTANCE_MODIFY_DEBUG 
-   DENTER(TOP_LAYER, "qinstance_modify");
+   DENTER(TOP_LAYER, "qinstance_modify_attribute");
 #else
    DENTER(QINSTANCE_LAYER, "qinstance_modify");
 #endif
@@ -111,7 +179,6 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
       int pos = lGetPosInDescr(descr, attribute_name);
       int type = lGetPosType(descr, pos);
       bool value_found = true;
-      lList *list_value = NULL;
 
       switch (cqueue_attibute_name) {
          case CQ_qtype:
@@ -210,44 +277,94 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
             break;
          case CQ_ckpt_list:
          case CQ_pe_list:
-            strlist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value, is_ambiguous);
-            /* EB: TODO: handle only if sublist changed */
-            lSetList(this_elem, attribute_name, lCopyList("", list_value));
-            *has_changed = true;
+            {
+               lList *old_value = lGetList(this_elem, attribute_name);
+               lList *new_value;
+
+               strlist_attr_list_find_value(attr_list, answer_list,
+                                            hostname, &new_value, is_ambiguous);
+               if (object_list_has_differences(old_value, answer_list, 
+                                               new_value, false)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+#endif
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_owner_list:
          case CQ_acl:
          case CQ_xacl:
-            usrlist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value, is_ambiguous);
-            /* EB: TODO: handle only if sublist changed */
-            lSetList(this_elem, attribute_name, lCopyList("", list_value));
-            *has_changed = true;
+            {
+               lList *old_value = lGetList(this_elem, attribute_name);
+               lList *new_value;
+
+               usrlist_attr_list_find_value(attr_list, answer_list,
+                                            hostname, &new_value, is_ambiguous);
+               if (object_list_has_differences(old_value, answer_list,
+                                               new_value, false)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+#endif
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_projects:
          case CQ_xprojects:
-            prjlist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value, is_ambiguous);
-            /* EB: TODO: handle only if sublist changed */
-            lSetList(this_elem, attribute_name, lCopyList("", list_value));
-            *has_changed = true;
+            {
+               lList *old_value = lGetList(this_elem, attribute_name);
+               lList *new_value;
+
+               prjlist_attr_list_find_value(attr_list, answer_list,
+                                            hostname, &new_value, is_ambiguous);
+               if (object_list_has_differences(old_value, answer_list,
+                                               new_value, false)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+#endif
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_consumable_config_list:
          case CQ_load_thresholds:
          case CQ_suspend_thresholds:
-            celist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value, is_ambiguous);
-            /* EB: TODO: handle only if sublist changed */
-            lSetList(this_elem, attribute_name, lCopyList("", list_value));
-            *has_changed = true;
+            {
+               lList *old_value = lGetList(this_elem, attribute_name);
+               lList *new_value;
+
+               celist_attr_list_find_value(attr_list, answer_list,
+                                           hostname, &new_value, is_ambiguous);
+               if (object_list_has_differences(old_value, answer_list,
+                                               new_value, false)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+#endif
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_subordinate_list:
-            solist_attr_list_find_value(attr_list, answer_list,
-                                        hostname, &list_value, is_ambiguous);
-            /* EB: TODO: handle only if sublist changed */
-            lSetList(this_elem, attribute_name, lCopyList("", list_value));
-            *has_changed = true;
+            {
+               lList *old_value = lGetList(this_elem, attribute_name);
+               lList *new_value;
+
+               solist_attr_list_find_value(attr_list, answer_list,
+                                           hostname, &new_value, is_ambiguous);
+               if (object_list_has_differences(old_value, answer_list,
+                                               new_value, false)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+#endif
+                  lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                  *has_changed = true;
+               }
+            }
             break;
          default:
             value_found = false;
@@ -322,5 +439,9 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
    DEXIT;
    return ret;
 }
+
+
+   
+
 
 

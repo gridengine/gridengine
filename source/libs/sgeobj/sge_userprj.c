@@ -58,9 +58,37 @@ lList *Master_User_List = NULL;
 *  RESULT
 *     lListElem* - pointer to user or project element
 ******************************************************************************/
-lListElem *userprj_list_locate(lList *userprj_list, 
+lListElem *
+userprj_list_locate(lList *userprj_list, 
                                const char *uerprj_name) 
 {
    return lGetElemStr(userprj_list, UP_name, uerprj_name);
 }
+
+const char *
+userprj_list_append_to_dstring(const lList *this_list, dstring *string)
+{
+   const char *ret = NULL;
+
+   DENTER(BASIS_LAYER, "userprj_list_append_to_dstring");
+   if (this_list != NULL && string != NULL) {
+      lListElem *elem = NULL;
+      bool printed = false;
+
+      for_each(elem, this_list) {
+         sge_dstring_sprintf_append(string, "%s", lGetString(elem, UP_name));
+         if (lNext(elem)) {
+            sge_dstring_sprintf_append(string, " ");
+         }
+         printed = true;
+      }
+      if (!printed) {
+         sge_dstring_sprintf_append(string, "NONE");
+      }
+      ret = sge_dstring_get_string(string);
+   }
+   DEXIT;
+   return ret;
+}
+
 

@@ -33,7 +33,6 @@
 #include <string.h>
 
 #include "sge_all_listsL.h"
-#include "sge_resource.h"
 #include "show_job.h"
 #include "parse_qsub.h"
 #include "sgermon.h"
@@ -166,7 +165,7 @@ void cull_show_job(lListElem *job, int flags)
          printf("cwd:                        %s\n", lGetString(job, JB_cwd));
       if (lGetPosViaElem(job, JB_path_aliases)>=0)
          if (lGetList(job, JB_path_aliases)) {
-            intprt_type fields[] = { PA_origin, PA_submit_host, PA_exec_host,
+            int fields[] = { PA_origin, PA_submit_host, PA_exec_host,
                                        PA_translation, 0 };
 
             delis[0] = " ";
@@ -182,7 +181,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_stderr_path_list)>=0)
       if (lGetList(job, JB_stderr_path_list)) {
-         intprt_type fields[] = { PN_host, PN_path, 0 };
+         int fields[] = { PN_host, PN_path, 0 };
 
          delis[0] = ":";
          printf("stderr_path_list:           ");
@@ -220,7 +219,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_mail_list)>=0)
       if (lGetList(job, JB_mail_list)) {
-         intprt_type fields[] = { MR_user, MR_host, 0 };
+         int fields[] = { MR_user, MR_host, 0 };
 
          delis[0] = "@";
          printf("mail_list:                  ");
@@ -240,7 +239,7 @@ void cull_show_job(lListElem *job, int flags)
    
    if (lGetPosViaElem(job, JB_stdout_path_list)>=0)
       if (lGetList(job, JB_stdout_path_list)) {
-         intprt_type fields[] = { PN_host, PN_path, 0 };
+         int fields[] = { PN_host, PN_path, 0 };
 
          delis[0] = ":";
          printf("stdout_path_list:           ");
@@ -250,7 +249,7 @@ void cull_show_job(lListElem *job, int flags)
    
    if (lGetPosViaElem(job, JB_stdin_path_list)>=0)
       if (lGetList(job, JB_stdin_path_list)) {
-         intprt_type fields[] = { PN_host, PN_path, 0 };
+         int fields[] = { PN_host, PN_path, 0 };
 
          delis[0] = ":";
          printf("stdin_path_list:            ");
@@ -266,7 +265,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_hard_queue_list)>=0)
       if (lGetList(job, JB_hard_queue_list)) {
-         intprt_type fields[] = {QR_name, 0 };
+         int fields[] = {QR_name, 0 };
 
          delis[0] = " ";
          printf("hard_queue_list:            ");
@@ -276,7 +275,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_soft_queue_list)>=0)
       if (lGetList(job, JB_soft_queue_list)) {
-         intprt_type fields[] = {QR_name, 0 };
+         int fields[] = {QR_name, 0 };
 
          delis[0] = " ";
          printf("soft_queue_list:            ");
@@ -293,7 +292,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_shell_list)>=0)
       if (lGetList(job, JB_shell_list)) {
-         intprt_type fields[] = {PN_host, PN_path, 0 };
+         int fields[] = {PN_host, PN_path, 0 };
 
          delis[0] = ":";
          printf("shell_list:                 ");
@@ -311,7 +310,7 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetList(job, JB_env_list)) {
          lList *print = NULL;
          lList *do_not_print = NULL;
-         intprt_type fields[] = {VA_variable, VA_value, 0 };
+         int fields[] = {VA_variable, VA_value, 0 };
 
          delis[0] = "=";
          printf("env_list:                   ");
@@ -333,7 +332,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_job_args)>=0)
       if (lGetList(job, JB_job_args) || (flags & FLG_QALTER)) {
-         intprt_type fields[] = {ST_name, 0 };
+         int fields[] = {ST_name, 0 };
 
          delis[0] = "";
          printf("job_args:                   ");
@@ -343,7 +342,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_qs_args)>=0)
       if (lGetList(job, JB_qs_args) || (flags & FLG_QALTER)) {
-         intprt_type fields[] = {ST_name, 0 };
+         int fields[] = {ST_name, 0 };
          delis[0] = "";
          printf("qs_args:                    ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_qs_args), fields, 
@@ -352,7 +351,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_master_hard_queue_list)>=0)
       if (lGetList(job, JB_master_hard_queue_list)) {
-         intprt_type fields[] = {QR_name, 0 };
+         int fields[] = {QR_name, 0 };
          delis[0] = " ";
          printf("master hard queue list:     ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_master_hard_queue_list), 
@@ -361,7 +360,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_job_identifier_list)>=0)
       if (lGetList(job, JB_job_identifier_list)) {
-         intprt_type fields[] = { JRE_job_number, 0 };
+         int fields[] = { JRE_job_number, 0 };
 
          delis[0] = "";
          printf("job_identifier_list:        ");
@@ -398,7 +397,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
-         intprt_type fields[] = { JRE_job_name, 0 };
+         int fields[] = { JRE_job_name, 0 };
 
          delis[0] = "";
          printf("jid_predecessor_list:       ");
@@ -408,7 +407,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_jid_sucessor_list)>=0)
       if (lGetList(job, JB_jid_sucessor_list)) {
-         intprt_type fields[] = { JRE_job_number, 0 };
+         int fields[] = { JRE_job_number, 0 };
 
          delis[0] = "";
          printf("jid_sucessor_list:          ");
@@ -455,7 +454,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_context)>=0)
       if (lGetList(job, JB_context)) {
-         intprt_type fields[] = {VA_variable, VA_value, 0 };
+         int fields[] = {VA_variable, VA_value, 0 };
 
          delis[0] = "=";
          printf("context:                    ");
@@ -656,3 +655,64 @@ static void sge_show_mail_options(int op, int how)
    DEXIT;
    return;
 } 
+
+static void show_ce_type_list(lList *cel, const char *indent, const char *separator);
+
+void sge_show_ce_type_list(lList *rel)
+{
+   DENTER(TOP_LAYER, "sge_show_ce_type_list");
+
+   show_ce_type_list(rel, "", ",");
+
+   DEXIT;
+   return;
+}
+
+/*************************************************************/
+/* cel CE_Type List */
+static void show_ce_type_list(lList *cel, const char *indent,
+                                  const char *separator)
+{
+   bool first = true;
+   lListElem *ce;
+   const char *s;
+
+   DENTER(TOP_LAYER, "show_ce_type_list");
+
+   /* walk through complex entries */
+   for_each (ce, cel) {
+      if (first) {
+         first = false;
+      } else {
+         printf("%s", separator);
+         printf("%s", indent);
+      }
+
+      s = lGetString(ce, CE_stringval);
+      if(s) {
+         printf("%s=%s", lGetString(ce, CE_name), s);
+      } else {
+         printf("%s", lGetString(ce, CE_name));
+      }
+   }
+
+   DEXIT;
+   return;
+}
+
+/*************************************************************/
+/* rel CE_Type List */
+void sge_show_ce_type_list_line_by_line(const char *label,
+                                        const char *indent,
+                                        lList *rel)
+{
+   DENTER(TOP_LAYER, "sge_show_ce_type_list_line_by_line");
+
+   printf("%s", label);
+   show_ce_type_list(rel, indent, "\n");
+   printf("\n");
+
+   DEXIT;
+   return;
+}
+

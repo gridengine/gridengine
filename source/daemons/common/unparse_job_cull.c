@@ -34,7 +34,7 @@
 #include "symbols.h"
 #include "sge_options.h"
 #include "sge_ja_task.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
 #include "sge_string.h"
@@ -43,7 +43,6 @@
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
-#include "sge_resource.h"
 #include "parse.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
@@ -59,6 +58,7 @@
 #include "sge_job.h"
 #include "sge_userset.h"
 #include "sge_mailrec.h"
+#include "sge_centry.h"
 
 #include "msg_daemons_common.h"
 
@@ -180,7 +180,7 @@ int flags
    ** -hold_jid
    */
    if ((lp = lGetList(job, JB_jid_predecessor_list))) {
-      intprt_type fields[] = { JRE_job_number, 0 };
+      int fields[] = { JRE_job_number, 0 };
       const char *delis[] = {NULL, ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 0);
@@ -206,7 +206,7 @@ int flags
    ** -jid
    */
    if ((lp = lGetList(job, JB_job_identifier_list))) {
-      intprt_type fields[] = { JRE_job_number, 0};
+      int fields[] = { JRE_job_number, 0};
       const char *delis[] = {"", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -284,7 +284,7 @@ int flags
          }
       }
       if (lp_new) {
-         intprt_type fields[] = { MR_user, MR_host, 0 };
+         int fields[] = { MR_user, MR_host, 0 };
          const char *delis[] = {"@", ",", NULL};
 
          ret = uni_print_list(NULL, str, sizeof(str) - 1, lp_new, fields, delis, 
@@ -368,7 +368,7 @@ int flags
    ** is not in the manual anyway
    */
    if ((lp = lGetList(job, JB_hard_queue_list))) {
-      intprt_type fields[] = { QR_name, 0 };
+      int fields[] = { QR_name, 0 };
       const char *delis[] = {"@", ",", NULL};
 
       ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
@@ -385,7 +385,7 @@ int flags
       lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
    }
    if ((lp = lGetList(job, JB_soft_queue_list))) {
-      intprt_type fields[] = { QR_name, 0 };
+      int fields[] = { QR_name, 0 };
       const char *delis[] = {"@", ",", NULL};
 
       ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
@@ -420,7 +420,7 @@ int flags
    ** -S
    */
    if ((lp = lGetList(job, JB_shell_list))) {
-      intprt_type fields[] = { PN_host, PN_path, 0 };
+      int fields[] = { PN_host, PN_path, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -440,7 +440,7 @@ int flags
    ** declare a job generated with -V as default
    */
    if ((lp = lGetList(job, JB_env_list))) {
-      intprt_type fields[] = { VA_variable, VA_value, 0};
+      int fields[] = { VA_variable, VA_value, 0};
       const char *delis[] = {"=", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -479,7 +479,7 @@ int flags
    */
    if ((flags & FLG_FULL_CMDLINE) &&
       (lp = lGetList(job, JB_job_args))) {
-      intprt_type fields[] = { ST_name, 0};
+      int fields[] = { ST_name, 0};
       const char *delis[] = {NULL, " ", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -692,7 +692,7 @@ lList **alpp
       else
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
 
-      ret = unparse_resources(NULL, str, sizeof(str) - 1, lp);
+      ret = centry_list_append_to_string(lp, str, sizeof(str) - 1);
       if (ret) {
          DPRINTF(("Error %d formatting hard_resource_list as -l\n", ret));
          sprintf(str, MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL);
@@ -786,7 +786,7 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_unparse_path_list");
 
    if ((lp = lGetList(job, nm))) {
-      intprt_type fields[] = { PN_host, PN_path, 0 };
+      int fields[] = { PN_host, PN_path, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -819,7 +819,7 @@ lList **alpp
    DENTER(TOP_LAYER, "sge_unparse_id_list");
 
    if ((lp = lGetList(job, nm))) {
-      intprt_type fields[] = { QR_name, 0 };
+      int fields[] = { QR_name, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
@@ -858,7 +858,7 @@ lList **alpp
          lAddElemStr(&lp, ST_name, lGetString(ap, US_name), ST_Type);
 
    if (lGetNumberOfElem(lp) > 0) {
-      intprt_type fields[] = { ST_name, 0 };
+      int fields[] = { ST_name, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);

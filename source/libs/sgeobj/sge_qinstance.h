@@ -36,15 +36,23 @@
 #include "sge_dstring.h"
 #include "sge_qinstanceL.h"
 
+extern const char *queue_types[];
+
+const char *
+so_list_append_to_dstring(const lList *this_list, dstring *string);
+
+const char *
+qtype_append_to_dstring(u_long32 dtype, dstring *string);
+
 lListElem *
 qinstance_create(const lListElem *cqueue, lList **answer_list,
                  const char *hostname, bool *is_ambiguous);
 
 bool
-qinstance_modify(lListElem *this_elem, lList **answer_list,
-                 const lListElem *cqueue, int attribute_name,
-                 int cqueue_attibute_name, int sub_host_name, 
-                 int sub_value_name, int subsub_key, bool *is_ambiguous,
-                 bool *has_changed);
+qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
+                           const lListElem *cqueue, int attribute_name,
+                           int cqueue_attibute_name, int sub_host_name, 
+                           int sub_value_name, int subsub_key, 
+                           bool *is_ambiguous, bool *has_changed);
 
 #endif /* __SGE_QINSTANCE_H */

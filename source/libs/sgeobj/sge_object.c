@@ -49,6 +49,7 @@
 #include "sge_manop.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_schedd_conf.h"
 #include "sge_sharetree.h"
 #include "sge_cuser.h"
@@ -61,6 +62,7 @@
 #include "sge_object.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
+#include "sge_str.h"
 #include "sge_parse_num_par.h"
 #include "sge_utility.h"
 #include "cull_parse_util.h"
@@ -370,9 +372,9 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
                                dstring *buffer, const int nm, 
                                char string_quotes)
 {
-   const char *result = NULL;
+   const char *ret = NULL;
    char tmp_buf[MAX_STRING_SIZE];
-   dstring tmp_dstring;
+   dstring string;
    bool quote_special_case = false;
 
    DENTER(OBJECT_LAYER, "object_append_field_to_dstring");
@@ -388,182 +390,72 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
     *          QU_batch, QU_parallel, ...
     */
 
-   sge_dstring_init(&tmp_dstring, tmp_buf, sizeof(tmp_buf));
+   sge_dstring_init(&string, tmp_buf, sizeof(tmp_buf));
     
    switch (nm) {
       case CE_valtype:
-         result = map_type2str(lGetUlong(object, nm));
+         ret = map_type2str(lGetUlong(object, nm));
          quote_special_case = true;
          break;
       case CE_relop:
-         result = map_op2str(lGetUlong(object, nm));
+         ret = map_op2str(lGetUlong(object, nm));
          quote_special_case = true;
          break;
       case CE_requestable:
-         result = map_req2str(lGetUlong(object, nm));
+         ret = map_req2str(lGetUlong(object, nm));
          break;
       case CE_consumable:
          if (lGetBool(object, nm)) {
-            result = "YES";
+            ret = "YES";
          } else {
-            result = "NO";
+            ret = "NO";
          }
          quote_special_case = true;
          break;
       case QU_qtype:
-         queue_print_qtype_to_dstring(object, &tmp_dstring, false);
-         result = sge_dstring_get_string(buffer); 
+         queue_print_qtype_to_dstring(object, &string, false);
+         ret = sge_dstring_get_string(buffer); 
          quote_special_case = true;
          break;
       case US_type:
-         result = userset_get_type_string(object, answer_list, &tmp_dstring);
+         ret = userset_get_type_string(object, answer_list, &string);
          quote_special_case = true;
          break;
-      case ASTRLIST_value:
-         {
-            lList *list = lGetList(object, nm);
-            lListElem *elem = NULL;
-            bool printed = false;
 
-            for_each(elem, list) { 
-               sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, ST_name));
-               if (lNext(elem)) {
-                  sge_dstring_sprintf_append(&tmp_dstring, " ");
-               }
-               printed = true;
-            }
-            if (!printed) {
-               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
-            }
-            result = sge_dstring_get_string(&tmp_dstring);
-         }
+      case ASTRLIST_value:
+         ret = str_list_append_to_dstring(lGetList(object, nm), &string, ' ');
          break;
       case AUSRLIST_value:
-         {
-            lList *list = lGetList(object, nm);
-            lListElem *elem = NULL;
-            bool printed = false;
-
-            for_each(elem, list) { 
-               sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, US_name));
-               if (lNext(elem)) {
-                  sge_dstring_sprintf_append(&tmp_dstring, " ");
-               }
-               printed = true;
-            }
-            if (!printed) {
-               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
-            }
-            result = sge_dstring_get_string(&tmp_dstring);
-         }
+         ret = userset_list_append_to_dstring(lGetList(object, nm), &string);
          break;
       case APRJLIST_value:
-         {
-            lList *list = lGetList(object, nm);
-            lListElem *elem = NULL;
-            bool printed = false;
-
-            for_each(elem, list) { 
-               sge_dstring_sprintf_append(&tmp_dstring, "%s", lGetString(elem, UP_name));
-               if (lNext(elem)) {
-                  sge_dstring_sprintf_append(&tmp_dstring, " ");
-               }
-               printed = true;
-            }
-            if (!printed) {
-               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
-            }
-            result = sge_dstring_get_string(&tmp_dstring);
-         }
+         ret = userprj_list_append_to_dstring(lGetList(object, nm), &string);
          break;
       case ACELIST_value:
-         {
-            lList *list = lGetList(object, nm);
-            lListElem *elem = NULL;
-            bool printed = false;
-
-            for_each(elem, list) {
-               if (printed) {
-                  sge_dstring_sprintf_append(&tmp_dstring, ",");
-               } 
-               sge_dstring_sprintf_append(&tmp_dstring, "%s=",  
-                                          lGetString(elem, CE_name));
-               if (lGetString(elem, CE_stringval) != NULL) {
-                  sge_dstring_sprintf_append(&tmp_dstring, "%s", 
-                                             lGetString(elem, CE_stringval));
-               } else {
-                  sge_dstring_sprintf_append(&tmp_dstring, "%f", 
-                                             lGetString(elem, CE_doubleval));
-               }
-               printed = true;
-            }
-            if (!printed) {
-               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
-            }
-            result = sge_dstring_get_string(&tmp_dstring);
-         }
+         ret = centry_list_append_to_dstring(lGetList(object, nm), &string);
          break;
       case ASOLIST_value:
-         {
-            lList *list = lGetList(object, nm);
-            lListElem *elem = NULL;
-            bool printed = false;
-
-            for_each(elem, list) {
-               sge_dstring_sprintf_append(&tmp_dstring, "%s",
-                                          lGetString(elem, SO_qname));
-               if (lGetUlong(elem, SO_threshold)) {
-                  sge_dstring_sprintf_append(&tmp_dstring, "="u32"%s",
-                                             lGetUlong(elem, SO_threshold),
-                                             lNext(elem)?",":"");
-               }
-               printed = true;
-            }
-            if (!printed) {
-               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
-            }
-            result = sge_dstring_get_string(&tmp_dstring);
-         } 
+         ret = so_list_append_to_dstring(lGetList(object, nm), &string);
          break;
       case AQTLIST_value:
-         {
-            u_long32 qtype = lGetUlong(object, nm);
-            const char **ptr = NULL; 
-            u_long32 bitmask = 1;
-            bool qtype_defined = false;
-
-            for (ptr = queue_types; **ptr != '\0'; ptr++) {
-               if (bitmask & qtype) {
-                  if (qtype_defined) {
-                     sge_dstring_sprintf_append(&tmp_dstring, " ");
-                  } 
-                  sge_dstring_sprintf_append(&tmp_dstring, "%s", *ptr);
-                  qtype_defined = true;
-               }
-               bitmask <<= 1;
-            };
-            if (!qtype_defined) {
-               sge_dstring_sprintf_append(&tmp_dstring, "NONE");
-            }
-            result = sge_dstring_get_string(&tmp_dstring);
-         }
+         ret = qtype_append_to_dstring(lGetUlong(object, nm), &string);
          break;
    }
 
    /* we had a special case - append to result dstring */
-   if (result != NULL) {
+   if (ret != NULL) {
       if (quote_special_case && string_quotes != '\0') {
-         result = sge_dstring_sprintf_append(buffer, "%c%s%c", string_quotes, 
-                                             result, string_quotes);
+         ret = sge_dstring_sprintf_append(buffer, "%c%s%c", string_quotes, 
+                                          ret, string_quotes);
       } else { 
-         result = sge_dstring_append(buffer, result);
+         ret = sge_dstring_append(buffer, ret);
       }
    } else {
-      result = object_append_raw_field_to_dstring(object, answer_list, buffer,
-                                                  nm, string_quotes);
+      ret = object_append_raw_field_to_dstring(object, answer_list, buffer,
+                                               nm, string_quotes);
    }
 
-   return result;
+   return ret;
 }
 
 /****** sgeobj/object/object_append_raw_field_to_dstring() *********************
@@ -1394,7 +1286,7 @@ bool
 object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
                                 int name, const char *string)
 {
-   static intprt_type rule[] = {CE_name, CE_stringval, 0};
+   static int rule[] = {CE_name, CE_stringval, 0};
    bool ret = true;
 
    DENTER(TOP_LAYER, "object_parse_celist_from_string");
@@ -1434,17 +1326,17 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
       lListElem *tmp_elem = NULL;
       int pos = lGetPosViaElem(this_elem, name);
 
-      lString2List(string, &tmp_list, SO_Type, SO_qname, ", \t");
+      lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
       if (tmp_list != NULL) {
-         if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_qname))) {
+         if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_name))) {
             tmp_list = lFreeList(tmp_list);
          } else {
             for_each(tmp_elem, tmp_list) {
-               const char *queue_value = lGetString(tmp_elem, SO_qname);
+               const char *queue_value = lGetString(tmp_elem, SO_name);
                const char *queuename = sge_strtok(queue_value, ":=");
                const char *value_str = sge_strtok(NULL, ":=");
 
-               lSetString(tmp_elem, SO_qname, queuename);
+               lSetString(tmp_elem, SO_name, queuename);
                if (value_str != NULL) {
                   char *endptr = NULL;
                   u_long32 value = strtol(value_str, &endptr, 10);
@@ -1839,7 +1731,7 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
       } else if (type == lCharT) {
          *((lChar*)value) = lGetPosChar(this_elem, pos);
       } else if (type == lBoolT) {
-         *((lBool*)value) = lGetPosBool(this_elem, pos);
+         *((bool*)value) = (bool) lGetPosBool(this_elem, pos);
       } else if (type == lIntT) {
          *((int*)value) = lGetPosInt(this_elem, pos);
       } else if (type == lObjectT) {
@@ -2018,7 +1910,7 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 {
    bool ret = false;
 
-   DENTER(OBJECT_LAYER, "object_has_differences");
+   DENTER(BASIS_LAYER, "object_has_differences");
    if (this_elem != NULL && old_elem != NULL) {
       lDescr *this_elem_descr = this_elem->descr;
       lDescr *old_elem_descr = old_elem->descr;
@@ -2026,7 +1918,7 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
       lDescr *tmp_decr2 = NULL;
 
       /*
-       * Compare each attribute withen the given elements
+       * Compare each attribute of the given elements
        */ 
       for (tmp_decr1 = this_elem_descr, tmp_decr2 = old_elem_descr; 
            tmp_decr1->nm != NoName && tmp_decr2->nm != NoName; 
@@ -2122,25 +2014,9 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                   lList *new_list = lGetPosList(this_elem, pos);
                   lList *old_list = lGetPosList(old_elem, pos);
 
-                  if (lGetNumberOfElem(new_list) == lGetNumberOfElem(old_list)){
-                     lListElem *new_elem;
-                     lListElem *old_elem;
-
-                     for(new_elem = lFirst(new_list), old_elem = lFirst(old_list);
-                         new_elem != NULL && old_elem != NULL;
-                         new_elem = lNext(new_elem), old_elem = lNext(old_elem)) {
-
-                        equiv = object_has_differences(new_elem, answer_list,
-                                                       old_elem, modify_changed_flag); 
-                        if (!equiv) {
-                           DTRACE;
-                           break;
-                        }
-                     }
-                  } else {
-                     DTRACE;
-                     equiv = false;
-                  }
+                  equiv = !object_list_has_differences(new_list, answer_list,
+                                                       old_list, 
+                                                       modify_changed_flag);
                }
                break;
             default:
@@ -2169,3 +2045,36 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
    return ret;   
 }
                    
+bool 
+object_list_has_differences(lList *this_list, lList **answer_list,
+                            lList *old_list, bool modify_changed_flag)
+{
+   bool ret = false;
+
+   DENTER(BASIS_LAYER, "object_list_has_differences");
+
+   if (this_list == NULL && old_list == NULL) {
+      DTRACE;
+      ret = false;
+   } else if (lGetNumberOfElem(this_list) == lGetNumberOfElem(old_list)) {
+      lListElem *new_elem;
+      lListElem *old_elem;
+
+      for(new_elem = lFirst(this_list), old_elem = lFirst(old_list);
+          new_elem != NULL && old_elem != NULL;
+          new_elem = lNext(new_elem), old_elem = lNext(old_elem)) {
+
+         ret = object_has_differences(new_elem, answer_list,
+                                      old_elem, modify_changed_flag); 
+         if (ret) {
+            break;
+         }
+      }
+   } else {
+      DTRACE;
+      ret = true;
+   }
+
+   DEXIT;
+   return ret;
+}

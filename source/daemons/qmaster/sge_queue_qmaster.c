@@ -65,6 +65,7 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_job.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
@@ -75,7 +76,7 @@
 #include "sge_todo.h"
 #include "sge_utility_qmaster.h"
 #include "sge_static_load.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
@@ -490,7 +491,7 @@ int sub_command
             lCopyList("", lGetList(qep, QU_subordinate_list)));
 #endif
       attr_mod_sub_list(alpp, new_queue, QU_subordinate_list,
-            SO_qname, qep, sub_command,
+            SO_name, qep, sub_command,
             SGE_ATTR_SUBORDINATE_LIST, SGE_OBJ_QUEUE, 0); 
    }
 
@@ -832,7 +833,7 @@ int sub_command
             lGetUlong(new_queue, QU_suspended_on_subordinate));
 
       /* remove equal entries in both lists */
-      lDiffListStr(SO_qname, &suspend, &unsuspend);
+      lDiffListStr(SO_name, &suspend, &unsuspend);
    }
 
    /* disabling susp. thresholds (part 1) */
@@ -1067,7 +1068,7 @@ char *rhost
          lListElem *sqep;
    
          sqep = lGetElemStr(lGetList(qep, QU_subordinate_list),
-            SO_qname, qname);
+            SO_name, qname);
 
          if (sqep) {
             ERROR((SGE_EVENT, MSG_NOTALLOWEDTODELSUBORDINATE_SS, qname, lGetString(qep, QU_qname)));

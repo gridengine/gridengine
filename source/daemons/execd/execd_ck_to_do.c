@@ -80,7 +80,7 @@
 #  endif
 #endif
 
-#include "sge_stringL.h"
+#include "sge_str.h"
 
 #if COMPILE_DC
 static int reprioritization_enabled = 0;

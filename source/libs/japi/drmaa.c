@@ -31,7 +31,7 @@
 #include "sge_jobL.h"
 #include "sge_ja_taskL.h"
 #include "sge_japiL.h"
-#include "sge_stringL.h"
+#include "sge_strL.h"
 
 /****** DRMAA/--DRMAA_Job_API ********************************************************
 *  NAME

@@ -43,7 +43,7 @@
 #include "sge.h"
 #include "symbols.h"
 #include "sge_conf.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_sched.h"
 #include "sge_feature.h"
 #include "sge_manop.h"
@@ -2580,7 +2580,7 @@ int *trigger
          char str_predec[256], str_exited[256]; 
          const char *delis[] = {NULL, ",", ""};
 
-         intprt_type fields[] = { JRE_job_name, 0 };
+         int fields[] = { JRE_job_name, 0 };
          uni_print_list(NULL, str_predec, sizeof(str_predec)-1, new_pre_list, fields, delis, 0);
          uni_print_list(NULL, str_exited, sizeof(str_exited)-1, exited_pre_list, fields, delis, 0);
          sprintf(SGE_EVENT, MSG_JOB_HOLDLISTMOD_USS, 

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_complexL.h"
+#include "sge_centryL.h"
 
 extern lList *Master_CEntry_List;
 
@@ -95,6 +95,19 @@ centry_list_fill_request(lList *centry_list, lList *master_centry_list,
 
 bool
 centry_list_are_queues_requestable(const lList *this_list);
+
+const char *
+centry_list_append_to_dstring(const lList *this_list, dstring *string); 
+
+int
+centry_list_append_to_string(lList *this_list, char *buff, u_long32 max_len);
+
+lList *
+centry_list_parse_from_string(lList *complex_attributes,
+                              const char *str, bool check_value);
+
+void
+centry_list_remove_duplicates(lList *this_list);
 
 #endif /* __SGE_CENTRY_H */
 

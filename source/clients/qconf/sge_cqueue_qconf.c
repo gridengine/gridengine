@@ -37,6 +37,7 @@
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "sge_unistd.h"
+#include "sge_hostname.h"
 
 #include "sge_answer.h"
 #include "sge_queue.h"
@@ -245,6 +246,9 @@ cqueue_add(lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
+         ret &= cqueue_set_template_attributes(cqueue, answer_list);
+      }
+      if (ret) {
          ret &= cqueue_provide_modify_context(&cqueue, answer_list);
       }
       if (ret) {
@@ -441,7 +445,8 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         const char *hostname = NULL;
 
                         hostname = lGetHost(qinstance, QI_hostname);
-                        if (!fnmatch(h_pattern, hostname, 0)) {
+                        if (!fnmatch(h_pattern, hostname, 0) ||
+                            !sge_hostcmp(h_pattern, hostname)) {
                            write_qinstance(0, 0, qinstance, NULL);
                            found_something = true;
                         }

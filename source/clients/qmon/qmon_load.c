@@ -34,7 +34,7 @@
 #include <Xmt/Dialogs.h>
 
 #include "sge_gdi.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_centry.h"
 
 #include "qmon_rmon.h"

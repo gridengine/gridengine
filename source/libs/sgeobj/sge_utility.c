@@ -36,7 +36,7 @@
 #include "sge_log.h"
 #include "cull_list.h"
 #include "parse.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_identL.h"
 #include "sge_string.h"
 #include "sge_answer.h"

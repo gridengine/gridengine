@@ -40,4 +40,8 @@ extern lList *Master_User_List;
 lListElem *userprj_list_locate(lList *userprj_list,
                                const char *uerprj_name);
 
+const char *
+userprj_list_append_to_dstring(const lList *this_list, dstring *string);
+
+
 #endif /* __SGE_USERPRJ_H */

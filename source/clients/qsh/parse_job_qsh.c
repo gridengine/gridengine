@@ -38,8 +38,7 @@
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
-#include "sge_stringL.h"
-#include "sge_resource.h"
+#include "sge_str.h"
 #include "dispatcher.h"
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
@@ -59,6 +58,7 @@
 #include "sge_range.h"
 #include "sge_host.h"
 #include "sge_mailrec.h"
+#include "sge_centry.h"
 
 /*
 ** NAME
@@ -313,8 +313,8 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    parse_list_hardsoft(cmdline, "-l", *pjob, 
                         JB_hard_resource_list, JB_soft_resource_list);
-   sge_compress_resources(lGetList(*pjob, JB_hard_resource_list));
-   sge_compress_resources(lGetList(*pjob, JB_soft_resource_list));
+   centry_list_remove_duplicates(lGetList(*pjob, JB_hard_resource_list));
+   centry_list_remove_duplicates(lGetList(*pjob, JB_soft_resource_list));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-m"))) {
       u_long32 ul;

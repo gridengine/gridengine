@@ -49,9 +49,13 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_queue.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_feature.h"
+#include "sge_href.h"
+#include "sge_hgroup.h"
+#include "sge_href.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -121,7 +125,7 @@ list_attribute_struct cqueue_attribute_array[] = {
    { CQ_load_thresholds,         QI_load_thresholds,        ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD,    false},
    { CQ_suspend_thresholds,      QI_suspend_thresholds,     ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD, false},
 
-   { CQ_subordinate_list,        QI_subordinate_list,       ASOLIST_href,  ASOLIST_value,    SO_qname,   SGE_ATTR_SUBORDINATE_LIST,  false},
+   { CQ_subordinate_list,        QI_subordinate_list,       ASOLIST_href,  ASOLIST_value,    SO_name,    SGE_ATTR_SUBORDINATE_LIST,  false},
 
    { NoName,                     NoName,                    NoName,        NoName,           NoName,     NULL,                       false}
 };
@@ -213,7 +217,7 @@ cqueue_create(lList **answer_list, const char *name)
 {
    lListElem *ret = NULL;
 
-   DENTER(CQUEUE_LAYER, "cuser_create");
+   DENTER(CQUEUE_LAYER, "cqueue_create");
    if (name != NULL) {
       ret = lCreateElem(CQ_Type);
 
@@ -224,6 +228,192 @@ cqueue_create(lList **answer_list, const char *name)
                                 MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC));
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_set_template_attributes");
+   if (this_elem != NULL) {
+      if (ret) {
+         lList *href_list = NULL;
+
+         href_list_add(&href_list, answer_list, "NONE");
+         lSetList(this_elem, CQ_hostlist, href_list);
+      }
+
+      /*
+       * initialize u_long32 values
+       */
+      if (ret) {
+         const u_long32 value[] = {
+            7, 1, 1, 0, 0, 0 
+         }; 
+         const u_long32 attr[] = {
+            CQ_seq_no, CQ_nsuspend, CQ_job_slots, CQ_fshare, CQ_oticket, NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lList *attr_list = NULL;
+            lListElem *attr_elem = lAddElemHost(&attr_list, AULNG_href, 
+                                                HOSTREF_DEFAULT, AULNG_Type);
+
+            lSetUlong(attr_elem, AULNG_value, value[index]);
+            lSetList(this_elem, attr[index], attr_list);
+            index++;
+         }
+      }
+
+      /*
+       * initialize bool values
+       */
+      if (ret) {
+         lList *attr_list = NULL;
+         lListElem *attr = lAddElemHost(&attr_list, ABOOL_href, 
+                                        HOSTREF_DEFAULT, ABOOL_Type);
+
+         lSetBool(attr, AULNG_value, 7);
+         lSetList(this_elem, CQ_seq_no, attr_list);
+      }
+
+      /*
+       * initialize memory values
+       */
+      if (ret) {
+         const char *value[] = {
+            "INFINITY", "INFINITY", "INFINITY", "INFINITY",
+            "INFINITY", "INFINITY", "INFINITY", "INFINITY",
+            "INFINITY", "INFINITY", "INFINITY", "INFINITY",
+            NULL
+         }; 
+         const u_long32 attr[] = {
+            CQ_s_fsize, CQ_h_fsize, CQ_s_data, CQ_h_data,
+            CQ_s_stack, CQ_h_stack, CQ_s_core, CQ_h_core,
+            CQ_s_rss, CQ_h_rss, CQ_s_vmem, CQ_h_vmem,
+            NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lList *attr_list = NULL;
+            lListElem *attr_elem = lAddElemHost(&attr_list, AMEM_href, 
+                                                HOSTREF_DEFAULT, AMEM_Type);
+
+            lSetString(attr_elem, AMEM_value, value[index]);
+            lSetList(this_elem, attr[index], attr_list);
+            index++;
+         }
+      }
+      
+      /*
+       * initialize time values
+       */
+      if (ret) {
+         const char *value[] = {
+            "INFINITY", "INFINITY", "INFINITY", "INFINITY",
+            NULL
+         }; 
+         const u_long32 attr[] = {
+            CQ_s_rt, CQ_h_rt, CQ_s_cpu, CQ_h_cpu,
+            NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lList *attr_list = NULL;
+            lListElem *attr_elem = lAddElemHost(&attr_list, ATIME_href, 
+                                                HOSTREF_DEFAULT, ATIME_Type);
+
+            lSetString(attr_elem, ATIME_value, value[index]);
+            lSetList(this_elem, attr[index], attr_list);
+            index++;
+         }
+      }
+
+      /*
+       * initialize interval values
+       */
+      if (ret) {
+         const char *value[] = {
+            "00:05:00", "00:05:00", "00:00:60",
+            NULL
+         }; 
+         const u_long32 attr[] = {
+            CQ_suspend_interval, CQ_min_cpu_interval, CQ_notify,
+            NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lList *attr_list = NULL;
+            lListElem *attr_elem = lAddElemHost(&attr_list, AINTER_href, 
+                                                HOSTREF_DEFAULT, AINTER_Type);
+
+            lSetString(attr_elem, AINTER_value, value[index]);
+            lSetList(this_elem, attr[index], attr_list);
+            index++;
+         }
+      }
+
+      /*
+       * initialize string values
+       */
+      if (ret) {
+         const char *value[] = {
+            "/tmp", "/bin/csh", "NONE",
+            "0", "UNDEFINED", "NONE",
+            "NONE", "NONE", "NONE",
+            "NONE", "NONE", "NONE",
+            "default", 
+            NULL
+         }; 
+         const u_long32 attr[] = {
+            CQ_tmpdir, CQ_shell, CQ_calendar,
+            CQ_priority, CQ_processors, CQ_prolog,
+            CQ_epilog, CQ_shell_start_mode, CQ_starter_method,
+            CQ_suspend_method, CQ_resume_method, CQ_terminate_method,
+            CQ_initial_state,
+            NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lList *attr_list = NULL;
+            lListElem *attr_elem = lAddElemHost(&attr_list, ASTR_href, 
+                                                HOSTREF_DEFAULT, ASTR_Type);
+
+            lSetString(attr_elem, ASTR_value, value[index]);
+            lSetList(this_elem, attr[index], attr_list);
+            index++;
+         }
+      }
+
+      /*
+       * initialize string-list values
+       */
+      if (ret) {
+         const u_long32 attr[] = {
+            CQ_pe_list, CQ_ckpt_list,
+            NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lList *attr_list = NULL;
+            lListElem *attr_elem = lAddElemHost(&attr_list, ASTRLIST_href, 
+                                                HOSTREF_DEFAULT, ASTRLIST_Type);
+
+            lSetList(attr_elem, ASTRLIST_value, NULL);
+            lSetList(this_elem, attr[index], attr_list);
+            index++;
+         }
       }
    }
    DEXIT;
@@ -435,4 +625,303 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
    return ret;
 }
 
+bool
+cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
+                    lListElem *reduced_elem, lList **add_hosts,
+                    lList **rem_hosts)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_mod_hostlist");
+   if (cqueue != NULL && reduced_elem != NULL) {
+      int pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+         lList *old_href_list = lGetList(cqueue, CQ_hostlist);
+         lList *master_list = *(hgroup_list_get_master_list());
+         lList *add_groups = NULL;
+         lList *rem_groups = NULL;
+
+         ret &= href_list_find_diff(list, answer_list,
+                                    old_href_list, add_hosts,
+                                    rem_hosts, &add_groups,
+                                    &rem_groups);
+
+         if (ret) {
+            lList *master_list = *(hgroup_list_get_master_list());
+
+            if (add_hosts != NULL) {
+               ret &= href_list_resolve_hostnames(*add_hosts, answer_list);
+            }
+
+            if (add_groups != NULL) {
+               ret &= hgroup_list_exists(master_list, answer_list, add_groups);
+            }
+         }
+         if (ret) {
+            lSetList(cqueue, CQ_hostlist, lCopyList("", list));
+         }
+         if (ret) {
+            href_list_find_all_references(add_groups, answer_list, master_list,
+                                          add_hosts, NULL);
+            href_list_find_all_references(rem_groups, answer_list, master_list,
+                                          rem_hosts, NULL);
+#ifdef CQUEUE_MOD_DEBUG
+            {
+               lListElem *href = NULL;
+               dstring message = DSTRING_INIT;
+               bool is_first_hostname = true;
+
+               for_each(href, add_hosts) {
+                  const char *hostname = lGetHost(href, HR_name);
+
+                  if (is_first_hostname) {
+                     sge_dstring_sprintf(&message, "Added hostnames: ");
+                  } else {
+                     sge_dstring_sprintf_append(&message, ", ");
+                  }
+                  sge_dstring_sprintf_append(&message, "%s", hostname);
+                  is_first_hostname = false;
+               }
+               if (!is_first_hostname) {
+                  sge_dstring_sprintf_append(&message, "\n");
+                  DPRINTF((sge_dstring_get_string(&message)));
+               }
+               sge_dstring_free(&message);
+            }
+            {
+               lListElem *href = NULL;
+               dstring message = DSTRING_INIT;
+               bool is_first_hostname = true;
+
+               for_each(href, rem_hosts) {
+                  const char *hostname = lGetHost(href, HR_name);
+
+                  if (is_first_hostname) {
+                     sge_dstring_sprintf(&message, "Removed hostnames: ");
+                  } else {
+                     sge_dstring_sprintf_append(&message, ", ");
+                  }
+                  sge_dstring_sprintf_append(&message, "%s", hostname);
+                  is_first_hostname = false;
+               }
+               if (!is_first_hostname) {
+                  sge_dstring_sprintf_append(&message, "\n");
+                  DPRINTF((sge_dstring_get_string(&message)));
+               }
+               sge_dstring_free(&message);
+            }
+#endif
+         }
+         add_groups = lFreeList(add_groups);
+         rem_groups = lFreeList(rem_groups);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
+                      lListElem *reduced_elem, bool *is_ambiguous,
+                      bool *has_changed)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_mod_qinstances");
+
+   if (cqueue != NULL && reduced_elem != NULL) {
+      int index = 0;
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+             feature_is_enabled(FEATURE_SGEEE)) {
+            int pos = lGetPosViaElem(reduced_elem,
+                                     cqueue_attribute_array[index].cqueue_attr);
+
+            if (pos >= 0) {
+               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+               lListElem *qinstance = NULL;
+
+               for_each(qinstance, qinstance_list) {
+                  if (lGetUlong(qinstance, QI_tag) != SGE_QI_TAG_DEL) {
+                     const char *hostname = lGetHost(qinstance, QI_hostname);
+                     bool tmp_is_ambiguous = false;
+                     bool tmp_has_changed = false;
+
+                     ret &= qinstance_modify_attribute(qinstance,
+                                answer_list, cqueue,
+                                cqueue_attribute_array[index].qinstance_attr,
+                                cqueue_attribute_array[index].cqueue_attr,
+                                cqueue_attribute_array[index].href_attr,
+                                cqueue_attribute_array[index].value_attr,
+                                cqueue_attribute_array[index].primary_key_attr,
+                                &tmp_is_ambiguous, &tmp_has_changed);
+                     if (!ret) {
+                        break;
+                     }
+                     if (tmp_has_changed) {
+                        lSetUlong(qinstance, QI_tag, SGE_QI_TAG_MOD);
+                        DPRINTF(("Qinstance of host "SFQ" has been changed\n", hostname));
+                        if (has_changed != NULL) {
+                           *has_changed = true;
+                        }
+                     }
+                     if (tmp_is_ambiguous) {
+                        DPRINTF(("Qinstance of host "SFQ" has been ambiguous configuration\n", hostname));
+                        if (is_ambiguous != NULL) {
+                           *is_ambiguous = true;
+                        }
+                        /* EB: TODO: set CA state */
+                     }
+                  }
+               }
+            }
+         }
+         index++;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_mark_qinstances");
+   if (cqueue != NULL && del_hosts != NULL) {
+      lListElem *href = NULL;
+
+      for_each(href, del_hosts) {
+         const char *hostname = lGetHost(href, HR_name);
+         lList *list = lGetList(cqueue, CQ_qinstances);
+         lListElem* qinstance = lGetElemHost(list, QI_hostname, hostname);
+
+         if (qinstance != NULL) {
+            /*
+             * We cannot remove the qinstance object here because we
+             * need it later on for spooling and event handling:
+             *    - QI spoolfiles have to be removed
+             *    - delete events for QI objects
+             */
+            lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEL);
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts,
+                      bool *is_ambiguous)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_add_qinstances");
+   if (cqueue != NULL && add_hosts != NULL) {
+      lListElem *href = NULL;
+
+      DPRINTF(("CREATE QINSTANCES\n"));
+      for_each(href, add_hosts) {
+         const char *hostname = lGetHost(href, HR_name);
+         lList *list = lGetList(cqueue, CQ_qinstances);
+         lListElem* new_qinstance;
+         bool tmp_is_ambiguous = false;
+
+         if (list == NULL) {
+            list = lCreateList("", QI_Type);
+            lSetList(cqueue, CQ_qinstances, list);
+         }
+         new_qinstance = qinstance_create(cqueue, answer_list,
+                                          hostname, &tmp_is_ambiguous);
+         if (tmp_is_ambiguous) {
+            DPRINTF(("qinstance %s has ambiguous configuaration\n", hostname));
+            /* EB: TODO: Set ambiguous state */
+            if (is_ambiguous != NULL) { 
+               *is_ambiguous = true;
+            }
+         }
+         lSetUlong(new_qinstance, QI_tag, SGE_QI_TAG_ADD);
+         lAppendElem(list, new_qinstance);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
+                      lListElem *reduced_elem, int sub_command)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_mod_attributes");
+   if (cqueue != NULL && reduced_elem != NULL) {
+      int index = 0;
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         int pos = lGetPosViaElem(reduced_elem,
+                                  cqueue_attribute_array[index].cqueue_attr);
+
+         if (pos >= 0) {
+            ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem,
+                             sub_command,
+                             cqueue_attribute_array[index].cqueue_attr,
+                             cqueue_attribute_array[index].href_attr,
+                             cqueue_attribute_array[index].value_attr,
+                             cqueue_attribute_array[index].primary_key_attr,
+                             cqueue_attribute_array[index].name,
+                             SGE_OBJ_CQUEUE);
+         }
+         index++;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool 
+cqueue_verify_attibutes(lListElem *cqueue, lList **answer_list,
+                        lListElem *reduced_elem)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_LAYER, "cqueue_mod_attributes");
+   if (cqueue != NULL && reduced_elem != NULL) {
+      int index = 0;
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+             feature_is_enabled(FEATURE_SGEEE)) {
+            int pos = lGetPosViaElem(reduced_elem,
+                                     cqueue_attribute_array[index].cqueue_attr);
+
+            if (pos >= 0) {
+               lList *list = lGetList(cqueue,
+                                  cqueue_attribute_array[index].cqueue_attr);
+               lListElem *elem = lGetElemHost(list,
+                                    cqueue_attribute_array[index].href_attr,
+                                    HOSTREF_DEFAULT);
+
+
+               if (elem == NULL) {
+                  /* EB: TODO: move to msg file */
+                  ERROR((SGE_EVENT, SFQ" has no default value\n",
+                                    cqueue_attribute_array[index].name));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+            }
+         }
+         index++;
+      }
+   }
+   DEXIT;
+   return ret;
+}
 

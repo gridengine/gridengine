@@ -69,8 +69,8 @@ typedef struct {
 } tScheddConfEntry;
 
 
-static intprt_type load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
-static intprt_type usage_fields[] = { UA_name, UA_value, 0 };
+static int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
+static int usage_fields[] = { UA_name, UA_value, 0 };
 static const char *delis[] = {"=", ",", ""};
 
 int sc_set(

@@ -35,6 +35,13 @@
 
 #include "sge_cqueueL.h"
 
+enum {
+   SGE_QI_TAG_DEFAULT = 0,
+   SGE_QI_TAG_DEL     = 1,
+   SGE_QI_TAG_ADD     = 2,
+   SGE_QI_TAG_MOD     = 4
+};
+
 typedef struct _list_attribute_struct {
    int cqueue_attr;
    int qinstance_attr;
@@ -65,6 +72,9 @@ cqueue_list_get_master_list(void);
 bool
 cqueue_list_add_cqueue(lListElem *queue);
 
+bool
+cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list);
+
 lListElem *
 cqueue_list_locate(const lList *this_list, const char *name);
 
@@ -84,5 +94,31 @@ cqueue_list_find_all_matching_references(const lList *this_list,
 
 bool
 cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list);
+
+
+bool
+cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list, 
+                    lListElem *reduced_elem, lList **add_hosts, 
+                    lList **rem_hosts);
+
+bool
+cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
+                      lListElem *reduced_elem, int sub_command);
+bool 
+cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
+                      lListElem *reduced_elem, bool *is_ambiguous,
+                      bool *has_changed);
+
+bool
+cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts,
+                      bool *is_ambiguous);
+
+bool
+cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, 
+                       lList *del_hosts);
+
+bool
+cqueue_verify_attibutes(lListElem *cqueue, lList **answer_list,
+                        lListElem *reduced_elem);
 
 #endif /* __SGE_CQUEUE_H */

@@ -50,7 +50,7 @@
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_queue.h"

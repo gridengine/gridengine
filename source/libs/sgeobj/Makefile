@@ -49,12 +49,10 @@ SGEOBJLIB_SRC = \
          parse.c \
          sge_attr.c \
          sge_calendar.c \
-         sge_complex.c \
          sge_centry.c \
          sge_conf.c \
          sge_cqueue.c \
          sge_ckpt.c \
-         sge_cstring.c \
          sge_event.c \
          sge_host.c \
          sge_hgroup.c \
@@ -70,10 +68,10 @@ SGEOBJLIB_SRC = \
          sge_queue.c \
          sge_qinstance.c \
          sge_range.c \
-         sge_resource.c \
          sge_report.c \
          sge_schedd_conf.c \
          sge_sharetree.c \
+         sge_str.c \
          sge_sub_object.c \
          sge_suser.c \
          sge_usage.c \
@@ -145,9 +143,6 @@ sge_attr.o: $(SGEOBJLIB_DIR)/sge_attr.c
 sge_calendar.o: $(SGEOBJLIB_DIR)/sge_calendar.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_calendar.c
 
-sge_complex.o: $(SGEOBJLIB_DIR)/sge_complex.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_complex.c
-
 sge_centry.o: $(SGEOBJLIB_DIR)/sge_centry.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_centry.c
 
@@ -159,9 +154,6 @@ sge_cqueue.o: $(SGEOBJLIB_DIR)/sge_cqueue.c
 
 sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ckpt.c
-
-sge_cstring.o: $(SGEOBJLIB_DIR)/sge_cstring.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cstring.c
 
 sge_event.o:	$(SGEOBJLIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_event.c
@@ -208,9 +200,6 @@ sge_qinstance.o: $(SGEOBJLIB_DIR)/sge_qinstance.c
 sge_range.o: $(SGEOBJLIB_DIR)/sge_range.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_range.c
 
-sge_resource.o: $(SGEOBJLIB_DIR)/sge_resource.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_resource.c
-
 sge_report.o: $(SGEOBJLIB_DIR)/sge_report.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_report.c
 
@@ -219,6 +208,9 @@ sge_schedd_conf.o: $(SGEOBJLIB_DIR)/sge_schedd_conf.c
 
 sge_sharetree.o: $(SGEOBJLIB_DIR)/sge_sharetree.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_sharetree.c
+
+sge_str.o: $(SGEOBJLIB_DIR)/sge_str.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_str.c
 
 sge_sub_object.c: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
 		$(CC) $(CFLAGS) -E -c $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c

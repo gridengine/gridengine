@@ -1,85 +1,85 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
-/*___INFO__MARK_END__*/
+/*___INFO__MARK_END__*/                                   
 
-#include "basis_types.h"
-#include "sgermon.h" 
 #include "sge_string.h"
-#include "sge_stringL.h"
+#include "sgermon.h"
 #include "sge_log.h"
-#include "sge_answer.h"
-#include "commlib.h"
+#include "cull_list.h"
+#include "sge_str.h"
 
-#include "msg_common.h"
-#include "msg_sgeobjlib.h"
+#define STR_LAYER BASIS_LAYER
 
-#define CSTRING_LAYER TOP_LAYER
-
-bool cstring_list_append_to_string(const lList *this_list, dstring *string)
+const char *
+str_list_append_to_dstring(const lList *this_list, dstring *string,
+                           const char delimiter)
 {
-   bool ret = true;
-   
-   DENTER(CSTRING_LAYER, "cstring_list_append_to_string");
-   if (this_list != NULL) {
-      lListElem *str;
-      bool is_first = true;
+   const char *ret = NULL;
 
-      for_each(str, this_list) {
-         const char *name = lGetString(str, ST_name);
+   DENTER(STR_LAYER, "str_list_append_to_dstring");
+   if (string != NULL) {
+      lListElem *elem = NULL;
+      bool printed = false;
 
-         if (!is_first) {
-            sge_dstring_sprintf_append(string, ",");
+      for_each(elem, this_list) {
+         sge_dstring_sprintf_append(string, "%s", lGetString(elem, ST_name));
+         if (lNext(elem)) {
+            sge_dstring_sprintf_append(string, "%c", delimiter);
          }
-         sge_dstring_sprintf_append(string, "%s", name);
-         is_first = false;
+         printed = true;
       }
+      if (!printed) {
+         sge_dstring_sprintf_append(string, "NONE");
+      }
+      ret = sge_dstring_get_string(string);
    }
    DEXIT;
    return ret;
 }
 
-bool cstring_list_parse_from_string(lList **this_list, 
-                                    const char *string, const char *delimitor)
+bool 
+str_list_parse_from_string(lList **this_list,
+                           const char *string, const char *delimitor)
 {
    bool ret = true;
 
-   DENTER(CSTRING_LAYER, "cstring_list_parse_from_string");
-   if (this_list != NULL) {
+   DENTER(STR_LAYER, "str_list_parse_from_dstring");
+   if (this_list != NULL && string != NULL && delimitor != NULL) {
       struct saved_vars_s *context = NULL;
       const char *token;
 
       token = sge_strtok_r(string, delimitor, &context);
       while (token) {
          lAddElemStr(this_list, ST_name, token, ST_Type);
-         token = sge_strtok_r(NULL, delimitor, &context); 
+         token = sge_strtok_r(NULL, delimitor, &context);
       }
       sge_free_saved_vars(context);
    }

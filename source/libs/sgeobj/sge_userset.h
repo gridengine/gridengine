@@ -51,7 +51,11 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
                         dstring *buffer);
 
 bool 
-userset_set_type_string(lListElem *userset, lList **answer_list, const char *value);
+userset_set_type_string(lListElem *userset, lList **answer_list, 
+                        const char *value);
+
+const char *
+userset_list_append_to_dstring(const lList *this_list, dstring *string);
 
 #endif /* _SGE_USERSET_H */
 

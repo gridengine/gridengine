@@ -43,7 +43,7 @@
 #include "sge_conf.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_string.h"
 #include "sge_utility.h"
 #include "sge_cuser.h"
@@ -53,7 +53,6 @@
 #include "sge_hostname.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
-#include "sge_cstring.h"
 #include "sge_event_master.h"
 
 #include "sge_persistence_qmaster.h"
@@ -353,7 +352,7 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
                if (string_list != NULL) {
                   dstring string = DSTRING_INIT;
 
-                  cstring_list_append_to_string(string_list, &string); 
+                  str_list_append_to_dstring(string_list, &string, ','); 
                   ERROR((SGE_EVENT, "denied: following user mapping entries "
                          "still reference "SFQ": "SFN"\n", name,
                          sge_dstring_get_string(&string)));

@@ -49,7 +49,7 @@
 #include "sge_ckpt.h"
 #include "sge_todo.h"
 #include "sge_centry.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_utility.h"
 #include "parse.h"
 
@@ -58,12 +58,6 @@
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
-const char *queue_types[] = {
-   "BATCH",        
-   "INTERACTIVE",  
-   ""
-};
 
 lList *Master_Queue_List = NULL;
 

@@ -3426,7 +3426,7 @@ lListElem *lAddElemHost(lList **lpp, int nm, const char *str, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a str list in ep */
-      *lpp = lCreateList("host sublist", dp);
+      *lpp = lCreateList("", dp);
    }
 
    /* add new host str element to sublist */

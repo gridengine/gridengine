@@ -302,7 +302,8 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
 *     sgeobj/userset/userset_get_type_string()
 ******************************************************************************/
 bool 
-userset_set_type_string(lListElem *userset, lList **answer_list, const char *value)
+userset_set_type_string(lListElem *userset, lList **answer_list, 
+                        const char *value)
 {
    bool ret = true;
    u_long32 type = 0;
@@ -320,6 +321,32 @@ userset_set_type_string(lListElem *userset, lList **answer_list, const char *val
 
    lSetUlong(userset, US_type, type);
 
+   DEXIT;
+   return ret;
+}
+
+const char *
+userset_list_append_to_dstring(const lList *this_list, dstring *string)
+{
+   const char *ret = NULL;
+
+   DENTER(BASIS_LAYER, "userset_list_append_to_dstring");
+   if (this_list != NULL && string != NULL) {
+      lListElem *elem = NULL;
+      bool printed = false;
+
+      for_each(elem, this_list) {
+         sge_dstring_sprintf_append(string, "%s", lGetString(elem, US_name));
+         if (lNext(elem)) {
+            sge_dstring_sprintf_append(string, " ");
+         }
+         printed = true;
+      }
+      if (!printed) {
+         sge_dstring_sprintf_append(string, "NONE");
+      }
+      ret = sge_dstring_get_string(string);
+   }
    DEXIT;
    return ret;
 }

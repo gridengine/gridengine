@@ -45,6 +45,7 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_job.h"
 
 /* ------------------------------------------------
@@ -93,10 +94,10 @@ u_long32 jobid  /* just for logging in case of errors */
             continue;
 
          /* suspend it */
-         if (!(subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_qname)))) {
+         if (!(subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_name)))) {
             DPRINTF(("WARNING: sos_using_gdil for job "u32": can't "
                   "find subordinated queue "SFQ, 
-                  lGetString(qep, QU_qname), lGetString(so, SO_qname)));
+                  lGetString(qep, QU_qname), lGetString(so, SO_name)));
             continue;
          }
          ret |= sos(subqep, 0);
@@ -200,11 +201,11 @@ u_long32 jobid  /* just for logging in case of errors */
             lGetUlong(qep, QU_job_slots), lGetUlong(qep, QU_suspended_on_subordinate), so))
             continue;
 
-         subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_qname));
+         subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_name));
          if (!subqep) {
             DPRINTF(("queue "SFQ": can't find "
                   "subordinated queue "SFQ".\n", 
-                  lGetString(qep, QU_qname), lGetString(so, SO_qname)));
+                  lGetString(qep, QU_qname), lGetString(so, SO_name)));
             continue;
          }
          ret |= usos(subqep, 0);
@@ -278,7 +279,7 @@ int how
       const char *so_qname;
       lListElem *refqep;
 
-      so_qname = lGetString(so, SO_qname);
+      so_qname = lGetString(so, SO_name);
   
       /* check for recursions to our self */
       if (!strcmp(qname, so_qname)) {
@@ -339,7 +340,7 @@ lListElem *queueep
 
    for_each(qep, Master_Queue_List) {
       for_each(so, lGetList(qep, QU_subordinate_list)) {
-         if (!strcmp(lGetString(so, SO_qname), lGetString(queueep, QU_qname))) {
+         if (!strcmp(lGetString(so, SO_name), lGetString(queueep, QU_qname))) {
             /* suspend the queue if neccessary */
             if (tst_sos(qslots_used(qep), lGetUlong(qep, QU_job_slots),
                   lGetUlong(qep, QU_suspended_on_subordinate), so))
@@ -402,7 +403,7 @@ int recompute_caches
    DENTER(TOP_LAYER, "suspend_all");
 
    for_each(so, sol) {
-      qnm = lGetString(so, SO_qname);
+      qnm = lGetString(so, SO_name);
       qep = queue_list_locate(Master_Queue_List, qnm);
       if (qep)
          ret |=sos(qep, recompute_caches);
@@ -423,7 +424,7 @@ int recompute_caches
    DENTER(TOP_LAYER, "unsuspend_all");
 
    for_each(so, sol) {
-      qnm = lGetString(so, SO_qname);
+      qnm = lGetString(so, SO_name);
       qep = lGetElemStr(Master_Queue_List, QU_qname, qnm);
       if (qep)
          ret |=usos(qep, recompute_caches);

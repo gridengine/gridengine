@@ -37,7 +37,6 @@
 #include "symbols.h"
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
-#include "sge_resource.h"
 #include "commlib.h"
 #include "usage.h"
 #include "parse_qsub.h"
@@ -54,6 +53,7 @@
 #include "read_defaults.h"
 #include "sge_prog.h"
 #include "sge_answer.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -468,10 +468,10 @@ int *all_users
 
       parse_list_hardsoft(cmdline, "-l", job,
                            JB_hard_resource_list, JB_soft_resource_list);
-      sge_compress_resources(lGetList(job, JB_hard_resource_list));
+      centry_list_remove_duplicates(lGetList(job, JB_hard_resource_list));
       if (lGetList(job, JB_hard_resource_list))
          nm_set(job_field, JB_hard_resource_list);
-      sge_compress_resources(lGetList(job, JB_soft_resource_list));
+      centry_list_remove_duplicates(lGetList(job, JB_soft_resource_list));
       if (lGetList(job, JB_soft_resource_list))
          nm_set(job_field, JB_soft_resource_list);
 

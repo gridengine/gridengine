@@ -90,7 +90,7 @@ int recurse,        /* if =1 recursive write */
 int root_node 
 ) {
    FILE *fp; 
-   intprt_type print_elements[] = { STN_id, 0 };
+   int print_elements[] = { STN_id, 0 };
    const char *delis[] = {":", ",", NULL};
    lListElem *cep;
    int i;
@@ -199,7 +199,7 @@ int recurse,
 lListElem *rootelem     /* in case of a recursive call this is the root elem
                            of the tree we already read in */
 ) {
-   intprt_type print_elements[] = { STN_id, 0 };
+   int print_elements[] = { STN_id, 0 };
    int complete=0;      /* set to 1 when the node is completly read */
    lListElem *ep=NULL, *unspecified;
    lList *child_list;

@@ -43,6 +43,24 @@ extern "C" {
 /* *INDENT-OFF* */ 
 
 enum {
+   SO_name = SO_LOWERBOUND, 
+   SO_threshold    
+};
+
+SLISTDEF(SO_Type, SubordinateQueue)
+   SGE_STRING(SO_name, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST) 
+   SGE_ULONG(SO_threshold, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(SON)
+   NAME("SO_name")
+   NAME("SO_threshold")
+NAMEEND
+
+#define SOS sizeof(SON)/sizeof(char*)
+
+
+enum {
    QI_hostname = QI_LOWERBOUND,
    QI_name,
    QI_tag,

@@ -44,7 +44,7 @@
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "commlib.h"
 #include "sge_log.h"
 #include "sge_answer.h"

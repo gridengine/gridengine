@@ -65,39 +65,6 @@ enum {
 #define QCAL_SUSPENDED                       0x00040000
 #define QRESCHEDULED                         0x00080000 /* No queue state */
 
-/*
- * SO_Type - _sub_ordinated
- *
- * This list is used as a sublist of QU_Type
- * and is part of the queue configuration.
- *
- * A change of the configuration in this 
- * list has to trigger a new test
- * of suspend_on_subordinate in the 
- * subordinated queues.
- */
-enum {
-   SO_qname = SO_LOWERBOUND, /* name of the subordinated queue */
-   SO_threshold              /* threshold for suspend_on_subordinate 
-                              * here you find the number of used slots 
-                              * in the queue that hosts the SO-List 
-                              * that must be full for triggering a 
-                              * suspend_on_subordinate 
-                              * or 0 which means 'full' */
-};
-
-SLISTDEF(SO_Type, SubordinateQueue)
-   SGE_STRING(SO_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST) /* no hashing, we will not have too many subordinated queues for one queue */
-   SGE_ULONG(SO_threshold, CULL_DEFAULT)
-LISTEND 
-
-NAMEDEF(SON)
-   NAME("SO_qname")
-   NAME("SO_threshold")
-NAMEEND
-
-#define SOS sizeof(SON)/sizeof(char*)
-
 /****** sgeobj/queue/--QU_Type ************************************************
 *  NAME
 *     QU_Type - CULL queue element

@@ -49,7 +49,6 @@
 #include "sge_stdlib.h"
 #include "cull_parse_util.h"
 #include "parse.h"
-#include "sge_resource.h"
 #include "sge_host.h"
 #include "slots_used.h"
 #include "sge_complex_schedd.h"
@@ -725,7 +724,7 @@ lListElem *ep;
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplres = sge_parse_resources(*pplres, argstr, "hard", true);
+         *pplres = centry_list_parse_from_string(*pplres, argstr, true);
          FREE(argstr);
          continue;
       }

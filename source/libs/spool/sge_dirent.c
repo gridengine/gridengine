@@ -36,7 +36,7 @@
 #include "sge_conf.h"
 #include "sgermon.h"
 #include "cull.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "msg_common.h"

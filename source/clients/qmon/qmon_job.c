@@ -65,7 +65,6 @@
 #include "sge_signal.h"
 #include "sge_time.h"
 #include "sge_job_schedd.h"
-#include "sge_resource.h"
 #include "sge_all_listsL.h"
 #include "sge_utility.h"
 #include "sge_feature.h"
@@ -81,6 +80,7 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_object.h"
+#include "sge_centry.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -1487,15 +1487,13 @@ lListElem *jep
 #endif
 
    strcpy(buf, "");
-   unparse_resources(NULL, buf, sizeof(buf), 
-                     lGetList(jep, JB_hard_resource_list));
+   centry_list_parse_from_string(lGetList(jep, JB_hard_resource_list), buf, sizeof(buf));
    sprintf(info, WIDTH"%s", info, "Hard Resources:", buf);
    if (*buf=='\0')
       strcat(info, "\n");
                
    strcpy(buf, "");
-   unparse_resources(NULL, buf, sizeof(buf), 
-                     lGetList(jep, JB_soft_resource_list));
+   centry_list_parse_from_string(lGetList(jep, JB_soft_resource_list), buf, sizeof(buf));
    sprintf(info, WIDTH"%s", info, "Soft Resources:", buf);
    if (*buf=='\0')
       strcat(info, "\n");

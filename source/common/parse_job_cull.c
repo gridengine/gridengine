@@ -41,10 +41,9 @@
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_identL.h"
 #include "sge_job_refL.h"
-#include "sge_resource.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "sge_path_alias.h"
@@ -64,6 +63,7 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_mailrec.h"
+#include "sge_centry.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -398,8 +398,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    parse_list_hardsoft(cmdline, "-l", *pjob, 
                         JB_hard_resource_list, JB_soft_resource_list);
 
-   sge_compress_resources(lGetList(*pjob, JB_hard_resource_list));
-   sge_compress_resources(lGetList(*pjob, JB_soft_resource_list));
+   centry_list_remove_duplicates(lGetList(*pjob, JB_hard_resource_list));
+   centry_list_remove_duplicates(lGetList(*pjob, JB_soft_resource_list));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-m"))) {
       u_long32 ul;
@@ -648,7 +648,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *                 STATUS_EUNKNOWN - bad internal error like NULL pointer 
 *                                   received or no memory
 *                 STATUS_EDISK    - file could not be opened
-*                 stati returned by cull_parse_cmdline
 *
 *  NOTES
 *     Special comments in script files have to start in the first column of a 
@@ -660,7 +659,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *     MAX_STRING_SIZE is defined in common/basis_types.h (current value 2048).
 *
 *  SEE ALSO
-*     cull_parse_cmdline()
+*     centry_list_parse_from_string()
 *     basis_types.h
 *     cod_request(5)
 *******************************************************************************/

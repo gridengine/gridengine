@@ -39,7 +39,7 @@
 
 #include "sge.h"
 #include "qmon_prefL.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "qmon_preferences.h"
 #include "sge_string.h"
 #include "config.h"
@@ -129,7 +129,7 @@ int flag,
 int *tag,
 int parsing_type 
 ) {
-   static intprt_type intprt_as_cplx_entry[] = { 
+   static int intprt_as_cplx_entry[] = { 
       CE_name, 
       CE_stringval,
       0

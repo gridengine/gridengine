@@ -42,7 +42,6 @@
 #include "sge_string.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
-#include "sge_resource.h"
 #include "sge_sched.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -65,6 +64,7 @@
 #include "sge_queue.h"
 #include "sge_stdlib.h"
 #include "sge_ulong.h"
+#include "sge_centry.h"
 
 typedef struct {
    int host;
@@ -567,7 +567,7 @@ char **argv
    ** parsing complex flags and initialising complex list
    */
    if (complexflag) {
-      complex_options = sge_parse_resources(NULL, complexes, "hard", true);
+      complex_options = centry_list_parse_from_string(NULL, complexes, true);
       if (!complex_options) {
          /*
          ** problem: still to tell some more to the user

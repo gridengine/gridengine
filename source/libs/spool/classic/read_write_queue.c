@@ -51,11 +51,12 @@
 #include "sched_conf.h"
 #include "sge_range.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_conf.h"
 #include "sge_queue.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_centry.h"
 
 #include "msg_common.h"
@@ -67,7 +68,7 @@ static char *true_false[] =
    "unknown",
 };
 
-static intprt_type intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
+static int intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
 
 
 /****
@@ -293,7 +294,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    /* --------- QU_subordinate_list */
    if (!set_conf_subordlist(alpp, clpp, fields, "subordinate_list", ep, 
-            QU_subordinate_list, SO_Type, SO_qname, SO_threshold)) {
+            QU_subordinate_list, SO_Type, SO_name, SO_threshold)) {
       DEXIT;
       return -1;
    }
@@ -729,7 +730,7 @@ const lListElem *qep
       lListElem *ep;
 
       for_each (ep, lGetList(qep, QU_subordinate_list)) {
-         FPRINTF((fp, " %s", lGetString(ep, SO_qname))); 
+         FPRINTF((fp, " %s", lGetString(ep, SO_name))); 
          t = lGetUlong(ep, SO_threshold);
          if (t) {
             FPRINTF((fp, "="u32"%s", t, lNext(ep)?",":""));

@@ -35,7 +35,6 @@
 #include "symbols.h"
 #include "sge_all_listsL.h"
 #include "parse_qsubL.h"
-#include "sge_resource.h"
 #include "parse_job_cull.h"
 #include "sge_mailrec.h"
 #include "parse_qsub.h"
@@ -51,9 +50,10 @@
 #include "sge_stdlib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
-#include "sge_cstring.h"
 #include "sge_ckpt.h"
 #include "sge_ulong.h"
+#include "sge_str.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 
@@ -843,12 +843,7 @@ u_long32 flags
 
          DPRINTF(("\"-l %s\"\n", *sp));
 
-         if (is_hard_soft() < 2)
-            resource_list =
-               sge_parse_resources(NULL, *sp, "hard", true);
-         else
-            resource_list =
-               sge_parse_resources(NULL, *sp, "soft", true);
+         resource_list = centry_list_parse_from_string(NULL, *sp, true);
          if (!resource_list) {
              sprintf(str,MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S ,
              *sp);
@@ -1484,7 +1479,7 @@ DTRACE;
  
          DPRINTF(("\"-u %s\"\n", *sp));
 
-         cstring_list_parse_from_string(&user_list, *sp, ",");
+         str_list_parse_from_string(&user_list, *sp, ",");
 
          ep_opt = sge_add_arg(pcmdline, u_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, user_list);  

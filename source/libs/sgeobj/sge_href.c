@@ -33,7 +33,7 @@
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_hostname.h"
@@ -44,7 +44,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define HOSTREF_LAYER TOP_LAYER
+#define HOSTREF_LAYER BASIS_LAYER
 
 /****** sgeobj/href/href_list_add() *******************************************
 *  NAME

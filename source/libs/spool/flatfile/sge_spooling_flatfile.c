@@ -64,7 +64,7 @@
 #include "commlib.h"
 
 #include "sge_conf.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"

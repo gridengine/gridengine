@@ -51,7 +51,7 @@
 #include "sge_qexecL.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_security.h"
 #include "sge_var.h"
 

@@ -36,6 +36,7 @@
 #include "subordinate_schedd.h"
 #include "sgermon.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 
 /* -----------------------------------------------
 

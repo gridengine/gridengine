@@ -58,9 +58,9 @@
 #include "sge_conf.h"
 #include "sge_centry.h"
 
-static intprt_type intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
+static int intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
 
-static intprt_type intprt_as_usage[] = { UA_name, UA_value, 0 };
+static int intprt_as_usage[] = { UA_name, UA_value, 0 };
 
 static const char *delis[] = {"=", ",", "\n"};
 

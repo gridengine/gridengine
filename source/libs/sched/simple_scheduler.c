@@ -51,7 +51,7 @@
 #include "sge_queue.h"
 #include "sge_range.h"
 #include "sge_answer.h"
-#include "sge_stringL.h"
+#include "sge_strL.h"
 #include "sge_orderL.h"
 
 #include "sge_ssi.h"

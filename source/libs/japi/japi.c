@@ -64,7 +64,7 @@
 #include "sge_ja_taskL.h"
 #include "sge_japiL.h"
 #include "sge_identL.h"
-#include "sge_stringL.h"
+#include "sge_strL.h"
 #include "sge_answerL.h"
 #include "sge_reportL.h"
 

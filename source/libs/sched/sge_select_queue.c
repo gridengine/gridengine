@@ -41,7 +41,6 @@
 #include "cull.h"
 #include "sge_select_queue.h"
 #include "sge_parse_num_par.h"
-#include "sge_resource.h"
 #include "sge_complex_schedd.h"
 #include "valid_queue_user.h"
 #include "subordinate_schedd.h"
@@ -64,6 +63,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_job.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_userprj.h"
 #include "sge_host.h"
 #include "sge_ckpt.h"
@@ -2382,8 +2382,7 @@ int available_slots_at_queue(
                                 qslots, DOMINANT_LAYER_QUEUE , 0, QUEUE_TAG)){
             if (qslots==1) {
                char buff[1024 + 1];
-               unparse_resources(NULL, buff, sizeof(buff) - 1,
-                        lGetList(job, JB_hard_resource_list));
+               centry_list_append_to_string(lGetList(job, JB_hard_resource_list), buff, sizeof(buff) - 1);
                if (*buff && (buff[strlen(buff) - 1] == '\n'))
                   buff[strlen(buff) - 1] = 0;
                schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
@@ -2467,8 +2466,7 @@ static int available_slots_at_host(lListElem *job, lListElem *ja_task, lListElem
    
             if (hslots==minslots) {
                char buff[1024 + 1];
-               unparse_resources(NULL, buff, sizeof(buff) - 1,
-                        lGetList(job, JB_hard_resource_list));
+               centry_list_append_to_string(lGetList(job, JB_hard_resource_list), buff, sizeof(buff) - 1);
                if (*buff && (buff[strlen(buff) - 1] == '\n'))
                   buff[strlen(buff) - 1] = 0;
    
@@ -2585,7 +2583,7 @@ int *violations)
    if (not_select_resource && global_slots == 0) {
       char buff[1024 + 1];
 
-      unparse_resources(NULL, buff, sizeof(buff) - 1, lGetList(job, JB_hard_resource_list));
+      centry_list_append_to_string(lGetList(job, JB_hard_resource_list), buff, sizeof(buff) - 1);
       if (*buff && (buff[strlen(buff) - 1] == '\n'))
          buff[strlen(buff) - 1] = 0;
       schedd_mes_add (lGetUlong(job, JB_job_number), SCHEDD_INFO_CANNOTRUNGLOBALLY_SS,
@@ -2824,7 +2822,7 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
             */
             if (!tst_sos(qslots,        total, 0, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, 0, so)) {   /* but now                */
-               ret |= sos_schedd(lGetString(so, SO_qname), global_queue_list);
+               ret |= sos_schedd(lGetString(so, SO_name), global_queue_list);
 
                /* warn on jobs that were dispatched into that queue in
                   the same scheduling interval based on the orders list */
@@ -2833,9 +2831,9 @@ lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
                   for_each (order, orders_list) {
                      if (lGetUlong(order, OR_type) != ORT_start_job)
                         continue;
-                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_qname), OR_queuelist)) {
+                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
                         WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
-                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_qname)));
+                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
                      }
                   }
                }

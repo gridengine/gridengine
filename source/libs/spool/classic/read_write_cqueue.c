@@ -40,7 +40,7 @@
 #include "sge.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "read_write_cqueue.h"
@@ -1296,12 +1296,6 @@ write_cqueue(int spool, int how, const lListElem *ep)
 
             write_qinstance(0, 4, qinstance, qi_fp);
 
-            FPRINTF((qi_fp, "qname              %s\n", 
-                     lGetString(qinstance, QI_name)));
-            FPRINTF((qi_fp, "hostname           %s\n", 
-                     lGetHost(qinstance, QI_hostname)));
-            FPRINTF((qi_fp, "seq_no             %d\n", 
-                     (int) lGetUlong(qinstance, QI_seq_no)));
             fclose(qi_fp);
          }
          sge_dstring_free(&qi_dir);

@@ -46,7 +46,7 @@
 #include "gdi_checkpermissions.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
-#include "sge_cstring.h"
+#include "sge_str.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -321,7 +321,7 @@ lList *alp = NULL;
 
          sp++;
          if (*sp) {
-            cstring_list_parse_from_string(&user_list, *sp, ",");
+            str_list_parse_from_string(&user_list, *sp, ",");
 
             ep_opt = sge_add_arg(ppcmdline, 0, lListT, *(sp - 1), *sp);
             lSetList(ep_opt, SPA_argval_lListT, user_list);

@@ -44,7 +44,7 @@
 #include "sge_userset.h"
 #include "sge_utility.h"
 #include "sge_pe.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

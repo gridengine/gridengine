@@ -69,12 +69,12 @@ int cull_parse_string_list(
 char **pstrlist,
 const char *listname,
 lDescr *descr,
-intprt_type *interpretation_rule,
+int *interpretation_rule,
 lList **pplist 
 ) {
    lList *list;
    lListElem *ep;
-   intprt_type *rule;
+   int *rule;
    int type;
 
    DENTER(BASIS_LAYER, "cull_parse_string_list");
@@ -275,7 +275,7 @@ char *str,
 lList **lpp,
 const char *name,
 lDescr *descr,
-intprt_type *interpretation_rule 
+int *interpretation_rule 
 ) {
    char **pstr;
    int ret;
@@ -641,7 +641,7 @@ char *str,
 lList **lpp,
 char *name,
 lDescr *descr,
-intprt_type *interpretation_rule 
+int *interpretation_rule 
 ) {
    char **pstr;
    int ret;
@@ -721,12 +721,12 @@ FILE *fp,
 char *buff,
 u_long32 max_len,
 lList *lp,
-intprt_type *which_elements_rule,
+int *which_elements_rule,
 const char *pdelis[],
 unsigned long flags 
 ) {
    lListElem *ep;
-   intprt_type *rule;
+   int *rule;
    int type;
    const lDescr *descr;
    int begin = 1;

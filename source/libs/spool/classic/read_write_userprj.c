@@ -62,8 +62,8 @@
 
 #include "msg_common.h"
 
-static intprt_type intprt_as_usage[] = { UA_name, UA_value, 0 };
-static intprt_type intprt_as_acl[] = { US_name, 0 };
+static int intprt_as_usage[] = { UA_name, UA_value, 0 };
+static int intprt_as_acl[] = { US_name, 0 };
 
 static int read_userprj_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int user, int *tag, int parsing_type);
 

@@ -154,7 +154,7 @@ FILE *fpout,
 int spool 
 ) {
    FILE *fp;
-   intprt_type print_elements[] = { UE_name, 0 };
+   int print_elements[] = { UE_name, 0 };
    const char *delis[] = {":", ",", NULL};
    const char **ptr;
    u_long32 bitmask, type;

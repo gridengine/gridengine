@@ -49,6 +49,7 @@
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
 #include "sge_centry.h"
 #include "sge_var.h"
 #include "sge_host.h"
@@ -449,7 +450,7 @@ Cardinal size
    else if ( type == QmonQAT_Type )
       qmonSet2xN(w, lp, AT_account, AT_cell);
    else if ( type == QmonQSO_Type )
-      qmonSet2xN(w, lp, SO_qname, SO_threshold);
+      qmonSet2xN(w, lp, SO_name, SO_threshold);
    else if ( type == QmonQUA_Type )
       qmonSet2xN(w, lp, UA_name, UA_value);
       
@@ -490,7 +491,7 @@ Cardinal size
    else if ( type == QmonQAT_Type )
       lp = qmonGet2xN(w, AT_Type, AT_account, AT_cell);
    else if ( type == QmonQSO_Type )
-      lp = qmonGet2xN(w, SO_Type, SO_qname, SO_threshold);
+      lp = qmonGet2xN(w, SO_Type, SO_name, SO_threshold);
    else if ( type == QmonQUA_Type )
       lp = qmonGet2xN(w, UA_Type, UA_name, UA_value);
 
@@ -817,7 +818,6 @@ lListElem *ep,
 String *ce_entry 
 ) {
    int i, type, relop; 
-   double tmp_double;
    u_long32 requestable = REQU_NO;
 
    DENTER(GUI_LAYER, "setCE_TypeValues");

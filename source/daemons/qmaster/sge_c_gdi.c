@@ -1653,11 +1653,7 @@ int sub_command
    if (object->on_success)
       object->on_success(new_obj, old_obj, object);
 
-   DTRACE;
-
    lFreeElem(old_obj);
-
-   DTRACE;
 
    INFO((SGE_EVENT, 
       add?MSG_SGETEXT_ADDEDTOLIST_SSSS:

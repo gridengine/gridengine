@@ -83,7 +83,7 @@
 #include "gdi_checkpermissions.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "scheduler.h"
 #include "sge_support.h"
 #include "sge_stdlib.h"
@@ -4074,12 +4074,15 @@ DPRINTF(("ep: %s %s\n",
       /* "-acq cqueue"  */
       if (!strcmp("-acq", *spp)) {
          lList *answer_list = NULL;
+         const char *name = "template";
 
-         spp = sge_parser_get_next(spp);
-
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            name = *spp;
+         }
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
-         cqueue_add(&answer_list, *spp);
+         cqueue_add(&answer_list, name);
          show_gdi_request_answer(answer_list);
          spp++;
          continue;
@@ -4091,6 +4094,7 @@ DPRINTF(("ep: %s %s\n",
 
          spp = sge_parser_get_next(spp);
 
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
          cqueue_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);

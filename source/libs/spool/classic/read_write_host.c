@@ -55,10 +55,10 @@
 
 #include "sge_static_load.h"
 
-static intprt_type intprt_as_scaling[] = { HS_name, HS_value, 0 };
-static intprt_type intprt_as_load[] = { HL_name, HL_value, 0 };
-static intprt_type intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
-static intprt_type intprt_as_reschedule[] = { RU_job_number, RU_task_number,
+static int intprt_as_scaling[] = { HS_name, HS_value, 0 };
+static int intprt_as_load[] = { HL_name, HL_value, 0 };
+static int intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
+static int intprt_as_reschedule[] = { RU_job_number, RU_task_number,
    RU_state, 0 };
 
 
@@ -459,7 +459,7 @@ char *file
          goto FPRINTF_ERROR;
       } 
       if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-         intprt_type print_elements[] = { HS_name, HS_value, 0 };
+         int print_elements[] = { HS_name, HS_value, 0 };
          const char *delis[] = {"=", ",", NULL};
 
          ret = fprint_cull_list(fp,  "projects                   ", 

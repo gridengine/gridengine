@@ -37,7 +37,7 @@
 #include "sge.h"
 #include "symbols.h"
 #include "sge_ja_task.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "sge_identL.h"
 #include "sge_pe.h"
 #include "sge_signal.h"

@@ -45,7 +45,6 @@
 #include "commlib.h"
 #include "sge_host.h"
 #include "slots_used.h"
-#include "sge_resource.h"
 #include "sig_handlers.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
@@ -1502,7 +1501,7 @@ lList **ppljid
       if(parse_string(ppcmdline, "-F", &alp, &argstr)) {
          (*pfull) |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
          if (argstr) {
-            *pplqresource = sge_parse_resources(*pplqresource, argstr, "hard", false);
+            *pplqresource = centry_list_parse_from_string(*pplqresource, argstr, false);
             FREE(argstr);
          }
          continue;
@@ -1535,7 +1534,7 @@ lList **ppljid
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplresource = sge_parse_resources(*pplresource, argstr, "hard", false);
+         *pplresource = centry_list_parse_from_string(*pplresource, argstr, false);
          FREE(argstr);
          continue;
       }

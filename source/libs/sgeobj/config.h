@@ -65,7 +65,7 @@ bool set_conf_ulong(lList **alpp, lList **clpp, int fields[], const char *key, l
 
 bool set_conf_double(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, int operation_nm);
 
-bool set_conf_deflist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, intprt_type *interpretation_rule);
+bool set_conf_deflist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int *interpretation_rule);
 
 bool set_conf_timestr(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 

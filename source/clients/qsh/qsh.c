@@ -59,7 +59,6 @@
 #include "show_job.h"
 #include "commlib.h"
 #include "sig_handlers.h"
-#include "sge_resource.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"

@@ -1,24 +1,28 @@
+EB-2003-09-28-0: Cleanup:   moved/renamed serveral functions
+                            (EB-2003-09-24-1, EB-2003-09-24-0)
+
 SG-2003-09-26-4: Enhancem.: Updated the resource_attributes.txt file
 
-SG-2003-09-25-3: Bugfix:    The tickets are calculated for all pending jobs and not only
-                            for the ones, which can be dispatched in a scheduler run.
+SG-2003-09-25-3: Bugfix:    The tickets are calculated for all pending jobs 
+                            and not only for the ones, which can be dispatched 
+                            in a scheduler run.
                  Review:    AA 
                  Changed:   scheduler
 
-SG-2003-09-25-2: Enhancem.: Qmaster ensures, that the type for build in attributes are
-                            not changed. 
+SG-2003-09-25-2: Enhancem.: Qmaster ensures, that the type for build in 
+                            attributes are not changed. 
                  Review:    AA
                  Changed:   qmaster, qconf, qmon
 
-SG-2003-09-25-1: Enhancem.: All attribute changes are validated now and only valid ones
-                            are commited. In all other cases error messages are send
+SG-2003-09-25-1: Enhancem.: All attribute changes are validated now and only 
+                            valid ones are commited. In all other cases error 
+                            messages are send
                             to the user.
-
                  Review:    AA
                  Changed:   qmaster, qconf, qmon
 
-SG-2003-09-25-0: Bugfix:    A failed namechange of an attribute resulted in the deletion
-                            of that attribute. 
+SG-2003-09-25-0: Bugfix:    A failed namechange of an attribute resulted in
+                            the deletion of that attribute. 
                  Review:    AA
                  Changed:   qmaster, qconf, qmon
 
@@ -26,8 +30,8 @@ EB-2003-09-24-1: Enhancem.: qconf -?attr for QCs
 
 EB-2003-09-24-0: Enhancem.: qconf -sq for QCs
 
-SG-2003-09-16-1: Enhancem.: New document describing the functionality of attributes.
-
+SG-2003-09-16-1: Enhancem.: New document describing the functionality of 
+                            attributes.
                  Changed:   doc/devel/rfe/resource_attributes.txt
 
 SG-2003-09-15-6: Bugfix:    The running ticket update did not work correctly when the

@@ -42,7 +42,7 @@
 #include "sge_log.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_stringL.h"
+#include "sge_str.h"
 #include "job_report_execd.h"
 #include "execd_ck_to_do.h"
 #include "setup_execd.h"

@@ -154,6 +154,8 @@ proc project_access_lists_setup  {} {
 proc test_job_run { id_string job_id } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
 
+   wait_for_jobpending $job_id "leeper" 60 1
+
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
@@ -179,10 +181,10 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
    # "userA_project_name"    C
    # "userB_project_name"    D
 
-
+   
    puts $CHECK_OUTPUT "id_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
-   sleep 1
+   sleep 2
    
 
    if { [ string first "-P" $jobargs] >= 0 } {
@@ -262,6 +264,8 @@ proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
    
    puts $CHECK_OUTPUT "id_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
+
+   sleep 2
  
    if { [ string first "-P" $jobargs] >= 0 } {
       set no_P 1

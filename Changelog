@@ -1,3 +1,6 @@
+CR-2005-01-07-0: Testsuite: enhanced tight integration check to report
+                            errors for issue #1413
+
 DT-2005-01-05-2: Enhancem.: o aimk now checks the Java version
                  Changed:   aimk.site
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/08/21 13:16:35 $     Revision: $Revision: 1.16 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/08/28 12:30:54 $     Revision: $Revision: 1.17 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/08/21 13:16:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/08/28 12:30:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -225,7 +225,9 @@ of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
 jobs to be started afterwards. 
 An optional prefix "user@" specifies the user under which this procedure
-is to be started.
+is to be started. The procedures standard
+output and the error output stream are written to the same file used also for
+the standard output and error output of each job.
 This procedure is intended as a means
 for the xxQS_NAMExx administrator to automate the execution of general site
 specific tasks like the preparation of temporary file systems with the
@@ -279,7 +281,9 @@ The executable path of a shell script that is started after execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
 jobs that has just completed. An optional prefix "user@" specifies the 
-user under which this procedure is to be started.
+user under which this procedure is to be started. The procedures standard
+output and the error output stream are written to the same file used also for
+the standard output and error output of each job.
 This procedure is intended as a means
 for the xxQS_NAMExx administrator to automate the execution of general site
 specific tasks like the cleaning up of temporary file systems with the

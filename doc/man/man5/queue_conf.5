@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2002/03/22 10:54:06 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2002/08/28 12:30:54 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2002/03/22 10:54:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2002/08/28 12:30:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -301,7 +301,9 @@ The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
 jobs to be started afterwards. An optional prefix "user@" specifies the 
-user under which this procedure is to be started.
+user under which this procedure is to be started. The procedures standard
+output and the error output stream are written to the same file used also for
+the standard output and error output of each job.
 This procedure is intended as a means
 for the xxQS_NAMExx administrator to automate the execution of general site
 specific tasks like the preparation of temporary file systems with the
@@ -328,8 +330,9 @@ of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
 jobs that has just completed. 
 An optional prefix "user@" specifies the user under which this procedure
-is to be started.
-This procedure is intended as a means
+is to be started. The procedures standard output and the error output 
+stream are written to the same file used also for the standard output 
+and error output of each job. This procedure is intended as a means
 for the xxQS_NAMExx administrator to automate the execution of general site
 specific tasks like the cleaning up of temporary file systems with the
 need for the same context information as the job. This queue configuration 

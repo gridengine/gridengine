@@ -68,7 +68,7 @@ proc install_qmaster {} {
  global check_use_installed_system CHECK_ADMIN_USER_SYSTEM CHECK_DEFAULT_DOMAIN
  global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_COMMD_PORT
  global CHECK_REPORT_EMAIL_TO CHECK_MAIN_RESULTS_DIR CHECK_FIRST_FOREIGN_SYSTEM_USER
- global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
+ global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO CHECK_DNS_DOMAINNAME
  global CHECK_PROTOCOL_DIR
 
  puts $CHECK_OUTPUT "install qmaster ($ts_config(product_type) system) on host $CHECK_CORE_MASTER ..."
@@ -309,7 +309,7 @@ proc install_qmaster {} {
 
        -i $sp_id "lease enter the email address of the CA administrator" { 
           if { $CHECK_REPORT_EMAIL_TO == "none" } {
-             set CA_admin_mail "$CHECK_USER@sun.com"
+             set CA_admin_mail "${CHECK_USER}@${CHECK_DNS_DOMAINNAME}"
           } else {
              set CA_admin_mail $CHECK_REPORT_EMAIL_TO
           }
@@ -676,7 +676,7 @@ proc install_qmaster {} {
 
        -i $sp_id $ENTER_ADMIN_MAIL { 
           if { $CHECK_REPORT_EMAIL_TO == "none" } {
-             set admin_mail "$CHECK_USER@sun.com"
+             set admin_mail "${CHECK_USER}@${CHECK_DNS_DOMAINNAME}"
           } else {
              set admin_mail $CHECK_REPORT_EMAIL_TO
           }

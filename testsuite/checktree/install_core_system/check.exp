@@ -60,19 +60,19 @@ lappend check_functions "install_qmaster"
 lappend check_functions "reread_bootstrap"
 lappend check_functions "make_user_cert"
 lappend check_functions "install_execd"
-#lappend check_functions "cleanup_system"
-#lappend check_functions "setup_queues"
-#lappend check_functions "setup_testcheckpointobject"
-#lappend check_functions "setup_conf" 
-#lappend check_functions "setup_execd_conf"
-#lappend check_functions "setup_mytestproject" 
-#lappend check_functions "setup_mytestpe" 
-#lappend check_functions "setup_deadlineuser" 
-#lappend check_functions "setup_schedconf" 
-#lappend check_functions "setup_default_calendars"
-#lappend check_functions "setup_check_user_permissions"
-#lappend check_functions "setup_check_messages_files"
-#lappend check_functions "setup_inhouse_cluster"
+lappend check_functions "cleanup_system"
+lappend check_functions "setup_queues"
+lappend check_functions "setup_testcheckpointobject"
+lappend check_functions "setup_conf" 
+lappend check_functions "setup_execd_conf"
+lappend check_functions "setup_mytestproject" 
+lappend check_functions "setup_mytestpe" 
+lappend check_functions "setup_deadlineuser" 
+lappend check_functions "setup_schedconf" 
+lappend check_functions "setup_default_calendars"
+lappend check_functions "setup_check_user_permissions"
+lappend check_functions "setup_check_messages_files"
+lappend check_functions "setup_inhouse_cluster"
 
 # ---------------------------------------------------------------------------------
 # here the tests begin ....
@@ -647,6 +647,9 @@ proc setup_conf {} {
    global ts_config
   global CHECK_ARCH
   global CHECK_DEFAULT_DOMAIN 
+  global CHECK_REPORT_EMAIL_TO 
+  global CHECK_USER 
+  global CHECK_DNS_DOMAINNAME
 
   get_config old_config
   set params(reschedule_unknown) "00:00:00"
@@ -668,7 +671,13 @@ proc setup_conf {} {
   set params(user_lists) "none"
   set params(xuser_lists) "none"
   set params(max_unheard) "00:01:00"
-  set params(administrator_mail) "none"
+
+  if { $CHECK_REPORT_EMAIL_TO == "none" } {
+     set params(administrator_mail) "${CHECK_USER}@${CHECK_DNS_DOMAINNAME}"
+  } else {
+     set params(administrator_mail) $CHECK_REPORT_EMAIL_TO
+  }
+
   set params(set_token_cmd) "none"
   set params(pag_cmd) "none"
   set params(token_extend_time) "none"

@@ -1,3 +1,6 @@
+CR-2004-02-09-2: Testuiste: Fixed problems with admin mail address in install
+                            core system test
+
 SG-2004-02-09-2: Enhancem.: added the schema for qstat
 
 SG-2004-02-09-1: Bugfix:    -qstat -r -xml died.

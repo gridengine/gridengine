@@ -1,3 +1,7 @@
+CR-2003-04-09-1  Testsuite: using of open_spawn_process() may cause problems
+                            on NFS mounted testsuite installations. Using
+                            open_remote_spawn_process() even for local spawns.
+
 EB-2003-04-09-0  Bugfix:    cannot qalter/qhold/qrls several tasks of same job
                  Issue:     526
                  Bugtraq:   4845505

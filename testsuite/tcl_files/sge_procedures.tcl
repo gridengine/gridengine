@@ -2542,7 +2542,7 @@ proc get_queue { q_name change_array } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc suspend_queue { qname } {
- global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST
+ global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
 
   log_user 0 
   set timeout 30
@@ -2550,8 +2550,8 @@ proc suspend_queue { qname } {
 
   
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $qname"
-  set sid [ open_spawn_process $program  ]     
+  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+  set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $qname" ]
   set sp_id [ lindex $sid 1 ]
   set result -1	
 
@@ -2613,7 +2613,7 @@ proc suspend_queue { qname } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc unsuspend_queue { queue } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
 
   set timeout 30
   log_user 0 
@@ -2621,8 +2621,8 @@ proc unsuspend_queue { queue } {
   set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_UNSUSPENDQ_SSS] "*" "*" "*" ]
 
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -us $queue"
-  set sid [ open_spawn_process $program  ]     
+  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+  set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-us $queue" ]     
   set sp_id [ lindex $sid 1 ]
   set result -1	
   log_user 0 
@@ -2986,12 +2986,12 @@ proc add_checkpointobj { change_array } {
 #     sge_procedures/add_checkpointobj()
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $checkpoint_name "*" ]
 
   log_user 0 
-  set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dckpt" "$checkpoint_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dckpt $checkpoint_name"  ]
   set sp_id [ lindex $id 1 ]
   set timeout 30
   set result -1 
@@ -3435,12 +3435,13 @@ proc add_prj { change_array } {
 #*******************************
 proc del_pe { mype_name } {
    
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
 
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mype_name "*" ]
 
   log_user 0 
-  set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dp" "$mype_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dp $mype_name"]
+
   set sp_id [ lindex $id 1 ]
 
   set result -1
@@ -3505,6 +3506,7 @@ proc del_pe { mype_name } {
 #*******************************
 proc del_prj { myprj_name } {
   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_USER CHECK_CORE_MASTER
+  global CHECK_HOST
 
   if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
      set_error -1 "del_prj - not possible for sge systems"
@@ -3514,7 +3516,7 @@ proc del_prj { myprj_name } {
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $myprj_name "*" ]
 
   log_user 0
-  set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dprj" "$myprj_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dprj $myprj_name"]
   set sp_id [ lindex $id 1 ]
   set result -1
   set timeout 30 	
@@ -3585,7 +3587,9 @@ proc del_user { myuser_name } {
   set REMOVED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*" ]
 
   log_user 0
-  set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-duser" "$myuser_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-duser $myuser_name"]
+   
+
   set sp_id [ lindex $id 1 ]
   set result -1
   set timeout 30 	
@@ -3647,12 +3651,13 @@ proc del_user { myuser_name } {
 #     ???/???
 #*******************************
 proc del_calendar { mycal_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mycal_name "*" ]
 
   log_user 0
-  set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dcal" "$mycal_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dcal $mycal_name"]
+
   set sp_id [ lindex $id 1 ]
   set timeout 30 
   set result -1	
@@ -3795,7 +3800,7 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
   if { $mytime == $check_timestamp } {
      puts $CHECK_OUTPUT "was_job_running - waiting for job ..."
-     sleep 2
+     sleep 1
   }
   set check_timestamp $mytime
 
@@ -3938,7 +3943,7 @@ proc wait_for_load_from_all_queues { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for load value report from all queues ..."
-      sleep 5
+      sleep 1
       set result ""
       set catch_return [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result ]
       if { $catch_return == 0 } {
@@ -4248,7 +4253,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for end of all jobs ..."
-      sleep 5
+      sleep 1
       set result ""
       set catch_return [ catch {eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -s pr" } result ]
       if { $catch_return == 0 } {
@@ -4392,8 +4397,9 @@ proc suspend_job { id } {
 
 
    log_user 0 
-	set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $id"
-	set sid [ open_spawn_process $program  ]     
+	set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+   set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $id"  ]     
+
    set sp_id [ lindex $sid 1 ]
 	set timeout 30
    set result -1	
@@ -4459,8 +4465,8 @@ proc unsuspend_job { job } {
 
   log_user 0 
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -us $job"
-  set sid [ open_spawn_process $program  ]     
+  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+  set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-us $job" ]
   set sp_id [ lindex $sid 1 ]
   set timeout 30
   set result -1	
@@ -4565,28 +4571,28 @@ proc is_job_id { job_id } {
 #*******************************
 proc delete_job { jobid { wait_for_end 0 }} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
+   global CHECK_USER
 
 
-   sleep 1
+#   sleep 1
    set REGISTERED1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELTASK_SUU] "*" "*" "*"]
    set REGISTERED2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELJOB_SU] "*" "*" ]
    set DELETED1  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETETASK_SUU] "*" "*" "*"]
    set DELETED2  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETEJOB_SU] "*" "*" ]
 
-   set result -1
-
+   set result -100
    if { [ is_job_id $jobid] } {
       # spawn process
-      log_user 1
-      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $jobid"
-      set id [ open_spawn_process $program  ]
+      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
+      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$program" "$jobid" ]
       set sp_id [ lindex $id 1 ]
       set timeout 60 	
       log_user 1
    
+      while { $result == -100 } {
       expect {
           -i $sp_id full_buffer {
-             set result -1
+             set result -5
              add_proc_error "delete_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
           }
           -i $sp_id $REGISTERED1 {
@@ -4613,9 +4619,14 @@ proc delete_job { jobid { wait_for_end 0 }} {
              puts $CHECK_OUTPUT $expect_out(0,string)
              set result 0
           }
-          -i $sp_id default {
+          -i default {
+             if { [info exists expect_out(buffer)] } {
+                puts $CHECK_OUTPUT $expect_out(buffer)
+                add_proc_error "delete_job" -1 "expect default switch\noutput was:\n>$expect_out(buffer)<"
+             }
              set result -1 
           }
+      }
       }
       # close spawned process 
       close_spawn_process $id 1
@@ -4624,7 +4635,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
       add_proc_error "delete_job" -1 "job id is no integer"
    }
    if { $result != 0 } {
-      add_proc_error "delete_job" -1 "could not delete job $jobid"
+      add_proc_error "delete_job" -1 "could not delete job $jobid\nresult=$result"
    }
    if { $wait_for_end != 0 && $result == 0 } {
       set my_timeout [timestamp]
@@ -4641,7 +4652,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
              set my_second_qdel_timeout $my_timeout
              delete_job $jobid
           }
-          sleep 2
+          sleep 1
       }
    }
    return $result
@@ -6115,14 +6126,15 @@ proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
 #*******************************
 proc hold_job { jobid } {
 
-   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
 
    set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
 
    # spawn process
    log_user 0
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold $jobid"
-   set id [ open_spawn_process $program  ]
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold"
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "$jobid" ]
+
    set sp_id [ lindex $id 1 ]
    set timeout 30
    set result -1
@@ -6181,7 +6193,7 @@ proc hold_job { jobid } {
 #*******************************
 proc release_job { jobid } {
 
-   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
  
    # spawn process
    log_user 0
@@ -6189,8 +6201,9 @@ proc release_job { jobid } {
    set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
    set MODIFIED_HOLD_ARRAY [ translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JATASK_SUU] "*" "*" "*"]
 
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls $jobid"
-   set id [ open_spawn_process $program  ]
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls"
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "$jobid" ]
+
    set sp_id [ lindex $id 1 ]
    set timeout 30
    set result -1	

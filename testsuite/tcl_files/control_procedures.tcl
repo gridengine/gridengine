@@ -153,7 +153,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
-#  set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
       debug_puts "starting -> $prog_binary $prog_args"

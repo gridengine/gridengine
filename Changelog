@@ -1,3 +1,10 @@
+CR-2004-02-26-1: Bugfix:    using cl_com_ignore_timeouts() in default signal
+                            handler to induce communication functions to return
+                            without timeout in order to terminate sge client
+                            programs immediately after sending TERM signal.
+                 Changed:   all binaries
+                 Issue:     686 ( fixes all client programs expect "qsub" )
+
 AH-2004-02-26-0: Doc:       Mention sched_conf(5) monitor=1 params setting.
                             Document improved handling of wildcard PE request.
 

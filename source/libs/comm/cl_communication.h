@@ -194,7 +194,10 @@ const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);       /*
 const char* cl_com_get_mih_df_string(cl_xml_mih_data_format_t df);
 const char* cl_com_get_mih_mat_string(cl_xml_ack_type_t mat);
 
+/* This can be called by an signal handler to trigger abort of communications */
+void cl_com_ignore_timeouts(cl_bool_t flag); 
 
+cl_bool_t cl_com_get_ignore_timeouts_flag(void);
 
 
 /* message functions */

@@ -241,7 +241,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
 
          CL_LOG(CL_LOG_INFO,"gettimeofday");
          gettimeofday(&now,NULL);
-         if (connection->write_buffer_timeout_time <= now.tv_sec) {
+         if (connection->write_buffer_timeout_time <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
             timeout_flag = 1;
             break;
          }

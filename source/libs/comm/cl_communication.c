@@ -55,6 +55,7 @@
 
 static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent );
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent );
+static cl_bool_t cl_ingore_timeout = CL_FALSE;
 
 
 /****** cl_communication/cl_com_setup_tcp_connection() *************************
@@ -2545,6 +2546,25 @@ const char* cl_com_get_mih_df_string(cl_xml_mih_data_format_t df) {
    return "undefined";
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_ignore_timeouts()"
+void cl_com_ignore_timeouts(cl_bool_t flag) {
+   cl_ingore_timeout = flag;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_ignore_timeouts_flag()"
+cl_bool_t cl_com_get_ignore_timeouts_flag(void) {
+    if ( cl_ingore_timeout == CL_TRUE ) {
+       CL_LOG(CL_LOG_WARNING,"ignoring all communication timeouts");
+    }
+    return cl_ingore_timeout;
+}
 
 const char* cl_com_get_mih_mat_string(cl_xml_ack_type_t mat) {
    switch (mat) {

@@ -193,6 +193,7 @@ static void sge_terminate(int dummy)
 {
    if (!in_main_loop) {
 #ifdef ENABLE_NGC
+      cl_com_ignore_timeouts(CL_TRUE);
       cl_com_cleanup_commlib();
 #else
       leave_commd();
@@ -200,6 +201,7 @@ static void sge_terminate(int dummy)
       exit(1);
    }
    else {
+      cl_com_ignore_timeouts(CL_TRUE);
       shut_me_down = 1;
    }
 }

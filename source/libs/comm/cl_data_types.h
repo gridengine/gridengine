@@ -63,6 +63,11 @@ typedef enum cl_thread_mode_def {
    CL_ONE_THREAD         /* only one trigger thread */
 } cl_thread_mode_t;
 
+typedef enum cl_bool_def {
+   CL_FALSE = 0,
+   CL_TRUE
+} cl_bool_t;
+
 typedef enum cl_xml_data_format_def {
    CL_CM_DF_UNDEFINED = 1,
    CL_CM_DF_BIN,

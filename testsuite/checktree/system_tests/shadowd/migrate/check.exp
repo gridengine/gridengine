@@ -113,11 +113,7 @@ set shadowd_moved_master_dir 0
 #     ???/???
 #*******************************
 proc init_level {} {
-  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
-
-  set queue "$CHECK_HOST.qdel_test"
-
-  
+  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state
 
   switch -- $CHECK_ACT_LEVEL {
      "0" {  return 0   } 

@@ -65,7 +65,7 @@ set check_needs           "init_core_system"
 set check_functions ""
 lappend check_functions "qdel_setup"
 lappend check_functions "qdel_help"                   ;# print this help
-lappend check_functions "qdel_submit_delete_when_transferd"
+lappend check_functions "qdel_submit_delete_when_transfered"
 lappend check_functions "qdel_job_task_list"          ;# delete all jobs given in list
 lappend check_functions "qdel_delete_job_0"           ;# try to delete job id 0
 lappend check_functions "qdel_verify"                ;# just print what would be done
@@ -207,7 +207,7 @@ proc qdel_cleanup {} {
    set_error 0 "ok"
 }
 
-proc qdel_submit_delete_when_transferd { } {
+proc qdel_submit_delete_when_transfered { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL

@@ -36,11 +36,31 @@
 #include "sge_jobL.h"
 #include "cull.h"
 #include "msg_schedd.h"
-#include "event.h"
+#include "sge_event.h"
 
-/* this is used by master and schedd to make monitoring output */
-char *event_text(
-lListElem *event 
+/****** Eventclient/event_text() *************************************************
+*  NAME
+*     event_text() -- deliver event description
+*
+*  SYNOPSIS
+*     const char* event_text(const lListElem *event) 
+*
+*  FUNCTION
+*     Deliveres a short description of an event object.
+*
+*  INPUTS
+*     const lListElem *event - the event to describe
+*
+*  RESULT
+*     const char* - pointer to the descriptive string.
+*
+*  NOTES
+*     The result points to a static buffer. Subsequent calls to event_text
+*     will overwrite previous results.
+*
+*******************************************************************************/
+const char *event_text(
+const lListElem *event 
 ) {
    static char buffer[1024];
    u_long32 type, intkey, number, intkey2;

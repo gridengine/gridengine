@@ -240,17 +240,14 @@ int ec_prepare_registration(u_long32 id, const char *name)
 *  NOTES
 *     Should be no external interface. The event client mechanism should itself
 *     detect such situations and react accordingly.
-*     Should not reference a global variable from scheduler (new_global_config)!
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_need_new_registration()
 *******************************************************************************/
 void ec_mark4registration(void)
 {
-   extern int new_global_config;
    DENTER(TOP_LAYER, "ec_mark4registration");
    need_register = 1;
-   new_global_config = 1;
    DEXIT;
 }
 
@@ -1143,3 +1140,4 @@ lList **report_list
    DEXIT;
    return ret;
 }
+

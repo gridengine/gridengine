@@ -45,14 +45,11 @@
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "sge_c_event.h"
-#include "event.h"
+#include "sge_event.h"
 
 extern char **environ;
 
-int new_global_config = 0;
-
 int main(int argc, char *argv[]);
-
 
 static void dump_eventlist(lList *event_list)
 {

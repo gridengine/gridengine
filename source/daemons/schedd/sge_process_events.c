@@ -70,7 +70,7 @@
 #include "sgermon.h"
 #include "commlib.h"
 #include "cull_sort.h"
-#include "event.h"
+#include "sge_event.h"
 #include "sge_feature.h"
 #include "schedd_conf.h"
 #include "schedd_monitor.h"
@@ -88,7 +88,6 @@
 /* defined in sge_schedd.c */
 extern int shut_me_down;
 extern int start_on_master_host;
-extern int new_global_config;
 
 static void sge_rebuild_access_tree(lList *job_list, int trace_running);
 

@@ -1,3 +1,8 @@
+JG-2002-03-11-0  Cleanup:   Moved event client interface (client code) from
+                            scheduler to the gdi library and removed 
+                            all scheduler dependencies left from previous
+                            cleanup step.
+
 JG-2002-03-08-0  Testsuite: Make testsuite work for users that use a csh as
                             login shell (open_remote_spawn_process).
 

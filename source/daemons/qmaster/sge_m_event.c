@@ -41,7 +41,7 @@
 #include "sge_m_event.h"
 #include "sge_host.h"
 #include "sge_pe_qmaster.h"
-#include "event.h"
+#include "sge_event.h"
 #include "sge_all_listsL.h"
 #include "sec.h"
 #include "sge_prog.h"

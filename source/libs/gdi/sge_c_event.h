@@ -1,5 +1,5 @@
-#ifndef __EVENT_H
-#define __EVENT_H
+#ifndef __SGE_C_EVENT_H
+#define __SGE_C_EVENT_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,6 +32,28 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-char *event_text(lListElem *event);
 
-#endif /* __EVENT_H */
+#define DEFAULT_EVENT_DELIVERY_INTERVAL (4)
+
+int ec_prepare_registration(u_long32 id, const char *name);
+int ec_register(void);
+int ec_deregister(void);
+
+int ec_subscribe(int event);
+int ec_subscribe_all(void);
+
+int ec_unsubscribe(int event);
+int ec_unsubscribe_all(void);
+
+int ec_set_edtime(int intval);
+int ec_get_edtime(void);
+
+int ec_commit(void);
+
+int ec_get(lList **);
+
+void ec_mark4registration(void);
+int ec_need_new_registration(void);
+
+#endif /* __SGE_C_EVENT_H */
+

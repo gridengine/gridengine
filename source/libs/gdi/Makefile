@@ -60,6 +60,8 @@ GDILIB_SRC = sge_all_listsL.c \
          parse.c \
          parse_mail.c \
          parse_range.c \
+         sge_c_event.c \
+         sge_event.c \
          sge_resource.c \
          sge_feature.c \
          sge_security.c \
@@ -197,3 +199,9 @@ sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c
 
 sge_suser.o: $(GDILIB_DIR)/sge_suser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_suser.c
+
+sge_event.o: $(GDILIB_DIR)/sge_event.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c
+
+sge_c_event.o: $(GDILIB_DIR)/sge_c_event.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_c_event.c

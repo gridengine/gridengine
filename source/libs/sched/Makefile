@@ -47,7 +47,6 @@ SCHEDLIB_SRC = sge_select_queue.c \
               subordinate_schedd.c \
               slots_used.c \
               sge_static_load.c \
-              event.c \
               load_correction.c \
               suspend_thresholds.c \
               schedd_monitor.c \
@@ -163,8 +162,5 @@ sge_support.o: $(SCHEDLIB_DIR)/sge_support.c
 
 schedd_message.o: $(SCHEDLIB_DIR)/schedd_message.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/schedd_message.c
-
-event.o : $(SCHEDLIB_DIR)/event.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/event.c
 
 

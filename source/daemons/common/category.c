@@ -58,7 +58,7 @@
 #include "sgermon.h"
 #include "commlib.h"
 #include "cull_sort.h"
-#include "event.h"
+#include "sge_event.h"
 #include "sge_feature.h"
 #include "schedd_conf.h"
 #include "schedd_monitor.h"

@@ -37,7 +37,6 @@ SCHEDD_SDIR = $(SDIR)/daemons/schedd
 SCHEDD_TARGETS = sge_schedd sge_share_mon
 
 SCHEDD_SRC  = sge_schedd.c \
-             sge_c_event.c \
              scheduler.c \
              sge_access_tree.c \
              sge_category.c \
@@ -121,9 +120,6 @@ sge_access_tree.o : $(SCHEDD_SDIR)/sge_access_tree.c
 
 sge_category.o : $(SCHEDD_SDIR)/sge_category.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_category.c
-
-sge_c_event.o : $(SCHEDD_SDIR)/sge_c_event.c
-	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_c_event.c
 
 sge_process_events.o : $(SCHEDD_SDIR)/sge_process_events.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_process_events.c

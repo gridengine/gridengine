@@ -1,0 +1,184 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body>
+
+<center>
+<h1>
+Grid Engine 5.3beta2 is now ready.</h1></center>
+
+<center>Regensburg, Germany -- February 15, 2002</center>
+
+<p><br>
+<p>The developers of the Grid Engine project finished their work for the
+Grid Engine 5.3beta2 milestone. This release has a couple of interesting
+enhancements compared to the beta1 milestone release. We would like to
+thank all users who provided their valuable feedback and who helped to
+improve this release.
+<p>It is planned that no new features will be added for the final release
+of Grid Engine 5.3. It's the intent that no spool file formats will be
+changed for the final version.
+<p>The following enhancements have be added to Grid Engine 5.3beta2:
+<blockquote>
+<li>
+The Array Job feature has been modified to be extremely memory efficient.</li>
+</blockquote>
+
+<ul>
+<li>
+The administrator can limit the size of array jobs as well as the number
+of array job tasks which can be instantiated (get running) per array job.
+It it thus possible to better control memory consumption and scheduling
+performance in case of large array jobs. See "max_aj_tasks" and "max_aj_instances"
+parameters in the sge_conf(5) manual page.</li>
+</ul>
+
+<ul>
+<li>
+The new "max_u_jobs" parameter (see sge_conf(5) manual page) allows to
+restrict the number of jobs a user can have in the system simultaneously.</li>
+</ul>
+
+<ul>
+<li>
+The queue parameter "starter_method" is now operational.<br>
+<BR></li>
+
+<li>
+The deletion of huge job lists has been improved (e.g. "qdel all" or "qdel
+-uall"). The shadow daemon now will not try to take over in such cases.</li>
+</ul>
+
+<ul>
+<li>
+The "qconf -clearusage" command allows to delete the usage for an entire
+sharetree back to zero (Enterprise Edition only).</li>
+</ul>
+
+<ul>
+<li>
+The new boolean "enforce_user" parameter (see sge_conf(5) manual page)
+allows to configure the system in a way that only users for who a user
+object has been created can submit jobs (Enterprise Edition only).<br>
+<br>
+The rationale of this feature is to allow an intuitive fair share scheduling
+among users in the same project of the sharetree if the "default" user
+leaf node has been configured below a project node.</li>
+</ul>
+
+<ul>
+<li>
+A "POLICY_HIERARCHY" parameter has been added (see schedd_conf(5) manual
+page). This allows to define a dependency chain among the four scheduling
+policies (Enterprise Edition only).</li>
+</ul>
+
+<ul>
+<li>
+The so called "loose" integration package with the Sun HPC Cluster Tools
+MPI implementation has been added to the Grid Engine distribution in <tt>&lt;sge_root>/mpi/hpc/loose-integration
+</tt>(included in the "common" package).</li>
+</ul>
+
+<ul>
+<li>
+Scripts for updating from CODINE/GRD 5.0/5.1, SGE 5.2, SGE(EE) 5.3beta1
+and scripts for updating to the "Enterprise Edition" mode have been added.
+See the file "doc/UPGRADE" in the "common" package or see</li>
+</ul>
+
+<blockquote>
+<blockquote><a href="http://gridengine.sunsource.net/project/gridengine/howto/upgrade-2-53.txt
+">http://gridengine.sunsource.net/project/gridengine/howto/upgrade-2-53.txt
+</a></blockquote>
+</blockquote>
+
+<ul>
+<li>
+An OpenSSL based security framework is now available optionally. Next week
+we plan to add a HOWTO to the web site which describes how to setup Grid
+Engine with this framework.<br>
+<br>
+The courtesy binaries are linked with the OpenSSL library. Therefore the
+size of the binaries and the initial memory size of the Grid Engine daemons
+and commands is now bigger. However, if the OpenSSL mode is not enabled
+(this is the default), there are no further additional memory requirements
+and no CPU consumption overhead when operating Grid Engine.</li>
+</ul>
+
+<p><br>A couple of bugs and issues have been fixed in this release, among
+them are:
+<ul>
+<li>
+Qmaster now works on hosts with dual network interfaces if the "host_aliases"
+file is used.<br>
+<BR></li>
+
+<li>
+The shadow deamon is not started multiple times in the same host if the
+startup script or the binary is started multiple times.</li>
+</ul>
+
+<ul>
+<li>
+When the shadow deamon now starts qmaster, the stderr/stdout out of qmaster
+startup is logged in a file.</li>
+</ul>
+
+<ul>
+<li>
+A "softstop" commandline parameter has been added to the Grid Engine startup
+script. If called with this argument, the sge_shepherd processes will not
+be killed.</li>
+</ul>
+
+<ul>
+<li>
+Fixed broken "qrsh -notify" option and "qrsh" handling of empty job arguments.</li>
+</ul>
+
+<ul>
+<li>
+Fixed broken "qselect -pe" when non existant PE was selected.</li>
+</ul>
+
+<ul>
+<li>
+To shutdown all execd's it's now necessary to add the reserved keyword
+"all" ("qconf -ke all").</li>
+</ul>
+
+<ul>
+<li>
+The output of "qconf -sep" now shows the number of processors correctly.</li>
+</ul>
+
+<ul>
+<li>
+"qstat -s" now shows the correct output.</li>
+</ul>
+
+<p><br>The supported courtesy binaries provided by Sun Microsystems do
+not include anymore binaries for IBM AIX 4.2 and Digital Unix 4.0. Courtesy
+binary support for Linux/x86 for kernel 2.2.x with glibc 2.1.x already
+has been removed with Grid Engine 5.3beta1. However, the Sun Microsystems
+Grid Engine engineering team will continue to support through their development
+efforts these binary architectures for the life cycle of Grid Engine 5.3.
+<p>The included documentation has not yet been brought up-to-speed. The
+man pages are still the most accurate piece but still contain known deficiencies.
+You should also refer to the HOWTOs at
+<blockquote><a href="http://gridengine.sunsource.net/project/gridengine/howto/howto.html
+
+">http://gridengine.sunsource.net/project/gridengine/howto/howto.html</a></blockquote>
+and the application notes at
+<blockquote><a href="http://supportforum.sun.com/gridengine/appnotes.html
+">http://supportforum.sun.com/gridengine/appnotes.html</a></blockquote>
+for further viable information.
+<p>Please help us improve the quality of Grid Engine and use the beta version
+as early as possible in your Grid Engine cluster.
+<p>The final SGE 5.3 release is tentatively planned for March/April 2002.
+</body>
+</html>

@@ -831,11 +831,12 @@ AddSGEStartUpScript()
              "\nWe can install the startup script that\n" \
              "Grid Engine is started at machine boot (y/n) [y] >> "
 
+   ret=$?
    if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
       $CLEAR
       return
    else
-      if [ $? = 1 ]; then
+      if [ $ret = 1 ]; then
          $CLEAR
          return
       fi
@@ -856,7 +857,8 @@ AddSGEStartUpScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
+      ARCH=`$SGE_UTIL/arch`
+      if [ $ARCH = lx24-x86 -o $ARCH = lx24-amd64 ]; then
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"

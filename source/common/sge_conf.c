@@ -1232,11 +1232,45 @@ lList **conf_list
    return 0;
 }
 
+/****** sge_conf/policy_hierarchy_enum2char() *********************************
+*  NAME
+*     policy_hierarchy_enum2char() -- Return policy char for an enum value 
+*
+*  SYNOPSIS
+*     char policy_hierarchy_enum2char(policy_type_t value) 
+*
+*  FUNCTION
+*     Returns the first letter of a policy name corresponding to the enum 
+*     "value".
+*
+*  INPUTS
+*     policy_type_t value - enum value 
+*
+*  RESULT
+*     char - "O", "F", "S", "D"
+******************************************************************************/
 char policy_hierarchy_enum2char(policy_type_t value) 
 {
    return policy_hierarchy_chars[value - 1];
 }
  
+/****** sge_conf/policy_hierarchy_char2enum() *********************************
+*  NAME
+*     policy_hierarchy_char2enum() -- Return enum value for a policy char
+*
+*  SYNOPSIS
+*     policy_type_t policy_hierarchy_char2enum(char character) 
+*
+*  FUNCTION
+*     This function returns a enum value for the first letter of a policy
+*     name. 
+*
+*  INPUTS
+*     char character - "O", "F", "S" or "D" 
+*
+*  RESULT
+*     policy_type_t - enum value 
+******************************************************************************/
 policy_type_t policy_hierarchy_char2enum(char character)
 {
    const char *pointer;
@@ -1251,6 +1285,25 @@ policy_type_t policy_hierarchy_char2enum(char character)
    return ret;
 }
 
+/****** sge_conf/policy_hierarchy_verify_value() ******************************
+*  NAME
+*     policy_hierarchy_verify_value() -- verify a policy string 
+*
+*  SYNOPSIS
+*     int policy_hierarchy_verify_value(const char* value) 
+*
+*  FUNCTION
+*     The function tests whether the given policy string (value) is valid. 
+*
+*  INPUTS
+*     const char* value - policy string 
+*
+*  RESULT
+*     int - 0 -> OK
+*           1 -> ERROR: one char is at least twice in "value"
+*           2 -> ERROR: invalid char in "value"
+*           3 -> ERROR: value == NULL
+******************************************************************************/
 int policy_hierarchy_verify_value(const char* value) 
 {
    int ret = 0;
@@ -1293,7 +1346,59 @@ int policy_hierarchy_verify_value(const char* value)
    return ret;
 }
 
-void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value)
+/****** sge_conf/policy_hierarchy_fill_array() ********************************
+*  NAME
+*     policy_hierarchy_fill_array() -- fill the policy array 
+*
+*  SYNOPSIS
+*     void policy_hierarchy_fill_array(policy_hierarchy_t array[], 
+*                                      const char *value) 
+*
+*  FUNCTION
+*     Fill the policy "array" according to the characters given by "value".
+*
+*     value == "FODS":
+*        policy_hierarchy_t array[4] = {
+*            {FUNCTIONAL_POLICY, 1},
+*            {OVERRIDE_POLICY, 1},
+*            {DEADLINE_POLICY, 1},
+*            {SHARE_TREE_POLICY, 1}
+*        };
+*
+*     value == "FS":
+*        policy_hierarchy_t array[4] = {
+*            {FUNCTIONAL_POLICY, 1},
+*            {SHARE_TREE_POLICY, 1},
+*            {OVERRIDE_POLICY, 0},
+*            {DEADLINE_POLICY, 0}
+*        };
+*
+*     value == "OFS":
+*        policy_hierarchy_t hierarchy[4] = {
+*            {OVERRIDE_POLICY, 1},
+*            {FUNCTIONAL_POLICY, 1},
+*            {SHARE_TREE_POLICY, 1},
+*            {DEADLINE_POLICY, 0}
+*        }; 
+*
+*     value == "NONE":
+*        policy_hierarchy_t hierarchy[4] = {
+*            {OVERRIDE_POLICY, 0},
+*            {FUNCTIONAL_POLICY, 0},
+*            {SHARE_TREE_POLICY, 0},
+*            {DEADLINE_POLICY, 0}
+*        }; 
+*
+*  INPUTS
+*     policy_hierarchy_t array[] - array with at least POLICY_VALUES values 
+*     const char* value          - "NONE" or any combination
+*                                  of the first letters of the policy names 
+*                                  (e.g. "OFSD")
+*
+*  RESULT
+*     "array" will be modified 
+******************************************************************************/
+void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char *value)
 {
    int is_contained[POLICY_VALUES];
    int index = 0;
@@ -1326,6 +1431,19 @@ void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value)
    DEXIT;
 }
 
+/****** sge_conf/policy_hierarchy_print_array() *******************************
+*  NAME
+*     policy_hierarchy_print_array() -- print hierarchy array 
+*
+*  SYNOPSIS
+*     void policy_hierarchy_print_array(policy_hierarchy_t array[]) 
+*
+*  FUNCTION
+*     Print hierarchy array in the debug output 
+*
+*  INPUTS
+*     policy_hierarchy_t array[] - array with at least POLICY_VALUES values 
+******************************************************************************/
 void policy_hierarchy_print_array(policy_hierarchy_t array[])
 {
    int i;

@@ -1405,6 +1405,11 @@ proc read_edit_defaults_file { filename } {
       
    } ]
 
+
+   if { [llength $CHECK_CORE_MASTER] != 1 } {
+        puts $CHECK_OUTPUT "qmaster_host has more than one hostname entry"
+        return -1
+   }
    
    if { $CHECK_FIRST_FOREIGN_SYSTEM_USER == $CHECK_USER } {
         puts $CHECK_OUTPUT "first_foreign_system_user should not be testsuite user"
@@ -2648,6 +2653,74 @@ proc setup { {do_only_hostname_resolving 0} } {
      puts "--> Setup complete"
   }
   set check_name "no check running"
+
+
+
+  foreach elem $CHECK_CORE_EXECD {
+     set found 0
+     set hostname ""
+     foreach host $CHECK_CORE_EXECD {
+        if { [ string first $host $elem ] >= 0 }  {
+           incr found 1
+           set hostname $host
+        }
+     }
+     if { $found != 1 } {
+        puts "checking list_of_execution_hosts"
+        puts "error -> found duplicate entry of host $hostname"
+        exit 1
+     }
+  }
+
+  foreach elem $CHECK_CORE_MASTER {
+     set found 0
+     set hostname ""
+     foreach host $CHECK_CORE_MASTER {
+        if { [ string first $host $elem ] >= 0 }  {
+           incr found 1
+           set hostname $host
+        }
+     }
+     if { $found != 1 } {
+        puts "checking qmaster_host"
+        puts "error -> found duplicate entry of host $hostname"
+        exit 1
+     }
+  }
+
+
+  foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
+     set found 0
+     set hostname ""
+     foreach host $CHECK_SUBMIT_ONLY_HOSTS {
+        if { [ string first $host $elem ] >= 0 }  {
+           incr found 1
+           set hostname $host
+        }
+     }
+     if { $found != 1 } {
+        puts "checking list_of_submit_only_hosts"
+        puts "error -> found duplicate entry of host $hostname"
+        exit 1
+     }
+  }
+
+
+  foreach elem $CHECK_SOURCE_COMPILE_HOSTS {
+     set found 0
+     set hostname ""
+     foreach host $CHECK_SOURCE_COMPILE_HOSTS {
+        if { [ string first $host $elem ] >= 0 }  {
+           incr found 1
+           set hostname $host
+        }
+     }
+     if { $found != 1 } {
+        puts "checking list_of_compile_hosts"
+        puts "error -> found duplicate entry of host $hostname"
+        exit 1
+     }
+  }
 }
 
 
@@ -5298,6 +5371,38 @@ proc compile_source {} {
        append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
        update_compile_html_output $html_body
        return -1
+   }
+
+   set compile_arch_list ""
+   foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+      puts $CHECK_OUTPUT "\n-> checking architecture for host $chost ..."
+      set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0 ]
+      puts $CHECK_OUTPUT "return state: $prg_exit_state"
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "error starting \"aimk -no-mk\" on host $chost"
+         append html_body [ create_html_text "error starting \"aimk -no-mk\" on host $chost" ]
+         update_compile_html_output $html_body
+         return -1
+      }
+      puts $CHECK_OUTPUT "output:\n$output"
+      lappend compile_arch_list $output
+   }
+
+   foreach elem $compile_arch_list {
+     set found 0
+     set hostarch ""
+     foreach host $compile_arch_list {
+        if { [ string first $host $elem ] >= 0 }  {
+           incr found 1
+           set hostarch $host
+        }
+     }
+     if { $found != 1 } {
+        puts $CHECK_OUTPUT "two compile hosts have the same architecture -> error"
+        append html_body [ create_html_text "two compile hosts have the same architecture -> error" ]
+        update_compile_html_output $html_body
+        return -1
+     }
    }
 
    if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {

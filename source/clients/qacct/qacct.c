@@ -212,7 +212,7 @@ char **argv
    column_sizes.project    = strlen(MSG_HISTORY_PROJECT)+1;
    column_sizes.department = strlen(MSG_HISTORY_DEPARTMENT)+1;  
    column_sizes.granted_pe = strlen(MSG_HISTORY_PE)+1;
-   column_sizes.slots      = 7;
+   column_sizes.slots      = 5;
 
 
    /*
@@ -1163,8 +1163,12 @@ char **argv
    if ( granted_pe[0] ) {
       column_sizes.granted_pe = strlen(granted_pe) + 1;
    } 
-   
+   DPRINTF(("host culumn: %d\n", column_sizes.host ));
    calc_column_sizes(lFirst(sorted_list), &column_sizes);
+/*   lWriteListTo(sorted_list, stdout); */
+   DPRINTF(("host culumn: %d\n", column_sizes.host ));
+/*   exit(-1);  */
+
    {
       lListElem *ep = NULL;
       int dashcnt = 0;
@@ -1177,6 +1181,7 @@ char **argv
 #endif
 
       if (host[0] || hostflag) {
+         DPRINTF(("host culumn: %d\n", column_sizes.host ));
          print_full(column_sizes.host , MSG_HISTORY_HOST);
          dashcnt += column_sizes.host ;
       }
@@ -1345,7 +1350,7 @@ char **argv
 static void print_full_ulong(int full_length, u_long32 value) {
    char tmp_buf[100];
    DENTER(TOP_LAYER, "print_full_ulong");
-      sprintf(tmp_buf, "%6"fu32, value);
+      sprintf(tmp_buf, "%5"fu32, value);
       print_full(full_length, tmp_buf); 
    DEXIT;
 }
@@ -1376,10 +1381,13 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
    DENTER(TOP_LAYER, "calc_column_sizes");
    
 
+
    if ( column_size_data == NULL ) {
+      DPRINTF(("no column size data!\n"));
       DEXIT;
       return;
    }
+
 /*   column_size_data->host = 30;
    column_size_data->queue = 15;
    column_size_data->group = 10;
@@ -1391,6 +1399,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 
    if ( column_size_data->host < strlen(MSG_HISTORY_HOST)+1  ) {
       column_size_data->host = strlen(MSG_HISTORY_HOST)+1;
+      DPRINTF(("host size changed: %d\n", column_size_data->host ));
    } 
    if ( column_size_data->queue < strlen(MSG_HISTORY_QUEUE)+1  ) {
       column_size_data->queue = strlen(MSG_HISTORY_QUEUE)+1;
@@ -1410,8 +1419,8 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
    if ( column_size_data->granted_pe < strlen(MSG_HISTORY_PE)+1  ) {
       column_size_data->granted_pe = strlen(MSG_HISTORY_PE)+1;
    } 
-   if ( column_size_data->slots <7  ) {
-      column_size_data->slots = 7;
+   if ( column_size_data->slots < 5  ) {
+      column_size_data->slots = 5;
    } 
 
    if ( ep != NULL) {
@@ -1420,8 +1429,10 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
       const char* tmp_string = NULL;
       lep = ep;
       while (lep) {
+         DPRINTF(("next element\n"));
          /* host  */
-         tmp_string = lGetHost(ep, QAJ_host);
+         tmp_string = lGetHost(lep, QAJ_host);
+         DPRINTF(("host: %s\n", tmp_string));
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->host < tmp_length) {
@@ -1429,7 +1440,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
             }
          } 
          /* queue */
-         tmp_string = lGetString(ep, QAJ_queue);
+         tmp_string = lGetString(lep, QAJ_queue);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->queue < tmp_length) {
@@ -1437,7 +1448,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
             }
          } 
          /* group */
-         tmp_string = lGetString(ep, QAJ_group) ;
+         tmp_string = lGetString(lep, QAJ_group) ;
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->group < tmp_length) {
@@ -1445,7 +1456,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
             }
          } 
          /* owner */
-         tmp_string = lGetString(ep, QAJ_owner);
+         tmp_string = lGetString(lep, QAJ_owner);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->owner < tmp_length) {
@@ -1462,7 +1473,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          } 
 
          /* department  */
-         tmp_string = lGetString(ep, QAJ_department);
+         tmp_string = lGetString(lep, QAJ_department);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->department < tmp_length) {
@@ -1470,7 +1481,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
             }
          } 
          /* granted_pe */
-         tmp_string = lGetString(ep, QAJ_granted_pe) ;
+         tmp_string = lGetString(lep, QAJ_granted_pe) ;
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
             if (column_size_data->granted_pe < tmp_length) {
@@ -1479,14 +1490,17 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          } 
 
          /* slots */
-         sprintf(tmp_buf,"%6"fu32, lGetUlong(ep, QAJ_slots));
+         sprintf(tmp_buf,"%5"fu32, lGetUlong(lep, QAJ_slots));
          tmp_length = strlen(tmp_buf);
          if (column_size_data->slots < tmp_length) {
             column_size_data->slots  = tmp_length + 1;
          }
          lep = lNext(lep);
       }
+   } else {
+     DPRINTF(("got NULL list\n")); 
    }
+   
    DEXIT;
 }
 

@@ -48,17 +48,11 @@ typedef enum {
 
 typedef enum {
    FEATURESET_UNINITIALIZED,
-   FEATURESET_SGE,
    FEATURESET_SGEEE,
-   FEATURESET_SGE_AFS,
    FEATURESET_SGEEE_AFS,
-   FEATURESET_SGE_DCE,
    FEATURESET_SGEEE_DCE,
-   FEATURESET_SGE_KERBEROS,
    FEATURESET_SGEEE_KERBEROS,
-   FEATURESET_SGE_RESERVED_PORT,
    FEATURESET_SGEEE_RESERVED_PORT,
-   FEATURESET_SGE_CSP,
    FEATURESET_SGEEE_CSP,
  
    /* DON'T CHANGE THE ORDER OF THE ENTRIES ABOVE */
@@ -69,13 +63,6 @@ typedef enum {
 
 typedef enum {
    FEATURE_UNINITIALIZED,
-   FEATURE_REPRIORITIZATION,        /* PTFs auto reprioritization */
-   FEATURE_REPORT_USAGE,            /* PDC data collection and
-                                       usage reports from execd to master */
-   FEATURE_SPOOL_ADD_ATTR,          /* spool additional attributes for sge 
-                                       objects in sg3e-mode */
-   FEATURE_SGEEE,                   /* activate the remaining code needed in 
-                                       sg3e-mode */
    FEATURE_NO_SECURITY,             /* No security mode active */
    FEATURE_AFS_SECURITY,            /* AFS security */
    FEATURE_DCE_SECURITY,            /* DCE security */

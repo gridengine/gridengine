@@ -1706,119 +1706,113 @@ int ptf_adjust_job_priorities(void)
 
    job_list = ptf_jobs;
 
-   /* 
-    * just get jobs usage in SGE mode 
-    * this is necessary to force job resource limits 
+   /*
+    * Do pass 0 of calculating job proportional share of resources
     */
-   if (feature_is_enabled(FEATURE_REPRIORITIZATION)) {
+   for_each(job, job_list) {
+      ptf_calc_job_proportion_pass0(job, &sum_of_job_tickets,
+                                    &sum_of_last_usage);
+   }
+   if (sum_of_job_tickets == 0) {
+      sum_of_job_tickets = 1;
+   }
 
-      /*
-       * Do pass 0 of calculating job proportional share of resources
-       */
-      for_each(job, job_list) {
-         ptf_calc_job_proportion_pass0(job, &sum_of_job_tickets,
-                                       &sum_of_last_usage);
-      }
-      if (sum_of_job_tickets == 0) {
-         sum_of_job_tickets = 1;
-      }
+   /*
+    * Do pass 1 of calculating job proportional share of resources
+    */
+   for_each(job, job_list) {
+      ptf_calc_job_proportion_pass1(job, sum_of_job_tickets,
+                                    sum_of_last_usage, &sum_proportion);
+   }
 
-      /*
-       * Do pass 1 of calculating job proportional share of resources
-       */
-      for_each(job, job_list) {
-         ptf_calc_job_proportion_pass1(job, sum_of_job_tickets,
-                                       sum_of_last_usage, &sum_proportion);
-      }
+   /*
+    * Do pass 2 of calculating job proportional share of resources
+    */
+   for_each(job, job_list) {
+      ptf_calc_job_proportion_pass2(job, sum_of_job_tickets,
+                                    sum_proportion, 
+                                    &sum_adjusted_proportion,
+                                    &sum_interval_usage);
+   }
 
-      /*
-       * Do pass 2 of calculating job proportional share of resources
-       */
-      for_each(job, job_list) {
-         ptf_calc_job_proportion_pass2(job, sum_of_job_tickets,
-                                       sum_proportion, 
-                                       &sum_adjusted_proportion,
-                                       &sum_interval_usage);
-      }
-
-      /*
-       * Do pass 3 of calculating job proportional share of resources
-       */
-      for_each(job, job_list) {
-         ptf_calc_job_proportion_pass3(job, sum_proportion,
-                                       sum_interval_usage, &min_share,
-                                       &max_share, &max_ticket_share);
-      }
+   /*
+    * Do pass 3 of calculating job proportional share of resources
+    */
+   for_each(job, job_list) {
+      ptf_calc_job_proportion_pass3(job, sum_proportion,
+                                    sum_interval_usage, &min_share,
+                                    &max_share, &max_ticket_share);
+   }
 
 #ifdef PTF_NEW_ALGORITHM
 
-      max_share = 0;
-      min_share = -1;
+   max_share = 0;
+   min_share = -1;
 
-      for_each(job, job_list) {
-         double shr;
+   for_each(job, job_list) {
+      double shr;
 
 #ifdef PTF_DYNAMIC_PRIORITY_ADJUSTMENT
 
-      {
-         /*
-          * calculate share based on tickets and recent performance
-          * recent performanced is measure by keeping a decayed sum of
-          *     (targetted - actual)
-          */
-         double targetted = lGetDouble(job, JL_last_proportion);
-         double actual = sum_of_last_usage ?
-             (lGetDouble(job, JL_last_usage) / sum_of_last_usage) : 0;
+   {
+      /*
+       * calculate share based on tickets and recent performance
+       * recent performanced is measure by keeping a decayed sum of
+       *     (targetted - actual)
+       */
+      double targetted = lGetDouble(job, JL_last_proportion);
+      double actual = sum_of_last_usage ?
+          (lGetDouble(job, JL_last_usage) / sum_of_last_usage) : 0;
 
-         lSetDouble(job, JL_diff_proportion,
-                    (lGetDouble(job, JL_diff_proportion) *
-                     PTF_DIFF_DECAY_CONSTANT) + (targetted - actual));
+      lSetDouble(job, JL_diff_proportion,
+                 (lGetDouble(job, JL_diff_proportion) *
+                  PTF_DIFF_DECAY_CONSTANT) + (targetted - actual));
 
-         shr = MAX(((lGetUlong(job, JL_tickets) /
-                     (double) sum_of_job_tickets)) +
-                   (lGetDouble(job, JL_diff_proportion) * 1.0),
-                   0) * 1000.0 + 1.0;
-      }
+      shr = MAX(((lGetUlong(job, JL_tickets) /
+                  (double) sum_of_job_tickets)) +
+                (lGetDouble(job, JL_diff_proportion) * 1.0),
+                0) * 1000.0 + 1.0;
+   }
 #else
 
-         /*
-          * calculate share based on tickets only
-          */
-         shr = lGetDouble(job, JL_share);
-
-#endif
-
-         num_procs = 0;
-         for_each(osjob, lGetList(job, JL_OS_job_list)) {
-            if ((pid_list = lGetList(osjob, JO_pid_list))) {
-               num_procs += lGetNumberOfElem(pid_list);
-            }
-         }
-         num_procs = MAX(1, num_procs);
-
-         /* 
-          * NOTE: share algo only adjusts priority when a process runs 
-          */
-         lSetDouble(job, JL_curr_pri, lGetDouble(job, JL_curr_pri) 
-                    + ((lGetDouble(job, JL_adjusted_usage) * num_procs) 
-                       / (shr * shr)));
-
-         max_share = MAX(max_share, lGetDouble(job, JL_curr_pri));
-         if (min_share < 0) {
-            min_share = lGetDouble(job, JL_curr_pri);
-         } else {
-            min_share = MIN(min_share, lGetDouble(job, JL_curr_pri));
-         } 
-      }
-
-#endif
-
       /*
-       * Set the O.S. scheduling parameters for the jobs
+       * calculate share based on tickets only
        */
-      ptf_set_OS_scheduling_parameters(job_list, min_share, max_share,
-                                       max_ticket_share);
+      shr = lGetDouble(job, JL_share);
+
+#endif
+
+      num_procs = 0;
+      for_each(osjob, lGetList(job, JL_OS_job_list)) {
+         if ((pid_list = lGetList(osjob, JO_pid_list))) {
+            num_procs += lGetNumberOfElem(pid_list);
+         }
+      }
+      num_procs = MAX(1, num_procs);
+
+      /* 
+       * NOTE: share algo only adjusts priority when a process runs 
+       */
+      lSetDouble(job, JL_curr_pri, lGetDouble(job, JL_curr_pri) 
+                 + ((lGetDouble(job, JL_adjusted_usage) * num_procs) 
+                    / (shr * shr)));
+
+      max_share = MAX(max_share, lGetDouble(job, JL_curr_pri));
+      if (min_share < 0) {
+         min_share = lGetDouble(job, JL_curr_pri);
+      } else {
+         min_share = MIN(min_share, lGetDouble(job, JL_curr_pri));
+      } 
    }
+
+#endif
+
+   /*
+    * Set the O.S. scheduling parameters for the jobs
+    */
+   ptf_set_OS_scheduling_parameters(job_list, min_share, max_share,
+                                    max_ticket_share);
+   
    next = now + PTF_SCHEDULE_TIME;
 
    DEXIT;

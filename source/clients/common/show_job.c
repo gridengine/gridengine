@@ -506,8 +506,7 @@ void cull_show_job(lListElem *job, int flags)
          dst += lGetDouble(uep, UA_value); \
       }
 
-   if (feature_is_enabled(FEATURE_REPORT_USAGE) 
-       && lGetPosViaElem(job, JB_ja_tasks)>=0) {
+   if ( lGetPosViaElem(job, JB_ja_tasks)>=0) {
       lListElem *uep, *jatep, *pe_task_ep;
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
          double cpu, mem, io, vmem, maxvmem;

@@ -93,6 +93,7 @@ typedef struct {
 typedef struct {
    pthread_mutex_t  mutex;    /* used for mutual exclusion    */
    pthread_cond_t   cond_var; /* used for waiting             */
+   pthread_mutex_t  cond_mutex;
    bool             exit;     /* true -> exit event master    */
    lList*           clients;  /* list of event master clients */
 } event_master_control_t;
@@ -197,7 +198,7 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  *******************************************************************/
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
-static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, NULL};
+static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, false, NULL};
 static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
 
@@ -1584,14 +1585,11 @@ static void send_events(void)
    struct timespec ts;
 
    DENTER(TOP_LAYER, "send_events");
-
+   
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    event_client = lFirst(Master_Control.clients);
          
-   ts.tv_sec = EVENT_DELIVERY_INTERVAL_S;
-   ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
-
    while (event_client)
    {
       /* extract address of event client */
@@ -1683,7 +1681,6 @@ static void send_events(void)
                lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
             }
 
-
          /* don't delete sent events - deletion is triggerd by ack's */
          {
             lList *lp = NULL;
@@ -1695,10 +1692,15 @@ static void send_events(void)
       }
       event_client = lNext(event_client);
    }
-
-   pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.mutex, &ts);
-
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+
+   ts.tv_sec = sge_get_gmt() + EVENT_DELIVERY_INTERVAL_S;
+   ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
+   pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.cond_mutex, &ts);
+
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex); 
 
    DEXIT;
    return;

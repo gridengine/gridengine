@@ -317,7 +317,7 @@ lListElem *jr
    if (ptf_error) {
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
          u32c(job_id), ptf_errstr(ptf_error)));
-   } else if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+   } else {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
          lFreeList(usage);

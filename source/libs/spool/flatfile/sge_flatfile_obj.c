@@ -404,49 +404,46 @@ spooling_field *sge_build_UP_field_list (int spool, int user)
    create_spooling_field (&fields[count++], UP_name, 0, "name", NULL,
                           NULL, NULL, NULL);
    
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      create_spooling_field (&fields[count++], UP_oticket, 0, "oticket",
-                             NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], UP_fshare, 0, "fshare",
-                             NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], UP_oticket, 0, "oticket",
+                          NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], UP_fshare, 0, "fshare",
+                          NULL, NULL, NULL, NULL);
 #if defined(allow_delete_time_modification)
-      if (user) {
-         create_spooling_field (&fields[count++], UP_delete_time, 0,
-                                "delete_time", NULL, NULL, NULL, NULL);
-      }
+   if (user) {
+      create_spooling_field (&fields[count++], UP_delete_time, 0,
+                             "delete_time", NULL, NULL, NULL, NULL);
+   }
 #endif
-      
-      if (spool) {
+   
+   if (spool) {
 #if !defined(allow_delete_time_modification)
-         if (user) {
-            create_spooling_field (&fields[count++], UP_delete_time, 0, "delete_time",
-                             NULL, NULL, NULL, NULL);
-         }
-#endif
-         create_spooling_field (&fields[count++], UP_usage, 0, "usage",
-                                UA_sub_fields, NULL, NULL, NULL);
-         create_spooling_field (&fields[count++], UP_usage_time_stamp, 0, "usage_time_stamp",
-                                NULL, NULL, NULL, NULL);
-         create_spooling_field (&fields[count++], UP_long_term_usage, 0, "long_term_usage",
-                                UA_sub_fields, NULL, NULL, NULL);
-         create_spooling_field (&fields[count++], UP_project, 0, "project",
-                                UPP_sub_fields, NULL, NULL, NULL);
+      if (user) {
+         create_spooling_field (&fields[count++], UP_delete_time, 0, "delete_time",
+                          NULL, NULL, NULL, NULL);
       }
+#endif
+      create_spooling_field (&fields[count++], UP_usage, 0, "usage",
+                             UA_sub_fields, NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], UP_usage_time_stamp, 0, "usage_time_stamp",
+                             NULL, NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], UP_long_term_usage, 0, "long_term_usage",
+                             UA_sub_fields, NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], UP_project, 0, "project",
+                             UPP_sub_fields, NULL, NULL, NULL);
    }
    
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR) && user) {
+   if (user) {
       create_spooling_field (&fields[count++], UP_default_project, 0, "default_project",
                              NULL, NULL, NULL, NULL);
    }
-   
-   if (!user) {
+   else {
       create_spooling_field (&fields[count++], UP_acl, 0, "acl", US_sub_fields,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], UP_xacl, 0, "xacl",
                              US_sub_fields, NULL, NULL, NULL);
    }
                   
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR) && spool) {
+   if (spool) {
       create_spooling_field (&fields[count++], UP_debited_job_usage, 0, NULL,
                              UPU_sub_fields, NULL, NULL, NULL);
    }
@@ -516,10 +513,8 @@ spooling_field *sge_build_PE_field_list (bool spool, bool to_stdout)
    create_spooling_field (&fields[count++], PE_job_is_first_task, 17, "job_is_first_task",
                           NULL, NULL, NULL, NULL);
    
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      create_spooling_field (&fields[count++], PE_urgency_slots, 17, "urgency_slots",
-                             NULL, NULL, NULL, NULL);
-   }
+   create_spooling_field (&fields[count++], PE_urgency_slots, 17, "urgency_slots",
+                          NULL, NULL, NULL, NULL);
    
    if (!spool && to_stdout && getenv("MORE_INFO")) {
       create_spooling_field (&fields[count++], PE_free_slots, 17, "free_slots",
@@ -551,11 +546,9 @@ spooling_field *sge_build_US_field_list (void)
    
    create_spooling_field (&fields[count++], US_name, 7, "name", NULL, NULL, NULL, NULL);
    
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      create_spooling_field (&fields[count++], US_type, 7, "type", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], US_fshare, 7, "fshare", US_sub_fields, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], US_oticket, 7, "oticket", US_sub_fields, NULL, NULL, NULL);
-   }
+   create_spooling_field (&fields[count++], US_type, 7, "type", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], US_fshare, 7, "fshare", US_sub_fields, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], US_oticket, 7, "oticket", US_sub_fields, NULL, NULL, NULL);
    
    create_spooling_field (&fields[count++], US_entries, 7, "entries", UE_sub_fields, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], NoName, 7, NULL, NULL, NULL, NULL, NULL);
@@ -613,17 +606,15 @@ spooling_field *sge_build_EH_field_list (bool spool, bool to_stdout,
    create_spooling_field (&fields[count++], EH_xacl, 21, "xuser_lists",
                           US_sub_fields, NULL, NULL, NULL);
    
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      create_spooling_field (&fields[count++], EH_prj, 21, "projects",
-                             UP_sub_fields, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], EH_xprj, 21, "xprojects",
-                             UP_sub_fields, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], EH_usage_scaling_list, 21,
-                             "usage_scaling", HS_sub_fields,
-                             &qconf_sub_name_value_comma_sfi, NULL, NULL);
-      create_spooling_field (&fields[count++], EH_report_variables, 21, "report_variables",
-                             STU_sub_fields, NULL, NULL, NULL);
-   }
+   create_spooling_field (&fields[count++], EH_prj, 21, "projects",
+                          UP_sub_fields, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], EH_xprj, 21, "xprojects",
+                          UP_sub_fields, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], EH_usage_scaling_list, 21,
+                          "usage_scaling", HS_sub_fields,
+                          &qconf_sub_name_value_comma_sfi, NULL, NULL);
+   create_spooling_field (&fields[count++], EH_report_variables, 21, "report_variables",
+                          STU_sub_fields, NULL, NULL, NULL);
    
    create_spooling_field (&fields[count++], NoName, 21, NULL, NULL, NULL, NULL,
                           NULL);
@@ -664,58 +655,55 @@ spooling_field *sge_build_SC_field_list(void)
    create_spooling_field (&fields[count++], SC_params, 33, "params", NULL, NULL,
                           NULL, NULL);
    
-   /* conf values needed for SGEEE */
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      create_spooling_field (&fields[count++], SC_reprioritize_interval, 33,
-                             "reprioritize_interval", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_halftime, 33, "halftime", NULL,
-                             NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_usage_weight_list, 33,
-                             "usage_weight_list", UA_sub_fields, NULL, NULL,
-                             NULL);
-      create_spooling_field (&fields[count++], SC_compensation_factor, 33,
-                             "compensation_factor", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_user, 33,
-                             "weight_user", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_project, 33,
-                             "weight_project", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_jobclass, 33,
-                             "weight_jobclass", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_department, 33,
-                             "weight_department", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_job, 33,
-                             "weight_job", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_tickets_functional, 33,
-                             "weight_tickets_functional", NULL, NULL, NULL,
-                             NULL);
-      create_spooling_field (&fields[count++], SC_weight_tickets_share, 33,
-                             "weight_tickets_share", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_share_override_tickets, 33,
-                             "share_override_tickets", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_share_functional_shares, 33,
-                             "share_functional_shares", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++],
-                             SC_max_functional_jobs_to_schedule, 33,
-                             "max_functional_jobs_to_schedule", NULL, NULL,
-                             NULL, NULL);
-      create_spooling_field (&fields[count++], SC_report_pjob_tickets, 33,
-                             "report_pjob_tickets", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_max_pending_tasks_per_job, 33,
-                             "max_pending_tasks_per_job", NULL, NULL, NULL,
-                             NULL);
-      create_spooling_field (&fields[count++], SC_halflife_decay_list, 33,
-                             "halflife_decay_list", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_policy_hierarchy, 33,
-                             "policy_hierarchy", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_ticket, 33,
-                             "weight_ticket", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_waiting_time, 33,
-                             "weight_waiting_time", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_deadline, 33,
-                             "weight_deadline", NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], SC_weight_urgency, 33,
-                             "weight_urgency", NULL, NULL, NULL, NULL);
-   }
+   create_spooling_field (&fields[count++], SC_reprioritize_interval, 33,
+                          "reprioritize_interval", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_halftime, 33, "halftime", NULL,
+                          NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_usage_weight_list, 33,
+                          "usage_weight_list", UA_sub_fields, NULL, NULL,
+                          NULL);
+   create_spooling_field (&fields[count++], SC_compensation_factor, 33,
+                          "compensation_factor", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_user, 33,
+                          "weight_user", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_project, 33,
+                          "weight_project", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_jobclass, 33,
+                          "weight_jobclass", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_department, 33,
+                          "weight_department", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_job, 33,
+                          "weight_job", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_tickets_functional, 33,
+                          "weight_tickets_functional", NULL, NULL, NULL,
+                          NULL);
+   create_spooling_field (&fields[count++], SC_weight_tickets_share, 33,
+                          "weight_tickets_share", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_share_override_tickets, 33,
+                          "share_override_tickets", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_share_functional_shares, 33,
+                          "share_functional_shares", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++],
+                          SC_max_functional_jobs_to_schedule, 33,
+                          "max_functional_jobs_to_schedule", NULL, NULL,
+                          NULL, NULL);
+   create_spooling_field (&fields[count++], SC_report_pjob_tickets, 33,
+                          "report_pjob_tickets", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_max_pending_tasks_per_job, 33,
+                          "max_pending_tasks_per_job", NULL, NULL, NULL,
+                          NULL);
+   create_spooling_field (&fields[count++], SC_halflife_decay_list, 33,
+                          "halflife_decay_list", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_policy_hierarchy, 33,
+                          "policy_hierarchy", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_ticket, 33,
+                          "weight_ticket", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_waiting_time, 33,
+                          "weight_waiting_time", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_deadline, 33,
+                          "weight_deadline", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_weight_urgency, 33,
+                          "weight_urgency", NULL, NULL, NULL, NULL);
    
    create_spooling_field (&fields[count++], NoName, 33, NULL, NULL, NULL, NULL,
                           NULL);
@@ -1021,22 +1009,21 @@ spooling_field *sge_build_CQ_field_list(void)
                           &qconf_sub_name_value_comma_braced_sfi,
                           read_CQ_celist_attr_list, write_CQ_celist_attr_list);
    
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      create_spooling_field (&fields[count++], CQ_projects, 21, "projects",
-                             APRJLIST_sub_fields,
-                             &qconf_sub_name_value_comma_braced_sfi,
-                             read_CQ_prjlist_attr_list,
-                             write_CQ_prjlist_attr_list);
-      create_spooling_field (&fields[count++], CQ_xprojects, 21, "xprojects",
-                             APRJLIST_sub_fields,
-                             &qconf_sub_name_value_comma_braced_sfi,
-                             read_CQ_prjlist_attr_list,
-                             write_CQ_prjlist_attr_list);
-      create_spooling_field (&fields[count++], CQ_calendar, 21, "calendar",
-                             ASTR_sub_fields,
-                             &qconf_sub_name_value_comma_braced_sfi,
-                             read_CQ_str_attr_list, write_CQ_str_attr_list);
-   }
+   create_spooling_field (&fields[count++], CQ_projects, 21, "projects",
+                          APRJLIST_sub_fields,
+                          &qconf_sub_name_value_comma_braced_sfi,
+                          read_CQ_prjlist_attr_list,
+                          write_CQ_prjlist_attr_list);
+   create_spooling_field (&fields[count++], CQ_xprojects, 21, "xprojects",
+                          APRJLIST_sub_fields,
+                          &qconf_sub_name_value_comma_braced_sfi,
+                          read_CQ_prjlist_attr_list,
+                          write_CQ_prjlist_attr_list);
+   create_spooling_field (&fields[count++], CQ_calendar, 21, "calendar",
+                          ASTR_sub_fields,
+                          &qconf_sub_name_value_comma_braced_sfi,
+                          read_CQ_str_attr_list, write_CQ_str_attr_list);
+
    create_spooling_field (&fields[count++], CQ_initial_state, 21,
                           "initial_state", ASTR_sub_fields,
                           &qconf_sub_name_value_comma_braced_sfi,
@@ -1181,24 +1168,20 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
       create_spooling_field (&fields[count++], QU_consumable_config_list, 21,
                              "complex_values", CE_sub_fields, NULL, NULL, NULL);
       
-      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-         create_spooling_field (&fields[count++], QU_projects, 21, "projects",
-                                UP_sub_fields, NULL, NULL, NULL);
-         create_spooling_field (&fields[count++], QU_xprojects, 21, "xprojects",
-                                UP_sub_fields, NULL, NULL, NULL);
-      }
+      create_spooling_field (&fields[count++], QU_projects, 21, "projects",
+                             UP_sub_fields, NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], QU_xprojects, 21, "xprojects",
+                             UP_sub_fields, NULL, NULL, NULL);
       
       create_spooling_field (&fields[count++], QU_calendar, 21, "calendar",
                              NULL, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_initial_state, 21,
                              "initial_state", NULL, NULL, NULL, NULL);
 #if 0
-      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-         create_spooling_field (&fields[count++], QU_fshare, 21, "fshare", NULL,
-                                NULL, NULL, NULL);
-         create_spooling_field (&fields[count++], QU_oticket, 21, "oticket",
-                                NULL, NULL, NULL, NULL);
-      }
+      create_spooling_field (&fields[count++], QU_fshare, 21, "fshare", NULL,
+                             NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], QU_oticket, 21, "oticket",
+                             NULL, NULL, NULL, NULL);
 #endif
       create_spooling_field (&fields[count++], QU_s_rt, 21, "s_rt", NULL, NULL,
                              NULL, NULL);

@@ -166,13 +166,11 @@ _Insight_set_option("suppress", "PARM_NULL");
    set_conf_bool(NULL, clpp, fields, "job_is_first_task", ep, 
                  PE_job_is_first_task);
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      /* --------- PE_urgency_slots */
-      if (!set_conf_string(alpp, clpp, fields, "urgency_slots", ep, 
-               PE_urgency_slots)) {
-         DEXIT;
-         return -1;
-      }
+   /* --------- PE_urgency_slots */
+   if (!set_conf_string(alpp, clpp, fields, "urgency_slots", ep, 
+            PE_urgency_slots)) {
+      DEXIT;
+      return -1;
    }
 
    /* initialize number of used PE slots with 0 */
@@ -308,10 +306,10 @@ const lListElem *ep
    FPRINTF((fp, "job_is_first_task %s\n", lGetBool(ep, PE_job_is_first_task) ? 
                "TRUE" : "FALSE"));
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      /* --------- PE_urgency_slots */
-      FPRINTF((fp, "urgency_slots     %s\n", lGetString(ep, PE_urgency_slots)));
-   }
+
+   /* --------- PE_urgency_slots */
+   FPRINTF((fp, "urgency_slots     %s\n", lGetString(ep, PE_urgency_slots)));
+
 
    /* --------- internal fields ----------------------------------- */
 

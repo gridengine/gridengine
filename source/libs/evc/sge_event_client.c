@@ -815,7 +815,6 @@ int ec_set_edtime(int interval)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       ret = (lGetUlong(ec, EV_d_time) != interval);
-
       if (ret > 0) {
 #ifdef ENABLE_NGC
          lSetUlong(ec, EV_d_time, MIN(interval, CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5));

@@ -1,3 +1,10 @@
+SG-2004-02-16-1: Bugfix:    - second part of removing SGE 
+                            - fixed processing of scheduler configuration
+                              in scheduler
+                            - fixed event_master delivery time.
+                 Changed:   all
+                 Review:    CR
+
 MD-2004-02-16-0: Bugfix:    Fixed some Messages, spooldir default
                  Testsuite: Adapted to new messages
                  Enhancem:  Added 3 default scheduler setups

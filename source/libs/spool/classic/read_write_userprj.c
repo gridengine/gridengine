@@ -141,7 +141,7 @@ int user        /* =1 user, =0 project */
 
    FPRINTF((fp, "name %s\n", lGetString(ep, UP_name)));
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+   {
       lList *pul;
 
       FPRINTF((fp, "oticket " u32 "\n", lGetUlong(ep, UP_oticket)));
@@ -206,7 +206,7 @@ int user        /* =1 user, =0 project */
       }
    }
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR) && user) {
+   {
       const char *dproj = lGetString(ep, UP_default_project);
       FPRINTF((fp, "default_project %s\n", dproj ? dproj : "NONE"));
    }
@@ -228,7 +228,7 @@ int user        /* =1 user, =0 project */
       FPRINTF((fp, "\n"));
    }
                   
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR) && spool) {
+   if (spool) {
       for_each (ju, lGetList(ep, UP_debited_job_usage)) {
          FPRINTF((fp, u32" ", lGetUlong(ju, UPU_job_number)));
          ret = uni_print_list(fp, NULL, 0, lGetList(ju, UPU_old_usage_list), 
@@ -286,154 +286,152 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      /* --------- UP_oticket */
-      if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, UP_oticket)) {
+   /* --------- UP_oticket */
+   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, UP_oticket)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- UP_fshare */
+   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, UP_fshare)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- UP_default_project */
+   if (user) {
+
+      if (!set_conf_string(alpp, clpp, fields, "default_project", ep,
+             UP_default_project)) {
          DEXIT;
          return -1;
       }
-
-      /* --------- UP_fshare */
-      if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, UP_fshare)) {
-         DEXIT;
-         return -1;
-      }
-
-      /* --------- UP_default_project */
-      if (user) {
-
-         if (!set_conf_string(alpp, clpp, fields, "default_project", ep,
-                UP_default_project)) {
-            DEXIT;
-            return -1;
-         }
-         NULL_OUT_NONE(ep, UP_default_project);
+      NULL_OUT_NONE(ep, UP_default_project);
 
 #if defined(allow_delete_time_modification)
+      if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
+               UP_delete_time)) {
+         DEXIT;
+         return -1;
+      }
+#endif
+   }
+
+   if (spool) {
+
+      lList *sclp = NULL, *ssclp = NULL;
+      const char *val;
+
+#if !defined(allow_delete_time_modification)
+      /* --------- UP_delete_time */
+      if (user) {
          if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
                   UP_delete_time)) {
             DEXIT;
             return -1;
          }
+      }
 #endif
+
+      /* --------- UP_usage */
+      if (!set_conf_deflist(alpp, clpp, fields, "usage", ep, 
+               UP_usage, UA_Type, intprt_as_usage)) {
+         DEXIT;
+         return -1;
       }
 
-      if (spool) {
+      /* --------- UP_usage_time_stamp */
+      if (!set_conf_ulong(alpp, clpp, fields, "usage_time_stamp", ep, 
+               UP_usage_time_stamp)) {
+         DEXIT;
+         return -1;
+      }
 
-         lList *sclp = NULL, *ssclp = NULL;
-         const char *val;
+      /* --------- UP_long_term_usage */
+      if (!set_conf_deflist(alpp, clpp, fields, "long_term_usage", ep, 
+               UP_long_term_usage, UA_Type, intprt_as_usage)) {
+         DEXIT;
+         return -1;
+      }
 
-#if !defined(allow_delete_time_modification)
-         /* --------- UP_delete_time */
-         if (user) {
-            if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
-                     UP_delete_time)) {
-               DEXIT;
-               return -1;
-            }
-         }
-#endif
+      if ((sclp=get_conf_sublist(fields?NULL:alpp, *clpp, CF_name,
+               CF_sublist, "project"))) {
 
-         /* --------- UP_usage */
-         if (!set_conf_deflist(alpp, clpp, fields, "usage", ep, 
-                  UP_usage, UA_Type, intprt_as_usage)) {
-            DEXIT;
-            return -1;
-         }
+         lListElem *upp;
 
-         /* --------- UP_usage_time_stamp */
-         if (!set_conf_ulong(alpp, clpp, fields, "usage_time_stamp", ep, 
-                  UP_usage_time_stamp)) {
-            DEXIT;
-            return -1;
-         }
+         next = lFirst(sclp);
+         while ((cp = next)) {
+            next = lNext(cp);
+            name = lGetString(cp, CF_name);
+            add_nm_to_set(fields, UP_project);
 
-         /* --------- UP_long_term_usage */
-         if (!set_conf_deflist(alpp, clpp, fields, "long_term_usage", ep, 
-                  UP_long_term_usage, UA_Type, intprt_as_usage)) {
-            DEXIT;
-            return -1;
-         }
+            if ((lGetList(cp, CF_sublist))) {
 
-         if ((sclp=get_conf_sublist(fields?NULL:alpp, *clpp, CF_name,
-                  CF_sublist, "project"))) {
+               ssclp = lCopyList(NULL, lGetList(cp, CF_sublist));
 
-            lListElem *upp;
+               /* --------- UPP_name */
+               if (!(upp = lAddSubStr(ep, UPP_name, name, UP_project, UPP_Type))) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_FOUNDPROJECTXTWICE_S, name));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
+                         ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return -1;
+               }
+               add_nm_to_set(fields, UPP_name);
 
-            next = lFirst(sclp);
-            while ((cp = next)) {
-               next = lNext(cp);
-               name = lGetString(cp, CF_name);
-               add_nm_to_set(fields, UP_project);
-
-               if ((lGetList(cp, CF_sublist))) {
-
-                  ssclp = lCopyList(NULL, lGetList(cp, CF_sublist));
-
-                  /* --------- UPP_name */
-                  if (!(upp = lAddSubStr(ep, UPP_name, name, UP_project, UPP_Type))) {
-                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_FOUNDPROJECTXTWICE_S, name));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
-                            ANSWER_QUALITY_ERROR);
-                     DEXIT;
-                     return -1;
-                  }
-                  add_nm_to_set(fields, UPP_name);
-
-                  /* --------- UPP_usage */
-                  if (!set_conf_deflist(alpp, &ssclp, fields, "usage", upp, 
-                           UPP_usage, UA_Type, intprt_as_usage)) {
-                     DEXIT;
-                     return -1;
-                  }
-
-                  /* --------- UPP_long_term_usage */
-                  if (!set_conf_deflist(alpp, &ssclp, fields,
-                            "long_term_usage", upp, UPP_long_term_usage,
-                            UA_Type, intprt_as_usage)) {
-                     DEXIT;
-                     return -1;
-                  }
-
-                  if (ssclp)
-                     lFreeList(ssclp);
-
-                  lSetList(cp, CF_sublist, NULL);  /* frees old list */
-
-               } else if ((val = lGetString(cp, CF_value))) {
-
-                  if (!strcasecmp("NONE", val)) {
-                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_INVALIDPROJECTX_S, name));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
-                            ANSWER_QUALITY_ERROR);
-                     DEXIT;
-                     return -1;
-                  }
-
+               /* --------- UPP_usage */
+               if (!set_conf_deflist(alpp, &ssclp, fields, "usage", upp, 
+                        UPP_usage, UA_Type, intprt_as_usage)) {
+                  DEXIT;
+                  return -1;
                }
 
-               /* lFreeElem(lDechainElem(sclp, cp)); */
+               /* --------- UPP_long_term_usage */
+               if (!set_conf_deflist(alpp, &ssclp, fields,
+                         "long_term_usage", upp, UPP_long_term_usage,
+                         UA_Type, intprt_as_usage)) {
+                  DEXIT;
+                  return -1;
+               }
+
+               if (ssclp)
+                  lFreeList(ssclp);
+
+               lSetList(cp, CF_sublist, NULL);  /* frees old list */
+
+            } else if ((val = lGetString(cp, CF_value))) {
+
+               if (!strcasecmp("NONE", val)) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_INVALIDPROJECTX_S, name));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
+                         ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return -1;
+               }
+
             }
 
+            /* lFreeElem(lDechainElem(sclp, cp)); */
          }
-
-         lDelElemStr(clpp, CF_name, "project");
-
-      } else {
-
-#if 0
-         /* NOTE: if we are reading in a manager-modified object, we want
-          * to clear the delete time, to make the object a permanent
-          * object.
-          */
-
-         /* --------- UP_delete_time */
-         if (user) {
-            lSetUlong(ep, UP_delete_time, 0);
-         }
-#endif
 
       }
+
+      lDelElemStr(clpp, CF_name, "project");
+
+   } else {
+
+#if 0
+      /* NOTE: if we are reading in a manager-modified object, we want
+       * to clear the delete time, to make the object a permanent
+       * object.
+       */
+
+      /* --------- UP_delete_time */
+      if (user) {
+         lSetUlong(ep, UP_delete_time, 0);
+      }
+#endif
+
    }
 
    if (!user) {

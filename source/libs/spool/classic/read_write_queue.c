@@ -332,34 +332,31 @@ _Insight_set_option("suppress", "PARM_NULL");
       }    
    }
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      /* --------- QU_projects */
-      if (!set_conf_list(alpp, clpp, fields, "projects", ep, 
-               QU_projects, UP_Type, UP_name)) {
-         DEXIT;
-         return -1;
-      }
-      /* --------- QU_xprojects */
-      if (!set_conf_list(alpp, clpp, fields, "xprojects", ep, 
-               QU_xprojects, UP_Type, UP_name)) {
-         DEXIT;
-         return -1;
-      }
+   /* --------- QU_projects */
+   if (!set_conf_list(alpp, clpp, fields, "projects", ep, 
+            QU_projects, UP_Type, UP_name)) {
+      DEXIT;
+      return -1;
+   }
+   /* --------- QU_xprojects */
+   if (!set_conf_list(alpp, clpp, fields, "xprojects", ep, 
+            QU_xprojects, UP_Type, UP_name)) {
+      DEXIT;
+      return -1;
+   }
 
 #if 0
-      /* --------- QU_fshare */
-      if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, QU_fshare)) {
-         DEXIT;
-         return -1;
-      }
-      /* --------- QU_oticket */
-      if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, QU_oticket)) {
-         DEXIT;
-         return -1;
-      }
-#endif
-
+   /* --------- QU_fshare */
+   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, QU_fshare)) {
+      DEXIT;
+      return -1;
    }
+   /* --------- QU_oticket */
+   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, QU_oticket)) {
+      DEXIT;
+      return -1;
+   }
+#endif
 
    /* --------- QU_calendar */
    if (!set_conf_string(alpp, clpp, fields, "calendar", ep, QU_calendar)) {
@@ -763,30 +760,30 @@ const lListElem *qep
    if (ret == -1) {
       goto FPRINTF_ERROR;
    } 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      ret = fprint_cull_list(fp, "projects             ", 
-         lGetList(qep, QU_projects), UP_name);
-      if (ret == -1) {
-         goto FPRINTF_ERROR;
-      } 
-      ret = fprint_cull_list(fp, "xprojects            ", 
-         lGetList(qep, QU_xprojects), UP_name);
-      if (ret == -1) {
-         goto FPRINTF_ERROR;
-      } 
-   }
+  
+   ret = fprint_cull_list(fp, "projects             ", 
+      lGetList(qep, QU_projects), UP_name);
+   if (ret == -1) {
+      goto FPRINTF_ERROR;
+   } 
+   ret = fprint_cull_list(fp, "xprojects            ", 
+      lGetList(qep, QU_xprojects), UP_name);
+   if (ret == -1) {
+      goto FPRINTF_ERROR;
+   } 
+   
    FPRINTF((fp, "calendar             %s\n", 
       (s=lGetString(qep, QU_calendar))?s:"NONE"));
    FPRINTF((fp, "initial_state        %s\n", 
       lGetString(qep, QU_initial_state)));
 
 #if 0
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      FPRINTF((fp, "fshare               %d\n", 
-         (int)lGetUlong(qep, QU_fshare)));
-      FPRINTF((fp, "oticket              %d\n", 
-         (int)lGetUlong(qep, QU_oticket)));
-   }
+
+   FPRINTF((fp, "fshare               %d\n", 
+      (int)lGetUlong(qep, QU_fshare)));
+   FPRINTF((fp, "oticket              %d\n", 
+      (int)lGetUlong(qep, QU_oticket)));
+
 #endif
 
    FPRINTF((fp, "s_rt                 %s\n", lGetString(qep, QU_s_rt)));

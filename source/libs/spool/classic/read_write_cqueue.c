@@ -393,20 +393,18 @@ int parsing_type
                                          AUSRLIST_href)) ? -1 : 0;
    }
 
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      /* --------- CQ_projects */
-      if (ret == 0) {
-         ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "projects", ep,
-                                            CQ_projects, APRJLIST_Type, 
-                                            APRJLIST_href)) ? -1 : 0;
-      }
+   /* --------- CQ_projects */
+   if (ret == 0) {
+      ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "projects", ep,
+                                         CQ_projects, APRJLIST_Type, 
+                                         APRJLIST_href)) ? -1 : 0;
+   }
 
-      /* --------- CQ_xprojects */
-      if (ret == 0) {
-         ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "xprojects", ep,
-                                            CQ_xprojects, APRJLIST_Type, 
-                                            APRJLIST_href)) ? -1 : 0;
-      }
+   /* --------- CQ_xprojects */
+   if (ret == 0) {
+      ret = (!set_conf_prjlist_attr_list(alpp, clpp, fields, "xprojects", ep,
+                                         CQ_xprojects, APRJLIST_Type, 
+                                         APRJLIST_href)) ? -1 : 0;
    }
 
    /* --------- CQ_load_thresholds */
@@ -907,36 +905,35 @@ write_cqueue(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "NONE\n"));
       }
    }
-   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      {
-         const lList *str_attr_list = lGetList(ep, CQ_projects);
 
-         FPRINTF((fp, "projects           "));
-         if (str_attr_list != NULL) {
-            dstring string = DSTRING_INIT;
+   {
+      const lList *str_attr_list = lGetList(ep, CQ_projects);
 
-            prjlist_attr_list_append_to_dstring(str_attr_list, &string);
-            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-            sge_dstring_free(&string);
-         } else {
-            FPRINTF((fp, "NONE\n"));
-         }
+      FPRINTF((fp, "projects           "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
       }
-      {
-         const lList *str_attr_list = lGetList(ep, CQ_xprojects);
+   
+      str_attr_list = lGetList(ep, CQ_xprojects);
 
-         FPRINTF((fp, "xprojects          "));
-         if (str_attr_list != NULL) {
-            dstring string = DSTRING_INIT;
+      FPRINTF((fp, "xprojects          "));
+      if (str_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
 
-            prjlist_attr_list_append_to_dstring(str_attr_list, &string);
-            FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
-            sge_dstring_free(&string);
-         } else {
-            FPRINTF((fp, "NONE\n"));
-         }
+         prjlist_attr_list_append_to_dstring(str_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
       }
    }
+
    {
       const lList *str_attr_list = lGetList(ep, CQ_calendar);
 

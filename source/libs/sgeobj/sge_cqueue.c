@@ -463,7 +463,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
       /*
        * initialize u_long32 values (SGEEE attributes)
        */
-      if (ret && feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      if (ret ) {
          const u_long32 value[] = {
             0, 0, 0 
          }; 
@@ -676,7 +676,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
       /*
        * initialize APRJLIST_Type-list values (only sgeee mode)
        */
-      if (ret && feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      if (ret) {
          const int attr[] = {
             CQ_projects, CQ_xprojects,
             NoName

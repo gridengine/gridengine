@@ -170,9 +170,7 @@ static int execd_add_job_report(lList *report_list)
    update_job_usage();
 
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-      force_job_rlimit();
-   }
+   force_job_rlimit();
 #endif
 
    job_report = lCreateElem(REP_Type);
@@ -541,20 +539,18 @@ static void update_job_usage(void)
 
 #ifdef COMPILE_DC
 
-   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-      if (!sharetree_reserved_usage) {
-         int ptf_error;
+   if (!sharetree_reserved_usage) {
+      int ptf_error;
 
-         if ((ptf_error=ptf_get_usage(&usage_list))) {
-            ERROR((SGE_EVENT, MSG_LOAD_NOPTFUSAGE_S, ptf_errstr(ptf_error)));
-            /*
-               use the old usage values in job report or none
-               in case this is the first call to ptf_get_usage()
-               since a new job was started
-            */
-            DEXIT;
-            return;
-         }
+      if ((ptf_error=ptf_get_usage(&usage_list))) {
+         ERROR((SGE_EVENT, MSG_LOAD_NOPTFUSAGE_S, ptf_errstr(ptf_error)));
+         /*
+            use the old usage values in job report or none
+            in case this is the first call to ptf_get_usage()
+            since a new job was started
+         */
+         DEXIT;
+         return;
       }
    }
 #endif
@@ -802,7 +798,7 @@ calculate_reserved_usage(const lListElem *ja_task, const lListElem *pe_task,
    io_val = iow_val = maxvmem = 0;
 
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+   {
       /* use PDC actual I/O if available */
       lList *jul;
       lListElem *uep;

@@ -339,55 +339,43 @@ write_qinstance(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "owner_list         %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      }
-      {
-         dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QU_acl);
+      
+         list = lGetList(ep, QU_acl);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "user_lists         %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      }
-      {
-         dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QU_xacl);
+      
+         list = lGetList(ep, QU_xacl);
 
          userset_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xuser_lists        %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      }
-      {
-         dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QU_subordinate_list);
+      
+         list = lGetList(ep, QU_subordinate_list);
 
          so_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "subordinate_list   %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      }
-      {
-         dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QU_consumable_config_list);
+      
+         list = lGetList(ep, QU_consumable_config_list);
 
          centry_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "complex_values     %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      }
-      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-         dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QU_projects);
+      
+         list = lGetList(ep, QU_projects);
 
          userprj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "projects           %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
-      }
-      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-         dstring tmp_string = DSTRING_INIT;
-         const lList *list = lGetList(ep, QU_xprojects);
+      
+         list = lGetList(ep, QU_xprojects);
 
          userprj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xprojects          %s\n", 
@@ -403,12 +391,11 @@ write_qinstance(int spool, int how, const lListElem *ep)
                   lGetString(ep, QU_initial_state)));
       }
 #if 0
-      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-         FPRINTF((fp, "fshare             "u32"\n",
-                  lGetUlong(ep, QU_fshare)));
-         FPRINTF((fp, "oticket            "u32"\n",
-                  lGetUlong(ep, QU_oticket)));
-      }
+      FPRINTF((fp, "fshare             "u32"\n",
+               lGetUlong(ep, QU_fshare)));
+      FPRINTF((fp, "oticket            "u32"\n",
+               lGetUlong(ep, QU_oticket)));
+      
 #endif
       {
          FPRINTF((fp, "s_rt               %s\n", lGetString(ep, QU_s_rt)));

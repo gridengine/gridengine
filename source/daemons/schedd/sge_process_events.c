@@ -93,7 +93,6 @@ extern int start_on_master_host;
 extern int new_global_config;
 
 bool rebuild_categories = true;
-bool rebuild_accesstree = true;
 
 const lCondition 
       *where_queue = NULL,
@@ -175,7 +174,6 @@ int event_handler_default_scheduler()
          so rebuilding categories makes necessary to rebuild
          the access tree */
       rebuild_categories = 0;   
-      rebuild_accesstree = 1;
    }
 
    if ((ret=sge_before_dispatch())) {
@@ -686,17 +684,6 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
       return false;
    }
 
-   /* check user_sort: if it changes, rebuild accesstree */
-#if 0
-   if (!old || (lGetBool(new, SC_user_sort) != lGetBool(old, SC_user_sort))) {
-      rebuild_accesstree = 1;
-   }
-#else
-   if (!old) {
-      rebuild_accesstree = 1;
-   }
-#endif
-   
    /* check for valid load formula */ 
    {
       const char *new_load_formula = lGetString(new, SC_load_formula);
@@ -992,10 +979,7 @@ int subscribe_default_scheduler(void)
   
    /* event types with callbacks */
 
-   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    
-                        sge_process_schedd_conf_event_before, NULL, NULL, NULL, NULL);
-
-   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    NULL, 
+   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF, sge_process_schedd_conf_event_before , 
                         sge_process_schedd_conf_event_after,      NULL, NULL, NULL);
                                                 
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
@@ -1013,22 +997,26 @@ int subscribe_default_scheduler(void)
    /* set flush parameters for job */
    {
       int temp = sconf_get_flush_submit_sec();
-      if (temp <= 0)
+      if (temp <= 0) {
          ec_set_flush(sgeE_JOB_ADD, false, -1);        
-      else
+         /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
+         a job is removed from its hold state */
+      }   
+      else {
          ec_set_flush(sgeE_JOB_ADD, true, temp);
+         /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
+         a job is removed from its hold state */
+      }   
          
       temp = sconf_get_flush_finish_sec();
       if (temp <= 0){
          ec_set_flush(sgeE_JOB_DEL, false,        -1);
          ec_set_flush(sgeE_JOB_FINAL_USAGE, false, -1);
-         ec_set_flush(sgeE_JATASK_MOD, false, -1);
          ec_set_flush(sgeE_JATASK_DEL, false,-1);
       }
       else {
          ec_set_flush(sgeE_JOB_DEL, true,        temp);
          ec_set_flush(sgeE_JOB_FINAL_USAGE, true, temp);
-         ec_set_flush(sgeE_JATASK_MOD, true, temp);
          ec_set_flush(sgeE_JATASK_DEL, true, temp);
       }
    }

@@ -71,38 +71,27 @@ struct feature_state_t {
 
 /* *INDENT-OFF* */
 static const int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
-/*  FEATURE_UNINITIALIZED                                       */
-/*  |  FEATURE_REPRIORISATION                                   */
-/*  |  |  FEATURE_REPORT_USAGE                                  */
-/*  |  |  |  FEATURE_SPOOL_ADD_ATTR                             */
-/*  |  |  |  |  FEATURE_SGEEE                                   */
-/*  |  |  |  |  |                                               */
-/*  |  |  |  |  |    FEATURE_NO_SECURITY                        */
-/*  |  |  |  |  |    |  FEATURE_AFS_SECUIRITY                   */
-/*  |  |  |  |  |    |  |  FEATURE_DCE_SECURITY                 */
-/*  |  |  |  |  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
-/*  |  |  |  |  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
-/*  |  |  |  |  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
-/*  v  v  v  v  v    v  v  v  v  v  v                           */
-                                       
-   {0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
-   {0, 0, 1, 0, 0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGE                 */
-   {0, 1, 1, 1, 1,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
-   {0, 0, 1, 0, 0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGE_AFS             */
-   {0, 1, 1, 1, 1,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
-   {0, 0, 1, 0, 0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGE_DCE             */
-   {0, 1, 1, 1, 1,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
-   {0, 0, 1, 0, 0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGE_KERBEROS        */
-   {0, 1, 1, 1, 1,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
-   {0, 0, 1, 0, 0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGE_RESERVED_PORT   */
-   {0, 1, 1, 1, 1,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
-   {0, 0, 1, 0, 0,   0, 0, 0, 0, 0, 1},   /* FEATURESET_SGE_CSP   */
-   {0, 1, 1, 1, 1,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
+/*  XX FEATURE_UNINITIALIZED                                    */
+/*  |                                                           */
+/*  |   FEATURE_NO_SECURITY                        */
+/*  |    |  FEATURE_AFS_SECUIRITY                   */
+/*  |    |  |  FEATURE_DCE_SECURITY                 */
+/*  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
+/*  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
+/*  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
+/*  v    v  v  v  v  v  v                           */
+   {0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
+   {0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
+   {0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
+   {0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
+   {0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
+   {0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
+   {0,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
 };
 
 static const feature_names_t feature_list[] = {
-   {FEATURE_REPRIORITIZATION,       "reprioritization"},
-   {FEATURE_REPORT_USAGE,           "report_usage"},
+/*   {FEATURE_REPRIORITIZATION,       "reprioritization"},*/
+/*   {FEATURE_REPORT_USAGE,           "report_usage"},*/
    {FEATURE_NO_SECURITY,            "no_security"},
    {FEATURE_AFS_SECURITY,           "afs_security"},
    {FEATURE_DCE_SECURITY,           "dce_security"},
@@ -113,21 +102,11 @@ static const feature_names_t feature_list[] = {
 };  
 
 static const featureset_names_t featureset_list[] = {
-   {FEATURESET_SGE,                 "sge"},
    {FEATURESET_SGEEE,               "sgeee"},
-   {FEATURESET_SGE_AFS,             "sge-afs"},
    {FEATURESET_SGEEE_AFS,           "sgeee-afs"},
-   {FEATURESET_SGE_DCE,             "sge-dce"},
    {FEATURESET_SGEEE_DCE,           "sgeee-dce"},
-   {FEATURESET_SGE_KERBEROS,        "sge-kerberos"},
    {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},
-/*
- * if changed, please update setup_commd_path.c 
- * function use_reserved_port() 
- */
-   {FEATURESET_SGE_RESERVED_PORT,   "sge-reserved_port"},  
    {FEATURESET_SGEEE_RESERVED_PORT, "sgeee-reserved_port"},
-   {FEATURESET_SGE_CSP,             "sge-csp"},
    {FEATURESET_SGEEE_CSP,           "sgeee-csp"},
    {0, NULL}
 };
@@ -644,13 +623,8 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    DENTER(TOP_LAYER, "feature_get_product_name");
 
    if (feature_get_active_featureset_id() != FEATURESET_UNINITIALIZED ) {
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         short_name = GEEE_SHORTNAME;
-         long_name  = GEEE_LONGNAME;
-      } else {
-         short_name = GE_SHORTNAME;
-         long_name  = GE_LONGNAME;
-      }
+      short_name = GEEE_SHORTNAME;
+      long_name  = GEEE_LONGNAME;
    }
    version = GDI_VERSION; 
 

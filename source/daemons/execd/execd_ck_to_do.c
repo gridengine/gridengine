@@ -376,12 +376,11 @@ int answer_error
    if (lGetNumberOfElem(Master_Job_List) > 0) {
       notify_ptf();
 
-      if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-         sge_switch2start_user();
-         ptf_update_job_usage();
-         sge_switch2admin_user();
-      }
-      if (feature_is_enabled(FEATURE_REPRIORITIZATION) && sge_is_reprioritize()) {
+      sge_switch2start_user();
+      ptf_update_job_usage();
+      sge_switch2admin_user();
+
+      if (sge_is_reprioritize()) {
          sge_switch2start_user();
          DPRINTF(("ADJUST PRIORITIES\n"));
          ptf_adjust_job_priorities();

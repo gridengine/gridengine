@@ -576,7 +576,9 @@ int sub_command
                strcasecmp("unix_behavior", s) && 
                strcasecmp("posix_compliant", s) && 
                strcasecmp("script_from_stdin", s)) {
-         sprintf(SGE_EVENT, SFQ" is not a valid shell_start_mode\n", s);
+        
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QMASTER_XNOVALIDSSM_S , s));
+
          sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
          goto ERROR;
       }
@@ -593,7 +595,7 @@ int sub_command
       if (s && strcasecmp("default", s) && 
                strcasecmp("enabled", s) && 
                strcasecmp("disabled", s)) {
-         sprintf(SGE_EVENT, SFQ" is not a valid initial_state\n", s);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QMASTER_XNOVALIDIS_S , s));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
          goto ERROR;
       }

@@ -101,7 +101,7 @@ lList *cmplx_list
    s = lGetString(sc_ep, SC_algorithm);
    if ( !s || (strcmp(s, "default") && strcmp(s, "simple_sched") 
       && strncmp(s, "ext_", 4))) {
-      sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME ); 
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME )); 
       sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
       DEXIT;
       return -1;
@@ -114,8 +114,8 @@ lList *cmplx_list
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, 
        s=lGetString(sc_ep, SC_schedule_interval), tmp_error, 
        sizeof(tmp_error),0) ) {
-         sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
-         "schedule_interval", tmp_error);    
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
+         "schedule_interval", tmp_error));    
          sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          DEXIT;
          return -1;
@@ -182,8 +182,8 @@ lList *cmplx_list
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, 
          s=lGetString(sc_ep, SC_load_adjustment_decay_time), tmp_error, 
          sizeof(tmp_error),0)) {
-      sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, 
-         "load_adjustment_decay_time", tmp_error);    
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, 
+         "load_adjustment_decay_time", tmp_error));    
       sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
       DEXIT;
       return -1;
@@ -199,7 +199,6 @@ lList *cmplx_list
       return -1;
    }
    if (sc) {
-
       sc->load_formula = sge_strdup(sc->load_formula, 
          lGetString(sc_ep, SC_load_formula));
       strip_blanks(sc->load_formula);
@@ -224,7 +223,7 @@ lList *cmplx_list
       else if (!strcmp("job_list", key)) 
          ikey = SCHEDD_JOB_INFO_JOB_LIST;
       else {
-         sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM );
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
          sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          DEXIT;
          return -1;
@@ -234,7 +233,7 @@ lList *cmplx_list
          key = strtok(NULL, "\n");
          if (!(rlp=parse_ranges(key, 0, 0, &alp, NULL, INF_NOT_ALLOWED))) {
             lFreeList(alp);
-            sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
             sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
             DEXIT;
             return -1;
@@ -257,8 +256,8 @@ lList *cmplx_list
       if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, 
             s=lGetString(sc_ep, SC_sgeee_schedule_interval), tmp_error, 
             sizeof(tmp_error),0)) {
-         sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
-            "sgeee_schedule_interval", tmp_error);    
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
+            "sgeee_schedule_interval", tmp_error));    
          sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
          DEXIT;
          return -1;
@@ -364,20 +363,19 @@ static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
             int type = lGetUlong(cmplx_attr, CE_valtype);
    
             if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
-               sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr));
                sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0); 
                ret = 0;
             }
          } else {
-            sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, attr));
             sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
             ret = 0;
          }
       }
    }
-
-   return ret;
    DEXIT;
+   return ret;
 }
 
 

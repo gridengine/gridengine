@@ -51,6 +51,7 @@
 #include "sge_log.h"
 #include "version.h"
 #include "sge_feature.h"
+#include "msg_common.h"
 
 static int read_pref_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
@@ -194,7 +195,7 @@ lListElem *ep
       fp = fopen(filename, "w");
 
    if (!fp) {
-      sprintf(SGE_EVENT, "error writing %s\n", filename);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FILE_ERRORWRITETOFILEX_S, filename));
       sge_add_answer(&answer, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
       DEXIT;
       return answer;

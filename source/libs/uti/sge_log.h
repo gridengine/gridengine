@@ -32,13 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+
 #ifndef WIN32NATIVE
 #	include <syslog.h>
 #else 
 #	include "win32nativetypes.h"
 #endif 
-
-
 
 #ifndef __BASIS_TYPES_H
 #   include "basis_types.h"
@@ -79,12 +78,51 @@ void sge_qmon_log(int i);
 #   define INFO(x)     (sprintf x,sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #   define DEBUG(x)    (sprintf x,sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #else
-#   define CRITICAL(x) (sprintf x,sge_log(LOG_CRIT,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-#   define ERROR(x)    (sprintf x,sge_log(LOG_ERR,    SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-#   define WARNING(x)  (sprintf x,sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-#   define NOTICE(x)   (sprintf x,sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-#   define INFO(x)     (sprintf x,sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-#   define DEBUG(x)    (sprintf x,sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+#ifdef __SGE_COMPILE_WITH_GETTEXT__
+#   define CRITICAL(x) (sge_set_message_id_output(1), \
+                        sprintf x, \
+                        sge_set_message_id_output(0), \
+                        sge_log(LOG_CRIT, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#else
+#   define CRITICAL(x) (sprintf x, \
+                        sge_log(LOG_CRIT, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#endif
+
+#ifdef __SGE_COMPILE_WITH_GETTEXT__
+#   define ERROR(x)    (sge_set_message_id_output(1),                          \
+                        sprintf x,                                             \
+                        sge_set_message_id_output(0),                          \
+                        sge_log(LOG_ERR,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__), 1) ? 1 : 0
+#else
+#   define ERROR(x)    (sprintf x,                                             \
+                        sge_log(LOG_ERR,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__), 1) ? 1 : 0
+#endif
+
+#ifdef __SGE_COMPILE_WITH_GETTEXT__
+#   define WARNING(x)  (sge_set_message_id_output(1), \
+                        sprintf x,       \
+                        sge_set_message_id_output(0), \
+                        sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#else
+#   define WARNING(x)  ( sprintf x,       \
+                        sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#endif
+
+#   define NOTICE(x)   (sprintf x,  \
+                        sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+
+#   define INFO(x)     (sprintf x,  \
+                        sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#ifdef __SGE_COMPILE_WITH_GETTEXT__
+#   define DEBUG(x)    (sge_set_message_id_output(1),  \
+                        sprintf x,  \
+                        sge_set_message_id_output(0), \
+                        sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#else
+#   define DEBUG(x)    (sprintf x,  \
+                        sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#endif
 #endif
 int sge_log(int log_level, char *mesg, char *file__, char *func__, int line__);
 

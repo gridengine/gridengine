@@ -43,6 +43,7 @@
 #include "sge_stdio.h"
 #include "sge_stat.h"
 #include "msg_common.h" 
+#include "msg_qmaster.h"
 #include "sge_spoolmsg.h"
 #include "sge_feature.h"
 

@@ -34,18 +34,18 @@
 
 #include "basis_types.h"
 
-#define MSG_QRSH_STARTER_CANNOTOPENFILE_SS   _("qrsh_starter: cannot open file %s: %s\n")
-#define MSG_QRSH_STARTER_CANNOTREADCONFIGFROMFILE_S _("qrsh_starter: cannot read job configuration from file %s\n")
-#define MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS  _("qrsh_starter: cannot change to directory %s: %s\n")
-#define MSG_QRSH_STARTER_MALLOCFAILED_S      _("qrsh_starter: malloc failed: %s\n")
-#define MSG_QRSH_STARTER_CANNOTREADENV_S     _("qrsh_starter: cannot read environment variable %s\n")
-#define MSG_QRSH_STARTER_CANNOTWRITEPID_S    _("qrsh_starter: cannot write pid file %s\n")
-#define MSG_QRSH_STARTER_CANNOTFORKCHILD_S   _("qrsh_starter: cannot fork child process: %s\n")
-#define MSG_QRSH_STARTER_CANNOTGETLOGIN_S    _("qrsh_starter: cannot get login name: %s\n")
-#define MSG_QRSH_STARTER_CANNOTGETUSERINFO_S _("qrsh_starter: cannot get user information: %s\n")
-#define MSG_QRSH_STARTER_CANNOTDETERMSHELL_S _("qrsh_starter: cannot determine login shell, using \"%s\"\n")
-#define MSG_QRSH_STARTER_EMPTY_WRAPPER               _("qrsh_starter: environment variable QRSH_WRAPPER has no value\n")
-#define MSG_QRSH_STARTER_EXECCHILDFAILED_S   _("qrsh_starter: executing child process %s failed: %s\n")
-#define MSG_QRSH_STARTER_INVALIDCOMMAND      _("qrsh_starter: received invalid command to execute\n")
+#define MSG_QRSH_STARTER_CANNOTOPENFILE_SS   _MESSAGE(15000, _("qrsh_starter: cannot open file %s: %s\n"))
+#define MSG_QRSH_STARTER_CANNOTREADCONFIGFROMFILE_S _MESSAGE(15001, _("qrsh_starter: cannot read job configuration from file %s\n"))
+#define MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS  _MESSAGE(15002, _("qrsh_starter: cannot change to directory %s: %s\n"))
+#define MSG_QRSH_STARTER_MALLOCFAILED_S      _MESSAGE(15003, _("qrsh_starter: malloc failed: %s\n"))
+#define MSG_QRSH_STARTER_CANNOTREADENV_S     _MESSAGE(15004, _("qrsh_starter: cannot read environment variable %s\n"))
+#define MSG_QRSH_STARTER_CANNOTWRITEPID_S    _MESSAGE(15005, _("qrsh_starter: cannot write pid file %s\n"))
+#define MSG_QRSH_STARTER_CANNOTFORKCHILD_S   _MESSAGE(15006, _("qrsh_starter: cannot fork child process: %s\n"))
+#define MSG_QRSH_STARTER_CANNOTGETLOGIN_S    _MESSAGE(15007, _("qrsh_starter: cannot get login name: %s\n"))
+#define MSG_QRSH_STARTER_CANNOTGETUSERINFO_S _MESSAGE(15008, _("qrsh_starter: cannot get user information: %s\n"))
+#define MSG_QRSH_STARTER_CANNOTDETERMSHELL_S _MESSAGE(15009, _("qrsh_starter: cannot determine login shell, using \"%s\"\n"))
+#define MSG_QRSH_STARTER_EMPTY_WRAPPER               _MESSAGE(15010, _("qrsh_starter: environment variable QRSH_WRAPPER has no value\n"))
+#define MSG_QRSH_STARTER_EXECCHILDFAILED_S   _MESSAGE(15011, _("qrsh_starter: executing child process %s failed: %s\n"))
+#define MSG_QRSH_STARTER_INVALIDCOMMAND      _MESSAGE(15012, _("qrsh_starter: received invalid command to execute\n"))
 
 #endif /* __MSG_QRSH_H */

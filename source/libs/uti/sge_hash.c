@@ -500,6 +500,17 @@ const void *DupFunc_u_long32(const void *key)
    return dup;
 }
 
+const void *DupFunc_long(const void *key)
+{
+   long *dup  = NULL;
+   long *cast = (long*)key;
+
+   if((dup = (long*) malloc(sizeof(long))) != NULL) {
+      *dup = *cast;
+   }
+   return dup;
+}
+
 const void *DupFunc_string(const void *key)
 {
    return strdup((const char *)key);
@@ -536,6 +547,12 @@ const void *DupFunc_string(const void *key)
 int HashFunc_u_long32(const void *key) 
 {
    u_long32 *cast = (u_long32 *)key;
+   return (int)*cast;
+}
+
+int HashFunc_long(const void *key)
+{
+   long *cast = (long*)key;
    return (int)*cast;
 }
 
@@ -588,6 +605,13 @@ int HashCompare_u_long32(const void *a, const void *b)
 {
    u_long32 *cast_a = (u_long32 *)a;
    u_long32 *cast_b = (u_long32 *)b;
+   return *cast_a - *cast_b;
+}
+
+int HashCompare_long(const void *a, const void *b) 
+{
+   long *cast_a = (long*)a;
+   long *cast_b = (long*)b;
    return *cast_a - *cast_b;
 }
 

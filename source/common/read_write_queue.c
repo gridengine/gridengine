@@ -133,8 +133,8 @@ _Insight_set_option("suppress", "PARM_NULL");
          /* build unique hostname when it comes in */
          if ((ret = getuniquehostname(str, unique, 0)) != CL_OK) {
             if (ret != COMMD_NACK_UNKNOWN_HOST) {
-               sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
-                  str, cl_errstr(ret));
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS,
+                  str, cl_errstr(ret)));
                sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
                DEXIT;
                return -1;

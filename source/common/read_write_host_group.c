@@ -216,7 +216,7 @@ int parsing_type
                /* group name found */
                if (sge_add_subgroup2group(alpp,NULL, ep, &fileEntry[1],FALSE) == FALSE) {
                  DPRINTF(("Error adding subgroup '%s'\n", &fileEntry[1]));
-                 sprintf(SGE_EVENT, MSG_ANSWER_SUBGROUPXINGROUPYNOTACCEPTED_SS, &fileEntry[1], lGetString(ep, GRP_group_name));
+                 SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_SUBGROUPXINGROUPYNOTACCEPTED_SS, &fileEntry[1], lGetString(ep, GRP_group_name)));
                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0); 
                  back = -1;
                }
@@ -224,7 +224,7 @@ int parsing_type
                /* host name found */
                if (sge_add_member2group( ep, fileEntry) == FALSE) {
                  DPRINTF(("Error adding host '%s'\n", fileEntry));
-                 sprintf(SGE_EVENT, MSG_ANSWER_HOSTXINGROUPYNOTACCEPTED_SS,fileEntry , lGetString(ep, GRP_group_name));
+                 SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_HOSTXINGROUPYNOTACCEPTED_SS,fileEntry , lGetString(ep, GRP_group_name)));
                  sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0); 
                  back = -1;
                }

@@ -153,7 +153,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       while (!(pw = getpwuid(uid))) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETPWUIDFAILED_US , 
-                  uid, strerror(errno)));
+                  u32c(uid), strerror(errno)));
             DEXIT;
 #ifdef QIDL
             pthread_mutex_unlock(&lock);
@@ -210,7 +210,7 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       while (!(gr = getgrgid(gid))) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US , 
-                  gid, strerror(errno)));
+                  u32c(gid), strerror(errno)));
 #ifdef QIDL
             pthread_mutex_unlock(&lock);
 #endif

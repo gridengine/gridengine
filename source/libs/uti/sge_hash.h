@@ -53,12 +53,15 @@ extern void HashTableForEach(HashTable ht, HashTableForEachProc proc);
 
 extern const char *HashStatistics(HashTable ht);
 
+extern const void *DupFunc_long(const void *key);
 extern const void *DupFunc_u_long32(const void *key);
 extern const void *DupFunc_string(const void *key);
 
+extern int HashFunc_long(const void *key);
 extern int HashFunc_u_long32(const void *key);
 extern int HashFunc_string(const void *key);
 
+extern int HashCompare_long(const void *a, const void *b);
 extern int HashCompare_u_long32(const void *a, const void *b);
 extern int HashCompare_string(const void *a, const void *b);
 

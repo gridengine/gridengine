@@ -667,8 +667,8 @@ const char *cal_name
 ERROR:
    if (cal)
       lFreeList(*cal);
-   sprintf(SGE_EVENT, MSG_ANSWER_ERRORINDISABLYEAROFCALENDARXY_SS, 
-         save_error(), cal_name);
+   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_ERRORINDISABLYEAROFCALENDARXY_SS, 
+         save_error(), cal_name));
    sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
    DEXIT;
    return -1;
@@ -1291,8 +1291,8 @@ const char *cal_name
 ERROR:
    if (cal)
       lFreeList(*cal);
-   sprintf(SGE_EVENT, MSG_PARSE_ERRORINDISABLEDWEEKOFCALENDAR_SS, 
-        cal_name, save_error());
+   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_ERRORINDISABLEDWEEKOFCALENDAR_SS, 
+        cal_name, save_error()));
    sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
    DEXIT;
    return -1;

@@ -62,7 +62,7 @@ int main(int argc, char **argv)
    sge_setup_sig_handlers(QCONF);
 
    if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      generate_commd_port_and_service_status_message(ret, SGE_EVENT);
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
       fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }   

@@ -177,7 +177,7 @@ lList **alpp
       */
       lSetHost(pal, PA_submit_host, submit_host);
       if (strcmp(submit_host, "*") && sge_resolve_host(pal, PA_submit_host)) {
-         sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, submit_host));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          ret = -1;
          break;

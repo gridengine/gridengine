@@ -38,17 +38,17 @@
 /*
 ** shadowd.c
 */
-#define MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S       _("can't read qmaster_spool_dir from \"%s\"")
-#define MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I   _("found running shadowd with pid %d - not starting")
-#define MSG_SHADOWD_CANTCHANGETOQMASTERSPOOLDIRX_S       _("can't change to qmaster spool directory: %s")
-#define MSG_SHADOWD_CANTSWITCHTOADMIN_USER       _("can't switch to admin_user")
-#define MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER       _("failed to lock qmaster -- somebody else was faster")
-#define MSG_SHADOWD_CANTSTARTQMASTER       _("can't start qmaster")
-#define MSG_SHADOWD_DELAYINGSHADOWFUNCTIONFOR10MINUTES       _("delaying shadow function for 10 minutes")
-#define MSG_SHADOWD_CANTREADACTQMASTERFILEX_S       _("can't read act_qmaster file \"%s\"")
-#define MSG_SHADOWD_CANTRESOLVEHOSTNAMEFROMACTQMASTERFILE_SS       _("can't resolve hostname from act_qmaster file \"%s\": \"%s\"")
-#define MSG_SHADOWD_NOTASHADOWMASTERFILE_S       _("this is not in shadow master file \"%s\"")
-#define MSG_SHADOWD_CANTREADBINARYPATHFROMX_S       _("can't read binary path \"binary_path\" from \"%s\"")
+#define MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S       _MESSAGE(35000, _("can't read qmaster_spool_dir from \"%s\""))
+#define MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I   _MESSAGE(35001, _("found running shadowd with pid %d - not starting"))
+#define MSG_SHADOWD_CANTCHANGETOQMASTERSPOOLDIRX_S       _MESSAGE(35002, _("can't change to qmaster spool directory: %s"))
+#define MSG_SHADOWD_CANTSWITCHTOADMIN_USER       _MESSAGE(35003, _("can't switch to admin_user"))
+#define MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER       _MESSAGE(35004, _("failed to lock qmaster -- somebody else was faster"))
+#define MSG_SHADOWD_CANTSTARTQMASTER       _MESSAGE(35005, _("can't start qmaster"))
+#define MSG_SHADOWD_DELAYINGSHADOWFUNCTIONFOR10MINUTES       _MESSAGE(35006, _("delaying shadow function for 10 minutes"))
+#define MSG_SHADOWD_CANTREADACTQMASTERFILEX_S       _MESSAGE(35007, _("can't read act_qmaster file \"%s\""))
+#define MSG_SHADOWD_CANTRESOLVEHOSTNAMEFROMACTQMASTERFILE_SS       _MESSAGE(35008, _("can't resolve hostname from act_qmaster file \"%s\": \"%s\""))
+#define MSG_SHADOWD_NOTASHADOWMASTERFILE_S       _MESSAGE(35009, _("this is not in shadow master file \"%s\""))
+#define MSG_SHADOWD_CANTREADBINARYPATHFROMX_S       _MESSAGE(35010, _("can't read binary path \"binary_path\" from \"%s\""))
 
 
 #endif /* __MSG_SHADOWD_H */

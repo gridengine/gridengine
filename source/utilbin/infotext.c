@@ -389,6 +389,7 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
    line_length = 0;
    lc = 0;
    line_buf = (char*)sge_dstring_get_string(&line);
+   
    for(i=0;i<sge_dstring_strlen(&line);i++) {
       lc++;
       if (line_buf[i] == '\n') {
@@ -399,6 +400,8 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
       }
    }
 
+
+/*   line_length = sge_dstring_wcstrlen(&line); */
 
    /* output */
    output=stdout;  

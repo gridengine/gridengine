@@ -92,7 +92,7 @@ lList **alpp
    }
 
    /* initialize hostcompare policy consisting 
-      of default_domain and ignore_fqdn settings */ 
+      of default_domain and ignore_fqdn settings */
    if (init_hostcpy_policy()) {
       SGE_EXIT(1);
    }
@@ -101,8 +101,8 @@ lList **alpp
    /* gdi lib call */
    if (!(me.who == QMASTER || me.who == SHADOWD) && !sge_get_master(1)) {
       if (alpp) {
-         sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
-                     path.act_qmaster_file);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
+                     path.act_qmaster_file));
    /* gdi lib call */
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
          DEXIT;
@@ -119,7 +119,7 @@ lList **alpp
       if(cl) {
          compression_level = (int)strtol(cl, NULL, 10);
          if(compression_level == LONG_MIN || compression_level == LONG_MAX) {
-            sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl));
             compression_level = Z_DEFAULT_COMPRESSION;
          }
       }
@@ -129,7 +129,7 @@ lList **alpp
       if(cl) {
          compression_threshold = (int)strtol(cl, NULL, 10);
          if(compression_threshold == LONG_MIN || compression_threshold == LONG_MAX || compression_threshold < 0) {
-            sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl));
             compression_threshold = 10 * 1024;
          }
       }
@@ -164,8 +164,8 @@ int reresolve_me_qualified_hostname()
    return CL_OK;
 }
 
-/* initialize policy used in hostcpy() consisting of 
-   default_domain and ignore_fqdn settings */ 
+/* initialize policy used in hostcpy() consisting of
+   default_domain and ignore_fqdn settings */
 static int init_hostcpy_policy(void)
 {
    u_long32 uval;
@@ -175,7 +175,8 @@ static int init_hostcpy_policy(void)
    DENTER(TOP_LAYER, "init_hostcpy_policy");
 
    if (get_confval_array(path.conf_file, 2, name, value)) {
-      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S, path.conf_file));
+      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
+      path.conf_file));
       DEXIT;
       return -1;
    }
@@ -188,4 +189,3 @@ static int init_hostcpy_policy(void)
    DEXIT;
    return 0;
 }
-

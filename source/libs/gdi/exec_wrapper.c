@@ -51,8 +51,8 @@
 #include "config.h"
 #include "exec_wrapper.h"
 #include "setup_path.h"
-
 #include "msg_utilib.h"
+#include "msg_common.h"
 
 /* module global variables */
 static lList *task_config = NULL;
@@ -84,7 +84,7 @@ print_func_t ostream
    sprintf(fname, "%s/common/qtask", path.cell_root);
 
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
@@ -110,13 +110,13 @@ print_func_t ostream
 
    /* user settings */
    if (!(pwd = sge_getpwnam(me.user_name))) {
-      sprintf(SGE_EVENT, "invalid user name \"%s\"\n", me.user_name);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , me.user_name));
       sge_add_answer(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, 0);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    if (!pwd->pw_dir) {
-      sprintf(SGE_EVENT, "missing home directory for user \"%s\"\n", me.user_name);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , me.user_name));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
@@ -124,7 +124,7 @@ print_func_t ostream
    sprintf(fname, "%s/.qtask", pwd->pw_dir);
    
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       (*ostream)("%s", SGE_EVENT);
       goto Error;

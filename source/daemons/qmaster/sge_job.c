@@ -459,7 +459,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          }
       }
       if (!has_permissions) {
-         sprintf(SGE_EVENT, MSG_JOB_NOTINANYQ_S, ruser);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOTINANYQ_S, ruser));
          sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
       }
    }
@@ -872,7 +872,7 @@ int sub_command
       /*
        * Repeat until all requested taskid ranges are handled
        */
-      rn = lFirst(lGetList(idep, ID_ja_structure));   
+      rn = lFirst(lGetList(idep, ID_ja_structure));
       do {
          /*
           * delete tasks or the whole job?
@@ -882,28 +882,30 @@ int sub_command
          unenrolled_start = job_get_smallest_unenrolled_task_id(job);
          unenrolled_end = job_get_biggest_unenrolled_task_id(job);
          enrolled_start = job_get_smallest_enrolled_task_id(job);
-         enrolled_end = job_get_biggest_enrolled_task_id(job);  
+         enrolled_end = job_get_biggest_enrolled_task_id(job);
          rn = lFirst(lGetList(idep, ID_ja_structure));
          if (rn) {
             r_start = lGetUlong(rn, RN_min);
             r_end = lGetUlong(rn, RN_max);
-            unenrolled_start = MAX(r_start, unenrolled_start);                              unenrolled_end = MIN(r_end, unenrolled_end);
+            unenrolled_start = MAX(r_start, unenrolled_start);
+            unenrolled_end = MIN(r_end, unenrolled_end);
             enrolled_start = MAX(r_start, enrolled_start);
-            enrolled_end = MIN(r_end, enrolled_end);  
+            enrolled_end = MIN(r_end, enrolled_end);
             step = lGetUlong(rn, RN_step);
-            if (!step)
+            if (!step) {
                step = 1;
+            }
             alltasks = 0;
          } else {
             step = 1;
             alltasks = 1;
-         }       
+         }
          DPRINTF(("Request: alltasks = %d, start = %d, end = %d, step = %d\n",
                   alltasks, r_start, r_end, step));
          DPRINTF(("unenrolled ----> start = %d, end = %d, step = %d\n",
                   unenrolled_start, unenrolled_end, step));
          DPRINTF(("enrolled   ----> start = %d, end = %d, step = %d\n",
-                  enrolled_start, enrolled_end, step));  
+                  enrolled_start, enrolled_end, step));
 
 
          /* Does user have privileges to delete the job/task? */
@@ -3217,9 +3219,9 @@ int *trigger
                lFreeList(talp);
             }
 
-            sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
                (verify_mode==JUST_VERIFY ? MSG_JOB_VERIFYVERIFY: 
-                  (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN));
+                  (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
 
             if (verify_mode != WARINING_VERIFY) {

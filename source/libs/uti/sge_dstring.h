@@ -68,6 +68,9 @@ char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2);
 
 size_t sge_dstring_strlen(const dstring *string);
 
+/* size_t sge_dstring_wcstrlen(const dstring *string); */
+
+
 
 #endif /* __SGE_STRING_APPEND_H */
 

@@ -1964,7 +1964,7 @@ char *priority_str
 
    *valp = strtol(priority_str, &s, 10);
    if (priority_str==s || *valp > 1024 || *valp < -1023) {
-       sprintf(SGE_EVENT, MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024);
+       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024));
        sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
        DEXIT;
        return -1;

@@ -35,6 +35,7 @@
 #include <stdarg.h>
 #include "sgermon.h"
 #include "sge_dstring.h"
+/* #include <wchar.h> */
 
 #define REALLOC_CHUNK   1024
 
@@ -218,7 +219,19 @@ size_t sge_dstring_strlen(const dstring *string)
    return len;
 }
 
-
+/* size_t sge_dstring_wcstrlen(const dstring *string) 
+{
+   size_t len = 0;
+   DENTER(TOP_LAYER,"sge_dstring_wcstrlen");
+   if (string != NULL && string->s != NULL) {
+      wchar_t my_buf[10000];
+      mbstowcs(my_buf, string->s, 9999); 
+      len = wcslen(my_buf);
+   }
+   DEXIT;
+   return len;
+}
+*/
 
 
 #if 0 /* EB: debug */

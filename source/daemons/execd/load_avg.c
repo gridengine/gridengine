@@ -67,20 +67,24 @@
 #  include "ptf.h"
 #endif
 
-static void get_reserved_usage(lList **job_usage_list);
-static int execd_add_load_report(lList *report_list);
-static int execd_add_conf_report(lList *report_list);
-static int execd_add_license_report(lList *report_list);
-static int execd_add_job_report(lList *report_list);
-static int sge_get_loadavg(lList **lpp);
-
-static void update_job_usage(void);
+static void 
+get_reserved_usage(lList **job_usage_list);
+static int 
+execd_add_load_report(lList *report_list, u_long32 now, u_long32 *next_send);
+static int 
+execd_add_conf_report(lList *report_list, u_long32 now, u_long32 *next_send);
+static int 
+execd_add_license_report(lList *report_list, u_long32 now, u_long32 *next_send);
+static int 
+execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send);
+static int 
+sge_get_loadavg(lList **lpp);
 
 report_source execd_report_sources[] = {
-   { NUM_REP_REPORT_LOAD, execd_add_load_report },
-   { NUM_REP_REPORT_CONF, execd_add_conf_report },
-   { NUM_REP_REPORT_PROCESSORS, execd_add_license_report },
-   { NUM_REP_REPORT_JOB, execd_add_job_report },
+   { NUM_REP_REPORT_LOAD, execd_add_load_report , 0 },
+   { NUM_REP_REPORT_CONF, execd_add_conf_report , 0 },
+   { NUM_REP_REPORT_PROCESSORS, execd_add_license_report , 0 },
+   { NUM_REP_REPORT_JOB, execd_add_job_report , 0 },
    { 0, NULL }
 };
 
@@ -88,99 +92,151 @@ int report_seqno = 0;
 
 extern lList *jr_list;
 
-static int execd_add_load_report(lList *report_list) 
+static int 
+execd_add_load_report(lList *report_list, u_long32 now, u_long32 *next_send) 
 {
-   lListElem *report;
+   if (*next_send <= now) {
+      lListElem *report;
 
-   /*
-   ** problem: add some more error handling here
-   */
-   /*
-   ** 1. load report
-   */
-   report = lCreateElem(REP_Type);
-   lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
-   lSetUlong(report, REP_version, GRM_GDI_VERSION);
-   lSetUlong(report, REP_seqno, report_seqno);
-   lSetHost(report, REP_host, uti_state_get_qualified_hostname());
-   lSetList(report, REP_list, sge_build_load_report());
-   lAppendElem(report_list, report);
+      *next_send = now + conf.load_report_time;
 
-   return 0;
-}
-
-
-static int execd_add_conf_report(lList *report_list) 
-{
-   lListElem *report;
-   /*
-   ** 2. report about the configuration versions
-   ** that the exec daemon has right now
-   ** order of the reports is irrelevant
-   */
-   report = lCreateElem(REP_Type);
-   lSetUlong(report, REP_type, NUM_REP_REPORT_CONF);
-   lSetUlong(report, REP_version, GRM_GDI_VERSION);
-   lSetUlong(report, REP_seqno, report_seqno);
-   lSetHost(report, REP_host, uti_state_get_qualified_hostname());
-   lSetList(report, REP_list, 
-      lCopyList("execd config list copy", Execd_Config_List));
-   lAppendElem(report_list, report);
-
-   return 0;
-}
-
-static int execd_add_license_report(lList *report_list) 
-{
-   lListElem *report;
-   /*
-   ** 3. license report
-   */
-   report = lCreateElem(REP_Type);
-   lSetUlong(report, REP_type, NUM_REP_REPORT_PROCESSORS);
-   lSetUlong(report, REP_version, GRM_GDI_VERSION);
-   lSetUlong(report, REP_seqno, report_seqno);
-   lSetHost(report, REP_host, uti_state_get_qualified_hostname());
-   {
-      lList *lp_lic;
-      lListElem *ep_lic;
-      
-      lp_lic = lCreateList("license report list", LIC_Type);
-      ep_lic = lCreateElem(LIC_Type);
       /*
-      ** no error handling here cause we can just send 1 as #processors
+      ** problem: add some more error handling here
       */
-      lSetUlong(ep_lic, LIC_processors,  sge_nprocs());
-      lSetString(ep_lic, LIC_arch, sge_get_arch());
-      lAppendElem(lp_lic, ep_lic);
-      lSetList(report, REP_list, lp_lic);
+      /*
+      ** 1. load report
+      */
+      report = lCreateElem(REP_Type);
+      lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
+      lSetUlong(report, REP_version, GRM_GDI_VERSION);
+      lSetUlong(report, REP_seqno, report_seqno);
+      lSetHost(report, REP_host, uti_state_get_qualified_hostname());
+      lSetList(report, REP_list, sge_build_load_report());
+      lAppendElem(report_list, report);
    }
-   lAppendElem(report_list, report);
 
    return 0;
 }
 
-static int execd_add_job_report(lList *report_list) 
+
+static int 
+execd_add_conf_report(lList *report_list, u_long32 now, u_long32 *next_send) 
 {
-   lListElem *job_report = NULL;
+   if (*next_send <= now) {
+      lListElem *report;
 
-   /* in case of SGE we need to update the usage list 
-      in our job report list */
+      *next_send = now + conf.load_report_time;
 
-   update_job_usage();
+      /*
+      ** 2. report about the configuration versions
+      ** that the exec daemon has right now
+      ** order of the reports is irrelevant
+      */
+      report = lCreateElem(REP_Type);
+      lSetUlong(report, REP_type, NUM_REP_REPORT_CONF);
+      lSetUlong(report, REP_version, GRM_GDI_VERSION);
+      lSetUlong(report, REP_seqno, report_seqno);
+      lSetHost(report, REP_host, uti_state_get_qualified_hostname());
+      lSetList(report, REP_list, 
+         lCopyList("execd config list copy", Execd_Config_List));
+      lAppendElem(report_list, report);
+   }
 
-#ifdef COMPILE_DC
-   force_job_rlimit();
-#endif
+   return 0;
+}
 
-   job_report = lCreateElem(REP_Type);
-   lSetUlong(job_report, REP_type, NUM_REP_REPORT_JOB);
-   lSetUlong(job_report, REP_version, GRM_GDI_VERSION);
-   lSetUlong(job_report, REP_seqno, report_seqno);
-   lSetHost(job_report, REP_host, uti_state_get_qualified_hostname());
+static int 
+execd_add_license_report(lList *report_list, u_long32 now, u_long32 *next_send) 
+{
+   if (*next_send <= now) {
+      lListElem *report;
 
-   lSetList(job_report, REP_list, lCopyList("jr_list", jr_list));
-   lAppendElem(report_list, job_report);
+      *next_send = now + conf.load_report_time;
+
+      /*
+      ** 3. license report
+      */
+      report = lCreateElem(REP_Type);
+      lSetUlong(report, REP_type, NUM_REP_REPORT_PROCESSORS);
+      lSetUlong(report, REP_version, GRM_GDI_VERSION);
+      lSetUlong(report, REP_seqno, report_seqno);
+      lSetHost(report, REP_host, uti_state_get_qualified_hostname());
+      {
+         lList *lp_lic;
+         lListElem *ep_lic;
+         
+         lp_lic = lCreateList("license report list", LIC_Type);
+         ep_lic = lCreateElem(LIC_Type);
+         /*
+         ** no error handling here cause we can just send 1 as #processors
+         */
+         lSetUlong(ep_lic, LIC_processors,  sge_nprocs());
+         lSetString(ep_lic, LIC_arch, sge_get_arch());
+         lAppendElem(lp_lic, ep_lic);
+         lSetList(report, REP_list, lp_lic);
+      }
+      lAppendElem(report_list, report);
+   }
+
+   return 0;
+}
+
+static int 
+execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send) 
+{
+   bool do_send = false;
+   bool only_flush = false;
+   static u_long32 last_send = 0;
+
+   /* if report interval expired: send all reports */
+   if (*next_send <= now) {
+      *next_send = now + conf.load_report_time;
+      do_send = true;
+   } else {
+      /* if we shall flush reports: send only reports marked to flush */
+      if (flush_jr) {
+         do_send = true;
+         only_flush = true;
+      }
+   }
+
+   /* 
+    * send only one report message per second 
+    * and don't send an empty report
+    */
+   if (do_send && (last_send < now) && (lGetNumberOfElem(jr_list) > 0)) {
+      lListElem *job_report;
+      lList *job_report_list;
+      lListElem *jr;
+
+      /* remember last send time */
+      last_send = now;
+
+      /* create job report */
+      job_report = lCreateElem(REP_Type);
+      lSetUlong(job_report, REP_type, NUM_REP_REPORT_JOB);
+      lSetUlong(job_report, REP_version, GRM_GDI_VERSION);
+      lSetUlong(job_report, REP_seqno, report_seqno);
+      lSetHost(job_report, REP_host, uti_state_get_qualified_hostname());
+
+      /* create job report list */
+      job_report_list = lCreateList("jr", JR_Type);
+      lSetList(job_report, REP_list, job_report_list);
+
+      /* copy reports (all or only to flush) */
+      for_each (jr, jr_list) {
+         if (!only_flush || lGetBool(jr, JR_flush)) {
+            lAppendElem(job_report_list, lCopyElem(jr));
+            lSetBool(jr, JR_flush, false);
+         }
+      }
+     
+      /* append this new job report to the report list */
+      lAppendElem(report_list, job_report);
+
+      /* now all is sent, reset flush_jr */
+      flush_jr = false;
+   }
 
    return 0;
 }
@@ -529,7 +585,7 @@ static int sge_get_loadavg(lList **lpp)
    return 0;
 }
 
-static void update_job_usage(void)
+void update_job_usage(void)
 {
    lList *usage_list = NULL;
    lListElem *jr;
@@ -539,7 +595,6 @@ static void update_job_usage(void)
    DENTER(TOP_LAYER, "update_job_usage");
 
 #ifdef COMPILE_DC
-
    if (!sharetree_reserved_usage) {
       int ptf_error;
 

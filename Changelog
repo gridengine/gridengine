@@ -1,3 +1,8 @@
+JG-2004-10-11-0: Enhancem.: performance tuning
+                            - improved Berkeley DB throughput
+                            - cleanup of qmaster - execd protocol
+                 Review:    CR
+
 MD-2004-10-11-1: Bugfix:    fixed qmod (sge_prof_setup) 
                  Changed:   sge_profiling
 

@@ -142,7 +142,6 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    ** usually there will be a load report
    ** and a configuration version report
    */
-
    for_each(report, report_list) {
 
       rep_type = lGetUlong(report, REP_type);

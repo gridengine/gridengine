@@ -262,7 +262,7 @@ void sge_reap_children_execd()
          clean_up_job(jr, failed, exit_status, job_is_array(jep),
                       lGetObject(jatep, JAT_pe_object));
 
-         flush_jr = 1; /* trigger direct sending of job reports */ 
+         flush_job_report(jr);
 
       } else  if (sge_ls_stop_if_pid(pid, 1)) {
          if (child_signal) {
@@ -1139,7 +1139,7 @@ int failed
       DPRINTF(("no job report found to report job start failure!\n"));
       jr = add_job_report(jobid, jataskid, petaskid, jep);
    }
-
+   
    if(petep != NULL) {
       ep = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
    } else {
@@ -1490,7 +1490,7 @@ int npids
    clean_up_job(jr, 0, 0, job_is_array(jep), lGetObject(jatep, JAT_pe_object));
    lSetUlong(jr, JR_state, JEXITING);
    
-   flush_jr = 1;  /* trigger direct sending of job reports */
+   flush_job_report(jr);
 
    DEXIT;
    return;

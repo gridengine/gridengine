@@ -140,7 +140,8 @@ enum {
    JR_ckpt_arena,
    JR_pe_task_id_str,
    JR_osjobid,
-   JR_wait_status
+   JR_wait_status,
+   JR_flush
 };
 
 LISTDEF(JR_Type)
@@ -163,6 +164,7 @@ LISTDEF(JR_Type)
     * if this is non null this is a PE task */
    SGE_STRING(JR_osjobid, CULL_DEFAULT)     /* string containing osjobid for ckpt jobs */
    SGE_ULONG(JR_wait_status, CULL_DEFAULT)  /* japi_wait() 'status' information  */
+   SGE_BOOL(JR_flush, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(JRN)
@@ -182,6 +184,7 @@ NAMEDEF(JRN)
    NAME("JR_pe_task_id_str")
    NAME("JR_osjobid")
    NAME("JR_wait_status")
+   NAME("JR_flush")
 NAMEEND
 
 #define JRS sizeof(JRN)/sizeof(char*)

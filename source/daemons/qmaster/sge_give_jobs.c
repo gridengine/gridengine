@@ -515,23 +515,24 @@ void sge_job_resend_event_handler(te_event_t anEvent)
             DEXIT;
             return;
          }
-      }
-      else
-      {
+      } else {
          pe = NULL;
       }
 
-      if (lGetUlong(jatep, JAT_start_time))
-      {
-         WARNING((SGE_EVENT, MSG_JOB_DELIVER2Q_UUS, u32c(jobid), u32c(jataskid), lGetString(jatep, JAT_master_queue)));
+      if (lGetUlong(jatep, JAT_start_time)) {
+         WARNING((SGE_EVENT, MSG_JOB_DELIVER2Q_UUS, u32c(jobid), 
+                  u32c(jataskid), lGetString(jatep, JAT_master_queue)));
       }
 
+      /* send job to execd */
       sge_give_job(jep, jatep, mqep, pe, hep);
  
       /* reset timer */
       lSetUlong(jatep, JAT_start_time, now);
-      trigger_job_resend(now, hep, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number));
 
+      /* initialize resending of job if not acknowledged by execd */
+      trigger_job_resend(now, hep, lGetUlong(jep, JB_job_number), 
+                         lGetUlong(jatep, JAT_task_number));
    } 
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);

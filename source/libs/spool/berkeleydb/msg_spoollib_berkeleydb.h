@@ -77,6 +77,8 @@
 #define MSG_BERKELEY_COULDNTSETOBJECTS_IS _MESSAGE(70110, _("couldn't set maximum number of locked objects: (%d) "SFN"\n"))
 #define MSG_BERKELEY_COULDNTSETLOCKS_IS _MESSAGE(70111, _("couldn't set maximum number of locks: (%d) "SFN"\n"))
 #define MSG_BERKELEY_CANNOTCREATECURSOR_IS _MESSAGE(70112, _("cannot create database cursor: (%d) "SFN"\n"))
+#define MSG_BERKELEY_CANTSETENVFLAGS_IS _MESSAGE(70113, _("cannot set environment flags: (%d) "SFN"\n"))
+#define MSG_BERKELEY_CANTSETENVCACHE_IS _MESSAGE(70114, _("cannot set environment cache size: (%d) "SFN"\n"))
 
 /*
  * sge_bdb_types.c

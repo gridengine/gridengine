@@ -36,11 +36,12 @@
 
 #include "cull.h"
 
-typedef int (*report_func_type)(lList *);
+typedef int (*report_func_type)(lList *, u_long32 now, u_long32 *next_send);
 
 typedef struct report_source {
   int type;
   report_func_type func;
+  u_long32 next_send;
 } report_source;
 
 int sge_send_all_reports(u_long32 now, int which, report_source *report_sources);

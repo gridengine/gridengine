@@ -271,7 +271,8 @@ lListElem *jatep
          add_usage(jr, "signal", NULL, sig);
 
          lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
-         flush_jr = 1;
+
+         flush_job_report(jr);
       }
       
       return 0;

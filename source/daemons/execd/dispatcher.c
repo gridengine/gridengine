@@ -172,12 +172,15 @@ int dispatch( dispatch_entry*   table,
        *  =====================
        *  -> this will block 1 second , when there are no messages to read/write 
        */
-      cl_commlib_trigger(cl_com_get_handle( "execd" ,1)); 
 
       i = receive_message_cach_n_ack(&de, &pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
 
       DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
                cl_get_error_text(i), de.host, de.commproc, de.id)); 
+
+      if (i != CL_RETVAL_OK) {
+         cl_commlib_trigger(cl_com_get_handle( "execd" ,1));
+      }
 
       switch (i) {
       case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
@@ -215,19 +218,6 @@ int dispatch( dispatch_entry*   table,
                sigprocmask(SIG_SETMASK, &old_sigset, NULL);
 
                rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
-#if 0
-               /* This is done later - CR */
-               switch (j) {
-               case -1:
-                  terminate = 1;
-                  errorcode = CL_RETVAL_UNKNOWN;
-                  break;
-               case 1:
-                  terminate = 1;
-                  errorcode = CL_RETVAL_OK;
-                  break;
-               }
-#endif
                
                /* if apb is filled send it back to the requestor */
                if (pb_filled(&apb)) {              

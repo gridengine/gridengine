@@ -259,8 +259,7 @@ char **argv
           INFO((SGE_EVENT, "SIGPIPE received\n"));
       }
 
-      if (i) {             
-
+      if (i) {
          if ( strcmp(cl_get_error_text(i), CL_RETVAL_UNDEFINED_STR) != 0 ) {
             if (i != CL_RETVAL_OK) {
                WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
@@ -358,6 +357,7 @@ static void execd_register()
             }
 
             if ( cl_commlib_trigger(handle) != CL_RETVAL_OK) {
+               DPRINTF(("cl_commlib_trigger reported an error - sleeping 1 s"));
                sleep(1);
             }
 

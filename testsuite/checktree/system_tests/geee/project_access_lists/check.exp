@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "project_access_lists_init_level"
 
 # define test's name and run level descriptions
 set check_name            "project_access_lists"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   0
 set check_description(0)  "Test project access for queue/cluster/pe"
 

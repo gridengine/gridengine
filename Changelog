@@ -1,11 +1,14 @@
-JG-2002-04-11-0: Bugfix:  In simulation mode, job reports were not flushed 
-                          at (simulated) job end.
+CR-2002-04-11-0: Testsuite: Added testsuite categories, modified framework
+                 Enhancem.  
 
-EB-2002-04-10-1: Cleanup: Moved messages
+JG-2002-04-11-0: Bugfix:    In simulation mode, job reports were not flushed 
+                            at (simulated) job end.
 
-EB-2002-04-10-0: Cleanup: Cleanup within CULL library
-                           - ADOC comments for all nonstatic functions
-                           - minor modifications
+EB-2002-04-10-1: Cleanup:   Moved messages
+
+EB-2002-04-10-0: Cleanup:   Cleanup within CULL library
+                            - ADOC comments for all nonstatic functions
+                            - minor modifications
 
 JG-2002-04-09-0: Enhancem.  Further generalization of the event client 
                             interface:

@@ -177,6 +177,7 @@ set CHECK_EXPECT_MATCH_MAX_BUFFER 640000
 
 # to redefine in checks:
 global check_name                  ;# name of actual check module 
+global check_category              ;# check category name array (z.b. COMPATIBILITY, NONROOT, SYSTEM, PERFORMANCE)
 global check_description           ;# description of actual check module (append more levels as list)
 global check_needs                 ;# dependencies of this check (name of other check)
 global check_functions             ;# functions to call (in order)
@@ -202,6 +203,7 @@ global CHECK_CUR_PROC_NAME         ;# name of current running test procedure
 global CHECK_CUR_PROC_ERRORS       ;# list of procedure errors   ({error text} {error text} ... )
 global CHECK_CUR_PROC_RESULTS      ;# list of procedure results  (0 -1 -2 0 ...)
 global CHECK_GUILTY_RUNLEVELS      ;# enabled runlevels
+global CHECK_GUILTY_CATEGORIES     ;# enabled categories
 global CHECK_MAX_LEVEL             ;# highest level number of all subtests
 global CHECK_ACT_PATH              ;# actual checkpath (while switching in menu mode)
 global arch_cache                  ;# cache for architecture names (lower case) e.g. solaris64
@@ -221,6 +223,7 @@ set have_ssh_access_state -1
 
 set CHECK_ROOT_PASSWORD    "none"
 set CHECK_GUILTY_RUNLEVELS "0"
+set CHECK_GUILTY_CATEGORIES {}
 set CHECK_DO_SETUP         0
 set CHECK_INFORMATION_FILE "check.exp"   ;# this is the filename of each check in different
                                          ;# subdirectories of "checktree"
@@ -659,10 +662,6 @@ proc create_error_message { error_array} {
   return $output
 }
 
-# This procedure tries to get a ssh (secure shell) connection to each execd host
-# from the cluster. The result of this test is stored in a global variable so
-# the next call will not cause the connection test again.
-# It returns 1 if ssh access is given, if not 0.
 #                                                             max. column:     |
 #****** check/have_ssh_access() ******
 # 
@@ -756,10 +755,6 @@ proc have_ssh_access {} {
   return $have_complete_access
 }
 
-# This procedure reads in the root password from stdin. If the root
-# password is not used ( ssh access garanted) the procedure returns
-# immediately.
-#                                                             max. column:     |
 #****** check/set_root_passwd() ******
 # 
 #  NAME
@@ -861,7 +856,6 @@ proc have_root_passwd {} {
   return 0
 }
 
-# This procedure returns the root password, typed in by the user.
 #                                                             max. column:     |
 #****** check/get_root_passwd() ******
 # 
@@ -2315,6 +2309,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_MAILX_HOST do_nomain
   global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC  CHECK_USE_SSH CHECK_SOURCE_CVS_RELEASE
   global check_name CHECK_ACT_LEVEL CHECK_SEND_ERROR_MAILS CHECK_MAX_ERROR_MAILS
+  global CHECK_GUILTY_CATEGORIES
 
   puts "starting setup ..."
 
@@ -2608,6 +2603,7 @@ proc setup { {do_only_hostname_resolving 0} } {
 
   get_max_level_count $CHECK_CHECKTREE_ROOT
   set CHECK_GUILTY_RUNLEVELS "0" ;# 100 200 300 400" ;#$CHECK_MAX_LEVEL is 400
+  set CHECK_GUILTY_CATEGORIES "SYSTEM" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
   delete_tests $CHECK_CHECKTREE_ROOT 1
 
   setup_shared_lib_path
@@ -2778,6 +2774,13 @@ proc delete_result {path runtime level} {
      return   ;# level not enabled
   }
 
+  if { [is_category_enabled $path] == -1 } { 
+     debug_puts "\n--> delete_result - info: category not activated, aborting\n"
+     return  
+  }
+  
+  
+
   set good_dir $CHECK_CORE_RESULT_DIR
   set bad_dir $CHECK_CORE_BAD_RESULT_DIR
 
@@ -2944,9 +2947,18 @@ proc save_result {path runtime level} {
 #*******************************
 proc get_check_name {path} {
    global CHECK_INFORMATION_FILE check_name
+   set check_name ""
    source $path/$CHECK_INFORMATION_FILE
   
    return $check_name
+}
+
+proc get_check_level { path } {
+   global CHECK_INFORMATION_FILE check_highest_level
+   set check_highest_level 0
+   source $path/$CHECK_INFORMATION_FILE
+
+   return $check_highest_level 
 }
 
 # get test result
@@ -3245,6 +3257,25 @@ proc is_level_enabled { level_nr } {
     return -1
 }
 
+proc get_check_category { path } {
+   global CHECK_INFORMATION_FILE check_category
+   source $path/$CHECK_INFORMATION_FILE
+   return $check_category
+}
+
+proc is_category_enabled { path } {
+   global CHECK_GUILTY_CATEGORIES CHECK_OUTPUT
+   set checks_cat [get_check_category $path]
+
+   foreach elem $checks_cat {
+      if { [ lsearch $CHECK_GUILTY_CATEGORIES $elem] != -1 } {
+         return 0
+      }
+   }
+
+   return -1
+}
+
 # delete tests
 #                                                             max. column:     |
 #****** check/delete_tests() ******
@@ -3365,8 +3396,8 @@ proc delete_tests {path { only_if_not_there 0 } } {
 #     ???/???
 #*******************************
 proc run_tests { path runcompleted } {
-    global CHECK_DIRECTORIES CHECK_OUTPUT CHECK_HOST check_errstr
-    global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_MAX_ERROR_MAILS
+    global CHECK_DIRECTORIES CHECK_OUTPUT CHECK_HOST check_errstr CHECK_RESULT_DIR
+    global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_MAX_ERROR_MAILS CHECK_CORE_RESULT_DIR
     global CHECK_CHECKTREE_ROOT CHECK_ACT_PATH check_use_installed_system
     global check_reinit_on_tcl_error
 
@@ -3377,8 +3408,27 @@ proc run_tests { path runcompleted } {
 
     if { [info exists CHECK_DIRECTORIES] == 1 } {
        
-        # check if root password is needed
+        set checks_to_do ""
         foreach elem $CHECK_DIRECTORIES {
+           if { [is_category_enabled $elem ] == 0 } {
+               set test_name [get_check_name $elem] 
+               set tests_runlevel [get_check_level $elem]
+               if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                  continue
+               }
+               if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                  continue
+               }
+
+               lappend checks_to_do $elem
+           }
+        }
+        if {[llength $checks_to_do] == 0} {
+           return
+        }
+
+        # check if root password is needed
+        foreach elem $checks_to_do {
             debug_puts "checking whether test in directory $elem needs root access ..."
             if { ([check_root_access $elem ] == 0) && ([have_root_passwd] == -1 ) } {
                 puts $CHECK_OUTPUT "test in directory $elem needs root access ..."
@@ -3388,7 +3438,6 @@ proc run_tests { path runcompleted } {
 
         set stop 0
         set pass_no 1
-        set checks_to_do $CHECK_DIRECTORIES
         set last_to_do -1
         set check_ok_name     ""
         set check_ok_state    "" 
@@ -3405,6 +3454,7 @@ proc run_tests { path runcompleted } {
         set check_warning_state ""
         set check_warning_date ""
         set check_warning_pass ""
+        set check_missing_dep ""
 #        set check_warning_text ""
 
 
@@ -3498,12 +3548,12 @@ proc run_tests { path runcompleted } {
            if { [llength $check_missing_dep] > 0 } {
               # missing dependencies , run again
               set checks_to_do $check_missing_dep
-              set check_missing_dep ""
               incr pass_no 1
               if { $todo == $last_to_do } {
                  set stop 1
               } else {
                  puts $CHECK_OUTPUT "restarting test with missing dependencies ..."
+                 set check_missing_dep ""
               } 
               set last_to_do $todo
            } else {
@@ -3512,14 +3562,26 @@ proc run_tests { path runcompleted } {
            } 
         }  ;# while stop == 0
 
-        puts $CHECK_OUTPUT "Number of completed tests   : [llength $check_ok_name]"  
-        puts $CHECK_OUTPUT "Number of failed tests      : [llength $check_error_name]"  
-        puts $CHECK_OUTPUT "Number of unsupported tests : [llength $check_warning_name]"
+        puts $CHECK_OUTPUT "Number of completed tests     : [llength $check_ok_name]"  
+        puts $CHECK_OUTPUT "Number of failed tests        : [llength $check_error_name]"  
+        puts $CHECK_OUTPUT "Number of unsupported tests   : [llength $check_warning_name]"
+        puts $CHECK_OUTPUT "Number of dependencies errors : [llength $check_missing_dep]"
+ 
 
         set mail_body "Testsuite run on host $CHECK_HOST complete\n\n"
 
 
+        # dependencies errors
+        if { [llength $check_missing_dep ] > 0 } { 
+           append mail_body "missing dependencies:\n"
+           append mail_body "=====================\n\n"
+           foreach elem $check_missing_dep {
+              append mail_body "check [get_check_name $elem] in directory\n$elem\n" 
+           } 
+           append mail_body "\n"
+        }
         # tests ok
+
         append mail_body "completed tests:\n"
         append mail_body "================\n\n"
         for {set index 0} {$index < [llength $check_ok_name]} {incr index 1} {
@@ -3570,9 +3632,11 @@ proc run_tests { path runcompleted } {
         }
         set nr_unsupported [llength $check_warning_name]
         append mail_body "Number of unsupported tests: $nr_unsupported"  
-
-
-        set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported"
+        if { [llength $check_missing_dep ] > 0 } {
+           set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported;depend:[llength $check_missing_dep]"
+        } else {
+           set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported"
+        }
         mail_report "$mail_subject" $mail_body
       
  
@@ -4119,7 +4183,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS check_root_access_needs
   global CHECK_CURRENT_WORKING_DIR check_highest_level check_init_level_procedure CHECK_ACT_LEVEL
   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_TESTSUITE_ROOT
-  global CHECK_PRODUCT_FEATURE
+  global CHECK_PRODUCT_FEATURE check_category
 
   set del_file_name "$CHECK_TESTSUITE_ROOT/.testsuite_delete"
   if { [ file isfile $del_file_name ] == 1 } {
@@ -4142,6 +4206,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   set CHECK_ACTUAL_TEST_PATH $path
 
   set check_name          ""
+  set check_category      ""
   set check_needs         ""
   set check_functions     ""
   set check_highest_level 0
@@ -4180,6 +4245,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
         lappend check_errstr "{run_test|dependencies not fulfilled!|$check_name|run_test}"
         lappend check_errno "-1"
      }
+
      for {set level 0} {$level <= $check_highest_level} {incr level 1} {
        if { [string compare $check_init_level_procedure "--" ] != 0 } { 
          set CHECK_ACT_LEVEL $level
@@ -4190,7 +4256,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
          delete_result $path 0 $level
        }
      }
-     return -2   ;# dependencies not fulfilled
+     return -2  ;# dependencies not fulfilled
   }
 
   set nr_errors 0
@@ -4324,8 +4390,16 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
 #*******************************
 proc clean_up_globals {} {
   global check_init_level_procedure check_name check_description check_highest_level
-  global check_needs check_functions check_errno check_errstr 
+  global check_needs check_functions check_errno check_errstr check_category
  
+  if { [ info exists check_category ] } {
+     unset check_category 
+  }
+
+  if { [ info exists check_description] } {
+     unset check_description 
+  }
+
 
   set check_name        ""                 ;# name of actual check module 
   set check_needs       ""          ;# dependencies of this check (name of other check)
@@ -4370,15 +4444,17 @@ proc clean_up_globals {} {
 #*******************************
 proc show_test {path full} {
   global CHECK_INFORMATION_FILE check_errno check_needs check_highest_level 
-  global check_init_level_procedure CHECK_ACT_LEVEL
+  global check_init_level_procedure CHECK_ACT_LEVEL check_category
 
   clean_up_globals  
-  set check_highest_level 0 
-  set check_init_level_procedure "--"
   source $path/$CHECK_INFORMATION_FILE
-
   puts "===============================================================================" 
   puts "name:         | $check_name"
+  puts -nonewline "categories:   | "
+  foreach cat $check_category {
+     puts -nonewline "$cat "
+  }
+  puts ""
   puts "===============================================================================" 
 
   if { $full == 1} {
@@ -4450,13 +4526,15 @@ proc show_test {path full} {
 #     ???/???
 #*******************************
 proc select_runlevel {} {
-     global CHECK_GUILTY_RUNLEVELS
+     global CHECK_GUILTY_RUNLEVELS CHECK_GUILTY_CATEGORIES CHECK_CHECKTREE_ROOT
 
      set data ""
+     set my_cats [get_categories $CHECK_CHECKTREE_ROOT]
 
-     while { $data != 5 } {
+     while { $data != 0 } {
        
         clear_screen    
+        print_menu_header
         set selected_levels ""
         foreach elem $CHECK_GUILTY_RUNLEVELS {
            set a_level [ get_run_level_name $elem ] 
@@ -4465,44 +4543,73 @@ proc select_runlevel {} {
               set selected_levels "$selected_levels $a_level"
            } 
         }
-        puts "===============================================================" 
-        puts "selected runlevels: $selected_levels"
-        puts "===============================================================" 
+#        puts "===============================================================" 
+#        puts "selected runlevels: $selected_levels"
+#        puts -nonewline "selected categories:  "
+#        foreach cat_elem $CHECK_GUILTY_CATEGORIES {
+#           puts -nonewline "$cat_elem "
+#        }
+#        puts ""
+#        puts "===============================================================" 
 
-        puts "\n\nplease select/unselect new runlevels: \n"
-        puts "(0) short  (   0 min - 15 min / run level   0 -  99 )"
-        puts "(1) medium (  16 min -  1 h   / run level 100 - 199 )"
-        puts "(2) long   (   1 h   -  4 h   / run level 200 - 299 )"
-        puts "(3) day    ( > 4 h   - 24 h   / run level 300 - 399 )"
-        puts "(4) week   ( >24 h            / run level 400 - 499 )"
-        puts "\n(5) return to previous menu"
+        puts "\nplease select/unselect new runlevels/categories: \n"
+        puts "(0) return to previous menu\n"
 
-   
+        puts "runlevels:\n"
+        puts "(1) short  (   0 min - 15 min / run level   0 -  99 )"
+        puts "(2) medium (  16 min -  1 h   / run level 100 - 199 )"
+        puts "(3) long   (   1 h   -  4 h   / run level 200 - 299 )"
+        puts "(4) day    ( > 4 h   - 24 h   / run level 300 - 399 )"
+        puts "(5) week   ( >24 h            / run level 400 - 499 )\n"
+        puts "categories:\n"
+        set numbs 6
+        foreach elem $my_cats {
+           puts "($numbs) $elem"
+           incr numbs 1
+        }
+
         gets stdin data
- 
-        set in 0
-        if { $data <= 4 && $data >= 0 } {
-           foreach x $CHECK_GUILTY_RUNLEVELS {
-              if { $x == [ expr ( $data * 100 ) ] } {
-                 set in 1
-              }      
+        if { $data <= 5 && $data > 0 } {
+           incr data -1
+           set in 0
+           if { $data <= 4 && $data >= 0 } {
+              foreach x $CHECK_GUILTY_RUNLEVELS {
+                 if { $x == [ expr ( $data * 100 ) ] } {
+                    set in 1
+                 }      
+              }
+           }
+   
+           if { $data <= 4 && $data >= 0 } {
+             if {$in == 0} {
+               lappend CHECK_GUILTY_RUNLEVELS [ expr ( $data * 100 )] 
+             } else {
+               set new_guilty_runlevels ""
+               foreach x $CHECK_GUILTY_RUNLEVELS {
+                  if { $x != [ expr ( $data * 100 ) ] } { 
+                     lappend new_guilty_runlevels $x
+                  }
+               }
+               set CHECK_GUILTY_RUNLEVELS $new_guilty_runlevels
+             } 
+           }
+           incr data 1
+        } else {
+           # categories
+           set max_number [llength $my_cats]
+           incr max_number 5
+           if { $data > $max_number || $data <= 5  } {
+              continue
+           }   
+           set my_cat [ expr ( $data - 6 ) ]   
+           set new_cat [ lindex $my_cats $my_cat ]
+           set cat_pos [ lsearch $CHECK_GUILTY_CATEGORIES  $new_cat ]
+           if { $cat_pos != -1 } {
+              set CHECK_GUILTY_CATEGORIES [ lreplace $CHECK_GUILTY_CATEGORIES $cat_pos $cat_pos ]
+           } else {
+              lappend CHECK_GUILTY_CATEGORIES $new_cat
            }
         }
-
-        if { $data <= 4 && $data >= 0 } {
-          if {$in == 0} {
-            lappend CHECK_GUILTY_RUNLEVELS [ expr ( $data * 100 )] 
-          } else {
-            set new_guilty_runlevels ""
-            foreach x $CHECK_GUILTY_RUNLEVELS {
-               if { $x != [ expr ( $data * 100 ) ] } { 
-                  lappend new_guilty_runlevels $x
-               }
-            }
-            set CHECK_GUILTY_RUNLEVELS $new_guilty_runlevels
-          } 
-        }
-
      } 
 }
 
@@ -4565,6 +4672,37 @@ proc get_max_level_count {path} {
   }
   return $CHECK_MAX_LEVEL
 }
+
+proc get_categories {path} {
+  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE check_highest_level 
+  global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL
+  global check_category
+ 
+  set CHECK_DIRECTORIES ""
+  set CHECK_MAX_LEVEL "0"
+  set back ""
+  get_check_dirs $path  
+  if { [info exists CHECK_DIRECTORIES] == 1 } {
+    foreach elem $CHECK_DIRECTORIES {
+       if { [file isfile $elem/$CHECK_INFORMATION_FILE] == 1 } {
+          clean_up_globals
+          source $elem/$CHECK_INFORMATION_FILE
+          if { [info exists check_category] } {
+             foreach elem $check_category {
+                if { [ lsearch -exact $back $elem ] == -1 } {
+                   lappend back $elem
+                }
+             }
+          }
+       }
+    }  
+  }
+  set back [lsort $back]
+  return $back
+}
+
+
+
 
 # show test descriptons (of all subtests)
 #                                                             max. column:     |
@@ -4733,9 +4871,33 @@ proc get_run_level_name { level } {
   if { $level >= 00 } {
      return "short"
   }
-
   return ""
 }
+# time in minutes
+proc get_run_level_time { level } {
+  
+  if { $level >= 400 } {
+     return [expr (48 * 60)]
+  }
+
+  if { $level >= 300 } {
+     return [expr (14 * 60)]
+  }
+
+  if { $level >= 200 } {
+     return [expr (2 * 60)]
+  }
+
+  if { $level >= 100 } {
+     return 30
+  }
+
+  if { $level >= 00 } {
+     return 10
+  }
+  return 0
+}
+
 
 #                                                             max. column:     |
 #****** check/clear_screen() ******
@@ -4806,32 +4968,57 @@ proc print_menu_header {} {
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
   global CHECK_GUILTY_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
-  global CHECK_PRODUCT_FEATURE
+  global CHECK_PRODUCT_FEATURE CHECK_GUILTY_CATEGORIES
 
   
   clear_screen
   get_version_info
   puts "===============================================================================" 
 
-  puts " system version    :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version]) / feature: $CHECK_PRODUCT_FEATURE"
-  puts " current dir       :  [ format_output "                      " 55 $CHECK_ACT_PATH ]"
+  puts " system version     :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version]) / feature: $CHECK_PRODUCT_FEATURE"
+  puts " current dir        :  [ format_output "                       " 54 $CHECK_ACT_PATH ]"
 
   set dirs [ get_dir_names $CHECK_ACT_PATH ]
   set files [get_file_names $CHECK_ACT_PATH ]
-
+  if { [ llength $dirs ] == 0 } {
+     lappend dirs "."
+  }
   set test_counts ""
   set test_text ""
+  set time_count 0
   foreach elem $dirs {
+     set test_name ""
      set CHECK_DIRECTORIES ""
      get_check_dirs "$CHECK_ACT_PATH/$elem"
-     set count [llength $CHECK_DIRECTORIES]
+     set count 0
+     foreach test $CHECK_DIRECTORIES {
+        if { [is_category_enabled $test] == 0 } {
+           set level_ok 0
+           set tests_runlevel [get_check_level $test]
+           if { [ is_level_enabled $tests_runlevel ] == 0 } {
+              set test_name [get_check_name $test]
+              if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                 continue
+              }
+              if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                 continue
+              }
+              incr count 1
+              incr time_count [get_run_level_time $tests_runlevel] 
+           }
+        }
+     }
      if { $count > 9 } {
         set blank " "
      } else {
         set blank "  "
      }
      lappend test_counts "$count"
-     lappend test_text   "${blank}${count} test(s) available in subdir: ${elem}"
+     if { ${elem} == "." } {
+        lappend test_text   " test name: $test_name"
+     } else {
+        lappend test_text   "${blank}${count} test(s) available in subdir: ${elem}"
+     }
   }
   set test_count 0
   foreach elem $test_counts {
@@ -4846,10 +5033,12 @@ proc print_menu_header {} {
      if { [string first $a_level $possible_levels ] < 0 } {
         set possible_levels "$possible_levels $a_level"
      } 
-  } 
-  puts " max. runlevel     : $possible_levels"  
+  }
+  set possible_levels [lsort $possible_levels]
+  puts " max. runlevel      :  $possible_levels"  
 
   set selected_levels ""
+  set CHECK_GUILTY_RUNLEVELS [ lsort $CHECK_GUILTY_RUNLEVELS  ]
   foreach elem $CHECK_GUILTY_RUNLEVELS {
      set a_level [ get_run_level_name $elem ] 
 
@@ -4857,7 +5046,25 @@ proc print_menu_header {} {
         set selected_levels "$selected_levels $a_level"
      } 
   } 
-  puts " selected runlevels: $selected_levels"
+
+  set selected_levels [ lsort $selected_levels ]
+  puts " selected runlevels :  $selected_levels"
+  set my_cats [get_categories $CHECK_ACT_PATH]
+  puts -nonewline " categories         :  "
+  foreach elem $my_cats {
+     puts -nonewline "$elem "
+  }
+  puts ""
+
+  puts -nonewline " selected categories:  "
+  set CHECK_GUILTY_CATEGORIES [ lsort $CHECK_GUILTY_CATEGORIES]
+  foreach elem $CHECK_GUILTY_CATEGORIES {
+     puts -nonewline "$elem "
+  }
+  puts ""
+  set hours [ expr ( $time_count / 60 ) ]
+  set minutes [ expr (  $time_count % 60 ) ]
+  puts " est. run time      :  $hours h $minutes m"
   puts "===============================================================================" 
   foreach elem $test_text {
      puts $elem
@@ -5695,7 +5902,7 @@ proc menu {} {
 
   set files [  print_menu_header ]
  
-  puts "  (0) select runlevels"
+  puts "  (0) select runlevels/categories"
   puts "  (1) change dir"
   puts "  (2) run not completed tests (including subdirectories)"
   puts "  (3) show test descriptions"
@@ -5717,7 +5924,7 @@ proc menu {} {
     puts " (12) run local test"
     puts " (13) run local test continously"
   }
-
+    puts "===============================================================================" 
     puts " (20) shutdown and restart master and scheduler"
     puts " (21) only start master and scheduler daemons"
     puts " (22) check messages files of execds and qmaster"
@@ -5848,6 +6055,7 @@ set do_install        0
 set do_compile        0
 set do_not_update     0
 set do_all            0
+set do_category       0
 set do_nomain         0
 set do_only_reset_config 0
 set be_quiet          0
@@ -5905,6 +6113,10 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "all RUNLEVEL          run every test automatically up to runlevel RUNLEVEL"
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
+      puts ""
+      puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM [...])"
+      puts "                      (CAT_LIST must be 1 single parameter, must be quoted"
+      puts "                       when using more than one category)"
       puts "" 
       puts "no_main               don't run main part (usefull for sourceing this file)"
       puts ""
@@ -6052,6 +6264,25 @@ for { set i 0 } { $i < $argc } { incr i } {
       incr i
       continue
    }
+   
+   if { ( [string compare [lindex $argv $i] "--category"] == 0 ) || ([string compare [lindex $argv $i] "category"] == 0 ) } {
+      set do_category 1
+      set ru_lev [ expr (1 + $i) ] 
+      set do_category_list [lindex $argv $ru_lev]
+      if { [ llength $do_category_list ] == 0 } {
+         puts $CHECK_OUTPUT "used category parameter without category list"
+         setup
+         set mail_body "$mail_body product version is [get_version_info]\n"
+         set mail_body "$mail_body testsuite root directory is \"$CHECK_TESTSUITE_ROOT\"\n"
+         set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture is \"$CHECK_ARCH\"\n"
+         set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
+         mail_report $mail_subject "$mail_body used category parameter without category list" 
+         exit -1
+      }
+      incr i
+      continue
+   }
+
 
    if { ( [string compare [lindex $argv $i] "--debug"] == 0 ) || ([string compare [lindex $argv $i] "debug"] == 0 ) } {
       set deb_lev [ expr (1 + $i) ] 
@@ -6074,6 +6305,9 @@ for { set i 0 } { $i < $argc } { incr i } {
 # load defaults file
 setup
 
+if { $do_category == 1 } {
+   set CHECK_GUILTY_CATEGORIES $do_category_list
+}
 set CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT
 
 
@@ -6104,49 +6338,10 @@ if { $do_all } {
    set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"
    delete_tests $CHECK_ACT_PATH
 
-   puts $CHECK_OUTPUT "install_core_system ..."
-   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"
-   set dirs [ get_dir_names $CHECK_ACT_PATH ]
-   set files [get_file_names $CHECK_ACT_PATH ]
-
-   foreach elem $dirs {
-     set CHECK_DIRECTORIES ""
-     get_check_dirs "$CHECK_ACT_PATH/$elem"
-     set count [llength $CHECK_DIRECTORIES]
-     puts $CHECK_OUTPUT "$count test(s) available in subdir: $elem"
-   }
-   
-   get_max_level_count $CHECK_ACT_PATH
-   set selected_levels ""
-   set CHECK_GUILTY_RUNLEVELS ""
-   for {set i 0} {$i<= $do_all_runlevel} {incr i 1} {
-      lappend CHECK_GUILTY_RUNLEVELS [ expr ( $i * 100 )  ]
-   }
-
-   foreach elem $CHECK_GUILTY_RUNLEVELS {
-      set a_level [ get_run_level_name $elem ] 
- 
-      if { [string first $a_level $selected_levels ] < 0 } {
-         set selected_levels "$selected_levels $a_level"
-      } 
-   } 
-   puts $CHECK_OUTPUT "selected runlevel: $selected_levels"
-
-   run_test $CHECK_ACT_PATH 1
-
-   
-   puts $CHECK_OUTPUT "run all tests ..."
    set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"
    set dirs [ get_dir_names $CHECK_ACT_PATH ]
    set files [get_file_names $CHECK_ACT_PATH ]
    
-   foreach elem $dirs {
-     set CHECK_DIRECTORIES ""
-     get_check_dirs "$CHECK_ACT_PATH/$elem"
-     set count [llength $CHECK_DIRECTORIES]
-     puts $CHECK_OUTPUT "$count test(s) available in subdir: $elem"
-   }
-   
    get_max_level_count $CHECK_ACT_PATH
    set selected_levels ""
    set CHECK_GUILTY_RUNLEVELS ""
@@ -6154,53 +6349,13 @@ if { $do_all } {
       lappend CHECK_GUILTY_RUNLEVELS [ expr ( $i * 100 )  ]
    }
 
-
-   foreach elem $CHECK_GUILTY_RUNLEVELS {
-      set a_level [ get_run_level_name $elem ] 
- 
-      if { [string first $a_level $selected_levels ] < 0 } {
-         set selected_levels "$selected_levels $a_level"
-      } 
-   } 
-   puts $CHECK_OUTPUT "selected runlevel: $selected_levels"
+   print_menu_header
+   puts $CHECK_OUTPUT "run all tests ..."
 
    run_tests $CHECK_ACT_PATH 0
 
-   if {[ file isfile ${CHECK_REPORT_FILE}.ok ] == 1 } {
-      delete_file "${CHECK_REPORT_FILE}.ok"
-   }
-   if {[ file isfile ${CHECK_REPORT_FILE}.failed ] == 1 } {
-      delete_file "${CHECK_REPORT_FILE}.failed"
-   }
-   create_report "${CHECK_REPORT_FILE}.ok" 0
-   create_report "${CHECK_REPORT_FILE}.failed"  1
-
-   sleep 5
-   set mail_subject "testsuite run complete"
-   set mail_body "\n######## Tests ok ($CHECK_REPORT_FILE.ok):\n"
-   
-   set good_rep [open "${CHECK_REPORT_FILE}.ok" "RDONLY"]
-   set line ""
-   while { [gets $good_rep line] >= 0 } {
-          set mail_body "$mail_body  $line\n"
-   }
-   close $good_rep
-
-   set mail_body "$mail_body\n\n######## Tests failed ($CHECK_REPORT_FILE.failed):\n"
-   set bad_rep [open "${CHECK_REPORT_FILE}.failed" "RDONLY"]
-   set line ""
-   while { [gets $bad_rep line] >= 0 } {
-          set mail_body "$mail_body  $line\n"
-   }
-   close $bad_rep
-
-   mail_report $mail_subject $mail_body
    exit 0
 } 
-
-#setup
-#set CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT
-
 
 if { $do_install } {
    puts "installing core system on host $CHECK_HOST ..."

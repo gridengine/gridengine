@@ -43,12 +43,13 @@
 #___INFO__MARK_END__
 
 global check_name check_description check_needs check_functions check_errno check_errstr 
-global check_root_access_needs       
+global check_root_access_needs check_category      
 global check_use_installed_system
 
 # This file shows some check spezific things
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
+set check_category      "COMPATIBILITY SYSTEM"
 set check_description(0)   "install a default system (master/execution daemon on local host and start them up)"
 set check_needs         ""                        ;# dependencies of this check (name of other check)
 set check_functions     ""                        ;# functions to call (in order)

@@ -43,12 +43,14 @@ global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
 global env
+global check_category
 
 # define a level initialization procedure:
 set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qconf"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level    0
 set check_description(0)  "add/remove queues"
 

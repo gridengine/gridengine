@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "share_tree_init_level"
 
 # define test's name and run level descriptions
 set check_name            "share_tree"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   100
 set check_description(0)  "Testing grd share_tree (functional test)"
 set check_description(100)  "Testing grd share_tree"

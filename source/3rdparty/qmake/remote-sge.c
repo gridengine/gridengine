@@ -1197,7 +1197,7 @@ void set_default_options()
 
    /* determine architecture */
    architecture = getenv("ARCH");
-   if(architecture == NULL) {
+   if(architecture == NULL || strlen(architecture) == 0) {
       fprintf(stderr, "qmake: *** cannot determine architecture from environment variable ARCH\n");
       fprintf(stderr, "           no default architecture set\n");
       return;
@@ -1216,7 +1216,8 @@ void set_default_options()
       /* copy old sge options */
       argv = sge_argv;
       sge_argv = (char **)malloc((sge_argc + 
-                                     (insert_resource_request ? 3 : 0)) * sizeof(char *));
+                                  (insert_resource_request ? 3 : 0)
+                                 ) * sizeof(char *));
 
       if(sge_argv == NULL) {
          remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
@@ -1343,6 +1344,9 @@ static void equalize_nslots(int *p_argc, char **p_argv[])
 *     a request for a parallel environment "make" with the a range
 *     of slots from 1 to the value given with the -j option is
 *     inserted into the sge options.
+*     If no information about parallelism is given at all (either by
+*     specifying sge option -pe or gmake option -j), one slot in the
+*     make parallel environment is requested.
 *     If an error occurs (invalid -j option, malloc) qmake exits with
 *     an appropriate error message and error code.
 *
@@ -1355,7 +1359,7 @@ static void equalize_pe_j()
    char **argv;
    static char buffer[100];
 
-   /* no -pe sge option set? */
+   /* -pe sge option set? Then take this one. */
    for(i = 0; i < sge_argc; i++) {
       if(!strcmp(sge_argv[i], "-pe")) {
          return;
@@ -1376,33 +1380,35 @@ static void equalize_pe_j()
       }
    }
   
-   if(nslots > 1) {
-      if(be_verbose) {
-         fprintf(stderr, "inserting pe request to sge options: -pe make 1-%d\n", nslots);
-      }
-   
-      /* insert pe into sge options */
-      /* copy old sge options */
-      argv = sge_argv;
-      sge_argv = (char **)malloc((sge_argc + 3) * sizeof(char *));
-
-      if(sge_argv == NULL) {
-         remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
-      }
-
-      for(i = 0; i < sge_argc; i++) {
-         sge_argv[i] = argv[i];
-      }
-   
-      /* append pe */
-      sprintf(buffer, "1-%d", nslots);
-      sge_argv[sge_argc++] = "-pe";
-      sge_argv[sge_argc++] = "make";
-      sge_argv[sge_argc++] = buffer;
-   
-      /* free old sge_argv */
-      free(argv);
+   if(nslots < 1) {
+      nslots = 1;
    }
+
+   if(be_verbose) {
+      fprintf(stderr, "inserting pe request to sge options: -pe make 1-%d\n", nslots);
+   }
+   
+   /* insert pe into sge options */
+   /* copy old sge options */
+   argv = sge_argv;
+   sge_argv = (char **)malloc((sge_argc + 3) * sizeof(char *));
+
+   if(sge_argv == NULL) {
+      remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
+   }
+
+   for(i = 0; i < sge_argc; i++) {
+      sge_argv[i] = argv[i];
+   }
+
+   /* append pe */
+   sprintf(buffer, "1-%d", nslots);
+   sge_argv[sge_argc++] = "-pe";
+   sge_argv[sge_argc++] = "make";
+   sge_argv[sge_argc++] = buffer;
+
+   /* free old sge_argv */
+   free(argv);
 }
 
 

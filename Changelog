@@ -1,3 +1,11 @@
+JG-2002-09-11-1  Bugfix:    qmake without information about parallel execution
+                            on commandline failed.
+                            qmake made an incorrect resource request if the 
+                            ARCH environment variable was an empty string.
+                 IZ:        #335, #327
+                 Bugtraq:   #4745399, 4745404
+                 Changed:   qmake
+
 JG-2002-09-11-0  Bugfix:    qrsh and qlogin accept unexpected options.
                             qsh/qrsh/qlogin did not accept options
                             -ac, -dc, -sc and -w

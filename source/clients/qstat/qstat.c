@@ -89,7 +89,7 @@ static int select_by_hard_queue_list(lList *queue_list, lList *hql);
 static int select_by_pe_list(lList *queue_list, lList *peref_list, lList *pe_list);
 static int select_by_queue_user_list(lList *exechost_list, lList *queue_list, lList *queue_user_list, lList *acl_list);
 static lList *sge_parse_cmdline_qstat(char **argv, char **envp, lList **ppcmdline);
-static lList *sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource, lList **pplqueueref, lList **ppluser, lList **pplqueue_user, lList **pplpe, u_long32 *pfull, u_long32 *pempty, char **hostname, u_long32 *job_info, u_long32 *group_opt, lList **ppljid);
+static lList *sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource, lList **pplqueueref, lList **ppluser, lList **pplqueue_user, lList **pplpe, u_long32 *pfull, char **hostname, u_long32 *job_info, u_long32 *group_opt, lList **ppljid);
 static int qstat_usage(FILE *fp, char *what);
 static int qstat_show_job(lList *jid);
 static int qstat_show_job_info(void);
@@ -129,7 +129,7 @@ char **argv
          *pe_list = NULL, *ckpt_list = NULL;
    lList *ce = NULL, *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
    int a_queue_was_selected = 0;
-   u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
+   u_long32 full_listing = QSTAT_DISPLAY_ALL, job_info = 0;
    u_long32 group_opt = 0;
    lList *running_per_user = NULL;
    lSortOrder *so = NULL;
@@ -176,7 +176,6 @@ char **argv
       &queue_user_list, /* -U user_list - selects queues */
       &peref_list,      /* -pe pe_list                   */
       &full_listing,    /* -ext                          */
-      &empty_qs,        /* -empty                        */
       &hostname,
       &job_info,        /* -j ..                         */
       &group_opt,       /* -g ..                         */
@@ -328,8 +327,7 @@ char **argv
          DPRINTF(("matching queue %s with qstat -l\n", lGetString(qep, QU_qname)));
          ce = NULL;
 
-         if (empty_qs) /* bug !! this is always 0 */
-            set_qs_state(QS_STATE_EMPTY);
+         set_qs_state(QS_STATE_EMPTY);
          queue_complexes2scheduler(&ce, qep, exechost_list, complex_list, 0);
          ccl[0] = lGetList(lGetElemHost(exechost_list, EH_name, "global"), EH_consumable_config_list);
          ccl[1] = (ep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname)))?
@@ -339,8 +337,7 @@ char **argv
          selected = sge_select_queue(ce, resource_list, 1, NULL, 0, -1, ccl);
 
          lFreeList(ce);
-         if (empty_qs)
-            set_qs_state(QS_STATE_FULL);
+         set_qs_state(QS_STATE_FULL);
 
          if (!selected)
             lSetUlong(qep, QU_tagged, 0);
@@ -1399,7 +1396,6 @@ lList **ppluser,
 lList **pplqueue_user,
 lList **pplpe,
 u_long32 *pfull,
-u_long32 *pempty_qs,
 char **hostname,
 u_long32 *job_info,
 u_long32 *group_opt,

@@ -4614,7 +4614,7 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "return state: $return_state"
    #puts $CHECK_OUTPUT "$output\n"
 
-   puts $CHECK_OUTPUT "-> starting aimk depend on host $CHECK_SOURCE_HOSTNAME ..."
+   puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS depend on host $CHECK_SOURCE_HOSTNAME ..."
    set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; aimk $CHECK_AIMK_COMPILE_OPTIONS depend\"" } output ]
    puts $CHECK_OUTPUT "return state: $return_state"
    #puts $CHECK_OUTPUT "$output\n"
@@ -4640,7 +4640,7 @@ proc compile_source {} {
       set par1 "$CHECK_SOURCE_DIR"
       set par2 "$CHECK_AIMK_COMPILE_OPTIONS"
       
-      eval spawn rsh $elem "\"$prog $par1 $par2\""
+      eval spawn rsh $elem "\"$prog $par1 '$par2'\""
       lappend spawn_list $spawn_id
       set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
       lappend file_name_list $myfilename

@@ -30,13 +30,29 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+#include <string.h>
+
+
 #include "sgermon.h"
 #include "sge_log.h"
+
+#include "sge_feature.h"
 
 #include "sge_answer.h"
 #include "sge_object.h"
 
+#include "sge_complex.h"
+#include "sge_conf.h"
+#include "sge_hgroup.h"
 #include "sge_host.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
+#include "sge_schedd_conf.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
 
 #include "spool/sge_spooling.h"
 #include "spool/sge_spooling_utilities.h"
@@ -153,17 +169,19 @@ typedef struct {
 static lList **
 spool_database_get_field_id_list(const spooling_field *fields);
 
-static table_description *
-spool_database_create_table_description(const char *table_name,
-                                        const char *field_name_id,
-                                        const char *field_name_parent_id,
-                                        const char *field_name_valid,
-                                        const char *field_name_created,
-                                        const char *field_name_deleted,
-                                        int key_nm);
+static bool 
+spool_database_assign_table_description(lList **answer_list, spooling_field *fields, const char *table_name, const lDescr *descr, bool sublevel);
 
+static table_description *
+spool_database_create_table_description(lList **answer_list, const char *table_name, const char *prefix, int key_nm, bool sublevel);
+
+static const char *
+spool_database_get_sub_table_name(const char *prefix, int nm);
+
+#if 0
 static bool
 spool_database_set_table_description(spooling_field *fields, int nm, table_description *description);
+#endif
 
 static table_description table_base[SGE_TYPE_ALL] = {
    { "sge_adminhost", "AH__id", NULL, "AH__valid", "AH__created", "AH_deleted", AH_name },
@@ -200,7 +218,7 @@ const spool_instr spool_database_sub_instr = {
    CULL_SUBLIST,
    true,
    false,
-   NULL,
+   &spool_database_sub_instr,
    NULL
 };
 
@@ -211,6 +229,55 @@ const spool_instr spool_database_instr = {
    &spool_database_sub_instr,
    NULL
 };
+
+const spool_instr spool_database_sharetree_instr = {
+   CULL_SPOOL,
+   true,
+   false,
+   &spool_database_sharetree_instr,
+   NULL
+};
+
+const spool_instr spool_database_complex_sub_instr = {
+   CULL_SPOOL,
+   true,
+   false,
+   NULL,
+   NULL
+};
+
+const spool_instr spool_database_complex_instr = {
+   CULL_SPOOL,
+   true,
+   false,
+   &spool_database_complex_sub_instr,
+   NULL
+};
+
+const spool_instr spool_database_userprj_sub_instr = {
+   CULL_SUBLIST,
+   true,
+   false,
+   &spool_database_userprj_sub_instr,
+   NULL
+};
+
+const spool_instr spool_database_project_instr = {
+   CULL_SPOOL | CULL_SPOOL_PROJECT,
+   true,
+   false,
+   &spool_database_userprj_sub_instr,
+   NULL
+};
+
+const spool_instr spool_database_user_instr = {
+   CULL_SPOOL | CULL_SPOOL_USER,
+   true,
+   false,
+   &spool_database_userprj_sub_instr,
+   NULL
+};
+
 
 /****** spool/database/spool_database_initialize() **********************
 *  NAME
@@ -247,44 +314,86 @@ spool_database_initialize(lList **answer_list, lListElem *rule)
    info->with_history = false;
    info->handle = NULL;
   
-   for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
+   for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL && ret; i++) {
+      const lDescr *descr = object_type_get_descr(i);
+
       /* evaluate which fields to spool */
       switch (i) {
          case SGE_TYPE_ADMINHOST:
+         case SGE_TYPE_CALENDAR:
+         case SGE_TYPE_CKPT:
+         case SGE_TYPE_CONFIG:
          case SGE_TYPE_EXECHOST:
+         case SGE_TYPE_JOB:
+#if 0
+         case SGE_TYPE_JATASK:
+         case SGE_TYPE_PETASK:
+         case SGE_TYPE_JOB_SCHEDD_INFO:
+#endif
+         case SGE_TYPE_MANAGER:
+         case SGE_TYPE_OPERATOR:
+         case SGE_TYPE_PE:
+         case SGE_TYPE_QUEUE:
+         case SGE_TYPE_SCHEDD_CONF:
+         case SGE_TYPE_SUBMITHOST:
+         case SGE_TYPE_USERSET:
+         case SGE_TYPE_HGROUP:
+#ifndef __SGE_NO_USERMAPPING__
+         case SGE_TYPE_CUSER:
+#endif
             info->fields[i] = spool_get_fields_to_spool(answer_list, 
                                                         object_type_get_descr(i),
                                                         &spool_database_instr);
+            if (info->fields[i] == NULL) {
+               ret = false;
+               continue;
+            }
+            ret = spool_database_assign_table_description(answer_list, info->fields[i], table_base[i].table_name, descr, false);
             break;
-         default:
+         case SGE_TYPE_COMPLEX:
+            info->fields[i] = spool_get_fields_to_spool(answer_list, 
+                                                        object_type_get_descr(i),
+                                                        &spool_database_complex_instr);
+            if (info->fields[i] == NULL) {
+               ret = false;
+               continue;
+            }
+            ret = spool_database_assign_table_description(answer_list, info->fields[i], table_base[i].table_name, descr, false);
             break;
-      }
+         case SGE_TYPE_SHARETREE:
+            info->fields[i] = spool_get_fields_to_spool(answer_list, 
+                                                        object_type_get_descr(i),
+                                                        &spool_database_sharetree_instr);
+            if (info->fields[i] == NULL) {
+               ret = false;
+               continue;
+            }
+            ret = spool_database_assign_table_description(answer_list, info->fields[i], table_base[i].table_name, descr, false);
+            break;
 
-      /* postprocess field list and set table / db-field info */
-      switch (i) {
-         case SGE_TYPE_ADMINHOST:
-            info->fields[i][0].clientdata = &table_base[i];
+         case SGE_TYPE_PROJECT:
+            info->fields[i] = spool_get_fields_to_spool(answer_list, 
+                                                        object_type_get_descr(i),
+                                                        &spool_database_project_instr);
+            if (info->fields[i] == NULL) {
+               ret = false;
+               continue;
+            }
+            ret = spool_database_assign_table_description(answer_list, info->fields[i], table_base[i].table_name, descr, false);
             break;
-         case SGE_TYPE_EXECHOST:
-            info->fields[i][0].clientdata = &table_base[i];
-            spool_database_set_table_description(info->fields[i], EH_scaling_list,
-                spool_database_create_table_description("sge_exechost_load_scaling", 
-                                                        "HS__id",
-                                                        "HS__parent",
-                                                        "HS__valid",
-                                                        "HS__created",
-                                                        "HS__deleted",
-                                                        HS_name));
-            spool_database_set_table_description(info->fields[i], EH_load_list,
-                spool_database_create_table_description("sge_exechost_load", 
-                                                        "HL__id",
-                                                        "HL__parent",
-                                                        "HL__valid",
-                                                        "HL__created",
-                                                        "HL__deleted",
-                                                        HL_name));
+         case SGE_TYPE_USER:
+            info->fields[i] = spool_get_fields_to_spool(answer_list, 
+                                                        object_type_get_descr(i),
+                                                        &spool_database_user_instr);
+            if (info->fields[i] == NULL) {
+               ret = false;
+               continue;
+            }
+            ret = spool_database_assign_table_description(answer_list, info->fields[i], table_base[i].table_name, descr, false);
             break;
+
          default:
+            info->fields[i] = NULL;
             break;
       }
    }
@@ -292,6 +401,29 @@ spool_database_initialize(lList **answer_list, lListElem *rule)
    lSetRef(rule, SPR_clientdata, info);
 
    DEXIT;
+   return ret;
+}
+
+bool 
+spool_database_check_version(lList **answer_list, const char *version)
+{
+   bool ret = true;
+
+   char buffer[256];
+   dstring ds;
+   const char *my_version;
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+   my_version = feature_get_product_name(FS_SHORT_VERSION, &ds);
+
+   if (strcmp(version, my_version) != 0) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_POSTGRES_WRONGVERSION_SS, 
+                              version, my_version);
+      ret = false;
+   }
+
    return ret;
 }
 
@@ -667,6 +799,25 @@ spool_database_get_fields(const lListElem *rule, sge_object_type type)
 {
    sge_database_info *info = (sge_database_info *)lGetRef(rule, SPR_clientdata);
    return info->fields[type];
+}
+
+spooling_field *
+spool_database_get_sub_fields(spooling_field *fields, int nm)
+{
+   spooling_field *ret = NULL;
+
+   if (fields != NULL) {
+      int i;
+
+      for (i = 0; fields[i].nm != NoName; i++) {
+         if (fields[i].nm == nm) {
+            ret = fields[i].sub_fields;
+            break;
+         }
+      }
+   }
+
+   return ret;
 }
 
 /****** spool/database/spool_database_store_id() ************************
@@ -1089,28 +1240,43 @@ spool_database_object_changed(lList **answer_list, const lListElem *object,
 *     ???/???
 *******************************************************************************/
 static table_description *
-spool_database_create_table_description(const char *table_name,
-                                        const char *field_name_id,
-                                        const char *field_name_parent_id,
-                                        const char *field_name_valid,
-                                        const char *field_name_created,
-                                        const char *field_name_deleted,
-                                        int key_nm)
+spool_database_create_table_description(lList **answer_list, const char *table_name, const char *prefix, int key_nm, bool sublevel)
 {
-   table_description *description    = 
-         (table_description *)malloc(sizeof(table_description));
-   description->table_name           = table_name;
-   description->field_name_id        = field_name_id;
-   description->field_name_parent_id = field_name_parent_id;
-   description->field_name_valid     = field_name_valid;
-   description->field_name_created   = field_name_created;
-   description->field_name_deleted   = field_name_deleted;
-   description->key_nm               = key_nm;
-   description->id_list              = NULL;
+   table_description *description;
+  
+   DENTER(TOP_LAYER, "spool_database_create_table_description");
+ 
+   description = (table_description *)malloc(sizeof(table_description));
+   if (description == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_UNABLETOALLOCATEBYTES_DS,
+                              sizeof(table_description), SGE_FUNC);
+   } else {
+      dstring name_dstring;
+      char name_buffer[30];
 
+      sge_dstring_init(&name_dstring, name_buffer, sizeof(name_buffer));
+
+      description->table_name           = table_name;
+      description->field_name_id = strdup(sge_dstring_sprintf(&name_dstring, "%s%s", prefix, "_id"));
+      if (sublevel) {
+         description->field_name_parent_id = strdup(sge_dstring_sprintf(&name_dstring, "%s%s", prefix, "_parent"));
+      } else {
+         description->field_name_parent_id = NULL;
+      }
+      description->field_name_created = strdup(sge_dstring_sprintf(&name_dstring, "%s%s", prefix, "_created"));
+      description->field_name_valid = strdup(sge_dstring_sprintf(&name_dstring, "%s%s", prefix, "_valid"));
+      description->field_name_deleted = strdup(sge_dstring_sprintf(&name_dstring, "%s%s", prefix, "_deleted"));
+      description->key_nm               = key_nm;
+      description->id_list              = NULL;
+   }
+
+   DEXIT;
    return description;
 }
 
+#if 0
 /****** spool/database/spool_database_set_table_description() ***********
 *  NAME
 *     spool_database_set_table_description() -- set table description for nm 
@@ -1153,6 +1319,328 @@ spool_database_set_table_description(spooling_field *fields, int nm,
          }
          break;
       }
+   }
+
+   return ret;
+}
+#endif
+
+static bool 
+spool_database_assign_table_description(lList **answer_list, spooling_field *fields, const char *table_name, const lDescr *descr, bool sublevel)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_database_assign_table_description");
+
+   /* create table description for this level */
+
+   if (table_name == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_NOTABLENAMEPASSEDTO_S, SGE_FUNC);
+      
+   } else {
+      const char *prefix;
+      int key_nm;
+      dstring prefix_dstring;
+      char prefix_buffer[10];
+
+      sge_dstring_init(&prefix_dstring, prefix_buffer, sizeof(prefix_buffer));
+      prefix = object_get_name_prefix(descr, &prefix_dstring);
+      key_nm = object_get_primary_key(descr);
+
+      if (prefix == NULL || key_nm == NoName) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_UNKNOWNPREFIXORKEYNMFORTABLE_S, 
+                                 table_name);
+         ret = false;
+      } else {
+         bool recursive_table = false;
+         int i;
+
+         /* create table description for all sublevels */
+         for (i = 0; fields[i].nm != NoName && ret; i++) {
+            spooling_field *sub_fields = fields[i].sub_fields;
+            if (sub_fields != NULL) {
+               if (sub_fields == fields) {
+                  recursive_table = true;
+               } else {
+                  const lDescr *sub_descr = object_get_subtype(fields[i].nm);
+                  if (sub_descr == NULL) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                             ANSWER_QUALITY_ERROR,
+                                             MSG_UNKNOWNOBJECTTYPEFOR_SS,
+                                             lNm2Str(fields[i].nm), SGE_FUNC);
+                     ret = false;
+                  } else {
+                     const char *sub_table_name;
+
+                     sub_table_name = spool_database_get_sub_table_name(table_name, fields[i].nm);
+                     if (sub_table_name == NULL) {
+                        answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                                ANSWER_QUALITY_ERROR,
+                                                MSG_UNKNOWNTABLENAMEFORSUBLIST_S,
+                                                lNm2Str(fields[i].nm));
+                        ret = false;
+                     } else {
+                        ret = spool_database_assign_table_description(answer_list, 
+                                                                      sub_fields, 
+                                                                      sub_table_name,
+                                                                      sub_descr, 
+                                                                      true);
+                     }
+                  }
+               }
+            } 
+         }
+   
+         /* processing for subfields succeeded. Create info for this level */
+         if (ret) {
+            table_description *description;
+            description = spool_database_create_table_description(answer_list, table_name, prefix, key_nm, sublevel || recursive_table);
+
+            if (description == NULL) {
+               /* error messages created in spool_database_create_table_description */
+               ret = false;
+            } else {
+               fields[0].clientdata = description;
+            }
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static const char *
+spool_database_get_sub_table_name(const char *prefix, int nm)
+{
+   const char *ret = NULL;
+
+   dstring table_dstring;
+   char table_buffer[MAX_STRING_SIZE];
+
+   sge_dstring_init(&table_dstring, table_buffer, sizeof(table_buffer));
+
+   switch (nm) {
+      case CONF_entries:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "entries");
+         break;
+      case CX_entries:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "entries");
+         break;
+#ifndef __SGE_NO_USERMAPPING__
+      case CU_ruser_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "rusers");
+         break;
+#endif
+      case EH_acl:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
+         break;
+      case EH_xacl:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
+         break;
+      case EH_consumable_config_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complex_values");
+         break;
+      case EH_complex_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complexes");
+         break;
+      case EH_load_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "load");
+         break;
+      case EH_prj:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "prj");
+         break;
+      case EH_xprj:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xprj");
+         break;
+      case EH_scaling_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "load_scaling");
+         break;
+      case EH_usage_scaling_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage_scaling");
+         break;
+      case HGRP_host_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "hosts");
+         break;
+      case JAT_finished_task_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "finished_tasks");
+         break;
+      case JAT_granted_destin_identifier_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "granted_queues");
+         break;
+      case JAT_scaled_usage_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "scaled_usage");
+         break;
+      case JAT_task_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "tasks");
+         break;
+      case JAT_usage_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
+         break;
+      case JB_context:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "context");
+         break;
+      case JB_env_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "environment");
+         break;
+      case JB_hard_queue_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "hard_queue_list");
+         break;
+      case JB_ja_structure:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_structure");
+         break;
+      case JB_ja_n_h_ids:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_n_h_ids");
+         break;
+      case JB_ja_u_h_ids:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_u_h_ids");
+         break;
+      case JB_ja_s_h_ids:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_s_h_ids");
+         break;
+      case JB_ja_o_h_ids:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_o_h_ids");
+         break;
+      case JB_ja_template:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_template");
+         break;
+      case JB_ja_tasks:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_tasks");
+         break;
+      case JB_ja_z_ids:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ja_z_ids");
+         break;
+      case JB_jid_predecessor_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "predecessor");
+         break;
+      case JB_jid_sucessor_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "successor");
+         break;
+      case JB_job_args:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "args");
+         break;
+      case JB_mail_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "mail_list");
+         break;
+      case JB_master_hard_queue_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "master_hard_queue_list");
+         break;
+      case JB_path_aliases:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "path_aliases");
+         break;
+      case JB_pe_range:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "pe_range");
+         break;
+      case JB_shell_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "shell");
+         break;
+      case JB_soft_queue_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "soft_queue_list");
+         break;
+      case JB_stdout_path_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "stdout");
+         break;
+      case JB_stderr_path_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "stderr");
+         break;
+      case JB_stdin_path_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "stdin");
+         break;
+      case PE_user_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
+         break;
+      case PE_xuser_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
+         break;
+      case PET_granted_destin_identifier_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "granted_queues");
+         break;
+      case PET_scaled_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "scaled_usage");
+         break;
+      case PET_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
+         break;
+      case QU_load_thresholds:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "load_thresholds");
+         break;
+      case QU_suspend_thresholds:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "suspend_thresholds");
+         break;
+      case QU_acl:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
+         break;
+      case QU_xacl:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
+         break;
+      case QU_owner_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "owner");
+         break;
+      case QU_subordinate_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "subordinate");
+         break;
+      case QU_complex_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complexes");
+         break;
+      case QU_consumable_config_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "complex_values");
+         break;
+      case QU_projects:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "prj");
+         break;
+      case QU_xprojects:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xprj");
+         break;
+      case QU_pe_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "pe");
+         break;
+      case QU_ckpt_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "ckpt");
+         break;
+      case SC_job_load_adjustments:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "job_load_adjustments");
+         break;
+      case SC_usage_weight_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage_weight");
+         break;
+      case UP_acl:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "acl");
+         break;
+      case UP_xacl:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "xacl");
+         break;
+      case UP_debited_job_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "debited_job_usage");
+         break;
+      case UP_long_term_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "long_term_usage");
+         break;
+      case UP_project:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "project");
+         break;
+      case UP_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
+         break;
+      case UPP_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
+         break;
+      case UPP_long_term_usage:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "long_term_usage");
+         break;
+      case UPU_old_usage_list:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "usage");
+         break;
+      case US_entries:
+         ret = sge_dstring_sprintf(&table_dstring, "%s_%s", prefix, "entries");
+         break;
+   }
+
+   if (ret != NULL) {
+      ret = strdup(ret);
    }
 
    return ret;

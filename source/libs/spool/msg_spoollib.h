@@ -56,6 +56,7 @@
 #define MSG_SPOOL_TYPEALREADYHASDEFAULTRULE_S       _MESSAGE(59019, _("spooling type "SFQ" already has a default rule, cannot add a second one\n"))
 #define MSG_SPOOL_STARTUPOFRULEFAILED_SS  _MESSAGE(59020, _("startup of rule "SFQ" in context "SFQ" failed\n"))
 #define MSG_SPOOL_SHUTDOWNOFRULEFAILED_SS  _MESSAGE(59021,_("shutdown of rule "SFQ" in context "SFQ" failed\n"))
+#define MSG_SPOOL_MAINTENANCEOFRULEFAILED_SS  _MESSAGE(59021,_("maintenance function of rule "SFQ" in context "SFQ" failed\n"))
 /* 
  * libs/spool/sge_spooling_utilities.c
  */
@@ -74,4 +75,8 @@
 #define MSG_CANTCLOSETRANSACTIONNONEOPEN _MESSAGE(59904, _("can't close a transaction - we have no transaction open\n"))
 #define MSG_OBJECTWITHPRIMARYKEYUNKNOWN_S _MESSAGE(59905, _("object with primary key "SFQ" unknown to database spooling\n"))
 #define MSG_PARENTKEYORIDNULL _MESSAGE(59906, _("required primary key or database id of the parent object is NULL\n"))
+#define MSG_UNKNOWNTABLENAMEFORSUBLIST_S  _MESSAGE(59907, _("table name unknown for sublist "SFN"\n"))
+#define MSG_NOTABLENAMEPASSEDTO_S _MESSAGE(59908, _("no table_name passed to function "SFN"\n"))
+#define MSG_UNKNOWNPREFIXORKEYNMFORTABLE_S _MESSAGE(59908, _("prefix or primary key unknown for table "SFN"\n"))
+#define MSG_POSTGRES_WRONGVERSION_SS      _MESSAGE(59909, _("wrong version: database schema was created for version "SFQ", we run version "SFQ"\n"))
 #endif /* __MSG_SPOOLLIB_H */

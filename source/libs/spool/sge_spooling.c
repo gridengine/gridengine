@@ -155,19 +155,29 @@ spool_free_context(lList **answer_list, lListElem *context)
 *
 *  SYNOPSIS
 *     bool 
-*     spool_startup_context(lList **answer_list, lListElem *context) 
+*     spool_startup_context(lList **answer_list, lListElem *context, bool check)
 *
 *  FUNCTION
-*     Checks consistency of the spooling context, e.g. a default rule exists 
-*     for  all types handled by the context.
+*     Starts up the spooling context.
+*     Checks consistency of the spooling context.
 *
-*     If the context is OK, the startup callback for all rules will be called.
-*     These startup callbacks will for example create spool directories,
-*     connect to a database system etc.
+*     Then the startup callback for all rules will be called, which will 
+*     startup the different rules.
+*
+*     For file based spooling, this can been to chdir into the spool directory,
+*     for database spooling it means opening the database connection.
+*
+*     If the parameter check is set to true, the startup callbacks
+*     check the data base, e.g. if the spooling database
+*     was created for the current Grid Engine version.
+*     This check shall be done for all operations, except when creating the
+*     database.
+*
 *
 *  INPUTS
 *     lList **answer_list  - to return error messages
 *     lListElem *context   - the context to startup
+*     bool check           - check database?
 *
 *  RESULT
 *     bool - true, if the context is OK and all startup callbacks reported
@@ -179,7 +189,7 @@ spool_free_context(lList **answer_list, lListElem *context)
 *     spool/spool_shutdown_context()
 *******************************************************************************/
 bool 
-spool_startup_context(lList **answer_list, lListElem *context)
+spool_startup_context(lList **answer_list, lListElem *context, bool check)
 {
    bool ret = true;
 
@@ -258,7 +268,7 @@ spool_startup_context(lList **answer_list, lListElem *context)
          spooling_startup_func func = (spooling_startup_func)
                                       lGetRef(rule, SPR_startup_func);
          if (func != NULL) {
-            if (!func(answer_list, rule)) {
+            if (!func(answer_list, rule, check)) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
                                        MSG_SPOOL_STARTUPOFRULEFAILED_SS,
@@ -276,6 +286,79 @@ error:
    DEXIT;
    return ret;
 }
+
+/****** spool/spool_maintain_context() **********************************
+*  NAME
+*     spool_maintain_context() -- maintain a context
+*
+*  SYNOPSIS
+*     bool 
+*     spool_maintain_context(lList **answer_list, lListElem *context,
+*                            const spooling_maintenance_command cmd,
+*                            const char *args) 
+*
+*  FUNCTION
+*     Do maintenance on spooling context's database.
+*     Calls the maintenance callback for all defined spooling rules.
+*     These callbacks will
+*        - initialize the database
+*        - backup
+*        - switch between spooling with/without history
+*        - etc.
+*
+*  INPUTS
+*     lList **answer_list - to return error messages
+*     lListElem *context  - the context to maintain
+*     const char *args    - arguments to maintenance callback
+*
+*  RESULT
+*     bool - true, if all maintenance callbacks reported success,
+*            else false
+*
+*  SEE ALSO
+*     spool/--Spooling
+*     spool/spool_startup_context()
+*******************************************************************************/
+bool 
+spool_maintain_context(lList **answer_list, lListElem *context, 
+                       const spooling_maintenance_command cmd,
+                       const char *args)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_maintain_context");
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
+
+   if (context == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
+                              SGE_FUNC);
+      ret = false;
+   } else {
+      lListElem *rule;
+
+      for_each (rule, lGetList(context, SPC_rules)) {
+         spooling_maintenance_func func = (spooling_maintenance_func)
+                                       lGetRef(rule, SPR_maintenance_func);
+         if (func != NULL) {
+            if (!func(answer_list, rule, cmd, args)) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_SPOOL_MAINTENANCEOFRULEFAILED_SS,
+                                       lGetString(rule, SPR_name), 
+                                       lGetString(context, SPC_name));
+               ret = false;
+               break;
+            }
+         }
+      }
+   }
+   
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   DEXIT;
+   return ret;
+}
+
 
 /****** spool/spool_shutdown_context() **********************************
 *  NAME
@@ -434,6 +517,7 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *                               const char *name, const char *url, 
 *                               spooling_startup_func startup_func, 
 *                               spooling_shutdown_func shutdown_func,
+*                               spooling_maintenance_func maintenance_func,
 *                               spooling_list_func list_func, 
 *                               spooling_read_func read_func, 
 *                               spooling_write_func write_func, 
@@ -450,6 +534,8 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *     const char *url                      - the name of the url
 *     spooling_startup_func startup_func   - startup function for the rule
 *     spooling_shutdown_func shutdown_func - shutdown function
+*     spooling_maintenance_func shutdown_func - maintenance function 
+*                                               (initializaion, backup, etc.)
 *     spooling_list_func list_func         - function reading a list of objects
 *     spooling_read_func read_func         - function reading an individual 
 *                                            object 
@@ -471,6 +557,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
                           const char *name, const char *url,
                           spooling_startup_func startup_func, 
                           spooling_shutdown_func shutdown_func, 
+                          spooling_maintenance_func maintenance_func, 
                           spooling_list_func list_func, 
                           spooling_read_func read_func, 
                           spooling_write_func write_func, 
@@ -502,6 +589,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
       lSetString(ep, SPR_url, url);
       lSetRef(ep, SPR_startup_func, (void *)startup_func);
       lSetRef(ep, SPR_shutdown_func, (void *)shutdown_func);
+      lSetRef(ep, SPR_maintenance_func, (void *)maintenance_func);
       lSetRef(ep, SPR_list_func, (void *)list_func);
       lSetRef(ep, SPR_read_func, (void *)read_func);
       lSetRef(ep, SPR_write_func, (void *)write_func);
@@ -1173,6 +1261,8 @@ spool_compare_objects(lList **answer_list, const lListElem *context,
                               ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
                               SGE_FUNC);
    }
+
+   ret = true;
 
    DEXIT; 
    return ret;

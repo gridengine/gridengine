@@ -114,7 +114,7 @@ static int init_framework(void)
          spool_set_default_context(spooling_context);
 
          /* initialize spooling context */
-         if (!spool_startup_context(&answer_list, spooling_context)) {
+         if (!spool_startup_context(&answer_list, spooling_context, true)) {
             CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
          } else {
             ret = EXIT_SUCCESS;

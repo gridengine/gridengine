@@ -305,7 +305,7 @@ bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
 
    DENTER(TOP_LAYER, "pe_list_do_all_exist");
    for_each(pe_ref_elem, pe_ref_list) {
-      const char *pe_ref_string = lGetString(pe_ref_elem, STR);
+      const char *pe_ref_string = lGetString(pe_ref_elem, ST_name);
 
       if (pe_list_locate(pe_list, pe_ref_string) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EEXIST, 

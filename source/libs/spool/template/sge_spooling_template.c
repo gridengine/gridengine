@@ -93,14 +93,15 @@ spool_template_create_context(lList **answer_list, const char *args)
 *  SYNOPSIS
 *     bool 
 *     spool_template_default_startup_func(lList **answer_list, 
-*                                         const char *args)
+*                                         const char *args, bool check)
 *
 *  FUNCTION
 *
 *  INPUTS
-*     lList **answer_list - to return error messages
+*     lList **answer_list   - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
+*     bool check            - check the spooling database
 *
 *  RESULT
 *     bool - true, if the startup succeeded, else false
@@ -115,7 +116,7 @@ spool_template_create_context(lList **answer_list, const char *args)
 *******************************************************************************/
 bool
 spool_template_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule)
+                                    const lListElem *rule, bool check)
 {
    const char *url;
 

@@ -1477,7 +1477,7 @@ XtPointer cld, cad;
                ql = lCreateList("CQ", ST_Type);
             }
             qep = lCreateElem(ST_Type);
-            lSetString(qep, STR, lGetString(QBG[i][j].qI->qp, QU_qname));
+            lSetString(qep, ST_name, lGetString(QBG[i][j].qI->qp, QU_qname));
             lAppendElem(ql, qep);
          }
       }

@@ -232,7 +232,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                DEXIT;
                return NULL;
             }
-            
+
             sub_descr = object_get_subtype(descr[i].nm);
             if (sub_descr == NULL) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -244,8 +244,15 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                return NULL;
             }
 
-            sub_fields = _spool_get_fields_to_spool(answer_list, sub_descr, 
-                                                    instr->sub_instr);
+            /* recursive spooling, e.g. sharetree */
+            if (instr->sub_instr == instr && descr == sub_descr) {
+               sub_fields = fields;
+               DPRINTF(("recursive structure detected for field %s\n",
+                        lNm2Str(descr[i].nm)));
+            } else {
+               sub_fields = _spool_get_fields_to_spool(answer_list, sub_descr, 
+                                                       instr->sub_instr);
+            }
          }
 
          fields[j++].sub_fields = sub_fields;
@@ -284,7 +291,7 @@ spool_free_spooling_fields(spooling_field *fields)
    if (fields != NULL) {
       int i;
       for (i = 0; fields[i].nm >=0; i++) {
-         if (fields[i].sub_fields != NULL) {
+         if (fields[i].sub_fields != NULL && fields[i].sub_fields != fields) {
             fields[i].sub_fields = spool_free_spooling_fields(fields[i].sub_fields);
          }
 

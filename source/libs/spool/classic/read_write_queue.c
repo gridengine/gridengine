@@ -228,14 +228,14 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    /* --------- QU_pe_list */
    if (!set_conf_list(alpp, clpp, fields, "pe_list", ep, 
-            QU_pe_list, ST_Type, STR)) {
+            QU_pe_list, ST_Type, ST_name)) {
       DEXIT;
       return -1;
    }
    
    /* --------- QU_pe_list */
    if (!set_conf_list(alpp, clpp, fields, "ckpt_list", ep, 
-            QU_ckpt_list, ST_Type, STR)) {
+            QU_ckpt_list, ST_Type, ST_name)) {
       DEXIT;
       return -1;
    }
@@ -682,12 +682,12 @@ const lListElem *qep
       sge_dstring_free(&qtype_buffer);
    }
    ret = fprint_cull_list(fp,  "ckpt_list            ", 
-      lGetList(qep, QU_ckpt_list), STR);
+      lGetList(qep, QU_ckpt_list), ST_name);
    if (ret == -1) {
       goto FPRINTF_ERROR;
    } 
    ret = fprint_cull_list(fp,  "pe_list              ", 
-      lGetList(qep, QU_pe_list), STR);
+      lGetList(qep, QU_pe_list), ST_name);
    if (ret == -1) {
       goto FPRINTF_ERROR;
    } 

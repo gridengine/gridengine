@@ -194,6 +194,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           spool_dir,
                                           spool_classic_default_startup_func,
                                           NULL,
+                                          NULL,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
@@ -207,6 +208,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           "default rule (common dir)", 
                                           common_dir,
                                           spool_classic_common_startup_func,
+                                          NULL,
                                           NULL,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
@@ -233,7 +235,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
 *  SYNOPSIS
 *     bool
 *     spool_classic_default_startup_func(lList **answer_list, 
-*                                        const lListElem *rule) 
+*                                        const lListElem *rule, bool check) 
 *
 *  FUNCTION
 *     Checks the existence of the spool directory.
@@ -246,6 +248,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
 *     lList **answer_list - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
+*     bool check            - check the spooling database
 *
 *  RESULT
 *     bool - true, if the startup succeeded, else false
@@ -260,7 +263,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
 *******************************************************************************/
 bool
 spool_classic_default_startup_func(lList **answer_list, 
-                                   const lListElem *rule)
+                                   const lListElem *rule, bool check)
 {
    bool ret = true;
 
@@ -326,7 +329,7 @@ spool_classic_default_startup_func(lList **answer_list,
 *  SYNOPSIS
 *     bool
 *     spool_classic_common_startup_func(lList **answer_list, 
-                                        const lListElem *rule) 
+                                        const lListElem *rule, bool check) 
 *
 *  FUNCTION
 *     Checks the existence of the common directory.
@@ -337,6 +340,7 @@ spool_classic_default_startup_func(lList **answer_list,
 *     lList **answer_list - to return error messages
 *     const lListElem *rule - rule containing data like the path to the common 
 *                             directory
+*     bool check            - check the spooling database
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -351,7 +355,7 @@ spool_classic_default_startup_func(lList **answer_list,
 *******************************************************************************/
 bool
 spool_classic_common_startup_func(lList **answer_list, 
-                                  const lListElem *rule)
+                                  const lListElem *rule, bool check)
 {
    bool ret = true;
    const char *url;

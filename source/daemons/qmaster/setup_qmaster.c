@@ -175,7 +175,7 @@ int sge_setup_qmaster()
          SGE_EXIT(1);
       }
 
-      if (!spool_startup_context(&answer_list, spooling_context)) {
+      if (!spool_startup_context(&answer_list, spooling_context, true)) {
          CRITICAL((SGE_EVENT, "unable to startup spooling context\n"));
          SGE_EXIT(1);
       }

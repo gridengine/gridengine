@@ -33,6 +33,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_answer.h"
 #include "sge_object.h"
 
 #include "msg_common.h"
@@ -59,13 +60,17 @@ spool_sql_create_insert_statement(lList **answer_list,
 
    descr = lGetElemDescr(object);
 
-   for (i = 0; fields[i].nm != NoName; i++) {
+   for (i = 0; fields[i].nm != NoName && ret; i++) {
       int pos, type;
+
+      
       pos = lGetPosInDescr(descr, fields[i].nm);
       if (pos < 0) {
-/*          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, */
-/*                                  ANSWER_QUALITY_ERROR, */
-/*                                  MSG_ATTRIBUTENOTINOBJECT_S, lNm2Str(nm)); */
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ATTRIBUTENOTINOBJECT_S, 
+                                 lNm2Str(fields[i].nm));
+         ret = false;
          continue;
       }
 
@@ -75,15 +80,21 @@ spool_sql_create_insert_statement(lList **answer_list,
             sge_dstring_append(field_dstring, ", ");
             sge_dstring_append(value_dstring, ", ");
          }
-         /* JG: TODO: check for NULL value */
-         sge_dstring_append(field_dstring, fields[i].name);
-         object_append_field_to_dstring(object, answer_list, value_dstring, 
-                                        fields[i].nm, '\'');
+         if (fields[i].name == NULL) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_ERROR,
+                                    "invalid field name for field "SFQ"\n", 
+                                    lNm2Str(fields[i].nm));
+            ret = false;
+            continue;
+         } else {
+            sge_dstring_append(field_dstring, fields[i].name);
+            object_append_raw_field_to_dstring(object, answer_list, value_dstring, 
+                                               fields[i].nm, '\'');
+         }
          *data_written = true;
          first_field = false;
-      } else {
       }
-
    }
 
    DEXIT;
@@ -108,13 +119,15 @@ spool_sql_create_update_statement(lList **answer_list,
 
    descr = lGetElemDescr(object);
 
-   for (i = 0; fields[i].nm != NoName; i++) {
+   for (i = 0; fields[i].nm != NoName && ret; i++) {
       int pos, type;
       pos = lGetPosInDescr(descr, fields[i].nm);
       if (pos < 0) {
-/*          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, */
-/*                                  ANSWER_QUALITY_ERROR, */
-/*                                  MSG_ATTRIBUTENOTINOBJECT_S, lNm2Str(nm)); */
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ATTRIBUTENOTINOBJECT_S, 
+                                 lNm2Str(fields[i].nm));
+         ret = false;
          continue;
       }
 
@@ -125,8 +138,9 @@ spool_sql_create_update_statement(lList **answer_list,
                sge_dstring_append(update_dstring, ", ");
             }
             sge_dstring_sprintf_append(update_dstring, "%s = ", fields[i].name);
-            object_append_field_to_dstring(object, answer_list, update_dstring, 
-                                           fields[i].nm, '\'');
+            object_append_raw_field_to_dstring(object, answer_list, 
+                                               update_dstring, fields[i].nm, 
+                                               '\'');
             *data_written = true;
             first_field = false;
          }

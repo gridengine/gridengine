@@ -87,7 +87,7 @@ enum {
 };
 
 SLISTDEF(SO_Type, SubordinateQueue)
-   SGE_STRING(SO_qname, CULL_DEFAULT) /* no hashing, we will not have too many subordinated queues for one queue */
+   SGE_STRING(SO_qname, CULL_DEFAULT | CULL_SUBLIST) /* no hashing, we will not have too many subordinated queues for one queue */
    SGE_ULONG(SO_threshold, CULL_DEFAULT)
 LISTEND 
 
@@ -484,6 +484,9 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_STRING(QU_resume_method, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_STRING(QU_terminate_method, CULL_SPOOL | CULL_CONFIGURE)
 
+   /* JG: TODO: ST_Type has non unique hash - shouldn't we better have an
+    *           additional unique type STU_Type?
+    */
    SGE_LIST(QU_pe_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
    SGE_LIST(QU_ckpt_list, ST_Type, CULL_SPOOL | CULL_CONFIGURE)
 LISTEND 

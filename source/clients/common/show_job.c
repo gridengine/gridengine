@@ -333,7 +333,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_job_args)>=0)
       if (lGetList(job, JB_job_args) || (flags & FLG_QALTER)) {
-         intprt_type fields[] = {STR, 0 };
+         intprt_type fields[] = {ST_name, 0 };
 
          delis[0] = "";
          printf("job_args:                   ");
@@ -343,7 +343,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_qs_args)>=0)
       if (lGetList(job, JB_qs_args) || (flags & FLG_QALTER)) {
-         intprt_type fields[] = {STR, 0 };
+         intprt_type fields[] = {ST_name, 0 };
          delis[0] = "";
          printf("qs_args:                    ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_qs_args), fields, 

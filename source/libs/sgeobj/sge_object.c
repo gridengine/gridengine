@@ -262,6 +262,9 @@ object_get_subtype(int nm)
       case QU_complex_list:
          ret = CX_Type;
          break;
+      case JAT_finished_task_list:
+         ret = FPET_Type;
+         break;
       case EH_load_list:
          ret = HL_Type;
          break;
@@ -272,27 +275,76 @@ object_get_subtype(int nm)
       case EH_usage_scaling_list:
          ret = HS_Type;
          break;
+      case JB_ja_template:
+      case JB_ja_tasks:
+         ret = JAT_Type;
+         break;
+      case JAT_granted_destin_identifier_list:
+      case PET_granted_destin_identifier_list:
+         ret = JG_Type;
+         break;
+      case JB_jid_predecessor_list:
+      case JB_jid_sucessor_list:
+         ret = JRE_Type;
+         break;
+      case JB_mail_list:
+         ret = MR_Type;
+         break;
+      case JB_path_aliases:
+         ret = PA_Type;
+         break;
+      case JAT_task_list:
+         ret = PET_Type;
+         break;
+      case JB_shell_list:
+      case JB_stdout_path_list:
+      case JB_stderr_path_list:
+      case JB_stdin_path_list:
+         ret = PN_Type;
+         break;
+      case JB_hard_queue_list:
+      case JB_soft_queue_list:
+      case JB_master_hard_queue_list:
+         ret = QR_Type;
+         break;
+      case JB_pe_range:
+      case JB_ja_structure:
+      case JB_ja_n_h_ids:
+      case JB_ja_u_h_ids:
+      case JB_ja_s_h_ids:
+      case JB_ja_o_h_ids:
+      case JB_ja_z_ids:
+         ret = RN_Type;
+         break;
       case EH_reschedule_unknown_list:
          ret = RU_Type;
          break;
       case QU_subordinate_list:
          ret = SO_Type;
          break;
+      case JB_job_args:
+      case QU_pe_list:
+      case QU_ckpt_list:
+         ret = ST_Type;
+         break;
       case STN_children:
          ret = STN_Type;
          break;
+      case JAT_usage_list:
+      case JAT_scaled_usage_list:
+      case PET_usage:
+      case PET_scaled_usage:
       case SC_usage_weight_list:
       case UP_usage:
       case UP_long_term_usage:
       case UPP_usage:
       case UPP_long_term_usage:
+      case UPU_old_usage_list:
          ret = UA_Type;
          break;
       case US_entries:
          ret = UE_Type;
          break;
-      case EH_acl:
-      case EH_xacl:
       case EH_prj:
       case EH_xprj:
       case QU_projects:
@@ -305,6 +357,8 @@ object_get_subtype(int nm)
       case UP_debited_job_usage:
          ret = UPU_Type;
          break;
+      case EH_acl:
+      case EH_xacl:
       case PE_user_list:
       case PE_xuser_list:
       case QU_acl:
@@ -313,6 +367,10 @@ object_get_subtype(int nm)
       case UP_acl:
       case UP_xacl:
          ret = US_Type;
+         break;
+      case JB_context:
+      case JB_env_list:
+         ret = VA_Type;
          break;
    }
 
@@ -351,36 +409,80 @@ object_get_primary_key(const lDescr *descr)
 
    if (descr == AH_Type) {
       ret = AH_name;
+#ifndef __SGE_NO_USERMAPPING__
+   } else if (descr == ASTR_Type) {
+      ret = ASTR_href;
+#endif
    } else if (descr == CAL_Type) {
       ret = CAL_name;
+   } else if (descr == CE_Type) {
+      ret = CE_name;
+   } else if (descr == CF_Type) {
+      ret = CF_name;
    } else if (descr == CK_Type) {
       ret = CK_name;
    } else if (descr == CONF_Type) {
       ret = CONF_hname;
+   } else if (descr == CX_Type) {
+      ret = CX_name;
    } else if (descr == EH_Type) {
       ret = EH_name;
-   } else if (descr == JB_Type) {
-      ret = JB_job_number;
+   } else if (descr == FPET_Type) {
+      ret = FPET_id;
+   } else if (descr == HGRP_Type) {
+      ret = HGRP_name;
+   } else if (descr == HL_Type) {
+      ret = HL_name;
+   } else if (descr == HR_Type) {
+      ret = HR_name;
+   } else if (descr == HS_Type) {
+      ret = HS_name;
    } else if (descr == JAT_Type) {
       ret = JAT_task_number;
-   } else if (descr == PE_Type) {
-      ret = PE_name;
+   } else if (descr == JB_Type) {
+      ret = JB_job_number;
+   } else if (descr == JG_Type) {
+      ret = JG_qname;
+   } else if (descr == JRE_Type) {
+      ret = JRE_job_number;
    } else if (descr == MO_Type) {
       ret = MO_name;
+   } else if (descr == MR_Type) {
+      ret = MR_user; /* JG: TODO: is this really the primary key? */
+   } else if (descr == PA_Type) {
+      ret = PA_origin; /* JG: TODO: this is most probably no primary key! */
+   } else if (descr == PE_Type) {
+      ret = PE_name;
    } else if (descr == PET_Type) {
       ret = PET_id;
+   } else if (descr == PN_Type) {
+      ret = PN_path;
    } else if (descr == QU_Type) {
       ret = QU_qname;
    } else if (descr == QR_Type) {
       ret = QR_name;
    } else if (descr == RN_Type) {
-      ret = RN_min;
+      ret = RN_min; /* JG: TODO: this is not a primary key! */
    } else if (descr == SC_Type) {
       ret = SC_algorithm;
    } else if (descr == SH_Type) {
       ret = SH_name;
+   } else if (descr == SO_Type) {
+      ret = SO_qname;
+   } else if (descr == ST_Type) {
+      ret = ST_name;
+   } else if (descr == STN_Type) {
+      ret = STN_name;
+   } else if (descr == UA_Type) {
+      ret = UA_name;
+   } else if (descr == UE_Type) {
+      ret = UE_name;
    } else if (descr == UP_Type) {
       ret = UP_name;
+   } else if (descr == UPP_Type) {
+      ret = UPP_name;
+   } else if (descr == UPU_Type) {
+      ret = UPU_job_number;
    } else if (descr == US_Type) {
       ret = US_name;
    } else if (descr == VA_Type) {
@@ -432,7 +534,7 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
       return NULL;
    }
 
-   nm = object_get_primary_key(descr);
+   nm = descr[0].nm;
 
    if (nm != NoName) {
       const char *name = lNm2Str(nm);
@@ -458,18 +560,23 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *     const char *
 *     object_append_field_to_dstring(const lListElem *object, 
 *                                    lList **answer_list, 
-*                                    dstring *buffer, const int nm) 
+*                                    dstring *buffer, const int nm,
+*                                    char string_quotes) 
 *
 *  FUNCTION
 *     Returns a string representation of a given object attribute.
 *     If errors arrise they are returned in the given answer_list.
 *     Data will be created in the given dynamic string buffer.
+*     For some fields a special handling is implemented, e.g. mapping
+*     bitfields to string lists.
 *
 *  INPUTS
 *     const lListElem *object - object to use
 *     lList **answer_list     - used to return error messages
 *     dstring *buffer         - buffer used to format the result
 *     const int nm            - attribute to output
+*     char string_quotes      - character to be used for string quoting 
+*                               '\0' means no quoting
 *
 *  RESULT
 *     const char * - string representation of the attribute value 
@@ -492,10 +599,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
                                dstring *buffer, const int nm, 
                                char string_quotes)
 {
-   const char *str;
    const char *result = NULL;
-   const lDescr *descr;
-   int pos, type;
    char tmp_buf[MAX_STRING_SIZE];
    dstring tmp_dstring;
    bool quote_special_case = false;
@@ -503,19 +607,6 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
    DENTER(OBJECT_LAYER, "object_append_field_to_dstring");
 
    SGE_CHECK_POINTER_NULL(object);
-
-   descr = lGetElemDescr(object);
-   pos = lGetPosViaElem(object, nm);
-
-   if (pos < 0) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_NMNOTINELEMENT_S, 
-                              lNm2Str(nm));
-      DEXIT;
-      return NULL;
-   }
-
-   type = lGetPosType(descr, pos);
 
    /* handle special cases 
     * these special cases are for instance bitfields that shall be 
@@ -575,6 +666,79 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          result = sge_dstring_append(buffer, result);
       }
    } else {
+      result = object_append_raw_field_to_dstring(object, answer_list, buffer,
+                                                  nm, string_quotes);
+   }
+
+   return result;
+}
+
+/****** sgeobj/object/object_append_raw_field_to_dstring() *********************
+*  NAME
+*     object_append_raw_field_to_dstring() -- object field to string
+*
+*  SYNOPSIS
+*     const char *
+*     object_append_raw_field_to_dstring(const lListElem *object, 
+*                                        lList **answer_list, 
+*                                        dstring *buffer, const int nm,
+*                                        char string_quotes) 
+*
+*  FUNCTION
+*     Returns a string representation of a given object attribute.
+*     If errors arrise they are returned in the given answer_list.
+*     Data will be created in the given dynamic string buffer.
+*     For some fields a special handling is implemented, e.g. mapping
+*     bitfields to string lists.
+*
+*  INPUTS
+*     const lListElem *object - object to use
+*     lList **answer_list     - used to return error messages
+*     dstring *buffer         - buffer used to format the result
+*     const int nm            - attribute to output
+*     char string_quotes      - character to be used for string quoting 
+*                               '\0' means no quoting
+*
+*  RESULT
+*     const char * - string representation of the attribute value 
+*                    (pointer to the string in the dynamic string 
+*                    buffer, or NULL if an error occured.
+*
+*  NOTES
+*     For sublists, subobjects and references NULL is returned.
+*
+*  BUGS
+*     For the handled special cases, the dstring is cleared,
+*     the default handling appends to the dstring buffer.
+*
+*  SEE ALSO
+*     sgeobj/object/--GDI-object-Handling
+*     sgeobj/object/object_parse_field_from_string()
+*******************************************************************************/
+const char *
+object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
+                                   dstring *buffer, const int nm,
+                                   char string_quotes)
+{
+   const char *str;
+   const char *result = NULL;
+   int pos;
+
+   DENTER(OBJECT_LAYER, "object_append_raw_field_to_dstring");
+
+   pos = lGetPosViaElem(object, nm);
+
+   if (pos < 0) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_NMNOTINELEMENT_S, 
+                              lNm2Str(nm));
+   } else {
+      const lDescr *descr;
+      int type;
+
+      descr = lGetElemDescr(object);
+      type = lGetPosType(descr, pos);
+
       /* no special case: read and copy data from object */
       switch (type) {
          case lFloatT:
@@ -653,6 +817,8 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
 *  FUNCTION
 *     Sets a new value for a certain object attribute.
 *     The new value is passed as parameter in string format.
+*     For some fields a special handling is implemented, e.g. mapping
+*     string lists to bitfields.
 *
 *  INPUTS
 *     lListElem *object   - the object to change
@@ -677,23 +843,10 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
                                const int nm, const char *value)
 {
    bool ret = true;
-   const lDescr *descr;
-   int pos, type;
 
    DENTER(OBJECT_LAYER, "object_parse_field_from_string");
 
    SGE_CHECK_POINTER_FALSE(object);
-
-   descr = lGetElemDescr(object);
-   pos = lGetPosViaElem(object, nm);
-   if (pos < 0) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, MSG_NMNOTINELEMENT_S, 
-                              lNm2Str(nm));
-      abort();
-   }
-
-   type = lGetPosType(descr, pos);
 
    /* handle special cases */
    switch (nm) {
@@ -718,8 +871,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
                lSetUlong(object, nm, type);
             }
          }
-         DEXIT;
-         return ret;
+         break;
       case CE_relop:
          {
             u_long32 op = 0;
@@ -737,8 +889,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
                lSetUlong(object, nm, op);
             }
          }
-         DEXIT;
-         return ret;
+         break;
       case CE_request:
          {
             bool req = false;
@@ -756,8 +907,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
             lSetBool(object, CE_forced, forced);
             lSetBool(object, CE_request, req);
          }
-         DEXIT;
-         return ret;
+         break;
       case CE_consumable:
          {
             bool cond = false;
@@ -770,57 +920,117 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
             }
             lSetBool(object, nm, cond);
          }
-         DEXIT;
-         return ret;
+         break;
       case QU_qtype:
          ret = queue_parse_qtype_from_string(object, answer_list, value);
-         DEXIT;
-         return ret; 
+         break;
       case US_type:
          ret = userset_set_type_string(object, answer_list, value);
-         DEXIT;
-         return ret; 
-   }
-
-   /* read data */
-   switch (type) {
-      case lFloatT:
-         ret = object_parse_float_from_string(object, answer_list, nm, value);
-         break;
-      case lDoubleT:
-         ret = object_parse_double_from_string(object, answer_list, nm, value);
-         break;
-      case lUlongT:
-         ret = object_parse_ulong32_from_string(object, answer_list, nm, value);
-         break;
-      case lLongT:
-         ret = object_parse_long_from_string(object, answer_list, nm, value);
-         break;
-      case lCharT:
-         ret = object_parse_char_from_string(object, answer_list, nm, value);
-         break;
-      case lBoolT:
-         ret = object_parse_bool_from_string(object, answer_list, nm, value);
-         break;
-      case lIntT:
-         ret = object_parse_int_from_string(object, answer_list, nm, value);
-         break;
-      case lStringT:
-         lSetPosString(object, pos, value);
-         break;
-      case lHostT:
-         lSetPosHost(object, pos, value);
-         break;
-      case lListT:
-      case lObjectT:
-      case lRefT:
-         /* what do to here? */
          break;
       default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_INVALIDCULLDATATYPE_D, type);
+         ret = object_parse_raw_field_from_string(object, answer_list, nm, 
+                                                  value);
          break;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/object/object_parse_raw_field_from_string() ************************
+*  NAME
+*     object_parse_raw_field_from_string() -- set object attr. from str
+*
+*  SYNOPSIS
+*     bool 
+*     object_parse_raw_field_from_string(lListElem *object, 
+*                                        lList **answer_list, 
+*                                        const int nm, const char *value) 
+*
+*  FUNCTION
+*     Sets a new value for a certain object attribute.
+*     The new value is passed as parameter in string format.
+*
+*  INPUTS
+*     lListElem *object   - the object to change
+*     lList **answer_list - used to return error messages
+*     const int nm        - the attribute to change
+*     const char *value   - the new value
+*
+*  RESULT
+*     bool - true on success,
+*            false, on error, error description in answer_list 
+*
+*  NOTES
+*     Sublists, subobjects and references cannot be set with this 
+*     function.
+*
+*  SEE ALSO
+*     sgeobj/object/--GDI-object-Handling
+*     sgeobj/object/object_append_field_to_dstring()
+******************************************************************************/
+bool 
+object_parse_raw_field_from_string(lListElem *object, lList **answer_list, 
+                                   const int nm, const char *value)
+{
+   bool ret = true;
+   int pos;
+
+   DENTER(OBJECT_LAYER, "object_parse_raw_field_from_string");
+
+   pos = lGetPosViaElem(object, nm);
+   if (pos < 0) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_NMNOTINELEMENT_S, 
+                              lNm2Str(nm));
+      ret = false;
+   } else {
+      const lDescr *descr;
+      int type;
+
+      descr = lGetElemDescr(object);
+      type = lGetPosType(descr, pos);
+
+      /* read data */
+      switch (type) {
+         case lFloatT:
+            ret = object_parse_float_from_string(object, answer_list, nm, value);
+            break;
+         case lDoubleT:
+            ret = object_parse_double_from_string(object, answer_list, nm, value);
+            break;
+         case lUlongT:
+            ret = object_parse_ulong32_from_string(object, answer_list, nm, value);
+            break;
+         case lLongT:
+            ret = object_parse_long_from_string(object, answer_list, nm, value);
+            break;
+         case lCharT:
+            ret = object_parse_char_from_string(object, answer_list, nm, value);
+            break;
+         case lBoolT:
+            ret = object_parse_bool_from_string(object, answer_list, nm, value);
+            break;
+         case lIntT:
+            ret = object_parse_int_from_string(object, answer_list, nm, value);
+            break;
+         case lStringT:
+            lSetPosString(object, pos, value);
+            break;
+         case lHostT:
+            lSetPosHost(object, pos, value);
+            break;
+         case lListT:
+         case lObjectT:
+         case lRefT:
+            /* what do to here? */
+            break;
+         default:
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_INVALIDCULLDATATYPE_D, type);
+            break;
+      }
    }
 
    DEXIT;

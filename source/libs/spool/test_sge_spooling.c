@@ -281,10 +281,58 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                 * if yes, spool the object.
                 */
                if(old_ep == NULL || 
-                  spool_compare_objects(&answer_list, context, type, ep, old_ep) != 0)  {
+                  spool_compare_objects(&answer_list, context, type, ep, old_ep))  {
                   spool_write_object(&answer_list, context, ep, key, type);
                   answer_list_output(&answer_list);
                }
+            }
+            break;
+
+         case SGE_TYPE_JOB:
+            for_each(ep, *master_list) {
+               lListElem *new_ep;
+
+               new_ep = lGetElemUlong(new_list, key_nm, lGetUlong(ep, key_nm));
+               if(new_ep == NULL) {
+                  const char *job_key;
+                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL);
+                  /* object not contained in new list, delete it */
+                  spool_delete_object(&answer_list, context, type, job_key);
+                  answer_list_output(&answer_list);
+               }
+            }
+
+            for_each(ep, new_list) {
+               lListElem *old_ep;
+               u_long32 key = lGetUlong(ep, key_nm);
+
+               old_ep = lGetElemUlong(*master_list, key_nm, key);
+
+               /* check if spooling relevant attributes have changed,
+                * if yes, spool the object.
+                */
+               if(old_ep == NULL || 
+                  spool_compare_objects(&answer_list, context, type, ep, old_ep))  {
+                  const char *job_key;
+                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL);
+                  spool_write_object(&answer_list, context, ep, job_key, type);
+                  answer_list_output(&answer_list);
+               }
+            }
+            break;
+
+         case SGE_TYPE_SHARETREE:
+            /* two pass algorithm:
+             * 1. If we have an old sharetree: delete it
+             * 2. If a new sharetree has been sent: write it (spool_event_after)
+             * JG: TODO: we have to compare them: delete / write only, when
+             *           sharetree no longer exists or has changed
+             */
+            ep = lFirst(*master_list);
+            if(ep != NULL) {
+               /* delete sharetree */
+               spool_delete_object(&answer_list, context, type, SHARETREE_FILE);
+               answer_list_output(&answer_list);
             }
             break;
          default:
@@ -350,18 +398,6 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
    switch(action) {
       case SGE_EMA_LIST:
          switch(type) {
-            case SGE_TYPE_SHARETREE:
-               ep = lFirst(*master_list);
-               if(ep == NULL) {
-                  /* delete sharetree */
-                  spool_delete_object(&answer_list, context, type, SHARETREE_FILE);
-                  answer_list_output(&answer_list);
-               } else {
-                  /* spool sharetree */
-                  spool_write_object(&answer_list, context, ep, NULL, type);
-                  answer_list_output(&answer_list);
-               }
-               break;
             case SGE_TYPE_MANAGER:
             case SGE_TYPE_OPERATOR:
                /* The "classic" spooling functions always write all list entries
@@ -376,6 +412,14 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                      answer_list_output(&answer_list);
                   }
                }   
+            case SGE_TYPE_SHARETREE:
+               ep = lFirst(*master_list);
+               if(ep != NULL) {
+                  /* spool sharetree */
+                  spool_write_object(&answer_list, context, ep, SHARETREE_FILE, type);
+                  answer_list_output(&answer_list);
+               }
+               break;
             default:
                break;
          }
@@ -465,7 +509,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   DEXIT;
                   return false;
                }
-               spool_write_object(&answer_list, context, ep, NULL, type);
+               spool_write_object(&answer_list, context, ep, "default", type);
                answer_list_output(&answer_list);
                break;
             case SGE_TYPE_JATASK:
@@ -538,7 +582,7 @@ int main(int argc, char *argv[])
 
    spool_set_default_context(spooling_context);
 
-   if(!spool_startup_context(&answer_list, spooling_context)) {
+   if(!spool_startup_context(&answer_list, spooling_context, true)) {
       answer_list_output(&answer_list);
       SGE_EXIT(EXIT_FAILURE);
    }
@@ -559,7 +603,8 @@ int main(int argc, char *argv[])
 
       now = time(0);
       if (now > next_prof_output) {
-         INFO((SGE_EVENT, "\n%s", prof_get_info_string(SGE_PROF_ALL, false, NULL)));
+         prof_output_info(SGE_PROF_ALL, false, "test_sge_info:\n");
+/*          INFO((SGE_EVENT, "\n%s", prof_get_info_string(SGE_PROF_ALL, false, NULL))); */
          next_prof_output = now + 60;
       }
    }

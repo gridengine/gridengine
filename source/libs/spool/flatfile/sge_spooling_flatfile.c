@@ -480,6 +480,7 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                                           spool_dir,
                                           spool_flatfile_default_startup_func,
                                           NULL,
+                                          NULL,
                                           spool_flatfile_default_list_func,
                                           spool_flatfile_default_read_func,
                                           spool_flatfile_default_write_func,
@@ -521,7 +522,7 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
 *  SYNOPSIS
 *     bool
 *     spool_flatfile_default_startup_func(lList **answer_list, 
-*                                         const lListElem *rule) 
+*                                         const lListElem *rule, bool check) 
 *
 *  FUNCTION
 *     Checks the existence of the spool directory.
@@ -531,9 +532,10 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
 *     exist, they are created.
 *
 *  INPUTS
-*     lList **answer_list - to return error messages
+*     lList **answer_list   - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
+*     bool check            - check the spooling database
 *
 *  RESULT
 *     bool - true, if the startup succeeded, else false
@@ -548,7 +550,7 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
 *******************************************************************************/
 bool
 spool_flatfile_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule)
+                                    const lListElem *rule, bool check)
 {
    bool ret = true;
    const char *url;
@@ -595,7 +597,7 @@ spool_flatfile_default_startup_func(lList **answer_list,
 *  SYNOPSIS
 *     bool
 *     spool_flatfile_common_startup_func(lList **answer_list, 
-*                                        const lListElem *rule) 
+*                                        const lListElem *rule, bool check) 
 *
 *  FUNCTION
 *     Checks the existence of the common directory.
@@ -606,6 +608,7 @@ spool_flatfile_default_startup_func(lList **answer_list,
 *     lList **answer_list - to return error messages
 *     const lListElem *rule - rule containing data like the path to the common 
 *                             directory
+*     bool check            - check the spooling database
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -620,7 +623,7 @@ spool_flatfile_default_startup_func(lList **answer_list,
 *******************************************************************************/
 bool
 spool_flatfile_common_startup_func(lList **answer_list, 
-                                   const lListElem *rule)
+                                   const lListElem *rule, bool check)
 {
    bool ret = true;
    const char *url;

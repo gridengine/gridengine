@@ -73,7 +73,7 @@ lList *sge_get_dirents(const char *path) {
          continue;             
       if (strcmp(dent->d_name, "..") == 0 || strcmp(dent->d_name, ".") == 0)
          continue;
-      lAddElemStr(&entries, STR, dent->d_name, ST_Type);
+      lAddElemStr(&entries, ST_name, dent->d_name, ST_Type);
    }
    closedir(cwd);
 
@@ -91,7 +91,7 @@ u_long32 sge_count_dirents(char *directory_name)
    for_each(dir_entry, dir_entries) {
       const char *entry;
 
-      entry = lGetString(dir_entry, STR);
+      entry = lGetString(dir_entry, ST_name);
       if (strcmp(entry, ".") && strcmp(entry, "..")) {
          entries++;
       }
@@ -111,7 +111,7 @@ int has_more_dirents(char *directory_name, u_long32 number_of_entries)
    for_each(dir_entry, dir_entries) {
       const char *entry;
  
-      entry = lGetString(dir_entry, STR);
+      entry = lGetString(dir_entry, ST_name);
       if (strcmp(entry, ".") && strcmp(entry, "..")) {
          entries++;
          if (entries > number_of_entries) {

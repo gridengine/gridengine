@@ -38,7 +38,7 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot infotext spooldefaults
+                 testsuidroot infotext spooldefaults spoolinit
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
@@ -183,6 +183,13 @@ spooldefaults:   spooldefaults.o  version.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHED
 
 spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooldefaults.c
+
+#---------------------------------------------------------------------
+spoolinit:   spoolinit.o  version.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ spoolinit.o version.o $(LFLAGS) $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+spoolinit.o: $(UTILBIN_DIR)/spoolinit.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spoolinit.c
 
 #---------------------------------------------------------------------
 testsuidroot:   testsuidroot.o 

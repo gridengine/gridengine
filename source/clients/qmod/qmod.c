@@ -133,7 +133,7 @@ char **argv
       }
 
       for_each(rep, ref_list) {
-         printf(MSG_QMOD_XYOFJOBQUEUEZ_SSS,force?MSG_FORCED:"", actionstr, lGetString(rep, STR));
+         printf(MSG_QMOD_XYOFJOBQUEUEZ_SSS,force?MSG_FORCED:"", actionstr, lGetString(rep, ST_name));
       }
       SGE_EXIT(0);
    }
@@ -264,31 +264,31 @@ int usageshowed = 0;
       if(parse_flag(ppcmdline, "-verify", &alp, pverify))
          continue;
 
-      if(parse_multi_stringlist(ppcmdline, "-c", &alp, ppreflist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-c", &alp, ppreflist, ST_Type, ST_name)) {
          *paction = QERROR;
          break;
       }
 
-      if(parse_multi_stringlist(ppcmdline, "-d", &alp, ppreflist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-d", &alp, ppreflist, ST_Type, ST_name)) {
          *paction = QDISABLED;
          break;
       }
 
-      if(parse_multi_stringlist(ppcmdline, "-r", &alp, ppreflist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-r", &alp, ppreflist, ST_Type, ST_name)) {
          *paction = QRESCHEDULED;
          break;
       }
 
-      if(parse_multi_stringlist(ppcmdline, "-e", &alp, ppreflist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-e", &alp, ppreflist, ST_Type, ST_name)) {
          *paction = QENABLED;
          break;
       }
 
-      if(parse_multi_stringlist(ppcmdline, "-s", &alp, ppreflist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-s", &alp, ppreflist, ST_Type, ST_name)) {
          *paction = QSUSPENDED;
          break;
       }
-      if(parse_multi_stringlist(ppcmdline, "-us", &alp, ppreflist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-us", &alp, ppreflist, ST_Type, ST_name)) {
          *paction = QRUNNING;
          break;
       }

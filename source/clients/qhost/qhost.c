@@ -462,8 +462,8 @@ u_long32 show
          int found = 0;
          int first_item = 0;
          for_each (r1, resl) {
-            if (!strcmp(lGetString(r1, STR), lGetString(rep, CE_name)) ||
-                !strcmp(lGetString(r1, STR), lGetString(rep, CE_shortcut))) {
+            if (!strcmp(lGetString(r1, ST_name), lGetString(rep, CE_name)) ||
+                !strcmp(lGetString(r1, ST_name), lGetString(rep, CE_shortcut))) {
                found = 1;
                if (first) {
                   first = 0;
@@ -692,14 +692,14 @@ lListElem *ep;
          break;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-h", &alp, pphost, ST_Type, STR)) {
+      if (parse_multi_stringlist(ppcmdline, "-h", &alp, pphost, ST_Type, ST_name)) {
          /* 
          ** resolve hostnames and replace them in list
          */
          for_each(ep, *pphost) {
-            if (sge_resolve_host(ep, STR)) {
+            if (sge_resolve_host(ep, ST_name)) {
                char buf[BUFSIZ];
-               sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,STR) );
+               sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
                answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return alp; 
@@ -709,7 +709,7 @@ lListElem *ep;
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-F", &alp, ppFres, ST_Type, STR)) {
+      if (parse_multi_stringlist(ppcmdline, "-F", &alp, ppFres, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_RESOURCES;
          continue;
       }
@@ -735,7 +735,7 @@ lListElem *ep;
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-u", &alp, ppuser, ST_Type, STR)) {
+      if (parse_multi_stringlist(ppcmdline, "-u", &alp, ppuser, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_JOBS;
          continue;
       }
@@ -845,7 +845,7 @@ lWriteListTo(ehl, stdout);
    */
 
    for_each(ep, hostref_list) {
-      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, lGetString(ep, STR));
+      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, lGetString(ep, ST_name));
       if (!where)
          where = nw;
       else
@@ -872,7 +872,7 @@ lWriteListTo(ehl, stdout);
    ** depending on the hosts to display get the attached queues
    */
    for_each(ep, hostref_list) {
-      nw = lWhere("%T(%I == %s)", QU_Type, QU_qhostname, lGetString(ep, STR));
+      nw = lWhere("%T(%I == %s)", QU_Type, QU_qhostname, lGetString(ep, ST_name));
       if (!qw)
          qw = nw;
       else
@@ -902,7 +902,7 @@ lWriteListTo(ehl, stdout);
 /* lWriteListTo(user_list, stdout); */
 
       for_each(ep, user_list) {
-         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, STR));
+         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
          if (!jw)
             jw = nw;
          else

@@ -383,8 +383,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lList *jref_list = NULL;
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
-            DPRINTF(("-hold_jid %s\n", lGetString(sep, STR)));
-            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, STR), JRE_Type);
+            DPRINTF(("-hold_jid %s\n", lGetString(sep, ST_name)));
+            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
          }
          lRemoveElem(cmdline, ep);
       }
@@ -568,7 +568,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lp = lCopyList("job args", lGetList(*pjob, JB_job_args));
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBARG))) {
-         lAddElemStr(&lp, STR, lGetString(ep, SPA_argval_lStringT), ST_Type);
+         lAddElemStr(&lp, ST_name, lGetString(ep, SPA_argval_lStringT), ST_Type);
          
          lRemoveElem(cmdline, ep);
       }

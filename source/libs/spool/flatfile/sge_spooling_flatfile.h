@@ -134,10 +134,10 @@ spool_flatfile_create_context(lList **answer_list, const char *args);
 
 bool 
 spool_flatfile_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule);
+                                    const lListElem *rule, bool check);
 bool 
 spool_flatfile_common_startup_func(lList **answer_list, 
-                                   const lListElem *rule);
+                                   const lListElem *rule, bool check);
 
 bool 
 spool_flatfile_default_list_func(lList **answer_list, 

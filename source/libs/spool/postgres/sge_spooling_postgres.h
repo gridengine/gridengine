@@ -64,10 +64,15 @@ spool_postgres_create_context(lList **answer_list, const char *args);
 
 bool 
 spool_postgres_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule);
+                                    const lListElem *rule, bool check);
 bool 
 spool_postgres_default_shutdown_func(lList **answer_list, 
                                      const lListElem *rule);
+bool 
+spool_postgres_default_maintenance_func(lList **answer_list, 
+                                        const lListElem *rule,
+                                        const spooling_maintenance_command cmd,
+                                        const char *args);
 
 bool 
 spool_postgres_common_startup_func(lList **answer_list, 

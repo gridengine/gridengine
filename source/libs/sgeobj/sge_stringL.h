@@ -43,16 +43,16 @@ extern "C" {
 /* *INDENT-OFF* */
 
 enum {
-   STR = ST_LOWERBOUND
+   ST_name = ST_LOWERBOUND
 };
 
 LISTDEF(ST_Type)
    /* misc setup variables */
-   SGE_STRING(STR, CULL_HASH)
+   SGE_STRING(ST_name, CULL_HASH | CULL_SUBLIST)
 LISTEND 
 
 NAMEDEF(STN)
-   NAME("String")
+   NAME("ST_name")
 NAMEEND
 
 /* *INDENT-ON* */ 

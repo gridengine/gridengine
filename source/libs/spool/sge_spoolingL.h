@@ -135,6 +135,15 @@ NAMEEND
 *        function pointer to a shutdown function,
 *        e.g. disconnecting from a database or closing file handles.
 *
+*     SGE_REF(SPR_maintenance_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+*        function pointer to a maintenance function for 
+*           - creating the database tables / directories in case of 
+*             filebased spooling
+*           - switching between spooling with/without history
+*           - backup
+*           - cleaning up / compressing database
+*           - etc.
+*
 *     SGE_REF(SPR_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 *        pointer to a function reading complete lists (master lists)
 *        from the spooling data source.
@@ -177,6 +186,7 @@ enum {
    SPR_url,                          /* an url, e.g. base dir, database url */
    SPR_startup_func,                 /* function pointer: startup, e.g. connect to database */
    SPR_shutdown_func,                /* function pointer: shutdown, e.g. disconnect from db */
+   SPR_maintenance_func,             /* function pointer: maintenance, e.g. backup of db */
    SPR_list_func,                    /* function pointer: read master list */
    SPR_read_func,                    /* function pointer: read an object */
    SPR_write_func,                   /* function pointer: write an object */
@@ -190,6 +200,7 @@ LISTDEF(SPR_Type)
    SGE_STRING(SPR_url, CULL_DEFAULT)
    SGE_REF(SPR_startup_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_shutdown_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+   SGE_REF(SPR_maintenance_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_list_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_read_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
    SGE_REF(SPR_write_func, CULL_ANY_SUBTYPE, CULL_DEFAULT)
@@ -203,6 +214,7 @@ NAMEDEF(SPRN)
    NAME("SPR_url")
    NAME("SPR_startup_func")
    NAME("SPR_shutdown_func")
+   NAME("SPR_maintenance_func")
    NAME("SPR_list_func")
    NAME("SPR_read_func")
    NAME("SPR_write_func")

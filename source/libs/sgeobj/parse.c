@@ -282,7 +282,7 @@ lListElem *ep; /* SPA_Type */
       ep = sge_add_arg(ppcmdline, 0, lListT, shortopt, NULL);
       while (*rp && **rp != '-') {
          /* string at *rp is argument to current option */
-         lAddSubStr(ep, STR, *rp, SPA_argval_lListT, ST_Type);
+         lAddSubStr(ep, ST_name, *rp, SPA_argval_lListT, ST_Type);
          rp++;
       }
    }
@@ -330,7 +330,7 @@ lList **alpp
       ep = sge_add_arg(ppcmdline, 0, lListT, shortopt, NULL);
       while (*rp && **rp != '-') {
          /* string at *rp is argument to current option */
-         lAddSubStr(ep, STR, *rp, SPA_argval_lListT, ST_Type);
+         lAddSubStr(ep, ST_name, *rp, SPA_argval_lListT, ST_Type);
          rp++;
       }
    }
@@ -363,7 +363,7 @@ lListElem *ep = NULL; /* SPA_Type */
       /* string under rp is parameter, no option! */
       if(!ep)
          ep = sge_add_arg(ppcmdline, 0, lListT, opt, NULL);
-      lAddElemStr(lGetListRef(ep, SPA_argval_lListT), STR, *rp, ST_Type);
+      lAddElemStr(lGetListRef(ep, SPA_argval_lListT), ST_name, *rp, ST_Type);
       rp++;
    }
    DEXIT;
@@ -439,7 +439,7 @@ int field
       while(ep) {
          /* collect all opts of same type, this is what 'multi' means in funcname!  */
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
-            sge_parse_string_list(ppdestlist, lGetString(sep, STR), field, type);
+            sge_parse_string_list(ppdestlist, lGetString(sep, ST_name), field, type);
          }
          lRemoveElem(*ppcmdline, ep);
          ep = lGetElemStr(*ppcmdline, SPA_switch, opt);
@@ -469,9 +469,9 @@ lList **ppdestlist
          lList *tmp_alp = NULL;
       
          if (sge_parse_jobtasks(ppdestlist, &idp, 
-               lGetString(sep, STR), &tmp_alp) == -1) {
+               lGetString(sep, ST_name), &tmp_alp) == -1) {
             sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
-               lGetString(sep, STR));
+               lGetString(sep, ST_name));
             answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
             lRemoveElem(*ppcmdline, ep);
@@ -498,7 +498,7 @@ char **str
    if((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
       ep2 = lFirst(lGetList(ep, SPA_argval_lListT));
       if (ep2)
-         *str = sge_strdup(NULL, lGetString(ep2, STR));
+         *str = sge_strdup(NULL, lGetString(ep2, ST_name));
       else
          *str = NULL;   
       lRemoveElem(*ppcmdline, ep);
@@ -520,7 +520,7 @@ lList *string_list
 
    DENTER(TOP_LAYER, "sge_parse_group_options");
    for_each(str_elem, string_list) {
-      if ((char) lGetString(str_elem, STR)[0] == 'd')
+      if ((char) lGetString(str_elem, ST_name)[0] == 'd')
          group_opt = GROUP_NO_TASK_GROUPS;
    }
    DEXIT; 

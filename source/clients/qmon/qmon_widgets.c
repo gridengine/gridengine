@@ -457,7 +457,7 @@ Cardinal size
    }   
    
    if (type == QmonQSTR_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, STR);
+      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, ST_name);
    }
       
    XmtLayoutEnableLayout(parent);
@@ -504,7 +504,7 @@ Cardinal size
    }
 
    if (type == QmonQSTR_Type) {
-      lp = XmStringToCull(w, ST_Type, STR, ALL_ITEMS);
+      lp = XmStringToCull(w, ST_Type, ST_name, ALL_ITEMS);
    }
 
    *(lList**)address = lp;
@@ -612,11 +612,11 @@ Cardinal size
       strcpy(buf, "");
       for_each(ep, list) {
          if (first_time) {
-            strcpy(buf, lGetString(ep, STR));
+            strcpy(buf, lGetString(ep, ST_name));
             first_time = 0;
          }
          else
-            sprintf(buf, "%s %s", buf, lGetString(ep, STR));
+            sprintf(buf, "%s %s", buf, lGetString(ep, ST_name));
       }
       str = buf;
    }
@@ -703,7 +703,7 @@ Cardinal size
       if ( type == QmonQENV_Type || type == QmonQCTX_Type )
          var_list_parse_from_string(&ret_list, str, 0); 
       if (type == QmonQST_Type) {
-         lString2List(str, &ret_list, ST_Type, STR, " ");
+         lString2List(str, &ret_list, ST_Type, ST_name, " ");
       }
       if (type == QmonQRN_Type) {
          range_list_parse_from_string(&ret_list, &alp, str,
@@ -735,7 +735,7 @@ Cardinal size
          lListElem *ep = NULL;
          cull_parse_jid_hold_list(&sl, str); 
          for_each (ep, sl) {
-            lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, STR), JRE_Type);
+            lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, ST_name), JRE_Type);
          }
          sl = lFreeList(sl);
       }

@@ -184,10 +184,18 @@ const char *
 object_append_field_to_dstring(const lListElem *object, lList **answer_list, 
                                dstring *buffer, const int nm,
                                char string_quotes);
+const char *
+object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
+                                   dstring *buffer, const int nm,
+                                   char string_quotes);
 
 bool 
 object_parse_field_from_string(lListElem *object, lList **answer_list, 
                                const int nm, const char *value);
+
+bool 
+object_parse_raw_field_from_string(lListElem *object, lList **answer_list, 
+                                   const int nm, const char *value);
 
 void
 object_delete_range_id(lListElem *object, lList **answer_list, 

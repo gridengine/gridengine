@@ -690,7 +690,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       for_each(se, lGetList(jep, JB_job_args)) {
          int do_quote = 0;
          int n;
-         const char *s = lGetString(se,STR);
+         const char *s = lGetString(se,ST_name);
 
          /* handle NULL as empty string */
          if (s == NULL) {
@@ -1114,7 +1114,7 @@ u_long32 step
          if (user_list_string[0] != 0)
             strcat(user_list_string, ", ");
          if (--umax)
-            strcat(user_list_string, lGetString(user, STR));
+            strcat(user_list_string, lGetString(user, ST_name));
          else {
             /* prevent buffer overrun */
             strcat(user_list_string, "...");
@@ -1170,7 +1170,7 @@ char *ruser
       for_each(user, user_list) {
 
          new_where = lWhere("%T(%I==%s)", JB_Type, JB_owner,
-               lGetString(user, STR));
+               lGetString(user, ST_name));
          if (!or_where)
             or_where = new_where;
          else

@@ -249,7 +249,7 @@ enum {
 *     SGE_ULONG(JB_verify)             
 *        Triggers "verify" messages. (qsub -verify)
 *
-*     SGE_LIST(JB_env_list)      
+*     SGE_LIST(JB_env_list) 
 *        Export these env variables (VA_Type). ("qsub -V").
 *
 *     SGE_TLIST(JB_context, VA_Type)       
@@ -550,78 +550,78 @@ enum {
  */
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
-   SGE_ULONG(JB_job_number, CULL_HASH)             
-   SGE_STRING(JB_job_name, CULL_DEFAULT)
-   SGE_ULONG(JB_version, CULL_DEFAULT)
-   SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT) 
-   SGE_STRING(JB_session, CULL_DEFAULT) 
+   SGE_ULONG(JB_job_number, CULL_HASH | CULL_SPOOL)             
+   SGE_STRING(JB_job_name, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_version, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) /* JG: TODO: typo: successor */
+   SGE_STRING(JB_session, CULL_DEFAULT | CULL_SPOOL) 
 
-   SGE_STRING(JB_project, CULL_DEFAULT)             
-   SGE_STRING(JB_department, CULL_DEFAULT)  
+   SGE_STRING(JB_project, CULL_DEFAULT | CULL_SPOOL)             
+   SGE_STRING(JB_department, CULL_DEFAULT | CULL_SPOOL)  
 
-   SGE_STRING(JB_directive_prefix, CULL_DEFAULT)     
+   SGE_STRING(JB_directive_prefix, CULL_DEFAULT | CULL_SPOOL)     
    SGE_STRING(JB_exec_file, CULL_DEFAULT)
-   SGE_STRING(JB_script_file, CULL_DEFAULT)
-   SGE_ULONG(JB_script_size, CULL_DEFAULT)
+   SGE_STRING(JB_script_file, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_script_size, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(JB_script_ptr, CULL_DEFAULT)
 
-   SGE_ULONG(JB_submission_time, CULL_DEFAULT)
-   SGE_ULONG(JB_execution_time, CULL_DEFAULT)  
-   SGE_ULONG(JB_deadline, CULL_DEFAULT) 
+   SGE_ULONG(JB_submission_time, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_execution_time, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_ULONG(JB_deadline, CULL_DEFAULT | CULL_SPOOL) 
 
-   SGE_STRING(JB_owner, CULL_DEFAULT)
-   SGE_ULONG(JB_uid, CULL_DEFAULT)
-   SGE_STRING(JB_group, CULL_DEFAULT)
-   SGE_ULONG(JB_gid, CULL_DEFAULT)
-   SGE_STRING(JB_account, CULL_DEFAULT)      
+   SGE_STRING(JB_owner, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_uid, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(JB_group, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_gid, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(JB_account, CULL_DEFAULT | CULL_SPOOL)      
 
-   SGE_STRING(JB_cwd, CULL_DEFAULT)     
-   SGE_BOOL(JB_notify, CULL_DEFAULT)  
-   SGE_ULONG(JB_type, CULL_DEFAULT)     
-   SGE_ULONG(JB_priority, CULL_DEFAULT)       
-   SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT) 
-   SGE_ULONG(JB_verify, CULL_DEFAULT) 
-   SGE_LIST(JB_env_list, VA_Type, CULL_DEFAULT)  
-   SGE_LIST(JB_context, VA_Type, CULL_DEFAULT)  
-   SGE_LIST(JB_job_args, ST_Type, CULL_DEFAULT)  
+   SGE_STRING(JB_cwd, CULL_DEFAULT | CULL_SPOOL)     
+   SGE_BOOL(JB_notify, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_ULONG(JB_type, CULL_DEFAULT | CULL_SPOOL)     
+   SGE_ULONG(JB_priority, CULL_DEFAULT | CULL_SPOOL)       
+   SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_ULONG(JB_verify, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_env_list, VA_Type, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_LIST(JB_context, VA_Type, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_LIST(JB_job_args, ST_Type, CULL_DEFAULT | CULL_SPOOL)  
 
-   SGE_ULONG(JB_checkpoint_attr, CULL_DEFAULT)     
-   SGE_STRING(JB_checkpoint_name, CULL_DEFAULT)   
+   SGE_ULONG(JB_checkpoint_attr, CULL_DEFAULT | CULL_SPOOL)     
+   SGE_STRING(JB_checkpoint_name, CULL_DEFAULT | CULL_SPOOL)   
    SGE_OBJECT(JB_checkpoint_object, CK_Type, CULL_DEFAULT)
-   SGE_ULONG(JB_checkpoint_interval, CULL_DEFAULT)   
-   SGE_ULONG(JB_restart, CULL_DEFAULT)  
+   SGE_ULONG(JB_checkpoint_interval, CULL_DEFAULT | CULL_SPOOL)   
+   SGE_ULONG(JB_restart, CULL_DEFAULT | CULL_SPOOL)  
 
-   SGE_LIST(JB_stdout_path_list, PN_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_stderr_path_list, PN_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_stdin_path_list, PN_Type, CULL_DEFAULT) 
-   SGE_BOOL(JB_merge_stderr, CULL_DEFAULT)     
+   SGE_LIST(JB_stdout_path_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_stderr_path_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_stdin_path_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_BOOL(JB_merge_stderr, CULL_DEFAULT | CULL_SPOOL)     
 
-   SGE_LIST(JB_hard_resource_list, RE_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_soft_resource_list, RE_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_hard_queue_list, QR_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_soft_queue_list, QR_Type, CULL_DEFAULT) 
+   SGE_LIST(JB_hard_resource_list, RE_Type, CULL_DEFAULT) /* JG: TODO: how to spool? */
+   SGE_LIST(JB_soft_resource_list, RE_Type, CULL_DEFAULT) /* JG: TODO: how to spool? */
+   SGE_LIST(JB_hard_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_soft_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL) 
    
-   SGE_ULONG(JB_mail_options, CULL_DEFAULT) 
-   SGE_LIST(JB_mail_list, MR_Type, CULL_DEFAULT)  
+   SGE_ULONG(JB_mail_options, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_mail_list, MR_Type, CULL_DEFAULT | CULL_SPOOL)  
 
-   SGE_STRING(JB_pe, CULL_DEFAULT)              
-   SGE_LIST(JB_pe_range, RN_Type, CULL_DEFAULT)     
-   SGE_LIST(JB_master_hard_queue_list, QR_Type, CULL_DEFAULT)  
+   SGE_STRING(JB_pe, CULL_DEFAULT | CULL_SPOOL)              
+   SGE_LIST(JB_pe_range, RN_Type, CULL_DEFAULT | CULL_SPOOL)     
+   SGE_LIST(JB_master_hard_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL)  
 
    SGE_STRING(JB_tgt, CULL_DEFAULT)      
    SGE_STRING(JB_cred, CULL_DEFAULT)   
 
-   SGE_LIST(JB_ja_structure, RN_Type, CULL_DEFAULT)  
-   SGE_LIST(JB_ja_n_h_ids, RN_Type, CULL_DEFAULT) 
-   SGE_LIST(JB_ja_u_h_ids, RN_Type, CULL_DEFAULT)   
-   SGE_LIST(JB_ja_s_h_ids, RN_Type, CULL_DEFAULT)    
-   SGE_LIST(JB_ja_o_h_ids, RN_Type, CULL_DEFAULT)   
-   SGE_LIST(JB_ja_z_ids, RN_Type, CULL_DEFAULT)   
-   SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT)  
-   SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT)  
+   SGE_LIST(JB_ja_structure, RN_Type, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_LIST(JB_ja_n_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(JB_ja_u_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)   
+   SGE_LIST(JB_ja_s_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)    
+   SGE_LIST(JB_ja_o_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)   
+   SGE_LIST(JB_ja_z_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)   
+   SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
 
-   SGE_STRING(JB_jobclass, CULL_DEFAULT) 
+   SGE_STRING(JB_jobclass, CULL_DEFAULT)
    SGE_HOST(JB_host, CULL_DEFAULT)       
    SGE_REF(JB_category, CT_Type, CULL_DEFAULT)    
 
@@ -630,11 +630,11 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_job_source, CULL_DEFAULT)
    SGE_ULONG(JB_verify_suitable_queues, CULL_DEFAULT)
    SGE_ULONG(JB_nrunning, CULL_DEFAULT)
-   SGE_ULONG(JB_soft_wallclock_gmt, CULL_DEFAULT)
-   SGE_ULONG(JB_hard_wallclock_gmt, CULL_DEFAULT)
-   SGE_ULONG(JB_override_tickets, CULL_DEFAULT)   
+   SGE_ULONG(JB_soft_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_hard_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(JB_override_tickets, CULL_DEFAULT | CULL_SPOOL)   
    SGE_LIST(JB_qs_args, ST_Type, CULL_DEFAULT)   
-   SGE_LIST(JB_path_aliases, PA_Type, CULL_DEFAULT)  
+   SGE_LIST(JB_path_aliases, PA_Type, CULL_DEFAULT | CULL_SPOOL)
 
 
    /* 
@@ -787,8 +787,8 @@ enum {
 };
 
 SLISTDEF(PN_Type, PathName)
-   SGE_STRING(PN_path, CULL_DEFAULT)
-   SGE_HOST(PN_host, CULL_DEFAULT)                    /* CR - hostname change */
+   SGE_STRING(PN_path, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_HOST(PN_host, CULL_DEFAULT | CULL_SUBLIST)                    /* CR - hostname change */
 LISTEND
 
 NAMEDEF(PNN)
@@ -844,10 +844,10 @@ enum {
 };
 
 SLISTDEF( JG_Type, GrantedQueue )
-   SGE_STRING(JG_qname, CULL_DEFAULT)    /* the queue's name                           */
+   SGE_STRING(JG_qname, CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT)  /* it's version                               */
    SGE_HOST(JG_qhostname, CULL_DEFAULT)/* redundant qualified host name for caching  */  /* CR - hostname change */
-   SGE_ULONG(JG_slots, CULL_DEFAULT)     /* from orders list                           */
+   SGE_ULONG(JG_slots, CULL_DEFAULT | CULL_SUBLIST)     /* from orders list                           */
    SGE_OBJECT(JG_queue, QU_Type, CULL_DEFAULT) /* QU_Type - complete queue only in execd */
    SGE_ULONG(JG_tag_slave_job, CULL_DEFAULT) /* whether slave execds job has arrived in 
                                  * case of pe's with sge controlled slaves */

@@ -56,6 +56,6 @@ for i in $databases; do
 done
 
 createdb "${DBNAME}"
-
-psql -f "${BASEDIR}/init_postgres.sql" $DBNAME
+SOLARIS64/spoolinit blah "host=$PGHOST dbname=$DBNAME" init
+#psql -f "${BASEDIR}/init_postgres.sql" $DBNAME
 

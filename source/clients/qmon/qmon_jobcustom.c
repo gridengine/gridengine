@@ -420,7 +420,7 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, job_args) {
-      const char *arg = lGetString(jep, STR);
+      const char *arg = lGetString(jep, ST_name);
       if(arg != NULL) {
          sprintf(buf, "%s %s", buf, arg);
       } else {
@@ -1307,7 +1307,7 @@ XtPointer cld,cad;
    */
    owner_str = XmtInputFieldGetString(jobfilter_owner);
    jobfilter_owners = lFreeList(jobfilter_owners);
-   lString2List(owner_str, &jobfilter_owners, ST_Type, STR, NULL); 
+   lString2List(owner_str, &jobfilter_owners, ST_Type, ST_name, NULL); 
 
    jobfilter_compact = XmToggleButtonGetState(jobfilter_arrays_compressed);
 
@@ -1354,7 +1354,7 @@ XtPointer cld, cad;
    lSetBool(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
    for (j=FIRST_FIELD; j<XtNumber(job_items); j++) {           
       if (job_items[j].show)
-         lAddElemStr(&lp, STR, job_items[j].name, ST_Type); 
+         lAddElemStr(&lp, ST_name, job_items[j].name, ST_Type); 
    }
    lSetList(qmon_preferences, PREF_job_filter_fields, lp);
 
@@ -1692,10 +1692,10 @@ XtPointer cld
       for_each(ep, jobfilter_owners) {
          if (first_time) {
             first_time = 0;
-            strcpy(buf, lGetString(ep, STR));
+            strcpy(buf, lGetString(ep, ST_name));
          }
          else
-            sprintf(buf, "%s,%s", buf, lGetString(ep, STR));
+            sprintf(buf, "%s,%s", buf, lGetString(ep, ST_name));
       }
       XmtInputFieldSetString(jobfilter_owner, buf);
 
@@ -1704,7 +1704,7 @@ XtPointer cld
       ** set the fields which shall be shown
       */
       for_each(field, jobfilter_fields) {
-         u_long32 temp = XrmStringToQuark(lGetString(field, STR));
+         u_long32 temp = XrmStringToQuark(lGetString(field, ST_name));
          if (sge_htable_lookup(JobColumnPrintHashTable, 
              &temp,
              (const void **) &job_item)) {
@@ -2126,7 +2126,7 @@ lList *owner_list
       return True;
 
    for_each(op, owner_list) {
-      if (!fnmatch(lGetString(op, STR), lGetString(jep, JB_owner), 0)) {
+      if (!fnmatch(lGetString(op, ST_name), lGetString(jep, JB_owner), 0)) {
          return True;
       }
    }

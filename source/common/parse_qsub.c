@@ -1292,7 +1292,7 @@ DTRACE;
          }
 
          for (;sp && *sp && strcmp("-qs_end", *sp); sp++) {
-            lAddElemStr(&qs_args_list, STR, *sp, ST_Type);
+            lAddElemStr(&qs_args_list, ST_name, *sp, ST_Type);
          }
 
          if ( !sp || !*sp || strcmp("-qs_end", *sp)) {
@@ -2208,7 +2208,7 @@ char *str
  */
 
 ) {
-   int rule[] = {STR, 0};
+   int rule[] = {ST_name, 0};
    char **str_str = NULL;
    int i_ret;
    char *s;

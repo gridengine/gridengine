@@ -176,7 +176,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_ULONG(EH_cache_version, CULL_DEFAULT)
    SGE_ULONG(EH_master_host, CULL_DEFAULT)
    SGE_ULONG(EH_reschedule_unknown, CULL_DEFAULT)
-   SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT) /* JG: TODO: shall it be spooled? Problem: composed primary key */
    SGE_ULONG(EH_report_seqno, CULL_DEFAULT)
 LISTEND 
 

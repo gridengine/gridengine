@@ -123,7 +123,7 @@ int sge_read_host_group_entries_from_disk()
      }
      
      for_each(direntry, direntries) {
-        hostGroupEntry = lGetString(direntry, STR);
+        hostGroupEntry = lGetString(direntry, ST_name);
 
         if (hostGroupEntry[0] != '.') {
            if (!sge_silent_get()) { 
@@ -167,7 +167,7 @@ int sge_read_user_mapping_entries_from_disk()
      }
      
      for_each(direntry, direntries) {
-         ume = lGetString(direntry, STR);
+         ume = lGetString(direntry, ST_name);
 
          if (ume[0] != '.') {
             if (!sge_silent_get()) { 
@@ -243,7 +243,7 @@ int sge_read_exechost_list_from_disk()
       
       for_each(direntry, direntries) {
 
-         host = lGetString(direntry, STR);
+         host = lGetString(direntry, ST_name);
          if (host[0] != '.') {
             DPRINTF(("Host: %s\n", host));
             ep = cull_read_in_host(EXECHOST_DIR, host, CULL_READ_SPOOL, EH_name, 
@@ -309,7 +309,7 @@ int sge_read_adminhost_list_from_disk()
       if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINADMINHOSTS);
       for_each(direntry, direntries) {
-         host = lGetString(direntry, STR);
+         host = lGetString(direntry, ST_name);
 
          if (host[0] != '.') {
             DPRINTF(("Host: %s\n", host));
@@ -358,7 +358,7 @@ int sge_read_submithost_list_from_disk()
       if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINSUBMITHOSTS);
       for_each(direntry, direntries) {
-         host = lGetString(direntry, STR);
+         host = lGetString(direntry, ST_name);
          if (host[0] != '.') {
             DPRINTF(("Host: %s\n", host));
             ep = cull_read_in_host(SUBMITHOST_DIR, host, CULL_READ_SPOOL, 
@@ -406,7 +406,7 @@ int sge_read_pe_list_from_disk()
          printf(MSG_CONFIG_READINGINGPARALLELENV);
       }
       for_each(direntry, direntries) {
-         pe = lGetString(direntry, STR);
+         pe = lGetString(direntry, ST_name);
          if (pe[0] != '.') {
             if (!sge_silent_get()) {
                printf(MSG_SETUP_PE_S, pe);
@@ -458,7 +458,7 @@ int sge_read_cal_list_from_disk()
       if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINCALENDARS);
       for_each(direntry, direntries) {
-         cal = lGetString(direntry, STR);
+         cal = lGetString(direntry, ST_name);
 
          if (cal[0] != '.') {
             if (!sge_silent_get()) {
@@ -512,7 +512,7 @@ int sge_read_ckpt_list_from_disk()
       if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS);
       for_each(direntry, direntries) {
-         ckpt = lGetString(direntry, STR);
+         ckpt = lGetString(direntry, ST_name);
 
          if (ckpt[0] != '.') {
             if (!sge_silent_get()) 
@@ -556,41 +556,41 @@ int sge_read_queue_list_from_disk()
          printf(MSG_CONFIG_READINGINQUEUES);
       for_each(direntry, direntries) {
 
-         queue_str = lGetString(direntry, STR);
+         queue_str = lGetString(direntry, ST_name);
          if (queue_str[0] != '.') {
             config_tag = 0;
             if (!sge_silent_get()) {
-               printf(MSG_SETUP_QUEUE_S, lGetString(direntry, STR));
+               printf(MSG_SETUP_QUEUE_S, lGetString(direntry, ST_name));
             }
             if (verify_str_key(&alp, queue_str, "queue")) {
                DEXIT;
                return -1;
             }   
-            qep = cull_read_in_qconf(QUEUE_DIR, lGetString(direntry, STR), 1, 
+            qep = cull_read_in_qconf(QUEUE_DIR, lGetString(direntry, ST_name), 1, 
                   0, &config_tag, NULL);
             if (!qep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, QUEUE_DIR, 
-                        lGetString(direntry, STR)));
+                        lGetString(direntry, ST_name)));
                DEXIT;
                return -1;
             }
             if (config_tag & CONFIG_TAG_OBSOLETE_VALUE) {
                /* an obsolete config value was found in the file.
                   spool it out again to have the newest version on disk. */
-               cull_write_qconf(1, 0, QUEUE_DIR, lGetString(direntry, STR), 
+               cull_write_qconf(1, 0, QUEUE_DIR, lGetString(direntry, ST_name), 
                      NULL, qep);
                INFO((SGE_EVENT, MSG_CONFIG_QUEUEXUPDATED_S, 
-                     lGetString(direntry, STR)));
+                     lGetString(direntry, ST_name)));
             }
             
-            if (!strcmp(lGetString(direntry, STR), SGE_TEMPLATE_NAME) && 
+            if (!strcmp(lGetString(direntry, ST_name), SGE_TEMPLATE_NAME) && 
                 !strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME)) {
                /* 
                   we do not keep the queue template in the main queue list 
                   to be compatible with other old code in the qmaster
                */
                qep = lFreeElem(qep);
-               sge_unlink(QUEUE_DIR, lGetString(direntry, STR));
+               sge_unlink(QUEUE_DIR, lGetString(direntry, ST_name));
                WARNING((SGE_EVENT, MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED));
             }
             else if (!strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME)) {
@@ -692,26 +692,26 @@ int sge_read_project_list_from_disk()
       for_each(direntry, direntries) {
          const char *userprj_str;
 
-         userprj_str = lGetString(direntry, STR);
+         userprj_str = lGetString(direntry, ST_name);
          if (userprj_str[0] != '.') {
             config_tag = 0;
             if (!sge_silent_get()) 
-               printf(MSG_SETUP_PROJECT_S, lGetString(direntry, STR));
+               printf(MSG_SETUP_PROJECT_S, lGetString(direntry, ST_name));
             if (verify_str_key(&alp, userprj_str, "project")) {
                DEXIT;
                return -1;
             }  
-            ep = cull_read_in_userprj(PROJECT_DIR, lGetString(direntry, STR), 1,
+            ep = cull_read_in_userprj(PROJECT_DIR, lGetString(direntry, ST_name), 1,
                                        0, &config_tag);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, PROJECT_DIR, 
-                      lGetString(direntry, STR)));
+                      lGetString(direntry, ST_name)));
                DEXIT;
                return -1;
             }
-            if (strcmp(lGetString(ep, UP_name), lGetString(direntry, STR))) {
+            if (strcmp(lGetString(ep, UP_name), lGetString(direntry, ST_name))) {
                ERROR((SGE_EVENT, MSG_QMASTER_PRJINCORRECT_S,
-                      lGetString(direntry, STR)));
+                      lGetString(direntry, ST_name)));
                DEXIT;
                return -1;
             }
@@ -744,17 +744,17 @@ int sge_read_user_list_from_disk()
       for_each(direntry, direntries) {
          const char *direntry_str;
          
-         direntry_str = lGetString(direntry, STR); 
+         direntry_str = lGetString(direntry, ST_name); 
          if (direntry_str[0] != '.') { 
             config_tag = 0;
             if (!sge_silent_get()) 
-               printf(MSG_SETUP_USER_S, lGetString(direntry, STR));
+               printf(MSG_SETUP_USER_S, lGetString(direntry, ST_name));
 
-            ep = cull_read_in_userprj(USER_DIR, lGetString(direntry, STR), 1,
+            ep = cull_read_in_userprj(USER_DIR, lGetString(direntry, ST_name), 1,
                                        1, &config_tag);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, USER_DIR, 
-                        lGetString(direntry, STR)));
+                        lGetString(direntry, ST_name)));
                DEXIT;
                return -1;
             }
@@ -785,11 +785,11 @@ int sge_read_userset_list_from_disk()
          printf(MSG_CONFIG_READINGINUSERSETS);
 
       for_each(direntry, direntries) {
-         const char *userset = lGetString(direntry, STR);
+         const char *userset = lGetString(direntry, ST_name);
 
          if (userset[0] != '.') {
             if (!sge_silent_get()) {
-               printf(MSG_SETUP_USERSET_S , lGetString(direntry, STR));
+               printf(MSG_SETUP_USERSET_S , lGetString(direntry, ST_name));
             }
             if (verify_str_key(&alp, userset, "userset")) {
                DEXIT;

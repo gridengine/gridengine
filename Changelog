@@ -1,9 +1,15 @@
+JG-2003-05-28-0: Enhancem.: Spooling to PostgreSQL Database for all objects.
+                            Database structure is generated from CULL object 
+                            definitions.
+                 Review:    TBD           
+
 JG-2003-05-27-0: Bugfix:    Type mismatch in (compiler warning) in featureset.
+                 Review:    EB
 
 SG-2003-05-27-0: Testsuite: - removed error message with maintrunk
                               removed unused macro call 
                               "REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT"
-                 Review:   CR
+                 Review:    CR
 
 CR-2003-05-22-0: Testsuite: - enhancments to make testsuite compatible with
                               cvs commit from EB-2003-05-15-0 (PE/CKPT 

@@ -3891,10 +3891,10 @@ DPRINTF(("ep: %s %s\n",
 
          spp = sge_parser_get_next(spp);
 
-         lString2List(*spp, &uList, ST_Type, STR , ", ");
+         lString2List(*spp, &uList, ST_Type, ST_name , ", ");
          for_each(uep,uList)
          {
-            user = lGetString(uep,STR);
+            user = lGetString(uep,ST_name);
             /* get user */
             where = lWhere("%T( %I==%s )", UP_Type, UP_name, user);
             what = lWhat("%T(ALL)", UP_Type);

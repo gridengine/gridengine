@@ -43,6 +43,9 @@
 #include "sge_dstring.h"
 
 #include "sge_object.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 
 #include "spool/sge_spooling_database.h"
 #include "spool/sge_spooling_sql.h"
@@ -155,6 +158,21 @@ spool_postgres_invalidate(lList **answer_list, PGconn *connection,
                           bool *transaction_started, 
                           const spooling_field *fields, const char *id);
 
+static bool
+spool_postgres_init_database(lList **answer_list, const lListElem *rule, 
+                             const char *args);
+
+static bool
+spool_postgres_create_table(lList **answer_list, PGconn *connection, 
+                            spooling_field *fields, bool with_history, 
+                            const lDescr *descr, bool sublevel);
+
+static const char *
+spool_postgres_map_datatype(int type);
+
+static bool 
+spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
+                        const char *sql);
 
 /****** spool/postgres/spool_postgres_create_context() ********************
 *  NAME
@@ -192,6 +210,7 @@ spool_postgres_create_context(lList **answer_list, const char *args)
                               ANSWER_QUALITY_ERROR, 
                               MSG_POSTGRES_INVALIDARGSTOCREATESPOOLINGCONTEXT);
    } else {
+      bool ret;
       lListElem *rule, *type;
       
       /* create spooling context */
@@ -203,16 +222,21 @@ spool_postgres_create_context(lList **answer_list, const char *args)
                                        args,
                                        spool_postgres_default_startup_func,
                                        spool_postgres_default_shutdown_func,
+                                       spool_postgres_default_maintenance_func,
                                        spool_postgres_default_list_func,
                                        spool_postgres_default_read_func,
                                        spool_postgres_default_write_func,
                                        spool_postgres_default_delete_func,
                                        spool_postgres_default_verify_func);
 
-      spool_database_initialize(answer_list, rule);
-
-      type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
-      spool_type_add_rule(answer_list, type, rule, true);
+      ret = spool_database_initialize(answer_list, rule);
+      if (ret) {
+         type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
+         spool_type_add_rule(answer_list, type, rule, true);
+      } else {
+         /* error messages have been created earlier */
+         context = lFreeElem(context);
+      }
    }
 
    DEXIT;
@@ -226,7 +250,7 @@ spool_postgres_create_context(lList **answer_list, const char *args)
 *  SYNOPSIS
 *     bool 
 *     spool_postgres_default_startup_func(lList **answer_list, 
-*                                         lListElem *rule)
+*                                         lListElem *rule, bool check)
 *
 *  FUNCTION
 *     Tries to connect to the configured database.
@@ -241,6 +265,7 @@ spool_postgres_create_context(lList **answer_list, const char *args)
 *     lList **answer_list - to return error messages
 *     const lListElem *rule - the rule containing data necessary for
 *                             the startup (e.g. path to the spool directory)
+*     bool check            - check the spooling database
 *
 *  RESULT
 *     bool - true, if the startup succeeded, else false
@@ -255,7 +280,7 @@ spool_postgres_create_context(lList **answer_list, const char *args)
 *******************************************************************************/
 bool
 spool_postgres_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule)
+                                    const lListElem *rule, bool check)
 {
    bool ret = true;
    const char *url;
@@ -273,60 +298,51 @@ spool_postgres_default_startup_func(lList **answer_list,
                               url, PQerrorMessage(connection));
       ret = false;
    } else {
-      /* retrieve version and history information */
-      PGresult *res;
-
       spool_database_set_handle(rule, connection);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_INFO, 
                               MSG_POSTGRES_OPENSUCCEEDED_S, 
                               url);
-      /* check version and retrieve info */
-      res = PQexec(connection, 
-                   "SELECT * FROM sge_info ORDER BY last_change DESC LIMIT 1");
-      if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_POSTGRES_CANNOTREADDBINFO_S, 
-                                 PQerrorMessage(connection));
-         ret = false;
-      } else {
-         char buffer[256];
-         dstring ds;
-         const char *db_version;
-         const char *my_version;
-        
-         /* check version */
-         sge_dstring_init(&ds, buffer, sizeof(buffer));
-         my_version = feature_get_product_name(FS_SHORT_VERSION, &ds);
+      if (check) {
+         /* retrieve version and history information */
+         PGresult *res;
 
-         db_version = PQgetvalue(res, 0, PQfnumber(res, "version"));
-
-         if (strcmp(db_version, my_version) != 0) {
+         /* check version and retrieve info */
+         res = PQexec(connection, 
+                      "SELECT * FROM sge_info ORDER BY last_change DESC LIMIT 1");
+         if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_POSTGRES_WRONGVERSION_SS, 
-                                    db_version, my_version);
+                                    MSG_POSTGRES_CANNOTREADDBINFO_S, 
+                                    PQerrorMessage(connection));
             ret = false;
          } else {
-            /* check and store history settings */
-            const char *history = PQgetvalue(res, 0, 
-                                             PQfnumber(res, "with_history"));
-            if (*history == 'f') {
-               spool_database_set_history(rule, false);
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                       ANSWER_QUALITY_INFO,
-                                       MSG_POSTGRES_HISTORYDISABLED);
-            } else {
-               spool_database_set_history(rule, true);
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                       ANSWER_QUALITY_INFO,
-                                       MSG_POSTGRES_HISTORYENABLED);
+            const char *version;
+           
+            /* check version */
+            version = PQgetvalue(res, 0, PQfnumber(res, "version"));
+            ret = spool_database_check_version(answer_list, version);
+
+            if (ret) {
+               /* check and store history settings */
+               const char *history = PQgetvalue(res, 0, 
+                                                PQfnumber(res, "with_history"));
+               if (*history == 'f') {
+                  spool_database_set_history(rule, false);
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                          ANSWER_QUALITY_INFO,
+                                          MSG_POSTGRES_HISTORYDISABLED);
+               } else {
+                  spool_database_set_history(rule, true);
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                          ANSWER_QUALITY_INFO,
+                                          MSG_POSTGRES_HISTORYENABLED);
+               }
             }
          }
-      }
 
-      PQclear(res);
+         PQclear(res);
+      }
    }
 
    /* on error shutdown database connection */
@@ -398,6 +414,352 @@ spool_postgres_default_shutdown_func(lList **answer_list,
    return ret;
 }
 
+/****** spool/postgres/spool_postgres_default_maintenance_func() **************
+*  NAME
+*     spool_postgres_default_maintenance_func() -- maintain database
+*
+*  SYNOPSIS
+*     bool 
+*     spool_postgres_default_maintenance_func(lList **answer_list, 
+*                                             lListElem *rule
+*                                             const spooling_maintenance_command cmd,
+*                                             const char *args);
+*
+*  FUNCTION
+*     Maintains the database:
+*        - initialization
+*        - ...
+*
+*  INPUTS
+*     lList **answer_list   - to return error messages
+*     const lListElem *rule - the rule containing data necessary for
+*                             the maintenance (e.g. path to the spool directory)
+*     const spooling_maintenance_command cmd - the command to execute
+*     const char *args      - arguments to the maintenance command
+*
+*  RESULT
+*     bool - true, if the maintenance succeeded, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/postgres/--Spooling-Postgres
+*     spool/spool_maintain_context()
+*******************************************************************************/
+bool
+spool_postgres_default_maintenance_func(lList **answer_list, 
+                                    const lListElem *rule, 
+                                    const spooling_maintenance_command cmd,
+                                    const char *args)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_postgres_default_maintenance_func");
+
+   switch (cmd) {
+      case SPM_init:
+         ret = spool_postgres_init_database(answer_list, rule, args);
+         break;
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 "unknown maintenance command %d\n", cmd);
+         ret = false;
+         break;
+         
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_postgres_init_database(lList **answer_list, const lListElem *rule, 
+                             const char *args)
+{
+   bool ret = true;
+   PGconn *connection;
+   sge_object_type i;
+
+   bool with_history;
+
+   DENTER(TOP_LAYER, "spool_postgres_init_database");
+
+   connection = spool_database_get_handle(rule);
+
+   if (args != NULL && strcmp(args, "history") == 0) {
+      with_history = true;
+   } else {
+      with_history = false;
+   }
+
+   /* create tables for SGE objects */
+   for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL && ret; i++) {
+      spooling_field *fields;
+      const lDescr *descr;
+
+      fields = spool_database_get_fields(rule, i);
+      descr  = object_type_get_descr(i);
+      /* create toplevel table */
+      if (fields != NULL && fields[0].clientdata != NULL) {
+         ret = spool_postgres_create_table(answer_list, connection, 
+                                           fields, with_history, 
+                                           descr, false);
+      }
+   }
+
+   /* create sge_info table */
+   if (ret) {
+      dstring sql_dstring;
+      char sql_buffer[MAX_STRING_SIZE];
+      
+      sge_dstring_init(&sql_dstring, sql_buffer, sizeof(sql_buffer));
+      sge_dstring_sprintf(&sql_dstring, 
+                          "CREATE TABLE sge_info ("
+                          "last_change TIMESTAMP WITH TIME ZONE NOT NULL"
+                          ", version VARCHAR NOT NULL"
+                          ", with_history BOOLEAN NOT NULL)");
+      ret = spool_postgres_exec_sql(answer_list, connection,
+                                    sge_dstring_get_string(&sql_dstring));
+  
+      if (ret) {
+         dstring version_dstring;
+         char version_buffer[256];
+         const char *version;
+
+         sge_dstring_init(&version_dstring, version_buffer, 
+                          sizeof(version_buffer));
+         version = feature_get_product_name(FS_SHORT_VERSION, &version_dstring);
+
+         sge_dstring_sprintf(&sql_dstring, 
+                             "INSERT INTO sge_info VALUES (%s, '%s', %s)",
+                             "'now'", version, with_history ? "TRUE" : "FALSE");
+         ret = spool_postgres_exec_sql(answer_list, connection,
+                                       sge_dstring_get_string(&sql_dstring));
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_postgres_create_table(lList **answer_list, PGconn *connection, 
+                            spooling_field *fields, bool with_history, 
+                            const lDescr *descr, bool sublevel)
+{
+   bool ret = true;
+   dstring sql_dstring;
+   char sql_buffer[MAX_STRING_SIZE];
+   const char *table_name, *id_field, *valid_field, *created_field, 
+              *deleted_field, *parent_field;
+
+   DENTER(TOP_LAYER, "spool_postgres_create_table");
+   
+   table_name = spool_database_get_table_name(fields);
+   id_field = spool_database_get_id_field(fields);
+   valid_field = spool_database_get_valid_field(fields);
+   created_field = spool_database_get_created_field(fields);
+   deleted_field = spool_database_get_deleted_field(fields);
+   parent_field = spool_database_get_parent_id_field(fields);
+
+   sge_dstring_init(&sql_dstring, sql_buffer, sizeof(sql_buffer));
+
+   /* create sequence */
+   sge_dstring_sprintf(&sql_dstring, "CREATE SEQUENCE %s_seq", table_name);
+   ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+
+   if (ret) {
+      int i;
+
+      /* create table of this level */
+      sge_dstring_sprintf(&sql_dstring, 
+                          "CREATE TABLE %s ("
+                          "%s INTEGER NOT NULL, "
+                          "%s TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT 'now'",
+                          table_name,
+                          id_field,
+                          created_field);
+
+      if (with_history) {
+         sge_dstring_sprintf_append(&sql_dstring,
+                                    ", %s BOOLEAN NOT NULL DEFAULT TRUE"
+                                    ", %s TIMESTAMP WITH TIME ZONE",
+                                    valid_field,
+                                    deleted_field);
+      }
+
+      if (parent_field != NULL) {
+         sge_dstring_sprintf_append(&sql_dstring,
+                                    ", %s INTEGER NOT NULL",
+                                    parent_field);
+      }
+
+      for (i = 0; fields[i].nm != NoName; i++) {
+         int pos, type;
+         
+         pos = lGetPosInDescr(descr, fields[i].nm);
+         if (pos < 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_ATTRIBUTENOTINOBJECT_S, 
+                                    lNm2Str(fields[i].nm));
+            continue;
+         }
+
+         type = mt_get_type(descr[pos].mt);
+
+         if (type != lListT) {
+            sge_dstring_sprintf_append(&sql_dstring,
+                                       ", %s %s",
+                                       fields[i].name, 
+                                       spool_postgres_map_datatype(type));
+            
+         }
+      }
+
+      sge_dstring_sprintf_append(&sql_dstring, ")");
+      ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+   }
+
+   /* create indices */
+   if (ret) {
+      sge_dstring_sprintf(&sql_dstring, 
+                          "CREATE UNIQUE INDEX %s_idx1 on %s (%s",
+                          table_name,
+                          table_name,
+                          id_field);
+      if (with_history) {
+         sge_dstring_sprintf_append(&sql_dstring,
+                                    ", %s, %s",
+                                    valid_field,
+                                    created_field);
+      }
+      
+      sge_dstring_sprintf_append(&sql_dstring, ")");
+      ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+   }
+
+   if (ret) {
+      if (sublevel) {
+         sge_dstring_sprintf(&sql_dstring, 
+                             "CREATE INDEX %s_idx2 on %s (%s",
+                             table_name,
+                             table_name,
+                             parent_field);
+         if (with_history) {
+            sge_dstring_sprintf_append(&sql_dstring,
+                                       ", %s",
+                                       valid_field);
+         }
+         sge_dstring_sprintf_append(&sql_dstring, ")");
+         ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+      } else {
+         if (with_history) {
+            sge_dstring_sprintf(&sql_dstring, 
+                                "CREATE INDEX %s_idx2 on %s (%s)",
+                                table_name,
+                                table_name,
+                                valid_field);
+            ret = spool_postgres_exec_sql(answer_list, connection, sge_dstring_get_string(&sql_dstring));
+         }
+      }
+   }   
+
+   if (ret) {
+      /* create sublist tables */
+      int i;
+
+      for (i = 0; fields[i].nm != NoName && ret; i++) {
+         int pos, type;
+         
+         pos = lGetPosInDescr(descr, fields[i].nm);
+         if (pos < 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_ATTRIBUTENOTINOBJECT_S, 
+                                    lNm2Str(fields[i].nm));
+            continue;
+         }
+
+         type = mt_get_type(descr[pos].mt);
+
+         if (type == lListT) {
+            spooling_field *sub_fields = fields[i].sub_fields;
+            
+            if (sub_fields != NULL && sub_fields[0].clientdata != NULL &&
+                sub_fields != fields) {
+               const lDescr *sub_descr = object_get_subtype(fields[i].nm);
+               ret = spool_postgres_create_table(answer_list, connection, 
+                                                 sub_fields, with_history, 
+                                                 sub_descr, true);
+            }
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool 
+spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
+                        const char *sql)
+{
+   bool ret = true;
+   PGresult *res;
+
+   DPRINTF(("SQL: %s\n", sql));
+   res = PQexec(connection, sql);
+   if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_POSTGRES_COMMANDFAILED_SS, 
+                              sql,
+                              PQerrorMessage(connection));
+      ret = false;
+   }
+
+   return ret;
+}
+
+static const char *
+spool_postgres_map_datatype(int type)
+{
+   const char *ret;
+
+   switch (type) {
+      case lFloatT:
+         ret = "REAL";
+         break;
+      case lDoubleT:
+         ret = "DOUBLE PRECISION";
+         break;
+      case lUlongT:
+      case lLongT:
+      case lIntT:
+         ret = "INTEGER";
+         break;
+      case lCharT:
+         ret = "VARCHAR(1)";
+         break;
+      case lBoolT:
+         ret = "BOOLEAN";
+         break;
+      case lStringT:
+      case lHostT:
+         ret = "VARCHAR";
+         break;
+      default:
+         ret = "UNKNOWN";
+         break;
+   }
+
+   return ret;
+}
+
 /****** spool/postgres/spool_postgres_read_list() ***********************
 *  NAME
 *     spool_postgres_read_list() -- read a list of objects
@@ -440,28 +802,30 @@ spool_postgres_read_list(lList **answer_list, PGconn *connection,
    dstring sql_dstring;
    char sql_buffer[MAX_STRING_SIZE];
    const char *table_name;
+   const char *parent_field;
 
    DENTER(TOP_LAYER, "spool_postgres_read_list");
 
    sge_dstring_init(&sql_dstring, sql_buffer, sizeof(sql_buffer));
    table_name = spool_database_get_table_name(fields);
+   parent_field = spool_database_get_parent_id_field(fields);
 
    /* JG: TODO: creating SQL could be moved to sge_spooling_sql */
    if (with_history) {
       sge_dstring_sprintf(&sql_dstring, 
          "SELECT * FROM %s WHERE %s = TRUE", table_name,
          spool_database_get_valid_field(fields));
-      if (parent_id != NULL) {
+      if (parent_field != NULL) {
          sge_dstring_sprintf_append(&sql_dstring, " AND %s = %s",
-                                    spool_database_get_parent_id_field(fields),
-                                    parent_id);
+                                    parent_field,
+                                    parent_id != NULL ? parent_id : "0");
       }
    } else {
       sge_dstring_sprintf(&sql_dstring, "SELECT * FROM %s", table_name);
-      if (parent_id != NULL) {
+      if (parent_field != NULL) {
          sge_dstring_sprintf_append(&sql_dstring, " WHERE %s = %s",
-                                    spool_database_get_parent_id_field(fields),
-                                    parent_id);
+                                    parent_field,
+                                    parent_id != NULL ? parent_id : "0");
       }
    }
 
@@ -702,32 +1066,21 @@ spool_postgres_default_list_func(lList **answer_list,
                                  const sge_object_type event_type)
 {
    bool ret = true;
+   spooling_field *fields;
 
    DENTER(TOP_LAYER, "spool_postgres_default_list_func");
 
-   switch (event_type) {
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_EXECHOST:
-         break;
-      default:
-#if 0
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
-#endif
-         ret = false;
-         break;
+   fields = spool_database_get_fields(rule, event_type);
+   if (fields == NULL) {
+      ret = false;
    }
 
    if (ret) {
-      spooling_field *fields;
       const lDescr *descr;
       lList **master_list;
       bool with_history;
       PGconn *connection;
 
-      fields      = spool_database_get_fields(rule, event_type);
       descr       = object_type_get_descr(event_type);
       master_list = object_type_get_master_list(event_type);
       with_history = spool_database_get_history(rule);
@@ -1172,17 +1525,19 @@ spool_postgres_write_object(lList **answer_list, PGconn *connection,
       data_written = false;
       if (id == NULL || spool_database_object_changed(answer_list, object, 
                                                       fields)) {
-         spool_sql_create_insert_statement(answer_list, 
-                                          &field_dstring, 
-                                          &value_dstring, 
-                                          fields, 
-                                          object, &data_written);
+         ret = spool_sql_create_insert_statement(answer_list, 
+                                                 &field_dstring, 
+                                                 &value_dstring, 
+                                                 fields, 
+                                                 object, &data_written);
       }
 
-      /* if spooling with history, we have to make earlier records invalid */
-      if (id != NULL && with_history && data_written) {
-         ret = spool_postgres_invalidate(answer_list, connection, 
-                                         transaction_started, fields, id);
+      if (ret) {
+         /* if spooling with history, we have to make earlier records invalid */
+         if (id != NULL && with_history && data_written) {
+            ret = spool_postgres_invalidate(answer_list, connection, 
+                                            transaction_started, fields, id);
+         }
       }
 
       if (ret && data_written) {
@@ -1198,12 +1553,14 @@ spool_postgres_write_object(lList **answer_list, PGconn *connection,
              */
             ret = false;
          } else {
-            if (parent_id == NULL) {
+            const char *id_field = spool_database_get_id_field(fields);
+            const char *parent_field = spool_database_get_parent_id_field(fields);
+            if (parent_field == NULL) {
                sge_dstring_sprintf(&sql_dstring, 
                                    "INSERT INTO %s (%s, %s) "
                                    "VALUES (%s, %s)",
                                    table_name, 
-                                   spool_database_get_id_field(fields),
+                                   id_field,
                                    sge_dstring_get_string(&field_dstring),
                                    id,
                                    sge_dstring_get_string(&value_dstring));
@@ -1212,11 +1569,11 @@ spool_postgres_write_object(lList **answer_list, PGconn *connection,
                                    "INSERT INTO %s (%s, %s, %s) "
                                    "VALUES (%s, %s, %s)",
                                    table_name, 
-                                   spool_database_get_id_field(fields),
-                                   spool_database_get_parent_id_field(fields),
+                                   id_field,
+                                   parent_field,
                                    sge_dstring_get_string(&field_dstring),
                                    id,
-                                   parent_id,
+                                   parent_id != NULL ? parent_id : "0",
                                    sge_dstring_get_string(&value_dstring));
             }
          }
@@ -1229,11 +1586,11 @@ spool_postgres_write_object(lList **answer_list, PGconn *connection,
       dstring update_dstring = DSTRING_INIT;
 
       /* create_update_statement will detect, if object changed at all */
-      spool_sql_create_update_statement(answer_list, 
-                                        &update_dstring, 
-                                        fields, 
-                                        object, &data_written);
-      if (data_written) {
+      ret = spool_sql_create_update_statement(answer_list, 
+                                              &update_dstring, 
+                                              fields, 
+                                              object, &data_written);
+      if (ret && data_written) {
          sge_dstring_sprintf(&sql_dstring, 
                              "UPDATE %s set %s = 'now', %s where %s = %s",
                              table_name,
@@ -1362,8 +1719,8 @@ spool_postgres_write_sublist(lList **answer_list, PGconn *connection,
 /* JG: TODO: get key_nm outside for_each */
       key_nm = spool_database_get_key_nm(fields);
       sge_dstring_sprintf(&key_dstring, "%s|", parent_key);
-      key = object_append_field_to_dstring(object, answer_list, 
-                                           &key_dstring, key_nm, '\0');
+      key = object_append_raw_field_to_dstring(object, answer_list, 
+                                               &key_dstring, key_nm, '\0');
       ret = spool_postgres_write_object(answer_list, connection, 
                                         transaction_started, 
                                         fields, with_history, 
@@ -1557,43 +1914,92 @@ spool_postgres_default_write_func(lList **answer_list,
                                   const sge_object_type event_type)
 {
    bool ret = true;
+   spooling_field *fields;
+   const char *parent_key = NULL;
+   const char *parent_id  = NULL;
 
    DENTER(TOP_LAYER, "spool_postgres_default_write_func");
 
    switch (event_type) {
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_EXECHOST:
+      case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
+         {
+            u_long32 job_id, ja_task_id;
+            char *pe_task_id;
+            char *dup = strdup(key);
+            bool only_job; 
+            dstring key_dstring;
+            char key_buffer[MAX_STRING_SIZE];
+            /* JG: TODO: handling only_job would require to disable spooling of 
+             *           JB_ja_tasks 
+             */
+            fields = spool_database_get_fields(rule, SGE_TYPE_JOB);
+            sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
+            job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
+            DPRINTF(("write func called for job "U32CFormat"."U32CFormat"%s",
+                     job_id, ja_task_id, pe_task_id != NULL ? pe_task_id : "<null>"));
+            key = sge_dstring_sprintf(&key_dstring, U32CFormat, job_id);
+            if (ja_task_id != 0) {
+               spooling_field *parent_fields = fields;
+
+               fields = spool_database_get_sub_fields(parent_fields, JB_ja_tasks);
+               object = lGetSubUlong(object, JAT_task_number, ja_task_id, JB_ja_tasks);
+               parent_key = strdup(key);
+               parent_id  = spool_database_get_id(answer_list, parent_fields,
+                                                     NULL, parent_key, false);
+               key = sge_dstring_sprintf(&key_dstring, U32CFormat"|"U32CFormat, job_id, ja_task_id);
+               if (pe_task_id != NULL) {
+                  const char *grandparent_key = parent_key;
+                  parent_fields = fields;
+                  fields = spool_database_get_sub_fields(parent_fields, JAT_task_list);
+                  object = lGetSubStr(object, PET_id, pe_task_id, JAT_task_list);
+                  parent_key = strdup(key);
+                  parent_id = spool_database_get_id(answer_list, parent_fields,
+                                                    grandparent_key, parent_key, false);
+                  free((char *)grandparent_key);
+               }
+            }
+
+            free(dup);
+         }
          break;
       default:
+         fields = spool_database_get_fields(rule, event_type);
+         break;
+   }
+
+   if (fields == NULL) {
 #if 0
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
                                  object_type_get_name(event_type));
 #endif
-         ret = false;
-         break;
+      ret = false;
    }
 
    if (ret) {
       bool with_history, transaction_started;
-      spooling_field *fields;
       PGconn *connection;
 
       with_history = spool_database_get_history(rule);
       transaction_started = false;
-      fields       = spool_database_get_fields(rule, event_type);
       connection   = spool_database_get_handle(rule);
 
       ret = spool_postgres_write_object(answer_list, connection, 
                                         &transaction_started, 
                                         fields, with_history, 
-                                        object, key, NULL, NULL);
+                                        object, key, parent_id, parent_key);
       /* if a transaction was started during write_object - close it */
       if (transaction_started) {
          spool_postgres_stop_transaction(answer_list, connection, 
                                          &transaction_started, ret);
       }
+   }
+
+   if (parent_key != NULL) {
+      free((char *)parent_key);
    }
 
    DEXIT;
@@ -1965,38 +2371,80 @@ spool_postgres_default_delete_func(lList **answer_list,
                                    const sge_object_type event_type)
 {
    bool ret = true;
+   spooling_field *fields;
+   const char *parent_key = NULL;
+   const char *parent_id  = NULL;
 
    DENTER(TOP_LAYER, "spool_postgres_default_delete_func");
 
    switch (event_type) {
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_EXECHOST:
+      case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
+         {
+            u_long32 job_id, ja_task_id;
+            char *pe_task_id;
+            char *dup = strdup(key);
+            bool only_job; 
+            dstring key_dstring;
+            char key_buffer[MAX_STRING_SIZE];
+            /* JG: TODO: handling only_job would require to disable spooling of 
+             *           JB_ja_tasks 
+             */
+            fields = spool_database_get_fields(rule, SGE_TYPE_JOB);
+            sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
+            job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
+            key = sge_dstring_sprintf(&key_dstring, U32CFormat, job_id);
+
+            if (ja_task_id != 0) {
+               spooling_field *parent_fields = fields;
+
+               fields = spool_database_get_sub_fields(parent_fields, JB_ja_tasks);
+               parent_key = strdup(key);
+               parent_id  = spool_database_get_id(answer_list, parent_fields,
+                                                     NULL, parent_key, false);
+               key = sge_dstring_sprintf(&key_dstring, U32CFormat"|"U32CFormat, job_id, ja_task_id);
+               if (pe_task_id != NULL) {
+                  const char *grandparent_key = parent_key;
+                  parent_fields = fields;
+                  fields = spool_database_get_sub_fields(parent_fields, JAT_task_list);
+                  parent_key = strdup(key);
+                  parent_id = spool_database_get_id(answer_list, parent_fields,
+                                                    grandparent_key, parent_key, false);
+                  free((char *)grandparent_key);
+               }
+            }
+
+            free(dup);
+         }
          break;
       default:
+         fields = spool_database_get_fields(rule, event_type);
+         break;
+   }
+
+   if (fields == NULL) {
 #if 0
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
                                  object_type_get_name(event_type));
 #endif
-         ret = false;
-         break;
+      ret = false;
    }
 
    if (ret) {
       bool with_history, transaction_started;
-      spooling_field *fields;
       PGconn *connection;
 
       with_history = spool_database_get_history(rule);
       transaction_started = false;
-      fields       = spool_database_get_fields(rule, event_type);
       connection   = spool_database_get_handle(rule);
 
       ret = spool_postgres_delete_object(answer_list, connection, 
                                          &transaction_started, 
                                          fields, with_history, 
-                                         key, NULL, NULL);
+                                         key, parent_id, parent_key);
 
       /* if a transaction was started, we have to close it */
       if (transaction_started) {
@@ -2005,6 +2453,9 @@ spool_postgres_default_delete_func(lList **answer_list,
       }
    }
 
+   if (parent_key != NULL) {
+      free((char *)parent_key);
+   }
 
    DEXIT;
    return ret;

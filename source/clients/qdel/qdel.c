@@ -394,7 +394,7 @@ lListElem *ep;
          lRemoveElem(*ppcmdline, ep);
       } 
 
-      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppuserlist, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppuserlist, ST_Type, ST_name)) {
          continue;  
       }
 

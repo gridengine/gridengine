@@ -58,7 +58,7 @@ spool_template_create_context(lList **answer_list, const char *args);
 
 bool 
 spool_template_default_startup_func(lList **answer_list, 
-                                    const lListElem *rule);
+                                    const lListElem *rule, bool check);
 
 bool 
 spool_template_common_startup_func(lList **answer_list, 

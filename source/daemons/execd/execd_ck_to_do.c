@@ -629,7 +629,7 @@ lListElem *petep
             char *endptr = NULL;
             u_long32 duration_in;
   
-            arg = lGetString(lFirst(job_args), STR);
+            arg = lGetString(lFirst(job_args), ST_name);
             if(arg != NULL) {
                DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
                

@@ -53,7 +53,7 @@ bool cstring_list_append_to_string(const lList *this_list, dstring *string)
       bool is_first = true;
 
       for_each(str, this_list) {
-         const char *name = lGetString(str, STR);
+         const char *name = lGetString(str, ST_name);
 
          if (!is_first) {
             sge_dstring_sprintf_append(string, ",");
@@ -78,7 +78,7 @@ bool cstring_list_parse_from_string(lList **this_list,
 
       token = sge_strtok_r(string, delimitor, &context);
       while (token) {
-         lAddElemStr(this_list, STR, token, ST_Type);
+         lAddElemStr(this_list, ST_name, token, ST_Type);
          token = sge_strtok_r(NULL, delimitor, &context); 
       }
       sge_free_saved_vars(context);

@@ -49,8 +49,8 @@ enum {
 };
 
 ILISTDEF(CONF_Type, Configuration, SGE_CONFIG_LIST)
-   SGE_HOST(CONF_hname, CULL_HASH | CULL_UNIQUE)                       /* CR - hostname change */
-   SGE_ULONG(CONF_version, CULL_DEFAULT)
+   SGE_HOST(CONF_hname, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)                       /* CR - hostname change */
+   SGE_ULONG(CONF_version, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(CONF_entries, CF_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 

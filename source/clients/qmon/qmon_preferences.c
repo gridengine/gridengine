@@ -147,14 +147,14 @@ int parsing_type
    
    /* --------- PREF_job_filter_owners */
    if (!set_conf_list(alpp, clpp, fields, "job_filter_owners", ep, 
-                      PREF_job_filter_owners, ST_Type, STR)) {
+                      PREF_job_filter_owners, ST_Type, ST_name)) {
       DEXIT;
       return -1;
    }
    
    /* --------- PREF_job_filter_fields */
    if (!set_conf_list(alpp, clpp, fields, "job_filter_fields", ep, 
-                      PREF_job_filter_fields, ST_Type, STR)) {
+                      PREF_job_filter_fields, ST_Type, ST_name)) {
       DEXIT;
       return -1;
    }
@@ -230,7 +230,7 @@ lListElem *ep
    sep = lFirst(lGetList(ep, PREF_job_filter_owners));
    if (sep) {
       do {
-         fprintf(fp, "%s", lGetString(sep, STR));
+         fprintf(fp, "%s", lGetString(sep, ST_name));
          sep = lNext(sep);
          if (sep) 
             fprintf(fp, " ");
@@ -245,7 +245,7 @@ lListElem *ep
    sep = lFirst(lGetList(ep, PREF_job_filter_fields));
    if (sep) {
       do {
-         fprintf(fp, "%s", lGetString(sep, STR));
+         fprintf(fp, "%s", lGetString(sep, ST_name));
          sep = lNext(sep);
          if (sep) 
             fprintf(fp, " ");

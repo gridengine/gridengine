@@ -80,8 +80,11 @@
 *     Typedefs -- type definitions for the spooling framework
 *
 *  SYNOPSIS
-*     typedef bool (*spooling_startup_func)(const lListElem *rule); 
-*     typedef bool (*spooling_shutdown_func)(const lListElem *rule); 
+*     typedef bool (*spooling_startup_func)(lList **answer_list,
+*                                           const lListElem *rule, 
+*                                           bool check); 
+*     typedef bool (*spooling_shutdown_func)(lList **answer_list, 
+*                                            const lListElem *rule); 
 *
 *     typedef bool (*spooling_list_func)(lList **answer_list,
 *                                        const lListElem *type, 
@@ -141,6 +144,15 @@
 ****************************************************************************
 */
 
+typedef enum {
+   SPM_init,
+   SPM_history,
+   SPM_backup,
+   SPM_purge,
+   SPM_vacuum,
+   SPM_info
+} spooling_maintenance_command;
+
 typedef const char *
 (*spooling_get_method_func)(void);
 
@@ -148,9 +160,15 @@ typedef lListElem *
 (*spooling_create_context_func)(lList **answer_list, const char *args);
 
 typedef bool
-(*spooling_startup_func)(lList **answer_list, const lListElem *rule); 
+(*spooling_startup_func)(lList **answer_list, const lListElem *rule, 
+                         bool check); 
 typedef bool
 (*spooling_shutdown_func)(lList **answer_list, const lListElem *rule); 
+
+typedef bool 
+(*spooling_maintenance_func)(lList **answer_list, const lListElem *rule, 
+                             const spooling_maintenance_command cmd, 
+                             const char *args);
 
 typedef bool
 (*spooling_list_func)(lList **answer_list, 
@@ -203,6 +221,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
                           const char *name, const char *url,
                           spooling_startup_func startup_func, 
                           spooling_shutdown_func shutdown_func, 
+                          spooling_maintenance_func maintenance_func,
                           spooling_list_func list_func, 
                           spooling_read_func read_func, 
                           spooling_write_func write_func, 
@@ -226,10 +245,15 @@ lListElem
 
 /* startup and shutdown */
 bool 
-spool_startup_context(lList **answer_list, lListElem *context);
+spool_startup_context(lList **answer_list, lListElem *context, bool check);
 
 bool 
 spool_shutdown_context(lList **answer_list, lListElem *context);
+
+bool
+spool_maintain_context(lList **answer_list, lListElem *context, 
+                       const spooling_maintenance_command cmd,
+                       const char *args);
 
 /* reading */
 bool 

@@ -670,7 +670,7 @@ queue_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
 
    DENTER(TOP_LAYER, "queue_is_pe_referenced");
    for_each(re_ref_elem, lGetList(this_elem, QU_pe_list)) {
-      if (pe_is_matching(pe, lGetString(re_ref_elem, STR))) {
+      if (pe_is_matching(pe, lGetString(re_ref_elem, ST_name))) {
          ret = true;
          break;
       }
@@ -747,7 +747,7 @@ queue_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
 
    DENTER(TOP_LAYER, "queue_is_ckpt_referenced");
    for_each(re_ref_elem, lGetList(this_elem, QU_ckpt_list)) {
-      if (!strcmp(lGetString(ckpt, CK_name), lGetString(re_ref_elem, STR))) {
+      if (!strcmp(lGetString(ckpt, CK_name), lGetString(re_ref_elem, ST_name))) {
          ret = true;
          break;
       }

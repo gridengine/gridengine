@@ -385,8 +385,8 @@ char **argv
       /* ok, now we untag the jobs if the user_list was specified */ 
       for_each(up, user_list) 
          for_each (jep, job_list) {
-            if (up && lGetString(up, STR) && 
-                  !fnmatch(lGetString(up, STR), 
+            if (up && lGetString(up, ST_name) && 
+                  !fnmatch(lGetString(up, ST_name), 
                               lGetString(jep, JB_owner), 0)) {
                for_each (jatep, lGetList(jep, JB_ja_tasks)) {
                   lSetUlong(jatep, JAT_suitable, 
@@ -621,7 +621,7 @@ u_long32 show
    */ 
    if (job_l) {
       for_each(ep, user_list) {
-         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, STR));
+         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
          if (!jw)
             jw = nw;
          else
@@ -707,7 +707,7 @@ u_long32 show
    */ 
    if (zombie_l && show_zombies) {
       for_each(ep, user_list) {
-         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, STR));
+         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
          if (!zw)
             zw = nw;
          else
@@ -1061,7 +1061,7 @@ lList *hql
 */
 static int select_by_pe_list(
 lList *queue_list,
-lList *peref_list,   /* STR_Type */
+lList *peref_list,   /* ST_Type */
 lList *pe_list 
 ) {
    int nqueues = 0;
@@ -1078,7 +1078,7 @@ lList *pe_list
       lListElem *ref_pe;   /* PE_Type */
       lListElem *copy_pe;  /* PE_Type */
 
-      ref_pe = pe_list_locate(pe_list, lGetString(pe, STR));
+      ref_pe = pe_list_locate(pe_list, lGetString(pe, ST_name));
       copy_pe = lCopyElem(ref_pe);
       if (pe_selected == NULL) {
          const lDescr *descriptor = lGetElemDescr(ref_pe);
@@ -1106,7 +1106,7 @@ lList *pe_list
       for_each (pe, pe_selected) {
          const char *pe_name = lGetString(pe, PE_name);
 
-         found = lGetSubStr(qep, STR, pe_name, QU_pe_list);
+         found = lGetSubStr(qep, ST_name, pe_name, QU_pe_list);
          if (found != NULL) {
             break;
          }
@@ -1180,7 +1180,7 @@ lList *acl_list
          int gh_access = 0;
          int conf_access = 0;
 
-         const char *name = lGetString(qu, STR);
+         const char *name = lGetString(qu, ST_name);
          if (name == NULL)
             continue;
 
@@ -1412,7 +1412,7 @@ lList **ppljid
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-j", &alp, ppljid, ST_Type, STR)) {
+      if (parse_multi_stringlist(ppcmdline, "-j", &alp, ppljid, ST_Type, ST_name)) {
          *job_info = 1;
          continue;
       }
@@ -1550,19 +1550,19 @@ lList **ppljid
          continue;
       }
 
-      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppluser, ST_Type, STR)) 
+      if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppluser, ST_Type, ST_name)) 
          continue;
       
-      if(parse_multi_stringlist(ppcmdline, "-U", &alp, pplqueue_user, ST_Type, STR)) 
+      if(parse_multi_stringlist(ppcmdline, "-U", &alp, pplqueue_user, ST_Type, ST_name)) 
          continue;
       
-      if(parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, STR)) 
+      if(parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) 
          continue;
       
       if(parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name))
          continue;
 
-      if(parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, STR)) {
+      if(parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
          *group_opt = parse_group_options(plstringopt);
          
          lFreeList(plstringopt);    
@@ -1698,7 +1698,7 @@ lList *jid_list
    /* build 'where' for all jobs */
    where = NULL;
    for_each(j_elem, jid_list) {
-      u_long32 jid = atol(lGetString(j_elem, STR));
+      u_long32 jid = atol(lGetString(j_elem, ST_name));
 
       newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
       if (!where)
@@ -1732,7 +1732,7 @@ lList *jid_list
          char buffer[256];
             
          sprintf(buffer, U32CFormat, u32c(lGetUlong(elem1, JB_job_number)));   
-         elem2 = lGetElemStr(jid_list, STR, buffer);       
+         elem2 = lGetElemStr(jid_list, ST_name, buffer);       
          
          if (elem2) {
             lDechainElem(jid_list, elem2);
@@ -1745,7 +1745,7 @@ lList *jid_list
             fprintf(stderr, ", "); 
          }
          first_time = 0;
-         fprintf(stderr, "%s", lGetString(elem1, STR));
+         fprintf(stderr, "%s", lGetString(elem1, ST_name));
       }
       fprintf(stderr, "\n");
       DEXIT;

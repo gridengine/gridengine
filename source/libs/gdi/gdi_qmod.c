@@ -89,7 +89,7 @@ u_long32 action_flag
    ** see if the queue names are correct
    */
    for_each(ref, ref_list) {
-      name = lGetString(ref, STR);
+      name = lGetString(ref, ST_name);
       if (!name) {
          answer_list_add(&alp, MSG_GDI_INVALIDIDENCOUNTERED , STATUS_ENOKEY, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -104,10 +104,10 @@ u_long32 action_flag
    for_each(ref, ref_list) {
       idp = NULL;
       /* job.task? */
-      sge_parse_jobtasks(&id_list, &idp, lGetString(ref, STR), &alp);
+      sge_parse_jobtasks(&id_list, &idp, lGetString(ref, ST_name), &alp);
       /* queue? */
       if (!idp) 
-         idp = lAddElemStr(&id_list, ID_str, lGetString(ref, STR), ID_Type);
+         idp = lAddElemStr(&id_list, ID_str, lGetString(ref, ST_name), ID_Type);
       if (!idp) {
          answer_list_add(&alp, MSG_GDI_OUTOFMEMORY , STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          id_list = lFreeList(id_list);

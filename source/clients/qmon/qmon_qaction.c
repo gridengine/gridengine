@@ -1774,16 +1774,16 @@ XtPointer cld, cad;
    }
 
    cl_in = qmonMirrorList(SGE_CKPT_LIST);
-   cl_out = XmStringToCull(ckpt_reference_list, ST_Type, STR, ALL_ITEMS);
+   cl_out = XmStringToCull(ckpt_reference_list, ST_Type, ST_name, ALL_ITEMS);
 
    status = XmtAskForItems(w, NULL, NULL, "@{Select Checkpoint Object}", 
                   cl_in, CK_name, "@{@fBAvailable Checkpoint Objects}", 
-                  &cl_out, ST_Type, STR, "@{@fBChosen Checkpoint Objects}",
+                  &cl_out, ST_Type, ST_name, "@{@fBChosen Checkpoint Objects}",
                   NULL);
 
    if (status) {
       UpdateXmListFromCull(ckpt_reference_list, XmFONTLIST_DEFAULT_TAG, cl_out,
-                              STR);
+                              ST_name);
    }
    cl_out = lFreeList(cl_out);
 
@@ -1814,16 +1814,16 @@ XtPointer cld, cad;
    }
 
    pel_in = qmonMirrorList(SGE_PE_LIST);
-   pel_out = XmStringToCull(pe_reference_list, ST_Type, STR, ALL_ITEMS);
+   pel_out = XmStringToCull(pe_reference_list, ST_Type, ST_name, ALL_ITEMS);
 
    status = XmtAskForItems(w, NULL, NULL, "@{Select PE Object}", 
                   pel_in, PE_name, "@{@fBAvailable PE Objects}", 
-                  &pel_out, ST_Type, STR, "@{@fBChosen PE Objects}",
+                  &pel_out, ST_Type, ST_name, "@{@fBChosen PE Objects}",
                   NULL);
 
    if (status) {
       UpdateXmListFromCull(pe_reference_list, XmFONTLIST_DEFAULT_TAG, pel_out,
-                              STR);
+                              ST_name);
    }
    pel_out = lFreeList(pel_out);
 

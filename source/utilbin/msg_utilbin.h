@@ -144,4 +144,17 @@
 #define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57052, _("cannot startup spooling context\n"))
 #define MSG_SPOOLDEFAULTS_CANNOTREADADMINUSER   _MESSAGE(57053, _("cannot read admin_user parameter\n"))
 
+/*
+ * utilbin/spooldefaults.c
+ */
+
+#define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57060, _("shlib libargs command [args]"))
+#define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57061, _("database maintenance\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57062, _("following are the valid commands\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57063, _("init [history]    initialize the database [with history enabled]\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO4   _MESSAGE(57064, _("history on|off    switch spooling with history on or off\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO5   _MESSAGE(57065, _("backup path       backup the database to path\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57066, _("purge days        remove historical data older than days\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57067, _("vacuum            compress database, update statistics\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57068, _("info              output information about the database\n"))
 #endif /* __MSG_UTILBIN_H */

@@ -480,7 +480,7 @@ int flags
    */
    if ((flags & FLG_FULL_CMDLINE) &&
       (lp = lGetList(job, JB_job_args))) {
-      intprt_type fields[] = { STR, 0};
+      intprt_type fields[] = { ST_name, 0};
       const char *delis[] = {NULL, " ", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -868,10 +868,10 @@ lList **alpp
 
    for_each (ap, acl) 
       if (sge_contained_in_access_list(owner, group, ap, alpp)) 
-         lAddElemStr(&lp, STR, lGetString(ap, US_name), ST_Type);
+         lAddElemStr(&lp, ST_name, lGetString(ap, US_name), ST_Type);
 
    if (lGetNumberOfElem(lp) > 0) {
-      intprt_type fields[] = { STR, 0 };
+      intprt_type fields[] = { ST_name, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);

@@ -48,8 +48,8 @@ enum {
 };
 
 SLISTDEF(MR_Type, MailRecipient)
-   SGE_STRING(MR_user, CULL_DEFAULT)
-   SGE_HOST(MR_host, CULL_DEFAULT)       /* CR - hostname change */
+   SGE_STRING(MR_user, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_HOST(MR_host, CULL_DEFAULT | CULL_SUBLIST)
 LISTEND
 
 NAMEDEF(MRN)

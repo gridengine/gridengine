@@ -1055,7 +1055,7 @@ lWriteListTo(environmentList, stderr);
       fprintf(fp, "njob_args=%d\n", lGetNumberOfElem(args));
 
       for_each(se, args) {
-         const char *arg = lGetString(se, STR);
+         const char *arg = lGetString(se, ST_name);
          if(arg != NULL) {
             fprintf(fp, "job_arg%d=%s\n", nargs++, arg);
          } else {

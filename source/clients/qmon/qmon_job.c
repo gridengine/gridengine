@@ -985,9 +985,9 @@ XtPointer cad
    DENTER(GUI_LAYER, "qmonJobChangeState");
 
    if (action == QERROR) {
-      rl = qmonJobBuildSelectedList(job_running_jobs, ST_Type, STR);
+      rl = qmonJobBuildSelectedList(job_running_jobs, ST_Type, ST_name);
       
-      jl = qmonJobBuildSelectedList(job_pending_jobs, ST_Type, STR);
+      jl = qmonJobBuildSelectedList(job_pending_jobs, ST_Type, ST_name);
 
       if (!jl && rl) {
          jl = rl;
@@ -1003,7 +1003,7 @@ XtPointer cad
       /*
       ** state changes only for running jobs
       */
-      jl = qmonJobBuildSelectedList(job_running_jobs, ST_Type, STR);
+      jl = qmonJobBuildSelectedList(job_running_jobs, ST_Type, ST_name);
    }
 
    if (jl) {
@@ -1042,7 +1042,7 @@ int nm;
 
    DENTER(GUI_LAYER, "qmonJobBuildSelectedList");
 
-   if (nm != JB_job_number && nm != STR) {
+   if (nm != JB_job_number && nm != ST_name) {
       DEXIT;
       return NULL;
    }
@@ -1101,8 +1101,8 @@ int nm;
                      }
                   }
                   break;
-               case STR:
-                  jep = lAddElemStr(&jl, STR, str, dp);
+               case ST_name:
+                  jep = lAddElemStr(&jl, ST_name, str, dp);
                   lSetList(jep, JB_ja_tasks, NULL);
                   break;
             }
@@ -1659,13 +1659,13 @@ XtPointer cld, cad;
    lList *jl = NULL;
 
    lDescr info_descr[] = {
-      {STR, lStringT},
+      {ST_name, lStringT},
       {NoName, lEndT}
    };
    
    DENTER(GUI_LAYER, "qmonJobScheddInfo");
    
-   jl = qmonJobBuildSelectedList(job_pending_jobs, info_descr, STR);
+   jl = qmonJobBuildSelectedList(job_pending_jobs, info_descr, ST_name);
    
    qmonBrowserOpen(w, NULL, NULL);
    if (jl ? (show_info_for_jobs(jl, NULL, NULL, &sb) == 0) :  
@@ -1775,7 +1775,7 @@ dstring *sb
    /* build 'where' for all jobs */
    where = NULL;
    for_each(j_elem, jid_list) {
-      u_long32 jid = atol(lGetString(j_elem, STR));
+      u_long32 jid = atol(lGetString(j_elem, ST_name));
  
       newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
       if (!where)

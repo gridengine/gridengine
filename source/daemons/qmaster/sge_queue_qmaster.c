@@ -399,7 +399,7 @@ int sub_command
                                 lGetList(qep, QU_pe_list))) {
          goto ERROR;
       }
-      attr_mod_sub_list(alpp, new_queue, QU_pe_list, STR, qep, 
+      attr_mod_sub_list(alpp, new_queue, QU_pe_list, ST_name, qep, 
                         sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);
    }
 
@@ -412,7 +412,7 @@ int sub_command
                                   lGetList(qep, QU_ckpt_list))) {
          goto ERROR;
       }
-      attr_mod_sub_list(alpp, new_queue, QU_ckpt_list, STR, qep, 
+      attr_mod_sub_list(alpp, new_queue, QU_ckpt_list, ST_name, qep, 
                         sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);
    }
 

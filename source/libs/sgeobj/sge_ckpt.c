@@ -332,7 +332,7 @@ ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
 
    DENTER(TOP_LAYER, "ckpt_list_do_all_exist");
    for_each(ckpt_ref_elem, ckpt_ref_list) {
-      const char *ckpt_ref_string = lGetString(ckpt_ref_elem, STR);
+      const char *ckpt_ref_string = lGetString(ckpt_ref_elem, ST_name);
 
       if (ckpt_list_locate(ckpt_list, ckpt_ref_string) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EEXIST,

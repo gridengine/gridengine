@@ -172,7 +172,7 @@ static lList *ja_task_list_create_from_file(u_long32 job_id,
    for_each(dir_entry, dir_entries) {
       const char *entry;
  
-      entry = lGetString(dir_entry, STR);
+      entry = lGetString(dir_entry, ST_name);
       if (strcmp(entry, ".") && strcmp(entry, "..") && 
           strcmp(entry, "common")) {
          stringT spool_dir_tasks;
@@ -183,7 +183,7 @@ static lList *ja_task_list_create_from_file(u_long32 job_id,
          for_each(ja_task_entry, ja_task_entries) {
             const char *ja_task_string;
 
-            ja_task_string = lGetString(ja_task_entry, STR);
+            ja_task_string = lGetString(ja_task_entry, ST_name);
             if (strcmp(ja_task_string, ".") && strcmp(ja_task_string, "..")) {
                stringT spool_dir_pe_tasks;
                lListElem *pe_task_entry;
@@ -209,7 +209,7 @@ static lList *ja_task_list_create_from_file(u_long32 job_id,
                   for_each(pe_task_entry, pe_task_entries) {
                      const char *pe_task_string;
 
-                     pe_task_string = lGetString(pe_task_entry, STR);
+                     pe_task_string = lGetString(pe_task_entry, ST_name);
                      if (strcmp(pe_task_string, ".") && 
                          strcmp(pe_task_string, "..") &&
                          strcmp(pe_task_string, "common")) {
@@ -807,7 +807,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
       const char *first_entry_string;
 
 
-      first_entry_string = lGetString(first_direntry, STR);
+      first_entry_string = lGetString(first_direntry, ST_name);
       sprintf(path, "%s/%s", first_dir, first_entry_string);
       if (!sge_is_directory(path)) {
          ERROR((SGE_EVENT, MSG_CONFIG_NODIRECTORY_S, path)); 
@@ -824,7 +824,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
          lListElem *third_direntry;
          const char *second_entry_string;
 
-         second_entry_string = lGetString(second_direntry, STR);
+         second_entry_string = lGetString(second_direntry, ST_name);
          sprintf(path, "%s/%s/%s", first_dir, first_entry_string,
                  second_entry_string);
          if (!sge_is_directory(path)) {
@@ -847,11 +847,11 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
 
             sge_status_next_turn();
             sprintf(fourth_dir, SFN"/"SFN, third_dir,
-                    lGetString(third_direntry, STR));
+                    lGetString(third_direntry, ST_name));
             sprintf(job_id_string, SFN SFN SFN, 
-                    lGetString(first_direntry, STR),
-                    lGetString(second_direntry, STR),
-                    lGetString(third_direntry, STR)); 
+                    lGetString(first_direntry, ST_name),
+                    lGetString(second_direntry, ST_name),
+                    lGetString(third_direntry, ST_name)); 
             job_id = (u_long32) strtol(job_id_string, NULL, 10);
             strtok(job_id_string, ".");
             ja_task_id_string = strtok(NULL, ".");

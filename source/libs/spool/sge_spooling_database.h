@@ -53,6 +53,9 @@
 bool
 spool_database_initialize(lList **answer_list, lListElem *rule);
 
+bool 
+spool_database_check_version(lList **answer_list, const char *version);
+
 void *
 spool_database_get_handle(const lListElem *rule);
 bool 
@@ -73,6 +76,9 @@ int spool_database_get_key_nm(const spooling_field *fields);
 
 spooling_field *
 spool_database_get_fields(const lListElem *rule, sge_object_type type);
+
+spooling_field *
+spool_database_get_sub_fields(spooling_field *fields, int nm);
 
 bool 
 spool_database_store_id(lList **answer_list, const spooling_field *fields, 

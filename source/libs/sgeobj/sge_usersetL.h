@@ -66,7 +66,7 @@ enum {
 };
 
 ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
-   SGE_STRING(US_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)       /* configured name spooled */
+   SGE_STRING(US_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured name spooled */
    SGE_ULONG(US_type, CULL_DEFAULT | CULL_SPOOL)         /* configured type spooled */
    SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
    SGE_ULONG(US_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets spooled */

@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_qmaster_main.h"
 
 #include <signal.h>
 #include <pthread.h>
@@ -58,6 +59,7 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_all_listsL.h"
+#include "sge_calendar_qmaster.h"
 #include "lock.h"
 #include "qmaster_heartbeat.h"
 #include "shutdown.h"
@@ -71,7 +73,6 @@
 #include "msg_daemons_common.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
 #include "sge_any_request.h"
-#include "sge_qmaster_main.h"
 
 
 /*
@@ -628,6 +629,8 @@ static void start_periodic_tasks(void)
    DENTER(TOP_LAYER, "start_periodic_tasks");
 
    te_register_event_handler(sge_job_resend_event_handler, TYPE_JOB_RESEND_EVENT);
+
+   te_register_event_handler(sge_calendar_event_handler, TYPE_CALENDAR_EVENT);
 
    te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT);
    ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");

@@ -190,15 +190,35 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    return STATUS_OK;
 }
 
-void 
-calendar_event(te_event_t anEvent) 
+/****** qmaster/sge_calendar_qmaster/sge_calendar_event_handler() **************
+*  NAME
+*     sge_calendar_event_handler() -- calendar event handler
+*
+*  SYNOPSIS
+*     void sge_calendar_event_handler(te_event_t anEvent) 
+*
+*  FUNCTION
+*     Handle calendar events. 
+*
+*  INPUTS
+*     te_event_t anEvent - calendar event
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_calendar_event_handler() is not MT safe 
+*
+*******************************************************************************/
+void sge_calendar_event_handler(te_event_t anEvent) 
 {
    lListElem *cep;
    const char* cal_name = te_get_alphanumeric_key(anEvent);
 
-   DENTER(TOP_LAYER, "calendar_event");
+   DENTER(TOP_LAYER, "sge_calendar_event_handler");
 
-   if (!(cep=calendar_list_locate(Master_Calendar_List, cal_name))) {
+   if (!(cep = calendar_list_locate(Master_Calendar_List, cal_name)))
+   {
       ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));
       DEXIT;
       return;
@@ -207,8 +227,10 @@ calendar_event(te_event_t anEvent)
    calendar_update_queue_states(cep, 0, NULL);
 
    sge_free((char *)cal_name);
+
    DEXIT;
-}
+   return;
+} /* sge_calendar_event_handler() */
 
 int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object)
 {

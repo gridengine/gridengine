@@ -44,7 +44,7 @@ int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_
 
 int sge_del_calendar(lListElem *ep, lList **alpp, char *ruser, char *rhost);
 
-void calendar_event(te_event_t anEvent);
+void sge_calendar_event_handler(te_event_t anEvent);
 
 #endif /* __SGE_CALENDAR_QMASTER_H */
 

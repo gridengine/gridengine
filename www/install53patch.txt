@@ -1,98 +1,143 @@
-                 Installing SGE 5.3p1 as a patch for SGE 5.3
-                 -------------------------------------------
+                       Installing a SGE 5.3 patch
+                       --------------------------
 
 Content
 -------
 
-1) Prerequisites   
-2) Stopping the Grid Engine cluster to schedule jobs
-3) Renaming the 'sge_commd' binary
-4) Shutting down Grid Engine qmaster and scheduler
-5) Installing the patch release and restarting Grid Engine
+1) Who needs to read this document
+2) Prerequisites
+3) Stopping the Grid Engine cluster to schedule jobs
+4) Shutting down Grid Engine    
+5) Renaming SGE binaries
+6) Installing the patch release and restarting Grid Engine
 
-1) Prerequisites
--------------
 
-   These directions apply for the installation of the SGE 5.3p1 patch
-   release. If you make a new installation of SGE 5.3p1 you do not need to
-   read this file.
+1) Who needs to read this document
+----------------------------------
+
+   This document does not describe how to upgrade from SGE 5.2.x or any
+   other previous version of SGE/CODINE/GRD to the current SGE 5.3 patch
+   release. These directions only apply for the installation of a SGE 5.3
+   patch release which updates the original SGE 5.3 distribution or any
+   previous patch release of SGE 5.3.
+ 
+   If you make a new installation of a SGE 5.3 patch you do not need to read
+   this file.
+
+   The terms "patch", "patch release", "distribution" in this document are
+   used interchangeably and refer to the most recent courtesy distribution
+   including binaries, documentation and architecture independent files
+   ("common" package) available on the binary download pages. Not every
+   patch replaces all packages. Often a patch will not update the
+   documentation or the "common" package.
+
+
+2) Prerequisites
+----------------
+
+   The courtesy binary distribution always contains a full set of all
+   binaries. There are two general options to install a patch release.
+
+   1) You can shutdown your complete SGE cluster including all sge_commd's,
+   sge_execd's, sge_shepherd's. This means there may be no running jobs but
+   there may be pending jobs in your SGE cluster. In this case you can
+   install the new binaries by unpacking the tar files, setting the file
+   permissions and restart SGE.  This is the fastet and easiest way, however
+   it means that there may be no running job during the upgrade.
+
+   2) If there are running jobs in your SGE cluster a couple of further
+   steps needs to be carried out that that installation of the new binaries
+   does not kill the active SGE processes (esp. the sge_shepherd process).
+   This would usually result in orphanded jobs which are not anymore running
+   under the control of Grid Engine. Parallel jobs or interactive jobs most
+   likely could fail.
+
+   You can install the patch with running parallel jobs which use the tight
+   PE integration (e.g. MPICH or HPCT jobs where "control_slaves" is set to
+   "true" in the PE configuration) or with interactive jobs (qsh, qrsh,
+   qlogin).
+
+   You should never try to make an upgrade with running 'qmake' jobs.
 
    These installation instructions assume that you are running a Grid Engine
    cluster where all hosts share the same directory for the binaries.  If
    you installed the binaries on a local file system you only need to stop
-   the SGE daemons for that host on which you are installing the patch.
-
-   By default there may by no running jobs when the patch is installed.
-   There may pending batch jobs, but no pending interactive jobs (qrsh,
-   qmake, qsh, qtcsh).
-
-   It is possible to install the patch with running batch jobs. To avoid a
-   failure of the active "sge_shepherd" binary it is necessary to move the
-   old shepherd binary.
-
-   In no case it is supported to install the patch with running interactive
-   jobs.
+   and rename the SGE binaries for that host on which you are installing the
+   patch (in this case it is required to install the patch on all hosts
+   before you restart SGE).
+  
+   It is recommened that you make a backup of your SGE distribution before
+   you begin with the patch installation.
 
 
-2) Stopping the Grid Engine cluster to schedule jobs
+3) Stopping the Grid Engine cluster to schedule jobs
 ----------------------------------------------------
 
    Disable all queues that no new jobs are started:
 
       # qmod -d '*'
+      (wait 1 minute before you continue with the next step)
 
-   Optional (only needed of there are running jobs which should continue to
-   run when the patch release is installed):
+
+4) Shutting down Grid Engine
+----------------------------
+
+   You need to shutdown the qmaster and scheduler daemon and all execution
+   daemons on all SGE hosts. You also need to to shutdown the communication
+   daemons ('sge_commd') on all hosts, including the qmaster host. If there
+   are running shadow daemons (sge_shadowd) you need to 'kill' these
+   processes on all your shadow hosts.
+
+   Shutdown your execution hosts and qmaster/scheduler:
+   
+      # qconf -ke all      (wait 30 seconds)
+      # qconf -ks          (shutdown the scheduler)
+      # qconf -km          (shutdown qmaster)
+      # sgecommdcntl -k    (this kills the local sge_commd daemon, repeat
+                            this step on all your execution hosts)
+
+   Now verify with the 'ps' command that the qmaster and scheduler daemon
+   (sge_qmaster, sge_schedd) and the execution daemons (sge_execd) and
+   communication daemons (sge_commd) on all your hosts are stopped.
+
+
+5) Renaming SGE binaries
+------------------------
+   
+   You can skip this section of you upgrade your SGE cluster with no
+   running jobs.
+
+   If you are planning to install the patch where only running batch jobs or
+   parallel jobs using the loose PE integration exist you just need to
+   rename the 'sge_shepherd' binary:
 
       # cd $SGE_ROOT/bin
       # mv <arch>/sge_shepherd <arch>/sge_shepherd.sge53
 
-   
-3) Renaming the 'sge_commd' binary
-----------------------------------
-
-   Since the patch packages contain the 'sge_commd' binary you need to
-   move away the commd binary to avoid a crash of your running commd's when
-   unpacking the new patch packages.
+   If you are planning to carry out the upgrade with running tightly
+   integrated parallel jobs or interactive jobs you need to rename a couple
+   of SGE binaries to avoid their crash when the new binaries are unpacked:
 
       # cd $SGE_ROOT/bin
-      # mv <arch>/sge_commd <arch>/sge_commd.sge53
+      # mv <arch>/qsh <arch>/qsh.sge53
+      # cd $SGE_ROOT/utilbin
+      # mv <arch>/qrsh_starter <arch>/qrsh_starter.sge53
+      # mv <arch>/rsh <arch>/rsh.sge53
+      # mv <arch>/rshd <arch>/rshd.sge53
+      # mv <arch>/rlogin <arch>/rlogin.sge53
 
 
-   NOTE: SGE 5.3p1 does not change 'sge_commd'. Therefore it is not
-         necessary to shutdown the communication daemons in your Grid Engine
-         cluster.
-
-
-4) Shutting down Grid Engine qmaster and scheduler
---------------------------------------------------
-
-   You need to shutdown the qmaster and scheduler daemon and all execution
-   daemons on all SGE hosts. It is not necessary to shutdown the
-   communication daemons ('sge_commd').
-
-   Shutdown your execution hosts and qmaster/scheduler:
-   
-      # qconf -ke all
-      (wait 30 seconds)
-      # qconf -ks
-      # qconf -km
-
-   Now verify with the 'ps' command that the qmaster and scheduler daemon
-   (sge_qmaster, sge_schedd) and the execution daemon (sge_execd) on all
-   your hosts are stopped.
-
-
-5) Installing the patch release and restarting Grid Engine
+6) Installing the patch release and restarting Grid Engine
 ----------------------------------------------------------
 
-   Now please install the packages for all your binaries as user root in a
-   machine where user root has read/write permission in the $SGE_ROOT
-   directory:
+   Now please install the packages for all your binaries and if applicable
+   the "common" and "doc" packages as user root on a machine where user root
+   has read/write permission in the $SGE_ROOT directory:
 
       # cd $SGE_ROOT
-      # gzip -dc sge-<rel>-bin-<arch>.tar.gz> | tar xvpf -
-   
+      # gzip -dc sge-<rel>-bin-<arch>.tar.gz | tar xvpf -
+      # gzip -dc sge-<rel>-common.tar.gz | tar xvpf -
+      # util/setfileperm.sh <adminuser> <group> <sge_root>
 
    After installing the patch you need to restart your SGE cluster. Please
    login to your qmaster machine and enter:
@@ -105,5 +150,5 @@ Content
 
       # qmod -e '*'
 
-   If you renamed the shepherd binary you may safely delete the old binary
-   when all jobs finished which where running prior the patch installation.
+   If you renamed SGE binaries you may safely delete these old versions when
+   all jobs finished which where running prior the patch installation.

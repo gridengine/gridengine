@@ -1229,3 +1229,29 @@ centry_list_do_all_exists(const lList *this_list, lList **answer_list,
    DEXIT;
    return ret;
 }
+
+bool
+centry_list_is_correct(lList *this_list, lList **answer_list)
+{
+
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "centry_list_has_error");
+   if (this_list != NULL) {
+      lListElem *centry = lGetElemStr(this_list, CE_name, "qname");
+
+      if (centry != NULL) {
+         const char *value = lGetString(centry, CE_stringval);
+
+         if (strchr(value, (int)'@')) {
+            answer_list_add_sprintf(answer_list, STATUS_EEXIST,
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_CENTRY_QINOTALLOWED);
+            ret = false;
+         } 
+      }
+   }
+   DEXIT;
+   return ret;
+}
+

@@ -1,3 +1,8 @@
+EB-2004-02-19-0: Bugfix:    qsub -l q=<QI> was not rejected
+                 Issue:     #671
+                 Changed:   sge_qmaster
+                 Review:    JG
+
 JG-2004-02-19-1: Testsuite: Testsuite install output warnings due to changed 
                             defaults for weight_* schedd config attributes.
 

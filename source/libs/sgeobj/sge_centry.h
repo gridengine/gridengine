@@ -116,5 +116,8 @@ bool
 centry_list_do_all_exists(const lList *this_list, lList **answer_list,
                           const lList *centry_list);
 
+bool
+centry_list_is_correct(lList *this_list, lList **answer_list);
+
 #endif /* __SGE_CENTRY_H */
 

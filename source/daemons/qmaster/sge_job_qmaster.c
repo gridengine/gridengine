@@ -335,6 +335,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       DEXIT;
       return STATUS_EUNKNOWN;
    }
+   if (!centry_list_is_correct(lGetList(jep, JB_hard_resource_list), alpp)) {
+       DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+   if (!centry_list_is_correct(lGetList(jep, JB_soft_resource_list), alpp)) { 
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
 
    {
       lList* temp = NULL;
@@ -2586,6 +2594,11 @@ int *trigger
          DEXIT;
          return STATUS_EUNKNOWN;   
       }
+      if (!centry_list_is_correct(lGetList(jep, JB_hard_resource_list), alpp)) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
 
       lSetList(new_job, JB_hard_resource_list, 
             lCopyList("", lGetList(jep, JB_hard_resource_list)));
@@ -2607,6 +2620,10 @@ int *trigger
          return STATUS_EUNKNOWN;
       }
       if (deny_soft_consumables(alpp, lGetList(jep, JB_soft_resource_list))) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+      if (!centry_list_is_correct(lGetList(jep, JB_soft_resource_list), alpp)) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }

@@ -40,7 +40,7 @@
 #define MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER    _MESSAGE(21003, _("\nYour qsub request could not be scheduled, try again later.\n"))
 #define MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U    _MESSAGE(21004, _("\nYour immediate job %s has been successfully scheduled.\n"))
 #define MSG_QSUB_COULDNOTINITIALIZEENV_U    _MESSAGE(21005, _("\nUnable to initialize environment because of error: %s\nExiting.\n"))
-#define MSG_QSUB_COULDNOTRUNJOB_U    _MESSAGE(21006, _("\nUnable to run job because of error: %s.\nExiting.\n"))
+#define MSG_QSUB_COULDNOTRUNJOB_U    _MESSAGE(21006, _("Unable to run job because of error: %s.\nExiting.\n"))
 #define MSG_QSUB_COULDNOTWAITFORJOB_U    _MESSAGE(21007, _("\nUnable to wait for job because of error: %s\nExiting.\n"))
 #define MSG_QSUB_JOBNEVERRAN_U    _MESSAGE(21008, _("Unable to run job %s\n"))
 #define MSG_QSUB_JOBRECEIVEDSIGNAL_SS    _MESSAGE(21009, _("Job %s exited because of signal %s\n"))

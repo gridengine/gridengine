@@ -282,5 +282,6 @@
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN"\n"))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults\n"))
 #define MSG_CONF_NEITHERSGECODGRDSETTINGSGE _MESSAGE(64302, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
+#define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

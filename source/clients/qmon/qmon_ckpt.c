@@ -77,7 +77,6 @@ static Widget ckpt_ckpt_dir_w = 0;
 static Widget ckpt_when_w = 0;
 static Widget ckpt_reschedule_w = 0;
 static Widget ckpt_signal_w = 0;
-static Widget ckpt_queues_w = 0;
 static int add_mode = 0;
 
 static String ckpt_interface_types[] = { 
@@ -103,7 +102,6 @@ static void qmonCkptResetAsk(void);
 static void qmonCkptSetAsk(lListElem *pep);
 static Widget qmonCreateCkptAsk(Widget parent);
 static Boolean qmonCkptGetAsk(lListElem *pep);
-static void qmonCkptAskForQueues(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
 void qmonPopupCkptConfig(w, cld, cad)
@@ -212,7 +210,7 @@ lListElem *ep
       return;
    }
    
-   itemCount = 10;
+   itemCount = 9;
    items = (XmString*) XtMalloc(sizeof(XmString)*itemCount); 
 
    i = 0;
@@ -250,6 +248,7 @@ lListElem *ep
                lGetString(ep, CK_ckpt_dir));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
 
+#ifdef HOP
    /* queue list */
    ql = lGetList(ep, CK_queue_list);
    sprintf(buf, "%-20.20s", "Queues");
@@ -260,6 +259,7 @@ lListElem *ep
    if (!lGetNumberOfElem(ql))
       strcat(buf, " NONE");
    items[i++] = XmStringCreateLtoR(buf, "LIST");
+#endif   
    
    /* CK_when */
    sprintf(buf, "%-20.20s %s", "Checkpoint When", lGetString(ep, CK_when));
@@ -351,7 +351,7 @@ Widget parent
 static Widget qmonCreateCkptAsk(
 Widget parent 
 ) {
-   Widget ckpt_ok, ckpt_cancel, ckpt_queuesPB;
+   Widget ckpt_ok, ckpt_cancel;
 
    DENTER(GUI_LAYER, "qmonCreateCkptAsk");
    
@@ -359,7 +359,6 @@ Widget parent
                            NULL, 0,
                            "ckpt_ok", &ckpt_ok,
                            "ckpt_cancel", &ckpt_cancel,
-                           "ckpt_queuesPB", &ckpt_queuesPB,
                            "ckpt_name", &ckpt_name_w,
                            "ckpt_interface", &ckpt_interface_w,
                            "ckpt_ckpt_command", &ckpt_ckpt_command_w,
@@ -370,15 +369,12 @@ Widget parent
                            "ckpt_when", &ckpt_when_w,
                            "ckpt_reschedule", &ckpt_reschedule_w,
                            "ckpt_signal", &ckpt_signal_w,
-                           "ckpt_queues", &ckpt_queues_w,
                            NULL);
 
    XtAddCallback(ckpt_ok, XmNactivateCallback, 
                      qmonCkptOk, NULL);
    XtAddCallback(ckpt_cancel, XmNactivateCallback, 
                      qmonCkptCancel, NULL);
-   XtAddCallback(ckpt_queuesPB, XmNactivateCallback, 
-                     qmonCkptAskForQueues, NULL);
    XtAddEventHandler(XtParent(ckpt_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
@@ -386,6 +382,7 @@ Widget parent
    return ckpt_ask_layout;
 }
 
+#ifdef HOP
 /*-------------------------------------------------------------------------*/
 static void qmonCkptAskForQueues(w, cld, cad)
 Widget w;
@@ -422,6 +419,8 @@ XtPointer cld, cad;
 
    DEXIT;
 }
+
+#endif
 
 /*-------------------------------------------------------------------------*/
 static void qmonCkptAdd(w, cld, cad)
@@ -680,11 +679,13 @@ lListElem *ckp
    if (ckpt_signal)
       XmtInputFieldSetString(ckpt_signal_w, ckpt_signal);
 
+#ifdef HOP
    /*
    ** the lists have to be converted to XmString
    */
    ql = lGetList(ckp, CK_queue_list);
    UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, ql, QR_name);
+#endif   
 
 
    DEXIT;
@@ -707,10 +708,12 @@ static void qmonCkptResetAsk(void)
    XmtChooserSetState(ckpt_when_w, state, False);
    XmtChooserSetState(ckpt_reschedule_w, 0, False);
    XmtInputFieldSetString(ckpt_signal_w, "NONE");
+#ifdef HOP   
    /*
    ** the lists have to be converted to XmString
    */
    UpdateXmListFromCull(ckpt_queues_w, XmFONTLIST_DEFAULT_TAG, NULL, QR_name);
+#endif
 
    DEXIT;
 }
@@ -827,11 +830,13 @@ lListElem *ckp
    }
    lSetString(ckp, CK_signal, ckpt_signal);
   
+#ifdef HOP  
    /*
    ** XmString entries --> Cull
    */
    ql = XmStringToCull(ckpt_queues_w, QR_Type, QR_name, ALL_ITEMS);
    lSetList(ckp, CK_queue_list, ql);
+#endif   
 
 
    DEXIT;

@@ -119,6 +119,7 @@ _Messages_.en.*.@fBOverride Policy: @fBOverride Policy
 _Messages_.en.*.@fBOwner List: @fBOwner List
 _Messages_.en.*.@fBOwners: @fBOwners
 _Messages_.en.*.@fBParallel Job Request - %s: @fBParallel Job Request - %s
+_Messages_.en.*.@fBParallel Environment: @fBParallel Environment
 _Messages_.en.*.@fBParallel Environment Configuration: @fBParallel Environment Configuration
 _Messages_.en.*.@fBPending Jobs: @fBPending Jobs
 _Messages_.en.*.@fBPolicy: @fBPolicy

@@ -76,12 +76,102 @@
 #include "qmon_globals.h"
 #include "qmon_project.h"
 #include "AskForTime.h"
+#include "AskForItems.h"
 #include "sge_host.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
 
 /*-------------------------------------------------------------------------*/
+
+/* 
+ * typedefs for all the resources connected to the dialogs 
+ * additional typedefs for transfer cull <--> structs
+ */
+
+/* queue configuration parameters -> gdilib/sge_queueL.h */
+
+typedef struct _tQCEntry {
+/*---- general queue config -----*/
+   char qname[100];
+   char qhostname[100];
+   int  qtype;
+   char processors[256];
+   int  priority;
+   int  job_slots;
+   int  rerun;
+   char tmpdir[256];
+   char calendar[256];
+   char shell[256];
+   int  shell_start_mode;
+   char notify[20];
+   int  seq_no;
+   int initial_state;
+/*---- methods -----*/
+   const char *prolog;
+   const char *epilog;
+   const char *starter_method;
+   const char *suspend_method;
+   const char *resume_method;
+   const char *terminate_method;
+/*---- checkpointing -----*/
+   char min_cpu_interval[20];
+   lList *ckpt_list;
+/*---- pe -----*/
+   lList *pe_list;
+/*---- load thresholds ----*/
+   lList* load_thresholds;
+/*---- suspend thresholds ----*/
+   lList* suspend_thresholds;
+   char suspend_interval[20];
+   int    nsuspend;
+/*---- queue limits  ----*/
+   lList* limits_hard;
+   lList* limits_soft;
+   /*
+   char s_rt[20];
+   char h_rt[20];
+   char s_cpu[20];
+   char h_cpu[20];
+   char s_fsize[20];
+   char h_fsize[20];
+   char s_data[20];
+   char h_data[20];
+   char s_stack[20];
+   char h_stack[20];
+   char s_core[20];
+   char h_core[20];
+   char s_rss[20];
+   char h_rss[20];
+   char s_vmem[20];
+   char h_vmem[20];
+   */
+/*---- complexes  ----*/
+   lList *complexes;
+   lList *consumable_config_list;
+/*---- user access ---*/
+   lList *acl;
+   lList *xacl;
+/*---- project access ---*/
+   lList *prj;
+   lList *xprj;
+/*---- owner list ----*/
+   lList *owner_list;
+/*---- subordinate list ----*/
+   lList *subordinates;
+}  tQCEntry;
+
+   
+typedef struct _tAction {
+   String label;
+   XtCallbackProc callback;
+} tAction;
+
+enum {
+   QC_ADD,
+   QC_MODIFY,
+   QC_DELETE
+};
 
 
 /*---- queue configuration -----*/
@@ -178,6 +268,17 @@ XtResource qc_resources[] = {
    { "min_cpu_interval", "min_cpu_interval", XmtRBuffer,
       XmtSizeOf(tQCEntry, min_cpu_interval),
       XtOffsetOf(tQCEntry, min_cpu_interval[0]),
+      XtRImmediate, NULL },
+
+   { "ckpt_list", "ckpt_list", QmonRSTR_Type,
+      sizeof(lList *),
+      XtOffsetOf(tQCEntry, ckpt_list),
+      XtRImmediate, NULL },
+
+/*---- pe -----*/
+   { "pe_list", "pe_list", QmonRSTR_Type,
+      sizeof(lList *),
+      XtOffsetOf(tQCEntry, pe_list),
       XtRImmediate, NULL },
    
 /*---- load thresholds ----*/
@@ -286,6 +387,8 @@ static void qmonQCLimitInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCLimitNoEdit(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonQCLimitCheck(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCAskForPE(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
 static Boolean check_qname(char *name);
 static void qmonInitQCEntry(tQCEntry *data);
 static void qmonQCSetData(tQCEntry *data, StringConst qname, int how);
@@ -297,6 +400,9 @@ static void qmonQCModify(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCDelete(Widget w, XtPointer cld, XtPointer cad);
 
 static void qmonLoadNamesQueue(Widget w, XtPointer cld, XtPointer cad); 
+static void updateQCC(void);
+static void updateQCA(void);
+static void updateQCP(void);
 
 /*-------------------------------------------------------------------------*/
 static Widget qc_dialog = 0;
@@ -320,6 +426,8 @@ static Widget project_deny = 0;
 static Widget project_toggle = 0;
 static Widget owner_list = 0;
 static Widget owner_new = 0;
+static Widget ckpt_reference_list = 0;
+static Widget pe_reference_list = 0;
 
 static int dialog_mode = QC_ADD;
 
@@ -345,6 +453,7 @@ enum {
    QC_ALL,
    QC_GENERAL,
    QC_CHECKPOINT,
+   QC_PE,
    QC_LIMIT,
    QC_LOADTHRESHOLD, 
    QC_COMPLEXES,
@@ -502,6 +611,7 @@ Widget parent
    Widget access_add, access_remove, access_dialog;
    Widget project_add, project_remove, project_dialog, project_config;
    Widget owner_add, owner_remove;
+   Widget pe_reference_listPB, ckpt_reference_listPB;
 
    DENTER(TOP_LAYER, "qmonQCCreate");
 
@@ -532,6 +642,11 @@ Widget parent
                               /* checkpoint_config */
                               "min_cpu_intervalPB", &min_cpu_intervalPB,
                               "min_cpu_interval", &min_cpu_interval,
+                              "ckpt_reference_listPB", &ckpt_reference_listPB,
+                              "ckpt_reference_list", &ckpt_reference_list,
+                              /* pe config */
+                              "pe_reference_listPB", &pe_reference_listPB,
+                              "pe_reference_list", &pe_reference_list,
                               /* load_threshold_config */
                               "load_thresholds", &load_thresholds,
                               "load_delete", &load_delete,
@@ -649,6 +764,15 @@ Widget parent
    */
    XtAddCallback(min_cpu_intervalPB, XmNactivateCallback,
                   qmonQCTime, (XtPointer) min_cpu_interval); 
+   XtAddCallback(ckpt_reference_listPB, XmNactivateCallback,
+                  qmonQCAskForCkpt, NULL); 
+
+   /*
+   ** PE
+   */
+   XtAddCallback(pe_reference_listPB, XmNactivateCallback,
+                  qmonQCAskForPE, NULL); 
+
 
    /*
    ** Complexes & Consumables
@@ -1281,7 +1405,23 @@ DTRACE;
       strncpy(data->min_cpu_interval, lGetString(qep, QU_min_cpu_interval),  
                XmtSizeOf(tQCEntry, min_cpu_interval));
    }
+   if (how == QC_ALL || how == QC_CHECKPOINT || how == QC_ALMOST) {
+      data->ckpt_list = lFreeList(data->ckpt_list);
+      data->ckpt_list = lCopyList("ckpt_list", lGetList(qep, QU_ckpt_list));
+   }
 DTRACE;
+
+   /*********************/
+   /* pe config         */
+   /*********************/
+   
+   if (how == QC_ALL || how == QC_PE || how == QC_ALMOST) {
+      data->pe_list = lFreeList(data->pe_list);
+      data->pe_list = lCopyList("pe_list", lGetList(qep, QU_pe_list));
+
+   }
+DTRACE;
+
    /*********************/
    /* limit config      */
    /*********************/
@@ -1472,6 +1612,15 @@ lListElem *qep
    /* checkpoint config      */
    /**************************/
    lSetString(qep, QU_min_cpu_interval, data->min_cpu_interval);
+   lSetList(qep, QU_ckpt_list, data->ckpt_list);
+   data->ckpt_list = NULL;
+
+   /**************************/
+   /* pe config              */
+   /**************************/
+   lSetList(qep, QU_pe_list, data->pe_list);
+   data->pe_list = NULL;
+
 
    /**************************/
    /* limit config           */
@@ -1604,6 +1753,84 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* C H E C K P O I N T    P A G E                                          */
 /*-------------------------------------------------------------------------*/
+
+static void qmonQCAskForCkpt(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *cl_out = NULL;
+   lList *cl_in = NULL;
+   int status;
+   lList *alp = NULL;
+
+   DENTER(GUI_LAYER, "qmonQCAskForCkpt");
+   
+   qmonMirrorMultiAnswer(CKPT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
+   cl_in = qmonMirrorList(SGE_CKPT_LIST);
+   cl_out = XmStringToCull(ckpt_reference_list, ST_Type, STR, ALL_ITEMS);
+
+   status = XmtAskForItems(w, NULL, NULL, "@{Select Checkpoint Object}", 
+                  cl_in, CK_name, "@{@fBAvailable Checkpoint Objects}", 
+                  &cl_out, ST_Type, STR, "@{@fBChosen Checkpoint Objects}",
+                  NULL);
+
+   if (status) {
+      UpdateXmListFromCull(ckpt_reference_list, XmFONTLIST_DEFAULT_TAG, cl_out,
+                              STR);
+   }
+   cl_out = lFreeList(cl_out);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+/* P E   P A G E                                                           */
+/*-------------------------------------------------------------------------*/
+
+static void qmonQCAskForPE(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *pel_out = NULL;
+   lList *pel_in = NULL;
+   int status;
+   lList *alp = NULL;
+
+   DENTER(GUI_LAYER, "qmonQCAskForPE");
+   
+   qmonMirrorMultiAnswer(PE_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
+   pel_in = qmonMirrorList(SGE_PE_LIST);
+   pel_out = XmStringToCull(pe_reference_list, ST_Type, STR, ALL_ITEMS);
+
+   status = XmtAskForItems(w, NULL, NULL, "@{Select PE Object}", 
+                  pel_in, PE_name, "@{@fBAvailable PE Objects}", 
+                  &pel_out, ST_Type, STR, "@{@fBChosen PE Objects}",
+                  NULL);
+
+   if (status) {
+      UpdateXmListFromCull(pe_reference_list, XmFONTLIST_DEFAULT_TAG, pel_out,
+                              STR);
+   }
+   pel_out = lFreeList(pel_out);
+
+   DEXIT;
+}
+
+
 /*-------------------------------------------------------------------------*/
 static void qmonQCTime(w, cld, cad)
 Widget w;
@@ -2129,7 +2356,7 @@ void updateQCQ(void)
 #endif
 
 /*-------------------------------------------------------------------------*/
-void updateQCC(void)
+static void updateQCC(void)
 {
    lList *cl;
    lList *rcl;
@@ -2163,7 +2390,7 @@ void updateQCC(void)
 }
 
 /*-------------------------------------------------------------------------*/
-void updateQCA(void)
+static void updateQCA(void)
 {
    lList *al;
    
@@ -2182,7 +2409,7 @@ void updateQCA(void)
 }
 
 /*-------------------------------------------------------------------------*/
-void updateQCP(void)
+static void updateQCP(void)
 {
    lList *pl;
    

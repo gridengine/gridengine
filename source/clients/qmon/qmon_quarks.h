@@ -50,6 +50,7 @@
 #define QmonRENV_Type    "ENV_Type"
 #define QmonRCTX_Type    "CTX_Type"
 #define QmonRST_Type     "ST_Type"
+#define QmonRSTR_Type    "STR_Type"
 #define QmonRRN_Type     "RN_Type"
 #define QmonRTRN_Type    "TRN_Type"
 #define QmonRUP_Type     "UP_Type"
@@ -74,6 +75,7 @@ externalref XrmQuark QmonQSO_Type;
 externalref XrmQuark QmonQENV_Type;
 externalref XrmQuark QmonQCTX_Type;
 externalref XrmQuark QmonQST_Type;
+externalref XrmQuark QmonQSTR_Type;
 externalref XrmQuark QmonQRN_Type;
 externalref XrmQuark QmonQTRN_Type;
 externalref XrmQuark QmonQInt;

@@ -111,8 +111,7 @@ Qmon*ckpt_ask_shell.ckpt_ask_layout.xmtChildren: \
    XmtChooser     ckpt_interface, \
                   ckpt_reschedule, \
                   ckpt_when; \
-   XmScrolledList ckpt_queues; \
-   XmPushButton   ckpt_ok, ckpt_cancel, ckpt_queuesPB;
+   XmPushButton   ckpt_ok, ckpt_cancel;
 
 Qmon*ckpt_ask_layout.layout: \
    Row { \
@@ -121,10 +120,6 @@ Qmon*ckpt_ask_layout.layout: \
             Col { \
                Fixed Caption tl "@{Name}" ckpt_name \
                Fixed Caption tl "@{Interface}" ckpt_interface \
-            } \
-            Row { \
-               Stretchable Caption tl "@{Queue List}" 2 in ckpt_queues \
-               Fixed Centered ckpt_queuesPB \
             } \
          } \
          Fixed Caption tl "@{Checkpoint Command}" ckpt_ckpt_command \
@@ -166,11 +161,4 @@ Qmon*ckpt_ask_layout.ckpt_when.strings: \
 
 Qmon*ckpt_ask_layout.ckpt_ok.labelString:     @{Ok}
 Qmon*ckpt_ask_layout.ckpt_cancel.labelString: @{Cancel}
-
-Qmon*ckpt_ask_layout*scrollBarDisplayPolicy:              AS_NEEDED
-Qmon*ckpt_ask_layout*ckpt_queues.selectionPolicy:           BROWSE_SELECT
-Qmon*ckpt_ask_layout*ckpt_queues.visibleItemCount:          5
-
-Qmon*ckpt_ask_layout.ckpt_queuesPB.labelType:     PIXMAP
-Qmon*ckpt_ask_layout.ckpt_queuesPB.labelPixmap:   qask
 

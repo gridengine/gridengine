@@ -103,12 +103,13 @@ Qmon*qc_dialog.qc_help.labelString:               @{Help}
 Qmon*qc_help.activateCallback:   XmtHelpDisplayContextHelp(self);
 
 Qmon*qc_folder.layoutAllowResize:  false
-Qmon*qc_folder.tabsPerRow:  5
+Qmon*qc_folder.tabsPerRow:  4
 Qmon*qc_folder.resizeChildren:  True
 Qmon*qc_folder.xmtChildren: \
    XmtLayout   general_config, \
                method_config, \
                checkpoint_config, \
+               pe_config, \
                load_threshold_config, \
                limit_config, \
                complexes_config, \
@@ -198,7 +199,7 @@ Qmon*general_config*calendar.navigationType: TAB_GROUP
 !! the order of the strings is important (->sge_queueL.h)
 Qmon*qtype.chooserType: CheckBox
 Qmon*qtype.strings: \
-   "@{Batch}", "@{Interactive}", "@{Checkpointing}", "@{Parallel}"
+   "@{Batch}", "@{Interactive}"
 
 Qmon*shell_start_mode.chooserType: ChooserOption
 Qmon*shell_start_mode.strings: \
@@ -275,8 +276,9 @@ Qmon*method_config*terminate_method.columns: 80
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*checkpoint_config.tabLabel: @{@fBCheckpointing}
 Qmon*checkpoint_config.xmtChildren: \
+   StringList ckpt_reference_list = ckpt_list; \
    InputField     min_cpu_interval = min_cpu_interval; \
-   XmPushButton   min_cpu_intervalPB;
+   XmPushButton   min_cpu_intervalPB, ckpt_reference_listPB;
 
 Qmon*checkpoint_config.layout: \
       Col { \
@@ -285,8 +287,51 @@ Qmon*checkpoint_config.layout: \
             Fixed Centered min_cpu_intervalPB \
             <>\
          } \
+         Row { \
+            Stretchable Caption tl "@{Referenced Ckpt Object}" 2 in ckpt_reference_list \
+            Fixed Centered ckpt_reference_listPB \
+         } \
          <>\
-      } \
+      }
+
+Qmon*checkpoint_config*scrollBarDisplayPolicy:               AS_NEEDED
+Qmon*checkpoint_config*ckpt_reference_list.selectionPolicy:  BROWSE_SELECT
+Qmon*checkpoint_config*ckpt_reference_list.visibleItemCount: 5
+
+Qmon*checkpoint_config.ckpt_reference_listPB.labelType:     PIXMAP
+Qmon*checkpoint_config.ckpt_reference_listPB.labelPixmap:   qask
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! pe dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*pe_config.tabLabel: @{@fBParallel Environment}
+Qmon*pe_config.xmtChildren: \
+   StringList pe_reference_list = pe_list; \
+   XmPushButton   pe_reference_listPB;
+   
+
+Qmon*pe_config.layout: \
+      Col { \
+         Row { \
+            Stretchable Caption tl "@{Referenced PE}" 2 in pe_reference_list \
+            Fixed Centered pe_reference_listPB \
+         } \
+         <>\
+      }
+
+Qmon*pe_config*pe_reference_list.fontList:         $fixed_font
+Qmon*pe_config*pe_reference_list.selectionPolicy:  BROWSE_SELECT
+Qmon*pe_config*pe_reference_list.visibleItemCount: 5
+
+Qmon*pe_config*scrollBarDisplayPolicy:     AS_NEEDED
+Qmon*pe_config*listSizePolicy:             CONSTANT
+
+Qmon*pe_config.pe_reference_listPB.labelType:     PIXMAP
+Qmon*pe_config.pe_reference_listPB.labelPixmap:   qask
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Qmon*qc_dialog.qc_folder*XbaeMatrix*buttonLabels: True
 Qmon*qc_dialog.qc_folder*XbaeMatrix*rows: 7

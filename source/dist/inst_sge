@@ -417,7 +417,7 @@ Makedir()
 }
 
 #-------------------------------------------------------------------------
-# SetPerm: set permissions, chown, chgrp
+# SetPerm: set permissions
 #
 SetPerm()
 {
@@ -491,16 +491,14 @@ PrintConf()
    if [ $inst = sgeee ]; then
       $ECHO "projects               none"
       $ECHO "xprojects              none"
+      $ECHO "enforce_project        false"
+      $ECHO "enforce_user           false"
    fi
    $ECHO "load_report_time       00:00:40"
    $ECHO "stat_log_time          48:00:00"
    $ECHO "max_unheard            00:05:00"
    $ECHO "reschedule_unknown     00:00:00"
    $ECHO "loglevel               log_warning"
-   if [ $inst = sgeee ]; then
-      $ECHO "enforce_project        false"
-      $ECHO "enforce_user           false"
-   fi
    $ECHO "administrator_mail     $CFG_MAIL_ADDR"
    if [ $afs = true ]; then
       $ECHO "set_token_cmd          /path_to_token_cmd/set_token_cmd"
@@ -1585,13 +1583,19 @@ AddQsystStartUpScript()
    STARTUP_FILE_NAME=rcsge
    S95NAME=S95rcsge
 
-   Execute rm -rf ${TMP_V5_STARTUP_FILE}.0 ${TMP_V5_STARTUP_FILE}.1
+   if [ -f $TMP_V5_STARTUP_FILE ]; then
+      Execute rm $TMP_V5_STARTUP_FILE
+   fi
+   if [ -f ${TMP_V5_STARTUP_FILE}.0 ]; then
+      Execute rm ${TMP_V5_STARTUP_FILE}.0
+   fi
+   if [ -f ${TMP_V5_STARTUP_FILE}.1 ]; then
+      Execute rm ${TMP_V5_STARTUP_FILE}.1
+   fi
 
    V5_STARTUP_FILE=$QSYST_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
 
    if [ $create = true ]; then
-
-      rm -f $TMP_V5_STARTUP_FILE ${TMP_V5_STARTUP_FILE}.0
 
       Execute sed -e "s%GENROOT%${QSYST_ROOT_VAL}%g" \
                   -e "s%GENCELL%${QSYST_CELL_VAL}%g" \
@@ -1879,85 +1883,13 @@ CreateSettingsFile()
 {
    Translate 0 "Creating settings files for >%s<" ".profile/.cshrc"
 
-   SP_CSH=$QSYST_ROOT_VAL/$COMMONDIR/settings.csh
-   SP_SH=$QSYST_ROOT_VAL/$COMMONDIR/settings.sh
+   ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.sh
+   ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh
 
-   TruncCreateAndMakeWriteable $SP_CSH
-   TruncCreateAndMakeWriteable $SP_SH
+   ExecuteAsAdmin util/create_settings.sh $QSYST_ROOT_VAL/$COMMONDIR
 
-   Translate 0 "Creating %s" $QSYST_ROOT_VAL/$COMMONDIR/settings.[c]sh
-
-   $ECHO "set ARCH = \`$QSYST_ROOT_VAL/util/arch\`"                  >  $SP_CSH
-   $ECHO "set DEFAULTMANPATH = \`$QSYST_ROOT_VAL/util/arch -m\`"     >> $SP_CSH
-   $ECHO "set MANTYPE = \`$QSYST_ROOT_VAL/util/arch -mt\`"           >> $SP_CSH
-   $ECHO ""                                                          >> $SP_CSH
-   $ECHO "unsetenv $QSYST_ROOT"                                      >> $SP_CSH
-   $ECHO "unsetenv $QSYST_CELL"                                      >> $SP_CSH
-   $ECHO "unsetenv COMMD_PORT"                                       >> $SP_CSH
-   $ECHO ""                                                          >> $SP_CSH
-   $ECHO "setenv $QSYST_ROOT $QSYST_ROOT_VAL"                        >> $SP_CSH
-   if [ "$QSYST_CELL_VAL" != "default" ]; then
-      $ECHO "setenv $QSYST_CELL $QSYST_CELL_VAL"                     >> $SP_CSH
-   fi
-   if [ "$COMMD_PORT" != "" ]; then
-      $ECHO "setenv COMMD_PORT $COMMD_PORT"                          >> $SP_CSH
-   fi
-   $ECHO ""                                                          >> $SP_CSH
-   $ECHO 'if ( $?MANPATH == 1 ) then'                                >> $SP_CSH
-   $ECHO "   setenv MANPATH $QSYST_ROOT_VAL/"'${MANTYPE}':'$MANPATH' >> $SP_CSH
-   $ECHO "else"                                                      >> $SP_CSH
-   $ECHO "   setenv MANPATH $QSYST_ROOT_VAL/"'${MANTYPE}:$DEFAULTMANPATH' >> $SP_CSH
-   $ECHO "endif"                                                     >> $SP_CSH
-   $ECHO ""                                                          >> $SP_CSH
-   $ECHO "set path = ( $QSYST_ROOT_VAL/bin/"'$ARCH $path )'          >> $SP_CSH
-
-   $ECHO "set shlib_path_name = \`$QSYST_ROOT_VAL/util/arch -lib\`"                     >> $SP_CSH
-   $ECHO "if ( \`eval echo '\$?'\$shlib_path_name\` ) then"                             >> $SP_CSH
-   $ECHO "   set old_value = \`eval echo '\$'\$shlib_path_name\`"                       >> $SP_CSH
-   $ECHO "   setenv \$shlib_path_name \"\$old_value\":\"$QSYST_ROOT_VAL/lib/\$ARCH\""   >> $SP_CSH
-   $ECHO "else"                                                                         >> $SP_CSH
-   $ECHO "   setenv \$shlib_path_name $QSYST_ROOT_VAL/lib/\$ARCH"                       >> $SP_CSH
-   $ECHO "endif"                                                                        >> $SP_CSH
-
-   $ECHO "unset ARCH DEFAULTMANPATH MANTYPE"                         >> $SP_CSH
-
-
-   $ECHO "ARCH=\`$QSYST_ROOT_VAL/util/arch\`"                        >  $SP_SH
-   $ECHO "DEFAULTMANPATH=\`$QSYST_ROOT_VAL/util/arch -m\`"           >> $SP_SH
-   $ECHO "MANTYPE=\`$QSYST_ROOT_VAL/util/arch -mt\`"                 >> $SP_SH
-   $ECHO ""                                                          >> $SP_SH
-   $ECHO "unset $QSYST_ROOT"                                         >> $SP_SH
-   $ECHO "unset $QSYST_CELL"                                         >> $SP_SH
-   $ECHO "unset COMMD_PORT"                                          >> $SP_SH
-   $ECHO ""                                                          >> $SP_SH
-   $ECHO "$QSYST_ROOT=$QSYST_ROOT_VAL; export $QSYST_ROOT"           >> $SP_SH
-   if [ "$QSYST_CELL_VAL" != "default" ]; then
-      $ECHO "$QSYST_CELL=$QSYST_CELL_VAL; export $QSYST_CELL"        >> $SP_SH
-   fi
-   if [ "$COMMD_PORT" != "" ]; then
-      $ECHO "COMMD_PORT=$COMMD_PORT; export COMMD_PORT"              >> $SP_SH
-   fi
-   $ECHO ""                                                          >> $SP_SH
-   $ECHO "if [ \"\$MANPATH\" = \"\" ]; then"                         >> $SP_SH
-   $ECHO "   MANPATH=\$DEFAULTMANPATH"                               >> $SP_SH
-   $ECHO "fi"                                                        >> $SP_SH
-   $ECHO "MANPATH=$QSYST_ROOT_VAL/\$MANTYPE:\$MANPATH; export MANPATH"   >> $SP_SH
-   $ECHO ""                                                          >> $SP_SH
-   $ECHO "PATH=$QSYST_ROOT_VAL/bin/\$ARCH:\$PATH; export PATH"       >> $SP_SH
-
-   $ECHO "shlib_path_name=\`$QSYST_ROOT_VAL/util/arch -lib\`"               >> $SP_SH
-   $ECHO "old_value=\`eval echo '\$'\$shlib_path_name\`"                    >> $SP_SH
-   $ECHO "if [ x\$old_value = "x" ]; then"                                  >> $SP_SH
-   $ECHO "   eval \$shlib_path_name=$QSYST_ROOT_VAL/lib/\$ARCH"             >> $SP_SH
-   $ECHO "else"                                                             >> $SP_SH
-   $ECHO "   eval \$shlib_path_name=\$old_value:$QSYST_ROOT_VAL/lib/\$ARCH" >> $SP_SH
-   $ECHO "fi"                                                               >> $SP_SH
-   $ECHO "export \$shlib_path_name"                                         >> $SP_SH
-
-   $ECHO "unset ARCH DEFAULTMANPATH MANTYPE"                         >> $SP_SH
-
-   SetPerm $SP_CSH
-   SetPerm $SP_SH
+   SetPerm $QSYST_ROOT_VAL/$COMMONDIR/settings.sh
+   SetPerm $QSYST_ROOT_VAL/$COMMONDIR/settings.csh
 }
 
 #--------------------------------------------------------------------------

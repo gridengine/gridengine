@@ -10,23 +10,23 @@
 <h1>
 <b><font size=+4>Standard Compatibility Test</font></b></h1>
 
-<p><br>Compatibility is an important aspect of the <a href="gridengine/www/Gridengine_SISSL_license.html">License</a>
+<p><br>Compatibility is an important aspect of the <a href="/project/gridengine/Gridengine_SISSL_license.html">License</a>
 under which Grid Engine source code is made available. In this context,
 cross compatibility may have to be certified between a version of the Grid
 Engine software which you have enhanced and a version declared as one of
-Grid Engine's <font color="#990000">Standard Versions</font> from which
+Grid Engine's <font color="#990000">Reference Builds</font> from which
 your modification deviates. Note, that over time there can be multiple
-Standard Versions representing different stable software release levels.
+Reference Builds representing different stable software release levels.
 You might intend to test compatibility with one or with multiple of those
-Standard Versions. A list of the currently available Standard Versions
-with all pertinent information can be found <a href="standard_version.html">here</a>.
-<p>The following describes how to test compatibility between two versions.
-You will need to create a <a href="gridengine/source/dist/dist.html">binary
-distribution package</a>&nbsp; for both versions before you start with
-the compatibility checking process. You will also have to make all preparations
-to be able to run the Grid Engine <a href="/home/ff114084/CODINE/OS/gridengine/testsuite/testsuite.html">Testsuite</a>.
-You will have to use the Testsuite level as defined in the <a href="standard_versions.html">Standard
-Version definition</a>.
+Reference Builds. A list of the currently available Reference Builds with
+all pertinent information can be found <a href="/project/gridengine/standards.html">here</a>.
+<p>The following describes how to test compatibility between two bilds.
+You will need to create a <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/dist/dist.html?content-type=text/html">binary
+distribution package</a>&nbsp; for both builds before you start with the
+compatibility checking process. You will also have to make all preparations
+to be able to run the Grid Engine <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/testsuite/testsuite.html?content-type=text/html">Testsuite</a>.
+You will have to use the Testsuite level as defined in the <a href="/project/gridengine/standards.html">Reference
+Build definition</a>.
 <p>The compatibility test consist of a preparation step, a validation run
 of the Standard Version and multiple compatibility checks. Your changed
 version has to pass all tests without error and has to deliver the same
@@ -40,9 +40,9 @@ results as the validation run to be considered compatible.
 <font size=+2>Set up a testsuite cluster with more than one host</font></li>
 </ul>
 
-<blockquote>The <a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/testsuite/testsuite.html">Testsuite</a>
-documentation is describing how this can be done. Use the <b><i>Standard
-Version</i></b> to which you want to test compatibility and run:</blockquote>
+<blockquote>The <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/testsuite/testsuite.html?content-type=text/html">Testsuite</a>
+documentation is describing how this can be done. Use the <b><i>Reference
+Build</i></b> to which you want to test compatibility and run:</blockquote>
 
 <blockquote>
 <blockquote><tt>expect check.exp install</tt></blockquote>
@@ -55,11 +55,9 @@ test.</tt></blockquote>
 
 <ul>
 <li>
-<font size=+2>Run testsuite on Standard Version</font></li>
+<font size=+2>Run testsuite on Reference Build</font></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<p>Run the testsuite with runlevel&nbsp; 1:
+<p><br>Run the testsuite with runlevel&nbsp; 1:
 <br>&nbsp;
 <ul><tt>expect check.exp all 1</tt></ul>
 
@@ -83,9 +81,7 @@ out the test if you are not 100% sure.)</tt>
 <li>
 <font size=+2>Shutdown the system</font></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<p>Use the testsuite to shutdown the cluster:
+<p><br>Use the testsuite to shutdown the cluster:
 <br>&nbsp;
 <ul><tt>expect check.exp kill</tt></ul>
 </ul>
@@ -93,40 +89,34 @@ out the test if you are not 100% sure.)</tt>
 <ul>
 <li>
 <font size=+2>Exchange the sge_qmaster binary with the one from your modified
-version</font></li>
+build</font></li>
 </ul>
 
 <ul>
 <li>
 <font size=+2>Run the testsuite</font></li>
 
+<p><br>Run the testsuite again:
 <br>&nbsp;
-<p>&nbsp;
-<p>Run the testsuite again:
-<br>&nbsp;
-<ul><tt>expect check.exp all 1</tt></ul>
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Compare results with validation run</font></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p>Stop if the results are not equal.
+<p><br>Stop if the results are not equal.
 <br>&nbsp;
 <li>
 <font size=+2>Shutdown the system</font></li>
 
+<p><br>Use the testsuite to shutdown the cluster:
 <br>&nbsp;
-<p>&nbsp;
-<p>Use the testsuite to shutdown the cluster:
-<br>&nbsp;
-<ul><tt>expect check.exp kill</tt></ul>
+<ul><tt>expect check.exp kill</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Re-Exchange the sge_qmaster binary with the one from the
-Standard Version</font></li>
+Reference Build</font></li>
 </ul>
 
 <h1>
@@ -140,40 +130,34 @@ the test if you are not 100% sure.)</tt></ul>
 <ul>
 <li>
 <font size=+2>Exchange the sge_schedd binary with the one from your modified
-version</font></li>
+build</font></li>
 </ul>
 
 <ul>
 <li>
 <font size=+2>Run the testsuite</font></li>
 
+<p><br>Run the testsuite again:
 <br>&nbsp;
-<p>&nbsp;
-<p>Run the testsuite again:
-<br>&nbsp;
-<ul><tt>expect check.exp all 1</tt></ul>
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Compare results with validation run</font></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<p>Stop if the results are not equal.
+<p><br>Stop if the results are not equal.
 <br>&nbsp;
 <li>
 <font size=+2>Shutdown the system</font></li>
 
+<p><br>Use the testsuite to shutdown the cluster:
 <br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p>Use the testsuite to shutdown the cluster:
-<br>&nbsp;
-<ul><tt>expect check.exp kill</tt></ul>
+<ul><tt>expect check.exp kill</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
-<font size=+2>Re-Exchange the sge_schedd binary with the one from the Standard
-Version</font></li>
+<font size=+2>Re-Exchange the sge_schedd binary with the one from the Reference
+Build</font></li>
 </ul>
 
 <h1>
@@ -187,18 +171,17 @@ Carry out the test if you are not 100% sure.)</tt></blockquote>
 <ul>
 <li>
 <font size=+2>Exchange all sge_commd binaries with the ones from your modified
-version</font></li>
+build</font></li>
 </ul>
 
 <ul>
 <li>
 <font size=+2>Run the testsuite</font></li>
 
+<p><br>Run the testsuite again:
 <br>&nbsp;
-<p>&nbsp;
-<p>Run the testsuite again:
-<br>&nbsp;
-<ul><tt>expect check.exp all 1</tt></ul>
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Compare results with validation run</font></li>
@@ -209,25 +192,23 @@ Stop if the results are not equal.
 <li>
 <font size=+2>Shutdown the system</font></li>
 
+<p><br>Use the testsuite to shutdown the cluster:
 <br>&nbsp;
-<p>&nbsp;
-<p>Use the testsuite to shutdown the cluster:
-<br>&nbsp;
-<ul><tt>expect check.exp kill</tt></ul>
+<ul><tt>expect check.exp kill</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Re-Exchange the sge_commd binaries with the ones from the
-Standard Version</font></li>
+Reference Build</font></li>
 </ul>
 
 <h1>
 <font size=+2>Check 4: Client compatibility</font></h1>
 
-<blockquote><font size=+2>&nbsp;</font><tt>(If you are absolutely sure
-that your modification did not change any Grid Engine client binary you
-may skip this step, but be aware that changes in some libraries, like the
-GDI library,&nbsp; may also modify the client binaries. Carry out the test
-if you are not 100% sure.)</tt></blockquote>
+<blockquote><tt>(If you are absolutely sure that your modification did
+not change any Grid Engine client binary you may skip this step, but be
+aware that changes in some libraries, like the GDI library,&nbsp; may also
+modify the client binaries. Carry out the test if you are not 100% sure.)</tt></blockquote>
 
 <ul>
 <li>
@@ -238,11 +219,10 @@ if you are not 100% sure.)</tt></blockquote>
 <li>
 <font size=+2>Run the testsuite</font></li>
 
+<p><br>Run the testsuite again:
 <br>&nbsp;
-<p>&nbsp;
-<p>Run the testsuite again:
-<br>&nbsp;
-<ul><tt>expect check.exp all 1</tt></ul>
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Compare results with validation run</font></li>
@@ -257,21 +237,18 @@ Stop if the results are not equal.</ul>
 <li>
 <font size=+2>Shutdown the system</font></li>
 
+<p><br>Use the testsuite to shutdown the cluster:
 <br>&nbsp;
-<p>&nbsp;
-<p>Use the testsuite to shutdown the cluster:
-<br>&nbsp;
-<ul>expect check.exp kill</ul>
+<ul>expect check.exp kill
+<br>&nbsp;</ul>
 
 <li>
 <font size=+2>Set up a testsuite cluster with more than one host using
-the modified version</font></li>
+the modified build</font></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<p>The <a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/testsuite/testsuite.html">Testsuite</a>
+<p><br>The <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/testsuite/testsuite.html?content-type=text/html">Testsuite</a>
 documentation is describing how this can be done. Use the <b><i>modified
-version</i></b>.
+build</i></b>.
 <br>&nbsp;
 <ul>&nbsp;expect check.exp install</ul>
 
@@ -279,13 +256,12 @@ version</i></b>.
 cluster and you will have to use at least 2 for the purpose of this test.
 <br>&nbsp;
 <li>
-<font size=+2>Run the testsuite on your modified version</font></li>
+<font size=+2>Run the testsuite on your modified build</font></li>
 
+<p><br>Run the testsuite test with runlevel&nbsp; 1:
 <br>&nbsp;
-<p>&nbsp;
-<p>Run the testsuite test with runlevel&nbsp; 1:
-<br>&nbsp;
-<ul><tt>expect check.exp all 1</tt></ul>
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
 
 <li>
 <font size=+2>Compare results with validation run</font></li>

@@ -1,4 +1,4 @@
-/* $Id: IconList.c,v 1.1 2001/07/18 11:06:03 root Exp $ */
+/* $Id: IconList.c,v 1.1.1.1.24.1 2005/02/11 18:13:24 andre Exp $ */
 /*
  * Copyright 1996 John L. Cwikla
  *
@@ -50,10 +50,11 @@
 #include <Xm/Traversal.h>
 #endif
 
+#ifndef SOLARISAMD64
 #if XmVersion >= 2000
 extern void _XmResizeObject(
                         Widget g,
-#if NeedWidePrototypes
+#ifdef NeedWidePrototypes
                         int width,
                         int height,
                         int border_width) ;
@@ -64,7 +65,7 @@ extern void _XmResizeObject(
 #endif /* NeedWidePrototypes */
 extern void _XmMoveObject(
                         Widget g,
-#if NeedWidePrototypes
+#ifdef NeedWidePrototypes
                         int x,
                         int y) ;
 #else
@@ -75,7 +76,7 @@ extern void _XmDrawHighlight(
                         Display *display,
                         Drawable d,
                         GC gc,
-#if NeedWidePrototypes
+#ifdef NeedWidePrototypes
                         int x,
                         int y,
                         int width,
@@ -90,6 +91,7 @@ extern void _XmDrawHighlight(
 #endif /* NeedWidePrototypes */
                         int line_style) ;
 
+#endif
 #endif
 
 #include "DumbClip.h"

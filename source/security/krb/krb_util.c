@@ -46,6 +46,7 @@
 #include "sge_gdi_intern.h"
 #include "utility.h"
 #include "sge_copy_append.h"
+#include "read_write_job.h"
 #include "commlib.h"
 
 #include "sge.h"
@@ -113,7 +114,7 @@ lList *joblist
       krb5_error_code rc;
       krb5_creds ** tgt_creds = NULL;
       krb5_data tgtbuf;
-      char *tgtstr = NULL;
+      const char *tgtstr = NULL;
 
       tgtbuf.length = 0;
 

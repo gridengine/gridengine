@@ -114,7 +114,7 @@ static krb_global_data_t gsd;			/* global security data */
 
 
 static char *ptr2str(void *ptr, char *str);
-static void *str2ptr(char *str);
+static void *str2ptr(const char *str);
 static int krb_send_auth_failure(char *tocommproc, int toid, char *tohost);
 static krb5_error_code krb_get_new_auth_con(krb5_auth_context *auth, krb5_rcache rcache);
 static krb5_error_code krb_get_tkt_for_daemon(char *qmaster_host);
@@ -430,6 +430,9 @@ int krb_init(char *progname)
    }
 
    gsd.initialized = 1;
+
+
+   DPRINTF(("====================[  KRB SECURITY  ]===========================\n"));
 
 #ifdef notdef
    if (krbrealm) free(krbrealm);
@@ -1434,7 +1437,7 @@ static char* ptr2str(void *ptr, char *str)
    return str;
 }
 
-static void* str2ptr(char *str) 
+static void* str2ptr(const char *str) 
 {
    void *ptr;
    if (str == NULL)
@@ -1495,7 +1498,7 @@ char *str
 
 void *
 krb_str2bin(
-char *str,
+const char *str,
 void *data,
 int *rlen 
 ) {
@@ -1519,7 +1522,7 @@ int *rlen
    if (data == NULL)
       return NULL;
 
-   src = str+4;
+   src = (char*) str+4;
    dest = data;
    while (*src) {
       if (*src != 1) {

@@ -47,7 +47,7 @@ int krb_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, int
 int krb_verify_user(char *host, char *commproc, int id, char *user);
 int krb_check_for_idle_clients(void);
 char *krb_bin2str(void *data, int len, char *str);
-void * krb_str2bin(char *str, void *data, int *rlen);
+void * krb_str2bin(const char *str, void *data, int *rlen);
 krb5_error_code krb_encrypt_tgt_creds(krb5_creds **tgt_creds, krb5_data *outbuf);
 krb5_error_code krb_decrypt_tgt_creds(krb5_data *inbuf, krb5_creds ***tgt_creds);
 int krb_get_client_flags(void);

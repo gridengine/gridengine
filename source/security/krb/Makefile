@@ -31,17 +31,16 @@
 #___INFO__MARK_END__
 KRB_SDIR = ../security/krb
 KRBLIBOBJS = krb_lib.o krb_util.o
-KRBLIB = libkrb.a
-KRBALL = $(KRBLIB)
+KRBALL = $(KRBLIBS)
 
 #----------------------------------------------------------------------------
 # rules
 #----------------------------------------------------------------------------
 
-krb_all:	$(KRBLIB)
+krb_all:	$(KRBLIBS)
 
 krb_clean:
-	rm -f $(KRBLIB) $(KRBLIBOBJS)
+	rm -f $(KRBLIBS) $(KRBLIBOBJS)
 
 krb_depend:
 	$(DEPEND) -f$(KRB_SDIR)/krb_dependencies $(KRB_SDIR)/*.c
@@ -52,9 +51,9 @@ krb_messages:
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
 	done
 
-$(KRBLIB):	$(KRBLIBOBJS)
-	$(AR) $(ARFLAGS) $(KRBLIB) $(KRBLIBOBJS)
-	$(RANLIB) $(KRBLIB)
+$(KRBLIBS):	$(KRBLIBOBJS)
+	$(AR) $(ARFLAGS) $(KRBLIBS) $(KRBLIBOBJS)
+	$(RANLIB) $(KRBLIBS)
 
 #---------------------------------------------------------------------
 include $(KRB_SDIR)/krb_dependencies

@@ -750,7 +750,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUI
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
       client = lGetElemUlong(Master_Control.clients, EV_id, aClientID);
       if (client != NULL) {
-         INFO((SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS, lGetString(client, EV_name), lGetUlong(client, EV_id), lGetHost(client, EV_host))); 
+         INFO((SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS, lGetString(client, EV_name), (unsigned long)lGetUlong(client, EV_id), lGetHost(client, EV_host))); 
       }
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -810,8 +810,7 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
       
       add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL);
       
-      INFO((SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS, lGetString(client, EV_name), 
-      id, lGetHost(client, EV_host)));
+      INFO((SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS, lGetString(client, EV_name), (unsigned long)id, lGetHost(client, EV_host)));
 
 /*      sge_add_event_for_client(id, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL, NULL); */
 

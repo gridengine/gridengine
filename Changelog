@@ -1,3 +1,6 @@
+JG-2003-03-24-0  Enhancem.: Added aimk switch -purify to instrument code for
+                            memory debugging with purify.
+
 AA-2003-03-21-3  Bugfix:    3rdparty/qtcsh/tc.alloc.c DARWIN define
 
 AA-2003-03-21-3  Bugfix:    3rdparty/qtcsh/DARWIN added

@@ -100,7 +100,7 @@ schedd_messages:
 # rules to build binaries
 ###############################################################################
 sge_schedd: $(SCHEDD_OBJS) $(SCHEDD_ADD_OBJS) $(SCHEDD_LIB_DEPENDS)
-	$(CC) -o $@ $(LFLAGS) $(SCHEDD_OBJS) $(SCHEDD_ADD_OBJS) $(SCHEDD_ADD_LIBS) $(SLIBS) $(LIBS)
+	$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) $(SCHEDD_OBJS) $(SCHEDD_ADD_OBJS) $(SCHEDD_ADD_LIBS) $(SLIBS) $(LIBS)
 
 sge_share_mon: $(SMON_OBJS) $(SMON_ADD_OBJS) $(SMON_LIB_DEPENDS)
 	$(CC) -o $@ $(LFLAGS) $(SMON_OBJS) $(SMON_ADD_OBJS) $(SMON_ADD_LIBS) $(SLIBS) $(LIBS)

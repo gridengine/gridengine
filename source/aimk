@@ -191,7 +191,7 @@ usage:
    echo "-help             -> show this help"
    echo "-htmlman          -> generate man and html pages"
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
-   echo "-insure           -> compile in debug mode and detect memory leaks (en ensure ; glinux, ..)"
+   echo "-insure           -> compile in debug mode and detect memory leaks (en insure ; glinux, ..)"
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-jam              -> compile jam"
    echo "-kerberos         -> enable kerberos authentication"
@@ -222,6 +222,7 @@ usage:
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
+   echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-secure           -> enable ssl security"
    echo "-shared           -> link shared (default)"
@@ -276,6 +277,7 @@ set   IRIX_ARCHDEF  = IRIX6
 set   OSREL         = ""
 set   CC_FORCED     = 0
 set   CC           = cc
+set   LD_WRAPPER   = ""
 set   CXX          = CC
 set   FC           = f77
 set   LFLAGS       = "-L."
@@ -715,6 +717,10 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-pr-sgeee":
       set SGE_PRODUCT_MODE=sgeee
+      breaksw
+   case "-purify":
+      set LD_WRAPPER = "purify"
+      set DEBUGGED   = 1
       breaksw
    case "-qmake"
       set USE_QMAKE    = 1
@@ -1888,7 +1894,7 @@ if ( "$CORE" == 1 ) then
    cd $COMPILE_ARCH
 
    echo ________C_O_R_E__S_Y_S_T_E_M_________
-   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" \
        "CXX=$CXX" "CXXFLAGS=$CXXFLAGS" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
@@ -1952,7 +1958,7 @@ if ( "$QMON" == 1) then
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f $SOURCE/clients/qmon/Makefile \
-       "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "SDIR=$SDIR" "SOURCE=$SOURCE"\
+       "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $CORE_INCLUDE" "SDIR=$SDIR" "SOURCE=$SOURCE"\
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" \
        "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" \
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" \

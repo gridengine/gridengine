@@ -809,10 +809,10 @@ By selecting one of the execution hosts the corresponding attributes are display
 To add a new execution host press @fBAdd@fR this pops up the execution host configuration editor.\n\
 Here the hostname of the new execution host can be specified the @fBLoad Scaling@fR factors, the\n\
 @fBAccess Attributes@fR, the @fBConsumables/Fixed Attributes@fR can be changed. In Grid Engine Enterprise Edition mode the\n\
-@fBUsage Scaling@fR and the @fBResource Capability Factor@fR can be adjusted.\n\
+@fBUsage Scaling@fR can be adjusted.\n\
 \n\
 The configuration helper dialogue consists of a folder with the categories @fBScaling@fR for\n\
-@fBLoad Scaling, Usage Scaling@fR (Grid Engine Enterprise Edition mode only) and @fBResource Capability Factor@fR (Grid Engine Enterprise Edition mode only)\n\
+@fBLoad Scaling, Usage Scaling@fR (Grid Engine Enterprise Edition mode only)\n\
 settings, @fBConsumables/Fixed Attributes@fR for host based attachment of consumables and fixed attributes,\n\
 @fBUser Access@fR for host based accessability settings and in Grid Engine Enterprise Edition mode additionally @fBProject Access@fR\n\
 for host based definition of project access.\n\

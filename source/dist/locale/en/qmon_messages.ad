@@ -135,7 +135,6 @@ _Messages_.en.*.@fBQueue Control: @fBQueue Control
 _Messages_.en.*.@fBQUEUE ACTIONS: @fBQUEUE ACTIONS
 _Messages_.en.*.@fBRequested Resources: @fBRequested Resources
 _Messages_.en.*.@fBRerun Jobs: @fBRerun Jobs
-_Messages_.en.*.@fBResource Capability Factor: @fBResource Capability Factor
 _Messages_.en.*.@fBResume Method: @fBResume Method
 _Messages_.en.*.@fBRunning Jobs: @fBRunning Jobs
 _Messages_.en.*.@fBScaling: @fBScaling

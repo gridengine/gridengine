@@ -136,7 +136,6 @@ _Messages_.de.@fBQueue Configuration: @fBWarteschlangenkonfiguration
 _Messages_.de.@fBQueue Control: @fBWarteschlangenüberwachung
 _Messages_.de.@fBRequested Resources: @fBAngeforderte Betriebsmittel
 _Messages_.de.@fBRerun Jobs: @fBAuftragsneustart
-_Messages_.de.@fBResource Capability Factor: @fBBetriebsmittelverfügbarkeitsmaßzahl
 _Messages_.de.@fBResume Method: @fBWiederaufnahmemethode
 _Messages_.de.@fBRunning Jobs: @fBLaufende Aufträge
 _Messages_.de.@fBScaling: @fBSkalierung

@@ -255,8 +255,7 @@ Qmon*exechost_layout.xmtChildren: \
                      exechost_consumables, \
                      exechost_reporting_variables, \
                      exechost_access, \
-                     exechost_usage_scaling; \
-      XmTextField    exechost_rcf;
+                     exechost_usage_scaling;
 
 Qmon*exechost_layout.layout: \
    Row { \
@@ -267,7 +266,6 @@ Qmon*exechost_layout.layout: \
          Caption tl "@{@fBConsumables/Fixed Attributes}" exechost_consumables \
          Caption tl "@{@fBReporting Variables}" exechost_reporting_variables \
          Caption tl "@{@fBUsage Scaling}" exechost_usage_scaling \
-         Caption tl "@{@fBResource Capability Factor}" exechost_rcf \
       } \
    }
 
@@ -284,12 +282,6 @@ Qmon*exechost_layout*scrollBarDisplayPolicy:   AS_NEEDED
 Qmon*exechost_layout*exechost_list.fontList:            $fixed_font
 Qmon*exechost_layout*exechost_list.selectionPolicy:     BROWSE_SELECT
 Qmon*exechost_layout*exechost_list.visibleItemCount:    7
-
-Qmon*exechost_layout.exechost_rcf.cursorPositionVisible:   False
-Qmon*exechost_layout.exechost_rcf.editable:                False
-Qmon*exechost_layout.exechost_rcf.columns:                 10
-Qmon*exechost_layout.exechost_rcf.shadowThickness:         0
-Qmon*exechost_layout.exechost_rcf.highlightThickness:      0
 
 Qmon*exechost_load_scaling.fontList:              $fixed_font
 Qmon*exechost_load_scaling.editable:              False

@@ -1,3 +1,7 @@
+EB-2002-02-26-0: Enhancem:  Some modifications for EB-2002-01-23-1
+                            - return value 25 for qrsh, qsh, qlogin, qresub
+                            - modified man qubmit man page
+
 CR-2002-02-26-1: Testsuite: - changed name of product feature for secure mode from
                               "secure" to "csp"
                             - compile option will now automatically add "-secure"

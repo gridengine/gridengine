@@ -1677,7 +1677,11 @@ char **argv
       if (do_exit) {
          lFreeList(alp);
          lFreeList(lp_jobs);
-         SGE_EXIT(1);
+         if (status == STATUS_NOTOK_DOAGAIN) { 
+            SGE_EXIT(status);
+         } else {
+            SGE_EXIT(1);
+         }
       }
       
       VERBOSE_LOG((stderr, MSG_QSH_WAITINGFORINTERACTIVEJOBTOBESCHEDULED));

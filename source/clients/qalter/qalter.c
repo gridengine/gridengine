@@ -192,7 +192,11 @@ char **argv
    if (ret == STATUS_OK) {
       ret = 0;
    } else {
-      ret = 1;
+      if (me.who == QALTER) {
+         if (ret != STATUS_NOTOK_DOAGAIN) {
+            ret = 1;
+         }
+      }
    }
 
    SGE_EXIT(ret);

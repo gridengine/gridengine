@@ -1,3 +1,5 @@
+CR-2004-01-14-1: Bugfix:    rcsge startup_template still want to shutdown commd
+
 CR-2004-01-14-0: Testsuite: update install_core_system test for new communication
                             lib.
 

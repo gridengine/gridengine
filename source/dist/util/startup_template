@@ -499,9 +499,5 @@ else
             Shutdown sge_shepherd $execd_spool_dir/active_jobs/$jobid/pid
          done
       fi
-
-      # Shutdown communication daemon
-      echo "   Shutting down Grid Engine communication daemon"
-      $bin_dir/sgecommdcntl -k
    fi
 fi

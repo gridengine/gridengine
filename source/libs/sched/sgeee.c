@@ -3370,7 +3370,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     * element within the job. 
     */
 
-#if 1 /* EB: debug */
+#if 0 /* EB: debug */
    {
       lListElem *job;
 
@@ -3388,7 +3388,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          if (job) {
             lListElem *ja_task_template;
-#if 1 /* EB: debug */
+#if 0 /* EB: debug */
    DPRINTF(("tref->job_number: "u32"\n", tref->job_number));         
 #endif
 

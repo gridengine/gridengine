@@ -43,9 +43,9 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = /tmp_mnt/sge_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing aclocal
+ACLOCAL = aclocal
 AUTOCONF = autoconf
-AUTOMAKE = /tmp_mnt/sge_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing automake
+AUTOMAKE = automake
 AUTOHEADER = autoheader
 
 INSTALL = ../install-sh -c
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /tmp_mnt/sge_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing makeinfo
+MAKEINFO = makeinfo
 PACKAGE = make
 PERL = perl
 RANLIB = :

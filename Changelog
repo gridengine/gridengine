@@ -1,3 +1,5 @@
+AA-2004-02-16-0: Bugfix:    dependencies in Makefiles from ancient paths ;) removed
+
 JG-2004-02-16-0: Testsuite: Checked and fixed test functional/usage.
                             Source tcl_files/private.tcl to enable private
                             installation settings.

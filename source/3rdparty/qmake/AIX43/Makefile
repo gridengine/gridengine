@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = /sge_home/joga/devel/new/c4/qmake/missing aclocal
-AUTOCONF = /sge_home/joga/devel/new/c4/qmake/missing autoconf
-AUTOMAKE = /sge_home/joga/devel/new/c4/qmake/missing automake
-AUTOHEADER = /sge_home/joga/devel/new/c4/qmake/missing autoheader
+ACLOCAL = aclocal
+AUTOCONF = autoconf
+AUTOMAKE = automake
+AUTOHEADER = autoheader
 
 INSTALL = ../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /sge_home/joga/devel/new/c4/qmake/missing makeinfo
+MAKEINFO = makeinfo
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib

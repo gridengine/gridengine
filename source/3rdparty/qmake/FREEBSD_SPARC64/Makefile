@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = ../missing aclocal
-AUTOCONF = ../missing autoconf
-AUTOMAKE = ../missing automake
-AUTOHEADER = ../missing autoheader
+ACLOCAL = aclocal
+AUTOCONF = autoconf
+AUTOMAKE = automake
+AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)

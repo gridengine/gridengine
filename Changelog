@@ -1,3 +1,7 @@
+SD-2002-02-18-0: Bugfix:    - Set resource limits after setting the OS
+                              job id in builtin_starter.c so that job
+                              resource limits will work on the SX-6.
+
 AS-2002-02-13-3: CVS:       Created V53_beta2_sx6_TAG and V53_beta2_sx6_BRANCH
 ------------------------------------------------------------------------------
 

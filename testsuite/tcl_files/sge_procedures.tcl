@@ -6040,14 +6040,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 
 
 
-   set scheduler_pid -1
-
-   set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
-   set scheduler_pid [ string trim $scheduler_pid ]
-   if { $prg_exit_state != 0 } {
-      set scheduler_pid -1
-   }
-
+   set scheduler_pid [ get_scheduler_pid $hostname $qmaster_spool_dir ] 
 
    get_ps_info $scheduler_pid $hostname
    if { ($ps_info($scheduler_pid,error) == 0) } {
@@ -6069,6 +6062,32 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 
    puts $CHECK_OUTPUT "done."
 }  
+proc is_scheduler_alive { hostname qmaster_spool_dir } {
+
+   set scheduler_pid [get_scheduler_pid $hostname $qmaster_spool_dir]
+   get_ps_info $scheduler_pid $hostname
+   
+   set alive 0
+   if { ($ps_info($scheduler_pid,error) == 0) } {
+      if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
+         set alive 1
+      }
+   }
+
+   return $alive
+}
+
+proc get_scheduler_pid { hostname qmaster_spool_dir } {
+   global CHECK_USER 
+
+   set scheduler_pid -1
+   set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
+   set scheduler_pid [ string trim $scheduler_pid ]
+   if { $prg_exit_state != 0 } {
+      set scheduler_pid -1
+   }
+   return $scheduler_pid
+}
 
 proc shutdown_qmaster {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM

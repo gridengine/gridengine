@@ -3436,7 +3436,7 @@ proc run_tests { path runcompleted } {
     global CHECK_DIRECTORIES CHECK_OUTPUT CHECK_HOST check_errstr CHECK_RESULT_DIR
     global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_MAX_ERROR_MAILS CHECK_CORE_RESULT_DIR
     global CHECK_CHECKTREE_ROOT CHECK_ACT_PATH check_use_installed_system
-    global check_reinit_on_tcl_error
+    global check_reinit_on_tcl_error CHECK_CORE_MASTER
 
     set CHECK_DIRECTORIES ""
     get_check_dirs $path 
@@ -3511,6 +3511,7 @@ proc run_tests { path runcompleted } {
               }   
 
               set test_result [ run_test $check $runcompleted ]
+              
 
               switch -- $test_result {
                        0 { 
@@ -3581,7 +3582,7 @@ proc run_tests { path runcompleted } {
                                lappend check_error_text("$check") "{$err_message}"
                             }
                          }
-              }           
+              }
            }
    
            if { [llength $check_missing_dep] > 0 } {
@@ -3910,7 +3911,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    global CHECK_CORE_RESULT_DIR check_errstr CHECK_OUTPUT check_description check_functions check_errno 
    global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS
    global CHECK_CURRENT_WORKING_DIR check_init_level_procedure CHECK_ACT_LEVEL
-   global set_error_proc_called errorInfo
+   global set_error_proc_called errorInfo CHECK_CORE_MASTER
    
    # do not run allready completed tests
    debug_puts "runcompleted is $runcompleted"
@@ -3948,6 +3949,12 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    set was_unsupported 0
    set complete_errstr ""
    set complete_errno ""
+
+   if { [ string compare $check_name "init_core_system" ] != 0 } {
+      if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
+         add_proc_error "run_test_level" -1 "scheduler is not alive"
+      }
+   }
 
    if { [info exists check_functions] == 1 } {
       foreach elem $check_functions {
@@ -4324,6 +4331,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
      }
      puts $CHECK_OUTPUT "\n----------------------------------------------"
      puts $CHECK_OUTPUT "-> enter check level $level"
+
      if { $do_only_one_test == 0 } {
         set back [run_test_level $path $runcompleted $level]
         debug_puts "level $level return value: $back"
@@ -5345,7 +5353,6 @@ proc compile_source {} {
    puts $CHECK_OUTPUT "output:\n$output"
    puts $CHECK_OUTPUT "------------------------------------------"
 
-   sleep 60
    puts $CHECK_OUTPUT "------------------------------------------"
    set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
    if { [ string compare "csp" $CHECK_PRODUCT_FEATURE ] == 0 } {

@@ -159,8 +159,6 @@ proc submit_hosts_test {} {
       if { [ string first "neither submit nor admin host" $output ] < 0 } {
          add_proc_error "submit_hosts_test" -1 "qconf -mconf on host $submit_host should not work here"
       }
-
-
    } 
   
    wait_for_end_of_all_jobs 120

@@ -1,3 +1,12 @@
+CR-2002-04-29-1: Testsuite: - check if qmaster/scheduler are alive before starting
+                              any test
+                            - modified timeouts of some tests
+                            - added error information on some tests
+                            - new procedures:
+                              is_scheduler_alive()
+                              get_scheduler_pid()
+                             
+
 JG-2002-04-29-0: Cleanup:   Job object:
                             - removed unused attributes and corresponging code
                             - moved JB_end_time to jatask object

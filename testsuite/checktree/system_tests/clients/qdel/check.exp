@@ -117,7 +117,7 @@ global queue
 proc init_level {} {
   global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
 
-  set queue "$CHECK_HOST.qdel_test"
+  set queue "$CHECK_HOST.q_del"
 
   
 
@@ -204,6 +204,17 @@ proc qdel_setup {} {
 #*******************************
 proc qdel_cleanup {} {
    global queue CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+   global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
+   global CHECK_SECOND_FOREIGN_SYSTEM_USER
+
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" "-uall" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result" 
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result" 
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result" 
+
+   wait_for_end_of_all_jobs 120
 
    del_queue $queue
 
@@ -239,7 +250,7 @@ proc qdel_submit_delete_when_transfered { } {
             puts $CHECK_OUTPUT $result
             set job_id [lindex $result 2]    
             catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$arch/qconf" "-tsm" } result
-            set job_state [ wait_for_jobstart $job_id "leeper" 60 ]
+            set job_state [ wait_for_jobstart $job_id "leeper" 120 ]
             if { $job_state == -1 } {
                set runs 0
             }
@@ -317,7 +328,7 @@ proc are_jobs_deleted { job_list } {
        }
 
        set runtime [expr ( [timestamp] - $time ) ]
-       if { $runtime >= 300 } {
+       if { $runtime >= 120 } {
           return -1
        }
        sleep 1
@@ -1142,6 +1153,7 @@ proc qdel_user_list {} {
           }
    } 
 
+
    # now delete all jobs as user 2 ( only submit user ) of user 2 ( himself ) 
    set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "-u $CHECK_FIRST_FOREIGN_SYSTEM_USER" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
@@ -1155,6 +1167,7 @@ proc qdel_user_list {} {
    set job_list_user2 [submit_testjobs $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "user 2 has jobs $job_list_user2"
    set all_jobs "$job_list_user1 $job_list_user2 $job_list_user3"
+
 
 
    # now delete all jobs as user 2
@@ -1172,7 +1185,6 @@ proc qdel_user_list {} {
          set_error -1 "(2) not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted"
       }
    } 
-
    # now test if the jobs of user1 and user3 are still here
    set all_jobs "$job_list_user1 $job_list_user3"
    puts $CHECK_OUTPUT "following jobs must be in the system: $all_jobs"
@@ -1329,7 +1341,6 @@ proc qdel_force {} {
       # now restart execd
       startup_execd $CHECK_HOST
    }
-
   # ok - qdel without execd is ok, now check the -f option 
 
    # submit jobs to delete

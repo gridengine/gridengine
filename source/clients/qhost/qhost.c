@@ -402,9 +402,9 @@ u_long32 show
             state = lGetUlong(qep, QU_state);
             load_thresholds = lGetList(qep, QU_load_thresholds);
             suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
-            if (sge_load_alarm(qep, load_thresholds, ehl, cl, NULL))
+            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL))
                state |= QALARM; 
-            if (sge_load_alarm(qep, suspend_thresholds, ehl, cl, NULL))
+            if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL))
                state |= QSUSPEND_ALARM; 
             queue_get_state_string(state_string, state);
             printf("%s", state_string);

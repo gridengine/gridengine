@@ -134,11 +134,11 @@ int nr
       case SCHEDD_INFO_NOACCESSTOPE_S           :
          return MSG_SCHEDD_INFO_NOACCESSTOPE_S            ;   
  
-      case SCHEDD_INFO_QUEUEINALARM_S           :
-         return MSG_SCHEDD_INFO_QUEUEINALARM_S            ;       
+      case SCHEDD_INFO_QUEUEINALARM_SS          :
+         return MSG_SCHEDD_INFO_QUEUEINALARM_SS           ;       
  
-      case SCHEDD_INFO_QUEUEOVERLOADED_S        :
-         return MSG_SCHEDD_INFO_QUEUEOVERLOADED_S         ;   
+      case SCHEDD_INFO_QUEUEOVERLOADED_SS       :
+         return MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS        ;   
  
       case SCHEDD_INFO_ALLALARMOVERLOADED_      :
          return MSG_SCHEDD_INFO_ALLALARMOVERLOADED_       ;   

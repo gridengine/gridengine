@@ -123,8 +123,8 @@
 #define MSG_SCHEDD_INFO_CKPTNOTFOUND_                 _MESSAGE(47064, _("cannot run because requested ckpt object not found"))
 #define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S           _MESSAGE(47065, _("cannot run because free slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_NOACCESSTOPE_S                _MESSAGE(47066, _("cannot run because no access to pe "SFQ"") ) 
-#define MSG_SCHEDD_INFO_QUEUEINALARM_S                _MESSAGE(47067, _("queue "SFQ" is in suspend alarm") )        
-#define MSG_SCHEDD_INFO_QUEUEOVERLOADED_S             _MESSAGE(47068, _("queue "SFQ" dropped because it is overloaded") ) 
+#define MSG_SCHEDD_INFO_QUEUEINALARM_SS               _MESSAGE(47067, _("queue "SFQ" is in suspend alarm: %s") )        
+#define MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS            _MESSAGE(47068, _("queue "SFQ" dropped because it is overloaded: %s") ) 
 #define MSG_SCHEDD_INFO_ALLALARMOVERLOADED_           _MESSAGE(47069, _("All queues dropped because of overload or full") )  
 #define MSG_SCHEDD_INFO_TURNEDOFF_                    _MESSAGE(47070, _("(Collecting of scheduler job information is turned off)") ) 
 #define MSG_SCHEDD_INFO_JOBLIST_                      _MESSAGE(47071, _("(Scheduler job information not available for every job)" ) )  
@@ -304,6 +304,8 @@
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN"\n"))
 #define MSG_SCHEDD_NOLOADVALUEFORTHRESHOLD_S                _MESSAGE(47220, _("\terror: no load value for threshold "SFN"\n"))
 
+
+
 /* 
 ** schedd/sge_update_lists.c
 */ 
@@ -379,7 +381,7 @@
 /* 
 ** schedd/slots_used.c
 */ 
-#define MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S     _MESSAGE(47261, _("missing \"slots\" entry in consumable actual list of queue "SFQ"\n"  ) )  
+#define MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S      _MESSAGE(47261, _("missing \"slots\" entry in consumable actual list of queue "SFQ"\n"  ) )  
 
 /* 
 ** schedd/sort_hosts.c
@@ -391,5 +393,26 @@
 */ 
 #define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47263, _("Group "SFQ" already contained in userset "SFQ"\n"))
 #define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47264, _("User "SFQ" already contained in userset "SFQ"\n"))
+
+
+/* 
+** schedd/sge_select_queue.c
+*/
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47265, _("invalid load value "SFQ" for theshold "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47266, _("invalid threshold value "SFN"="SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47267, _("invalid load correction value "SFN"="SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSS            _MESSAGE(47268, _(SFN"="SFN" ("SN_UNLIMITED") exceeds threshold of "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSS           _MESSAGE(47269, _(SFN"=%f ("SN_UNLIMITED") exceeds threshold of "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSS           _MESSAGE(47270, _(SFN"="SFN" exceeds threshold of "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47271, _("unknown complex attribute type for theshold "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47272, _("no such host "SFN" for that queue\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47273, _("no such complex attribute for threshold "SFQ"\n"))
+
+#define MSG_SCHEDD_LCDIAGHOSTNP_ISI                   _MESSAGE(47274, _("host load correction %d times "SFN" (nproc=%d)"))
+#define MSG_SCHEDD_LCDIAGHOST_IS                      _MESSAGE(47275, _("host load correction %d times "SFN))
+#define MSG_SCHEDD_LCDIAGGLOBAL_IS                    _MESSAGE(47276, _("global load correction %d times "SFN))
+#define MSG_SCHEDD_LCDIAGPOSITIVE_S                   _MESSAGE(47277, _("encloses "SFN))
+#define MSG_SCHEDD_LCDIAGNEGATIVE_S                   _MESSAGE(47278, _("reduced by "SFN))
+#define MSG_SCHEDD_LCDIAGNONE                         _MESSAGE(47279, _("no load correction applied"))
 
 #endif /* __MSG_SCHEDD_H */

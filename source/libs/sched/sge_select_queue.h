@@ -46,7 +46,7 @@ int sge_match_complex_attributes(lList *given_attr, lList *requested_attr, int q
  * is there a load alarm on this queue
  * 
  */
-int sge_load_alarm(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, lList *load_adjustments);
+int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, lList *load_adjustments);
 
 /* 
  * get reason for alarm state on queue

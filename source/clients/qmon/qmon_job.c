@@ -720,11 +720,9 @@ void updateJobList(void)
                qnm = lGetString(lFirst(ql), JG_qname);
                qep = lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, qnm);
                if (qep) {
-      /*             lList *lt = lGetList(qep, QU_load_thresholds); */
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
-                  if (/* sge_load_alarm(qep, lt, ehl, cl, NULL) || */
-                           sge_load_alarm(qep, st, ehl, cl, NULL)) {
+                  if ( sge_load_alarm(NULL, qep, st, ehl, cl, NULL)) {
                      jstate = lGetUlong(jap, JAT_state);
                      jstate &= ~JRUNNING; /* unset bit jrunning */
                      /* set bit jsuspended_on_subordinate */

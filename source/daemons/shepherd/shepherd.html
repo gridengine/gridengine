@@ -89,11 +89,11 @@ set for the job.</li>
 If available and requested: setup AFS security mechanism.</li>
 
 <li>
-If requested: start a prolog script - see <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/queue_conf.html">queue_conf(5)</a></font>.</li>
+If requested: start a prolog script - see <font color="#000000"><a href="../../../doc/htmlman/htmlman5/queue_conf.html">queue_conf(5)</a></font>.</li>
 
 <li>
 In case of parallel jobs that need special setup: start a pe startup procedure
-- see <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_pe.html">sge_pe(5)</a></font>.</li>
+- see <font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_pe.html">sge_pe(5)</a></font>.</li>
 </ul>
 This process environment is setup in <tt>source/daemons/shepherd/shepherd.c:
 main</tt>
@@ -135,7 +135,7 @@ Setup the environment variables.</li>
 <li>
 If requested, set a special group id different from the users primary group
 id - see execd_param <tt>USE_QSUB_GID</tt> in the cluster configuration:
-<font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.</li>
+<font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a></font>.</li>
 
 <li>
 Set an operating system job id, if the operating system provides this feature,
@@ -155,12 +155,12 @@ If it is a batch job, execute the jobscript with commandline parameters.</li>
 
 <li>
 If it is a qsh job, start an xterm process as defined in the cluster configuration,
-parameter xterm, see <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.</li>
+parameter xterm, see <font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a></font>.</li>
 
 <li>
 If it is a qrsh or qlogin job, call the qlogin_starter that starts a telnetd,
 rshd or rlogind as defined in the cluster configuration, parameters qlogin_daemon,
-rsh_daemon and rlogin_daemon, see <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.</li>
+rsh_daemon and rlogin_daemon, see <font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a></font>.</li>
 </ul>
 
 <li>
@@ -183,10 +183,10 @@ After a job has terminated, the job is cleaned up:
 <ul>
 <li>
 If it is a parallel job and a pe stop procedure has been defined: Execute
-the pe stop procedure, see <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_pe.html">sge_pe(5)</a></font>.</li>
+the pe stop procedure, see <font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_pe.html">sge_pe(5)</a></font>.</li>
 
 <li>
-Execute an epilog script if defined, see <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/queue_conf.html">queue_conf(5)</a></font>.</li>
+Execute an epilog script if defined, see <font color="#000000"><a href="../../../doc/htmlman/htmlman5/queue_conf.html">queue_conf(5)</a></font>.</li>
 
 <li>
 Free a previously defined processor set.</li>
@@ -214,7 +214,7 @@ wait_my_child</tt>).
 <tt>$SGE_ROOT/default/spool/&lt;hostname></tt>).
 The spool directory can be defined in the cluster configuration - see parameter
 <tt>execd_spool_dir</tt>
-in the cluster configuration, <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
+in the cluster configuration, <font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
 <p>Under the host specific spool directory, a subdirectory active_jobs
 is created by the execd, for each job, the execd creates a subdirectory
 <tt>&lt;jobid>.&lt;taskid></tt>
@@ -366,6 +366,7 @@ hostname is the name of the execution host</li>
 qlogin/qrsh client as number in ASCII format.
 <br>(see <tt>source/daemons/common/qlogin_starter.c: write_exit_code_to_qrsh</tt>)
 <br>&nbsp;
+<p><br>
 <center>
 <p>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
 </ul>

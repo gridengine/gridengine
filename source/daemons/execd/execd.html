@@ -214,7 +214,7 @@ contain
 
 <br>All load values collected by the load sensor(s) of an execd in a load
 report interval are sent to the qmaster in one report message - see also
-man page <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
+man page <font color="#000000"><a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
 <li>
 <b><i>Job reports</i></b></li>
 
@@ -241,14 +241,14 @@ function <tt>get_load_avg</tt> and <tt>get_cpu_load</tt> in the file <tt>source/
 <p><font color="#000000">Memory load values are retrieved by the (platform
 dependent) function <tt>load_mem</tt> in file <tt>source/libs/uti/sge_loadmem.c</tt>.</font>
 <p>In addition, there exists an interface to integrate one or multiple
-external load sensors into the execd - see man page <a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a>.
+external load sensors into the execd - see man page <a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a>.
 <p>This is for example done to integrate license counters from licensing
 systems into Grid Engine or to provide additional host characteristics
 to Grid Engine that are not handled by the built-in load sensor.
 <p>An external load sensor can be any executable like a binary, a shell
 script, a perl script ...
 <p>It can be configured in the (host specific) cluster configuration by
-setting the parameter <tt>load_sensor</tt> - see man page <a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a>
+setting the parameter <tt>load_sensor</tt> - see man page <a href="../../../doc/htmlman/htmlman5/sge_conf.html">sge_conf(5)</a>
 - and is started by the execd as a child process (see function <tt>sge_ls_start_ls</tt>
 in file <tt>source/daemons/execd/sge_load_sensor.c</tt>).
 <br>Multiple load sensors can be started by one execd.

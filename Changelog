@@ -1,41 +1,55 @@
-EB-2003-06-17-0: Bugfix:   Checkpointed job migration on bad exit status
-                 Issue:    174
-                 Review:   AS
-                 Changed:  sge_shepherd
+EB-2003-06-17-0: Bugfix:    Checkpointed job was migrated on bad exit status
+                            Restarted kernel/app level checkpointing jobs
+                            where rescheduled forever
+                            Now jobs also exiting with exit status > 128
+                            won't be rescheduled
+                 Issue:     174
+                 Review:    AS
+                 Changed:   sge_shepherd
 
-JG-2003-06-10-0: Bugfix:   An incomplete resource request (-l =1) caused 
-                           qmaster to crash.
-                 Bugtraq:  4876169
-                 Review:   AS
-                 Changed:  sge_qmaster, qsub, qsh, qhost, qalter, qstat
+AS-2003-06-17-0: Bugfix:    Allow "-" sign as first character of load_formula
+                            It was not possible to have a load formaula like
+                            "-np_load_avg". Also changed man page.
+                 Issue:     568
+                 Review:    EB
+                 Changed:   sge_schedd, sge_qmaster
 
-SG-2003-06-10-0: Bugfix:    I added a new bug while fixing issue 540
+JG-2003-06-10-0: Bugfix:    An incomplete resource request (-l =1) caused 
+                            qmaster to crash.
+                 Bugtraq:   4876169
+                 Review:    AS
+                 Changed:   sge_qmaster, qsub, qsh, qhost, qalter, qstat
+
+SG-2003-06-10-0: Bugfix:    Added a new bug while fixing issue 540
                             The qmaster creashed in a special error case.
-                  Review:   AA
-                  Changed:  qmaster
+                 Review:    AA
+                 Changed:   qmaster
 
-EB-2003-06-06-0  Bugfix    Impossible to disable qmaster profiling
-                 IZ:       ???
-                 Bugtraq:  ???
-                 Changed:  sge_qmaster
-                 Review:   AS 
+EB-2003-06-06-0  Bugfix:    Impossible to disable qmaster profiling
+                 Issue:     569
+                 Changed:   sge_qmaster
+                 Review:    AS 
 
-SG-2003-06-04-0  Bugfix    the queue name was truncated to 10 chars
-                           - the "-r" option got an extra info-line: 
-                             "master queue:", which displayes the full queue 
-                             name 
-                           - for all other outputs enables the env variable 
-                             "SGE_LONG_QNAMES"
-                           the output of long queue names. 
-                 IZ:       #555
-                 Changed:  qstat
-                 Review:   AH, AA
+SG-2003-06-04-0  Bugfix     the queue name was truncated to 10 chars
+                            - the "-r" option got an extra info-line: 
+                              "master queue:", which displayes the full queue 
+                              name 
+                            - for all other outputs enables the env variable 
+                              "SGE_LONG_QNAMES"
+                            the output of long queue names. 
+                 Issue:     555
+                 Changed:   qstat
+                 Review:    AH, AA
 
-SG-2003-05-26-0: Bugfix    qstat crashed, when used with the options -r -s z
-                           - added the required information to the list
-                 IZ:       #545
-                 Changed:  qstat
-                 Review:   AH
+AS-2003-05-27-1  Bugfix:    cannot install on Solaris 10
+                            Solaris 10 not recognized by util/arch script
+                 Bugtraq:   4822799
+
+SG-2003-05-26-0: Bugfix     qstat crashed, when used with the options -r -s z
+                            - added the required information to the list
+                 Issue:     545
+                 Changed:   qstat
+                 Review:    AH
 
 SG-2003-05-22-0: Bugfix:    enabled output file names to have a ":" inside for 
                             qsub
@@ -46,9 +60,9 @@ SG-2003-05-22-0: Bugfix:    enabled output file names to have a ":" inside for
                               error if the name could not be found.
                             - implemented a check, if the files are only 
                               specified once per machine.
-                 IZ:        #540
+                 Issue:     540
                  Changed:   qsub, qsh, qalter, sge_qmaster, qmon
-                 Review:    AH, 
+                 Review:    AH
 
 AA-2003-05-27-0  Bugfix:    sge_ca script -usercert needs RANDFILE env var
                  Bugtraq:   4749151
@@ -66,7 +80,7 @@ AA-2003-05-22-1  Bugfix:    sge_ca script: uniqueIdentifier has been renamed to
 AA-2003-05-22-0  Bugfix:    missing comment and syntax errors in qmon resource
                             file Q
                             aimk.site, upgrade to openssl 0.9.7a
-                 IZ:        560           
+                 Issue:     560           
                  Bugtraq:   4869784
                  Changed:   all binaries
 
@@ -74,7 +88,7 @@ AS-2003-05-22-0  Bugfix:    resource limits not correctly set for Linux x86.
                             Used 32bit interface. This caused that a job
                             could not get more than ~ 3.7GB of memory.
                  Review:    AH
-                 IZ:        521
+                 Issue:     521
                  Bugtraq:   4869772
                  Changed:   sge_shepherd
                             
@@ -86,7 +100,7 @@ JG-2003-05-21-0  Bugfix:    SGE didn't compile on systems with glibc-2.3 and
 JG-2003-05-20-0  Bugfix:    SGE_O_* variables for a task within a tightly 
                             integrated job were set from the jobs environment, 
                             but have to come from the tasks environment.
-                 IZ:        557
+                 Issue:     557
                  Bugtraq:   4866711
                  Review:    AH
                  Changed:   qsh, sge_execd
@@ -94,12 +108,12 @@ JG-2003-05-20-0  Bugfix:    SGE_O_* variables for a task within a tightly
 AA-2003-05-09-0  Bugfix:    unexpected output for qstat -j and qmon Why? 
                             with no job selected due to wrong order of 
                             message ids fixed
-                 Bugtraq:   #4851939
+                 Bugtraq:   4851939
                  Review:    CR 
                  Changed:   all binaries that link against schedlib
 
 JG-2003-05-08-0  Bugfix:    qmake dumped core when starting recursive make calls
-                 IZ:        547
+                 Issue:     547
                  Bugtraq:   4860391
                  Review:    AS
                  Changed:   qmake
@@ -111,21 +125,21 @@ EB-2003-05-08-0  Bugfix:    settings.[c]sh did not set LD_LIBRARY_PATH
 
 AA-2003-04-30-0  Bugfix:    qlogin/qlogind whitespace checking removed to 
                             allow ssh/sshd with optional arguments
-                 IZ:        541
+                 Issue:     541
                  Review:    CR
                  Changed:   qmon
                  
 JG-2003-04-22-0  Bugfix:    qrsh (rshd) does not set limits after setting the 
                             osjobid. This disabled limits that depend on being 
                             in a OS managed job (e.g. on SUPER-UX/SX).
-                 IZ:        513
+                 Issue:     513
                  Review:    EB
                  Changed:   rshd
 
 AH-2003-04-17-0  Bugfix:    Consumable values were not considered in 
                             load/suspend threshold.
-                 IZ:        #464
-                 Bugtraq:   #4849969
+                 Issue:     464
+                 Bugtraq:   4849969
                  Review:    AS 
 
                             THE FIX IS INCORPORATED INTO THE SOURCE CODE
@@ -234,7 +248,7 @@ AH-2003-03-27-0  Bugfix:    qrong qstat -j diagnosis message wrongly indicates
 
 JG-2003-03-27-0  Bugfix:    qstat -alarm was broken.
                  Issue:     469, 489
-                 Bugtraq:   481579
+                 Bugtraq:   4815795
                  Changed:   qstat
                  Review:    AH
 
@@ -382,7 +396,7 @@ JG-2003-02-14-0  Bugfix:    Second migration of tightly integrated jobs failed
                  Changed:   sge_qmaster
 
 EB-2003-02-14-0  Testsuite: new test which will find #226 
-                 IZ:        #364
+                 Issue:     364
 
 JG-2003-02-13-1  Enhancem.: Disabled use of non unique hashtable in scheduler.
                             It has negative performance impact on job sorting.
@@ -409,7 +423,7 @@ AA-2003-02-11-0  Bugfix:    qmon crash fixed for pressing Why ? when several
                             jobs are selected.
                  Changed:   qmon
                  Bugtraq:   4816529
-                 IZ:        #490
+                 Issue:     490
 
 JG-2003-02-11-0  Enhancem.  Improved ineffective implementation of removing 
                             entries in nonunique hashtables.
@@ -418,7 +432,7 @@ JG-2003-02-11-0  Enhancem.  Improved ineffective implementation of removing
 
 AS-2003-02-10-1  Bugfix:    scripts/util/arch: backed out hp11-64 and aix51
                             detection since no port available yet
-                 IZ:        #486
+                 Issue:     486
                  
 AS-2003-02-10-0  Changed:   libs/gdi/version.c: set version to 5.3p3
 
@@ -442,8 +456,8 @@ CR-2003-02-05-3  L10N:      Removed unused message macro (ID:15004)
                  Changed:   msg_qrsh.h
 
 EB-2003-02-05-0: Bugfix:    qstat -r shows wrong dependencies
-                 IZ:        #478
-                 Bugtraq:   #4813188
+                 Issue:     478
+                 Bugtraq:   4813188
                  Changed:   qstat
 
 CR-2003-02-05-0: Enhancem.: Modified qevent demo client for testsuite 
@@ -461,8 +475,8 @@ CR-2003-01-31-0: Bugfix:    qconf -Muser and qconf -Auser report no success
                  Changed:   qconf
 
 AH-2003-01-31-0: Bugfix:    wrong usage reported by qstat -j <jobid>
-                 Bugtraq:   #4794242
-                 IZ:        #446
+                 Bugtraq:   4794242
+                 Issue:     446
                  Review:    AS
                  Changed:   sge_execd
 
@@ -471,22 +485,22 @@ JG-2003-01-31-0  Bugfix:    For tightly integrated parallel jobs, the
                             times resulting in too much accounting entries,
                             probably wrong scheduling decisions and
                             unnecessary spooling overhead.
-                 IZ:        #438
-                 Bugtraq:   #4791238
+                 Issue:     438
+                 Bugtraq:   4791238
                  Review:    AH
                  Changed:   sge_qmaster
 
 JG-2003-01-28-1  Bugfix:    qrsh crashed when job arguments exceeded 4k in
                             size.
-                 IZ:        #472
-                 Bugtraq:   #4807677
+                 Issue:     472
+                 Bugtraq:   4807677
                  Review:    CR
                  Changed:   qsh
 
 JG-2003-01-28-0  Bugfix:    startup failure of qrsh was reported as regular
                             job exit.
-                 IZ:        #380
-                 Bugtraq:   #4818741
+                 Issue:     380
+                 Bugtraq:   4818741
                  Review:    AH
                  Changed:   qrsh_starter, sge_shepherd, qsh
 
@@ -494,33 +508,33 @@ AA-2003-01-24-0  Bugfix:    qsub -C option analogue was missing in qmon
                             remove #$ in submit dialogue's Prefix field to
                             achieve same functionality as qsub -C before
                             loading job with the file dialogue
-                 IZ:        #449
-                 Bugtraq:   #4802831
+                 Issue:     449
+                 Bugtraq:   4802831
                  Review:    JG
                  Changed:   qmon
 
 EB-2003-01-23-1  Bugfix:    execd does process tracking even if no job has
                             to be controlled.
-                 IZ:        #416
-                 Bugtraq:   #4776016
+                 Issue:     416
+                 Bugtraq:   4776016
                  Review:    JG 
                  Changed:   sge_execd
 
 EB-2003-01-23-0  Bugfix:    qacct -l selection broken and
                             qacct -nohist -l selection broken
-                 IZ:        #455
-                 Bugtraq:   #4802171
+                 Issue:     455
+                 Bugtraq:   4802171
                  Review:    JG 
                  Changed:   qacct
 
 AH-2003-01-23-0: Bugfix:    qtcsh can't be used as normal tcsh
-                 Bugtraq:   #4776821
-                 IZ:        #417
+                 Bugtraq:   4776821
+                 Issue:     417
                  Review:    JG
                  Changed:   qtcsh
 
 JG-2003-01-23-0  Bugfix:    Set commlib timeouts in qsh analogous to qsub.
-                 Bugtraq:   #4654993 (partial fix)
+                 Bugtraq:   4654993 (partial fix)
 
 SD-2003-01-22-0  Enhancem.  Added code to source/libs/cull/cull_list.c to
                             randomize the elements before calling qsort.
@@ -529,34 +543,34 @@ SD-2003-01-22-0  Enhancem.  Added code to source/libs/cull/cull_list.c to
                             performance.
 
 EB-2003-01-22-1  Bugfix:    ":" in account string breaks accounting file
-                 IZ:        #314
-                 Bugtraq:   #4713013
+                 Issue:     314
+                 Bugtraq:   4713013
                  Review:    JG 
                  Changed:   sge_qmaster, submit.1
 
 JG-2003-01-22-1  Bugfix:    Empty sge_request file caused submission error.
-                 IZ:        #393
-                 Bugtraq:   #4760981
+                 Issue:     393
+                 Bugtraq:   4760981
 
 AH-2003-01-22-0  Bugfix:    STRING complex attribute handling with 
                             RELOP "!=" is broken
-                 IZ:        #450
-                 Bugtraq:   #4805423 
+                 Issue:     450
+                 Bugtraq:   4805423 
                  Review:    CR
                  Changed:   sge_qmaster, sge_schedd, qstat, qhost, qselect, 
                             qacct
 
 EB-2003-01-22-0  Bugfix:    qalter shows wrong priority number when using
                             negative priorities with -p option
-                 IZ:        #403
-                 Bugtraq:   #4769608
+                 Issue:     403
+                 Bugtraq:   4769608
                  Review:    CR
                  Changed:   sge_qmaster
 
 JG-2002-01-20-0  Bugfix:    qsub -C "" (do not parse special comments in
                             script file) did not work.
-                 IZ:        #449
-                 Bugtraq:   #4802831
+                 Issue:     449
+                 Bugtraq:   4802831
 
 SD-2002-12-19-1  Enhancem.  A new qmaster_params attribute called
                             SCHEDULER_TIMEOUT will allow the scheduler GDI
@@ -577,25 +591,25 @@ JG-2002-12-19-0  Bugfix:    Wrong error output if a userlist shall be
 
 AH-2002-12-12-0  Bugfix:    conflicting policies can cause job being started
                             and immediately suspended
-                 IZ:        #437
-                 Bugtraq:   #4790592 
+                 Issue:     437
+                 Bugtraq:   4790592 
                  Bugfix     failover to shadow master leaves sge_schedd on the  
                             original qmaster host
-                 IZ:        #441
-                 Bugtraq:   #4787623 
+                 Issue:     441
+                 Bugtraq:   4787623 
                  Review:    AS
 
 AH-2002-12-11-0  Bugfix:    job arguments larger than 10k crash qmaster
-                 IZ:        #440
-                 Bugtraq:   #4792036
+                 Issue:     440
+                 Bugtraq:   4792036
                  Review:    AS
             
 JG-2002-12-11-0  Enhancem.  Improved performance / scalability for job submit.
 
 EB-2002-12-10-0  Bugfix:    job logging file exists but is empty in certain 
                             configurations
-                 IZ:        #439
-                 Bugtraq:   #4791908
+                 Issue:     439
+                 Bugtraq:   4791908
                  Review:    AS
 
 EB-2002-12-09-0  Bugfix:    qstat -j shows messages concerning queues although
@@ -604,8 +618,8 @@ EB-2002-12-09-0  Bugfix:    qstat -j shows messages concerning queues although
                             if schedd_job_info=true
                             Job notification signals won't be delivered if
                             user redefines suspend_method or terminate_method
-                 IZ:        #432 #435 #436
-                 Bugtraq:   #4787598 #4790540 #4790547
+                 Issue:     432 435 436
+                 Bugtraq:   4787598 4790540 4790547
                  Review:    AS
 
 CR-2002-12-03-0  L10N:      a) When SGE qmaster was started with the global 
@@ -624,17 +638,17 @@ CR-2002-11-28-0  Cleanup:   un-commented message macros not used in source code
                  L10N:
 
 EB-2002-11-25-2  Bugfix:    qstat -f output broken for pe jobs on same queue
-                 IZ:        #430
-                 Bugtraq:   #4795475
+                 Issue:     430
+                 Bugtraq:   4795475
                  Review:    CR
 
 EB-2002-11-25-1  Testsuite: Added new tests which will find bug #126
-                 IZ:        #427
+                 Issue:     427
 
 EB-2002-11-25-0  Bugfix:    race condition if signals are to be delivered in 
                             job's startup phase
-                 IZ:        #126
-                 Bugtraq:   #4780316
+                 Issue:     126
+                 Bugtraq:   4780316
                  Review:    AH
 
 CR-2002-11-19-1  L10N       removed message definition macro only used in
@@ -652,8 +666,8 @@ AA-2002-11-21-0  Security:  SHA_1 define, sge_ca enhancements to support sha-1,
 CR-2002-11-22-1  Bugfix:    Uninitialized pointer cause segmentation fault in 
                             qsh/qrsh on submit only hosts.
                  Changed:   qsh/qrsh
-                 Bugtraq:   #4815774
-                 IZ:        #487
+                 Bugtraq:   4815774
+                 Issue:     487
 
 AA-2002-11-21-0  Bugfix:    aix51 arch in util/arch script
 
@@ -677,20 +691,20 @@ CR-2002-11-19-0  L10N:      Code cleanup/enhancements for testsuite l10n
 
 AH-2002-11-18-0  Bugfix:    Complex values for user defined complexes  
                             are rejected with global host.
-                 IZ:        #418
-                 Bugtraq:   #4776754
+                 Issue:     418
+                 Bugtraq:   4776754
                  Review:    AS
 
 EB-2002-11-18-0  Testsuite: Test for issue #423 and #402
-                 IZ:        #425, #426
+                 Issue:     425, 426
 
 EB-2002-11-14-0  Bugfix:    - memopy leak in execd
                             - stepsize 0 in array job specification
                               results in qmaster exception
                             - job env variables SGE_TASK_* might be
                               overwritten by qsub -v
-                 IZ:        #423, #424, #402, #264
-                 Bugtraq:   #4778757, #4778758, #4778762
+                 Issue:     423, 424, 402, 264
+                 Bugtraq:   4778757, 4778758, 4778762
                  Review:    JG
 
 AA-2002-11-14-0  Kerberos:  changes to fix build problems with krb5
@@ -711,8 +725,8 @@ SD-2002-10-15-0  Bugfix:    Fix no newline problem with path alias file If
                             the last line in the path aliases file
                             (sge_aliases) did not have a new line, qsub
                             would core.
-                 IZ:        #398
-                 Bugtraq:   #4816541
+                 Issue:     398
+                 Bugtraq:   4816541
                  Changed:   qsub, qsh, qmon, ...
 
 AH-2002-10-10-0  Bugfix:    Fix problem with user .cshrc error causing
@@ -723,7 +737,7 @@ AH-2002-10-10-0  Bugfix:    Fix problem with user .cshrc error causing
                             allows admins to prevent .cshrc/.profile from
                             being sourced when #!/bin/csh -f or #!/bin/sh -f
                             is used.
-                 IZ:        391
+                 Issue:     391
                  Bugtraq:   4756556
                  Review:    AS
                  Changed    sge_shepherd
@@ -739,8 +753,8 @@ AH-2002-10-08-0  Bugfix:    Commd read the host alias file each time when
 AH-2002-10-07-0  Bugfix:    Fixed problem with non-resvolvable hosts in
                             host_aliases file causing wrong resolving
                             results.
-                 IZ:        #392
-                 Bugtraq:   #4756557
+                 Issue:     392
+                 Bugtraq:   4756557
                  L10N:      added two new messages 
                  Review:    AS
                  Changed:   sge_qmaster, gethostbyname, gethostname
@@ -760,7 +774,7 @@ CR-2002-10-02-0  Testsuite: added sleep 1 command in procedure "delete_job"
 
 EB-2002-10-01-0  Bugfix:    using SGE_STRUCT_STAT instead of original stat 
                             struct
-                 IZ:        389
+                 Issue:     389
                  Bugtraq:   4755931
                  Review:    AS
 
@@ -784,12 +798,12 @@ JG-2002-09-26-0  Testsuite: Introduce architectures aix51 and hp11-64 for
 
 EB-2002-09-25-0  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog 
                             for pending jobs.
-                 IZ:        388 
+                 Issue:     388 
                  Changed:   qmon
 
 CR-2002-09-24-1  Bugfix:    linux clients use port 65535 by error if
                             COMMD_PORT/sge_commd service not set
-                 Bugtraq:   #4750818
+                 Bugtraq:   4750818
                  Changed:   all clients using commlib
 
 JG-2002-09-24-0  Enhancem.: Initial Part of port for HP-UX 11 64 bit
@@ -801,33 +815,33 @@ CR-2002-09-24-0  Testsuite: install_core_system check: wait for
                  Bugfix:
 
 CR-2002-09-23-2  Bugfix:    2 sentences need to be i18ned in master 
-                 Bugtraq:   #4746079
+                 Bugtraq:   4746079
 
 CR-2002-09-23-1  Bugfix:    infotext doesn't support the reorder of conversion
                             specifications
-                 Bugtraq:   #4739811
+                 Bugtraq:   4739811
                  Changed:   infotext
                             Bug not fixed for ALPHA, ALPHA5, ALINUX architecture
 
 CR-2002-09-20-0  Bugfix:    infotext doesn't support the reorder of conversion
                             specifications
-                 Bugtraq:   #4739811
+                 Bugtraq:   4739811
                  Changed:   infotext
 
 EB-2002-09-19-0  Bugfix:    prevent deletion of still referenced objects
                             - PE objects
                             - CKPT objects
-                 IZ:        #302 
-                 Bugtraq:   #4753668
+                 Issue:     302 
+                 Bugtraq:   4753668
                  Changed:   sge_qmaster
 
 SD-2002-09-19-0  Bugfix:    Fixed restart_command for checkpoint jobs
-                 IZ:        #383
+                 Issue:     383
                  Changed:   sge_shepherd
 
 EB-2002-09-18-0  Bugfix:    qconf gets commd timeout
-                 IZ:        #308
-                 Bugtraq:   #4753669 
+                 Issue:     308
+                 Bugtraq:   4753669 
                  Review:    AH
                  Changed:   qconf
 
@@ -835,15 +849,15 @@ JG-2002-09-17-0  Bugfix:    If a task of a tightly integrated job died through
                             a signal (e.g. SIGXCPU), the job was not terminated
                             and the signalling information not visible in the 
                             accounting record.
-                 Bugtraq:   #4747829
-                 IZ:        #379
+                 Bugtraq:   4747829
+                 Issue:     379
 
 CR-2002-09-16-0  Bugfix:    subject containing non-ASCII of notification mail
                             is not encoded properly
-                 Bugtraq:   #4740001
+                 Bugtraq:   4740001
 
 CR-2002-09-13-1  Bugfix:    Typo in Message
-                 Bugtraq:   #4746705
+                 Bugtraq:   4746705
 
 AA-2002-09-13-0  Bugfix:    QERROR action bugfix for qmon
                             aimk.site -> openssl-0.9.6g
@@ -853,15 +867,15 @@ JG-2002-09-11-1  Bugfix:    qmake without information about parallel execution
                             on commandline failed.
                             qmake made an incorrect resource request if the 
                             ARCH environment variable was an empty string.
-                 IZ:        #335, #327
-                 Bugtraq:   #4745399, 4745404
+                 Issue:     335, 327
+                 Bugtraq:   4745399, 4745404
                  Changed:   qmake
 
 JG-2002-09-11-0  Bugfix:    qrsh and qlogin accept unexpected options.
                             qsh/qrsh/qlogin did not accept options
                             -ac, -dc, -sc and -w
-                 IZ:        #325
-                 Bugtraq:   #4716824, #4745387
+                 Issue:     325
+                 Bugtraq:   4716824, 4745387
                  Changed:   qsh, submit.1
 
 EB-2002-09-10-0  Enhancem.: Initial Part of AIX 5.1 port
@@ -872,8 +886,8 @@ CR-2002-09-10-0  Bugfix:    L10N - (setlocale() returns e.g. fr_FR on LINUX)
 
 JG-2002-09-10-0  Bugfix:    qsh jobs without or with local DISPLAY variable 
                             set have to be rejected.
-                 IZ:        #342
-                 Bugtraq:   #4744523
+                 Issue:     342
+                 Bugtraq:   4744523
                  Changed:   sge_qmaster, qsh, submit.1
 
 CR-2002-09-09-3  I18N:      fixed script errors which caused loose of some
@@ -881,7 +895,7 @@ CR-2002-09-09-3  I18N:      fixed script errors which caused loose of some
                  Bugfix:
 
 CR-2002-09-09-1  I18N:      invalid escape sequence in one of msgid
-                 Bugtraq:   #4743505
+                 Bugtraq:   4743505
                  Changed:   inst_sgeee usage output
 
 CR-2002-09-09-0  Testsuite: make output check of qdel test independent of
@@ -889,8 +903,8 @@ CR-2002-09-09-0  Testsuite: make output check of qdel test independent of
 
 EB-2002-09-08-0  Bugfix:    schedd_job_info = true causes immense daemons
                             memory growth
-                 IZ:        #374
-                 Bugtraq:   #4742189
+                 Issue:     374
+                 Bugtraq:   4742189
                  Review:    AH
                  Changed:   sge_schedd
 
@@ -900,60 +914,60 @@ AA-2002-09-05-0  I18N:      - Calculation failure in Functional policy
                               on Solaris64
                             - suspend_threshold in queue icon display nearly 
                               not visible
-                 Bugtraq:   #4742082, #4729085, #4740335
-                 IZ:        #350
+                 Bugtraq:   4742082, 4729085, 4740335
+                 Issue:     350
 
 AS-2002-09-05-1  Bugfix:    "stop" procedure for execd had hardwired execd 
                             spool dir
-                 IZ:        #219
-                 Bugtraq:   #4742133
+                 Issue:     219
+                 Bugtraq:   4742133
 
 AS-2002-09-05-0  Enhancem:  better error message if hostname can't be
                             resolved at commd
                  Changed:   qconf
 
 EB-2002-09-02-1  Bugfix:    qmod help output is incomplete
-                 IZ:        #354
-                 Bugtraq:   #4741230
+                 Issue:     354
+                 Bugtraq:   4741230
                  Review:    AH
                  Changed:   qmod
 
 EB-2002-09-02-0  Bugfix:    load formula of the scheduler
-                 IZ:        #330
-                 Bugtraq:   #4740578
+                 Issue:     330
+                 Bugtraq:   4740578
                  Review:    AS
                  Changed:   sge_qmaster
 
 AS-2002-09-02-0  Bugfix:    Insufficient checking for PTF_*_PRIORITY values
-                 IZ:        #333
-                 Bugtraq:   #4740407
+                 Issue:     333
+                 Bugtraq:   4740407
                  Changed:   sge_execd
 
 AH-2002-09-02-0  Doc:       qmod man page for "-r" incorrect (user)
                             daemons to crash at startup phase
-                 IZ:        #193
+                 Issue:     193
                  Doc:       job array task index values range not documented
-                 IZ:        #283
+                 Issue:     283
 
 CR-2002-09-02-0  Testsuite: Merges from maintrunc
 
 EB-2002-09-02-0  Bugfix:    problems with destin_id_list syntax
-                 IZ:        #313
-                 Bugtraq:   #4740350
+                 Issue:     313
+                 Bugtraq:   4740350
                  Review:    AH
                  Changed:   qsub, qalter, qsh
                   
 AH-2002-08-30-0  Bugfix:    solaris 32 bit: rlim_fd_max > 1024 can cause 32 bit 
                             daemons to crash at startup phase
-                 IZ:        #371
-                 Bugtraq:   #4739596
+                 Issue:     371
+                 Bugtraq:   4739596
                  Changed:   sge_qmaster sge_execd sge_commd sge_schedd 
                             sge_shadowd
 
 EB-2002-08-29-0  Bugfix:    msg size used in tight PE integr. job start sync. 
                             protocol should be smaller
-                 IZ:        #213
-                 Bugtraq:   #4658706
+                 Issue:     213
+                 Bugtraq:   4658706
                  Review:    AH 
 
                             THE FIX IS INCORPORATED INTO THE SOURCE CODE
@@ -971,8 +985,8 @@ CR-2002-08-29-0  Bugfix:    corrected mistake in writing in debug messages
 
 EB-2002-08-28-0  Bugfix:    protocol doing termin. on failure for tightly 
                             integr. par. job could be leaner
-                 IZ:        #214
-                 Bugtraq:   #4658716
+                 Issue:     214
+                 Bugtraq:   4658716
                  Review:    AH 
 
                             THE FIX IS INCORPORATED INTO THE SOURCE CODE
@@ -988,24 +1002,24 @@ AA-2002-08-28-1  I18N:      version string and copyright strings for infotext
 
 AA-2002-08-28-0  Bugfix:    OK without hostname in host_configuration kill 
                             sge_qmaster
-                 Issues:    #370
-                 Bugtraq:   #4732031
+                 Issues:    370
+                 Bugtraq:   4732031
                  Review:    CR
                  Changed:   sge_qmaster
 
 AH-2002-08-28-0  Doc:       man page typo for sge_aliases
-                 IZ:        #347
+                 Issue:     347
                  Doc:       access_list(5) man page does not describe file 
                             format for SGEEE mode
-                 IZ:        #357
+                 Issue:     357
                  Doc:       Output of prolog/epilog for interactive jobs not
                             mentioned
-                 IZ:        #367
+                 Issue:     367
 
 EB-2002-08-23-0  Bugfix:    scheduler crashes if defaultuser has 0 shares in 
                             sharetree
-                 Issues:    #363
-                 Bugtraq:   #4735972
+                 Issues:    363
+                 Bugtraq:   4735972
                  Review:    AS
                  Changed:   sge_schedd
 
@@ -1013,42 +1027,42 @@ AS-2002-08-22-4  CVS        Created V531_beta7_TAG
 --------------------------------------------------
 
 AA-2002-08-22-0  I18N:      bunch of fixes for l10n
-                 Bugtraq:   #4733802, #4733201, #4733089, #4733043,
-                            #4731976, #4731990, #4731967, #4731958,
-                            #4731944, #4731935, #4731273, #4729700
+                 Bugtraq:   4733802, 4733201, 4733089, 4733043,
+                            4731976, 4731990, 4731967, 4731958,
+                            4731944, 4731935, 4731273, 4729700
                   
 AS-2002-08-22-2  I18N:      some msgs. are not anymore dynamically created
 
 AS-2002-08-22-1  Bugfix:    qhold/qrls (via qhold.sh) can print i18ned
                             removed Translate() shell function
                             better gid_range checking in install script
-                 Bugtraq:   #4732535           
+                 Bugtraq:   4732535           
 
 EB-2002-08-22-0  Bugfix:    Userset "defaultdepartment" accepts users in CLI
-                 Bugtraq:   #4733859, #4731347
-                 IZ:        #360 ??? #356 ???
+                 Bugtraq:   4733859, 4731347
+                 Issue:     360 ??? 356 ???
                  Review:    AS
                  Changed:   sge_qmaster, qconf
 
 AS-2002-08-22-0  Bugfix:    print correct progname in usage
-                 Bugtraq:   #4735258
+                 Bugtraq:   4735258
                  Changed:   sge_qmaster sge_execd, sge_shadowd, sgecommdcntl
 
 AA-2002-08-21-0  Bugfix:    gid_range bugfix for SGE mode in qmon
-                 Bugtraq:   #4731288
-                 IZ:        #355
+                 Bugtraq:   4731288
+                 Issue:     355
                  Changed:   qmon
 
 EB-2002-08-21-0  Bugfix:    qmaster error message during startup: global 
                             configuration doesn't exist - creating
-                 Bugtraq:   #4665780
-                 Issues:    #226
+                 Bugtraq:   4665780
+                 Issues:    226
                  Review:    AS
                  Changed:   sge_qmaster, qconf, qmon
 
 AS-2002-08-19-0  Bugfix:    gethostbyaddr binary not working on solaris64
-                 Bugtraq:   #4732545
-                 IZ:        #359
+                 Bugtraq:   4732545
+                 Issue:     359
                  Changed:   gethostbyaddr
 
 SD-2002-08-14-0  Enhancem.  Updated Kerberos integration to handle
@@ -1076,23 +1090,23 @@ AA-2002-08-09-0  I18N:      - aimk: -lXmu for LINUX6 broke build under special
 
 EB-2002-08-08-0  I18N:      Messages in some types of mail notification are 
                             not i18ned.
-                 Bugtraq:   #4728217
+                 Bugtraq:   4728217
                  Changed:   sge_execd, sge_qmaster
 
 AS-2002-08-08-1  Bugfix:    i18n/l10n ready for util/setfileperm.sh
-                 Bugtraq:   #4705054
+                 Bugtraq:   4705054
 
 AS-2002-08-08-0  Enhancm.:  cleanup in i18n setup
 
 AS-2002-08-07-0  Bugfix:    wrong setting of SGE_CELL in settings.sh 
                             created by util/create_settings.sh
-                 Bugtraq:   #4727457
-                 IZ:        #346
+                 Bugtraq:   4727457
+                 Issue:     346
  
 EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is
                             not reached
-                 IZ:        #345
-                 Bugtraq:   #4727515
+                 Issue:     345
+                 Bugtraq:   4727515
                  Review:    AH
                  Changed:   sge_schedd
 
@@ -1102,7 +1116,7 @@ AA-2002-08-01-1  L10N:      Yun's bug list, XtResolvePathname fix in Lookup.c
 CR-2002-07-31-1  Bugfix:    English messages show up when running install 
                             in localized environment (fix for "fr" Solaris 8
                             and 9)   
-                 Bugtraq:   #4719203
+                 Bugtraq:   4719203
                  Changed:   all binaries
 
 
@@ -1112,33 +1126,33 @@ CR-2002-07-31-0  Bugfix:    addend missing #ifdef __SGE_NO_USERMAPPING__
 
 AH-2002-07-29-1  Doc:       Describe the 'all' keyword for queue_list in
                             sge_pe(5) and checkpoint(5).
-                 IZ:        #319
+                 Issue:     319
                  Doc:       Describe qconf -mqattr switch as the deprecated
                             form of the -rattr and not of the -mattr switch.
                             Mention that ?attr switch familiy operates also
                             on PE and ckpt objects.
-                 IZ:        #321
+                 Issue:     321
 
 CR-2002-07-29-1: Bugfix:    corrected CR-2002-07-29-0 and added sc_OPT
                             for qalter binary
 
 CR-2002-07-29-0: Bugfix:    CLI: invalid option "-jid jid" for qconf in 
                             qconf -help
-                 Bugtraq:   #4722060
+                 Bugtraq:   4722060
                  Changed:   qalter, qconf, qsh, qrsh, qlogin, qsub
 
 CR-2002-07-26-1: Bugfix:    Wrong path for qmaster messages file in exe host 
                             installation
-                 Bugtraq:   #4721181    
+                 Bugtraq:   4721181    
  
 CR-2002-07-26-0: Bugfix:    Junk messages in installation
-                 Bugtraq:   #4705066 (refix)
+                 Bugtraq:   4705066 (refix)
 
 CR-2002-07-25-2: Merge:     Added some sge_ca options from maintrunc 
 
 CR-2002-07-25-1: I18N:      English messages show up when running install 
                             in localized environment    
-                 Bugtraq:   #4719203
+                 Bugtraq:   4719203
                  Changed:   all binaries
 
 CR-2002-07-25-0: Testsuite: bugfix (can't open product mode file - error)
@@ -1155,12 +1169,12 @@ AA-2002-07-25-0: I18N:      - qmon_about.c copyright under non C locales
                               when using localized q names
                             - change of qmon_messages.ad template
                               about_msg, removed obsolete calendar msgs
-                 Bugtraq:   #4719152
+                 Bugtraq:   4719152
 
 CR-2002-07-24-0: Bugfix:    wrong port output in qstat error message when qmaster
                             (merged from maintrunc)
-                 IZ:        #331
-                 Bugtraq:   #4719755
+                 Issue:     331
+                 Bugtraq:   4719755
                  Changed:   commdcntl infotext libcom.a libsec.a libsge.a qacct qalter qconf qdel qevent qhost qmod qmon qsh qstat qsub sge_commd sge_coshepherd sge_execd sge_qmaster sge_schedd sge_shadowd sge_share_mon sge_shepherd tstrcv tstsnd
                             
 CR-2002-07-23-1: Testsuite: (merged from maintrunc) 
@@ -1174,12 +1188,12 @@ AA-2002-07-23-0: I18N:      sge_ca script infotextized
 
 EB-2002-07-23-0: Bugfix:    qsub/qalter -l <shortcut_name>... might select
                             wrong resource.
-                 IZ:        #328
-                 Bugtraq:   #4718880
+                 Issue:     328
+                 Bugtraq:   4718880
                  Changed:   sge_qmaster
 
 CR-2002-07-22-1: Bugfix:    Junk messages in installation
-                 Bugtraq:   #4705066
+                 Bugtraq:   4705066
 
 CR-2002-07-22-0: Testsuite: New version strings for 5.3.1beta3 and beta4
                  Enhancem.:
@@ -1203,7 +1217,7 @@ CR-2002-07-18-4: Bugfix:    i18n new gridengine.pot file
 
 CR-2002-07-18-1: Bugfix:    i18n wrong function call in infotext binary -
                             l10n not working
-                 Bugtraq:   #4715919
+                 Bugtraq:   4715919
 
 CR-2002-07-18-0: Bugfix:    i18n aimk compilation for SOLARIS86 did not
                             translate i18n code
@@ -1213,8 +1227,8 @@ AA-2002-07-15-0: Bugfix:    l10n wrong widget name in qmon_cluster.ad file
                             translation template
 
 EB-2002-07-11-0: Bugfix:    qacct displays incorrect accounting information
-                 IZ:        #314
-                 Bugtraq:   #4713013
+                 Issue:     314
+                 Bugtraq:   4713013
                  Changed:   qacct
 
 AH-2002-07-10-4: Enhancem.: Further improved load alarm/suspend alarm
@@ -1224,14 +1238,14 @@ AH-2002-07-10-4: Enhancem.: Further improved load alarm/suspend alarm
 AH-2002-07-10-3: Bugfix:    Fixed problems with global load values
                             preventing job dispatching
                  Changed:   sge_qmaster
-                 IZ:        #311
-                 Bugtraq:   #4712023
+                 Issue:     311
+                 Bugtraq:   4712023
                             
 CR-2002-07-09-1  Testsuite: - added new SGE/SGEEE version strings for
                               5.3.1beta2 and SGE_5.3p1
                  Enhancem.: - new check "functional/job_environment" testing
                               job environment variables (e.g. JOB_NAME)
-                 IZ:        #267     
+                 Issue:     267     
 
 CR-2002-07-09-0  Bugfix:    removed double conf_version lines when creating
                             local configuration in install script inst_sge
@@ -1257,13 +1271,13 @@ AS-2002-07-04-2  CVS        Created V53p1_rc1_TAG and V53p1_rc1_BRANCH
 ----------------------------------------------------------------------
 
 AH-2002-07-02-2: Bugfix:    Fix problem with flittering load adjustment
-                 IZ:        #309
-                 Bugtraq:   #4710514
+                 Issue:     309
+                 Bugtraq:   4710514
                  Changed:   sge_schedd
 
 JG-2002-07-02-0: Bugfix:    qrsh -inherit failed with error 
                             "COMMPROC ALREADY REGISTERED"
-                 IZ:        #303
+                 Issue:     303
                  Changed:   qsh
 
 AH-2002-07-02-0: Bugfix:    Added missing newline character to error msg.
@@ -1279,8 +1293,8 @@ CR-2002-06-26-0: Testsuite: - new default parameter for wait_for_jobpending()
                               project_acces_lists test   
 
 CR-2002-06-25-1: Bugfix:    script syntax error in exec host installation
-                 IZ:        #297
-                 Bugtraq:   #4705893
+                 Issue:     297
+                 Bugtraq:   4705893
 
 AA-2002-06-19-0: Change:    i18n gettext build script
 
@@ -1290,24 +1304,24 @@ CR-2002-06-17-1: Bugfix:    Don't produce infotext error message "Binary not
                             compiled with gettext!"
 
 AA-2002-06-14-0: Bugfix:    Job dependency display in qmon (not displayed)
-                 IZ:        #275
-                 Bugtraq:   #4706929
+                 Issue:     275
+                 Bugtraq:   4706929
 		 Changes:   qmon
 
-CR-2002-06-13-5: Testsuite: testing issue #140 also for pending jobs
+CR-2002-06-13-5: Testsuite: testing issue 140 also for pending jobs
                  Enhancem.: 
 
 JG-2002-06-13-0: Enhancem.  qtcsh: If a command is started in the background 
                             using qrsh, the qrsh option -nostdin is used to 
                             avoid qrsh being suspended.
-                 IZ:        #287
-                 Bugtraq:   #4701640
+                 Issue:     287
+                 Bugtraq:   4701640
 
 CR-2002-06-13-4: Testsuite: merged qrsh test for hold_jid and h option from
                             maintrunc
 
 CR-2002-06-13-3: Testsuite: enhanced qstat test for -l/-q/-pe/-U option tests
-                 IZ:        #286
+                 Issue:     286
 
 AH-2002-06-12-0: Bugfix:    Prevent use of soft requests for consumables.
                             This addresses problems related to IZ #223 / BT
@@ -1315,87 +1329,87 @@ AH-2002-06-12-0: Bugfix:    Prevent use of soft requests for consumables.
                             debitation for soft resource requests.
 
 CR-2002-06-12-0: Testsuite: new testsuite checks (merge from MT)
-                 IZ:        #140
-                 IZ:        #141
-                 IZ:        #171
+                 Issue:     140
+                 Issue:     141
+                 Issue:     171
 
 EB-2002-06-11-0: Bugfix:    qstat shows waiting jobs of other PEs
-                 IZ:        #284
-                 Bugtraq:   #4699665
+                 Issue:     284
+                 Bugtraq:   4699665
                  Changed:   qstat
 
 AH-2002-06-10-0: Bugfix:    Complex default value was not used for load
                             thresholds in cases when no load value was
                             available.
-                 IZ:        #223
-                 Bugtraq:   #4700286
+                 Issue:     223
+                 Bugtraq:   4700286
 
 EB-2002-06-07-0: Bugfix:    disallow "none" in load_formula and addition
                             tests for the correctness
-                 IZ:        #215
-                 Bugtraq:   #4673738
+                 Issue:     215
+                 Bugtraq:   4673738
                  Changed:   sge_qmaster
 
 AH-2002-06-05-0: Bugfix:    Prevent qalter -l res=val on running jobs for 
                             consumable resources to prevent corruption of 
                             consumable managment 
-                 IZ:        #251
-                 Bugtraq:   #4683852
+                 Issue:     251
+                 Bugtraq:   4683852
 
 JG-2002-06-06-0: Bugfix:    Building Grid Engine with shared libs was broken. 
 
 AH-2002-06-05-0: Bugfix:    Fix problem with notify mechanism causing actual 
                             termination/suspension signal being delayed 
                             endlessly
-                 IZ:        #231
-                 Bugtraq:   #4697491
+                 Issue:     231
+                 Bugtraq:   4697491
 
 JG-2002-06-05-2: Bugfix:    qsub allowed submission of binary files
-                 IZ:        #247
-                 Bugtraq:   #4696768
+                 Issue:     247
+                 Bugtraq:   4696768
 
 JG-2002-06-05-1: Bugfix:    Error handling when reading configuration at
                             qmaster startup was incomplete and produced
                             confusing error messages.
-                 IZ:        #226
-                 Bugtraq:   #4665780
+                 Issue:     226
+                 Bugtraq:   4665780
 
 AS-2002-06-05-2: Change:    print edit comment when cluster config is
                             created in inst_sge script
-                 IZ:        #213
+                 Issue:     213
 
 JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines 
                             were incorrect.
-                 IZ:        #246
+                 Issue:     246
 
 SD-2002-06-04-0: Bugfix:    Removed max_jobs reference from 5.3 branch
-                 IZ:        #273
-	              Bugtraq:   #4696766
+                 Issue:     273
+	         Bugtraq:   4696766
 
 SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
-		 IZ:   	    #273
-                 Bugtraq:   #4696766
+		 Issue:	    273
+                 Bugtraq:   4696766
 
 JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin
-                 IZ:        #272
-                 Bugtraq:   #4708235
+                 Issue:     272
+                 Bugtraq:   4708235
 
 AH-2002-05-29-0: Bugfix:    Fix bug allowing non-privileged users to submit
                             jobs with priority higher than 0
-                 IZ:        #271
-                 Bugtraq:   #4692957
+                 Issue:     271
+                 Bugtraq:   4692957
 
 JG-2002-05-29-0: Enhancem.  Allow specification of arguments to 
                             [rsh|rlogin|qlogin]_[daemon|command]
-                 IZ:        #232
-                 Bugtraq:   #4708239
+                 Issue:     232
+                 Bugtraq:   4708239
 
 AH-2002-05-28-0: Bugfix:    Fix messages printed when GDI client fails
                             contacting qmaster
 
 JG-2002-05-27-0: Bugfix:    qsh ignored -S <shell> in sge_request(5) files
-                 IZ:        #250
-                 Bugtraq:   #4682966
+                 Issue:     250
+                 Bugtraq:   4682966
 
 AA-2002-05-27-0: I18N.:     I18N/L10N changes
 
@@ -1419,7 +1433,7 @@ JG-2002-05-22-0: Doc:       Fixed description of the environment variable
 
 JG-2002-05-21-0: Bugfix:    Recycling of additional group ids did not respect 
                             tightly integrated pe tasks.
-                 IZ:        #263
+                 Issue:     263
 
 CR-2002-05-21-0: Bugfix:    smaller bugfixes for infotext binary
 
@@ -1432,8 +1446,8 @@ CR-2002-05-16-0: Enhancem.: - i18n changes for inst_sge (part 1)
                             - added dstring modules
 
 EB-2002-05-06-0: Bugfix:    qhost -j is broken
-                 IZ:        #259
-                 Bugtraq:   #4686157
+                 Issue:     259
+                 Bugtraq:   4686157
                  Changed:   qhost
 
 CR-2002-05-14-0: Change:    removed sge_printf build from Makfile 
@@ -1447,7 +1461,7 @@ AH-2002-05-13-0: Change:    Do no longer flush events immediately after
                  Changed:   sge_qmaster
 
 EB-2002-04-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param. 
-                 Issues:    #248 
+                 Issues:    248 
                  Changed:   sge_qmaster, qacct, qconf
 
 CR-2002-05-06-0: Testsuite: fixed check dependencies
@@ -1471,16 +1485,16 @@ JG-2002-04-30-1: Enhancem.: Contribution of Guiseppe Palumbo: Make the
 JG-2002-04-30-0: Bugfix:    Buffer for task_id of pe task was too small.
                             This could cause a buffer overflow and probably
                             crashes of execd.
-                 IZ:        #299           
-                 Bugtraq:   #4677087    
+                 Issue:     299           
+                 Bugtraq:   4677087    
                  Changed:   sge_execd           
 
 EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch
                             on dev mailing list (Mon, 15 Apr 2002) 
                             - Memory leak
                             - potential wrong job state handling
-                 Issues:    #243
-                 Bugtraq:   #4676340 
+                 Issues:    243
+                 Bugtraq:   4676340 
                  Changed:   sge_schedd
 
 AH-2002-04-29-0: Change:    In the sched_conf(5) man page it was wrongly 
@@ -1490,19 +1504,19 @@ AH-2002-04-29-0: Change:    In the sched_conf(5) man page it was wrongly
                             Furthermore it was wrongly documented that the 
                             maxujobs limitation is applied separately to each
                             priority group.
-                 IZ:        #249
-                 Bugtraq:   #4681454 
+                 Issue:     249
+                 Bugtraq:   4681454 
 
 AH-2002-04-26-0: Bugfix:    - queue nsuspend > 1 was not used to suspend
                               multiple jobs in a queue at a time in case of a
                               suspend threshold alarm.
-                 IZ:        #239
-                 Bugtraq:   #4675410
+                 Issue:     239
+                 Bugtraq:   4675410
                             - use of suspend thresholds and user sort policy
                               could cause "inconsistent access tree data" schedd
                               logging and break user sort policy
-                 IZ:        #240
-                 Bugtraq:   #4675416
+                 Issue:     240
+                 Bugtraq:   4675416
                  Changed:   sge_schedd
 
 CR-2002-04-25-1: Testsuite: - access_list test:
@@ -1537,8 +1551,8 @@ CR-2002-04-23-0: Testsuite: merged compile procedure enhancments from
 JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had 
                             already the maximum number of group id's.
                  Enhancem.: More detailed description in error output
-                 IZ:        #237
-                 Bugtraq:   #4670669
+                 Issue:     237
+                 Bugtraq:   4670669
                  Changed:   sge_shepherd qsh rshd
 
 JG-2002-04-18-1: Enhancem.  Improved verbose output in qmake.
@@ -1551,8 +1565,8 @@ JG-2002-04-18-0: Bugfix:    If more then 1 task of a parallel job was started
                             variable was no longer exported to the tasks 
                             environment. Replaced the TASK_ID mechanism by
                             an entry in the jobs config.
-                 IZ:        #236
-                 Bugtraq:   #4670664
+                 Issue:     236
+                 Bugtraq:   4670664
                  Changed:   sge_shepherd, sge_execd, qrsh_starter
 
 CR-2002-04-17-0: Testsuite: fixed tcl error on using help command line
@@ -1583,8 +1597,8 @@ CR-2002-04-11-3: Testsuite: Merge of CR-2002-04-11-2, CR-2002-04-11-1 and
 EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
                             - fix: solaris psets won't be used
                             - fix: checkpointed job migration on bad exit state
-                 IZ:        #229, #174
-                 Bugtraq:   #4668148
+                 Issue:     229, 174
+                 Bugtraq:   4668148
                  Changed:   sge_shepherd
 
 JG-2002-04-11-0: Bugfix:    In simulation mode, job reports were not flushed 
@@ -1661,8 +1675,8 @@ AH-2002-03-26-0  Bugfix:    Found and fixed infinite loop in commd in case
                             host formerly resolved by gethostbyname(3) is no
                             longer resolvable. Also fix commd option -dhr
                             which was -drh before.
-                 Bugtraq:   #4658193
-                 IZ:        #212
+                 Bugtraq:   4658193
+                 Issue:     212
 
 JG-2002-03-26-1  Bugfix:    At startup qmaster removed pending messages too
                             late (after daemonizing instead of after
@@ -1702,14 +1716,14 @@ CR-2002-03-22-2  Bugfix:    qacct output formatting
 AA-2002-03-22-3  Bugfix:    sharetree position of FindNext not visible fix
 
 CR-2002-03-22-1  Bugfix:    Enhancements for CR-2002-03-22-0
-                 IZ:        #158
+                 Issue:     158
 
 AA-2002-03-22-2  Bugfix:    Tru64 spinbox incrementLarge fix for cluster
                             config dialogue
 
 CR-2002-03-22-0  Bugfix:    Reopend issue: Wrong error message when service
                             sge_commd is not available
-                 IZ:        #158
+                 Issue:     158
 
 AH-2002-03-22-0  Bugfix:    Ensure shepherd mapping signals do not hit
                             shepherd itself because of signal handler not
@@ -1729,7 +1743,7 @@ AA-2002-03-21-0  Bugfix:    SGE_KEYFILE, SGE_CERTFILE
 
 CR-2002-03-21-4  Bugfix:    scheduler generates high CPU load for 1-2
                             minutes when sge_commd is killed.
-                 IZ:        #197
+                 Issue:     197
 
 EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
 
@@ -1755,7 +1769,7 @@ JG-2002-03-21-0  Bugfix:    prioritization of messages to qmaster could
 
 EB-2002-03-21-0  Bugfix:    local config not written as admin user at
                             startup
-                 IZ:        #198
+                 Issue:     198
 
 CR-2002-03-21-0  Testsuite: merge from maintrunc
                             sending "vt100" when client host is using tset
@@ -1770,7 +1784,7 @@ EB-2002-03-20-1  Bugfix:    can't receive request: READ ERROR
                             - improved logging; additional messages may be 
                               found in the messages files of the daemons which 
                               might help if these errors occure again
-                 IZ:        #176 (partially)
+                 Issue:     176 (partially)
 
 EB-2002-03-20-0  Cleanup:   removed global variable monitor_next_run
 
@@ -1778,10 +1792,10 @@ JG-2002-03-20-1  Bugfix:    Check return code of fclose in spooling functions
                             and handle error situations:
                             - log critical error
                             - remove file
-                 IZ:        #185
+                 Issue:     185
 
 CR-2002-03-20-0  Bugfix:    qselect/qstat -U is (partially) broken
-                 IZ:        #191
+                 Issue:     191
 
 JG-2002-03-20-0  Bugfix:    Reduce memory consumption of qmaster and size of 
                             spool files for tightly integrated parallel jobs 
@@ -1807,11 +1821,11 @@ CR-2002-03-19-1  Testsuite: - stop install_core_system check if qmaster
 CR-2002-03-19-0  Bugfix:    Fixed broken build on IRIX6 arch
 
 CR-2002-03-18-1  Bugfix:    Mail on suspend wasn't working
-                 IZ:        #86
+                 Issue:     86
  
                  Bugfix:    Wrong error message when service sge_commd 
                             is not available    
-                 IZ:        #158
+                 Issue:     158
 
 
 AA-2002-03-18-3  Legal:     Xmt copyrights
@@ -1844,7 +1858,7 @@ AH-2002-03-15-4  Bugfix:    Ensure after execd installation the host needs to be
 
 EB-2002-03-15-0: Bugfix:    qmaster code accepted qsub -t task specification
                             which included the id 0 => loop in schedd
-                 IZ:        #192
+                 Issue:     192
 
 AS-2002-03-15-1  Install:   ignore_fqdn accidentially always set to true
                             remove qlogin_command from default local config
@@ -1861,7 +1875,7 @@ AH-2002-03-15-0: Bugfix:    Changed scheme used for creation of id used for
                             qrsh -inherit sub-tasks to fix accounting data leak with 
                             multiple runs of a par. application within a job. Also
                             write id into accounting file.
-                 Bugtraq:   #4447392
+                 Bugtraq:   4447392
 
 AA-2002-03-14-0: Bugfix:    msg_sec.h new messages
 
@@ -1869,7 +1883,7 @@ EB-2002-03-13-0: Bugfix:    handling of faulty migrate script
                             - improved logging
                             - shepherd internal state will be reset. 
                               Further migrate requests will be initiated
-                 IZ:        #146 (partially)
+                 Issue:     146 (partially)
 
 JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the 
                             necessity to use the options -v PATH and -cwd.
@@ -1891,7 +1905,7 @@ AH-2002-03-11-0: Bugfix:    A set of fixes on initiative from Patrik Koch
 
 AS-2002-03-08-2: Doc:       document location of PE stderr/out files in
                             qsub(1) and sge_pe(5)
-                 IZ:        #94
+                 Issue:     94
 
 AS-2002-03-08-0: Change:    set version string to "5.3beta2_2"
 
@@ -1903,11 +1917,11 @@ AA-2002-03-07-0: Bugfix:    Addition of acl to project generated core dump due
 
 EB-2002-03-07-1: Bugfix:    Array Tasks, inconsistent handling of multiple
                             task ranges
-                 IZ:        #49 
+                 Issue:     49 
 
 EB-2002-03-07-0: Bugfix:    inconsistences between qstat/qmon output and
                             internal state
-                 IZ:        #179 
+                 Issue:     179 
 
 EB-2002-03-06-1: Doc.:      Added documentation for (auto)rescheduling
                             - removed RESCHEDULE_UNKNOWN from sge_conf
@@ -1918,11 +1932,11 @@ EB-2002-03-06-1: Doc.:      Added documentation for (auto)rescheduling
 
 JG-2002-03-06-0: Doc.:      Enhanced description of execd_params
                             SET_[SGE|COD|GRD]_ENV.
-                 IZ:        #120
+                 Issue:     120
 
 AH-2002-03-05-0: Doc.:      Fixed description of seq_no queue parameter 
                             in queue_conf(5). 
-                 Bugtraq:   #4490117
+                 Bugtraq:   4490117
                         
 CR-2002-03-05-0: Testsuite: - sge/ee installation path (product root) should
                               not be longer than 60 chars ( workaround, because
@@ -1942,11 +1956,11 @@ CR-2002-03-04-1: Bugfix:    hostname resolving check was executed even when
 
 EB-2002-03-04-2: Bugfix:    'qdel <array-jid>' might cause qmaster core
                             depending on the tasks history.
-                 IZ:        #173  
+                 Issue:     173  
 
 CR-2002-03-04-0: Bugfix:    qacct truncates project/department/... names 
                             (merge from maintrunc)
-                 IZ:        #150
+                 Issue:     150
 
 AH-2002-03-04-2: Enhancem.: Added PVM 3.4.4 Virtual Machine ID setting
                             to startpvm.sh from Andrew Shewmaker
@@ -1954,14 +1968,14 @@ AH-2002-03-04-2: Enhancem.: Added PVM 3.4.4 Virtual Machine ID setting
 
 EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
                             did not exist.
-                 IZ:        #171 
+                 Issue:     171 
 
 EB-2002-03-04-0: Bugfix:    schedd_runlog file was not written by a
                             'qconf -tsm' command  
-                 IZ:        #170
+                 Issue:     170
 
 EB-2002-03-01-1: Bugfix:    inconsistences between qstat and qmon output
-                 IZ:        #148
+                 Issue:     148
 
 CR-2002-03-01-0: Testsuite: - using source/dist/util/arch from source directory
                               and not from product_root/util/arch. This 
@@ -1972,13 +1986,13 @@ CR-2002-03-01-0: Testsuite: - runlevel of large_cluster performance test set to
 
 EB-2002-03-01-0: Bugfix:    "scheduler tries to schedule xxx twice" logging in 
                             qmaster
-                 IZ:        #167
+                 Issue:     167
 
 CR-2002-02-28-1: Testsuite: (MERGED from maintrunc)
                  Enhancem.: - new test: system_tests/sheperd/submit_del
                               testing sheperd signaling with sheperd wrapper
                               script.
-                 IZ:        #125  (Part 1)
+                 Issue:     125  (Part 1)
                  Bugfix:    - fixed typo in system_tests/clients/qdel
                             - removed unused var system_tests/shadowd/migrate
 
@@ -1990,7 +2004,7 @@ CR-2002-02-28-0: Testsuite: (MERGED from maintrunc)
 
 JG-2002-02-27-0: Doc:       Documented the qrsh -noshell option in the
                             qrsh/submit man page.
-                 IZ:        #132
+                 Issue:     132
 
 EB-2002-02-26-1: Bugfix:    Fixed one problem repoted bye Patrik Koch.
                             - switched call order in
@@ -2013,11 +2027,11 @@ EB-2002-02-26-0: Enhancem:  Some modifications for EB-2002-01-23-1
                             - modified man qubmit man page
 
 JG-2002-02-26-0: Bugfix:    qlogin did no longer work for solaris exec hosts.
-                 IZ:        #151
+                 Issue:     151
 
 EB-2002-02-25-0: Bugfix:    - Error in qdel return message if task does not
                               exist
-                 IZ:        #144 #161
+                 Issue:     144 161
 
 AA-2002-02-25-0: Testsuite: changes from maintrunc merged
 
@@ -2029,7 +2043,7 @@ EB-2002-02-18-0: Bugfix:    Attempt to unlink directory + bogus error message
                               => put whole zombie job into one file
                                  $SGE_ROOT/default/spool/qmaster/zombies/ ... 
                                  ... xx/yyyy/zzzz (zzzz is a file)
-                 IZ:       #149  
+                 Issue:    149  
 
 AS-2002-02-13-3: CVS:       Created V53_beta2_sx6_TAG and V53_beta2_sx6_BRANCH
 ------------------------------------------------------------------------------
@@ -2061,27 +2075,27 @@ AS-2002-02-04-0: Doc:       updated courtesy download pages to reflect
 CR-2002-02-04-0: Enhancem.: aimk -DNO_USER_MAPPING_AMBIGUOUS_IN_CHECK will
                             disable the user mapping check for incoming 
                             mapping requests.
-                 IZ:        #129
+                 Issue:     129
 
 JG-2002-01-30-2: Enhancem.: Higher precision for scheduler profiling.
 
 JG-2002-01-30-1: Doc:       Updated qconf manpage to document options
                             -secl and -kec (see JG-2001-11-26-0).
-                 IZ:        #100           
+                 Issue:     100           
 
 JG-2002-01-30-0: Doc:       Updated qconf manpage to document options
                             -Auser and -Muser (see JG-2001-11-08-1).
-                 IZ:        #90           
+                 Issue:     90           
 
 CR-2002-01-29-2: Testsuite: create foreign user keys for secure system
            
 
 CR-2002-01-29-1: Bugfix:    broken aimk -umap build
-                 IZ:        #127
+                 Issue:     127
 
 JG-2002-01-29-1: Doc:       Updated qconf manpage to reflect changes
                             from JG-2002-01-10-0.
-                 IZ:        #115           
+                 Issue:     115           
 
 JG-2002-01-29-0: Testsuite: Enhanced "large_cluster" test:
                             - check product type (sge/sgeee)
@@ -2422,7 +2436,7 @@ JG-2002-01-10-0: Enhancem.: Additional check of the host parameter to
                             qconf -ke - only accepts non option parameter.
 
 EB-2002-01-09-0: Bugfix:   qselect -pe 
-                 Bugtraq:  #4584673
+                 Bugtraq:  4584673
 
 SD-2002-01-09-1: Enhancem.: Added -clearusage info to qconf -help
 
@@ -2432,7 +2446,7 @@ AA-2002-01-09-0: Enhancem.: openssl lib path, I18N Linux uses libc gettext
 JG-2002-01-09-0: Enhancem.: qconf -ke has to be called with a host(list) or
                             the keyword "all". qconf -ke without hostlist no
                             longer kills all hosts.
-                 IZ:        #83           
+                 Issue:     83           
 
 CR-2002-01-08-0: Testsuite: 
                     - New settings file version "4" because of new parameters
@@ -2479,7 +2493,7 @@ AA-2001-12-20-1: Feature:   Security:
 
 EB-2001-12-20-0: Bugfix:    Hold tid list of job submission dialog honours
                             tid range specification.
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-12-0) 
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-12-0) 
 
 CR-2001-12-20-0: Testsuite: moved job start procedures from job_state_handling test
                             to the global sge_procedurs.tcl file.
@@ -2517,7 +2531,7 @@ JG-2001-12-18-1: Testsuite: - Fixed qsub check_submit - now it submits jobs from
 
 EB-2001-12-18-0: Bugfix:    'qstat -f' showed pending tasks multiple times 
                             Rescusciated '-g d' option of qstat
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-10-1)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)
 
 JG-2001-12-18-0: Testsuite: - new test procedures in qsub and in qrsh tests
                               that test the starter_method.
@@ -2545,20 +2559,20 @@ JG-2001-12-17-2: Bugfix:    Bugfix for JG-2001-12-17-0 handling "none" as
                             starter_method.
 
 EB-2001-12-17-1: Bugfix:    qstat -j <job_id> did not show a monitoring message
-                 IZ:        #113
-                 Bugtraq:   #4614501
+                 Issue:     113
+                 Bugtraq:   4614501
 
 JG-2001-12-17-1: Testsuite: Testsuite framework will output stack trace
                             if a TCL error causes a test to fail.
 
 JG-2001-12-17-0: Feature:   Implemented starter_method for qrsh.
-                 IZ:        #6
+                 Issue:     6
 
 EB-2001-12-17-0: Feature:   Compatibility mode (sge_request, SGE_*)
 
 AH-2001-12-14-0: Bugfix:    SGE's hostaliasing can prevent qmaster restart
-                 IZ:        #95
-                 Bugtraq:   #4616534
+                 Issue:     95
+                 Bugtraq:   4616534
 
 AA-2001-12-14-1: Bugfix:    got a X protocol error, fixed -> AA-2001-12-14-0:
 
@@ -2571,7 +2585,7 @@ JG-2001-12-14-0: Doc:       ADOC documentation for the event client interface.
 
 EB-2001-12-13-0: Bugfix:    Qmaster automatically corrects invalid task id
                             ranges during job submittion.
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-10-1)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)
 
 AA-2001-12-13-0: Feature:   added max_aj_instances and max_aj_tasks to global
                             cluster config
@@ -2580,13 +2594,13 @@ AA-2001-12-13-0: Feature:   added max_aj_instances and max_aj_tasks to global
 EB-2001-12-12-0: Bugfix:    Changed/enhanced qmon's "Job Control" and "Job
                             Submission" dialog so that they respect unenrolled
                             pending tasks.
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-10-1)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)
 
 JG-2001-12-12-0: Copyright: Create and link libXltree as shared lib; it is
                             LGPL Code.
 
 EB-2001-12-11-0: Bugfix:    Printing of zombie jobs in qmon and qstat
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-10-1)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)
 
 CR-2001-12-11-1: Testsuite: Start sgecommdcntl as root if root access is available
 
@@ -2619,22 +2633,22 @@ CR-2001-12-10-0: Testsuite: using catch to prevent testsuite abort when a test
 
 EB-2001-12-10-0: Bugfix:    Fix in sgeee scheduler where pending tickets 
                             are moved into the template for pending tasks 
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-04-0) 
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0) 
 
 AH-2001-12-07-0: Cleanup:   Improved diagnosis possibilities when commd is 
                             blocked NIS/DNS resolver library calls.
 
 SD-2001-12-07-1: Bugfix:    Fixed ln command in distinst when creating security
                             distribution.
-                 IZ:        None (Fix of Cleanup: SD-2001-12-06-4)
+                 Issue:     None (Fix of Cleanup: SD-2001-12-06-4)
 
 EB-2001-12-07-0: Bugfix:    Reanimated code for 'qconf -sep'
-                 IZ:        None (Bug only appeared in beta1)
+                 Issue:     None (Bug only appeared in beta1)
 
 JG-2001-12-07-0: Bugfix:    scheduler could dump core in SGE systems with 
                             usersort and maxujobs activated, if no pending jobs
                             existed.
-                 IZ:        None (Fix of Enhancem. JG-2001-12-06-1)
+                 Issue:     None (Fix of Enhancem. JG-2001-12-06-1)
 
 SD-2001-12-06-4: Cleanup:   Cleaned up the security gss modules for Kerberos
                             and DCE support.  Fixed a bug in get_cred.c.
@@ -2644,7 +2658,7 @@ SD-2001-12-06-4: Cleanup:   Cleaned up the security gss modules for Kerberos
                             or security binaries distributions.
 
 EB-2001-12-06-3: Bugfix:    qstat -s r didn't show running jobs
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-04-0)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
 
 JG-2001-12-06-2: Testsuite: Adapt qmaster size test to use newer spawn function
                             open_remote_spawn_process.
@@ -2657,7 +2671,7 @@ EB-2001-12-06-2: Bugfix:    Jobs submittet with start time in future where
                             never started
                             Qalter -hold_jid failed for unenrolled pending
                             jobs 
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-04-0)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
 
 CR-2001-12-06-1: Enhancem.: commd will only allow kill, trace, dump and unregister
                             commands when client (commdcntl) is using reserved
@@ -2681,14 +2695,14 @@ JG-2001-12-06-0: Bugfix:    Cull hash implementation: When cull objects were
 EB-2001-12-06-0: Bugfix:    It was not possible to modify the hold state
                             of tasks without task id specification.
                             (e.g. qalter -h u <jobid> failed)
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-04-0)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
 
 JG-2001-12-05-0: Testsuite: Adapt qrsh test to use newer spawn function
                             open_remote_spawn_process.
 
 EB-2001-12-05-0: Bugfix:    Master got pending tickets for jobs which
                             where already started.
-                 IZ:        None (Fix of Enhancem.: EB-2001-12-04-0)
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
 
 SD-2001-12-04-1: Enhancem.: SGEEE - Added support for qconf -clearusage to reset
                             sharetree usage back to zero.
@@ -2721,14 +2735,14 @@ JG-2001-11-30-1: Enhancem.: Event client mechanism:
 JG-2001-11-30-0: Cleanup:   made a number of function parameters const
 
 CR-2001-11-30-1: Bugfix:    qrsh error with empty job parameters
-                 IZ:        #110
-                 Bugtraq:   #4533448
+                 Issue:     110
+                 Bugtraq:   4533448
 
 AA-2001-11-30-4: Feature:   Security changes:
                             CSP seclib changes
 
 CR-2001-11-30-0: Bugfix:    qsub parsing does not handle blanks on job args correctly
-                 IZ:        #93
+                 Issue:     93
                             Only fixed qmaster output text ("your job X (...) has 
                             been submitted."), problem of lost blanks does not 
                             appear any more. Maybe someone else fixed it in an
@@ -2800,8 +2814,8 @@ AH-2001-11-29-2:            Removed unused exec host spool entries
                             'number_of_jobs' and 'real_host_name'
 
 AH-2001-11-29-1: Bugfix:    qmaster logging "enrolled but leave_commd failed ..."
-                 Bugtraq:   #4532798
-                 IZ:        #108
+                 Bugtraq:   4532798
+                 Issue:     108
 
 AS-2001-11-29-0: Doc:       pseudo output variable $TASK_ID had wrong name
                             $SGE_TASK_ID.
@@ -2818,7 +2832,7 @@ AS-2001-11-28-0: Bugfix:    remove unused and obsolete command line
                             and scheduler:
                                 -k
                                 -salg
-                 Bugtraq:   #4532233
+                 Bugtraq:   4532233
 		 Doc:       updated man pages sge_qmaster.8, sge_schedd.8
                             accordingly
 
@@ -2829,16 +2843,16 @@ AH-2001-11-28-0: Feature:   added enforce_project switch to cluster
 
 CR-2001-11-28-1: Testsuite: Conformation of the testsuite because of changes from
                             CR-2001-11-28-0, 
-                 IZ:        #79, 
-		 Bugtrag:   #4531719
+                 Issue:     79, 
+		 Bugtrag:   4531719
 
 CR-2001-11-28-0: Bugfix:    Reject changing of qmaster_spool_dir, execd_spool_dir
                             admin_user, default_domain and ignore_fqdn in running cluster.
- 		 IZ:        #79
-                 Bugtraq    #4531719          
+ 		 Issue:     79
+                 Bugtraq    4531719          
 
 AS-2001-11-26-0: Bugfix:    execd now exits on SIGTERM also when commd is down
-                 Bugtraq:   #4531720
+                 Bugtraq:   4531720
 
 JG-2001-11-26-3: Feature:   Added a subscribe/unsubscribe mechanism to the
                             event client interface. The current
@@ -2854,12 +2868,12 @@ CR-2001-11-26-0: Testsuite: Conformation of the testsuite because of changes
 
 AH-2001-11-26-1: Bugfix:    Fix 'minus_n=0' problem in dist/mpi/rsh wrapper
                             script
-                 Bugtraq:   #4532155
+                 Bugtraq:   4532155
                  Build:     Fix error in generating rmon lib dependencies
 
 AH-2001-11-26-0: Bugfix:    Fix qmaster problem with not existing task spool 
                             directory when task file is written.
-                 Bugtraq:   #4532157
+                 Bugtraq:   4532157
 
 JG-2001-11-26-2: Feature:   Made qconf -secl use the new lHost datatype and
                             access functions (see CR-2001-11-23-1).
@@ -2875,8 +2889,8 @@ JG-2001-11-26-0: Feature:   Added qconf options -secl (show event client list) a
 
 AH-2001-11-23-1: Bugfix:    Removed unused configuration parameters in queue 
                             configuration and scheduler configuration 
-                 IZ:        #71
-                 Bugtraq:   #4431000 
+                 Issue:     71
+                 Bugtraq:   4431000 
                  
                             This requires manual removal of certain parameters before 
                             restarting daemons
@@ -2907,8 +2921,8 @@ CR-2001-11-23-1: Feature:   Implementation of the lHostT cull data type.
                             stored. The lHostT data type is implemented like
                             the lStringT type, but only used for hostnames.
 
-                 IssuZilla: #63 
-                 Bugtraq:   #4531708
+                 IssuZilla: 63 
+                 Bugtraq:   4531708
 
 CR-2001-11-23-0: Testsuite: changed timeout behaviour in procedure 
                             open_remote_spawn_process
@@ -2937,11 +2951,11 @@ JG-2001-11-20-0: Feature:   Generalized event client interface.
 AH-2001-11-20-0: Bugfix:    Use kstat interface instead of kvm interface for
                             retrieval of cpu percentage load value to fix
                             problems with Solaris 7,8 running 32-bit kernels
-                 IssuZilla: #78
-                 Bugtraq:   #4528905
+                 IssuZilla: 78
+                 Bugtraq:   4528905
 
 SD-2001-11-19-0: Feature:   Added support for queue starter_method
-                 IZ:        #6
+                 Issue:     6
 
 AA-2001-11-19-0: Bugfix:    Qmon core dump in sharetree for empty sharetree
                             when using Find
@@ -2955,8 +2969,8 @@ JG-2001-11-15-0: Feature:   Performance/Scalability optimization:
 
 EB-2001-11-13-0: Bugfix:    Qmaster did not change the reschedule unknown
                             value immediately after using the qconf command.
-                 IZ:           #92
-                 Bugtraq:   #4525963
+                 Issue:     92
+                 Bugtraq:   4525963
 
 AA-2001-11-09-0: Build:     rename of commd constants to resolve namespace
                             conflicts for perlgui
@@ -2984,7 +2998,7 @@ JG-2001-11-08-1: Feature:   New qconf options:
                                -Auser: add user from file
                                -Muser: modify user from file
                             Corrected sorting of options in help output.
-                 IZ:        #89 
+                 Issue:     89 
 
 JG-2001-11-08-0: Bugfix:    Updated recent GDI versions for version check
                             and error handling in qmaster.
@@ -3169,7 +3183,7 @@ EB-2001-10-11-0: Changed spool behaviour for (array) jobs
                  - collected duplicated code used in master and execd 
 
 CR-2001-10-10-1: Testsuite:
-                 - closed issue # 9 (Create a new test for file parsing)
+                 - closed issue #9 (Create a new test for file parsing)
 
 CR-2001-10-10-0: Testsuite:
                  - new command line option: mfile FILE

@@ -63,6 +63,9 @@ static char* report_types[] = {
 
 #define ALIVE_INTERVAL (3*60)
 
+extern lUlong sge_execd_report_seqno;
+
+
 /*-------------------------------------------------------------------------*/
 int sge_send_all_reports(
 u_long32 now,
@@ -104,6 +107,12 @@ report_source *report_sources
 
       /* send load report asynchron to qmaster */
       if (lGetNumberOfElem(report_list) > 0) {
+
+         /* wrap around */
+         if (++sge_execd_report_seqno == 10000) {
+            sge_execd_report_seqno = 0;
+         }
+         
          ret = report_list_send(report_list, sge_get_master(0), 
                                 prognames[QMASTER], 1, 0, NULL);
       } else {

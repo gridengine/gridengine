@@ -1,5 +1,5 @@
-#ifndef _JOB_REPORT_EXECD_H_
-#define _JOB_REPORT_EXECD_H_
+#ifndef __EXECD_MAIN_H
+#define __EXECD_MAIN_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,24 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void sge_set_flush_jr_flag(bool value);
-bool sge_get_flush_jr_flag(void);
-void flush_job_report(lListElem *jr);
+int sge_execd_register_at_qmaster(void);
 
-lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid, lListElem *jep);
-lListElem *get_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid);
-
-void del_job_report(lListElem *jr);
-void cleanup_job_report(u_long32 jobid, u_long32 jataskid);
-void trace_jr(void);
-
-int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);
-
-#include "dispatcher.h"
-
-int execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
-
-int
-execd_get_acct_multiplication_factor(const lListElem *pe, 
-                                     int slots, bool task);
-#endif /* _JOB_REPORT_EXECD_H_ */
+#endif /* __EXECD_MAIN_H */

@@ -52,6 +52,7 @@
 #include "sig_handlers.h"
 #include "sge_profiling.h"
 #include "sge_time.h"
+#include "execd.h"
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -134,6 +135,7 @@ int dispatch( dispatch_entry*   table,
    dispatch_entry de,   /* filled with receive mask */
                   *te;
    int i, j, terminate, errorcode, ntab;
+   bool do_re_register = false;
    u_long rcvtimeoutt=rcvtimeout;
    u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
@@ -194,11 +196,18 @@ int dispatch( dispatch_entry*   table,
       switch (i) {
       case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
         de.tag = -1;  
+        do_re_register = true;
         /* no break; */
       case CL_RETVAL_NO_MESSAGE:
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
       case CL_RETVAL_OK:
 
+         if (do_re_register == true && i != CL_RETVAL_CONNECTION_NOT_FOUND) {
+            /* re-register at qmaster when connection is up again */
+            if ( sge_execd_register_at_qmaster() == 0) {
+               do_re_register = false;
+            }
+         }
          /* look for dispatch entries matching the inbound message or
             entries activated at idle times */
          for (ntab=0; ntab<tabsize; ntab++) {

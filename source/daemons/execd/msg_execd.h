@@ -296,6 +296,7 @@
 #define MSG_EXECD_APPL_STATE_CFS               _MESSAGE(29185, _("dispatcher: %c (%.2f) | %s"))
 
 #define MSG_EXECD_CANT_GET_CONFIGURATION_EXIT  _MESSAGE(29186, _("can't get configuration qmaster - terminating\n"))
+#define MSG_EXECD_REGISTERED_AT_QMASTER_S      _MESSAGE(29187, _("registered at qmaster host "SFQ"\n"))
 
 /*
  *

@@ -1,3 +1,9 @@
+CR-2005-03-29-0: Bugfix:    sequence nr of execd load reports corrupted
+                 Bugtraq:   6247239
+                 Issue:     1450
+                 Changed:   execd
+                 Review:    SG
+
 DT-2005-03-29-2: Bugfix:    o Fixed broken build on MacOS X & HP-UX
                  Changed:   profiling
 

@@ -55,14 +55,23 @@
 #include "sge_report.h"
 
 lList *jr_list = NULL;
-bool flush_jr = false;
+static bool flush_jr = false;
+
+void sge_set_flush_jr_flag(bool value) {
+   flush_jr =value;
+}
+
+bool sge_get_flush_jr_flag(void) {
+   return flush_jr;
+}
+
 
 void 
 flush_job_report(lListElem *jr)
 {
    if (jr != NULL) {
       lSetBool(jr, JR_flush, true);
-      flush_jr = true;
+      sge_set_flush_jr_flag(true);
    }
 }
 

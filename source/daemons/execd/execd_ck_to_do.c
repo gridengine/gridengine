@@ -93,7 +93,6 @@ static int reprioritization_enabled = 0;
 extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
-extern lUlong sge_execd_report_seqno;
 
 static bool 
 sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
@@ -368,8 +367,9 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    static u_long next_signal = 0;
    static u_long next_old_job = 0;
    static u_long next_report = 0;
+   static u_long last_report_send = 0;
    lListElem *jep, *jatep;
-   int was_communication_error = CL_RETVAL_UNKNOWN;
+   int was_communication_error = CL_RETVAL_OK;
    int return_value = 0;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
@@ -578,21 +578,19 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
 
    /* do timeout calculation */
    now = sge_get_gmt();
-   if ( flush_jr || next_report <= now) {
+   if ( sge_get_flush_jr_flag() == true || next_report <= now) {
       if (next_report <= now) {
          next_report = now + conf.load_report_time;
       }
 
-      /* wrap around */
-      if (++sge_execd_report_seqno == 10000) {
-         sge_execd_report_seqno = 0;
+      if (last_report_send < now) {
+         last_report_send = now;
+         /* send all reports */
+         was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
+         DPRINTF(("----> was_communication_error: "SFQ" ("U32CFormat")\n", 
+                  cl_get_error_text(was_communication_error), 
+                  u32c(was_communication_error)));
       }
-
-      /* send all reports */
-      was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
-      DPRINTF(("----> was_communication_error: %s (%d)\n", cl_get_error_text(was_communication_error),was_communication_error));
-   } else {
-      was_communication_error = CL_RETVAL_OK;
    }
 
    /* handle shutdown */
@@ -607,7 +605,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
          /* if shut_me_down == 2 we wait one "dispatch epoche"
             and we hope that all the killed jobs are reaped 
             reaped jobs will be reported to qmaster 
-            since flush_jr is set in this case
+            since sge_get_flush_flag() is set in this case
          */
          if (!Master_Job_List || !lGetNumberOfElem(Master_Job_List)) { /* no need to delay shutdown */
             return_value = 1;

@@ -81,6 +81,8 @@
 #include "sge_mt_init.h"
 #include "sge_uidgid.h"
 #include "sge_profiling.h"
+#include "execd.h"
+#include "qm_name.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -464,27 +466,90 @@ const char *err_str
    DEXIT;
 }
 
-/*-------------------------------------------------------------
- * execd_register
- *
- * Function for registering the execd at qmaster
- *-------------------------------------------------------------*/
-static void execd_register()
-{
-   lList *hlp = NULL, *alp = NULL; 
-   lListElem *hep;
-   int had_problems = 0; /* to ensure single logging */
-   int last_commlib_error = CL_RETVAL_OK;
-
-   DENTER(TOP_LAYER, "execd_register");
+/****** execd/sge_execd_register_at_qmaster() **********************************
+*  NAME
+*     sge_execd_register_at_qmaster() -- modify execd list at qmaster site
+*
+*  SYNOPSIS
+*     int sge_execd_register_at_qmaster(void) 
+*
+*  FUNCTION
+*     add local execd name to SGE_EXECHOST_LIST in order to register at
+*     qmaster
+*
+*  INPUTS
+*     void - no input
+*
+*  RESULT
+*     int - 0 = success / 1 = error
+*
+*  NOTES
+*     MT-NOTE: sge_execd_register_at_qmaster() is not MT safe 
+*
+*  SEE ALSO
+*     execd/execd_register()
+*******************************************************************************/
+int sge_execd_register_at_qmaster(void) {
+   int return_value = 0;
+   static int sge_last_register_error_flag = 0;
+   lList *hlp = NULL, *alp = NULL;
+   lListElem *aep = NULL;
+   lListElem *hep = NULL;
+   DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
    hlp = lCreateList("exechost starting", EH_Type);
    hep = lCreateElem(EH_Type);
    lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
    lAppendElem(hlp, hep);
 
+   /* register at qmaster */
+   alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+   aep = lFirst(alp);
+   if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
+      if (sge_last_register_error_flag == 0) {
+         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, aep?lGetString(aep, AN_text):MSG_COM_ERROR));
+         sge_last_register_error_flag = 1;
+      }
+      return_value = 1;
+   } else {
+      sge_last_register_error_flag = 0;
+      INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, sge_get_master(false)));
+   }
+   alp = lFreeList(alp);
+   hlp = lFreeList(hlp);
+   DEXIT;
+   return return_value;
+}
+
+/*-------------------------------------------------------------
+ * execd_register
+ *
+ * Function for registering the execd at qmaster
+ *-------------------------------------------------------------*/
+/****** execd/execd_register() *************************************************
+*  NAME
+*     execd_register() -- register at qmaster on startup
+*
+*  SYNOPSIS
+*     static void execd_register() 
+*
+*  FUNCTION
+*     This function will block until execd is registered at qmaster
+*
+*  NOTES
+*     MT-NOTE: execd_register() is not MT safe 
+*
+*  SEE ALSO
+*     execd/sge_execd_register_at_qmaster()
+*******************************************************************************/
+static void execd_register(void)
+{
+   int had_problems = 0;
+   int last_commlib_error = CL_RETVAL_OK;
+
+   DENTER(TOP_LAYER, "execd_register");
+
    while (!shut_me_down) {
-      lListElem *aep;
       DPRINTF(("*****Checking In With qmaster*****\n"));
 
       if (had_problems != 0) {
@@ -535,22 +600,15 @@ static void execd_register()
          }
       }
 
-      alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
-      aep = lFirst(alp);
-      if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
+      if (sge_execd_register_at_qmaster() != 0) {
          if ( had_problems == 0) {
-            WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, aep?lGetString(aep, AN_text):MSG_COM_ERROR));
             had_problems = 1;
          }
-         alp = lFreeList(alp);
          continue;
       }
       break;
    }
    
-   hlp = lFreeList(hlp);
-   alp = lFreeList(alp);
-
    DEXIT;
    return;
 }

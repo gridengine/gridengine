@@ -203,7 +203,7 @@ int answer_error;
    if (ret)  {
       lFreeElem(jelem);
    } else { /* succsess - set some triggers */
-      flush_jr = 1;
+      sge_set_flush_jr_flag(true);
    }
 
    DEXIT;

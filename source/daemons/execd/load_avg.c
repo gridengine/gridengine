@@ -198,7 +198,7 @@ execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send)
       do_send = true;
    } else {
       /* if we shall flush reports: send only reports marked to flush */
-      if (flush_jr) {
+      if (sge_get_flush_jr_flag() == true) {
          do_send = true;
          only_flush = true;
       }
@@ -240,7 +240,7 @@ execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send)
       lAppendElem(report_list, job_report);
 
       /* now all is sent, reset flush_jr */
-      flush_jr = false;
+      sge_set_flush_jr_flag(false);
    }
 
    return 0;

@@ -1,31 +1,34 @@
-SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly when the
-                            sgeee_scheduling interval was set to a very very long time,
-                            a sge_scheduling run was done and the sgeee_scheduling 
-                            interval was set back to a normal amount of time. The
-                            scheduler had the very long sgeee_scheduling interval 
+AS-2003-07-14-0: CVS        Created V53p4_1_TAG (Darwin port availability)
+--------------------------------------------------------------------------
+
+SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly
+                            when the sgeee_scheduling interval was set to a
+                            very very long time, a sge_scheduling run was
+                            done and the sgeee_scheduling interval was set
+                            back to a normal amount of time. The scheduler
+                            had the very long sgeee_scheduling interval
                             stored. It got changed after its execution.
      
-                            The new implementation stores the time of the last
-                            sgeee_scheduling interval execution and checks every
-                            scheduling interval, if the specified time has past.
-      
+                            The new implementation stores the time of the
+                            last sgeee_scheduling interval execution and
+                            checks every scheduling interval, if the
+                            specified time has past.
                  Review:    AS
                  Changed:   scheduler
 
-SG-2003-09-15-1: Bugfix:    When a pending job moved to running, it lost its 
-                            ticket details. It had only the total amount of tickets.
-                            This is changed now, the ftix, sharetree tix and others
-                            are included now.
-
+SG-2003-09-15-1: Bugfix:    When a pending job moved to running, it lost its
+                            ticket details. It had only the total amount of
+                            tickets.  This is changed now, the ftix,
+                            sharetree tix and others are included now.
                  Review:    AS
                  Changed:   scheduler
 
-SG-2003-09-15-0: Bugfix:    Fixed a bug in the pending ticket calculation. When
-                            two projects have the same amount of shares, they
-                            were combined in one functional category, which lead
-                            to a wrong job order. The fcategories are now defined
-                            by the references to the control structures.
-   
+SG-2003-09-15-0: Bugfix:    Fixed a bug in the pending ticket calculation.
+                            When two projects have the same amount of
+                            shares, they were combined in one functional
+                            category, which lead to a wrong job order. The
+                            fcategories are now defined by the references to
+                            the control structures.
                  Review:    AS
                  Changed:   scheduler
 
@@ -34,10 +37,11 @@ CR-2003-09-04-0: Bugfix:    infotext ignores parameters for HP10, HP11 systems
                  Issue:     597
                  Review:    AS
 
-SG-2003-08-27-0: Bugfix:    The scheduler handled strings in a hard and hard 
-                            with a soft request differently, when it was defined 
-                            in a host and overwritten in a queue.
-
+SG-2003-08-27-0: Bugfix:    scheduler handled hard requested string resource
+                            requests wrong when combined with other soft
+                            requests (e.g. string definition in queue which
+                            overrode host level definition was ignored by
+                            scheduler)
                  Changed:   sge_schedd
                  Issue:     589
                  Review:    EB
@@ -46,8 +50,8 @@ AH-2003-08-18-0: Enhancem.: Update on tight integration with Sun HPC
                             ClusterTools 5
 
 AH-2003-08-01-0: Enhancem.: Added integration package for tight integration
-                            with Sun HPC ClusterTools 5
-                            Enhanced distinst to install tight integration
+                            with Sun HPC ClusterTools 5 Enhanced distinst to
+                            install tight integration
                  Review:    AA
 
 SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
@@ -2596,7 +2600,8 @@ JG-2002-01-15-1: Bugfix:   qconf -mattr only handled string attributes, changing
                            attributes of other datatypes made qconf dump core.
 
 AA-2002-01-15-0: Feature:  Security:
-                           - sge_security_verify_user wraps sec method specific funcs                             sec_verify_user() and krb_verify_user() 
+                           - sge_security_verify_user wraps sec method specific funcs                             
+                             sec_verify_user() and krb_verify_user() 
                            - addition of uniqueIdentifier to keep the Unix user name
                              to certificate generation scripts/templates
                            - xcheck between Unix user and certificate 

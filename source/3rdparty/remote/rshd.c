@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.7 2002/07/26 14:08:01 ernst Exp $	*/
+/*	$Id: rshd.c,v 1.8 2002/09/11 10:42:33 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -94,7 +94,7 @@
 #include <paths.h>
 #endif
 
-#if defined AIX4 || ALPHA || IRIX6
+#if defined AIX || ALPHA || IRIX6
 #define _PATH_DEFPATH "/usr/bin:/bin"
 #endif
 

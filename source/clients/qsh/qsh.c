@@ -260,8 +260,13 @@ static void forward_signal(int sig)
 *
 */
 static int open_qrsh_socket(int *port) {
-   int sock, length;
+   int sock;
    struct sockaddr_in server;
+#if AIX51
+   size_t length;
+#else
+   int length;
+#endif
  
    DENTER(TOP_LAYER, "open_qrsh_socket");
 
@@ -353,7 +358,11 @@ static int wait_for_qrsh_socket(int sock, int timeout)
       default: 
          if(FD_ISSET(sock, &ready)) {
             /* start accepting connections */
-            msgsock = accept(sock,(struct sockaddr *) 0,(int *) 0);
+#if AIX51
+            msgsock = accept(sock,(struct sockaddr *) 0,(size_t *) NULL);
+#else
+            msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
+#endif
             if (msgsock == -1) {
                ERROR((SGE_EVENT, MSG_QSH_ERRORINACCEPTONSOCKET_S, strerror(errno)));
             }

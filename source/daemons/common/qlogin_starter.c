@@ -345,16 +345,23 @@ int qlogin_starter(const char *cwd, char *daemon)
    int on = 1;
    int sso = 1;
    int newsfd;
-   int length;
    fd_set fds;
    struct sockaddr_in serv_addr;
-   int len = sizeof(serv_addr);
    struct timeval timeout;
    char buffer[2048];
    char *args[20]; /* JG: TODO: should be dynamically allocated */
    int argc = 0;
    const char *sge_root = NULL;
    char *arch = NULL;
+#if AIX51
+   size_t length;
+   size_t len;
+#else
+   int length;
+   int len;
+#endif
+
+   len = sizeof(serv_addr);
 
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));

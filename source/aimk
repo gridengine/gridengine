@@ -119,6 +119,9 @@ case "solaris86":
 case "tru64":
    set BUILDARCH = ALPHA5
    breaksw
+case "aix51":
+   set BUILDARCH = AIX51
+   breaksw
 default:
    echo oops - no mapping for architecure \"$buildarch\" defined yet
    exit 1
@@ -753,9 +756,40 @@ case AIX43:
    
    set CXX      = xlC
    set MAKE     = make
-   set CFLAGS   = "$OFLAG -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS   = "$OFLAG -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
+   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
+
+   if ( $STATIC == 1 ) then
+      set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
+      set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
+   endif
+
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+   breaksw
+
+case AIX51:
+   set OFLAG    = "-O -qmaxmem=8192"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3 -qstrict -qmaxmem=8192"
+   endif
+
+   set CXX      = xlC
+   set MAKE     = make
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"

@@ -48,7 +48,7 @@
 #   include <machine/hal_sysinfo.h>
 #endif
 
-#if defined(SOLARIS) || defined(AIX4)
+#if defined(SOLARIS) || defined(AIX)
 #   include <unistd.h>
 #endif
 
@@ -168,7 +168,7 @@ int sge_nprocs()
    getsysinfo(GSI_CPUS_IN_BOX,(char*)&nprocs,sizeof(nprocs),&start);
 #endif
 
-#if defined(SOLARIS) || defined(AIX4)
+#if defined(SOLARIS) || defined(AIX)
    nprocs = sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 

@@ -104,7 +104,7 @@ static const char *var_get_sharedlib_path_name(void);
 ******************************************************************************/
 static const char *var_get_sharedlib_path_name(void)
 {
-#if defined(AIX4)
+#if defined(AIX)
    return "LIBPATH";
 #elif defined(HP10) || defined(HP11)
    return "SHLIB_PATH";

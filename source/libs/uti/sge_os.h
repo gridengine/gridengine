@@ -32,11 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(AIX32) || defined(AIX41)
-#   include <sys/select.h>
-#endif
- 
-#if defined(AIX32) || defined(AIX4)
+#if defined(AIX32) || defined(AIX)
 #   include <sys/select.h>
 #endif
 

@@ -6413,11 +6413,7 @@ proc wait_till_qmaster_is_down { host } {
 
    set process_names "sge_qmaster" 
    
-   if { [string match "csp" $ts_config(product_feature)] } {
-      set my_timeout [ expr ( [timestamp] + 180 ) ] 
-   } else {
-      set my_timeout [ expr ( [timestamp] + 90 ) ] 
-   }
+   set my_timeout [ expr ( [timestamp] + 180 ) ] 
 
    while { 1 } {
       set found_p [ ps_grep "$ts_config(product_root)/" $host ]

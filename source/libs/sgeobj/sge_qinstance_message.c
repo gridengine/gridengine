@@ -37,10 +37,16 @@
 #include "sge.h"
 
 #include "sge_answer.h"
-#include "sge_qim.h"
+#include "sge_qinstance_message.h"
 #include "msg_sgeobjlib.h"
 
-bool
+static bool
+qim_list_add(lList **this_list, u_long32 type, const char *message);
+
+static bool
+qim_list_trash_all_of_type_X(lList **this_list, u_long32 type);
+
+static bool
 qim_list_add(lList **this_list, u_long32 type, const char *message) 
 {
    bool ret = true;
@@ -55,7 +61,7 @@ qim_list_add(lList **this_list, u_long32 type, const char *message)
    return ret;
 }
 
-bool
+static bool
 qim_list_trash_all_of_type_X(lList **this_list, u_long32 type) 
 {
    bool ret = true;
@@ -106,11 +112,11 @@ qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "qinstance_message_add");
+   DENTER(TOP_LAYER, "qinstance_message_trash_all_of_type_X");
    lList *old_qim_list = lGetList(this_elem, QU_message_list);
    lList *qim_list = old_qim_list;
 
-   ret &= qim_list_add(&qim_list, type, message);
+   ret &= qim_list_trash_all_of_type_X(&qim_list, type);
    if (ret && old_qim_list != qim_list) {
       lSetList(this_elem, QU_message_list, qim_list);
    }

@@ -39,13 +39,14 @@
 #include "sge_qinstance.h"
 
 enum {
+   QIM_DEFAULT,
    QIM_AMBIGUOUS
 };
 
 bool
-qim_list_add(lList **qim_list, u_long32 type, const char *message);
+qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
 
 bool
-qim_list_trash_all_of_type_X(lList **qim_list, u_long32 type);
+qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
 
 #endif /* __SGE_QINSTANCE_MSG_H */

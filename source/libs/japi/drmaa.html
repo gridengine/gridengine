@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20010611;14564800">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010716;16471800">
+</HEAD>
+<BODY>
+<H1><FONT SIZE=6 STYLE="font-size: 28pt">DRMAA C binding for Grid Engine</FONT></H1>
+<H1>Overview</H1>
+<P>The purpose of this library is to provide an implementation for the DRMAA C binding 
+standard based on Grid Engine DRM system. The best way to circumscribe DRMAA is to cite 
+the DRMAA-WG Charter:</P>
+<UL>
+<P>"Develop an API specification for the submission and control of jobs to one or more Distributed Resource
+Management (DRM) systems. The scope of this specification is all the high level functionality which is
+necessary for an application to consign a job to a DRM system including common operations on jobs like
+termination or suspension.</P>
+<P>The objective is to facilitate the direct interfacing of applications to today's DRM systems by
+application's builders, portal builders, and Independent Software Vendors (ISVs)."</P>
+</UL>
+<P>For more details on the 
+<A HREF="http://www.gridforum.org">Global Grid Forum</A>
+standards body working group refer to the page of the
+<A HREF="http://www.drmaa.org">GGF DRMAA working group</A>
+.
+</P>
+<H1>Availability</H1>
+<P>At this stage DRMAA is only available as a source snapshot from the "maintrunk" of the Grid Engine.
+In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in time the following Grid Engine binary architectures are know to be working:</P>
+<UL>
+   <LI><P>solaris (Sparc Solaris 2.6, 7, 8, 9  32-bit)</P>
+   <LI><P>solaris64 (Sparc Solaris 7, 8, 9  64-bit</P>
+   <LI><P>solaris86 (x86 Solaris 8)</P>
+   <LI><P>glinux (x86 Linux, kernel 2.4, glibc >= 2.2)</P>
+</UL>
+<P>There are three build targets that are related to DRMAA:</P>
+<UL>
+   <LI><P>libdrmaa.a - a DRMAA library for statically linking</P>
+   <LI><P>libjapi.a - a JAPI library for statically linking</P>
+   <LI><P>test_drmaa - a test DRMAA application used for QA</P>
+</UL>
+
+<P>For building 
+The steps described in the 
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/README.BUILD">Grid Engine build page</A> 
+are the same that also must be followed 
+
+for building the DRMAA build targets. In case of 
+Grid Engine binary architectures where the Port is already done the command</P>
+<UL>
+   aimk 
+</UL>
+<P>compiles all Grid Engine binaries plus DRMAA build targets. To enforce compliation
+of DRMAA build targets for not yet ported binary architectures 
+<UL>
+   aimk -only-mt 
+</UL>
+<P>can be used. To compile all Grid Engine binaries except the DRMAA build targets</P>
+<UL>
+   aimk -no-mt 
+</UL>
+<P>can be used.</P>
+<H1>Bugs</H1>
+You can file bugs to Grid Engine Issuezilla "drmaa" subcomponent. Before doing so please have a 
+look at the TODO list below and watch out for already submitted "drmaa" bugs. If you're not sure 
+whether you found a bug sending mail to 
+<A HREF="http://gridengine.sunsource.net/project/gridengine/maillist.html">dev@gridengine.sunsource.net Mailinglist</A> 
+is recommended.
+<H1>TODO</H1>
+This list contains items that are not yet implemented but required for a DRMAA 1.0 compliant 
+implementation:
+<UL>
+   <LI><P>shared drmaa library (currently only static library linking can be used)</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_job_category"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_native_specification"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_v_env"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_v_email"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_block_email"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_start_time"</P>
+   <LI><P>implement drmaa_wait(3) output parameter rusage</P>
+   <LI><P>drmaa_wait(3) does not yet return DRMAA_ERRNO_NO_RUSAGE as foreseen by spec</P>
+</UL>
+<H1>Documentation</H1>
+The following DRMAA related documentation is recommended
+<A HREF="http://www.drmaa.org/docs/ggf-rec-drmaa-1_0.pdf">DRMAA 1.0 language independent specification</A>,
+<A HREF="https://forge.gridforum.org/tracker/?group_id=90&atid=608&aid=214">DRMAA C language binding specification</A> 
+and 
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those with drmaa_* prefixes)</A> 
+<H1>Example application</H1>
+<P>The C test program 
+<A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/libs/japi/example.c">example.c</A>
+is a good example of an application that uses the DRMAA C binding interface. 
+It illustrates submission of both single and bulk remote jobs. After submission drmaa_synchronize() call 
+is used to synchronize the remote jobs execution. The call returns after all the jobs have finished 
+executing. Finally, drmaa_wait() call is used to retrieve and print out the remote jobs execution 
+information.</P>
+<P>A full path for the remote command is passed as the first argument to the test program. 
+That value is directly used as &quot;drmaa_remote_command&quot; job template attribute. The C binding example uses 
+value  &quot;5&quot; as a first argument to the job template vector attribute &quot;drmaa_v_argv&quot;. Passing &quot;/bin/sleep&quot; as 
+a first argument to the test program will for example cause 32 sleep jobs to be run that sleep for &quot;5&quot; 
+seconds each before finishing execution.  Note that we expect to find  &quot;/bin/sleep&quot; command on all of the 
+remote nodes.</P>
+<P>To build this example run
+<UL>
+   aimk -no-mt example
+</UL>
+This is necessary because "example" is not part of the standard build procedure.</P>
+<P ALIGN=CENTER STYLE="text-decoration: none">Copyright 2003 Sun Microsystems, Inc. All rights reserved.</P>
+</BODY>
+</HTML>

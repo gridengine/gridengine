@@ -408,7 +408,7 @@ static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
          }
          /* multiple weighting factors? */
          if (end != NULL) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT, next_fact));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT));
             sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
             ret = 0;
          }

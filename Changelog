@@ -1,3 +1,7 @@
+CR-2002-04-02-0  Testsuite: testsuite should not fail if writing a script
+                            file fails
+                 Issue:     #186
+
 CR-2002-03-28-1  Testsuite: - merges from V53_beta2_BRANCH
 
 CR-2002-03-28-0  Testsuite: - new menu point: check messages files of

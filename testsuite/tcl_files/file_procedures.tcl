@@ -272,10 +272,14 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
     
    set_users_environment users_env
 
-   set script [ open "$scriptfile" "w" ]
-
-
-   
+   set script "no_script"
+   set catch_return [ catch {
+       set script [ open "$scriptfile" "w" ]
+   } ]
+   if { $catch_return != 0 } {
+      add_proc_error "create_shell_script" "-2" "could not open file $scriptfile for writing"
+      return
+   }
 
    # script header
    puts $script "#!${script_path}"

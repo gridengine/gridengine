@@ -104,16 +104,7 @@ FORMAT
   maxujobs
      The maximum number of jobs any user may have  running  in  a
      Grid  Engine cluster at the same time. If set to 0 (default)
-     the users may run  an  arbitrary  number  of  jobs.  If  the
-     user_sort  scheduling  policy  is  active  (see  below)  the
-     scheduler allows at the most maxujobs in each priority group
-
-     The maxujobs parameter has no effect in a Grid Engine Enter-
-     prise  Edition  system.  Grid Engine Enterprise Edition pro-
-     vides more sophisticated means to control share entitlement.
-
-  maxgjobs
-     Not implemented yet. Provided for later extension.
+     the users may run an arbitrary number of jobs.
 
   schedule_interval
      At   the   time   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>   initially   registers   to
@@ -166,6 +157,7 @@ FORMAT
      which queues are to be filled (e.g.   the cheapest  resource
      first).
 
+
      The default for this parameter is load.
 
   sgeee_schedule_interval
@@ -210,6 +202,7 @@ FORMAT
   compensation_factor
      This parameter is only available in a Grid Engine Enterprise
      Edition system. Grid Engine does not support this parameter.
+
      Determines how fast Grid Engine  Enterprise  Edition  should
      compensate  for past usage below of above the share entitle-
      ment defined in  the  share  tree.  Recommended  values  are
@@ -269,7 +262,6 @@ FORMAT
   weight_deadline
      This parameter is only available in a Grid Engine Enterprise
      Edition system. Grid Engine does not support this parameter.
-
      The maximum number of deadline tickets available for distri-
      bution  by  Grid  Engine  Enterprise Edition. Determines the
      relative importance of the deadline policy.
@@ -300,6 +292,14 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
 
 
 

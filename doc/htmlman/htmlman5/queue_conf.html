@@ -42,17 +42,17 @@ FORMAT
      plate default: host.dom.dom.dom).
 
   seq_no
-     With sort_seq_no  (see  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>)  set  to  TRUE,  this
+     In conjunction with the hosts load situation at a time  this
      parameter  specifies this queue's position in the scheduling
-     order within the suitable queues for a job to be dispatched.
-     It  thus  replaces  the order by load policy that would rule
-     otherwise.
+     order within the suitable queues for a job to be  dispatched
+     under    consideration   of   the   queue_sort_method   (see
+     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> ).
 
-     Regardless of  the  sort_seq_no  setting,  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  reports
-     queue  information  in the order defined by the value of the
-     seq_no. Set this parameter  to  a  monotonically  increasing
-     sequence. The type is number and the default is 0.
-
+     Regardless  of  the  queue_sort_method   setting,   <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>
+     reports  queue information in the order defined by the value
+     of  the  seq_no.  Set  this  parameter  to  a  monotonically
+     increasing  sequence.  The type is number and the default is
+     0.
 
   load_thresholds
      load_thresholds is a list of load thresholds. Already if one
@@ -100,46 +100,22 @@ FORMAT
      the  queue  is located.  The time interval is also used when
      enabling the jobs.
 
-  migr_load_thresholds
-     A list of load thresholds with the same semantics as that of
-     the   load_thresholds  parameter  (see  above)  except  that
-     exceeding one of the denoted thresholds initiates  migration
-     of the jobs from the queue.  This parameter has no effect in
-     this release.
-
   priority
      The priority parameter specifies the <B><A HREF="../htmlman2/nice.html">nice(2)</A></B> value at  which
      jobs  in  this queue will be run. The type is number and the
      default is zero (which means no nice  value  is  set  expli-
-     citly).
+     citly).  Negative  values (up to -20) correspond to a higher
+     scheduling priority, positive values (up to +20)  correspond
+     to a lower scheduling priority.
 
-  max_migr_time
-     The time reserved for checkpointing jobs to be migrated  and
-     aborted.   Checkpointing  jobs  due  to be aborted are first
-     sent a SIGTSTP. Everyone in the concerned process group  may
-     catch  this  signal  and  may  react  appropriately.   After
-     max_migr_time seconds, a SIGKILL is sent and  the  processes
-     are aborted.  Note: If you set max_migr_time too high a user
-     requesting full interactive usage may  suffer  max_migr_time
-     seconds  from a still running job.  Max_migr_time is of type
-     time and The default is 0 seconds.
-
-  migr_load_thresholds
-     A list of load thresholds with the same semantics as that of
-     the   load_thresholds  parameter  (see  above)  except  that
-     exceeding one of the denoted thresholds initiates  migration
-     of  checkpointing jobs from the queue.  It is recommended to
-     set  the  migration  load  values  high  enough  above   the
-     load_thresholds  to prevent the jobs from forcing migrations
-     by their own activity.
-
-  max_no_migr
-     The time a checkpointing job is allowed  to  spend  in  non-
-     interruptible   sections   of   the   batch   script.   Non-
-     interruptible sections are  everything  outside  <B><A HREF="../htmlman1/qrestart.html">qrestart(1)</A></B>
-     commands.  If a job exceeds this time limit it is killed and
-     the job owner is notified. The default for max_no_migr is  2
-     minutes. It is of type time.
+     In a SGEEE system  the  value  of  priority  has  no  effect
+     because  SGEEE  adjusts  priorities dynamically to implement
+     the SGEEE entitlement policy goals. Dynamic priority adjust-
+     ment   can   be   switched  off,  however,  by  setting  the
+     execd_param NO_REPRIORITIZATION to true  in  the  global  or
+     execution    daemon   local   cluster   configuration,   see
+     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  In this case, the  setting  of  priority  also
+     will haven an effect in SGEEE.
 
   min_cpu_interval
      The time between two automatic checkpoints in case of  tran-
@@ -175,12 +151,9 @@ FORMAT
   qtype
      The type of queue.  Currently  one  of  <I>batch</I>,  <I>interactive</I>,
      <I>parallel</I>  or  <I>checkpointing</I>  or  any  combination in a comma
-     separated list.  Alternatively, if the Grid  Engine  Queuing
-     System Interface (QSI) option is licensed, the type <I>transfer</I>
-     can be specified to indicate a queue which passes jobs on to
-     a foreign queuing system. Deprecated in the current version.
+     separated list.
 
-     (type string; default: batch).
+     (type string; default: batch interactive parallel ).
 
   rerun
      Defines a default behavior for jobs  which  are  aborted  by
@@ -289,13 +262,6 @@ FORMAT
 
      The default for shell_start_mode is <I>posix</I>_<I>compliant</I>.
 
-  klog
-     The executable path of the klog utility on the  queue  host.
-     It is used for AFS reauthentication. The type of the parame-
-     ter is string; the default is /usr/local/bin/klog.
-
-     Not supported in this release.
-
   prolog
      The executable path of a shell script that is started before
      execution of Grid Engine jobs with the same environment set-
@@ -344,11 +310,28 @@ FORMAT
 
 
   starter_method
-     The executable path given here is intended to be used  as  a
-     starter  facility  which is responsible for starting the job
-     itself.
+     The specified executable path will be used as a job  starter
+     facility  responsible  for starting batch jobs.  The execut-
+     able path will be executed instead of the  configured  shell
+     to  start  the  job.  The  job  arguments  will be passed as
+     arguments to the  job  starter.  The  following  environment
+     variables  are  used  to pass information to the job starter
+     concerning the shell environment  which  was  configured  or
+     requested to start the job.
 
-     Not supported in this release.
+
+     <I>SGE</I>_<I>STARTER</I>_<I>SHELL</I>_<I>PATH</I>
+          The name of the requested shell to start the job
+
+     <I>SGE</I>_<I>STARTER</I>_<I>SHELL</I>_<I>START</I>_<I>MODE</I>
+          The configured shell_start_mode
+
+     <I>SGE</I>_<I>STARTER</I>_<I>USE</I>_<I>LOGIN</I>_<I>SHELL</I>
+          Set to "true" if the shell is supposed to be used as  a
+          login shell (see login_shells in <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>)
+
+     The starter_method will not be invoked for  qsh,  qlogin  or
+     qrsh acting as rlogin.
 
 
   suspend_method
@@ -394,15 +377,6 @@ FORMAT
      $<I>job</I>_<I>pid</I>
           The pid of the job.
 
-
-  reauth_time
-     The time  gap  between  consecutive  AFS  reauthentications.
-     Reauth_time  should  be less than the ticket expiration time
-     that is configured for the local AFS installation. The  type
-     of the parameter is time and the default value is 1 hour and
-     40 minutes, i.e. 100 minutes.
-
-     Not supported in this release.
 
   notify
      The time waited between delivery of SIGUSR1/SIGUSR2  notifi-
@@ -471,6 +445,7 @@ FORMAT
      sion of the subordinated queue. If no value  is  assigned  a
      suspension  is  triggered  if  all  slots  of  the queue are
      filled.
+
      On nodes which host more than one queue, you might  wish  to
      accord  better  service  to  certain  classes of jobs (e.g.,
      queues that are dedicated to parallel processing might  need
@@ -522,9 +497,9 @@ FORMAT
      The  -<I>F</I>  option  of  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  and  the  load display in the
      <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> queue control dialog (activated  by  clicking  on  a
      queue  icon  while  the  "Shift"  key  is  pressed)  provide
-     detailed  information  on   the   actual   availability   of
-     consumable  resources  and on the origin of the values taken
-     into account currently.
+     detailed information on the actual availability  of  consum-
+     able  resources  and  on the origin of the values taken into
+     account currently.
 
      Note also: The resource consumption of  running  jobs  (used
      for  the  availability  calculation) as well as the resource
@@ -545,6 +520,7 @@ FORMAT
      bute. For parallel jobs each queue slot to be occupied by  a
      parallel  task  is meant to provide the same resource attri-
      bute value.
+
 
      Note: Only numeric complex attributes can be defined as con-
      sumable  resources  and  hence  non-numeric  attributes  are
@@ -596,6 +572,7 @@ FORMAT
   oticket
      This parameter is only available in a Grid Engine Enterprise
      Edition system. Grid Engine does not support this parameter.
+
 
      The override tickets of the queue  (i.e.  job  class).  Grid
      Engine  Enterprise Edition distributes the configured amount
@@ -687,37 +664,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -363,10 +363,27 @@ OPTIONS
           registered   with  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   Requires  root  or
           manager privileges.
 
+     -Astree fname                 &lt;<I>add</I> <I>share</I> <I>tree</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Adds the definition of a share tree to the system  (see
+          <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>)  from  the file fname.  Requires root or
+          manager privileges.
+
      -au user,... acl_name,...     &lt;<I>add</I> <I>users</I> <I>to</I> <I>ACLs</I>&gt;
           Adds users to Grid Engine  user  access  lists  (ACLs).
           User  lists  are  used  for queue usage authentication.
           Requires root/manager/operator privileges.
+
+     -Auser fname                  &lt;<I>add</I> <I>user</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Add the user defined in fname to the Grid Engine Enter-
+          prise  Edition cluster. The format of the user specifi-
+          cation is  described  in  <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root  or
+          manager privileges.
 
      -auser                        &lt;<I>add</I> <I>user</I>&gt;
           This option is only supported in case of a Grid  Engine
@@ -378,6 +395,13 @@ OPTIONS
           able)  for  a template user. The new user is registered
           after  changing  the  entry  and  exiting  the  editor.
           Requires root or manager privileges.
+
+     -clearusage                   &lt;<I>clear</I> <I>sharetree</I> <I>usage</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Clears all user and project usage from  the  sharetree.
+          All usage will be initialized back to zero.
 
      -cq queue_name,...            &lt;<I>clean</I> <I>queue</I>&gt;
           Cleans queue from jobs which haven't been reaped.  Pri-
@@ -497,19 +521,30 @@ OPTIONS
      -help
           Prints a listing of all options.
 
-     -k{m|s|e[j] [host,...]}       &lt;<I>shutdown</I> <I>Grid</I> <I>Engine</I>&gt;
+     -k{m|s|e[j] {host,...|all}}   &lt;<I>shutdown</I> <I>Grid</I> <I>Engine</I>&gt;
           Used to shutdown Grid Engine components (daemons).   In
           the form -km <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is forced to terminate in a
           controlled fashion. In the  same  way  the  -ks  switch
-          causes  termination  of <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  Shutdown of all
-          running <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> processes currently registered  is
+          causes  termination of <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  Shutdown of run-
+          ning <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  processes  currently  registered  is
           initiated  by  the  -ke  option.  If  -kej is specified
           instead, all jobs running on the  execution  hosts  are
           aborted  prior  to  termination  of  the  corresponding
-          <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  The optional comma separated  host  list
-          specifies  the  execution  hosts to be addressed by the
-          -ke and -kej option.
+          <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  The comma separated host list  specifies
+          the execution hosts to be addressed by the -ke and -kej
+          option. If the keyword all is specified  instead  of  a
+          host list, all running <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> processes are shut-
+          down.
           Requires root or manager privileges.
+
+     -kec {id,...|all}             &lt;<I>kill</I> <I>event</I> <I>client</I>&gt;
+          Used  to   shutdown   event   clients   registered   at
+          <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   The comma separated event client list
+          specifies the event clients to be addressed by the -kec
+          option.   If the keyword all is specified instead of an
+          event client list, all  running  event  clients  except
+          special  clients like the <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B> are terminated.
+          Requires root or manager privilege.
 
      -mattr obj_spec attr_name val obj_instance,...
                                  &lt;<I>modify</I> <I>object</I> <I>attributes</I>&gt;
@@ -658,6 +693,14 @@ OPTIONS
           registered   with  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   Requires  root  or
           manager privileges.
 
+     -Mstree fname                 &lt;<I>modify</I> <I>share</I> <I>tree</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Modifies  the  definition  of  the  share   tree   (see
+          <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).   The  modified  sharetree is read from
+          file fname.  Requires root or manager privileges.
+
      -mu acl_name                  &lt;<I>modify</I> <I>user</I> <I>access</I> <I>lists</I>&gt;
           Retrieves the current configuration for  the  specified
           user  access  list, executes an editor (either <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> or
@@ -686,6 +729,15 @@ OPTIONS
           the  load_values  attribute  cannot  be  modified  (see
           <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
           Requires root or manager privilege.
+
+     -Muser fname                  &lt;<I>modify</I> <I>user</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Modify the user defined in fname  in  the  Grid  Engine
+          Enterprise  Edition  cluster.  The  format  of the user
+          specification is described in <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root
+          or manager privileges.
 
      -muser user                   &lt;<I>modify</I> <I>user</I>&gt;
           This option is only supported in case of a Grid  Engine
@@ -739,6 +791,9 @@ OPTIONS
 
      -sel                          &lt;<I>show</I> <I>execution</I> <I>hosts</I>&gt;
           Displays the Grid Engine execution host list.
+
+     -secl                         &lt;<I>show</I> <I>event</I> <I>clients</I>&gt;
+          Displays the Grid Engine event client list.
 
      -sep                          &lt;<I>show</I> <I>licensed</I> <I>processors</I>&gt;
           Displays a list  of  number  of  processors  which  are
@@ -893,9 +948,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
 
 
 

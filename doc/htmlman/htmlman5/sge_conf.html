@@ -37,16 +37,16 @@ FORMAT
 
 qmaster_spool_dir
      The location where the master spool directory resides.  Only
-     the  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  needs to have access to this directory.
-     It needs read/write permission for root, however. The master
-     spool  directory  - in particular the jobs directory and the
-     message log file - may become quite large depending  on  the
-     size of the cluster and the number of jobs. Be sure to allo-
-     cate enough disk space  and  regularly  clean  off  the  log
-     files, e.g. via a <B><A HREF="../htmlman8/cron.html">cron(8)</A></B> job.
+     the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B> need to have access to
+     this directory. It needs  read/write  permission  for  root,
+     however. The master spool directory - in particular the jobs
+     directory and the message log file - may become quite  large
+     depending on the size of the cluster and the number of jobs.
+     Be sure to allocate enough disk space  and  regularly  clean
+     off the log files, e.g. via a <B><A HREF="../htmlman8/cron.html">cron(8)</A></B> job.
 
-     Changing the master spool  directory  will  have  an  effect
-     after restarting <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> only.
+     Being  a  parameter  set  at  installation   time   changing
+     qmaster_spool_dir in a running system is not supported.
 
      The default location  for  the  master  spool  directory  is
      &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
@@ -72,8 +72,8 @@ execd_spool_dir
      sically reference the same directory path (the  root  access
      restrictions mentioned above need to be met, however).
 
-     Changing the execution daemon spool directory will  have  an
-     effect after restarting <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> only.
+     Being a parameter set at installation time changing the glo-
+     bal execd_spool_dir in a running system is not supported.
 
      The default location for the execution daemon  spool  direc-
      tory is &lt;sge_root&gt;/&lt;cell&gt;/spool.
@@ -452,6 +452,37 @@ load_report_time
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
+reschedule_unknown
+     Determines whether  jobs  on  hosts  in  unknown  state  are
+     rescheduled   and  thus  sent  to  other  hosts.  Hosts  are
+     registered as unknown if <B><A HREF="../htmlman8/sge_master.html">sge_master(8)</A></B> cannot establish con-
+     tact  to the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on those hosts (see max_unheard ).
+     Likely reasons are a breakdown of the host or a breakdown of
+     the network connection in between, but also <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may
+     not be executing on such hosts.
+
+     In any case, Grid Engine can reschedule jobs running on such
+     hosts  to  another  system.  reschedule_unknown controls the
+     time which Grid Engine will wait before jobs are rescheduled
+     after  a  host became unknown. The time format specification
+     is hh:mm:ss. If the special value 00:00:00 is set, then jobs
+     will not be rescheduled from this host.
+
+     Rescheduling is only initiated for jobs which have activated
+     the rerun flag (see the -r y option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and the rerun
+     option  of   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    Parallel   jobs   are   only
+     rescheduled  if the host on which their master task executes
+     is  in  unknown  state.  Checkpointing  jobs  will  only  be
+     rescheduled when the when option of the corresponding check-
+     pointing environment containes  an  appropriate  flag.  (see
+     <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>).   Interactive  jobs  (see  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,
+     <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>) are not rescheduled.
+
+     The default for reschedule_unknown id 00:00:00
+
+     The global configuration entry for this value  may  be  over
+     written by the execution host local configuration.
+
 stat_log_time
      Grid Engine periodically logs a snapshot of  the  status  of
      the queues currently configured in the cluster to disk.  The
@@ -510,6 +541,68 @@ loglevel
      not  be  overwritten  by the execution host local configura-
      tion.
 
+max_aj_instances
+     This parameter defines the maximum amount of array  task  to
+     be  scheduled  to  run  simultaneously  per  array  job.  An
+     instance of an array task will be created within the  master
+     daemeon  when  it gets a start order from the scheduler. The
+     instance will be destroyed when  the  array  task  finishes.
+     Thus  the  parameter provides control mainly over the memory
+     consumption of array jobs in the master and  scheduler  dae-
+     mon.  It  is  most  useful  for very large clusters and very
+     large array jobs.  The default for this parameter  is  2000.
+     The  value  0  will deactivate this limit and will allow the
+     scheduler to start as  many  array  job  tasks  as  suitable
+     resources are available in the cluster.
+
+     Changing max_aj_instances will take immediate effect.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+max_aj_tasks
+     This parameter defines the maximum number of array job tasks
+     within  an  array job.  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> will reject all array
+     job submissions which request more than  max_aj_tasks  array
+     job  tasks.  The  default  for  this parameter is 75000. The
+     value 0 will deactivate this limit.
+
+     Changing max_aj_tasks will take immediate effect.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+max_u_jobs
+     The number of active (not finished)  jobs  which  each  Grid
+     Engine  user  can  have in the system simultaneously is con-
+     trolled by this parameter. A value greater  than  0  defines
+     the  limit.  The  default  value 0 means "unlimited". If the
+     max_u_jobs limit is exceeded by a job  submission  then  the
+     submission   command  exits  with  exit  status  25  and  an
+     appropriate error message.
+
+     Changing max_u_jobs will take immediate effect.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+max_jobs
+     The number of  active  (not  finished)  jobs  simultaneously
+     allowed  in Grid Engine.  is controlled by this parameter. A
+     value greater than 0 defines the limit. The default value  0
+     means  "unlimited".  If  the max_jobs limit is exceeded by a
+     job submission then the submission command exits  with  exit
+     status 25 and an appropriate error message.
+
+     Changing max_jobs will take immediate effect.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
 enforce_project
      This parameter is only available for Grid Engine  Enterprise
      Edition systems. It is not present in Grid Engine.
@@ -522,8 +615,22 @@ enforce_project
      default for enforce_project is <I>false</I>.
 
      This value is a global configuration parameter only. It can-
-     not   be   overwritten   by   the   execution   host   local
-     configuration.
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+enforce_user
+     This parameter is only available for Grid Engine  Enterprise
+     Edition systems. It is not present in Grid Engine.
+
+     If set to <I>true</I>, a Grid  Engine  Enterprise  Edition  <B><A HREF="../htmlman5/user.html">user(5)</A></B>
+     must  exists  to allow for job submission. Jobs are rejected
+     if no corresponding user exists.
+
+     Changing  enforce_user  will  take  immediate  effect.   The
+     default for enforce_user is <I>false</I>.
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
 
 set_token_cmd
      This parameter is only present if your Grid Engine system is
@@ -572,6 +679,7 @@ pag_cmd
      <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>  process  and the job run in a <I>pagsh</I>. Please
      ask your AFS administrator for details.
 
+
      Changing pag_cmd will take immediate  effect.   The  default
      for pag_cmd is none.
 
@@ -594,9 +702,6 @@ token_extend_time
      overwritten by the execution host local configuration.
 
 gid_range
-     This parameter is only available for Grid Engine  Enterprise
-     Edition systems. It is not present in Grid Engine.
-
      The gid_range is a comma separated list of range expressions
      of  the  form  n-m  (n  as well as m being positive non-zero
      integer numbers), where m is an abbreviation for m-m.  These
@@ -652,6 +757,10 @@ qmaster_params
           instance  if  there  are  not  enough  resources on the
           current one.
 
+     <I>DISABLE</I>_<I>AUTO</I>_<I>RESCHEDULING</I>
+          If set to "true" or "1", the <I>reschedule</I>_<I>unknown</I> parame-
+          ter is not taken into account.
+
      Changing qmaster_params will  take  immediate  effect.   The
      default for qmaster_params is none.
 
@@ -678,6 +787,86 @@ schedd_params
           behavior is enforced by either removing the  parameters
           or setting them to a value of -1.
 
+     <I>CLASSIC</I>_<I>SGEEE</I>_<I>SCHEDULING</I>
+          If set to "true" or "1", use the original SGEEE pending
+          job  scheduling  algorithm.  The original SGEEE pending
+          job scheduling algorithm  calculates  the  tickets  for
+          pending  jobs  by  dividing  up  the  tickets  in  each
+          scheduling policy among  all  the  active  and  pending
+          jobs. The pending job list is then ordered based on the
+          tickets assigned to the pending jobs. The default value
+          is  "false".  This  parameter  is only valid in a SGEEE
+          system.
+
+     <I>POLICY</I>_<I>HIERARCHY</I>
+          This parameter sets up a dependency chain of  policies.
+          Each  policy  in  the dependency chain is influenced by
+          the previous policies and influences the following pol-
+          icies.  A  typical scenario is to assign precedence for
+          the override policy over the  share-based  policy.  The
+          override  policy  determines  in such a case how share-
+          based tickets are assigned among jobs of the same  user
+          or  project.   Note that all policies contribute to the
+          ticket amount assigned to a particular  job  regardless
+          of  the  policy  hierarchy  definition. Yet the tickets
+          calculated in each of the  policies  can  be  differend
+          depending on "<I>POLICY</I>_<I>HIERARCHY</I>".
+
+          The "<I>POLICY</I>_<I>HIERARCHY</I>" parameter  can  be  a  up  to  4
+          letter  combination of the first letters of the 4 poli-
+          cies  S(hare-based),   F(unctional),   D(eadline)   and
+          O(verride).  So  a value "OFSD" means that the override
+          policy takes precedence  over  the  functional  policy,
+          which  influences  the  share-based  policy  and  which
+          finaly  preceeds  the  deadline  policy.  Less  than  4
+          letters mean that some of the policies do not influence
+          other policies and also are  not  influenced  by  other
+          policies.  So a value of "FS" means that the functional
+          policy influences the share-based policy and that there
+          is no interference with the other policies.
+
+          The special value "NONE" switches  off  policy  hierar-
+          chies.
+
+     <I>SHARE</I>_<I>OVERRIDE</I>_<I>TICKETS</I>
+          If set to "true" or "1", override tickets of any  over-
+          ride  object instance are shared equally among all jobs
+          associated with the object. If set to "false"  or  "0",
+          each  job  gets  the full value of the override tickets
+          associated  with  the  object.  The  default  value  is
+          "true". This parameter is only valid in a SGEEE system.
+
+     <I>SHARE</I>_<I>FUNCTIONAL</I>_<I>SHARES</I>
+          If set to "true" or "1", functional shares of any func-
+          tional  object  instance  are shared among all the jobs
+          associated with the object. If set to "false"  or  "0",
+          each  job associated with a functional object, gets the
+          full functional shares  of  that  object.  The  default
+          value  is  "true".  This  parameter  is only valid in a
+          SGEEE system.
+
+     <I>SHARE</I>_<I>DEADLINE</I>_<I>TICKETS</I>
+          If set to "true" or "1", the total deadline tickets are
+          shared  among  all  deadline jobs. If set to "false" or
+          "0", each deadline job will receive the total  deadline
+          tickets  once  the  job  deadline has been reached. The
+          default value is "true". This parameter is  only  valid
+          in a SGEEE system.
+
+     <I>MAX</I>_<I>FUNCTIONAL</I>_<I>JOBS</I>_<I>TO</I>_<I>SCHEDULE</I>
+          The maximum number of pending jobs to schedule  in  the
+          functional  policy.  The  default  value  is  200. This
+          parameter is only valid in a SGEEE system.
+
+     <I>MAX</I>_<I>PENDING</I>_<I>TASKS</I>_<I>PER</I>_<I>JOB</I>
+          The maximum number of subtasks per pending array job to
+          schedule.  This  parameter  exists  in  order to reduce
+          scheduling overhead. The default  value  is  50.   This
+          parameter is only valid in a SGEEE system.
+
+     <I>PROFILE</I>
+          If set, the scheduler logs profiling  information  sum-
+          marizing each scheduling run.
 
      Changing schedd_params  will  take  immediate  effect.   The
      default for schedd_params is none.
@@ -685,14 +874,6 @@ schedd_params
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
      tion.
-
-     <I>IGNORE</I>_<I>FQDN</I>
-          Ignore fully qualified domain names. It is switched  on
-          if  set  to  either  "true"  or "1". Can be used if all
-          hosts belonging to a Grid Engine cluster are part of  a
-          single  DNS  domain.  Switching it on my solve problems
-          with load reports due to different hostname resolutions
-          across the cluster.
 
 execd_params
      This is foreseen for passing additional  parameters  to  the
@@ -704,16 +885,18 @@ execd_params
           used for the accounting entries cpu, mem and io instead
           of the measured usage.
 
-     <I>DISABLE</I>_<I>AUTO</I>_<I>RESCHEDULING</I>
-          If   set   to   "true"   or   "1",   the    execd_param
-          <I>RESCHEDULE</I>_<I>UNKNOWN</I>   (see  below)  is  not  taken  into
-          account.
-
      <I>KEEP</I>_<I>ACTIVE</I>
           This value should only be set for  debugging  purposes.
           If  set  to  true, the execution daemon will not remove
           the spool directory maintained by <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> for a
           job.
+
+     <I>NO</I>_<I>REPRIORITIZATION</I>
+          If set to "true"  or  "1",  jobs  are  not  repriorized
+          dynamically.  Without setting this attribute the prior-
+          ity parameter in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> has no durable effect in
+          a SGEEE system because of dynamic reprioritization per-
+          formed by the PTF module inside <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
 
      <I>PTF</I>_<I>MIN</I>_<I>PRIORITY</I>, <I>PTF</I>_<I>MAX</I>_<I>PRIORITY</I>
           The parameters are only  available  in  a  Grid  Engine
@@ -751,30 +934,32 @@ execd_params
           another signal name then this signal will  be  sent  as
           notification signal.
 
-     <I>RESCHEDULE</I>_<I>UNKNOWN</I>
-          Determines whether jobs on hosts in unknown  state  are
-          rescheduled  and  thus  sent  to other hosts. Hosts are
-          registered as unknown if <B><A HREF="../htmlman8/sge_master.html">sge_master(8)</A></B> cannot establish
-          contact   to  the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  on  those  hosts  (see
-          max_unheard). Likely reasons are  a  breakdown  of  the
-          host  or  a  breakdown  of  the  network  connection in
-          between, but also <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may not be executing  on
-          such hosts.
-          In any case, Grid Engine can reschedule jobs running on
-          such  hosts  to another system. <I>RESCHEDULE</I>_<I>UNKNOWN</I> con-
-          trols the time which Grid Engine will wait before  jobs
-          are  rescheduled  after a host became unknown. The time
-          format specification is RESCHEDULE_UNKNOWN=hh:mm:ss. If
-          the  special  value RESCHEDULE_UNKNOWN=00:00:00 is set,
-          then jobs will not be rescheduled from this host.
-          Rescheduling is only  initiated  for  jobs  which  have
-          actiated the rerun flag (see the -r y option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
-          and the rerun option of <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).  Parallel  jobs
-          are  only rescheduled if the host on which their master
-          tasks executes is in unknown  state.  Interactive  jobs
-          (see  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,  <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>) are not rescheduled.
-          Migrating checkpointing jobs  (and  starting  from  the
-          last checkpoint) will be supported in a future release.
+     <I>SET</I>_<I>SGE</I>_<I>ENV</I>, <I>SET</I>_<I>COD</I>_<I>ENV</I>, <I>SET</I>_<I>GRD</I>_<I>ENV</I>
+          In <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> you can find a list of environment variables
+          which  are  exported  into the execution environment of
+          each Grid Engine Enterprise Edition job. Some of  these
+          variables  names  begin  with the prefix "SGE_". In the
+          predecessor products of Grid Engine Enterprise  Edition
+          (Codine,  GRD) the prefixes "COD_" and "GRD_" were used
+          for those variables. This makes it necessary to  update
+          all  job scripts relying one of those environment vari-
+          ables.  The  parameters  SET_SGE_ENV,  SET_COD_ENV  and
+          SET_GRD_ENV  can be used to accomplish a smoother tran-
+          sition from Codine/GRD to Grid Engine  Enterprise  Edi-
+          tion.
+
+          Each of those parameters  makes  sure  that  a  set  of
+          environment  variables  mentioned in <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and begin-
+          ning with the corresponding  prefix  will  be  exported
+          into the job environmnet. Every parameter can be set to
+          "true",   "1"   or   "false",   "0".    Defaults    are
+          "SET_SGE_ENV=1, SET_COD_ENV=0 and SET_GRD_ENV=0".
+
+          If all three parameters are set to "false" or "0"  jobs
+          might  fail  as  none  of the corresponding environment
+          variables would be set.  Therefore  in  this  case  the
+          environment  variables beginning with the prefix "SGE_"
+          are set.
 
      <I>SHARETREE</I>_<I>RESERVED</I>_<I>USAGE</I>
           If this parameter is set to  true,  reserved  usage  is
@@ -783,6 +968,7 @@ execd_params
 
      Changing  execd_params  will  take  immediate  effect.   The
      default for execd_params is none.
+
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
@@ -808,11 +994,14 @@ admin_user
      have  the  corresponding  file access permissions (e.g. on a
      shared file system without global root read/write access).
 
-     Changing admin_user  will  take  immediate  effect,  but  if
-     access to the Grid Engine spooling area is interrupted, this
-     will result  in  unpredictable  behaviour.   The  admin_user
-     parameter  has  no  default value, but instead it is defined
-     during the master installation procedure.
+     Being  a  parameter  set  at  installation   time   changing
+     admin_user in a running system is not supported. Changing it
+     manually on a shut-down cluster is possible, but  if  access
+     to  the  Grid Engine spooling area is interrupted, this will
+     result in unpredictable behaviour.
+
+     The admin_user parameter has no default value,  but  instead
+     it is defined during the master installation procedure.
 
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
@@ -853,6 +1042,7 @@ qlogin_command
      is given, a specialized Grid Engine component is used. It is
      automatically started with the target host and  port  number
      as parameters.
+
 
      Changing qlogin_command will  take  immediate  effect.   The
      default for qlogin_command is none.
@@ -905,6 +1095,7 @@ rsh_daemon
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
+
 rsh_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
@@ -924,18 +1115,40 @@ rsh_command
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-default_domain
-     Should be set if your hostname resolving yields  unqualified
-     hostnames for your cluster hosts. In that case, the value of
-     default_domain is appended to the  unqualified  hostname  to
-     define a fully qualified hostname.
+ignore_fqdn
+     Ignore fully qualified domain name component  of  hostnames.
+     Should  be set if all hosts belonging to a Grid Engine clus-
+     ter are part of a single DNS domain. It is  switched  on  if
+     set to either "true" or "1". Switching it on may solve prob-
+     lems with load reports due to different hostname resolutions
+     across the cluster.
 
-     Changing default_domain  will  take  immediate  effect.  The
-     default  for  default_domain  is none, in which case it will
+     Being  a  parameter  set  at  installation   time   changing
+     ignore_fqdn  in  a  running  system  is  not  supported. The
+     default for ignore_fqdn is "true".
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+default_domain
+     Only needed if your Grid Engine cluster covers hosts belong-
+     ing to more than a single DNS domain. In this case it can be
+     used if your hostname resolving yields  both  qualified  and
+     unqualified  hostnames  for  the  hosts  in  one  of the DNS
+     domains. The value of  default_domain  is  appended  to  the
+     unqualified  hostname  to define a fully qualified hostname.
+     The  default_domain  parameter  will  have  no   effect   if
+     ignore_fqdn is set to "true".
+
+     Being  a  parameter  set  at  installation   time   changing
+     default_domain  in  a  running  system is not supported. The
+     default for default_domain is "none", in which case it  will
      not be used.
 
-     The  global  configuration  entry  for  this  value  may  be
-     overwritten by the execution host local configuration.
+     This value is a global configuration parameter only. It can-
+     not   be   overwritten   by   the   execution   host   local
+     configuration.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
@@ -946,10 +1159,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
 
 
 

@@ -1,3 +1,6 @@
+CR-2001-07-25-2: Testsuite:
+                    - modified compile mail output
+
 CR-2001-07-25-1: Testsuite:
                     - CHECK_EXPECT_MATCH_MAX_BUFFER reset to 640 KB
                     - full_buffer caused not the error in compile_source procedure

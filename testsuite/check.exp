@@ -4450,7 +4450,7 @@ proc compile_source {} {
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
    set mail_subject "testsuite error - compile_source"
-   set mail_body    "date: [exec date]\n:\n"
+   set mail_body    "date: [exec date]\n"
 
  
    set was_error 0
@@ -4601,13 +4601,18 @@ proc compile_source {} {
 
 
    set arch_list {}
+   set compiled_mail_architectures ""
    puts -nonewline $CHECK_OUTPUT "\narchitectures: "
    foreach elem $host_list {
       set return_state [ catch { exec rsh $elem "$CHECK_SOURCE_DIR/dist/util/arch" } output ]
       lappend arch_list $output 
       puts -nonewline $CHECK_OUTPUT "$output "
+      append compiled_mail_architectures "\n$elem ($output)"
    }
-   
+
+     
+
+ 
    puts $CHECK_OUTPUT "\ninstalling product binaries"
    eval spawn rsh [lindex $host_list 0] "\"cd $CHECK_SOURCE_DIR ; setenv $var_name $CHECK_PRODUCT_ROOT ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list\""  
    set timeout -1
@@ -4659,12 +4664,14 @@ proc compile_source {} {
       mail_report $mail_subject "$mail_body - compile error(s)"
       return -1
    }
- 
-   set mail_body "$mail_body \n Successfully compiled and installed the $CHECK_PRODUCT_TYPE system.\n"
-   set mail_body "$mail_body Now it is [exec date], installed hosts and architectures:\n\n"
+   
+   append mail_body "\nSuccessfully compiled and pre-installed following architectures:"
+   append mail_body "\n${compiled_mail_architectures}\n"
+   
+   append mail_body "\nSuccessfully installed the $CHECK_PRODUCT_TYPE system at:"
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
-      set mail_body "$mail_body $elem\t\t($host_arch)\n"
+      append mail_body "\n$elem ($host_arch)"
    }
    if { [string compare $cvs_change_log "" ] != 0 } {
       set mail_body "$mail_body \n\n Update output:\n$cvs_change_log\n\n"

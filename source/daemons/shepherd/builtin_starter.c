@@ -809,7 +809,7 @@ char *str_title
    /*
    ** prepare job arguments
    */
-   if (atoi(get_conf_val("handle_as_binary")) && !is_rsh) {
+   if (atoi(get_conf_val("handle_as_binary")) && !is_rsh && !is_qlogin) {
       int arg_id = 0;
       dstring arguments = DSTRING_INIT;
       int n_job_args;

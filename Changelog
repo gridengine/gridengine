@@ -1,3 +1,6 @@
+JG-2002-12-16-0  Bugfix:    qrsh without command reported "protocol error".
+                 IZ:        #431
+
 AH-2002-12-12-1  Bugfix     conflicting policies can cause job being started and
                             immediately suspended
                  IZ:        #437

@@ -2172,6 +2172,11 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
    int str_pos;
 
    DENTER(CULL_LAYER, "lGetElemStrNext");
+
+   if(*iterator == NULL) {
+      return NULL;
+   }
+   
    if (!str) {
       DPRINTF(("error: NULL ptr passed to lGetElemStr\n"));
       DEXIT;
@@ -2201,7 +2206,7 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
       return ep;
    } else {
       /* seek for element */
-      for (ep = (lListElem *)*iterator; ep; ep = ep->next) {
+      for (ep = ((lListElem *)*iterator)->next; ep; ep = ep->next) {
          const char *s = lGetPosString(ep, str_pos);
          if (s && !strcmp(s, str)) {
             *iterator = ep;
@@ -2657,6 +2662,10 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **i
 
    DENTER(CULL_LAYER, "lGetElemUlongNext");
 
+   if(*iterator == NULL) {
+      return NULL;
+   }
+   
    /* get position of nm in sdp */
    val_pos = lGetPosInDescr(lGetListDescr(lp), nm);
 
@@ -2674,7 +2683,7 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **i
       return ep;
    } else {
       /* seek for element */
-      for (ep = (lListElem *)*iterator; ep; ep = ep->next) {
+      for (ep = ((lListElem *)*iterator)->next; ep; ep = ep->next) {
          lUlong s = lGetPosUlong(ep, val_pos);
          if (s == val) {
             *iterator = ep;

@@ -296,6 +296,8 @@ int flags
          host = lGetHost(ep, MR_host);
          if (sge_strnullcmp(user, uti_state_get_user_name()) || 
              sge_hostcmp(host, uti_state_get_qualified_hostname())) {
+             
+            lp_new = lCreateList("mail list", MR_Type);  
             ep_new = lAddElemStr(&lp_new, MR_user, user, MR_Type);
             lSetHost(ep_new, MR_host, host);
          }
@@ -313,7 +315,7 @@ int flags
             return answer;
          }
          ep_opt = sge_add_arg(pcmdline, M_OPT, lListT, "-M", str);
-         lSetList(ep_opt, SPA_argval_lListT, lCopyList("mail list", lp_new));      
+         lSetList(ep_opt, SPA_argval_lListT, lp_new);      
  
       }
    }

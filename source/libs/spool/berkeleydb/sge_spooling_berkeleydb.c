@@ -924,6 +924,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                                       object,
                                                       job_id, only_job);
                   }
+                  FREE(dup);
                }
                break;
             case SGE_TYPE_CQUEUE:
@@ -1070,6 +1071,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                      ret = spool_berkeleydb_delete_job(answer_list, info, 
                                                        dbkey, false);
                   }
+                  FREE(dup);
                }
                break;
             default:

@@ -1,3 +1,8 @@
+SG-2004-04-22-2: Bugfix:   fixed memory leak in berkeleydb spooling for jobs
+                           fixed memory leak in qsub 
+                 Changed:  qmaster, qsub
+                 Review:   AS, DT
+
 HP-2004-04-22-0: Enhancem.: Added Docu for delegated file staging
 
 SG-2004-04-22-1: Bugfix:   fixed memory leak cluster queue modification

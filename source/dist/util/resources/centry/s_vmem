@@ -1,0 +1,11 @@
+# Version: SGEEE pre6.0 (Maintrunk)
+# 
+# DO NOT MODIFY THIS FILE MANUALLY!
+# 
+name        s_vmem
+shortcut    s_vmem
+type        MEMORY
+relop       <=
+requestable YES
+consumable  NO
+default     0

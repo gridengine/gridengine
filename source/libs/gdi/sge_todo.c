@@ -54,7 +54,6 @@
 #include "sge_pe_task.h"
 #include "sge_manop.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "sge_sharetree.h"
 #include "sge_answer.h"
 #include "version.h"

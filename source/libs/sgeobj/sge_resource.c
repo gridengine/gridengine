@@ -38,7 +38,7 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_range.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

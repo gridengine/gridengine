@@ -118,7 +118,6 @@ extern "C" {
       {EV_LOWERBOUND, EVS, EVN},        /* event client */
       {ET_LOWERBOUND, ETS, ETN},        /* event */
       {CE_LOWERBOUND, CES, CEN},        /* complex entity */
-      {CX_LOWERBOUND, CXS, CXN},        /* complex */
       {LR_LOWERBOUND, LRS, LRN},        /* load report */
       {OR_LOWERBOUND, ORS, ORN},        /* ?? */
       {OQ_LOWERBOUND, OQS, OQN},        /* ?? */

@@ -43,7 +43,7 @@
 #include "sge_prog.h"
 #include "sge_stdlib.h"
 #include "sge_string.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 /****** sgeobj/var/-VariableList **********************************************
 *  NAME
@@ -490,7 +490,7 @@ void var_list_copy_prefix_vars_undef(lList **varl,
 *     void 
 *     var_list_copy_complex_vars_and_value(lList **varl, 
 *                                          const lList *src_varl, 
-*                                          const lList *cplx_list) 
+*                                          const lList *centry_list) 
 *
 *  FUNCTION
 *     Copy all variables from "src_varl" into
@@ -502,13 +502,13 @@ void var_list_copy_prefix_vars_undef(lList **varl,
 *     SGE_COMPLEX_hostname="" ==> SGE_COMPLEX_hostname="fangorn.sun.com" 
 *
 *  INPUTS
-*     lList **varl           - VA_Type list 
-*     const lList *src_varl  - source VA_Type list 
-*     const lList *cplx_list - complex list 
+*     lList **varl             - VA_Type list 
+*     const lList *src_varl    - source VA_Type list 
+*     const lList *centry_list - complex entry list 
 ******************************************************************************/
 void var_list_copy_complex_vars_and_value(lList **varl,
                                           const lList* src_varl,
-                                          const lList* cplx_list)
+                                          const lList* centry_list)
 {
    lListElem *var = NULL;
    int n = strlen(VAR_COMPLEX_PREFIX);
@@ -518,7 +518,7 @@ void var_list_copy_complex_vars_and_value(lList **varl,
       const char *name = lGetString(var, VA_variable);
 
       if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) {
-         const lListElem* attr = lGetElemStr(cplx_list, CE_name, &name[n]);
+         const lListElem* attr = lGetElemStr(centry_list, CE_name, &name[n]);
 
          if (attr != NULL) {
             const char *value = lGetString(attr, CE_stringval);
@@ -551,9 +551,9 @@ void var_list_copy_complex_vars_and_value(lList **varl,
 *     all variables beginning with "ignore_prefix".
 *
 *  INPUTS
-*     lList **varl           - VA_Type list 
-*     const lList *src_varl  - source VA_Type list 
-*     const lList *cplx_list - complex list 
+*     lList **varl              - VA_Type list 
+*     const lList *src_varl     - source VA_Type list 
+*     const char *ignore_prefix - prefix 
 *
 *  RESULT
 *     void - none

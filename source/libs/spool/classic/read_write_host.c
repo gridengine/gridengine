@@ -50,8 +50,9 @@
 #include "sge_io.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
 #include "sge_host.h"
+#include "sge_centry.h"
+
 #include "sge_static_load.h"
 
 static intprt_type intprt_as_scaling[] = { HS_name, HS_value, 0 };
@@ -107,13 +108,6 @@ _Insight_set_option("suppress", "PARM_NULL");
             DEXIT;
             return -1;
          } 
-      }
-
-      /* --------- EH_complex_list */
-      if (!set_conf_list(alpp, clpp, fields?fields:opt, "complex_list", ep,
-               EH_complex_list, CX_Type, CX_name)) {
-         DEXIT;
-         return -1;
       }
 
       /* --------- EH_consumable_config_list */
@@ -393,11 +387,6 @@ char *file
          FPRINTF((fp, "NONE\n"));
       }
 
-      ret = fprint_cull_list(fp,  "complex_list               ", 
-         lGetList(ep, EH_complex_list), CX_name);
-      if (ret == -1) {
-         goto FPRINTF_ERROR;
-      }
       fprint_thresholds(fp, "complex_values             ", 
          lGetList(ep, EH_consumable_config_list), 1);
       if (getenv("MORE_INFO"))

@@ -54,7 +54,7 @@
 #include "sge_time.h"
 #include "sge_queue.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 #include "cull_hash.h"
 

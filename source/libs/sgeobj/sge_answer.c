@@ -739,6 +739,38 @@ void answer_list_replace(lList **answer_list, lList **new_list)
    DEXIT;
 }
 
+/****** sge/answer/answer_list_append_list() ***********************************
+*  NAME
+*     answer_list_append_list() -- Append two lists 
+*
+*  SYNOPSIS
+*     void answer_list_append_list(lList **answer_list, lList **new_list) 
+*
+*  FUNCTION
+*     Append "new_list" after "answer_list". *new_list will be NULL afterwards 
+*
+*  INPUTS
+*     lList **answer_list - AN_Type list 
+*     lList **new_list    - AN_Type list 
+*
+*  RESULT
+*     void - None 
+*******************************************************************************/
+void answer_list_append_list(lList **answer_list, lList **new_list)
+{
+   DENTER(ANSWER_LAYER, "answer_list_append_list");
+   if (answer_list != NULL && new_list != NULL) {
+      if (*answer_list == NULL && *new_list != NULL) {
+         *answer_list = lCreateList("", AN_Type);
+      }
+      if (*new_list != NULL) {
+         lAddList(*answer_list, *new_list);
+         *new_list = NULL;
+      }
+   }
+   DEXIT;
+}
+
 /****** sgeobj/answer/answer_list_output() ****************************
 *  NAME
 *     answer_list_print_err_warn() -- output and free answer_list

@@ -69,7 +69,6 @@
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
 #include "sge_calendar.h"
 #include "sge_complex_schedd.h"
 #include "sge_utility.h"
@@ -77,6 +76,7 @@
 #include "sge_utility_qmaster.h"
 #include "sge_static_load.h"
 #include "sge_stringL.h"
+#include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -306,24 +306,6 @@ int sub_command
             goto ERROR;
          } 
       }
-   }
-
-   /* ---- QU_complex_list */
-   if (lGetPosViaElem(qep, QU_complex_list)>=0) {
-      DPRINTF(("got new QU_complex_list\n"));
-
-      /* check complex list */
-      normalize_sublist(qep, QU_complex_list);
-      if (complex_list_verify(lGetList(qep, QU_complex_list), alpp, "queue", 
-                              qname)!=STATUS_OK)
-         goto ERROR;
-#if 0
-      lSetList(new_queue, QU_complex_list, lCopyList("", 
-            lGetList(qep, QU_complex_list)));
-#endif
-      attr_mod_sub_list(alpp, new_queue, QU_complex_list,
-            CX_name, qep, sub_command,
-            SGE_ATTR_COMPLEX_LIST, SGE_OBJ_QUEUE, 0);  
    }
 
    /* ---- QU_seq_no */
@@ -926,7 +908,7 @@ int sub_command
       lSetList(new_queue, QU_consumable_actual_list, NULL);
 
       slots2config_list(new_queue);
-      debit_queue_consumable(NULL, new_queue, Master_Complex_List, 0); 
+      debit_queue_consumable(NULL, new_queue, Master_CEntry_List, 0); 
       for_each (jep, Master_Job_List) {
          int slots = 0;
          lListElem *jatep;
@@ -938,7 +920,7 @@ int sub_command
             slots += lGetUlong(gdil_ep, JG_slots);
          }
          if (slots)
-            debit_queue_consumable(jep, new_queue, Master_Complex_List, slots); 
+            debit_queue_consumable(jep, new_queue, Master_CEntry_List, slots); 
       }
    }
 

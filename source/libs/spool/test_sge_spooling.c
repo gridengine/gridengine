@@ -53,7 +53,6 @@
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_manop.h"
@@ -112,9 +111,9 @@ static bool read_spooled_data(void)
    DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(Master_Sched_Config_List)));
 
    /* complexes */
-   spool_read_list(&answer_list, context, &Master_Complex_List, SGE_TYPE_COMPLEX);
+   spool_read_list(&answer_list, context, &Master_CEntry_List, SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_Complex_List\n", lGetNumberOfElem(Master_Complex_List)));
+   DPRINTF(("read %d entries to Master_CEntry_List\n", lGetNumberOfElem(Master_CEntry_List)));
 
    /* hosts */
    spool_read_list(&answer_list, context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
@@ -249,7 +248,6 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
             break;
          case SGE_TYPE_CALENDAR:
          case SGE_TYPE_CKPT:
-         case SGE_TYPE_COMPLEX:
          case SGE_TYPE_MANAGER:
          case SGE_TYPE_OPERATOR:
          case SGE_TYPE_PE:
@@ -433,7 +431,6 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_CONFIG:
             case SGE_TYPE_CALENDAR:
             case SGE_TYPE_CKPT:
-            case SGE_TYPE_COMPLEX:
             case SGE_TYPE_MANAGER:
             case SGE_TYPE_OPERATOR:
             case SGE_TYPE_PE:
@@ -476,7 +473,6 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
 
             case SGE_TYPE_CALENDAR:
             case SGE_TYPE_CKPT:
-            case SGE_TYPE_COMPLEX:
             case SGE_TYPE_MANAGER:
             case SGE_TYPE_OPERATOR:
             case SGE_TYPE_PE:

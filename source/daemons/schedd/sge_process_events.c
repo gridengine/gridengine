@@ -80,7 +80,7 @@
 #include "sge_ckpt.h"
 #include "sge_host.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 #include "sge_sharetree.h"
 
 /* defined in sge_schedd.c */
@@ -109,7 +109,7 @@ lEnumeration
    *what_job = NULL,
    *what_host = NULL,
    *what_acl = NULL,
-   *what_complex = NULL,
+   *what_centry = NULL,
    *what_dept = NULL;
 
 static void ensure_valid_what_and_where(void);
@@ -197,14 +197,15 @@ int event_handler_default_scheduler()
    if (feature_is_enabled(FEATURE_SGEEE)) {
       copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
       copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
-   }
-   else {
+   } else {
       copy.acl_list = lCopyList("", Master_Userset_List);
       copy.dept_list = NULL;
    }
 
+   DTRACE;
+
    /* .. but not in all cases */
-   copy.complex_list = lCopyList("", Master_Complex_List);
+   copy.centry_list = lCopyList("", Master_CEntry_List);
    copy.pe_list = lCopyList("", Master_Pe_List);
    copy.share_tree = lCopyList("", Master_Sharetree_List);
    copy.config_list = lCopyList("", Master_Sched_Config_List);
@@ -224,7 +225,7 @@ int event_handler_default_scheduler()
             lGetNumberOfElem(copy.host_list),
             lGetNumberOfElem(Master_Exechost_List),
 
-            lGetNumberOfElem(copy.complex_list),
+            lGetNumberOfElem(copy.centry_list),
             lGetNumberOfElem(copy.acl_list),
             lGetNumberOfElem(copy.dept_list),
             lGetNumberOfElem(copy.pe_list),
@@ -248,7 +249,7 @@ int event_handler_default_scheduler()
          lGetNumberOfElem(copy.host_list),
          lGetNumberOfElem(Master_Exechost_List),
 
-         lGetNumberOfElem(copy.complex_list),
+         lGetNumberOfElem(copy.centry_list),
          lGetNumberOfElem(copy.acl_list),
          lGetNumberOfElem(copy.dept_list),
          lGetNumberOfElem(copy.pe_list),
@@ -290,7 +291,7 @@ int event_handler_default_scheduler()
    copy.queue_list = lFreeList(copy.queue_list);
    copy.all_queue_list = lFreeList(copy.all_queue_list);
    copy.job_list = lFreeList(copy.job_list);
-   copy.complex_list = lFreeList(copy.complex_list);
+   copy.centry_list = lFreeList(copy.centry_list);
    copy.acl_list = lFreeList(copy.acl_list);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
@@ -404,8 +405,8 @@ DTRACE;
    }
 
    /* ---------------------------------------- */
-   if (what_complex == NULL) { 
-      what_complex = lWhat("%T(ALL)", CX_Type);
+   if (what_centry == NULL) { 
+      what_centry = lWhat("%T(ALL)", CE_Type);
    }
 
    /* ---------------------------------------- */
@@ -928,7 +929,7 @@ int subscribe_default_scheduler(void)
 {
    /* subscribe event types for the mirroring interface */
    sge_mirror_subscribe(SGE_TYPE_CKPT,           NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_COMPLEX,        NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_CENTRY,         NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_EXECHOST,       NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL);
    sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL);

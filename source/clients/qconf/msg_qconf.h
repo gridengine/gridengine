@@ -45,5 +45,7 @@
 
 #define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _MESSAGE(5008, _("no option argument provided to "SFQ""))
 
+#define MSG_COMPLATTRNOTCHANGED       _MESSAGE(5009, _("Complex attribute configuartion has not been changed\n"))
+
 #endif /* __MSG_QCONF_H */
 

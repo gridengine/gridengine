@@ -59,7 +59,7 @@
 #include "sge_answer.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 #include "sge_conf.h"
 #include "sge_host.h"
 #include "sge_pe.h"
@@ -261,17 +261,12 @@ int sge_read_exechost_list_from_disk()
             }
 
             /* necessary to setup actual list of exechost */
-            debit_host_consumable(NULL, ep, Master_Complex_List, 0);
+            debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
 
             /* necessary to init double values of consumable configuration */
-            sge_fill_requests(lGetList(ep, EH_consumable_config_list), 
-                  Master_Complex_List, 1, 0, 1);
+            centry_list_fill_request(lGetList(ep, EH_consumable_config_list), 
+                                     Master_CEntry_List, true, false, true);
 
-            if (complex_list_verify(lGetList(ep, EH_complex_list), NULL, 
-                                    "host", lGetHost(ep, EH_name))!=STATUS_OK) {
-               DEXIT;
-               return -1;
-            }
             if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
                ep = lFreeElem(ep);
                DEXIT;
@@ -607,18 +602,12 @@ int sge_read_queue_list_from_disk()
                slots2config_list(qep); 
 
                /* setup actual list of queue */
-               debit_queue_consumable(NULL, qep, Master_Complex_List, 0);
+               debit_queue_consumable(NULL, qep, Master_CEntry_List, 0);
 
                /* init double values of consumable configuration */
-               sge_fill_requests(lGetList(qep, QU_consumable_config_list), Master_Complex_List, 1, 0, 1);
+               centry_list_fill_request(lGetList(qep, QU_consumable_config_list), 
+                                        Master_CEntry_List, true, false, true);
 
-               if (complex_list_verify(lGetList(qep, QU_complex_list), NULL, 
-                                       "queue", lGetString(qep, QU_qname))
-                    !=STATUS_OK) {
-                  qep = lFreeElem(qep);            
-                  DEXIT;
-                  return -1;
-               }
                if (ensure_attrib_available(NULL, qep, QU_load_thresholds) ||
                    ensure_attrib_available(NULL, qep, QU_suspend_thresholds) ||
                    ensure_attrib_available(NULL, qep, QU_consumable_config_list)) {
@@ -881,7 +870,7 @@ char *object_dir
    return 0;
 }
 
-int read_all_complexes(void)
+int read_all_centries(void)
 {
    DIR *dir;
    SGE_STRUCT_DIRENT *dent;
@@ -891,45 +880,41 @@ int read_all_complexes(void)
    lList *answer = NULL;
 
 
-   DENTER(TOP_LAYER, "read_all_complexes");
+   DENTER(TOP_LAYER, "read_all_centries");
 
-   if (!Master_Complex_List) {
-      Master_Complex_List = lCreateList("complex list", CX_Type);
+   if (!Master_CEntry_List) {
+      Master_CEntry_List = lCreateList("", CE_Type);
    }
 
-   dir = opendir(COMPLEX_DIR);
+   dir = opendir(CENTRY_DIR);
    if (!dir) {
-      ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, COMPLEX_DIR));
+      ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, CENTRY_DIR));
       DEXIT;
       return -1;
    }
    if (!sge_silent_get())
-      printf(MSG_CONFIG_READINGINCOMPLEXES);
+      printf(MSG_CONFIG_READINGINCOMPLEXATTRS);
 
    while ((dent=SGE_READDIR(dir)) != NULL) {
       if (!strcmp(dent->d_name,"..") || !strcmp(dent->d_name,".")) {
          continue;
       }
       if (!sge_silent_get()) {
-         printf(MSG_SETUP_COMPLEX_S, dent->d_name);
+         printf(MSG_SETUP_COMPLEX_ATTR_S, dent->d_name);
       }  
       if ((dent->d_name[0] == '.')) {
-         sge_unlink(COMPLEX_DIR, dent->d_name);
+         sge_unlink(CENTRY_DIR, dent->d_name);
          continue;
       }
 
-      if (verify_str_key(&answer, dent->d_name, "complex")) {
-         DEXIT;
-         return -1;
-      }    
-      sprintf(fstr, "%s/%s", COMPLEX_DIR, dent->d_name);
+      sprintf(fstr, "%s/%s", CENTRY_DIR, dent->d_name);
       
       if ((fd=open(fstr, O_RDONLY)) < 0) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fstr, strerror(errno)));
          continue;
       }
       close(fd);
-      el = read_cmplx(fstr, dent->d_name, &answer);
+      el = cull_read_in_centry(CENTRY_DIR, dent->d_name , 1, 0, NULL, NULL);
       if (answer) {
          ERROR((SGE_EVENT, lGetString(lFirst(answer), AN_text)));
          answer = lFreeList(answer);
@@ -937,16 +922,17 @@ int read_all_complexes(void)
          return -1;
       }
       if (el) {
-         lAppendElem(Master_Complex_List, el);
+         lAppendElem(Master_CEntry_List, el);
       }
    }
 
    closedir(dir);
 
+   centry_list_sort(Master_CEntry_List);
+
    DEXIT;
    return 0;
 }
-
 
 /*----------------------------------------------------
  * read_all_configurations

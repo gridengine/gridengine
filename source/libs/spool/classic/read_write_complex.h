@@ -32,9 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-lListElem *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp);
+lList *
+read_cmplx(const char *fname, const char *cmplx_name, lList **alpp);
 
-int write_cmplx(int spool, const char *fname, lList *lpc, FILE *fpout, lList **alpp);
+int 
+write_cmplx(int spool, const char *fname, lList *lpc, FILE *fpout, 
+            lList **alpp);
 
 #endif /* __READ_WRITE_COMPLEX_H */
 

@@ -160,7 +160,7 @@ char **argv
    sge_rusage_type totals;
    int ii, i_ret;
    lList *complex_options = NULL;
-   lList *complex_list, *queue_list, *exechost_list;
+   lList *centry_list, *queue_list, *exechost_list;
    lList *sorted_list = NULL;
    lList *alp = NULL;
    int is_path_setup = 0;   
@@ -589,9 +589,9 @@ char **argv
          is_path_setup = 1;
       }
       
-      get_qacct_lists(&complex_list, &queue_list, &exechost_list);
+      get_qacct_lists(&centry_list, &queue_list, &exechost_list);
       DPRINTF(("got 3 current lists: \n"));
-      lWriteList(complex_list);
+      lWriteList(centry_list);
       lWriteList(queue_list);
       lWriteList(exechost_list);
    } /* endif complexflag */
@@ -706,13 +706,13 @@ char **argv
    
          set_qs_state(QS_STATE_EMPTY);
 
-         queue_complexes2scheduler(&complex_filled, queue, exechost_list, complex_list, 0);
+         queue_complexes2scheduler(&complex_filled, queue, exechost_list, centry_list, 0);
 
          if (!complex_filled) {
             ERROR((SGE_EVENT, \
                MSG_HISTORY_COMPLEXTEMPLATESCANTBEFILLEDCORRECTLYFORJOBX_D, \
                u32c(dusage.job_number)));
-            lFreeList(complex_list);
+            lFreeList(centry_list);
             lFreeElem(queue);
             SGE_EXIT(1);
          }
@@ -1480,7 +1480,7 @@ sge_rusage_type *dusage
 ** NAME
 **   get_qacct_lists
 ** PARAMETER
-**   ppcomplexes - list pointer-pointer to be set to the complex list, CX_Type
+**   ppcentries - list pointer-pointer to be set to the complex list, CX_Type
 **   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type
 **   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type
 ** RETURN
@@ -1496,7 +1496,7 @@ sge_rusage_type *dusage
 **   problem: exiting is against the philosophy, restricts usage to clients
 */
 static void get_qacct_lists(
-lList **ppcomplexes,
+lList **ppcentries,
 lList **ppqueues,
 lList **ppexechosts 
 ) {
@@ -1505,16 +1505,16 @@ lList **ppexechosts
    lList *alp = NULL;
    lListElem *aep = NULL;
    lList *mal = NULL;
-   int cx_id = 0, eh_id = 0, q_id = 0;
+   int ce_id = 0, eh_id = 0, q_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_qacct_lists");
 
    /*
-   ** GET SGE_COMPLEX_LIST 
+   ** GET SGE_CENTRY_LIST 
    */
-   what = lWhat("%T(ALL)", CX_Type);
-   cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET,
+   what = lWhat("%T(ALL)", CE_Type);
+   ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
                            NULL, NULL, what, NULL, &state);
    what = lFreeWhat(what);
 
@@ -1555,8 +1555,8 @@ lList **ppexechosts
    ** handle results
    */
    /* --- complex */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_COMPLEX_LIST, cx_id,
-                                 mal, ppcomplexes);
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+                                mal, ppcentries);
    if (!alp) {
       ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
       SGE_EXIT(1);

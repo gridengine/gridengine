@@ -42,7 +42,7 @@ typedef struct {
    lList *queue_list;       /* QU_Type */
    lList *all_queue_list;   /* QU_Type */
    lList *job_list;         /* JB_Type */
-   lList *complex_list;     /* CX_Type */
+   lList *centry_list;      /* CE_Type */
    lList *acl_list;         /* US_Type */
    lList *pe_list;          /* PE_Type */
    lList *config_list;      /* SC_Type */

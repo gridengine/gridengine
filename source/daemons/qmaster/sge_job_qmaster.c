@@ -89,7 +89,7 @@
 #include "sge_queue.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -275,10 +275,11 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* fill name and shortcut for all requests
     * fill numeric values for all bool, time, memory and int type requests
-    * use the Master_Complex_List for all fills
+    * use the Master_CEntry_List for all fills
     * JB_hard/soft_resource_list points to a CE_Type list
     */
-   if (sge_fill_requests(lGetList(jep, JB_hard_resource_list), Master_Complex_List, 0, 1, 0)) {
+   if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
+                                Master_CEntry_List, false, true, false)) {
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -288,7 +289,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EUNKNOWN;
    }
    
-   if (sge_fill_requests(lGetList(jep, JB_soft_resource_list), Master_Complex_List, 0, 1, 0)) {
+   if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), 
+                                Master_CEntry_List, false, true, false)) {
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -314,7 +316,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       const char *qname;
       lListElem *ep;
 
-      if (!queues_are_requestable(Master_Complex_List)) {
+      if (!centry_list_are_queues_requestable(Master_CEntry_List)) {
          ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE)); 
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -337,7 +339,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       const char *qname;
       lListElem *ep;
 
-      if (!queues_are_requestable(Master_Complex_List)) {
+      if (!centry_list_are_queues_requestable(Master_CEntry_List)) {
          ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE)); 
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -1991,7 +1993,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
    for_each(old_entry, old) { 
       name = lGetString(old_entry, CE_name);
 
-      if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
+      if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
          /* complex attribute definition has been removed though
             job still requests resource */ 
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
@@ -2025,7 +2027,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
    for_each(new_entry, new) { 
       name = lGetString(new_entry, CE_name);
 
-      if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
+      if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
          /* refers to a not existing complex attribute definition */ 
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
@@ -2099,7 +2101,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl)
    for_each(entry, srl) {
       name = lGetString(entry, CE_name);
 
-      if (!(dcep = complex_list_locate_attr(Master_Complex_List, name))) {
+      if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          DEXIT;
@@ -2400,7 +2402,7 @@ int *trigger
    /* ---- JB_hard_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_hard_resource_list))>=0) {
       DPRINTF(("got new JB_hard_resource_list\n")); 
-      if (sge_fill_requests(lGetList(jep, JB_hard_resource_list), Master_Complex_List, 0, 1, 0)) {
+      if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), Master_CEntry_List, false, true, false)) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
@@ -2429,7 +2431,7 @@ int *trigger
    /* ---- JB_soft_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_soft_resource_list))>=0) {
       DPRINTF(("got new JB_soft_resource_list\n")); 
-      if (sge_fill_requests(lGetList(jep, JB_soft_resource_list), Master_Complex_List, 0, 1, 0)) {
+      if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), Master_CEntry_List, false, true, false)) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
@@ -2669,7 +2671,8 @@ int *trigger
       DPRINTF(("got new JB_hard_queue_list\n")); 
       
       /* attribute "qname" in queue complex must be requestable for -q */
-      if (lGetList(jep, JB_hard_queue_list) && !queues_are_requestable(Master_Complex_List)) {
+      if (lGetList(jep, JB_hard_queue_list) && 
+          !centry_list_are_queues_requestable(Master_CEntry_List)) {
          ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE2));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -2698,7 +2701,8 @@ int *trigger
       DPRINTF(("got new JB_master_hard_queue_list\n")); 
       
       /* attribute "qname" in queue complex must be requestable for -q */
-      if (lGetList(jep, JB_master_hard_queue_list) && !queues_are_requestable(Master_Complex_List)) {
+      if (lGetList(jep, JB_master_hard_queue_list) && 
+          !centry_list_are_queues_requestable(Master_CEntry_List)) {
          ERROR((SGE_EVENT, MSG_JOB_QNOTREQUESTABLE2));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -3268,7 +3272,7 @@ int *trigger
 
             granted = sge_replicate_queues_suitable4job(Master_Queue_List, 
                   jep, NULL, pep, ckpt_ep, scheddconf.queue_sort_method,
-                  Master_Complex_List, Master_Exechost_List, 
+                  Master_CEntry_List, Master_Exechost_List, 
                   Master_Userset_List, NULL, 0, &prev_dipatch_type, 0);
             ngranted = nslots_granted(granted, NULL);
             granted = lFreeList(granted);

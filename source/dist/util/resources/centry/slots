@@ -1,0 +1,11 @@
+# Version: SGEEE pre6.0 (Maintrunk)
+# 
+# DO NOT MODIFY THIS FILE MANUALLY!
+# 
+name        slots
+shortcut    s
+type        INT
+relop       <=
+requestable YES
+consumable  YES
+default     1

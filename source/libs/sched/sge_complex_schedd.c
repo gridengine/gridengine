@@ -49,9 +49,9 @@
 #include "sge_schedd_conf.h"
 #include "sge_queue.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -63,10 +63,10 @@ static int string_base_cmp(u_long32 type, const char *s1, const char *s2);
 static int string_cmp(u_long32 type, u_long32 relop, const char *request,
  const char *offer);
 
-static int fillComplexFromQueue(lList **new_complexl, lList *complex_listl, lListElem *complexl, lListElem *queue, int recompute_debitation_dependent);
+static int fillComplexFromQueue(lList **new_complexl, lList *complexl, lListElem *queue, int recompute_debitation_dependent);
 
 static int decide_dominance(lListElem *ep, double dval, const char *as_str, u_long32 mask);
-static int append_complexes(lList **new_complex, lListElem *to_add, u_long32 layer, int recompute_debitation_dependent); 
+static int append_complexes(lList **new_complex, lList *to_add, u_long32 layer, int recompute_debitation_dependent); 
 
 static int fixed_and_consumable(lList *new_complex, lList *config, lList *actual, u_long32 layer, int recompute_debitation_dependent);
 
@@ -314,7 +314,7 @@ static int decide_dominance(lListElem *ep, double dval, const char *as_str,
 
 static int append_complexes(
 lList **new_complex,
-lListElem *to_add,
+lList *to_add,
 u_long32 layer, 
 int recompute_debitation_dependent  
 ) {
@@ -329,7 +329,7 @@ int recompute_debitation_dependent
 
    prev = lGetNumberOfElem(*new_complex);
 
-   lp_add = lGetList(to_add, CX_entries);
+   lp_add = to_add;
    lp_add_descr = lGetListDescr(lp_add);
    pos_CE_name        = lGetPosInDescr(lp_add_descr, CE_name);
    pos_CE_dominant    = lGetPosInDescr(lp_add_descr, CE_dominant);
@@ -377,16 +377,11 @@ int recompute_debitation_dependent
       lSetString(newep, CE_pj_stringval, lGetString(ep, CE_stringval));
       lSetDouble(newep, CE_pj_doubleval, lGetDouble(ep, CE_doubleval));
 
-      if (!*new_complex)
+      if (!*new_complex) {
          *new_complex = lCreateList("attr", CE_Type);
+      }
       lAppendElem(*new_complex, newep);
    }
-
-#if 0
-   DPRINTF(("complex \"%s\" added %d attributes\n",
-         lGetString(to_add, CX_name), 
-         lGetNumberOfElem(*new_complex)-prev));
-#endif
 
    DEXIT;
    return 0;
@@ -403,18 +398,15 @@ struct queue2cmplx {
 
 /* provide a list of attributes containing all global attributes */
 int global_complexes2scheduler(
-lList **new_complex_list,
+lList **new_centry_list,
 lListElem *global_host,
-lList *complex_list,
+lList *centry_list,
 int recompute_debitation_dependent 
 ) {
-   lListElem *complex;
-
    DENTER(TOP_LAYER, "global_complexes2scheduler");
 
-   /* build global complex and add it to result */
-   complex = lGetElemStr(complex_list, CX_name, "global");
-   fillComplexFromHost(new_complex_list, complex_list, global_host, complex, DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
+   fillComplexFromHost(new_centry_list, global_host, centry_list, 
+                       DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -424,14 +416,12 @@ int recompute_debitation_dependent
 
 /* provide a list of attributes containing all attributes for the given host */
 int host_complexes2scheduler(
-lList **new_complex_list,
+lList **new_centry_list,
 lListElem *host,
 lList *exechost_list,
-lList *complex_list, 
+lList *centry_list, 
 int recompute_debitation_dependent 
 ) {
-   lListElem *complex;
-
    DENTER(TOP_LAYER, "host_comlexes2scheduler");
 
    if (!host) {
@@ -439,17 +429,15 @@ int recompute_debitation_dependent
    }
 
    /* build global complex and add it to result */
-   if (recompute_debitation_dependent || !*new_complex_list) {
-      global_complexes2scheduler(new_complex_list, 
+   if (recompute_debitation_dependent || !*new_centry_list) {
+      global_complexes2scheduler(new_centry_list, 
                                  host_list_locate(exechost_list, "global"), 
-                                 complex_list,
+                                 centry_list,
                                  recompute_debitation_dependent);
    }
 
-   /* build host complex and add it to result */
-   complex = lGetElemStr(complex_list, CX_name, "host");
-   fillComplexFromHost(new_complex_list, complex_list, host, complex, 
-         DOMINANT_LAYER_HOST, recompute_debitation_dependent);
+   fillComplexFromHost(new_centry_list, host, centry_list, 
+                       DOMINANT_LAYER_HOST, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -464,31 +452,28 @@ int recompute_debitation_dependent
 
  **********************************************************************/
 int queue_complexes2scheduler(
-lList **new_complex_list,
+lList **new_centry_list,
 lListElem *queue,
 lList *exechost_list,
-lList *complex_list, 
+lList *centry_list, 
 int recompute_debitation_dependent 
 ) {
-   lListElem *complex;
-
    DENTER(TOP_LAYER, "queue_complexes2scheduler");
 
-   if (recompute_debitation_dependent || !*new_complex_list) {
+   if (recompute_debitation_dependent || !*new_centry_list) {
       host_complexes2scheduler(
-         new_complex_list, 
+         new_centry_list, 
          queue ?
             host_list_locate(exechost_list, lGetHost(queue, QU_qhostname))
             :NULL, 
          exechost_list, 
-         complex_list, 
+         centry_list, 
          recompute_debitation_dependent);
       
    }
 
-   /* build queue complex and add it to result */
-   complex = lGetElemStr(complex_list, CX_name, "queue");
-   fillComplexFromQueue(new_complex_list, complex_list, complex, queue, recompute_debitation_dependent);
+   fillComplexFromQueue(new_centry_list, centry_list, queue, 
+                        recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -507,7 +492,6 @@ int recompute_debitation_dependent
   Returns: new_complex
 
 new_complex;                     here we collect resulting attributes  
-complex_list;                    the global complex list               
 host;                            the host or the global host           
 complex;                         he template                          
 layer;                           which layer was dominant?             
@@ -519,35 +503,23 @@ recompute_debitation_dependent;  recompute only attribute types which
                                  - consumable attributes              
                                    (-> CE_consumable)                 
  **********************************************************************/
-int fillComplexFromHost(lList **new_complex, lList *complex_list, 
-                        lListElem *host, lListElem *complex, u_long32 layer, 
+int fillComplexFromHost(lList **new_centry_list,  
+                        lListElem *host, lList *centry_list, u_long32 layer, 
                         int recompute_debitation_dependent)
 {
-   lListElem *cep;
    double lc_factor = 0; /* scaling for load correction */ 
    u_long32 ulc_factor;
 
    DENTER(TOP_LAYER, "fillComplexFromHost");
 
    /* append main complex "host"/"global" ... */
-   if (complex)
-      append_complexes(new_complex, complex, layer, recompute_debitation_dependent);
+   if (centry_list)
+      append_complexes(new_centry_list, centry_list, layer, recompute_debitation_dependent);
 
    if (!host) { /* there may be a queue which has no host object yet */
       DEXIT;
       return 0;
    }   
-   
-   /* ... and all userdefined complexes */
-   for_each (cep, lGetList(host, EH_complex_list)) {
-      if (!(complex = lGetElemStr(complex_list, CX_name, lGetString(cep, CX_name)))) {
-         ERROR((SGE_EVENT, MSG_LIST_NOCOMPLEXXATTACHEDTOHOSTY_SS , 
-               lGetString(cep, CX_name), lGetHost(host, EH_name)));
-         DEXIT;
-         return -1;
-      }
-      append_complexes(new_complex, complex, layer, recompute_debitation_dependent);
-   }
    
    /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
    if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
@@ -557,7 +529,7 @@ int fillComplexFromHost(lList **new_complex, lList *complex_list,
    
    /* handle load values */
    load_values(
-      *new_complex,
+      *new_centry_list,
       lGetHost(host, EH_name),
       lGetList(host, EH_load_list),
       layer,
@@ -565,7 +537,7 @@ int fillComplexFromHost(lList **new_complex, lList *complex_list,
       lc_factor);
 
    fixed_and_consumable(
-      *new_complex, 
+      *new_centry_list, 
       lGetList(host, EH_consumable_config_list),
       lGetList(host, EH_consumable_actual_list),
       layer, 
@@ -576,7 +548,7 @@ int fillComplexFromHost(lList **new_complex, lList *complex_list,
 }
 
 static int load_values(
-lList *new_complex,
+lList *new_centry_list,
 const char *hostname,
 lList *lv_list,
 u_long32 layer,
@@ -596,7 +568,7 @@ double lc_factor
       name = lGetString(load_sensor, HL_name);
 
       /* is this attribute contained in the complexes? */
-      if (!(ep = lGetElemStr(new_complex, CE_name, name)))
+      if (!(ep = lGetElemStr(new_centry_list, CE_name, name)))
          continue; /* no */
 
       /* get load correction for this load value ? */
@@ -610,7 +582,6 @@ double lc_factor
          if (!job_load && !lGetBool(ep, CE_consumable)) {
             continue;
          }
-/*          DPRINTF(("%s\tfillComplexFromHost()\n", name)); */
       }
 
       /* load values are accepted only in case they are static */
@@ -713,9 +684,8 @@ double lc_factor
 /**********************************************************************
  make a complex out of the default queue complex and a queue.
  **********************************************************************/
-static int fillComplexFromQueue(new_complex, complex_list, complex, queue, recompute_debitation_dependent)
+#if 0 /* EB: TODO: make adoc comment */
 lList** new_complex;                /* here we collect resulting attributes  */
-lList* complex_list;                /* the global complex list               */
 lListElem *complex;                 /* the "queue" complex */
 lListElem *queue;                   /* the queue itself */
 int recompute_debitation_dependent; /* recompute only attribute types which  */
@@ -725,8 +695,13 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
                                     /*   (-> scheddconf.job_load_adjustments)*/
                                     /* - consumable attributes               */
                                     /*   (-> CE_consumable)                  */
+#endif
+static int 
+fillComplexFromQueue(lList** new_complex, 
+                     lList *complex, lListElem *queue, 
+                     int recompute_debitation_dependent)
 {
-   lListElem *cep, *complexel;
+   lListElem *complexel;
    const char *value;
    char as_str[100];
    struct queue2cmplx *q2cptr;
@@ -771,17 +746,6 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
       DEXIT;
       return 0;
    }   
-
-   /* ... and all userdefined complexes */
-   for_each (cep, lGetList(queue, QU_complex_list)) {
-      if (!(complex = lGetElemStr(complex_list, CX_name, lGetString(cep, CX_name)))) {
-         ERROR((SGE_EVENT, MSG_LIST_NOCOMPLEXXATTACHEDTOQUEUEY_SS , 
-               lGetString(cep, CX_name), lGetString(queue, QU_qname)));
-         DEXIT;
-         return -1;
-      }
-      append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent);
-   }
 
    /* iterate through "queue" complex and fill in attribs from queue */
    for (q2cptr = q2c; q2cptr->attrname[0]; q2cptr++) {
@@ -1227,7 +1191,7 @@ int main(int argc, char *argv[], char *envp[])
 *     debit_consumable() -- Debit/Undebit consumables.
 *
 *  SYNOPSIS
-*     int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 
+*     int debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
 *             int slots, int config_nm, int actual_nm, const char *obj_name)
 *
 *  FUNCTION
@@ -1242,7 +1206,7 @@ int main(int argc, char *argv[], char *envp[])
 *     lListElem *ep        - The resource container (global/host/queue) 
 *                            that owns the resources (EH_Type).
 * 
-*     lList *complex_list  - The global complex list that is needed to interpret
+*     lList *centry_list   - The global complex list that is needed to interpret
 *                            the jobs' resource requests.
 *
 *     int slots            - The number of slots for which we are debiting.
@@ -1265,8 +1229,9 @@ int main(int argc, char *argv[], char *envp[])
 *
 ********************************************************************************
 */
-int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, int slots, int config_nm,
-int actual_nm, const char *obj_name) 
+int 
+debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots, 
+                 int config_nm, int actual_nm, const char *obj_name) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;
@@ -1285,7 +1250,7 @@ int actual_nm, const char *obj_name)
       dval = 0;
 
       /* search default request */  
-      if (!(dcep = complex_list_locate_attr(complex_list, name))) {
+      if (!(dcep = centry_list_locate(centry_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          DEXIT; 
          return -1;
@@ -1317,44 +1282,23 @@ int actual_nm, const char *obj_name)
    return mods;
 }
 
-int ensure_attrib_available(
-lList **alpp,
-lListElem *ep,
-int nm 
-) {
-   const char *name, *obj_name = "none", *obj_descr = "none";
+int 
+ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 
+{
    lListElem *attr;
-   lList *resources = NULL; 
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
-
    for_each (attr, lGetList(ep, nm)) {
-      if (!resources) { /* first time build resources list */
-         if ( nm==EH_consumable_config_list ) {
-            if (!strcmp(lGetHost(ep, EH_name), "global"))
-               global_complexes2scheduler(&resources, ep, Master_Complex_List, 0);
-            else 
-               host_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
-            obj_name = lGetHost(ep, EH_name);
-            obj_descr = "host";
-         } else {
-            queue_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
-            obj_name = lGetString(ep, QU_qname);
-            obj_descr = "queue";
-         }
-      }
+      const char *name = lGetString(attr, CE_name);
+      lListElem *centry = centry_list_locate(Master_CEntry_List, name);
 
-      name = lGetString(attr, CE_name);
-      if (!lGetElemStr(resources, CE_name, name)) {
-         resources = lFreeList(resources);
-         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_SSS, name, obj_descr, obj_name));
+      if (centry == NULL) {
+         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
    }
-   resources = lFreeList(resources);
-
    DEXIT;
    return 0;
 }
@@ -1383,9 +1327,9 @@ char *object_name
       attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
          sub_command, attr_name, object_name, 0); 
 
-      ret=sge_fill_requests(lGetList(tmp_elem, nm), Master_Complex_List, 1, 0, 0);
+      ret=centry_list_fill_request(lGetList(tmp_elem, nm), Master_CEntry_List, true, false, false);
       if (ret) {
-         /* error message gets written by sge_fill_requests into SGE_EVENT */
+         /* error message gets written by centry_list_fill_request into SGE_EVENT */
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          lFreeElem(tmp_elem);
          DEXIT;

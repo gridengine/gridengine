@@ -55,7 +55,7 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 #include "sge_queue.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 extern lList *Master_Job_List;
 

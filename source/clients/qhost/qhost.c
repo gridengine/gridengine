@@ -67,9 +67,9 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
-#include "sge_complex.h"
 #include "sge_ulong.h"
 #include "sge_queue.h"
+#include "sge_centry.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -179,21 +179,21 @@ char **argv
       show);
 
 
-   complex_list_init_double_attr(cl);
+   centry_list_init_double(cl);
 
    /*
    ** handle -l request for host
    */
    if (lGetNumberOfElem(resource_match_list)) {
-      lList *ce = NULL;
       int selected;
 
-      if (sge_fill_requests(resource_match_list, cl, 1, 1, 0)) {
-         /* error message gets written by sge_fill_requests into SGE_EVENT */
+      if (centry_list_fill_request(resource_match_list, cl, true, true, false)) {
+         /* error message gets written by centry_list_fill_request into SGE_EVENT */
          SGE_EXIT(1);
       }
       /* prepare request */
       for_each(ep, ehl) {
+         lList *centry_list = NULL;
 
          /* prepare complex attributes */
          if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
@@ -201,12 +201,13 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         ce = NULL;
-         host_complexes2scheduler(&ce, ep, ehl, cl, 0);
-         selected = sge_select_queue(ce, resource_match_list, 1, NULL, 0, -1, NULL);
+         host_complexes2scheduler(&centry_list, ep, ehl, cl, 0);
+         selected = sge_select_queue(centry_list, resource_match_list, 1, NULL,
+                                     0, -1, NULL);
+         centry_list = lFreeList(centry_list);
+
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
-         ce = lFreeList(ce);
       }
 
       /*
@@ -546,7 +547,12 @@ u_long32 show
       case TYPE_DOUBLE:  
       default:
          printf("   ");
-         printf("%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
+
+         if (!(dominant & DOMINANT_TYPE_VALUE)) {
+            printf("%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
+         } else {
+            printf("%s:%s=<<<has_no_value>>>\n", dom, lGetString(rep, CE_name));
+         }
          break;
       }
    }
@@ -802,7 +808,7 @@ const char *oldmem
 static void get_all_lists(
 lList **queue_l,
 lList **job_l,
-lList **complex_l,
+lList **centry_l,
 lList **exechost_l,
 lList **pe_l,
 lList *hostref_list,
@@ -810,7 +816,7 @@ lList *user_list,
 u_long32 show 
 ) {
    lCondition *where= NULL, *nw = NULL, *qw = NULL, *jw = NULL, *gc_where;
-   lEnumeration *q_all = NULL, *j_all = NULL, *cx_all = NULL, 
+   lEnumeration *q_all = NULL, *j_all = NULL, *ce_all = NULL, 
                 *eh_all = NULL, *pe_all = NULL, *gc_what;
    lList *alp = NULL;
    lListElem *aep = NULL;
@@ -818,7 +824,7 @@ u_long32 show
    lListElem *jatep = NULL;
    lList *mal = NULL;
    lList *conf_l = NULL;
-   int q_id, j_id = 0, cx_id, eh_id, pe_id, gc_id;
+   int q_id, j_id = 0, ce_id, eh_id, pe_id, gc_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_all_lists");
@@ -964,10 +970,10 @@ lWriteListTo(ehl, stdout);
    /*
    ** complexes
    */
-   cx_all = lWhat("%T(ALL)", CX_Type);
-   cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET, 
-                        NULL, NULL, cx_all, NULL, &state);
-   cx_all = lFreeWhat(cx_all);
+   ce_all = lWhat("%T(ALL)", CE_Type);
+   ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
+                        NULL, NULL, ce_all, NULL, &state);
+   ce_all = lFreeWhat(ce_all);
 
    if (alp) {
       printf("%s", lGetString(lFirst(alp), AN_text));
@@ -1054,9 +1060,9 @@ lWriteListTo(ehl, stdout);
       alp = lFreeList(alp);
    }
 
-   /* --- complex */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_COMPLEX_LIST, cx_id,
-                                 mal, complex_l);
+   /* --- complex attribute */
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+                                 mal, centry_l);
    if (!alp) {
       printf(MSG_GDI_COMPLEXSGEGDIFAILED);
       SGE_EXIT(1);

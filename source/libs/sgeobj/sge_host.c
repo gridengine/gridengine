@@ -40,7 +40,7 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_host.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -262,6 +262,25 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
       ret = CL_RANGE;
    }
 
+   DEXIT;
+   return ret;
+}
+
+bool
+host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "host_is_centry_referenced");
+   if (this_elem != NULL) {
+      const char *name = lGetString(centry, CE_name);
+      lList *centry_list = lGetList(this_elem, EH_consumable_config_list);
+      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
+
+      if (centry_ref != NULL) {
+         ret = true;
+      }
+   }
    DEXIT;
    return ret;
 }

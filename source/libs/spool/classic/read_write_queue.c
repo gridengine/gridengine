@@ -53,10 +53,10 @@
 #include "sge_queue.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_queue.h"
 #include "sge_stringL.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 
@@ -294,13 +294,6 @@ _Insight_set_option("suppress", "PARM_NULL");
    /* --------- QU_subordinate_list */
    if (!set_conf_subordlist(alpp, clpp, fields, "subordinate_list", ep, 
             QU_subordinate_list, SO_Type, SO_qname, SO_threshold)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* --------- QU_complex_list */
-   if (!set_conf_list(alpp, clpp, fields, "complex_list", ep, 
-            QU_complex_list, CX_Type, CX_name)) {
       DEXIT;
       return -1;
    }
@@ -744,11 +737,6 @@ const lListElem *qep
       }
       FPRINTF((fp, "\n"));
    }
-   ret = fprint_cull_list(fp,  "complex_list         ", 
-      lGetList(qep, QU_complex_list), CX_name);
-   if (ret == -1) {
-      goto FPRINTF_ERROR;
-   } 
    ret = fprint_thresholds(fp, "complex_values       ", 
       lGetList(qep, QU_consumable_config_list), 0);
    if (ret == -1) {

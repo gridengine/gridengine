@@ -47,7 +47,6 @@
 #include "sge_queue_qmaster.h"
 #include "sge_manop_qmaster.h"
 #include "slots_used.h"
-#include "complex_qmaster.h"
 #include "sge_job_qmaster.h"
 #include "configuration_qmaster.h"
 #include "qmaster_heartbeat.h"
@@ -86,12 +85,12 @@
 #include "sge_queue.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
-#include "sge_complex.h"
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_sharetree.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
+#include "sge_centry.h"
 
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
@@ -255,8 +254,8 @@ int sge_setup_qmaster()
    /*
    ** read in all objects and check for correctness
    */
-   DPRINTF(("Complexes-------------------------------\n"));
-   spool_read_list(&answer_list, spooling_context, &Master_Complex_List, SGE_TYPE_COMPLEX);
+   DPRINTF(("Complex Attributes----------------------\n"));
+   spool_read_list(&answer_list, spooling_context, &Master_CEntry_List, SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);
 
    DPRINTF(("host_list----------------------------\n"));
@@ -579,11 +578,11 @@ static int debit_all_jobs_from_qs()
 
             /* debit in all layers */
             debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
-                     "global"), Master_Complex_List, slots);
+                                  "global"), Master_CEntry_List, slots);
             debit_host_consumable(jep, hep = host_list_locate(
                      Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
-                     Master_Complex_List, slots);
-            debit_queue_consumable(jep, qep, Master_Complex_List, slots);
+                     Master_CEntry_List, slots);
+            debit_queue_consumable(jep, qep, Master_CEntry_List, slots);
             if (!master_hep)
                master_hep = hep;
          }

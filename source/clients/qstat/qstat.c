@@ -71,8 +71,8 @@
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
 #include "sge_queue.h"
+#include "sge_centry.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -80,7 +80,7 @@
 #define FORMAT_I_2 "%I %I "
 #define FORMAT_I_1 "%I "
 
-static void get_all_lists(lList **queue_l, lList **job_l, lList **complex_l, lList **exechost_l, lList **sc_l, lList **pe_l, lList **ckpt_l, lList **acl_l, lList **zombie_l, lList *qrl, lList *perl, lList *ul, u_long32 full_listing);
+static void get_all_lists(lList **queue_l, lList **job_l, lList **centry_l, lList **exechost_l, lList **sc_l, lList **pe_l, lList **ckpt_l, lList **acl_l, lList **zombie_l, lList *qrl, lList *perl, lList *ul, u_long32 full_listing);
 static int select_by_hard_queue_list(lList *queue_list, lList *hql); 
 static int select_by_pe_list(lList *queue_list, lList *peref_list, lList *pe_list);
 static int select_by_queue_user_list(lList *exechost_list, lList *queue_list, lList *queue_user_list, lList *acl_list);
@@ -90,7 +90,7 @@ static int qstat_usage(FILE *fp, char *what);
 static int qstat_show_job(lList *jid);
 static int qstat_show_job_info(void);
 
-lList *complex_list;
+lList *centry_list;
 lList *exechost_list = NULL;
 lList *sc_config = NULL;
 
@@ -123,7 +123,7 @@ char **argv
          *acl_list = NULL, *zombie_list = NULL, *jid_list = NULL, 
          *queue_user_list = NULL, *peref_list = NULL, 
          *pe_list = NULL, *ckpt_list = NULL;
-   lList *ce = NULL, *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
+   lList *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
    int a_queue_was_selected = 0;
    u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
    u_long32 group_opt = 0;
@@ -207,10 +207,10 @@ char **argv
 
 
    get_all_lists(
-      &queue_list, /**/
-      qselect_mode?NULL:&job_list, /**/
-      &complex_list, /**/
-      &exechost_list, /**/
+      &queue_list, 
+      qselect_mode?NULL:&job_list, 
+      &centry_list, 
+      &exechost_list, 
       &sc_config, 
       &pe_list,
       &ckpt_list,
@@ -221,7 +221,7 @@ char **argv
       user_list,
       full_listing); /**/
 
-   complex_list_init_double_attr(complex_list);
+   centry_list_init_double(centry_list);
 
    sge_stopwatch_log(0, "Time for getting all lists");
    
@@ -293,8 +293,8 @@ char **argv
 
    /* unseclect all queues not selected by a -l (if exist) */
    if (lGetNumberOfElem(resource_list)) {
-      if (sge_fill_requests(resource_list, complex_list, 1, 1, 0)) {
-         /* error message gets written by sge_fill_requests into SGE_EVENT */
+      if (centry_list_fill_request(resource_list, centry_list, true, true, false)) {
+         /* error message gets written by centry_list_fill_request into SGE_EVENT */
          SGE_EXIT(1);
          lFreeList(job_list);
          lFreeList(queue_list);
@@ -305,17 +305,16 @@ char **argv
       for_each(qep, queue_list) {
          lList *ccl[3];
          lListElem *ep;
+         lList *ce = NULL;
 
          /* prepare complex attributes */
          if (!strcmp(lGetString(qep, QU_qname), "template"))
             continue;
 
          DPRINTF(("matching queue %s with qstat -l\n", lGetString(qep, QU_qname)));
-         ce = NULL;
-
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
-         queue_complexes2scheduler(&ce, qep, exechost_list, complex_list, 0);
+         queue_complexes2scheduler(&ce, qep, exechost_list, centry_list, 0);
          ccl[0] = lGetList(host_list_locate(exechost_list, "global"), EH_consumable_config_list);
          ccl[1] = (ep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname)))?
                   lGetList(ep, EH_consumable_config_list):NULL;
@@ -420,7 +419,7 @@ char **argv
                continue;
 
             ret = available_slots_at_queue(NULL, jep, qep, pe, ckpt, 
-                                           exechost_list, complex_list, 
+                                           exechost_list, centry_list, 
                                            acl_list, NULL, 1, NULL, 0, NULL, 0, NULL);
             if (ret>0) {
                show_job = 1;
@@ -455,7 +454,7 @@ char **argv
     *
     */
 
-   correct_capacities(exechost_list, complex_list);
+   correct_capacities(exechost_list, centry_list);
    lPSortList(queue_list, "%I+ %I+", QU_seq_no, QU_qname);
    for_each (qep, queue_list) {
       int print_jobs_of_queue = 0;
@@ -465,7 +464,7 @@ char **argv
             continue;
          }
          else {
-            sge_print_queue(qep, exechost_list, complex_list, 
+            sge_print_queue(qep, exechost_list, centry_list, 
                               full_listing, qresource_list);
             print_jobs_of_queue = 1;
          }
@@ -476,7 +475,7 @@ char **argv
       }
 
       sge_print_jobs_queue(qep, job_list, pe_list, user_list,
-                           exechost_list, complex_list,
+                           exechost_list, centry_list,
                            print_jobs_of_queue, full_listing, "");
    }
 
@@ -521,7 +520,7 @@ char **argv
     *         print the jobs that run in these queues 
     *
     */
-   sge_print_jobs_pending(job_list, user_list, exechost_list, complex_list,
+   sge_print_jobs_pending(job_list, user_list, exechost_list, centry_list,
                            &running_per_user, so, full_listing, group_opt);
 
    /* 
@@ -531,7 +530,7 @@ char **argv
     *
     */
    sge_print_jobs_finished(job_list, user_list, exechost_list,
-                              complex_list, full_listing);
+                              centry_list, full_listing);
 
    /* 
     *
@@ -541,7 +540,7 @@ char **argv
     *          to ensure to print this job just to give hints whats wrong
     *
     */
-   sge_print_jobs_error(job_list, user_list, exechost_list, complex_list,
+   sge_print_jobs_error(job_list, user_list, exechost_list, centry_list,
                            full_listing);
 
    /* 
@@ -550,7 +549,7 @@ char **argv
     *
     */
    sge_print_jobs_zombie(zombie_list, user_list, exechost_list,
-                           complex_list,  full_listing);
+                           centry_list,  full_listing);
 
    lFreeList(zombie_list);
    lFreeList(job_list);
@@ -570,7 +569,7 @@ char **argv
 static void get_all_lists(
 lList **queue_l,
 lList **job_l,
-lList **complex_l,
+lList **centry_l,
 lList **exechost_l,
 lList **sc_l,
 lList **pe_l,
@@ -584,14 +583,14 @@ u_long32 show
 ) {
    lCondition *where= NULL, *nw = NULL, *qw = NULL, *pw = NULL, *jw = NULL, 
               *zw = NULL, *gc_where = NULL;
-   lEnumeration *q_all, *pe_all, *ckpt_all, *acl_all, *j_all, *cx_all, *eh_all, 
+   lEnumeration *q_all, *pe_all, *ckpt_all, *acl_all, *j_all, *ce_all, *eh_all, 
                 *sc_what, *z_all, *gc_what;
    lList *alp = NULL;
    lListElem *aep = NULL;
    lListElem *ep = NULL;
    lList *conf_l = NULL;
    lList *mal = NULL;
-   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0, cx_id, eh_id, sc_id, gc_id;
+   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0, ce_id, eh_id, sc_id, gc_id;
    int show_zombies = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
@@ -756,10 +755,10 @@ u_long32 show
    /*
    ** complexes
    */
-   cx_all = lWhat("%T(ALL)", CX_Type);
-   cx_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_COMPLEX_LIST, SGE_GDI_GET, 
-                        NULL, NULL, cx_all, NULL, &state);
-   cx_all = lFreeWhat(cx_all);
+   ce_all = lWhat("%T(ALL)", CE_Type);
+   ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
+                        NULL, NULL, ce_all, NULL, &state);
+   ce_all = lFreeWhat(ce_all);
 
    if (alp) {
       printf("%s", lGetString(lFirst(alp), AN_text));
@@ -900,8 +899,8 @@ u_long32 show
    }
 
    /* --- complex */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_COMPLEX_LIST, cx_id,
-                                 mal, complex_l);
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+                                mal, centry_l);
    if (!alp) {
       printf(MSG_GDI_COMPLEXSGEGDIFAILED);
       SGE_EXIT(1);

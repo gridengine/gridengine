@@ -101,20 +101,6 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
 
    /* -------------------- */
-   case sgeE_COMPLEX_LIST:
-      sge_dstring_sprintf(buffer, MSG_EVENT_COMPLEXLISTXELEMENTS_II, (int)number, n);
-      break;
-   case sgeE_COMPLEX_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDCOMPLEXX_IS, (int)number, strkey);
-      break;
-   case sgeE_COMPLEX_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELCOMPLEXX_IS, (int)number, strkey);
-      break;
-   case sgeE_COMPLEX_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODCOMPLEXX_IS, (int)number, strkey);
-      break;
-
-   /* -------------------- */
    case sgeE_CONFIG_LIST:
       sge_dstring_sprintf(buffer, MSG_EVENT_CONFIGLISTXELEMENTS_II, (int)number, n);
       break;
@@ -376,6 +362,20 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
    case sgeE_HGROUP_MOD:
       sge_dstring_sprintf(buffer, MSG_EVENT_MODHGROUPX_IS, (int)number, strkey);
+      break;
+
+   /* -------------------- */
+   case sgeE_CENTRY_LIST:
+      sge_dstring_sprintf(buffer, MSG_EVENT_CENTRYLISTXELEMENTS_II , (int)number, n);
+      break;
+   case sgeE_CENTRY_ADD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDCENTRYX_IS , (int)number, strkey);
+      break;
+   case sgeE_CENTRY_DEL:
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELCENTRYX_IS, (int)number, strkey);
+      break;
+   case sgeE_CENTRY_MOD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODCENTRYX_IS, (int)number, strkey);
       break;
 
    /* -------------------- */

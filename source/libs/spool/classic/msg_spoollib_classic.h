@@ -105,6 +105,10 @@
 #define MSG_SPOOL_SCHEDDCONFIGNOTDELETED _MESSAGE(61046, _("the scheduler configuration must not be deleted\n"))
 #define MSG_QMASTER_PRJINCORRECT_S       _MESSAGE(61048, _("Spoolfile for project "SFQ" containes invalid name\n"))
 
-
+/*
+ *  
+ */
+#define MSG_SETUP_COMPLEX_ATTR_S         _MESSAGE(61049, _("\tComplex attribute "SFQ".\n"))
+#define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes:\n"))
 
 #endif /* __MSG_SPOOLLIB_CLASSIC_H */

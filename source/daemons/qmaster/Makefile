@@ -58,7 +58,7 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_cuser_qmaster.c \
               sge_hgroup_qmaster.c \
               sge_userset_qmaster.c \
-              complex_qmaster.c \
+              sge_centry_qmaster.c \
               configuration_qmaster.c \
               job_report_qmaster.c \
               qmaster_to_execd.c \
@@ -186,8 +186,8 @@ sge_calendar_qmaster.o: $(QMASTER_DIR)/sge_calendar_qmaster.c
 sge_sharetree_qmaster.o: $(QMASTER_DIR)/sge_sharetree_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sharetree_qmaster.c
 
-complex_qmaster.o: $(QMASTER_DIR)/complex_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/complex_qmaster.c
+sge_centry_qmaster.o: $(QMASTER_DIR)/sge_centry_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_centry_qmaster.c
 
 configuration_qmaster.o:  $(QMASTER_DIR)/configuration_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/configuration_qmaster.c

@@ -97,4 +97,7 @@ queue_is_pe_referenced(const lListElem *this_elem, const lListElem *pe);
 bool 
 queue_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt);
 
+bool
+queue_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
+
 #endif /* __SGE_QUEUE_H */

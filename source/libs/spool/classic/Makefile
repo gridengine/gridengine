@@ -46,6 +46,7 @@ SPOOLCLIB_SRC = \
          read_write_ckpt.c \
          read_write_host.c \
          read_write_host_group.c \
+         read_write_centry.c \
          read_write_job.c \
          read_write_manop.c \
          read_write_pe.c \
@@ -108,6 +109,9 @@ read_object.o:   $(SPOOLCLIB_DIR)/read_object.c
 
 read_write_cal.o:	$(SPOOLCLIB_DIR)/read_write_cal.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_cal.c
+
+read_write_centry.o:	$(SPOOLCLIB_DIR)/read_write_centry.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_centry.c
 
 read_write_ckpt.o:	$(SPOOLCLIB_DIR)/read_write_ckpt.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_ckpt.c

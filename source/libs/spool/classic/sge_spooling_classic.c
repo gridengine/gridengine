@@ -50,7 +50,6 @@
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_manop.h"
@@ -306,6 +305,7 @@ spool_classic_default_startup_func(lList **answer_list,
          sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
          sge_mkdir(ADMINHOST_DIR, 0755, true, false);
          sge_mkdir(COMPLEX_DIR, 0755, true, false);
+         sge_mkdir(CENTRY_DIR, 0755, true, false);
          sge_mkdir(EXEC_DIR, 0755, true, false);
          sge_mkdir(PE_DIR, 0755, true, false);
          sge_mkdir(CKPTOBJ_DIR, 0755, true, false);
@@ -453,8 +453,8 @@ spool_classic_default_list_func(lList **answer_list,
             ret = false;
          }
          break;
-      case SGE_TYPE_COMPLEX:
-         if (read_all_complexes() != 0) {
+      case SGE_TYPE_CENTRY:
+         if (read_all_centries() != 0) {
             ret = false;
          }
          break;
@@ -647,15 +647,8 @@ spool_classic_default_read_func(lList **answer_list,
       case SGE_TYPE_CKPT:
          ep = cull_read_in_ckpt(CKPTOBJ_DIR, key, 1, 0, NULL, NULL);
          break;
-      case SGE_TYPE_COMPLEX:
-         {
-            char file_name_buf[SGE_PATH_MAX];
-            dstring file_name;
-
-            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
-            sge_dstring_sprintf(&file_name, "%s/%s", COMPLEX_DIR, key);
-            ep = read_cmplx(sge_dstring_get_string(&file_name), key, NULL);
-         }
+      case SGE_TYPE_CENTRY:
+         ep = cull_read_in_centry(CENTRY_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_CONFIG:
          {
@@ -793,27 +786,8 @@ spool_classic_default_write_func(lList **answer_list,
       case SGE_TYPE_CKPT:
          write_ckpt(1, 2, object);
          break;
-      case SGE_TYPE_COMPLEX:
-         {
-            char file_name_buf[SGE_PATH_MAX];
-            char real_name_buf[SGE_PATH_MAX];
-            dstring file_name;
-            dstring real_name;
-
-            sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
-            sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
-
-            sge_dstring_sprintf(&file_name, "%s/.%s", COMPLEX_DIR, key);
-            sge_dstring_sprintf(&real_name, "%s/%s", COMPLEX_DIR, key);
-            if(write_cmplx(1, sge_dstring_get_string(&file_name), 
-                           lGetList(object, CX_entries), NULL, answer_list) 
-               == 0) {
-               rename(sge_dstring_get_string(&file_name), 
-                      sge_dstring_get_string(&real_name));
-            } else {
-               ret = false;
-            }
-         }
+      case SGE_TYPE_CENTRY:
+         write_centry(1, 2, object);
          break;
       case SGE_TYPE_CONFIG:
          {
@@ -1063,8 +1037,8 @@ spool_classic_default_delete_func(lList **answer_list,
       case SGE_TYPE_CKPT:
          ret = sge_unlink(CKPTOBJ_DIR, key) == 0;
          break;
-      case SGE_TYPE_COMPLEX:
-         ret = sge_unlink(COMPLEX_DIR, key) == 0;
+      case SGE_TYPE_CENTRY:
+         ret = sge_unlink(CENTRY_DIR, key) == 0;
          break;
       case SGE_TYPE_CONFIG:
          if (sge_hostcmp(key, "global") == 0) {

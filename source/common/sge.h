@@ -158,6 +158,7 @@
 #define PE_DIR                    "pe"
 #define UME_DIR                   "usermapping"
 #define HGROUP_DIR                "hostgroups"
+#define CENTRY_DIR                "centry"
 #define CKPTOBJ_DIR               "ckpt"
 #define CAL_DIR                   "calendars"
 #define ZOMBIE_DIR                "zombies"

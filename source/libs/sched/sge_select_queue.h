@@ -100,7 +100,7 @@ int sge_get_ulong_qattr(u_long32 *uvalp, char *attrname, lListElem *q, lList *ex
  * which double value has the following attribute
  * 
  */
-int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list);
+int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list, bool *has_value_from_object);
 
 /* 
  * which string value has the following attribute

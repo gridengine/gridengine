@@ -294,7 +294,7 @@
 /*
 ** complex.c
 */
-#define MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE _MESSAGE(23246, _(">#< starts a comment but comments are not saved across edits -----------------------\n"))
+#define MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE _MESSAGE(23246, _(">#< starts a comment but comments are not saved across edits --------\n"))
 #define MSG_PARSE_CANTPARSECPLX_S     _MESSAGE(23247, _("parse error in file "SFN"\n"))
 #define MSG_PARSE_CANTPARSECPLX_SI    _MESSAGE(23248, _("parse error in file "SFN" in line %d\n"))
 #define MSG_PARSE_INVALIDCPLXTYPE_SS    _MESSAGE(23249, _("parse error in file "SFN", unknown type "SFN"\n"))

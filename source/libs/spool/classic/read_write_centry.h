@@ -1,5 +1,5 @@
-#ifndef __COMPLEX_QMASTER_H
-#define __COMPLEX_QMASTER_H
+#ifndef _READ_WRITE_CENTRY_H
+#define _READ_WRITE_CENTRY_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,17 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int
+read_centry_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
+int spool, int flag, int *tag, int parsing_type);
 
+lListElem *cull_read_in_centry(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
 
-#include "sge_c_gdi.h"
+char *write_centry(int spool, int how, const lListElem *hostGroupElement);
 
-int sge_del_cmplx(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
-
-int complex_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
-
-int complex_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
-
-int complex_mod(lList **alpp, lListElem *new_complex, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
-
-#endif /* __COMPLEX_QMASTER_H */
+#endif /* _READ_WRITE_CENTRY_H */
 

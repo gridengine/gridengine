@@ -91,7 +91,7 @@ static int get_load_value(double *dval, lList *tcl, char *name);
 
    input parameters:
       hl             :  the host list to be sorted
-      cplx_list      :  the complex list
+      centry_list    :  the complex entry list
       formula        :  the load evaluation formula (containing no blanks)
 
    output parameters:
@@ -101,7 +101,7 @@ static int get_load_value(double *dval, lList *tcl, char *name);
 
 int sort_host_list(
 lList *hl,           /* EH_Type */ 
-lList *cplx_list     /* CX_Type */
+lList *centry_list   /* CE_Type */
 ) {
    lListElem *hlp;
    const char *host;
@@ -115,7 +115,7 @@ lList *cplx_list     /* CX_Type */
       if (strcmp(host,"global")) { /* don't treat global */
 
          /* build complexes for that host */
-         host_complexes2scheduler(&tcl, hlp, hl, cplx_list, 0);
+         host_complexes2scheduler(&tcl, hlp, hl, centry_list, 0);
          lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(tcl));
          tcl = lFreeList(tcl);  
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
@@ -324,7 +324,7 @@ int debit_job_from_hosts(
 lListElem *job,     /* JB_Type */
 lList *granted,     /* JG_Type */
 lList *host_list,   /* EH_Type */
-lList *complex_list, /* CX_Type */
+lList *centry_list, /* CE_Type */
 int *sort_hostlist
 ) {
    lSortOrder *so = NULL;
@@ -355,13 +355,13 @@ int *sort_hostlist
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
-      debit_host_consumable(job, host_list_locate(host_list, "global"), complex_list, slots);
-      debit_host_consumable(job, hep, complex_list, slots);
+      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots);
+      debit_host_consumable(job, hep, centry_list, slots);
 
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
       tcl = NULL;
-      host_complexes2scheduler(&tcl, hep, host_list, complex_list, 0);
+      host_complexes2scheduler(&tcl, hep, host_list, centry_list, 0);
       new_sort_value = scaled_mixed_load(tcl);
       if(new_sort_value != old_sort_value) {
          lSetDouble(hep, EH_sort_value, new_sort_value);
@@ -387,13 +387,17 @@ int *sort_hostlist
    return 0;
 }
 
-int debit_host_consumable(
-lListElem *jep,      /* JB_Type */
-lListElem *hep,      /* EH_Type */
-lList *complex_list, /* CX_Type */
-int slots 
-) {
-   return debit_consumable(jep, hep, complex_list, slots,
-         EH_consumable_config_list, EH_consumable_actual_list, 
-         lGetHost(hep, EH_name));
+/*
+ * jep: JB_Type
+ * hep: EH_Type
+ * centry_list: CE_Type
+ */
+int 
+debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, 
+                      int slots) 
+{
+   return debit_consumable(jep, hep, centry_list, slots, 
+                           EH_consumable_config_list, 
+                           EH_consumable_actual_list, 
+                           lGetHost(hep, EH_name));
 }

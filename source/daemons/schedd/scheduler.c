@@ -92,7 +92,7 @@ sge_Sdescr_t lists =
 static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, 
                          lList **splitted_job_list[]);
 
-static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *complex_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, double *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
+static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *job, lListElem *ja_task, lListElem *pe, lListElem *ckpt, lList *centry_list, lList *host_list, lList *acl_list, lList **user_list, lList **group_list, lList **orders_list, double *total_running_job_tickets, int ndispatched, int *dispatch_type, int host_order_changed, int *sort_hostlist);
 
 
 /****** schedd/scheduler/scheduler() ******************************************
@@ -244,7 +244,7 @@ int scheduler(sge_Sdescr_t *lists) {
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_RUNNING])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_SUSPENDED])),
          lGetNumberOfElem(*(splitted_job_lists[SPLIT_FINISHED])),
-         lGetNumberOfElem(lists->complex_list),
+         lGetNumberOfElem(lists->centry_list),
          lGetNumberOfElem(lists->acl_list),
          lGetNumberOfElem(lists->pe_list),
          lGetNumberOfElem(lists->config_list),
@@ -367,7 +367,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    /*---------------------------------------------------------------------
     * CAPACITY CORRECTION
     *---------------------------------------------------------------------*/
-   correct_capacities(lists->host_list, lists->complex_list);
+   correct_capacities(lists->host_list, lists->centry_list);
 
    /*---------------------------------------------------------------------
     * KEEP SUSPEND THRESHOLD QUEUES
@@ -376,7 +376,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          &(lists->queue_list),    /* queue list                             */
          &susp_queues,            /* list of queues in suspend alarm state  */
          lists->host_list,
-         lists->complex_list,
+         lists->centry_list,
          scheddconf.job_load_adjustments,
          NULL,
          QU_suspend_thresholds)) {
@@ -403,7 +403,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          &(lists->queue_list), /* source list                              */
          NULL,                 /* no destination so they get trashed       */
          lists->host_list,     /* host list contains load values           */
-         lists->complex_list,  /* complex list is needed to use load values */
+         lists->centry_list,  /* complex list is needed to use load values */
          scheddconf.job_load_adjustments,
          NULL,
          QU_load_thresholds)) {
@@ -592,8 +592,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    case QSM_SHARE:   
 
       if (sgeee_mode) {
-         sort_host_list(lists->host_list, lists->complex_list);
-         sort_host_list_by_share_load(lists->host_list, lists->complex_list);
+         sort_host_list(lists->host_list, lists->centry_list);
+         sort_host_list_by_share_load(lists->host_list, lists->centry_list);
 
 #ifdef TEST_DEMO
 
@@ -618,7 +618,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    default:
 
       DPRINTF(("sorting hosts by load\n"));
-      sort_host_list(lists->host_list, lists->complex_list);
+      sort_host_list(lists->host_list, lists->centry_list);
 
 #ifdef TEST_DEMO
       fprintf(fpdjp, "after sort by  load");
@@ -764,7 +764,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                   &(lists->queue_list), 
                   splitted_job_lists[SPLIT_PENDING], 
                   job, ja_task, pe, ckpt, 
-                  lists->complex_list, 
+                  lists->centry_list, 
                   lists->host_list, 
                   lists->acl_list,
                   &user_list,
@@ -793,7 +793,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                &(lists->queue_list), 
                splitted_job_lists[SPLIT_PENDING], 
                job, ja_task, NULL, ckpt, 
-               lists->complex_list, 
+               lists->centry_list, 
                lists->host_list, 
                lists->acl_list,
                &user_list,
@@ -890,7 +890,7 @@ SKIP_THIS_JOB:
 
       if (dispatched_a_job && !(lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))==0))  {
          if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
-            sort_host_list_by_share_load(lists->host_list, lists->complex_list);
+            sort_host_list_by_share_load(lists->host_list, lists->centry_list);
 
 #ifdef TEST_DEMO
             for_each(host, lists->host_list) {
@@ -953,7 +953,7 @@ lListElem *job,
 lListElem *ja_task,
 lListElem *pe,
 lListElem *ckpt,
-lList *complex_list,
+lList *centry_list,
 lList *host_list,
 lList *acl_list,
 lList **user_list,
@@ -983,7 +983,7 @@ int *sort_hostlist
       pe,                    /* selects queues (queue list of pe)       */
       ckpt,                  /* selects queues (queue list of ckpt)     */
       scheddconf.queue_sort_method ,/* sort order to use                       */
-      complex_list,         /* to interpret job requests               */
+      centry_list,         /* to interpret job requests               */
       host_list,            /* for load/architecture                   */
       acl_list,             /* use these access lists                  */
       scheddconf.job_load_adjustments,
@@ -1044,7 +1044,7 @@ int *sort_hostlist
    sge_inc_jc(user_list, lGetString(job, JB_owner), 1);
 
    debit_scheduled_job(job, granted, *queue_list, pe, host_list, 
-         complex_list, sort_hostlist, *orders_list);
+         centry_list, sort_hostlist, *orders_list);
 
    /*------------------------------------------------------------------
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING
@@ -1058,7 +1058,7 @@ int *sort_hostlist
          queue_list, /* source list                              */
          NULL,                 /* no destination so they get trashed       */
          host_list,     /* host list contains load values           */
-         complex_list,  /* complex list is neede to use load values */
+         centry_list, 
          scheddconf.job_load_adjustments,
          granted,
          QU_load_thresholds)) {   /* use load thresholds here */

@@ -75,12 +75,12 @@
 #include "sge_report.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
 #include "sge_queue.h"
 #include "sge_queue_qmaster.h"
 #include "sge_utility_qmaster.h"
 #include "qmaster_to_execd.h"
 #include "sge_todo.h"
+#include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -94,7 +94,7 @@ static void host_trash_nonstatic_load_values(lListElem *host);
 
 static void notify(lListElem *lel, sge_gdi_request *answer, int kill_jobs, int force);
 
-static int verify_scaling_list(lList **alpp, lListElem *hep); 
+static int verify_scaling_list(lList **alpp, lListElem *host); 
 
 /****** qmaster/host/host_trash_nonstatic_load_values() ***********************
 *  NAME
@@ -411,18 +411,6 @@ int sub_command
       host = lGetString(new_host, nm);
    }
    if (nm == EH_name) {
-      /* ---- EH_complex_list */
-      if (lGetPosViaElem(ep, EH_complex_list)>=0) {
-         DPRINTF(("got new EH_complex_list\n"));
-         /* check complex list */
-         if (complex_list_verify(lGetList(ep, EH_complex_list), alpp, 
-                                 object->object_name, host)!=STATUS_OK)
-            goto ERROR;
-
-         attr_mod_sub_list(alpp, new_host, EH_complex_list, CX_name, ep, 
-            sub_command, SGE_ATTR_COMPLEX_LIST, SGE_OBJ_EXECHOST, 0);
-      }
-
       /* ---- EH_scaling_list */
       if (lGetPosViaElem(ep, EH_scaling_list)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_scaling_list, HS_name, ep,
@@ -550,11 +538,8 @@ gdi_object_t *object
    return 0;
 }
 
-int host_success(
-lListElem *ep,
-lListElem *old_ep,
-gdi_object_t *object 
-) {
+int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+{
    lListElem* jatep;
    DENTER(TOP_LAYER, "host_success");
 
@@ -566,7 +551,7 @@ gdi_object_t *object
          int slots, global_host = !strcmp("global", host);
 
          lSetList(ep, EH_consumable_actual_list, NULL);
-         debit_host_consumable(NULL, ep, Master_Complex_List, 0);
+         debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
          for_each (jep, Master_Job_List) {
             slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -574,7 +559,7 @@ gdi_object_t *object
                   global_host?NULL:host);
             }
             if (slots)
-               debit_host_consumable(jep, ep, Master_Complex_List, slots);
+               debit_host_consumable(jep, ep, Master_CEntry_List, slots);
          }
 
          sge_change_queue_version_exechost(host);
@@ -1342,38 +1327,26 @@ u_long32 target) {
 }
 
 
-static int verify_scaling_list(
-lList **alpp,
-lListElem *hep 
-) {
-   lListElem *ep;
-   lList *resources = NULL;
-   const char *name;
+static int verify_scaling_list(lList **answer_list, lListElem *host) 
+{
+   bool ret = true;
+   lListElem *hs_elem;
 
    DENTER(TOP_LAYER, "verify_scaling_list");
+   for_each (hs_elem, lGetList(host, EH_scaling_list)) {
+      const char *name = lGetString(hs_elem, HS_name);
+      lListElem *centry = centry_list_locate(Master_CEntry_List, name);
+   
+      if (centry == NULL) {
+         const char *hname = lGetHost(host, EH_name);
 
-   /* check whether this attrib is available due to complex configuration */
-   for_each (ep, lGetList(hep, EH_scaling_list)) {
-
-      if (!resources) { /* first time build resources list */
-         if (!strcmp(lGetHost(hep, EH_name), "global"))
-            global_complexes2scheduler(&resources, hep, Master_Complex_List, 0);
-         else 
-            host_complexes2scheduler(&resources, hep, Master_Exechost_List, Master_Complex_List, 0);
-      }
-
-      name = lGetString(ep, HS_name);
-      if (!lGetElemStr(resources, CE_name, name)) {
-         resources = lFreeList(resources);
-         ERROR((SGE_EVENT, MSG_OBJ_NOSCALING4HOST_SS,
-               name, lGetHost(hep, EH_name)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         ERROR((SGE_EVENT, MSG_OBJ_NOSCALING4HOST_SS, name, hname));
+         answer_list_add(answer_list, SGE_EVENT, 
+                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = false;
+         break;
       }
    }
-
-   resources = lFreeList(resources);
    DEXIT;
-   return STATUS_OK;
+   return ret ? STATUS_OK : STATUS_EUNKNOWN;
 }

@@ -472,7 +472,7 @@ static lListElem *
 locate_jobclass_for_pending_job( lListElem *jep,
                                  lList *queue_list,
                                  lList *exec_host_list,
-                                 lList *complex_list )
+                                 lList *centry_list )
 {
    lListElem *qep;
    lList *ce;
@@ -498,7 +498,7 @@ EH_consumable_config_list);
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
       ce = NULL;
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
+      queue_complexes2scheduler(&ce, qep, exec_host_list, centry_list, 0);
       if (sge_select_queue(ce, lGetList(jep, JB_hard_resource_list), 1,
                                        NULL, 0, -1, ccl)) {
          ce = lFreeList(ce);
@@ -594,7 +594,7 @@ sge_set_job_refs( lListElem *job,
       ref->jobclass = locate_jobclass_for_pending_job(job,
                                  lists->all_queue_list,
                                  lists->host_list,
-                                 lists->complex_list);
+                                 lists->centry_list);
       if (ref->jobclass) {
          lSetUlong(ref->jobclass, QU_job_cnt, 0);
          lSetUlong(ref->jobclass, QU_pending_job_cnt, 0);
@@ -4149,7 +4149,7 @@ calculate_host_tickets( lList **running,   /* JB_Type */
 
    input parameters:
       hl             :  the host list to be sorted
-      cplx_list      :  the complex list
+      centry_list    :  the complex entry list
       formula        :  the share load evaluation formula (containing no blanks)
 
    output parameters:
@@ -4158,7 +4158,7 @@ calculate_host_tickets( lList **running,   /* JB_Type */
 *************************************************************************/
 int
 sort_host_list_by_share_load( lList *hl,
-                              lList *cplx_list )
+                              lList *centry_list )
 {
    lListElem *hlp                = NULL;
    lListElem *global_host_elem   = NULL; 
@@ -4171,21 +4171,10 @@ sort_host_list_by_share_load( lList *hl,
    u_long total_load = 0;
 #ifdef notdef
    lListElem *host_complex;
-   lList *host_complex_attributes = NULL;
+   lList *host_complex_attributes = centry_list;
 #endif
 
    DENTER(TOP_LAYER, "sort_host_list_by_share_load");
-
-#ifdef notdef
-   /*
-      don't panic if there is no host_complex
-       a given attributename does not exist -
-      error handling is done in scale_load_value()
-   */
-   if ((host_complex = lGetElemStr(cplx_list, CX_name, SGE_HOST_NAME)))
-      host_complex_attributes = lGetList(host_complex, CX_entries);
-
-#endif
 
    /* collect  share load parameter totals  for each host*/
    global_host_elem   = host_list_locate(hl, SGE_GLOBAL_NAME);    /* get "global" element pointer */

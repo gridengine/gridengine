@@ -98,7 +98,7 @@
 /* #define MSG_SGETEXT_UNABLETORETRIEVE_I                _message(47041, _("unable to retrieve value for system limit (%d)\n") )      __TS Removed automatically from testsuite!! TS__*/
 
 
-#define MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS           _MESSAGE(47042, _("(-l"SFN") cannot run at host "SFQ" because "SFN"" ) ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS           _MESSAGE(47042, _("(-l "SFN") cannot run at host "SFQ" because "SFN"" ) ) 
 #define MSG_SCHEDD_INFO_HASNOPERMISSION_SS            _MESSAGE(47043, _("has no permission for "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS           _MESSAGE(47044, _("(project "SFN") does not have the correct project to run in "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_HASNOPRJ_S                    _MESSAGE(47045, _("(no project) does not have the correct project to run in "SFN" "SFQ""))
@@ -115,9 +115,9 @@
 #define MSG_SCHEDD_INFO_NOTREQFORCEDRES_SS            _MESSAGE(47056, _("does not request 'forced' resource "SFQ" of queue "SFN""))
 #define MSG_SCHEDD_INFO_WOULDSETQEUEINALARM_IS        _MESSAGE(47057, _("(%d slots) would set queue "SFQ" in load alarm state") ) 
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE_S              _MESSAGE(47058, _("cannot run in queue "SFQ" because it has \"0\" slots"))
-#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47059, _("(-l"SFN") cannot run in queue "SFQ" because "SFN"") ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47059, _("(-l "SFN") cannot run in queue "SFQ" because "SFN"") ) 
 #define MSG_SCHEDD_INFO_NORESOURCESPE_                _MESSAGE(47060, _("cannot run because resources requested are not available for parallel job"))
-#define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47061, _("(-l"SFN") cannot run globally because "SFN"\n") ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47061, _("(-l "SFN") cannot run globally because "SFN"\n") ) 
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _MESSAGE(47062, _("does not request 'forced' resource "SFQ" of host "SFN"") )  
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS            _MESSAGE(47063, _("does not request globally 'forced' resource "SFQ"") )    
 #define MSG_SCHEDD_INFO_CKPTNOTFOUND_                 _MESSAGE(47064, _("cannot run because requested ckpt object not found"))
@@ -427,6 +427,6 @@
 /* 
  * libs/sched/sge_complex_schedd.c
  */
-#define MSG_GDI_NO_ATTRIBUTE_SSS     _MESSAGE(33080, _("denied: attribute "SFQ" is not configured for "SFN" "SFQ"\n"))
+#define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47286, _("denied: attribute "SFQ" is no complex attribute\n"))
 
 #endif /* __MSG_SCHEDD_H */

@@ -42,7 +42,7 @@ bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                        lList **answer_list,
                                        lList *cmplx_list);
 
-lListElem *find_attribute_in_complex_list(const char *attrname,
-                                          const lListElem *first);
+bool
+sconf_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
 
 #endif /* __SGE_SCHEDD_CONF_H */

@@ -41,7 +41,6 @@
 #include "sge_answer.h"
 #include "sge_object.h"
 
-#include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_hgroup.h"
 #include "sge_host.h"
@@ -191,7 +190,6 @@ static table_description table_base[SGE_TYPE_ALL] = {
    { "sge_adminhost", "AH__id", NULL, "AH__valid", "AH__created", "AH_deleted", AH_name },
    { "sge_calendar", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_ckpt", NULL , NULL, NULL, NULL, NULL, NoName},
-   { "sge_complex", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_config", NULL , NULL, NULL, NULL, NULL, NoName},
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},
    { "sge_exechost", "EH__id" , NULL, "EH__valid", "EH__created", "EH__deleted", EH_name },
@@ -213,6 +211,7 @@ static table_description table_base[SGE_TYPE_ALL] = {
    { "sge_user", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_userset", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_hgroup", NULL , NULL, NULL, NULL, NULL, NoName},
+   { "sge_complex", NULL , NULL, NULL, NULL, NULL, NoName},
 #ifndef __SGE_NO_USERMAPPING__
    { "sge_cuser", NULL , NULL, NULL, NULL, NULL, NoName}
 #endif
@@ -348,16 +347,6 @@ spool_database_initialize(lList **answer_list, lListElem *rule)
             info->fields[i] = spool_get_fields_to_spool(answer_list, 
                                                         object_type_get_descr(i),
                                                         &spool_database_instr);
-            if (info->fields[i] == NULL) {
-               ret = false;
-               continue;
-            }
-            ret = spool_database_assign_table_description(answer_list, info->fields[i], table_base[i].table_name, descr, false);
-            break;
-         case SGE_TYPE_COMPLEX:
-            info->fields[i] = spool_get_fields_to_spool(answer_list, 
-                                                        object_type_get_descr(i),
-                                                        &spool_database_complex_instr);
             if (info->fields[i] == NULL) {
                ret = false;
                continue;

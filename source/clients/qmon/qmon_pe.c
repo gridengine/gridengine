@@ -184,7 +184,7 @@ Widget w,
 lListElem *ep 
 ) {
    lList *ul;
-   lListElem *qep, *uep;
+   lListElem *uep;
    XmString *items;
    Cardinal itemCount; 
    char buf[BUFSIZ];
@@ -601,7 +601,6 @@ lListElem *pep
 ) {
    StringConst pe_name = NULL;
    u_long32 pe_slots = 0;
-   lList *ql = NULL;
    lList *acl = NULL;
    lList *xacl = NULL;
    StringConst start_args = NULL;
@@ -687,7 +686,6 @@ lListElem *pep
    u_long32 pe_slots = 0;
    u_long32 pe_control_slaves = 0;
    u_long32 pe_job_is_first_task = 0;
-   lList *ql = NULL;
    lList *acl = NULL;
    lList *xacl = NULL;
    String start_args = NULL;

@@ -851,7 +851,7 @@ SLISTDEF( JG_Type, GrantedQueue )
    SGE_OBJECT(JG_queue, QU_Type, CULL_DEFAULT) /* QU_Type - complete queue only in execd */
    SGE_ULONG(JG_tag_slave_job, CULL_DEFAULT) /* whether slave execds job has arrived in 
                                  * case of pe's with sge controlled slaves */
-   SGE_LIST(JG_complex, CX_Type, CULL_DEFAULT)         /* CX_Type - complex list for this queue 
+   SGE_LIST(JG_complex, CE_Type, CULL_DEFAULT)         /* CE_Type - complex list for this queue 
                                  * used to transfer these values to execd */
    SGE_ULONG(JG_task_id_range, CULL_DEFAULT) /* unused - please recycle */
    SGE_DOUBLE(JG_ticket, CULL_DEFAULT)    /* SGEEE tickets assigned to slots              */

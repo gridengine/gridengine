@@ -61,6 +61,12 @@ enum {
    CMPLXNE_OP
 };
 
+enum {
+   REQU_NO = 1,
+   REQU_YES,
+   REQU_FORCED
+};
+
 /* bit mask for CE_dominant */
 enum {
    DOMINANT_LAYER_GLOBAL = 0x0001,
@@ -78,37 +84,19 @@ enum {
 };
 
 enum {
-   CX_name = CX_LOWERBOUND,
-   CX_entries                /* CE_Type */
-};
-
-ILISTDEF(CX_Type, Complex, SGE_COMPLEX_LIST)
-   SGE_STRING(CX_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)
-   SGE_LIST(CX_entries, CE_Type, CULL_DEFAULT | CULL_SPOOL)
-LISTEND 
-
-NAMEDEF(CXN)
-   NAME("CX_name")
-   NAME("CX_entries")
-NAMEEND
-
-#define CXS sizeof(CXN)/sizeof(char*)
-
-enum {
    CE_name = CE_LOWERBOUND,
    CE_shortcut,
    CE_valtype,
    CE_stringval,
    CE_doubleval,
    CE_relop,
-   CE_request,
    CE_consumable,
-   CE_forced,
    CE_default,
    CE_dominant,
    CE_pj_stringval,          /* per job */
    CE_pj_doubleval,
-   CE_pj_dominant
+   CE_pj_dominant,
+   CE_requestable
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
@@ -118,14 +106,13 @@ SLISTDEF(CE_Type, ComplexEntry)
    SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_SPOOL | CULL_SUBLIST)     /* non overwritten value */
    SGE_DOUBLE(CE_doubleval, CULL_DEFAULT)    /* parsed CE_stringval */
    SGE_ULONG(CE_relop, CULL_DEFAULT | CULL_SPOOL)          /* relational operator */
-   SGE_BOOL(CE_request, CULL_DEFAULT | CULL_SPOOL)         /* flag requestable */
    SGE_BOOL(CE_consumable, CULL_DEFAULT | CULL_SPOOL)      /* flag consumable */
-   SGE_BOOL(CE_forced, CULL_DEFAULT)          /* flag forced */
    SGE_STRING(CE_default, CULL_DEFAULT | CULL_SPOOL)      /* default request for consumable */
    SGE_ULONG(CE_dominant, CULL_DEFAULT)      /* monitoring facility */
    SGE_STRING(CE_pj_stringval, CULL_DEFAULT) /* per job string value */
    SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT) /* per job parsed CE_stringval */
    SGE_ULONG(CE_pj_dominant, CULL_DEFAULT)   /* per job monitoring facility */
+   SGE_ULONG(CE_requestable, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CEN)
@@ -135,14 +122,13 @@ NAMEDEF(CEN)
    NAME("CE_stringval")
    NAME("CE_doubleval")
    NAME("CE_relop")
-   NAME("CE_request")
    NAME("CE_consumable")
-   NAME("CE_forced")
    NAME("CE_default")
    NAME("CE_dominant")
    NAME("CE_pj_stringval")
    NAME("CE_pj_doubleval")
    NAME("CE_pj_dominant")
+   NAME("CE_requestable")
 NAMEEND
 
 /* *INDENT-ON* */ 

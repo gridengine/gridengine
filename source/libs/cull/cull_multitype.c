@@ -58,7 +58,7 @@ static char *_lNm2Str(const lNameSpace *nsp, int nm);
 static int _lStr2Nm(const lNameSpace *nsp, const char *str);
 
 
-static char *multitypes[] =
+const char *multitypes[] =
 {
    "lEndT",
    "lFloatT",

@@ -52,7 +52,7 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_schedd_conf.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 #include "msg_schedd.h"
 
@@ -78,7 +78,7 @@ lList **alpp,             /* AN_Type */
 sge_schedd_conf_type *sc, /* if NULL we just check sc_ep */
 lListElem *sc_ep,         /* SC_Type */  
 u_long32 *si,             /* here scheduling interval gets written */
-lList *cmplx_list
+lList *centry_list
 ) {
    char tmp_buffer[1024], tmp_error[1024];
    u_long32 uval;
@@ -152,9 +152,9 @@ lList *cmplx_list
 #else
    lval = lGetList(sc_ep, SC_job_load_adjustments);
 
-   ret=sge_fill_requests(lGetList(qep, nm), Master_Complex_List, 1, 0, 1);
+   ret=centry_list_fill_request(lGetList(qep, nm), Master_CEntry_List, true, false, true);
    if (ret) {
-   /* error message gets written by sge_fill_requests into SGE_EVENT */
+   /* error message gets written by centry_list_fill_request into SGE_EVENT */
    answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    DEXIT;
    return STATUS_EUNKNOWN;
@@ -187,8 +187,8 @@ lList *cmplx_list
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
 
    /* --- SC_load_formula */
-   if (cmplx_list != NULL &&
-       !schedd_conf_is_valid_load_formula(sc_ep, alpp, cmplx_list)) {
+   if (centry_list != NULL &&
+       !schedd_conf_is_valid_load_formula(sc_ep, alpp, centry_list)) {
       DEXIT;
       return -1;
    }

@@ -128,13 +128,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          element = object;
          object_type = SGE_TYPE_CKPT;
          break;
-      case sgeE_COMPLEX_LIST:
-      case sgeE_COMPLEX_ADD:
-      case sgeE_COMPLEX_DEL:
-      case sgeE_COMPLEX_MOD:
+      case sgeE_CENTRY_LIST:
+      case sgeE_CENTRY_ADD:
+      case sgeE_CENTRY_DEL:
+      case sgeE_CENTRY_MOD:
          key = strkey;
          element = object;
-         object_type = SGE_TYPE_COMPLEX;
+         object_type = SGE_TYPE_CENTRY;
          break;
       case sgeE_CONFIG_LIST:
       case sgeE_CONFIG_ADD:
@@ -317,7 +317,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_ADMINHOST_DEL:
          case sgeE_CALENDAR_DEL:
          case sgeE_CKPT_DEL:
-         case sgeE_COMPLEX_DEL:
+         case sgeE_CENTRY_DEL:
          case sgeE_CONFIG_DEL:
          case sgeE_EXECHOST_DEL:
          case sgeE_JATASK_DEL:

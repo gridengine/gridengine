@@ -84,7 +84,6 @@
 *        SGE_TYPE_ADMINHOST
 *        SGE_TYPE_CALENDAR
 *        SGE_TYPE_CKPT
-*        SGE_TYPE_COMPLEX
 *        SGE_TYPE_CONFIG
 *        SGE_TYPE_GLOBAL_CONFIG
 *        SGE_TYPE_EXECHOST
@@ -106,6 +105,7 @@
 *        SGE_TYPE_USER
 *        SGE_TYPE_USERSET
 *        SGE_TYPE_CUSER
+*        SGE_TYPE_CENTRY
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -117,7 +117,6 @@ typedef enum {
    SGE_TYPE_ADMINHOST = 0,
    SGE_TYPE_CALENDAR,
    SGE_TYPE_CKPT,
-   SGE_TYPE_COMPLEX,
    SGE_TYPE_CONFIG,
    SGE_TYPE_GLOBAL_CONFIG,
    SGE_TYPE_EXECHOST,
@@ -139,6 +138,7 @@ typedef enum {
    SGE_TYPE_USER,
    SGE_TYPE_USERSET,
    SGE_TYPE_HGROUP,
+   SGE_TYPE_CENTRY,
 #ifndef __SGE_NO_USERMAPPING__
    SGE_TYPE_CUSER,
 #endif
@@ -243,5 +243,9 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem, 
                   int sub_command, char *sub_list_name, char *object_name, 
                   int no_info); 
+
+bool  
+object_has_differences(lListElem *this_elem, lList **answer_list,
+                       lListElem *old_elem, bool modify_changed_flag);
 
 #endif /* __SGE_OBJECT_H */

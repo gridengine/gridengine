@@ -1,0 +1,11 @@
+# Version: SGEEE pre6.0 (Maintrunk)
+# 
+# DO NOT MODIFY THIS FILE MANUALLY!
+# 
+name        seq_no
+shortcut    seq
+type        INT
+relop       ==
+requestable NO
+consumable  NO
+default     0

@@ -44,7 +44,7 @@
 #include "sge_userset_qmaster.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_manop_qmaster.h"
-#include "complex_qmaster.h"
+#include "sge_centry_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
@@ -72,12 +72,12 @@
 #include "sge_userprj.h"
 #include "sge_job.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_sharetree.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
+#include "sge_centry.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -111,7 +111,7 @@ static gdi_object_t gdi_object[] = {
    { SGE_EXECHOST_LIST,     EH_name,          EH_Type,  "exechost",                &Master_Exechost_List,          host_mod,     host_spool,     host_success },
    { SGE_QUEUE_LIST,        0,                NULL,     "queue",                   &Master_Queue_List,             NULL,         NULL,           NULL },
    { SGE_JOB_LIST,          0,                NULL,     "job",                     &Master_Job_List,               NULL,         NULL,           NULL },
-   { SGE_COMPLEX_LIST,      CX_name,          CX_Type,  "complex",                 &Master_Complex_List,           complex_mod,  complex_spool,  complex_success },
+   { SGE_CENTRY_LIST,       CE_name,          CE_Type,  "complex entry",                  &Master_CEntry_List,            centry_mod,   centry_spool,   centry_success },
    { SGE_ORDER_LIST,        0,                NULL,     "order",                   NULL,                           NULL,         NULL,           NULL },
    { SGE_MASTER_EVENT,      0,                NULL,     "master event",            NULL,                           NULL,         NULL,           NULL },
    { SGE_MANAGER_LIST,      0,                NULL,     "manager",                 &Master_Manager_List,           NULL,         NULL,           NULL },
@@ -775,8 +775,8 @@ int sub_command
             sge_gdi_del_job(ep, &(answer->alp), user, host, sub_command);
             break;
 
-         case SGE_COMPLEX_LIST:
-            sge_del_cmplx(ep, &(answer->alp), user, host); 
+         case SGE_CENTRY_LIST:
+            sge_del_centry(ep, &(answer->alp), user, host);
             break;
 
          case SGE_PE_LIST:
@@ -1199,7 +1199,7 @@ char *user
    case SGE_SUBMITHOST_LIST:
    case SGE_EXECHOST_LIST:
    case SGE_QUEUE_LIST:
-   case SGE_COMPLEX_LIST:
+   case SGE_CENTRY_LIST:
    case SGE_OPERATOR_LIST:
    case SGE_MANAGER_LIST:
    case SGE_PE_LIST:
@@ -1284,7 +1284,7 @@ lListElem *ep
    case SGE_MANAGER_LIST:
    case SGE_SUBMITHOST_LIST:
    case SGE_QUEUE_LIST:
-   case SGE_COMPLEX_LIST:
+   case SGE_CENTRY_LIST:
    case SGE_PE_LIST:
    case SGE_CONFIG_LIST:
    case SGE_SC_LIST:
@@ -1400,7 +1400,7 @@ sge_gdi_request *request
    case SGE_MANAGER_LIST:
    case SGE_SUBMITHOST_LIST:
    case SGE_QUEUE_LIST:
-   case SGE_COMPLEX_LIST:
+   case SGE_CENTRY_LIST:
    case SGE_PE_LIST:
    case SGE_SC_LIST:
    case SGE_USER_LIST:

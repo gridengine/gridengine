@@ -68,7 +68,6 @@
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
 #include "sge_userprj.h"
 #include "sge_usage.h"
 #include "sge_sharetree.h"
@@ -445,12 +444,6 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                                               &spool_conf_instr);
                   field_info[i].instr  = &spool_flatfile_instr_conf;
                   break;
-               case SGE_TYPE_COMPLEX:
-                  field_info[i].fields = spool_get_fields_to_spool(answer_list, 
-                                              object_type_get_descr(i), 
-                                              &spool_complex_instr);
-                  field_info[i].instr  = &spool_flatfile_instr_complex;
-                  break;
                case SGE_TYPE_PROJECT:
                   field_info[i].fields = PROJECT_fields;
                   field_info[i].instr  = &spool_flatfile_instr_config;
@@ -761,10 +754,6 @@ spool_flatfile_default_list_func(lList **answer_list,
       case SGE_TYPE_CKPT:
          directory = CKPTOBJ_DIR;
          break;
-      case SGE_TYPE_COMPLEX:
-         key_nm    = CX_name;
-         directory = COMPLEX_DIR;
-         break;
       case SGE_TYPE_CONFIG:
          key_nm    = CONF_hname;
          filename  = "global";
@@ -942,10 +931,6 @@ spool_flatfile_default_read_func(lList **answer_list,
          directory = CKPTOBJ_DIR;
          filename = key;
          break;
-      case SGE_TYPE_COMPLEX:
-         directory = COMPLEX_DIR;
-         filename  = key;
-         break;
       case SGE_TYPE_CONFIG:
          if (sge_hostcmp(key, "global") == 0) {
             directory = ".";
@@ -1111,10 +1096,6 @@ spool_flatfile_default_write_func(lList **answer_list,
       case SGE_TYPE_CKPT:
          directory = CKPTOBJ_DIR;
          filename = key;
-         break;
-      case SGE_TYPE_COMPLEX:
-         directory = COMPLEX_DIR;
-         filename  = key;
          break;
       case SGE_TYPE_CONFIG:
          if (sge_hostcmp(key, "global") == 0) {
@@ -1309,9 +1290,6 @@ spool_flatfile_default_delete_func(lList **answer_list,
       case SGE_TYPE_CKPT:
          ret = sge_unlink(CKPTOBJ_DIR, key) == 0;
          break;
-      case SGE_TYPE_COMPLEX:
-         ret = sge_unlink(COMPLEX_DIR, key) == 0;
-         break;
       case SGE_TYPE_CONFIG:
          if(sge_hostcmp(key, "global") == 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1495,17 +1473,12 @@ spool_flatfile_default_verify_func(lList **answer_list,
          if (event_type == SGE_TYPE_EXECHOST) {
             if (ret) {
                /* necessary to setup actual list of exechost */
-               debit_host_consumable(NULL, object, Master_Complex_List, 0);
+               debit_host_consumable(NULL, object, Master_CEntry_List, 0);
 
                /* necessary to init double values of consumable configuration */
-               sge_fill_requests(lGetList(object, EH_consumable_config_list), 
-                     Master_Complex_List, 1, 0, 1);
+               centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
+                                        Master_CEntry_List, true, false, true);
 
-               if (complex_list_verify(lGetList(object, EH_complex_list), NULL, 
-                                       "host", lGetHost(object, EH_name))
-                                    !=STATUS_OK) {
-                  ret = false;
-               }
             }
 
             if (ret) {
@@ -1522,17 +1495,12 @@ spool_flatfile_default_verify_func(lList **answer_list,
             slots2config_list(object); 
 
             /* setup actual list of queue */
-            debit_queue_consumable(NULL, object, Master_Complex_List, 0);
+            debit_queue_consumable(NULL, object, Master_CEntry_List, 0);
 
             /* init double values of consumable configuration */
-            sge_fill_requests(lGetList(object, QU_consumable_config_list), 
-                              Master_Complex_List, 1, 0, 1);
+            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
+                                     Master_CEntry_List, true, false, true);
 
-            if (complex_list_verify(lGetList(object, QU_complex_list), NULL, 
-                                    "queue", lGetString(object, QU_qname))
-                 !=STATUS_OK) {
-                 ret = false;
-            }
             if (ret) {
                if (ensure_attrib_available(NULL, object, 
                                            QU_load_thresholds) ||
@@ -1618,10 +1586,6 @@ spool_flatfile_default_verify_func(lList **answer_list,
             ret = false;
          }
          break;
-      case SGE_TYPE_COMPLEX:
-         /* JG: TODO: complex attributes of type host should be resolved 
-          * we need a function verify_complex
-          */
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:
       case SGE_TYPE_HGROUP:

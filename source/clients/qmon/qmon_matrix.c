@@ -49,7 +49,7 @@
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_queue.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 #include "sge_var.h"
 #include "sge_host.h"
 #include "sge_mailrec.h"
@@ -806,8 +806,8 @@ StringConst *ce_entry
       ce_entry[CE_RELOP] = "??";
    }
    ce_entry[CE_VALUE] = lGetString(ep, CE_stringval);
-   ce_entry[CE_REQUEST] = lGetBool(ep, CE_forced) ? "FORCED" : 
-                           (lGetBool(ep, CE_request) ? "YES" : "NO");
+   ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
+                           (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
    ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
    ce_entry[CE_DEFAULT] = lGetString(ep, CE_default);
       
@@ -821,9 +821,8 @@ lListElem *ep,
 String *ce_entry 
 ) {
    int i, type, relop; 
-   bool forced = false;
-   bool requestable = false;
    double tmp_double;
+   u_long32 requestable = REQU_NO;
 
    DENTER(GUI_LAYER, "setCE_TypeValues");
    
@@ -885,20 +884,19 @@ String *ce_entry
 
    if (!strcasecmp(ce_entry[CE_REQUEST], "y") 
             || !strcasecmp(ce_entry[CE_REQUEST], "yes"))
-      requestable = true;
+      requestable = REQU_YES;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "n") 
             || !strcasecmp(ce_entry[CE_REQUEST], "no"))
-      requestable = false;
+      requestable = REQU_NO;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "f") 
             || !strcasecmp(ce_entry[CE_REQUEST], "forced")) {
-      forced = true;
-      requestable = true;
+      requestable = REQU_FORCED;
    }
    else {
       DPRINTF(("invalid requestable entry: %s\n", ce_entry[CE_REQUEST]));
    }
-   lSetBool(ep, CE_request, requestable);
-   lSetBool(ep, CE_forced, forced);
+
+   lSetUlong(ep, CE_requestable, requestable);
 
    if (!strcasecmp(ce_entry[CE_CONSUMABLE], "y") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "yes"))

@@ -42,6 +42,8 @@
 #include "sge_answer.h"
 #include "sge_dstring.h"
 #include "sge_ulong.h"
+#include "sge_centry.h"
+
 #include "msg_sgeobjlib.h"
 
 #define ULONG_LAYER TOP_LAYER
@@ -145,7 +147,7 @@ bool double_print_to_dstring(double value, dstring *string)
 
 bool 
 ulong_parse_date_time_from_string(u_long32 *this_ulong, 
-                                  lList **alpp, const char *string) 
+                                  lList **answer_list, const char *string) 
 {
    int i;
    int year_fieldlen=2;
@@ -163,8 +165,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if (!string || string[0] == '\0') {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_NODATE));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -176,8 +178,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if (strlen(string) > sizeof(stringT)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_STARTTIMETOOLONG));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -199,8 +201,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((i != 0) && (i != 2)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECONDS));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -214,8 +216,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((i != 8) && (i != 10) && (i != 12)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOURMIN));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -250,8 +252,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    timeptr.tm_mon=atoi(tmp_str)-1;/* 00==Jan, we don't like that do we */
    if ((timeptr.tm_mon>11)||(timeptr.tm_mon<0)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDMONTH));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -272,8 +274,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    if ((timeptr.tm_mday > 31) || (timeptr.tm_mday < 1)) {
       /* actually mktime() should frigging do it */
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDDAY));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -290,8 +292,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((timeptr.tm_hour > 23) || (timeptr.tm_hour < 0)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOUR));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -307,8 +309,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((timeptr.tm_min > 59)||(timeptr.tm_min < 0)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDMINUTE));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -323,8 +325,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    }
    if ((timeptr.tm_sec>59)||(timeptr.tm_mday<0)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECOND));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -346,8 +348,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    if (gmt_secs < 0) {
       DPRINTF(("input to mktime: %s\n",asctime(&timeptr)));
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_NODATEFROMINPUT));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, 
+      if (answer_list) {
+         answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       } else {
          fprintf(stderr,"\n%s\n", SGE_EVENT);
@@ -362,5 +364,53 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    *this_ulong = gmt_secs;
    DEXIT;
    return true;
+}
+
+bool
+ulong_parse_centry_type_from_string(u_long32 *this_ulong,
+                                    lList **answer_list, const char *string)
+{
+   bool ret = true;
+   int i;
+   DENTER(TOP_LAYER, "ulong_parse_centry_type_from_string");
+
+   *this_ulong = 0;
+   for (i = TYPE_FIRST; i <= TYPE_DOUBLE; i++) {
+      if (!strcasecmp(string, map_type2str(i))) {
+         *this_ulong = i;
+         break;
+      }
+   }
+   if (*this_ulong == 0) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_INVALID_CENTRY_TYPE_S, string);
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+ulong_parse_centry_relop_from_string(u_long32 *this_ulong,
+                                     lList **answer_list, const char *string)
+{
+   bool ret = true;
+   int i;
+   DENTER(TOP_LAYER, "ulong_parse_centry_relop_from_string");
+
+   *this_ulong = 0;
+   for (i = CMPLXEQ_OP; i <= CMPLXNE_OP; i++) {
+      if (!strcasecmp(string, map_op2str(i))) {
+         *this_ulong = i;
+         break;
+      }
+   }
+   if (*this_ulong == 0) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_INVALID_CENTRY_RELOP_S, string);
+      ret = false;
+   }
+   DEXIT;
+   return ret;
 }
 

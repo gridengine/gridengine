@@ -194,6 +194,16 @@
 #define MSG_CKPTREFDOESNOTEXIST_S                  _MESSAGE(64181, _("Ckpt "SFQ" does not exist\n"))
 #define MSG_PEREFINQUEUE_SS                        _MESSAGE(64182, _("Pe "SFQ" is still referenced in queue "SFQ".\n"))
 #define MSG_CKPTREFINQUEUE_SS                      _MESSAGE(64183, _("Ckpt "SFQ" is still referenced in queue "SFQ".\n"))
-#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(64184,_("ERROR! two files are specified for the same host\n"))
+#define MSG_INVALID_CENTRY_TYPE_S                  _MESSAGE(64184, _("Invalid complex attribute type ("SFQ")\n"))
+#define MSG_INVALID_CENTRY_RELOP_S                 _MESSAGE(64185, _("Invalid complex attribute for relation operator ("SFQ")\n"))
+#define MSG_INVALID_CENTRY_REQUESTABLE_S           _MESSAGE(64186, _("Invalid complex attribute for requestable ("SFQ")\n"))
+#define MSG_CENTRYREFINQUEUE_SS                    _MESSAGE(64187, _("Complex attribute "SFQ" is still referenced in queue "SFQ".\n"))
+#define MSG_CENTRYREFINHOST_SS                     _MESSAGE(64188, _("Complex attribute "SFQ" is still referenced in host "SFQ".\n"))
+#define MSG_CENTRYREFINSCONF_S                     _MESSAGE(64189, _("Complex attribute "SFQ" is still referenced in scheduler configuration.\n"))
+#define MSG_PARSE_DUPLICATEHOSTINFILESPEC          _MESSAGE(64190,_("ERROR! two files are specified for the same host\n"))
+#define MSG_EVENT_CENTRYLISTXELEMENTS_II           _MESSAGE(64191, _("%d. EVENT COMPLEX ENTRY LIST %d Elements"))
+#define MSG_EVENT_DELCENTRYX_IS                    _MESSAGE(64192, _("%d. EVENT DEL COMPLEX ENTRY "SFN""))
+#define MSG_EVENT_ADDCENTRYX_IS                    _MESSAGE(64193, _("%d. EVENT ADD COMPLEX ENTRY "SFN""))
+#define MSG_EVENT_MODCENTRYX_IS                    _MESSAGE(64194, _("%d. EVENT MOD COMPLEX ENTRY "SFN""))
 
 #endif /* __MSG_SGEOBJLIB_H */

@@ -411,7 +411,7 @@ MakeDirsMaster()
    Makedir $QMDIR
    Makedir $QMDIR/admin_hosts
    Makedir $QMDIR/ckpt
-   Makedir $QMDIR/complexes
+   Makedir $QMDIR/centry
    Makedir $QMDIR/exec_hosts
    Makedir $QMDIR/job_scripts
    Makedir $QMDIR/jobs
@@ -807,20 +807,20 @@ AddActQmaster()
 #
 AddDefaultComplexes()
 {
-   $INFOTEXT "Adding default complexes >host< and >queue<"
-   for c in host queue; do
-      if [ -f $QMDIR/complexes/$c -a -s $QMDIR/complexes/$c ]; then
+   $INFOTEXT "Adding default complex attributes"
+   for c in arch h_rt mem_free num_proc  s_rt swap_total calendar h_stack mem_total qname s_stack swap_used cpu h_vmem mem_used rerun s_vmem tmpdir h_core hostname min_cpu_interval s_core seq_no virtual_free h_cpu load_avg np_load_avg s_cpu slots virtual_total h_data load_long np_load_long s_data swap_free virtual_used h_fsize load_medium np_load_medium s_fsize swap_rate h_rss load_short np_load_short s_rss swap_rsvd; do
+      if [ -f $QMDIR/centry/$c -a -s $QMDIR/centry/$c ]; then
          $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-                   "Complex >%s< already exists - should complex be preserved (y/n) [y] >> " $c
+                   "Complex attribute >%s< already exists - should Complex attribute be preserved (y/n) [y] >> " $c
          if [ $? = 1 ]; then
-            $INFOTEXT "Overwriting existing complex >%s<" $c
-            ExecuteAsAdmin cp util/resources/complexes/$c $QMDIR/complexes
+            $INFOTEXT "Overwriting existing complex attribute>%s<" $c
+            ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
          fi
       else
-         ExecuteAsAdmin cp util/resources/complexes/$c $QMDIR/complexes
+         ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
       fi
    done
-   ExecuteAsAdmin chmod $FILEPERM $QMDIR/complexes/*
+   ExecuteAsAdmin chmod $FILEPERM $QMDIR/centry/*
 }
 
 #-------------------------------------------------------------------------

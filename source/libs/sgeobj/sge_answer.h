@@ -121,4 +121,6 @@ bool answer_list_add(lList **answer_list, const char *text,
 
 void answer_list_replace(lList **answer_list, lList **new_list);
 
+void answer_list_append_list(lList **answer_list, lList **new_list);
+
 #endif /* __SGE_ANSWER_H */

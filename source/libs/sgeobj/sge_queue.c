@@ -38,7 +38,6 @@
 #include "sge.h"
 
 #include "sge_object.h"
-#include "sge_complex.h"
 #include "sge_job.h"
 #include "sge_manop.h"
 #include "sge_userset.h"
@@ -49,6 +48,7 @@
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_todo.h"
+#include "sge_centry.h"
 #include "sge_stringL.h"
 #include "sge_utility.h"
 #include "parse.h"
@@ -810,5 +810,24 @@ bool queue_is_checkointing_queue(const lListElem *this_elem)
 bool queue_is_parallel_queue(const lListElem *this_elem) 
 {
    return queue_is_a_pe_referenced(this_elem);
+}
+
+bool
+queue_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "queue_is_centry_referenced");
+   if (this_elem != NULL) {
+      const char *name = lGetString(centry, CE_name);
+      lList *centry_list = lGetList(this_elem, QU_consumable_config_list);
+      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
+
+      if (centry_ref != NULL) {
+         ret = true;
+      }
+   }
+   DEXIT;
+   return ret;
 }
 

@@ -76,7 +76,6 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_QUEUE_LIST, QUEUE_T, NULL, 0, NULL, NULL },
    { 0, SGE_JOB_LIST, JOB_T, NULL, 0, NULL, NULL },
    { 0, SGE_EVENT_LIST, EVENT_T, NULL, 0, NULL, NULL },
-   { 0, SGE_COMPLEX_LIST, COMPLEX_T, NULL, 0, NULL, NULL },
    { 0, SGE_ORDER_LIST, ORDER_T, NULL, 0, NULL, NULL },
    { 0, SGE_MASTER_EVENT, MASTER_EVENT_T, NULL, 0, NULL, NULL },
    { 0, SGE_CONFIG_LIST, CONFIG_T, NULL, 0, NULL, NULL },
@@ -134,7 +133,7 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_QUEUE_LIST].what = lWhat("%T(ALL)", QU_Type);
    QmonMirrorList[SGE_JOB_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_EVENT_LIST].what = lWhat("%T(ALL)", EV_Type);
-   QmonMirrorList[SGE_COMPLEX_LIST].what = lWhat("%T(ALL)", CX_Type);
+   QmonMirrorList[SGE_CENTRY_LIST].what = lWhat("%T(ALL)", CE_Type);
    QmonMirrorList[SGE_ORDER_LIST].what = lWhat("%T(ALL)", OR_Type);
    QmonMirrorList[SGE_MASTER_EVENT].what = lWhat("%T(ALL)", EV_Type);
    QmonMirrorList[SGE_CONFIG_LIST].what = lWhat("%T(ALL)", CONF_Type);

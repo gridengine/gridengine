@@ -46,7 +46,6 @@
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_answer.h"
-#include "sge_complex.h"
 #include "sge_userprj.h"
 
 typedef struct {

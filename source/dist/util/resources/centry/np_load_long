@@ -1,0 +1,11 @@
+# Version: SGEEE pre6.0 (Maintrunk)
+# 
+# DO NOT MODIFY THIS FILE MANUALLY!
+# 
+name        np_load_long
+shortcut    nll
+type        DOUBLE
+relop       >=
+requestable NO
+consumable  NO
+default     0

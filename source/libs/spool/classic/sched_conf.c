@@ -55,8 +55,8 @@
 #include "sge_prog.h"
 #include "sge_io.h"
 #include "sge_answer.h"
-#include "sge_complex.h"
 #include "sge_conf.h"
+#include "sge_centry.h"
 
 static intprt_type intprt_as_load_adjustment[] = { CE_name, CE_stringval, 0 };
 

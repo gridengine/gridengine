@@ -74,7 +74,6 @@
 #include "sge_job.h"
 #include "sge_queue.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
@@ -2014,7 +2013,7 @@ lList *exec_host_list
    /*
    ** fill in requests
    */
-   if (sge_fill_requests(request_list, complex_list, 0, 1, 0)) {
+   if (centry_list_fill_request(request_list, complex_list, false, true, false)) {
       DPRINTF(("failure in sge_fill_requests()\n"));
       DEXIT;
       return False;

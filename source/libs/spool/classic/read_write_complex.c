@@ -49,7 +49,7 @@
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 static int parse_flag(lList **alpp, const char *cp, lListElem *ep, int nm, const char *name, const char *fname, int line);
 
@@ -107,10 +107,10 @@ static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const 
 *     read_cmplx() -- Read complex template from file. 
 *
 *  SYNOPSIS
-*     lListElem* read_cmplx(char *fname, char *cmplx_name, lList **alpp) 
+*     lList* read_cmplx(char *fname, char *cmplx_name, lList **alpp) 
 *
 *  FUNCTION
-*     This functions returns a CX_Type list. This list will be read from 
+*     This functions returns a CE_Type list. This list will be read from 
 *     fname. If no answer list is provided the function will terminate
 *     the using application.
 *
@@ -120,15 +120,12 @@ static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const 
 *     lList **alpp     - Answer list pointer or NULL 
 *
 *  RESULT
-*     lListElem* - a CX_Type list
+*     lList* - a CE_Type list
 *******************************************************************************/
-lListElem *read_cmplx(
-const char *fname,
-const char *cmplx_name,
-lList **alpp 
-) {
+lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp) 
+{
    FILE *fp;
-   lListElem *ep=NULL, *epc;
+   lListElem *ep=NULL;
    int line = 0;
    int type = 0;
    const char *name;
@@ -136,7 +133,6 @@ lList **alpp
    char buf[10000], *cp;
    const char *s;
    lList *lp;
-   int ret;
    double dval;
 
    DENTER(TOP_LAYER, "read_cmplx");
@@ -224,7 +220,7 @@ lList **alpp
          else
             SGE_EXIT(1);
       }
-
+#if 0 /* EB: TODO: remove */
       /* VALUE */
       if (((s = sge_strtok(cp, " \t\n")) && (*s != '#'))) {
 
@@ -285,6 +281,8 @@ lList **alpp
          else
             SGE_EXIT(1);
       }
+
+#endif
       
       /* RELOP */
       if (((s = sge_strtok(cp, " \t\n"))) && (*s != '#')) {
@@ -381,27 +379,6 @@ lList **alpp
             }
 /*             lSetDouble(ep, CE_defaultdouble, dval); */
             break;
-         case TYPE_HOST:
-            /* resolve hostname and store it */
-            ret = sge_resolve_host(ep, CE_stringval);
-            if (ret) {
-               if (ret == COMMD_NACK_UNKNOWN_HOST) {
-                  ERROR((SGE_EVENT, MSG_COM_COMMDLOCKED));
-                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
-               } else {
-                  ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-                  ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
-               }
-               if (alpp) {
-                  answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-                  lp = lFreeList(lp);
-                  DEXIT;
-                  return NULL;
-               }
-               else
-                  SGE_EXIT(1);
-            }
-            break;
          }
       }
       else {
@@ -433,12 +410,8 @@ lList **alpp
 
    fclose(fp);
 
-   epc = lCreateElem(CX_Type);
-   lSetString(epc, CX_name, cmplx_name);
-   lSetList(epc, CX_entries, lp);
-
    DEXIT;
-   return epc;
+   return lp;
 }
 
 static int parse_flag(
@@ -488,19 +461,19 @@ lListElem *ep,
 const char *fname,
 int line 
 ) {
-   int flag;
+   u_long32 flag;
    const char *s;
 
    DENTER(TOP_LAYER, "parse_flag");
 
    if (((s = sge_strtok(cp, " \t\n"))) && (*s != '#')) {
-      if (!strcasecmp(s, "y") || !strcasecmp(s, "yes"))
-         flag = 1;
-      else if (!strcasecmp(s, "n") || !strcasecmp(s, "no"))
-         flag = 0;
-      else if (!strcasecmp(s, "f") || !strcasecmp(s, "forced"))
-         flag = 2;
-      else {
+      if (!strcasecmp(s, "y") || !strcasecmp(s, "yes")) {
+         flag = REQU_YES;
+      } else if (!strcasecmp(s, "n") || !strcasecmp(s, "no")) {
+         flag = REQU_NO;
+      } else if (!strcasecmp(s, "f") || !strcasecmp(s, "forced")) {
+         flag = REQU_FORCED;
+      } else {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXREQ_SS, fname, s));
          if (alpp)
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
@@ -508,13 +481,7 @@ int line
          return 1;
       }
 
-      if (flag == 2) {
-         lSetBool(ep, CE_forced, TRUE);
-         lSetBool(ep, CE_request, TRUE);
-      } else {
-         lSetBool(ep, CE_forced, FALSE);
-         lSetBool(ep, CE_request, flag);
-      }
+      lSetUlong(ep, CE_requestable, flag);
    }
    else {
       ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
@@ -567,24 +534,25 @@ lList **alpp
       goto FPRINTF_ERROR;
    }  
 
-   FPRINTF((fp, "%-16s %-10s %-6s %-15s %-5s %-11s %-10s %-5s\n", 
+
+   FPRINTF((fp, "%-16s %-10s %-6s %-5s %-11s %-10s %-5s\n", 
 	         "#name", "shortcut", "type",
-            "value", "relop", "requestable", "consumable", "default"));
+            "relop", "requestable", "consumable", "default"));
    FPRINTF((fp, "#-------------------------------------------------"
-            "-------------------------------------\n"));
+            "----------------------\n"));
    
    for_each(ep, lpc) {
-      FPRINTF((fp, "%-16s %-10s %-6s %-15s %-5s %-11s %-10s %-5s\n", 
+      FPRINTF((fp, "%-16s %-10s %-6s %-5s %-11s %-10s %-5s\n", 
 	      lGetString(ep, CE_name), 
          lGetString(ep, CE_shortcut), 
          map_type2str(lGetUlong(ep, CE_valtype)), 
-         lGetString(ep, CE_stringval), 
          map_op2str(lGetUlong(ep, CE_relop)), 
-         (lGetBool(ep, CE_forced)) ? "FORCED" : 
-                           (lGetBool(ep, CE_request)) ? "YES" : "NO",
+         (lGetUlong(ep, CE_requestable) == REQU_FORCED) ? "FORCED" : 
+         (lGetUlong(ep, CE_requestable) == REQU_YES) ? "YES" : "NO",
          (lGetBool(ep, CE_consumable)) ? "YES" : "NO",
          lGetString(ep, CE_default)));
    }
+
 
    FPRINTF((fp, "# "SFN, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    

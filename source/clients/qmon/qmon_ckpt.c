@@ -189,8 +189,6 @@ static void qmonCkptFillConf(
 Widget w,
 lListElem *ep 
 ) {
-   lList *ql;
-   lListElem *qep;
    XmString *items;
    Cardinal itemCount; 
    char buf[BUFSIZ];
@@ -558,7 +556,6 @@ lListElem *ckp
    StringConst ckpt_ckpt_dir = NULL;
    StringConst ckpt_when = NULL;
    StringConst ckpt_signal = NULL;
-   lList *ql = NULL;
    int i;
    int state = 0;
    int reschedule = 0;
@@ -662,7 +659,6 @@ lListElem *ckp
    String ckpt_clean_command = NULL;
    String ckpt_ckpt_dir = NULL;
    String ckpt_signal = NULL;
-   lList *ql = NULL;
    int state;
    int i;
    char ckpt_when[20];

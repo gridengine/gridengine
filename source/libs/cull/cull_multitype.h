@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+const char *multitypes[13];
+
 typedef int (*lCmpFunction)(lListElem *, lListElem *, int);
 
 void lWriteDescrTo(const lDescr *dp, FILE *fp);

@@ -53,9 +53,9 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
-#include "sge_complex.h"
 #include "sge_complex_schedd.h"
 #include "sge_answer.h"
+#include "sge_centry.h"
 #include "spool/classic/read_write_complex.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
@@ -383,8 +383,8 @@ XtPointer cld, cad;
             map_type2str(lGetUlong(attr, CE_valtype)), 
             lGetString(attr, CE_stringval), 
             map_op2str(lGetUlong(attr, CE_relop)),
-            lGetBool(attr, CE_forced) ? "FORCED" : 
-               (lGetBool(attr, CE_request) ? "YES" : "NO"),
+            lGetUlong(attr, CE_requestable) == REQU_FORCED ? "FORCED" : 
+               (lGetUlong(attr, CE_requestable) == REQU_YES ? "YES" : "NO"),
             lGetBool(attr, CE_consumable) ? "YES" : "NO",
             lGetString(attr, CE_default) ? lGetString(attr, CE_default) : "");
             XmTextInsert(text_field, pos, buf);

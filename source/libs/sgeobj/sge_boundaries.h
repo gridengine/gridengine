@@ -105,12 +105,8 @@ enum NameSpaceBoundaries {
    CE_LOWERBOUND = EV_UPPERBOUND + 1,
    CE_UPPERBOUND = CE_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* list of complexes */ 
-   CX_LOWERBOUND = CE_UPPERBOUND + 1,
-   CX_UPPERBOUND = CX_LOWERBOUND + 1*BASIC_UNIT - 1,
-
    /* order list */ 
-   OR_LOWERBOUND = CX_UPPERBOUND + 1,
+   OR_LOWERBOUND = CE_UPPERBOUND + 1,
    OR_UPPERBOUND = OR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* entries for OR_queuelist-field */

@@ -71,8 +71,8 @@ int compare_complexes(int slots, lListElem *util_max_ep, lListElem *complex1,
                       lListElem *complex2, char *availability_text, 
                       int is_threshold, int force_existence);
 
-int fillComplexFromHost(lList **new_complex, lList *complex_list, 
-                        lListElem *host, lListElem *complex, u_long32 layer, 
+int fillComplexFromHost(lList **new_complex,  
+                        lListElem *host, lList *complex, u_long32 layer, 
                         int recompute_debitation_dependent);
 
 int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 

@@ -40,6 +40,7 @@ QCONF_SRC = qconf.c \
             parse_qconf.c \
             sge_client_access.c \
             sge_hgroup_qconf.c \
+            sge_centry_qconf.c \
             sge_cuser_qconf.c
 
 QCONF_ADD_SRC = \
@@ -88,6 +89,9 @@ sge_client_access.o: $(QCONF_DIR)/sge_client_access.c
 
 sge_hgroup_qconf.o: $(QCONF_DIR)/sge_hgroup_qconf.c
 		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_hgroup_qconf.c
+
+sge_centry_qconf.o: $(QCONF_DIR)/sge_centry_qconf.c
+		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_centry_qconf.c
 
 sge_cuser_qconf.o: $(QCONF_DIR)/sge_cuser_qconf.c
 		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_cuser_qconf.c

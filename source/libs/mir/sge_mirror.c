@@ -43,7 +43,6 @@
 
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
 #include "sge_conf.h"
 #include "sge_host.h"
 #include "sge_hgroup.h"
@@ -125,7 +124,6 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
-   { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, NULL,                                   NULL, NULL },
    { NULL, host_update_master_list,                NULL, NULL },
    { NULL, ja_task_update_master_list,             NULL, NULL },
@@ -145,11 +143,11 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, host_update_master_list,                NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
-
+   { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, generic_update_master_list,             NULL, NULL },
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
 #endif
-   { NULL, NULL,                                   NULL, NULL },
 };
 
 /* Static functions for internal use */
@@ -346,11 +344,11 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_CKPT_DEL);
          ec_subscribe(sgeE_CKPT_MOD);
          break;
-      case SGE_TYPE_COMPLEX:
-         ec_subscribe(sgeE_COMPLEX_LIST);
-         ec_subscribe(sgeE_COMPLEX_ADD);
-         ec_subscribe(sgeE_COMPLEX_DEL);
-         ec_subscribe(sgeE_COMPLEX_MOD);
+      case SGE_TYPE_CENTRY:
+         ec_subscribe(sgeE_CENTRY_LIST);
+         ec_subscribe(sgeE_CENTRY_ADD);
+         ec_subscribe(sgeE_CENTRY_DEL);
+         ec_subscribe(sgeE_CENTRY_MOD);
          break;
       case SGE_TYPE_CONFIG:
          ec_subscribe(sgeE_CONFIG_LIST);
@@ -571,11 +569,11 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_CKPT_DEL);
          ec_unsubscribe(sgeE_CKPT_MOD);
          break;
-      case SGE_TYPE_COMPLEX:
-         ec_unsubscribe(sgeE_COMPLEX_LIST);
-         ec_unsubscribe(sgeE_COMPLEX_ADD);
-         ec_unsubscribe(sgeE_COMPLEX_DEL);
-         ec_unsubscribe(sgeE_COMPLEX_MOD);
+      case SGE_TYPE_CENTRY:
+         ec_unsubscribe(sgeE_CENTRY_LIST);
+         ec_unsubscribe(sgeE_CENTRY_ADD);
+         ec_unsubscribe(sgeE_CENTRY_DEL);
+         ec_unsubscribe(sgeE_CENTRY_MOD);
          break;
       case SGE_TYPE_CONFIG:
          ec_unsubscribe(sgeE_CONFIG_LIST);
@@ -885,17 +883,17 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
             ret = sge_mirror_process_event(SGE_TYPE_CKPT, SGE_EMA_MOD, event);
             break;
 
-         case sgeE_COMPLEX_LIST:
-            ret = sge_mirror_process_event(SGE_TYPE_COMPLEX, SGE_EMA_LIST, event);
+         case sgeE_CENTRY_LIST:
+            ret = sge_mirror_process_event(SGE_TYPE_CENTRY, SGE_EMA_LIST, event);
             break;
-         case sgeE_COMPLEX_ADD:
-            ret = sge_mirror_process_event(SGE_TYPE_COMPLEX, SGE_EMA_ADD, event);
+         case sgeE_CENTRY_ADD:
+            ret = sge_mirror_process_event(SGE_TYPE_CENTRY, SGE_EMA_ADD, event);
             break;
-         case sgeE_COMPLEX_DEL:
-            ret = sge_mirror_process_event(SGE_TYPE_COMPLEX, SGE_EMA_DEL, event);
+         case sgeE_CENTRY_DEL:
+            ret = sge_mirror_process_event(SGE_TYPE_CENTRY, SGE_EMA_DEL, event);
             break;
-         case sgeE_COMPLEX_MOD:
-            ret = sge_mirror_process_event(SGE_TYPE_COMPLEX, SGE_EMA_MOD, event);
+         case sgeE_CENTRY_MOD:
+            ret = sge_mirror_process_event(SGE_TYPE_CENTRY, SGE_EMA_MOD, event);
             break;
 
          case sgeE_CONFIG_LIST:

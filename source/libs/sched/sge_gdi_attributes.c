@@ -48,7 +48,7 @@
 #include "sge_prog.h"
 #include "sge_job.h"
 #include "sge_host.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 /* scheduling library */
 #include "sge_complex_schedd.h"
@@ -180,7 +180,7 @@ const char *hostname,
 const char *attr_name 
 ) {
    int global, ret;
-   lList *alp, *complex_list = NULL, *exechost_list = NULL, *attributes = NULL;
+   lList *alp, *centry_list = NULL, *exechost_list = NULL, *attributes = NULL;
    static char attribute_value[1024];
    lListElem *cep, *aep, *hep;
    lEnumeration *what;
@@ -228,8 +228,8 @@ const char *attr_name
    lFreeList(alp);
 
    /* get complexes */
-   what = lWhat("%T(ALL)", CX_Type);
-   alp = sge_gdi(SGE_COMPLEX_LIST, SGE_GDI_GET, &complex_list, NULL, what);
+   what = lWhat("%T(ALL)", CE_Type);
+   alp = sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET, &centry_list, NULL, what);
    lFreeWhat(what);
    
    /* evaluate answer list */
@@ -248,7 +248,7 @@ const char *attr_name
    /* search for host */
    if (!(hep=host_list_locate(exechost_list, unique))) {
       fprintf(stderr, MSG_LIST_NOEXECHOSTOBJECT_S , unique);
-      lFreeList(complex_list);
+      lFreeList(centry_list);
       lFreeList(exechost_list);
       DEXIT;
       return NULL;
@@ -256,10 +256,10 @@ const char *attr_name
 
    /* build attributes */
    if ((ret = global?
-         global_complexes2scheduler(&attributes, hep, complex_list, 0):
-         host_complexes2scheduler(&attributes, hep, exechost_list, complex_list, 0))) {
+         global_complexes2scheduler(&attributes, hep, centry_list, 0):
+         host_complexes2scheduler(&attributes, hep, exechost_list, centry_list, 0))) {
       fprintf(stderr, MSG_LIST_FAILEDBUILDINGATTRIBUTESFORHOST_S , unique);
-      lFreeList(complex_list);
+      lFreeList(centry_list);
       lFreeList(exechost_list);
       DEXIT;
       return NULL;
@@ -270,7 +270,7 @@ const char *attr_name
       fprintf(stderr, MSG_LIST_NOATTRIBUTEXFORHOSTY_SS , 
             attr_name, unique);
       lFreeList(attributes);
-      lFreeList(complex_list);
+      lFreeList(centry_list);
       lFreeList(exechost_list);
       DEXIT;
       return NULL;
@@ -286,7 +286,7 @@ const char *attr_name
       attribute_value[0] = '\0';
 
    lFreeList(attributes);
-   lFreeList(complex_list);
+   lFreeList(centry_list);
    lFreeList(exechost_list);
    DEXIT;
    return attribute_value;

@@ -92,10 +92,10 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_ckpt.h"
-#include "sge_complex.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
 #include "sge_todo.h"
+#include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -151,7 +151,7 @@ lListElem *hep
 
       if ((q = queue_list_locate(Master_Queue_List, lGetString(gdil_ep, JG_qname)))) {
          resources = NULL;
-         queue_complexes2scheduler(&resources, q, Master_Exechost_List, Master_Complex_List, 0);
+         queue_complexes2scheduler(&resources, q, Master_Exechost_List, Master_CEntry_List, 0);
          lSetList(gdil_ep, JG_complex, resources);
       }
 
@@ -702,20 +702,20 @@ sge_commit_flags_t commit_flags
             qep_QU_qhostname = lGetHost(qep, QU_qhostname);
 
             /* debit in all layers */
-            if ( debit_host_consumable(jep, global_host_ep, Master_Complex_List, slots) > 0 ) {
+            if (debit_host_consumable(jep, global_host_ep, Master_CEntry_List, slots) > 0 ) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, "global", NULL, global_host_ep );
                lListElem_clear_changed_info(global_host_ep);
             }
 
             hep = host_list_locate(Master_Exechost_List, qep_QU_qhostname);
-            if ( debit_host_consumable(jep, hep, Master_Complex_List, slots) > 0 ) {
+            if ( debit_host_consumable(jep, hep, Master_CEntry_List, slots) > 0 ) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, qep_QU_qhostname, NULL, hep);
                lListElem_clear_changed_info(hep);
             }
 
-            debit_queue_consumable(jep, qep, Master_Complex_List, slots);
+            debit_queue_consumable(jep, qep, Master_CEntry_List, slots);
             /* this info is not spooled */
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
             lListElem_clear_changed_info(qep);
@@ -1090,19 +1090,19 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             /* undebit consumable resources */ 
             host = host_list_locate(Master_Exechost_List, "global");
             if (debit_host_consumable(job, host, 
-                                      Master_Complex_List, -tmp_slot)) {
+                                      Master_CEntry_List, -tmp_slot)) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, "global", NULL, host);
                lListElem_clear_changed_info(host);
             }
             host = host_list_locate(Master_Exechost_List, queue_hostname);
             if (debit_host_consumable(job, host, 
-                                      Master_Complex_List, -tmp_slot)) {
+                                      Master_CEntry_List, -tmp_slot)) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, queue_hostname, NULL, host);
                lListElem_clear_changed_info(host);
             }
-            debit_queue_consumable(job, queue, Master_Complex_List, -tmp_slot);
+            debit_queue_consumable(job, queue, Master_CEntry_List, -tmp_slot);
          }
 
          /* this info is not spooled */
@@ -1179,7 +1179,7 @@ char *rlimit_name
       really used to manage resources of this queue, host or globally */
    if (!found) {
       lListElem *dcep;
-      if ((dcep=complex_list_locate_attr(Master_Complex_List, rlimit_name))
+      if ((dcep=centry_list_locate(Master_CEntry_List, rlimit_name))
                && lGetBool(dcep, CE_consumable))
          if ( lGetSubStr(qep, CE_name, rlimit_name, QU_consumable_config_list) ||
               lGetSubStr(host_list_locate(Master_Exechost_List, lGetHost(qep, QU_qhostname)),

@@ -50,4 +50,12 @@ bool
 ulong_parse_date_time_from_string(u_long32 *this_ulong,
                                   lList **alpp, const char *date_str);
 
+bool
+ulong_parse_centry_type_from_string(u_long32 *this_ulong,
+                                    lList **answer_list, const char *string);
+
+bool
+ulong_parse_centry_relop_from_string(u_long32 *this_ulong,
+                                     lList **answer_list, const char *string);
+
 #endif /* __SGE_ULONG_H */

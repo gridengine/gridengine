@@ -51,7 +51,6 @@ enum {
                               * host only Used to scale host load values.
                               * Contains pairs of load value names and
                               * doubles. spooled */
-   EH_complex_list,          /* user define host complexes CX_Type */
    EH_consumable_config_list,        /* consumable resources of host
                                       * CE_Type */
 
@@ -136,7 +135,6 @@ enum {
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_HOST(EH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_LIST(EH_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(EH_complex_list, CX_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_consumable_config_list, CE_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_usage_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_load_list, HL_Type, CULL_DEFAULT | CULL_SPOOL)
@@ -183,7 +181,6 @@ LISTEND
 NAMEDEF(EHN)
    NAME("EH_name")
    NAME("EH_scaling_list")
-   NAME("EH_complex_list")
    NAME("EH_consumable_config_list")
    NAME("EH_usage_scaling_list")
    NAME("EH_load_list")

@@ -238,9 +238,6 @@ NAMEEND
 *     SGE_LIST(QU_subordinate_list) 
 *        SO_Type - string containing list of subordinate Qs
 *
-*     SGE_LIST(QU_complex_list)     
-*        user defined queue complexes CX_Type
-*
 *     SGE_LIST(QU_consumable_config_list) 
 *        CE_Type - consumable resources of queue
 *
@@ -372,7 +369,6 @@ enum {
    QU_xacl,
    QU_owner_list,
    QU_subordinate_list,
-   QU_complex_list,
    QU_consumable_config_list,
    QU_projects,
    QU_xprojects,
@@ -456,7 +452,6 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_LIST(QU_owner_list, US_Type, CULL_SPOOL | CULL_CONFIGURE)
    SGE_LIST(QU_subordinate_list, SO_Type, CULL_SPOOL | CULL_CONFIGURE)
                                          
-   SGE_LIST(QU_complex_list, CX_Type, CULL_SPOOL | CULL_CONFIGURE)  
    SGE_LIST(QU_consumable_config_list, CE_Type, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_LIST(QU_projects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)       
    SGE_LIST(QU_xprojects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)    
@@ -546,7 +541,6 @@ NAMEDEF(QUN)
    NAME("QU_xacl")
    NAME("QU_owner_list")
    NAME("QU_subordinate_list")
-   NAME("QU_complex_list")
    NAME("QU_consumable_config_list")
    NAME("QU_projects")
    NAME("QU_xprojects")

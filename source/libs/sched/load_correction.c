@@ -41,9 +41,9 @@
 #include "schedd_conf.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
-#include "sge_complex.h"
 #include "sge_queue.h"
 #include "sge_host.h"
+#include "sge_centry.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 
@@ -161,10 +161,9 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
  *  attributes where also load values are available
  *
  */
-int correct_capacities(
-lList *host_list,
-lList *complex_list 
-) {
+int 
+correct_capacities(lList *host_list, lList *centry_list) 
+{
    lListElem *hep, *ep, *cep; 
    lListElem *job_load, *scaling, *total, *inuse_rms;
    u_long32 type, relop;
@@ -180,7 +179,7 @@ lList *complex_list
          const char *attr_name = lGetString(ep, HL_name);
  
          /* seach for appropriate complex attribute */
-         if (!(cep=complex_list_locate_attr(complex_list, attr_name)))
+         if (!(cep=centry_list_locate(centry_list, attr_name)))
             continue;
 
          type = lGetUlong(cep, CE_valtype);

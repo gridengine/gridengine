@@ -1,3 +1,31 @@
+EB-2003-07-09-0: Enhancem.: Made changes with complexes according to CQ spec.
+                            * data structures
+                               - removed CX_Type element
+                               - now it is necessary to provide lists of
+                                 type CE_Type to all functions which
+                                 accepted CX_Type elements previously
+                               - removed "value" column from CE_Type
+                               - removed "complex_list" from queue/host 
+                                 specification
+                            * CE_Type: GDI/Event/Spooling
+                               - all requests address one complex attribute 
+                            * qconf 
+                               - changed various options (Ac, ac, dc,
+                                 scl, Mc, mc, sc)
+                            * qstat 
+                               - changed output of -F parameter
+                               - "---" if there is no load available 
+                            * Changed installation procedure 
+                            * man pages
+                               - changed man pages according to CQ spec
+
+                            Following things still have to me done:
+                            * qmon modification
+                            * testsuite changes
+
+                 Review:    AH
+                 Changed:   all
+
 JG-2003-07-09-2: Bugfix:    failure of master task of a tightly integrated
                             parallel job did not delete the job.
                  Bugtraq:   4885930

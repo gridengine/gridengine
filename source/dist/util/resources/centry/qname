@@ -1,0 +1,11 @@
+# Version: SGEEE pre6.0 (Maintrunk)
+# 
+# DO NOT MODIFY THIS FILE MANUALLY!
+# 
+name        qname
+shortcut    q
+type        STRING
+relop       ==
+requestable YES
+consumable  NO
+default     NONE

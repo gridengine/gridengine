@@ -180,10 +180,10 @@ typedef enum {
    sgeE_CKPT_DEL,                   /* + event delete ckpt */
    sgeE_CKPT_MOD,                   /* + event modify ckpt */
 
-   sgeE_COMPLEX_LIST,               /* + send complex list at registration */
-   sgeE_COMPLEX_ADD,                /* + event add complex */
-   sgeE_COMPLEX_DEL,                /* + event delete complex */
-   sgeE_COMPLEX_MOD,                /* + event modify complex */
+   sgeE_CENTRY_LIST,                /* + send complex list at registration */
+   sgeE_CENTRY_ADD,                 /* + event add complex */
+   sgeE_CENTRY_DEL,                 /* + event delete complex */
+   sgeE_CENTRY_MOD,                 /* + event modify complex */
 
    sgeE_CONFIG_LIST,                /* + send config list at registration */
    sgeE_CONFIG_ADD,                 /* + event add config */
@@ -290,7 +290,7 @@ typedef enum {
   (((x)==sgeE_ADMINHOST_LIST) || \
   ((x)==sgeE_CALENDAR_LIST) || \
   ((x)==sgeE_CKPT_LIST) || \
-  ((x)==sgeE_COMPLEX_LIST) || \
+  ((x)==sgeE_CENTRY_LIST) || \
   ((x)==sgeE_CONFIG_LIST) || \
   ((x)==sgeE_EXECHOST_LIST) || \
   ((x)==sgeE_JOB_LIST) || \

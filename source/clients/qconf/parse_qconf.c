@@ -88,7 +88,6 @@
 #include "sge_io.h"
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
-#include "sge_complex.h"
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_hgroup.h"
@@ -96,6 +95,7 @@
 #include "sge_ckpt.h"
 #include "sge_hgroup_qconf.h"
 #include "sge_cuser_qconf.h"
+#include "sge_centry_qconf.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -109,6 +109,7 @@ static int show_processors(void);
 static int show_eventclients(void);
 
 static void show_gdi_request_answer(lList *alp);
+static void show_gdi_request_answer_list(lList *alp);
 /* ------------------------------------------------------------- */
 static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s);
 static int add_host_of_type(lList *arglp, u_long32 target);
@@ -119,9 +120,6 @@ static lListElem *edit_exechost(lListElem *ep);
 static int edit_usersets(lList *arglp);
 
 /************************************************************************/
-static int add_chg_cmplx(char *cmplx_name, int add, char *fname);
-
-static int print_cmplx(const char *cmplx_name);
 static int print_config(const char *config_name);
 static int delete_config(const char *config_name);
 static int add_modify_config(const char *config_name, const char *filename, u_long32 flags);
@@ -178,19 +176,6 @@ char *argv[]
    spp = argv;
 
    while (*spp) {
-
-/*----------------------------------------------------------------------------*/
-      /* "-ac complex" */
-
-      if (!strcmp("-ac", *spp)) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-
-         spp = sge_parser_get_next(spp);
-         add_chg_cmplx(*spp, 1, NULL);
-         spp++;
-         continue;
-      }
 
 /*----------------------------------------------------------------------------*/
       /* "-acal cal-name" */
@@ -255,19 +240,6 @@ DPRINTF(("ep: %s %s\n",
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
-         spp++;
-         continue;
-      }
-/*----------------------------------------------------------------------------*/
-      /* "-Ac complex file" */
-
-      if (!strcmp("-Ac", *spp)) {
-         /* no adminhost/manager check needed here */
-
-         spp = sge_parser_get_next(spp);
-         cp = *spp;
-         spp = sge_parser_get_next(spp);
-         add_chg_cmplx(cp, 1, *spp);
          spp++;
          continue;
       }
@@ -1206,22 +1178,6 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 /*-----------------------------------------------------------------------------*/
-      /* "-dc complex_list" */
-
-      if (!strcmp("-dc", *spp)) {
-         /* no adminhost/manager check needed here */
-         spp = sge_parser_get_next(spp);
-
-         cp = sge_strtok(*spp, ",");
-         add_chg_cmplx(cp, 2, NULL);
-         while ((cp=sge_strtok(NULL, ","))) {
-            add_chg_cmplx(cp, 2, NULL);
-         }
-
-         spp++;
-         continue;
-      }
-/*-----------------------------------------------------------------------------*/
       /* "-dcal calendar_name" */
 
       if (!strcmp("-dcal", *spp)) {
@@ -1688,24 +1644,16 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-      /* "-mc complex_name" */
+      /* "-mc" */
 
       if (!strcmp("-mc", *spp)) {
+         lList *answer_list = NULL;
+
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
 
-         cp = NULL;
-
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp);
-         }
-         else {
-            if (sge_error_and_exit(MSG_COMPLEX_NEEDACOMPLEXNAME))
-               continue;
-         }
-
-         add_chg_cmplx(*spp, 0, NULL);
-
+         centry_list_modify(&answer_list);
+         show_gdi_request_answer_list(answer_list);
          spp++;
          continue;
       }
@@ -1796,12 +1744,19 @@ DPRINTF(("ep: %s %s\n",
       /* "-Mc complex file" */
 
       if (!strcmp("-Mc", *spp)) {
+         lList *answer_list = NULL;
+         char* file = NULL;
+
          /* no adminhost/manager check needed here */
 
-         spp = sge_parser_get_next(spp);
-         cp = sge_strdup(NULL, *spp);
-         spp = sge_parser_get_next(spp);
-         add_chg_cmplx(cp, 0, *spp);
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            file = *spp;
+         } else {
+            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
+         }
+         centry_list_modify_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
@@ -2924,26 +2879,10 @@ DPRINTF(("ep: %s %s\n",
       /* "-sc complex_name_list" */
 
       if (!strcmp("-sc", *spp)) {
-         spp = sge_parser_get_next(spp);
+         lList *answer_list = NULL;
 
-         /* *spp might look like name1,name2,... */
-
-         cp = sge_strtok(*spp, ",");
-         print_cmplx(cp);
-         while ((cp=sge_strtok(NULL, ","))) {
-            fprintf(stderr, "\n");
-            print_cmplx(cp);
-         }
-
-         spp++;
-         continue;
-      }
-
-/*-----------------------------------------------------------------------------*/
-      /* "-scl" */
-
-      if (!strcmp("-scl", *spp)) {
-         show_object_list(SGE_COMPLEX_LIST, CX_Type, CX_name, "complex"); 
+         centry_list_show(&answer_list);
+         show_gdi_request_answer(answer_list);
          spp++;
          continue;
       }
@@ -3730,6 +3669,20 @@ DPRINTF(("ep: %s %s\n",
       }
 
 
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CENTRY_DEBUG__
+      /* "-sce attribute"  */
+      if (!strcmp("-sce", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         centry_show(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -3767,6 +3720,27 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+#ifdef __SGE_CENTRY_DEBUG__
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-mce centry"  */
+      if (!strcmp("-mce", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         centry_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+#endif
+
          
 /*----------------------------------------------------------------------------*/
 
@@ -3797,6 +3771,23 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CENTRY_DEBUG__
+      /* "-dce attribute "  */
+      if (!strcmp("-dce", *spp)) {
+         lList *answer_list = NULL;
+   
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         centry_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list); 
+         spp++;
+         continue;
+      }
+
+#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -3859,6 +3850,28 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
+
+#ifdef __SGE_CENTRY_DEBUG__
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-ace attribute"  */
+      if (!strcmp("-ace", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         centry_add(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+#endif
+
 /*----------------------------------------------------------------------------*/
 
       /* "-Ahgrp file"  */
@@ -4723,43 +4736,8 @@ static int show_processors()
    return 0;
 }
 
-/***p** src/show_gdi_request_answer() **********************************
-*
-*  NAME
-*     show_gdi_request_answer() -- print answer list to stderr
-*
-*  SYNOPSIS
-*
-*     void show_gdi_request_answer(alp);  
-*
-*  FUNCTION
-*     
-*
-*
-*  INPUTS
-*     lList* alp - pointer to answer list for SGE_USER_MAP_LIST request
-*
-*  RESULT
-*     nothing
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-static void show_gdi_request_answer(
-lList *alp 
-) {
+static void show_gdi_request_answer(lList *alp) 
+{
    lListElem *aep         = NULL;
    DENTER(TOP_LAYER, "show_gdi_request_answer");
    if (alp != NULL) {
@@ -4773,169 +4751,18 @@ lList *alp
    DEXIT;
 }
 
-/***************************************************************************
-  -ac|-Ac|-mc|-Mc|-dc option 
-  May be its cleaner to split the options in several routines. 
- ***************************************************************************/
-static int add_chg_cmplx(
-char *cmplx_name,
-int add,                        /* == 0 modify ==1 add ==2 delete */
-char *fname                     /* != NULL if we read the complex from file */
-) {
-   char *tmpname = NULL; 
-   const char *cp = NULL;
-   stringT str;
-   lCondition *where;
-   lEnumeration *what;
-   lList *alp = NULL, *lp = NULL;
-   lListElem *ep;
-   int status, op;
-   lList *answer = NULL;
-
-   DENTER(TOP_LAYER, "add_chg_cmplx");
-
-   /* test cmplx_name */
-   if (sge_is_valid_filename2(cmplx_name)) {
-      fprintf(stderr, MSG_QCONF_XISNOVALIDCOMPLEXNAME_S, cmplx_name);
-      DEXIT;
-      return -1;
-   }
-
-   /* look whether this complex already exist */
-   where = lWhere("%T(%I==%s)", CX_Type, CX_name, cmplx_name);
-   if (!where)
-      fprintf(stderr, MSG_ANSWER_MALFORMEDREQUEST);
-
-   if (add)  /* add/delete only need complex names */
-      what = lWhat("%T(%I)", CX_Type, CX_name);
-   else
-      what = lWhat("%T(ALL)", CX_Type);
-
-   if (!what)
-      fprintf(stderr, MSG_ANSWER_MALFORMEDREQUEST);
-
-
-   alp = sge_gdi(SGE_COMPLEX_LIST, SGE_GDI_GET, &lp, where, what);
-
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
-
-   ep = lFirst(alp);
-   answer_exit_if_not_recoverable(ep);
-   if (answer_get_status(ep) != STATUS_OK) {
-      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-   }
-   else {
-      if (add==1) {  /* add */
-         if (lp) {
-            fprintf(stderr, MSG_ANSWER_COMPLEXXALREADYEXISTS_S, cmplx_name);
-            return -1;
-         }
-      }
-      else {
-         if (!lp) {  /* modify / delete */
-            fprintf(stderr, MSG_ANSWER_COMPLEXXDOESNOTEXIST_S, cmplx_name);
-            return -1;
-         } 
+static void show_gdi_request_answer_list(lList *alp) 
+{
+   lListElem *aep         = NULL;
+   DENTER(TOP_LAYER, "show_gdi_request_answer");
+   if (alp != NULL) {
+    
+      for_each(aep,alp) {
+         answer_exit_if_not_recoverable(aep);
+         fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
    }
-   if (!add)                    /* store complex which we want to modify */
-      ep = lCopyElem(lFirst(lp));
-   lFreeList(alp);
-   lFreeList(lp);
-
-   if (add != 2) {      /* delete needs no editing */
-      if (!fname) {     /* in case of -Ac|-Mc we have already a file */
-         /* make a temporary file for editing */
-         if (!(tmpname = sge_tmpnam(str))) {
-            if (sge_error_and_exit(MSG_FILE_CANTCREATETEMPFILE))
-               return -1;
-         }
-         close(creat(tmpname, 0755));
-      }
-      if (add) {                /* if we modify an element we have it already */
-         /* Write an empty complex table */
-         ep = lCreateElem(CX_Type);
-         lSetString(ep, CX_name, cmplx_name);
-      }
-
-      if (!fname)
-         write_cmplx(0, tmpname, lGetList(ep, CX_entries), NULL, NULL);
-
-      lFreeElem(ep);
-
-      if (fname)
-         tmpname = fname;
-      else {
-         status = sge_edit(tmpname);
-         if (status < 0) {
-            DTRACE;
-            unlink(tmpname);
-            if (sge_error_and_exit(MSG_PARSE_EDITFAILED))
-               return -1;
-         }
-         DTRACE;
-
-         if (status > 0) {
-            unlink(tmpname);
-            if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED))
-               return -1;
-         }
-      }
-
-      if (!(ep = read_cmplx(tmpname, cmplx_name, &answer))) {
-         answer = lFreeList(answer);
-         if (!fname)
-            unlink(tmpname); 
-         DEXIT;
-         return -1;
-      }
-      if (!fname) 
-         unlink(tmpname);
-   }
-
-   lp = lCreateList("complex to modify, add or delete", CX_Type);
-   if (add == 2) /* delete */
-      lAddElemStr( &lp, CX_name, cmplx_name, CX_Type);
-   else
-      lAppendElem(lp, ep); 
-
-
-   if (add==0)
-      op = SGE_GDI_MOD;
-   else if (add==1)
-      op = SGE_GDI_ADD;
-   else
-      op = SGE_GDI_DEL;
-
-   alp = sge_gdi(SGE_COMPLEX_LIST, op, &lp, NULL, NULL);
-
-   /* report results */
-   ep = lFirst(alp);
-   answer_exit_if_not_recoverable(ep);
-   if (answer_get_status(ep) == STATUS_OK) {
-
-      switch (add) {
-         case 0:
-            cp = MSG_MULTIPLY_MODIFIEDIN;
-            break;
-         case 1:
-            cp = MSG_MULTIPLY_ADDEDTO;
-            break;
-         case 2:
-            cp = MSG_MULTIPLY_DELETEDFROM;
-      }
-         
-      fprintf(stderr, MSG_ANSWER_XYCOMPLEXLIST_SS, cmplx_name, cp);
-   }
-   else
-      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-   
-   lFreeList(lp);
-   lFreeList(alp);
-
    DEXIT;
-   return 0;
 }
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
@@ -5076,49 +4903,6 @@ lList *arglp
 
    DEXIT;
    return 0;
-}
-
-/***************************************************************************
-  -sc option 
- ***************************************************************************/
-static int print_cmplx(
-const char *cmplx_name 
-) {
-   lCondition *where;
-   lEnumeration *what;
-   lList *alp = NULL, *lp = NULL;
-   lListElem *ep;
-   int fail=0;
-
-   DENTER(TOP_LAYER, "print_cmplx");
-
-   /* get complex */
-   where = lWhere("%T(%I==%s)", CX_Type, CX_name, cmplx_name);
-   what = lWhat("%T(ALL)", CX_Type);
-   alp = sge_gdi(SGE_COMPLEX_LIST, SGE_GDI_GET, &lp, where, what);
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
-
-   ep = lFirst(alp);
-   answer_exit_if_not_recoverable(ep);
-   if (answer_get_status(ep) != STATUS_OK) {
-      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-      fail = 1;
-   }
-   else {
-      if (!(ep = lFirst(lp))) {
-         fprintf(stderr, MSG_COMPLEX_COMPLEXXNOTDEFINED_S , cmplx_name);
-         DEXIT;
-         return 1;
-      }
-      write_cmplx(0, NULL, lGetList(ep, CX_entries), stdout, NULL);
-   }
-
-   lFreeList(alp);
-   lFreeList(lp);
-
-   DEXIT;
-   return fail;
 }
 
 /***************************************************************************

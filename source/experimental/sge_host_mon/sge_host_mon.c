@@ -73,7 +73,7 @@ typedef struct {
 } format_t;
 
 static int
-setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
+setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
 {
    lList *alp;
    lListElem *aep;
@@ -117,11 +117,11 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeList(alp);
 
    /*
-    * get complex list
+    * get centry list
     */
 
-   what = lWhat("%T(ALL)", CX_Type);
-   alp=sge_gdi(SGE_COMPLEX_LIST, SGE_GDI_GET, complex, NULL, what);
+   what = lWhat("%T(ALL)", CE_Type);
+   alp=sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET, centry, NULL, what);
    lFreeWhat(what);
 
    aep = lFirst(alp);
@@ -590,7 +590,7 @@ lListElem *hep, *running_job_elem, *rjq;
 
 */
 
-int calculate_host_pcts(lList *hosts, lList *complex)
+int calculate_host_pcts(lList *hosts, lList *centry)
 {
    double total_resource_capability_factor=0, total_sge_load=0;
    lListElem *hep;
@@ -878,7 +878,7 @@ void host_usage(void)
 
 int main(int argc, char **argv)
 {
-   lList *jobs, *hosts, *config, *complex;
+   lList *jobs, *hosts, *config, *centry;
    int interval=15;
    int err=0;
    int count=-1;
@@ -994,7 +994,7 @@ int main(int argc, char **argv)
 
    while(count == -1 || count-- > 0) {
 
-      setup_lists(&jobs, &hosts, &config, &complex);
+      setup_lists(&jobs, &hosts, &config, &centry);
 
 
 /* Calculate usage and usage percentages on a host basis for cpu, mem,  and io.  Calculate host tickets and ticket percentages on a host basis.  Also calculate EH_num_running_jobs. */
@@ -1008,19 +1008,19 @@ int main(int argc, char **argv)
 #endif
 /* Calculate EH_sge_load_pct and EH_resource_capability_factor_pct on a host basis.  */ 
 #ifdef notdef
-      calculate_host_pcts(hosts, complex);
+      calculate_host_pcts(hosts, centry);
 #endif
 
    switch (scheddconf.queue_sort_method) {
    case QSM_SEQNUM:
-      sort_host_list(hosts, complex);
+      sort_host_list(hosts, centry);
       break;
    case QSM_LOAD:
-      sort_host_list(hosts, complex);
+      sort_host_list(hosts, centry);
       break;
    case QSM_SHARE:
-      sort_host_list(hosts, complex);
-      sort_host_list_by_share_load(hosts, complex);
+      sort_host_list(hosts, centry);
+      sort_host_list_by_share_load(hosts, centry);
       break;
 }
 #ifdef notdef 

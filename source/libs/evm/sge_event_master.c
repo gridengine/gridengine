@@ -57,12 +57,12 @@
 #include "sge_host.h"
 #include "sge_hostname.h"
 #include "sge_userset.h"
-#include "sge_complex.h"
 #include "sge_manop.h"
 #include "sge_calendar.h"
 #include "sge_sharetree.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
+#include "sge_centry.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -385,7 +385,7 @@ total_update(lListElem *event_client)
    sge_total_update_event(event_client, sgeE_ADMINHOST_LIST);
    sge_total_update_event(event_client, sgeE_CALENDAR_LIST);
    sge_total_update_event(event_client, sgeE_CKPT_LIST);
-   sge_total_update_event(event_client, sgeE_COMPLEX_LIST);
+   sge_total_update_event(event_client, sgeE_CENTRY_LIST);
    sge_total_update_event(event_client, sgeE_CONFIG_LIST);
    sge_total_update_event(event_client, sgeE_EXECHOST_LIST);
    sge_total_update_event(event_client, sgeE_JOB_LIST);
@@ -666,7 +666,7 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       check_send_new_subscribed_list(old_subscription, subscription, 
                                      event_client, sgeE_CKPT_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
-                                     event_client, sgeE_COMPLEX_LIST);
+                                     event_client, sgeE_CENTRY_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
                                      event_client, sgeE_CONFIG_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
@@ -1311,24 +1311,6 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       break;
 
    /* -------------------- */
-   case sgeE_COMPLEX_DEL:
-      deleteObjectByName(SGE_COMPLEX_LIST, 
-                         lFirst(list) ? lGetString(lFirst(list),CX_name) : 
-                                        strkey);
-      break;
-  case sgeE_COMPLEX_ADD:
-      /* done by handle generic gdi object */
-      break;
-   case sgeE_COMPLEX_MOD:
-      if (lFirst(list))
-         complex_changed(lFirst(list));
-      else 
-         DPRINTF(("first element is NULL"));
-      break;
-   case sgeE_COMPLEX_LIST:
-      break;
-
-   /* -------------------- */
    case sgeE_EXECHOST_DEL:
       deleteObjectByName(SGE_EXECHOST_LIST, 
                          lFirst(list) ? lGetHost(lFirst(list),EH_name) : 
@@ -1651,8 +1633,8 @@ sge_total_update_event(lListElem *event_client, ev_event type)
          case sgeE_CKPT_LIST:
             lp = Master_Ckpt_List;
             break;
-         case sgeE_COMPLEX_LIST:
-            lp = Master_Complex_List;
+         case sgeE_CENTRY_LIST:
+            lp = Master_CEntry_List;
             break;
          case sgeE_CONFIG_LIST:
             lp = Master_Config_List;

@@ -45,6 +45,8 @@
 #include "parse.h"
 #include "sge_attr.h"
 #include "sge_object.h"
+#include "sge_ulong.h"
+#include "sge_complexL.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -288,7 +290,7 @@ _Insight_set_option("suppress", "PARM_NULL");
    int pos;
    int dataType;
 
-   DENTER(CULL_LAYER, "set_conf_string");
+   DENTER(TOP_LAYER, "set_conf_string");
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
       DEXIT;
@@ -370,6 +372,126 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
 }
 
+bool set_conf_centry_type(
+lList **alpp,
+lList **clpp,
+int fields[],
+const char *key,
+lListElem *ep,
+int name_nm 
+) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   const char *str;
+   u_long32 type;
+
+   DENTER(CULL_LAYER, "set_conf_centry_type");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   if (!ulong_parse_centry_type_from_string(&type, alpp, str)) {
+      DEXIT;
+      return false;
+   } else {
+      lSetUlong(ep, name_nm, type);
+   }
+
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
+
+bool set_conf_centry_relop(
+lList **alpp,
+lList **clpp,
+int fields[],
+const char *key,
+lListElem *ep,
+int name_nm 
+) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   const char *str;
+   u_long32 type;
+
+   DENTER(CULL_LAYER, "set_conf_centry_relop");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   if (!ulong_parse_centry_relop_from_string(&type, alpp, str)) {
+      DEXIT;
+      return false;
+   } else {
+      lSetUlong(ep, name_nm, type);
+   }
+
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
+
+bool set_conf_centry_requestable(
+lList **alpp,
+lList **clpp,
+int fields[],
+const char *key,
+lListElem *ep,
+int name_nm 
+) {
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   const char *str;
+   u_long32 flag;
+
+   DENTER(CULL_LAYER, "set_conf_centry_relop");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   if (!strcasecmp(str, "y") || !strcasecmp(str, "yes")) {
+      flag = REQU_YES;
+   } else if (!strcasecmp(str, "n") || !strcasecmp(str, "no")) {
+      flag = REQU_NO;
+   } else if (!strcasecmp(str, "f") || !strcasecmp(str, "forced")) {
+      flag = REQU_FORCED;
+   } else {
+      answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_INVALID_CENTRY_REQUESTABLE_S, str);
+      DEXIT;
+      return false;
+   }
+   lSetUlong(ep, name_nm, flag);
+
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
 
 /****
  **** set_conf_ulong

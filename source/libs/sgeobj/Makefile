@@ -50,6 +50,7 @@ SGEOBJLIB_SRC = \
          sge_attr.c \
          sge_calendar.c \
          sge_complex.c \
+         sge_centry.c \
          sge_conf.c \
          sge_ckpt.c \
          sge_cstring.c \
@@ -144,6 +145,9 @@ sge_calendar.o: $(SGEOBJLIB_DIR)/sge_calendar.c
 
 sge_complex.o: $(SGEOBJLIB_DIR)/sge_complex.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_complex.c
+
+sge_centry.o: $(SGEOBJLIB_DIR)/sge_centry.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_centry.c
 
 sge_conf.o: $(SGEOBJLIB_DIR)/sge_conf.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_conf.c

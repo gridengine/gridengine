@@ -37,7 +37,7 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_answer.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 #include "sge_feature.h"
 #include "sge_usage.h"
 
@@ -58,7 +58,7 @@ lList *Master_Sched_Config_List = NULL;
 
 bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                        lList **answer_list,
-                                       lList *cmplx_list)
+                                       lList *centry_list)
 {
    const char *load_formula = NULL;
    bool ret = true;
@@ -96,7 +96,7 @@ bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
 
          next_attr = sge_strtok(NULL, delimitor);
 
-         cmplx_attr = complex_list_locate_attr(cmplx_list, attr);
+         cmplx_attr = centry_list_locate(centry_list, attr);
          if (cmplx_attr != NULL) {
             int type = lGetUlong(cmplx_attr, CE_valtype);
 
@@ -116,43 +116,6 @@ bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
    }
    DEXIT;
    return ret;
-}
-
-/***************************************************************
- Find an attribute in a complex list. 
- Iterate over all Complexes and look into their attribute lists.
- ***************************************************************/
-lListElem *find_attribute_in_complex_list(const char *attrname,
-                                          const lListElem *cmplxl)
-{
-   const lListElem *attr;
-   const char *str;
-   int pos_CE_name, pos_CE_shortcut;
-
-   DENTER(CULL_LAYER, "find_attribute_in_complex_list");
-
-   if (!attrname || !cmplxl) {
-      DEXIT;
-      return NULL;
-   }
-
-   pos_CE_name      = lGetPosViaElem(cmplxl, CE_name);
-   pos_CE_shortcut  = lGetPosViaElem(cmplxl, CE_shortcut);
-
-   for (attr=cmplxl; attr; attr = lNext(attr)) {
-      /* attrname may be the name or a shortcut */
-      if ((str = lGetPosString(attr, pos_CE_name)) && !strcmp(attrname, str)) {
-         DEXIT;
-         return (lListElem *)attr;
-      }
-      if ((str = lGetPosString(attr, pos_CE_shortcut)) && !strcmp(attrname, str)) {
-         DEXIT;
-         return (lListElem *)attr;
-      }
-   }
-
-   DEXIT;
-   return NULL;
 }
 
 /******************************************************/
@@ -217,4 +180,24 @@ lListElem *schedd_conf_create_default()
    DEXIT;
    return ep;
 }
+
+bool
+sconf_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "sconf_is_centry_referenced");
+   if (this_elem != NULL) {
+      const char *name = lGetString(centry, CE_name);
+      lList *centry_list = lGetList(this_elem, SC_job_load_adjustments);
+      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
+
+      if (centry_ref != NULL) {
+         ret = true;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
 

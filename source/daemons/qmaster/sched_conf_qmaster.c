@@ -43,7 +43,7 @@
 #include "sge_log.h"
 #include "setup_path.h"
 #include "sge_answer.h"
-#include "sge_complex.h"
+#include "sge_centry.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -77,7 +77,7 @@ char *rhost
    }
 
    /* just check and log */
-   if (sc_set(alpp, NULL, confp, &si, Master_Complex_List)) {
+   if (sc_set(alpp, NULL, confp, &si, Master_CEntry_List)) {
       /* alpp gets filled by sc_set() */
       ERROR((SGE_EVENT, lGetString(lLast(*alpp), AN_text))); 
       DEXIT;

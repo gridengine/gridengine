@@ -1,3 +1,9 @@
+SG-2004-05-26-1: Bugfix:    The scheduler did sometimes dispatch more jobs 
+                            into a queue, than that queue had resources left.
+                            This only happend in advanced reservation mode.
+                 Review:    AH, DT
+                 Changed:   sge_schedd
+
 MD-2004-05-26-2: Bugfix:    -csp option does not recognize secure binaries
                  Review:    AS
                  Changed:   inst_sge

@@ -113,7 +113,8 @@
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
-#define DEFAULT_DURATION                    "0:10:"
+#define DEFAULT_DURATION                    "0:10:00" /* the default_duration and default_duration_I have to be */
+#define DEFAULT_DURATION_I                  600       /* in sync. On is the strin version of the other (based on seconds)*/
 
 
 /* 
@@ -147,7 +148,7 @@ typedef struct {
 typedef struct{
    bool empty;          /* marks this structure as empty or set */
    
-   int algorithm;       /* SGE settings */
+   int algorithm;       /* pos settings */
    int schedule_interval;
    int maxujobs;
    int queue_sort_method;
@@ -159,7 +160,7 @@ typedef struct{
    int flush_finish_sec;
    int params;
    
-   int reprioritize_interval;  /* SGEEE settings */
+   int reprioritize_interval;  
    int halftime;
    int usage_weight_list;
    int compensation_factor;
@@ -179,10 +180,6 @@ typedef struct{
    int halflife_decay_list; 
    int policy_hierarchy;
 
-   int c_is_schedd_job_info;       /* cached configuration */
-   lList *c_schedd_job_info_range;
-   lList *c_halflife_decay_list;   
-   lList *c_params;
    int weight_ticket;
    int weight_waiting_time;
    int weight_deadline;
@@ -191,7 +188,20 @@ typedef struct{
    int weight_priority;
    int default_duration;
 
+   int c_is_schedd_job_info;       /* cached configuration */
+   lList *c_schedd_job_info_range;
+   lList *c_halflife_decay_list;   
+   lList *c_params;
+   u_long32 c_default_duration;
+
    bool new_config;     /* identifies an update in the configuration */
+
+   int s_max_resources;            /* additional scheduler states, independed of the user */
+   bool s_global_load_correction;  /* scheduler configuration */
+   bool s_host_order_changed;
+   u_long32 s_now_time;
+   int s_last_dispatch_type;
+   
 }config_pos_type;
 
 static bool schedd_profiling = false;
@@ -215,9 +225,11 @@ static int policy_hierarchy_verify_value(const char* value);
 static config_pos_type pos = {true, 
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       -1, -1, -1, -1, -1, -1, -1, -1,
-                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
-                       -1, -1, -1, -1, -1, -1, false};
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, 
+                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, MAX_ULONG32, 
+                       false,
+                       QS_STATE_FULL, 0, true, 0, 0};
 
 /*
  * a list of all valid "params" parameters
@@ -244,15 +256,6 @@ int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 int usage_fields[] = { UA_name, UA_value, 0 };
 const char *delis[] = {"=", ",", ""};
 
-static int max_resources = QS_STATE_FULL;
-static bool global_load_correction = 0;
-static bool host_order_changed = true;
-static u_long32 default_duration = MAX_ULONG32;
-static u_long32 now_time;
-static bool host_order_changed;
-static int last_dispatch_type;
-
-
 /****** sge_schedd_conf/clear_pos() ********************************************
 *  NAME
 *     clear_pos() -- resets the position information 
@@ -266,8 +269,10 @@ static int last_dispatch_type;
 *******************************************************************************/
 static void sconf_clear_pos(void){
 
+/* set config empty */
          pos.empty = true;
 
+/* reset positions */
          pos.algorithm = -1; 
          pos.schedule_interval = -1; 
          pos.maxujobs =  -1;
@@ -298,6 +303,15 @@ static void sconf_clear_pos(void){
          pos.halflife_decay_list = -1; 
          pos.policy_hierarchy = -1;
 
+         pos.weight_ticket = -1;
+         pos.weight_waiting_time = -1;
+         pos.weight_deadline = -1;
+         pos.weight_urgency = -1;
+         pos.max_reservation = -1;
+         pos.weight_priority = -1;
+         pos.default_duration = -1;
+
+/* reseting cached values */
          pos.c_is_schedd_job_info = SCHEDD_JOB_INFO_UNDEF;
          if (pos.c_schedd_job_info_range)
             pos.c_schedd_job_info_range = lFreeList(pos.c_schedd_job_info_range);
@@ -307,14 +321,9 @@ static void sconf_clear_pos(void){
 
          if (pos.c_params)
             pos.c_params = lFreeList(pos.c_params);
+         
+         pos.c_default_duration = DEFAULT_DURATION_I;
 
-         pos.weight_ticket = -1;
-         pos.weight_waiting_time = -1;
-         pos.weight_deadline = -1;
-         pos.weight_urgency = -1;
-         pos.max_reservation = -1;
-         pos.weight_priority = -1;
-         pos.default_duration = -1;
 }
 
 static bool sconf_calc_pos(void){
@@ -327,7 +336,7 @@ static bool sconf_calc_pos(void){
 
       if (config) {
          pos.empty = false;
-/* SGE */         
+
          ret &= (pos.algorithm = lGetPosViaElem(config, SC_algorithm )) != -1; 
          ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval)) != -1; 
          ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs)) != -1;
@@ -341,7 +350,6 @@ static bool sconf_calc_pos(void){
          ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec)) != -1;
          ret &= (pos.params = lGetPosViaElem(config, SC_params)) != -1;
 
-/* SGEEE */
          ret &= (pos.reprioritize_interval = lGetPosViaElem(config, SC_reprioritize_interval)) != -1;
          ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime)) != -1;
          ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list)) != -1;
@@ -2285,10 +2293,12 @@ bool sconf_validate_config_(lList **answer_list){
       u_long32 max_reservation = sconf_get_max_reservations();
 
       if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
-         if (!s)
+         if (!s) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", "not defined"));   
-         else
+         }   
+         else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", tmp_error));    
+         }   
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          ret =  false;
       } else {
@@ -2297,6 +2307,9 @@ bool sconf_validate_config_(lList **answer_list){
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RR_REQUIRES_DEFAULT_DURATION));    
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
             ret = false; 
+         }
+         else {
+            pos.c_default_duration = uval;
          }
       }
    }
@@ -2695,57 +2708,53 @@ static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, co
 */
 void sconf_set_qs_state(qs_state_t qs_state) 
 {
-   max_resources = qs_state;
+   pos.s_max_resources = qs_state;
 }
 qs_state_t sconf_get_qs_state(void) 
 {
-   return max_resources;
+   return pos.s_max_resources;
 }
 void sconf_set_global_load_correction(bool flag) 
 {
-   global_load_correction = flag;
+   pos.s_global_load_correction = flag;
 }
 bool sconf_get_global_load_correction(void) 
 {
-   return global_load_correction;
+   return pos.s_global_load_correction;
 }
 
-void sconf_set_default_duration(u_long32 duration) 
-{
-   default_duration = duration;
-}
 u_long32 sconf_get_default_duration(void) 
 {
-   return default_duration;
+   return pos.c_default_duration;
 }
 
 void sconf_set_now(u_long32 now)
 {
-   now_time = now;
+   pos.s_now_time = now;
 }
 
 u_long32 sconf_get_now(void)
 {
-   return now_time;
+   return pos.s_now_time;
 }
 
 bool sconf_get_host_order_changed(void)
 {
-   return host_order_changed;
+   return pos.s_host_order_changed;
 }
 
 void sconf_set_host_order_changed(bool changed)
 {
-   host_order_changed = changed;
+   pos.s_host_order_changed = changed;
 }
 
 int sconf_get_last_dispatch_type(void)
 {
-   return last_dispatch_type;
+   return pos.s_last_dispatch_type;
 }
 void sconf_set_last_dispatch_type(int last)
 {
-   last_dispatch_type = last;
+   pos.s_last_dispatch_type = last;
 }
 
 /****** sge_resource_utilization/serf_control() ********************************

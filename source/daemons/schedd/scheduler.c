@@ -447,22 +447,13 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    sconf_set_now(sge_get_gmt());
 
    if (max_reserve != 0) {
-      char tmp_error[1024];
-      u_long32 default_duration;
       /*----------------------------------------------------------------------
        * ENSURE RUNNING JOBS ARE REFLECTED IN PER RESOURCE SCHEDULE
        *---------------------------------------------------------------------*/
-      const char *s = sconf_get_default_duration_str();
-      if (!parse_ulong_val(NULL, &default_duration, TYPE_TIM, s, tmp_error, sizeof(tmp_error))) {
-         ERROR((SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "default_duration", tmp_error));
-         default_duration = 10*60; /* may never happen - must be prevented by qmaster */
-      }
-      sconf_set_default_duration(default_duration);
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
                               *(splitted_job_lists[SPLIT_SUSPENDED]),
                               lists->pe_list, lists->host_list, lists->queue_list, 
                               lists->centry_list);
-      utilization_print_all(lists->pe_list, lists->host_list, lists->queue_list); 
    }
 
    /*---------------------------------------------------------------------
@@ -1167,8 +1158,7 @@ lList **load_list
 *  FUNCTION
 *     The minimum of the time values the user specified with -l h_rt=<time> 
 *     and -l s_rt=<time> is returned in 'duration'. If neither of these 
-*     time values were specified no 'duration' is retured and result is 
-*     'false' otherwise 'true'.
+*     time values were specified the default duration is used.
 *
 *  INPUTS
 *     u_long32 *duration   - Returns duration on success
@@ -1265,7 +1255,7 @@ static int add_job_list_to_schedule(const lList *job_list, bool suspended,
             in the resource schedules. Note duration enforcement is domain of 
             sge_execd and default_duration is not enforced at all anyways.
             All we can do here is hope the job will be finished in the next interval. */
-         if (a.start + a.duration < now) {
+         if (a.start + a.duration <= now) {
             a.duration = (now - a.start) + interval;
          }
 
@@ -1333,7 +1323,11 @@ static void prepare_resource_schedules(const lList *running_jobs, const lList *s
    add_job_list_to_schedule(suspended_jobs, true, 
          pe_list, host_list, queue_list, centry_list);
 
-   utilization_print_all(pe_list, host_list, queue_list);
+   /* just for information purposes... */
+
+#ifdef DEBUG
+   utilization_print_all(pe_list, host_list, queue_list); 
+#endif   
 
    DEXIT;
    return;

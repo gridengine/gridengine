@@ -183,7 +183,6 @@ qs_state_t sconf_get_qs_state(void);
 void sconf_set_global_load_correction(bool flag);
 bool sconf_get_global_load_correction(void);
 
-void     sconf_set_default_duration(u_long32 duration);
 u_long32 sconf_get_default_duration(void);
 const char *sconf_get_default_duration_str(void);
 

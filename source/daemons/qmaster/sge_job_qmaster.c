@@ -744,6 +744,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
 /*    job_log(lGetUlong(jep, JB_job_number), 0, MSG_LOG_NEWJOB); */
    reporting_create_new_job_record(NULL, jep);
+   reporting_create_job_log(NULL, lGetUlong(jep, JB_submission_time), 
+                            JL_PENDING, ruser, rhost, NULL, 
+                            jep, NULL, NULL, MSG_LOG_NEWJOB);
    DEXIT;
    return STATUS_OK;
 }

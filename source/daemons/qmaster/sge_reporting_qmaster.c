@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 
 /* rmon */
 #include "sgermon.h"
@@ -46,6 +47,10 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_time.h"
+
+/* lck */
+#include "sge_lock.h"
+#include "sge_mtutil.h"
 
 /* daemons/common */
 #include "category.h"
@@ -65,9 +70,6 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 
-/* lck */
-#include "sge_lock.h"
-
 /* sched */
 #include "sge_sharetree_printing.h"
 
@@ -82,11 +84,21 @@
    parsing routines. */
 static const char REPORTING_DELIMITER = ':';
 
-/* global dstring for accounting data */
-static dstring accounting_data = DSTRING_INIT;
+typedef enum {
+   ACCOUNTING_BUFFER = 0,
+   REPORTING_BUFFER
+} rep_buf;
 
-/* global dstring for reporting data */
-static dstring reporting_data = DSTRING_INIT;
+typedef struct {
+   dstring buffer;
+   pthread_mutex_t mtx;
+   const char *mtx_name;
+} rep_buf_t;
+
+static rep_buf_t reporting_buffer[2] = {
+   { DSTRING_INIT, PTHREAD_MUTEX_INITIALIZER, "mtx_accounting" },
+   { DSTRING_INIT, PTHREAD_MUTEX_INITIALIZER, "mtx_reporting" }
+};
 
 static bool 
 reporting_flush_accounting(lList **answer_list);
@@ -95,8 +107,8 @@ static bool
 reporting_flush_reporting(lList **answer_list);
 
 static bool 
-reporting_flush_report_file(lList **answer_list, dstring *contents, 
-                      const char *filename, sge_locktype_t lock);
+reporting_flush_report_file(lList **answer_list,
+                            const char *filename, rep_buf_t *buf);
 
 static bool 
 reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush);
@@ -219,6 +231,7 @@ reporting_shutdown(lList **answer_list)
    bool ret = true;
    lList* alp = NULL;
    u_long32 dummy = 0;
+   rep_buf_t *buf;
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
@@ -227,14 +240,16 @@ reporting_shutdown(lList **answer_list)
       answer_list_output(&alp);
    }
 
+   buf = &reporting_buffer[ACCOUNTING_BUFFER];
    /* free memory of buffers */
-   SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
-   sge_dstring_free(&accounting_data);
-   SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   sge_dstring_free(&(buf->buffer));
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
-   SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-   sge_dstring_free(&reporting_data);
-   SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   buf = &reporting_buffer[REPORTING_BUFFER];
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   sge_dstring_free(&(buf->buffer));
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    
    DEXIT;
    return ret;
@@ -332,9 +347,11 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
+      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
                           submission_time, REPORTING_DELIMITER,
                           job_number, REPORTING_DELIMITER,
+                          0, REPORTING_DELIMITER,
+                          "none", REPORTING_DELIMITER,
                           job_name, REPORTING_DELIMITER,
                           owner, REPORTING_DELIMITER,
                           group, REPORTING_DELIMITER,
@@ -372,7 +389,7 @@ reporting_create_job_log(lList **answer_list,
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_id = 0, ja_task_id = 0;
-      const char *pe_task_id = "";
+      const char *pe_task_id = "none";
       u_long32 state_time = 0, jstate;
       const char *event;
       char state[20];
@@ -481,9 +498,10 @@ reporting_create_acct_record(lList **answer_list,
          ret = false;
       } else {
          /* write accounting file */
-         SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
-         sge_dstring_append(&accounting_data, job_string);
-         SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
+         rep_buf_t *buf = &reporting_buffer[ACCOUNTING_BUFFER];
+         sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+         sge_dstring_append(&(buf->buffer), job_string);
+         sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
       }
    }
 
@@ -710,6 +728,7 @@ reporting_create_sharelog_record(lList **answer_list)
    if (do_reporting && sharelog_time > 0) {
       /* only create sharelog entries if we have a sharetree */
       if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
+         rep_buf_t *buf;
          dstring prefix_dstring = DSTRING_INIT;
          dstring data_dstring   = DSTRING_INIT;
          format_t format;
@@ -749,10 +768,11 @@ reporting_create_sharelog_record(lList **answer_list)
          SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
 
          /* write data to reporting buffer */
-         SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-         sge_dstring_append(&reporting_data,
+         buf = &reporting_buffer[REPORTING_BUFFER];
+         sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+         sge_dstring_append(&(buf->buffer),
                             sge_dstring_get_string(&data_dstring));
-         SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+         sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
          /* cleanup */
          sge_dstring_free(&prefix_dstring);
@@ -812,18 +832,19 @@ reporting_create_record(lList **answer_list,
                         const char *data)
 {
    bool ret = true;
+   rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
 
    DENTER(TOP_LAYER, "reporting_create_record");
 
-   SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-   sge_dstring_sprintf_append(&reporting_data, U32CFormat"%c%s%c%s",
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   sge_dstring_sprintf_append(&(buf->buffer), U32CFormat"%c%s%c%s",
                               sge_get_gmt(),
                               REPORTING_DELIMITER,
                               type,
                               REPORTING_DELIMITER,
                               data,
                               REPORTING_DELIMITER);
-   SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
    DEXIT;
    return ret;
@@ -841,9 +862,8 @@ reporting_flush_accounting(lList **answer_list)
    DENTER(TOP_LAYER, "sge_flush_accounting");
 
    /* write accounting data */
-   ret = reporting_flush_report_file(answer_list, &accounting_data, 
-                               path_state_get_acct_file(),
-                               LOCK_MASTER_ACCOUNTING_BUFFER);
+   ret = reporting_flush_report_file(answer_list, path_state_get_acct_file(),
+                                     &reporting_buffer[ACCOUNTING_BUFFER]);
    DEXIT;
    return ret;
 }
@@ -860,9 +880,9 @@ reporting_flush_reporting(lList **answer_list)
    DENTER(TOP_LAYER, "sge_flush_reporting");
 
    /* write reporting data */
-   ret = reporting_flush_report_file(answer_list, &reporting_data, 
+   ret = reporting_flush_report_file(answer_list,
                                      path_state_get_reporting_file(),
-                                     LOCK_MASTER_REPORTING_BUFFER);
+                                     &reporting_buffer[REPORTING_BUFFER]);
    DEXIT;
    return ret;
 }
@@ -872,8 +892,9 @@ reporting_flush_reporting(lList **answer_list)
 *     MT-NOTE: reporting_flush_report_file() is MT-safe
 */
 static bool 
-reporting_flush_report_file(lList **answer_list, dstring *contents, 
-                      const char *filename, sge_locktype_t lock)
+reporting_flush_report_file(lList **answer_list,
+                      const char *filename, 
+                      rep_buf_t *buf)
 {
    bool ret = true;
    
@@ -881,7 +902,7 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
 
    DENTER(TOP_LAYER, "reporting_flush_report_file");
 
-   size = sge_dstring_strlen(contents);
+   size = sge_dstring_strlen(&(buf->buffer));
 
    /* do we have anything to write? */ 
    if (size > 0) {
@@ -898,7 +919,7 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
          write_comment = true;
       }     
 
-      SGE_LOCK(lock, LOCK_WRITE);
+      sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
       /* open file for append */
       fp = fopen(filename, "a");
@@ -947,7 +968,7 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
 
       /* write data */
       if (ret) {
-         if (fwrite(sge_dstring_get_string(contents), size, 1, fp) != 1) {
+         if (fwrite(sge_dstring_get_string(&(buf->buffer)), size, 1, fp) != 1) {
             if (answer_list == NULL) {
                ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, 
                       sge_strerror(errno, &error_dstring)));
@@ -980,9 +1001,9 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
        * the writing command. Otherwise, if writing the report file failed
        * over a longer time period, the reporting buffer could grow endlessly.
        */
-      sge_dstring_clear(contents);
+      sge_dstring_clear(&(buf->buffer));
 
-      SGE_UNLOCK(lock, LOCK_WRITE);
+      sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    }
 
    DEXIT;

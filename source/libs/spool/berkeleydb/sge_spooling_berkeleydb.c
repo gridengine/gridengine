@@ -632,7 +632,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                      lList *qinstance_list = NULL;
                      const char *qname = lGetString(queue, CQ_name);
 
-                     key = sge_dstring_sprintf(&key_dstring, "%s:%s@",
+                     key = sge_dstring_sprintf(&key_dstring, "%s:%s/",
                                                qinstance_table,
                                                qname);
                      ret = spool_berkeleydb_read_list(answer_list, info,

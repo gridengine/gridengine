@@ -1,3 +1,8 @@
+JG-2004-01-26-0: Bugfix:    Fixed a problem with berkeley db spooling of queue 
+                            instances.
+                            Use mutexes in qmaster reporting instead of locks.
+                 Review:    AH
+
 AD-2004-01-26-0: Bugfix:    Decrease delivery interval for remote events.
                  Changed:   qmaster
 

@@ -74,7 +74,7 @@ static int delay = 0;
  */
 
 #if SGE_LOCKING
-pthread_mutex_t mtx;
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 extern lList *Master_Job_List;

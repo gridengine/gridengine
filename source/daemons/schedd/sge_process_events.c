@@ -520,7 +520,12 @@ int sge_process_all_events(lList *event_list) {
          DEXIT;
          goto HaltSchedd;   
       }         
-      
+     
+      /* +================================================================+
+       * | NOTE: if you add new eventhandling here,                       |
+       * |      make sure to subscribe the event in sge_subscribe_schedd! |
+       * +================================================================+
+       */
       switch (type) {
          /* ======================================================
           * schedd configuration
@@ -933,7 +938,7 @@ int sge_process_all_events(lList *event_list) {
 
          break;
 
-      case sgeE_FINAL_USAGE:
+      case sgeE_JOB_FINAL_USAGE:
       case sgeE_JOB_USAGE:
          {
             u_long32 was_running;
@@ -976,13 +981,13 @@ int sge_process_all_events(lList *event_list) {
             }
             was_running = running_status(lGetUlong(ja_task, JAT_status));
             /* decrease # of running jobs for this user */
-            if (type == sgeE_FINAL_USAGE && was_running && !strkey) {
+            if (type == sgeE_JOB_FINAL_USAGE && was_running && !strkey) {
                sge_dec_jc(&lists.running_per_user, lGetString(jep, JB_owner), 1);
                if (!sge_mode && user_sort)
                   at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
             }
 
-            if (type == sgeE_FINAL_USAGE && !strkey)
+            if (type == sgeE_JOB_FINAL_USAGE && !strkey)
                lSetUlong(ja_task, JAT_status, JFINISHED);
          }
          break;
@@ -1529,6 +1534,11 @@ int sge_process_all_events(lList *event_list) {
          }
          break;
 
+      /* +================================================================+
+       * | NOTE: if you add new eventhandling here,                       |
+       * |      make sure to subscribe the event in sge_subscribe_schedd! |
+       * +================================================================+
+       */
       default:
          DPRINTF(("Unknown event type %d\n", (int) type));
          DEXIT;

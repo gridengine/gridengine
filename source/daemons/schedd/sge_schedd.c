@@ -89,6 +89,7 @@ static int parse_cmdline_schedd(int argc, char **argv);
 static void usage(FILE *fp);
 static void schedd_exit_func(int i);
 static int sge_setup_sge_schedd(void);
+static void sge_subscribe_schedd(void);
 int daemonize_schedd(void);
 
 extern char *error_file;
@@ -154,6 +155,10 @@ char *argv[]
    feature_initialize_from_file(path.product_mode_file);
    parse_cmdline_schedd(argc, argv);
 
+   /* prepare event client mechanism */
+   ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
+   sge_subscribe_schedd();
+
    /* daemonizes if qmaster is unreachable */
    check_qmaster = sge_setup_sge_schedd();
 
@@ -187,9 +192,6 @@ char *argv[]
    set_commlib_param(CL_P_TIMEOUT_SRCV, 4*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
 
-   ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
-   ec_subscribe_all();
-
    while (1) {
       lList* event_list = NULL;
 
@@ -218,17 +220,15 @@ char *argv[]
 
       {
          static u_long32 last_list = 0;
-         if (!ret)
+         if (ret == CL_OK) {
             last_list = sge_get_gmt();
-         else {
+            check_qmaster = 0;
+         } else {
             if (last_list && (sge_get_gmt() > last_list + ec_get_edtime() * 10)) {
                DPRINTF(("QMASTER ALIVE TIMEOUT EXPIRED\n"));
                ec_mark4registration();
-            }
-            if (ret == 1)
-               check_qmaster = 0;
-            else
                check_qmaster = 1;
+            }
             continue;
          }
       }
@@ -644,3 +644,71 @@ int handle_administrative_events(u_long32 type, lListElem *event)
    DEXIT;
    return ret;
 }
+
+void sge_subscribe_schedd(void)
+{
+   ec_subscribe(sgeE_CKPT_LIST);
+   ec_subscribe(sgeE_CKPT_ADD);
+   ec_subscribe(sgeE_CKPT_DEL);
+   ec_subscribe(sgeE_CKPT_MOD);
+
+   ec_subscribe(sgeE_COMPLEX_LIST);
+   ec_subscribe(sgeE_COMPLEX_ADD);
+   ec_subscribe(sgeE_COMPLEX_DEL);
+   ec_subscribe(sgeE_COMPLEX_MOD);
+
+   ec_subscribe(sgeE_EXECHOST_LIST);
+   ec_subscribe(sgeE_EXECHOST_ADD);
+   ec_subscribe(sgeE_EXECHOST_DEL);
+   ec_subscribe(sgeE_EXECHOST_MOD);
+
+   ec_subscribe(sgeE_GLOBAL_CONFIG);
+
+   ec_subscribe(sgeE_JATASK_DEL);
+   ec_subscribe(sgeE_JATASK_MOD);
+
+   ec_subscribe(sgeE_JOB_LIST);
+   ec_subscribe(sgeE_JOB_ADD);
+   ec_subscribe(sgeE_JOB_DEL);
+   ec_subscribe(sgeE_JOB_MOD);
+   ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
+   ec_subscribe(sgeE_JOB_FINAL_USAGE);
+   ec_subscribe(sgeE_JOB_USAGE);
+
+   ec_subscribe(sgeE_NEW_SHARETREE);
+
+   ec_subscribe(sgeE_PROJECT_LIST);
+   ec_subscribe(sgeE_PROJECT_DEL);
+   ec_subscribe(sgeE_PROJECT_ADD);
+   ec_subscribe(sgeE_PROJECT_MOD);
+
+   ec_subscribe(sgeE_PE_LIST);
+   ec_subscribe(sgeE_PE_ADD);
+   ec_subscribe(sgeE_PE_DEL);
+   ec_subscribe(sgeE_PE_MOD);
+
+   ec_subscribe(sgeE_QMASTER_GOES_DOWN);
+
+   ec_subscribe(sgeE_QUEUE_LIST);
+   ec_subscribe(sgeE_QUEUE_ADD);
+   ec_subscribe(sgeE_QUEUE_DEL);
+   ec_subscribe(sgeE_QUEUE_MOD);
+   ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
+   ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
+
+   ec_subscribe(sgeE_SCHED_CONF);
+
+   ec_subscribe(sgeE_SHUTDOWN);
+
+   ec_subscribe(sgeE_USER_LIST);
+   ec_subscribe(sgeE_USER_ADD);
+   ec_subscribe(sgeE_USER_DEL);
+   ec_subscribe(sgeE_USER_MOD);
+
+   ec_subscribe(sgeE_USERSET_LIST);
+   ec_subscribe(sgeE_USERSET_DEL);
+   ec_subscribe(sgeE_USERSET_ADD);
+   ec_subscribe(sgeE_USERSET_MOD);
+}
+
+

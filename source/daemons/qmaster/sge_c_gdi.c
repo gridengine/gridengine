@@ -569,7 +569,9 @@ int sub_command
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, uid);
 
-         sge_add_event_client(ep,&(answer->alp), user,host);
+         sge_add_event_client(ep,&(answer->alp), 
+                              (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL,
+                              user,host);
          break;
 
       case SGE_ORDER_LIST:
@@ -583,7 +585,7 @@ int sub_command
             if (lFirst(request->lp) == ep) {
                now = sge_get_gmt();
                if (last_order_arrived) {
-                  DPRINTF(("SCHEDULER RUN TOOK %d seconds\n", 
+                  DPRINTF(("TIME SINCE LAST ORDER: %d seconds\n", 
                      now - last_order_arrived));
                }
                last_order_arrived = now;
@@ -1123,6 +1125,20 @@ int sub_command
             user, host);
          break;
 
+      case SGE_EVENT_LIST:
+ 
+         /* fill address infos from request */
+         /* into event client that must be added */
+         lSetHost(ep, EV_host, request->host);
+         lSetString(ep, EV_commproc, request->commproc);
+         lSetUlong(ep, EV_commid, request->id);
+ 
+         /* fill in authentication infos from request */
+         lSetUlong(ep, EV_uid, uid);
+ 
+         sge_mod_event_client(ep,&(answer->alp), NULL, user,host);
+         break;
+
 #if 0
       case SGE_CKPT_LIST:
          sge_mod_ckpt(ep, &(answer->alp), user, host);
@@ -1557,6 +1573,7 @@ int sub_command
           MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, name, object->object_name));
 
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+    
    DEXIT;
    return STATUS_OK;
 }

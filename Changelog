@@ -1,3 +1,20 @@
+JG-2001-11-29-0: Feature:   Event client mechanism:
+                              - added new events for 
+                                 - admin hosts
+                                 - submit hosts
+                                 - configuration changes
+                                 - calendar
+                                 - schedd info
+                                 - manager
+                                 - operator
+                              - all event clients subscribe the events 
+                                SHUTDOWN and QMASTER_GOES_DOWN and cannot 
+                                unsubscribe these events
+                            scheduler: 
+                              - use subscription mechanism
+                              - do not poll global configuration in each 
+                                scheduling interval
+
 AH-2001-11-29-2:            Removed unused exec host spool entries
                             'number_of_jobs' and 'real_host_name'
 

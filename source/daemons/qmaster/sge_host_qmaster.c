@@ -285,8 +285,19 @@ u_long32 target
 
    /* remove host file */
    sge_unlink_object(ep, nm);
-   if (target==SGE_EXECHOST_LIST) 
-      sge_add_event(NULL, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
+
+   /* send event */
+   switch(target) {
+      case SGE_ADMINHOST_LIST:
+         sge_add_event(NULL, sgeE_ADMINHOST_DEL, 0, 0, host, NULL);
+         break;
+      case SGE_EXECHOST_LIST:
+         sge_add_event(NULL, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
+         break;
+      case SGE_SUBMITHOST_LIST:
+         sge_add_event(NULL, sgeE_SUBMITHOST_DEL, 0, 0, host, NULL);
+         break;
+   }
 
    /* delete found host element */
    lRemoveElem(*host_list, ep);
@@ -487,28 +498,40 @@ gdi_object_t *object
    lListElem* jatep;
    DENTER(TOP_LAYER, "host_success");
 
-   if (object->key_nm == EH_name) { 
-      lListElem *jep;
-      const char *host = lGetHost(ep, EH_name);
-      int slots, global_host = !strcmp("global", host);
+   switch(object->key_nm) {
+      case EH_name:
+      {
+         lListElem *jep;
+         const char *host = lGetHost(ep, EH_name);
+         int slots, global_host = !strcmp("global", host);
 
-      lSetList(ep, EH_consumable_actual_list, NULL);
-      debit_host_consumable(NULL, ep, Master_Complex_List, 0);
-      for_each (jep, Master_Job_List) {
-         slots = 0;
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            slots += nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list), 
-               global_host?NULL:host);
+         lSetList(ep, EH_consumable_actual_list, NULL);
+         debit_host_consumable(NULL, ep, Master_Complex_List, 0);
+         for_each (jep, Master_Job_List) {
+            slots = 0;
+            for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+               slots += nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list), 
+                  global_host?NULL:host);
+            }
+            if (slots)
+               debit_host_consumable(jep, ep, Master_Complex_List, slots);
          }
-         if (slots)
-            debit_host_consumable(jep, ep, Master_Complex_List, slots);
+
+         sge_change_queue_version_exechost(host);
+         sge_add_event(NULL, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
+         if (!is_nohist())
+            write_host_history(ep);
+
       }
+      break;
 
-      sge_change_queue_version_exechost(host);
-      sge_add_event(NULL, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
-      if (!is_nohist())
-         write_host_history(ep);
+      case AH_name:
+         sge_add_event(NULL, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 0, 0, lGetHost(ep, AH_name), ep);
+      break;
 
+      case SH_name:
+         sge_add_event(NULL, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 0, 0, lGetHost(ep, SH_name), ep);
+      break;
    }
 
    DEXIT;

@@ -455,8 +455,7 @@ lList **malpp
          an_sub_command = SGE_GDI_GET_SUBCOMMAND(an->op);
          if (an_operation == SGE_GDI_GET || an_operation == SGE_GDI_PERMCHECK ||
                (an_operation==SGE_GDI_ADD 
-                && an_sub_command==SGE_GDI_RETURN_NEW_VERSION 
-                && an->target == SGE_JOB_LIST)) {
+                && an_sub_command==SGE_GDI_RETURN_NEW_VERSION )) {
             lSetList(map, MA_objects, an->lp);
             an->lp = NULL;
          }
@@ -554,8 +553,7 @@ lList **olpp
    }
 
    if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
-       (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION 
-           && target == SGE_JOB_LIST)) {
+       (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
       if (!olpp) {
          sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
          sge_add_answer(&alp, SGE_EVENT, STATUS_ESYNTAX, 0);

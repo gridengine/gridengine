@@ -321,6 +321,8 @@ char *rhost
    new_config = 1;
 
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   sge_add_event(NULL, sgeE_CONFIG_DEL, 0, 0, config_name, NULL);
+   
    DEXIT;
    return STATUS_OK;
 }
@@ -522,6 +524,7 @@ char *rhost
 
    INFO((SGE_EVENT, cp, ruser, rhost, config_name, MSG_OBJ_CONF ));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   sge_add_event(NULL, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 0, 0, config_name, ep);
    
    DEXIT;
    return STATUS_OK;

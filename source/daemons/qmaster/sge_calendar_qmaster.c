@@ -41,6 +41,8 @@
 #include "sge_queueL.h"
 #include "sge_answerL.h"
 #include "sge_calendarL.h"
+#include "sge_eventL.h"
+#include "sge_m_event.h"
 #include "time_event.h"
 #include "read_write_cal.h"
 #include "sge_c_gdi.h"
@@ -1807,8 +1809,9 @@ int sub_command
          goto ERROR;
    }
 
-   lWriteElemTo(new_cal, stderr);
-   
+   sge_add_event( NULL, add ? sgeE_CALENDAR_ADD : sgeE_CALENDAR_MOD, 
+         0, 0, cal_name, new_cal);
+
    DEXIT;
    return 0;
 
@@ -1895,6 +1898,7 @@ char *rhost
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, cal_name, _("calendar")));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   sge_add_event(NULL, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
    DEXIT;
    return STATUS_OK;
 }

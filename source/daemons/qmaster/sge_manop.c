@@ -40,6 +40,8 @@
 #include "read_write_manop.h"
 #include "sge_manopL.h"
 #include "sge_answerL.h"
+#include "sge_eventL.h"
+#include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_max_nis_retries.h"
 #include "sge_uidgid.h"
@@ -138,6 +140,8 @@ DTRACE;
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, manop_name, object_name));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   sge_add_event(NULL, target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : sgeE_OPERATOR_ADD,
+                 0, 0, manop_name, added);
    DEXIT;
    return STATUS_OK;
 }
@@ -235,6 +239,8 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, manop_name, object_name));
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   sge_add_event(NULL, target == SGE_MANAGER_LIST ? sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
+                 0, 0, manop_name, NULL);
    DEXIT;
    return STATUS_OK;
 }

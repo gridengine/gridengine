@@ -109,69 +109,122 @@ NAMEEND
 
 /* valid values for ET_type */
 enum {
-   sgeE_ALL_EVENTS,
+   sgeE_ALL_EVENTS,                 /* + = impl. and tested, - = not available */
 
-   sgeE_JOB_DEL,
-   sgeE_JOB_ADD,
-   sgeE_JOB_MOD,
-   sgeE_JOB_LIST,
-   sgeE_JOB_MOD_SCHED_PRIORITY,
-   sgeE_JOB_USAGE,
-   sgeE_FINAL_USAGE,
+   sgeE_ADMINHOST_LIST,             /* + send admin host list at registration */
+   sgeE_ADMINHOST_ADD,              /* + event add admin host */
+   sgeE_ADMINHOST_DEL,              /* + event delete admin host */
+   sgeE_ADMINHOST_MOD,              /* - event modify admin host */
 
-   sgeE_QUEUE_DEL,
-   sgeE_QUEUE_ADD,
-   sgeE_QUEUE_MOD,
-   sgeE_QUEUE_LIST,
-   sgeE_QUEUE_SUSPEND_ON_SUB,        /* dont wanna lose */
-   sgeE_QUEUE_UNSUSPEND_ON_SUB,      /* any information */
+   sgeE_CALENDAR_LIST,              /* + send calendar list at registration */
+   sgeE_CALENDAR_ADD,               /* + event add calendar */
+   sgeE_CALENDAR_DEL,               /* + event delete calendar */
+   sgeE_CALENDAR_MOD,               /* + event modify calendar */
 
-   sgeE_COMPLEX_DEL,
-   sgeE_COMPLEX_ADD,
-   sgeE_COMPLEX_MOD,
-   sgeE_COMPLEX_LIST,
+   sgeE_CKPT_LIST,                  /* + send ckpt list at registration */
+   sgeE_CKPT_ADD,                   /* + event add ckpt */
+   sgeE_CKPT_DEL                    /* + event delete ckpt */,
+   sgeE_CKPT_MOD                    /* + event modify ckpt */,
 
-   sgeE_EXECHOST_DEL,
-   sgeE_EXECHOST_ADD,
-   sgeE_EXECHOST_MOD,
-   sgeE_EXECHOST_LIST,
+   sgeE_COMPLEX_LIST,               /* + send complex list at registration */
+   sgeE_COMPLEX_ADD,                /* + event add complex */
+   sgeE_COMPLEX_DEL,                /* + event delete complex */
+   sgeE_COMPLEX_MOD,                /* + event modify complex */
 
-   sgeE_USERSET_DEL,
-   sgeE_USERSET_ADD,
-   sgeE_USERSET_MOD,
-   sgeE_USERSET_LIST,
+   sgeE_CONFIG_LIST,                /* + send config list at registration */
+   sgeE_CONFIG_ADD,                 /* + event add config */
+   sgeE_CONFIG_DEL,                 /* + event delete config */
+   sgeE_CONFIG_MOD,                 /* + event modify config */
 
-   sgeE_USER_DEL,
-   sgeE_USER_ADD,
-   sgeE_USER_MOD,
-   sgeE_USER_LIST,
+   sgeE_EXECHOST_LIST,              /* + send exec host list at registration */
+   sgeE_EXECHOST_ADD,               /* + event add exec host */
+   sgeE_EXECHOST_DEL,               /* + event delete exec host */
+   sgeE_EXECHOST_MOD,               /* + event modify exec host */
 
-   sgeE_PROJECT_DEL,
-   sgeE_PROJECT_ADD,
-   sgeE_PROJECT_MOD,
-   sgeE_PROJECT_LIST,
+   sgeE_GLOBAL_CONFIG,              /* + global config changed, replace by sgeE_CONFIG_MOD */
 
-   sgeE_PE_DEL,
-   sgeE_PE_ADD,
-   sgeE_PE_MOD,
-   sgeE_PE_LIST,
+#ifndef __SGE_NO_USERMAPPING__
+   sgeE_HOST_GROUP_LIST,
+   sgeE_HOST_GROUP_ADD,
+   sgeE_HOST_GROUP_DEL,
+   sgeE_HOST_GROUP_MOD,
+#endif
 
-   sgeE_SHUTDOWN,
-   sgeE_QMASTER_GOES_DOWN,
-   sgeE_SCHEDDMONITOR,
-   sgeE_GLOBAL_CONFIG,
+   sgeE_JATASK_DEL,                 /* + event delete array job task */
+   sgeE_JATASK_MOD,                 /* + event modify array job task */
 
-   sgeE_NEW_SHARETREE,       /* replace possibly existing share tree */
-   sgeE_SCHED_CONF,          /* replace existing (sge) scheduler
-                              * configuration */
+   sgeE_JOB_LIST,                   /* + send job list at registration */
+   sgeE_JOB_ADD,                    /* + event job add (new job) */
+   sgeE_JOB_DEL,                    /* + event job delete */
+   sgeE_JOB_MOD,                    /* + event job modify */
+   sgeE_JOB_MOD_SCHED_PRIORITY,     /* + event job modify priority */
+   sgeE_JOB_USAGE,                  /* + event job online usage */
+   sgeE_JOB_FINAL_USAGE,            /* + event job final usage report after job end */
 
-   sgeE_CKPT_DEL,
-   sgeE_CKPT_ADD,
-   sgeE_CKPT_MOD,
-   sgeE_CKPT_LIST,
+   sgeE_JOB_SCHEDD_INFO_LIST,       /* + send job schedd info list at registration */
+   sgeE_JOB_SCHEDD_INFO_ADD,        /* - event jobs schedd info added */
+   sgeE_JOB_SCHEDD_INFO_DEL,        /* - event jobs schedd info deleted */
+   sgeE_JOB_SCHEDD_INFO_MOD,        /* + event jobs schedd info modified */
 
-   sgeE_JATASK_DEL,
-   sgeE_JATASK_MOD,
+   sgeE_MANAGER_LIST,               /* + send manager list at registration */
+   sgeE_MANAGER_ADD,                /* + event add manager */
+   sgeE_MANAGER_DEL,                /* + event delete manager */
+   sgeE_MANAGER_MOD,                /* - event modify manager */
+
+   sgeE_OPERATOR_LIST,              /* + send operator list at registration */
+   sgeE_OPERATOR_ADD,               /* + event add operator */
+   sgeE_OPERATOR_DEL,               /* + event delete operator */
+   sgeE_OPERATOR_MOD,               /* - event modify operator */
+
+   sgeE_NEW_SHARETREE,              /* + replace possibly existing share tree */
+
+   sgeE_PE_LIST,                    /* + send pe list at registration */
+   sgeE_PE_ADD,                     /* + event pe add */
+   sgeE_PE_DEL,                     /* + event pe delete */
+   sgeE_PE_MOD,                     /* + event pe modify */
+
+   sgeE_PROJECT_LIST,               /* + send project list at registration */
+   sgeE_PROJECT_ADD,                /* + event project add */
+   sgeE_PROJECT_DEL,                /* + event project delete */
+   sgeE_PROJECT_MOD,                /* + event project modify */
+
+   sgeE_QMASTER_GOES_DOWN,          /* + qmaster notifies all event clients, before
+                                         it exits */
+
+   sgeE_QUEUE_LIST,                 /* + send queue list at registration */
+   sgeE_QUEUE_ADD,                  /* + event queue add */
+   sgeE_QUEUE_DEL,                  /* + event queue delete */
+   sgeE_QUEUE_MOD,                  /* + event queue modify */
+   sgeE_QUEUE_SUSPEND_ON_SUB,       /* + queue is suspended by subordinate mechanism */
+   sgeE_QUEUE_UNSUSPEND_ON_SUB,     /* + queue is unsuspended by subordinate mechanism */
+
+   sgeE_SCHED_CONF,                 /* + replace existing (sge) scheduler configuration */
+
+   sgeE_SCHEDDMONITOR,              /* + trigger scheduling run */
+
+   sgeE_SHUTDOWN,                   /* + request shutdown of an event client */
+
+   sgeE_SUBMITHOST_LIST,            /* + send submit host list at registration */
+   sgeE_SUBMITHOST_ADD,             /* + event add submit host */
+   sgeE_SUBMITHOST_DEL,             /* + event delete submit host */
+   sgeE_SUBMITHOST_MOD,             /* - event modify submit host */
+
+   sgeE_USER_LIST,                  /* + send user list at registration */
+   sgeE_USER_ADD,                   /* + event user add */
+   sgeE_USER_DEL,                   /* + event user delete */
+   sgeE_USER_MOD,                   /* + event user modify */
+   
+#ifndef __SGE_NO_USERMAPPING__
+   sgeE_USERMAPPING_ENTRY_LIST,
+   sgeE_USERMAPPING_ENTRY_ADD,
+   sgeE_USERMAPPING_ENTRY_DEL,
+   sgeE_USERMAPPING_ENTRY_MOD,
+#endif
+
+   sgeE_USERSET_LIST,               /* + send userset list at registration */
+   sgeE_USERSET_ADD,                /* + event userset add */
+   sgeE_USERSET_DEL,                /* + event userset delete */
+   sgeE_USERSET_MOD,                /* + event userset modify */
 
    sgeE_EVENTSIZE 
 };

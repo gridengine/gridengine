@@ -53,10 +53,10 @@
 #include "sge_time.h"
 #include "msg_schedd.h"
 
-#define DEFAULT_EVENT_DELIVERY_INTERVAL (4)
 
 static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number);
 static int get_event_list(int sync, lList **lp);
+static int ec_config_changed(void);
 
 /*---------------------------------------- 
  *  this flag is used to control 
@@ -99,8 +99,12 @@ int ec_prepare_registration(u_long32 id, const char *name)
    for(i = 0; i < sgeE_EVENTSIZE; i++) {
       subscription[i] = '0';
    }
+
    subscription[sgeE_EVENTSIZE] = 0;
+
    lSetString(ec, EV_subscription, subscription);
+   ec_subscribe(sgeE_QMASTER_GOES_DOWN);
+   ec_subscribe(sgeE_SHUTDOWN);
 
    DEXIT;
    return 1;
@@ -138,6 +142,7 @@ int ec_set_edtime(int interval) {
 
    if(ret) {
       lSetUlong(ec, EV_d_time, interval);
+      ec_config_changed();
    }
 
    DEXIT;
@@ -212,28 +217,29 @@ int ec_register(void)
     *  to add may also means to modify
     *  - if this event client is already enrolled at qmaster
     */
-   alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-   lFreeList(lp); 
-   
+   alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp, NULL, NULL);
+  
    success = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
    if (success) { 
+      lListElem *new_ec;
       u_long32 new_id = 0;
-      const char *s;
-      const char *alp_message = lGetString(lFirst(alp), AN_text);
-      s = strchr(alp_message, ':');
-      if(s != NULL) {
-         s++;
-         new_id = atoi(s);
+
+      new_ec = lFirst(lp);
+      if(new_ec != NULL) {
+         new_id = lGetUlong(new_ec, EV_id);
       }
+
       if(new_id != 0) {
          lSetUlong(ec, EV_id, new_id);
          DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
+         lFreeList(lp); 
          lFreeList(alp);
          DEXIT;
          return 1;
       }
    }
 
+   lFreeList(lp); 
    lFreeList(alp);
    DPRINTF(("REGISTRATION FAILED\n"));
    DEXIT;
@@ -314,6 +320,8 @@ int ec_subscribe(int event)
    lSetString(ec, EV_subscription, subscription);
    free(subscription);
 
+   ec_config_changed();
+
    DEXIT;
    return 1;
 }
@@ -354,12 +362,23 @@ int ec_unsubscribe(int event)
       for(i = 0; i < sgeE_EVENTSIZE; i++) {
          subscription[i] = '0';
       }
+      subscription[sgeE_QMASTER_GOES_DOWN] = '1';
+      subscription[sgeE_SHUTDOWN] = '1';
    } else {
-      subscription[event] = '0';
+      if(event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
+         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+         free(subscription);
+         DEXIT;
+         return 0;
+      } else {
+         subscription[event] = '0';
+      }
    }
 
    lSetString(ec, EV_subscription, subscription);
    free(subscription);
+
+   ec_config_changed();
 
    DEXIT;
    return 1;
@@ -370,6 +389,50 @@ int ec_unsubscribe_all(void)
    return ec_unsubscribe(sgeE_ALL_EVENTS);
 }
 
+int ec_config_changed(void) 
+{
+   int success;
+   lList *lp, *alp;
+
+   DENTER(TOP_LAYER, "ec_config_changed");
+
+   /* not yet initialized? Cannot send modification to qmaster! */
+   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
+      DPRINTF((MSG_EVENT_UNINITIALIZED_EC));
+      DEXIT;
+      return 0;
+   }
+
+   /* not (yet) registered? Cannot send modification to qmaster! */
+   if(ec_need_new_registration()) {
+      DPRINTF((MSG_EVENT_NOTREGISTERED));
+      DEXIT;
+      return 0;
+   }
+
+   lp = lCreateList("change configuration", EV_Type);
+   lAppendElem(lp, lCopyElem(ec));
+
+   /*
+    *  to add may also means to modify
+    *  - if this event client is already enrolled at qmaster
+    */
+   alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+   lFreeList(lp); 
+   
+   success = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
+   lFreeList(alp);
+   
+   if (success) {
+      DPRINTF(("CHANGE CONFIGURATION SUCCEEDED\n"));
+      DEXIT;
+      return 1;
+   }
+
+   DPRINTF(("CHANGE CONFIGURATION FAILED\n"));
+   DEXIT;
+   return 0;
+}
 
 /*-------------------------------------------------------------------*
  * ec_get

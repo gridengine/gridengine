@@ -1115,6 +1115,8 @@ DTRACE;
             Master_Job_Schedd_Info_List = lCreateList("schedd info", SME_Type);
             lAppendElem(Master_Job_Schedd_Info_List, lCopyElem(sme));
          }
+
+         sge_add_event(NULL, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, sme);
       }
       break;
 

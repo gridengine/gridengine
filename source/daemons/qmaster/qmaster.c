@@ -121,30 +121,30 @@ int in_spool_dir = 0;                 /* to prevent lock file writing */
 /*
 ** the global lists of the master referenced somewhere else
 */
-lList *Master_Config_List = NULL;
-lList *Master_Queue_List = NULL;
-lList *Master_Job_List = NULL;
-lList *Master_Complex_List = NULL;
-lList *Master_Sharetree_List = NULL;
-lList *Master_Userset_List = NULL;
-lList *Master_User_List = NULL;
-lList *Master_Project_List = NULL;
-lList *Master_Sched_Config_List = NULL;
-lList *Master_Exechost_List = NULL;
-lList *Master_Adminhost_List = NULL;
-lList *Master_Submithost_List = NULL;
-lList *Master_Ckpt_List = NULL;
-lList *Master_Pe_List = NULL;
-lList *Master_Manager_List = NULL;
-lList *Master_Operator_List = NULL;
-lList *Master_Calendar_List = NULL;
-lList *Master_Job_Schedd_Info_List = NULL;
-lList *Master_Zombie_List = NULL;
-lList *Master_Feature_Set_List = NULL;
+lList *Master_Adminhost_List           = NULL;
+lList *Master_Calendar_List            = NULL;
+lList *Master_Ckpt_List                = NULL;
+lList *Master_Complex_List             = NULL;
+lList *Master_Config_List              = NULL;
+lList *Master_Exechost_List            = NULL;
+lList *Master_Feature_Set_List         = NULL;
+lList *Master_Job_List                 = NULL;
+lList *Master_Job_Schedd_Info_List     = NULL;
+lList *Master_Manager_List             = NULL;
+lList *Master_Operator_List            = NULL;
+lList *Master_Pe_List                  = NULL;
+lList *Master_Project_List             = NULL;
+lList *Master_Queue_List               = NULL;
+lList *Master_Sched_Config_List        = NULL;
+lList *Master_Sharetree_List           = NULL;
+lList *Master_Submithost_List          = NULL;
+lList *Master_User_List                = NULL;
+lList *Master_Userset_List             = NULL;
+lList *Master_Zombie_List              = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
-lList *Master_Usermapping_Entry_List = NULL;
-lList *Master_Host_Group_List = NULL;
+lList *Master_Host_Group_List          = NULL;
+lList *Master_Usermapping_Entry_List   = NULL;
 #endif
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);

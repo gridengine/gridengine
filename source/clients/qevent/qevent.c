@@ -58,9 +58,9 @@ int main(int argc, char *argv[]);
 static void dump_eventlist(lList *event_list)
 {
    lListElem *event;
-/*    lWriteListTo(event_list, stdout); */
    for_each(event, event_list) {
       fprintf(stdout, event_text(event));
+/*       lWriteElemTo(event, stdout); */
       switch(lGetUlong(event, ET_type)) {
          case sgeE_SHUTDOWN:
             shut_me_down = 1;
@@ -75,6 +75,7 @@ static void dump_eventlist(lList *event_list)
    }
 }
 
+#define TEST
 
 /************************************************************************/
 int main(int argc, char **argv)
@@ -86,7 +87,6 @@ int main(int argc, char **argv)
    DENTER_MAIN(TOP_LAYER, "qevent");
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);
@@ -99,15 +99,10 @@ int main(int argc, char **argv)
    }   
 
    ec_prepare_registration(EV_ID_ANY, "qevent");
-/*    ec_subscribe(sgeE_JOB_DEL); */
-/*    ec_subscribe(sgeE_JOB_ADD); */
-/*    ec_subscribe(sgeE_JOB_MOD); */
-/*    ec_subscribe(sgeE_JOB_LIST); */
-/*    ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY); */
-/*    ec_subscribe(sgeE_JOB_USAGE); */
-/*    ec_subscribe(sgeE_JOB_USAGE); */
-
+   
+#ifndef TEST   
    ec_subscribe_all();
+#endif
 
    while(!shut_me_down) {
       time_t now = time(0);
@@ -128,6 +123,37 @@ int main(int argc, char **argv)
          dump_eventlist(event_list);
          lFreeList(event_list);
       }
+
+#ifdef TEST
+      {
+         static int event = sgeE_ALL_EVENTS + 1;
+         static int subscribe = 1;
+         if(subscribe) {
+            if(event < sgeE_EVENTSIZE) {
+               ec_subscribe(event++);
+            } else {
+               subscribe = 0;
+               event--;
+            }
+         } else {
+            if(event > sgeE_ALL_EVENTS) {
+               ec_unsubscribe(event--);
+            } else {
+               subscribe = 1;
+               event++;
+            }   
+         }
+      }
+
+      {
+         if(ec_get_edtime() == DEFAULT_EVENT_DELIVERY_INTERVAL) {
+            ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL * 2);
+         } else {
+            ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL);
+         }
+      }
+#endif
+      
    }
 
    ec_deregister();

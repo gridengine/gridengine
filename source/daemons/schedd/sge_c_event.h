@@ -33,6 +33,8 @@
 /*___INFO__MARK_END__*/
 
 
+#define DEFAULT_EVENT_DELIVERY_INTERVAL (4)
+
 int ec_prepare_registration(u_long32 id, const char *name);
 int ec_register(void);
 int ec_deregister(void);

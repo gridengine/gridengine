@@ -842,13 +842,13 @@ int spool_job
          lListElem* task_ja_task;
 
          for_each (task_ja_task, lGetList(task, JB_ja_tasks)) {   
-            sge_add_list_event(NULL, sgeE_FINAL_USAGE, lGetUlong(jep, JB_job_number),
+            sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
                lGetUlong(task_ja_task, JAT_task_number), 
                lGetString(task, JB_pe_task_id_str), 
                lGetList(task_ja_task, JAT_scaled_usage_list));
          }
       }
-      sge_add_list_event(NULL, sgeE_FINAL_USAGE, jid = lGetUlong(jep, JB_job_number), 
+      sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, jid = lGetUlong(jep, JB_job_number), 
          lGetUlong(jatep, JAT_task_number),
          NULL, lGetList(jatep, JAT_scaled_usage_list));
 

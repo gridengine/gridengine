@@ -44,7 +44,9 @@ extern int last_seq_no;
 
 void reinit_schedd(void);
 
-int sge_add_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost);
+int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost);
+int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost);
+
 void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb);
 void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gdi_request *answer);
 

@@ -453,6 +453,9 @@
 #define MSG_EVE_ILLEGALEVENTCLIENTID_S _("illegal event client id "SFQ"\n")
 #define MSG_EVE_ILLEGALIDREGISTERED_U _("illegal event client id "U32CFormat" for registration\n")
 
+#define MSG_EVE_INVALIDSUBSCRIPTION   _("invalid subscription information\n")
+#define MSG_EVE_INVALIDINTERVAL_U     _("invalid event interval "U32CFormat"\n")
+
 #define MSG_COM_ACKTIMEOUT4EV_ISIS    _("acknowledge timeout after %d seconds for event client (%s:%d) on host \"%s\"")
 #define MSG_COM_NOSHUTDOWNPERMS       _("shutdown requires manager privileges\n")
 #define MSG_COM_NOSCHEDDREGMASTER     _("no scheduler registered at qmaster\n")

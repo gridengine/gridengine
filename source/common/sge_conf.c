@@ -701,7 +701,7 @@ lList **lpp
          else if (!strncasecmp(s, "PTF_MIN_PRIORITY", sizeof("PTF_MIN_PRIORITY")-1))
             ptf_min_priority=atoi(&s[sizeof("PTF_MIN_PRIORITY=")-1]);
          else if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1))
-            ptf_min_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
+            execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
 
       flush_submit_sec = -1;
       flush_finish_sec = -1;

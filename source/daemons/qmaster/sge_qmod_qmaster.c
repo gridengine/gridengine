@@ -147,7 +147,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 
       found = false;
       
-      if (!(lGetUlong(dep, ID_action) && JOB_DO_ACTION)) {
+      if ((lGetUlong(dep, ID_action) & JOB_DO_ACTION) == 0) {
          qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
          qref_list_resolve(qref_list, NULL, &tmp_list, 
                            &found_something, cqueue_list,

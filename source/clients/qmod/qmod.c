@@ -115,7 +115,6 @@ char **argv
       
       if (id_list_build_from_str_list(&id_list, &alp, 
                                       ref_list, action, force)) {
-lWriteListTo(id_list, stdout);         
          alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       }
       id_list = lFreeList(id_list);

@@ -1,3 +1,6 @@
+SG-2004-01-20-0: Bugfix:    fixed qmod and removed lWriteListTo from the code
+                 Changed:   qmaster, qmod
+
 EB-2004-01-20-0: Enhancem.: core implementation for qconf -sick
                             - cleanup
                             - TODO items

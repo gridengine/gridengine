@@ -250,10 +250,16 @@ struct timeval *timeout;
 
    DENTER(TOP_LAYER, "peclose");
 
-   fclose(fp_in);
-   fclose(fp_out);
-   fclose(fp_err);
-
+   if (fp_in != NULL) {
+      fclose(fp_in);
+   }
+   if (fp_out != NULL) {
+      fclose(fp_out);
+   }
+   if (fp_err != NULL) {
+      fclose(fp_err);
+   }  
+   
    do {
       i = waitpid(pid, &status, timeout?WNOHANG:0);
       if (i==-1) {

@@ -130,8 +130,8 @@ proc sge_macro { macro_name } {
       "DISTINST_SHADOW_ROOT" { set value "Please enter your SGE_ROOT directory or use the default\n\[%s\] >> " }
       "DISTINST_SHADOW_CELL" { set value "Please enter your SGE_CELL directory or use the default \[default\] >> " }
       "DISTINST_SHADOWD_INSTALL_COMPLETE" { set value "Shadowhost installation completed!" }     
-       
-
+      "DISTINST_WE_CONFIGURE_WITH_X_SETTINGS" { set value "\nWe're configuring the scheduler with >%s< settings!\n Do you agree? (y/n) \[y\] >> " }     
+  
 
    }
    if { $value == "" } {

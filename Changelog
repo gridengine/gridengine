@@ -1,3 +1,6 @@
+CR-2004-10-05-1: Testsuite: added missing install expect handling for qmaster
+                            installation
+
 EB-2004-10-05-0: Enhancem.: added new module test which especially tests
                             the modifications done with EB-2004-09-15-0
                  Changed:   none

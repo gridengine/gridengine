@@ -147,6 +147,7 @@ proc install_qmaster {} {
  set CELL_NAME_OVERWRITE          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_OVERWRITE] ]
  set ADD_SHADOWHOST_ASK           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ADD_SHADOWHOST_ASK] ]
  set ADD_SHADOWHOST_FROM_FILE_ASK [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ADD_SHADOWHOST_FROM_FILE_ASK] ]
+ set WE_CONFIGURE_WITH_X_SETTINGS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_WE_CONFIGURE_WITH_X_SETTINGS] "*" ]
 
 # dynamic spooling
  set CHOOSE_SPOOLING_METHOD [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CHOOSE_SPOOLING_METHOD]]
@@ -757,6 +758,8 @@ proc install_qmaster {} {
          continue;
       }
 
+      
+
       # 
       # SGE 6.0 Berkeley DB Spooling
       #
@@ -1005,6 +1008,16 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id $input
+          continue;
+       }
+
+       -i $sp_id $WE_CONFIGURE_WITH_X_SETTINGS {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
           continue;
        }
 

@@ -101,3 +101,5 @@ AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
 AA-2001-07-27-0: - Merge from branch: core dump fix for qmon_pe start/stop_proc_args
 
 AH-2001-08-03-0: Accept -N job_name references in -hold_jid list 
+
+AA-2001-08-07-0: - IZ 32, feature_is_enabled() used incorrectly

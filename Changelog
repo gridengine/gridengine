@@ -1,3 +1,8 @@
+SD-2002-08-14-0  Enhancem.  Updated Kerberos integration to handle cross-domain
+                            authentication correctly when storing the forwarded
+                            credentials in the credentials cache.
+                 Changed:   put_cred
+
 AA-2002-08-09-0  I18N:      - aimk: -lXmu for LINUX6 broke build under special
                                     RHLinux 7.3
                                     HFLAGS for gettext

@@ -413,6 +413,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
             if (has_domain) {
                const char *d_pattern = sge_dstring_get_string(&host_domain);
                lList *href_list = NULL;
+               bool is_first = true;
 
                hgroup_list_find_matching_and_resolve(hgroup_list, NULL,
                                                      d_pattern, &href_list);
@@ -434,6 +435,11 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                  QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
+                           if (is_first) {
+                              is_first = false; 
+                           } else {
+                              fprintf(stdout, "\n");
+                           }
                            write_qinstance(0, 0, qinstance);
                            found_something = true;
                         }
@@ -445,6 +451,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                qref_list = lFreeList(qref_list);
             } else if (has_hostname) {
                const char *h_pattern = sge_dstring_get_string(&host_domain);
+               bool is_first = true;
 
                for_each(qref, qref_list) {
                   const char *cqueue_name = NULL;
@@ -463,6 +470,11 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
+                           if (is_first) {
+                              is_first = false; 
+                           } else {
+                              fprintf(stdout, "\n");
+                           }
                            write_qinstance(0, 0, qinstance);
                            found_something = true;
                         }
@@ -470,12 +482,19 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                   }
                }
             } else {
+               bool is_first = true;
+
                for_each(qref, qref_list) {
                   const char *cqueue_name = lGetString(qref, QR_name);
                   lListElem *cqueue = NULL;
 
                   cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
                   if (cqueue != NULL) {
+                     if (is_first) {
+                        is_first = false; 
+                     } else {
+                        fprintf(stdout, "\n");
+                     }
                      write_cqueue(0, 0, cqueue);
                      found_something = true;
                   }

@@ -3155,9 +3155,9 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 {
    const char *job_name = lGetString(job, JB_job_name);
    int ret = 0;
-#define MAX_characters 6
-   const char characters[MAX_characters] = { '\n', '\t', '\r', '/', ':', '@'};
-   const char *output[MAX_characters] = {"\\n", "\\t", "\\r", "/", ":", "@"};
+#define MAX_characters 7
+   const char characters[MAX_characters] = { '\n', '\t', '\r', '/', ':', '@', '\\'};
+   const char *output[MAX_characters] = {"\\n", "\\t", "\\r", "/", ":", "@", "\\"};
 
    
    DENTER(TOP_LAYER, "job_verify_name");

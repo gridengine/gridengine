@@ -1,3 +1,9 @@
+SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
+:w
+                 Changed:   sge_schedd, qstat, qmon, qhost
+                 Issue:     589
+                 Review:    AH
+
 AA-2003-07-30-0: Bugfix:    qmon_cplx: selectAttributes callback was missing,
                             CQ_Type list added
                             libs/sgeobj/Makefile delete generated sge_sub_obj.c

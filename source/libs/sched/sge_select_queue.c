@@ -1142,7 +1142,6 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       u_long32 relop, type;
 
       name = lGetString(tep, CE_name);
-
       /* complex attriute definition */
       if (!(cep = centry_list_locate(centry_list, name))) {
          if (reason)
@@ -1160,7 +1159,8 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
             load_value = lGetString(hlep, HL_value);
             load_is_value = 0;
          }
-      } else if (global_hep != NULL) {
+      }
+      if ((hlep == NULL) && (global_hep != NULL)) {
          glep = lGetSubStr(global_hep, HL_name, name, EH_load_list);
          if (glep != NULL) {
             load_value = lGetString(glep, HL_value);
@@ -1183,13 +1183,13 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
 
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
-
       if(sge_check_load_alarm(reason, name, load_value, limit_value, relop, 
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
          DEXIT;
          return 1;
       }   
+
    } 
 
    DEXIT;

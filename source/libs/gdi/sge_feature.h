@@ -66,7 +66,7 @@ typedef enum {
    FEATURESET_LAST_ENTRY
 } featureset_id_t;
  
- 
+
 typedef enum {
    FEATURE_UNINITIALIZED,
    FEATURE_USE_OSJOB_ID,            /* jobs will get a unique job id during 

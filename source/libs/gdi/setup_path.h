@@ -50,7 +50,6 @@
 #define HISTORY_DIR               "history"
 #define SHADOW_MASTERS_FILE       "shadow_masters"
 #define LICENSE_FILE              "license"
-#define PRODUCT_MODE_FILE         "product_mode"
 #define MASTER_IOR_FILE           "master.ior"
 
 #ifndef WIN32NATIVE

@@ -1,3 +1,5 @@
+CR-2001-12-10-1: Feature:   remove unnecessary libs linked to commd
+
 JG-2001-12-10-0: Bugfix:    qrsh/qlogin: if client command (rsh/rlogin/telnet)
                             exited abnormaly (signal, coredump etc.), the 
                             corresponding job will be deleted, assuring that 

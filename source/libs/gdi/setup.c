@@ -73,6 +73,8 @@ lList **alpp
 
    sge_getme(sge_formal_prog_name);
    memset(&path, 0, sizeof(path));
+
+   /* gdi lib call */ 
    sge_setup_paths(me.default_cell, &path, alpp);
 
    if (alpp && *alpp){
@@ -80,16 +82,19 @@ lList **alpp
       return;
    }
 
+   /* gdi lib call */ 
    if (feature_initialize_from_file(path.product_mode_file)) {
       SGE_EXIT(1);
    }
 
       
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
+   /* gdi lib call */
    if (!(me.who == QMASTER || me.who == SHADOWD) && !sge_get_master(1)) {
       if (alpp) {
          sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
                      path.act_qmaster_file);
+   /* gdi lib call */
          sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
          DEXIT;
          return;

@@ -111,7 +111,9 @@ static feature_names_t featureset_list[] = {
    {FEATURESET_SGEEE_DCE,           "sgeee-dce"},
    {FEATURESET_SGE_KERBEROS,        "sge-kerberos"},
    {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},
-   {FEATURESET_SGE_RESERVED_PORT,   "sge-reserved_port"},
+/* if changed, please update setup_commd_path.c */
+/* function use_reserved_port()  */
+   {FEATURESET_SGE_RESERVED_PORT,   "sge-reserved_port"},  
    {FEATURESET_SGEEE_RESERVED_PORT, "sgeee-reserved_port"},
    {FEATURESET_SGE_CSP,             "sge-csp"},
    {FEATURESET_SGEEE_CSP,           "sgeee-csp"},
@@ -212,9 +214,10 @@ int feature_initialize_from_file(const char *filename)
             ret = -2;
          } else {
             char mode[128];
-
-            fscanf(fp,"%s", mode);
+            char buf[128];
+            fgets(buf, 127, fp);
             fclose(fp); 
+            sscanf(buf,"%s", mode);
             ret = feature_initialize_from_string(mode);
 
             if (ret == -3) {

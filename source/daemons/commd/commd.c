@@ -67,6 +67,8 @@
 #include "sge_language.h"
 #include "sge_stat.h" 
 #include "sge_feature.h"
+#include "setup_commd_path.h"
+#include "sge_exit.h"
 
 void init_send(message *mp, int reserved_port, int commdport);
 static char *fdsetstr(fd_set *fds, char *);
@@ -83,8 +85,6 @@ void sighandler(int sig);
 void log_state_transition_too_many_fds_open(u_long t);
 int seek_badfd(int nfds, fd_set *rfds, fd_set *wfds);
 char *get_alias_path(char *);
-static char *get_act_master_path(char *);
-
 int main(int argc, char **argv);
 
 static int memorylack = 0;
@@ -99,6 +99,7 @@ int messagelog_fd = -1;
 int hostname_refresh = 1;       /* resolve hostnames on a regular basis */
 char *aliasfile = NULL;         /* File used for specifying host aliases */
 char *actmasterfile = NULL;     /* File with actual qmaster name */
+char *product_mode_file = NULL; /* File with actual product mode */
 u_long too_many_fds_open = 0;   /* time at which too many fds were open */
 
 extern u_long32 logginglevel;
@@ -168,10 +169,10 @@ char **argv
       port = atoi(cp);
 
    /* check if reserved port shall be used; set in product_mode file */
-   sge_setup(COMMD, NULL);
-   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY))
+   /* gdi lib call */
+   sge_commd_setup(COMMD);
+   if (use_reserved_port())
       port_security = 1; 
-
    DPRINTF(("reserved ports %s\n", port_security ? "on" : "off"));
 
 
@@ -226,7 +227,7 @@ char **argv
             if (SGE_STAT(aliasfile, &stat_dummy)) {
                 CRITICAL((SGE_EVENT, MSG_COMMD_STATHOSTALIASFILEFAILED_SS, 
                          aliasfile, strerror(errno)));
-                exit(1);
+                SGE_EXIT(1);
              }
          } else
             commd_usage(stderr, argv);
@@ -261,6 +262,11 @@ char **argv
       /* expect act_master file at default location */
       actmasterfile = get_act_master_path(me.default_cell);
    }
+   if (product_mode_file == NULL) {
+      /* expect product_mode_file file at default location */
+      product_mode_file = get_product_mode_file_path(me.default_cell);
+   }
+ 
 
    /* read aliasfile */
    if (aliasfile) {
@@ -276,7 +282,7 @@ char **argv
          CRITICAL((SGE_EVENT,MSG_COMMD_OPENFILEFORMESSAGELOGFAILED_SS , 
                   message_logging,
                   strerror(errno)));
-         exit(1);
+         SGE_EXIT(1);
       }
 
    if (port)
@@ -288,7 +294,7 @@ char **argv
    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       CRITICAL((SGE_EVENT, MSG_NET_OPENSTREAMSOCKETFAILED_S , 
          strerror(errno)));
-      exit(1);
+      SGE_EXIT(1);
    }   
 
    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
@@ -304,7 +310,7 @@ char **argv
          CRITICAL((SGE_EVENT, MSG_NET_RESOLVESERVICEFAILED_SS , 
                   service,
                   strerror(errno)));
-         exit(1);
+         SGE_EXIT(1);
       }
       port = ntohs(se->s_port);
       serv_addr.sin_port = se->s_port;
@@ -316,7 +322,7 @@ char **argv
       CRITICAL((SGE_EVENT, MSG_NET_BINDPORTFAILED_IS , 
                (int) ntohs(serv_addr.sin_port),
                strerror(errno)));
-      exit(1);
+      SGE_EXIT(1);
    }
 
    printf(MSG_NET_BOUNDTOPORT_I , (int) ntohs(serv_addr.sin_port));
@@ -387,7 +393,7 @@ char **argv
          if (!exist_message(termination_message)) {
             /* message seems to be acknowledged -> die */
             WARNING((SGE_EVENT, MSG_COMMD_SHUTDOWNDUECONTROLMESSAGE ));
-            exit(0);
+            SGE_EXIT(0);
          }
 
       }
@@ -652,7 +658,9 @@ static void commd_usage(
 FILE *out,
 char **argv 
 ) {
-   fprintf(out, "%s\n", feature_get_product_name(FS_SHORT_VERSION) );
+   DENTER(TOP_LAYER, "commd_usage");
+
+   fprintf(out, "%s\n", get_short_product_name() );
 
    fprintf(out, "%s %s [-s service] [-p port] [-ml fname] [-ll loglevel] [-nd] [-a aliasfile][-dhr]\n", MSG_USAGE, argv[0]); 
    fprintf(out, "    -s   %s [commd]\n", MSG_COMMD_s_OPT_USAGE);
@@ -662,7 +670,7 @@ char **argv
    fprintf(out, "    -nd  %s", MSG_COMMD_nd_OPT_USAGE);
    fprintf(out, "    -a   %s", MSG_COMMD_a_OPT_USAGE);
    fprintf(out, "    -dhr %s", MSG_COMMD_dhr_OPT_USAGE);
-   exit(1);
+   SGE_EXIT(1);
 }
 
 /* If this function is called, we have a real problem.
@@ -839,7 +847,7 @@ int sig
    
    DEXIT;
    WARNING((SGE_EVENT, MSG_SIGNAL_SIGTERMSHUTDOWN ));
-   exit(1);
+   SGE_EXIT(1);
 }
 
 
@@ -1044,7 +1052,7 @@ char *sge_cell
 
    if (!sge_root || strlen(sge_root) == 0) { 
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTSET));
-      exit(1); 
+      SGE_EXIT(1); 
    }
 
    if (sge_root[strlen(sge_root)-1] == '/')  /*get rid of trailing slash*/
@@ -1052,55 +1060,20 @@ char *sge_cell
 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
-      exit(1);
+      SGE_EXIT(1);
    }
 
    len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ALIAS_FILE) + 5;
 
    if (!(cp = malloc(len))) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE ));
-      exit(1);
+      SGE_EXIT(1);
    }
 
    sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE); 
    return cp;
 }
 
-/*-----------------------------------------------------------------------
- * get_act_master_path
- *-----------------------------------------------------------------------*/
-static char *get_act_master_path(
-char *sge_cell 
-) {
-   char *sge_root, *cp;
-   int len;
-   SGE_STRUCT_STAT sbuf;
-      
-   DENTER(TOP_LAYER, "get_act_master_path");
-   
-   sge_root = getenv("SGE_ROOT");
 
-   if (!sge_root || strlen(sge_root) == 0) { 
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTSET));
-      exit(1); 
-   }
 
-   if (sge_root[strlen(sge_root)-1] == '/')  /*get rid of trailing slash*/
-      sge_root[strlen(sge_root)-1] = '\0';
-
-   if (SGE_STAT(sge_root, &sbuf)) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
-      exit(1);
-   }
-
-   len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ACT_QMASTER_FILE) + 5;
-
-   if (!(cp = malloc(len))) {
-      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE ));
-      exit(1);
-   }
-
-   sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR,ACT_QMASTER_FILE ); 
-   return cp;
-}
 

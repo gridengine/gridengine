@@ -36,7 +36,7 @@ COMMD_DIR = $(SDIR)/daemons/commd
 
 COMMD_TARGETS = sge_commd commdcntl tstsnd tstrcv
 
-COMMD_SRC   = commd.c message.c rwfd.c commproc.c host.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c
+COMMD_SRC   = commd.c message.c rwfd.c commproc.c host.c process_received_message.c prolog.c deliver_message.c ack.c reset_messages_for_commproc.c setup_commd_path.c version.c commd_io.c
 
 COMMD_ADD_SRC = 
 
@@ -44,9 +44,9 @@ COMMD_OBJS = $(COMMD_SRC:.c=.o)
 
 COMMD_ADD_OBJS = $(COMMD_ADD_SRC:.c=.o)
 
-COMMD_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+COMMD_ADD_LIBS = -luti -lrmon 
 
-COMMD_LIB_DEPENDS =  $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+COMMD_LIB_DEPENDS =  $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
 
 COMMD_TARGETS_OBJS = commdcntl.o tstsnd.o tstrcv.o
 
@@ -73,8 +73,8 @@ commd_messages:
 sge_commd:	$(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_LIB_DEPENDS)
 	$(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
 
-commdcntl:	commdcntl.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(KRBLIBS)
-	$(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
+commdcntl:	commdcntl.o $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(RMONLIB)
+	$(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB)  $(COMMLIB) $(RMONLIB) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(SLIBS) $(LIBS)
 
 tstsnd:	tstsnd.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
 	$(CC) $(CFLAGS) $(LFLAGS) -o $@ tstsnd.o $(COMMD_ADD_OBJS) -lcull -lcom -luti -lrmon $(LIBS)
@@ -134,3 +134,6 @@ reset_messages_for_commproc.o:  $(COMMD_DIR)/reset_messages_for_commproc.c
 
 debug_malloc.o:  $(COMMD_DIR)/debug_malloc.c
 	$(CC) $(CFLAGS) -c $(COMMD_DIR)/debug_malloc.c
+	
+setup_commd_path.o: $(COMMD_DIR)/setup_commd_path.c
+	$(CC) $(CFLAGS) -c $(COMMD_DIR)/setup_commd_path.c

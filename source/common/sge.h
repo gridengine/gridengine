@@ -168,6 +168,7 @@
 #endif
 #define ALIAS_FILE                "host_aliases"
 #define ACT_QMASTER_FILE          "act_qmaster"
+#define PRODUCT_MODE_FILE         "product_mode"
 
 /* These files exist in the qmaster and execd spool area */
 #define EXEC_DIR                  "job_scripts"

@@ -78,6 +78,9 @@
 #define MSG_FILE_TOMANYFDSEND                         _("end of \"too may open fds open\" }")
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _("can't malloc() for path to host alias file")
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE _("can't malloc() for path to act_qmaster file")
+#define MSG_MEMORY_MALLOCFAILEDFORPATHTOPRODMODFILE    _("can't malloc() for path to product mode file")
+
+
 
 
 /* 

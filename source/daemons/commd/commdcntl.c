@@ -72,16 +72,22 @@ char **argv
    u_long32 arg;
    char *carg = NULL;
 
-   /* use allways reserved port connection for security reasons */
-   int reserved_port = 1;
-
    int commdport = 0;
    
    /* 
-   ** determine service
+   ** determine service, (will set CL_P_RESERVED_PORT from product mode file)
    */
    sge_gdi_param(SET_MEWHO,COMMDCNTL,NULL);
    sge_gdi_setup(prognames[COMMDCNTL]); 
+
+   /*
+   **  always set CL_P_RESERVED_PORT
+   */
+   i = set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
+   if (i) {
+      printf(MSG_COMMDCNTL_SETCOMMLIBPARAM2RETURNED_II , (int) 1, i);
+   }
+
 
    /*
    ** eval command line
@@ -94,7 +100,14 @@ char **argv
          commdport = atoi(*argv);
       }
       if (!strcmp("-U", *argv)) {
-         reserved_port = 0;
+         /*
+         **  disable CL_P_RESERVED_PORT
+         */
+
+         i = set_commlib_param(CL_P_RESERVED_PORT, 0, NULL, NULL);
+         if (i) {
+            printf(MSG_COMMDCNTL_SETCOMMLIBPARAM2RETURNED_II , (int) 1, i);
+         }
       }
       if (!strcmp("-h", *argv)) {
          usage();
@@ -155,12 +168,6 @@ char **argv
       printf(MSG_COMMDCNTL_SETCOMMLIBPARAM1RETURNED_II , commdport, i);
    }
 
-   if (reserved_port) {
-      i = set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
-      if (i) {
-         printf(MSG_COMMDCNTL_SETCOMMLIBPARAM2RETURNED_II , (int) 1, i);
-      }
-   }
 
    i = cntl(operation, &arg, carg);
    if (i) {

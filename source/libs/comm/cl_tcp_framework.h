@@ -71,7 +71,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection,cl_com
 int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connection); /* CR check */
 
 /* connection establish help functions */
-int cl_com_tcp_connection_complete_request(cl_com_connection_t* connection, unsigned long timeout,unsigned long only_once );  /* CR check */
+int cl_com_tcp_connection_complete_request(cl_com_connection_t* connection, unsigned long timeout,unsigned long only_once, cl_select_method_t select_mode );  /* CR check */
 int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read);
 
 

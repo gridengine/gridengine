@@ -1,3 +1,17 @@
+CR-2004-07-12-0: Bugfix:    - cl_com_tcp_connection_complete_request() got
+                              a new parameter to handle only "read", only "write"
+                              or "read and write" connection establisment.
+                              ( read and write thread did both and produced a 
+                                one second timeout for multithreaded clients. Now
+                                the read thread will only read and the write thread
+                                will only write. A non multithreaded commlib will
+                                do both, read and write )
+                            - new function cl_commlib_search_endpoint(): The
+                              function will return an endpoint list with connected
+                              clients.
+                 Changed:   commlib
+                 Review:    HP
+
 JG-2004-07-12-0: Bugfix:    qmaster spooled tightly integrated parallel tasks
                             whenever online usage was reported by an execd.
                             Added ADOC header for job/ja_task/pe_task spooling.

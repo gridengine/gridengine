@@ -266,7 +266,7 @@ int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs)
 int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
                            int force_registration)
 {   
-   int ret;
+   int ret = 0;
    lListElem *suser = NULL;
    const char *submit_user = NULL;
 

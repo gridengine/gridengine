@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2004/04/19 10:52:07 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2004/04/22 09:16:26 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/19 10:52:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/22 09:16:26 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx bootstrap file
@@ -106,16 +106,22 @@ Defines how
 .M xxqs_name_sxx_qmaster 8
 writes its configuration and the status information of a running cluster.
 .PP
-The only available spooling method is \fIberkeleydb\fP.
+The available spooling methods are \fIberkeleydb\fP and \fIclassic\fP.
 .\"
 .\"
 .SH "\fBspooling_lib\fP"
-In case of a shared linked system could be the name of a shared library to 
-be loaded at 
+The name of a shared library containing the \fBspooling_method\fP to be loaded 
+at 
 .M xxqs_name_sxx_qmaster 8
 initialization time.
+The extension characterizing a shared library (.so, .sl, .dylib etc.) is not contained in \fBspooling_lib\fP.
 .PP
-Currently this parameter is always set to \fInone\fP.
+If \fBspooling_method\fP was set to \fIberkeleydb\fP during installation, \fBspooling_lib\fP is set to \fIlibspoolb\fP, if \fIclassic\fP was chosen as \fBspooling_method\fP, \fBspooling_lib\fP is set to \fIlibspoolc\fP.
+.PP
+Not all operating systems allow the dynamic loading of libraries. On these
+platforms a certain spooling method (default: berkeleydb) is compiled into the binaries and the 
+parameter \fBspooling_lib\fP will be ignored.
+.PP
 .\"
 .\"
 .SH "\fBspooling_params\fP"
@@ -123,7 +129,11 @@ Defines parameters to the chosen spooling method.
 .PP
 Parameters that are needed to initialize the spooling framework, e.g. to open database files or to connect to a certain database server.
 .PP
-The default spooling parameters value (for spooling method \fIberkeleydb\fP) is [rpc_server:]database directory, e.g. /sge_local/default/spool/qmaster/spooldb for spooling to a local filesystem, or myhost:sge for spooling over a Berkeley DB RPC server.
+The spooling parameters value for spooling method \fIberkeleydb\fP is [rpc_server:]database directory, e.g. /sge_local/default/spool/qmaster/spooldb for spooling to a local filesystem, or myhost:sge for spooling over a Berkeley DB RPC server.
+.PP
+For spooling method \fIclassic\fP the spooling parameters take the form
+<common_dir>;<qmaster spool dir>, e.g.
+/sge/default/common;/sge/default/spool/qmaster
 .\"
 .\"
 .SH "\fBbinary_path\fP"

@@ -1,3 +1,7 @@
+DT-2004-07-19-0: Enhancem.: o Added code examples for DRMAA Java language
+                              binding howto.  (Done over the weekend)
+                 Changed:   DRMAA
+
 AH-2004-07-13-0: Bugfix:    Deleted pending job appears in qstat
                             Problem was that finished jobs generally were 
                             displayed by qstat. Removed broken code that was 

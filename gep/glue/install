@@ -307,8 +307,8 @@ InstallChannels()
    done
 
    $INFOTEXT -n "Adding the channels. This may take some seconds.  "
-   # $IPS/SUNWps/bin/dpadmin list -u "uid=amAdmin,ou=People,o=$IPS_DOMAIN,o=isp" -w $ADMINPW -d "o=$IPS_DOMAIN,o=isp"
-   $IPS/SUNWps/bin/dpadmin add -u "uid=amAdmin,ou=People,o=$IPS_DOMAIN,o=isp" -w $ADMINPW -d "o=$IPS_DOMAIN,o=isp" channels/GEPTableContainer.xml
+   # $IPS/SUNWps/bin/dpadmin list -u "uid=amAdmin,ou=People,$IPS_DOMAIN" -w $ADMINPW -d "$IPS_DOMAIN"
+   $IPS/SUNWps/bin/dpadmin add -u "uid=amAdmin,ou=People,$IPS_DOMAIN" -w $ADMINPW -d "$IPS_DOMAIN" channels/GEPTableContainer.xml
 
    $INFOTEXT "Follow the instructions in the installation guide to add roles\nand to make the GEPTableContainer available."
 }

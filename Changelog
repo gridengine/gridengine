@@ -1,3 +1,9 @@
+HP-2004-04-16-0: Enhancem.: Added flag to enable or diasble drmaa_transfer_files
+                            via the configuration.
+                 Issue:     638
+                 Changed:   drmaa, japi, configuration
+                 Review:    AH
+
 AH-2004-04-16-0: Bugfix:    -soft submit option broken
                  Issue:     917
                  Review:    TBD

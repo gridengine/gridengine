@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, comp_port, "qping", 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, comp_port, CL_TCP_DEFAULT,"qping", 0, 1,0 );
    if (handle == NULL) {
       fprintf(stderr, "could not create communication handle: %s\n", cl_get_error_text(commlib_error));
       cl_com_cleanup_commlib();

@@ -1,8 +1,12 @@
-SG-2004-11-03-0: Bugfix:   too many array tasks are deleted
-                 Review:   EB
-                 Changed:  qmaster
-                 Issue:    1279
-                 Bugtraq:  6190164
+CR-2004-11-04-0: Enhancm.:  commlib: added rresvport() (reserved port) support
+                 Changed:   commlib
+                 Review:    pending
+
+SG-2004-11-03-0: Bugfix:    too many array tasks are deleted
+                 Review:    EB
+                 Changed:   qmaster
+                 Issue:     1279
+                 Bugtraq:   6190164
 
 AH-2004-11-03-0: Bugfix:    qsub doesn't forward the AFS token, removed 
                             set_sec_cred call 

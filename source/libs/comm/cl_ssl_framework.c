@@ -210,7 +210,10 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
                                 int                            server_port,
                                 int                            connect_port,
                                 cl_xml_connection_type_t       data_flow_type,
-                                cl_xml_connection_autoclose_t  auto_close_mode) {
+                                cl_xml_connection_autoclose_t  auto_close_mode,
+                                cl_framework_t                 framework_type,
+                                cl_xml_data_format_t           data_format_type,
+                                cl_tcp_connect_t               tcp_connect_mode) {
    
    cl_com_ssl_private_t* com_private = NULL;
    int ret_val;
@@ -231,6 +234,18 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
       return ret_val;
    }
 
+   /* check for correct framework specification */
+   switch(framework_type) {
+      case CL_CT_SSL:
+         break;
+      case CL_CT_UNDEFINED:
+      case CL_CT_TCP: {
+         CL_LOG_STR(CL_LOG_ERROR,"unexpected framework:", cl_com_get_framework_type(*connection));
+         cl_com_close_connection(connection);
+         return CL_RETVAL_WRONG_FRAMEWORK;
+      }
+   }
+
    /* create private data structure */
    com_private = (cl_com_ssl_private_t*) malloc(sizeof(cl_com_ssl_private_t));
    if (com_private == NULL) {
@@ -247,8 +262,10 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
    (*connection)->auto_close_type = auto_close_mode;
    (*connection)->data_flow_type = data_flow_type;
    (*connection)->connection_type = CL_COM_SEND_RECEIVE;
-   (*connection)->framework_type = CL_CT_SSL;
-   (*connection)->data_format_type = CL_CM_DF_BIN;
+   (*connection)->framework_type = framework_type;
+   (*connection)->data_format_type = data_format_type;
+   (*connection)->tcp_connect_mode = tcp_connect_mode;
+
 
    /* setup ssl private struct */
    com_private->sockfd = -1;
@@ -330,17 +347,35 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       int on = 1;
       char* unique_host = NULL;
       struct timeval now;
+      int res_port = IPPORT_RESERVED -1;
+
 
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_INIT");
       private->sockfd = -1;
+  
       
-      /* create socket */
-      if ((private->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-         CL_LOG(CL_LOG_ERROR,"could not create socket");
-         private->sockfd = -1;
-         cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
-         return CL_RETVAL_CREATE_SOCKET;
-      }
+      switch(connection->tcp_connect_mode) {
+         case CL_TCP_DEFAULT: {
+            /* create socket */
+            if ((private->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+               CL_LOG(CL_LOG_ERROR,"could not create socket");
+               private->sockfd = -1;
+               cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
+               return CL_RETVAL_CREATE_SOCKET;
+            }
+            break;
+         }
+         case CL_TCP_RESERVED_PORT: {
+            /* create reserved port socket */
+            if ((private->sockfd = rresvport(&res_port)) < 0) {
+               CL_LOG(CL_LOG_ERROR,"could not create reserved port socket");
+               private->sockfd = -1;
+               cl_com_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR );
+               return CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
+            }
+            break;
+         }
+      }    
 
       /* set local address reuse socket option */
       if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
@@ -851,13 +886,18 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
 #endif
           /* here we can investigate more information about the client */
           /* ntohs(cli_addr.sin_port) ... */
+          CL_LOG_INT(CL_LOG_WARNING,"client uses port=", ntohs(cli_addr.sin_port));
 
           tmp_connection = NULL;
           /* setup a ssl connection where autoclose is still undefined */
           if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
                                                    private->server_port,
                                                    private->connect_port,
-                                                   connection->data_flow_type, CL_CM_AC_UNDEFINED )) != CL_RETVAL_OK) {
+                                                   connection->data_flow_type,
+                                                   CL_CM_AC_UNDEFINED,
+                                                   connection->framework_type,
+                                                   connection->data_format_type,
+                                                   connection->tcp_connect_mode)) != CL_RETVAL_OK) {
              cl_com_ssl_close_connection(&tmp_connection); 
              if (resolved_host_name != NULL) {
                 free(resolved_host_name);
@@ -983,10 +1023,26 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
 
-      if (connection->framework_type == CL_CT_SSL) {
-         switch (connection->connection_state) {
-            case CL_CONNECTED:
-               if (connection->ccrm_sent == 0) {
+      switch(connection->framework_type) {
+         case CL_CT_SSL: {
+            switch (connection->connection_state) {
+               case CL_CONNECTED:
+                  if (connection->ccrm_sent == 0) {
+                     if (do_read_select != 0) {
+                        max_fd = MAX(max_fd,con_private->sockfd);
+                        FD_SET(con_private->sockfd,&my_read_fds); 
+                        nr_of_descriptors++;
+                        connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                     }
+                     if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
+                        /* this is to come out of select when data is ready to write */
+                        max_fd = MAX(max_fd, con_private->sockfd);
+                        FD_SET(con_private->sockfd,&my_write_fds);
+                        connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                     } 
+                  }
+                  break;
+               case CL_CONNECTING:
                   if (do_read_select != 0) {
                      max_fd = MAX(max_fd,con_private->sockfd);
                      FD_SET(con_private->sockfd,&my_read_fds); 
@@ -998,38 +1054,28 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                      max_fd = MAX(max_fd, con_private->sockfd);
                      FD_SET(con_private->sockfd,&my_write_fds);
                      connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-                  } 
-               }
-               break;
-            case CL_CONNECTING:
-               if (do_read_select != 0) {
-                  max_fd = MAX(max_fd,con_private->sockfd);
-                  FD_SET(con_private->sockfd,&my_read_fds); 
-                  nr_of_descriptors++;
-                  connection->data_read_flag = CL_COM_DATA_NOT_READY;
-               }
-               if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
-                  /* this is to come out of select when data is ready to write */
-                  max_fd = MAX(max_fd, con_private->sockfd);
-                  FD_SET(con_private->sockfd,&my_write_fds);
-                  connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-               }
-               break;
-            case CL_OPENING:
-               /* this is to come out of select when connection socket is ready to connect */
-               if (connection->connection_sub_state == CL_COM_OPEN_CONNECT) { 
-                  if ( con_private->sockfd > 0 && do_read_select != 0) {
-                     max_fd = MAX(max_fd, con_private->sockfd);
-                     FD_SET(con_private->sockfd,&my_write_fds);
                   }
-               } 
-               break;
-            case CL_DISCONNECTED:
-            case CL_CLOSING:
-               break;
+                  break;
+               case CL_OPENING:
+                  /* this is to come out of select when connection socket is ready to connect */
+                  if (connection->connection_sub_state == CL_COM_OPEN_CONNECT) { 
+                     if ( con_private->sockfd > 0 && do_read_select != 0) {
+                        max_fd = MAX(max_fd, con_private->sockfd);
+                        FD_SET(con_private->sockfd,&my_write_fds);
+                     }
+                  } 
+                  break;
+               case CL_DISCONNECTED:
+               case CL_CLOSING:
+                  break;
+            }
+            break;
          }
-      } else {
-         CL_LOG_STR(CL_LOG_WARNING,"ignoring unexpected connection type:", cl_com_get_framework_type(connection) );
+         case CL_CT_UNDEFINED:
+         case CL_CT_TCP: {
+            CL_LOG_STR(CL_LOG_WARNING,"ignoring unexpected connection type:",
+                       cl_com_get_framework_type(connection));
+         }
       }
       con_elem = cl_connection_list_get_next_elem(con_elem);
       if (max_fd + 1 >= FD_SETSIZE) {

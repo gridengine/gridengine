@@ -596,6 +596,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                                       cl_xml_connection_type_t data_flow_type,
                                       cl_bool_t service_provider,
                                       int handle_port,
+                                      cl_tcp_connect_t tcp_connect_mode,
                                       char* component_name, unsigned long component_id,
                                       int select_sec_timeout, int select_usec_timeout) {
    int thread_start_error = 0;
@@ -685,6 +686,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
 
    new_handle->local = NULL;
+   new_handle->tcp_connect_mode = tcp_connect_mode;
    new_handle->debug_client_mode = CL_DEBUG_CLIENT_OFF;
    new_handle->debug_list = NULL;
    new_handle->messages_ready_for_read = 0;
@@ -917,30 +919,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       }
 
       CL_LOG(CL_LOG_INFO,"creating service ...");
-      switch(new_handle->framework) {
-         case CL_CT_TCP: {
-            return_value = cl_com_tcp_setup_connection(&new_con,
-                                                       new_handle->service_port,
-                                                       new_handle->connect_port,
-                                                       CL_CM_CT_STREAM,
-                                                       CL_CM_AC_UNDEFINED);
-            break;
-         }
-         case CL_CT_SSL: {
-            return_value = cl_com_ssl_setup_connection(&new_con,
-                                                       new_handle->service_port,
-                                                       new_handle->connect_port,
-                                                       CL_CM_CT_STREAM,
-                                                       CL_CM_AC_UNDEFINED);
-            break;
-         }
-         case CL_CT_UNDEFINED: {
-            return_value = CL_RETVAL_UNDEFINED_FRAMEWORK;
-            break;
-         }
-      }
+      return_value = cl_com_setup_connection(new_handle, &new_con);
 
-      /* autoclose is not used for service connection */
       if (return_value != CL_RETVAL_OK) {
          int mutex_ret_val;
          cl_com_close_connection(&new_con);
@@ -964,6 +944,9 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          return NULL;
       }
       
+      /* autoclose is not used for service connection */
+      new_con->data_flow_type = CL_CM_CT_STREAM;
+      new_con->auto_close_type = CL_CM_AC_UNDEFINED;
       new_con->handler = new_handle;
 
       return_value = cl_com_connection_request_handler_setup(new_con, new_handle->local);
@@ -1411,7 +1394,10 @@ int cl_com_setup_connection(cl_com_handle_t* handle, cl_com_connection_t** conne
                                                   handle->service_port,
                                                   handle->connect_port,
                                                   handle->data_flow_type,
-                                                  handle->auto_close_mode);
+                                                  handle->auto_close_mode,
+                                                  handle->framework,
+                                                  CL_CM_DF_BIN,
+                                                  handle->tcp_connect_mode);
             break;
          }
          case CL_CT_SSL: {
@@ -1419,7 +1405,10 @@ int cl_com_setup_connection(cl_com_handle_t* handle, cl_com_connection_t** conne
                                                   handle->service_port,
                                                   handle->connect_port,
                                                   handle->data_flow_type,
-                                                  handle->auto_close_mode);
+                                                  handle->auto_close_mode,
+                                                  handle->framework,
+                                                  CL_CM_DF_BIN,
+                                                  handle->tcp_connect_mode);
             break;
          }
          case CL_CT_UNDEFINED: {
@@ -2136,10 +2125,6 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
    elem = cl_connection_list_get_first_elem(handle->connection_list);     
    
    while(elem) {
-#if 0
-      printf("connection state is %s\n", cl_com_get_connection_state(elem->connection));
-      printf("connection sub state is %s\n", cl_com_get_connection_sub_state(elem->connection));
-#endif
 
       if (elem->connection->connection_state == CL_DISCONNECTED) {
          /* open connection if there are messages to send */

@@ -47,7 +47,14 @@ int cl_com_ssl_get_fd(cl_com_connection_t* connection, int* fd);
 
 
 /* create new connection object */
-int cl_com_ssl_setup_connection(cl_com_connection_t** connection, int server_port, int connect_port, cl_xml_connection_type_t data_flow_type, cl_xml_connection_autoclose_t auto_close_mode);
+int cl_com_ssl_setup_connection(cl_com_connection_t** connection,
+                                int server_port,
+                                int connect_port,
+                                cl_xml_connection_type_t data_flow_type,
+                                cl_xml_connection_autoclose_t auto_close_mode,
+                                cl_framework_t                 framework_type,
+                                cl_xml_data_format_t           data_format_type,
+                                cl_tcp_connect_t               tcp_connect_mode);
 
 /* create/destroy connection functions */
 int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once);

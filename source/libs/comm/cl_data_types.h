@@ -42,6 +42,12 @@
 #include "cl_lists.h"
 #include "cl_xml_parsing.h"
 
+/* typedef for tcp port options */
+typedef enum cl_tcp_connect_def {
+   CL_TCP_DEFAULT = 1,           /* standard tcp/ip options */
+   CL_TCP_RESERVED_PORT          /* use reserved port security */
+} cl_tcp_connect_t;
+
 
 /* typedef for Connection Type (CT) */
 typedef enum cl_framework_def {
@@ -189,6 +195,7 @@ typedef struct cl_com_handle {
    cl_debug_client_t         debug_client_mode;
    cl_raw_list_t*            debug_list;
    cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
+   cl_tcp_connect_t          tcp_connect_mode; /* used for reserved port selection for tcp connect */
    cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */
    cl_bool_t                 service_provider; /* if true this component will provide a service for clients (server port) */
 
@@ -338,6 +345,7 @@ struct cl_com_connection_type {
    int                   ccrm_received;
 
    cl_framework_t        framework_type;          /* CL_CT_TCP, ... */
+   cl_tcp_connect_t      tcp_connect_mode;        /* used for reserved port socket creation for TCP connect call */ 
    cl_connection_t       connection_type;         /* CL_COM_RECEIVE, CL_COM_SEND or CL_COM_SEND_RECEIVE  */
    cl_service_handler_t  service_handler_flag;    /* CL_COM_SERVICE_HANDLER or CL_COM_CONNECTION or CL_COM_SERVICE_UNDEFINED*/
    cl_data_ready_flag_t  data_write_flag;         /* CL_COM_DATA_READY or CL_COM_DATA_NOT_READY */ 

@@ -136,7 +136,7 @@ extern int main(int argc, char** argv)
 
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, atoi(argv[2]) , "virtual_master", 1 , 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_master", 1 , 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);

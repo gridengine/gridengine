@@ -72,6 +72,7 @@
 #define MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_COMPONENT_NOT_FOUND              _MESSAGE(85032, _("requested component not found"))
 #define MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_ENDPOINT_NOT_UNIQUE_ERROR        _MESSAGE(85033, _("already connected - endpoint not unique error"))
 #define MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST  _MESSAGE(85034, _("client is not in allowed host list"))
+#define MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR                                   _MESSAGE(85005, _("call to rresvport() returned value < 0"))
 
 
 

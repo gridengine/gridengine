@@ -556,7 +556,7 @@ int japi_init(const char *contact, const char *session_key_in,
 
       if (handle == NULL) {
          handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE,
-                                       sge_get_qmaster_port(),
+                                       sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                        (char*)prognames[uti_state_get_mewho()],
                                        0, 1, 0);      
       }

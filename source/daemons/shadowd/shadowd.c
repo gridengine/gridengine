@@ -115,7 +115,7 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
 
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
 
-   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(),(char*)prognames[SHADOWD] , 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
       CRITICAL((SGE_EVENT,cl_get_error_text(commlib_error)));
       DEXIT;

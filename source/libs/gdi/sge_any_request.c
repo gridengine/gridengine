@@ -431,7 +431,7 @@ void prepare_enroll(const char *name)
                                                    CL_CM_AC_DISABLED ,
                                                    CL_TRUE);
             execd_port = sge_get_execd_port(); 
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE,execd_port ,
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE,execd_port , CL_TCP_DEFAULT,
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
 #ifdef ENABLE_DEBUG_CLIENT
@@ -453,7 +453,7 @@ void prepare_enroll(const char *name)
             DPRINTF(("creating QMASTER handle\n"));
             handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
                                           CL_TRUE, sge_get_qmaster_port(),                          /* create service on qmaster port,                */
-                                                                                                    /* use execd port to connect to endpoints         */
+                                          CL_TCP_DEFAULT,                                           /* use standard connect mode         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
                                           1 , 0 );           
                                        /* select timeout is set to 1 second 0 usec       */
@@ -474,7 +474,7 @@ void prepare_enroll(const char *name)
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
@@ -493,7 +493,7 @@ void prepare_enroll(const char *name)
          default:
             /* this is for "normal" gdi clients of qmaster */
             DPRINTF(("creating GDI handle\n"));
-            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
                switch (commlib_error) {

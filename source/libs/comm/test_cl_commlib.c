@@ -169,7 +169,7 @@ extern int main(int argc, char** argv)
   cl_com_set_tag_name_func(my_application_tag_name);
 
 
-  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, "server", 1, 1, 0 );
+  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);

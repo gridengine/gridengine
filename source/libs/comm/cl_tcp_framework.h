@@ -47,7 +47,15 @@ int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port);
 int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port);
 int cl_com_tcp_set_connect_port(cl_com_connection_t* connection, int port);
 
-int cl_com_tcp_setup_connection(cl_com_connection_t** connection, int server_port, int connect_port, cl_xml_connection_type_t data_flow_type, cl_xml_connection_autoclose_t auto_close_mode);
+int cl_com_tcp_setup_connection(cl_com_connection_t** connection, 
+                                int server_port, 
+                                int connect_port, 
+                                cl_xml_connection_type_t data_flow_type, 
+                                cl_xml_connection_autoclose_t auto_close_mode,
+                                cl_framework_t                 framework_type,
+                                cl_xml_data_format_t           data_format_type,
+                                cl_tcp_connect_t               tcp_connect_mode);
+
 int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once);  /* CR check */
 int cl_com_tcp_close_connection(cl_com_connection_t** connection);  /* CR check */
 int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data, unsigned long size, unsigned long *only_one_write );  /* CR check */

@@ -4041,8 +4041,6 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             connection->connection_state = CL_CONNECTED;  /* That was it */
             connection->connection_sub_state = CL_COM_WORK;
             cl_dump_connection(connection);
-            /* printf("local hostname is  : \"%s\"\n", connection->local->comp_host); */
-            /* printf("remote hostname is : \"%s\"\n", connection->remote->comp_host); */
          } else {
             CL_LOG_INT(CL_LOG_ERROR,"Connect Error:",crm_message->cs_condition);
             CL_LOG_STR(CL_LOG_ERROR,"error:",crm_message->cs_text);

@@ -275,7 +275,7 @@ void *server_thread(void *t_conf) {
    free(local_hostname);
    local_hostname = NULL;
 
-   retval = cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED );
+   retval = cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
    CL_LOG_STR(CL_LOG_INFO, "cl_com_setup_tcp_connection() returned ", cl_get_error_text(retval) );
 
    retval = cl_com_connection_request_handler_setup(con, local_host);
@@ -446,7 +446,7 @@ void *client_thread(void *t_conf) {
       pthread_cleanup_pop(0);  /* client_thread_cleanup */
 
       if (con == NULL) {
-         cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED );
+         cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
          retval = cl_com_open_connection(con, 5, remote_host, local_host, receiver_host, sender_host);
          CL_LOG_STR( CL_LOG_INFO, "cl_com_open_connection() returned ", cl_get_error_text(retval) );
          if (retval != CL_RETVAL_OK) {

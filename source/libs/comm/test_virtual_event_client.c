@@ -117,7 +117,7 @@ extern int main(int argc, char** argv)
   cl_com_setup_commlib(CL_NO_THREAD ,atoi(argv[1]), NULL );
 
   printf("setting up handle for connect port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "virtual_event_client", 0, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_event_client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);

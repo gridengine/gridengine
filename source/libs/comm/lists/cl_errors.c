@@ -326,6 +326,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED: {
          return MSG_CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
       }
+      case CL_RETVAL_CREATE_RESERVED_PORT_SOCKET: {
+         return MSG_CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

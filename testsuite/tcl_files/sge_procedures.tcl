@@ -6633,6 +6633,55 @@ proc startup_execd { hostname } {
    return 0
 }
 
+#****** sge_procedures/startup_execd_raw() *************************************
+#  NAME
+#     startup_execd_raw() -- startup execd without using startup script
+#
+#  SYNOPSIS
+#     startup_execd_raw { hostname } 
+#
+#  FUNCTION
+#     Startup execd on remote host
+#
+#  INPUTS
+#     hostname - host to start up execd
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     sge_procedures/startup_execd()
+#*******************************************************************************
+proc startup_execd_raw { hostname } {
+   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_START_SCRIPT_NAME CHECK_CORE_MASTER
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+      if { [have_root_passwd] != 0  } {
+         add_proc_error "startup_execd" "-2" "no root password set or ssh not available"
+         return -1
+      }
+      set startup_user "root"
+   } else {
+      set startup_user $CHECK_USER
+   }
+
+   puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
+   set remote_arch [ resolve_arch $hostname ]
+   set my_environment(COMMD_HOST) $CHECK_CORE_MASTER
+   set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/$remote_arch/sge_execd" "-nostart-commd" prg_exit_state 60 0 my_environment 1 1 1]
+
+
+   set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
+
+   if { [string match "*$ALREADY_RUNNING" $output ] } {
+      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
+      return -1
+   }
+   return 0
+}
+
 #                                                             max. column:     |
 #****** sge_procedures/startup_shadowd() ******
 # 

@@ -1,3 +1,8 @@
+CR-2003-05-15-0: Testsuite: - new method to cleanup remote spooldirs in 
+                              install_core_system check
+                            - new function startup_execd_raw() to start an execd
+                              without startup script 
+
 AD-2003-05-15-0: Bugfix:    aimk (Arch LINUX5/6): added '-lXmu' to XLIBS. Otherwise
                             the '_XEditRes*' functions could not be resolved or linked.
 		 Changed:   aimk

@@ -1926,7 +1926,9 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
       puts $CHECK_OUTPUT "->host $host has spool toplevel directory $spooldir"
       if { $do_cleanup == 1 } {
          puts $CHECK_OUTPUT "cleanup spooldir!"
-         set result [ start_remote_tcl_prog $host "ts_def_con" "file_procedures.tcl" "cleanup_spool_dir" "$spooldir $subdir" ]
+#         set result [ start_remote_tcl_prog $host "ts_def_con" "file_procedures.tcl" "cleanup_spool_dir" "$spooldir $subdir" ]
+         set result "cleanup spooldir"
+         cleanup_spool_dir_for_host $host $spooldir $subdir
       } else {
          puts $CHECK_OUTPUT "don't cleanup spooldir!"
          set result "no cleanup"

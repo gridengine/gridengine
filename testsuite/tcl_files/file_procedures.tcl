@@ -1790,7 +1790,7 @@ proc copy_directory { source target } {
 #     ??? 
 #
 #  SEE ALSO
-#     file_procedures/delete_directory
+#     file_procedures/delete_directory()
 #*******************************
 proc cleanup_spool_dir { topleveldir subdir } {
    global CHECK_COMMD_PORT CHECK_OUTPUT
@@ -1844,6 +1844,148 @@ proc cleanup_spool_dir { topleveldir subdir } {
    return $spooldir
 }
 
+
+#****** file_procedures/cleanup_spool_dir_for_host() ***************************
+#  NAME
+#     cleanup_spool_dir_for_host() -- create or cleanup spool directory
+#
+#  SYNOPSIS
+#     cleanup_spool_dir_for_host { hostname topleveldir subdir } 
+#
+#  FUNCTION
+#     This procedure will create or cleanup old entries in the qmaster or execd 
+#     spool directory
+#
+#  INPUTS
+#     hostname    - remote host where to cleanup spooldir
+#     topleveldir - path to spool toplevel directory ( updir of qmaster and execd )
+#     subdir      - this paramter is master or execd
+#
+#  RESULT
+#     if ok the procedure returns the correct spool directory. It returns  on 
+#     error 
+#
+#  SEE ALSO
+#     file_procedures/cleanup_spool_dir()
+#*******************************************************************************
+proc cleanup_spool_dir_for_host { hostname topleveldir subdir } {
+   global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_DEBUG_LEVEL
+
+   set spooldir "$topleveldir"
+
+   puts $CHECK_OUTPUT "->spool toplevel directory is $spooldir"
+   
+   if { [ remote_file_isdirectory $hostname $spooldir ] == 1 } {
+      set spooldir "$spooldir/$CHECK_COMMD_PORT"
+      if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } { 
+          puts $CHECK_OUTPUT "creating directory \"$spooldir\""
+          remote_file_mkdir $hostname $spooldir
+          if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
+              puts $CHECK_OUTPUT "could not create directory \"$spooldir\""
+              add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
+          }
+      }
+      set spooldir "$spooldir/$subdir"
+
+      if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
+          puts $CHECK_OUTPUT "creating directory \"$spooldir\""
+          remote_file_mkdir $hostname $spooldir
+          if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
+              puts $CHECK_OUTPUT "could not create directory \"$spooldir\""
+              add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
+          } 
+      } else {
+         if { [string compare $spooldir "" ] != 0 } {
+             puts $CHECK_OUTPUT "deleting old spool dir entries in \"$spooldir\""
+             if { [remote_delete_directory $hostname $spooldir] != 0 } { 
+                puts $CHECK_OUTPUT "could not remove spool directory $spooldir"
+                add_proc_error "cleanup_spool_dir" -2 "could not remove spool directory $spooldir"
+             }
+             puts $CHECK_OUTPUT "creating directory \"$spooldir\""
+             remote_file_mkdir $hostname $spooldir
+             if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
+                puts $CHECK_OUTPUT "could not create directory \"$spooldir\" after moving to trash folder"
+                add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
+             } 
+         }
+      }
+      puts $CHECK_OUTPUT "local spooldir is \"$spooldir\""
+   } else {
+      add_proc_error "cleanup_spool_dir" "-1" "toplevel spool directory \"$spooldir\" not found"
+      puts $CHECK_OUTPUT "using no spool dir"
+      set spooldir ""
+   }
+   puts "$spooldir"
+   return $spooldir
+}
+
+
+# return 0 if not
+# return 1 if is directory
+proc remote_file_isdirectory { hostname dir } {
+  global CHECK_USER
+  start_remote_prog $hostname $CHECK_USER "cd" "$dir" prg_exit_state 60 0 "" 1 0 1
+  if { $prg_exit_state == 0 } {
+     return 1  
+  }
+  return 0
+}
+
+proc remote_file_mkdir { hostname dir } {
+  global CHECK_USER
+  start_remote_prog $hostname $CHECK_USER "mkdir" "$dir" prg_exit_state 60 0 "" 1 0 1
+}
+
+proc remote_delete_directory { hostname path } { 
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_USER
+
+   set return_value -1
+   puts $CHECK_OUTPUT "$hostname -> path to delete: \"$path\""
+   if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
+      file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"
+   }
+
+   if { [remote_file_isdirectory $hostname $path] != 1} {
+      puts $CHECK_OUTPUT "delete_directory - no such directory: \"$path\""
+      add_proc_error "delete_directory" -1 "no such directory: \"$path\""
+      return -1     
+   }
+ 
+   if { [string length $path ] > 10 } {
+      puts $CHECK_OUTPUT "delete_directory - moving \"$path\" to trash folder ..."
+      set new_name [ file tail $path ] 
+
+      start_remote_prog $hostname $CHECK_USER "mv" "$path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "delete_directory - mv error:\n$result"
+         puts $CHECK_OUTPUT "delete_directory - try to copy the directory"
+         start_remote_prog $hostname $CHECK_USER "cp" "-r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
+         if { $prg_exit_state != 0 } {
+            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder, $result"
+            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder, $result"
+            set return_value -1
+         } else { 
+            puts $CHECK_OUTPUT "copy ok -  removing directory"
+            start_remote_prog $hostname $CHECK_USER "rm" "-rf $path" prg_exit_state 60 0 "" 1 0 1
+            if { $prg_exit_state != 0 } {
+               puts $CHECK_OUTPUT "could not remove directory \"$path\", $result"
+               add_proc_error "delete_directory" -1 "could not remove directory \"$path\", $result"
+               set return_value -1
+            } else {
+               puts $CHECK_OUTPUT "done"
+               set return_value 0
+            }
+         }
+      } else {
+         set return_value 0
+      }
+   } else {
+      puts $CHECK_OUTPUT "delete_directory - path is to short. Will not delete\n\"$path\""
+      add_proc_error "delete_directory" "-1" "path is to short. Will not delete\n\"$path\""
+      set return_value -1
+   }
+  return $return_value
+}
 
 
 #                                                             max. column:     |

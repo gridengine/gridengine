@@ -524,8 +524,12 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       }
    }
 
-   /* check DISPLAY on the client side before submitting job to qmaster */
-   job_check_qsh_display(*pjob, &answer, FALSE);
+   /* check DISPLAY on the client side before submitting job to qmaster 
+    * only needed for qsh 
+    */
+   if(me.who == QSH) {
+      job_check_qsh_display(*pjob, &answer, FALSE);
+   }
 
    DEXIT;
    return answer;

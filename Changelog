@@ -1,3 +1,6 @@
+JG-2002-10-11-0  Bugfix:    qlogin and qrsh checked the DISPLAY variable
+                            this is only necessary for qsh.
+
 AH-2002-10-10-1  Bugfix:    Fix problem with user .cshrc error causing
                             [pro|epi]log,pe-[start|stop] failure and setting 
                             queue into error state.  [pro|epi]log,pe-[start|stop] 

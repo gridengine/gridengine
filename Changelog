@@ -1,3 +1,7 @@
+AD-2004-01-26-3: Bugfix:    'sge_do_log()' does no longer change the effective
+                            UID before and after logging.
+                 Changed:   uti
+
 CR-2004-01-26-0: Bugfix:    Fixed build for ALINUX
                  Review:    AD
 

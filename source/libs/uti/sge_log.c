@@ -584,20 +584,12 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_do_log() is not MT safe due to sge_switch2admin_user()
-*     MT-NOTE: sge_do_log() can be used however in MT applications if no 
-*     MT-NOTE: admin user switching takes place
+*     MT-NOTE: sge_do_log() is MT safe.
 *
 *******************************************************************************/
 static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine) 
 {
    int fd;
-   int switch_back = 0;
-
-   if (log_state_get_log_as_admin_user() && geteuid() == 0) {
-      sge_switch2admin_user();
-      switch_back = 1;
-   }
 
    if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
       char msg2log[4*MAX_STRING_SIZE];
@@ -617,10 +609,6 @@ static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine)
               aNewLine);
       write(fd, msg2log, strlen(msg2log));
       close(fd);
-   }
-
-   if (log_state_get_log_as_admin_user() && switch_back) {
-      sge_switch2start_user();
    }
 
    return;

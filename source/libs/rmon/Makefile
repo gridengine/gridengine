@@ -200,7 +200,7 @@ rmonlib_clean:  rmon_tidy
 	rm -f $(RMON_ALL) librmon.a librmon$(SHAREDEXT)
 
 rmonlib_depend:
-	$(DEPEND) -f$(RMON_DIR)/rmon_dependencies $(CULLLIB_DIR)/*.c
+	$(DEPEND) -f$(RMON_DIR)/rmon_dependencies $(RMON_DIR)/*.c
 #
 # remove symblols from executables
 #

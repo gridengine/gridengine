@@ -4288,7 +4288,7 @@ proc config_source_cvs_release { only_check name config_array } {
    set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$CHECK_SOURCE_DIR/CVS/Tag" prg_exit_state 60 0 "" 1 0]
    set result [string trim $result]
    if { $prg_exit_state == 0 } {
-      if { [ string compare $result "T$value" ] != 0 } {
+      if { [ string compare $result "T$value" ] != 0 && [string compare $result "N$value"] != 0 } {
          puts $CHECK_OUTPUT "CVS/Tag entry doesn't match cvs release tag \"$value\" in directory $CHECK_SOURCE_HOSTNAME"
          return -1
       }

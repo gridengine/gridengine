@@ -1,3 +1,6 @@
+JG-2003-01-08-1  Testsuite  Testsuite only accepted branches as cvs revision,
+                            but rejected tags.
+
 JG-2003-01-08-0  Bugfix     qtcsh did not build in a shared linked system 
                             (aimk -shared-libs)
 

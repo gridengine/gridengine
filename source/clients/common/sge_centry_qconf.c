@@ -29,11 +29,14 @@
  *
  ************************************************************************/
 
+#include <string.h>
+
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"
 #include "spool/classic/read_write_host_group.h"
 #include "spool/classic/read_write_complex.h"
+#include "spool/classic/read_write_centry.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "sge_unistd.h"
@@ -112,7 +115,7 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
       if (status >= 0) {
          lListElem *centry;
 
-         centry = cull_read_in_centry(NULL, filename, 1, 0, 0, NULL);
+         centry = cull_read_in_centry(NULL, filename, 1, 0, NULL);
          if (centry != NULL) {
             *this_elem = lFreeElem(*this_elem);
             *this_elem = centry; 
@@ -164,7 +167,7 @@ centry_add_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *centry;
 
-      centry = cull_read_in_centry(NULL, filename, 1, 0, 0, NULL); 
+      centry = cull_read_in_centry(NULL, filename, 1, 0,NULL); 
       if (centry == NULL) {
          ret = false;
       }
@@ -216,7 +219,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *centry;
 
-      centry = cull_read_in_centry(NULL, filename, 1, 0, 0, NULL); 
+      centry = cull_read_in_centry(NULL, filename, 1, 0,NULL); 
       if (centry == NULL) {
          sprintf(SGE_EVENT, MSG_CENTRY_FILENOTCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
@@ -325,6 +328,48 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
       lList *add_list = NULL;
       lListElem *centry_elem = NULL;
       lListElem *next_centry_elem = NULL;
+      bool cont = true;
+
+      /* check for duplicate names */
+      next_centry_elem = lFirst(this_list);
+      while ((centry_elem = next_centry_elem)) {
+         lListElem *cmp_elem = lFirst(this_list);
+            
+         while(centry_elem != cmp_elem){
+            bool duplicate_name=false;
+            const char *name;        
+
+            if (strcmp( (name = lGetString(centry_elem, CE_name)), lGetString(cmp_elem, CE_name)) == 0){
+               duplicate_name = true;
+            }
+            else if (strcmp( (name = lGetString(centry_elem, CE_name)), lGetString(cmp_elem, CE_shortcut)) == 0){
+               duplicate_name = true;
+            }
+            else if (strcmp( (name = lGetString(centry_elem, CE_shortcut)), lGetString(cmp_elem, CE_name)) == 0){
+               duplicate_name = true;
+            }
+            else if (strcmp( (name =lGetString(centry_elem, CE_shortcut)), lGetString(cmp_elem, CE_shortcut)) == 0){
+               duplicate_name = true;
+            }
+            
+            if (duplicate_name){
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_ANSWER_COMPLEXXALREADYEXISTS_S, name);
+               cont = false;
+            } 
+            cmp_elem = lNext(cmp_elem);
+         }
+
+         if (!centry_elem_validate(centry_elem, NULL, answer_list)){
+            cont = false;
+         }
+
+         next_centry_elem = lNext(centry_elem);
+      }
+     
+      if(!cont){
+         DEXIT;
+         return false;
+      }
 
       modify_list = lCreateList("", CE_Type);
       add_list = lCreateList("", CE_Type);

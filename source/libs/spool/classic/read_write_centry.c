@@ -113,9 +113,8 @@ lListElem *cull_read_in_centry(
 const char *dirname,
 const char *filename,
 int spool,
-int flag,
 int *tag,
-int fields[]
+lList *centry_list
 ) {
    lListElem *ep;
    struct read_object_args args = { CE_Type, "", read_centry_work };
@@ -124,6 +123,14 @@ int fields[]
    DENTER(TOP_LAYER, "cull_read_in_centry");
 
    ep = read_object(dirname, filename, spool, 0,RCL_NO_VALUE, &args, tag?tag:&intern_tag, NULL);
+
+   if(ep){
+      lList *answer_list = NULL;
+      if (!centry_elem_validate(ep,  centry_list, &answer_list)){
+         answer_list_output(&answer_list);
+         ep = lFreeElem(ep);
+      }
+   }
 
    DEXIT;
    return ep;

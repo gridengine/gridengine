@@ -59,6 +59,8 @@ include $(SDIR)/libs/gdi/Makefile
 include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/uti/Makefile
+include $(SDIR)/libs/sgeobj/Makefile
+include $(SDIR)/libs/spool/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -116,7 +118,8 @@ QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon 
                 -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
-                   $(XLTREELIB) $(XTABLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
+                   $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) \
+                   $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
                    $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
 

@@ -4349,7 +4349,6 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                lList *running_jobs,
                lList *finished_jobs,
                lList *pending_jobs,
-               lList *pending_jobs_excluded,
                lList **orderlist,
                bool has_queues,
                bool has_pending_jobs )
@@ -4365,10 +4364,6 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    if (pending_jobs)
       for_each(job, pending_jobs)
          sge_clear_job(job);
-   if (pending_jobs_excluded){
-      for_each(job, pending_jobs_excluded)
-         sge_clear_job(job);
-   }
 
       /* calculate tickets for pending jobs */
       seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, 
@@ -4418,11 +4413,6 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                                         finished_jobs, *orderlist, 1, seqno, max_report_job_tickets);
 
       past = now;
-   }
-
-   if (pending_jobs_excluded){
-      *orderlist = sge_build_sge_orders(lists, NULL, pending_jobs_excluded, NULL,
-                                        *orderlist, 0, seqno, max_report_job_tickets);
    }
 
    if(!has_pending_jobs || !has_queues)

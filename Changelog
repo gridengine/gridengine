@@ -1,3 +1,25 @@
+SG-2003-09-25-3: Bugfix:    The tickets are calculated for all pending jobs and not only
+                            for the ones, which can be dispatched in a scheduler run.
+                 Review:    AA 
+                 Changed:   scheduler
+
+SG-2003-09-25-2: Enhancem.: Qmaster ensures, that the type for build in attributes are
+                            not changed. 
+                 Review:    AA
+                 Changed:   qmaster, qconf, qmon
+
+SG-2003-09-25-1: Enhancem.: All attribute changes are validated now and only valid ones
+                            are commited. In all other cases error messages are send
+                            to the user.
+
+                 Review:    AA
+                 Changed:   qmaster, qconf, qmon
+
+SG-2003-09-25-0: Bugfix:    A failed namechange of an attribute resulted in the deletion
+                            of that attribute. 
+                 Review:    AA
+                 Changed:   qmaster, qconf, qmon
+
 EB-2003-09-24-1: Enhancem.: qconf -?attr for QCs
 
 EB-2003-09-24-0: Enhancem.: qconf -sq for QCs

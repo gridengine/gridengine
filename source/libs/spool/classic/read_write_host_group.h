@@ -44,8 +44,6 @@ int
 read_centry_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
 int spool, int flag, int *tag, int parsing_type);
 
-lListElem *cull_read_in_centry(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
-
 char *write_centry(int spool, int how, const lListElem *hostGroupElement);
 
 #endif /* _READ_WRITE_HOST_GROUP_H */

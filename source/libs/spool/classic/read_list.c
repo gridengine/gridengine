@@ -85,6 +85,7 @@
 #include "read_write_userprj.h"
 #include "read_write_userset.h"
 #include "read_write_cqueue.h"
+#include "read_write_centry.h"
 #include "sge_cuser.h"
 #include "read_write_ume.h"
 
@@ -1092,7 +1093,7 @@ int read_all_centries(void)
          continue;
       }
       close(fd);
-      el = cull_read_in_centry(CENTRY_DIR, dent->d_name , 1, 0, NULL, NULL);
+      el = cull_read_in_centry(CENTRY_DIR, dent->d_name , 1,0, Master_CEntry_List);
       if (answer) {
          ERROR((SGE_EVENT, lGetString(lFirst(answer), AN_text)));
          answer = lFreeList(answer);

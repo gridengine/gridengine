@@ -207,7 +207,7 @@
 #define MSG_EVE_TE4CAL_S              _MESSAGE(33133, _("got timer event for unknown calendar "SFQ"\n"))
 #define MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS _MESSAGE(33134, _("denied: calendar "SFQ" is still referenced in queue "SFQ"\n") ) 
 #define MSG_SGETEXT_REMOVEDFROMLIST_SSSS        _MESSAGE(33135, _(""SFN"@"SFN" removed "SFQ" from "SFN" list\n"))
-
+#define MSG_INVALID_CENTRY_DEL_S                _MESSAGE(33136, _("The build-in complex "SFQ" cannot be deleted\n"))
 
 
 

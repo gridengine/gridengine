@@ -212,6 +212,14 @@
 #define MSG_EVENT_DELQINSTANCE_ISS                 _MESSAGE(64199, _("%d. EVENT DEL QUEUE INSTANCE "SFN"@"SFQ""))
 #define MSG_EVENT_ADDQINSTANCE_ISS                 _MESSAGE(64200, _("%d. EVENT ADD QUEUE INSTANCE "SFN"@"SFQ""))
 #define MSG_EVENT_MODQINSTANCE_ISS                 _MESSAGE(64201, _("%d. EVENT MOD QUEUE INSTANCE "SFN"@"SFQ""))
-#define MSG_CQUEUE_NONDEFNOTALLOWED                _MESSAGE(64202, _("Queue domain/instance values are only allowed for cluster queues.\n"))
+#define MSG_INVALID_CENTRY_DEFAULT_S               _MESSAGE(64202, _("Complex "SFQ" cannot have a default value\n"))
+#define MSG_INVALID_CENTRY_CONSUMABLE_RELOP_S      _MESSAGE(64203, _("Consumable "SFQ" can have only <= as an relational operator\n"))
+#define MSG_INVALID_CENTRY_CONSUMABLE_TYPE_SS      _MESSAGE(64204, _("Complex "SFQ" of type "SFQ" cannot be a consumable\n"))
+#define MSG_INVALID_CENTRY_TYPE_RELOP_S            _MESSAGE(64205, _("Complex "SFQ" has an invalid relational operator\n")) 
+#define MSG_INVALID_CENTRY_PARSE_DEFAULT_SS        _MESSAGE(64206, _("The following error occoured for complex "SFQ", while parsing the default value: "SFQ"\n"))
+#define MSG_INVALID_CENTRY_CONSUMABLE_REQ1_S       _MESSAGE(64207, _("Consumable "SFQ" needs a default value because it is not requestable.\n"))
+#define MSG_INVALID_CENTRY_CONSUMABLE_REQ2_S       _MESSAGE(64208, _("Consumable "SFQ" cannot have a default value because it is forced.\n")) 
+#define MSG_INVALID_CENTRY_TYPE_CHANGE_S           _MESSAGE(64209, _("The type of the complex "SFQ" cannot be changed due to its build in status\n"))
+#define MSG_CQUEUE_NONDEFNOTALLOWED                _MESSAGE(64210, _("Queue domain/instance values are only allowed for cluster queues.\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

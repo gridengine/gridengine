@@ -36,6 +36,17 @@
 
 extern lList *Master_CEntry_List;
 
+/* Mapping list for generating a complex out of a queue */
+struct queue2cmplx {
+   char *name;    /* name of the centry element, not the shortcut */
+   int  field;    /* name of the element in the queue structure */
+   int type;      /* type of the element in the queue strcuture */
+};
+extern const int max_host_resources;
+extern const struct queue2cmplx host_resource[]; 
+extern const int max_queue_resources;
+extern const struct queue2cmplx queue_resource[];
+
 const char *
 map_op2str(u_long32 op);
 
@@ -66,6 +77,10 @@ centry_list_get_master_list(void);
 lListElem *
 centry_list_locate(const lList *this_list, 
                    const char *name);
+
+bool
+centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_list);
+
 
 bool
 centry_list_sort(lList *this_list);

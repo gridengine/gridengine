@@ -470,12 +470,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
             lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))));
 
    user_list_init_jc(&user_list, splitted_job_lists);
-   job_lists_split_with_reference_to_max_running(splitted_job_lists,
-                                                 &user_list,
-                                                 NULL,
-                                                 scheddconf.maxujobs);
-
-   trash_splitted_jobs(splitted_job_lists);
 
    queue = lFirst(lists->queue_list);
    nr_pending_jobs = lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]));
@@ -495,7 +489,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                     *(splitted_job_lists[SPLIT_RUNNING]),
                     *(splitted_job_lists[SPLIT_FINISHED]),
                     *(splitted_job_lists[SPLIT_PENDING]),
-                    *(splitted_job_lists[SPLIT_PENDING_EXCLUDED]),
                     orderlist,
                     queue != NULL,
                     nr_pending_jobs > 0); 
@@ -518,6 +511,15 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       
       }
    }
+
+   job_lists_split_with_reference_to_max_running(splitted_job_lists,
+                                                 &user_list,
+                                                 NULL,
+                                                 scheddconf.maxujobs);
+
+   nr_pending_jobs = lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]));
+
+   trash_splitted_jobs(splitted_job_lists);
 
    if(queue == NULL) {
       DPRINTF(("queues dropped because of overload or full: ALL\n"));

@@ -199,6 +199,10 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       }
    }
 
+   if (ret) {
+      ret = centry_elem_validate(centry, NULL, answer_list);
+   }
+
    DEXIT;
    if (ret) {
       return 0;
@@ -302,7 +306,30 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
          lList *master_centry_list = *(centry_list_get_master_list());
          lListElem *tmp_centry = centry_list_locate(master_centry_list, name);
 
+         /* check if its a build in value*/
+         {
+            int i;
+            for ( i=0; i< max_queue_resources; i++){
+               if (strcmp(queue_resource[i].name, name) == 0 ){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                    MSG_INVALID_CENTRY_DEL_S, name);
+                  ret = false;
+                  break; 
+               }
+            }
+
+            for ( i=0; i< max_host_resources; i++){
+               if (strcmp(host_resource[i].name, name) == 0 ){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                          MSG_INVALID_CENTRY_DEL_S, name);
+                  ret = false;
+                  break; 
+               }
+            }
+         }      
+
          if (tmp_centry != NULL) {
+
             if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                                      Master_Queue_List, Master_Exechost_List, 
                                      Master_Sched_Config_List)) {

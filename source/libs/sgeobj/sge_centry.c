@@ -55,6 +55,63 @@ static int
 centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
                       bool allow_neg_consumable);
 
+   const int max_host_resources=24;/* specifies the number of elements in the host_resource array */
+   const struct queue2cmplx host_resource[] = {
+      {"arch",           0, TYPE_STR},
+      {"cpu",            0, TYPE_STR},
+      {"load_avg",       0, TYPE_DOUBLE},
+      {"load_long",      0, TYPE_DOUBLE},
+      {"load_medium",    0, TYPE_DOUBLE},
+      {"load_short",     0, TYPE_DOUBLE},
+      {"mem_free",       0, TYPE_MEM},
+      {"mem_total",      0, TYPE_MEM},
+      {"mem_used",       0, TYPE_MEM},
+      {"min_cpu_inter",  0, TYPE_TIM},
+      {"np_load_avg",    0, TYPE_DOUBLE},
+      {"np_load_long",   0, TYPE_DOUBLE},
+      {"np_load_medium", 0, TYPE_DOUBLE},
+      {"np_load_short",  0, TYPE_DOUBLE},
+      {"num_proc",       0, TYPE_INT},
+      {"swap_free",      0, TYPE_MEM},
+      {"swap_rate",      0, TYPE_MEM},
+      {"swap_rsvd",      0, TYPE_MEM},
+      {"swap_total",     0, TYPE_MEM},
+      {"swap_used",      0, TYPE_MEM},
+      {"tmpdir",         0, TYPE_STR},
+      {"virtual_free",   0, TYPE_MEM},
+      {"virtual_total",  0, TYPE_MEM},
+      {"virtual_used",   0, TYPE_MEM}
+   };
+
+   const int max_queue_resources=24; /* specifies the number of elements in the queue_resource array */
+   const struct queue2cmplx queue_resource[] = {
+      {"qname",            QU_qname,            TYPE_STR },
+      {"hostname",         QU_qhostname,        TYPE_HOST},
+      {"slots",            QU_job_slots,        TYPE_INT },
+      {"tmpdir",           QU_tmpdir,           TYPE_STR },
+      {"seq_no",           QU_seq_no,           TYPE_INT }, 
+      {"rerun",            QU_rerun,            TYPE_BOO },
+      {"calendar",         QU_calendar,         TYPE_STR },
+      {"s_rt",             QU_s_rt,             TYPE_TIM },
+      {"h_rt",             QU_h_rt,             TYPE_TIM },
+      {"s_cpu",            QU_s_cpu,            TYPE_TIM },
+      {"h_cpu",            QU_h_cpu,            TYPE_TIM },
+      {"s_fsize",          QU_s_fsize,          TYPE_MEM },
+      {"h_fsize",          QU_h_fsize,          TYPE_MEM },
+      {"s_data",           QU_s_data,           TYPE_MEM },
+      {"h_data",           QU_h_data,           TYPE_MEM },
+      {"s_stack",          QU_s_stack,          TYPE_MEM },
+      {"h_stack",          QU_h_stack,          TYPE_MEM },
+      {"s_core",           QU_s_core,           TYPE_MEM },
+      {"h_core",           QU_h_core,           TYPE_MEM },
+      {"s_rss",            QU_s_rss,            TYPE_MEM },
+      {"h_rss",            QU_h_rss,            TYPE_MEM },
+      {"s_vmem",           QU_s_vmem,           TYPE_MEM },
+      {"h_vmem",           QU_h_vmem,           TYPE_MEM },
+      {"min_cpu_interval", QU_min_cpu_interval, TYPE_TIM }
+   };
+
+
 /****** sge/centry/centry_fill_and_check() ************************************
 *  NAME
 *     centry_fill_and_check() -- fill and check the attribute
@@ -641,4 +698,225 @@ centry_list_are_queues_requestable(const lList *this_list)
    return ret;
 }
 
+
+/****** sge/complex/centry_elem_validate() ********************************
+*  NAME
+*     centry_elem_validate() -- validates a given element and checks for duplicates 
+*
+*  SYNOPSIS
+*     int centry_list_fill_request(lListElem *centry,
+*                                  lList *centry_list,
+*                                  lList *answer_list)
+*
+*  FUNCTION
+*     Checks weather the configuration within the new centry is okay or not. A centry
+*     is valid, when it satisfies the following rules:   
+*         name 	  : has to be unique
+*         Short cu  : has to be unique
+*         Type	     : every type from the list (string, host, cstring, int, double,
+*                                                boolean, memory, time)
+*         Consumable : can only be defined for: int, double, memory, time
+*
+*         Relational operator:
+*         - for consumables:              only <=
+*Ü        - for non consumables:
+*            - string, host, cstring:     only ==, !=
+*            - boolean:	                  only ==
+*            - int, double, memory, time: ==, !=, <=, <, =>, >
+*
+*         Requestable	   : for all attribute
+*         default value 	: only for consumables
+*
+*     The type for build in attributes is not allowed to be changed!
+*
+*     When no centy list is passed in, the check for uniqie name and short cuts is skipt.
+*
+*  INPUTS
+*     lListElem *centry     - the centry list, which should be validated
+*     lList *centry_list    - if not null, the function checks, if the centry element
+*                             is already in the list
+*     lList *answer_list    - contains the error messages
+*
+*  RESULT   bool  false - error (the anwer_list contains the error message)
+*                 true - okay
+*
+*******************************************************************************/
+bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_list){
+   u_long32 relop = lGetUlong(centry, CE_relop);
+   u_long32 type = lGetUlong(centry, CE_valtype);
+   const char *attrname = lGetString(centry, CE_name);
+   const char *temp;
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "centry_elem_validate");
+
+   switch(type){
+      case TYPE_INT :
+      case TYPE_MEM :
+      case TYPE_DOUBLE:
+      case TYPE_TIM : /* no checks, they can have everything */
+         break;
+      
+      case TYPE_STR :
+      case TYPE_CSTR :
+      case TYPE_HOST : if ( !(relop == CMPLXEQ_OP || relop == CMPLXNE_OP) ) {
+                           answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
+                                                   MSG_INVALID_CENTRY_TYPE_RELOP_S, attrname);  
+                           ret = false;
+                       }
+                       if (lGetBool(centry, CE_consumable)) {
+                           answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                                   MSG_INVALID_CENTRY_CONSUMABLE_TYPE_SS, attrname, 
+                                                   map_type2str(type));
+                           ret = false;
+                       }
+         break;
+
+      case TYPE_BOO : if ( relop != CMPLXEQ_OP ){
+                           answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
+                                                   MSG_INVALID_CENTRY_TYPE_RELOP_S, attrname); 
+                           ret = false;
+                       } 
+                       if (lGetBool(centry, CE_consumable)) {
+                           answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
+                                                   MSG_INVALID_CENTRY_CONSUMABLE_TYPE_SS, attrname, 
+                                                   map_type2str(type));
+                           ret = false;
+                       }
+
+         break;
+
+      default : /* error unknown type */
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                    MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                  ret = false;
+         break;
+   } 
+
+   {
+      double dval;
+      char error_msg[200];
+      error_msg[0] = '\0';
+
+      if (lGetBool(centry, CE_consumable)) {
+   
+         if (relop != CMPLXLE_OP) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
+                                    MSG_INVALID_CENTRY_CONSUMABLE_RELOP_S , attrname);
+            ret = false;
+         }
+
+         if (lGetUlong(centry, CE_requestable) == REQU_NO) {
+            if(!parse_ulong_val(&dval, NULL, type, lGetString(centry, CE_default), error_msg, 199)){
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
+               ret = false;
+            }
+            if (dval == 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_CONSUMABLE_REQ1_S, attrname);
+               ret = false;
+            }
+         }
+         else if (lGetUlong(centry, CE_requestable) == REQU_FORCED) {
+            if(!parse_ulong_val(&dval, NULL, type, lGetString(centry, CE_default), error_msg, 199)){
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                    MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
+               ret = false;
+            }
+            if (dval != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_CONSUMABLE_REQ2_S, attrname);
+               ret = false;
+            }
+         }
+      }
+      else if ( (temp = lGetString(centry, CE_default)) ) {
+      
+         switch(type){
+            case TYPE_INT:
+            case TYPE_TIM:
+            case TYPE_MEM:
+            case TYPE_BOO:
+            case TYPE_DOUBLE:
+                              if(!parse_ulong_val(&dval, NULL, type, temp, error_msg, 199)){
+                                 answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                                   MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
+                                 ret = false;
+                              }
+                              if (dval != 0) {
+                                 answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
+                                 ret = false;
+                              }
+   
+               break;
+            case TYPE_HOST:
+            case TYPE_STR:
+            case TYPE_CSTR:
+                           if (strcasecmp(temp, "NONE") != 0 ) {
+                              answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
+                              ret = false;
+                           }
+               break;
+            default:
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+               ret = false;
+         }
+      }
+   }
+
+   /* check if its a build in value and if the type is correct */
+   {
+      int i;
+      for ( i=0; i< max_queue_resources; i++){
+         if (strcmp(queue_resource[i].name, attrname) == 0 &&
+            queue_resource[i].type != lGetUlong(centry, CE_valtype)
+         ){
+             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_TYPE_CHANGE_S, attrname);
+
+            ret = false;
+            break; 
+         }
+      }
+
+      for ( i=0; i< max_host_resources; i++){
+         if (strcmp(host_resource[i].name, attrname) == 0 &&
+            host_resource[i].type != lGetUlong(centry, CE_valtype)
+         ){
+             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_TYPE_CHANGE_S, attrname);
+
+            ret = false;
+            break; 
+         }
+      }
+   }
+
+   /* check for duplicates */
+   if (centry_list) {
+      const char *shortcut = lGetString(centry, CE_shortcut); 
+      lListElem *current = lFirst(centry_list);
+      while (current){
+
+         if( strcmp(attrname, (temp = lGetString(current, CE_name))) == 0 ||
+             strcmp(shortcut, temp) == 0 ||
+             strcmp(attrname, (temp = lGetString(current, CE_shortcut))) == 0 ||
+             strcmp(shortcut, temp) == 0) {
+               if(current != centry){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                          MSG_ANSWER_COMPLEXXALREADYEXISTS_S, attrname);
+                  ret = false;
+                  break;
+               }
+         }        
+         current = lNext(current); 
+      }
+   }
+   DEXIT;
+   return ret;
+}
 

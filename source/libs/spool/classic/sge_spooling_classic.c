@@ -79,6 +79,7 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "sched_conf.h"
+#include "read_write_centry.h"
 
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"
@@ -656,7 +657,7 @@ spool_classic_default_read_func(lList **answer_list,
          ep = cull_read_in_ckpt(CKPTOBJ_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_CENTRY:
-         ep = cull_read_in_centry(CENTRY_DIR, key, 1, 0, NULL, NULL);
+         ep = cull_read_in_centry(CENTRY_DIR, key, 1, 0,/* NULL,*/ NULL);
          break;
       case SGE_TYPE_CONFIG:
          {

@@ -87,42 +87,6 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
 static int max_resources = QS_STATE_FULL;
 static int global_load_correction = 0;
 
-/* Mapping list for generating a complex out of a queue */
-struct queue2cmplx {
-   char *name;
-   int  field;
-   int type;
-};
-
-   static const int max_queue_resources=24;
-   static const struct queue2cmplx queue_resource[] = {
-      {"qname",            QU_qname,            TYPE_STR },
-      {"hostname",         QU_qhostname,        TYPE_HOST},
-      {"slots",            QU_job_slots,        TYPE_INT },
-      {"tmpdir",           QU_tmpdir,           TYPE_STR },
-      {"seq_no",           QU_seq_no,           TYPE_INT }, 
-      {"rerun",            QU_rerun,            TYPE_BOO },
-      {"calendar",         QU_calendar,         TYPE_STR },
-      {"s_rt",             QU_s_rt,             TYPE_TIM },
-      {"h_rt",             QU_h_rt,             TYPE_TIM },
-      {"s_cpu",            QU_s_cpu,            TYPE_TIM },
-      {"h_cpu",            QU_h_cpu,            TYPE_TIM },
-      {"s_fsize",          QU_s_fsize,          TYPE_MEM },
-      {"h_fsize",          QU_h_fsize,          TYPE_MEM },
-      {"s_data",           QU_s_data,           TYPE_MEM },
-      {"h_data",           QU_h_data,           TYPE_MEM },
-      {"s_stack",          QU_s_stack,          TYPE_MEM },
-      {"h_stack",          QU_h_stack,          TYPE_MEM },
-      {"s_core",           QU_s_core,           TYPE_MEM },
-      {"h_core",           QU_h_core,           TYPE_MEM },
-      {"s_rss",            QU_s_rss,            TYPE_MEM },
-      {"h_rss",            QU_h_rss,            TYPE_MEM },
-      {"s_vmem",           QU_s_vmem,           TYPE_MEM },
-      {"h_vmem",           QU_h_vmem,           TYPE_MEM },
-      {"min_cpu_interval", QU_min_cpu_interval, TYPE_TIM }
-   };
-
-
 void set_qs_state(
 int qs_state 
 ) {

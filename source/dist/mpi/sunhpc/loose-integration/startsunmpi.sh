@@ -183,7 +183,7 @@ if [ $catch_rsh = 1 ]; then
 
    rshcmd=rsh
    case "$ARC" in
-      hp|hp10|hp11) rshcmd=remsh ;;
+      hp|hp10|hp11|hp11-64) rshcmd=remsh ;;
       *) ;;
    esac
    # note: This could also be done using rcp, ftp or s.th.

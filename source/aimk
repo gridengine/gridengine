@@ -90,6 +90,9 @@ case "hp10":
 case "hp11":
    set BUILDARCH = HP11
    breaksw
+case "hp11-64":
+   set BUILDARCH = HP1164
+   breaksw
 case "irix6":
    set BUILDARCH = IRIX6
    breaksw
@@ -1071,6 +1074,56 @@ case HP11:
       set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
       set CXXFLAGS = "$OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set SHAREDLD = ld
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "+z"
+      set SHARED_LFLAGS = "-L. -b +s"
+   endif
+
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
+   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
+   set LIBS     = "-lnsl $LIBS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set XMTDEF   = "-DNO_EDITRES"
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "$XMTDEF $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
+
+   if ( $STATIC == 1 ) then
+      set LFLAGS = "-Wl,-a,archive $LFLAGS"
+   endif
+   set SHAREDEXT = ".sl"
+   set LFLAGS = "-Wl,+s $LFLAGS"
+   breaksw
+
+case HP1164:
+   set MAKE = gmake
+   set OFLAG = "-O"
+   if ( $CC == gcc ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   else
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
+      set CXX = "aCC"
+      set CFLAGS = "-Ae $OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   endif
+
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"

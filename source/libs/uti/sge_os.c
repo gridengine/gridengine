@@ -314,7 +314,7 @@ int sge_daemonize(fd_set *keep_open)
    int fd;
 #endif
  
-#if defined(__sgi) || defined(ALPHA)
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
 #  if defined(ALPHA)
    extern int getdomainname(char *, int);
 #  endif
@@ -360,7 +360,7 @@ int sge_daemonize(fd_set *keep_open)
       exit(0);
    }
  
-#if defined(__sgi) || defined(ALPHA)
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
    /* The yp library may have open sockets
       when closing all fds also the socket fd of the yp library gets closed
       when called again yp library functions are confused since they

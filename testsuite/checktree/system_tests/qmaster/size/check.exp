@@ -363,6 +363,7 @@ proc init_ps {} {
    switch -exact $CHECK_ARCH {
       aix42 -
       aix43 -
+      aix51 -
       irix6 -
       osf4 -
       solaris -
@@ -385,8 +386,9 @@ proc init_ps {} {
          set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
          set size_unit kB
       }
-      hp10 - 
-      hp11 {
+      "hp10" - 
+      "hp11" -
+      "hp11-64" {
          set cmd_ps(master) "ps -p $qmaster_pid -l | tail -1 | awk '{print \$10}'"
          set cmd_ps(schedd) "ps -p $schedd_pid  -l | tail -1 | awk '{print \$10}'"
          set size_unit pages

@@ -106,7 +106,12 @@ if [ -x /bin/uname ]; then
          ARCH=hp10
          ;;
       *.11.*)
-         ARCH=hp11
+         bits=`/usr/bin/getconf KERNEL_BITS`
+         if [ $bits -eq 64 ]; then
+            ARCH=hp11-64
+         else
+            ARCH=hp11
+         fi
          ;;
       esac
       ;;
@@ -224,7 +229,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=/usr/share/catman:/usr/share/man:/usr/catman:/usr/man
       MANTYPE=catman
       ;;
-   hp10|hp11)
+   hp10|hp11|hp11-64)
       DEFAULTMANPATH=/usr/man:/usr/contrib/man:/usr/local/man
       SHARED_LIBRARY_PATH="SHLIB_PATH"
       ;;

@@ -1,3 +1,5 @@
+JG-2002-10-01-0  Enhancem.  Initial Part of port for HP-UX 11 64 bit
+
 CR-2002-10-01-0  Bugfix:    got compiler warning "unused variable `src_qname'"
 
 EB-2002-09-25-0  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog

@@ -1479,7 +1479,8 @@ u_long32 *isXML
       }
 
       while (parse_flag(ppcmdline, "-t", &alp, &full)) {
-         if(full) {
+         qstat_filter_add_t_attributes();
+         if (full) {
             (*pfull) |= QSTAT_DISPLAY_TASKS;
             *group_opt |= GROUP_NO_PETASK_GROUPS;
             full = 0;

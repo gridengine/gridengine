@@ -255,25 +255,25 @@ char *err_str
 
    dstring active_dir;
 
-   char shepherd_path[SGE_PATH_MAX], 
-        coshepherd_path[SGE_PATH_MAX],
-        hostfilename[SGE_PATH_MAX], 
-        script_file[SGE_PATH_MAX], 
-        tmpdir[SGE_PATH_MAX], 
-        active_dir_buffer[SGE_PATH_MAX],
-        fname[SGE_PATH_MAX],
-        shell_path[SGE_PATH_MAX], 
-        stdout_path[SGE_PATH_MAX],
-        stderr_path[SGE_PATH_MAX],
-        stdin_path[SGE_PATH_MAX],
-        pe_stdout_path[SGE_PATH_MAX],
-        pe_stderr_path[SGE_PATH_MAX],
+   char shepherd_path[SGE_PATH_MAX] = "", 
+        coshepherd_path[SGE_PATH_MAX] = "",
+        hostfilename[SGE_PATH_MAX] = "", 
+        script_file[SGE_PATH_MAX] = "", 
+        tmpdir[SGE_PATH_MAX] = "", 
+        active_dir_buffer[SGE_PATH_MAX] = "",
+        fname[SGE_PATH_MAX] = "",
+        shell_path[SGE_PATH_MAX] = "", 
+        stdout_path[SGE_PATH_MAX] ="",
+        stderr_path[SGE_PATH_MAX] ="",
+        stdin_path[SGE_PATH_MAX] ="",
+        pe_stdout_path[SGE_PATH_MAX] ="",
+        pe_stderr_path[SGE_PATH_MAX] ="",
         fs_stdin_host[SGE_PATH_MAX] = "\"\"",
-        fs_stdin_path[SGE_PATH_MAX],
+        fs_stdin_path[SGE_PATH_MAX] ="",
         fs_stdout_host[SGE_PATH_MAX] = "\"\"",
-        fs_stdout_path[SGE_PATH_MAX],
+        fs_stdout_path[SGE_PATH_MAX]= "",
         fs_stderr_host[SGE_PATH_MAX] = "\"\"",
-        fs_stderr_path[SGE_PATH_MAX];
+        fs_stderr_path[SGE_PATH_MAX] ="";
 
    char mail_str[1024], *shepherd_name;
    lListElem *gdil_ep, *master_q;

@@ -1,4 +1,11 @@
-RD-2005-01-19-0: Bugfix     CULL examples fixed
+SG-2005-01-21-0: Bugfix:   - fixed qstat -t
+                           - fixed a minor uninit variables in the execd
+                 Review:   DT
+                 Changed:  qstat, execd
+                 Issue:    1420
+                 Bugtraq:  6218877
+
+RD-2005-01-19-0: Bugfix:    CULL examples fixed
                  Review:    AH
  
 EB-2005-01-19-0: Enhancem.: qtcsh port for WIN32_X86

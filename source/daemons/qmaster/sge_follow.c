@@ -295,8 +295,9 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
 
          /* the first queue is the master queue */
-         if (!master_qep)
+         if (master_qep == NULL) {
             master_qep = qep;
+         }   
 
          /* check queue version */
          if (q_version != lGetUlong(qep, QU_version)) {
@@ -442,12 +443,14 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                } else {
                   lSetUlong(first_at_host, JG_tag_slave_job, 1);   
                }
-            } else 
+            } else  {
                DPRINTF(("master host %s\n", lGetHost(master_host, EH_name)));
+            }   
          }
          /* in case of a pe job update free_slots on the pe */
-         if (pe) 
+         if (pe) { 
             pe_slots += q_slots;
+         }   
       }
          
       /* fill in master_queue */

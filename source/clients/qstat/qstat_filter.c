@@ -256,6 +256,20 @@ void qstat_filter_add_xml_attributes(void)
    lMergeWhat(&what_JB_Type, &tmp_what);
 }
 
+void qstat_filter_add_t_attributes(void) 
+{
+   lEnumeration *tmp_what = NULL;
+   const int nm_JAT_Type_list[] = {
+      JAT_task_list,
+      NoName
+   };
+
+   tmp_what = lIntVector2What(JAT_Type, nm_JAT_Type_list); 
+   lMergeWhat(&what_JAT_Type_list, &tmp_what);
+   
+}
+
+
 lEnumeration *qstat_get_JB_Type_filter(void) 
 {
    if (what_JAT_Type_template != NULL) {

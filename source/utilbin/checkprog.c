@@ -110,27 +110,58 @@ int main(int argc, char *argv[])
          usage_getprogs();    
    }
 
-   if (checkit && (argc != 3 || atoi(argv[1]) == 0)) {
-      usage_checkprog();
+   if (checkit ) {
+	   if( argc == 3 )		
+		  if( atoi(argv[1]) == 0) {
+            usage_checkprog();
+		  }
    }
    else if (!checkit && argc != 2)
       usage_getprogs();
    
 
    if (checkit) {
-      pid = atoi(argv[1]);
+		
+		int printpid = 0;
+		char* process_name = NULL;
+		
+		switch( argc ) {
+			case 2:
+				if(strcmp(argv[1], "-ppid" ) == 0) {
+					printpid = 1;
+				} else {
+					usage_checkprog();
+				}
+				break;
+			case 3:
+			   pid = atoi(argv[1]);
+			   if(pid == 0) {
+				   usage_checkprog();
+			   }
+			   process_name = argv[2];
+			   break;
+			default:
+			   usage_checkprog();
+		}
+		
    
-      res = sge_checkprog(pid, argv[2], PSCMD);
-
-      if (res == 1)
-         printf(MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS, (int) pid, argv[2]);
-      else if (res == 0)
-         printf(MSG_PROC_PIDISRUNNINGWITHNAME_IS , (int) pid, argv[2]);
-      else if (res == -1)
-          printf(MSG_COMMAND_SPANPSFAILED );
-          
-      if (res == -1)
-         res = 2;
+		if( printpid ) {
+			pid = getppid();
+			printf("%ld\n", (long)pid );
+			res = 0;
+		} else {		
+			res = sge_checkprog(pid, process_name, PSCMD);
+	
+			if (res == 1)
+				printf(MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS, (int) pid, argv[2]);
+			else if (res == 0)
+				printf(MSG_PROC_PIDISRUNNINGWITHNAME_IS , (int) pid, argv[2]);
+			else if (res == -1)
+				 printf(MSG_COMMAND_SPANPSFAILED );
+				 
+			if (res == -1)
+				res = 2;
+		}
    }
    else {
       res = sge_get_pids(pids, 10000, argv[1], PSCMD);

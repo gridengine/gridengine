@@ -54,7 +54,7 @@
 /* 
 ** utilbin/checkprog.c
 */ 
-#define MSG_COMMAND_USAGECHECKPROG           _MESSAGE(57008, _("\ncheckprog pid processname\ncheck the first 8 letters of process basename\n\nexit status: 0 if process was found\n             1 if process was not found\n             2 if ps program couldn't be spawned\n"))
+#define MSG_COMMAND_USAGECHECKPROG           _MESSAGE(57008, _("\ncheckprog { -ppid | pid processname }\n\n if only the option -ppid is given the parent process id (ppid)\n of checkprog is printed to stdout. \n else check the first 8 letters of process basename\n\nexit status: 0 if process was found or ppid was printed\n             1 if process was not found\n             2 if ps program couldn't be spawned\n"))
 #define MSG_COMMAND_USAGEGETPROGS            _MESSAGE(57009, _("\ngetprogs processname\ncheck and list pids of \"processname\"\n\nexit status: 0 if process(es) were found\n             1 if process(es) was not found\n             2 if ps program couldn't be spawned\n"))
 #define MSG_COMMAND_CALLCHECKPROGORGETPROGS  _MESSAGE(57010, _("program must be called as \"checkprog\" or \"getprogs\"\n"))
 #define MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS _MESSAGE(57011, _("pid \"%d\" is not running or has another program name than "SFQ"\n"))

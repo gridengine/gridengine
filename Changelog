@@ -1,3 +1,8 @@
+RH-2005-03-11-1: Enhancem.: checkprog accepts now the options -ppid. The parent
+                            process will be printed to stdout
+                 Changed:   checkprog
+                 Review:    AS
+
 RD-2005-03-10-1: Bugfix    Problems with shadowd install
                  Issue:    1347
                  Bugtraq:  6197730

@@ -834,7 +834,7 @@ const char *oldmem
       }
    }
    else {
-      strcpy(result, ""); 
+      strcpy(result, "?E"); 
       ret = 0;
    }
    DEXIT;

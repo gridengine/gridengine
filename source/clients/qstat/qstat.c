@@ -213,7 +213,7 @@ char **argv
    if (job_info) {
       int ret = 0;
 
-      if(lGetNumberOfElem(jid_list)) {
+      if(lGetNumberOfElem(jid_list) > 0) {
          ret = qstat_show_job(jid_list, isXML);
       } else {
          ret = qstat_show_job_info(isXML);
@@ -1961,7 +1961,10 @@ u_long32 isXML
          printf("\n");
       else
          line_separator = 1;
+      /* print job information */
       cull_show_job(j_elem, 0);
+      
+      /* print scheduling information */
       if (schedd_info && (sme = lFirst(ilp))) {
          int first_run = 1;
 

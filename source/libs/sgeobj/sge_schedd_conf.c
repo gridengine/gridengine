@@ -221,6 +221,10 @@ static config_pos_type pos = {true,
 
 /*
  * a list of all valid "params" parameters
+ *
+ * The implementation has a problem. If an entry is removed, its setting is not
+ * changed, but it should be turned off. This means we have to turn everything off,
+ * before we work on the params 
  */
 const parameters_t params[] = {
    {"PROFILE",  sconf_eval_set_profiling},
@@ -2177,7 +2181,13 @@ bool sconf_validate_config_(lList **answer_list){
    {
       const char *sparams = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
       char *s = NULL; 
+      
+      /* the implementation has a problem. If an entry is removed, its setting is not
+         changed, but it should be turned off. This means we have to turn everything off,
+         before we work on the params */
       schedd_profiling = false;
+      serf_set_active(false);
+
       if (sparams) {
          for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;

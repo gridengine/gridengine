@@ -1,3 +1,6 @@
+CR-2002-03-26-0  Bugfix:    can't resolve hostname "%-.100s" from act_qmaster file
+                            message
+
 AH-2002-03-25-0  Bugfix:    gethostbyname -aname was broken
                  Optimiz.:  Ensure global conf is read only one time by
                             AH-2002-03-22-0 code

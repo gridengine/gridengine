@@ -1047,9 +1047,9 @@ AddDefaultOperator()
 MoveLog()
 {
    if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
-      cp /tmp/$LOGSNAME $SGE_ROOT/$SGE_CELL/spool/uninstall_`hostname`_$DATE.log 2>&1
+      cp /tmp/$LOGSNAME $QMDIR/uninstall_`hostname`_$DATE.log 2>&1
    else
-      cp /tmp/$LOGSNAME $SGE_ROOT/$SGE_CELL/spool/install_`hostname`_$DATE.log 2>&1
+      cp /tmp/$LOGSNAME $QMDIR/install_`hostname`_$DATE.log 2>&1
    fi
 
    rm /tmp/$LOGSNAME 2>&1
@@ -1079,13 +1079,13 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/qmaster.pid`
+       daemon_pid=`cat $QMDIR/qmaster.pid`
        $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
        return $?      
       ;;
 
       sge_schedd )
-       daemon_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/schedd/schedd.pid`
+       daemon_pid=`cat $QMDIR/schedd/schedd.pid`
        $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
        return $?
       ;;

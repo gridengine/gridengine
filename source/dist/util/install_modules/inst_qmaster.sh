@@ -658,14 +658,15 @@ AddConfiguration()
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
       TMPC=/tmp/configuration
+      TOUCH=touch
       rm -f $TMPC
-      PrintConf > $TMPC
+      ExecuteAsAdmin $TOUCH $TMPC
+      PrintConf >> $TMPC
       SetPerm $TMPC
       ExecuteAsAdmin $SPOOLDEFAULTS configuration $TMPC
       rm -f $TMPC
    fi
 }
-
 
 #-------------------------------------------------------------------------
 # PrintConf: print SGE default configuration
@@ -997,7 +998,7 @@ StartQmaster()
    $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
    $SGE_STARTUP_FILE -qmaster
 
-   CheckRunningDaemon
+   CheckRunningDaemon sge_qmaster
    run=$?
    if [ $run -ne 0 ]; then
       $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \

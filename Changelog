@@ -1,3 +1,8 @@
+MD-2004-05-26-0: Bugfix:    - refixed file perms setting of /tmp/configuration
+                            - MoveLog procedure
+                 Review:    RH
+                 Changed:   inst_sge
+
 SG-2004-05-26-0: Bugfix:    fixed a scheduler crash. The scheduler crashed
                             when the host settings were not straight forward,
                             and not all load values were delivered.

@@ -37,11 +37,12 @@
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
 
-void get_taskrange_str(lList *task_list, char *taskrange_str);
+void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
 
 lList* split_task_group(lList **in_list);
 
 int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, StringBufferT *sb);
+
 int show_info_for_job(FILE *fp, lList **alpp, StringBufferT *sb);
 
 #endif /* __QSTAT_UTIL_H */

@@ -137,7 +137,7 @@ char *str_jobtask,
 lList **alpp 
 ) {
    char *token;
-   char job_str[1024], str[1024];
+   char *job_str, *str;
    lList *task_id_range_list = NULL;
    lListElem *range;
 
@@ -150,18 +150,23 @@ lList **alpp
 
    DENTER(TOP_LAYER, "sge_parse_jobtasks");
 
-   strcpy (str, str_jobtask);
-   if ((token = strtok(str, " ."))) {
-      strcpy(job_str, token);
+   /*
+   ** dup the input string for tokenizing
+   */
+   str = strdup(str_jobtask);
+   if (str) {
+      token = strtok(str, " ."); 
    }
-   else {
-      strcpy(job_str, str);
-   }
+   job_str = str;
 
    if ((token = strtok(NULL, ""))) {
       task_id_range_list = parse_ranges(token, 0, 1, alpp, NULL, 
                                           INF_NOT_ALLOWED);
       if (*alpp) {
+         /*
+         ** free the dupped string
+         */
+         free(str);
          DEXIT;
          return -1;
       }
@@ -173,6 +178,10 @@ lList **alpp
    }
 
    if (!atol(job_str) && strcmp(job_str, "all")) {
+      /*
+      ** free the dupped string
+      */
+      free(str);
       DEXIT;
       return -1;
    }
@@ -180,7 +189,11 @@ lList **alpp
    *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
    if (*idp)
       lSetList(*idp, ID_ja_structure, task_id_range_list);
-   
+  
+   /*
+   ** free the dupped string
+   */
+   free(str); 
    DEXIT;
    return 1;
 }

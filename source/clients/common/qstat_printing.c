@@ -71,7 +71,7 @@
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
 
-static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, char *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
+static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, StringBufferT *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
 static int sge_print_subtask(lListElem *job, lListElem *ja_task, lListElem *task, int print_hdr, int indent);
 
@@ -391,7 +391,7 @@ char *indent
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
    char *qnm;
-   char task_str[512];
+   StringBufferT dyn_task_str = {NULL, 0};
 
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
 
@@ -446,12 +446,13 @@ char *indent
                         jid = lGetUlong(jlep, JB_job_number);
                         old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
-                        sprintf(task_str, "%d", (int)jataskid);
+                        sge_string_free(&dyn_task_str);
+                        sge_string_printf(&dyn_task_str, u32, jataskid);
                         different = (jid != old_jid) || (jataskid != old_jataskid);
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
                               (lGetUlong(jatep, JAT_state) & JRUNNING)) {
                            sge_print_job(jlep, jatep, qep, different,
-                              (master && different && (i==0))?"MASTER":"SLAVE", task_str, full_listing,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                               lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, cl, pe_list, indent);   
                            already_printed = 1;
                         }
@@ -460,7 +461,7 @@ char *indent
                            (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
                             (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE))) {
                            sge_print_job(jlep, jatep, qep, different,
-                              (master && different && (i==0))?"MASTER":"SLAVE", task_str, full_listing,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                               lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, cl, pe_list, indent);   
                            already_printed = 1;
                         }
@@ -468,7 +469,7 @@ char *indent
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_USERHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) {
                            sge_print_job(jlep, jatep, qep, different,
-                              (master && different && (i==0))?"MASTER":"SLAVE", task_str, full_listing,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                               lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, cl, pe_list, indent);
                            already_printed = 1;
                         }
@@ -476,7 +477,7 @@ char *indent
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_OPERATORHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  {
                            sge_print_job(jlep, jatep, qep, different,
-                              (master && different && (i==0))?"MASTER":"SLAVE", task_str, full_listing,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                               lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, cl, pe_list, indent);
                            already_printed = 1;
                         }
@@ -484,7 +485,7 @@ char *indent
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_SYSTEMHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) {
                            sge_print_job(jlep, jatep, qep, different,
-                              (master && different && (i==0))?"MASTER":"SLAVE", task_str, full_listing,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                               lGetUlong(gdilep, JG_slots)+slot_adjust, i, ehl, cl, pe_list, indent);
                            already_printed = 1;
                         }
@@ -496,6 +497,7 @@ char *indent
          }
       }
    }
+   sge_string_free(&dyn_task_str);
    DEXIT;
 }
 
@@ -515,7 +517,7 @@ u_long32 group_opt
    int first = 1;
    lListElem *nxt, *jep, *jatep, *nxt_jatep;
    int sge_ext;
-   char task_str[512];
+   StringBufferT dyn_task_str = {NULL, 0};
    lList* ja_task_list = NULL;
    int FoundTasks;
 
@@ -528,7 +530,7 @@ u_long32 group_opt
    while ((jep=nxt)) {
       nxt = lNext(jep);
 
-      task_str[0]=0;
+      sge_string_free(&dyn_task_str);
 
       nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       FoundTasks = 0;
@@ -576,9 +578,9 @@ u_long32 group_opt
                }
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
                   group_opt != GROUP_TASK_GROUPS) {
-                  sprintf(task_str, u32, lGetUlong(jatep, JAT_task_number));
-                  sge_print_job(jep, jatep, NULL, 1, NULL, task_str, 
-                     full_listing, 0, 0, ehl, cl, NULL, "");
+
+                  sge_string_free(&dyn_task_str);
+                  sge_string_printf(&dyn_task_str, u32, lGetUlong(jatep, JAT_task_number));
                } else {
                   if (!ja_task_list)
                      ja_task_list = lCreateList("", JAT_Type);
@@ -595,16 +597,17 @@ u_long32 group_opt
          lList *task_group = NULL;
 
          while ((task_group = split_task_group(&ja_task_list))) {
-            get_taskrange_str(task_group, task_str);
+            get_taskrange_str(task_group, &dyn_task_str);
 
-            sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, task_str, 
+            sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, &dyn_task_str, 
                full_listing, 0, 0, ehl, cl, NULL, "");
             task_group = lFreeList(task_group);
-            task_str[0] = 0;
+            sge_string_free(&dyn_task_str);
          }
          ja_task_list = lFreeList(ja_task_list);
       }
    }
+   sge_string_free(&dyn_task_str);
    DEXIT;
 }
 
@@ -622,7 +625,7 @@ u_long32 full_listing
    int sge_ext;
    int first = 1;
    lListElem *jep, *jatep;
-   char task_str[512];
+   StringBufferT dyn_task_str = {NULL, 0};
 
    DENTER(TOP_LAYER, "sge_print_jobs_finished");
 
@@ -649,14 +652,16 @@ u_long32 full_listing
                      printf(MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING);
                      printf(  "################################################################################%s\n", sge_ext?hashes:"");
                   }
-                  sprintf(task_str, "%d", (int)lGetUlong(jatep, JAT_task_number));
-                  sge_print_job(jep, jatep, NULL, 1, NULL, task_str, full_listing, 0, 0, ehl, cl, NULL, "");   
+                  sge_string_free(&dyn_task_str);
+                  sge_string_printf(&dyn_task_str, u32, lGetUlong(jatep, JAT_task_number));
+                  sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");   
+                  
                }
             }
          }
       }
    }
-
+   sge_string_free(&dyn_task_str);
    DEXIT;
 }
   
@@ -673,7 +678,7 @@ u_long32 full_listing
    int first = 1;
    lListElem *jep, *jatep;
    int sge_ext;
-   char task_str[512];
+   StringBufferT dyn_task_str = {NULL, 0};
 
    DENTER(TOP_LAYER, "sge_print_jobs_error");
 
@@ -693,12 +698,14 @@ u_long32 full_listing
                   printf(MSG_QSTAT_PRT_ERRORJOBS);
                   printf("################################################################################%s\n", sge_ext?hashes:"");
                }
-               sprintf(task_str, "%d", (int)lGetUlong(jatep, JAT_task_number));
-               sge_print_job(jep, jatep, NULL, 1, NULL, task_str, full_listing, 0, 0, ehl, cl, NULL, "");
+               sge_string_free(&dyn_task_str);
+               sge_string_printf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
+               sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");
             }
          }
       }
    }
+   sge_string_free(&dyn_task_str);
    DEXIT;
 }
 
@@ -715,7 +722,7 @@ u_long32 full_listing
    int sge_ext;
    int first = 1;
    lListElem *jep, *jatep;
-   char task_str[512];
+   StringBufferT dyn_task_str = {NULL, 0}; 
 
    DENTER(TOP_LAYER, "sge_print_jobs_zombie");
    
@@ -735,8 +742,9 @@ u_long32 full_listing
             printf(MSG_QSTAT_PRT_FINISHEDJOBS);
             printf(  "################################################################################%s\n", sge_ext?hashes:"");
          }
-         sprintf(task_str, "%d", (int)lGetUlong(jatep, JAT_task_number));
-         sge_print_job(jep, jatep, NULL, 1, NULL, task_str, full_listing, 0, 0, ehl, cl, NULL, "");   
+         sge_string_free(&dyn_task_str);
+         sge_string_printf(&dyn_task_str, u32, lGetUlong(jatep, JAT_task_number)); 
+         sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");   
       }
    }
    DEXIT;
@@ -752,7 +760,7 @@ lListElem *jatep,
 lListElem *qep,
 int print_jobid,
 char *master,
-char *task_str,
+StringBufferT *dyn_task_str,
 u_long32 full_listing,
 int slots,
 int slot,
@@ -1011,8 +1019,8 @@ char *indent
    else
       printf("        ");
 
-   if (task_str && is_array(job))
-      printf("%s", task_str);
+   if (dyn_task_str->s && is_array(job))
+      printf("%s", dyn_task_str->s); 
    else
       printf("         ");
 
@@ -1152,7 +1160,7 @@ char *indent
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");
             for_each(qrep, ql) {
-               printf("%s", lGetString(qrep, JRE_job_name));
+               printf(u32, lGetUlong(qrep, JRE_job_number));
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }

@@ -666,16 +666,19 @@ void sge_host_list_refresh(void)
    host *hl = hostlist;
    struct hostent *he;
 
+   DENTER(TOP_LAYER, "refresh_hostlist");
+
    while (hl) {
       he = sge_gethostbyname(hl->he.h_name);
       if (!he) {
          hl->deleted = 1;
-         continue;
-      }
-
-      sge_host_copy_entry(&hl->he, he);
+      } else
+         sge_host_copy_entry(&hl->he, he);
       hl = hl->next;
    }
+
+   DEXIT;
+   return;
 }
 
 /****** uti/hostname/sge_host_get_mainname() **********************************

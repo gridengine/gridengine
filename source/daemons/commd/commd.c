@@ -230,7 +230,7 @@ char **argv
             commd_usage(stderr, argv);
          continue;
       }
-      if (!strcmp("-drh", *argp)) {
+      if (!strcmp("-dhr", *argp)) {
          hostname_refresh = 0;
          continue;
       }

@@ -195,7 +195,8 @@ proc usage_setup  {} {
    add_pe pe
 
    set queue_conf(load_thresholds) "np_load_avg=11"
-   set queue_conf(pe_list) "tight loose1 loose2"
+   set queue_conf(pe_list)         "tight loose1 loose2"
+   set queue_conf(slots)           5
 
    # set memory limits
    if {$reserved_usage} {
@@ -264,9 +265,9 @@ proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeo
       # expect_user ensures only that expect will parse input up to a newline,
       # but there seems to be no way to tell expect we want to examine each
       # individual line.
-      -i $sp_id "?*" {
+      -i $sp_id "?*\n" {
          #puts $CHECK_OUTPUT "entered default branch, data: $expect_out(0,string)"
-         foreach line [split $expect_out(0,string) "\n"] {
+         foreach line [ string trim [split $expect_out(0,string) "\n"]] {
             if {[string length [string trim $line]] > 0} {
                #puts $CHECK_OUTPUT "processing line: $line"
                switch -glob $line {
@@ -309,6 +310,17 @@ proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeo
                   "NSLOTS ??? NHOSTS ??? NQUEUES*" {
                      set ret "task running"
                   }
+                  "_start_mark_:(*)*" {
+                     puts $CHECK_OUTPUT "got start mark from remote prog shell script"
+                  }
+                  "_exit_status_:(*)*" {
+                     puts $CHECK_OUTPUT "got exit status from remote prog shell script"
+                  }
+                  "script done.*" {
+                     puts $CHECK_OUTPUT "got \"script done.\" from remote prog shell script"
+                  }
+
+
                   default {
                      puts $CHECK_OUTPUT "skipping unexpected job output $line"
                   }
@@ -317,7 +329,6 @@ proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeo
          }
       }
    }
-
    return $ret
 }
 

@@ -1,8 +1,13 @@
+CR-2004-08-11-2: Testsuite: - usage test did not work with only 2 execd hosts
+                            - wait_for_unknown_load call from shutdown_core_sytem
+                              did not return immediately when no binaries are
+                              installed or when qconf returns an error
+
 DT-2004-08-11-0: Doc.:      o Cleaned up man3, man8, and submit.1 man pages
                  Issue:     1170
                  Review:    DT
 
-CR-2004-08-11-0: Testsuite: - fixed bug which caused error in issue test 314
+CR-2004-08-11-1: Testsuite: - fixed bug which caused error in issue test 314
 
 CR-2004-08-11-0: Testsuite: - fixed bug in issue test 193
 

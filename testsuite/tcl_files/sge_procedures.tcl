@@ -3029,6 +3029,11 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
    global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
+
+   if { [ file isfile $ts_config(product_root)/bin/$CHECK_ARCH/qstat ] != 1} {
+      return -1      
+   }
+
    while { 1 } {
       sleep 1
       puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
@@ -3083,6 +3088,8 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"
+        add_proc_error "wait_for_unknown_load" -1 "qstat error"
+        return -1
       }
 
       set runtime [expr ( [timestamp] - $time) ]

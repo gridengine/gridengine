@@ -87,7 +87,7 @@ if ( $MANMODE == "ge" ) then
    set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "GE 5.3beta1"
+   set xxRELxx = "GE 5.3beta2"
 else if ( $MANMODE == "geee" ) then
    set xxQS_NAMExx = "Grid Engine Enterprise Edition" 
    set xxQS_NAME_Cxx = "Grid Engine" 
@@ -95,7 +95,7 @@ else if ( $MANMODE == "geee" ) then
    set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "GEEE 5.3"
+   set xxRELxx = "GEEE 5.3beta2"
 else if ( $MANMODE == "sge" ) then
    set xxQS_NAMExx = "Sun Grid Engine"
    set xxQS_NAME_Cxx = "Sun Grid Engine"
@@ -103,7 +103,7 @@ else if ( $MANMODE == "sge" ) then
    set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR"
    set xxQS_NAME_Sxx = "SGE"
    set xxqs_name_sxx = "sge"
-   set xxRELxx = "SGE 5.3beta1"
+   set xxRELxx = "SGE 5.3beta2"
 else if ( $MANMODE == "sgeee" ) then
    set xxQS_NAMExx = "Sun Grid Engine, Enterprise Edition"
    set xxQS_NAME_Cxx = "Sun Grid Engine"
@@ -111,7 +111,7 @@ else if ( $MANMODE == "sgeee" ) then
    set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR"
    set xxQS_NAME_Sxx = "SGE"
    set xxqs_name_sxx = "sge"
-   set xxRELxx = "SGEEE 5.3beta1"
+   set xxRELxx = "SGEEE 5.3beta2"
 else
    echo error wrong MANMODE=$MANMODE. Exit
    exit 1

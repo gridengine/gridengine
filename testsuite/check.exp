@@ -809,7 +809,10 @@ proc set_root_passwd {} {
          set CHECK_ADMIN_USER_SYSTEM 1
 
      }
+  } else {
+     puts $CHECK_OUTPUT "--> id as root output:\n$result"
   }
+ 
 
   puts $CHECK_OUTPUT "starting now ..."
   flush $CHECK_OUTPUT
@@ -3338,6 +3341,7 @@ proc run_tests { path runcompleted } {
                                set save_CHECK_ACT_PATH $CHECK_ACT_PATH
                                set check_use_installed_system 1
                                set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
+                               close_open_rlogin_sessions  ;# session reset
                                if { [run_test $CHECK_ACT_PATH 1] != 0 } {
                                   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
                                   run_test $CHECK_ACT_PATH 1

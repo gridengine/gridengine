@@ -1,3 +1,10 @@
+CR-2002-01-23-1: Testsuite: - new procedure: close_open_rlogin_sessions()
+                 Enhancem.: - closing all rlogin sessions on TCL error
+                            - send CTRL + C on each close_spawn_process() call
+                              to stop evtl. running applications at remote host          
+                            
+                            
+
 CR-2002-01-23-0: Testsuite: - updated resolve_version for SGE(EE) 5.3beta2
                             - bugfix for SGE installation (install_core_system)
 

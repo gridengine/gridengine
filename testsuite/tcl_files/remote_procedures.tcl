@@ -1252,6 +1252,48 @@ proc get_spawn_id_rlogin_session { id back_var {no_check 0}} {
    return 0
 }
 
+#****** remote_procedures/close_open_rlogin_sessions() *************************
+#  NAME
+#     close_open_rlogin_sessions() -- close all open rlogin sessions
+#
+#  SYNOPSIS
+#     close_open_rlogin_sessions { } 
+#
+#  FUNCTION
+#     This procedure closes all open rlogin expect sessions.
+#
+#*******************************************************************************
+proc close_open_rlogin_sessions {} {
+   global CHECK_OUTPUT rlogin_spawn_session_buffer
+   global do_close_rlogin
+
+   if { $do_close_rlogin != 0 } {
+      puts $CHECK_OUTPUT "close_open_rlogin_sessions - open rlogin session mode not activated!"
+      return 0 
+   }
+   set sessions [array names rlogin_spawn_session_buffer]
+   set help_buf ""
+   foreach session $sessions {
+      lappend help_buf "$session;$rlogin_spawn_session_buffer($session)"
+   }
+   foreach session $help_buf {
+      set data_list [split $session ";"]
+      set back(spawn_id)  [lindex $data_list 0]
+      set back(pid)       [lindex $data_list 2]
+      set back(hostname)  [lindex $data_list 1]
+      set back(user)      [lindex $data_list 3]
+      set back(ltime)     [lindex $data_list 4]
+      set back(nr_shells) [lindex $data_list 5]
+
+      unset rlogin_spawn_session_buffer($back(spawn_id))
+      set id $back(pid)
+      lappend id $back(spawn_id)
+      lappend id $back(nr_shells)
+      puts $CHECK_OUTPUT "close_open_rlogin_sessions - closing $id"
+      close_spawn_process $id 0 2
+   }
+}
+
 #****** remote_procedures/check_rlogin_session() *******************************
 #  NAME
 #     check_rlogin_session() -- check if rlogin session is alive
@@ -1285,7 +1327,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
    if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
       set timeout 1
       set ok 0
-      set mytries 60
+      set mytries  5
       debug_puts "check_rlogin_session -> waiting for shell response ..."
       
       send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
@@ -1323,7 +1365,9 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
          set id $pid
          lappend id $spawn_id
          lappend id $nr_of_shells
-         close_spawn_process $id
+         puts $CHECK_OUTPUT "closing spawn id $spawn_id with pid $pid to enable new rlogin session ..."
+         close_spawn_process $id 0 3
+         puts $CHECK_OUTPUT "closing done."
       }       
    }
    return 0 ;# error
@@ -1376,15 +1420,16 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
 
    set sp_id  [lindex $id 1]
    set sp_pid [lindex $id 0]
-
    get_spawn_id_rlogin_session $sp_id con_data 1
    if { $con_data(pid) != 0 } {
+      debug_puts "sending CTRL + C to spawn id $sp_id ..."
+      send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
       debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
       debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
       return -1   
    }
 
-   log_user 0
+   log_user 0  
    if { $CHECK_DEBUG_LEVEL != 0 } {
       log_user 1
    }

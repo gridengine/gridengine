@@ -2091,7 +2091,7 @@ if ( "$CORE" == 1 ) then
    end
    set SPOOLING_DEPS = "$new_deps"
 
-   set target=$argv
+   set target = "$argv"
 
    if ( $JAVA == 0 && "$target" == "" ) then
       set target=common_all_nj

@@ -1,3 +1,6 @@
+CR-2002-04-18-1: Testsuite: 
+                 Bugfix:    testsuite did no aimk -only-depend
+
 CR-2002-04-18-0: Testsuite: 
                  Bugfix:    testsuite only updates the c source code
                  Issue:     #187

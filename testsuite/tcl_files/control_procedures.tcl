@@ -199,32 +199,55 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       while { [ timestamp ] == $start_time } { 
       }
       send -i $sp_id ":wq\n"
+      log_user 1
+
       set timeout 100
       set doStop 0
-      while { $doStop == 0 } {
-      expect {
-         -i $sp_id full_buffer {
-            set doStop 1
-            add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         }
-         -i $sp_id -- "$expected_result" {
-            set result 0
-         }
-         -i $sp_id -- "$additional_expected_result" {
-            set result -2
-         }
-         -i $sp_id -- "$additional_expected_result2" {
-            set result -3
-         }
-         -i $sp_id timeout {
-            set result -1
-            set doStop 1
-            add_proc_error "handle_vi_edit" -1 "timeout error"
-         }
-         -i $sp_id eof {
-            set doStop 1
-         }
-     }
+      if { [string compare "" $expected_result ] == 0 } {
+         set timeout 0
+         set doStop 0
+         while { $doStop == 0 } {
+            expect {
+               -i $sp_id full_buffer {
+                  set doStop 1
+                  add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               }
+               -i $sp_id timeout {
+                  set result -1
+                  set doStop 0
+               }
+               -i $sp_id eof {
+                  set doStop 1
+                  set result 0
+               }
+           }
+        }
+      } else {
+         while { $doStop == 0 } {
+            expect {
+               -i $sp_id full_buffer {
+                  set doStop 1
+                  add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               }
+               -i $sp_id -- "$expected_result" {
+                  set result 0
+               }
+               -i $sp_id -- "$additional_expected_result" {
+                  set result -2
+               }
+               -i $sp_id -- "$additional_expected_result2" {
+                  set result -3
+               }
+               -i $sp_id timeout {
+                  set result -1
+                  set doStop 1
+                  add_proc_error "handle_vi_edit" -1 "timeout error"
+               }
+               -i $sp_id eof {
+                  set doStop 1
+               }
+           }
+        }
      }
      puts $CHECK_OUTPUT $expect_out(buffer)
      close_spawn_process $id

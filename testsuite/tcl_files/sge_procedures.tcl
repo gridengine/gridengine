@@ -620,7 +620,8 @@ proc get_gid_range { user port } {
 #     ???/???
 #*******************************
 proc move_qmaster_spool_dir { new_spool_dir } {
-  global CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER
+  global CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT
+  global CHECK_HOST
 
   set old_spool_dir [ get_qmaster_spool_dir ]
  
@@ -642,10 +643,26 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 
   
   # change qmaster spool dir and shutdown the qmaster and scheduler
-  set change_array(qmaster_spool_dir) $new_spool_dir
-  set_config change_array "global"
+#  this was the old way before 5.3.beta2. Now we can't change qmaster_spool_dir in
+#  a running system. We have to do it manually.
+#  set change_array(qmaster_spool_dir) $new_spool_dir
+#  set_config change_array "global"
   shutdown_master_and_scheduler $CHECK_CORE_MASTER $old_spool_dir
- 
+
+  set vi_commands ""
+ #  ":%s/^$elem .*$/$elem  $newVal/\n"
+  set newVal1 [split $new_spool_dir {/}]
+  set newVal [join $newVal1 {\/}]
+
+  lappend vi_commands ":%s/^qmaster_spool_dir .*$/qmaster_spool_dir    $newVal/\n"
+
+  set vi_binary [get_binary_path $CHECK_HOST "vim"]
+  set result [ handle_vi_edit "$vi_binary" "$CHECK_PRODUCT_ROOT/default/common/configuration" "$vi_commands" "" ] 
+  puts $CHECK_OUTPUT "result: \"$result\""
+  if { $result != 0 } {
+     add_proc_error "shadowd_kill_master_and_scheduler" -1 "edit error when changing global configuration"
+  } 
+
   # now copy the entries  
   set result [ start_remote_tcl_prog $CHECK_CORE_MASTER $CHECK_USER "file_procedures.tcl" "copy_directory" "$old_spool_dir $new_spool_dir" ]
   if { [ string first "no errors" $result ] < 0 } {
@@ -654,6 +671,12 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 
   startup_qmaster
   wait_for_load_from_all_queues 300
+
+  set changed_spool_dir [ get_qmaster_spool_dir ]
+  if { [string compare $changed_spool_dir $new_spool_dir] != 0 } {
+     add_proc_error "shadowd_kill_master_and_scheduler" -1 "error changing qmaster spool dir"
+  }
+
 }
 
 #                                                             max. column:     |

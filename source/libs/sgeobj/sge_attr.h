@@ -82,6 +82,10 @@ TEMPLATE_ATTR_PROTO(ulng_attr, u_long32)
 
 TEMPLATE_ATTR_PROTO(bool_attr, bool)                    
 
+TEMPLATE_ATTR_PROTO(time_attr, const char *)                    
+
+TEMPLATE_ATTR_PROTO(mem_attr, const char *)                    
+
 #undef ATTR_TYPE_PROTOTYPES 
 
 #endif /* __SGE_ATTR_H__ */

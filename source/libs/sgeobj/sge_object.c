@@ -60,7 +60,7 @@
 #include "sge_range.h"
 #include "sge_object.h"
 #include "sge_centry.h"
-
+#include "sge_parse_num_par.h"
 #include "sge_utility.h"
 
 #include "msg_common.h"
@@ -686,6 +686,12 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
       case US_type:
          ret = userset_set_type_string(object, answer_list, value);
          break;
+      case AMEM_value:
+         ret = object_parse_mem_from_string(object, answer_list, nm, value);
+         break;
+      case ATIME_value:
+         ret = object_parse_time_from_string(object, answer_list, nm, value);
+         break;
       default:
          ret = object_parse_raw_field_from_string(object, answer_list, nm, 
                                                   value);
@@ -1135,6 +1141,66 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
 }
 
 bool
+object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
+                              int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_time_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+
+      if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
+         lSetPosString(this_elem, pos, string);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_mem_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+
+      if (parse_ulong_val(NULL, NULL, TYPE_MEM, string, NULL, 0)) {
+         lSetPosString(this_elem, pos, string);
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_ERRORPARSINGVALUEFORNM_SS,
+                                 string, lNm2Str(name));
+         ret = false;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_ERRORPARSINGVALUEFORNM_SS,
+                              "<null>", lNm2Str(name));
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
 object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
                                  int name, const char *string)
 {
@@ -1145,7 +1211,12 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
       int pos = lGetPosViaElem(this_elem, name);
       u_long32 value;
 
-      if (sscanf(string, u32, &value) == 1) {
+      if (strlen(string) == 0) {
+         /*
+          * Empty string will be parsed as '0'
+          */
+         lSetPosUlong(this_elem, pos, 0);
+      } else if (sscanf(string, u32, &value) == 1) {
          lSetPosUlong(this_elem, pos, value);
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,

@@ -46,7 +46,9 @@ enum {
    CU_name = CU_LOWERBOUND,       
    CU_ruser_list,
    CU_ulong32,
-   CU_bool
+   CU_bool,
+   CU_time,
+   CU_mem
 };
 
 LISTDEF(CU_Type)
@@ -54,6 +56,8 @@ LISTDEF(CU_Type)
    SGE_LIST(CU_ruser_list, ASTR_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(CU_ulong32, AULNG_Type, CULL_DEFAULT)
    SGE_LIST(CU_bool, ABOOL_Type, CULL_DEFAULT)
+   SGE_LIST(CU_time, ATIME_Type, CULL_DEFAULT)
+   SGE_LIST(CU_mem, AMEM_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CUN)
@@ -61,6 +65,8 @@ NAMEDEF(CUN)
    NAME("CU_ruser_list")
    NAME("CU_ulong32")
    NAME("CU_bool")
+   NAME("CU_time")
+   NAME("CU_mem")
 NAMEEND
 
 #define CUS sizeof(CUN)/sizeof(char*)

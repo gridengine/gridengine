@@ -123,6 +123,20 @@ int parsing_type
                                       CU_bool, ABOOL_Type, 
                                       ABOOL_href)) ? -1 : 0;
    }
+
+   /* --------- CU_time */
+   if (ret == 0) {
+      ret = (!set_conf_time_attr_list(alpp, clpp, fields, "time", ep, 
+                                      CU_time, ATIME_Type,
+                                      ATIME_href)) ? -1 : 0;
+   }
+   
+   /* --------- CU_mem */
+   if (ret == 0) {
+      ret = (!set_conf_mem_attr_list(alpp, clpp, fields, "mem", ep, 
+                                     CU_mem, AMEM_Type,
+                                     AMEM_href)) ? -1 : 0;
+   }
    DEXIT;
    return ret;
 }
@@ -268,6 +282,36 @@ const lListElem *ep
          sge_dstring_free(&string);
       } else {
          FPRINTF((fp, "NONE\n"));
+      }
+ 
+   }
+   {
+      const lList *time_attr_list = lGetList(ep, CU_time);
+
+      FPRINTF((fp, "time             "));
+      if (time_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         time_attr_list_append_to_dstring(time_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "INFINITY\n"));
+      }
+ 
+   }
+   {
+      const lList *mem_attr_list = lGetList(ep, CU_mem);
+
+      FPRINTF((fp, "mem              "));
+      if (mem_attr_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         mem_attr_list_append_to_dstring(mem_attr_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "INFINITY\n"));
       }
  
    }

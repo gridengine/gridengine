@@ -1,8 +1,13 @@
+EB-2003-07-18-0: Enhancem.: Added support for memory and time values
+                            in configuration sublists of CQs
+                 Changed:   sge_qmaster, qconf
+
 SG-2003-07-18-1: optim.     - Optimized function ticket computation. Decreased
                             the amount of cull accesses when the pending jobs
                             are set active and inactive for calculation its
                             tickets.
-                            - Fixed a bug (which I added with the last optimization)
+                            - Fixed a bug (which I added with the last 
+                              optimization)
                               for calculating the ftickets for running jobs.
                  Review:    AH
                  Changed:   sge_schedd
@@ -16,7 +21,6 @@ SG-2003-07-18-0: Enhancem.: - 2 part: additional profiling information about a
                  Review:    JG
                  Changed:   sge_schedd
  
-
 EB-2003-07-17-0: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
                             * job was rejected because requests a queue
                               while queues are configured as requestable

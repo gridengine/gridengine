@@ -1012,7 +1012,8 @@ void sge_hostcpy(char *dst, const char *raw)
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
-   } else if (uti_state_get_default_domain() && SGE_STRCASECMP(uti_state_get_default_domain(), "none")) {
+   } else if (uti_state_get_default_domain() && 
+              SGE_STRCASECMP(uti_state_get_default_domain(), "none")) {
  
       /* exotic: honor FQDN but use default_domain */
  

@@ -802,3 +802,6 @@ TEMPLATE_ATTR_IMPL(str_attr, const char *, ASTR_Type, ASTR_href, ASTR_value)
 TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, AULNG_Type, AULNG_href, AULNG_value) 
 
 TEMPLATE_ATTR_IMPL(bool_attr, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
+
+TEMPLATE_ATTR_IMPL(time_attr, const char *, ATIME_Type, ATIME_href, ATIME_value) 
+TEMPLATE_ATTR_IMPL(mem_attr, const char *, AMEM_Type, AMEM_href, AMEM_value) 

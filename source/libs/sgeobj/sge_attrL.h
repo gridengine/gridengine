@@ -93,6 +93,40 @@ NAMEEND
 
 #define ABOOLS sizeof(ABOOLN)/sizeof(char*)
 
+enum {
+   ATIME_href = ATIME_LOWERBOUND,
+   ATIME_value                    
+};
+
+LISTDEF(ATIME_Type)
+   SGE_HOST(ATIME_href, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(ATIME_value, CULL_DEFAULT)
+LISTEND 
+
+NAMEDEF(ATIMEN)
+   NAME("ATIME_href")
+   NAME("ATIME_value")
+NAMEEND
+
+#define ATIMES sizeof(ATIMEN)/sizeof(char*)
+
+enum {
+   AMEM_href = AMEM_LOWERBOUND,
+   AMEM_value                    
+};
+
+LISTDEF(AMEM_Type)
+   SGE_HOST(AMEM_href, CULL_HASH | CULL_UNIQUE)
+   SGE_STRING(AMEM_value, CULL_DEFAULT)
+LISTEND 
+
+NAMEDEF(AMEMN)
+   NAME("AMEM_href")
+   NAME("AMEM_value")
+NAMEEND
+
+#define AMEMS sizeof(AMEMN)/sizeof(char*)
+
 /* *INDENT-ON* */  
 
 #ifdef  __cplusplus

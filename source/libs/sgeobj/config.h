@@ -91,6 +91,14 @@ bool set_conf_bool_attr_list(lList **alpp, lList **clpp, int fields[],
                              const char *key, lListElem *ep, int name_nm,
                              lDescr *descr, int sub_name_nm);
 
+bool set_conf_time_attr_list(lList **alpp, lList **clpp, int fields[],
+                             const char *key, lListElem *ep, int name_nm,
+                             lDescr *descr, int sub_name_nm);
+
+bool set_conf_mem_attr_list(lList **alpp, lList **clpp, int fields[],
+                             const char *key, lListElem *ep, int name_nm,
+                             lDescr *descr, int sub_name_nm);
+
 bool set_conf_centry_type(lList **alpp, lList **clpp, int fields[], 
                           const char *key, lListElem *ep, int name_nm);
 

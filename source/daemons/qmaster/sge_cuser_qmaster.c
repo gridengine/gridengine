@@ -135,6 +135,26 @@ int usermap_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem, 
       }
    }
 
+   if (ret) {
+      pos = lGetPosViaElem(reduced_elem, CU_time);
+   
+      if (pos >= 0) {
+         lList *hostattr_list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cuser, CU_time, lCopyList("", hostattr_list));
+      }
+   }
+
+   if (ret) {
+      pos = lGetPosViaElem(reduced_elem, CU_mem);
+   
+      if (pos >= 0) {
+         lList *hostattr_list = lGetPosList(reduced_elem, pos);
+
+         lSetList(cuser, CU_mem, lCopyList("", hostattr_list));
+      }
+   }
+
    DEXIT;
    if (ret) {
       return 0;

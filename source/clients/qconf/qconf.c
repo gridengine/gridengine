@@ -56,6 +56,8 @@ int main(int argc, char **argv)
    
    DENTER_MAIN(TOP_LAYER, "qconf");
 
+   lInit(nmv);
+
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
    if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));

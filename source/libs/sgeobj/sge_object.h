@@ -233,6 +233,14 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
                                int name, const char *string);
 
 bool
+object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
+                                 int name, const char *string);
+
+bool
+object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,
+                             int name, const char *string);
+
+bool
 object_set_any_type(lListElem *this_elem, int name, void *value);
 
 void

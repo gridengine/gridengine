@@ -1344,9 +1344,14 @@ RestoreConfig()
       done
 
       if [ -d $master_spool ]; then
-         :
+         if [ -d $master_spool/job_scipts ]; then
+            :
+         else
+            ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+         fi
       else
          ExecuteAsAdmin $MKDIR $master_spool
+         ExecuteAsAdmin $MKDIR $master_spool/job_scripts
       fi
 
       for f in $BUP_SPOOL_FILE_LIST; do
@@ -1420,9 +1425,14 @@ RestoreConfig()
       done
 
       if [ -d $master_spool ]; then
-         :
+         if [ -d $master_spool/job_scipts ]; then
+            :
+         else
+            ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+         fi
       else
          ExecuteAsAdmin $MKDIR $master_spool
+         ExecuteAsAdmin $MKDIR $master_spool/job_scripts
       fi
 
       for f in $BUP_SPOOL_FILE_LIST; do

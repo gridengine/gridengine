@@ -1,3 +1,10 @@
+MD-2004-10-08-1: Bugfix:    restoring a backup does not 
+                            restore the job_scripts dir 
+                 Review:    CR
+                 Changed:   inst_sge
+                 Issue:     1239
+                 Bugtraq:   6176177
+
 MD-2004-10-08-0: Enhancem.: Profiling Code Enhancement (made MT-save)
                  Review:    CR
                  Changed:   qmaster, schedd, sge_profiling

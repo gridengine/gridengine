@@ -1,3 +1,6 @@
+JG-2001-08-02-0: Added external loadsensor script for platform aix43
+                 (util/resources/loadsensors/ibm-loadsensor)
+
 JG-2001-08-01-0: Testsuite: Test "cluster performance" failed on hosts reporting
                  a fully qualified hostname.
 

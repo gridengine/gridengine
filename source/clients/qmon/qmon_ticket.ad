@@ -181,7 +181,7 @@ Qmon*tov_layout*share_override_ticket.alignment:      ALIGNMENT_BEGINNING
 Qmon*tov_layout*report_pjob_tickets.labelString:    @{Report Pending Job Tickets}
 Qmon*tov_layout*report_pjob_tickets.alignment:      ALIGNMENT_BEGINNING
 
-Qmon*tov_layout*share_functional_ticket.labelString:  @{Share Functional Tickets}
+Qmon*tov_layout*share_functional_ticket.labelString:  @{Share Functional Shares}
 Qmon*tov_layout*share_functional_ticket.alignment:    ALIGNMENT_BEGINNING
 
 Qmon*tov_layout*max_functional_jobs.minimum: 0

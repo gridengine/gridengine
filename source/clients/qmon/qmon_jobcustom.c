@@ -2224,6 +2224,16 @@ lList *request_list
    if(!lGetList(jep, JB_ja_tasks)) {
       found_task = True;
    }   
+
+   if (select_by_resource_list(request_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
+      DEXIT;
+      return False;
+   }
+   if (!is_cqueue_selected(queue_list)) {
+      DEXIT;
+      return False;
+   }
+
    /*
    ** see if job is running on specified queue otherwise don't show
    */
@@ -2234,18 +2244,21 @@ lList *request_list
          for_each(cq, queue_list) {
             lListElem *qep;
             for_each(qep, lGetList(cq, CQ_qinstances)) {
-               dstring queue_name_buffer = DSTRING_INIT;
-               const char *qnm = qinstance_get_name(qep, &queue_name_buffer);
-               lListElem *gdilep;
-               for_each(gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-                  if (!strcmp(lGetString(gdilep, JG_qname), qnm)) {
-                     found_task = True;
-                     break;
+               if (lGetUlong(qep, QU_tag) == 1) {
+                  dstring queue_name_buffer = DSTRING_INIT;
+                  const char *qnm = qinstance_get_name(qep, &queue_name_buffer);
+                  lListElem *gdilep;
+                  for_each(gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+                     if (!strcmp(lGetString(gdilep, JG_qname), qnm)) {
+                        found_task = True;
+                        break;
+                     }
                   }
+                  sge_dstring_free(&queue_name_buffer);
                }
-               sge_dstring_free(&queue_name_buffer);
             }
          }
+
          if (!found_task) {
             lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable) & ~TAG_SHOW_IT);
          }   

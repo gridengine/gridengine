@@ -1,0 +1,124 @@
+
+                   Kerberized GRD Overview
+
+Kerberized GRD provides for the authentication of GRD users and GRD
+daemons to ensure a secure queueing environment.  Kerberized GRD also
+supports automatic forwarding and renewal of Kerberos ticket granting
+tickets (TGTs) on behalf of the user to the execution hosts to ensure
+that users' jobs will have the proper Kerberos credentials to execute
+other kerberized applications (e.g. PVM).
+
+            Installation Instructions for Kerberized GRD
+
+Kerberized GRD requires Kerberos 5, release 1.0pl1 or later to be
+installed on all GRD qmaster, shadow, execution, and submit hosts.
+
+You must also define some kerberos principals and add them to the
+Kerberos database and add some keys to the default keytabs of the
+qmaster and execution hosts.  Detailed instructions for setting up your
+Kerberos database to execute Kerberized GRD are included below.
+
+The instructions below include examples.  In the examples, the Kerberos
+domain is HPC-TX.COM.  The qmaster host is fritz.hpc-tx.com and the
+execution host is constitution.hpc-tx.com.
+
+1. Add a principal for the GRD service for each qmaster and shadow host.
+Specify the qmaster or shadow host as the host portion of the principal.
+
+
+$ kinit admin/admin
+Password for admin/admin@HPC-TX.COM: 
+$ /usr/krb5/sbin/kadmin
+Enter password:
+kadmin:  addprinc -randkey grd/fritz.hpc-tx.com@HPC-TX.COM
+Principal "grd/fritz.hpc-tx.com@HPC-TX.COM" created.
+kadmin:  quit
+$ 
+
+
+2. Add a principal for the cod_qmaster and cod_schedd daemons for the
+qmaster host and any shadow hosts.  Specify the qmaster or
+shadow host as the host portion of the principal.
+
+
+$ /usr/krb5/sbin/kadmin
+Enter password:
+kadmin:  addprinc -randkey cod_qmaster/fritz.hpc-tx.com@HPC-TX.COM
+Principal "cod_qmaster/fritz.hpc-tx.com@HPC-TX.COM" created.
+kadmin:  addprinc -randkey cod_schedd/fritz.hpc-tx.com@HPC-TX.COM
+Principal "cod_schedd/fritz.hpc-tx.com@HPC-TX.COM" created.
+kadmin:  quit
+$ 
+
+
+3. For each execution host, add a cod_execd principal for the cod_execd daemon
+which will be executing on the host.  Specify the execution host as the
+host portion of the principal.
+
+
+$ /usr/krb5/sbin/kadmin
+Enter password:
+kadmin:  addprinc -randkey cod_execd/constitution.hpc-tx.com@HPC-TX.COM
+Principal "cod_execd/constitution.hpc-tx.com@HPC-TX.COM" created.
+kadmin:  quit
+$ 
+
+
+4. Add the GRD, cod_qmaster, and cod_schedd principals to the default keytab on
+the qmaster host and any shadow hosts.  (You need to be root to write to
+the default keytab.)
+
+On each qmaster or shadow host:
+
+$ su
+Password:
+# /usr/krb5/bin/kinit admin/admin
+Password for admin/admin@HPC-TX.COM: 
+# /usr/krb5/sbin/kadmin
+Enter password:
+kadmin:  ktadd grd/fritz.hpc-tx.com cod_qmaster/fritz.hpc-tx.com cod_schedd/fritz.hpc-tx.com
+Entry for principal grd/fritz.hpc-tx.com with kvno 5, encryption type DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
+Entry for principal cod_qmaster/fritz.hpc-tx.com with kvno 5, encryption type DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
+Entry for principal cod_schedd/fritz.hpc-tx.com with kvno 4, encryption type DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
+kadmin:  quit
+# 
+
+5. For each execution host, add the cod_execd principal to the default
+keytab on the execution host.  (You need to be root to write to
+the default keytab.)
+
+On each execution host:
+
+$ su
+Password:
+# /usr/krb5/bin/kinit admin/admin
+Password for admin/admin@HPC-TX.COM: 
+# /usr/krb5/sbin/kadmin
+Enter password:
+kadmin:  ktadd cod_execd/constitution.hpc-tx.com
+Entry for principal cod_execd/constitution.hpc-tx.com with kvno 3, encryption type DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
+kadmin:  quit
+# 
+
+6. Follow the usual instructions for installing GRD.
+
+
+		      Kerberos Error Logging
+
+Kerberos errors are logged in the usual GRD messages files as well as
+the Kerberos library log file.  Each kerberos error includes a
+descriptive Kerberos error message as well as the GRD context in which
+the error occurred.  Authentication failures are logged as errors.
+
+
+		    TGT Forwarding and TGT Renewal
+
+In order for Kerberized GRD to automatically forward and renew TGTs for a job
+submitted by a user, the user must have obtained a forwardable and
+renewable TGT.  This can be done by using the -f and -r switches when the
+kinit command is issued.  To request a forwardable TGT which can be renewed
+for 14 days, the user should issue the command:
+
+$ kinit -f -r 14d
+
+

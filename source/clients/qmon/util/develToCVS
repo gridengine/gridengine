@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# develToCVS erzeugt aus Qmon_main dem Entwicklungs Resource File
+# das User Resource File Qmon und ein qmon_fallbacks.c file, das benutzt wird 
+# falls Qmon nicht existiert oder die Pfade (XAPPLRESDIR) nicht richtig 
+# gesetzt sind
+
+AD2C=../clients/qmon/util/ad2c
+DIST_QMON=../dist/qmon/Qmon
+
+echo "/* DO NOT EDIT: Dialog Description, Fallbacks */" > qmon_diares.c
+echo "#include <stdio.h>" >> qmon_diares.c
+echo "char* qmon_dialogs[] = {" >> qmon_diares.c
+sed '/#include/,$d' $1 > $DIST_QMON
+if [ $? -ne 0 ] 
+then
+   echo "can't reach $DIST_QMON"
+   rm -f qmon_diares.c
+   exit 1
+fi
+
+for i in `sed -n '/#include/s/#include "\(.*\)"/\1/p' $1`
+do
+   $AD2C $i >> qmon_diares.c 
+done
+echo "NULL"    >> qmon_diares.c
+echo "};"      >> qmon_diares.c
+echo "/*-----------------------------------------------------------------*/" >> qmon_diares.c
+echo "char* qmon_fallbacks[] = {" >> qmon_diares.c 
+$AD2C ../dist/qmon/Qmon  >> qmon_diares.c 
+echo "NULL"    >> qmon_diares.c
+echo "};"      >> qmon_diares.c 

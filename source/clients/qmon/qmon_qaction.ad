@@ -1,0 +1,727 @@
+!!___INFO__MARK_BEGIN__
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  The Contents of this file are made available subject to the terms of
+!!  the Sun Industry Standards Source License Version 1.2
+!!
+!!  Sun Microsystems Inc., March, 2001
+!!
+!!
+!!  Sun Industry Standards Source License Version 1.2
+!!  =================================================
+!!  The contents of this file are subject to the Sun Industry Standards
+!!  Source License Version 1.2 (the "License"); You may not use this file
+!!  except in compliance with the License. You may obtain a copy of the
+!!  License at http://www.gridengine.sunsource.net/license.html
+!!
+!!  Software provided under this License is provided on an "AS IS" basis,
+!!  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+!!  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+!!  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+!!  See the License for the specific provisions governing your rights and
+!!  obligations concerning the Software.
+!!
+!!  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+!!
+!!  Copyright: 2001 by Sun Microsystems, Inc.
+!!
+!!  All Rights Reserved.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!___INFO__MARK_END__
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Queue List Dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*qc_dialog_shell.allowShellResize:      True
+Qmon*qc_dialog_shell.resizePolicy:          RESIZE_ANY
+Qmon*qc_dialog_shell.xmtChildren:  unmanaged XmtLayout qc_dialog;
+
+Qmon*qc_dialog.autoUnmanage:    False
+Qmon*qc_dialog.dialogTitle: @{QMON +++ Queue Configuration}
+Qmon*qc_dialog*fontList:        $dialog_font
+
+Qmon*qc_dialog.xmtChildren: \
+      XmPushButton      qc_main_link; \
+      XmtLayoutString   qc_title; \
+      InputField        qc_qname = qname, \
+                        qc_qhostname = qhostname; \
+      XmPushButton      qc_apply, qc_cancel, qc_clone, qc_update, \
+                        qc_reset, qc_help;\
+      Folder            qc_folder;
+
+Qmon*qc_dialog.layout: \
+   Col { \
+      Fixed Shadowed Out 4 2 LREvenSpaced Row qc_title_area { \
+         Fixed Centered qc_main_link \
+         Centered Color "$title_fg" qc_title \
+         ####### \
+      } \
+      Col { \
+         Fixed Row { \
+            Shadowed Out 4 2 Col { \
+               Fixed Caption tl "@{Queue}" qc_qname \
+               Fixed Caption tl "@{Hostname}" qc_qhostname \
+               Equal Even Row { qc_clone qc_reset qc_update } \
+            } \
+            Shadowed Out 4 2 Fixed Col { \
+               Fixed qc_apply \
+               Fixed qc_cancel \
+               Fixed qc_help \
+               <> \
+            } \
+         } \
+         Shadowed Out 4 2 Centered qc_form \
+      } \
+   }
+
+
+Qmon*qc_dialog.qc_main_link.labelType:   PIXMAP
+Qmon*qc_dialog.qc_main_link.labelPixmap: logo
+Qmon*qc_dialog.qc_main_link.shadowThickness:    1
+Qmon*qc_dialog.qc_main_link.highlightThickness: 0
+Qmon*qc_dialog.qc_main_link.marginHeight:       0
+Qmon*qc_dialog.qc_main_link.marginWidth:        0
+
+Qmon*qc_dialog.qc_qname.highlightOnError:        True
+Qmon*qc_dialog.qc_qname.navigationType:          TAB_GROUP
+Qmon*qc_dialog.qc_qhostname.navigationType:      TAB_GROUP
+Qmon*qc_dialog.qc_apply.navigationType:          TAB_GROUP
+Qmon*qc_dialog.qc_cancel.navigationType:         TAB_GROUP
+Qmon*qc_dialog.qc_clone.navigationType:          TAB_GROUP
+Qmon*qc_dialog.qc_update.navigationType:          TAB_GROUP
+Qmon*qc_dialog.qc_reset.navigationType:          TAB_GROUP
+Qmon*qc_dialog.qc_help.navigationType:           TAB_GROUP
+
+Qmon*qc_dialog.qc_apply.recomputeSize:            False
+Qmon*qc_dialog.qc_apply.labelString:              @{Ok}
+Qmon*qc_dialog.qc_cancel.labelString:             @{Cancel}
+Qmon*qc_dialog.qc_clone.labelString:              @{Clone}
+Qmon*qc_dialog.qc_update.labelString:             @{Refresh}
+Qmon*qc_dialog.qc_reset.labelString:              @{Reset}
+Qmon*qc_dialog.qc_help.labelString:               @{Help}
+
+Qmon*qc_help.activateCallback:   XmtHelpDisplayContextHelp(self);
+
+Qmon*qc_folder.layoutAllowResize:  false
+Qmon*qc_folder.tabsPerRow:  5
+Qmon*qc_folder.resizeChildren:  True
+Qmon*qc_folder.xmtChildren: \
+   XmtLayout   general_config, \
+               method_config, \
+               checkpoint_config, \
+               load_threshold_config, \
+               limit_config, \
+               complexes_config, \
+               subordinates_config, \
+               access_config, \
+               project_config, \
+               owner_config;
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! General Queue Info Dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*general_config.tabLabel: @{@fBGeneral Configuration}
+Qmon*general_config.xmtChildren: \
+      InputField        tmpdir = tmpdir, \
+                        shell = shell, \
+                        notify = notify, \
+                        processors = processors, \
+                        calendar = calendar, \
+                        seq_no = seq_no; \
+      XmtChooser        qtype = qtype, \
+                        shell_start_mode = shell_start_mode, \
+                        initial_state = initial_state; \
+      XmScale           priority = priority; \
+      Spinbox           job_slots = job_slots; \
+      XmToggleButton    rerun = rerun; \
+      XmPushButton      notifyPB, calendarPB;
+
+Qmon*general_config.layout: \
+   Row general_row { \
+      Col { \
+         Row { \
+            Col { \
+               Row { "@{@fBSequence Nr}" <> Fixed 20 em seq_no } \
+               Row { "@{@fBProcessors}" <> Fixed 20 em processors } \
+               Row { "@{@fBtmp Directory}" <> Fixed 20 em tmpdir } \
+               Row { "@{@fBShell}" <> Fixed 20 em shell } \
+            } \
+            Col { \
+               Row { "@{@fBCalendar}" <> \
+                  Margin 0 Row { calendar Fixed Centered calendarPB } \
+               } \
+               Row { "@{@fBNotify Time}" <> \
+                  Margin 0 Row { notify Fixed Centered notifyPB } \
+               } \
+               Row { FlushBottom "@{@fBJob's Nice}" <> 15 em priority } \
+               Row { FlushBottom "@{@fBSlots}" <> 15 em job_slots } \
+            } \
+         } \
+         Equal Even Row { \
+            Caption tl "@{@fBShell Start Mode}" Fixed Centered shell_start_mode \
+            Caption tl "@{@fBInitial State}" Fixed Centered initial_state \
+            Caption tl "@{@fBRerun Jobs}" Fixed rerun \
+            <> \
+         } \
+         <> \
+      } \
+      Col { \
+         Etched Through 6 4 Caption tl "@{@fBType}" qtype \
+         <> \
+      } \
+   }
+
+
+!!Qmon*general_config*tmpdir.columns: 20
+!!Qmon*general_config*shell.columns: 20
+!!Qmon*general_config*seq_no.columns: 20
+!!Qmon*general_config*processors.columns: 20
+Qmon*general_config*calendar.columns: 15
+Qmon*general_config*notify.columns: 15
+!!Qmon*general_config*job_slots*columns: 10
+
+!Qmon*general_config*seq_no.pattern: dddddddddddd
+!Qmon*general_config*seq_no.matchAll: False
+
+Qmon*general_config*seq_no.navigationType: TAB_GROUP
+Qmon*general_config*processors.navigationType: TAB_GROUP
+Qmon*general_config*tmpdir.navigationType: TAB_GROUP
+Qmon*general_config*shell.navigationType: TAB_GROUP
+Qmon*general_config*qtype.navigationType: TAB_GROUP
+Qmon*general_config*priority.navigationType: TAB_GROUP
+Qmon*general_config*job_slots.navigationType: TAB_GROUP
+Qmon*general_config*notify.navigationType: TAB_GROUP
+Qmon*general_config*rerun.navigationType: TAB_GROUP
+Qmon*general_config*calendar.navigationType: TAB_GROUP
+
+!! the order of the strings is important (->sge_queueL.h)
+Qmon*qtype.chooserType: CheckBox
+Qmon*qtype.strings: \
+   "@{Batch}", "@{Interactive}", "@{Checkpointing}", "@{Parallel}", "@{Transfer}"
+
+Qmon*shell_start_mode.chooserType: ChooserOption
+Qmon*shell_start_mode.strings: \
+   "@{posix_compliant}", "@{script_from_stdin}", "@{unix_behavior}"
+
+Qmon*initial_state.chooserType: ChooserOption
+Qmon*initial_state.strings: \
+   "@{default}", "@{enabled}", "@{disabled}"
+
+!Qmon*general_config.priority.layoutShrinkability: 10
+Qmon*general_config.priority.orientation:     HORIZONTAL
+Qmon*general_config.priority.scaleMultiple:   1
+Qmon*general_config.priority.showValue:       True
+Qmon*general_config.priority.minimum:         0
+Qmon*general_config.priority.maximum:         19
+
+!Qmon*general_config.job_slots.layoutShrinkability: 10
+!Qmon*general_config.job_slots.orientation:    HORIZONTAL
+!Qmon*general_config.job_slots.scaleMultiple:  1
+!Qmon*general_config.job_slots.showValue:      True
+!Qmon*general_config.job_slots.minimum:        0
+!Qmon*general_config.job_slots.maximum:        50
+
+Qmon*general_config.job_slots.buttonSizeFixed:   True
+Qmon*general_config.job_slots.minimum:           0
+Qmon*general_config.job_slots.maximum:           100000000
+
+Qmon*general_config.notifyPB.labelType:     PIXMAP
+Qmon*general_config.notifyPB.labelPixmap:   time
+
+Qmon*general_config.calendarPB.labelType:     PIXMAP
+Qmon*general_config.calendarPB.labelPixmap:   qask
+
+!Qmon*general_config.rerun.layoutShrinkability:   10
+!Qmon*general_config.rerun.labelString:           @{@fBRerun\nJobs}
+Qmon*general_config.rerun.indicatorSize:          20
+Qmon*general_config.rerun.labelString:
+Qmon*general_config.rerun.highlightThickness:     0
+
+Qmon*general_row.navigationType:  TAB_GROUP
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Method Queue Info Dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*method_config.tabLabel: @{@fBExecution Method}
+Qmon*method_config.xmtChildren: \
+      InputField        prolog = prolog, \
+                        epilog = epilog, \
+                        starter_method = starter_method, \
+                        suspend_method = suspend_method, \
+                        resume_method = resume_method, \
+                        terminate_method = terminate_method;
+
+Qmon*method_config.layout: \
+   Even Equal Col { \
+      Row { "@{@fBProlog}" <> prolog } \
+      Row { "@{@fBEpilog}" <> epilog } \
+      Row { "@{@fBStarter Method}" <> starter_method } \
+      Row { "@{@fBSuspend Method}" <> suspend_method } \
+      Row { "@{@fBResume Method}" <> resume_method } \
+      Row { "@{@fBTerminate Method}" <> terminate_method } \
+      <> \
+   }
+
+Qmon*method_config*prolog.columns: 80
+Qmon*method_config*epilog.columns: 80
+Qmon*method_config*starter_method.columns: 80
+Qmon*method_config*suspend_method.columns: 80
+Qmon*method_config*resume_method.columns: 80
+Qmon*method_config*terminate_method.columns: 80
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! checkpointing dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*checkpoint_config.tabLabel: @{@fBCheckpointing}
+Qmon*checkpoint_config.xmtChildren: \
+   Matrix_2xN     migr_load_thresholds = migr_load_thresholds;\
+   InputField     max_migr_time = max_migr_time, \
+                  max_no_migr = max_no_migr, \
+                  min_cpu_interval = min_cpu_interval; \
+   XmPushButton   max_migr_timePB, max_no_migrPB, min_cpu_intervalPB;
+
+
+Qmon*checkpoint_config.layout: \
+   Row { \
+      Etched Through Caption tc "@{Migration Load Thresholds}" Col { \
+         Margin 10 Centered migr_load_thresholds \
+      } \
+      ## \
+      Col { \
+         Caption tl "@{MaxMigrTime}" Row { \
+            Centered max_migr_time \
+            Fixed Centered max_migr_timePB \
+         } \
+         Caption tl "@{MaxNoMigr}" Row { \
+            Centered max_no_migr \
+            Fixed Centered max_no_migrPB \
+         } \
+         Caption tl "@{MinCpuTime}" Row { \
+            Centered min_cpu_interval \
+            Fixed Centered min_cpu_intervalPB \
+         } \
+         <>\
+      } \
+   }
+
+Qmon*qc_dialog.qc_folder*XbaeMatrix*buttonLabels: True
+Qmon*qc_dialog.qc_folder*XbaeMatrix*rows: 7
+Qmon*qc_dialog.qc_folder*XbaeMatrix*visibleRows: 7
+Qmon*qc_dialog.qc_folder*XbaeMatrix*columns: 2
+Qmon*qc_dialog.qc_folder*XbaeMatrix*columnWidths: 10, 10
+Qmon*qc_dialog.qc_folder*XbaeMatrix*columnMaxLengths: 100, 100
+Qmon*qc_dialog.qc_folder*XbaeMatrix*columnLabels:       @{Load}, @{Value}
+Qmon*qc_dialog.qc_folder*XbaeMatrix*gridType:          GRID_CELL_SHADOW
+Qmon*qc_dialog.qc_folder*XbaeMatrix*cellShadowType:     SHADOW_IN
+Qmon*qc_dialog.qc_folder*XbaeMatrix*cellShadowThickness: 1
+Qmon*qc_dialog.qc_folder*XbaeMatrix.translations: #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()\n\
+         <Btn1Up>(2):      SelectCell(edit)
+Qmon*qc_dialog.qc_folder*XbaeMatrix.clip.translations: #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()\n\
+         <Btn1Up>(2):      SelectCell(edit)
+
+Qmon*qc_dialog.qc_folder*XbaeMatrix.textTranslations: #override\n\
+         <Key>osfActivate: CommitEdit(True)\n\
+         ~Shift ~Meta ~Alt <Key>Return: CommitEdit(True)\n\
+         <Key>osfCancel: CommitEdit(True)
+
+Qmon*qc_dialog*migr_load_thresholds.xmtChildren: unmanaged XmtPopupMenu qc_menu;
+Qmon*qc_dialog*migr_load_thresholds*menuPost: <Btn3Down>
+
+Qmon*qc_dialog*migr_load_thresholds*qc_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteLines(*migr_load_thresholds);
+
+Qmon*qc_dialog*migr_load_thresholds.enterCellCallback: \
+      ColumnZeroNoEdit();
+
+Qmon*checkpoint_config.max_migr_timePB.labelType:    PIXMAP
+Qmon*checkpoint_config.max_migr_timePB.labelPixmap:  time
+
+Qmon*checkpoint_config.max_no_migrPB.labelType:    PIXMAP
+Qmon*checkpoint_config.max_no_migrPB.labelPixmap:  time
+
+Qmon*checkpoint_config.min_cpu_intervalPB.labelType:    PIXMAP
+Qmon*checkpoint_config.min_cpu_intervalPB.labelPixmap:  time
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! load_threshold + suspend_threshold dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*load_threshold_config.tabLabel: @{@fBLoad/Suspend Thresholds}
+Qmon*load_threshold_config.xmtChildren: \
+   Matrix_2xN     load_thresholds = load_thresholds; \
+   Matrix_2xN     suspend_thresholds = suspend_thresholds; \
+   Spinbox        suspend_nsuspend = nsuspend; \
+   InputField     suspend_interval = suspend_interval; \
+   XmPushButton   suspend_intervalPB;
+
+Qmon*load_threshold_config.layout: \
+   Row { \
+      Etched Through Caption tl "@{@fBLoad Thresholds}" Col { \
+         Margin 10 Centered load_thresholds \
+      } \
+      ## \
+      Equal Etched Through Caption tl "@{@fBSuspend Thresholds}" Row { \
+         Margin 10 Centered suspend_thresholds \
+         ### \
+         Margin 10 Col { \
+            Caption tl "@{@fISuspend interval}" Row { \
+               Centered suspend_interval \
+               Centered Fixed suspend_intervalPB \
+               <> \
+            } \
+            Caption tl "@{@fIJobs suspended per interval}" suspend_nsuspend \
+            <> \
+         } \
+      } \
+   }
+
+Qmon*load_threshold_config*suspend_nsuspend.buttonSizeFixed:   True
+Qmon*load_threshold_config*suspend_nsuspend.minimum:           0
+Qmon*load_threshold_config*suspend_nsuspend.maximum:           100000000
+
+Qmon*qc_dialog*load_thresholds.xmtChildren: unmanaged XmtPopupMenu qc_menu;
+Qmon*qc_dialog*load_thresholds*menuPost: <Btn3Down>
+
+Qmon*qc_dialog*load_thresholds*qc_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteLines(*load_thresholds);
+
+Qmon*qc_dialog*load_thresholds.enterCellCallback: \
+      ColumnZeroNoEdit();
+
+Qmon*qc_dialog*suspend_thresholds.xmtChildren: unmanaged XmtPopupMenu qc_menu;
+Qmon*qc_dialog*suspend_thresholds*menuPost: <Btn3Down>
+
+Qmon*qc_dialog*suspend_thresholds*qc_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteLines(*suspend_thresholds);
+
+Qmon*qc_dialog*suspend_thresholds.enterCellCallback: \
+      ColumnZeroNoEdit();
+
+Qmon*suspend_intervalPB.labelType:    PIXMAP
+Qmon*suspend_intervalPB.labelPixmap:  time
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! queue limit dialog
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*qc_dialog.qc_folder*limit_config.tabLabel: @{@fBLimits}
+Qmon*qc_dialog.qc_folder*limit_config.xmtChildren: \
+   Matrix_2xN        limits_hard = limits_hard; \
+   Matrix_2xN        limits_soft = limits_soft;
+
+Qmon*qc_dialog.qc_folder*limit_config.layout: \
+   Equal Even Caption tl "@{Double click on values to change limits}" Row { \
+      limits_hard \
+      limits_soft \
+   }\
+   <>
+
+Qmon*qc_dialog.qc_folder*limits_hard.rows: 7
+Qmon*qc_dialog.qc_folder*limits_hard.visibleRows: 7
+Qmon*qc_dialog.qc_folder*limits_hard.columns: 2
+Qmon*qc_dialog.qc_folder*limits_hard.columnWidths: 25, 10
+Qmon*qc_dialog.qc_folder*limits_hard.columnMaxLengths: 100, 100
+Qmon*qc_dialog.qc_folder*limits_hard.columnLabels: @{Hard Limit}, @{Value}
+Qmon*qc_dialog.qc_folder*limits_hard.gridType:          GRID_CELL_SHADOW
+Qmon*qc_dialog.qc_folder*limits_hard.cellShadowType:     SHADOW_IN
+Qmon*qc_dialog.qc_folder*limits_hard.cellShadowThickness: 1
+
+Qmon*qc_dialog.qc_folder*limits_soft.rows: 7
+Qmon*qc_dialog.qc_folder*limits_soft.visibleRows: 7
+Qmon*qc_dialog.qc_folder*limits_soft.columns: 2
+Qmon*qc_dialog.qc_folder*limits_soft.columnWidths: 25, 10
+Qmon*qc_dialog.qc_folder*limits_soft.columnMaxLengths: 100, 100
+Qmon*qc_dialog.qc_folder*limits_soft.columnLabels: @{Soft Limit}, @{Value}
+Qmon*qc_dialog.qc_folder*limits_soft.gridType:          GRID_CELL_SHADOW
+Qmon*qc_dialog.qc_folder*limits_soft.cellShadowType:     SHADOW_IN
+Qmon*qc_dialog.qc_folder*limits_soft.cellShadowThickness: 1
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! complex list 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*complexes_config.tabLabel: @{@fBComplexes}
+Qmon*complexes_config.xmtChildren: \
+   StringList     complexes_attached = complex_list; \
+   XmScrolledList complexes_available; \
+   Matrix_2xN     complexes_ccl = consumable_config_list; \
+   XmPushButton   complexes_dialog, complexes_add, complexes_remove;
+
+Qmon*complexes_config.layout: \
+   Row { \
+      Etched Through Caption tc "@{@fBComplex Selection}" Row { \
+         Fixed Caption tl "@{Available Complexes}"  3 in complexes_available \
+         Col { \
+            <> \
+            Fixed Centered complexes_add \
+            Fixed Centered complexes_remove \
+            ### \
+            Fixed Centered complexes_dialog \
+            <> \
+         } \
+         Fixed Caption tl "@{Attached Complexes}" 3 in complexes_attached \
+      } \
+      ## \
+      Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Col { \
+         Margin 10 Centered complexes_ccl \
+      } \
+   }
+
+Qmon*complexes_config.complexes_dialog.labelType:    PIXMAP
+Qmon*complexes_config.complexes_dialog.labelPixmap:  toolbar_cplx
+
+Qmon*complexes_config.complexes_add.labelType:       PIXMAP
+Qmon*complexes_config.complexes_add.labelPixmap:     rightarrow
+Qmon*complexes_config.complexes_remove.labelType:    PIXMAP
+Qmon*complexes_config.complexes_remove.labelPixmap:  leftarrow
+
+Qmon*complexes_config*scrollBarDisplayPolicy:  AS_NEEDED
+Qmon*complexes_config*listSizePolicy:          CONSTANT
+
+Qmon*complexes_config*complexes_available.fontList:          $fixed_font
+Qmon*complexes_config*complexes_available.selectionPolicy:   EXTENDED_SELECT
+Qmon*complexes_config*complexes_available.scrollingPolicy:   AUTOMATIC
+Qmon*complexes_config*complexes_available.visualPolicy:      CONSTANT
+
+Qmon*complexes_config*complexes_attached.fontList:          $fixed_font
+Qmon*complexes_config*complexes_attached.selectionPolicy:   EXTENDED_SELECT
+Qmon*complexes_config*complexes_attached.scrollingPolicy:   AUTOMATIC
+Qmon*complexes_config*complexes_attached.visualPolicy:      CONSTANT
+
+Qmon*qc_dialog*complexes_ccl.xmtChildren: unmanaged XmtPopupMenu qc_menu;
+Qmon*qc_dialog*complexes_ccl*menuPost: <Btn3Down>
+
+Qmon*qc_dialog*complexes_ccl*qc_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteLines(*complexes_ccl);
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! subordinate list 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*qc_dialog.qc_folder.subordinates_config.tabLabel: @{@fBSubordinates}
+Qmon*qc_dialog.qc_folder.subordinates_config.xmtChildren: \
+   Matrix_2xN      subordinates_attached = subordinate_list;
+
+Qmon*qc_dialog.qc_folder.subordinates_config.layout: \
+   Row { \
+      subordinates_attached \
+      ##### \
+      "@{qaction.max_slots.If 'Max Slots' are filled in the current queue,\nthe queues in column one are suspended.}" \
+      <> \
+   }
+
+Qmon*qc_dialog.qc_folder.subordinates_config.subordinates_remove.labelString: @{Remove Lines}
+
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.rows: 7
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.visibleRows: 7
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.columns: 2
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.columnWidths: 20, 10
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.columnMaxLengths: 200, 100
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.columnLabels: @{Queue},@{Max Slots}
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.gridType:     GRID_CELL_SHADOW
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.cellShadowType: SHADOW_IN
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.cellShadowThickness: 1
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.translations: #override\n\
+         Shift<Btn1Down>: SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()\n\
+         <Btn1Up>(2):      SelectCell(editall)
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.clip.translations: #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()\n\
+         <Btn1Up>(2):      SelectCell(editall)
+
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.xmtChildren: unmanaged XmtPopupMenu del_menu;
+Qmon*qc_dialog.qc_folder.subordinates_config*subordinates_attached.menuPost: <Btn3Down>
+
+Qmon*subordinates_attached*del_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteLines(*subordinates_attached);
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! (x)access list 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*access_config.tabLabel: @{@fBUser Access}
+Qmon*access_config.xmtChildren: \
+   StringList     access_list, \
+                  access_allow = acl, \
+                  access_deny = xacl; \
+   XmtChooser     access_toggle; \
+   XmPushButton   access_add, access_remove, access_dialog;
+
+Qmon*access_config.layout: \
+   Row { \
+      3 in Wide Caption tl "@{@fBAccess Lists}" access_list \
+      Fixed Col { \
+         <> \
+         Etched Through access_toggle \
+         Fixed Centered access_add \
+         Fixed Centered access_remove \
+         ### \
+         Fixed Centered access_dialog \
+         <> \
+      } \
+      3 in Wide Col { \
+         Caption tl "@{@fBAllow Access to}" access_allow \
+         Caption tl "@{@fBDeny Access to}" access_deny \
+      } \
+   }
+
+Qmon*access_config.access_dialog.labelType:       PIXMAP
+Qmon*access_config.access_dialog.labelPixmap:     toolbar_user
+
+Qmon*access_config.access_add.labelType:          PIXMAP
+Qmon*access_config.access_add.labelPixmap:        rightarrow
+Qmon*access_config.access_remove.labelType:       PIXMAP
+Qmon*access_config.access_remove.labelPixmap:     leftarrow
+
+Qmon*access_config.access_toggle.chooserType:    ChooserRadioBox
+Qmon*access_config.access_toggle.strings: \
+   "@{Allow Access}", "@{Deny Access}"
+
+Qmon*access_config*scrollBarDisplayPolicy:  AS_NEEDED
+Qmon*access_config*listSizePolicy:          CONSTANT
+
+Qmon*access_config*access_list.fontList:          $fixed_font
+Qmon*access_config*access_list.selectionPolicy:   EXTENDED_SELECT
+Qmon*access_config*access_list.scrollingPolicy:   AUTOMATIC
+Qmon*access_config*access_list.visualPolicy:      CONSTANT
+Qmon*access_config*access_list.visibleItemCount:  10
+
+Qmon*access_config*access_allow.fontList:         $fixed_font
+Qmon*access_config*access_allow.selectionPolicy:  EXTENDED_SELECT
+Qmon*access_config*access_allow.scrollingPolicy:  AUTOMATIC
+Qmon*access_config*access_allow.visualPolicy:     CONSTANT
+Qmon*access_config*access_allow.visibleItemCount: 4
+
+Qmon*access_config*access_deny.fontList:          $fixed_font
+Qmon*access_config*access_deny.selectionPolicy:   EXTENDED_SELECT
+Qmon*access_config*access_deny.scrollingPolicy:   AUTOMATIC
+Qmon*access_config*access_deny.visualPolicy:      CONSTANT
+Qmon*access_config*access_deny.visibleItemCount:  4
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! (x)projects
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*project_config.tabLabel: @{@fBProject Access}
+Qmon*project_config.xmtChildren: \
+   StringList     project_list, \
+                  project_allow = prj, \
+                  project_deny = xprj; \
+   XmtChooser     project_toggle; \
+   XmPushButton   project_add, project_remove, project_dialog;
+
+Qmon*project_config.layout: \
+   Row { \
+      3 in Wide Caption tl "@{@fBProjects}" project_list \
+      Fixed Col { \
+         <> \
+         Etched Through project_toggle \
+         Fixed Centered project_add \
+         Fixed Centered project_remove \
+         ### \
+         Fixed Centered project_dialog \
+         <> \
+      } \
+      3 in Wide Col { \
+         Caption tl "@{@fBAllow Project Access to}" project_allow \
+         Caption tl "@{@fBDeny Project Access to}" project_deny \
+      } \
+   }
+
+Qmon*project_config.project_dialog.labelType:       PIXMAP
+Qmon*project_config.project_dialog.labelPixmap:     toolbar_prj
+
+Qmon*project_config.project_add.labelType:          PIXMAP
+Qmon*project_config.project_add.labelPixmap:        rightarrow
+Qmon*project_config.project_remove.labelType:       PIXMAP
+Qmon*project_config.project_remove.labelPixmap:     leftarrow
+
+Qmon*project_config.project_toggle.chooserType:    ChooserRadioBox
+Qmon*project_config.project_toggle.strings: \
+   "@{Allow Access}", "@{Deny Access}"
+
+Qmon*project_config*scrollBarDisplayPolicy:  AS_NEEDED
+Qmon*project_config*listSizePolicy:          CONSTANT
+
+Qmon*project_config*project_list.fontList:          $fixed_font
+Qmon*project_config*project_list.selectionPolicy:   EXTENDED_SELECT
+Qmon*project_config*project_list.scrollingPolicy:   AUTOMATIC
+Qmon*project_config*project_list.visualPolicy:      CONSTANT
+Qmon*project_config*project_list.visibleItemCount:  10
+
+Qmon*project_config*project_allow.fontList:         $fixed_font
+Qmon*project_config*project_allow.selectionPolicy:  EXTENDED_SELECT
+Qmon*project_config*project_allow.scrollingPolicy:  AUTOMATIC
+Qmon*project_config*project_allow.visualPolicy:     CONSTANT
+Qmon*project_config*project_allow.visibleItemCount: 4
+
+Qmon*project_config*project_deny.fontList:          $fixed_font
+Qmon*project_config*project_deny.selectionPolicy:   EXTENDED_SELECT
+Qmon*project_config*project_deny.scrollingPolicy:   AUTOMATIC
+Qmon*project_config*project_deny.visualPolicy:      CONSTANT
+Qmon*project_config*project_deny.visibleItemCount:  4
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! owners list 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*owner_config.tabLabel: @{@fBOwners}
+Qmon*owner_config.xmtChildren: \
+   StringList     owner_list = owner_list; \
+   InputField  owner_new; \
+   XmPushButton   owner_remove;
+
+Qmon*owner_config.layout: \
+   Row { \
+      Caption tl "@{@fBOwner List}" 3 in owner_list \
+      Fixed 3 in Col { \
+         Caption tl "@{Enter Owner}" owner_new \
+         # \
+         Fixed FlushLeft owner_remove \
+         <>\
+      } \
+      <> \
+   }
+
+Qmon*owner_config.owner_remove.labelType:      PIXMAP
+Qmon*owner_config.owner_remove.labelPixmap:    trashcan
+!Qmon*owner_config.owner_remove.labelString:      @{Delete}
+Qmon*owner_config.owner_remove.activateCallback:  DeleteItems(*owner_list);
+
+Qmon*owner_config*scrollBarDisplayPolicy:   AS_NEEDED
+Qmon*owner_config*listSizePolicy:           CONSTANT
+
+Qmon*owner_config*owner_list.fontList:         $fixed_font
+Qmon*owner_config*owner_list.selectionPolicy:  EXTENDED_SELECT
+Qmon*owner_config*owner_list.scrollingPolicy:  AUTOMATIC
+Qmon*owner_config*owner_list.visualPolicy:     CONSTANT
+
+Qmon*owner_config*owner_list.xmtChildren: unmanaged XmtPopupMenu qc_menu;
+Qmon*owner_config*owner_list*qc_menu.menuPost: <Btn3Down>
+
+Qmon*owner_config*owner_list*qc_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteItems(*owner_list);
+

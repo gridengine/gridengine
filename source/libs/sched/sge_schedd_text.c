@@ -1,0 +1,353 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://www.gridengine.sunsource.net/license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+#include <stdio.h>
+#include <string.h>
+#include "basis_types.h"
+#include "sge_schedd_text.h"
+#include "sgermon.h"
+#include "msg_schedd.h"
+
+
+
+/*
+** Prototype for internationalized messages
+** translation (used in sge_schedd_text() )
+*/
+const char* sge_get_schedd_text(int number);
+
+/*
+** Code was former
+** in sge_text.c ( sge_text() is now sge_schedd_text() )
+*/
+const char* sge_get_schedd_text(
+int nr 
+) {
+/* Info strings used in scheduler (detailed information) 
+ * and Info strings used in qstat (we group jobs)
+ *
+ * Info strings used in scheduler and info strings used in qstat must
+ * have same sequence because we use offset to map messages
+ */
+   switch(nr)
+   {  
+      case SCHEDD_INFO_CANNOTRUNATHOST_SSS      :
+         return MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS       ;  
+ 
+      case SCHEDD_INFO_HASNOPERMISSION_S        :
+         return MSG_SCHEDD_INFO_HASNOPERMISSION_S         ;   
+ 
+      case SCHEDD_INFO_HASINCORRECTPRJ_SSS      :
+         return MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS       ;  
+ 
+      case SCHEDD_INFO_HASNOPRJ_S               :
+         return MSG_SCHEDD_INFO_HASNOPRJ_S                ;  
+ 
+      case SCHEDD_INFO_EXCLPRJ_SS               :
+         return MSG_SCHEDD_INFO_EXCLPRJ_SS                ; 
+ 
+      case SCHEDD_INFO_QUEUENOTREQUESTABLE_S    :
+         return MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE_S     ;   
+ 
+      case SCHEDD_INFO_NOTINHARDQUEUELST_S      :
+         return MSG_SCHEDD_INFO_NOTINHARDQUEUELST_S       ;   
+ 
+      case SCHEDD_INFO_NOTPARALLELQUEUE_S       :
+         return MSG_SCHEDD_INFO_NOTPARALLELQUEUE_S        ;  
+ 
+      case SCHEDD_INFO_NOTINQUEUELSTOFPE_SS     :
+         return MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE_SS      ; 
+ 
+      case SCHEDD_INFO_NOTACKPTQUEUE_SS         :
+         return MSG_SCHEDD_INFO_NOTACKPTQUEUE_SS          ;  
+ 
+      case SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS   :
+         return MSG_SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS    ;  
+ 
+      case SCHEDD_INFO_QUEUENOTINTERACTIVE_S    :
+         return MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE_S     ;   
+ 
+      case SCHEDD_INFO_NOTASERIALQUEUE_S        :
+         return MSG_SCHEDD_INFO_NOTASERIALQUEUE_S         ;  
+ 
+      case SCHEDD_INFO_NOTPARALLELJOB_S         :
+         return MSG_SCHEDD_INFO_NOTPARALLELJOB_S          ; 
+ 
+      case SCHEDD_INFO_NOTREQFORCEDRES_SS       :
+         return MSG_SCHEDD_INFO_NOTREQFORCEDRES_SS        ; 
+ 
+      case SCHEDD_INFO_WOULDSETQEUEINALARM_DS   :
+         return MSG_SCHEDD_INFO_WOULDSETQEUEINALARM_IS    ;   
+ 
+      case SCHEDD_INFO_NOSLOTSINQUEUE_S         :
+         return MSG_SCHEDD_INFO_NOSLOTSINQUEUE_S          ;   
+ 
+      case SCHEDD_INFO_CANNOTRUNINQUEUE_SSS     :
+         return MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS      ;   
+ 
+      case SCHEDD_INFO_NOSLOTSUPPORTBYPE_S      :
+         return MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE_S       ;   
+ 
+      case SCHEDD_INFO_CANNOTRUNGLOBALLY_SS     :
+         return MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS      ;   
+ 
+      case SCHEDD_INFO_NOFORCEDRES_SS           :
+         return MSG_SCHEDD_INFO_NOFORCEDRES_SS            ;  
+ 
+      case SCHEDD_INFO_NOGLOBFORCEDRES_SS       :
+         return MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS        ;   
+ 
+      case SCHEDD_INFO_CKPTNOTFOUND_S           :
+         return MSG_SCHEDD_INFO_CKPTNOTFOUND_S            ;   
+ 
+      case SCHEDD_INFO_PESLOTSNOTINRANGE_S      :
+         return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S       ;  
+ 
+      case SCHEDD_INFO_NOACCESSTOPE_S           :
+         return MSG_SCHEDD_INFO_NOACCESSTOPE_S            ;   
+ 
+      case SCHEDD_INFO_QUEUEINALARM_S           :
+         return MSG_SCHEDD_INFO_QUEUEINALARM_S            ;       
+ 
+      case SCHEDD_INFO_QUEUEOVERLOADED_S        :
+         return MSG_SCHEDD_INFO_QUEUEOVERLOADED_S         ;   
+ 
+      case SCHEDD_INFO_ALLALARMOVERLOADED_      :
+         return MSG_SCHEDD_INFO_ALLALARMOVERLOADED_       ;   
+ 
+      case SCHEDD_INFO_TURNEDOFF_               :
+         return MSG_SCHEDD_INFO_TURNEDOFF_                ;  
+ 
+      case SCHEDD_INFO_JOBLIST_                 :
+         return MSG_SCHEDD_INFO_JOBLIST_                  ;   
+ 
+      case SCHEDD_INFO_EXECTIME_                :
+         return MSG_SCHEDD_INFO_EXECTIME_                 ;   
+ 
+      case SCHEDD_INFO_JOBINERROR_              :
+         return MSG_SCHEDD_INFO_JOBINERROR_               ;   
+ 
+      case SCHEDD_INFO_JOBHOLD_S                :
+         return MSG_SCHEDD_INFO_JOBHOLD_S                 ;   
+ 
+      case SCHEDD_INFO_USRGRPLIMIT_             :
+         return MSG_SCHEDD_INFO_USRGRPLIMIT_              ;     
+ 
+      case SCHEDD_INFO_JOBDEPEND_               :
+         return MSG_SCHEDD_INFO_JOBDEPEND_                ;      
+ 
+      case SCHEDD_INFO_NOMESSAGE_               :
+         return MSG_SCHEDD_INFO_NOMESSAGE_                ;   
+ 
+      case SCHEDD_INFO_QUEUEFULL_               :
+         return MSG_SCHEDD_INFO_QUEUEFULL_                ;   
+ 
+      case SCHEDD_INFO_QUEUESUSP_               :
+         return MSG_SCHEDD_INFO_QUEUESUSP_                ;   
+ 
+      case SCHEDD_INFO_QUEUEDISABLED_           :
+         return MSG_SCHEDD_INFO_QUEUEDISABLED_            ;  
+ 
+      case SCHEDD_INFO_QUEUENOTAVAIL_           :
+         return MSG_SCHEDD_INFO_QUEUENOTAVAIL_            ;   
+      
+      case SCHEDD_INFO_INSUFFICIENTSLOTS_       :
+         return MSG_SCHEDD_INFO_INSUFFICIENTSLOTS_        ;
+
+      case SCHEDD_INFO_PEALLOCRULE_S            :
+         return MSG_SCHEDD_INFO_PEALLOCRULE_S             ;
+
+      case SCHEDD_INFO_NOPEMATCH_               :
+         return MSG_SCHEDD_INFO_NOPEMATCH_ ;  
+
+      case SCHEDD_INFO_CLEANUPNECESSARY_S :
+         return MSG_SCHEDD_INFO_CLEANUPNECESSARY_S;
+
+/* */
+
+      case SCHEDD_INFO_CANNOTRUNATHOST          :
+         return MSG_SCHEDD_INFO_CANNOTRUNATHOST           ;   
+ 
+      case SCHEDD_INFO_HASNOPERMISSION          :
+         return MSG_SCHEDD_INFO_HASNOPERMISSION           ;  
+ 
+      case SCHEDD_INFO_HASINCORRECTPRJ          :
+         return MSG_SCHEDD_INFO_HASINCORRECTPRJ           ;  
+ 
+      case SCHEDD_INFO_HASNOPRJ                 :
+         return MSG_SCHEDD_INFO_HASNOPRJ                  ;  
+ 
+      case SCHEDD_INFO_EXCLPRJ                  :
+         return MSG_SCHEDD_INFO_EXCLPRJ                   ;  
+ 
+      case SCHEDD_INFO_QUEUENOTREQUESTABLE      :
+         return MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE       ;  
+ 
+      case SCHEDD_INFO_NOTINHARDQUEUELST        :
+         return MSG_SCHEDD_INFO_NOTINHARDQUEUELST         ;  
+ 
+      case SCHEDD_INFO_NOTPARALLELQUEUE         :
+         return MSG_SCHEDD_INFO_NOTPARALLELQUEUE          ;  
+ 
+      case SCHEDD_INFO_NOTINQUEUELSTOFPE        :
+         return MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE         ;  
+ 
+      case SCHEDD_INFO_NOTACKPTQUEUE            :
+         return MSG_SCHEDD_INFO_NOTACKPTQUEUE             ;   
+ 
+      case SCHEDD_INFO_NOTINQUEUELSTOFCKPT      :
+         return MSG_SCHEDD_INFO_NOTINQUEUELSTOFCKPT       ;  
+ 
+      case SCHEDD_INFO_QUEUENOTINTERACTIVE      :
+         return MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE       ; 
+ 
+      case SCHEDD_INFO_NOTASERIALQUEUE          :
+         return MSG_SCHEDD_INFO_NOTASERIALQUEUE           ; 
+ 
+      case SCHEDD_INFO_NOTPARALLELJOB           :
+         return MSG_SCHEDD_INFO_NOTPARALLELJOB            ; 
+ 
+      case SCHEDD_INFO_NOTREQFORCEDRES          :
+         return MSG_SCHEDD_INFO_NOTREQFORCEDRES           ;   
+ 
+      case SCHEDD_INFO_WOULDSETQEUEINALARM      :
+         return MSG_SCHEDD_INFO_WOULDSETQEUEINALARM       ;     
+ 
+      case SCHEDD_INFO_NOSLOTSINQUEUE           :
+         return MSG_SCHEDD_INFO_NOSLOTSINQUEUE            ;   
+ 
+      case SCHEDD_INFO_CANNOTRUNINQUEUE         :
+         return MSG_SCHEDD_INFO_CANNOTRUNINQUEUE          ;   
+ 
+      case SCHEDD_INFO_NOSLOTSUPPORTBYPE        :
+         return MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE         ;  
+ 
+      case SCHEDD_INFO_CANNOTRUNGLOBALLY        :
+         return MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY         ;  
+ 
+      case SCHEDD_INFO_NOFORCEDRES              :
+         return MSG_SCHEDD_INFO_NOFORCEDRES               ;      
+ 
+      case SCHEDD_INFO_NOGLOBFORCEDRES          :
+         return MSG_SCHEDD_INFO_NOGLOBFORCEDRES           ; 
+ 
+      case SCHEDD_INFO_CKPTNOTFOUND             :
+         return MSG_SCHEDD_INFO_CKPTNOTFOUND              ;
+ 
+      case SCHEDD_INFO_PESLOTSNOTINRANGE        :
+         return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE         ; 
+ 
+      case SCHEDD_INFO_NOACCESSTOPE             :
+         return MSG_SCHEDD_INFO_NOACCESSTOPE              ;  
+ 
+      case SCHEDD_INFO_QUEUEINALARM             :
+         return MSG_SCHEDD_INFO_QUEUEINALARM              ;    
+ 
+      case SCHEDD_INFO_QUEUEOVERLOADED          :
+         return MSG_SCHEDD_INFO_QUEUEOVERLOADED           ; 
+ 
+      case SCHEDD_INFO_ALLALARMOVERLOADED       :
+         return MSG_SCHEDD_INFO_ALLALARMOVERLOADED        ; 
+ 
+      case SCHEDD_INFO_TURNEDOFF                :
+         return MSG_SCHEDD_INFO_TURNEDOFF                 ;      
+ 
+      case SCHEDD_INFO_JOBLIST                  :
+         return MSG_SCHEDD_INFO_JOBLIST                   ;   
+ 
+      case SCHEDD_INFO_EXECTIME                 :
+         return MSG_SCHEDD_INFO_EXECTIME                  ;              
+ 
+      case SCHEDD_INFO_JOBINERROR               :
+         return MSG_SCHEDD_INFO_JOBINERROR                ;   
+ 
+      case SCHEDD_INFO_JOBHOLD                  :
+         return MSG_SCHEDD_INFO_JOBHOLD                   ; 
+ 
+      case SCHEDD_INFO_USRGRPLIMIT              :
+         return MSG_SCHEDD_INFO_USRGRPLIMIT               ;     
+ 
+      case SCHEDD_INFO_JOBDEPEND                :
+         return MSG_SCHEDD_INFO_JOBDEPEND                 ;      
+ 
+      case SCHEDD_INFO_NOMESSAGE                :
+         return MSG_SCHEDD_INFO_NOMESSAGE                 ;            
+ 
+      case SCHEDD_INFO_QUEUEFULL                :
+         return MSG_SCHEDD_INFO_QUEUEFULL                 ;     
+ 
+      case SCHEDD_INFO_QUEUESUSP                :
+         return MSG_SCHEDD_INFO_QUEUESUSP                 ;   
+ 
+      case SCHEDD_INFO_QUEUEDISABLED            :
+         return MSG_SCHEDD_INFO_QUEUEDISABLED             ;   
+ 
+      case SCHEDD_INFO_QUEUENOTAVAIL            :
+         return MSG_SCHEDD_INFO_QUEUENOTAVAIL             ; 
+
+      case SCHEDD_INFO_INSUFFICIENTSLOTS        :
+         return MSG_SCHEDD_INFO_INSUFFICIENTSLOTS         ;
+
+      case SCHEDD_INFO_PEALLOCRULE              :
+         return MSG_SCHEDD_INFO_PEALLOCRULE               ;  
+
+      case SCHEDD_INFO_NOPEMATCH  :
+         return MSG_SCHEDD_INFO_NOPEMATCH ;
+
+      case SCHEDD_INFO_CLEANUPNECESSARY :
+         return MSG_SCHEDD_INFO_CLEANUPNECESSARY;
+
+      default:
+         return "";
+   }
+}
+
+const char *sge_schedd_text(int number) {
+   const char *error_text = NULL;
+
+   DENTER(TOP_LAYER, "sge_schedd_text");
+
+   error_text = sge_get_schedd_text(number);
+
+   if (error_text == NULL) {
+      DEXIT;
+      return MSG_SYSTEM_GOTNULLASERRORTEXT;
+   }
+ 
+   if (strlen(error_text) == 0) {
+      DEXIT;
+      return MSG_SYSTEM_INVALIDERRORNUMBER;
+   }
+
+   DEXIT;
+   return error_text;
+}
+

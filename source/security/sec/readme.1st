@@ -1,0 +1,4 @@
+To use CODINE with the security enhancement, you must create the
+'libcrypto.a' from the SSL package and copy it to the appropiate
+binary directory of CODINE. After that you can build the CODINE
+code with 'aimk'.

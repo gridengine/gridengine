@@ -1,0 +1,18 @@
+qtcsh is an extension of the popular csh derivative tcsh 
+allowing transparent remote execution using Grid Engine.
+
+It is based on tcsh v6.09.00 whose copyright notice can
+be found in the file 'copyright.tcsh'. The copyright notice
+of csh can be found in 'copyright.csh'.
+
+For additional information and usage see the manpage qtcsh(1)
+respectively tcsh(1).
+
+Compilation of qtcsh:
+1. Create the corresponding aimk ARCH directories
+2. Logon to the machine representing this ARCH
+3. cd to ARCH dir and do: 
+   % ../configure --srcdir=.. --with-grd=<ARCH>
+   [% make      for testing otherwise see step 4]
+4. Go to the  rootdir of the source tree and do:
+   % aimk qtcsh

@@ -1,0 +1,154 @@
+
+See the bottom of the file for the latest on executing in a DCE environment.
+
+This README file contains information about the DCE / Kerberos security
+modules.  Most of the information is contained in the README.customer file.
+This file contains internal information which is not provided to Codine/GRD
+customers.
+
+Codine/GRD Kerberos/DCE Security Modules Overview
+-------------------------------------------------
+
+   see README.customer
+
+
+How the security modules work
+-----------------------------
+
+   see README.customer
+
+
+DCE version differences
+-----------------------
+
+The DCE GSSAPI library forwards credentials but the forwarded
+credentials apparently cannot be inherited by child programs. I found
+the following comment in the DCE source code which explains this.
+
+  dce/src/src/security/client/login/sec_login.c, line 1295 of 2643
+
+    /*
+     * DCE 1.0 restriction - can't do a set context if the context was
+     * marked sec_login_credentials_private.  Note that this means
+     * such a context can only be used as an explicit context in user
+     * space applications.  It cannot be used to make authenticated
+     * kernel calls, because these rely on the default context.
+     */
+
+This is in the sec_login_set_context DCE library function which allows
+the user to set up a new default network credentials. (Maybe this is
+why DCE does not provide rlogin type of utilities which automatically
+forward your credentials.) However, I was able to work around this
+problem by using a "hack" to clear the "private" flag in the forwarded
+credential. Once the "private" flag is cleared, the forwarded
+credential can be made the user's default credential which causes the
+credential to be written to the user's credential cache. I plan on
+investigating to find out if there is a way to create a non-private
+credential without resorting to hacking the code.
+
+DCE uses the KRB5CCNAME environment variable to specify the location of
+the credentials cache file name.  However, unlike Kerberos, the DCE
+library determines the location of the credentials cache and sets the
+KRB5CCNAME environment variable on your behalf when the credentials are
+created. Under Kerberos, the user or application can specify the
+location of the credentials cache by setting the KRB5CCNAME environment
+variable and the Kerberos library routines will simply use it.  GRD
+initially sets the KRB5CCNAME environment variable based on the job ID
+before calling the get_cred, put_cred, and delete_cred programs. For
+Kerberos, this works fine. The Kerberos GSSAPI routines just use the
+KRB5CCNAME environment variable. When DCE sets a credential as the
+default credentials, it chooses a file location for the credentials
+cache and overwrites the current setting of the KRB5CCNAME environment
+variable.  In order to allow GRD to refer to the credentials cache by a
+"handle" that it creates, the put_cred program creates a soft link from
+the GRD provided credentials cache to the DCE provided credentials
+cache. This allows GRD to refer to the credentials cache based on the
+handle that it created.
+
+Another strange thing about DCE is that when the user's credentials are
+forwarded, the default Kerberos principal for the user is "grd", not his
+user name. The list of Kerberos service tickets remains the same as the
+user's original credentials. I'm not sure why this is or if it is a
+problem.
+
+For some reason, get_cred always fails on notos. Specifically, it fails
+with the error message "Can't enable delegation in gss_init_sec_ctx
+(141290bd)". This is a normal gss_init_sec_context call requesting
+a delegated credential.  It works fine on euros.  I haven't yet figured
+out the difference. I think there is probably a configuration problem.
+I haven't been able to test this lately because I haven't been able
+to login to notos.
+
+Once, while testing, I got an error that said the delegated token had
+expired. This made me think that there may be a special expiration time
+on a delegated token.  I looked at the DCE source code and it appeared that
+the token got the expiration time of the credentials from which it was
+derived. I will probably have to test this by putting some queues on hold
+for a long period of time.
+
+DCE requires the use of shepherd "starter" program to create the
+credentials because only descendants of this process can use the
+credentials.
+
+
+Building the binaries for distribution with Codine/GRD
+------------------------------------------------------
+
+To make dependencies:
+
+        aimk gss_depend
+
+To compile Kerberos binaries:
+
+	aimk -kerberos -gss gss_all
+
+To compile DCE binaries:
+
+	aimk -dce gss_all
+
+To clean:
+
+        aimk gss_clean
+
+These programs have been tested under Kerberos on IRIX 6.2 and under DCE
+on Digital Unix V4.0D.  I would like to test under DCE on IRIX 6.5, but
+this requires updating bradley to IRIX 6.5.2 and installing DCE 1.2.2a
+which can be downloaded for free from SGI:
+
+   http://www.sgi.com/Products/Evaluation/
+
+
+DCE / Kerberos Configuration
+----------------------------
+
+   see README.customer
+
+
+Instructions for Codine/GRD spool directories in DFS
+----------------------------------------------------
+
+   see README.customer
+
+
+Turning off security
+--------------------
+
+   see README.customer
+
+Running Kerberos binaries in a DCE environment
+----------------------------------------------
+
+After having many problems with the DCE delegation code (see above)
+and learning a little more about how DCE uses Kerberos internally,
+I decided the best way to run in a DCE environment is to use the
+Kerberos security modules.  The only addition that has to be made
+for a DCE environment is that the k5dcelogin command must be used
+as a shepherd wrapper to convert the Kerberos TGT to the user's 
+DCE credentials before executing the shepherd process. This method
+works quite well.  It uses the stable, robust Kerberos code for
+forwarding the TGT and then on the execution host, it changes the
+Kerberos TGT into the DCE credentials.  See the README.customer
+file for additional information.
+
+
+

@@ -1,0 +1,29 @@
+/* XPM */
+static char *mini-stdoutput[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16        6            1",
+/* colors */
+". s mask c None",
+"# c #00cd9a",
+"a c #009865",
+"b c #b2c0dc",
+"c c #32cb98",
+"d c #cbffcb",
+/* pixels */
+"bbbbb.......bbbb",
+"b.############.b",
+".########aaaaa##",
+".########aaaaaa#",
+"..#######aaaaaa#",
+".dd..#.##aaaaaa#",
+".ccddddd######a#",
+".ccccddddaaaaa##",
+".ccccdddddaaaaa#",
+".cdccddddddaaaa#",
+".dcccdddddddaaa#",
+".ccccdddddd###a#",
+".dcccdddddbbb.##",
+"b.dddddddbbbbbb.",
+"bbb..dddbbbbbbbb",
+"bbbbbb.bbbbbbbbb"
+};

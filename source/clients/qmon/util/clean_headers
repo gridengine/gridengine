@@ -1,0 +1,7 @@
+#!/bin/sh
+for i in $@
+do
+   sed -e '/#include <Xbae\/[^>]*>/s/>/"/' -e '/#include <Xbae\/[^>]*"/s/<Xbae\//"/' $i > $i.changed
+   mv $i $i.orig
+   mv $i.changed $i
+done

@@ -1,0 +1,28 @@
+/* XPM */
+static char *mini-stderror[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16        5            1",
+/* colors */
+". s mask c None",
+"# c #000000",
+"a c #ff0000",
+"b c #b03060",
+"c c #fa8072",
+/* pixels */
+".....#######....",
+".#aaaaaaaaaaaa#.",
+"#aaaaaaaabbbbbaa",
+"#aaaaaaaabbbbbba",
+"##aaaaaaabbbbbba",
+"#cc##a#aabbbbbba",
+"#bbcccccaaaaaaba",
+"#bbbbccccbbbbbaa",
+"#bbbbcccccbbbbba",
+"#bcbbccccccbbbba",
+"#cbbbcccccccbbba",
+"#bbbbccccccaaaba",
+"#cbbbccccc...#aa",
+".#ccccccc......#",
+"...##ccc........",
+"......#........."
+};

@@ -1,0 +1,34 @@
+/* XPM */
+static char *mini-xterm-sol[] = {
+/* width height num_colors chars_per_pixel */
+"    32    19        8            1",
+/* colors */
+". s mask c none",
+"# c #8c8c8c",
+"a c #ffffff",
+"b c #ff0000",
+"c c #000000",
+"d c #c2c2c2",
+"e c #4e4e4e",
+"f c #273a0e",
+/* pixels */
+"................................",
+".....aabccc#.##############.....",
+"....aaaacccccdddddddddddddde....",
+"...aaaaa###c#d#fffffffffffdee...",
+"..baaaaabbbb##ffffffffffffdee...",
+".aaaa###aabb##cfffffffffffdeee..",
+".aaa####aaab##cfffffffffffdeee..",
+".baa####aaab###fffffffffffdeee..",
+".aaa####aaab##cfffffffffffdeee..",
+".aaa####aaab##cfffffffffffdeee..",
+".acaa###aabb##cffffffffffddee...",
+"..aaaaaabbbb#cddddddddddddde....",
+"...acaaa####################e...",
+"....aaaa#cc#cedddddddddddddee#.#",
+".....aaa#c.#eeeeeeeeeeeeeedee..#",
+"...........eddddddddddddde...eee",
+"...........ddddddddddddde..ede#e",
+"..........ddddddddddddde...###e.",
+"................................"
+};

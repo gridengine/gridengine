@@ -1,0 +1,65 @@
+#!/bin/csh -f
+#
+# Creates packed catman files in directories CAT{1,...} from ASCII
+# manuals in directories ASCMAN{1,...}. The directories CAT{1,...}
+# are created if they do not exist. The procedure must be executed
+# in the directory in which the ASCMAN{1,...} directories reside.
+#
+# The procedure uses the SGI pack program to compress the manual
+# pages, thus it has to be executed on an SGI
+
+set MANBUILDDIR = $1/MANSBUILD 
+
+if ( `/sbin/uname` != "IRIX" ) then
+        echo "Error: need to be executed on an SGI - we need pack."
+        exit 1
+endif
+
+
+foreach n ( 1 5 8 )
+        if ( ! -d $MANBUILDDIR/ASCMAN/man/man${n} ) then
+                echo "Error: Subdirectory ASCMAN/man/man${n} doesn't exist."
+                exit
+        endif
+
+        mkdir -p $MANBUILDDIR/CAT/man${n} >& /dev/null
+
+        if ( ! -d $MANBUILDDIR/CAT/man${n} ) then
+                echo "Error: Couldnt create subdirectory CAT/man${n}."
+                exit
+        endif
+
+        echo copying and compressing section $n 
+	cd $MANBUILDDIR/ASCMAN/man/man${n}
+	foreach f ( * )
+		\cp $f $MANBUILDDIR/CAT/man${n}
+	end
+	cd $MANBUILDDIR/CAT/man${n}
+
+	\rm -f *.z
+	pack -f *
+end
+
+mkdir -p $MANBUILDDIR/ASCMAN/catman/u_man/cat1 >& /dev/null
+mkdir -p $MANBUILDDIR/ASCMAN/catman/a_man/cat5 >& /dev/null
+mkdir -p $MANBUILDDIR/ASCMAN/catman/a_man/cat8 >& /dev/null
+
+if ( ! -d $MANBUILDDIR/ASCMAN/catman/a_man/cat8 || ! -d $MANBUILDDIR/ASCMAN/catman/a_man/cat5 || \
+     ! -d $MANBUILDDIR/ASCMAN/catman/u_man/cat1 ) then
+   echo "Error: Couldn't create directories."
+   exit
+endif
+
+rm -f $MANBUILDDIR/ASCMAN/catman/u_man/cat1/* >& /dev/null
+rm -f $MANBUILDDIR/ASCMAN/catman/a_man/cat5/* >& /dev/null
+rm -f $MANBUILDDIR/ASCMAN/catman/a_man/cat8/* >& /dev/null
+
+echo copying cat1 ...
+cp $MANBUILDDIR/CAT/man1/* $MANBUILDDIR/ASCMAN/catman/u_man/cat1 >& /dev/null
+# echo copying cat3 ...
+# cp $MANBUILDDIR/CAT/man3/* $MANBUILDDIR/ASCMAN/catman/p_man/cat3 >& /dev/null
+echo copying cat5 ...
+cp $MANBUILDDIR/CAT/man5/* $MANBUILDDIR/ASCMAN/catman/a_man/cat5 >& /dev/null
+echo copying cat8 ...
+cp $MANBUILDDIR/CAT/man8/* $MANBUILDDIR/ASCMAN/catman/a_man/cat8 >& /dev/null
+echo ... done

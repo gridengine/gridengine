@@ -1,0 +1,99 @@
+#!/bin/csh -fb
+#
+#
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://www.gridengine.sunsource.net/license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+if ( $#argv != 1 ) then
+   echo "dl1.csh: missing debugging level"
+   goto usage
+endif
+
+# map 0-10 level to matrix oriented levels
+switch ($argv[1])
+   case "0":
+      unsetenv SGE_DEBUG_LEVEL
+      breaksw
+   case "1":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t = i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "2":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t = t i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "3":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t c a = i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "4":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t c a = t i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "5":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t g a = t i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "6":
+      goto unused
+      breaksw
+   case "7":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (s = t i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "8":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t h = i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "9":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t h = t i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   case "10":
+      set argv = (-); source $SGE_ROOT/util/dl2.csh
+      set argv = (t c b p = t i); source $SGE_ROOT/util/dl2.csh
+      breaksw
+   default:
+      goto usage
+      breaksw         
+endsw
+
+exit
+
+usage:
+echo "usage: dl <debugging_level>"
+echo "       debugging_level 0 - 10"
+exit 1
+
+unused:
+echo "dl: $argv[1] is a still unused debugging level"
+exit 1

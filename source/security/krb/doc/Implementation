@@ -1,0 +1,132 @@
+
+		GRD KERBERIZATION IMPLEMENTATION
+
+Kerberos support is implemented in GRD primarily through the use of a
+set of library routines. The source code for the library is in
+krb/src/krb_lib.c. The header file is krb/src/krb_lib.h.  There are
+two routines, krb_send_message and krb_receive_message which replace
+the normal send_message and receive_message routines used by all GRD
+daemons and client processes. The krb_send_message and
+krb_receive_message routines take care of authenticating and encrypting
+messages which are passed between processes. To build a Kerberized version
+of GRD, a clean build should be executed using aimk with the -kerberos
+switch.
+
+Authentication
+
+Authentication of GRD clients and daemons to the qmaster is
+accomplished within the krb_send_message and krb_receive_message
+routines. Each message sent from a GRD client or daemon to the qmaster
+contains the necessary information for the qmaster to authenticate the
+sender of the message (i.e. a Kerberos AP_REQ packet). The actual data
+in the message is also encrypted in the session key, which is a key
+obtained from the KDC which is private between the client/GRD daemon
+and the qmaster. The message may also contain a forwarded TGT which is
+also encrypted in the session key.
+
+A connection list is maintained by the library routines in the qmaster
+to track the state of each qmaster client (including the GRD daemons).
+The connection list is keyed based on the client name, host name, and
+connection ID.  Client connections are removed from the connection list
+after a period of inactivity in the krb_check_for_idle_clients routine,
+which is called regularly in the qmaster. The connection list is
+primarily used as a holding place for client-specific information
+passed between the kerberos library and higher level routines. For
+example, upon receiving an API request, the qmaster verifies that the
+user name passed in the API request matches the user name used during
+Kerberos authentication by calling krb_verify_user and passing the
+client information and the user name as a parameter. The user name
+associated with connection entry is looked up based on the client
+information, and if the user names do not match, then the API request
+is denied.
+
+Message Encryption
+
+All message data passed between a GRD client or daemon and the qmaster
+is encrypted in a session key which is private between the GRD client or
+daemon and the qmaster.
+
+Forwarding TGTs
+
+Kerberized GRD also automatically forwards ticket-granting-tickets
+(TGTs) to the execution host.  In order for TGT forwarding to work, the
+client must have requested "forwardable" tickets in the initial
+kinit(1) request.  This allows jobs submitted using GRD to
+automatically have Kerberos tickets and to run kerberized applications
+without the user having to login to each execution host and execute a
+kinit(1).
+
+When a job is submitted from qmon, qsub, or qsh, the cod_api_multi
+routine (cod_api_request.c) calls krb_set_client_flags (krb_lib.c) to
+set the KRB_FORWARD_TGT flag, which informs the kerberos library to
+forward the TGT for any subsequent krb_send_message messages.  When the
+krb_send_message routine is called to send the job to the qmaster, the
+TGT is acquired, encoded, and sent as part of the encoded message to
+the qmaster. The TGT is encrypted in the private session key of the
+client process and the qmaster. After sending the message, the
+cod_api_multi routine calls krb_set_client_flags to clear the
+KRB_FORWARD_TGT flag.
+
+When the message is received by the qmaster, the TGT is stored in the
+client connection entry maintained by the GRD kerberos library
+routines.  When the job is added to the job list in the cod_api_add_job
+routine (cod_job.c), the TGT is retrieved from the connection entry
+using krb_get_tgt (krb_lib.c), and is then encrypted in the qmaster's
+private key using krb_encrypt_tgt_creds (krb_lib.c), and is converted
+to a string using krb_bin2str (krb_lib.c), and is stored in the job
+entry in the JB_tgt field.  This allows the TGT to be spooled as part
+of the job entry but also to be protected since it is encrypted.  Once
+a job is to be executed on an execution host, the send_job routine
+(cod_give_jobs.c), just before sending the message, calls krb_str2bin
+(krb_lib.c) to convert the TGT stored in the JB_tgt field of the job
+entry, from string to binary.  The TGT is then decrypted using
+krb_decrypt_tgt_creds (krb_lib.c), and is stored in the connection
+entry associated with the execution daemon that the message is being
+sent to using krb_put_tgt (krb_lib.c).  When the krb_send_message
+routine (krb_lib.c) is executed, the TGT is forwarded to the execution
+daemon.
+
+Upon receiving the message in the execution daemon, the
+krb_receive_message routine decrypts and saves the TGT locally.  The
+execd_job_exec_ routine (execd_job_exec.c), then calls krb_get_tgt
+(krb_lib.c) to retrieve the saved TGT and calls krb_store_forwarded_tgt
+(krb_lib.c) which stores in the forwarded TGT in a specific credentials
+cache created for the user for this job.  The credentials cache is
+stored in /tmp/krbcc_grd%d where %d is the job ID.  The KRB5CCNAME
+environment variable for the job is updated to point to this
+credentials cache.  Any kerberized applications executed by the
+job will automatically use the TGT located in the credentials cache.
+
+When the job completes and is cleaned up, the credentials cache is
+destroyed by calling krb_destroy_forwarded_tgt from clean_up_job
+(reaper_execd.c).
+
+Renewing TGTs
+
+Kerberized GRD automatically renews the kerberos ticket for
+the GRD service which is required by the GRD cod_schedd and cod_execd
+daemons to authenticate themselves to the GRD qmaster.  The ticket is
+renewed by checking the credentials of the daemon to see if the ticket
+has expired or is about to expire before sending a message to the
+qmaster. 
+
+Kerberized GRD also handles renewing TGTs on behalf of the client.  In
+order for TGTs to be renewed the client must have requested both
+forwardable and renewable TGTs in the initial kinit(1) request.  This
+allows long running jobs or jobs which are queued for a long period of
+time to still maintain a valid TGT when they are executed on the
+execution hosts.  TGTs are renewed on both the execution host and the
+qmaster host until the job is complete to ensure that if the job is
+restarted on a different host, it will still have a valid TGT.
+
+Tickets are renewed in the krb_renew_tgts routine which is regularly
+called by both the qmaster and the execution daemon.  The
+krb_renew_tgts routine, which is executed once per TGT renewal
+interval, goes through the list of jobs and checks to see if the TGT
+will expire within the TGT renewal threshold.  If so, a new TGT is
+acquired from the KDC and is stored back into the job entry.  If
+executing in the execution daemon, the new TGT is also written to the
+user's credentials cache, where it will be used by any Kerberized applications
+running in the job.
+
+

@@ -1,0 +1,7 @@
+#!/bin/sh
+for i in $@
+do
+   sed -e '/#include <Xmt\/[^>]*>/s/>/"/' -e '/#include <Xmt\/[^>]*"/s/<Xmt\//"/' $i > $i.changed
+   mv $i $i.orig
+   mv $i.changed $i
+done

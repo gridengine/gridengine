@@ -1,0 +1,670 @@
+!!___INFO__MARK_BEGIN__
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  The Contents of this file are made available subject to the terms of
+!!  the Sun Industry Standards Source License Version 1.2
+!!
+!!  Sun Microsystems Inc., March, 2001
+!!
+!!
+!!  Sun Industry Standards Source License Version 1.2
+!!  =================================================
+!!  The contents of this file are subject to the Sun Industry Standards
+!!  Source License Version 1.2 (the "License"); You may not use this file
+!!  except in compliance with the License. You may obtain a copy of the
+!!  License at http://www.gridengine.sunsource.net/license.html
+!!
+!!  Software provided under this License is provided on an "AS IS" basis,
+!!  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+!!  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+!!  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+!!  See the License for the specific provisions governing your rights and
+!!  obligations concerning the Software.
+!!
+!!  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+!!
+!!  Copyright: 2001 by Sun Microsystems, Inc.
+!!
+!!  All Rights Reserved.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!___INFO__MARK_END__
+_Messages_.en.FW.MBE.@fB Attributes: @fBƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.@fB Type : @fBƒ@ „sTTƒ™yƒpƒ…eƒ@ 
+_Messages_.en.FW.MBE.@fBAFS Parameters: @fB„`AA„eFF„rSSƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBAccess Attributes: @fB„`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBAccess Lists: @fB„`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBAdditional Parameters: @fB„`AAƒ„dƒ„dƒ‰iƒ”tƒ‰iƒoƒnƒaƒŒlƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBAdministration Host: @fB„`AAƒ„dƒmƒ‰iƒnƒ‰iƒ“sƒ”tƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ „gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.@fBAdvanced: @fB„`AAƒ„dƒ–vƒaƒnƒƒcƒ…eƒ„d
+_Messages_.en.FW.MBE.@fBAdvanced Settings: @fB„`AAƒ„dƒ–vƒaƒnƒƒcƒ…eƒ„dƒ@ „rSSƒ…eƒ”tƒ”tƒ‰iƒnƒ‡gƒ“s
+_Messages_.en.FW.MBE.@fBAlgorithm: @fB„`AAƒŒlƒ‡gƒoƒ’rƒ‰iƒ”tƒˆhƒm
+_Messages_.en.FW.MBE.@fBAllow Access to: @fB„`AAƒŒlƒŒlƒoƒ—wƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ ƒ”tƒo
+_Messages_.en.FW.MBE.@fBAllow Project Access to: @fB„`AAƒŒlƒŒlƒoƒ—wƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ ƒ”tƒo
+_Messages_.en.FW.MBE.@fBAvailable Access Lists: @fB„`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBAvailable Fields: @fB„`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „eFFƒ‰iƒ…eƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.@fBAvailable Projects: @fB„`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBAvailable Queues: @fB„`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBAvailable Resources: @fB„`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBBrowser: @fB„aBBƒ’rƒoƒ—wƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.@fBCalendar: @fB„bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’r
+_Messages_.en.FW.MBE.@fBCalendar Configuration: @fB„bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBCalendar Name: @fB„bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ@ „mNNƒaƒmƒ…e
+_Messages_.en.FW.MBE.@fBCheckpoint Configuration: @fB„bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBCheckpointing: @fB„bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.@fBCheckpointing Configuration: @fB„bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡gƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBChosen Access Lists: @fB„bCCƒˆhƒoƒ“sƒ…eƒnƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBChosen Projects: @fB„bCCƒˆhƒoƒ“sƒ…eƒnƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBChosen Queues: @fB„bCCƒˆhƒoƒ“sƒ…eƒnƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBCluster Configuration: @fB„bCCƒŒlƒ•uƒ“sƒ”tƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBCompact Job Array Display: @fB„bCCƒoƒmƒpƒaƒƒcƒ”tƒ@ „iJJƒoƒ‚bƒ@ „`AAƒ’rƒ’rƒaƒ™yƒ@ „cDDƒ‰iƒ“sƒpƒŒlƒaƒ™y
+_Messages_.en.FW.MBE.@fBComplex Configuration: @fB„bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBComplex Selection: @fB„bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ@ „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBComplexes: @fB„bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBComplexes Configuration: @fB„bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ…eƒ“sƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBConfiguration for Host: @fB„bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ ƒ†fƒoƒ’rƒ@ „gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.@fBConsumables/Fixed Attributes: @fB„bCCƒoƒnƒ“sƒ•uƒmƒaƒ‚bƒŒlƒ…eƒ“s¡¿„eFFƒ‰iƒ˜xƒ…eƒ„dƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBControl Slaves: @fB„bCCƒoƒnƒ”tƒ’rƒoƒŒlƒ@ „rSSƒŒlƒaƒ–vƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBCurrent Active Tickets: @fB„bCCƒ•uƒ’rƒ’rƒ…eƒnƒ”tƒ@ „`AAƒƒcƒ”tƒ‰iƒ–vƒ…eƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBDecay Time: @fB„cDDƒ…eƒƒcƒaƒ™yƒ@ „sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.@fBDeny Access to: @fB„cDDƒ…eƒnƒ™yƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ ƒ”tƒo
+_Messages_.en.FW.MBE.@fBDeny Project Access to: @fB„cDDƒ…eƒnƒ™yƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ ƒ”tƒo
+_Messages_.en.FW.MBE.@fBEdit Tickets: @fB„dEEƒ„dƒ‰iƒ”tƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBEpilog: @fB„dEEƒpƒ‰iƒŒlƒoƒ‡g
+_Messages_.en.FW.MBE.@fBExample:: @fB„dEEƒ˜xƒaƒmƒpƒŒlƒ…eƒF:
+_Messages_.en.FW.MBE.@fBExecution Host: @fB„dEEƒ˜xƒ…eƒƒcƒ•uƒ”tƒ‰iƒoƒnƒ@ „gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.@fBExecution Method: @fB„dEEƒ˜xƒ…eƒƒcƒ•uƒ”tƒ‰iƒoƒnƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.@fBExit: @fB„dEEƒ˜xƒ‰iƒ”t
+_Messages_.en.FW.MBE.@fBFilter Jobs: @fB„eFFƒ‰iƒŒlƒ”tƒ…eƒ’rƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBFilter Queues: @fB„eFFƒ‰iƒŒlƒ”tƒ…eƒ’rƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBFilter Resources: @fB„eFFƒ‰iƒŒlƒ”tƒ…eƒ’rƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBFilter by Owner: @fB„eFFƒ‰iƒŒlƒ”tƒ…eƒ’rƒ@ ƒ‚bƒ™yƒ@ „nOOƒ—wƒnƒ…eƒ’r
+_Messages_.en.FW.MBE.@fBFinished Jobs: @fB„eFFƒ‰iƒnƒ‰iƒ“sƒˆhƒ…eƒ„dƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBFunctional Policy: @fB„eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒlƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.@fBGRD Schedule Interval: @fB„fGG„qRR„cDDƒ@ „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ@ „hIIƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒl
+_Messages_.en.FW.MBE.@fBGeneral: @fB„fGGƒ…eƒnƒ…eƒ’rƒaƒŒl
+_Messages_.en.FW.MBE.@fBGeneral Configuration: @fB„fGGƒ…eƒnƒ…eƒ’rƒaƒŒlƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBGeneral Parameters: @fB„fGGƒ…eƒnƒ…eƒ’rƒaƒŒlƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBGeneral Settings: @fB„fGGƒ…eƒnƒ…eƒ’rƒaƒŒlƒ@ „rSSƒ…eƒ”tƒ”tƒ‰iƒnƒ‡gƒ“s
+_Messages_.en.FW.MBE.@fBHost: @fB„gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.@fBHost Configuration: @fB„gHHƒoƒ“sƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBHosts: @fB„gHHƒoƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBInitial State: @fB„hIIƒnƒ‰iƒ”tƒ‰iƒaƒŒlƒ@ „rSSƒ”tƒaƒ”tƒ…e
+_Messages_.en.FW.MBE.@fBJob Control: @fB„iJJƒoƒ‚bƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.@fBJob Scheduling Information: @fB„iJJƒoƒ‚bƒ@ „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ‰iƒnƒ‡gƒ@ „hIIƒnƒ†fƒoƒ’rƒmƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBJob Submission: @fB„iJJƒoƒ‚bƒ@ „rSSƒ•uƒ‚bƒmƒ‰iƒ“sƒ“sƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBJob is first task: @fB„iJJƒoƒ‚bƒ@ ƒ‰iƒ“sƒ@ ƒ†fƒ‰iƒ’rƒ“sƒ”tƒ@ ƒ”tƒaƒ“sƒ‹k
+_Messages_.en.FW.MBE.@fBJob's Nice: @fB„iJJƒoƒ‚b'ƒ“sƒ@ „mNNƒ‰iƒƒcƒ…e
+_Messages_.en.FW.MBE.@fBLimits: @fB„kLLƒ‰iƒmƒ‰iƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBLoad Adjustment: @fB„kLLƒoƒaƒ„dƒ@ „`AAƒ„dƒŠjƒ•uƒ“sƒ”tƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.@fBLoad Formula: @fB„kLLƒoƒaƒ„dƒ@ „eFFƒoƒ’rƒmƒ•uƒŒlƒa
+_Messages_.en.FW.MBE.@fBLoad Scaling: @fB„kLLƒoƒaƒ„dƒ@ „rSSƒƒcƒaƒŒlƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.@fBLoad Thresholds: @fB„kLLƒoƒaƒ„dƒ@ „sTTƒˆhƒ’rƒ…eƒ“sƒˆhƒoƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.@fBLoad/Suspend Thresholds: @fB„kLLƒoƒaƒ„d¡¿„rSSƒ•uƒ“sƒpƒ…eƒnƒ„dƒ@ „sTTƒˆhƒ’rƒ…eƒ“sƒˆhƒoƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.@fBManager: @fB„lMMƒaƒnƒaƒ‡gƒ…eƒ’r
+_Messages_.en.FW.MBE.@fBMax. Jobs/Group: @fB„lMMƒaƒ˜xƒD.ƒ@ „iJJƒoƒ‚bƒ“s¡¿„fGGƒ’rƒoƒ•uƒp
+_Messages_.en.FW.MBE.@fBMax. Jobs/User: @fB„lMMƒaƒ˜xƒD.ƒ@ „iJJƒoƒ‚bƒ“s¡¿„tUUƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.@fBMethod Parameters: @fB„lMMƒ…eƒ”tƒˆhƒoƒ„dƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBName of Complex: @fB„mNNƒaƒmƒ…eƒ@ ƒoƒ†fƒ@ „bCCƒoƒmƒpƒŒlƒ…eƒ˜x
+_Messages_.en.FW.MBE.@fBNode Attributes: @fB„mNNƒoƒ„dƒ…eƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBNode Info: @fB„mNNƒoƒ„dƒ…eƒ@ „hIIƒnƒ†fƒo
+_Messages_.en.FW.MBE.@fBNotify Time: @fB„mNNƒoƒ”tƒ‰iƒ†fƒ™yƒ@ „sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.@fBObjects: @fB„nOOƒ‚bƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBOperations: @fB„nOOƒpƒ…eƒ’rƒaƒ”tƒ‰iƒoƒnƒ“s
+_Messages_.en.FW.MBE.@fBOperator: @fB„nOOƒpƒ…eƒ’rƒaƒ”tƒoƒ’r
+_Messages_.en.FW.MBE.@fBOverride Policy: @fB„nOOƒ–vƒ…eƒ’rƒ’rƒ‰iƒ„dƒ…eƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.@fBOwner List: @fB„nOOƒ—wƒnƒ…eƒ’rƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.@fBOwners: @fB„nOOƒ—wƒnƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBParallel Environment Configuration: @fB„oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒlƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBPending Jobs: @fB„oPPƒ…eƒnƒ„dƒ‰iƒnƒ‡gƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBPolicy: @fB„oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.@fBProcessors: @fB„oPPƒ’rƒoƒƒcƒ…eƒ“sƒ“sƒoƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBProject Access: @fB„oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“s
+_Messages_.en.FW.MBE.@fBProject Configuration: @fB„oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBProjects: @fB„oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBProlog: @fB„oPPƒ’rƒoƒŒlƒoƒ‡g
+_Messages_.en.FW.MBE.@fBQueue Configuration: Add: @fB„pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒF:ƒ@ „`AAƒ„dƒ„d
+_Messages_.en.FW.MBE.@fBQueue Configuration: Modify: @fB„pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒF:ƒ@ „lMMƒoƒ„dƒ‰iƒ†fƒ™y
+_Messages_.en.FW.MBE.@fBQueue Control: @fB„pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.@fBRequested Resources: @fB„qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”tƒ…eƒ„dƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBRerun Jobs: @fB„qRRƒ…eƒ’rƒ•uƒnƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBRerun\nJobs: @fB„qRRƒ…eƒ’rƒ•uƒn
+_Messages_.en.FW.MBE.„iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBResource Capability Factor: @fB„qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ@ „bCCƒaƒpƒaƒ‚bƒ‰iƒŒlƒ‰iƒ”tƒ™yƒ@ „eFFƒaƒƒcƒ”tƒoƒ’r
+_Messages_.en.FW.MBE.@fBResume Method: @fB„qRRƒ…eƒ“sƒ•uƒmƒ…eƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.@fBRunning Jobs: @fB„qRRƒ•uƒnƒnƒ‰iƒnƒ‡gƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBScaling: @fB„rSSƒƒcƒaƒŒlƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.@fBSchedule Interval: @fB„rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ@ „hIIƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒl
+_Messages_.en.FW.MBE.@fBScheduler Configuration: @fB„rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBSelect Job Fields: @fB„rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ „iJJƒoƒ‚bƒ@ „eFFƒ‰iƒ…eƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.@fBSelected Fields: @fB„rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ „eFFƒ‰iƒ…eƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.@fBSequence Nr: @fB„rSSƒ…eƒ‘qƒ•uƒ…eƒnƒƒcƒ…eƒ@ „mNNƒ’r
+_Messages_.en.FW.MBE.@fBSet Hold: @fB„rSSƒ…eƒ”tƒ@ „gHHƒoƒŒlƒ„d
+_Messages_.en.FW.MBE.@fBShare Tree Policy: @fB„rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…eƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.@fBShare Tree Policy Parameters: @fB„rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…eƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™yƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.@fBShell: @fB„rSSƒˆhƒ…eƒŒlƒŒl
+_Messages_.en.FW.MBE.@fBShell Start Mode: @fB„rSSƒˆhƒ…eƒŒlƒŒlƒ@ „rSSƒ”tƒaƒ’rƒ”tƒ@ „lMMƒoƒ„dƒ…e
+_Messages_.en.FW.MBE.@fBSlots: @fB„rSSƒŒlƒoƒ”tƒ“s
+_Messages_.en.FW.MBE.@fBStarter Method: @fB„rSSƒ”tƒaƒ’rƒ”tƒ…eƒ’rƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.@fBSubmit Host: @fB„rSSƒ•uƒ‚bƒmƒ‰iƒ”tƒ@ „gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.@fBSubordinates: @fB„rSSƒ•uƒ‚bƒoƒ’rƒ„dƒ‰iƒnƒaƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.@fBSuspend Method: @fB„rSSƒ•uƒ“sƒpƒ…eƒnƒ„dƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.@fBSuspend Thresholds: @fB„rSSƒ•uƒ“sƒpƒ…eƒnƒ„dƒ@ „sTTƒˆhƒ’rƒ…eƒ“sƒˆhƒoƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.@fBTerminate Method: @fB„sTTƒ…eƒ’rƒmƒ‰iƒnƒaƒ”tƒ…eƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.@fBTicket Configuration: @fB„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBTicket Overview: @fB„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ@ „nOOƒ–vƒ…eƒ’rƒ–vƒ‰iƒ…eƒ—w
+_Messages_.en.FW.MBE.@fBUsage Scaling: @fB„tUUƒ“sƒaƒ‡gƒ…eƒ@ „rSSƒƒcƒaƒŒlƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.@fBUser: @fB„tUUƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.@fBUser Access: @fB„tUUƒ“sƒ…eƒ’rƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“s
+_Messages_.en.FW.MBE.@fBUser Configuration: @fB„tUUƒ“sƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@fBUserset: @fB„tUUƒ“sƒ…eƒ’rƒ“sƒ…eƒ”t
+_Messages_.en.FW.MBE.@fBtmp Directory: @fBƒ”tƒmƒpƒ@ „cDDƒ‰iƒ’rƒ…eƒƒcƒ”tƒoƒ’rƒ™y
+_Messages_.en.FW.MBE.@fIDeadline Initiation Tickets: @fI„cDDƒ…eƒaƒ„dƒŒlƒ‰iƒnƒ…eƒ@ „hIIƒnƒ‰iƒ”tƒ‰iƒaƒ”tƒ‰iƒoƒnƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fIFunctional Tickets: @fI„eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒlƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fIJobs suspended per interval: @fI„iJJƒoƒ‚bƒ“sƒ@ ƒ“sƒ•uƒ“sƒpƒ…eƒnƒ„dƒ…eƒ„dƒ@ ƒpƒ…eƒ’rƒ@ ƒ‰iƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒl
+_Messages_.en.FW.MBE.@fIMaximum Deadline Initiation Tickets: @fI„lMMƒaƒ˜xƒ‰iƒmƒ•uƒmƒ@ „cDDƒ…eƒaƒ„dƒŒlƒ‰iƒnƒ…eƒ@ „hIIƒnƒ‰iƒ”tƒ‰iƒaƒ”tƒ‰iƒoƒnƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fIOverride Tickets: @fI„nOOƒ–vƒ…eƒ’rƒ’rƒ‰iƒ„dƒ…eƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fIShare Tree Tickets: @fI„rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…eƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fISuspend interval: @fI„rSSƒ•uƒ“sƒpƒ…eƒnƒ„dƒ@ ƒ‰iƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒl
+_Messages_.en.FW.MBE.@fITotal Functional Tickets: @fI„sTTƒoƒ”tƒaƒŒlƒ@ „eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒlƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@fITotal Share Tree Tickets: @fI„sTTƒoƒ”tƒaƒŒlƒ@ „rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…eƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.@f[BIG]Job Control: @f[BIG]„iJJƒoƒ‚bƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.@f[BIG]Job Submission: @f[BIG]„iJJƒoƒ‚bƒ@ „rSSƒ•uƒ‚bƒmƒ‰iƒ“sƒ“sƒ‰iƒoƒn
+_Messages_.en.FW.MBE.@f[BIG]Message: @f[BIG]„lMMƒ…eƒ“sƒ“sƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.@f[BIG]Object Browser: @f[BIG]„nOOƒ‚bƒŠjƒ…eƒƒcƒ”tƒ@ „aBBƒ’rƒoƒ—wƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.@f[BIG]Queue Control: @f[BIG]„pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.APPLICATION-LEVEL: APPLICATION-LEVEL
+_Messages_.en.FW.MBE.Abort of Job: „`AAƒ‚bƒoƒ’rƒ”tƒ@ ƒoƒ†fƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.About: „`AAƒ‚bƒoƒ•uƒ”t
+_Messages_.en.FW.MBE.Access List: „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Access Lists: „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.Account: „`AAƒƒcƒƒcƒoƒ•uƒnƒ”t
+_Messages_.en.FW.MBE.AccountString: „`AAƒƒcƒƒcƒoƒ•uƒnƒ”t„rSSƒ”tƒ’rƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.Actual Resource Share: „`AAƒƒcƒ”tƒ•uƒaƒŒlƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ@ „rSSƒˆhƒaƒ’rƒ…e
+_Messages_.en.FW.MBE.Add: „`AAƒ„dƒ„d
+_Messages_.en.FW.MBE.Add Leaf: „`AAƒ„dƒ„dƒ@ „kLLƒ…eƒaƒ†f
+_Messages_.en.FW.MBE.Add Node: „`AAƒ„dƒ„dƒ@ „mNNƒoƒ„dƒ…e
+_Messages_.en.FW.MBE.Add/Modify Calendar: „`AAƒ„dƒ„d¡¿„lMMƒoƒ„dƒ‰iƒ†fƒ™yƒ@ „bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’r
+_Messages_.en.FW.MBE.Add/Modify Exec Host: „`AAƒ„dƒ„d¡¿„lMMƒoƒ„dƒ‰iƒ†fƒ™yƒ@ „dEEƒ˜xƒ…eƒƒcƒ@ „gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.Add/Modify Project: „`AAƒ„dƒ„d¡¿„lMMƒoƒ„dƒ‰iƒ†fƒ™yƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Admin Mail: „`AAƒ„dƒmƒ‰iƒnƒ@ „lMMƒaƒ‰iƒŒl
+_Messages_.en.FW.MBE.Admin User: „`AAƒ„dƒmƒ‰iƒnƒ@ „tUUƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.Algorithm required!: „`AAƒŒlƒ‡gƒoƒ’rƒ‰iƒ”tƒˆhƒmƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Allocation Rule: „`AAƒŒlƒŒlƒoƒƒcƒaƒ”tƒ‰iƒoƒnƒ@ „qRRƒ•uƒŒlƒ…e
+_Messages_.en.FW.MBE.Allow Access: „`AAƒŒlƒŒlƒoƒ—wƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“s
+_Messages_.en.FW.MBE.Apply: „`AAƒpƒpƒŒlƒ™y
+_Messages_.en.FW.MBE.Attached Complexes: „`AAƒ”tƒ”tƒaƒƒcƒˆhƒ…eƒ„dƒ@ „bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ…eƒ“s
+_Messages_.en.FW.MBE.Attribute: „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…e
+_Messages_.en.FW.MBE.Attributes: „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.Attributes for queue %s: „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“sƒ@ ƒ†fƒoƒ’rƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ@ ƒ“%ƒ“s
+_Messages_.en.FW.MBE.Available Calendars: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ“s
+_Messages_.en.FW.MBE.Available Complexes: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ…eƒ“s
+_Messages_.en.FW.MBE.Available Parallel Environments: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒlƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”tƒ“s
+_Messages_.en.FW.MBE.Available Queues: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ“s
+_Messages_.en.FW.MBE.Available Resources: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.Available attributes: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ ƒaƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.Available checkpoint objects: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ ƒƒcƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ ƒoƒ‚bƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.Available projects: „`AAƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…eƒ@ ƒpƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.B: „aBB
+_Messages_.en.FW.MBE.BOOL: „aBB„nOO„nOO„kLL
+_Messages_.en.FW.MBE.Batch: „aBBƒaƒ”tƒƒcƒˆh
+_Messages_.en.FW.MBE.Binary Path: „aBBƒ‰iƒnƒaƒ’rƒ™yƒ@ „oPPƒaƒ”tƒˆh
+_Messages_.en.FW.MBE.Browser Dialog: „aBBƒ’rƒoƒ—wƒ“sƒ…eƒ’rƒ@ „cDDƒ‰iƒaƒŒlƒoƒ‡g
+_Messages_.en.FW.MBE.Byte: „aBBƒ™yƒ”tƒ…e
+_Messages_.en.FW.MBE.CPR: „bCC„oPP„qRR
+_Messages_.en.FW.MBE.CPU: „bCC„oPP„tUU
+_Messages_.en.FW.MBE.CPU [%]: „bCC„oPP„tUUƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.CRAY-CKPT: „bCC„qRR„`AA„xYY-„bCC„jKK„oPP„sTT
+_Messages_.en.FW.MBE.CSTRING: „bCC„rSS„sTT„qRR„hII„mNN„fGG
+_Messages_.en.FW.MBE.CWD: „bCC„vWW„cDD
+_Messages_.en.FW.MBE.Calendar Configuration: „bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Calendars: „bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ“s
+_Messages_.en.FW.MBE.Can't copy the whole tree !: „bCCƒaƒn'ƒ”tƒ@ ƒƒcƒoƒpƒ™yƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ—wƒˆhƒoƒŒlƒ…eƒ@ ƒ”tƒ’rƒ…eƒ…eƒ@ ƒI!
+_Messages_.en.FW.MBE.Can't cut the whole tree !: „bCCƒaƒn'ƒ”tƒ@ ƒƒcƒ•uƒ”tƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ—wƒˆhƒoƒŒlƒ…eƒ@ ƒ”tƒ’rƒ…eƒ…eƒ@ ƒI!
+_Messages_.en.FW.MBE.Cancel: „bCCƒaƒnƒƒcƒ…eƒŒl
+_Messages_.en.FW.MBE.Cannot start editor !: „bCCƒaƒnƒnƒoƒ”tƒ@ ƒ“sƒ”tƒaƒ’rƒ”tƒ@ ƒ…eƒ„dƒ‰iƒ”tƒoƒ’rƒ@ ƒI!
+_Messages_.en.FW.MBE.Category: „bCCƒaƒ”tƒ…eƒ‡gƒoƒ’rƒ™y
+_Messages_.en.FW.MBE.Cell: „bCCƒ…eƒŒlƒŒl
+_Messages_.en.FW.MBE.Change Checkpoint Object: „bCCƒˆhƒaƒnƒ‡gƒ…eƒ@ „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „nOOƒ‚bƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Change global configuration: „bCCƒˆhƒaƒnƒ‡gƒ…eƒ@ ƒ‡gƒŒlƒoƒ‚bƒaƒŒlƒ@ ƒƒcƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Checkpoint Command: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.Checkpoint Object: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „nOOƒ‚bƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Checkpoint Objects: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „nOOƒ‚bƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.Checkpoint Signal: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „rSSƒ‰iƒ‡gƒnƒaƒŒl
+_Messages_.en.FW.MBE.Checkpoint When: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ „vWWƒˆhƒ…eƒn
+_Messages_.en.FW.MBE.Checkpointing: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.Checkpointing Configuration: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡gƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Checkpointing Directory: „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡gƒ@ „cDDƒ‰iƒ’rƒ…eƒƒcƒ”tƒoƒ’rƒ™y
+_Messages_.en.FW.MBE.Choose a script first !: „bCCƒˆhƒoƒoƒ“sƒ…eƒ@ ƒaƒ@ ƒ“sƒƒcƒ’rƒ‰iƒpƒ”tƒ@ ƒ†fƒ‰iƒ’rƒ“sƒ”tƒ@ ƒI!
+_Messages_.en.FW.MBE.Clean Command: „bCCƒŒlƒ…eƒaƒnƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.Clear: „bCCƒŒlƒ…eƒaƒ’r
+_Messages_.en.FW.MBE.Clear Error: „bCCƒŒlƒ…eƒaƒ’rƒ@ „dEEƒ’rƒ’rƒoƒ’r
+_Messages_.en.FW.MBE.Click TRUE or FALSE: „bCCƒŒlƒ‰iƒƒcƒ‹kƒ@ „sTT„qRR„tUU„dEEƒ@ ƒoƒ’rƒ@ „eFF„`AA„kLL„rSS„dEE
+_Messages_.en.FW.MBE.Clone: „bCCƒŒlƒoƒnƒ…e
+_Messages_.en.FW.MBE.Cluster Configuration: „bCCƒŒlƒ•uƒ“sƒ”tƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Cluster Settings: „bCCƒŒlƒ•uƒ“sƒ”tƒ…eƒ’rƒ@ „rSSƒ…eƒ”tƒ”tƒ‰iƒnƒ‡gƒ“s
+_Messages_.en.FW.MBE.Combined Usage: „bCCƒoƒmƒ‚bƒ‰iƒnƒ…eƒ„dƒ@ „tUUƒ“sƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.Compensation Factor: „bCCƒoƒmƒpƒ…eƒnƒ“sƒaƒ”tƒ‰iƒoƒnƒ@ „eFFƒaƒƒcƒ”tƒoƒ’r
+_Messages_.en.FW.MBE.Complex Configuration: „bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Complexes: „bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ…eƒ“s
+_Messages_.en.FW.MBE.Configuration: „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Consumable: „bCCƒoƒnƒ“sƒ•uƒmƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.Context: „bCCƒoƒnƒ”tƒ…eƒ˜xƒ”t
+_Messages_.en.FW.MBE.Context Help: „bCCƒoƒnƒ”tƒ…eƒ˜xƒ”tƒ@ „gHHƒ…eƒŒlƒp
+_Messages_.en.FW.MBE.Context Variable List: „bCCƒoƒnƒ”tƒ…eƒ˜xƒ”tƒ@ „uVVƒaƒ’rƒ‰iƒaƒ‚bƒŒlƒ…eƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Context for Job: „bCCƒoƒnƒ”tƒ…eƒ˜xƒ”tƒ@ ƒ†fƒoƒ’rƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.Copy: „bCCƒoƒpƒ™y
+_Messages_.en.FW.MBE.Credit Formula required!: „bCCƒ’rƒ…eƒ„dƒ‰iƒ”tƒ@ „eFFƒoƒ’rƒmƒ•uƒŒlƒaƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Current Working Directory: „bCCƒ•uƒ’rƒ’rƒ…eƒnƒ”tƒ@ „vWWƒoƒ’rƒ‹kƒ‰iƒnƒ‡gƒ@ „cDDƒ‰iƒ’rƒ…eƒƒcƒ”tƒoƒ’rƒ™y
+_Messages_.en.FW.MBE.Customize: „bCCƒ•uƒ“sƒ”tƒoƒmƒ‰iƒšzƒ…e
+_Messages_.en.FW.MBE.Cut: „bCCƒ•uƒ”t
+_Messages_.en.FW.MBE.DOUBLE: „cDD„nOO„tUU„aBB„kLL„dEE
+_Messages_.en.FW.MBE.DTicket: „cDD„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”t
+_Messages_.en.FW.MBE.Day: „cDDƒaƒ™y
+_Messages_.en.FW.MBE.Days: „cDDƒaƒ™yƒ“s
+_Messages_.en.FW.MBE.Deadline: „cDDƒ…eƒaƒ„dƒŒlƒ‰iƒnƒ…e
+_Messages_.en.FW.MBE.Default: „cDDƒ…eƒ†fƒaƒ•uƒŒlƒ”t
+_Messages_.en.FW.MBE.Default Project: „cDDƒ…eƒ†fƒaƒ•uƒŒlƒ”tƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Delete: „cDDƒ…eƒŒlƒ…eƒ”tƒ…e
+_Messages_.en.FW.MBE.Deny Access: „cDDƒ…eƒnƒ™yƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“s
+_Messages_.en.FW.MBE.Department: „cDDƒ…eƒpƒaƒ’rƒ”tƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.Department [%]: „cDDƒ…eƒpƒaƒ’rƒ”tƒmƒ…eƒnƒ”tƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.Disable: „cDDƒ‰iƒ“sƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.Do you really want to delete the\nselected Calendar Configuration ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ „bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to delete the\nselected Checkpointing Configuration ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡gƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to delete the\nselected Parallel Environment\nConfiguration ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒlƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.„bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to delete the\nselected Project Configuration ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to delete the\nselected cluster configuration ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ ƒƒcƒŒlƒ•uƒ“sƒ”tƒ…eƒ’rƒ@ ƒƒcƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to delete\nthe selected userset lists ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…e
+_Messages_.en.FW.MBE.ƒ”tƒˆhƒ…eƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ ƒ•uƒ“sƒ…eƒ’rƒ“sƒ…eƒ”tƒ@ ƒŒlƒ‰iƒ“sƒ”tƒ“sƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to\ndelete the selected complexes ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒo
+_Messages_.en.FW.MBE.ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ ƒƒcƒoƒmƒpƒŒlƒ…eƒ˜xƒ…eƒ“sƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you really want to\ndelete the selected queues ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ’rƒ…eƒaƒŒlƒŒlƒ™yƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒo
+_Messages_.en.FW.MBE.ƒ„dƒ…eƒŒlƒ…eƒ”tƒ…eƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ“sƒ@ ƒH?
+_Messages_.en.FW.MBE.Do you want to save your changes ?: „cDDƒoƒ@ ƒ™yƒoƒ•uƒ@ ƒ—wƒaƒnƒ”tƒ@ ƒ”tƒoƒ@ ƒ“sƒaƒ–vƒ…eƒ@ ƒ™yƒoƒ•uƒ’rƒ@ ƒƒcƒˆhƒaƒnƒ‡gƒ…eƒ“sƒ@ ƒH?
+_Messages_.en.FW.MBE.Done: „cDDƒoƒnƒ…e
+_Messages_.en.FW.MBE.Double click on values to change limits: „cDDƒoƒ•uƒ‚bƒŒlƒ…eƒ@ ƒƒcƒŒlƒ‰iƒƒcƒ‹kƒ@ ƒoƒnƒ@ ƒ–vƒaƒŒlƒ•uƒ…eƒ“sƒ@ ƒ”tƒoƒ@ ƒƒcƒˆhƒaƒnƒ‡gƒ…eƒ@ ƒŒlƒ‰iƒmƒ‰iƒ”tƒ“s
+_Messages_.en.FW.MBE.Edit: „dEEƒ„dƒ‰iƒ”t
+_Messages_.en.FW.MBE.Enable: „dEEƒnƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.End of Job: „dEEƒnƒ„dƒ@ ƒoƒ†fƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.Enforce Project: „dEEƒnƒ†fƒoƒ’rƒƒcƒ…eƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Enter Owner: „dEEƒnƒ”tƒ…eƒ’rƒ@ „nOOƒ—wƒnƒ…eƒ’r
+_Messages_.en.FW.MBE.Enter a memory value: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒ@ ƒmƒ…eƒmƒoƒ’rƒ™yƒ@ ƒ–vƒaƒŒlƒ•uƒ…e
+_Messages_.en.FW.MBE.Enter a memory value for '@fB%s':: @fBƒ“%ƒ“s'ƒF:
+_Messages_.en.FW.MBE.Enter a new priority for the selected jobs: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒ@ ƒnƒ…eƒ—wƒ@ ƒpƒ’rƒ‰iƒoƒ’rƒ‰iƒ”tƒ™yƒ@ ƒ†fƒoƒ’rƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ ƒŠjƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.Enter a string value: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒ@ ƒ“sƒ”tƒ’rƒ‰iƒnƒ‡gƒ@ ƒ–vƒaƒŒlƒ•uƒ…e
+_Messages_.en.FW.MBE.Enter a time value: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒ@ ƒ”tƒ‰iƒmƒ…eƒ@ ƒ–vƒaƒŒlƒ•uƒ…e
+_Messages_.en.FW.MBE.Enter a uppercase string value: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒ@ ƒ•uƒpƒpƒ…eƒ’rƒƒcƒaƒ“sƒ…eƒ@ ƒ“sƒ”tƒ’rƒ‰iƒnƒ‡gƒ@ ƒ–vƒaƒŒlƒ•uƒ…e
+_Messages_.en.FW.MBE.Enter a valid hostname: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒ@ ƒ–vƒaƒŒlƒ‰iƒ„dƒ@ ƒˆhƒoƒ“sƒ”tƒnƒaƒmƒ…e
+_Messages_.en.FW.MBE.Enter an integer value: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒaƒnƒ@ ƒ‰iƒnƒ”tƒ…eƒ‡gƒ…eƒ’rƒ@ ƒ–vƒaƒŒlƒ•uƒ…e
+_Messages_.en.FW.MBE.Enter item name: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒ‰iƒ”tƒ…eƒmƒ@ ƒnƒaƒmƒ…e
+_Messages_.en.FW.MBE.Enter the deadline time in the\nfollowing format: [[CC]]YY]MMDDhhmm.[ss]\nor leave the current time and press ok: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ„dƒ…eƒaƒ„dƒŒlƒ‰iƒnƒ…eƒ@ ƒ”tƒ‰iƒmƒ…eƒ@ ƒ‰iƒnƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ†fƒoƒŒlƒŒlƒoƒ—wƒ‰iƒnƒ‡gƒ@ ƒ†fƒoƒ’rƒmƒaƒ”tƒF:ƒ@ ƒm[ƒm[„bCC„bCCƒn]ƒn]„xYY„xYYƒn]„lMM„lMM„cDD„cDDƒˆhƒˆhƒmƒmƒD.ƒm[ƒ“sƒ“sƒn]
+_Messages_.en.FW.MBE.ƒoƒ’rƒ@ ƒŒlƒ…eƒaƒ–vƒ…eƒ@ ƒ”tƒˆhƒ…eƒ@ ƒƒcƒ•uƒ’rƒ’rƒ…eƒnƒ”tƒ@ ƒ”tƒ‰iƒmƒ…eƒ@ ƒaƒnƒ„dƒ@ ƒpƒ’rƒ…eƒ“sƒ“sƒ@ ƒoƒ‹k
+_Messages_.en.FW.MBE.Enter the submit time in the\nfollowing format: [[CC]]YY]MMDDhhmm[.ss]\nor leave the current time and press ok: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒ”tƒˆhƒ…eƒ@ ƒ“sƒ•uƒ‚bƒmƒ‰iƒ”tƒ@ ƒ”tƒ‰iƒmƒ…eƒ@ ƒ‰iƒnƒ@ ƒ”tƒˆhƒ…e
+_Messages_.en.FW.MBE.ƒ†fƒoƒŒlƒŒlƒoƒ—wƒ‰iƒnƒ‡gƒ@ ƒ†fƒoƒ’rƒmƒaƒ”tƒF:ƒ@ ƒm[ƒm[„bCC„bCCƒn]ƒn]„xYY„xYYƒn]„lMM„lMM„cDD„cDDƒˆhƒˆhƒmƒmƒm[ƒD.ƒ“sƒ“sƒn]
+_Messages_.en.FW.MBE.ƒoƒ’rƒ@ ƒŒlƒ…eƒaƒ–vƒ…eƒ@ ƒ”tƒˆhƒ…eƒ@ ƒƒcƒ•uƒ’rƒ’rƒ…eƒnƒ”tƒ@ ƒ”tƒ‰iƒmƒ…eƒ@ ƒaƒnƒ„dƒ@ ƒpƒ’rƒ…eƒ“sƒ“sƒ@ ƒoƒ‹k
+_Messages_.en.FW.MBE.Enter time: „dEEƒnƒ”tƒ…eƒ’rƒ@ ƒ”tƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Environment: „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.Environment Variable List: „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”tƒ@ „uVVƒaƒ’rƒ‰iƒaƒ‚bƒŒlƒ…eƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Environment for Job: „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”tƒ@ ƒ†fƒoƒ’rƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.Epilog: „dEEƒpƒ‰iƒŒlƒoƒ‡g
+_Messages_.en.FW.MBE.Error: „dEEƒ’rƒ’rƒoƒ’r
+_Messages_.en.FW.MBE.Execd Parameters: „dEEƒ˜xƒ…eƒƒcƒ„dƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.Execd Spool Dir: „dEEƒ˜xƒ…eƒƒcƒ„dƒ@ „rSSƒpƒoƒoƒŒlƒ@ „cDDƒ‰iƒ’r
+_Messages_.en.FW.MBE.Exit: „dEEƒ˜xƒ‰iƒ”t
+_Messages_.en.FW.MBE.FORCED: „eFF„nOO„qRR„bCC„dEE„cDD
+_Messages_.en.FW.MBE.FTicket: „eFF„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”t
+_Messages_.en.FW.MBE.False: „eFFƒaƒŒlƒ“sƒ…e
+_Messages_.en.FW.MBE.File: „eFFƒ‰iƒŒlƒ…e
+_Messages_.en.FW.MBE.File Selection: „eFFƒ‰iƒŒlƒ…eƒ@ „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Find: „eFFƒ‰iƒnƒ„d
+_Messages_.en.FW.MBE.Find Next: „eFFƒ‰iƒnƒ„dƒ@ „mNNƒ…eƒ˜xƒ”t
+_Messages_.en.FW.MBE.Finished Jobs: „eFFƒ‰iƒnƒ‰iƒ“sƒˆhƒ…eƒ„dƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.Force: „eFFƒoƒ’rƒƒcƒ…e
+_Messages_.en.FW.MBE.GByte (1024x1024x1024): „fGG„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒQ2ƒS4ƒ˜xƒP1ƒO0ƒQ2ƒS4ƒ˜xƒP1ƒO0ƒQ2ƒS4ƒj)
+_Messages_.en.FW.MBE.GID Range for Job Monitoring: „fGG„hII„cDDƒ@ „qRRƒaƒnƒ‡gƒ…eƒ@ ƒ†fƒoƒ’rƒ@ „iJJƒoƒ‚bƒ@ „lMMƒoƒnƒ‰iƒ”tƒoƒ’rƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.GRD Schedule Interval required!: „fGG„qRR„cDDƒ@ „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ@ „hIIƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒlƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Get Environment: „fGGƒ…eƒ”tƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.Get Queue: „fGGƒ…eƒ”tƒ@ „pQQƒ•uƒ…eƒ•uƒ…e
+_Messages_.en.FW.MBE.Get Queue Attributes from: „fGGƒ…eƒ”tƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“sƒ@ ƒ†fƒ’rƒoƒm
+_Messages_.en.FW.MBE.Get calendar: „fGGƒ…eƒ”tƒ@ ƒƒcƒaƒŒlƒ…eƒnƒ„dƒaƒ’r
+_Messages_.en.FW.MBE.HIBERNATOR: „gHH„hII„aBB„dEE„qRR„mNN„`AA„sTT„nOO„qRR
+_Messages_.en.FW.MBE.HOST: „gHH„nOO„rSS„sTT
+_Messages_.en.FW.MBE.Halflife: „gHHƒaƒŒlƒ†fƒŒlƒ‰iƒ†fƒ…e
+_Messages_.en.FW.MBE.Hard Limit: „gHHƒaƒ’rƒ„dƒ@ „kLLƒ‰iƒmƒ‰iƒ”t
+_Messages_.en.FW.MBE.Hard Queue List: „gHHƒaƒ’rƒ„dƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Hard Request: „gHHƒaƒ’rƒ„dƒ@ „qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”t
+_Messages_.en.FW.MBE.Hard Resources: „gHHƒaƒ’rƒ„dƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.Help: „gHHƒ…eƒŒlƒp
+_Messages_.en.FW.MBE.Help Index: „gHHƒ…eƒŒlƒpƒ@ „hIIƒnƒ„dƒ…eƒ˜x
+_Messages_.en.FW.MBE.Hold: „gHHƒoƒŒlƒ„d
+_Messages_.en.FW.MBE.Hold Job: „gHHƒoƒŒlƒ„dƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.Host: „gHHƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.Host Configuration: „gHHƒoƒ“sƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Hostname: „gHHƒoƒ“sƒ”tƒnƒaƒmƒ…e
+_Messages_.en.FW.MBE.Hour: „gHHƒoƒ•uƒ’r
+_Messages_.en.FW.MBE.Hours: „gHHƒoƒ•uƒ’rƒ“s
+_Messages_.en.FW.MBE.I/O [%]: „hII¡¿„nOOƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.INFINITY: „hII„mNN„eFF„hII„mNN„hII„sTT„xYY
+_Messages_.en.FW.MBE.INT: „hII„mNN„sTT
+_Messages_.en.FW.MBE.IO: „hII„nOO
+_Messages_.en.FW.MBE.Id: „hIIƒ„d
+_Messages_.en.FW.MBE.Identifier: „hIIƒ„dƒ…eƒnƒ”tƒ‰iƒ†fƒ‰iƒ…eƒ’r
+_Messages_.en.FW.MBE.If 'Max Slots' are filled in the current queue,\nthe queues in column one are suspended.: „hIIƒ†fƒ@ '„lMMƒaƒ˜xƒ@ „rSSƒŒlƒoƒ”tƒ“s'ƒ@ ƒaƒ’rƒ…eƒ@ ƒ†fƒ‰iƒŒlƒŒlƒ…eƒ„dƒ@ ƒ‰iƒnƒ@ ƒ”tƒˆhƒ…eƒ@ ƒƒcƒ•uƒ’rƒ’rƒ…eƒnƒ”tƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒC,
+_Messages_.en.FW.MBE.ƒ”tƒˆhƒ…eƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ“sƒ@ ƒ‰iƒnƒ@ ƒƒcƒoƒŒlƒ•uƒmƒnƒ@ ƒoƒnƒ…eƒ@ ƒaƒ’rƒ…eƒ@ ƒ“sƒ•uƒ“sƒpƒ…eƒnƒ„dƒ…eƒ„dƒD.
+_Messages_.en.FW.MBE.Infinity: „hIIƒnƒ†fƒ‰iƒnƒ‰iƒ”tƒ™y
+_Messages_.en.FW.MBE.Interactive: „hIIƒnƒ”tƒ…eƒ’rƒaƒƒcƒ”tƒ‰iƒ–vƒ…e
+_Messages_.en.FW.MBE.Interface: „hIIƒnƒ”tƒ…eƒ’rƒ†fƒaƒƒcƒ…e
+_Messages_.en.FW.MBE.J O B   C U S T O M I Z E: „iJJƒ@ „nOOƒ@ „aBBƒ@ ƒ@ ƒ@ „bCCƒ@ „tUUƒ@ „rSSƒ@ „sTTƒ@ „nOOƒ@ „lMMƒ@ „hIIƒ@ „yZZƒ@ „dEE
+_Messages_.en.FW.MBE.Job: „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.Job Args: „iJJƒoƒ‚bƒ@ „`AAƒ’rƒ‡gƒ“s
+_Messages_.en.FW.MBE.Job Class [%]: „iJJƒoƒ‚bƒ@ „bCCƒŒlƒaƒ“sƒ“sƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.Job Control: „iJJƒoƒ‚bƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.Job Dependencies: „iJJƒoƒ‚bƒ@ „cDDƒ…eƒpƒ…eƒnƒ„dƒ…eƒnƒƒcƒ‰iƒ…eƒ“s
+_Messages_.en.FW.MBE.Job Name: „iJJƒoƒ‚bƒ@ „mNNƒaƒmƒ…e
+_Messages_.en.FW.MBE.Job Name must not contain / !: „iJJƒoƒ‚bƒ@ „mNNƒaƒmƒ…eƒ@ ƒmƒ•uƒ“sƒ”tƒ@ ƒnƒoƒ”tƒ@ ƒƒcƒoƒnƒ”tƒaƒ‰iƒnƒ@ ¡¿ƒ@ ƒI!
+_Messages_.en.FW.MBE.Job Range: „iJJƒoƒ‚bƒ@ „qRRƒaƒnƒ‡gƒ…e
+_Messages_.en.FW.MBE.Job Range required!: „iJJƒoƒ‚bƒ@ „qRRƒaƒnƒ‡gƒ…eƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Job Script: „iJJƒoƒ‚bƒ@ „rSSƒƒcƒ’rƒ‰iƒpƒ”t
+_Messages_.en.FW.MBE.Job Submit: „iJJƒoƒ‚bƒ@ „rSSƒ•uƒ‚bƒmƒ‰iƒ”t
+_Messages_.en.FW.MBE.Job Tasks: „iJJƒoƒ‚bƒ@ „sTTƒaƒ“sƒ‹kƒ“s
+_Messages_.en.FW.MBE.Job [%]: „iJJƒoƒ‚bƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.JobArgs: „iJJƒoƒ‚b„`AAƒ’rƒ‡gƒ“s
+_Messages_.en.FW.MBE.JobId: „iJJƒoƒ‚b„hIIƒ„d
+_Messages_.en.FW.MBE.JobName: „iJJƒoƒ‚b„mNNƒaƒmƒ…e
+_Messages_.en.FW.MBE.Jobclass: „iJJƒoƒ‚bƒƒcƒŒlƒaƒ“sƒ“s
+_Messages_.en.FW.MBE.Just verify: „iJJƒ•uƒ“sƒ”tƒ@ ƒ–vƒ…eƒ’rƒ‰iƒ†fƒ™y
+_Messages_.en.FW.MBE.KByte (1024): „jKK„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒQ2ƒS4ƒj)
+_Messages_.en.FW.MBE.Key:: „jKKƒ…eƒ™yƒF:
+_Messages_.en.FW.MBE.Level Percentage: „kLLƒ…eƒ–vƒ…eƒŒlƒ@ „oPPƒ…eƒ’rƒƒcƒ…eƒnƒ”tƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.Load: „kLLƒoƒaƒ„d
+_Messages_.en.FW.MBE.Load Adjustment Decay Time required!: „kLLƒoƒaƒ„dƒ@ „`AAƒ„dƒŠjƒ•uƒ“sƒ”tƒmƒ…eƒnƒ”tƒ@ „cDDƒ…eƒƒcƒaƒ™yƒ@ „sTTƒ‰iƒmƒ…eƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Load Formula required!: „kLLƒoƒaƒ„dƒ@ „eFFƒoƒ’rƒmƒ•uƒŒlƒaƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Load Sensor: „kLLƒoƒaƒ„dƒ@ „rSSƒ…eƒnƒ“sƒoƒ’r
+_Messages_.en.FW.MBE.Load Settings: „kLLƒoƒaƒ„dƒ@ „rSSƒ…eƒ”tƒ”tƒ‰iƒnƒ‡gƒ“s
+_Messages_.en.FW.MBE.Load(scaled)/Consumable: „kLLƒoƒaƒ„dƒi(ƒ“sƒƒcƒaƒŒlƒ…eƒ„dƒj)¡¿„bCCƒoƒnƒ“sƒ•uƒmƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.Loadreport Time: „kLLƒoƒaƒ„dƒ’rƒ…eƒpƒoƒ’rƒ”tƒ@ „sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Log Level: „kLLƒoƒ‡gƒ@ „kLLƒ…eƒ–vƒ…eƒŒl
+_Messages_.en.FW.MBE.Login Shells: „kLLƒoƒ‡gƒ‰iƒnƒ@ „rSSƒˆhƒ…eƒŒlƒŒlƒ“s
+_Messages_.en.FW.MBE.MByte (1024x1024): „lMM„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒQ2ƒS4ƒ˜xƒP1ƒO0ƒQ2ƒS4ƒj)
+_Messages_.en.FW.MBE.MEM: „lMM„dEE„lMM
+_Messages_.en.FW.MBE.MEM [%]: „lMM„dEE„lMMƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.MEMORY: „lMM„dEE„lMM„nOO„qRR„xYY
+_Messages_.en.FW.MBE.Mail: „lMMƒaƒ‰iƒŒl
+_Messages_.en.FW.MBE.Mail To: „lMMƒaƒ‰iƒŒlƒ@ „sTTƒo
+_Messages_.en.FW.MBE.Mail address: „lMMƒaƒ‰iƒŒlƒ@ ƒaƒ„dƒ„dƒ’rƒ…eƒ“sƒ“s
+_Messages_.en.FW.MBE.MailOptions: „lMMƒaƒ‰iƒŒl„nOOƒpƒ”tƒ‰iƒoƒnƒ“s
+_Messages_.en.FW.MBE.MailTo: „lMMƒaƒ‰iƒŒl„sTTƒo
+_Messages_.en.FW.MBE.Mailer: „lMMƒaƒ‰iƒŒlƒ…eƒ’r
+_Messages_.en.FW.MBE.Master Parameters: „lMMƒaƒ“sƒ”tƒ…eƒ’rƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.Master Queue List: „lMMƒaƒ“sƒ”tƒ…eƒ’rƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Master Spool Dir: „lMMƒaƒ“sƒ”tƒ…eƒ’rƒ@ „rSSƒpƒoƒoƒŒlƒ@ „cDDƒ‰iƒ’r
+_Messages_.en.FW.MBE.Max Slots: „lMMƒaƒ˜xƒ@ „rSSƒŒlƒoƒ”tƒ“s
+_Messages_.en.FW.MBE.Max Unheard: „lMMƒaƒ˜xƒ@ „tUUƒnƒˆhƒ…eƒaƒ’rƒ„d
+_Messages_.en.FW.MBE.MaxMigrTime: „lMMƒaƒ˜x„lMMƒ‰iƒ‡gƒ’r„sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.MaxNoMigr: „lMMƒaƒ˜x„mNNƒo„lMMƒ‰iƒ‡gƒ’r
+_Messages_.en.FW.MBE.Merge Output: „lMMƒ…eƒ’rƒ‡gƒ…eƒ@ „nOOƒ•uƒ”tƒpƒ•uƒ”t
+_Messages_.en.FW.MBE.MergeOutput: „lMMƒ…eƒ’rƒ‡gƒ…e„nOOƒ•uƒ”tƒpƒ•uƒ”t
+_Messages_.en.FW.MBE.Messages: „lMMƒ…eƒ“sƒ“sƒaƒ‡gƒ…eƒ“s
+_Messages_.en.FW.MBE.Migration Command: „lMMƒ‰iƒ‡gƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.Migration Load Thresholds: „lMMƒ‰iƒ‡gƒ’rƒaƒ”tƒ‰iƒoƒnƒ@ „kLLƒoƒaƒ„dƒ@ „sTTƒˆhƒ’rƒ…eƒ“sƒˆhƒoƒŒlƒ„dƒ“s
+_Messages_.en.FW.MBE.Min GID: „lMMƒ‰iƒnƒ@ „fGG„hII„cDD
+_Messages_.en.FW.MBE.Min UID: „lMMƒ‰iƒnƒ@ „tUU„hII„cDD
+_Messages_.en.FW.MBE.MinCpuTime: „lMMƒ‰iƒn„bCCƒpƒ•u„sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Minute: „lMMƒ‰iƒnƒ•uƒ”tƒ…e
+_Messages_.en.FW.MBE.Modify: „lMMƒoƒ„dƒ‰iƒ†fƒ™y
+_Messages_.en.FW.MBE.NO: „mNN„nOO
+_Messages_.en.FW.MBE.Name: „mNNƒaƒmƒ…e
+_Messages_.en.FW.MBE.Netscape Help: „mNNƒ…eƒ”tƒ“sƒƒcƒaƒpƒ…eƒ@ „gHHƒ…eƒŒlƒp
+_Messages_.en.FW.MBE.No: „mNNƒo
+_Messages_.en.FW.MBE.No Job Name specified !: „mNNƒoƒ@ „iJJƒoƒ‚bƒ@ „mNNƒaƒmƒ…eƒ@ ƒ“sƒpƒ…eƒƒcƒ‰iƒ†fƒ‰iƒ…eƒ„dƒ@ ƒI!
+_Messages_.en.FW.MBE.No Restart: „mNNƒoƒ@ „qRRƒ…eƒ“sƒ”tƒaƒ’rƒ”t
+_Messages_.en.FW.MBE.No calendars to select: „mNNƒoƒ@ ƒƒcƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ“sƒ@ ƒ”tƒoƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.No load attributes available: „mNNƒoƒ@ ƒŒlƒoƒaƒ„dƒ@ ƒaƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“sƒ@ ƒaƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.No queues to clone: „mNNƒoƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ“sƒ@ ƒ”tƒoƒ@ ƒƒcƒŒlƒoƒnƒ…e
+_Messages_.en.FW.MBE.No queues to select: „mNNƒoƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ“sƒ@ ƒ”tƒoƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.No valid Queue name specified\n: „mNNƒoƒ@ ƒ–vƒaƒŒlƒ‰iƒ„dƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ ƒnƒaƒmƒ…eƒ@ ƒ“sƒpƒ…eƒƒcƒ‰iƒ†fƒ‰iƒ…eƒ„d
+_Messages_.en.FW.MBE.
+_Messages_.en.FW.MBE.No valid filename specified !: „mNNƒoƒ@ ƒ–vƒaƒŒlƒ‰iƒ„dƒ@ ƒ†fƒ‰iƒŒlƒ…eƒnƒaƒmƒ…eƒ@ ƒ“sƒpƒ…eƒƒcƒ‰iƒ†fƒ‰iƒ…eƒ„dƒ@ ƒI!
+_Messages_.en.FW.MBE.No valid time format: hh:mm:ss or\nINFINITY required !: „mNNƒoƒ@ ƒ–vƒaƒŒlƒ‰iƒ„dƒ@ ƒ”tƒ‰iƒmƒ…eƒ@ ƒ†fƒoƒ’rƒmƒaƒ”tƒF:ƒ@ ƒˆhƒˆhƒF:ƒmƒmƒF:ƒ“sƒ“sƒ@ ƒoƒ’r
+_Messages_.en.FW.MBE.„hII„mNN„eFF„hII„mNN„hII„sTT„xYYƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒ@ ƒI!
+_Messages_.en.FW.MBE.Notify: „mNNƒoƒ”tƒ‰iƒ†fƒ™y
+_Messages_.en.FW.MBE.Notify Job: „mNNƒoƒ”tƒ‰iƒ†fƒ™yƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.OTicket: „nOO„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”t
+_Messages_.en.FW.MBE.Ok: „nOOƒ‹k
+_Messages_.en.FW.MBE.On Job Suspend: „nOOƒnƒ@ „iJJƒoƒ‚bƒ@ „rSSƒ•uƒ“sƒpƒ…eƒnƒ„d
+_Messages_.en.FW.MBE.On Min CPU Interval: „nOOƒnƒ@ „lMMƒ‰iƒnƒ@ „bCC„oPP„tUUƒ@ „hIIƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒl
+_Messages_.en.FW.MBE.On Shutdown of Execd: „nOOƒnƒ@ „rSSƒˆhƒ•uƒ”tƒ„dƒoƒ—wƒnƒ@ ƒoƒ†fƒ@ „dEEƒ˜xƒ…eƒƒcƒ„d
+_Messages_.en.FW.MBE.Operator: „nOOƒpƒ…eƒ’rƒaƒ”tƒoƒ’r
+_Messages_.en.FW.MBE.OverrideTickets: „nOOƒ–vƒ…eƒ’rƒ’rƒ‰iƒ„dƒ…e„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.Owner: „nOOƒ—wƒnƒ…eƒ’r
+_Messages_.en.FW.MBE.PE: „oPP„dEE
+_Messages_.en.FW.MBE.PE Configuration: „oPP„dEEƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.PE List: „oPP„dEEƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.PE name required !: „oPP„dEEƒ@ ƒnƒaƒmƒ…eƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒ@ ƒI!
+_Messages_.en.FW.MBE.PERange: „oPP„dEE„qRRƒaƒnƒ‡gƒ…e
+_Messages_.en.FW.MBE.Parallel: „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒl
+_Messages_.en.FW.MBE.Parallel Environment: „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒlƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.Paste: „oPPƒaƒ“sƒ”tƒ…e
+_Messages_.en.FW.MBE.Path: „oPPƒaƒ”tƒˆh
+_Messages_.en.FW.MBE.Percentage: „oPPƒ…eƒ’rƒƒcƒ…eƒnƒ”tƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.Please configure a Parallel\nEnvironment first.: „oPPƒŒlƒ…eƒaƒ“sƒ…eƒ@ ƒƒcƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒ…eƒ@ ƒaƒ@ „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒl
+_Messages_.en.FW.MBE.„dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”tƒ@ ƒ†fƒ‰iƒ’rƒ“sƒ”tƒD.
+_Messages_.en.FW.MBE.Please type or select a filename:: „oPPƒŒlƒ…eƒaƒ“sƒ…eƒ@ ƒ”tƒ™yƒpƒ…eƒ@ ƒoƒ’rƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒaƒ@ ƒ†fƒ‰iƒŒlƒ…eƒnƒaƒmƒ…eƒF:
+_Messages_.en.FW.MBE.Predecessors: „oPPƒ’rƒ…eƒ„dƒ…eƒƒcƒ…eƒ“sƒ“sƒoƒ’rƒ“s
+_Messages_.en.FW.MBE.Prefix: „oPPƒ’rƒ…eƒ†fƒ‰iƒ˜x
+_Messages_.en.FW.MBE.Priority: „oPPƒ’rƒ‰iƒoƒ’rƒ‰iƒ”tƒ™y
+_Messages_.en.FW.MBE.Project: „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Project Configuration: „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Project Share Tree: „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…e
+_Messages_.en.FW.MBE.Project [%]: „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.Project name required !: „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ ƒnƒaƒmƒ…eƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒ@ ƒI!
+_Messages_.en.FW.MBE.Projects: „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.Prolog: „oPPƒ’rƒoƒŒlƒoƒ‡g
+_Messages_.en.FW.MBE.Q U E U E   C U S T O M I Z E: „pQQƒ@ „tUUƒ@ „dEEƒ@ „tUUƒ@ „dEEƒ@ ƒ@ ƒ@ „bCCƒ@ „tUUƒ@ „rSSƒ@ „sTTƒ@ „nOOƒ@ „lMMƒ@ „hIIƒ@ „yZZƒ@ „dEE
+_Messages_.en.FW.MBE.QMON: „pQQ„lMM„nOO„mNN
+_Messages_.en.FW.MBE.QMON  +++  Calendar Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ@ ƒ{+ƒ{+ƒ{+ƒ@ ƒ@ „bCCƒaƒŒlƒ…eƒnƒ„dƒaƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON  +++  Checkpointing Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ@ ƒ{+ƒ{+ƒ{+ƒ@ ƒ@ „bCCƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ‰iƒnƒ‡gƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON  +++  Cluster Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ@ ƒ{+ƒ{+ƒ{+ƒ@ ƒ@ „bCCƒŒlƒ•uƒ“sƒ”tƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON  +++  Host Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ@ ƒ{+ƒ{+ƒ{+ƒ@ ƒ@ „gHHƒoƒ“sƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON  +++  Parallel Environment Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ@ ƒ{+ƒ{+ƒ{+ƒ@ ƒ@ „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒlƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON  +++  User Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ@ ƒ{+ƒ{+ƒ{+ƒ@ ƒ@ „tUUƒ“sƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Admin Host Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „`AAƒ„dƒmƒ‰iƒnƒ@ „gHHƒoƒ“sƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Attributes for queue: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“sƒ@ ƒ†fƒoƒ’rƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…e
+_Messages_.en.FW.MBE.QMON +++ Browser: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „aBBƒ’rƒoƒ—wƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.QMON +++ Complex Add/Modify: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ@ „`AAƒ„dƒ„d¡¿„lMMƒoƒ„dƒ‰iƒ†fƒ™y
+_Messages_.en.FW.MBE.QMON +++ Complex Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „bCCƒoƒmƒpƒŒlƒ…eƒ˜xƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Execution Host Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „dEEƒ˜xƒ…eƒƒcƒ•uƒ”tƒ‰iƒoƒnƒ@ „gHHƒoƒ“sƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Functional Policy: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒlƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.QMON +++ Job Control: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „iJJƒoƒ‚bƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.QMON +++ Job Submission: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „iJJƒoƒ‚bƒ@ „rSSƒ•uƒ‚bƒmƒ‰iƒ“sƒ“sƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Manager Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „lMMƒaƒnƒaƒ‡gƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Message: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „lMMƒ…eƒ“sƒ“sƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.QMON +++ Operator Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „nOOƒpƒ…eƒ’rƒaƒ”tƒoƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Override Policy: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „nOOƒ–vƒ…eƒ’rƒ’rƒ‰iƒ„dƒ…eƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.QMON +++ Project Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Queue Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Queue Control: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.QMON +++ Scheduler Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Share Tree Policy: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…eƒ@ „oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.QMON +++ Submit Host Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „rSSƒ•uƒ‚bƒmƒ‰iƒ”tƒ@ „gHHƒoƒ“sƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Ticket Overview: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ@ „nOOƒ–vƒ…eƒ’rƒ–vƒ‰iƒ…eƒ—w
+_Messages_.en.FW.MBE.QMON +++ User Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „tUUƒ“sƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QMON +++ Userset Configuration: „pQQ„lMM„nOO„mNNƒ@ ƒ{+ƒ{+ƒ{+ƒ@ „tUUƒ“sƒ…eƒ’rƒ“sƒ…eƒ”tƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.QSI Common Dir: „pQQ„rSS„hIIƒ@ „bCCƒoƒmƒmƒoƒnƒ@ „cDDƒ‰iƒ’r
+_Messages_.en.FW.MBE.Qalter: „pQQƒaƒŒlƒ”tƒ…eƒ’r
+_Messages_.en.FW.MBE.Qlogin Command: „pQQƒŒlƒoƒ‡gƒ‰iƒnƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.Qlogin Daemon: „pQQƒŒlƒoƒ‡gƒ‰iƒnƒ@ „cDDƒaƒ…eƒmƒoƒn
+_Messages_.en.FW.MBE.Queue: „pQQƒ•uƒ…eƒ•uƒ…e
+_Messages_.en.FW.MBE.Queue Control: „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „bCCƒoƒnƒ”tƒ’rƒoƒŒl
+_Messages_.en.FW.MBE.Queue List: „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Refresh: „qRRƒ…eƒ†fƒ’rƒ…eƒ“sƒˆh
+_Messages_.en.FW.MBE.Relation: „qRRƒ…eƒŒlƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Reload: „qRRƒ…eƒŒlƒoƒaƒ„d
+_Messages_.en.FW.MBE.Remove Lines: „qRRƒ…eƒmƒoƒ–vƒ…eƒ@ „kLLƒ‰iƒnƒ…eƒ“s
+_Messages_.en.FW.MBE.Request Resources: „qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”tƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.Request for serial job: „qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”tƒ@ ƒ†fƒoƒ’rƒ@ ƒ“sƒ…eƒ’rƒ‰iƒaƒŒlƒ@ ƒŠjƒoƒ‚b
+_Messages_.en.FW.MBE.Requestable: „qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”tƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.Reset: „qRRƒ…eƒ“sƒ…eƒ”t
+_Messages_.en.FW.MBE.Restart: „qRRƒ…eƒ“sƒ”tƒaƒ’rƒ”t
+_Messages_.en.FW.MBE.Restart Command: „qRRƒ…eƒ“sƒ”tƒaƒ’rƒ”tƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.Restart Job: „qRRƒ…eƒ“sƒ”tƒaƒ’rƒ”tƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.Restart depends on Queue: „qRRƒ…eƒ“sƒ”tƒaƒ’rƒ”tƒ@ ƒ„dƒ…eƒpƒ…eƒnƒ„dƒ“sƒ@ ƒoƒnƒ@ „pQQƒ•uƒ…eƒ•uƒ…e
+_Messages_.en.FW.MBE.Resume: „qRRƒ…eƒ“sƒ•uƒmƒ…e
+_Messages_.en.FW.MBE.Resume Method: „qRRƒ…eƒ“sƒ•uƒmƒ…eƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.STRING: „rSS„sTT„qRR„hII„mNN„fGG
+_Messages_.en.FW.MBE.STicket: „rSS„sTTƒ‰iƒƒcƒ‹kƒ…eƒ”t
+_Messages_.en.FW.MBE.Save: „rSSƒaƒ–vƒ…e
+_Messages_.en.FW.MBE.Save Settings: „rSSƒaƒ–vƒ…eƒ@ „rSSƒ…eƒ”tƒ”tƒ‰iƒnƒ‡gƒ“s
+_Messages_.en.FW.MBE.Saving of job attributes failed!: „rSSƒaƒ–vƒ‰iƒnƒ‡gƒ@ ƒoƒ†fƒ@ ƒŠjƒoƒ‚bƒ@ ƒaƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“sƒ@ ƒ†fƒaƒ‰iƒŒlƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.Scale Factor: „rSSƒƒcƒaƒŒlƒ…eƒ@ „eFFƒaƒƒcƒ”tƒoƒ’r
+_Messages_.en.FW.MBE.Schedd Parameters: „rSSƒƒcƒˆhƒ…eƒ„dƒ„dƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.Schedule Interval required!: „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ@ „hIIƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒlƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
+_Messages_.en.FW.MBE.ScheduleTime: „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…e„sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Scheduler Configuration: „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.Script: „rSSƒƒcƒ’rƒ‰iƒpƒ”t
+_Messages_.en.FW.MBE.Second: „rSSƒ…eƒƒcƒoƒnƒ„d
+_Messages_.en.FW.MBE.Select Access Lists: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ „`AAƒƒcƒƒcƒ…eƒ“sƒ“sƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.Select Project: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ „oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Select Queues: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ“s
+_Messages_.en.FW.MBE.Select a Parallel Environment: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒaƒ@ „oPPƒaƒ’rƒaƒŒlƒŒlƒ…eƒŒlƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”t
+_Messages_.en.FW.MBE.Select a checkpoint object: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒaƒ@ ƒƒcƒˆhƒ…eƒƒcƒ‹kƒpƒoƒ‰iƒnƒ”tƒ@ ƒoƒ‚bƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Select a load parameter: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒaƒ@ ƒŒlƒoƒaƒ„dƒ@ ƒpƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’r
+_Messages_.en.FW.MBE.Select a project: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒaƒ@ ƒpƒ’rƒoƒŠjƒ…eƒƒcƒ”t
+_Messages_.en.FW.MBE.Select one job for Qalter !: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒoƒnƒ…eƒ@ ƒŠjƒoƒ‚bƒ@ ƒ†fƒoƒ’rƒ@ „pQQƒaƒŒlƒ”tƒ…eƒ’rƒ@ ƒI!
+_Messages_.en.FW.MBE.Select one pending job for Qalter !: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒoƒnƒ…eƒ@ ƒpƒ…eƒnƒ„dƒ‰iƒnƒ‡gƒ@ ƒŠjƒoƒ‚bƒ@ ƒ†fƒoƒ’rƒ@ „pQQƒaƒŒlƒ”tƒ…eƒ’rƒ@ ƒI!
+_Messages_.en.FW.MBE.Select only one queue !: „rSSƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒoƒnƒŒlƒ™yƒ@ ƒoƒnƒ…eƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ@ ƒI!
+_Messages_.en.FW.MBE.Send mail to mail address: „rSSƒ…eƒnƒ„dƒ@ ƒmƒaƒ‰iƒŒlƒ@ ƒ”tƒoƒ@ ƒmƒaƒ‰iƒŒlƒ@ ƒaƒ„dƒ„dƒ’rƒ…eƒ“sƒ“s
+_Messages_.en.FW.MBE.Share: „rSSƒˆhƒaƒ’rƒ…e
+_Messages_.en.FW.MBE.Shares: „rSSƒˆhƒaƒ’rƒ…eƒ“s
+_Messages_.en.FW.MBE.Shell: „rSSƒˆhƒ…eƒŒlƒŒl
+_Messages_.en.FW.MBE.Shell Start Mode: „rSSƒˆhƒ…eƒŒlƒŒlƒ@ „rSSƒ”tƒaƒ’rƒ”tƒ@ „lMMƒoƒ„dƒ…e
+_Messages_.en.FW.MBE.Shell on host: „rSSƒˆhƒ…eƒŒlƒŒlƒ@ ƒoƒnƒ@ ƒˆhƒoƒ“sƒ”t
+_Messages_.en.FW.MBE.Shepherd Command: „rSSƒˆhƒ…eƒpƒˆhƒ…eƒ’rƒ„dƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.Shortcut: „rSSƒˆhƒoƒ’rƒ”tƒƒcƒ•uƒ”t
+_Messages_.en.FW.MBE.Show Details ...: „rSSƒˆhƒoƒ—wƒ@ „cDDƒ…eƒ”tƒaƒ‰iƒŒlƒ“sƒ@ ƒD.ƒD.ƒD.
+_Messages_.en.FW.MBE.Shutdown: „rSSƒˆhƒ•uƒ”tƒ„dƒoƒ—wƒn
+_Messages_.en.FW.MBE.Skip: „rSSƒ‹kƒ‰iƒp
+_Messages_.en.FW.MBE.Slot-Limits/Fixed Attributes: „rSSƒŒlƒoƒ”t-„kLLƒ‰iƒmƒ‰iƒ”tƒ“s¡¿„eFFƒ‰iƒ˜xƒ…eƒ„dƒ@ „`AAƒ”tƒ”tƒ’rƒ‰iƒ‚bƒ•uƒ”tƒ…eƒ“s
+_Messages_.en.FW.MBE.Slots: „rSSƒŒlƒoƒ”tƒ“s
+_Messages_.en.FW.MBE.Soft Limit: „rSSƒoƒ†fƒ”tƒ@ „kLLƒ‰iƒmƒ‰iƒ”t
+_Messages_.en.FW.MBE.Soft Queue List: „rSSƒoƒ†fƒ”tƒ@ „pQQƒ•uƒ…eƒ•uƒ…eƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.Soft Request: „rSSƒoƒ†fƒ”tƒ@ „qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”t
+_Messages_.en.FW.MBE.Soft Resources: „rSSƒoƒ†fƒ”tƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
+_Messages_.en.FW.MBE.Sort by load: „rSSƒoƒ’rƒ”tƒ@ ƒ‚bƒ™yƒ@ ƒŒlƒoƒaƒ„d
+_Messages_.en.FW.MBE.Sort by sequence number: „rSSƒoƒ’rƒ”tƒ@ ƒ‚bƒ™yƒ@ ƒ“sƒ…eƒ‘qƒ•uƒ…eƒnƒƒcƒ…eƒ@ ƒnƒ•uƒmƒ‚bƒ…eƒ’r
+_Messages_.en.FW.MBE.Sort by share: „rSSƒoƒ’rƒ”tƒ@ ƒ‚bƒ™yƒ@ ƒ“sƒˆhƒaƒ’rƒ…e
+_Messages_.en.FW.MBE.Start At: „rSSƒ”tƒaƒ’rƒ”tƒ@ „`AAƒ”t
+_Messages_.en.FW.MBE.Start Job Immediately: „rSSƒ”tƒaƒ’rƒ”tƒ@ „iJJƒoƒ‚bƒ@ „hIIƒmƒmƒ…eƒ„dƒ‰iƒaƒ”tƒ…eƒŒlƒ™y
+_Messages_.en.FW.MBE.Start Proc Args: „rSSƒ”tƒaƒ’rƒ”tƒ@ „oPPƒ’rƒoƒƒcƒ@ „`AAƒ’rƒ‡gƒ“s
+_Messages_.en.FW.MBE.Start of Job: „rSSƒ”tƒaƒ’rƒ”tƒ@ ƒoƒ†fƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.StartTime: „rSSƒ”tƒaƒ’rƒ”t„sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Starter Method: „rSSƒ”tƒaƒ’rƒ”tƒ…eƒ’rƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.Stat Log Time: „rSSƒ”tƒaƒ”tƒ@ „kLLƒoƒ‡gƒ@ „sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Status: „rSSƒ”tƒaƒ”tƒ•uƒ“s
+_Messages_.en.FW.MBE.Stderr Path List: „rSSƒ”tƒ„dƒ…eƒ’rƒ’rƒ@ „oPPƒaƒ”tƒˆhƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.StderrPaths: „rSSƒ”tƒ„dƒ…eƒ’rƒ’r„oPPƒaƒ”tƒˆhƒ“s
+_Messages_.en.FW.MBE.Stdout Path List: „rSSƒ”tƒ„dƒoƒ•uƒ”tƒ@ „oPPƒaƒ”tƒˆhƒ@ „kLLƒ‰iƒ“sƒ”t
+_Messages_.en.FW.MBE.StdoutPaths: „rSSƒ”tƒ„dƒoƒ•uƒ”t„oPPƒaƒ”tƒˆhƒ“s
+_Messages_.en.FW.MBE.Stop Proc Args: „rSSƒ”tƒoƒpƒ@ „oPPƒ’rƒoƒƒcƒ@ „`AAƒ’rƒ‡gƒ“s
+_Messages_.en.FW.MBE.Submit: „rSSƒ•uƒ‚bƒmƒ‰iƒ”t
+_Messages_.en.FW.MBE.Submit Job: „rSSƒ•uƒ‚bƒmƒ‰iƒ”tƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.SubmitTime: „rSSƒ•uƒ‚bƒmƒ‰iƒ”t„sTTƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.Suspend: „rSSƒ•uƒ“sƒpƒ…eƒnƒ„d
+_Messages_.en.FW.MBE.Suspend Method: „rSSƒ•uƒ“sƒpƒ…eƒnƒ„dƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.Suspend of Job: „rSSƒ•uƒ“sƒpƒ…eƒnƒ„dƒ@ ƒoƒ†fƒ@ „iJJƒoƒ‚b
+_Messages_.en.FW.MBE.System: „rSSƒ™yƒ“sƒ”tƒ…eƒm
+_Messages_.en.FW.MBE.TIME: „sTT„hII„lMM„dEE
+_Messages_.en.FW.MBE.TRANSPARENT: „sTT„qRR„`AA„mNN„rSS„oPP„`AA„qRR„dEE„mNN„sTT
+_Messages_.en.FW.MBE.Targeted Resource Share: „sTTƒaƒ’rƒ‡gƒ…eƒ”tƒ…eƒ„dƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ@ „rSSƒˆhƒaƒ’rƒ…e
+_Messages_.en.FW.MBE.Task: „sTTƒaƒ“sƒ‹k
+_Messages_.en.FW.MBE.TaskId(s): „sTTƒaƒ“sƒ‹k„hIIƒ„dƒi(ƒ“sƒj)
+_Messages_.en.FW.MBE.Terminate Method: „sTTƒ…eƒ’rƒmƒ‰iƒnƒaƒ”tƒ…eƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
+_Messages_.en.FW.MBE.There are no jobs selected !: „sTTƒˆhƒ…eƒ’rƒ…eƒ@ ƒaƒ’rƒ…eƒ@ ƒnƒoƒ@ ƒŠjƒoƒ‚bƒ“sƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ…eƒ„dƒ@ ƒI!
+_Messages_.en.FW.MBE.Ticket: „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”t
+_Messages_.en.FW.MBE.Ticket Overview: „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ@ „nOOƒ–vƒ…eƒ’rƒ–vƒ‰iƒ…eƒ—w
+_Messages_.en.FW.MBE.Tickets: „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.To modify a queue select this queue !: „sTTƒoƒ@ ƒmƒoƒ„dƒ‰iƒ†fƒ™yƒ@ ƒaƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ@ ƒ“sƒ…eƒŒlƒ…eƒƒcƒ”tƒ@ ƒ”tƒˆhƒ‰iƒ“sƒ@ ƒ‘qƒ•uƒ…eƒ•uƒ…eƒ@ ƒI!
+_Messages_.en.FW.MBE.Total Percentage: „sTTƒoƒ”tƒaƒŒlƒ@ „oPPƒ…eƒ’rƒƒcƒ…eƒnƒ”tƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.Transfer: „sTTƒ’rƒaƒnƒ“sƒ†fƒ…eƒ’r
+_Messages_.en.FW.MBE.Transfer QS Arguments: „sTTƒ’rƒaƒnƒ“sƒ†fƒ…eƒ’rƒ@ „pQQ„rSSƒ@ „`AAƒ’rƒ‡gƒ•uƒmƒ…eƒnƒ”tƒ“s
+_Messages_.en.FW.MBE.True: „sTTƒ’rƒ•uƒ…e
+_Messages_.en.FW.MBE.Type: „sTTƒ™yƒpƒ…e
+_Messages_.en.FW.MBE.USERDEFINED: „tUU„rSS„dEE„qRR„cDD„dEE„eFF„hII„mNN„dEE„cDD
+_Messages_.en.FW.MBE.Usage: „tUUƒ“sƒaƒ‡gƒ…e
+_Messages_.en.FW.MBE.User: „tUUƒ“sƒ…eƒ’r
+_Messages_.en.FW.MBE.User Configuration: „tUUƒ“sƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
+_Messages_.en.FW.MBE.User Lists: „tUUƒ“sƒ…eƒ’rƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.User Share Tree: „tUUƒ“sƒ…eƒ’rƒ@ „rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…e
+_Messages_.en.FW.MBE.User Sort: „tUUƒ“sƒ…eƒ’rƒ@ „rSSƒoƒ’rƒ”t
+_Messages_.en.FW.MBE.User [%]: „tUUƒ“sƒ…eƒ’rƒ@ ƒm[ƒ“%ƒn]
+_Messages_.en.FW.MBE.User/Group: „tUUƒ“sƒ…eƒ’r¡¿„fGGƒ’rƒoƒ•uƒp
+_Messages_.en.FW.MBE.Users/Groups: „tUUƒ“sƒ…eƒ’rƒ“s¡¿„fGGƒ’rƒoƒ•uƒpƒ“s
+_Messages_.en.FW.MBE.Userset Name: „tUUƒ“sƒ…eƒ’rƒ“sƒ…eƒ”tƒ@ „mNNƒaƒmƒ…e
+_Messages_.en.FW.MBE.Usersets: „tUUƒ“sƒ…eƒ’rƒ“sƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.Value: „uVVƒaƒŒlƒ•uƒ…e
+_Messages_.en.FW.MBE.Variable: „uVVƒaƒ’rƒ‰iƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.Verify Mode: „uVVƒ…eƒ’rƒ‰iƒ†fƒ™yƒ@ „lMMƒoƒ„dƒ…e
+_Messages_.en.FW.MBE.Warning: „vWWƒaƒ’rƒnƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.Week: „vWWƒ…eƒ…eƒ‹k
+_Messages_.en.FW.MBE.Why ?: „vWWƒˆhƒ™yƒ@ ƒH?
+_Messages_.en.FW.MBE.XProjects: „wXX„oPPƒ’rƒoƒŠjƒ…eƒƒcƒ”tƒ“s
+_Messages_.en.FW.MBE.Xterm: „wXXƒ”tƒ…eƒ’rƒm
+_Messages_.en.FW.MBE.Xuser Lists: „wXXƒ•uƒ“sƒ…eƒ’rƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
+_Messages_.en.FW.MBE.YES: „xYY„dEE„rSS
+_Messages_.en.FW.MBE.Year: „xYYƒ…eƒaƒ’r
+_Messages_.en.FW.MBE.Yes: „xYYƒ…eƒ“s
+_Messages_.en.FW.MBE._Delete: ƒQ_„cDDƒ…eƒŒlƒ…eƒ”tƒ…e
+_Messages_.en.FW.MBE.calendar.week_example: „vWWƒ…eƒ…eƒ‹k\nƒmƒoƒn-ƒ†fƒ’rƒ‰iƒ=ƒQ2ƒO0-ƒU6ƒm[ƒ=ƒ“sƒ•uƒ“sƒpƒ…eƒnƒ„dƒ…eƒ„dƒn]ƒ@ ƒ“sƒaƒ”t-ƒ“sƒ•uƒnƒm[ƒ=ƒ“sƒ•uƒ“sƒpƒ…eƒnƒ„dƒ…eƒ„dƒn]
+_Messages_.en.FW.MBE.calendar.year_example: „xYYƒ…eƒaƒ’r\nƒP1ƒD.ƒP1ƒD.ƒP1ƒX9ƒX9ƒV7ƒC,ƒR3ƒO0ƒD.ƒR3ƒD.ƒP1ƒX9ƒX9ƒV7-ƒR3ƒP1ƒD.ƒR3ƒD.ƒP1ƒX9ƒX9ƒV7ƒC,ƒQ2ƒU6ƒD.ƒP1ƒQ2ƒD.ƒP1ƒX9ƒX9ƒV7ƒm[ƒ=ƒ“sƒ•uƒ“sƒpƒ…eƒnƒ„dƒ…eƒ„dƒn]
+_Messages_.en.FW.MBE.cplx.Load: „kLLƒoƒaƒ„d
+_Messages_.en.FW.MBE.default: ƒ„dƒ…eƒ†fƒaƒ•uƒŒlƒ”t
+_Messages_.en.FW.MBE.disabled: ƒ„dƒ‰iƒ“sƒaƒ‚bƒŒlƒ…eƒ„d
+_Messages_.en.FW.MBE.enabled: ƒ…eƒnƒaƒ‚bƒŒlƒ…eƒ„d
+_Messages_.en.FW.MBE.fticket.functional: „eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒl
+_Messages_.en.FW.MBE.„rSSƒˆhƒaƒ’rƒ…eƒ“s
+_Messages_.en.FW.MBE.fticket.ratio: @fB„qRRƒaƒ”tƒ‰iƒoƒ@ „aBBƒ…eƒ”tƒ—wƒ…eƒ…eƒnƒ@ „rSSƒoƒ’rƒ”tƒ“sƒ@ „nOOƒ†f
+_Messages_.en.FW.MBE.„eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒlƒ@ „sTTƒ‰iƒƒcƒ‹kƒ…eƒ”tƒ“s
+_Messages_.en.FW.MBE.gByte (1000x1000x1000): ƒ‡g„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒO0ƒO0ƒ˜xƒP1ƒO0ƒO0ƒO0ƒ˜xƒP1ƒO0ƒO0ƒO0ƒj)
+_Messages_.en.FW.MBE.kByte (1000): ƒ‹k„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒO0ƒO0ƒj)
+_Messages_.en.FW.MBE.log_err: ƒŒlƒoƒ‡gƒQ_ƒ…eƒ’rƒ’r
+_Messages_.en.FW.MBE.log_info: ƒŒlƒoƒ‡gƒQ_ƒ‰iƒnƒ†fƒo
+_Messages_.en.FW.MBE.log_warning: ƒŒlƒoƒ‡gƒQ_ƒ—wƒaƒ’rƒnƒ‰iƒnƒ‡g
+_Messages_.en.FW.MBE.mByte (1000x1000): ƒm„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒO0ƒO0ƒ˜xƒP1ƒO0ƒO0ƒO0ƒj)
+_Messages_.en.FW.MBE.pag command: ƒpƒaƒ‡gƒ@ ƒƒcƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.posix_compliant: ƒpƒoƒ“sƒ‰iƒ˜xƒQ_ƒƒcƒoƒmƒpƒŒlƒ‰iƒaƒnƒ”t
+_Messages_.en.FW.MBE.script_from_stdin: ƒ“sƒƒcƒ’rƒ‰iƒpƒ”tƒQ_ƒ†fƒ’rƒoƒmƒQ_ƒ“sƒ”tƒ„dƒ‰iƒn
+_Messages_.en.FW.MBE.set_token command: ƒ“sƒ…eƒ”tƒQ_ƒ”tƒoƒ‹kƒ…eƒnƒ@ ƒƒcƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.stderr: ƒ“sƒ”tƒ„dƒ…eƒ’rƒ’r
+_Messages_.en.FW.MBE.stdout: ƒ“sƒ”tƒ„dƒoƒ•uƒ”t
+_Messages_.en.FW.MBE.token_extend_time: ƒ”tƒoƒ‹kƒ…eƒnƒQ_ƒ…eƒ˜xƒ”tƒ…eƒnƒ„dƒQ_ƒ”tƒ‰iƒmƒ…e
+_Messages_.en.FW.MBE.tov.deadline: „tUUƒ“sƒ…eƒ’rƒ“sƒ@ „`AAƒŒlƒŒlƒoƒ—wƒ…eƒ„d\n„sTTƒoƒ@ „rSSƒ•uƒ‚bƒmƒ‰iƒ”t\n„cDDƒ…eƒaƒ„dƒŒlƒ‰iƒnƒ…eƒ@ „iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.tov.functional: „eFFƒ•uƒnƒƒcƒ”tƒ‰iƒoƒnƒaƒŒl\n„oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.tov.override: „nOOƒ–vƒ…eƒ’rƒ’rƒ‰iƒ„dƒ…e\n„oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.tov.sharetree: „rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…e\n„oPPƒoƒŒlƒ‰iƒƒcƒ™y
+_Messages_.en.FW.MBE.unix_behavior: ƒ•uƒnƒ‰iƒ˜xƒQ_ƒ‚bƒ…eƒˆhƒaƒ–vƒ‰iƒoƒ’r
+_Messages_.en.FW.MBE.rsh Daemon: ƒ’rƒ“sƒˆhƒ@ „cDDƒaƒ…eƒmƒoƒn
+_Messages_.en.FW.MBE.rsh Command: ƒ’rƒ“sƒˆhƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.rlogin Daemon: ƒ’rƒŒlƒoƒ‡gƒ‰iƒnƒ@ „cDDƒaƒ…eƒmƒoƒn
+_Messages_.en.FW.MBE.rlogin Command: ƒ’rƒŒlƒoƒ‡gƒ‰iƒnƒ@ „bCCƒoƒmƒmƒaƒnƒ„d
+_Messages_.en.FW.MBE.@fBInteractive Parameters: @fB„hIIƒnƒ”tƒ…eƒ’rƒaƒƒcƒ”tƒ‰iƒ–vƒ…eƒ@ „oPPƒaƒ’rƒaƒmƒ…eƒ”tƒ…eƒ’rƒ“s
+_Messages_.en.FW.MBE.XmtHelpDisplayContextHelp.helpTitle: ~DbCCƒoƒnƒ”tƒ…eƒ˜xƒ”tƒˆhƒ…eƒŒlƒp
+_Messages_.en.FW.MBE.XmtHelpDisplayContextHelp.noHelp: „mNNƒoƒ@ „gHHƒ…eƒŒlƒpƒ@ ƒaƒ–vƒaƒ‰iƒŒlƒaƒ‚bƒŒlƒ…e
+_Messages_.en.FW.MBE.XmtHelpDisplayContextHelp.dialogTitle: „bCCƒoƒnƒ”tƒ…eƒ˜xƒ”tƒˆhƒ…eƒŒlƒp
+_Messages_.en.FW.MBE.XmtHelpDisplayContextHelp.dialogTitle: „bCCƒoƒnƒ”tƒ…eƒ˜xƒ”tƒˆhƒ…eƒŒlƒp
+Qmon*about_msg.message: @f[BIG]„vWWƒ…eƒŒlƒƒcƒoƒm @fB%s@@%s\nƒ”tƒo %s qmon\n\n@fR„bCCƒoƒpƒ™yƒ’rƒ‰iƒ‡gƒˆhƒ”t \251 1996-1999\n\n\nGridware, Inc.\n1265 S. Bascom Ave.\nSuite 110\nSan Jose, CA 95128\nU.S.A.\nPhone: (+1) 408 866-4100\nFax: (+1) 408 559-2090\nEmail: support@@gridware.com\nhttp://www.gridware.com\n\nGridware GmbH\nErzgebirgstr. 2\nD-93073 Neutraubling\nGermany\nTel.: (+49) 9401 9200-0\nFax: (+49) 9401 9200-92\nEmail: support@@gridware.de\nhttp://www.gridware.de
+Qmon*cancelLabelString: „bCCƒaƒnƒƒcƒ…eƒŒl
+Qmon*okLabelString: „nOOƒ‹k
+Qmon*helpLabelString: „gHHƒ…eƒŒlƒp
+Qmon*dirListLabelString: „cDDƒ‰iƒ’rƒ…eƒƒcƒ”tƒoƒ’rƒ‰iƒ…eƒ“s
+Qmon*fileListLabelString: „eFFƒ‰iƒŒlƒ…eƒ“s
+Qmon*filterLabelString: „eFFƒ‰iƒŒlƒ”tƒ…eƒ’r
+Qmon*applyLabelString: „eFFƒ‰iƒŒlƒ”tƒ…eƒ’r
+Qmon*xmtHelpDialog*doneLabel: „cDDƒoƒnƒ…e

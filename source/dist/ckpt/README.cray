@@ -1,0 +1,56 @@
+                    Cray kernel level checkpointing
+                    -------------------------------
+
+                    (c) 2000 Sun Microsystems, Inc.
+
+
+The Cray kernel-level checkpointing interfaces use the chkpnt(1) and
+restart(1) commands to checkpoint and restart Grid Engine/Grid Engine
+Enterprise Edition jobs. Here is some specific information about the Cray
+checkpointing interface scripts.
+
+1. The cray_ckpt_command and cray_migrate_command scripts both delete the
+user's job script file before executing the chkpnt(1) command.  This forces
+the chkpnt(1) command to save the unlinked script file as part of the
+checkpoint restart file.  Otherwise the script will not have the same inode
+number when the job is restarted, because Grid Engine/Grid Engine
+Enterprise Edition will have deleted and restored it, and the restart(1)
+will fail.  In order for this workaround to work, the user must have write
+access to the $SGE_ROOT/$SGE_CELL/spool/<exec_host_name>/job_scripts
+directory.
+
+2. The cray_restart_command script uses the acctcom(1) command to retrieve
+the status of the restarted job when it completes.  This is needed because
+the restart(1) command only returns a 0 or a 1.  The acttcom(1) command 
+returns data which is then parsed by the parse_job_status script in order to
+get the status of the completed job.  Unfortunatley, the acctcom(1) utility
+only reports the signal number if the job was killed by a signal or a 0 if
+the job was not.  So the actual status code returned by the job script is not
+available for a restarted job.  The cray_jobstatus script is a utility to
+print out the status code reported by acctcom(1) given a cray job id and
+process id.
+
+3. When setting up a checkpointing interface for these scripts in the
+Qmon checkpoint config dialog, the checkpoint commands should be
+identified in the following format.  The names in <> should be filled
+in with the appropriate values.
+
+   <sge_root>/ckpt/<chkpnt_script_name> $job_id $job_pid $ckpt_dir
+
+4. The checkpoint interface scripts log some general information to the file
+$ckpt_dir/ckpt.log
+
+5. The checkpoint files are placed in $ckpt_dir/ckpt.$job_id.  A detailed
+log is available in $ckpt_dir/ckpt.$job_id/ckpt.log. The
+$ckpt_dir/ckpt.$job_id directory is cleaned up in the cleanup_command
+script.
+
+6. These scripts are designed to handle a system failure during checkpointing.
+That is, the latest checkpoint file will not be used for a restart until the
+checkpoint command completes.  If the system fails before the checkpoint has
+completed, the last checkpoint file will be used for restart.
+
+7. The checkpoint files will not be deleted in the cpr_clean_command script
+if either the SGE_LEAVE_CKPT_DIR environment variable is set to a non-null
+string or if the fourth parameter in the clean command for the checkpoint
+configuration is set to the string "save".

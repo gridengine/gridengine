@@ -1,0 +1,152 @@
+#!/bin/csh -f
+#
+# Creates ASCII manual pages in ASCMAN/man/man{1,...} sudirectories from
+# nroff manual pages in SEDMAN/man/man{1,...} subdirectories.
+# The ASCMAN/man/man{1,...} sudirectories are created if they do not exist.
+# Also can create HTML version of the manpages.
+#
+# Requires groff to be installed and accessible.
+#
+# $1 = directory where aimk is installed
+# $2 = "sge" or "sgeee"
+# $3 = 0 or 1 - flag if man pages in ASCII format should be created
+# $4 = 0 or 1 - flag if man pages in HTML format  should be created
+# $5 = 0 or 1 - checkout man pages with "-kv" flag
+#
+
+if ( ! $?CVSROOT ) then
+   echo "CVSROOT must be set"
+   exit 1
+endif
+
+set MANBUILDDIR = $1/MANSBUILD
+
+
+set MANMODE = $2
+set MANASC = $3
+set MANHTML = $4
+set KVMAN = $5
+
+echo "Removing old manpages"
+\rm -rf $MANBUILDDIR
+mkdir -p $MANBUILDDIR
+cd $MANBUILDDIR
+
+if ( $KVMAN == 1 ) then
+   set MANSRCDIR = $MANBUILDDIR/MANSRC
+   echo "Checking out manpage source"
+   cvs -q co -P -kv -d MANSRC gridengine/doc/man
+else
+   set MANSRCDIR = $1/../doc/man
+endif
+
+# 
+# Changes magic strings in the checked-in man page versions into SGE
+# SGEEE, etc. as appropriate.
+# Creates the changed man pages in SEDMAN/man/man{1,...} subdirectories,
+# which are created if they do not exist.
+#
+# Requires sed to be installed and accessible.
+if ( $MANMODE == "sge" ) then 
+   set xxQS_NAMExx = "Grid Engine" 
+   set xxQS_NAME_Cxx = "Grid Engine" 
+   set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
+   set xxqs_namexx = "grid_engine" 
+   set xxQS_NAME_Sxx = "SGE" 
+   set xxqs_name_sxx = "sge" 
+   set xxRELxx = "Grid Engine 5.3"
+else   
+   set xxQS_NAMExx = "Grid Engine Enterprise Edition" 
+   set xxQS_NAME_Cxx = "Grid Engine" 
+   set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
+   set xxqs_namexx = "Grid Engine Enterprise Edition" 
+   set xxQS_NAME_Sxx = "SGEEE" 
+   set xxqs_name_sxx = "sgeee" 
+   set xxRELxx = "Grid Engine Enterprise Edition x.y"
+endif
+
+echo "Building SEDMAN pages"
+foreach n ( 1 5 8 )
+   echo xxxx $MANSRCDIR/man${n}
+   if ( ! -d $MANSRCDIR/man${n} ) then
+      echo "Error: No man${n} subdirectory."
+      exit 1
+   endif
+
+   mkdir -p $MANBUILDDIR/SEDMAN/man/man${n} >& /dev/null
+
+   if ( ! -d $MANBUILDDIR/SEDMAN/man/man${n} ) then
+      echo "Error: Couldn't create subdirectory SEDMAN/man/man${n}."
+      exit 1
+   endif
+  
+   foreach f ( $MANSRCDIR/man${n}/*.${n} )
+      echo Processing $f
+      sed -e "s/xxQS_NAMExx/$xxQS_NAMExx/g" \
+          -e "s/xxqs_namexx/$xxqs_namexx/g" \
+          -e "s/xxQS_NAME_Sxx/$xxQS_NAME_Sxx/g" \
+          -e "s/xxqs_name_sxx/$xxqs_name_sxx/g" \
+          -e "s/xxQS_NAME_EExx/$xxQS_NAME_EExx/g" \
+          -e "s/xxQS_NAME_Cxx/$xxQS_NAME_Cxx/g" \
+          -e "s/xxRELxx/$xxRELxx/g" $f >! $MANBUILDDIR/SEDMAN/man/man${n}/`basename $f`
+   end
+end
+
+
+#
+# process the seded man pages with groff
+#
+if ( "$MANASC" == 1 ) then
+   echo "Building ASCMAN from sedman pages"
+   foreach n ( 1 5 8 )
+      if ( ! -d $MANBUILDDIR/SEDMAN/man/man${n} ) then
+         echo "Error: No SEDMAN/man/man${n} subdirectory."
+         exit 1
+      endif
+
+      mkdir -p $MANBUILDDIR/ASCMAN/man/man${n} >& /dev/null
+
+      if ( ! -d $MANBUILDDIR/ASCMAN/man/man${n} ) then
+         echo "Error: Couldn't create subdirectory ASCMAN/man/man${n}."
+         exit 1
+      endif
+           
+      foreach f ( $MANBUILDDIR/SEDMAN/man/man${n}/*.${n} )
+         echo Processing $f
+         groff -man -t -Tascii $f >! $MANBUILDDIR/ASCMAN/man/man${n}/`basename $f .${n}`
+      end
+   end
+endif
+
+#
+# build html man pages from sedman with man2html 
+#
+if ( "$MANHTML" == 1 ) then
+   echo "Building HTML from sedman pages"
+   foreach n ( 1 5 8 )
+      mkdir -p $MANBUILDDIR/HTMLMAN/htmlman${n}
+      foreach i ($MANBUILDDIR/SEDMAN/man/man${n}/*)
+         echo Processing $i
+         set bn = `basename $i .${n}`
+         # man -M$MANBUILDDIR/SEDMAN/man/ $bn | man2html -solaris > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
+         man -M$MANBUILDDIR/SEDMAN/man/ $bn | man2html -cgiurl '../htmlman$section/$title.html' -solaris > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
+      end
+   end   
+   #
+   # generate an index file 
+   #
+   cp $1/scripts/template.html $MANBUILDDIR/HTMLMAN/index.html 
+   foreach n ( 1 5 8 )
+      echo "<H3>Section $n</H3>" >> $MANBUILDDIR/HTMLMAN/index.html
+      echo '<P><UL>' >> $MANBUILDDIR/HTMLMAN/index.html
+      foreach f ($MANBUILDDIR/HTMLMAN/htmlman${n}/*)
+         set base = `basename $f`
+         set title = `basename $base .html`
+         echo '<LI><A HREF=' >> $MANBUILDDIR/HTMLMAN/index.html
+         echo "htmlman${n}/$base" >> $MANBUILDDIR/HTMLMAN/index.html
+         echo ">$title</A>" >> $MANBUILDDIR/HTMLMAN/index.html 
+      end
+      echo '</UL></P>' >> $MANBUILDDIR/HTMLMAN/index.html
+   end
+   echo '</BODY></HTML>' >> $MANBUILDDIR/HTMLMAN/index.html
+endif

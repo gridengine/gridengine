@@ -1,0 +1,84 @@
+                              MPI 
+                              ---
+              Parallel Environment for Grid Engine
+
+                  (c) 2000 Sun Microsystems, Inc.
+
+
+This directory contains the following files:
+
+              README         - this file 
+   1.         startmpi.sh    - the startup script for MPI
+   2.         stopmpi.sh     - the shutdown script for MPI
+   3.         mpi.template   - a MPI PE template configuration for Grid Engine
+   4.         mpich.template - a MPICH PE template configuration for Grid Engine
+                               (tight integration)
+   5.         mpi.sh         - a sample MPI job
+   6.         mpi_cpi.sh     - another MPI job
+
+Refer to the "Installation and Administration Guide" Chapter "Support
+of Parallel Environments" for a general introduction to the Parallel
+Environment Interface of Grid Engine
+
+1. The starter script 'startmpi.sh' needs some command line arguments, to 
+   be configured by use of either qmon or qconf. The first one is the path
+   to the "$pe_hostfile" that gets transformed by startmpi.sh into a
+   MPI machine file. On successful completion startmpi.sh creates a
+   machine file in $TMPDIR/machines to be passed to "mpirun" at job
+   start.
+
+   $TMPDIR is a temporary directory created and removed by the Grid Engine
+   execution daemon.
+
+2. The stopper 'stopmpi.sh' just removes $TMPDIR/machines.  
+
+3. Use this template as a starting point when establishing a parallel
+   environment for MPI without tight integration. You need to replace
+   <a_list_of_parallel_queues>, <the_number_of_slots> and <your_sge_root>
+   with the appropriate information.
+
+   Grid Engine offers an additional interface which allows a tighter
+   integration with public domain MPI (MPICH). Tighter integration means
+   that all tasks of your MPICH application are under full control of
+   Grid Engine. This is precondition for some additional benefits:
+
+   - full accounting also for all tasks of MPI jobs
+   - resource limits are effective for all tasks
+   - all tasks are started with the appropriate nice value which was
+     configured as 'priority' in the queues configuration
+
+4. Use this template as a starting point when establishing a parallel
+   environment for MPICH with tight integration. You need to replace
+   <a_list_of_parallel_queues>, <the_number_of_slots> and <your_sge_root>
+   with the appropriate information.
+
+   Here is a list of problems for which tight integration provides solutions
+   - resource limits are enforced also for tasks at slave hosts
+   - resource consumption at slave hosts can be accounted
+   - no need to write a customized terminate method to ensure
+     that whole job is finished on qdel
+ 
+   Here is a list of problems which are not solved by the tight integration
+   - can't trigger job finish if application finishes partially
+
+   There are two samples included. You should use these samples to verify
+   that your integration of Grid Engine with MPI/MPICH works correctly.
+
+5. The first job example 'mpi.sh' starts the 'life' program from the mpich
+   distribution using mpirun. Since this program needs the problem dimension
+   to be entered interactively, necessary parameters get piped into 'life'.
+
+   Please note that a MPI job that has to start 'mpirun' with the option
+   
+      -np $NSLOTS
+
+   to start the job with the correct number of slots ($NSLOTS is set by
+   Grid Engine). To pass information where to start the MPI tasks one has to
+   pass
+
+      -machinefile $TMPDIR/machines
+
+   as the second argument.  
+   
+6. The second example is a wrapper to start 'cpi' from the mpich
+   distribution.

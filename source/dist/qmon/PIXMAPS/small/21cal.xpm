@@ -1,0 +1,39 @@
+/* XPM */
+static char *mini-21cal[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16       16            1",
+/* colors */
+". s mask c None",
+"# c #0000fe",
+"a c #000000",
+"b c #ffcc9a",
+"c c #cc9966",
+"d c #ff9966",
+"e c #cb6532",
+"f c #983200",
+"g c #222222",
+"h c #330000",
+"i c #bbbbbb",
+"j c #fecb00",
+"k c #555555",
+"l c #aaaaaa",
+"m c #eeeeee",
+"n c #888888",
+/* pixels */
+"..######aaa.....",
+"..######cbbd....",
+"..######cbbdd...",
+"..bccccccbbaaa..",
+"..bbbffffffffc..",
+"..bbfffffffhgb..",
+"..bbfjfffjfhgc..",
+"..bbhhhhhhhhgc..",
+"..bbmmmmmmmkgc..",
+"..bbmamaammkgc..",
+"..bbmmmnmmmkgc..",
+"..bbmnmmmmmkgc..",
+"..bbmaaaaamkgc..",
+"..bbmmmmmmmkgc..",
+"..bbkkkkkkkkcc..",
+"..aaaaaaaaaaaa.."
+};

@@ -1,0 +1,22 @@
+/* XPM */
+static char * head_open_xpm[] = {
+"16 16 3 1",
+" 	s None	c None",
+".	c cyan",
+"X	c blue",
+"                ",
+"                ",
+"      ...       ",
+"     XXX..      ",
+"    XXXXX..     ",
+"   XXX XXX..    ",
+"  XXX   XXX..   ",
+"  XX     XX..   ",
+"  XXX   XXX..   ",
+"   XXX XXX..    ",
+"    XXXXX..     ",
+"     XXX..      ",
+"                ",
+"                ",
+"                ",
+"                "};

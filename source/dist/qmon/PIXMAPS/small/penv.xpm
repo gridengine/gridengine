@@ -1,0 +1,28 @@
+/* XPM */
+static char *mini-penv[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16        5            1",
+/* colors */
+". c #000000",
+"# c #008080",
+"a c #808080",
+"b c #c0c0c0",
+"c c #b2c0dc",
+/* pixels */
+"cccccccccccccccc",
+"cccccccccccccccc",
+"cccccccccccccccc",
+"cccccccccccccccc",
+"cccccccccccccccc",
+"cb...aaaaaa...cc",
+"aaccb.ccbbcc.ba.",
+"c.ccb.ccbbcc.ccb",
+"cbcccaccbbcabcc.",
+"cb.ccabbabcbbcb.",
+"cc#..aaaaaaba.ab",
+"ccbccccccccccbac",
+"cccccccccccccccc",
+"cccccccccccccccc",
+"cccccccccccccccc",
+"cccccccccccccccc"
+};

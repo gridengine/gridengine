@@ -1,0 +1,318 @@
+
+This README file contains information concerning the Codine/GRD security
+modules.
+
+Codine/GRD Kerberos/DCE Security Modules Overview
+-------------------------------------------------
+	
+The Kerberos / DCE security modules are designed to be called by GRD in
+order to do the following:
+
+   * Forward the user's DCE/Kerberos credentials to the job
+   * Protect the credentials during network transfer (done automatically
+     by DCE and Kerberos)
+   * Authenticate the user
+   * Verify the authenticated user matches the CODINE/GRD user
+
+The security modules consist of three programs which are called by GRD
+client programs and GRD daemons.
+
+get_cred - this program builds a GSSAPI security context and gets the
+user's forwardable credentials, tokenizes them into a buffer and writes
+them to standard output. It is called by qsub, qsh, and qmon when
+submitting jobs. It is also called by cod_qmaster on behalf of the user
+before a job is sent to an execution host.
+
+put_cred - this program accepts a tokenized security context from
+standard input, authenticates the user, verifies that the user is who
+GRD thinks he is, and creates the forwarded credentials for the user.
+The routine also checks to make sure the qsub request is not a replay
+(i.e. a qsub request which was "stolen" and resent by a hacker so he
+could impersonate the user). The put_cred program is called by the
+cod_qmaster and the cod_execd on receipt of a new job. The cod_qmaster
+stores the credentials cache files in /tmp/krb5cc_qmaster_<job_id>. On
+the execution host the credentials cache files are stored in
+/tmp/krb5cc_grd_<job_id>.
+
+delete_cred - this program deletes a set of credentials. Deleting a
+user's credentials means that the user's credentials cache files are
+deleted.  The delete_cred program is called by the cod_qmaster and
+cod_execd when a job completes.
+
+starter_cred - this shell script is used as a shepherd wrapper program
+in a DCE environment. It executes the k5dcelogin program to turn
+the forwarded Kerberos TGT into DCE credentials and then executes
+the cod_shepherd.
+
+These programs can be executed standalone in the following fashion.
+
+  $ setenv KRB5CCNAME FILE:/tmp/krb5cc_test_grd
+  $ get_cred grd > cred.out
+
+  $ put_cred -s grd -u davidson -b davidson < cred.out
+
+  $ delete_cred
+
+How the security modules work
+-----------------------------
+
+  1. qsub/qmon calls get_cred when a job is submitted to get the
+     credentials of the user.  The tokenized credentials are sent back to
+     qsub and are put into the job request.
+
+  2. The qmaster calls put_cred which authenticates the user and stores the
+     forwarded credentials in a credentials cache file.
+
+  3. When a job is sent to an execution host, the qmaster calls get_cred
+     and sends the credentials to the execd.
+
+  4. The execd calls put_cred which stores the credentials in
+     a credentials cache for the user.
+  
+  5. We set the KRB5CCNAME environment variable for the job
+     so it points to the job's credentials cache.
+  
+  6. (DCE-only) The execd spawns starter_cred instead of the shepherd which
+     executes k5dcelogin to convert the Kerberos TGT into valid DCE 
+     credentials and then executes the shepherd program.
+
+  7. When the job completes, execd and qmaster call delete_cred to delete
+     the credentials cache files
+
+
+Building the binaries
+---------------------
+
+First, you must obtain, compile and install the Kerberos libraries for
+each architecture. For a DCE environment, you will also need to compile
+the k5dcelogin program for each execution host architecture. To compile
+and install k5dcelogin, use the commands:
+
+   aimk -dce k5dcelogin
+   aimk install_k5dcelogin
+
+Before using the security modules, you must create and install the
+binaries for each qmaster or execution host architecture upon which
+you will be using DCE/Kerberos security. To create and install the
+security binaries, follow these instructions:
+
+   1. Compile the binaries
+
+       $ cd $CODINE_ROOT/security
+       $ aimk -kerberos
+
+   2. Install the binaries
+
+       # cd $CODINE_ROOT/security
+       # aimk install
+
+DCE / Kerberos Configuration
+----------------------------
+
+DCE or Kerberos must be configured to recognize the "grd" or "codine"
+principal. If you are running GRD, use the "grd" principal. If you
+are running CODINE, use the "codine" principal. The following instructions
+explain how to configure Kerberos or DCE. There may be minor differences
+depending on your version of Kerberos or DCE.
+
+Kerberos Instructions
+---------------------
+
+1. Create a "grd" or "codine" principal for each qmaster and execution
+   host. In the example below sdremote.hpc-mo.com is the qmaster host
+   and o2.hpc-mo.com is an execution host.
+
+   # ./kadmin
+   Enter password:
+   kadmin:  addprinc -randkey grd/sdremote.hpc-mo.com
+   Principal "grd/sdremote.hpc-mo.com@HPC-MO.COM" created.
+   kadmin:  addprinc -randkey grd/o2.hpc-mo.com
+   Principal "grd/o2.hpc-mo.com@HPC-MO.COM" created.
+   kadmin:  quit
+
+2. Put the "grd" or "codine" key into the default keytab on the qmaster
+   and execution hosts. To do this, you need to log into each host
+   individually and execute the following commands substituting the local
+   host name for sdremote.hpc-mo.com.
+
+   # ./kadmin
+   Enter password:
+   kadmin:  ktadd grd/sdremote.hpc-mo.com
+   Entry for principal grd/sdremote.hpc-mo.com with kvno 3, encryption type
+   DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
+   kadmin:  quit
+
+
+DCE Instructions
+----------------
+
+1. Create a "grd" or "codine" principal and server account for each qmaster
+   and execution host. In the example below sdremote.hpc-mo.com is the
+   qmaster host and o2.hpc-mo.com is an execution host.
+
+   # dce_login cell_admin
+   Enter Password: xxxxx
+   # dcecp
+   dcecp> principal create grd/sdremote.hpc-mo.com
+   dcecp> group add none -member grd/sdremote.hpc-mo.com
+   dcecp> organization add none -member grd/sdremote.hpc-mo.com
+   dcecp> account create grd/sdremote.hpc-mo.com -group none -organization none -mypwd xxxxx
+   -password yyyyy 
+   dcecp> principal create grd/o2.hpc-mo.com
+   dcecp> group add none -member grd/o2.hpc-mo.com
+   dcecp> organization add none -member grd/o2.hpc-mo.com
+   dcecp> account create grd/o2.hpc-mo.com -group none -organization none -mypwd xxxxx
+   -password yyyyy 
+
+      where xxxxx is the cell_admin password and yyyyy is a key
+      you make up for the "codine" or "grd" account.
+
+2. Put the "grd" or "codine" key into the default keytab on the qmaster
+   and execution hosts
+
+   dcecp> keytab add /.../<CELL>/hosts/<HOST>/config/keytab/self -member
+   grd/sdremote.hpc-mo.com -key yyyyy -version 1 -nopriv
+   dcecp> quit
+
+   where <CELL> is the local cell name and <HOST> is the local host name. For some
+   DCE versions, you may need to use rgy_edit to update the keytab file
+
+3. If you currently do not run any Kerberos utilities on your DCE system (e.g. rlogin,
+   rcp, telnet) then you may need to set up a few Kerberos configuration files so
+   the Kerberos libraries that the security subprograms use will work correctly.
+
+   a. Make sure /etc/krb5.keytab points to your DCE keytab file. The DCE keytab
+      file is generally /etc/v5srvtab
+
+   b. Make sure you have a valid /etc/krb5.conf file. Something like this should be OK:
+
+        [libdefaults]
+          default_realm = <your_DCE_realm_name>
+          default_tkt_enctypes = des-cbc-crc
+          default_tgs_enctypes = des-cbc-crc
+          ccache_type = 2
+
+        [realms]
+          <your_DCE_realm_name> = {
+            kdc = <your_security_server_hostname>:88
+          }
+
+        [domain_realm]
+          .<your_local_domain> = <your_DCE_realm_name>
+
+      For additional information, see the Kerberos krb5.conf(5) man page.
+
+
+CODINE/GRD Configuration
+------------------------
+
+To use the security sub-programs with CODINE or GRD, you must obtain a CODINE/GRD
+license with the Kerberos or DCE option activated. Contact Gridware for additional 
+information.
+
+Instructions for Codine/GRD spool directories in DFS
+----------------------------------------------------
+
+If you would like to maintain the Codine/GRD spool directories in DFS, then
+the Codine/GRD deamons must run under a DCE identity.  The best way to
+accomplish this is to create a unique DCE account (e.g. "grd_daemon" or
+"codine_daemon") and put the key into the default keytab. To create the
+account, follow the DCE Instructions above substituting the DCE account
+name that you choose for "grd". Once the account is set up, you or the
+DCE administrator can create directories in DFS for use by Codine/GRD. The
+final step is to modify the Codine/GRD startup scripts. The lines which
+start the cod_qmaster, cod_schedd, and cod_execd should be modified to
+use dce_login to start the daemons. For example,
+
+Change:
+
+   /grd/test/bin/osf4/cod_qmaster
+   
+to:
+
+   dce_login grd_daemon -k /krb5/v5srvtab -e /grd/test/bin/osf4/cod_qmaster
+
+To install Codine/GRD into a DFS directory, the user should be running as
+root and with the DCE Codine/GRD deamon identity. The execution daemon
+spool directories should be stored on a local non-DFS file system.
+
+Turning off security
+--------------------
+
+The security modules can be turned "off" globally by including the string
+"NO_SECURITY" in the qmaster_params of the global cluster configuration.
+The security modules can be turned "off" for all or particular execution
+hosts by including the string "NO_SECURITY" in the execd_params of the
+global or host-specific cluster configuration. This can be useful for an
+environment where certain hosts do not support DCE or Kerberos security.
+
+By default, the security modules authenticate that the DCE or Kerberos
+principal is authorized to use the Unix account represented by the user's
+user name on the qmaster host and on the execution hosts.  The
+authentication feature can be turned "off" globally by including the
+string "NO_AUTHENTICATION" in the qmaster_params of the global cluster
+configuration.  The authentication feature can also be turned off for
+all or particular execution hosts by including the string
+"NO_AUTHENTICATION" in the global or host-specific cluster
+configuration. The authentication feature can also be turned on for
+all or particular execution hosts by including the string
+"DO_AUTHENTICATION" in the global or host-specific cluster configuration.
+To turn off authentication on the qmaster host, but turn
+it on for some or all execution hosts, add the string "NO_AUTHENTICATION"
+to the qmaster_params of the global cluster configuration and add the
+string "DO_AUTHENTICATION" to the global or host-specific cluster
+configuration of the execution host(s).
+
+
+Renewing credentials
+--------------------
+
+Credentials can be automatically renewed through the use of the 
+renew_cred script included in the security distribution. In order
+for the script to automatically renew credentials, users must
+initially obtain renewable credentials.  In Kerberos, this can be
+set up as the default, or users can use the "-r" option of the kinit
+command.  The renew_cred script should be executed from the CODINE/GRD
+startup script.
+
+
+Troubleshooting
+---------------
+
+1. When there are problems, you should always check the qmaster and
+execution daemon messages files. The stderr of the security subprograms
+is written to these files.
+
+2. If authentication fails, here are a few things to check.
+
+  A. Make sure the user's credentials are forwardable. If the credentials
+  could not be forwarded, there will be a warning message in the qmaster
+  messages file. You can also have the user do a klist -f and see if
+  the TGT has the forwardable flag set.
+
+  B. Make sure the user's Unix name matches the user's Kerberos or DCE
+  name.  If the names do not match, then the user cannot be authenticated.
+  If there is a valid reason for the mismatching names (e.g. cross-realm
+  authentication), then a .k5login file in the user's home directory can
+  be used to authenticate the user. The .k5login file, which resides in
+  a user's home directory, contains a list of Kerberos principals which
+  can be used to access the user's account. Anyone with valid tickets for
+  a principal in the file is allowed host access with the UID of the user
+  in whose home directory the file resides. Suppose the user "janedoe" had
+  a .k5login file in her home directory containing the following line:
+
+           johndoe@FUBAR.ORG
+
+  This would allow her husband "johndoe" to use CODINE/GRD to access her
+  account. However, in order for this to work, the .k5login file must be
+  accessible by the qmaster deamon running on the qmaster host. If the
+  qmaster host does not have access to the users home directories, then
+  the GRD manager has the option to create "dummy" home directories which
+  simply contain the appropriate .k5login files for the appropriate users.
+  The dummy home directories must be pointed to by the password file
+  (or equivalent) on the qmaster host. To turn off authentication, see
+  the paragraph on "Turning off security"
+  above.
+
+
+

@@ -1,0 +1,12 @@
+// EventClient.idl
+// simple event client for qidl
+
+#ifndef _EventClient_idl
+#define _EventClient_idl
+
+#include <CosEventComm.idl>
+
+interface EventClient : CosEventComm::PushConsumer {
+};
+
+#endif

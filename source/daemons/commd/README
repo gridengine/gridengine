@@ -1,0 +1,731 @@
+Implementation and Usage of COMMD & COMMLIB 
+===========================================
+
+
+Targets:
+-------
+
+Codine needs a communication system which reliable delivers requests
+between components of CODINE. Components are client programs like
+qstat and server processes like qmaster and codine_execd.
+
+In special server processes have special demands to the communication
+system. In case of one threaded serverprocesses as codine
+serverprocesses are the communication has to be serialized and
+processed one after the other. Deadlocks have to be avoided. In
+special there has to be a possibility to avoid Deadlocks between
+serverprocesses communicating with each other.
+
+The communication system should build a layer below the codine core
+system. The Interface should have a small amount of calls and has to
+be organized as library with a headerfile includable for all codine
+components which need communication.
+
+It should be a means of handling failure of components which avoids
+components hanging around and presents descriptive error reports to
+the codine system.
+
+
+Names used in this document:
+
+commproc: (communication process) any process of the codine system
+which does some sort of communication. A commproc is identified by a
+hostname he resides on, a name and an identifier (number). The
+identifiers distinguishs between two components on the same host with
+the same name. This is neccessary for client programms which can be
+used more than once at the same time (qstat, qsub, ...).
+
+commd: (communication daemon) the process representing the
+communication system. This process is some sort of multiplexer for
+communications.
+
+commlib: (communication library) the library each commproc has to be
+linked with in order to do communication.
+
+
+Usage:
+-----
+
+The communication system is represented by a daemon called "commd" and
+a library called "commlib". The communication system can be built with
+a single commd which handles all the traffic. It could be decided at
+setup time to use more than one commd. This has some advantages:
+Commprocs with a local commd (on same host) have a local multiplexer
+which buffers messages. So messages which are allready delivered to
+this host can be fetched very fast (local communication). Vice versa,
+the commproc can forward messages to the commproc and immediately
+handle other things without waiting for the message to be transfered
+to another system. The disadvantage is that there is just another
+component (process) flying around. In further releases there is
+planned to include some sort of message routing including firewall
+support. This can only be handled by a process (commd) on the firewall
+machine handling authentication and delivery.
+
+The commd is a single program which has to be started by the codine
+startup scripts or if it is desirable by a commponent of codine
+(e.g. qmaster). 
+
+If started the commd waits for commprocs or other commds to
+contact. In this situation the commd needs nearly no cpu. Nearly cause
+from time to time it leaves the waiting state and does an internal
+cleanup loop. 
+
+Commd listens on a port for connections. The used port is given
+through:
+
+- the service "commd" (using getservbyname())
+
+- the commandline Parameters -s -p
+
+Commandline parameters overrules the "commd" service. -p overrules -s.
+
+Commd can operate in secure mode. This means there are only
+connections allowed which come from a reserved port
+(0<=port<=1024). To avoid commds beeing rejected by other commds the
+commd port also has to be in the reserved port range.
+
+
+Starting commd:
+
+usage: commd [-s service] [-p port] [-S] [-ml fname] [-ll loglevel] [-nd] [-a aliasfile]
+       -s  use this service for connections from other commds [commd]
+       -p  use this port    for connections from other commds [commd]
+       -S  enable port security
+       -ml message logging to file
+       -ll logging level
+       -nd do not daemonize
+       -a  aliasfile
+
+"-ml" is used for debugging purposes only. Messages are dumped to a file which
+can be analysed by programmers.
+
+"-ll" sets a logging level 0<=ll<=255. 255 = maximal logging. Logging levels are defined in error.h. The ll defaults to LOG_ERROR|LOG_SYSERROR. The commd usually logs to /tmp/commd/err.<pid>.
+
+"-nd" do not daemonize the commd. All logging is displayed on stderr.
+
+"-a aliasfile" specify file containing host aliases
+
+Commd is up:
+
+Once commd is running commprocs can connect to the commd in order to
+communicate with each other.
+
+Controlling the operation of commd:
+
+There are client programms which allow some means of controlling running
+commds.
+
+
+usage: commdcntl [-k | -t level | -d]
+
+commdcntl (communication daemon control program) 
+"-k" kill communication daemon. Not so hard as it sounds. Terminates the commd.
+
+"-t" trace messages as they pass the commd. Commdcntl sends one line
+per message activity to stdout.
+
+"-d" dump state of the commd. Dumps known hosts, commprocs and messages to
+"/tmp/commd/commd.dmp".
+
+
+
+usage: tstsnd [-s] [-w] [-host host] [-commproc name] [-id id] 
+              [-enrollname name] [-enrollid id] [-t timeout]
+       tstsnd -ae hostname name id   name may be any, id=0 means any id
+
+usage: tstrcv [-s] [-host host] [-commproc name] [-id id] [-enroll name] 
+	      [-enrollid id] [-t timeout]
+-s receive synchron (wait until message arrives or TIMEOUT_SRCV happens)
+-t set timeout TIMEOUT_SRCV and TIMEOUT
+TIMEOUT_SRCV is the time we maximal wait in a synchron receive
+TIMEOUT is the time we maximal wait in a read on a communication file desc.
+Specify target: -host host -commproc name -id id
+Enroll with: -enroll name -enrollid id
+
+
+tstsnd and tstrcv can be used to simulate normal client programs. They
+both enroll (enroll()) to the commd at the beginning and unregister
+(leave()) at the end. tstsnd sends a message and tstrcv receives a message.
+
+"-s" do a synchron receive/send. Synchron sending/receiving waits for
+the other side before returning from the communication. A synchron
+send waits for an acknowledge of the receiving commproc. A synchron
+receive waits for the arrival of a message. To limit the time hanging
+in a communication "-t" specifies the upper limit to wait for a
+completion. After waiting the specified time, communication will end
+unsuccessful.
+
+"-enrollname" and "-enrollid" can be used to specify the identifier
+to enroll with.	
+
+"-host", "-commproc" and "-id" specifies the communication partner.
+
+"-w" is used only in case of an asynchron send and means to wait for
+the message to be acknowledged.
+
+"-ae" allows to ask for enrolled commprocs. No message will be sent or
+received.
+
+
+
+The library:
+-----------
+
+The commlib library builds the interface between any process who wants
+to communicate (commproc) and the communication system. tstsnd and
+tstrcv are examples how to use the library.
+
+The library routines all return integers which give information about
+the success of the call. To handle failure the caller can use the
+defined return values which can be found in the library header file
+commlib.h. There is a function returning a pointer to the errorstring
+according to the error value returned.
+
+char *cl_errstr(int n);
+
+n is the returned error coder. The returned pointer points to a static
+area. The caller must not use destructive string funtions to the
+returned pointer.
+
+The "everything fine" return value is defined through CL_OK and is 0
+for the purposes of a simple conditional statement testing for errors.
+
+if ((i=commlibfunc(...))) {
+  printf("We have a nasty error: %s\n", cl_errstr(i));
+  ...
+}
+
+
+Other calls:
+
+(un)register with the library
+
+
+- int enroll(char *name, u_short *id); 
+
+  Tell the library and the responsible commd: "I am".  "name" is the
+  name of the commproc.  "id" is his id. If id is 0 the responsible
+  commd gives us a unique id so that the triple host:name:id is unique.
+
+
+- int leave(void);
+  Say goodbye to the library and the commd.
+
+
+To contact the commd we need the tuple host:port.  
+
+host is given through the environment variable "COMMD_HOST", the
+parameter CL_P_COMMDHOST (see: set_commlib_param() below) and defaults
+to the local host.
+
+The port is given through the environment variable "COMMD_SERVICE" and
+defaults to "commd".
+
+
+
+set library parameters
+
+- int set_commlib_param(int param, int intval, char *strval)
+
+  Possible parameters are: 
+   
+    CL_P_RESERVED_PORT use reserved ports for communication
+
+    CL_P_COMMDHOST set host of commd to contact
+
+    CL_P_TIMEOUT set timeout for communication
+
+    CL_P_TIMEOUT_SRCV set timeout for synchron receive
+
+
+
+Message Transfer
+
+- int send_message(int synchron, char *tocomproc, int toid, char *tohost, 
+                   char *buffer, int buflen, u_long *mid);
+
+  synchron: 
+     wait for delivery of message; This ensures that the receiver has
+     gotten the message and leaves receive_message()
+
+  tocommproc, toid, tohost:
+     specifies the receiver commproc. tocommproc="" -> any name
+     toid=0 -> any commproc
+
+  buffer, buflen:
+     message data and length to transfer
+
+  mid:
+     given by commlib to identify asynchron messages. This is needed
+     for ensuring the delivery of a asynchron message (see:
+     last_ack_message())
+
+
+
+
+- int receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
+                      char **buffer, u_long *buflen, int synchron);
+
+  fromcommproc, fromid, fromhost:
+     Specify sender of message. fromcommproc[0]='\0' -> any sendername; 
+     *fromid=0 -> any senderid; fromhost[0]='\0' -> any senderhost
+
+     All 3 parameters are filled on return with the actual data of the
+     sender.
+
+  buffer, buflen:
+     "receive_message()" allocates the buffer containing the message
+     and returns the length in buflen. The caller has to free the buffer.
+
+  synchron:
+     If set receive_message() waits for a message to arive. The
+     Parameter CL_P_TIMEOUT_SRCV decides how long to wait maximal.
+
+
+- int last_ack_message(u_long *mid)
+
+  Returns the message id (mid) of the last acknowledged asynchron
+  message. This allows the sender to send a message do s.th. and then to
+  look whether his message arrived at the receiver. It is not possible
+  to send 2 messages asynchron and then call last_ack_message() because
+  the acknowledge for the first message may be overwritten by the
+  acknowledge of the second message.
+
+
+Information
+
+
+- unsigned int ask_commproc(char *host, char *commprocname, 
+                            u_short commprocid);
+
+  Look whether commproc is enrolled. The same wildcard behavior as
+  used by send_message is applied.
+
+  returns 0 if everything goes fine and the commproc we ask about is enrolled
+  returns CL_UNKNOWN_RECEIVER if commproc is not enrolled
+  returns errorcode on error
+
+
+Control
+
+  This call should not be used by normal applications using the
+  communication system. It is for control and debugging usage only
+  (see: commdcntl).
+
+- int cntl(u_short cntl_operation, u_long arg);
+
+  The caller need not call enroll() before cntl()
+
+  cntl_operation:
+
+    O_KILL   Terminate commd
+    O_TRACE  Trace messages as they come and go to stdout
+    O_DUMP   Tell commd to dump his datastructures to "/tmp/commd/commd.dump"
+
+
+Resolving
+
+- int getuniquehostname(char *hostin, char *hostout, int refresh_aliases)
+
+  Get the unique hostname for a given hostname. Before comparing hostnames
+  a commproc should use this function to get the main name for a host. These
+  main name will be returned by any commlib function returning hosts. So if a
+  commproc gets a message via a receive_message() it gets the main name for
+  the sender host. If this sender host has to be compared with a locally
+  given name getuniquehostname() has to be called for the locally given
+  hostname.
+
+  If refresh_aliases == 1 the commd tries to read its aliasfile and adds
+  aliases found in this file.
+
+
+IMPLEMENTATION:
+--------------
+
+1. COMMD Datasstructures
+
+The Commd is the central component of the communication system. He
+needs some data to hold in order to provide services to the commprocs.
+
+
+a. HOSTS
+
+First he has to know about hosts. What commprocs know about hosts are
+just names. In order to communicate with other hosts over networks
+these names have to be converted to network addresses. This process is
+called resolving. There are several mechanisms in Unix Networks to
+handle this tasks. The interface to these are given by 2 functions:
+gethostbyname() and gethostbyaddr(). Both functions return a
+hoststructure. But what is exactly delivered to the caller debends on
+the implementation of the resolver library, the system used for
+resolving and the configuration done by system administrators. The
+host structure contains a primary name for the host asked about and a
+list of aliases. Also a list of network addresses is returned. 
+
+- First problem is the primary name. NIS and /etc/host are
+casesensitive DNS is not. This is a problem for comparing hosts using
+their names. Related to this problem is, that some hosts (esp. AIX)
+return different primary names depending on the input given to
+gethostbyname().
+
+- Local Hostnames: gethostname() returns the name of the local
+host. This hostname can be with or without domain and can be in lower
+case letters or in upper ones.
+
+- Different names on different machines: An Administrator of a network
+is free in assigning names to hosts. He e.g. can name a host on one
+machine "fileserver" on the other machine the same host is known as
+"printserver".
+
+- Same name for two hosts. E.g. names like "printserver" may be used
+on different hosts of the same domain for identifying different
+hosts. This is no good way to handle printer delegation but may be
+used.
+
+- More than one IP-Address per Host. A Unix host is not limited to a
+single interface. Handling more than one interfaces can be done
+different by the administrator. If he uses DNS he can assign more
+than one ipaddress to a hostname. Thus a gethostbyname returns a
+structure containing more than one ipaddress. In /etc/hosts and NIS
+there is no such possibility. Administrators using /etc/hosts and NIS
+give hosts with more than one interface one name per Interface. Thus
+there is no possibility to identify the hostnames of the two
+interfaces as belonging to the same host.
+
+
+Steps taken to take these things into account:
+
+commd ensures to only give one name for a hosts to a comproc. So the
+commproc can do a simple strcmp to compare hosts. Upper/Lower case
+problems are ignored. It is not possible to distinguish between upper
+and lower case hostnames. 
+
+The commd can be started with an aliasfile. If a message with an
+aliased hostname passes through commd, commd translates the name to
+the main hostname. The aliasfile looks like this:
+
+hostname alias1 alias2 ...
+...
+
+If commd encounters problems reaching a host or resolving a host the
+aliasfile will be checked for changes.
+
+There will be a call implemented in commd to get the main hostname for
+a given alias:
+
+int getuniquehostname(char *hostin, char *hostout, int refresh_aliases)
+
+This allows a commproc to compare a locally generated hostname with a
+hostname gotten from commd.  
+
+refresh_aliases allows the commproc to force the commd reading his
+aliases again. This is for the case the commproc encountered a problem
+and wants to ensure to have the actual alias settings.
+
+
+The commd contains a host-module host.c/host.h which handles all things
+concerning hosts. 
+
+
+host.h:
+
+typedef struct host {
+    struct hostent he;
+    struct host *alias;		/* chain aliases */
+    struct host *next;
+} host;
+
+extern host *localhost;
+
+void host_initialize(void);
+
+host *newhost_addr(char *addr);
+host *newhost_name(char *name);
+host *create_host(void);
+
+void delete_host(host *h);
+
+host *search_host(char *name, char *addr);
+
+int alias_host(host *h1, host *h2);
+int alias_hoststr(char *host1, char *host2);
+int read_aliasfile(char *fname);
+
+void print_host(host *, FILE *fp);
+void print_hostlist(FILE *fp);
+
+
+Before doing anything with hosts host_initialze() has to be called. This
+sets up e.g. localhost. There are routines for adding hosts
+newhost_addr()/newhost_name() which both call create_host() which allocates
+and links a hoststructure in the static host list. delete_host() let you
+get rid of hosts no longer needed. search_host() provides search
+functionality. The parameters "name" and/or "addr" can be NULL. In this
+case they are ignored for searching. The host returned is always the main
+host in case an aliased hosts is searched for. alias_host() is the low
+level function aliasing two hosts. alias_hoststr uses alias_host() to make
+an alias using host names not pointers to host structures. read_aliasfile()
+reads the file "fname" and calls alias_hoststr for every pair of hosts to
+alias. The aliasfile has a mainname at the start of each line and a list of
+aliases following the main name seperated by blanks. print_... can be used
+to print hosts and the hostlist.
+
+
+b. COMMPROCS
+
+The commd has to maintain a list of commprocs enrolled in order to do
+message delivery. This also can be used by other commprocs (on other hosts)
+to ensure a given commproc is alive. The commproc structure is created when
+a commproc enrolls and will be deleted when the commproc does a leave. An
+implicit leave() is done when the commproc notices a broken
+connection. Other commprocs trying to send to the died commproc will be
+rejected. There is a timeout for commproc structures. This is to ensure a
+commproc who died in a situation where there is no connection to the commd
+can be cleaned up. The timeout takes place when there is no communication
+done by the commproc for a longer time. So commprocs who are designed to
+enroll and then communicate very seldom has to be prepared of beeing no
+longer enrolled. They can handle this by enrolling again periodically. Or
+if they are not contacted by other commprocs they just enroll before they
+communicate and then do a leave immediately in order to save space in the
+commd.
+
+commproc.h:
+
+#define COMMPROC_TIMEOUT 3600
+
+/* Structure used to maintain a list of known communication processes.
+   Also used for addressing a communication process */
+
+typedef struct commproc {
+  char name[MAXCOMPONENTLEN];
+  host *host;                /* pointer to host entry this commproc lives on */
+  u_short id;			/* identifier of this commproc */
+
+  /* if commproc is waiting for a message the following describes the wait
+     conditions */
+  int w_fd;			/* fd commproc is waiting on */
+  char w_name[MAXCOMPONENTLEN];	/* commproc name we wait for */
+  host *w_host;			/* pointer to hostentry we wait for */
+  u_short w_id;			/* commprocid we are waiting for */
+
+  u_long last_ack_mid;		/* mid of last acknowledged message */
+  u_long lastaction;		/* for timeout of commproc enroll */
+
+  /* next commproc in list */
+  struct commproc *next;
+} commproc;
+
+commproc *match_commproc(commproc *to);
+commproc *add_commproc(void);
+commproc *search_commproc(char *, char *name, u_short id);
+commproc *search_commproc_waiting_on_fd(int fd);
+void delete_commproc(commproc *commp);
+void delete_commproc_fd(int fd, char *name);
+int setcommprocid(commproc *new, u_short wanted);
+int match2commprocs(commproc *a, commproc *b);
+void print_commproc(commproc *commp, FILE *fp);
+void print_commprocs(FILE *fp);
+void commproc_touch(commproc *commp);
+void look4timeouts(u_long now);
+
+
+The commproc structure holds the information for a commproc enrolled at the
+commd. An commproc can be identified by his name, a pointer to the
+hoststructure of the host the commproc (not neccessary the commd) lives on
+and an unique id for the commproc.
+
+The w_... fields describe a wait situation for the commproc. The are made
+up by a complete identifier for another commproc (wildcards possible) and a
+filedescriptor the commproc is waiting on (of course the fd is a commd fd).
+If the commproc dies in a waiting situatiuon. The commd will notice this
+and will do an implicit leave for this commproc. 
+
+last_ack_mid holds the message id of the last acknowledged message this
+commproc has sent. 
+
+lastaction contains the timestamp of the last action of this commproc. This
+is used to timeout commproc structures. Timeout doesnot take place if the
+commproc is in a waitcondition (commd would notice if the commproc dies).
+
+
+Functions:
+
+Creating an chaining a commproc is done via add_commproc(). Deletion is
+done by delete_commproc() or delete_commproc_fd().
+
+Searching for commprocs in the static commproc list is done via
+match_commproc(commproc *to), search_commproc(char *, char *name, u_short
+id) or search_commproc_waiting_on_fd(int fd)
+
+Comparing of commprocs including wildcard match can be done (also used by
+search functions) with match2commprocs(commproc *a, commproc *b).
+
+setcommprocid(commproc *new, u_short wanted) finds an unused id for a
+commproc.
+
+Printing is done by
+void print_commproc(commproc *commp, FILE *fp) and
+void print_commprocs(FILE *fp);
+
+Timeout handling:
+
+commproc_touch(commproc *commp) sets the time stamp to the actual time.
+look4timeouts(u_long now) deletes timed out commprocs.
+
+
+
+2. Communication done by commd
+------------------------------
+
+Commd always is waiting for incoming connections on a port given by service
+or by commandline switch. This is done by a select() system call for the
+following reasons:
+
+- Commd can have more than one communication opened at a time.
+
+- "select" provides a timeout parameter which allows commd to periodically
+  do some jobs without busy waiting.
+
+The idle state of commd is to hang in a select waiting for communication or
+for a timeout.
+
+
+
+If a commproc has to send a message to another commproc the following will
+happen:
+
+- select returns marking the socket filedescriptor (sfd) assigned to the
+  commd port active.
+
+- commd enters its routine mknewconnect() in order to open the connection
+
+- an "accept()" is done to open the connection. The newly created sfd is
+switched to non blocking state.
+
+- a new message struct will be created in order to handle the state of the
+communication. The message is set to the initial state.
+
+- the main loop starts at the beginning doing a select
+
+
+All further steps can be done in chunks. That means if a communication can
+not be done immediately the control flow always returns to the select()
+marked ther concerning sfds as possible to communicate. If s.th. can be
+done on the sfd select returns, commd looks at the state of the
+corresponding message and continues doing what he tried before
+communication blocks.
+
+So lets continue the example of the sending commproc.
+
+- select returns indicating that there is s.th. to receive from the commproc
+
+- commd enters readfromfd()
+
+- if no blocking condition occurs this routine runs from start to the end
+in one run. If s.th. blocks the function will be reentered.
+
+- the state of the corresponding message is looked up
+
+- read_message_prolog reads the message prolog containing flags, headerlen
+and bufferlen.
+
+Message sending is done in two parts (message prolog and message itself)
+because of the variable length of messages. The receiver has to exactly
+know how much he has to receive in order to handle errors in connections
+and to malloc memory appropriate. So a fixed size part is sent first
+containing the length of the remainder of the message.
+
+- commd allocates the neccesary memory to receive the whole message
+
+- read_message() reads the remainder of the message (also, this not
+neccesary is done in one step)
+
+- process_received_message() is called. This is the scheduling function
+deciding what to do with reeived messages. Implementing new requests to the
+commd shoul be handled inside this function. Also it is a separator in the
+live of a message. After this routine a message may change state from a
+receive state to a send state.
+
+- process_received_message() first looks whether this is a normal message
+(all requests to commd are done via messages, so there are some other
+message types). Then it sets the message state to S_WRITE_ACK_SND for
+asynchron messages and S_RDY_4_SND for synchron messages. Asynchron
+messages are acknowledged immediately and the connection to the sender is
+closed. Synchron messages are hold locally until an acknowledge arrives and
+the acknowlege is forwarded to the sender.
+
+Assume this is a synchron message.
+
+- init_send() is called
+
+- init_send decides whether this message has to be forwarded to another
+host or can be delivered to a commproc on the local host. There are several
+ways to proceede:
+
+a: delivery to local host receiver not enrolled or not waiting
+   -> keep message until sender run into an timeout or receiver fetches message
+
+b: delivery to local host receiver enrolled and waiting
+   -> insert receivers fd to message struct; call deliver_message()
+
+c: delivery via remote commd
+   -> call open_connection() in order to establish a connection to the
+      remote commd
+
+Assume this is a local delivery to an enrolled and waiting commproc (a)
+
+
+- deliver_message() is called for local delivery (also called for delivery
+to a remote commd).
+
+- deliver_message() prepares the message for delivery. The prolog and the
+header is set appropriate. Message state now is S_ACK_THEN_PROLOG.
+
+- a positive acknowledge is sent to the receiver (a negative acknowledge
+would have been sent earlier to the receiver if s.th. went wrong with the
+receive request).
+
+- the prolog will be sent to the receiver
+
+- the remaining message will be sent to the receiver
+
+- commd waits for an acknowledge from the receiver
+
+- commd sends an ack to the sender
+
+- the message will be deleted if nothing is to do else idle state is
+reached
+
+
+
+Now let's look at the receiver:
+
+
+- everything went the same as done by the sender until process_received_message() is called
+
+- process_received_message() recognizes that this is a receive request
+
+- if there is a message ready for receive, the request message is deleted
+communication proceeds with the found message. deliver_message() is
+called. Further processing is handled as described above.
+
+- if there is no message available and it is a asynchron receive request an negative acknowledge will be sent to the receiver
+
+- if there is no message available and it is a synchron receive request the
+wait condition and the sfd is stored in the commproc structure of the
+receiver. The communication blocks the receiver until a message arives or
+his timeout will be reached. If his timeout is reached he closes the
+connection and commd cleans the wait condition stored in the receivers
+commproc. Also the sfd is closed.
+
+- if there will be a message available during the wait condition of the
+receiver is set processing continues as described above
+
+
+
+Special requests:
+
+Special requests are requests from a commproc to the responsible commd. The
+are sent like messages to the commd. process_received_message() does the
+handling of these requests and sends back acknowledge to the commprocs.
+E.g. enroll() done by a commproc generates a special request.

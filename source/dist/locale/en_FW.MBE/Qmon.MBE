@@ -1,0 +1,33 @@
+Qmon*foreground:  red
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! This fonts are added for the MBE tests
+!! Either copy it to your .Xdefaults file and do
+!! xrdb -merge 
+!! or copy the $GRD_ROOT/qmon/Qmon file to $HOME and
+!! replace the corresponding fonts sections, below is
+!! an example, the mbe font sizes may destroy the queue 
+!! icon display
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! MBE fonts start (remove the !! below)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ Qmon*FontList: $interface
+_FontLists_*interface: \
+    -*-medium-r-*--14*=R,\
+    -*-bold-r-*--14*=B,\
+    -*-medium-i-*--14*=I,\
+    -*-bold-i-*--14*=BI,\
+    -*-bold-r-*--16*=BIG,\
+    -*-bold-r-*--18*=HUGE,\
+    -*-medium-r-*--10*=SMALL,\
+    -*-medium-r-*--12*=LIST,\
+    -*-bold-r-*--14*=LISTBOLD,\
+    -*-medium-r-*-*14*=LISTSMALL
+
+ _FontLists_*dialog_font:         -*-medium-r-*--14*:
+ _FontLists_*matrix_font:         -*-medium-r-*--14*:
+ _FontLists_*browser_font:        -*-medium-r-*--14*:
+ _FontLists_*fixed_font:          -*-medium-r-*--14*:
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! MBE fonts end
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+

@@ -1,0 +1,118 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://www.gridengine.sunsource.net/license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+#include <string.h>
+
+#include "sge_jobL.h"
+#include "sge_jataskL.h"
+#include "job_log.h"
+#include "job.h"
+#include "mail.h"
+#include "sge_prognames.h"
+#include "sge_me.h"
+#include "sge_rangeL.h"
+
+
+extern lList *Master_Job_List;
+
+/**********************************************************************
+*/
+lListElem *search_task(
+u_long32 jataskid,
+lListElem *job 
+) {
+   return job?lGetSubUlong(job, JAT_task_number, jataskid, JB_ja_tasks):NULL;
+}
+
+/**********************************************************************
+  return
+    ==JTYPE_JOB          -  job is a real job
+    ==JTYPE_JOB_ARRAY    -  job is job array
+ */
+int is_array(
+lListElem *job 
+) {
+   return lGetList(job, JB_ja_structure) ? JTYPE_JOB_ARRAY : JTYPE_JOB;
+}
+
+/***********************************************************************/
+int get_ja_task_ids(
+lListElem *job,
+u_long32 *start,
+u_long32 *end,
+u_long32 *step 
+) {
+   lListElem *elem1;
+
+   if ((elem1 = lFirst(lGetList(job, JB_ja_structure)))) {
+      *start = lGetUlong(elem1, RN_min);
+      *end = lGetUlong(elem1, RN_max);
+      *step = lGetUlong(elem1, RN_step) ? lGetUlong(elem1, RN_step) : 1;
+   }
+   else {
+      *start = *end = 0; 
+      *step = 1;
+   }
+   return 1;
+}
+
+
+#if 0
+
+/**********************************************************************
+ Log a whole job. I dont put it in job_log, cause I dont want to
+ include all stuff.
+
+ Give useful informations (not too much)
+ */
+int job_log_alljobs()
+{
+   char str[256];
+   lListElem *jep; 
+
+   job_log(0, "printing a list of all known jobs", 
+           prognames[me.who], me.unqualified_hostname);
+   for_each(jep, Master_Job_List) {
+      lListElem* ja_task;
+      
+      for_each (ja_task, lGetList(jep, JB_ja_tasks)) {
+         sprintf(str, MSG_LOG_SCRIPTSTATEOWNER_SUS,
+                  lGetString(jep, JB_script_file), u32c(lGetUlong(ja_task, JAT_state)), 
+                  lGetString(jep, JB_owner));
+         job_log(lGetUlong(jep, JB_job_number), str, prognames[me.who], 
+                 me.unqualified_hostname);
+      }
+   }
+
+   return 0;
+}
+
+#endif

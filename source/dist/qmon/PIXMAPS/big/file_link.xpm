@@ -1,0 +1,23 @@
+/* XPM */
+static char *file_link[] = {
+	"16 16 3 1",
+	". c grey90   m white g4 grey90",
+	"b c black m black g4 black",
+	"r c red   m white g4 grey70",
+	"................",
+	"................",
+	"................",
+	"..bbbbb.........",
+	".brrrrrb........",
+	".brrrrrrb...b...",
+	"..bbbrrrb...bb..",
+	".....brrrbbbbrb.",
+	".....brrrrrrrrrb",
+	"......brrrrrrrrb",
+	".......bbbbbbrb.",
+	"............bb..",
+	"............b...",
+	"................",
+	"................",
+	"................",
+};	

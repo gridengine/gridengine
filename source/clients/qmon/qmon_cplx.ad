@@ -1,0 +1,267 @@
+!!___INFO__MARK_BEGIN__
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!!  The Contents of this file are made available subject to the terms of
+!!  the Sun Industry Standards Source License Version 1.2
+!!
+!!  Sun Microsystems Inc., March, 2001
+!!
+!!
+!!  Sun Industry Standards Source License Version 1.2
+!!  =================================================
+!!  The contents of this file are subject to the Sun Industry Standards
+!!  Source License Version 1.2 (the "License"); You may not use this file
+!!  except in compliance with the License. You may obtain a copy of the
+!!  License at http://www.gridengine.sunsource.net/license.html
+!!
+!!  Software provided under this License is provided on an "AS IS" basis,
+!!  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+!!  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+!!  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+!!  See the License for the specific provisions governing your rights and
+!!  obligations concerning the Software.
+!!
+!!  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+!!
+!!  Copyright: 2001 by Sun Microsystems, Inc.
+!!
+!!  All Rights Reserved.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!___INFO__MARK_END__
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Complex Configuration
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*qmon_cplx.xmtChildren:  unmanaged XmtLayout cplx_layout;
+
+Qmon*qmon_cplx.cplx_layout.autoUnmanage:  False
+Qmon*qmon_cplx.cplx_layout.dialogTitle:  @{QMON +++ Complex Configuration}
+
+Qmon*qmon_cplx.cplx_layout.xmtChildren: \
+   XmPushButton   cplx_main_link; \
+   XmScrolledText   cplx_attributes_title; \
+   XmScrolledText   cplx_attributes; \
+   XmScrolledList cplx_names; \
+   XmPushButton   cplx_delete, cplx_add, cplx_modify, cplx_done, cplx_help;
+
+Qmon*qmon_cplx.cplx_layout.layout: \
+   Fixed Shadowed Out 4 2 LREvenSpaced Row cplxconfig_title { \
+      Fixed Centered cplx_main_link \
+      Centered Color "$title_fg" "@{@fBComplex Configuration}" \
+   } \
+   # \
+   Stretchable Row { \
+      Caption tl "@{Complexes}" 2 in cplx_names \
+      Stretchable Etched Through Caption tc "@{Attributes}" Col { \
+         Fixed 4 in cplx_attributes_title \
+         Stretchable cplx_attributes \
+      } \
+      Fixed Shadowed Col { \
+         Fixed cplx_add \
+         Fixed cplx_modify \
+         Fixed cplx_delete \
+         Fixed cplx_done \
+         Fixed cplx_help \
+      } \
+   }
+
+Qmon*qmon_cplx.cplx_layout*scrollBarDisplayPolicy:          AS_NEEDED
+Qmon*qmon_cplx.cplx_layout*listSizePolicy:                  CONSTANT
+
+Qmon*cplx_layout*cplx_main_link.labelType:          PIXMAP
+Qmon*cplx_layout*cplx_main_link.labelPixmap:        logo
+Qmon*cplx_layout*cplx_main_link.shadowThickness:    1
+Qmon*cplx_layout*cplx_main_link.highlightThickness: 0
+Qmon*cplx_layout*cplx_main_link.marginHeight:       0
+Qmon*cplx_layout*cplx_main_link.marginWidth:        0
+
+Qmon*qmon_cplx.cplx_layout.cplx_delete.labelString:     @{Delete}
+Qmon*qmon_cplx.cplx_layout.cplx_add.labelString:        @{Add}
+Qmon*qmon_cplx.cplx_layout.cplx_modify.labelString:     @{Modify}
+Qmon*qmon_cplx.cplx_layout.cplx_done.labelString:       @{Done}
+Qmon*qmon_cplx.cplx_layout.cplx_help.labelString:       @{Help}
+
+Qmon*qmon_cplx.cplx_layout*XmScrollBar.showArrows: False
+
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.fontList:    $dialog_font
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.rows:        1
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.columns:     75
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.editable:    False
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.editMode:    MULTI_LINE_EDIT
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.cursorPositionVisible: False
+!Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.scrollHorizontal: False
+!Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.scrollVertical: False
+Qmon*qmon_cplx.cplx_layout*cplx_attributes_title.resizeWidth: True
+
+Qmon*qmon_cplx.cplx_layout*cplx_attributes.fontList:    $dialog_font
+Qmon*qmon_cplx.cplx_layout*cplx_attributes.rows:        10
+Qmon*qmon_cplx.cplx_layout*cplx_attributes.columns:     75
+Qmon*qmon_cplx.cplx_layout*cplx_attributes.editable:    False
+Qmon*qmon_cplx.cplx_layout*cplx_attributes.editMode:    MULTI_LINE_EDIT
+!Qmon*qmon_cplx.cplx_layout*cplx_attributes.scrollVertical: False
+Qmon*qmon_cplx.cplx_layout*cplx_attributes.cursorPositionVisible: False
+
+
+Qmon*qmon_cplx.cplx_layout*cplx_names.selectionPolicy:  BROWSE_SELECT
+Qmon*qmon_cplx.cplx_layout*cplx_names.visibleItemCount: 8
+
+Qmon*qmon_cplx.cplx_layout.cplx_help.activateCallback:   XmtHelpDisplayContextHelp(self);
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*cplx_ask_shell.xmtChildren: unmanaged XmtLayout cplx_ask_layout;
+
+Qmon*cplx_ask_shell.cplx_ask_layout.autoUnmanage: False
+Qmon*cplx_ask_shell.cplx_ask_layout.dialogTitle:  @{QMON +++ Complex Add/Modify}
+Qmon*cplx_ask_shell.cplx_ask_layout.XmtInputField.marginWidth:      2
+Qmon*cplx_ask_shell.cplx_ask_layout.XmtInputField.marginHeight:     2
+Qmon*cplx_ask_shell.cplx_ask_layout*fontList:     $dialog_font
+
+Qmon*cplx_ask_layout*columns: 14
+
+Qmon*cplx_ask_shell.cplx_ask_layout.xmtChildren: \
+   CX_TypeMatrix  cplx_ask_mx; \
+   InputField     cplx_ask_name; \
+   InputField     cplx_ask_aname, \
+                  cplx_ask_ashort, \
+                  cplx_ask_adefault, \
+                  cplx_ask_avalue; \
+   XmtChooser     cplx_ask_atype, \
+                  cplx_ask_arel, \
+                  cplx_ask_aconsumable, \
+                  cplx_ask_areq; \
+   XmPushButton   cplx_ask_ok, cplx_ask_cancel, cplx_ask_add, \
+                  cplx_ask_del, cplx_ask_load, cplx_ask_save;
+
+Qmon*cplx_ask_layout.layout: \
+   Row { \
+      Col { \
+         Fixed Centered Caption l "@{@fBName of Complex}  " cplx_ask_name \
+         # \
+         Etched Through Caption tc "@{@fB Attributes} " Col { \
+            Fixed Row { \
+               FlushTop Caption tl "@{Name}" cplx_ask_aname \
+               FlushTop Caption tl "@{Shortcut}" cplx_ask_ashort \
+               Centered Caption tl "@{Type}" cplx_ask_atype \
+               FlushTop Caption tl "@{Value}" cplx_ask_avalue \
+               Centered Caption tl "@{Relation}" cplx_ask_arel \
+               Centered Caption tl "@{Requestable}" cplx_ask_areq \
+               Centered Caption tl "@{Consumable}" cplx_ask_aconsumable \
+               FlushTop Caption tl "@{Default}" cplx_ask_adefault \
+            } \
+            Etched Top Centered Row { \
+               cplx_ask_mx \
+               Fixed Even Equal Col { \
+                  cplx_ask_add \
+                  cplx_ask_del \
+                  cplx_ask_load \
+                  cplx_ask_save \
+               } \
+            } \
+         } \
+      } \
+      Shadowed Col { \
+         Fixed cplx_ask_ok \
+         Fixed cplx_ask_cancel \
+         <> \
+      } \
+   }
+
+Qmon*cplx_ask_layout.cplx_ask_name.columns: 40
+
+Qmon*cplx_ask_layout.cplx_ask_name.navigationType:         TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_aname.navigationType:        TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_ashort.navigationType:       TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_atype.navigationType:        TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_avalue.navigationType:       TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_arel.navigationType:         TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_areq.navigationType:         TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_aconsumable.navigationType:  TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_adefault.navigationType:     TAB_GROUP
+
+Qmon*cplx_ask_layout.cplx_ask_add.navigationType:          TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_del.navigationType:          TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_load.navigationType:         TAB_GROUP
+Qmon*cplx_ask_layout.cplx_ask_save.navigationType:         TAB_GROUP
+
+Qmon*cplx_ask_layout.cplx_ask_ok.labelString:     @{Ok}
+Qmon*cplx_ask_layout.cplx_ask_cancel.labelString: @{Cancel}
+Qmon*cplx_ask_layout.cplx_ask_add.labelString:    @{Add}
+Qmon*cplx_ask_layout.cplx_ask_del.labelString:    @{Delete}
+Qmon*cplx_ask_layout.cplx_ask_load.labelString:   @{cplx.Load}
+Qmon*cplx_ask_layout.cplx_ask_save.labelString:   @{Save}
+
+Qmon*cplx_ask_layout.cplx_ask_add.activateCallback: ComplexAttributeAdd(*cplx_ask_mx);
+Qmon*cplx_ask_layout.cplx_ask_del.activateCallback: ComplexAttributeDelete(*cplx_ask_mx); 
+Qmon*cplx_ask_layout.cplx_ask_load.activateCallback: ComplexAttributeLoad();
+Qmon*cplx_ask_layout.cplx_ask_save.activateCallback: ComplexAttributesSave();
+
+
+Qmon*cplx_ask_layout*cplx_ask_mx.xmtChildren: unmanaged XmtPopupMenu cplx_ask_menu;
+Qmon*cplx_ask_layout*cplx_ask_mx*cplx_ask_menu.menuPost: <Btn3Down>
+
+Qmon*cplx_ask_layout*cplx_ask_mx*cplx_ask_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] ComplexAttributeDelete(*cplx_ask_mx);
+
+
+Qmon*cplx_ask_layout*cplx_ask_mx.rows:         7
+Qmon*cplx_ask_layout*cplx_ask_mx.visibleRows:  7
+Qmon*cplx_ask_layout*cplx_ask_mx.columns:      8
+Qmon*cplx_ask_layout*cplx_ask_mx.columnWidths: 15,10,15,10,10,10,10,15
+Qmon*cplx_ask_layout*cplx_ask_mx.maxLengths:   100,100,100,100,10,10,10,100
+Qmon*cplx_ask_layout*cplx_ask_mx.columnLabels: @{Name}, @{Shortcut}, @{Type}, @{Value}, @{Relation}, @{Requestable}, @{Consumable}, @{Default}
+Qmon*cplx_ask_layout*cplx_ask_mx.boldLabels:          True
+!Qmon*cplx_ask_layout*cplx_ask_mx.evenRowBackground:   $matrix_even_bg
+!Qmon*cplx_ask_layout*cplx_ask_mx.oddRowBackground:    $matrix_odd_bg
+Qmon*cplx_ask_layout*cplx_ask_mx.gridType:            GRID_CELL_SHADOW
+Qmon*cplx_ask_layout*cplx_ask_mx.cellShadowType:      SHADOW_IN
+Qmon*cplx_ask_layout*cplx_ask_mx.cellShadowThickness:   1
+
+Qmon*cplx_ask_layout*cplx_ask_mx.translations:   #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:  SelectCell(toggle)\n\
+         <Btn1Down>:   SelectCell(begin)\n\
+         Ctrl<Btn2Down>: ResizeColumns()
+Qmon*cplx_ask_layout*cplx_ask_mx.clip.translations: #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:  SelectCell(toggle)\n\
+         <Btn1Down>:   SelectCell(begin)\n\
+         Ctrl<Btn2Down>: ResizeColumns()
+
+Qmon*cplx_ask_layout.cplx_ask_atype.ChooserType:        ChooserOption
+Qmon*cplx_ask_layout.cplx_ask_atype.alignment:         ALIGNMENT_CENTER
+Qmon*cplx_ask_layout.cplx_ask_atype.strings:  \
+   "@{INT}", \
+   "@{STRING}", \
+   "@{TIME}", \
+   "@{MEMORY}", \
+   "@{BOOL}", \
+   "@{CSTRING}",\
+   "@{HOST}", \
+   "@{DOUBLE}"
+
+Qmon*cplx_ask_layout.cplx_ask_areq.ChooserType:        ChooserOption
+Qmon*cplx_ask_layout.cplx_ask_areq.alignment:         ALIGNMENT_CENTER
+Qmon*cplx_ask_layout.cplx_ask_areq.strings:  \
+   "@{NO}", \
+   "@{YES}", \
+   "@{FORCED}"
+
+Qmon*cplx_ask_layout.cplx_ask_aconsumable.ChooserType:        ChooserOption
+Qmon*cplx_ask_layout.cplx_ask_aconsumable.alignment:         ALIGNMENT_CENTER
+Qmon*cplx_ask_layout.cplx_ask_aconsumable.strings:  \
+   "@{NO}", \
+   "@{YES}"
+
+
+Qmon*cplx_ask_layout.cplx_ask_arel.ChooserType:        ChooserOption
+Qmon*cplx_ask_layout.cplx_ask_arel.alignment:         ALIGNMENT_CENTER
+Qmon*cplx_ask_layout.cplx_ask_arel.strings:  \
+   "==", \
+   ">=", \
+   ">", \
+   "<", \
+   "<=", \
+   "!="

@@ -1,0 +1,28 @@
+/* XPM */
+static char *mini-mailbox_ins[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16        5            1",
+/* colors */
+". s mask c None",
+"# c #708090",
+"a c #d3d3d3",
+"b c #ffa500",
+"c c #2f4f4f",
+/* pixels */
+"........##......",
+".......aaaa.....",
+"......aaaaaa....",
+".....aaaaaaa#...",
+"....a#aaaaa#a...",
+"...aaaaaaa#aa.#.",
+"...aaaaaa#aaa##.",
+"...a#a#aaaaa###.",
+"...aaa###aa##.#.",
+"...aaaaa#a##a...",
+"...aaaaaa##a#...",
+"...aaaaaa#a#....",
+"...aaaaaaaa.....",
+"...##aaaaa#.....",
+"......####c.....",
+".......ccc#....."
+};

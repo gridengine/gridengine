@@ -1,0 +1,23 @@
+/* XPM */
+static char * branch_open[] = {
+"16 16 4 1",
+" 	c white",
+".	c black",
+"X	c yellow3",
+"o	c yellow",
+"                ",
+"                ",
+"                ",
+"   .............",
+"  .XXXXXXXXXXXX.",
+" .XXXXXXXXXXXXX.",
+".............XX.",
+".ooooooooooo.XX.",
+".oooooooooooo.X.",
+".oooooooooooo.X.",
+".ooooooooooooo..",
+" ..oooooooooo.. ",
+"  ............  ",
+"   ..........   ",
+"                ",
+"                "};

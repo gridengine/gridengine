@@ -14410,7 +14410,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "                      RUNLEVEL. PATH is as check sub-path, relative to checktree."
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
       puts ""
-      puts "execute_func [args]   just run this procedure with given arguments"
+      puts "execute_func ARGS     just run this procedure with given arguments"
       puts "                      (all arguments after this keyword are used as function call)"
       puts "                      e.g.: .. no_update execute_func compare_dump_data_file arg1 arg2"
       puts ""

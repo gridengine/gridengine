@@ -1,0 +1,145 @@
+#!/bin/sh
+#
+# run command remotely by using "rsh" or "ssh"
+#
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+PATH=/bin:/usr/bin
+
+# "$SGE_ROOT" and $SGE_CELL (if other than "default") must be set in current
+# environment.
+#
+
+if [ "$SGE_ROOT" = "" ]; then
+   echo environment variable \"\$SGE_ROOT\" not set. Exit.
+   exit 1
+fi
+
+if [ "$SGE_ROOT" = "/ ]; then
+   echo environment variable \"\$SGE_ROOT\" cannot be set to \"/\". Exit.
+   exit 1
+fi
+
+if [ ! -f "$SGE_ROOT/util/arch" ]; then
+   echo
+   echo ERROR: The shell script \"$SGE_ROOT/util/arch\" does not exist.
+   echo Please verify your distribution and restart this script. Exit.
+   echo
+   exit 1
+fi
+ 
+if [ ! -f $SGE_ROOT/util/arch_variables ]; then
+   echo
+   echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".
+   echo Please verify your distribution and restart this script. Exit.
+   echo
+   exit 1
+fi
+
+. $SGE_ROOT/util/arch_variables
+
+V5BIN=$SGE_ROOT/bin/$ARCH
+V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
+
+
+if [ $# -lt 2 -o "$1" = "-h" -o "$1" = "-help" ]; then
+   echo "install execution daemons via \"rsh\" or \"ssh\" access "
+   echo
+   echo "usage: $0 [-noexec] [-ssh] [-all] [-noqmaster] host1 host2 host3 [--] command 
+   echo
+   echo "   -noexec    do nothing, just print what would be done"
+   echo "   -ssh       uses \"ssh\" instad of \"rsh\""
+   echo "   -all       run command on all execution hosts found in qmaster spool dir."
+   echo "   -noqmaster do not run command on current qmaster host"
+   echo ""
+   echo "The separator \"--\" must be given if a list of hosts is passed in command line"
+   exit 1
+fi
+
+if [ "$SGE_CELL" = "" ]; then
+   SGE_CELL=default
+   export SGE_CELL
+fi
+
+noexec=false
+cmd=rsh
+qmaster=true
+CMD=""
+hosts=""
+done=false
+
+whoseargs="args"
+while [ "$1" != "" -a $done = false ]; do
+   case "$1" in
+   --)
+      whoseargs="cmd" 
+      ;;
+   *)
+      if [ "$whoseargs" = "args" ]; then
+         case "$1" in
+         -noexec)
+            noexec=true
+            ;;
+         -ssh)
+            cmd=ssh
+            ;;
+         -all)
+            qma_spool_dir=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/configuration | \
+                           awk '{ print $2 }'`
+            hosts=`ls $qma_spool_dir/exec_hosts|egrep -v "template|global"`
+            ;;
+         -noqmaster)
+            qmaster=false
+            ;;
+         *)
+            hosts="$hosts $1"
+            ;;
+         esac
+         shift
+      else
+         CMD=$*
+         done=true
+      fi
+esac
+     
+echo noexec: $noexec
+echo cmd: $cmd
+echo qmaster: $qmaster
+echo CMD: $CMD
+echo done: $done
+
+for h in $hosts; do
+  
+   echo doing: rsh $h $CMD
+   echo ==============================================================================
+done

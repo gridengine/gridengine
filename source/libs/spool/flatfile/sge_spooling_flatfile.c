@@ -31,7 +31,8 @@
 /*___INFO__MARK_END__*/                                   
 
 #include <stdio.h>
-#ifdef ALPHA
+
+#if defined(ALPHA)|| defined(DARWIN)
    extern void flockfile(FILE *);
    extern void funlockfile(FILE *);
 #endif

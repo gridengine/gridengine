@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(CRAY) || defined(SOLARIS) || defined(HP10) || defined(HP11) || defined(ALPHA) || defined(LINUX) || defined(IRIX6) || defined(NECSX4) || defined(NECSX5)
+#if defined(CRAY) || defined(SOLARIS) || defined(HP10) || defined(HP11) || defined(ALPHA) || defined(LINUX) || defined(IRIX6) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN)
 
 #define SGE_LOADMEM
 

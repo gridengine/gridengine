@@ -79,6 +79,11 @@ int gethostname(char *name, int namelen);
 #   define sigdelset(what,sig) (*(what) &= ~(1<<(sig)))
 #endif
 
+#ifdef DARWIN
+#   define SIGCLD SIGCHLD
+#endif
+
+
 #include "commlib.h"
 #include "commlib_util.h"
 #include "message.h"

@@ -47,6 +47,10 @@ int verydummyprocfs;
 #include <sys/syscall.h>
 #endif
 
+#ifdef DARWIN
+#include <sys/time.h>
+#endif
+
 #include <unistd.h>
 #include <sys/times.h>
 #include <sys/wait.h>

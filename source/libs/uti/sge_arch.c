@@ -111,6 +111,8 @@ const char *sge_get_arch(void)
 #   define ARCHBIN "sx"   
 #elif defined(WIN32)
 #   define ARCHBIN "m$win"   
+#elif defined(DARWIN)
+#   define ARCHBIN "darwin"
 #else
 #   pragma "Define an architecture for SGE"
 #endif

@@ -130,6 +130,11 @@
 #  include <sys/rsg.h>
 #  include <sys/types.h>
 #  include <fcntl.h>    
+#elif defined(DARWIN)
+# include <mach/host_info.h>
+# include <mach/mach_host.h>
+# include <mach/mach_init.h>
+# include <mach/machine.h>
 #endif
 
 #define KERNEL_TO_USER_AVG(x) ((double)x/SGE_FSCALE)
@@ -184,7 +189,7 @@ static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
 
 static double get_cpu_load(void); 
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(HP10) || defined(HP11) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(LINUX)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(HP10) || defined(HP11) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(LINUX) || defined(DARWIN)
 
 static int get_load_avg(double loadv[], int nelem);    
 
@@ -777,6 +782,43 @@ static double get_cpu_load()
    }
 }
 
+#elif defined(DARWIN)
+
+double get_cpu_load()
+{
+   static long cpu_new[CPU_STATE_MAX];
+   static long cpu_old[CPU_STATE_MAX];
+   static long cpu_diff[CPU_STATE_MAX];
+   double cpu_states[CPU_STATE_MAX];
+   double cpu_load;
+   int i;
+
+   kern_return_t error;
+   struct host_cpu_load_info cpu_load_data;
+   int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
+   mach_port_t host_priv_port = mach_host_self();
+
+   error = host_statistics(host_priv_port, HOST_CPU_LOAD_INFO,
+        (host_info_t)&cpu_load_data, &host_count);
+
+   if (error != KERN_SUCCESS) {
+      return -1.0;
+   }
+
+   for (i = 0; i < CPU_STATE_MAX; i++) {
+      cpu_new[i] = cpu_load_data.cpu_ticks[i];
+   }
+
+   percentages (CPU_STATE_MAX, cpu_states, cpu_new, cpu_old, cpu_diff);
+
+   cpu_load = cpu_states[CPU_STATE_USER] + cpu_states[CPU_STATE_SYSTEM] + cpu_states[CPU_STATE_NICE];
+
+   if (cpu_load < 0.0) {
+      cpu_load = -1.0;
+   }
+   return cpu_load;
+}
+
 #endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARIS64))
@@ -1052,6 +1094,29 @@ int nelem
    }
    return 0;
 }
+
+#elif defined(DARWIN)
+
+ static int get_load_avg(
+ double loadavg[],
+ int nelem
+ ) {
+     kern_return_t error;
+     struct host_load_info load_data;
+     int host_count = sizeof(load_data)/sizeof(integer_t);
+     mach_port_t host_priv_port = mach_host_self();
+     error = host_statistics(host_priv_port, HOST_LOAD_INFO,
+                       (host_info_t)&load_data, &host_count);
+     if (error != KERN_SUCCESS) {
+         return -1;
+     } else {
+         loadavg[0] = (double)load_data.avenrun[0] / LOAD_SCALE;
+         loadavg[1] = (double)load_data.avenrun[1] / LOAD_SCALE;
+         loadavg[2] = (double)load_data.avenrun[2] / LOAD_SCALE;
+         return 0;
+     }
+}
+
 #endif 
 
 
@@ -1076,7 +1141,7 @@ int nelem
 
 #if defined(SOLARIS64)
    elem = getloadavg(loadavg, nelem); /* <== library function */
-#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX)
+#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(DARWIN)
    elem = get_load_avg(loadavg, nelem); 
 #else
    elem = -1;    

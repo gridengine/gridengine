@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#if defined(SUN4)
+#if defined(SUN4) || defined(DARWIN)
 #   include <sys/time.h>
 #endif
 
@@ -59,6 +59,12 @@
 #else
 #   define RLIMIT_STRUCT_TAG rlimit
 #endif
+
+#if defined(DARWIN)
+#   include <sys/time.h>
+#   include <sys/types.h>
+#endif
+
 
 #include "basis_types.h"
 #include "sge_parse_num_par.h"
@@ -453,7 +459,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 
 #if defined(LINUX) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX6) || defined(HP11) || defined(HP10)
+#elif defined(IRIX6) || defined(HP11) || defined(HP10) || defined(DARWIN)
 #  define limit_fmt "%lld"
 #elif defined(ALPHA) || defined(SOLARIS64)
 #  define limit_fmt "%lu"

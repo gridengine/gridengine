@@ -362,7 +362,11 @@ AskIfDefaultOkAndSetVariables()
       $INFOTEXT "      service            = %s" $QSYST_SERVICE
    fi
 
-   $INFOTEXT "      \$SGE_EXECD_PORT    = %s" $SGE_EXECD_PORT
+   if [ "$SGE_EXECD_PORT" != "" ]; then
+      $INFOTEXT "      \$SGE_EXECD_PORT    = %s" $SGE_EXECD_PORT
+   else
+      $INFOTEXT "      service            = %s" $QSYST_EXECD_SERVICE
+   fi
 
    if [ $ADMINUSER = default ]; then
       $INFOTEXT "      admin user account = root"
@@ -1290,9 +1294,9 @@ CheckForCommdPort()
       done=false
       while [ $done = false ]; do
          $V5UTILBIN/getservbyname $QSYST_MASTER_NAME 2>/dev/null
-         mret = $?
+         mret=$?
          $V5UTILBIN/getservbyname $QSYST_EXECD_NAME 2>/dev/null
-         eret = $?
+         eret=$?
          if [ $mret != 0 -o $eret != 0 ]; then
             $CLEAR
             $INFOTEXT -u "\nNo TCP/IP >%s< or >%s< service yet" $QSYST_MASTER_NAME $QSYST_EXECD_NAME
@@ -2292,6 +2296,7 @@ QSYST_SCHEDD_NAME=sge_schedd
 QSYST_SHEPHERD_NAME=sge_shepherd
 QSYST_SHADOWD_NAME=sge_shadowd
 QSYST_SERVICE=sge_qmaster
+QSYST_EXECD_SERVICE=sge_execd
 
 if [ ! -f util/arch_variables ]; then
    echo "missing shell script \"util/arch_variables\""

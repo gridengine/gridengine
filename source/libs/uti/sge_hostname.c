@@ -77,36 +77,61 @@ static host *hostlist = NULL;
 static host *localhost = NULL;
 
 
+#define SGE_MAXNISRETRY 10
 int sge_get_qmaster_port(void) {
-   /* TODO: get port from service file */
    char* port = NULL;
    int int_port = -1;
+   struct servent *se = NULL;
+
    DENTER(TOP_LAYER, "sge_get_qmaster_port");
    port = getenv("SGE_QMASTER_PORT");   
    if (port != NULL) {
       int_port = atoi(port);
    }
+
+   /* get port from services file */
+   if (int_port < 0) {
+      int nisretry = SGE_MAXNISRETRY;
+      while (nisretry-- && !((se = getservbyname("sge_qmaster", "tcp"))));
+      if (se != NULL) {
+         int_port = se->s_port;
+      }
+   }
+
    if (int_port < 0 ) {
-      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
+      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT or service \"sge_qmaster\"\n"));
       SGE_EXIT(1);
    } 
+
    DEXIT;
    return int_port;
 }
 
 int sge_get_execd_port(void) {
-   /* TODO: get port from service file */
    char* port = NULL;
    int int_port = -1;
+   struct servent *se = NULL;
+
    DENTER(TOP_LAYER, "sge_get_execd_port");
    port = getenv("SGE_EXECD_PORT");   
    if (port != NULL) {
       int_port = atoi(port);
    }
+
+   /* get port from services file */
+   if (int_port < 0) {
+      int nisretry = SGE_MAXNISRETRY;
+      while (nisretry-- && !((se = getservbyname("sge_execd", "tcp"))));
+      if (se != NULL) {
+         int_port = se->s_port;
+      }
+   }
+
    if (int_port < 0 ) {
-      ERROR((SGE_EVENT, "could not get environment variable SGE_EXECD_PORT\n"));
+      ERROR((SGE_EVENT, "could not get environment variable SGE_EXECD_PORT or service \"sge_execd\"\n"));
       SGE_EXIT(1);
    } 
+
    DEXIT;
    return int_port;
 

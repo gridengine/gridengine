@@ -1,3 +1,10 @@
+MD-2005-03-31-0: Bugfix:    - load.sh returns wrong load values, if uptime 
+                              higher than 1 hour
+                 Issue:     1535
+                 Bugtraq:   5086193
+                 Changed:   load.sh
+                 Review:    CR
+
 AA-2005-03-23-2: Bugfix:    Core dump in `qmon`Xpm.c`CreateImage running qmon on E25K (using remote DISPLAY)
                  Bugtraq:   6198937
                  Issue:     1288

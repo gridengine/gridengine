@@ -1,4 +1,7 @@
-CR-2003-04-30-0  Testsuite: modified scheduler test to create more queue instances
+EB-2003-05-02-0  Bugfix:    broken build
+
+CR-2003-04-30-0  Testsuite: modified scheduler test to create more queue 
+                            instances
 
 JG-2003-04-29-0  Enhancem.: Reset information which fields have changed in 
                             qmaster's objects after spooling and sending events.

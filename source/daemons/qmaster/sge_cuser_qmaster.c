@@ -52,7 +52,10 @@
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
+#include "sge_event_master.h"
+#include "sge_persistence_qmaster.h"
 
+#include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -155,7 +158,7 @@ int usermap_spool(lList **answer_list, lListElem *upe, gdi_object_t *object)
 {  
    DENTER(TOP_LAYER, "usermap_spool");
  
-   if (!spool_write_object(spool_get_default_context(), upe, lGetString(upe, CU_name), SGE_TYPE_CUSER)) {
+   if (!spool_write_object(NULL, spool_get_default_context(), upe, lGetString(upe, CU_name), SGE_TYPE_CUSER)) {
       const char* clusterUser = NULL;
       clusterUser = lGetString(upe, CU_name); 
       ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));

@@ -637,6 +637,8 @@ void qevent_testsuite_mode(void)
  
       const int job_nm[] = {       
             JB_job_number, 
+            JB_host,
+            JB_category,
             JB_project, 
             JB_ja_tasks,
             JB_ja_structure,

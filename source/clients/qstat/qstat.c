@@ -150,7 +150,7 @@ char **argv
    bool a_qinstance_is_selected = false;
    bool a_cqueue_is_selected = false;
    u_long32 full_listing = QSTAT_DISPLAY_ALL, empty_qs = 0, job_info = 0;
-   u_long32 explain_bits = QIM_DEFAULT;
+   u_long32 explain_bits = QI_DEFAULT;
    u_long32 group_opt = 0;
    u_long32 queue_states = U_LONG32_MAX;
    lSortOrder *so = NULL;
@@ -1939,70 +1939,12 @@ u_long32 *isXML
       }
 
       if (parse_string(ppcmdline, "-explain", &alp, &argstr)) {
-         if (argstr) {
-            static char noflag = '$';
-            static char* flags[] = {
-               "c", 
-               "a",
-               "A",
-               "E",
-               NULL
-            };
-            static u_long32 bits[] = {
-               QIM_AMBIGUOUS,
-               QIM_LOAD_ALARM,
-               QIM_SUSPEND_ALARM,
-               QIM_ERROR,
-               0 
-            };
-            int i, j;
-            char *s_switch;
-            u_long32 rm_bits = 0;
-            
-            (*pfull) |= QSTAT_DISPLAY_FULL;
-
-            /* initialize bitmask */
-            for (j=0; flags[j]; j++) 
-               rm_bits |= bits[j];
-            (*explain_bits) &= ~rm_bits;
-            
-            /* 
-            ** search each 'flag' in argstr
-            ** if we find the whole string we will set the corresponding bits in '*explain_bits'
-            */
-            for (i=0, s_switch=flags[i]; s_switch != NULL; i++, s_switch=flags[i]) {
-               for (j=0; argstr[j]; j++) { 
-                  if ((argstr[j] == flags[i][0] && argstr[j] != noflag)) {
-                     if ((strlen(flags[i]) == 2) && argstr[j+1] && (argstr[j+1] == flags[i][1])) {
-                        argstr[j] = noflag;
-                        argstr[j+1] = noflag;
-                        (*explain_bits) |= bits[i];
-                        break;
-                     } else if ((strlen(flags[i]) == 1)){
-                        argstr[j] = noflag;
-                        (*explain_bits) |= bits[i];
-                        break;
-                     }
-                  } 
-               }
-            } 
-
-            /* search for invalid options */
-            for (j=0; argstr[j]; j++) {
-               if (argstr[j] != noflag) {
-                  sprintf(str, MSG_OPTIONS_WRONGARGUMENTTOSOPT);
-                  if (!usageshowed)
-                     qstat_usage(stderr, NULL);
-                  answer_list_add(&alp, str, 
-                                  STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return alp;
-               }  
-            }
-         } 
+         u_long32 filter = QI_AMBIGUOUS | QI_ALARM | QI_SUSPEND_ALARM | QI_ERROR;
+         *explain_bits = qinstance_state_from_string(argstr, &alp, filter);
+         FREE(argstr);
          continue;
       }
-
+       
       if(parse_string(ppcmdline, "-F", &alp, &argstr)) {
          (*pfull) |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
          if (argstr) {
@@ -2048,7 +1990,8 @@ u_long32 *isXML
       }
 
       if (parse_string(ppcmdline, "-qs", &alp, &argstr)) {
-         *queue_states = qinstance_state_from_string(argstr, &alp);
+         u_long32 filter = 0xFFFFFFFF;
+         *queue_states = qinstance_state_from_string(argstr, &alp, filter);
          FREE(argstr);
          continue;
       }
@@ -2121,7 +2064,7 @@ char *what
          fprintf(fp, "        [-ext]                          %s",MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES);
       }
       if (!qselect_mode) {
-         fprintf(fp, "        [-explain c|a|A]                %s",MSG_QSTAT_USAGE_EXPLAINOPT);
+         fprintf(fp, "        [-explain a|c|A|E]              %s",MSG_QSTAT_USAGE_EXPLAINOPT);
       }
       if (!qselect_mode) 
          fprintf(fp, "        [-f]                            %s",MSG_QSTAT_USAGE_FULLOUTPUT);
@@ -2140,7 +2083,7 @@ char *what
       if (!qselect_mode) 
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
       fprintf(fp, "        [-pe pe_list]                   %s",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
-      fprintf(fp, "        [-q wc_queue_list]             %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
+      fprintf(fp, "        [-q wc_queue_list]              %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
       fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]   %s",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
       if (!qselect_mode) 
          fprintf(fp, "        [-r]                            %s",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);

@@ -50,6 +50,7 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_qmaster.h"
+#include "sge_qinstance_message.h"
 #include "subordinate_qmaster.h"
 #include "sge_qmod_qmaster.h"
 
@@ -531,21 +532,34 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
          /*
           * Some transitions need extra work
           */
-         if (transition == QI_DO_SUSPEND) {
-            if ((!qinstance_state_is_susp_on_sub(this_elem) &&
-                 !qinstance_state_is_cal_suspended(this_elem)) ||
-                force_transition) {
-               sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
-               did_something = true;
-            }
-         } else if (transition == QI_DO_UNSUSPEND) {
-            if (!qinstance_state_is_susp_on_sub(this_elem) &&
-                !qinstance_state_is_cal_suspended(this_elem)) {
-               sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
-               did_something = true;
-            }
-         } else {
-            did_something = true;
+          switch(transition){
+            case QI_DO_SUSPEND : 
+                  if ((!qinstance_state_is_susp_on_sub(this_elem) &&
+                       !qinstance_state_is_cal_suspended(this_elem)) ||
+                      force_transition) {
+                     sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
+                     did_something = true;
+                  }   
+               break;
+            case QI_DO_UNSUSPEND :    
+                  if (!qinstance_state_is_susp_on_sub(this_elem) &&
+                      !qinstance_state_is_cal_suspended(this_elem)) {
+                     sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
+                     did_something = true;
+                  }   
+               break;
+            case QI_DO_CLEARERROR :
+                  qinstance_message_trash_all_of_type_X(this_elem, QI_ERROR);
+                  did_something = true;
+               break;   
+#ifdef __SGE_QINSTANCE_STATE_DEBUG__
+            case QI_DO_SETERROR :
+                 qinstance_message_add(this_elem, QI_ERROR, "this is a debug message\n");
+                 did_something = true;
+               break;  
+#endif                  
+            default:   
+                  did_something = true;
          }
       
          /*
@@ -560,7 +574,6 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
           */
          if (did_something) {
             qinstance_increase_qversion(this_elem);
-            reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
             ret &= sge_event_spool(answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
                                    lGetHost(this_elem, QU_qhostname), NULL,

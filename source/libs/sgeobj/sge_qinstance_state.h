@@ -39,6 +39,7 @@
 /*
  * QI states
  */
+#define QI_DEFAULT                     0x00000000 
 #define QI_ALARM                       0x00000001
 #define QI_SUSPEND_ALARM               0x00000002
 #define QI_DISABLED                    0x00000004
@@ -109,9 +110,9 @@ transition_option_is_valid_for_qinstance(u_long32 option, lList **answer_list);
 
 bool qinstance_has_state(const lListElem *this_elem, u_long32 bit); 
 
-const char *
-qinstance_state_as_string(u_long32 bit);
+const char * qinstance_state_as_string(u_long32 bit);
 
+u_long32 qinstance_state_from_string(const char* state, lList **answer_list, u_long32 filter);
 /* */
 
 void 

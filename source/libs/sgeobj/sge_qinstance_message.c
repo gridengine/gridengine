@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <string.h>
+
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -78,7 +80,7 @@ qim_list_trash_all_of_type_X(lList **this_list, u_long32 type)
          u_long32 elem_type = lGetUlong(elem, QIM_type);
 
          next_elem = lNext(elem);
-         if (elem_type == type) {
+         if ((elem_type & type) != 0) {
             lRemoveElem(*this_list, elem);
          }
       }
@@ -124,4 +126,78 @@ qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
    return ret;
 }
 
+/* SG: removed, because message might go over multiple lines. The code is kept
+   as a starting point, if we want to add the error message spooling for the
+   classic spooling. One has to find a solution to remove the "\n" and replace
+   them by a string.
+*/
+#if 0
+bool qinstance_message2string(const lListElem *queue, u_long32 type, dstring *target) {
+   const char *del = "<&elem&>";
+   lList *messageList = lGetList(queue, QU_message_list);
+   lListElem *message = NULL;
 
+   sge_dstring_sprintf_append(target, "%s", del);
+
+   
+   
+   for_each(message, messageList) {
+      if ((lGetUlong(message, QIM_type) & type) != 0){
+         /*char *tempMessage = NULL;
+         tempMessage = strdup(lGetString(message, QIM_message);*/
+               
+         sge_dstring_sprintf_append(target, u32"%s%s%s", lGetUlong(message, QIM_type), del, lGetString(message, QIM_message), del);
+      }
+   }
+   return true;
+}
+
+bool qinsteance_message_from_string(lListElem *queue, const char *target, lList **answer) {
+   const char *del = "<&elem&>";
+   int del_length = strlen(del);
+   static const int max_size = 1000;
+   const char *token = NULL;
+   const char *token2 = NULL;
+   char tmp[max_size];
+   int size;
+   int error_code;
+   lList *messageList = lCreateList("messages", QIM_Type);
+
+   if (target == NULL){
+      return false;
+   }
+   
+   while((token = strstr(target, del)) != NULL) {
+      lListElem *message = lCreateElem(QIM_Type);
+
+      /* error nr */
+      token += del_length;
+      token2 = strstr(token, del);
+      if (token2 == NULL)
+         return false;
+      if ((size = token2 - token) > max_size)
+         size = max_size;
+      strncpy(tmp, token, size); 
+      error_code = atoi(tmp);
+      lSetUlong(message, QIM_type, error_code);
+      
+      /* error message */
+      token = token2 + del_length;
+      token2 = strstr(token, del);
+      if (token2 == NULL){
+         return false;
+      }
+      if ((size = token2 - token) > max_size)
+         size = max_size;
+      strncpy(tmp, token, size);   
+      lSetString(message, QIM_message, tmp);
+     
+      /* next */
+      token = token2 + del_length;
+   }
+   
+   lSetList(queue, QU_message_list, messageList);
+   
+   return true;
+}
+#endif

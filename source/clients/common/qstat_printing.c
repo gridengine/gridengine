@@ -200,25 +200,25 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       }
    }
 
-   if ((explain_bits & QIM_LOAD_ALARM) > 0) {
+   if ((explain_bits & QI_ALARM) > 0) {
       if(*load_alarm_reason) {
          printf(load_alarm_reason);
       }
    }
-   if ((explain_bits & QIM_SUSPEND_ALARM) > 0) {
+   if ((explain_bits & QI_SUSPEND_ALARM) > 0) {
       if(*suspend_alarm_reason) {
          printf(suspend_alarm_reason);
       }
    }
-   if (explain_bits != QIM_DEFAULT) {
+   if (explain_bits != QI_DEFAULT) {
       lList *qim_list = lGetList(q, QU_message_list);
       lListElem *qim = NULL;
 
       for_each(qim, qim_list) {
          u_long32 type = lGetUlong(qim, QIM_type);
 
-         if ((explain_bits & QIM_AMBIGUOUS) == type || 
-             (explain_bits & QIM_ERROR) == type) {
+         if ((explain_bits & QI_AMBIGUOUS) == type || 
+             (explain_bits & QI_ERROR) == type) {
             const char *message = lGetString(qim, QIM_message);
 
             printf("\t");

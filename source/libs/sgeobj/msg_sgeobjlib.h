@@ -273,7 +273,7 @@
 #define MSG_DOUBLE_INCORRECTSTRING     _MESSAGE(64272, _("error parsing double value from string "SFQ"\n"))
 #define MSG_FLOAT_INCORRECTSTRING      _MESSAGE(64273, _("error parsing float value from string "SFQ"\n"))
 #define MSG_QTYPE_INCORRECTSTRING      _MESSAGE(64274, _("error parsing queue type from string "SFQ"\n"))
-#define MSG_QSTATE_UNKNOWNCHAR         _MESSAGE(64275, _("unknwon queue state\n"))
+#define MSG_QSTATE_UNKNOWNCHAR_CS      _MESSAGE(64275, _("unknwon queue state: %c found in string: %s\n"))
 #define MSG_QSTAT_WRONGGCHAR_C         _MESSAGE(64276, _("wrong character \'%c\' for -g option\n"))
 #define MSG_CQUEUE_UNKNOWNCENTRY_S     _MESSAGE(64277, _("Complex attribute "SFQ" does not exist\n"))
 #define MSG_OBJECT_ALREADYEXIN_SSS     _MESSAGE(64278, _("No modification because "SFQ" already exists in "SFQ" of "SFQ"\n"))

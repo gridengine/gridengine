@@ -1512,26 +1512,26 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
       }
    }
 
-   if ((explain_bits & QIM_LOAD_ALARM) > 0) {
+   if ((explain_bits & QI_ALARM) > 0) {
       if(*load_alarm_reason) {
          xml_append_Attr_S(attributeList, "load-alarm-reason", load_alarm_reason);
       }
    }
-   if ((explain_bits & QIM_SUSPEND_ALARM) > 0) {
+   if ((explain_bits & QI_SUSPEND_ALARM) > 0) {
       if(*suspend_alarm_reason) {
          xml_append_Attr_S(attributeList, "suspend-alarm-reason", suspend_alarm_reason);
       }
    }
    
-   if (explain_bits != QIM_DEFAULT) {
+   if (explain_bits != QI_DEFAULT) {
       lList *qim_list = lGetList(q, QU_message_list);
       lListElem *qim = NULL;
 
       for_each(qim, qim_list) {
          u_long32 type = lGetUlong(qim, QIM_type);
 
-         if ((explain_bits & QIM_AMBIGUOUS) == type || 
-             (explain_bits & QIM_ERROR) == type) {
+         if ((explain_bits & QI_AMBIGUOUS) == type || 
+             (explain_bits & QI_ERROR) == type) {
             const char *message = lGetString(qim, QIM_message);
             xml_append_Attr_S(attributeList, "message", message);
          }

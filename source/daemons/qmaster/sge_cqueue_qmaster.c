@@ -423,7 +423,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
          /* 
           * Clear all messages which explain ambiguous state
           */
-         qinstance_message_trash_all_of_type_X(qinstance, QIM_AMBIGUOUS);
+         qinstance_message_trash_all_of_type_X(qinstance, QI_AMBIGUOUS);
 
          /*
           * Handle each cqueue attribute as long as there was no error
@@ -489,7 +489,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
                      sprintf(SGE_EVENT, MSG_ATTR_HASAMBVAL_SSS, 
                              cqueue_attribute_array[index].name,
                              matching_host_or_group, matching_group);
-                     qinstance_message_add(qinstance, QIM_AMBIGUOUS, SGE_EVENT);
+                     qinstance_message_add(qinstance, QI_AMBIGUOUS, SGE_EVENT);
                   }
 
                   will_be_ambiguous |= tmp_is_ambiguous;

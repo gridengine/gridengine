@@ -53,8 +53,9 @@
 #include "sge_host.h"
 #include "sge_pe.h"
 #include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance_message.h"
 #include "sge_userset.h"
 
 #include "sort_hosts.h"
@@ -464,6 +465,10 @@ bool spool_default_validate_func(lList **answer_list,
          {
             /* handle slots from now on as a consumble attribute of queue */
             qinstance_set_conf_slots_used(object); 
+
+            /* remove all queue message, which are regenerated during the unspooling
+               the queue */
+            qinstance_message_trash_all_of_type_X(object, ~QI_ERROR);   
 
             /* setup actual list of queue */
             qinstance_debit_consumable(object, NULL, Master_CEntry_List, 0);

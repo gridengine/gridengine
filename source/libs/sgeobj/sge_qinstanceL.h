@@ -241,7 +241,7 @@ SLISTDEF(QU_Type, QInstance)
    SGE_ULONG(QU_soft_violation, CULL_DEFAULT)
    SGE_ULONG(QU_host_seq_no, CULL_DEFAULT)
    SGE_LIST(QU_consumable_actual_list, CE_Type, CULL_DEFAULT)
-   SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT)
+   SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(QUN)

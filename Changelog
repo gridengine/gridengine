@@ -1,4 +1,8 @@
-CR-2004-01-29-0: Enhancm.:  - host aliases file support (part II)
+SG-2004-01-29-0: Enhancem.: Added qstat -explain E support.
+                 Review:    pending
+                 Changed:   qmaster, qstat
+
+CR-2004-01-29-0: Enhancem.: - host aliases file support (part II)
 
 SD-2004-01-28-1: Enhancem.: - Set default dynamic priority range 
                               (ptf_min_priority, ptf_max_priority) for

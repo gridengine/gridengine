@@ -58,6 +58,9 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 
+#include "sgeobj/sge_qinstance_message.h"
+#include "sgeobj/sge_qinstance_state.h"
+
 #include "msg_common.h"
 
 lListElem *cull_read_in_qinstance(const char *dirname, const char *filename, 
@@ -111,6 +114,16 @@ int parsing_type
       DEXIT;
       return -1;
    }
+   else if ((lGetUlong(ep, QU_state) & QI_ERROR) != 0){
+      lList *message_list = lCreateList("mesage", QIM_Type);
+      lListElem *message = lCreateElem(QIM_Type);
+      
+      lAppendElem(message_list, message);
+      lSetList(ep, QU_message_list, message_list);
+
+      lSetUlong(message, QIM_type, QI_ERROR);
+      lSetString(message, QIM_message, MSG_ERROR_CLASSIC_SPOOLING);
+   }
 
    /* --------- QU_pending_signal */
    if (!set_conf_ulong(alpp, clpp, fields, "pending_signal",
@@ -131,6 +144,19 @@ int parsing_type
       DEXIT;
       return -1;
    }
+
+   /* --------- QU_error messages */
+   /* SG: not supported yet */
+#if 0   
+   {
+      const char *str = NULL;
+      if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, "error_messages"))) {
+         DEXIT;
+         return -1;
+      }
+      qinsteance_message_from_string(ep, str, alpp);
+   }
+#endif   
 
    /* --------- QU_queue_number */
    if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QU_queue_number)) {
@@ -414,6 +440,18 @@ write_qinstance(int spool, int how, const lListElem *ep)
                (int)lGetUlong(ep, QU_version)));
       FPRINTF((fp, "queue_number       %d\n",
                (int)lGetUlong(ep, QU_queue_number)));
+      /* SG: not supported */
+#if 0      
+      {
+         dstring tmp_string = DSTRING_INIT;
+
+         qinstance_message2string (ep, QI_ERROR, &tmp_string);
+
+         FPRINTF((fp, "error_messages    %s\n", 
+                  sge_dstring_get_string(&tmp_string)));
+         sge_dstring_free(&tmp_string);
+      }  
+#endif      
    }
    if (how != 0) {
       fclose(fp);

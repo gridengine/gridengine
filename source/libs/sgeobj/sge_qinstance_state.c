@@ -365,7 +365,9 @@ qinstance_state_as_string(u_long32 bit)
 *     generates a mask with the different states.
 *
 *  INPUTS
-*     const char* sstate - each character one  state
+*     const char* sstate - each character one state
+*     lList **answer_list - stores error messages
+*     u_long32 filter  - a bit filter for allowed states
 *
 *  RESULT
 *     u_long32 - new state or 0, if no state was set
@@ -377,7 +379,7 @@ qinstance_state_as_string(u_long32 bit)
 *     MT-NOTE: qinstance_state_from_string() is MT safe 
 *
 *******************************************************************************/
-u_long32 qinstance_state_from_string(const char* sstate, lList **answer_list){
+u_long32 qinstance_state_from_string(const char* sstate, lList **answer_list, u_long32 filter){
    u_long32 ustate = 0;
    int i;
    int y;
@@ -395,16 +397,18 @@ u_long32 qinstance_state_from_string(const char* sstate, lList **answer_list){
             break;
          }
       }
-      if (!found){
-         answer_list_add(answer_list, MSG_QSTATE_UNKNOWNCHAR, STATUS_ESEMANTIC, 
-         ANSWER_QUALITY_ERROR);
+
+      if ((!found) || ((ustate & ~filter) != 0)){
+         ERROR((SGE_EVENT, MSG_QSTATE_UNKNOWNCHAR_CS, sstate[i], sstate));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
          DEXIT;
          return U_LONG32_MAX;
       }
    }
 
-   if (!found)
+   if (!found) {
       ustate = U_LONG32_MAX;
+   }
 
    DEXIT;
    return ustate;

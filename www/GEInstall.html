@@ -1,15 +1,15 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
-<html>
-<head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="Author" content="andre alefeld">
-   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
-</head>
-<body>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<! -- //content -->
+<tr>
+<td><B><font color="#336699" size="+2">Installation Summary for Grid Engine</font></B></td>
+</tr>
+</table>
+<br><br>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
 
-<h1>
-<font color="#990000">Installation Summary for Grid Engine</font></h1>
-<font color="#000000">To install Grid Engine and test the correct setup
+<p>To install Grid Engine and test the correct setup
 of its functionality proceed with the following tasks:</font>
 <ul>
 <li>
@@ -33,10 +33,9 @@ before installing</a></li>
 <li>
 <a href="#Using Grid Engine">Using Grid Engine</a></li>
 </ul>
-
-<h4>
+<p><h4><font color="#990000">General Overview
 <a NAME="Create a Grid Engine administrator account and set up a service"></a>Create
-a Grid Engine administrator account and set up a service port</h4>
+a Grid Engine administrator account and set up a service port</font></H4>
 An administrator account must be specified. The administrator can be an
 existing user or a new user may be created for this task. This account
 will own all of the files and it is used to configure and maintain the
@@ -61,9 +60,9 @@ matter, it must be unused on your system and should be a reserved port)
 Or, add the above manually to the /etc/services file on each machine</li>
 </ul>
 
-<h4>
+<p><h4><font color="#990000">
 <a NAME="Create a directory and unpack the distribution"></a>Create a directory
-and unpack the distribution</h4>
+and unpack the distribution</font></h4>
 As the Grid Engine administrator, do the following:
 <p>If you received the distribution in "pkgadd" format% mkdir &lt;your_gridengine_root_directory>
 <blockquote>Install the packages with "pkgadd" on your file server (all
@@ -94,9 +93,9 @@ some files need to be installed suid root)
 to chown/chmod file.
 <br>This script not necessarily need to run on the qmaster machine.</ul>
 
-<h4>
+<p><h4><font color="#990000">
 <a NAME="Additional information before installing"></a>Additional information
-before installing</h4>
+before installing</font></h4>
 
 <ul>
 <li>
@@ -142,8 +141,8 @@ before executing. For example:</li>
 <br>endif</ul>
 </ul>
 
-<h4>
-<a NAME="Install Grid Engine"></a>Install Grid Engine</h4>
+<p><h4><font color="#990000">
+<a NAME="Install Grid Engine"></a>Install Grid Engine</font></h4>
 The installation is a two step process. First, the Grid Engine files are
 installed and configured on the master. Then, a small installation is&nbsp;
 done on each execution host to configure and start the daemons, and to
@@ -171,8 +170,8 @@ The installation programs start the Grid Engine daemons, so at the completion
 of a successful install, Grid Engine is up and running. If&nbsp; the&nbsp;&nbsp;&nbsp;&nbsp;
 master host will also be an execution host execute Step Two also on the
 master machine.
-<h4>
-<a NAME="Verify installation"></a>Verify installation</h4>
+<p><h4><font color="#990000">
+<a NAME="Verify installation"></a>Verify installation</font></h4>
 After the installation is completed, the installation can be verified.
 There are some sample scripts in $SGE_ROOT/examples/jobs.
 <br>First source the proper settings file to setup the Grid Engine environment:
@@ -195,8 +194,8 @@ Verify that all of the queues have been installed properly by running the
 following:
 <blockquote>% qstat -f&nbsp;&nbsp; (full listing of the queues)</blockquote>
 
-<h4>
-<a NAME="Using Grid Engine"></a>Using Grid Engine</h4>
+<p><h4><font color="#990000">
+<a NAME="Using Grid Engine"></a>Using Grid Engine</font></h4>
 The main submit commands are qsub, qrsh and qtcsh. See the man pages for
 submit(1) and qtcsh(1) for more details.
 <ul>
@@ -235,5 +234,3 @@ qtcsh</li>
 submit jobs listed in a task file to the cluster. See the qtcsh(1) man
 page for more details.</ul>
 
-</body>
-</html>

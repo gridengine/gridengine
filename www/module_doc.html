@@ -1,6 +1,6 @@
 <table border="0" cellpadding="2" cellspacing="0" width="100%">
 <tr>
-<td><b><font color="#336699">MODULE DOC</font></b></td>
+<td><b><font color="#336699" size="+2">MODULE DOC</font></b></td>
 </tr>
 </table>
 <p>
@@ -8,7 +8,8 @@
 <tr>
 <td>
 
-<P>This document describes the Grid Engine source code modules, and
+<br><br>
+This document describes the Grid Engine source code modules, and
 is written for use by software developers. Our goal is to provide you
 with useful information if you are considering participating in the
 Grid Engine project or will be using Grid Engine source code. In
@@ -17,11 +18,11 @@ is necessary for a full understanding of the functional operation of
 the software. Consequently the 
 
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/index.html?content-type=text/html" NAME="man pages">man pages</A>
-are refered to herein where
-appropriate.</P>
+are refered to herein where appropriate.</P>
+
 <P>If you have problems with finding functions or browsing through
 the souce code we suggest the use of grep or preferably <A HREF="http://ctags.sourceforge.net/">ctags</A>.</P>
-<H1>1. Job life cycle</H1>
+<H3><font color="#990000">1. Job life cycle</font></h3>
 <P>The job life cycle is a good way to understand to overall system. 
 </P>
 <OL>
@@ -34,8 +35,8 @@ the souce code we suggest the use of grep or preferably <A HREF="http://ctags.so
 	<LI>Qmaster feeds jobs resource consumption in accounting database</LI>
 </OL>
 <P><IMG SRC="structure.gif" NAME="Graphic1" ALIGN=MIDDLE WIDTH=657 HEIGHT=415 BORDER=0></P>
-<H1>2. Components</H1>
-<H2>2.1 Daemon components</H2>
+<H3><font color="#990000">2. Components</font></h3>
+<H3><font color="#990000">2.1 Daemon components</font></H3>
 <P>In the &quot;source/daemons&quot; subdirectory there is one
 directory for each daemon.</P>
 <UL>
@@ -89,7 +90,7 @@ directory for each daemon.</P>
 	starts a new Qmaster if necessary. 
 	</P>
 </UL>
-<H2>2.2 Client components</H2>
+<H3><font color="#990000">2.2 Client components</font></H3>
 <P>In the &quot;source/clients&quot;
 subdirectory there is one directory for each client.</P>
 <UL>
@@ -188,7 +189,7 @@ subdirectory there is one directory for each client.</P>
 	<P>Qmod allows to modify the state of queues and jobs by using GDI. 
 	</P>
 </UL>
-<H2>2.3 Libraries</H2>
+<H3><font color="#990000">2.3 Libraries</font></H3>
 <P>In the &quot;source/libs&quot;
 subdirectory there is one directory for each library.</P>
 <UL>
@@ -231,7 +232,7 @@ subdirectory there is one directory for each library.</P>
 	Qmaster. 
 	</P>
 </UL>
-<H2>2.4 Third-party components</H2>
+<H3><font color="#990000">2.4 Third-party components</font></H3>
 <P>The &quot;source/3rdparty&quot; directory contains modules with
 different licenses than SISSL. 
 </P>
@@ -254,20 +255,20 @@ different licenses than SISSL.
 	tools</A></H4>
 	<P>This directory is the home of rsh, rshd, rlogin.</P>
 </UL>
-<H2>2.5 Utilities</H2>
+<H3><font color="#990000">2.5 Utilities</font></H3>
 <P>The &quot;source/utilbin&quot; directory contains <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/utilbin/utilbin.html?content-type=text/html" NAME="binaries">binaries</A>
 that are needed during installation of Grid Engine, for diagnosis purposes or for the job samples.</P>
-<H2>2.6 Dist</H2>
+<H3><font color="#990000">2.6 Dist</font></H3>
 <P>The &quot;source/dist&quot; directory contains <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/dist/dist.html?content-type=text/html" NAME="files and directories">files and directories</A>
 which are part of a Grid Engine distribution.</P>
-<H2>3. Security</H2>
+<H3><font color="#990000">3. Security</font></H3>
 <P>The &quot;source/security&quot; directory contains modules handling security.
 </P>
 <UL>
 	<LI><H4><A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/security/security.html?content-type=text/html" NAME="Security">Security</A></H4>
 	<P>Contains security related modules.</P>
 </UL>
-<H2>4. Experimental</H2>
+<H3><font color="#990000">4. Experimental</font></H3>
 <P>Each subdirectory of the &quot;source/experimental&quot; directory contains an
 experimental module. Those modules cannot be expected to work - although some may, 
 at least with a bit of work. The 

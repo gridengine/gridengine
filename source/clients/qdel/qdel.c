@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
    int wait;
    unsigned long status = 0;
    bool have_master_privileges;
+   cl_com_handle_t* handle = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
@@ -130,6 +131,8 @@ int main(int argc, char **argv) {
       lAddElemStr(&ref_list, ID_str, "0", ID_Type);
    }
 #ifdef ENABLE_NGC
+   handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   cl_com_set_synchron_receive_timeout(handle, 10*60);
 #else
    /* set timeout */
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);

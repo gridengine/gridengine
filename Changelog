@@ -1,8 +1,13 @@
+SG-2004-02-27-0: Bugfix:    increased the timeout in qdel, since it might take
+                            a bit longer to delete the jobs (with array tasks).
+                 Changed:   qdel
+                 Review:    CR
+
 CR-2004-02-27-1: Bugfix:    - ignore_fqdn and default_domain parameters wasn't
                               used in communication lib.
                  Changed:   commlib
 
-AS-2004-02-27    Bugfix:    corrected wrong exit status from tests"
+AS-2004-02-27-0: Bugfix:    corrected wrong exit status from tests"
                  Changed:   aimk
 
 CR-2004-02-27-0: Bugfix:    - Use thread signal handler for qsub only when 

@@ -597,7 +597,6 @@ char *err_str
 
    var_list_set_int(&environmentList, "RESTARTED", (int) lGetUlong(jatep, JAT_job_restarted));
 
-
    var_list_set_string(&environmentList, "TMPDIR", tmpdir);
    var_list_set_string(&environmentList, "TMP", tmpdir);
 

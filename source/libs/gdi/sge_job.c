@@ -1586,6 +1586,7 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
 *        <VAR_PREFIX>O_TZ
 *        <VAR_PREFIX>O_HOST
 *        <VAR_PREFIX>O_WORKDIR
+*        <VAR_PREFIX>O_MAIL
 *
 *     This function will be used in SGE/EE client applications.
 *     Clients do not know which prefix should be used for job
@@ -1608,7 +1609,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
    {   
       int i = -1;
       const char* env_name[] = {"HOME", "LOGNAME", "PATH", 
-                                "SHELL", "TZ", NULL};
+                                "SHELL", "TZ", "MAIL", NULL};
 
       while (env_name[++i] != 0) {
          const char *env_value = sge_getenv(env_name[i]);

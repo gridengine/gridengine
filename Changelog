@@ -1,3 +1,8 @@
+JG-2002-07-18-0: Bugfix:    qsh mechanism passing options to xterm was broken.
+                            help output for qrsh and qlogin contained 
+                            unsupported options.
+                 Changed:   qsh           
+
 CR-2002-07-18-4: Bugfix:    i18n new gridengine.pot file
 
 CR-2002-07-18-1: Bugfix:    i18n wrong function call in infotext binary - l10n

@@ -1,13 +1,18 @@
-MD-2005-05-28-3: Enhancem:  README-Upgrade.txt
+SG-2004-05-28-0: Bugfix:    fixed qmaster on HP-11. The problem was a "char save[32k]"
+                            in the file: daemons/qmaster/sge_give_jobs.c
+                 Changed:   qmaster
+                 Review:    MD
+
+MD-2004-05-28-3: Enhancem:  README-Upgrade.txt
 
 DT-2004-05-28-5: Bugfix:    o Resolved conflict between new file staging howto
                               and previous
                  Changed:   howtos
 
-MD-2005-05-28-2: Bugfix:    - message
+MD-2004-05-28-2: Bugfix:    - message
                  Changed:   inst_sge
 
-MD-2005-05-28-1: Enhancem:  - auto backup
+MD-2004-05-28-1: Enhancem:  - auto backup
                  Changed:   inst_sge
 
 DT-2004-05-28-4: Bugfix:    o Added file staging to howto main page

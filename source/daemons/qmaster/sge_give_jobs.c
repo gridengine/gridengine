@@ -919,12 +919,13 @@ sge_commit_flags_t commit_flags
           * use ERROR/WARNING/INFO or even DEBUG, the message qdel relies apon
           * may be overwritten.
           */
-         char save[4 * MAX_STRING_SIZE];
-         strncpy(save, SGE_EVENT, sizeof(save) - 1);
-         sge_event_spool(&answer_list, now, sgeE_JATASK_MOD, 
+         char *save = strdup(SGE_EVENT); 
+         
+         sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, false, true);
-         strncpy(SGE_EVENT, save, sizeof(save) - 1);
+         strcpy(SGE_EVENT, save);
+         FREE(save);
       }
 
       /* finished all ja-tasks => remove job script */

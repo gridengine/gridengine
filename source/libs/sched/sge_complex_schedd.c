@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fnmatch.h>
 
 #ifdef WIN32NATIVE
 #	include "win32nativetypes.h"
@@ -59,22 +60,10 @@
 #include "sge_complex_schedd.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
-static int string_base_cmp(u_long32 type, const char *s1, const char *s2);
+
 static int string_cmp(u_long32 type, u_long32 relop, const char *request,
- const char *offer);
-/*
-static int fillComplexFromQueue(lList **new_complexl, lList *complexl, lListElem *queue);
+                      const char *offer);
 
-static int decide_dominance(lListElem *ep, double dval, const char *as_str, u_long32 mask);
-
-static int append_complexes(lList **new_complex, lList *to_add, u_long32 layer,  
-                            const char** filter, int filter_count); 
-
-static int fixed_and_consumable(lList *new_complex, lList *config, lList *actual, u_long32 layer );
-
-static int load_values(lList *new_complex, const char *hostname, 
-                       lList *lv_list, u_long32 layer, double lc_factor);
-*/
 static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, lListElem *queue, lList *centry_list,
                                         const char** attrnames, int max_names);
 
@@ -85,6 +74,7 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
 static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, lList *centry_list);
 
 static int max_resources = QS_STATE_FULL;
+
 static int global_load_correction = 0;
 
 void set_qs_state(
@@ -376,7 +366,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             load_value = lGetString(load_el, HL_value);
 
             /* are we working on string values? if though, than it is easy */
-            if ( (type = lGetUlong(cplx_el, CE_valtype)) == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+            if ( (type = lGetUlong(cplx_el, CE_valtype)) == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
                lSetString(cplx_el, CE_stringval, load_value);
                lSetUlong(cplx_el, CE_dominant, layer | DOMINANT_TYPE_LOAD);
             }
@@ -548,6 +538,7 @@ bool get_queue_resource(lListElem *queue_elem, lListElem *queue, const char *att
 
       case TYPE_STR: 
       case TYPE_CSTR:
+      case TYPE_RESTR:
          value = lGetString(queue, queue_resource[pos].field);
          break;
       case TYPE_HOST:
@@ -1252,373 +1243,28 @@ static void build_name_filter(const char **filter, lList *list, int t_name, int 
       }
 }
 
-/****** sge_complex_schedd/load_values() ***************************************
-*  NAME
-*     load_values() -- ??? 
-*
-*  SYNOPSIS
-*     static int load_values(lList *new_centry_list, const char *hostname, 
-*     lList *lv_list, u_long32 layer, double lc_factor) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     lList *new_centry_list - ??? 
-*     const char *hostname   - ??? 
-*     lList *lv_list         - ??? 
-*     u_long32 layer         - ??? 
-*     double lc_factor       - ??? 
-*
-*  RESULT
-*     static int - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-#if 0
-static int load_values( lList *new_centry_list, const char *hostname, lList *lv_list,
-                        u_long32 layer, double lc_factor ) {
-   lListElem *ep, *load_sensor;
-   const char *name;
-   int nproc = 1;
-   lListElem *ep_nproc;
-
-   DENTER(TOP_LAYER, "load_values");
-                  
-   if ((ep_nproc = lGetElemStr(lv_list, HL_name, LOAD_ATTR_NUM_PROC))) {
-       const char *cp = lGetString(ep_nproc, HL_value);
-       if (cp)
-          nproc = MAX(1, atoi(lGetString(ep_nproc, HL_value)));
-   }
-
-   for_each (load_sensor, lv_list) {
-      name = lGetString(load_sensor, HL_name);
-
-      /* is this attribute contained in the complexes? */
-      if (!(ep = lGetElemStr(new_centry_list, CE_name, name)))
-         continue; /* no */
-
-      load_value( ep, load_sensor, nproc, hostname, layer, lc_factor );
-   }
-
-   DEXIT;
-   return 0;
-}
-#endif
-
-/****** sge_complex_schedd/load_value() ****************************************
-*  NAME
-*     load_value() -- ??? 
-*
-*  SYNOPSIS
-*     void load_value(lListElem *target_load_value, lListElem 
-*     *source_load_value, int nproc, const char *hostname, u_long32 layer, 
-*     double lc_factor) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     lListElem *target_load_value - ??? 
-*     lListElem *source_load_value - ??? 
-*     int nproc                    - ??? 
-*     const char *hostname         - ??? 
-*     u_long32 layer               - ??? 
-*     double lc_factor             - ??? 
-*
-*  RESULT
-*     void - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-#if 0
-void load_value( lListElem *target_load_value, lListElem *source_load_value, int nproc,
-                const char *hostname, u_long32 layer, double lc_factor ) {
-   const char *name, *load_value;
-   lListElem *job_load;
-   u_long32 type, dom_type;
-   double dval;
-   char err_str[256], sval[100];
-
-   DENTER(TOP_LAYER, "load_value");
-
-      name = lGetString(source_load_value, HL_name);
-
-      /* get load correction for this load value ? */
-      job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, name);
-
-      /* load values are accepted only in case they are static */
-      if (get_qs_state()==QS_STATE_EMPTY && !sge_is_static_load_value(name)){
-         DEXIT;
-         return;
-      }
-
-      load_value = lGetString(source_load_value, HL_value);
-      dom_type = DOMINANT_TYPE_LOAD;
-
-      switch (type = lGetUlong(target_load_value, CE_valtype)) {
-         case TYPE_INT:
-         case TYPE_TIM:
-         case TYPE_MEM:
-         case TYPE_BOO:
-         case TYPE_DOUBLE:
-            if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
-
-               strcpy(sval, load_value);
-               /* --------------------------------
-                  look for 'name' in our load_adjustments list
-               */
-               if (job_load) {
-                  const char *s;
-                  double load_correction;
-
-                  s = lGetString(job_load, CE_stringval);
-                  if (!parse_ulong_val(&load_correction, NULL, type, s,
-                     err_str, 255)) {
-                     ERROR((SGE_EVENT, MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S , name));
-                  }
-                  else {
-                     if (lc_factor) {
-                        double old_dval;
-
-                        if (!strncmp(name, "np_", 3)) {
-                           if (nproc != 1) {
-                              DPRINTF(("fillComplexFromHost: dividing lc_factor for \"%s\" with value %f by %d to %f\n",
-                                       name, lc_factor, nproc, lc_factor / nproc));
-                              lc_factor /= nproc;
-                           }
-                        }
-
-                        load_correction *= lc_factor;
-
-                        /* it depends on relop in complex config
-                           whether load_correction is pos/neg */
-                        switch (lGetUlong(target_load_value, CE_relop)) {
-                        case CMPLXGE_OP:
-                        case CMPLXGT_OP:
-                           old_dval = dval;
-                           dval += load_correction;
-                           break;
-
-                        case CMPLXNE_OP:
-                        case CMPLXEQ_OP:
-                        case CMPLXLT_OP:
-                        case CMPLXLE_OP:
-                        default:
-                           old_dval = dval;
-                           dval -= load_correction;
-                           break;
-                        }
-
-                        sprintf(sval, "%8.3f", dval);
-                        DPRINTF(("%s@%s: uc: %f c(%f): %f\n",
-                           name, hostname, old_dval,
-                           lc_factor, dval));
-                     }
-                     dom_type = DOMINANT_TYPE_CLOAD;
-                  }
-               }
-
-               decide_dominance(target_load_value, dval, sval, layer|dom_type);
-            } /* in case of errors we let the complexes unchanged */
-            break;
-
-         case TYPE_STR:
-         case TYPE_CSTR:
-         case TYPE_HOST:
-            lSetString(target_load_value, CE_stringval, load_value);
-            lSetUlong(target_load_value, CE_dominant, layer|DOMINANT_TYPE_LOAD);
-            break;
-      }
-   DEXIT;
-}
-#endif
-
-/**********************************************************************
- make a complex out of the default queue complex and a queue.
- **********************************************************************/
-#if 0 /* EB: TODO: make adoc comment */
-lList** new_complex;                /* here we collect resulting attributes  */
-lListElem *complex;                 /* the "queue" complex */
-lListElem *queue;                   /* the queue itself */
-int recompute_debitation_dependent; /* recompute only attribute types which  */
-                                    /* depend on the amount of debited jobs  */
-                                    /* these types are:                      */
-                                    /* - load corrected load values          */
-                                    /*   (-> scheddconf.job_load_adjustments)*/
-                                    /* - consumable attributes               */
-                                    /*   (-> CE_consumable)                  */
-#endif
-#if 0
-static int 
-fillComplexFromQueue(lList** new_complex, 
-                     lList *complex, lListElem *queue)
-{
-   lListElem *complexel;
-   const char *value;
-   char as_str[100];
-   struct queue2cmplx *q2cptr;
-
-   /* *INDENT-OFF* */
-   static struct queue2cmplx q2c[] = {
-      {"qname",            QU_qname,            TYPE_STR },
-      {"hostname",         QU_qhostname,        TYPE_HOST},
-      {"slots",            QU_job_slots,        TYPE_INT },
-      {"tmpdir",           QU_tmpdir,           TYPE_STR },
-      {"seq_no",           QU_seq_no,           TYPE_INT },
-      {"rerun",            QU_rerun,            TYPE_BOO },
-      {"calendar",         QU_calendar,         TYPE_STR },
-      {"s_rt",             QU_s_rt,             TYPE_TIM },
-      {"h_rt",             QU_h_rt,             TYPE_TIM },
-      {"s_cpu",            QU_s_cpu,            TYPE_TIM },
-      {"h_cpu",            QU_h_cpu,            TYPE_TIM },
-      {"s_fsize",          QU_s_fsize,          TYPE_MEM },
-      {"h_fsize",          QU_h_fsize,          TYPE_MEM },
-      {"s_data",           QU_s_data,           TYPE_MEM },
-      {"h_data",           QU_h_data,           TYPE_MEM },
-      {"s_stack",          QU_s_stack,          TYPE_MEM },
-      {"h_stack",          QU_h_stack,          TYPE_MEM },
-      {"s_core",           QU_s_core,           TYPE_MEM },
-      {"h_core",           QU_h_core,           TYPE_MEM },
-      {"s_rss",            QU_s_rss,            TYPE_MEM },
-      {"h_rss",            QU_h_rss,            TYPE_MEM },
-      {"s_vmem",           QU_s_vmem,           TYPE_MEM },
-      {"h_vmem",           QU_h_vmem,           TYPE_MEM },
-      {"min_cpu_interval", QU_min_cpu_interval, TYPE_TIM },
-      {"", 0, 0}                               /* delimiter */
-   };
-
-
-   /* *INDENT-ON* */
-
-   DENTER(TOP_LAYER, "fillComplexFromQueue");
-
-   /* append main "queue" complex ... */
-   if (complex){
-         int pos = 0;
-         const char **filter=NULL; 
-         filter = malloc((lGetNumberOfElem(complex)) * sizeof(char**)); 
-         memset(filter, 0,(lGetNumberOfElem(complex)) * sizeof(char**));
-   
-         for (q2cptr = q2c; q2cptr->attrname[0]; q2cptr++){
-               filter[pos++] = q2cptr->attrname;
-         }
-         
-         build_name_filter(filter, lGetList(queue, QU_consumable_config_list), CE_name, &pos);
-         build_name_filter(filter, lGetList(queue, QU_consumable_actual_list), CE_name, &pos);
-
-      
-         append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, filter, pos);
-         FREE(filter);
-   }
-   
-
-   if (!queue) {
-      DEXIT;
-      return 0;
-   }   
-
-   /* iterate through "queue" complex and fill in attribs from queue */
-   for (q2cptr = q2c; q2cptr->attrname[0]; q2cptr++) {
-      double dval;
-      if (!(complexel = lGetElemStr(*new_complex, CE_name, q2cptr->attrname)))
-         continue;
-
-      /* read stuff from queue and set to new elements */
-      switch (q2cptr->type) {
-      case TYPE_INT:
-         /* read from queue and write into complex */
-         dval = (double)lGetUlong(queue, q2cptr->field);
-         sprintf(as_str, u32, lGetUlong(queue, q2cptr->field));
-         decide_dominance(complexel, dval, as_str, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         break;
-
-      case TYPE_TIM:
-      case TYPE_MEM:
-      case TYPE_DOUBLE:
-         /* read from queue and write into complex */
-         if ((value = lGetString(queue, q2cptr->field))) {
-            parse_ulong_val(&dval, NULL, q2cptr->type, value, NULL, 0); 
-            decide_dominance(complexel, dval, value, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         } 
-         else if(lGetString(complexel, CE_stringval) == NULL){
-            lRemoveElem(*new_complex, complexel);
-         }
-         break;
-
-      case TYPE_BOO:
-         /* read from queue and write into complex */
-         dval = (double)lGetBool(queue, q2cptr->field);
-         sprintf(as_str, "%d", (int)lGetBool(queue, q2cptr->field));
-         decide_dominance(complexel, dval, as_str, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         break;
-
-      case TYPE_STR:
-      case TYPE_CSTR:
-         /* read a value from queue */
-         if ((value = lGetString(queue, q2cptr->field))) {
-            lSetString(complexel, CE_stringval, value);
-            lSetUlong(complexel, CE_dominant, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         }
-         else if(lGetString(complexel, CE_stringval) == NULL){
-            lRemoveElem(*new_complex, complexel);
-         }
-         break;
-      case TYPE_HOST:
-         /* read a value from queue */
-         if ((value = lGetHost(queue, q2cptr->field))) {
-            lSetString(complexel, CE_stringval, value);
-            lSetUlong(complexel, CE_dominant, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         }
-         else if(lGetString(complexel, CE_stringval) == NULL){
-            lRemoveElem(*new_complex, complexel);
-         }
-         break;
-      }
-   }
-   fixed_and_consumable(
-      *new_complex, 
-      lGetList(queue, QU_consumable_config_list),
-      lGetList(queue, QU_consumable_actual_list),
-      DOMINANT_LAYER_QUEUE);
-
-   DEXIT;
-   return 0;
-}
-#endif
 
 /* wrapper for strcmp() of all string types */ 
-static int string_base_cmp(u_long32 type, const char *s1, const char *s2)
+int string_base_cmp(u_long32 type, const char *s1, const char *s2)
 {
-   int match;
+   int match=0;
 
-   if (type==TYPE_STR)
-      match = strcmp(s1, s2);
-   else  {
-      if (type==TYPE_CSTR)
-         match = strcasecmp(s1, s2);
-      else
-         match = sge_hostcmp(s1, s2);
+   switch(type){
+      case TYPE_STR: match = strcmp(s1, s2);
+         break;
+      case TYPE_CSTR:  match = strcasecmp(s1, s2);
+         break;
+      case TYPE_HOST:  match = sge_hostcmp(s1, s2);
+         break;
+      case TYPE_RESTR:  {
+                           char *s = NULL; 
+                           struct saved_vars_s *context=NULL;
+                           for (s=sge_strtok_r(s1, "|", &context); s; s=sge_strtok_r(NULL, "|", &context)) {
+                              match |= fnmatch(s, s2, 0);
+                           }
+                        }
+         break;
+      default: match = -1;
    }
 
    return match;
@@ -1747,6 +1393,7 @@ int force_existence
    case TYPE_STR:
    case TYPE_CSTR:
    case TYPE_HOST:
+   case TYPE_RESTR:
       request = lGetString(req_cplx, CE_stringval);
 
       offer = lGetString(src_cplx, CE_stringval);

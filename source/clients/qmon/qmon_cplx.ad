@@ -1,4 +1,4 @@
-!!___INFO__MARK_BEGIN__
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
 !!  The Contents of this file are made available subject to the terms of
@@ -182,7 +182,8 @@ Qmon*cplx_layout.attr_atype.strings:  \
    "@{BOOL}", \
    "@{CSTRING}",\
    "@{HOST}", \
-   "@{DOUBLE}"
+   "@{DOUBLE}", \
+   "@{RESTRING}"
 
 Qmon*cplx_layout.attr_areq.ChooserType:        ChooserOption
 Qmon*cplx_layout.attr_areq.alignment:         ALIGNMENT_CENTER

@@ -214,6 +214,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          break;
       case TYPE_STR:
       case TYPE_CSTR:
+      case TYPE_RESTR:
          /* no restrictions - so everything is ok */
          break;
 
@@ -275,6 +276,7 @@ map_type2str(u_long32 type)
       "CSTRING", /* TYPE_CSTR */
       "HOST",    /* TYPE_HOST */
       "DOUBLE",  /* TYPE_DOUBLE */
+      "RESTRING", /* TYPE_RESTR */
 
       "TYPE_ACC",/* TYPE_ACC */
       "TYPE_LOG",/* TYPE_LOG */
@@ -896,6 +898,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
       
       case TYPE_STR :
       case TYPE_CSTR :
+      case TYPE_RESTR:
       case TYPE_HOST : if ( !(relop == CMPLXEQ_OP || relop == CMPLXNE_OP) ) {
                            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
                                                    MSG_INVALID_CENTRY_TYPE_RELOP_S, attrname);  
@@ -990,6 +993,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
                break;
             case TYPE_HOST:
             case TYPE_STR:
+            case TYPE_RESTR:
             case TYPE_CSTR:
                            if (strcasecmp(temp, "NONE") != 0 ) {
                               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
@@ -1007,28 +1011,36 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
 
    /* check if its a build in value and if the type is correct */
    {
-      int i;
+      int i; 
+      int type = lGetUlong(centry, CE_valtype);
       for ( i=0; i< max_queue_resources; i++){
          if (strcmp(queue_resource[i].name, attrname) == 0 &&
-            queue_resource[i].type != lGetUlong(centry, CE_valtype)
-         ){
-             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+            queue_resource[i].type != type){
+            if ((host_resource[i].type != TYPE_STR && host_resource[i].type != TYPE_CSTR && host_resource[i].type != TYPE_RESTR ) ||
+                (type != TYPE_CSTR && type != TYPE_RESTR && type != TYPE_STR)){            
+
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                        MSG_INVALID_CENTRY_TYPE_CHANGE_S, attrname);
 
-            ret = false;
-            break; 
+               ret = false;
+               break;
+            }
          }
       }
 
       for ( i=0; i< max_host_resources; i++){
          if (strcmp(host_resource[i].name, attrname) == 0 &&
-            host_resource[i].type != lGetUlong(centry, CE_valtype)
-         ){
-             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+             host_resource[i].type != type){
+            
+            if ((host_resource[i].type != TYPE_STR && host_resource[i].type != TYPE_CSTR && host_resource[i].type != TYPE_RESTR ) ||
+                (type != TYPE_CSTR && type != TYPE_RESTR && type != TYPE_STR)){
+            
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                        MSG_INVALID_CENTRY_TYPE_CHANGE_S, attrname);
 
-            ret = false;
-            break; 
+               ret = false;
+               break; 
+            }
          }
       }
    }

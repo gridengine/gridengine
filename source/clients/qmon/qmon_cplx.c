@@ -633,7 +633,7 @@ static void qmonCplxAtypeAttr(Widget w, XtPointer cld, XtPointer cad)
    for (i=0; i<6; i++)
       XmtChooserSetSensitive(attr_arel, i, True); 
    
-   if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+   if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
       XmtInputFieldSetString(attr_adefault, "NONE");
       XmtChooserSetState(attr_arel, 0, False);
       for (i=1; i<5; i++)
@@ -683,7 +683,7 @@ static void qmonCplxAconsumableAttr(Widget w, XtPointer cld, XtPointer cad)
          XmtChooserSetSensitive(attr_arel, i, True); 
       
       type = XmtChooserGetState(attr_atype) + 1;
-      if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+      if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
          XmtInputFieldSetString(attr_adefault, "NONE"); 
          XmtChooserSetState(attr_arel, 0, False);
          for (i=1; i<5; i++)
@@ -737,7 +737,7 @@ XtPointer cld, cad;
       /* type */
       str = XbaeMatrixGetCell(w, cbs->row, 2);
       type = 0;
-      for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
+      for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
          if (!strcasecmp(str, map_type2str(i)))
             type = i-1;
       }

@@ -222,7 +222,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             case TYPE_HOST:   
             case TYPE_STR:   
             case TYPE_CSTR:  
-
+            case TYPE_RESTR:
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                   dominant = lGetUlong(rep, CE_pj_dominant);
                   s = lGetString(rep, CE_pj_stringval);
@@ -282,6 +282,8 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             }
          }
          monitor_dominance(dom, dominant); 
+         printf("\t%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
+/*
          switch(lGetUlong(rep, CE_valtype)) {
          case TYPE_INT:  
          case TYPE_TIM:  
@@ -291,6 +293,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
             printf("\t%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
             break;
          }
+*/         
       }
 
       lFreeList(rlp);

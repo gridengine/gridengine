@@ -234,10 +234,8 @@ enum {
 *     SGE_ULONG(QU_tagged4schedule)
 *  
 *     SGE_LIST(QU_cached_complexes)      
-*        CE_Type used in scheduler for caching 
 *
 *     SGE_ULONG(QU_cache_version)       
-*        used to decide whether QU_cached_complexes needs a refresh
 *
 *     SGE_ULONG(QU_pending_signal)
 *
@@ -322,13 +320,13 @@ enum {
    QU_s_vmem,
    QU_h_vmem,
 
-   QU_stamp,
+/*   QU_stamp,*/
 
    QU_min_cpu_interval,
 
-   QU_enable_migr,
+/*   QU_enable_migr,*/
 
-   QU_master,
+/*   QU_master,*/
    QU_state,
    QU_notify,
 
@@ -347,12 +345,12 @@ enum {
    QU_suitable,
    QU_tagged,
    QU_tagged4schedule,
-   QU_cached_complexes,
-   QU_cache_version,
+/*   QU_cached_complexes,*/
+/*   QU_cache_version, */
    QU_pending_signal,
    QU_pending_signal_delivery_time,
    QU_version,
-   QU_queueing_system,
+/*   QU_queueing_system,*/
    QU_suspended_on_subordinate,
    QU_last_suspend_threshold_ckeck,
    QU_job_cnt,
@@ -408,10 +406,10 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_STRING(QU_h_rss, CULL_SPOOL | CULL_CONFIGURE)  
    SGE_STRING(QU_s_vmem, CULL_SPOOL | CULL_CONFIGURE) 
    SGE_STRING(QU_h_vmem, CULL_SPOOL | CULL_CONFIGURE)
-   SGE_ULONG(QU_stamp, CULL_DEFAULT) 
+/*   SGE_ULONG(QU_stamp, CULL_DEFAULT) */
    SGE_STRING(QU_min_cpu_interval, CULL_SPOOL | CULL_CONFIGURE) 
-   SGE_ULONG(QU_enable_migr, CULL_DEFAULT)     
-   SGE_ULONG(QU_master, CULL_DEFAULT)
+/*   SGE_ULONG(QU_enable_migr, CULL_DEFAULT)     */
+/*   SGE_ULONG(QU_master, CULL_DEFAULT)*/
    SGE_ULONG(QU_state, CULL_SPOOL)
    SGE_STRING(QU_notify, CULL_SPOOL | CULL_CONFIGURE)         
    SGE_LIST(QU_acl, US_Type, CULL_SPOOL | CULL_CONFIGURE)   
@@ -428,12 +426,12 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_ULONG(QU_suitable, CULL_DEFAULT)
    SGE_ULONG(QU_tagged, CULL_DEFAULT)
    SGE_ULONG(QU_tagged4schedule, CULL_DEFAULT)
-   SGE_LIST(QU_cached_complexes, CE_Type, CULL_DEFAULT)   
-   SGE_ULONG(QU_cache_version, CULL_DEFAULT)   
+/*   SGE_LIST(QU_cached_complexes, CE_Type, CULL_DEFAULT)   */
+/*   SGE_ULONG(QU_cache_version, CULL_DEFAULT)   */
    SGE_ULONG(QU_pending_signal, CULL_SPOOL)
    SGE_ULONG(QU_pending_signal_delivery_time, CULL_SPOOL)
    SGE_ULONG(QU_version, CULL_SPOOL)   
-   SGE_STRING(QU_queueing_system, CULL_DEFAULT)
+/*   SGE_STRING(QU_queueing_system, CULL_DEFAULT)*/
    SGE_ULONG(QU_suspended_on_subordinate, CULL_DEFAULT) 
    SGE_ULONG(QU_last_suspend_threshold_ckeck, CULL_DEFAULT) 
    SGE_ULONG(QU_job_cnt, CULL_DEFAULT)          
@@ -495,12 +493,12 @@ NAMEDEF(QUN)
    NAME("QU_s_vmem")
    NAME("QU_h_vmem")
 
-   NAME("QU_stamp")
+/*   NAME("QU_stamp")*/
    NAME("QU_min_cpu_interval")
 
-   NAME("QU_enable_migr")
+/*   NAME("QU_enable_migr")*/
 
-   NAME("QU_master")
+/*   NAME("QU_master")*/
    NAME("QU_state")
    NAME("QU_notify")
 
@@ -518,12 +516,12 @@ NAMEDEF(QUN)
    NAME("QU_suitable")
    NAME("QU_tagged")
    NAME("QU_tagged4schedule")
-   NAME("QU_cached_complexes")
-   NAME("QU_cache_version")
+/*   NAME("QU_cached_complexes")*/
+/*   NAME("QU_cache_version")*/
    NAME("QU_pending_signal")
    NAME("QU_pending_signal_delivery_time")
    NAME("QU_version")
-   NAME("QU_queueing_system")
+/*   NAME("QU_queueing_system")*/
    NAME("QU_suspended_on_subordinate")
    NAME("QU_last_suspend_threshold_ckeck")
    NAME("QU_job_cnt")

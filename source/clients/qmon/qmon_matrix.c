@@ -753,34 +753,8 @@ StringConst *ce_entry
    /* name type relation value */ 
    ce_entry[CE_NAME] = lGetString(ep, CE_name);
    ce_entry[CE_SHORTCUT] = lGetString(ep, CE_shortcut);
-   switch (lGetUlong(ep, CE_valtype)) {
-   case TYPE_INT:
-      ce_entry[CE_TYPE] = "INT";
-      break;
-   case TYPE_STR:
-      ce_entry[CE_TYPE] = "STRING";
-      break;
-   case TYPE_TIM:
-      ce_entry[CE_TYPE] = "TIME";
-      break;
-   case TYPE_MEM:
-      ce_entry[CE_TYPE] = "MEMORY";
-      break;
-   case TYPE_BOO:
-      ce_entry[CE_TYPE] = "BOOL";
-      break;
-   case TYPE_HOST:
-      ce_entry[CE_TYPE] = "HOST";
-      break;
-   case TYPE_DOUBLE:
-      ce_entry[CE_TYPE] = "DOUBLE";
-      break;
-   case TYPE_CSTR:
-      ce_entry[CE_TYPE] = "CSTRING";
-      break;
-   default:
-      ce_entry[CE_TYPE] = "UNKNOWN";
-   }
+   ce_entry[CE_TYPE] = map_type2str(lGetUlong(ep, CE_valtype));
+
    switch (lGetUlong(ep, CE_relop)) {
    case CMPLXLT_OP:
       ce_entry[CE_RELOP] = "<";
@@ -832,7 +806,7 @@ String *ce_entry
    lSetString(ep, CE_shortcut, ce_entry[CE_SHORTCUT] );
 
    type = 0;
-   for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
+   for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
       if (!strcasecmp(ce_entry[CE_TYPE], map_type2str(i)))
          type = i;
    }

@@ -375,7 +375,7 @@ ulong_parse_centry_type_from_string(u_long32 *this_ulong,
    DENTER(TOP_LAYER, "ulong_parse_centry_type_from_string");
 
    *this_ulong = 0;
-   for (i = TYPE_FIRST; i <= TYPE_DOUBLE; i++) {
+   for (i = TYPE_FIRST; i <= TYPE_CE_LAST; i++) {
       if (!strcasecmp(string, map_type2str(i))) {
          *this_ulong = i;
          break;

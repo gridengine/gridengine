@@ -70,10 +70,7 @@ lListElem *get_attribute_by_name(lListElem *global, lListElem *host, lListElem *
 int compare_complexes(int slots, lListElem *complex1, 
                       lListElem *complex2, char *availability_text, 
                       int is_threshold, int force_existence);
-/*
-int fillComplexFromHost(lList **new_complex,  
-                        lListElem *host, lList *complex, u_long32 layer);
-*/
+
 int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 
                      int slots, int config_nm, int actual_nm, 
                      const char *obj_name);
@@ -86,11 +83,10 @@ bool get_queue_resource(lListElem *queue_elem, lListElem *queue, const char *att
 
 lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr,lList *centry_list,
                                 lListElem *queue, u_long32 layer, double lc_factor, char *reason, int reason_size);
-/*
-void load_value( lListElem *target_load_value, lListElem *source_load_value, int nproc,
-                const char *hostname, u_long32 layer, double lc_factor ); 
-*/
+
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
+
+int string_base_cmp(u_long32 type, const char *s1, const char *s2);
 
 #endif /* __SGE_COMPLEX_SCHEDD_H */
 

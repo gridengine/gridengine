@@ -465,7 +465,7 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
          if (cmplx_attr != NULL) {
             int type = lGetUlong(cmplx_attr, CE_valtype);
 
-            if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+            if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, attr));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
                                ANSWER_QUALITY_ERROR);
@@ -1723,7 +1723,7 @@ void sconf_print_config(void){
    sconf_clear_pos();
 
    if (!sconf_is()){
-      ERROR((SGE_EVENT, "sconf_validate: no config to validate\n"));
+      ERROR((SGE_EVENT, "sconf_printf_config: no config to validate\n"));
       return;
    }
 
@@ -1989,7 +1989,7 @@ bool sconf_validate_config_(lList **answer_list){
    {
       const char *sparams = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
       char *s = NULL; 
-      if (s) {
+      if (sparams) {
          for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;
             bool added = false;

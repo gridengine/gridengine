@@ -69,7 +69,6 @@ enum {
    OR_job_version,
    OR_queuelist,
    OR_ticket,
-   OR_pticket,
    OR_joker,
    OR_pe
 };
@@ -83,7 +82,6 @@ LISTDEF(OR_Type)
    SGE_ULONG(OR_job_version, CULL_DEFAULT)  /* which job version */
    SGE_LIST(OR_queuelist, OQ_Type, CULL_DEFAULT)     /* associated queue list */
    SGE_DOUBLE(OR_ticket, CULL_DEFAULT)      /* SGEEE job tickets */
-   SGE_DOUBLE(OR_pticket, CULL_DEFAULT)     /* SGEEE job tickets */
    SGE_LIST(OR_joker, CULL_ANY_SUBTYPE, CULL_DEFAULT)         /* type of this sublist depends on OR_type:  
                                * ORT_start_job empty ORT_remove_job empty  
                                * ORT_tickets reduced job element JB_Type
@@ -104,7 +102,6 @@ NAMEDEF(ORN)
      NAME("OR_job_version")
      NAME("OR_queuelist")
      NAME("OR_ticket")
-     NAME("OR_pticket")
      NAME("OR_joker")
      NAME("OR_pe")
      NAMEEND

@@ -459,6 +459,8 @@ int type
       case TYPE_STR:
          pix = qmonGetIcon("str");
          break;
+      case TYPE_RESTR:
+         pix = qmonGetIcon("unknown");
       case TYPE_BOO:
          pix = qmonGetIcon("bool");
          break;
@@ -607,6 +609,11 @@ int maxlen
          break;
       case TYPE_CSTR:
          status = XmtAskForString(w, NULL, "@{Enter a uppercase string value}", stringval, maxlen, NULL);
+         if (stringval[0] == '\0')
+            status = False;
+         break;
+       case TYPE_RESTR:
+         status = XmtAskForString(w, NULL, "@{Enter a string value}", stringval, maxlen, NULL);
          if (stringval[0] == '\0')
             status = False;
          break;

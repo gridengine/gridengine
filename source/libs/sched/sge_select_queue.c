@@ -415,11 +415,14 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
          case 1 : /* the requested element does not exist */
                   if (tag == QUEUE_TAG) {
                      if (lGetUlong(attr, CE_tagged) == NO_TAG) {
-                        char tmp_reason[2048];
-                        tmp_reason[0] = '\0';
-
-                        strncpy(reason, MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE, reason_size-1);
-                        strncat(reason, tmp_reason, reason_size-1);
+                        if (reason){
+                           char tmp_reason[2048];
+                           tmp_reason[0] = '\0';
+                           
+                           sprintf(tmp_reason, " (%s)\n", lGetString(attr, CE_name));
+                           strncpy(reason, MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE, reason_size-1);
+                           strncat(reason, tmp_reason, reason_size-1);
+                        }
                         DEXIT;
                         return 0 ;
                      }
@@ -1116,6 +1119,8 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
       case TYPE_STR:
       case TYPE_CSTR:
       case TYPE_HOST:
+      case TYPE_RESTR:
+#if 0         
          if (type==TYPE_STR)
             match = strcmp(limit_value, load_value);
          else  { 
@@ -1131,7 +1136,15 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             DEXIT;
             return 1;
          }
-
+#endif
+         match = string_base_cmp(type, limit_value, load_value);
+         if (!match) {
+            if (reason)
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS, name, load_value, map_op2str(relop), limit_value);
+            DEXIT;
+            return 1;
+         }
+         
          break;
       default:
          if (reason)
@@ -2691,64 +2704,6 @@ int *violations)
 
 /* ----------------------------------------
 
-   sge_get_ulong_qattr() 
-
-   writes actual value of the queue attriute into *uvalp 
-
-   returns:
-      0 ok, value in *uvalp is valid
-      -1 the queue has no such attribute
-      -2 type error: cant compute uval from actual string value 
-
-*/  
-/* TODO SG remove (not used anymore?) */   
-#if 0
-int sge_get_ulong_qattr(
-u_long32 *uvalp,
-char *attrname,
-lListElem *q,
-lList *exechost_list,
-lList *centry_list 
-) {
-   int ret = -1;
-   lListElem *ep;
-   lList *attributes = NULL;
-   u_long32 type;
-   double tmp_dval;
-   char dom_str[4];
-
-   DENTER(TOP_LAYER, "sge_get_ulong_qattr");
-
-   /* fill in complexes */
-   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);
-
-   /* find matching */
-   if ((ep = centry_list_locate(attributes, attrname)) &&
-         (type=lGetUlong(ep, CE_valtype))!=TYPE_STR) {
-         
-         if ((lGetUlong(ep, CE_pj_dominant)&DOMINANT_TYPE_MASK)!=DOMINANT_TYPE_VALUE ) {
-            parse_ulong_val(&tmp_dval, NULL, type, lGetString(ep, CE_pj_stringval), NULL, 0);
-            monitor_dominance(dom_str, lGetUlong(ep, CE_pj_dominant));
-         } else {
-            parse_ulong_val(&tmp_dval, NULL, type, lGetString(ep, CE_stringval), NULL, 0); 
-            monitor_dominance(dom_str, lGetUlong(ep, CE_dominant));
-         }
-      ret = 0;
-      if (uvalp)
-         *uvalp = (u_long32)tmp_dval;
-      DPRINTF(("resource %s:"u32"\n", dom_str, (u_long32) tmp_dval));
-   }
-
-   /* free */
-   lFreeList(attributes);
-
-   DEXIT; 
-   return ret;
-}
-#endif
-
-/* ----------------------------------------
-
    sge_get_double_qattr() 
 
    writes actual value of the queue attriute into *uvalp 
@@ -2777,14 +2732,11 @@ sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
    global = host_list_locate(exechost_list, "global"); 
    host = host_list_locate(exechost_list, lGetHost(q, QU_qhostname));
 
-   /* fill in complexes */
-/*   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);*/
-
    /* find matching */
    *has_value_from_object = false;
    if (( ep = get_attribute_by_name(global, host, q, attrname, centry_list, NULL, 0)) &&
-/*   if ((ep = centry_list_locate(attributes, attrname)) &&*/
-         (type=lGetUlong(ep, CE_valtype))!=TYPE_STR) {
+         ((type=lGetUlong(ep, CE_valtype)) != TYPE_STR) && 
+         (type != TYPE_CSTR) && (type != TYPE_RESTR) && (type != TYPE_HOST) ) {
          
          if ((lGetUlong(ep, CE_pj_dominant)&DOMINANT_TYPE_MASK)!=DOMINANT_TYPE_VALUE ) {
             parse_ulong_val(&tmp_dval, NULL, type, lGetString(ep, CE_pj_stringval), NULL, 0);

@@ -178,11 +178,13 @@ typedef char stringT[MAX_STRING_SIZE];
 #define TYPE_CSTR         6
 #define TYPE_HOST         7
 #define TYPE_DOUBLE       8
+#define TYPE_RESTR        9
+#define TYPE_CE_LAST      TYPE_RESTR
 
 /* used in config */
-#define TYPE_ACC          9
-#define TYPE_LOG          10
-#define TYPE_LOF          11
+#define TYPE_ACC          10 
+#define TYPE_LOG          11
+#define TYPE_LOF          12
 #define TYPE_LAST         TYPE_LOF
 
 /* save string format quoted */

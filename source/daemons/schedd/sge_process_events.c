@@ -194,12 +194,14 @@ int event_handler_default_scheduler()
 
    ensure_valid_what_and_where();
 
+
    copy.job_list = lSelect("", Master_Job_List,
                            where_job, what_job); 
-
+                           
    /* the scheduler functions have to work with a reduced copy .. */
    copy.host_list = lSelect("", Master_Exechost_List,
                             where_host, what_host);
+
    copy.queue_list = lSelect("", Master_Queue_List,
                              where_queue, what_queue);
 
@@ -349,14 +351,15 @@ static void ensure_valid_what_and_where(void)
    called = 1;
 
    if (where_queue == NULL) {
-      where_queue = lWhere("%T(%I!=%s "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u) "
-         "&& !(%I m= %u))",
+      where_queue = lWhere("%T("
+     /*    "%I!=%s &&" */
+         " !(%I m= %u) &&" 
+         " !(%I m= %u) &&"
+         " !(%I m= %u) &&"
+         " !(%I m= %u) &&"
+         " !(%I m= %u))",
          QU_Type,    
-         QU_qname, SGE_TEMPLATE_NAME, /* do not select queue "template" */
+/*         QU_qname, SGE_TEMPLATE_NAME,*/ /* do not select queue "template" */
          QU_state, QSUSPENDED,        /* only not suspended queues      */
          QU_state, QSUSPENDED_ON_SUBORDINATE, 
          QU_state, QCAL_SUSPENDED, 
@@ -425,7 +428,93 @@ DTRACE;
 
    /* ---------------------------------------- */
    if (what_queue == NULL) {
-      what_queue = lWhat("%T(ALL)", QU_Type);
+      #define NM10 "%I%I%I%I%I%I%I%I%I%I"
+      #define NM9 "%I%I%I%I%I%I%I%I%I"
+      #define NM5  "%I%I%I%I%I"
+      #define NM3  "%I%I%I"
+      #define NM1  "%I"
+/*      what_queue = lWhat("%T(ALL)", QU_Type); */
+
+      what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5")", QU_Type,
+            QU_qname,
+            QU_qhostname,
+         /*   QU_tmpdir,
+            QU_shell,
+         */
+            QU_seq_no,
+         /*   QU_queue_number, */
+            QU_load_thresholds,
+            QU_suspend_thresholds,
+            QU_nsuspend,
+            QU_suspend_interval,
+         /*   QU_priority,
+            QU_rerun,
+            QU_qtype,
+            QU_processors,*/
+            QU_job_slots,
+
+            QU_calendar,
+
+         /*   QU_prolog,
+            QU_epilog,
+            QU_shell_start_mode,
+            QU_initial_state,
+         */
+            QU_s_rt,
+            QU_h_rt,
+            QU_s_cpu,
+            QU_h_cpu,
+            QU_s_fsize,
+            QU_h_fsize,
+            QU_s_data,
+            QU_h_data,
+            QU_s_stack,
+            QU_h_stack,
+            QU_s_core,
+            QU_h_core,
+            QU_s_rss,
+            QU_h_rss,
+            QU_s_vmem,
+            QU_h_vmem,
+
+            QU_min_cpu_interval,
+
+            QU_state,
+            QU_notify,
+
+         /*   QU_acl,
+            QU_xacl,
+            QU_owner_list, */
+            QU_subordinate_list,
+            QU_consumable_config_list,
+            QU_projects,
+            QU_xprojects,
+
+            QU_fshare,
+            QU_oticket,
+
+            QU_consumable_actual_list,
+            QU_suitable,
+            QU_tagged,
+            QU_tagged4schedule,
+         /*   QU_pending_signal,
+            QU_pending_signal_delivery_time, */
+            QU_version,
+            QU_suspended_on_subordinate,
+            QU_last_suspend_threshold_ckeck,
+            QU_job_cnt,
+            QU_pending_job_cnt,
+            QU_soft_violation,
+            QU_host_seq_no/*,
+
+            QU_starter_method,
+            QU_suspend_method,
+            QU_resume_method,
+            QU_terminate_method,
+
+            QU_pe_list,
+            QU_ckpt_list*/
+            );
    }
 
    /* ---------------------------------------- */

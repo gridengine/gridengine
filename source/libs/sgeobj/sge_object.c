@@ -1,4 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
+#/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
@@ -652,7 +652,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
             u_long32 type = 0;
             int i;
 
-            for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
+            for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
                if (!strcasecmp(value, map_type2str(i)))  
                   type = i;
             }

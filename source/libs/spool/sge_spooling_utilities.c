@@ -588,7 +588,7 @@ spool_default_validate_list_func(lList **answer_list,
       case SGE_TYPE_USER:
       case SGE_TYPE_SHARETREE:
       case SGE_TYPE_SCHEDD_CONF:
-            sconf_validate_config_(answer_list);
+            ret = sconf_validate_config_(answer_list);
       case SGE_TYPE_JOB:
       default:
          break;

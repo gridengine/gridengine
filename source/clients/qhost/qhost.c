@@ -488,6 +488,7 @@ u_long32 show
          case TYPE_HOST:   
          case TYPE_STR:   
          case TYPE_CSTR:   
+         case TYPE_RESTR:
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
                dominant = lGetUlong(rep, CE_pj_dominant);
                s = lGetString(rep, CE_pj_stringval);

@@ -53,7 +53,7 @@
 #include "msg_history.h"
 #include "def.h"
 #include "sge_all_listsL.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "complex_history.h"
 #include "sge_sched.h"
 #include "sge_resource.h"

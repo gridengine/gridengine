@@ -1,5 +1,5 @@
-#ifndef __COMPLEX_H
-#define __COMPLEX_H
+#ifndef __SGE_COMPLEX_H
+#define __SGE_COMPLEX_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -42,5 +42,5 @@ int fill_and_check_attribute(lListElem *alp, int allow_empty_boolean, int allow_
 
 void init_complex_double_values(lList *cl);
 
-#endif /* __COMPLEX_H */
+#endif /* __SGE_COMPLEX_H */
 

@@ -1,3 +1,8 @@
+AA-2001-11-30-4: Feature:   Security changes:
+                            - common/complex.[ch] -> sge_complex.[ch]
+                              due to name conflict when compiling under
+                              linux
+
 JG-2001-11-30-1: Enhancem.: Event client mechanism:
                             - any user may start an event client from an admin
                               or submit host

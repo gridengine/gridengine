@@ -80,7 +80,7 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "read_write_host.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sched_conf.h"
 #include "read_write_userprj.h"
 #include "sge_sharetree.h"

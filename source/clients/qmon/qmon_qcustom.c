@@ -57,7 +57,7 @@
 #include "qmon_appres.h"
 #include "qmon_widgets.h"
 #include "def.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_sched.h"      
 #include "commlib.h"
 #include "sge_gdi_intern.h"

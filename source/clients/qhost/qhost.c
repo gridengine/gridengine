@@ -57,7 +57,7 @@
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "utility.h"
 #include "qstat_printing.h"
 #include "sge_range.h"

@@ -46,7 +46,7 @@
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
 #include "sge_jobL.h"

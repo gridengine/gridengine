@@ -54,7 +54,7 @@ COMMON_SRC = sge_conf.c \
             sge_groups.c \
             sge_options.c \
             sge_sharetree.c \
-            complex.c \
+            sge_complex.c \
             complex_history.c \
             execution_states.c \
             job.c \
@@ -98,8 +98,8 @@ sge_options.o:	$(COMMON_DIR)/sge_options.c
 sge_sharetree.o: $(COMMON_DIR)/sge_sharetree.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_sharetree.c
 
-complex.o: $(COMMON_DIR)/complex.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/complex.c
+sge_complex.o: $(COMMON_DIR)/sge_complex.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_complex.c
 
 complex_history.o:	$(COMMON_DIR)/complex_history.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/complex_history.c

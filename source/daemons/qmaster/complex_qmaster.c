@@ -49,7 +49,7 @@
 #include "sge_schedconfL.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "complex_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_m_event.h"

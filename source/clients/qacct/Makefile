@@ -40,7 +40,7 @@ QACCT_SRC = qacct.c
 
 QACCT_ADD_SRC = \
             sge_rusage.c \
-            complex.c \
+            sge_complex.c \
             complex_history.c \
             job.c \
             read_object.c \

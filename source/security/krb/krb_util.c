@@ -58,7 +58,7 @@
 #include "sge_me.h"
 #include "sge_max_nis_retries.h"
 
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_prognames.h"
 #include "msg_krb.h"
 

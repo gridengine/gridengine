@@ -50,7 +50,7 @@
 
 #include "cull.h"
 #include "sge_gdi.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
 #include "parse_range.h"

@@ -79,7 +79,7 @@ QMASTER_ADD_SRC = usage.c sge_options.c sge_conf.c job_log.c \
               startprog.c utility_daemon.c shutdown.c opt_silent.c \
               admin_mail.c \
               category.c \
-              complex.c \
+              sge_complex.c \
               complex_history.c \
               config_file.c \
               execution_states.c \

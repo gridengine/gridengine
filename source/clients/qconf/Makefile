@@ -41,7 +41,7 @@ QCONF_SRC = qconf.c \
             sge_client_access.c
 
 QCONF_ADD_SRC = \
-               rw_configuration.c complex.c sge_userset.c \
+               rw_configuration.c sge_complex.c sge_userset.c \
                read_write_userprj.c read_write_pe.c read_write_queue.c \
                read_write_ckpt.c read_write_cal.c read_write_host.c \
                read_write_userset.c  sched_conf.c \

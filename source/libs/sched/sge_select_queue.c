@@ -40,7 +40,7 @@
 #include "sge_log.h"
 #include "cull.h"
 #include "sge_select_queue.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_resource.h"
 #include "sge_complex_schedd.h"

@@ -47,7 +47,7 @@
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sge_host.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
 #include "sig_handlers.h"

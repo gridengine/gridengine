@@ -53,7 +53,7 @@
 #include "sgermon.h"
 #include "sge_prognames.h"
 #include "sge_host.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_feature.h"
 #include "sge_c_gdi.h"

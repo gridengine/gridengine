@@ -34,7 +34,7 @@
 #include "cull.h"
 #include "sgermon.h"
 #include "sge_string.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_log.h"
 #include "sge_answerL.h"
 #include "sge_complexL.h"

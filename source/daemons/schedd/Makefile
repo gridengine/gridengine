@@ -46,7 +46,7 @@ SCHEDD_SRC  = sge_schedd.c \
 
 SCHEDD_ADD_SRC = job_log.c \
              category.c \
-             complex.c \
+             sge_complex.c \
              job.c \
              parse_job_cull.c \
              parse_qsub.c \
@@ -136,7 +136,7 @@ interactive_sched.o : $(SCHEDD_SDIR)/interactive_sched.c
 # -------------------------------------------------
 # this modules belong into a scheduling library
 # for being accessable from qmaster, qstat, qmon and may be others
-# there are still some ugly dependencies (complex.c)
+# there are still some ugly dependencies (sge_complex.c)
 
 sge_share_mon.o: $(SCHEDD_SDIR)/sge_share_mon.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_share_mon.c

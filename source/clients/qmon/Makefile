@@ -103,7 +103,7 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_calendar.ad \
             $(QMON_DIR)/qmon_loadmon.ad
 
-QMON_ADD_SRC = complex.c parse_job_cull.c unparse_job_cull.c \
+QMON_ADD_SRC = sge_complex.c parse_job_cull.c unparse_job_cull.c \
             parse_qsub.c path_aliases.c job.c \
             read_defaults.c parse_mail.c sge_userset.c \
             read_object.c write_job_defaults.c sge_options.c usage.c

@@ -45,7 +45,7 @@
 #include "sge_queueL.h"
 #include "sge_parse_num_par.h"
 #include "sge_static_load.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "msg_schedd.h"
 #include "sge_language.h"
 #include "sge_string.h"

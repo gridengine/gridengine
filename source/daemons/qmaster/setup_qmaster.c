@@ -60,7 +60,7 @@
 #include "sge_pe_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_manop.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "slots_used.h"
 #include "complex_qmaster.h"
 #include "complex_history.h"

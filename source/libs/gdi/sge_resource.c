@@ -37,7 +37,7 @@
 #include "sge_queueL.h"
 #include "sge_requestL.h"
 #include "sge_complexL.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "parse_range.h"
 #include "sge_resource.h"
 #include "cull_parse_util.h"

@@ -57,7 +57,7 @@
 #include "sge_schedd.h"
 #include "sgermon.h"
 #include "commlib.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "scheduler.h"
 #include "sge_feature.h"
 #include "shutdown.h"

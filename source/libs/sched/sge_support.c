@@ -47,7 +47,7 @@
 #include "sge_copy_append.h"
 #include "commlib.h"
 #include "sgermon.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_prognames.h"
 #include "sge_c_event.h"
 #include "sge_schedd.h"

@@ -50,7 +50,7 @@
 #include "sge_copy_append.h"
 #include "commlib.h"
 #include "sge_time.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_prognames.h"
 #include "sgermon.h"
 #include "scheduler.h"

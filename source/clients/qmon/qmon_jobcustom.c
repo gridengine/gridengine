@@ -60,7 +60,7 @@
 #include "qmon_matrix.h"
 #include "sge.h"
 #include "symbols.h"
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_sched.h"      
 #include "commlib.h"
 #include "sge_gdi_intern.h"

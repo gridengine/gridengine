@@ -60,7 +60,7 @@
 /* #include "sgermon.h" */
 /* #include "basis_types.h" */
 
-#include "complex.h"
+#include "sge_complex.h"
 #include "sge_prognames.h"
 #include "msg_krb.h"
 

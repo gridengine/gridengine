@@ -53,13 +53,14 @@ SHEPHERD_ADD_SRC = \
            sge_parse_num_par.c \
            pdc.c \
            procfs.c \
+           sge_mt_init.c \
            sge_processes_irix.c
 
 SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 
 SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o) 
 
-SHEPHERD_ADD_LIBS = -lsgeobj -lsgeobjd -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
+SHEPHERD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon
 
 SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 

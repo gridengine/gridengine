@@ -1,3 +1,6 @@
+AD-2003-10-30-0: Bugfix.:   MT initialization for sge_shepherd was incomplete.
+                 Changed:   sge_shepherd
+
 SG-2003-10-29-0: Bugfix.:   - SGE: sched config read in error on qmaster 
                                    startup
                             - SGE: no jobs were scheduled, fixed

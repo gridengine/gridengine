@@ -100,6 +100,7 @@ struct rusage {
 #include "sge_pset.h"
 #include "sge_dstring.h"
 #include "sge_shepconf.h"
+#include "sge_mt_init.h"
 
 #include "sge_reportL.h"
 
@@ -504,6 +505,8 @@ int main(int argc, char **argv)
    int run_epilog, run_pe_stop;
    dstring ds;
    char buffer[256];
+
+   sge_mt_init();
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    shepherd_trace_sprintf("shepherd called with uid = "uid_t_fmt", euid = "uid_t_fmt, 

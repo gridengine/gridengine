@@ -1,3 +1,8 @@
+CR-2003-02-24-1  Testsuite: - ignore second foreign system group at startup
+                              when no_main parameter is set
+                            - assume an extra entry in execd configuration
+                              for irix6 architecture (NICE values)
+
 CR-2003-02-24-0  Enhancem.: - Added commd profiling ( /tmp/commd/err.XXX file)
                             - New sgecommdcntl options: -profile on|off|reset
 

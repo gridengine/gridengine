@@ -2363,6 +2363,9 @@ proc setup_execd_conf {} {
         unset tmp_config
      }
      get_config tmp_config $host
+     if { [info exists elements] } {
+        unset elements
+     }
      set elements [array names tmp_config]
      set counter 0
      set output ""
@@ -2377,10 +2380,15 @@ proc setup_execd_conf {} {
      }
      set spool_dir_found 0
     
+     if { [ string compare [resolve_arch $host] "irix6"] == 0 } {
+        incr expected_entries 1 
+     }
+
      foreach elem $elements {
         append output "$elem is set to $tmp_config($elem)\n" 
         incr counter 1
         switch $elem {
+           "execd_params" { continue }
            "mailer" { continue }
            "qlogin_daemon" { continue }
            "rlogin_daemon" { continue }
@@ -2406,7 +2414,7 @@ proc setup_execd_conf {} {
      }
      puts $CHECK_OUTPUT $output
      if { $counter != $expected_entries } {
-        add_proc_error "setup_execd_conf" -1 "host $host has $counter from $expected_entries expeced entries:\n$output"
+        add_proc_error "setup_execd_conf" -1 "host $host has $counter from $expected_entries expected entries:\n$output"
      }
      foreach elem $removed {
         set tmp_config($elem) ""

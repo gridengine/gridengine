@@ -6531,7 +6531,7 @@ proc user_config_first_foreign_group { only_check name config_array } {
 proc user_config_second_foreign_group { only_check name config_array } {
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_USER
-   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP
+   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP do_nomain
 
    upvar $config_array config
    
@@ -6576,7 +6576,7 @@ proc user_config_second_foreign_group { only_check name config_array } {
 
    set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
    debug_puts $result
-   if { [string first $value $result ] < 0 } {
+   if { [string first $value $result ] < 0 && $do_nomain == 0 } {
       puts $CHECK_OUTPUT "second testsuite user ($CHECK_SECOND_FOREIGN_SYSTEM_USER) has not \"$value\" as main group"
       return -1
    }

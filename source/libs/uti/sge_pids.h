@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(SUN4) || defined(LINUX)
+#if defined(SUN4) || defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
 #  define PSCMD "/bin/ps -axc"
 #elif defined(ALPHA)
 #  define PSCMD "/bin/ps axo pid,ucomm"

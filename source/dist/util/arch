@@ -43,7 +43,12 @@
 #          arch -lib  (print name of variable to extend shared library path)
 #
 
-PATH=/bin:/usr/bin:/usr/sbin
+# On some architectures, it is necessicary to run the manpath(1) command
+# with the user's path instead of our "safe" one.  Thus we need to
+# save the old value of PATH for later restoration.
+SAFE_PATH=/bin:/usr/bin:/usr/sbin
+OLD_PATH=$PATH
+PATH=$SAFE_PATH
 
 ARCH=UNKNOWN
 

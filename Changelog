@@ -1,3 +1,6 @@
+BD-2003-07-11-0: Bugfix     Merge more missing FreeBSD/Darwin support code.
+                 Changed:   dist/util/arch, libs/uti/sge_pids.h
+
 SG-2003-07-10-0: Bugfix    Fixed broken build (HP11)
 
 AS-2003-07-10-0: CVS        Created V53p4_TAG --> SGE 5.3p4

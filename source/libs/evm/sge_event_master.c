@@ -1653,7 +1653,7 @@ static void send_events(void)
 
          lp = lGetList(event_client, EV_events);
          numevents = lGetNumberOfElem(lp);
-            
+         
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
          /* on failure retry is triggered automatically */
@@ -1662,6 +1662,7 @@ static void send_events(void)
 #else
          if (ret == 0) {
 #endif
+/*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
             switch (busy_handling) {
             case EV_THROTTLE_FLUSH:
                /* increase busy counter */
@@ -2392,6 +2393,13 @@ static void total_update_event(lListElem *event_client, ev_event type)
    
          DPRINTF(("%d %s\n", lGetUlong(event_client, EV_id), 
                   event_text(event, &buffer_wrapper)));
+                  
+   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+   if (lGetNumberOfElem(lp) == 0 || Master_Control.clients_deliver_count == 0) {
+      Master_Control.clients_deliver_count++;
+   }
+   sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+                  
          /* chain in new event */
          lAppendElem(llp, event);
       }

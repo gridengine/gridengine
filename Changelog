@@ -1,3 +1,7 @@
+SG-2004-02-18-1: Bugfix:    the total update events were delivered with
+                            the next regular event.
+                 Changed:   master
+
 SG-2004-02-18-0: Cleanup:   first part of doing the event client matching in
                             the event master thread.
                  Changed:   master

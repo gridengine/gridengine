@@ -35,6 +35,9 @@
 
 #include "sge_qmaster_timed_event.h"
 #include "sgermon.h"
+#include "sge_bootstrap.h"
+#include "sge_feature.h"
+#include "sge_profiling.h"
 
  
 void calendar_event_handler(te_event_t anEvent);
@@ -55,6 +58,10 @@ static void test_add_earlier_recurring_event(void);
 int main(int argc, char* argv[])
 {
    DENTER_MAIN(TOP_LAYER, "test_sge_qmaster_timed_event");
+
+   bootstrap_mt_init();
+   feature_mt_init();
+   sge_prof_set_enabled(false);
 
    printf("%s: delete_nonexistent_event ----------------------------------\n", SGE_FUNC);
 

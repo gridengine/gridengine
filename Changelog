@@ -1,4 +1,6 @@
-SG-2005-04-06-0: Bugfix:     reserved jobs prevent other jobs from starting
+AH-2005-04-06-0: Testsuite: fixed module test test_sge_qmaster_timed_event 
+
+SG-2005-04-06-0: Bugfix:    reserved jobs prevent other jobs from starting
                  Review:    AH
                  Issue:     1543
                  Bugtraq:   6251172

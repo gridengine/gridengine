@@ -1987,9 +1987,10 @@ bool sconf_validate_config_(lList **answer_list){
 
    /* --- SC_params */
    {
-      char *s = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
+      const char *sparams = lGetString(lFirst(Master_Sched_Config_List), SC_params); 
+      char *s = NULL; 
       if (s) {
-         for (s=sge_strtok(s, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
             int i = 0;
             bool added = false;
             for(i=0; params[i].name ;i++ ){

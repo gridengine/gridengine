@@ -86,7 +86,10 @@ char *rhost
       lSetUlong(confp, SC_weight_tickets_override, 
          lGetUlong(config, SC_weight_tickets_override));
    }
-   lAppendElem(temp_conf_list, lCopyElem(confp));
+
+
+   confp = lCopyElem(confp);
+   lAppendElem(temp_conf_list, confp);
 
    /* just check and log */
    if (!sconf_set_config(&temp_conf_list, alpp)) {
@@ -97,7 +100,7 @@ char *rhost
 
    if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 
                         0, 0, "schedd_conf", NULL, NULL,
-                        /*confp*/sconf_get_config(), NULL, NULL, true, true)) {
+                        confp, NULL, NULL, true, true)) {
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

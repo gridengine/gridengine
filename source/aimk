@@ -907,6 +907,9 @@ case AIX51:
    set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-lpthread"
    breaksw
 
 case ALINUX:
@@ -1307,6 +1310,9 @@ case HP11:
    endif
    set SHAREDEXT = ".sl"
    set LFLAGS = "-Wl,+s $LFLAGS"
+
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-lpthread"
    breaksw
 
 case HP1164:
@@ -1358,6 +1364,9 @@ case HP1164:
    endif
    set SHAREDEXT = ".sl"
    set LFLAGS = "-Wl,+s $LFLAGS"
+
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-lpthread"
    breaksw
 
 case LINUX5:

@@ -1,3 +1,9 @@
+DT-2004-10-04-0: Bugfix:    o Fixed qmaster crash
+                 Changed:   sge_host.c
+                 Review:    SG
+                 Issue:     1269
+                 Bugtraq:   5102442
+
 EB-2004-09-21-0: Bugfix:    qmaster might fail if jobs are deleted which have 
                             multiple hold states applied
                  Issue:     1280

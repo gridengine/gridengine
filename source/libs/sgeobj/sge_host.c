@@ -129,6 +129,7 @@ bool host_is_referenced(const lListElem *host,
       } else if (object_has_type(host, SH_Type)) {
          nm = object_get_primary_key(SH_Type);
       }
+
       hostname = lGetHost(host, nm);
 
       /* look at all the queue instances and figure out, if one still references
@@ -151,7 +152,7 @@ bool host_is_referenced(const lListElem *host,
          we have an exec host */
       if (!ret && object_has_type(host, EH_Type)) {
          lListElem *hgrp_elem = NULL;
-         lList *host_list;
+         lList *host_list = NULL;
 
          for_each (hgrp_elem, hgrp_list) {
             hgroup_find_all_references(hgrp_elem, NULL, hgrp_list, &host_list, NULL);

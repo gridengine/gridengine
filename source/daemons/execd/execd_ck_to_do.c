@@ -652,7 +652,7 @@ lListElem *tep
    newerrno = errno;
    fclose(fp);
    if (!success) {
-      WARNING((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SUUS, addgrpid_path, u32c(jobid), u32c(jataskid), strerror(newerrno)));
+      /* can happen that shepherd has opend the file but not written */
       DEXIT;
       return (1);
    }
@@ -703,8 +703,7 @@ lListElem *tep
    newerrno = errno;
    fclose(fp);
    if (!success) {
-      WARNING((SGE_EVENT, MSG_EXECD_NOOSJOBIDREAD_SUUS, osjobid_path, u32c(jobid), u32c(jataskid), strerror(newerrno)));
-      /* could happen that shepherd has opend the file but not written */
+      /* can happen that shepherd has opend the file but not written */
       DEXIT;
       return 1;
    }

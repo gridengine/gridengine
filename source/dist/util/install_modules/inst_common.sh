@@ -636,17 +636,16 @@ GiveHints()
    while [ $done = false ]; do
       $CLEAR
       $INFOTEXT -u "\nUsing Grid Engine"
-      $INFOTEXT "\nYou should now enter the command:\n\n" \
+      $INFOTEXT "\nAs a csh/tcsh user you should now enter the command at the shell prompt:\n\n" \
                 "   source %s\n\n" \
-                "if you are a csh/tcsh user or\n\n" \
-                "   # . %s\n\n" \
-                "if you are a sh/ksh user.\n\n" \
+                "or as a sh/ksh user you should enter\n\n" \
+                "   . %s\n\n" \
                 "This will set or expand the following environment variables:\n\n" \
                 "   - \$SGE_ROOT         (always necessary)\n" \
                 "   - \$SGE_CELL         (if you are using a cell other than >default<)\n" \
                 "   - \$SGE_QMASTER_PORT (if you haven't added the service >sge_qmaster<)\n" \
                 "   - \$SGE_EXECD_PORT   (if you haven't added the service >sge_execd<)\n" \
-                "   - \$PATH/\$path      (to find the Grid Engine binaries)\n" \
+                "   - \$PATH/\$path       (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH          (to access the manual pages)\n" \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.csh \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.sh
@@ -665,7 +664,7 @@ GiveHints()
                 "   Qmaster:     %s\n" \
                 "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/messages
 
-      $INFOTEXT -u "\nGrid Engine startup scripts"
+      $INFOTEXT -u "Grid Engine startup scripts"
       $INFOTEXT "\nGrid Engine startup scripts can be found at:\n\n" \
                 "   %s (qmaster and scheduler)\n" \
                 "   %s (execd)\n" $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgeexecd

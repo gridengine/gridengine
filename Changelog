@@ -1,3 +1,5 @@
+JG-2004-02-18-1: Bugfix:    Fixed build for dbstat.
+
 JG-2004-02-18-0: Testsuite: Fixed testsuite installation - it failed as schedd
                             conf attribute weight_jobclass no longer exists.
                             Did some fixes to tests 

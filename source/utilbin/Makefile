@@ -39,14 +39,14 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spoolinit \
-                 tst_pthread_signals
+                 tst_pthread_signals dbstat
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spoolinit.c \
-               tst_pthread_signals.c
+               tst_pthread_signals.c dbstat.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 

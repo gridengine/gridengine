@@ -1,3 +1,5 @@
+CR-2005-04-06-4: Testsuite: fixed job_environment test
+
 AH-2005-04-06-0: Testsuite: fixed module test test_sge_qmaster_timed_event 
 
 SG-2005-04-06-0: Bugfix:    reserved jobs prevent other jobs from starting

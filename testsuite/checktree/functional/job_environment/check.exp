@@ -107,6 +107,7 @@ proc job_environment_parse_env_test_output { file array } {
       unset job_env_array
    }
 
+   puts $CHECK_OUTPUT "waiting for file $file on host $CHECK_HOST as user $CHECK_USER ..."
    if {[wait_for_remote_file $CHECK_HOST $CHECK_USER $file] == 0} {
       set o_file [ open "$file" "r" ]
       
@@ -125,15 +126,19 @@ proc job_environment_parse_env_test_output { file array } {
       set job_env_array(index) $variable_names_list
       close $o_file
       file delete $file
+      wait_for_file $file 60 1
+      
    }
+   
 }
 
 proc job_environment_qsub_job { jobname array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_SCRIPT_FILE_DIR
-   global queue
+   global queue CHECK_OUTPUT
    upvar $array job_env_array
 
    set ret 1
+   puts $CHECK_OUTPUT "job environment should be written to $CHECK_PROTOCOL_DIR"
    set job_id [ submit_job "$arguments -q $queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
 
    if { $job_id <= 0 } {
@@ -211,6 +216,10 @@ proc job_environment_qsh_job { array arguments } {
 
    set script_name "$CHECK_PROTOCOL_DIR/temp_script.sh"
    create_shell_script $script_name $test_host "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
+   
+   wait_for_remote_file $test_host $CHECK_USER $script_name
+
+   puts $CHECK_OUTPUT "starting qsh $arguments -q $queue -S $script_name ..."
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $queue -S $script_name"]
    puts $CHECK_OUTPUT $output
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array

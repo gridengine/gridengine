@@ -40,6 +40,10 @@ if [ $# -ne 1 ]; then
    exit 1
 fi
 
+while [ -f $1/job_env.out ]; do
+   sleep 1
+   rm $1/job_env.out
+done
 #echo "JOB_NAME $JOB_NAME" > $1/job_env.out
 env > $1/job_env.out
 sleep 5

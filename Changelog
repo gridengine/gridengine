@@ -1,3 +1,6 @@
+DT-2005-04-22-0: Bugfix:    o Fixed broken build
+                 Changed:   Shepherd
+
 JG-2005-03-22-0: Testsuite: Added support for solaris zones.
                  Issue:     1503
 

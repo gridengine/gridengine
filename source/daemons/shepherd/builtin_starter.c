@@ -1166,8 +1166,8 @@ int is_qlogin,
 int is_rsh,
 int is_rlogin,
 char *str_title,
-int use_starter_method // If this flag is set the shellpath contains the
-                       // starter_method
+int use_starter_method /* If this flag is set the shellpath contains the
+                        * starter_method */
 ) {
    char **args;
    char **pstr;

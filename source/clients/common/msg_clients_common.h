@@ -39,7 +39,6 @@
 #define MSG_JOB_UNASSIGNED                               _MESSAGE(1001, _("unassigned"))
 #define MSG_FILE_CANTREADCURRENTWORKINGDIR               _MESSAGE(1002, _("cannot read current working directory\n"))
 #define MSG_SRC_USAGE                                    _MESSAGE(1003, _("usage:"))
-#define MSG_FORCED                                       _MESSAGE(1004, _("forced "))
 #define MSG_QDEL_not_available_OPT_USAGE_S               _MESSAGE(1005, _("no usage for "SFQ" available\n"))
 #define MSG_WARNING                                      _MESSAGE(1006, _("warning: "))
 #define MSG_SEC_SETJOBCRED                               _MESSAGE(1007, _("\nCannot set job credentials.\n"))

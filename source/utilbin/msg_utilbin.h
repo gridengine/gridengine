@@ -77,7 +77,6 @@
 /* 
 ** utilbin/gethostbyaddr.c
 */ 
-#define MSG_SYSTEM_GETHOSTBYADDRFAILED       _MESSAGE(57019, _("gethostbyaddr() failed"))
 #define MSG_SYSTEM_HOSTNAMEIS_S              _MESSAGE(57020, _("Hostname: "SFN"\n"))
 #define MSG_SYSTEM_ALIASES                   _MESSAGE(57021, _("Aliases:  "))
 #define MSG_SYSTEM_ADDRESSES                 _MESSAGE(57022, _("Host Address(es): "))
@@ -88,8 +87,6 @@
 ** utilbin/gethostname.c
 */ 
 #define MSG_COMMAND_USAGE_GETHOSTNAME        _MESSAGE(57023, _("get resolved hostname of this host\n"))
-#define MSG_SYSTEM_GETHOSTNAMEFAILED         _MESSAGE(57024, _("gethostname() failed"))
-#define MSG_SYSTEM_GETHOSTBYNAMEFAILED       _MESSAGE(57025, _("gethostbyname() failed"))
 
 
 /* 
@@ -161,12 +158,3 @@
 #define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57068, _("info              output information about the database\n"))
 #define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57069, _("method            output the compiled in spooling method\n"))
 #endif /* __MSG_UTILBIN_H */
-
-/*
- * utilbin/dbstat
- */
-#define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57070,         _("database query and maintenance\n"))
-#define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57071,         _("following are the valid commands:\n"))
-#define MSG_DBSTAT_LIST            _MESSAGE(57072,         _("list [object type]  list all objects [matching object type]\n"))
-#define MSG_DBSTAT_DUMP            _MESSAGE(57073,         _("dump key            dump the objects matching key\n"))
-#define MSG_DBSTAT_DELETE          _MESSAGE(57074,         _("delete key          delete the objects matching key\n"))

@@ -44,8 +44,6 @@
 #define MSG_EVE_REG_SUU               _MESSAGE(66003, _(SFQ" registers as event client with id "U32CFormat" event delivery interval "U32CFormat"\n"))
 #define MSG_EVE_UNREG_SU              _MESSAGE(66004, _("event client "SFQ" with id "U32CFormat" deregistered"))
 #define MSG_EVE_EVENTCLIENT           _MESSAGE(66005, _("event client"))
-
-#define MSG_EVE_ILLEGALEVENTCLIENTID_S _MESSAGE(66006, _("illegal event client id "SFQ"\n"))
 #define MSG_EVE_ILLEGALIDREGISTERED_U _MESSAGE(66007, _("illegal event client id "U32CFormat" for registration\n"))
 
 #define MSG_EVE_INVALIDSUBSCRIPTION   _MESSAGE(66008, _("invalid subscription information\n"))

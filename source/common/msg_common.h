@@ -48,15 +48,6 @@
 #define MSG_NULL                   _MESSAGE(23005, _("(NULL)"))
 #define MSG_SMALLNULL                       _MESSAGE(23006, _("(null)"))
 
-#define MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS   _MESSAGE(23007, _("unable to contact qmaster via "SFQ" commd - can't resolve service "SFQ"\n"))
-#define MSG_SGETEXT_NOQMASTER_PORT_ENV_SI           _MESSAGE(23008, _("unable to contact qmaster via "SFQ" commd using port %d\n"))
-#define MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS  _MESSAGE(23009, _("unable to contact qmaster via "SFQ" commd using port %d (service "SFQ")\n"))
-#define MSG_SGETEXT_NOQMASTER_REACHABLE             _MESSAGE(23010, _("unable to contact qmaster\n"))
-#define MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_SS  _MESSAGE(23011, _("unable to contact qmaster via "SFQ" commd - commlib error: "SFQ"\n"))
-#define MSG_SGETEXT_NOQMASTER_SUBSCR_AT_COMMD_S     _MESSAGE(23012, _("unable to contact qmaster via "SFQ" commd - qmaster not enrolled at commd\n"))
-#define MSG_SGETEXT_NOQMASTER_RESOLVING_ERROR_S     _MESSAGE(23013, _("unable to contact qmaster via "SFQ" commd - hostname resolving error\n"))
-
-
 #define MSG_FILE_CANTOPENDIRECTORYX_SS                         _MESSAGE(23014, _("can't open directory "SFQ": "SFN"\n"))
 #define MSG_SGETEXT_CANTRESOLVEHOST_S           _MESSAGE(23015, _("can't resolve hostname "SFQ"\n"))
 #define MSG_SGETEXT_CANTRESOLVEHOST_SS          _MESSAGE(23016, _("can't resolve hostname "SFQ": "SFN"\n"))
@@ -163,7 +154,7 @@
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23107, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
-#define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23109, _("ERROR! invalid jobshare, must be an unsigned integer\n"))
+#define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23110, _("ERROR! invalid jobshare, must be an unsigned integer\n"))
 /*#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23111,_("ERROR! two files are specified for the same host\n"))*/
 
 /*
@@ -196,8 +187,6 @@
 #define MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S     _MESSAGE(23139, _(SFN" is not a parallel environment\n"))
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23142, _(SFN": missing filename as option argument\n"))
 #define MSG_QCONF_XISNOTAOBJECTATTRIB_SSS         _MESSAGE(23143, _(SFN": "SFQ" is not a "SFN" attribute\n"))
-#define MSG_QCONF_XISNOTAQUEUEATTRIB_SS           _MESSAGE(23144, _(SFN": "SFQ" is not a queue attribute\n"))
-/* #define MSG_QCONF_XISNOTAEXECHOSTATTRIB_SS           _message(23145, _(SFN": "SFQ" is not a exec host attribute\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23146, _(SFN": cannot change "SFN"\n"))
 #define MSG_QCONF_INTERNALFAILURE_S               _MESSAGE(23147, _(SFN": internal failure\n"))
 #define MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S       _MESSAGE(23148, _(SFN": missing object list\n"))
@@ -745,7 +734,7 @@
 #define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"
 
 #define MSG_GDI_USAGE_R_OPT_YN                           "[-R y|n]"
-#define MSG_GDI_UTEXT_R_OPT_YN                           _MESSAGE(23503, _("reservation desired"))
+#define MSG_GDI_UTEXT_R_OPT_YN                           _MESSAGE(23404, _("reservation desired"))
 
 #define MSG_GDI_USAGE_r_OPT_YN                           "[-r y|n]"
 #define MSG_GDI_UTEXT_r_OPT_YN                           _MESSAGE(23405, _("define job as (not) restartable" ))

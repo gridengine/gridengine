@@ -1,3 +1,7 @@
+EB-2004-02-16-0: Bugfix:    eliminated ambiguous message ids
+                            removed obsolete messages
+                 Changed:   all
+                            
 AD-2004-02-16-0: Cleanup:   Did remove superfluous debug output. Did adjust
                             comments.
                  Changed:   evm

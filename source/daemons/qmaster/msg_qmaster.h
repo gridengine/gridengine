@@ -36,7 +36,6 @@
 #include "basis_types.h"
 
 #define MSG_SGETEXT_CANTSPOOL_SS      _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ"\n"))
-#define MSG_OBJ_JOBS                  _MESSAGE(33002, _("jobs"))
 
 /*
 ** sge_ckptobj.c
@@ -187,7 +186,6 @@
 #define MSG_MEM_MALLOC           _MESSAGE(33121, _("malloc failure\n"))
 #define MSG_SGETEXT_UNKNOWNOP    _MESSAGE(33122, _("unknown operation\n"))
 
-#define MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S _MESSAGE(33123, _("feature not available for "SFN" system\n"))
 #define MSG_SGETEXT_OPNOIMPFORTARGET             _MESSAGE(33125, _("operation not implemented for target\n"))
 #define MSG_SGETEXT_NOADMINHOST_S                _MESSAGE(33126, _("denied: host "SFQ" is no admin host\n"))
 #define MSG_SGETEXT_NOSUBMITHOST_S               _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
@@ -226,15 +224,8 @@
 #define MSG_JOB_NOHOST4TJ_SUU         _MESSAGE(33146, _("execution host "SFQ" for transfering job "U32CFormat"."U32CFormat" doesn't exist. deleting task"))
 #define MSG_JOB_NOPE4TJ_SUU           _MESSAGE(33147, _("parallel environment "SFQ" for transfering job "U32CFormat"." U32CFormat" doesn't exist. deleting job"))
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33148, _("failed to deliver job "U32CFormat"."U32CFormat" to queue "SFQ))
-/* EB: remove 
-#define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(33149, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
-#define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(33150, _("delete_cred stderr: "SFN))
-#define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(33151, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
-#define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(33152, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
-*/
 #define MSG_JOB_RESCHEDULE_UU         _MESSAGE(33159, _("rescheduling job "U32CFormat"."U32CFormat) ) 
 #define MSG_RU_CANCELED_S             _MESSAGE(33160, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" was canceled."))
-#define MSG_RU_TRIGGER_SU             _MESSAGE(33161, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" will be triggerd in "U32CFormat" seconds."))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -364,8 +355,6 @@
 #define MSG_JOB_CHANGEOVERRIDETICKS   _MESSAGE(33267, _("change amount of override tickets"))
 #define MSG_JOB_SETOVERRIDETICKS_SSUU _MESSAGE(33268, _(SFN"@"SFN" sets override tickets of job "U32CFormat" to "U32CFormat"\n"))
 #define MSG_JOB_PRIOINC               _MESSAGE(33269, _("increase job priority"))
-#define MSG_JOB_CHANGEJOBSHARE        _MESSAGE(33269, _("change job share"))
-#define MSG_JOB_PRIOSET_SSUU          _MESSAGE(33270, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
 #define MSG_JOB_JOBSHARESET_SSUU      _MESSAGE(33270, _(SFN"@"SFN" sets job share of job "U32CFormat" to "U32CFormat"\n"))
 #define MSG_JOB_ACCOUNT               _MESSAGE(33271, _("account"))
 #define MSG_JOB_WD                    _MESSAGE(33272, _("working directory"))
@@ -503,18 +492,7 @@
 /*
 ** sge_queue_qmaster.c
 */
-#define MSG_QUEUE_PRIORITYRANGE                 _MESSAGE(33451, _("priority not in range -20 to +20\n"))
-#define MSG_QUEUE_CANTLOCATEQUEUEX_S            _MESSAGE(33452, _("can't locate queue "SFN"\n"))
-#define MSG_QUEUE_DELQUEUETEMPLATE              _MESSAGE(33453, _("deleting queue \"template\""))
-#define MSG_QUEUE_NULLPTRPASSEDTOSGE_DEL_QUEUE  _MESSAGE(33454, _("NULL ptr passed to sge_del_queue()\n"))
-#define MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS _MESSAGE(33455, _("calendar "SFQ" referenced in queue "SFQ" does not exist\n"))
 #define MSG_OBJ_QUEUE                 _MESSAGE(33457, _("queue"))
-#define MSG_SGETEXT_NOTPOSSIBLETOMODHOSTNAME          _MESSAGE(33460, _("it is not possible to modify the hostname attribute\n"))
-/* #define MSG_SGETEXT_TOOFEWQSIQLIC_II                  _message(33461, _("not enough qsi queue licenses; licensed=%d - requested=%d\n") )   __TS Removed automatically from testsuite!! TS__*/
-#define MSG_SGETEXT_OPNOTALLOWED_S              _MESSAGE(33462, _("operation not allowed: "SFN"\n"))
-#define MSG_NOTALLOWEDTODELSUBORDINATE_SS              _MESSAGE(33463, _("deleting queue "SFQ" is not allowed because it is subordinate queue of "SFQ"\n"))
-#define MSG_SGETEXT_ACTIVEUNITS_SSIS            _MESSAGE(33464, _(""SFN" "SFQ" has %d active "SFN"\n"))
-/* #define MSG_SGETEXT_CANTCOUNT_QSIQ_S                  _message(33468, _("can't count qsi queues in "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
 
 /*
 ** sge_qmaster_main.c
@@ -552,8 +530,6 @@
 #define MSG_UP_ALREADYEXISTS_SS        _MESSAGE(33492, _("denied: shared namespace between project and user: there is already a "SFN" which is named "SFQ"\n"))
 #define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not valid\n"))
 #define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not valid\n"))
-#define MSG_UM_ERRORWRITESPOOLFORUSER_S _MESSAGE(33507, _("error writing spoolfile for cluster user "SFQ))
-#define MSG_HGRP_ERRORWRITESPOOLFORGROUP_S  _MESSAGE(33508, _("error writing spoolfile for host group "SFQ))
 #define MSG_OBJ_PRJ                    _MESSAGE(33509, _("project"))
 #define MSG_OBJ_PRJS                  _MESSAGE(33510, _("projects"))
 #define MSG_OBJ_XPRJS                 _MESSAGE(33511, _("xprojects"))
@@ -681,8 +657,6 @@
  * misc
  */
 #define MSG_SEC_CRED_SSSI                          _MESSAGE(33673, _("denied: request for user "SFQ" does not match credentials for connection <"SFN","SFN",%d>\n") )  
-#define MSG_QMASTER_XNOVALIDSSM_S                  _MESSAGE(33674, _(SFQ" is not a valid shell_start_mode\n"))
-#define MSG_QMASTER_XNOVALIDIS_S                   _MESSAGE(33675, _(SFQ" is not a valid initial_state\n"))      
 #define MSG_JOB_STDINPATHLIST                      _MESSAGE(33676, _("stdin path list"))
 #define MSG_QMASTER_AUTODEFDEPARTMENT              _MESSAGE(33677, _("all users are assigned to the \"defaultdepartment\" automatically\n"))
 #define MSG_QMASTER_DEPTFORDEFDEPARTMENT           _MESSAGE(33678, _("the \"defaultdepartment\" has to be of type \"DEPT\"\n"))
@@ -702,8 +676,6 @@
 
 #define MSG_CQUEUE_NAMENOTGUILTY_S       _MESSAGE(33687, _("cluster queue name "SFQ" is not valid\n"))
 #define MSG_CQUEUE_NONAMECHANGE          _MESSAGE(33688, _("unable to change cluster queue name\n"))
-#define MSG_CQUEUE_ERRORWRITESPOOLFILE_S _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
-
 #define MSG_HGROUP_CYCLEINDEF_SS        _MESSAGE(33690, _("Hostgroup "SFQ" in specification of "SFQ" would create a cycle\n"))
 #define MSG_HGROUP_REFINHGOUP_SS        _MESSAGE(33691, _("denied: following hostgroups still reference "SFQ": "SFN"\n"))
 #define MSG_HGROUP_REFINCUSER_SS        _MESSAGE(33692, _("denied: following user mapping entries still reference "SFQ": "SFN"\n"))
@@ -712,8 +684,6 @@
 #define MSG_QINSTANCE_NOSADM_S          _MESSAGE(33695, _("Administrator suspension prevents unsuspension due to calendar for queue "SFQ"\n"))
 #define MSG_QINSTANCE_NOUSSOS_S         _MESSAGE(33696, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
 #define MSG_QINSTANCE_NOUSADM_S         _MESSAGE(33697, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
-#define MSG_QINSTANCE_ERRORWRITESPOOLFILE_S _MESSAGE(33698, _("error writing spoolfile for queue instance"SFQ))
-
 #define MSG_QINSTANCE_STATENOTMOD_S     _MESSAGE(33720, _("Queue instance state of "SFQ" not modified: Spooling framework failed\n"))
 #define MSG_QINSTANCE_STATENOTMODPERM_S _MESSAGE(33721, _("Queue instance state of "SFQ" not modified: No permission\n") ) 
 #define MSG_QINSTANCE_HASSTATE_SS       _MESSAGE(33722, _("Queue instance "SFQ" has already this state ("SFN")\n"))
@@ -724,10 +694,6 @@
 #define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
 #define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("waning: "SFQ" has ambiguous value ("SFQ", "SFQ")\n"))
 #define MSG_CQUEUE_REFINHGOUP_SS        _MESSAGE(33729, _("denied: following cluster queues still reference "SFQ": "SFN"\n"))
-
-/*
- * job logging
- */
 #define MSG_LOG_DELETED               _MESSAGE(33800, _("job deleted"))
 #define MSG_LOG_SENT2EXECD            _MESSAGE(33801, _("sent to execd"))
 #define MSG_LOG_DELIVERED             _MESSAGE(33802, _("job received by execd"))
@@ -736,27 +702,15 @@
 #define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
 #define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
 #define MSG_LOG_JATASKEXIT            _MESSAGE(33807, _("ja task exited") )  
-
-/*
- * sge_qmaster_main.c
- */
 #define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d\n"))
 #define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
-
-
-/*
- * sge_c_gdi.c
- */
 #define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges\n"))
 #define MSG_COM_NOSCHEDDREGMASTER _MESSAGE(33816, _("no scheduler registered at qmaster\n"))
 #define MSG_COM_SCHEDMON_SS       _MESSAGE(33817, _(SFN"@"SFN" triggers scheduler monitoring\n"))
-
-/*
- * sge_persistence_qmaster.c
- */
-
-#define MSG_PERSISTENCE_WRITE_FAILED_S _MESSAGE(33820, _("error writing object "SFQ" to spooling database\n"))
-#define MSG_PERSISTENCE_DELETE_FAILED_S _MESSAGE(33821, _("error deleting object "SFQ" from spooling database\n"))
+#define MSG_PERSISTENCE_WRITE_FAILED_S    _MESSAGE(33820, _("error writing object "SFQ" to spooling database\n"))
+#define MSG_PERSISTENCE_DELETE_FAILED_S   _MESSAGE(33821, _("error deleting object "SFQ" from spooling database\n"))
+#define MSG_JOB_CHANGEJOBSHARE            _MESSAGE(33822, _("change job share"))
+#define MSG_JOB_PRIOSET_SSUU              _MESSAGE(33823, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
 
 
 #endif

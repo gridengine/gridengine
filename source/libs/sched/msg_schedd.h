@@ -35,12 +35,6 @@
 #include "basis_types.h"
 
 /* 
-** schedd/sge_access_tree.c
-*/ 
-#define MSG_SCHEDD_NOPRIORITYINACCESSTREEFOUND_UU     _MESSAGE(47000, _("found no priority "U32CFormat" (job "U32CFormat") in access tree\n"))
-#define MSG_SCHEDD_INCONSISTENTACCESSTREEDATA         _MESSAGE(47001, _("inconsistent access tree data"))
-
-/* 
 ** schedd/sge_gdi_attributes.c
 */ 
 #define MSG_NET_UNKNOWNHOSTNAME_S                     _MESSAGE(47002, _("unknown hostname "SFQ"\n"))
@@ -58,11 +52,7 @@
 /* 
 ** schedd/sge_complex_schedd.c
 */ 
-#define MSG_ATTRIB_ATTRIBUTEWITHOUTNAMEFOUND          _MESSAGE(47012, _("found attribute without name\n"))
-#define MSG_ATTRIB_XINATTRIBLISTMISSING_SU            _MESSAGE(47013, _("missing "SFQ" in attribute list (layer = "U32CFormat")\n"))
 #define MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S    _MESSAGE(47014, _("missing actual element to attrib "SFN"\n"))
-#define MSG_POINTER_ASSTRISNULLFORATTRIBX_S           _MESSAGE(47015, _("\"as_str\" is NULL for attrib "SFQ"\n"))
-#define MSG_MEMORY_UNABLETOALLOCSPACEFORCOMPLEXBUILD  _MESSAGE(47017, _("unable to alloc space for building complexes\n"))
 #define MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S  _MESSAGE(47020, _("load adjustments value "SFQ" must be of numeric type\n"))
 
 /* 
@@ -195,65 +185,9 @@
 ** schedd/sge_pe_schedd.c
 */ 
 #define MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS       _MESSAGE(47137, _("pe >"SFN"<: failed parsing allocation rule "SFQ"\n"))
-
-/* 
-** schedd/sge_process_events.c
-*/ 
-/* #define MSG_EVENT_GOTSHUTDOWNFROMQMASTER              _message(47138, _("got \"shutdown\" command from qmaster")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_GOTFORCESCHEDRUNFROMQMASTER         _message(47139, _("got \"force scheduler run\" command from qmaster")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_GOTMASTERGOESDOWNMESSAGEFROMQMASTER _message(47140, _("got \"qmaster goes down\" message from qmaster")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXTODELETE_U                _message(47141, _("can't find job \"" U32CFormat "\" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXTODELETEJOBARRAYTASK_U    _message(47142, _("can't find job \"" U32CFormat "\" to delete a job-array task")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXTOMODIFY_U                _message(47143, _("can't find job \"" U32CFormat "\" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXTOMODIFYPRIORITY_U        _message(47144, _("can't find job " U32CFormat " to modify priority")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXTOMODIFYTASKY_UU          _message(47145, _("can't find job "U32CFormat" to modify task "U32CFormat"")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBARRAYTASKXYTOMODIFY_UU     _message(47146, _("can't find job-array task "U32CFormat"."U32CFormat" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBARRAYTASKXTODELETE_U       _message(47147, _("can't find job-array task "U32CFormat" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U        _message(47148, _("can't find job "U32CFormat" for updating usage")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXFORADDINGPETASK_U         _message(47149, _("can't find job "U32CFormat" for adding a pe task")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJOBXFORDELETINGPETASK_U       _message(47150, _("can't find job "U32CFormat" for deleting a pe task")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJATASKXFORUPDATINGUSAGE_UU    _message(47151, _("can't find job-array task "U32CFormat"."U32CFormat" for updating usage")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJATASKXFORADDINGPETASK_UU     _message(47152, _("can't find job-array task "U32CFormat"."U32CFormat" for adding a pe task")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDJATASKXFORDELETINGPETASK_UU   _message(47153, _("can't find job-array task "U32CFormat"."U32CFormat" for adding a pe task")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_CANTFINDPETASKXFORUPDATINGUSAGE_UUS   _message(47154, _("can't find pe task "U32CFormat"."U32CFormat":"SFN" for updating usage")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_QUEUE_CANTFINDQUEUEXTODELETE_S            _message(47155, _("can't find queue "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_QUEUE_CANTFINDQUEUEXTOMODIFY_S            _message(47156, _("can't find queue "SFQ" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_COMPLEX_CANTFINDCOMPLEXXTODELETE_S        _message(47157, _("can't find complex "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_COMPLEX_CANTFINDCOMPLEXXTOMODIFY_S        _message(47158, _("can't find complex "SFQ" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_USERSET_CANTFINDUSERSETXTODELETE_S        _message(47159, _("can't find userset "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_USERSET_CANTFINDUSERSETXTOMODIFY_S        _message(47160, _("can't find userset "SFQ" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EXECHOST_CANTFINDEXECHOSTXTODELETE_S      _message(47161, _("can't find exechost "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EXECHOST_CANTFINDEXECHOSTXTOMODIFY_S      _message(47162, _("can't find exechost "SFQ" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_PARENV_CANTFINDPARENVXTODELETE_S          _message(47163, _("can't find parallel environment "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_PARENV_CANTFINDPARENVXTOMODIFY_S          _message(47164, _("can't find parallel environment "SFQ" to modify")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_CHKPNT_CANTFINDCHKPNTINTXTODELETE_S       _message(47165, _("can't find checkpointing interface "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_CHKPNT_CANTFINDCHKPNTINTXTOMODIFY_S       _message(47166, _("can't find checkpointing interface "SFQ" to modify" )) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SCHEDD_CANTFINDUSERORPROJECTXTODELETE_SS  _message(47167, _("can't find "SFN" "SFQ" to delete")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SCHEDD_CANTFINDUSERORPROJECTXTOMODIFY_S   _message(47168, _("can't find user/project "SFQ" to modify")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_USER                                      _MESSAGE(47169, _("user"))
 #define MSG_PROJECT                                   _MESSAGE(47170, _("project"))
-/* #define MSG_QUEUE_CANTFINDQUEUEXTOYONSUBORDINATE_SS   _message(47171, _("can't find queue  "SFQ" to "SFN" on subordinate")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDJOBGOTNONEWJOB_IUU         _message(47174, _("%d. EVENT ADD JOB " U32CFormat "." U32CFormat " - got no new JOB")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODJOBGOTNONEWJOB_UU          _message(47175, _(U32CFormat". EVENT MOD JOB " U32CFormat " - got no new JOB")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODJATASKGOTNONEWJATASK_UUU   _message(47176, _(U32CFormat". EVENT MOD JATASK "U32CFormat"."U32CFormat" - got no new JATASK")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODJOBGOTNONEWJOB_IU          _message(47177, _("%d. EVENT MOD JOB " U32CFormat " - got no new JOB")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDQUEUEXGOTNONEWQUEUE_IS     _message(47178, _("%d. EVENT ADD QUEUE "SFN" - got no new QUEUE")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODQUEUEXGOTNONEWQUEUE_IS     _message(47179, _("%d. EVENT MOD QUEUE "SFN" - got no new QUEUE")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDCOMPLEXXGOTNONEWCOMPLEX_IS _message(47180, _("%d. EVENT ADD COMPLEX "SFN" - got no new COMPLEX")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODCOMPLEXXGOTNONEWCOMPLEX_IS _message(47181, _("%d. EVENT MOD COMPLEX "SFN" - got no new COMPLEX")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDACLXGOTNONEWACL_IS         _message(47182, _("%d. EVENT ADD ACL "SFN" - got no new ACL")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODACLXGOTNONEWACL_IS         _message(47183, _("%d. EVENT MOD ACL "SFN" - got no new ACL")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDUSERORPROJXGOTNONEWONE_ISS _message(47184, _("%d. EVENT ADD "SFN" "SFN" - got no new one")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODUSERORPROJXGOTNONEWONE_ISS _message(47185, _("%d. EVENT MOD "SFN" "SFN" - got no new one")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDEXECHOSTXGOTNONEWEXECHOST_IS     _message(47186, _("%d. EVENT ADD EXECHOST "SFN" - got no new EXECHOST")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODEXECHOSTXGOTNONEWEXECHOST_IS     _message(47187, _("%d. EVENT MOD EXECHOST "SFN" - got no new EXECHOST")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDPETASKXGOTNONEWPETASK_IUUS           _message(47188, _("%d. EVENT ADD PETASK "U32CFormat"."U32CFormat":"SFN" - got no new pe task\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDPEXGOTNONEWPE_IS                 _message(47189, _("%d. EVENT ADD PE "SFN" - got no new PE")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODPEXGOTNONEWPE_IS                 _message(47190, _("%d. EVENT MOD PE "SFN" - got no new PE")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTADDCKPTXGOTNONEWCKPTINT_IS          _message(47191, _("%d. EVENT ADD CKPT "SFN" - got no new CKPT interface")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_XEVENTMODCKPTXGOTNONEWCKPTINT_IS          _message(47192, _("%d. EVENT MOD CKPT "SFN" - got no new CKPT interface")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_NO                                              _MESSAGE(47193, _("NO"))
-#define MSG_YES                                             _MESSAGE(47194, _("YES"))
 /* 
 ** schedd/sge_schedd.c
 */
@@ -269,12 +203,6 @@
 #define MSG_SCHEDD_CANTSWITCHTOADMINUSER                    _MESSAGE(47204, _("can't switch to amin_user"))
 #define MSG_SCHEDD_CANTSTARTUP                              _MESSAGE(47205, _("can't startup schedd\n"))
 #define MSG_QMASTERMOVEDEXITING_SS                          _MESSAGE(47287, _("qmaster moved from "SFQ" to "SFQ": exiting\n"))
-
-/* #define MSG_SCHEDD_REREGISTER_PARAM                         _message(47206, _("schedd parameter changed: reregistering at qmaster\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SCHEDD_REREGISTER_ERROR                         _message(47207, _("problems in schedd event layer: reregistering at qmaster\n")) __TS Removed automatically from testsuite!! TS__*/
-
-/* #define MSG_SCHEDD_CHANGEALGORITHMNOEVENT_S                 _message(47208, _("Switching to scheduler "SFQ". No change with event handler\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SCHEDD_CHANGEALGORITHMEVENT_S                   _message(47209, _("Switching to event handler scheduler "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
 
 /* 
 ** schedd/sge_select_queue.c
@@ -402,7 +330,6 @@
  */
 #define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47360, _("could not find job "SFQ" in master list\n")) 
 #define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47361, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
-#define MSG_NODATAINEVENT                             _MESSAGE(47362, _("event contains no data"))
 
 /* 
  * libs/sched/sge_complex_schedd.c

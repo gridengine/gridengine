@@ -37,7 +37,6 @@
 #define MSG_GDI_INVALIDPRODUCTMODESTRING_S   _MESSAGE(64005, _("invalid product mode string "SFQ"\n"))
 #define MSG_GDI_SWITCHFROMTO_SS              _MESSAGE(64007, _("switching from "SFQ" to "SFQ" feature set\n"))
 #define MSG_HOSTREFINQUEUE_SS                _MESSAGE(64008, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
-#define MSG_QUEUE_NULLPTR             _MESSAGE(64011, _("NULL ptr passed to sge_add_queue()\n"))
 #define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _MESSAGE(64012, _("no argument given in config option: "SFN"\n"))
 #define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _MESSAGE(64013, _("missing configuration attribute "SFQ""))
 #define MSG_GDI_CONFIGADDLISTFAILED_S                    _MESSAGE(64014, _("can't add "SFQ" to list"))
@@ -228,7 +227,6 @@
 
 #define MSG_CQUEUE_NODEFVALUE_S        _MESSAGE(64228, _(SFQ" has no default value\n"))
 #define MSG_CQUEUE_MULVALNOTALLOWED_S  _MESSAGE(64229, _("Multiple values for one queue domain/host ("SFN") are not allowed\n"))
-#define MSG_CQUEUE_NOTINHOSTLIST_S     _MESSAGE(64230, _(SFQ" is not in hostlist but used in cluster queue definition\n"))
 #define MSG_CQUEUE_WRONGCHARINPRIO     _MESSAGE(64231, _("Invalid character\n"))
 #define MSG_QINSTANCE_ALARM            _MESSAGE(64233, _("load alarm"))
 #define MSG_QINSTANCE_SUSPALARM        _MESSAGE(64234, _("suspend alarm"))
@@ -284,6 +282,5 @@
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN"\n"))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults\n"))
 #define MSG_CONF_NEITHERSGECODGRDSETTINGSGE _MESSAGE(64302, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
-#define MSG_CONF_INVALIDREPORTING_FLUSH_TIME_S  _MESSAGE(64303, _("invalid reporting_flush_time settings: "SFQ"\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

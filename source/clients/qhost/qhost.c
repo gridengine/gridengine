@@ -899,7 +899,7 @@ lWriteListTo(ehl, stdout);
    */
 
    for_each(ep, hostref_list) {
-      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, lGetString(ep, ST_name));
+      nw = lWhere("%T(%I h= %s)", EH_Type, EH_name, lGetString(ep, ST_name));
       if (!where)
          where = nw;
       else

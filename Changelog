@@ -1,3 +1,9 @@
+EB-2005-03-24-0: Bugfix:    qhost -h <hostname> does not show selected host
+                 Changed:   qhost
+                 Issue:     1524
+                 Bugtraq:   6245487
+                 Review:    SG
+
 JG-2005-03-24-0: Testsuite: Testsuite didn't compile / install binaries for 
                             bdb_server and submit_only_hosts.
                  Issue:     1523

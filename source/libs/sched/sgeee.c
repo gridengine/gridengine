@@ -2591,12 +2591,12 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    struct tms tms_buffer;
 
    u_long32 free_qslots = 0;
-
+   
+   DENTER(TOP_LAYER, "sge_calc_tickets");
+   
    if (profile_schedd) {
       start = times(&tms_buffer);
    }
-
-   DENTER(TOP_LAYER, "sge_calc_tickets");
 
    all_lists = lists;
 
@@ -3459,9 +3459,9 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       lFreeList(decay_list);
 
       if (profile_schedd) {
-         calc = (times(&tms_buffer) - start);/* * 1.0 / CLK_TCK ;*/
-         extern u_long32 logginglevel;
+         extern u_long32 logginglevel; 
          u_long32 saved_logginglevel = logginglevel;
+         calc = (times(&tms_buffer) - start);/* * 1.0 / CLK_TCK ;*/
 
          logginglevel = LOG_INFO;
          INFO((SGE_EVENT, "PROF: SGEEE job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
@@ -3915,11 +3915,11 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
    clock_t job_orders, update_orders;
    struct tms tms_buffer;
 
+   DENTER(TOP_LAYER, "sge_build_sge_orders");
+
    if (profile_schedd) {
       start = times(&tms_buffer);
    }
-
-   DENTER(TOP_LAYER, "sge_build_sge_orders");
 
    if (!order_list)
       order_list = lCreateList("orderlist", OR_Type);
@@ -4118,9 +4118,9 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
    }
 
    if (profile_schedd) {
-         update_orders = (times(&tms_buffer) - start);
          extern u_long32 logginglevel;
          u_long32 saved_logginglevel = logginglevel;
+         update_orders = (times(&tms_buffer) - start);
 
          logginglevel = LOG_INFO;
          INFO((SGE_EVENT, "PROF: SGEEE update orders: job orders: %.3f s, update orders: %.3f s\n",

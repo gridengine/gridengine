@@ -153,9 +153,10 @@ int event_handler_default_scheduler(lList *event_list)
    clock_t start;
    clock_t copy_time;
 
+   DENTER(TOP_LAYER, "event_handler_default_scheduler");
+
    start = times(&tms_buffer);
 
-   DENTER(TOP_LAYER, "event_handler_default_scheduler");
 
    DPRINTF(("================[SCHEDULING-EPOCH]==================\n"));
    

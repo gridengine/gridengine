@@ -1,4 +1,6 @@
-SG-2003-07-09.0: enhancem.  additional profiling information about a scheduler run
+CR-2003-07-10-0: Bugfix:    Fixed broken build
+
+SG-2003-07-09-0: enhancem.  additional profiling information about a scheduler run
                             Some profiling code was added to get a better picture
                             of the bottle necks within a scheduler run. 
                  Review:    AS

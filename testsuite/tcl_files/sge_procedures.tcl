@@ -1199,7 +1199,7 @@ proc reset_schedd_config {} {
          set default_array(report_pjob_tickets)             "true"
          set default_array(max_pending_tasks_per_job)       "50"
          set default_array(halflife_decay_list)             "none"
-         set default_array(policy_hierarchy)                "OFSD"
+         set default_array(policy_hierarchy)                "OFS"
 
          set default_array(weight_ticket)                   "1"
          set default_array(weight_waiting_time)             "1"

@@ -3342,7 +3342,6 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                         cl_raw_list_unlock(handle->connection_list);
 
                         if ( message_sent ) {
-                           CL_LOG(CL_LOG_WARNING,"trigger write thread");
                            switch(cl_com_create_threads) {
                            case CL_NO_THREAD:
                               CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -3351,6 +3350,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                               break;
                            case CL_ONE_THREAD:
                               /* we just want to trigger write , no wait for read*/
+                              CL_LOG(CL_LOG_WARNING,"trigger write thread");
                               cl_thread_trigger_event(handle->write_thread);
                               break;
                            }
@@ -3844,7 +3844,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
             CL_LOG(CL_LOG_ERROR,"connection is open, but going down now");
             gettimeofday(&now,NULL);
             connection->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout;
-            shutdown_received = 1;
+            shutdown_received = 2;
             break;
          }
          /* connection is open, just return */
@@ -3893,6 +3893,32 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
             if ( cl_com_compare_endpoints(connection->receiver, &receiver)) {
                struct timeval now;
                still_in_list = 1;
+/**/
+               if ( shutdown_received == 1 ) {
+                  if (connection->ccm_received == 0) {  
+                     /* This must be a new connection ( initiated from other endpoint ), so 
+                        we return that connection is already open */
+                     cl_raw_list_unlock(handle->connection_list);
+                     free(unique_hostname);
+                     pthread_mutex_unlock(handle->connection_list_mutex);
+                     CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
+                     return CL_RETVAL_OK;
+                  }
+               } else {
+                  if ( (connection->connection_state == CL_COM_CONNECTED && connection->connection_sub_state == CL_COM_WORK) || 
+                        connection->connection_state == CL_COM_OPENING ||
+                        connection->connection_state == CL_COM_CONNECTING ||
+                        connection->connection_state == CL_COM_DISCONNECTED) {
+                     /* This must be a new connection ( initiated from other endpoint ), so 
+                        we return that connection is already open */
+                     cl_raw_list_unlock(handle->connection_list);
+                     free(unique_hostname);
+                     pthread_mutex_unlock(handle->connection_list_mutex);
+                     CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
+                     return CL_RETVAL_OK;
+                  }
+               }
+/**/
                CL_LOG(CL_LOG_WARNING,"connection still alive ...");
                CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",cl_raw_list_get_elem_count(connection->received_message_list) );
                CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",cl_raw_list_get_elem_count(connection->send_message_list) );
@@ -3907,6 +3933,15 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                   message_sent = 1;
                   CL_LOG(CL_LOG_WARNING,"sending ccrm");
                }
+
+               /* There are messages to read for application, return */
+               if ( cl_raw_list_get_elem_count(connection->received_message_list) != 0 ) {
+                  cl_raw_list_unlock(handle->connection_list);
+                  free(unique_hostname);
+                  pthread_mutex_unlock(handle->connection_list_mutex);
+                  return CL_RETVAL_OK;
+               }
+
                gettimeofday(&now,NULL);
                if (connection->shutdown_timeout <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_WARNING,"got timeout while waiting for connection close");
@@ -3984,7 +4019,31 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
    free(unique_hostname); 
 
-   ret_val = cl_connection_list_append_connection(handle->connection_list, new_con,1);
+   /* lock connection list */
+   cl_raw_list_lock(handle->connection_list);
+   
+   /* Check if this connection is unique */
+   elem = cl_connection_list_get_first_elem(handle->connection_list);
+   while(elem != NULL) {
+      if ( cl_com_compare_endpoints(elem->connection->receiver, &receiver)) {
+         break;
+      }
+      elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
+   }
+   if (elem == NULL) {
+      /* endpoint is unique, add it to connection list */
+      ret_val = cl_connection_list_append_connection(handle->connection_list, new_con,0);
+      cl_raw_list_unlock(handle->connection_list);
+   } else {
+      CL_LOG(CL_LOG_ERROR,"client not unique error, can't add opened connection into connection list");
+      cl_raw_list_unlock(handle->connection_list);
+      cl_com_close_connection(&new_con);
+      free(unique_hostname);
+      /* unlock connection list */
+      pthread_mutex_unlock(handle->connection_list_mutex);
+      return CL_RETVAL_ENDPOINT_NOT_UNIQUE;
+   }
+
    CL_LOG(CL_LOG_INFO,"new connection created");
    handle->statistic->new_connections =  handle->statistic->new_connections + 1;
    /* unlock connection list */

@@ -172,6 +172,11 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       return CL_RETVAL_NO_PORT_ERROR; 
    }
 
+   if ( connection->connection_state != CL_COM_OPENING ) {
+      CL_LOG(CL_LOG_ERROR,"state is not CL_COM_OPENING - return connect error");
+      return CL_RETVAL_CONNECT_ERROR;   
+   }
+
    CL_LOG(CL_LOG_INFO,"setting up connection ...");
    if ( connection->connection_sub_state == CL_COM_OPEN_INIT) {
       int sockfd = -1;

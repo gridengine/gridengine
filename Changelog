@@ -1,3 +1,9 @@
+CR-2004-04-20-0: Bugfix:    - check for duplicate component entries before adding
+                              new connections in cl_commlib_open_connection()
+                            - additional error handling fixes when open a new 
+                              connection
+                 Changed:   commlib
+
 EB-2004-04-20-1: Bugfix:    load formula of the scheduler
                  Issue:     330
                  Changed:   sge_schedd, sge_qmaster

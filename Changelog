@@ -1,3 +1,6 @@
+JG-2004-02-19-1: Testsuite: Testsuite install output warnings due to changed 
+                            defaults for weight_* schedd config attributes.
+
 JG-2004-02-19-0: Bugfix:    Added source for dbstat.
 
 SG-2004-02-19-0: Bugfix:    the event should not accept new event clients when

@@ -42,5 +42,9 @@ proc vdep_set_sched_conf_defaults { change_array } {
       set chgar(sgeee_schedule_interval)    "00:00:40"
       set chgar(weight_tickets_deadline)    "10000"
       set chgar(weight_jobclass)            "0.2"
+      set chgar(weight_user)                "0.2"
+      set chgar(weight_project)             "0.2"
+      set chgar(weight_department)          "0.2"
+      set chgar(weight_job)                 "0.2"
    }
 }

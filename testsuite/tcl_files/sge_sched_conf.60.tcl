@@ -49,6 +49,10 @@ proc vdep_set_sched_conf_defaults { change_array } {
       set chgar(halflife_decay_list)             "none"
       set chgar(policy_hierarchy)                "OFS"
 
+      set chgar(weight_user)                "0.25"
+      set chgar(weight_project)             "0.25"
+      set chgar(weight_department)          "0.25"
+      set chgar(weight_job)                 "0.25"
       set chgar(weight_ticket)                   "0.5"
       set chgar(weight_waiting_time)             "0.278"
       set chgar(weight_deadline)                 "3600000"

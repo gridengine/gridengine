@@ -98,10 +98,6 @@ proc reset_schedd_config {} {
       set default_array(halftime)                   "168"
       set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
       set default_array(compensation_factor)        "5"
-      set default_array(weight_user)                "0.2"
-      set default_array(weight_project)             "0.2"
-      set default_array(weight_department)          "0.2"
-      set default_array(weight_job)                 "0.2"
       set default_array(weight_tickets_functional)  "0"
       set default_array(weight_tickets_share)       "0"
    }

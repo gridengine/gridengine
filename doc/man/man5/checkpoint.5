@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: checkpoint.5,v $     Last Update: $Date: 2001/07/20 08:19:15 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: checkpoint.5,v $     Last Update: $Date: 2002/03/06 11:52:40 $     Revision: $Revision: 1.3.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH CHECKPOINT 5 "$Date: 2001/07/20 08:19:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH CHECKPOINT 5 "$Date: 2002/03/06 11:52:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 checkpoint \- xxQS_NAMExx checkpointing environment configuration file format
@@ -133,8 +133,9 @@ used for checkpointing.
 .SS "\fBwhen\fP"
 The points of time when checkpoints are expected to be generated.
 Valid values for this parameter are composed by the letters \fIs\fP,
-\fIm\fP and
+\fIm\fP,
 \fIx\fP and
+\fIr\fP and
 any combinations thereof without any separating character in between. The
 same letters are allowed for the \fI\-c\fP option of the
 .M qsub 1
@@ -154,6 +155,12 @@ in which a job executes.
 .IP "\fIx\fP"
 A job is checkpointed, aborted and if possible migrated as soon as the job 
 gets suspended (manually as well as automatically).
+.IP "\fIr\fP"
+A job will be rescheduled (not checkpointed) when the host on which the job
+currently runs went into unknown state and the time interval
+\fIreschedule_unknown\fP (see
+.M xxqs_name_sxx_conf 5 )
+defined in the global/local cluster configuration will be exceeded.
 .\"
 .\"
 .SH RESTRICTIONS

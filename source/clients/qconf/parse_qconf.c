@@ -2990,7 +2990,7 @@ char *argv[]
    object_instance = sge_strdup(NULL, *spp);
 
    /* object_instance look like queue@host */
-   if (object = sge_strdup(NULL, sge_strtok(object_instance, "@"))) {
+   if ((object = sge_strdup(NULL, sge_strtok(object_instance, "@"))) != NULL) {
        hgroup_or_hostname = sge_strdup(NULL, sge_strtok(NULL, NULL));
    }
    

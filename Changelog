@@ -1,3 +1,6 @@
+SG-2005-03-02-0: Bugfix:   fixed build for lx24-amd
+                 Review:   RD
+
 RD-2005-03-01-1: Enhancem.: -purge switch added
                             purge host specific cluster queue profiles
                  Issue:     1453            

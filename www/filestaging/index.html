@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 7  (Solaris Sparc)">
+	<META NAME="CREATED" CONTENT="20031217;11404700">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20031218;10220900">
+	<STYLE>
+	<!--
+		@page { size: 8.5in 11in; margin-left: 1.25in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+		H1 { margin-bottom: 0.08in }
+		H1.western { font-family: "Albany", sans-serif; font-size: 16pt }
+		H1.cjk { font-family: "Mincho"; font-size: 16pt }
+		H1.ctl { font-family: "Lucidasans"; font-size: 16pt }
+		P { margin-bottom: 0.08in }
+		H2 { margin-bottom: 0.08in }
+		H2.western { font-family: "Albany", sans-serif; font-size: 14pt; font-style: italic }
+		H2.cjk { font-family: "Mincho"; font-size: 14pt; font-style: italic }
+		H2.ctl { font-size: 14pt; font-style: italic }
+		H3 { margin-bottom: 0.08in }
+		H3.western { font-family: "Albany", sans-serif }
+		H3.cjk { font-family: "Mincho" }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<H1 CLASS="western">File-Staging approaches in Grid Engine</H1>
+<P>Although Grid Engine is often used in an environment where NFS is
+used to share files, sometimes it's useful to have a way of
+transferring specific files associated with Grid jobs. Situations
+where this is applicable could include:</P>
+<UL>
+	<LI><P>Grids where NFS is not used on some or all compute hosts,
+	either for performance or stability reasons</P>
+</UL>
+<UL>
+	<LI><P>cases where files have to be obtained from some remote
+	system.  It's possible that not every host in the Grid has the
+	ability to retrieve these files, due to connectivity, security, or
+	bandwidth issues, but it would still be nice to have any compute
+	host operate on them</P>
+</UL>
+<P>This HOWTO will cover two general cases for setting up
+File-staging in SGE.</P>
+<OL>
+	<LI><P><A HREF="#Local File-Staging|outline"><B>Local file-staging</B></A>:
+	this is when you wish to transfer files directly to the compute host
+	on which a job will run</P>
+	<LI><P><A HREF="#Site File-Staging|outline"><B>Site file-staging</B></A>:
+	this means that you need to obtain a file from outside the Grid and
+	place it in a central repository, from which any compute host in the
+	Grid can access it (via NFS or some secondary staging mechanism)</P>
+</OL>
+<HR>
+<H2 CLASS="western"><A NAME="Local File-Staging|outline"></A>Local
+File-Staging</H2>
+<P STYLE="margin-bottom: 0in">For non-NFS SGE clusters, file staging
+can be provided by <B>prolog</B> and <B>epilog</B> methods. The
+actual mechanism of file transfer will depend upon the local setup,
+but here we outline the generic setup.  The &quot;remote&quot;
+compute hosts are ones which do not share any NFS filesystems with
+the master host or submit hosts.</P>
+<P STYLE="margin-bottom: 0in">This setup uses <CODE><B><I>rcp</I></B></CODE>
+as the file transfer mechanism. The underlying permissions for <CODE>rcp</CODE>
+need to be in place ahead of time. This includes:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">any potential submit host must be
+	allowed to <CODE>rcp</CODE> to any potential compute host</P>
+	<LI><P STYLE="margin-bottom: 0in">vice versa, that is, any potential
+	compute host must be allowed to <CODE>rcp</CODE> back to any
+	potential submit host</P>
+</UL>
+<P STYLE="margin-bottom: 0in">It is advisable that you first manually
+test <CODE>rcp</CODE> between hosts before implementing the
+file-staging procedure. Of course, the use of <CODE>rcp</CODE> is a
+security concern. However, it should be straightforward to convert
+this example to use <CODE>scp</CODE> instead of <CODE>rcp</CODE>.</P>
+<P STYLE="margin-bottom: 0in">NOTE: the prototype will only work if
+the submit user is known on the compute hosts, and if the submit
+hostname is known to the compute host. These issues are independent
+of file staging, but could present themselves in situations requiring
+a file-staging solution.</P>
+<H3 CLASS="western">Configuration</H3>
+<P STYLE="margin-bottom: 0in">The example given here is a simple job
+which transfers an input text file to the compute host, converts all
+characters to uppercase, and transfers the output file back to the
+directory from which the input file was obtained.</P>
+<P STYLE="margin-bottom: 0in">The prototype consists of: the prolog
+and epilog scripts, which run on the remote compute hosts, and a
+sample job script which shows how to invoke the file transfer
+facility.  The configuration is as follows:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">for queues on the compute hosts,
+	set the prolog and epilog to be the scripts included here:<BR><CODE>prolog
+	<A HREF="Local/file_trans_prlg.sh">file_trans_prlg.sh</A><BR>epilog
+	<A HREF="Local/file_trans_eplg.sh">file_trans_eplg.sh</A></CODE></P>
+</UL>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">use the sample jobs <CODE><A HREF="Local/changecase.sh">changecase.sh</A></CODE>
+	as a model to create any arbitrary job script which makes use of
+	stage-in/stage-out.</P>
+	<LI><P STYLE="margin-bottom: 0in">submit the job as specified in the
+	script.  You can use this file <CODE><A HREF="Local/song_of_wreck.txt">song_of_wreck.txt</A></CODE>
+	as sample input.</P>
+	<LI><P STYLE="margin-bottom: 0in">It is recommended to use <CODE>$TMPDIR</CODE>
+	as the working directory for staged files during a job run. This
+	environment variable is automatically set by SGE to be a directory
+	unique to every job. The directory and its contents are
+	automatically deleted after the epilog completes.</P>
+</UL>
+<HR>
+<H2 CLASS="western"><A NAME="Site File-Staging|outline"></A>Site
+File-Staging</H2>
+<P STYLE="margin-bottom: 0in">The transfer of files from outside the
+Grid to a local central repository can often times be a more
+complicated task. Additionally, it might be possible that only
+certain hosts in the grid are appropriate for doing this transfer
+process. Maybe only these hosts have the ability to go outside the
+firewall, or perhaps these hosts have high bandwidth to the network
+or to the local storage. Finally, it could be possible that extremely
+large files need to be transferred, eg, a large dataset from a public
+archive.</P>
+<P STYLE="margin-bottom: 0in">In this situation, the ideal approach
+is to have the file transfer procedure be a separate job in Grid
+Engine. The processing jobs which depend upon this data are then
+submitted with a dependency on this <B>transfer job</B>. With this
+setup, the transfer jobs can be configured to run only on those hosts
+appropriate for this task, leaving your compute hosts free to do
+other jobs, instead of being held up while the data transfer occurs.
+By transferring to a central repository, you can then allow any
+compute host to process the file.</P>
+<H3 CLASS="western">Configuration</H3>
+<P>In this second example, a transfer job is used to download
+selected texts from the <B>Gutenberg Project</B> archive via <I>anoymous
+ftp</I>. A processing job then does a word frequency analysis and
+generates a report. The whole process is driven by a <B>submit
+script</B>, which submits the two tasks with proper dependencies.</P>
+<P>The setup is as follows:</P>
+<UL>
+	<LI><P>since we are using anoymous ftp to transfer files, we need a
+	<CODE><A HREF="Site/netrc">.netrc</A></CODE> file in the user home
+	directory in order to make the ftp scriptable. Rename the download
+	to &ldquo;<CODE>.netrc&rdquo;</CODE> and place this file in the
+	user's home directory with permissions 700.</P>
+	<LI><P>the <CODE><A HREF="Site/transferjob.sh">transferjob.sh</A></CODE>
+	script takes some arguments to specify which Gutenberg text to
+	download and where to put it. The destination in this case should be
+	an NFS directory available to all compute hosts. (NOTE: we are using
+	the Gutenberg archive found at <B>ftp.cdrom.com</B>)</P>
+	<LI><P>The <CODE><A HREF="Site/countword.pl">countwords.pl</A></CODE>
+	script does the word frequency analysis for the file given as an
+	argument.</P>
+	<LI><P>The <CODE><A HREF="Site/submitscript.sh">submitscript.sh</A></CODE>
+	script drives the process, and accepts as arguments the directory
+	and filename from the Gutenberg archive</P>
+</UL>
+<P>Modify the scripts to match your environment.  It is recommended
+that you first test the transfer job by itself from the command line,
+to ensure that the anoymous ftp is working properly.</P>
+<HR>
+<H2 CLASS="western">Appendix: list of example files and scripts</H2>
+<UL>
+	<LI><P>Local File-Staging</P>
+</UL>
+<OL>
+	<OL>
+		<LI><P><A HREF="Local/file_trans_prlg.sh">f<CODE>ile_trans_prlg.sh</CODE></A></P>
+		<LI><P><CODE><A HREF="Local/file_trans_eplg.sh">file_trans_eplg.sh</A></CODE></P>
+		<LI><P><CODE><A HREF="Local/changecase.sh">changecase.sh</A></CODE></P>
+		<LI><P><CODE><A HREF="Local/song_of_wreck.txt">song_of_wreck.txt</A></CODE></P>
+	</OL>
+</OL>
+<UL>
+	<LI><P>Site File-Staging</P>
+</UL>
+<OL>
+	<OL>
+		<LI><P><CODE><A HREF="Site/netrc">.netrc</A></CODE></P>
+		<LI><P><CODE><A HREF="Site/transferjob.sh">transferjob.sh</A></CODE></P>
+		<LI><P><CODE><A HREF="Site/countword.pl">countwords.pl</A></CODE></P>
+		<LI><P><CODE><A HREF="Site/submitscript.sh">submitscript.sh</A></CODE></P>
+	</OL>
+</OL>
+</BODY>
+</HTML>

@@ -1,3 +1,6 @@
+CR-2002-07-09-0  Bugfix:    removed double conf_version lines when creating
+                            local configuration in install script inst_sge
+
 CR-2002-07-08-0  Enhancem.: I18N : modified Makefiles for lost lib_messages
                                    fixed infotext_msg_parse.tcl script  
 

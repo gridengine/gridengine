@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:10 $     Revision: $Revision: 1.30 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/20 11:38:52 $     Revision: $Revision: 1.31 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/19 10:52:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/20 11:38:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -887,11 +887,12 @@ If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
 .PP
 .IP "\fIMAX_DYN_EC\fP"
-Sets the max number of dynamic event clients (used in qsub -sync y). The
-default is set to 99. The number of dynamic event clients should not
-be bigger than half of the number of file descriptors the system has.
-The number of file descriptors are shared among the connections to all
-exec hosts, all event clients, and file handles that the qmaster needs.
+Sets the max number of dynamic event clients (as used by qsub -sync y 
+and by xxQS_NAMExx DRMAA API library sessions). The default is set to 99. 
+The number of dynamic event clients should not be bigger than half of 
+the number of file descriptors the system has. The number of file 
+descriptors are shared among the connections to all exec hosts, all 
+event clients, and file handles that the qmaster needs.
 .PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.

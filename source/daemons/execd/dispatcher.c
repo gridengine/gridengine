@@ -43,6 +43,7 @@
 #include "sge_log.h"
 #include "msg_execd.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 #include "sge_security.h"
 #include "sig_handlers.h"
 
@@ -279,7 +280,7 @@ dispatch_entry *dea, *deb;
    if (deb->commproc && deb->commproc[0] && 
        strcmp(deb->commproc, dea->commproc))
       return 0;
-   if (deb->host && deb->host[0] && hostcmp(deb->host, dea->host))
+   if (deb->host && deb->host[0] && sge_hostcmp(deb->host, dea->host))
       return 0;
    if (deb->id && deb->id != dea->id)
       return 0;
@@ -356,13 +357,19 @@ void (*errfunc)(const char *);
 
       receive_blocking = 0;     /* second receive is always non blocking */
       if (i == CL_OK) {
+         int pack_ret;
+
          new = (pbcache *)malloc(sizeof(pbcache));        
          new->pb = (sge_pack_buffer *)malloc(sizeof(sge_pack_buffer));
          new->de = (dispatch_entry *)malloc(sizeof(dispatch_entry));
          alloc_de(new->de);
          copy_de(new->de, &deact);
          new->next = 0;
-         init_packbuffer_from_buffer(new->pb, buffer, buflen, compressed);        
+         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen, compressed);
+         if(pack_ret != PACK_SUCCESS) {
+            ERROR((SGE_EVENT, MSG_EXECD_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
+            continue;
+         }
 
          if (cache)
             cacheend->next = new;
@@ -375,7 +382,7 @@ void (*errfunc)(const char *);
             acknowledge to apb. Else we have to send the acknowledge and
             reinitialize apb */
          if (apb.head_ptr) {  /* only if there is allready an acknowlege */
-            if (lastde.id != deact.id || hostcmp(lastde.host, deact.host) ||
+            if (lastde.id != deact.id || sge_hostcmp(lastde.host, deact.host) ||
                 strcmp(lastde.commproc, deact.commproc)) {
                /* this is another sender -> send ack to last sender */
                DPRINTF(("(1) sending acknowledge to (%s,%s,%d)\n",

@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -43,9 +42,10 @@
 #include <sys/stat.h>
 
 #include "basis_types.h"
-#include "sge_getpwnam.h"
-#include "sge_pgrp.h"
+#include "sge_stdlib.h"
 #include "sge_string.h"
+#include "sge_unistd.h"
+#include "sge_uidgid.h"
 #include "config_file.h"
 #include "msg_qrsh.h"
 
@@ -53,55 +53,7 @@
 
 pid_t child_pid = 0;
 
-/****** Interactive/qrsh_starter/sge_putenv() **********************************************
-*  NAME
-*     sge_putenv() -- put an environment variable to environment
-*
-*  SYNOPSIS
-*     static int sge_putenv(const char *var) 
-*
-*  FUNCTION
-*     Duplicates the given environment variable and calls the system call
-*     putenv.
-*
-*  INPUTS
-*     const char *var - variable to put in the form <name>=<value>
-*
-*  RESULT
-*     static int - 1 on success, else 0
-*
-*  NOTES
-*     This function should probably be part of utilib.
-*     Or sge_setenv's restrictions could be removed.
-*
-*  SEE ALSO
-*     sge_setenv()
-*
-*******************************************************************************/
-static int sge_putenv(const char *var)
-{
-   char *duplicate;
-
-   if(var == NULL) {
-      return 0;
-   }
-
-   duplicate = strdup(var);
-
-   if(duplicate == NULL) {
-      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return 0;
-   }
-
-   if(putenv(duplicate) != 0) {
-      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-      return 0;
-   }
-
-   return 1;
-}
-
-/****** Interactive/qrsh_starter/setEnvironment() ***************************************
+/****** Interactive/qrsh/setEnvironment() ***************************************
 *
 *  NAME
 *     setEnvironment() -- set environment from file
@@ -224,7 +176,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    return command;
 }
 
-/****** Interactive/qrsh_starter/readConfig() *****************************************
+/****** Interactive/qrsh/readConfig() *****************************************
 *  NAME
 *     readConfig() -- read the jobs configuration
 *
@@ -267,7 +219,7 @@ static int readConfig(const char *jobdir)
    return 1;
 }
 
-/****** Interactive/qrsh_starter/changeDirectory() *****************************************
+/****** Interactive/qrsh/changeDirectory() *****************************************
 *  NAME
 *     changeDirectory() -- change to directory named in job config
 *
@@ -283,7 +235,7 @@ static int readConfig(const char *jobdir)
 *     static int - 0, if an error occured
 *                  1, if function completed without errors
 *  SEE ALSO
-*     Interactive/qrsh_starter/readConfig()
+*     Interactive/qrsh/readConfig()
 *
 *******************************************************************************/
 static int changeDirectory(void) 
@@ -308,7 +260,7 @@ static int changeDirectory(void)
 }
 
 
-/****** Interactive/qrsh_starter/write_pid_file() ***************************************
+/****** Interactive/qrsh/write_pid_file() ***************************************
 *
 *  NAME
 *     write_pid_file()  -- write a pid to file pid in $TMPDIR
@@ -343,11 +295,10 @@ static int write_pid_file(pid_t pid)
       return 0;
    }
 
-   task_id_str = getenv("TASK_ID");
+   task_id_str = get_conf_val("pe_task_id");
 
-   if(task_id_str) {
-      long task_id = atol(task_id_str);
-      sprintf(pid_file_name, "%s/pid.%ld", tmpdir, task_id);
+   if(task_id_str != NULL) {
+      sprintf(pid_file_name, "%s/pid.%s", tmpdir, task_id_str);
    } else {
       sprintf(pid_file_name, "%s/pid", tmpdir);
    }
@@ -363,7 +314,7 @@ static int write_pid_file(pid_t pid)
    return 1;
 }
 
-/****** Interactive/qrsh_starter/forward_signal() ***************************************
+/****** Interactive/qrsh/forward_signal() ***************************************
 *
 *  NAME
 *     forward_signal() -- forward a signal to qrsh_starter's child
@@ -387,7 +338,7 @@ static void forward_signal(int sig)
    }
 }
 
-/****** Interactive/qrsh_starter/split_command() *******************************************
+/****** Interactive/qrsh/split_command() *******************************************
 *  NAME
 *     split_command() -- split commandline into tokens
 *
@@ -412,7 +363,7 @@ static void forward_signal(int sig)
 *     static int - the number of arguments or 0 if an error occured
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/join_command()
+*     Interactive/qrsh/join_command()
 *
 *******************************************************************************/
 static int split_command(char *command, char ***cmdargs) {
@@ -465,7 +416,7 @@ static int split_command(char *command, char ***cmdargs) {
    return argc;
 }
 
-/****** Interactive/qrsh_starter/join_command() ********************************************
+/****** Interactive/qrsh/join_command() ********************************************
 *  NAME
 *     join_command() -- join arguments to a single string
 *
@@ -486,7 +437,7 @@ static int split_command(char *command, char ***cmdargs) {
 *     static char* - the resulting commandline or NULL, if an error occured.
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/split_command()
+*     Interactive/qrsh/split_command()
 *
 *******************************************************************************/
 static char *join_command(int argc, char **argv) {
@@ -518,7 +469,7 @@ static char *join_command(int argc, char **argv) {
 }
 
 
-/****** Interactive/qrsh_starter/startJob() ***************************************
+/****** Interactive/qrsh/startJob() ***************************************
 *
 *  NAME
 *     startJob() -- start a shell with commands to execute
@@ -556,9 +507,9 @@ static char *join_command(int argc, char **argv) {
 *        - executing the shell failed
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/write_pid_file()
-*     Interactive/qrsh_starter/split_command()
-*     Interactive/qrsh_starter/join_command()
+*     Interactive/qrsh/write_pid_file()
+*     Interactive/qrsh/split_command()
+*     Interactive/qrsh/join_command()
 *
 ****************************************************************************
 */
@@ -676,7 +627,7 @@ static int startJob(char *command, char *wrapper, int noshell)
    return EXIT_FAILURE; 
 }
 
-/****** Interactive/qrsh_starter/writeExitCode() ***************************************
+/****** Interactive/qrsh/writeExitCode() ***************************************
 *
 *  NAME
 *    writeExitCode() -- write exit code of child process to file
@@ -690,8 +641,6 @@ static int startJob(char *command, char *wrapper, int noshell)
 *     else write the exit code of the child process (programExitCode).
 *     The exit code is written to a file "qrsh_exit_code" in the
 *     directory $TMPDIR.
-*     If the child process terminated normally, its exit code is written,
-*     else (if it was signaled etc.), EXIT_FAILURE is written.
 *
 *  INPUTS
 *     myExitCode      - status of qrsh_starter
@@ -716,11 +665,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
    if(myExitCode != EXIT_SUCCESS) {
       exitCode = myExitCode;
    } else {
-      if(WIFEXITED(programExitCode)) {
-         exitCode = WEXITSTATUS(programExitCode);
-      } else {
-         exitCode = EXIT_FAILURE;
-      }
+      exitCode = programExitCode;
    }
 
    if((tmpdir = getenv("TMPDIR")) == NULL) {
@@ -728,7 +673,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
       return EXIT_FAILURE;
    }
   
-   taskid = getenv("TASK_ID");
+   taskid = get_conf_val("pe_task_id");
    
    if(taskid != NULL) {
       sprintf(fileName, "%s/qrsh_exit_code.%s", tmpdir, taskid);
@@ -749,7 +694,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
    return EXIT_SUCCESS;
 }
 
-/****** Interactive/qrsh_starter/--Introduction ***************************************
+/****** Interactive/qrsh/--qrsh_starter ***************************************
 *
 *  NAME
 *     qrsh_starter -- start a command special correct environment
@@ -788,7 +733,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
 *     rsh <hostname> qrsh_starter ~/myenvironment 
 *
 *  SEE ALSO
-*     Interactive/qsh/--Introduction
+*     Interactive/qsh/--Interactive
 *
 ****************************************************************************
 */

@@ -163,7 +163,7 @@ const lSortOrder *sp
 
    for (i = 0; !result && sp[i].nm != NoName; i++) {
 
-      switch (sp[i].mt) {
+      switch (mt_get_type(sp[i].mt)) {
       case lIntT:
          result = intcmp(lGetPosInt(ep0, sp[i].pos), lGetPosInt(ep1, sp[i].pos));
          break;
@@ -184,6 +184,9 @@ const lSortOrder *sp
          break;
       case lLongT:
          result = longcmp(lGetPosLong(ep0, sp[i].pos), lGetPosLong(ep1, sp[i].pos));
+         break;
+      case lBoolT:
+         result = boolcmp(lGetPosBool(ep0, sp[i].pos), lGetPosBool(ep1, sp[i].pos));
          break;
       case lCharT:
          result = charcmp(lGetPosChar(ep0, sp[i].pos), lGetPosChar(ep1, sp[i].pos));
@@ -209,30 +212,38 @@ lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt,...)
    return lParseSortOrder(dp, fmt, ap);
 }
 
-/* ------------------------------------------------------------ 
-
-   creates a sort order array due to the given va_list
-
-   Synax for the fmt:
-
-   e.g.: lParseSortOrder(dp,"%s+ %d-", H_hostname, H_memsize )
-
-   returns a sort order array which can be used for sorting
-   an list with ascending H_hostname and descending H_memsize
-
-   %d  int
-   %s  char *
-   %u    ulong
-
-   +   ascending
-   -   descending
-
- */
-lSortOrder *lParseSortOrder(
-const lDescr *dp,
-const char *fmt,
-va_list ap 
-) {
+/****** cull/sort/lParseSortOrder() *******************************************
+*  NAME
+*     lParseSortOrder() -- Creates a sort order array 
+*
+*  SYNOPSIS
+*     lSortOrder* lParseSortOrder(const lDescr *dp, const char *fmt, 
+*                                 va_list ap) 
+*
+*  FUNCTION
+*     Create a sort oder array due to the given va_list. 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     const char *fmt  - format string
+*                        %d - int
+*                        %s - char*
+*                        %u - ulong
+*                        +  - ascending
+*                        -  - descending 
+*     va_list ap       - Attributes within descriptor 
+*
+*  RESULT
+*     lSortOrder* - sort order array 
+*
+*  EXAMPLE
+*     lParseSortOrder(dp,"%s+ %d-", H_hostname, H_memsize )
+*     
+*     Returns a sort order array which can be used for sorting an list
+*     with ascending H_hostname and descending H_memsize. 
+*******************************************************************************/
+lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap) 
+{
    const char *s;
    lSortOrder *sp;
    int i, n;
@@ -283,38 +294,38 @@ va_list ap
       /* COMMENTED OUT
          switch( scan(NULL) ) {
          case INT:
-         if ( sp[i].mt != lIntT )
+         if (mt_get_type(sp[i].mt) != lIntT )
          incompatibleType("lSortList (should be a lIntT)\n");
          break;
 
          case STRING:
-         if ( sp[i].mt !=lStringT )
+         if (mt_get_type(sp[i].mt) !=lStringT )
          incompatibleType("lSortList (should be a lStringT)\n");
          break;
 
          case ULONG:
-         if ( sp[i].mt !=lUlongT )
+         if (mt_get_type(sp[i].mt) !=lUlongT )
          incompatibleType("lSortList (should be a lUlongT)\n");
          break;
 
          case SUBLIST:
-         if ( sp[i].mt !=lListT )
+         if (mt_get_type(sp[i].mt) !=lListT )
          incompatibleType("lSortList (should be a lListT)\n");
          break;
          case FLOAT:
-         if ( sp[i].mt !=lFloatT )
+         if (mt_get_type(sp[i].mt) !=lFloatT )
          incompatibleType("lSortList (should be a lFloatT)\n");
          break;
          case DOUBLE:
-         if ( sp[i].mt !=lDoubleT )
+         if (mt_get_type(sp[i].mt) !=lDoubleT )
          incompatibleType("lSortList (should be a lDoubleT)\n");
          break;
          case LONG:
-         if ( sp[i].mt !=lLongT )
+         if (mt_get_type(sp[i].mt) !=lLongT )
          incompatibleType("lSortList (should be a lLongT)\n");
          break;
          case CHAR:
-         if ( sp[i].mt !=lCharT )
+         if (mt_get_type(sp[i].mt) !=lCharT )
          incompatibleType("lSortList (should be a lCharT)\n");
          break;
 

@@ -34,23 +34,19 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "def.h"
 #include "sgermon.h"
 #include "basis_types.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
-#include "sge_me.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_string.h"
-#include "utility.h"
-#include "msg_utilib.h"
+#include "setup_path.h"
+#include "sge_stdlib.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+
 #include "msg_gdilib.h"
 #include "msg_common.h"
-#include "sge_arch.h"
-#include "setup_path.h"
-#include "sge_stat.h" 
 
 sge_path_type path = { NULL };
 
@@ -78,7 +74,7 @@ lList **alpp
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S, sge_root));
       if (alpp) {
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }   
@@ -89,7 +85,7 @@ lList **alpp
    if (!S_ISDIR(sbuf.st_mode)) {
       CRITICAL((SGE_EVENT, MSG_GDI_SGEROOTNOTADIRECTORY_S , sge_root));
       if (alpp) { 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -102,7 +98,7 @@ lList **alpp
    if (!cell_root) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
       if (alpp) {
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -117,7 +113,7 @@ lList **alpp
       if (me.who != QMASTER) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_NOSGECELL_S, cell_root));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
          }
@@ -133,7 +129,7 @@ lList **alpp
       if (me.who != QMASTER) {  
          CRITICAL((SGE_EVENT, MSG_GDI_DIRECTORYNOTEXIST_S , common_dir));
          if (alpp) {
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
          }

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/01/25 15:32:58 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/11/14 14:30:59 $     Revision: $Revision: 1.23 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/01/25 15:32:58 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/11/14 14:30:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -51,9 +51,9 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B options
 ] [
-.B scriptfile | --
+.B command | --
 [
-.B script_args
+.B command_args
 ]]
 .PP
 .B qsh
@@ -85,7 +85,7 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B --
 [
-.B script_args
+.B command_args
 ]]
 .PP
 .B qalter
@@ -96,7 +96,7 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B --
 [
-.B script_args
+.B command_args
 ]]   
 .PP
 .B qresub
@@ -107,31 +107,32 @@ submit a copy of an existing xxQS_NAMExx job.
 .\"
 .\"
 .SH DESCRIPTION
+
 .I Qsub
-submits batch jobs to the xxQS_NAMExx queuing system. 
-xxQS_NAMExx supports single and multiple node jobs.
-\fBscriptfile\fP contains the commands to be
+submits batch jobs to the xxQS_NAMExx queuing system. xxQS_NAMExx supports
+single and multiple node jobs. \fBCommand\fP might be a path to a
+binary or a script (see \fB-b\fP below) which containes the commands to be
 run by the job using a shell (for example,
 .M sh 1
 or
 .M csh 1 ).
-Arguments to the job script are given by \fBscript_args\fP.
-xxQS_NAMExx flags may be entered as arguments to
-.I qsub
-or as embedded flags in the \fBscriptfile\fP if the first two
-characters of a script line either match '#$' or are equal to the prefix
-string defined with the \fB-C\fP option described below.
+Arguments to the command are given by \fBcommand_args\fP to
+.I qsub .
+If \fBcommand\fP is handled as script then it is possible to embed flags
+in the script if the first two characters of a script line either
+match '#$' or are equal to the prefix string defined with the \fB-C\fP option
+described below.
 .PP
 .I Qsh
 submits an interactive X-windows session to xxQS_NAMExx. An
 .M xterm 1
 is brought up from the executing machine with the display directed either to
-the X-server indicated by the DISPLAY environment variable or as specified 
+the X-server indicated by the DISPLAY environment variable or as specified
 with the \fI\-display qsh\fP option. Interactive jobs are not spooled if no
-resource is 
-available to execute them. They are either dispatched to a suitable machine 
+resource is
+available to execute them. They are either dispatched to a suitable machine
 for execution immediately or the user submitting the job is notified by
-.I qsh 
+.I qsh
 that appropriate resources to execute the job are not available.
 \fBxterm_args\fP are passed to the
 .M xterm 1
@@ -236,7 +237,7 @@ command-line.
 .PP
 .I Qalter
 can be used to change the attributes of pending jobs. Once a job is 
-executing, changes are no longer possible. For job arrays, for which a part
+executing, changes are no longer possible. For array jobs, for which a part
 of the tasks can be pending and another part can be running (see the 
 \fB\-t\fP option below), modifications with
 .I qalter
@@ -394,6 +395,28 @@ of the job.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
+.IP "\fB\-b y|n\fP"
+Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow
+changing this option. This option is only interpreted if it occures in the
+commandline. It is not possible to embed this flag in \fBcommand\fP itself.
+.sp 1
+Gives the user the possibility to indicate explicitly whether
+\fBcommand\fP should be treated as binary or script. If the value
+of \fB\-b\fP is 'y', then \fBcommand\fP  may be a binary or script.
+The \fBcommand\fP might not be accessible from the submission host.
+Nothing except the path of the \fBcommand\fP will be transfered
+from the submission host to the execution host. Path aliasing will
+be applied to the path of \fBcommand\fP before \fBcommand\fP will
+be executed.
+.sp 1
+If the value of \fB\-b\fP is 'n' then \fBcommand\fP needs to be a
+script and it will be handled as script. The script file has to be
+accessible by the submission host. It will be transfered to the
+execution host. \fIqsub\fP/\fIqrsh\fP will search directive prefixes
+within script.
+.sp 1
+\fIqsub\fP will implicitely use \fB-b n\fP whereas \fIqrsh\fP will apply
+the \fB-b y\fP option if nothing else is specified.
 .IP "\fB\-c occasion_specifier\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
@@ -440,7 +463,7 @@ prior to applying any modifications (if any) appearing in this specific
 command.
 .\"
 .IP "\fB\-cwd\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
 \fIqalter\fP only.
 .sp 1
 Execute the job from the current working directory.
@@ -465,11 +488,11 @@ Available for \fIqsub\fP only.
 defines the prefix that declares a directive to
 .I qsub
 in the
-job's scriptfile. The prefix is not a job attribute, but
+job's command. The prefix is not a job attribute, but
 affects the behavior of \fIqsub\fP. If the -C option is presented
 with the value of the directive prefix as a null string,
 .I qsub
-will not scan the scriptfile
+will not scan the command.
 .br
 The directive prefix consists of two ASCII characters which
 when appearing in the first two bytes of a script line
@@ -503,6 +526,10 @@ Directs
 to use
 .B display_specifier
 in order to contact the X server.
+The \fBdisplay_specifier\fP has to contain the hostname part of the display name (e.g. myhost:1). 
+Local display names (e.g. :0) cannot be used in grid environments.
+Values set with the \fB\-display\fP option overwrite settings from the submission environment 
+and from \fB\-v\fP commandline options.
 .\"
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -536,7 +563,7 @@ the specified host.
 .sp 1
 By default the file name for standard
 error has the form \fIjob_name.\fPe\fIjob_id\fP and
-\fIjob_name.\fPe\fIjob_id\fP.\fBtask_id\fP for job array tasks (see
+\fIjob_name.\fPe\fIjob_id\fP.\fBtask_id\fP for array job tasks (see
 \fB\-t\fP option below).
 .sp 1
 If \fBpath\fP is a directory, the standard error stream of the
@@ -553,7 +580,7 @@ $USER	user ID of job owner
 $JOB_ID	current job ID
 $JOB_NAME	current job name (see \fB\-N\fP option)
 $HOSTNAME	name of the execution host
-$TASK_ID	job array task index number
+$TASK_ID	array job task index number
 .fi
 .sp 1
 Alternatively to $HOME the tilde sign "~" can be used as common in
@@ -640,7 +667,7 @@ An alternate means to assign hold is provided by the
 .M qhold 1
 facility.
 .sp 1
-If the job is a job array (see the \fB\-t\fP option below), all tasks
+If the job is a array job (see the \fB\-t\fP option below), all tasks
 specified via \fB\-t\fP are affected by the \fB\-h\fP operation
 simultaneously.
 .\"
@@ -666,6 +693,31 @@ and/or job name list have completed successfully.
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
+.\"
+.IP "\fB\-i [hostname:]file,...\fP"
+Available for \fIqsub\fP, and \fIqalter\fP only.
+.sp 1
+Defines or redefines the file used for the standard input stream of
+the job. If the \fIfile\fP constitues an absolute filename, the input
+file attribute of the job is set to its value including the
+\fIhostname\fP. If the filename is relative, xxQS_NAMExx expands
+file either with the current working directory path in case the
+\fI-cwd\fP (see above) switch is also specified or with the home directory
+path otherwise. If \fIhostname\fP is present, the standart input stream
+will be found under the corresponding location if the job runs on the
+specified host.
+.sp 1
+By default /dev/null is the input stream for the job.
+.sp 1
+It is possible to use certain pseudo variables, their value will be
+expanded at runtime of the job and will be used to exert the
+standard input stream as described in the \fI-e\fP option for the standard
+error stream.
+.sp 1
+.I Qalter
+allows changing this option even while the job executes. The
+modified parameter will only be in effect after a restart or migration
+of the job, however.
 .\"
 .IP "\fB\-inherit\fP"
 Available only for \fIqrsh\fP and
@@ -764,7 +816,8 @@ have the following meaning:
 .ta \w'|b|  'u
 `b'     Mail is sent at the beginning of the job.
 `e'     Mail is sent at the end of the job.
-`a'     Mail is sent when the job is aborted.
+`a'     Mail is sent when the job is aborted or 
+        rescheduled.
 `s'     Mail is sent when the job is suspended.
 `n'     No mail is sent.
 .fi
@@ -873,6 +926,29 @@ assigned to the job.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
+.IP "\fB\-noshell\fP"
+Available only for \fIqrsh\fP with a commandline.
+.sp 1
+Do not start the commandline given to \fIqrsh\fP in a users login shell
+but execute it without the wrapping shell.
+.sp 1
+The option can be used to speed up execution as some overhead like the  
+shell startup and sourcing the shell resource files is avoided.
+.sp 1
+The option can only be used, if no shell specific commandline parsing is
+required. If the commandline contains shell syntax like environment
+variable substitution or (back) quoting, a shell must be started.
+In this case either do not use the \fB\-noshell\fP option or include
+the shell call in the commandline.
+.sp 1
+Example:
+.br 
+qrsh echo '$HOSTNAME'
+.br 
+Alternative call with the -noshell option
+.br 
+qrsh -noshell /bin/tcsh -f -c 'echo $HOSTNAME'
+.\"
 .IP "\fB\-nostdin\fP"
 Available only for \fIqrsh\fP.
 .sp 1
@@ -894,7 +970,7 @@ the standard error stream.
 .sp 1
 By default the file name for standard
 output has the form \fIjob_name.\fPo\fIjob_id\fP and
-\fIjob_name.\fPo\fIjob_id\fP.\fBtask_id\fP for job array tasks (see
+\fIjob_name.\fPo\fIjob_id\fP.\fBtask_id\fP for array job tasks (see
 \fB\-t\fP option below).
 .sp 1
 .I Qalter
@@ -1065,7 +1141,7 @@ again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
 .IP "\fB\-S [host:]pathname,...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
+Available for \fIqsub\fP, \fIqsh\fP and \fIqalter\fP.
 .sp 1
 Specifies the interpreting shell for the job. Only one \fBpathname\fP
 component without a \fBhost\fP specifier is valid and only one path name
@@ -1093,12 +1169,26 @@ however.
 .IP "\fB\-t n[-m[:s]]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
-Submits a so called \fIJob Array\fP, i.e. an array of identical tasks being
+Submits a so called \fIArray Job\fP, i.e. an array of identical tasks being
 only differentiated by an index number and being treated by xxQS_NAMExx
 almost like a series of jobs. The option argument to \fB\-t\fP specifies
-the number of job array tasks and the index number which will be associated
+the number of array job tasks and the index number which will be associated
 with the tasks. The index numbers will be exported to the job tasks via the
-environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP.
+environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP. The option arguments n, m and s will be available through the environment variables \fBxxQS_NAME_Sxx_TASK_FIRST\fP, \fBxxQS_NAME_Sxx_TASK_LAST\fP and  \fBxxQS_NAME_Sxx_TASK_STEPSIZE\fP.
+.sp 1
+.nf
+.RS
+Following restrictions apply to the values n and m:
+.sp 1
+.RS
+1 <= n <= MIN(2^31-1, max_aj_tasks)
+1 <= m <= MIN(2^31-1, max_aj_tasks)
+n <= m
+.RE
+.fi
+.sp 1
+\fImax_aj_tasks\fP is defined in the cluster configuration (see 
+.M sge_conf 5)
 .sp 1
 The task id range specified in the option argument
 may be a single number, a simple range of the form
@@ -1107,22 +1197,22 @@ n-m or a range with a step size. Hence, the task id range specified by
 i.e. in a total of 5 tasks identical tasks with the environment variable
 xxQS_NAME_Sxx_TASK_ID containing one of the 5 index numbers each.
 .sp 1
-All job array tasks inherit the same resource requests and attribute
+All array job tasks inherit the same resource requests and attribute
 definitions as specified in the \fIqsub\fP or \fIqalter\fP command line,
 except for the \fB\-t\fP option. The tasks are scheduled independently and,
 provided enough resources, concurrently very much like separate jobs.
-However, a job array or a sub-array thereof can be accessed as a total by
+However, a array job or a sub-array thereof can be accessed as a total by
 commands like
 .M qmod 1
 or
 .M qdel 1 .
 See the corresponding manual pages for further detail.
 .sp 1
-Job arrays are commonly used to execute the same type of operation on
+Array jobs are commonly used to execute the same type of operation on
 varying input data sets correlated with the task index number. The number
-of tasks in a job array is unlimited.
+of tasks in a array job is unlimited.
 .sp 1
-STDOUT and STDERR of job array tasks will be written into different files
+STDOUT and STDERR of array job tasks will be written into different files
 with the default location
 .sp 1
 .nf
@@ -1147,7 +1237,7 @@ If you use the \fB\-u\fP or \fB\-uall\fP switch it is not permitted to
 specify an additional \fI\job/task_id_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 Defines or redefines the environment variables to
@@ -1190,7 +1280,7 @@ represented by the current command\-line and all pertinent external
 influences.
 .\"
 .IP "\fB\-V\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 Specifies that all environment variables active within the
@@ -1245,10 +1335,10 @@ Specified by the following form:
 .ta 0.0i
 .sp 1
 If present, the \fItask_range\fP restricts the effect of the 
-operation to the job array task range specified as suffix to the job id
+operation to the array job task range specified as suffix to the job id
 (see the \fB\-t\fP option to
 .M qsub 1
-for further details on job arrays).
+for further details on array jobs).
 .sp 1
 The task range specifier has the
 form n[-m[:s]]. The range may be a single number, a  simple
@@ -1258,17 +1348,17 @@ Instead of job/task_id_list it is possible to
 use the keyword 'all' to modify all jobs of the
 current user.
 .\"       
-.IP "\fBscriptfile\fP"
-Available for \fIqsub\fP only.
+.IP "\fBcommand\fP"
+Available for \fIqsub\fP and \fIqrsh\fP only.
 .sp 1
-The job's scriptfile.
+The job's scriptfile or binary.
 If not present or if the operand is the 
 single-character string '-',
 .I qsub
 reads the script from standard input.
 .\"
-.IP "\fBscript_args\fP"
-Available for \fIqsub\fP and \fIqalter\fP only.
+.IP "\fBcommand_args\fP"
+Available for \fIqsub\fP, \fIqrsh\fP and \fIqalter\fP only.
 .sp 1
 Arguments to the job. Not valid if the script is entered from standard
 input.
@@ -1328,6 +1418,12 @@ to be used for xxQS_NAMExx communication of the
 client resides.
 Per default the local host is used.
 .\"
+.IP "DISPLAY" 1.5i
+For
+.I qsh
+jobs the DISPLAY has to be specified at job submission.
+If the DISPLAY is not set by using the \fB\-display\fP or the \fB\-v\fP
+switch, the contents of the DISPLAY environment variable are used as default.
 .PP
 In addition to those environment variables specified to be
 exported to the job via the \fB\-v\fP or the \fB\-V\fP option
@@ -1382,6 +1478,11 @@ scripts.
 the pathname of the file to which the standard output stream of the job is
 diverted. Commonly used for enhancing the output with messages from
 prolog, epilog, parallel environment start/stop or checkpointing scripts.
+.IP xxQS_NAME_Sxx_STDIN_PATH 1.5i
+the pathname of the file from which the standard input stream of the job
+is taken. This variable might be used in combination with xxQS_NAME_Sxx_O_HOST
+in prolog/epilog scripts to transfer the input file from the submit
+to the execution host.
 .IP xxQS_NAME_Sxx_JOB_SPOOL_DIR 1.5i
 The directory used by
 .M xxqs_name_sxx_shepherd 8
@@ -1389,10 +1490,24 @@ to store job related data during job
 execution. This directory is owned by root or by a xxQS_NAMExx administrative
 account and commonly is not open for read or write access to regular users.
 .IP xxQS_NAME_Sxx_TASK_ID 1.5i
-The index number of the current job array task (see \fB\-t\fP option
-above). This is an unique number in each job array and can be used to
+The index number of the current array job task (see \fB\-t\fP option
+above). This is an unique number in each array job and can be used to
 reference different input data records, for example. This environment
-variable is not set for non-array jobs.
+variable is set to "undefined" for non-array jobs. It is possible to
+change the predefined value of this variable with \fB\-v\fP or \fB\-V\fP
+(see options above).
+.IP xxQS_NAME_Sxx_TASK_FIRST 1.5i
+The index number of the first array job task (see \fB\-t\fP option
+above). It is possible to change the predefined value of this variable with
+\fB\-v\fP or \fB\-V\fP (see options above).
+.IP xxQS_NAME_Sxx_TASK_LAST 1.5i
+The index number of the last array job task (see \fB\-t\fP option
+above). It is possible to change the predefined value of this variable with
+\fB\-v\fP or \fB\-V\fP (see options above).
+.IP xxQS_NAME_Sxx_TASK_STEPSIZE 1.5i
+The stepsize of the array job specification (see \fB\-t\fP option
+above). It is possible to change the predefined value of this variable with
+\fB\-v\fP or \fB\-V\fP (see options above).
 .IP "ENVIRONMENT" 1.5i
 The ENVIRONMENT variable is set to BATCH to identify that the job is being
 executed under xxQS_NAMExx control.
@@ -1408,15 +1523,13 @@ A unique identifier assigned by the
 when the job was
 submitted. The job ID is a decimal integer in the range 1 to 99999.
 .IP "JOB_NAME" 1.5i
-The job name, either `INTERACT' for interactive jobs or
-built from the \fIqsub\fP
-script filename, a period, and the digits of the job ID.
+The job name. 
+For batch jobs or jobs submitted by \fIqrsh\fP with a command, the job name is built as basename of the \fIqsub\fP script filename resp. the \fIqrsh\fP command.
+For interactive jobs it is set to `INTERACTIVE' for \fIqsh\fP jobs, `QLOGIN' for \fIqlogin\fP jobs and `QRLOGIN' for \fIqrsh\fP jobs without a command.
+
 This default may be overwritten by the
 .I -N.
 option.
-.IP "LAST_HOST" 1.5i
-The name of the preceding host in case of migration of a checkpointing
-job.
 .IP "LOGNAME" 1.5i
 The user's login name from the
 .M passwd 5
@@ -1498,6 +1611,22 @@ endif
 .PP
 Don't forget to set your shell's search path in your
 shell start-up before this code.
+.\"
+.\"
+.SH EXIT STATUS
+The following exit values are returned:
+.IP "0" 0.5i
+Operation was executed successfully.
+.IP "25" 0.5i
+It was not possible to register a new job according to the configured
+.I max_u_jobs
+or
+.I max_jobs
+limit. Additional information may be found in
+.M sge_conf 5
+.
+.IP ">0" 0.5i
+Error occured.
 .\"
 .\"
 .SH EXAMPLES

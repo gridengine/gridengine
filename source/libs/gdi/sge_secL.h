@@ -64,22 +64,22 @@ enum {
 };
 
 LISTDEF(SecurityT)
-   SGE_ULONG(SEC_ConnectionID)
-   SGE_HOST(SEC_Host)               /* CR - hostname change */
-   SGE_STRING(SEC_Commproc)
-   SGE_INT(SEC_Id)
-   SGE_STRING(SEC_UniqueIdentifier)
-   SGE_STRING(SEC_ExpiryDate)
-   SGE_ULONG(SEC_SeqNoSend)
-   SGE_ULONG(SEC_SeqNoReceive)
-   SGE_ULONG(SEC_KeyPart0)
-   SGE_ULONG(SEC_KeyPart1)
-   SGE_ULONG(SEC_KeyPart2)
-   SGE_ULONG(SEC_KeyPart3)
-   SGE_ULONG(SEC_KeyPart4)
-   SGE_ULONG(SEC_KeyPart5)
-   SGE_ULONG(SEC_KeyPart6)
-   SGE_ULONG(SEC_KeyPart7)
+   SGE_ULONG(SEC_ConnectionID, CULL_DEFAULT)
+   SGE_HOST(SEC_Host, CULL_DEFAULT)               /* CR - hostname change */
+   SGE_STRING(SEC_Commproc, CULL_DEFAULT)
+   SGE_INT(SEC_Id, CULL_DEFAULT)
+   SGE_STRING(SEC_UniqueIdentifier, CULL_DEFAULT)
+   SGE_STRING(SEC_ExpiryDate, CULL_DEFAULT)
+   SGE_ULONG(SEC_SeqNoSend, CULL_DEFAULT)
+   SGE_ULONG(SEC_SeqNoReceive, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart0, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart1, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart2, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart3, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart4, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart5, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart6, CULL_DEFAULT)
+   SGE_ULONG(SEC_KeyPart7, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SecurityN)

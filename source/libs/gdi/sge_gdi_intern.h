@@ -52,7 +52,9 @@ extern "C" {
 /* v5.3 alpha1 0x100000F0 */
 /* before hash 0x100000F1 */
 /* v5.3beta1   0x100000F2 */
-#define GRM_GDI_VERSION 0x100000F3
+/* v5.3beta2   0x100000F3 */
+/* v5.3        0x100000F4 */
+#define GRM_GDI_VERSION 0x10000FFF
 
 /* sge_gdi_request.c */
 typedef struct _sge_gdi_request sge_gdi_request;
@@ -88,9 +90,6 @@ sge_gdi_request* new_gdi_request(void);
 
 
 #define INIT_ALPP(alpp) (alpp && !*alpp)?((*alpp=lCreateList("answers", AN_Type))!=NULL):0
-
-/* sge_send_reports */
-int sge_send_reports(const char *rhost, const char *commproc, int id, lList *report_list, int synchron, u_long32 *mid);
 
 /* sge_any_request.c */
 enum {
@@ -151,9 +150,9 @@ int reresolve_me_qualified_hostname(void);
 /* sge_ack.c */
 int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, u_long32 ulong_val_2);
 
-u_long32 sge_get_recoverable(lListElem *aep);  
-
 const char *quality_text(lListElem *aep);
+
+int check_isalive(const char *masterhost);
 
 #ifdef  __cplusplus
 }

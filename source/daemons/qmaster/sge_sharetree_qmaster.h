@@ -40,5 +40,7 @@ int update_sharetree(lList **alpp, lList *dst, lList *src);
 
 lListElem *getNode(lList *share_tree, const char *name, int node_type, int recurse);
 
+int check_sharetree(lList **alpp, lListElem *node, lList *user_list, lList *project_list, lListElem *project, lList **found);
+
 #endif /*  _SGE_SHARETREE_QMASTER_H_ */
 

@@ -47,17 +47,22 @@
 #include "cull_whatP.h"
 #include "cull_lerrnoP.h"
 
-  
-/* ------------------------------------------------------------ 
-
-   nm_set() is a utility function that can help to build int 
-   vectors like it is used by lIntVector2What() 
-
- */
-void nm_set(
-int job_field[],
-int nm 
-) {
+/****** cull/what/nm_set() ****************************************************
+*  NAME
+*     nm_set() -- Build a int vector 
+*
+*  SYNOPSIS
+*     void nm_set(int job_field[], int nm) 
+*
+*  FUNCTION
+*     Build a int vector like it is used by lIntVector2What() 
+*
+*  INPUTS
+*     int job_field[] - int vector 
+*     int nm          - field name id  
+******************************************************************************/
+void nm_set(int job_field[], int nm) 
+{
    int i;
 
    DENTER(TOP_LAYER, "nm_set");
@@ -78,19 +83,29 @@ int nm
    return;
 }
 
-
-/* ------------------------------------------------------------ 
-
-   lReduceDescr makes a new descriptor in *dst_dpp that 
-   contains only those fields from src_dp that are in
-   enp.
-
- */
-int lReduceDescr(
-lDescr **dst_dpp,
-lDescr *src_dp,
-lEnumeration *enp 
-) {
+/****** cull/what/lReduceDescr() **********************************************
+*  NAME
+*     lReduceDescr() -- Reduce a descriptor 
+*
+*  SYNOPSIS
+*     int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp) 
+*
+*  FUNCTION
+*     Makes a new descriptor in 'dst_dpp' that containes only those 
+*     fields from 'src_dp' that are in 'enp'. 
+*
+*  INPUTS
+*     lDescr **dst_dpp  - destination for reduced descriptor 
+*     lDescr *src_dp    - source descriptor 
+*     lEnumeration *enp - condition 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp) 
+{
    int n, index = 0;
 
    DENTER(TOP_LAYER, "lReduceDescr");
@@ -114,17 +129,12 @@ lEnumeration *enp
 }
 
 /* ------------------------------------------------------------ 
-
    _lWhat creates an enumeration array. This is used in lWhat
    to choose special fields of a list element.
-   lEnumeration* _lWhat( char *fmt, lDescr *dp, int* nm_list, int nr_nm) 
  */
-lEnumeration *_lWhat(
-const char *fmt,
-const lDescr *dp,
-const int *nm_list,
-int nr_nm 
-) {
+lEnumeration *_lWhat(const char *fmt, const lDescr *dp, 
+                            const int *nm_list, int nr_nm) 
+{
    int neg = 0;
    int i, j, k, n, size = 0;
    const char *s;
@@ -288,12 +298,24 @@ int nr_nm
    return NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lWhat creates an enumeration array. This is used in lSelect and
-   lJoin to choose special field of a list element.
-   lEnumeration* lWhat( char *fmt, ...) 
- */
+/****** cull/what/lWhat() *****************************************************
+*  NAME
+*     lWhat() -- Creates a enumeration array. 
+*
+*  SYNOPSIS
+*     lEnumeration* lWhat(const char *fmt, ...) 
+*
+*  FUNCTION
+*     Creates a enumeration array. This is used in lSelect and 
+*     lJoin to choose special fields of alist element.  
+*
+*  INPUTS
+*     const char *fmt - format string 
+*     ...             - additional arguments 
+*
+*  RESULT
+*     lEnumeration* - enumeration 
+******************************************************************************/
 lEnumeration *lWhat(const char *fmt,...)
 {
    int i, n;
@@ -356,14 +378,71 @@ lEnumeration *lWhat(const char *fmt,...)
    return NULL;
 }
 
-/* ------------------------------------------------------------ 
+/****** cull/what/lWhatAll() *****************************************************
+*  NAME
+*     lWhatAll() -- Creates a enumeration array requesting all elements. 
+*
+*  SYNOPSIS
+*     lEnumeration* lWhatAll() 
+*
+*  FUNCTION
+*     Creates a enumeration array that requests complete elements 
+*     of whatever typed list. This is a shortcut for 
+*     lWhat("%T(ALL)", <List_type>)), cause for all the descriptor is not
+*     needed anyway, it is available from the list itself.
+*
+*  INPUTS
+*
+*  RESULT
+*     lEnumeration* - enumeration 
+******************************************************************************/
+lEnumeration *lWhatAll()
+{
+   lEnumeration *ep;
+   int error_status;
 
-   lFreeWhat frees the enumeration array ep.
- */
+   DENTER(CULL_LAYER, "lWhatAll");
 
-lEnumeration *lFreeWhat(
-lEnumeration *ep 
-) {
+   if (!(ep = (lEnumeration *) malloc(sizeof(lEnumeration) * 2))) {
+      error_status = LEMALLOC;
+      goto error;
+   }
+
+   ep[0].pos = WHAT_ALL;
+   ep[0].nm = -99;
+   ep[0].mt = -99;
+   ep[1].pos = 0;
+   ep[1].nm = NoName;
+   ep[1].mt = lEndT;
+
+   DEXIT;
+   return ep;
+
+ error:
+   LERROR(error_status);
+   DPRINTF(("error_status = %d\n", error_status));
+   DEXIT;
+   return NULL;
+}
+
+/****** cull/what/lFreeWhat() *************************************************
+*  NAME
+*     lFreeWhat() -- Frees a enumeration array 
+*
+*  SYNOPSIS
+*     lEnumeration* lFreeWhat(lEnumeration *ep) 
+*
+*  FUNCTION
+*     Frees a enumeration array 
+*
+*  INPUTS
+*     lEnumeration *ep - enumeration 
+*
+*  RESULT
+*     lEnumeration* - NULL 
+******************************************************************************/
+lEnumeration *lFreeWhat(lEnumeration *ep) 
+{
    DENTER(CULL_LAYER, "lFreeWhat");
 
    if (!ep) {
@@ -376,15 +455,22 @@ lEnumeration *ep
    return NULL;
 }
 
-/* ------------------------------------------------------------
-
-   writes a lEnumeration array  (for debugging purposes)
-
- */
-void lWriteWhatTo(
-const lEnumeration *ep,
-FILE *fp 
-) {
+/****** cull/what/lWriteWhatTo() **********************************************
+*  NAME
+*     lWriteWhatTo() -- Writes a enumeration array to a file stream 
+*
+*  SYNOPSIS
+*     void lWriteWhatTo(const lEnumeration *ep, FILE *fp) 
+*
+*  FUNCTION
+*     Writes a enumeration array to a file stream 
+*
+*  INPUTS
+*     const lEnumeration *ep - enumeration 
+*     FILE *fp               - file stream 
+******************************************************************************/
+void lWriteWhatTo(const lEnumeration *ep, FILE *fp) 
+{
    int i;
 
    DENTER(CULL_LAYER, "lWriteWhatTo");
@@ -432,10 +518,25 @@ FILE *fp
    return;
 }
 
-int lCountWhat(
-const lEnumeration *enp,
-const lDescr *dp 
-) {
+/****** cull/what/lCountWhat() ************************************************
+*  NAME
+*     lCountWhat() -- Returns size of enumeration 
+*
+*  SYNOPSIS
+*     int lCountWhat(const lEnumeration *enp, const lDescr *dp) 
+*
+*  FUNCTION
+*     Returns size of enumeration 
+*
+*  INPUTS
+*     const lEnumeration *enp - enumeration 
+*     const lDescr *dp        - descriptor 
+*
+*  RESULT
+*     int - number of fields in enumeration 
+******************************************************************************/
+int lCountWhat(const lEnumeration *enp, const lDescr *dp) 
+{
    int n;
 
    DENTER(CULL_LAYER, "lCountWhat");
@@ -469,14 +570,24 @@ const lDescr *dp
    return n;
 }
 
-/* ------------------------------------------------------------
-
-   copies a lEnumeration array
-
- */
-lEnumeration *lCopyWhat(
-const lEnumeration *ep 
-) {
+/****** cull/what/lCopyWhat() *************************************************
+*  NAME
+*     lCopyWhat() -- Copy a enumeration array 
+*
+*  SYNOPSIS
+*     lEnumeration* lCopyWhat(const lEnumeration *ep) 
+*
+*  FUNCTION
+*     Copy a enumeration array 
+*
+*  INPUTS
+*     const lEnumeration *ep - enumeration 
+*
+*  RESULT
+*     lEnumeration* - new copy of enumeration 
+******************************************************************************/
+lEnumeration *lCopyWhat(const lEnumeration *ep) 
+{
    int i, n;
    lEnumeration *copy = NULL;
 
@@ -506,10 +617,25 @@ const lEnumeration *ep
    return copy;
 }
 
-lEnumeration *lIntVector2What(
-const lDescr *dp,
-const int intv[] 
-) {
+/****** cull/what/lIntVector2What() *******************************************
+*  NAME
+*     lIntVector2What() -- Create a enumeration from int array 
+*
+*  SYNOPSIS
+*     lEnumeration* lIntVector2What(const lDescr *dp, const int intv[]) 
+*
+*  FUNCTION
+*     Create a enumeration from int array 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     const int intv[] - int array 
+*
+*  RESULT
+*     lEnumeration* - enumeration 
+******************************************************************************/
+lEnumeration *lIntVector2What(const lDescr *dp, const int intv[]) 
+{
    lEnumeration *what;
    char fmtstr[2000];
    int i;

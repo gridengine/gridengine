@@ -38,31 +38,27 @@
 #include "sge.h"
 #include "sge_log.h"
 #include "sgermon.h"
-#include "sge_queueL.h"
-#include "sge_answerL.h"
-#include "sge_calendarL.h"
-#include "sge_eventL.h"
 #include "sge_m_event.h"
 #include "time_event.h"
 #include "read_write_cal.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_time.h"
-#include "utility.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_calendar.h"
+#include "sge_complex.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
+
 #ifdef QIDL
    #include "qidl_c_gdi.h"
 #endif
-
-extern lList* Master_Calendar_List;
-extern lList* Master_Queue_List;
-
-
+#if 0
 enum {
    DOT = 1,
    COLON,
@@ -118,13 +114,11 @@ static int tm_yday_cmp(lListElem *t1, lListElem *t2);
 static int tm_wday_cmp(lListElem *t1, lListElem *t2);
 static void cullify_tm(lListElem *tm_ep, struct tm *tm_now);
 static void uncullify_tm(lListElem *tm_ep, struct tm *tm_now);
-
 typedef int (*cmp_func_t)(lListElem *t1, lListElem *t2); 
 
 static int normalize_range_list(lList *rl, cmp_func_t cmp_func);
 static int in_range_list(lListElem *tm, lList *rl, cmp_func_t cmp_func);
 static int in_range(lListElem *tm, lListElem *r, cmp_func_t cmp_func);
-
 /* year and week */
 static int daytime_range_list(lList **dtrl);
 static int daytime_range(lListElem **tmr);
@@ -138,12 +132,10 @@ static int seconds(int *);
 static int action(int *sp);
 static int range_number(int min, int max, int *ip, const char *name);
 static int tm_daytime_cmp(lListElem *t1, lListElem *t2);
-
 /* week */
 static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit);
 
 static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_t *limit);
-
 
 static time_t compute_limit(int today, int active, lList *dtrl, lListElem *now);
 
@@ -152,7 +144,6 @@ static int week_day_range_list(lList **wdrl);
 static int week_day_range(lListElem **tmr);
 static void split_wday_range(lList *wdrl, lListElem *tmr);
 static int week_day(lListElem **tm);
-
 /* 
 
    NAME 
@@ -300,7 +291,6 @@ time_t *next_event
    DEXIT;
    return QENABLED;
 }
-
 /* returns state and time when state changes acording this entry */
 static u_long32 is_week_entry_active(
 lListElem *tm,         /* TM_Type */
@@ -331,7 +321,6 @@ time_t *limit
    DEXIT;
    return state;
 }
-
 /* returns state and time when state changes acording this entry */
 static u_long32 is_year_entry_active(
 lListElem *tm,         /* TM_Type */
@@ -362,7 +351,6 @@ time_t *limit
    DEXIT;
    return state;
 }
-
 static time_t compute_limit(
 int today,
 int active,
@@ -605,7 +593,6 @@ cmp_func_t cmp_func
    DEXIT;
    return 0;
 }
-
 /* disabled_year_list := disabled_year_entry[<space>disabled_year_entry] */
 static int disabled_year_list(
 lList **alpp,
@@ -667,9 +654,9 @@ const char *cal_name
 ERROR:
    if (cal)
       lFreeList(*cal);
-   sprintf(SGE_EVENT, MSG_ANSWER_ERRORINDISABLYEAROFCALENDARXY_SS, 
-         save_error(), cal_name);
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_ERRORINDISABLYEAROFCALENDARXY_SS, 
+         save_error(), cal_name));
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
 }
@@ -1291,9 +1278,9 @@ const char *cal_name
 ERROR:
    if (cal)
       lFreeList(*cal);
-   sprintf(SGE_EVENT, MSG_PARSE_ERRORINDISABLEDWEEKOFCALENDAR_SS, 
-        cal_name, save_error());
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_ERRORINDISABLEDWEEKOFCALENDAR_SS, 
+        cal_name, save_error()));
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
 }
@@ -1749,7 +1736,6 @@ lListElem *t2
       return t;
    return lGetUlong(t1, TM_sec) - lGetUlong(t2, TM_sec);
 }
-
 static void cullify_tm(
 lListElem *tm_ep,
 struct tm *tm_now 
@@ -1778,7 +1764,7 @@ struct tm *tm_now
    tm_now->tm_yday =  lGetUlong(tm_ep, TM_yday);
    tm_now->tm_isdst = lGetUlong(tm_ep, TM_isdst);
 }
-
+#endif 
 int calendar_mod(
 lList **alpp,
 lListElem *new_cal,
@@ -1835,7 +1821,7 @@ gdi_object_t *object
    DENTER(TOP_LAYER, "calendar_spool");
 
    if (write_cal(1, 2, cep)==NULL) {
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -1857,7 +1843,7 @@ char *rhost
 
    if ( !cep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1866,15 +1852,15 @@ char *rhost
    if (lGetPosViaElem(cep, CAL_name)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(QU_qname), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
    cal_name = lGetString(cep, CAL_name);
 
-   if (!sge_locate_calendar(cal_name)) {
+   if (!calendar_list_locate(Master_Calendar_List, cal_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CALENDAR, cal_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1886,7 +1872,7 @@ char *rhost
       if ((s=lGetString(qep, QU_calendar)) && !strcmp(cal_name, s)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS, 
                cal_name, lGetString(qep, QU_qname)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_ESEMANTIC;
       }
@@ -1903,8 +1889,8 @@ char *rhost
 #endif
    
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
-         ruser, rhost, cal_name, _("calendar")));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+         ruser, rhost, cal_name, MSG_OBJ_CALENDAR));
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    sge_add_event(NULL, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
    DEXIT;
    return STATUS_OK;
@@ -1921,7 +1907,7 @@ const char *cal_name
 
    DENTER(TOP_LAYER, "calendar_event");
 
-   if (!(cep=sge_locate_calendar(cal_name))) {
+   if (!(cep=calendar_list_locate(Master_Calendar_List, cal_name))) {
       ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));
       DEXIT;
       return;
@@ -1967,12 +1953,7 @@ gdi_object_t *object
    return 0;
 }
 
-lListElem *sge_locate_calendar(
-const char *cal_name 
-) {
-   return lGetElemStr(Master_Calendar_List, CAL_name, cal_name);
-}
-
+#if 0
 u_long32 act_cal_state(
 lListElem *cep,
 time_t *then 
@@ -2002,7 +1983,6 @@ time_t *then
    DEXIT;
    return new_state;
 }
-
 int parse_year(
 lList **alpp,
 lListElem *cal 
@@ -2042,3 +2022,4 @@ lListElem *cal
    DEXIT;
    return 0;
 }
+#endif

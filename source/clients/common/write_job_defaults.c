@@ -33,24 +33,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
-#include "sge_rangeL.h"
+#include "sge_ja_task.h"
+#include "sge_answer.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
 #include "sge_stringL.h"
 #include "sge_identL.h"
 #include "sge_job_refL.h"
-#include "sge_str_from_file.h"
-#include "sge_me.h"
 #include "sge_resource.h"
 #include "sgermon.h"                       
-
+#include "sge_answer.h"
 #include "unparse_job_cull.h"
 #include "write_job_defaults.h"
 #include "msg_common.h"
@@ -90,12 +85,13 @@ int flags
 
    alp = cull_unparse_job_parameter(&cmdline, job, flags);
    for_each(aep, alp) {
-      status = sge_get_recoverable(aep);
+      answer_exit_if_not_recoverable(aep);
+      status = answer_get_status(aep); 
       if ((status != STATUS_OK) && (status != STATUS_EEXIST)) {
          do_exit = 1;
       }
    }
-    if (do_exit) {
+   if (do_exit) {
       DEXIT;
       return alp;
    }
@@ -103,7 +99,8 @@ int flags
 
    alp = write_defaults_file(cmdline, filename, flags);
    for_each(aep, alp) {
-      status = sge_get_recoverable(aep);
+      answer_exit_if_not_recoverable(aep);
+      status = answer_get_status(aep);
       if ((status != STATUS_OK) && (status != STATUS_EEXIST)) {
          do_exit = 1;
       }
@@ -166,7 +163,7 @@ int flags
       fp = fopen(filename, "w");
       if (!fp) {
          sprintf(str, MSG_FILE_ERROROPENFILEXFORWRITING_S, filename);
-         sge_add_answer(&answer, str, STATUS_EDISK, 0);
+         answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -196,7 +193,7 @@ int flags
       }
       if ((*cp == '-') && (i != (int) strlen(cp) + 1)) {
          sprintf(str, MSG_FILE_ERRORWRITETOFILEX_S, filename);
-         sge_add_answer(&answer, str, STATUS_EDISK, 0);
+         answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          if (filename)
             fclose(fp);
          DEXIT;
@@ -207,7 +204,7 @@ int flags
          if (!cp) {
             sprintf(str, MSG_ANSWER_ARGUMENTMISSINGFORX_S , 
                     lGetString(ep, SPA_switch));
-            sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             if (filename)
                fclose(fp);
             DEXIT;
@@ -216,7 +213,7 @@ int flags
          i = fprintf(fp, "%s ", cp);
          if (i != (int) strlen(cp) + 1) {
             sprintf(str, MSG_FILE_ERRORWRITETOFILEX_S, filename);
-            sge_add_answer(&answer, str, STATUS_EDISK, 0);
+            answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             if (filename)
                fclose(fp);
             DEXIT;
@@ -256,7 +253,7 @@ char **envp
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -268,7 +265,8 @@ char **envp
    sge_setup(QSUB);
    alp = cull_parse_cmdline(argv + 1, envp, &cmdline, FLG_USE_PSEUDOS);
    for_each(aep, alp) {
-      status = sge_get_recoverable(aep);
+      answer_exit_if_not_recoverable(aep);
+      status = answer_get_status(aep);
       if ((status != STATUS_OK) && (status != STATUS_EEXIST)) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          do_exit = 1;
@@ -284,7 +282,8 @@ char **envp
 
    alp = cull_parse_job_parameter(cmdline, &job);
    for_each(aep, alp) {
-      status = sge_get_recoverable(aep);
+      answer_exit_if_not_recoverable(aep);
+      status = answer_get_status(aep);
       if (status != STATUS_OK) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          do_exit = 1;
@@ -300,7 +299,8 @@ char **envp
 
    alp = write_job_defaults(job, "wdtest.dat", FLG_FULL_CMDLINE);
    for_each(aep, alp) {
-      status = sge_get_recoverable(aep);
+      answer_exit_if_not_recoverable(aep);
+      status = answer_get_status(aep);
       if (status != STATUS_OK) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          do_exit = 1;
@@ -338,7 +338,7 @@ char **envp
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
-   sge_init_language(NULL,NULL);   
+   sge_lang_init(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
 

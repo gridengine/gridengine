@@ -316,7 +316,7 @@ commproc *search_commproc(char *h, char* name, u_short id)
    commproc *commp = commprocs;
 
    while (commp) {
-      if ((!h || search_host(h, NULL) == commp->host) &&
+      if ((!h || sge_host_search(h, NULL) == commp->host) &&
           !strcmp(name, commp->name) &&
           (!id || id == commp->id))
          return commp;
@@ -364,14 +364,14 @@ commproc *commp,
 FILE *fp 
 ) {
    fprintf(fp, MSG_COMMPROC_NAMEANDID_SI , commp->name, (int) commp->id);
-   fprintf(fp, MSG_COMMPROC_HOST_S , commp->host ? get_mainname(commp->host) : MSG_COMMPROC_NONE );
+   fprintf(fp, MSG_COMMPROC_HOST_S , commp->host ? sge_host_get_mainname(commp->host) : MSG_COMMPROC_NONE );
    fprintf(fp, MSG_COMMPROC_USING_FD_I , commp->fd);
    if (commp->w_fd != -1) {
       fprintf(fp, MSG_COMMPROC_WAITING_ON_FD_I , commp->w_fd);
       fprintf(fp, MSG_COMMPROC_WAITING_FOR_COMPONENT_ID_SI ,
               commp->w_name[0] ? commp->w_name : MSG_COMMPROC_ANY, (int) commp->w_id);
       fprintf(fp, MSG_COMMPROC_ON_HOST_S ,
-              commp->w_host ? get_mainname(commp->w_host) : MSG_COMMPROC_ANY);
+              commp->w_host ? sge_host_get_mainname(commp->w_host) : MSG_COMMPROC_ANY);
    }
 }
 

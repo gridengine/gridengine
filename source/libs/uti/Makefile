@@ -36,48 +36,32 @@ UTILIB_DIR  = $(SDIR)/libs/uti
 
 UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
-UTILIB_SRC = sge_afsutil.c \
+UTILIB_SRC = \
+         config_file.c \
+         sge_afsutil.c \
          sge_arch.c \
+         sge_bitfield.c \
          sge_bitop.c \
-         sge_chdir.c \
-         sge_copy_append.c \
          sge_crc.c \
-         host.c \
-         sge_daemonize.c \
-         sge_dir.c \
-         sge_exit.c \
-         sge_filecmp.c \
-         sge_get_confval.c \
+         sge_hostname.c \
          sge_getloadavg.c \
-         sge_getme.c \
-         sge_getpwnam.c \
-         sge_hash.c \
+         sge_htable.c \
          sge_io.c \
-         sge_isint.c \
          sge_language.c \
          sge_loadmem.c \
          sge_log.c \
-         sge_log_pid.c \
-         sge_mkdir.c \
          sge_nprocs.c \
-         sge_peopen.c \
-         sge_pids.c \
-         sge_prognames.c \
-         sge_set_def_sig_mask.c \
-         sge_set_uid_gid.c \
+         sge_os.c \
+         sge_profiling.c \
+         sge_prog.c \
          sge_signal.c \
-         sge_str_from_file.c \
          sge_string.c \
-         sge_string_append.c \
-         sge_switch_user.c \
-         sge_sysconf.c \
+         sge_dstring.c \
          sge_time.c \
-         sge_timestop.c \
-         sge_tmpnam.c \
-         sge_spoolmsg.c \
-         sge_washing_machine.c \
          sge_stdio.c \
-         sge_file_path.c \
+         sge_spool.c \
+         sge_stdlib.c \
+         sge_unistd.c \
          sge_uidgid$(QIDLEXT).c 
 
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -119,8 +103,11 @@ include $(UTILIB_DIR)/uti_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-host.o:	$(UTILIB_DIR)/host.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/host.c
+config_file.o:  $(UTILIB_DIR)/config_file.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/config_file.c
+
+sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
 
 sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
 		$(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
@@ -128,53 +115,20 @@ sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
 sge_afsutil.o: $(UTILIB_DIR)/sge_afsutil.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_afsutil.c
 
-sge_copy_append.o:	$(UTILIB_DIR)/sge_copy_append.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_copy_append.c
-
-sge_set_uid_gid.o:	$(UTILIB_DIR)/sge_set_uid_gid.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_set_uid_gid.c
-
-sge_set_def_sig_mask.o:	$(UTILIB_DIR)/sge_set_def_sig_mask.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_set_def_sig_mask.c
-
-sge_daemonize.o:	$(UTILIB_DIR)/sge_daemonize.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_daemonize.c
-
-sge_str_from_file.o:	$(UTILIB_DIR)/sge_str_from_file.c
-		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_str_from_file.c
-
 sge_string.o:	$(UTILIB_DIR)/sge_string.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_string.c
-
-sge_exit.o:	$(UTILIB_DIR)/sge_exit.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_exit.c
 
 sge_time.o:	$(UTILIB_DIR)/sge_time.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_time.c
 
-sge_timestop.o:	$(UTILIB_DIR)/sge_timestop.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_timestop.c
+peopen_standalone.o:	$(UTILIB_DIR)/sge_stdio.c
+		$(CC) -DNO_COD_COMPILE_DEBUG $(CFLAGS) -o peopen_standalone.o $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_stdio.c
 
-sge_peopen.o: 	$(UTILIB_DIR)/sge_peopen.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_peopen.c
+sge_os.o: 	$(UTILIB_DIR)/sge_os.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_os.c
 
-peopen_standalone.o:	$(UTILIB_DIR)/sge_peopen.c
-		$(CC) -DNO_COD_COMPILE_DEBUG $(CFLAGS) -o peopen_standalone.o $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_peopen.c
-
-sge_pids.o: 	$(UTILIB_DIR)/sge_pids.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_pids.c
-
-pids_standalone.o: $(UTILIB_DIR)/sge_pids.c
-		$(CC) -DNO_COD_COMPILE_DEBUG $(CFLAGS) -o pids_standalone.o $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_pids.c
-
-sge_log_pid.o:	$(UTILIB_DIR)/sge_log_pid.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_log_pid.c
-
-sge_isint.o:	$(UTILIB_DIR)/sge_isint.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_isint.c
-
-sge_dir.o: 	$(UTILIB_DIR)/sge_dir.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_dir.c
+pids_standalone.o: $(UTILIB_DIR)/sge_os.c
+		$(CC) -DNO_COD_COMPILE_DEBUG $(CFLAGS) -o pids_standalone.o $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_os.c
 
 sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_crc.c
@@ -182,32 +136,23 @@ sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
 sge_bitop.o:	$(UTILIB_DIR)/sge_bitop.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitop.c
 
-sge_filecmp.o: 	$(UTILIB_DIR)/sge_filecmp.c $(UTILIB_DIR)/sge_filecmp.h 
-		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_filecmp.c
+sge_prog.o:	$(UTILIB_DIR)/sge_prog.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_prog.c
 
-sge_getpwnam.o: $(UTILIB_DIR)/sge_getpwnam.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_getpwnam.c
-
-sge_get_confval.o:	$(UTILIB_DIR)/sge_get_confval.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_get_confval.c
-
-sge_prognames.o:	$(UTILIB_DIR)/sge_prognames.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_prognames.c
+sge_profiling.o:	$(UTILIB_DIR)/sge_profiling.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_profiling.c
 
 sge_io.o: 	$(UTILIB_DIR)/sge_io.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_io.c
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_io.c
 
-sge_tmpnam.o: 	$(UTILIB_DIR)/sge_tmpnam.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_tmpnam.c
+sge_spool.o:   $(UTILIB_DIR)/sge_spool.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_spool.c
 
-sge_spoolmsg.o: 	$(UTILIB_DIR)/sge_spoolmsg.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_spoolmsg.c
+sge_stdlib.o:   $(UTILIB_DIR)/sge_stdlib.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_stdlib.c
 
-sge_file_path.o:   $(UTILIB_DIR)/sge_file_path.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_file_path.c
-
-sge_washing_machine.o:   $(UTILIB_DIR)/sge_washing_machine.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_washing_machine.c
+sge_unistd.o:   $(UTILIB_DIR)/sge_unistd.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_unistd.c
 
 sge_stdio.o:   $(UTILIB_DIR)/sge_stdio.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_stdio.c
@@ -224,33 +169,29 @@ sge_loadmem.o:	$(UTILIB_DIR)/sge_loadmem.c
 sge_getloadavg.o:	$(UTILIB_DIR)/sge_getloadavg.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_getloadavg.c
 
-sge_getme.o:	$(UTILIB_DIR)/sge_getme.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_getme.c
-
 sge_log.o:	$(UTILIB_DIR)/sge_log.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_log.c
-
-sge_mkdir.o:	$(UTILIB_DIR)/sge_mkdir.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_mkdir.c
 
 sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_signal.c
 
-sge_chdir.o:	$(UTILIB_DIR)/sge_chdir.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_chdir.c
+sge_htable.o:	$(UTILIB_DIR)/sge_htable.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_htable.c
 
-sge_hash.o:	$(UTILIB_DIR)/sge_hash.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hash.c
+sge_bitfield.o:	$(UTILIB_DIR)/sge_bitfield.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitfield.c
 
-sge_switch_user.o:  $(UTILIB_DIR)/sge_switch_user.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_switch_user.c
-
-sge_sysconf.o:	$(UTILIB_DIR)/sge_sysconf.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_sysconf.c
-
-sge_string_append.o:	$(UTILIB_DIR)/sge_string_append.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_string_append.c
+sge_dstring.o:	$(UTILIB_DIR)/sge_dstring.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_dstring.c
 
 sge_language.o:	$(UTILIB_DIR)/sge_language.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_language.c
+#---------------------------------------------------------------------
+# test programs
+test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c
+
 

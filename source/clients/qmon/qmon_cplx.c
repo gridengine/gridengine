@@ -53,9 +53,9 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
-#include "def.h"
-#include "sge_complex.h"
+#include "read_write_complex.h"
 #include "sge_complex_schedd.h"
+#include "sge_answer.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -263,8 +263,14 @@ Widget parent
    ** set title bar
    */
    sprintf(buf, "%-20.20s %-10.10s %-10.10s %-20.20s %-5.5s %-7.7s %-10.10s %-20.20s",
-             "NAME", "SHORTCUT", "TYPE", "VALUE  ", "RELOP",
-             "REQ   ", "CONSUMABLE", "DEFAULT");
+             XmtLocalize(parent, "NAME", "NAME"), 
+             XmtLocalize(parent, "SHORTCUT", "SHORTCUT"),
+             XmtLocalize(parent, "TYPE", "TYPE"),
+             XmtLocalize(parent, "VALUE", "VALUE"),
+             XmtLocalize(parent, "RELOP", "RELOP"),
+             XmtLocalize(parent, "REQ","REQ"),
+             XmtLocalize(parent, "CONSUMABLE", "CONSUMABLE"),
+             XmtLocalize(parent, "DEFAULT", "DEFAULT"));
    XmTextSetString(cplx_attributes_title, buf);
    DEXIT;
    return cplx_layout;
@@ -376,9 +382,9 @@ XtPointer cld, cad;
             map_type2str(lGetUlong(attr, CE_valtype)), 
             lGetString(attr, CE_stringval), 
             map_op2str(lGetUlong(attr, CE_relop)),
-            lGetUlong(attr, CE_forced) ? "FORCED" : 
-               (lGetUlong(attr, CE_request) ? "YES" : "NO"),
-            lGetUlong(attr, CE_consumable) ? "YES" : "NO",
+            lGetBool(attr, CE_forced) ? "FORCED" : 
+               (lGetBool(attr, CE_request) ? "YES" : "NO"),
+            lGetBool(attr, CE_consumable) ? "YES" : "NO",
             lGetString(attr, CE_default) ? lGetString(attr, CE_default) : "");
             XmTextInsert(text_field, pos, buf);
             pos += strlen(buf);
@@ -674,23 +680,23 @@ XtPointer cld, cad;
    ** check input 
    */
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_aname))) {
-      qmonMessageShow(matrix, True, "Name required !\n");
+      qmonMessageShow(matrix, True, "Name required !");
       DEXIT;
       return;
    }
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_ashort))) {
-      qmonMessageShow(matrix, True, "Shortcut required !\n");
+      qmonMessageShow(matrix, True, "Shortcut required !");
       DEXIT;
       return;
    }
    if (XmtChooserGetState(cplx_ask_atype) == 0 && 
          is_empty_word(XmtInputFieldGetString(cplx_ask_avalue))) {
-      qmonMessageShow(matrix, True, "Value required !\n");
+      qmonMessageShow(matrix, True, "Value required !");
       DEXIT;
       return;
    }
    if (is_empty_word(XmtInputFieldGetString(cplx_ask_adefault))) {
-      qmonMessageShow(matrix, True, "Default required !\n");
+      qmonMessageShow(matrix, True, "Default required !");
       DEXIT;
       return;
    }

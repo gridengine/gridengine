@@ -35,9 +35,9 @@
 
 #include "cull.h"
 #include "sge_conf.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_queueL.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_queue.h"
 #include "sge_orderL.h"
 #include "sge_time.h"
 #include "sge_select_queue.h"
@@ -103,7 +103,7 @@ lList **orderlist
 
          /* prevent multiple selection of this job */
          lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) 
-            & JSUSPENDED_ON_THRESHOLD);
+            | JSUSPENDED_ON_THRESHOLD);
       }
 
       if (i==0 && !found) {
@@ -173,7 +173,7 @@ lList **orderlist
 
          /* prevent multiple selection of this job */
          lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) 
-            & JSUSPENDED_ON_THRESHOLD);
+            & ~JSUSPENDED_ON_THRESHOLD);
       }
       
       if (i==0 && !found) {

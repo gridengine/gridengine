@@ -33,21 +33,20 @@
 #include <stdlib.h>
 
 #include "cull.h"
-#include "sge_jobL.h"
-#include "sge_job_reportL.h"
+#include "sge_report_execd.h"
 #include "sge_usageL.h"
 #include "sge_gdi_intern.h"
 #include "job_report_execd.h"
-#include "job_report.h"
 #include "reaper_execd.h"
 #include "sge_signal.h"
 #include "execd_signal_queue.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "job.h"
 #include "msg_execd.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_report.h"
 
 lList *jr_list = NULL;
 int flush_jr = 0;
@@ -73,6 +72,7 @@ void trace_jr()
 lListElem *add_job_report(
 u_long32 jobid,
 u_long32 jataskid,
+const char *petaskid,
 lListElem *jep 
 ) {  
    lListElem *jr, *jatep = NULL;
@@ -87,13 +87,24 @@ lListElem *jep
       DEXIT;
       return NULL;
    }
+
    lSetUlong(jr, JR_job_number, jobid);
    lSetUlong(jr, JR_ja_task_number, jataskid);
+   if(petaskid != NULL) {
+      lSetString(jr, JR_pe_task_id_str, petaskid);
+   }
+
    lAppendElem(jr_list, jr);
 
-   jatep = job_search_task(jep, NULL, jataskid, 0);
-   if (jep != NULL && jatep != NULL) { 
-      init_from_job(jr, jep, jatep);
+   if(jep != NULL) {
+      jatep = job_search_task(jep, NULL, jataskid);
+      if (jatep != NULL) { 
+         lListElem *petep = NULL;
+         if(petaskid != NULL) {
+            petep = ja_task_search_pe_task(jatep, petaskid);
+         }   
+         job_report_init_from_job(jr, jep, jatep, petep);
+      }
    }
  
    DEXIT;
@@ -103,19 +114,20 @@ lListElem *jep
 lListElem *get_job_report(
 u_long32 jobid, 
 u_long32 jataskid, 
-const char *pe_task_id_str 
+const char *petaskid 
 ) {
    lListElem *jr;
    const char *s;
 
    DENTER(TOP_LAYER, "get_job_report");
 
+   /* JG: TODO (256): Could be optimized by using lGetElemUlong for jobid */
    for_each (jr, jr_list) {
       s = lGetString(jr, JR_pe_task_id_str);
 
       if (lGetUlong(jr, JR_job_number) == jobid && 
           lGetUlong(jr, JR_ja_task_number) == jataskid &&
-          !sge_strnullcmp(s, pe_task_id_str))
+          !sge_strnullcmp(s, petaskid))
          break; 
    }
 
@@ -172,6 +184,7 @@ u_long32 jataskid
       0 on success
       -1 on error
    ------------------------------------------------------------ */
+/* JG: TODO (397): move to libs/gdi/sge_usage.* */   
 int add_usage(lListElem *jr, char *name, const char *val_as_str, double val) 
 {
    lListElem *usage;
@@ -275,7 +288,7 @@ int answer_error
                     jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
-               remove_acked_job_exit(jobid, jataskid, jr);
+               remove_acked_job_exit(jobid, jataskid, pe_task_id_str, jr);
             } 
             else {
                DPRINTF(("acknowledged job "u32"."u32" not found\n", jobid, jataskid));
@@ -308,7 +321,7 @@ int answer_error
                if (signal_job(jobid, jataskid, signo)) {
                   lListElem *jr;
                   jr = get_job_report(jobid, jataskid, NULL);
-                  remove_acked_job_exit(jobid, jataskid, jr);
+                  remove_acked_job_exit(jobid, jataskid, NULL, jr);
                   job_unknown(jobid, jataskid, NULL);
                }
             }

@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qmod_auto_reschedule"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   1 
 set check_description(0)  "checking auto_reschedule with global reschedule_unknown 00:03:00"
 set check_description(1)  "checking auto_reschedule with global reschedule_unknown 00:00:00"
@@ -188,7 +190,7 @@ proc is_version_ok {} {
 }
 
 proc auto_reschedule_setup {} {
-   global queue1 queue2 CHECK_OUTPUT host1 host2 
+   global queue1 queue2 CHECK_OUTPUT host1 host2 CHECK_USER
    global CHECK_CORE_EXECD stored_configuration CHECK_CORE_MASTER
    global stored_host1_config global_resch CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL
 
@@ -232,7 +234,7 @@ proc auto_reschedule_setup {} {
          get_config tmp_config
    }
    set messages_name "$tmp_config(execd_spool_dir)/$host2/messages"
-   set tail_id [open_spawn_process rsh $host2 /usr/bin/tail -f $messages_name]
+   set tail_id [open_remote_spawn_process $host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
    set sp_id [ lindex $tail_id 1 ] 
 
 
@@ -267,7 +269,8 @@ proc auto_reschedule_setup {} {
    }
 
 
-   set timeout 300
+   set timeout 90
+   puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {
        close_spawn_process $tail_id
@@ -278,6 +281,7 @@ proc auto_reschedule_setup {} {
          add_proc_error "auto_reschedule_setup" -1 "setup failed"
       }
       -i $sp_id "using*${global_reschedule_value}*reschedule_unknown" {
+         puts $CHECK_OUTPUT "configuration changed"
          close_spawn_process $tail_id
       }
    }
@@ -460,7 +464,6 @@ proc auto_reschedule_unknown_check {} {
          set j_state [ is_job_running $job_id2 "Sleeper" ]
          if { $j_state != 1 } {
             add_proc_error "auto_reschedule_unknown_check" -1 "job $job_id2 should still run(2)"
-            wait_for_enter
             break
          } else {
             set to_go [ expr ( $my_timeout - [timestamp] ) ]
@@ -498,7 +501,7 @@ proc auto_reschedule_cleanup {} {
    
    global queue1 queue2 CHECK_OUTPUT host1 host2
    global CHECK_CORE_EXECD stored_configuration
-   global stored_host1_config
+   global stored_host1_config CHECK_USER
    
    
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
@@ -519,7 +522,8 @@ proc auto_reschedule_cleanup {} {
          get_config tmp_config
    }
    set messages_name "$tmp_config(execd_spool_dir)/$host2/messages"
-   set tail_id [open_spawn_process rsh $host2 /usr/bin/tail -f $messages_name]
+   set tail_id [open_remote_spawn_process $host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
+
    set sp_id [ lindex $tail_id 1 ] 
 
    
@@ -538,7 +542,7 @@ proc auto_reschedule_cleanup {} {
 
     
    set timeout 300
-   log_user 1
+   puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {
        close_spawn_process $tail_id
@@ -549,6 +553,7 @@ proc auto_reschedule_cleanup {} {
          add_proc_error "auto_reschedule_cleanup" -1 "setup failed"
       }
       -i $sp_id "using*00:00:00*reschedule_unknown" {
+         puts $CHECK_OUTPUT "configuration changed"
          close_spawn_process $tail_id
       }
    }

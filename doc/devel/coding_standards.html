@@ -3,7 +3,7 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta http-equiv="CONTENT-TYPE" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.76 [en] (X11; U; Linux 2.2.18-SMP i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
    <meta name="AUTHOR" content="Ernst Bablick">
    <meta name="CREATED" content="20010712;10065900">
    <meta name="CHANGEDBY" content="Ernst Bablick">
@@ -113,6 +113,17 @@ Info ...
 This is a typical ADOC-comment describing a function. Source code inside
 ADOC comments should look like the real source code. Information about
 using ADOC can be found <a href="adoc.html">here</a>
+<h4>
+Special Comments</h4>
+Format:&nbsp;/* &lt;Initials>: &lt;Keyword> [(&lt;issue #)]: &lt;text>
+*/
+<br>&lt;Initials> = 2 character initials, same as in Changelog
+<br>&lt;Keyword> =
+<blockquote>TODO
+<br>DEBUG</blockquote>
+Optionally an IssueZilla id can be specified referencing the correspondent
+issue.
+<br>&nbsp;
 <h3>
 Statements</h3>
 Functions should have the following format:

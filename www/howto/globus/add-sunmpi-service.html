@@ -1,0 +1,87 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
+   <meta name="Author" content=" Chansup Byun">
+   <meta name="GENERATOR" content="Mozilla/4.76C-Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body>
+
+<pre>
+
+<b><font color="#0000ff">Short Summary:</font></b>
+
+After completing Globus deployment, add the following service, 
+"<b><font color="#0000ff">jobmanager-sge</font></b>", to the <b><font color="#0000ff">$GLOBUS_DEPLOY_DIR/etc/globus-services</font></b> file 
+(a single line).
+
+<b><font color="#0000ff">jobmanager-sge stderr_log,local_cred - 
+/misc/globus-deploy/libexec/globus-jobmanager globus-jobmanager -conf 
+/misc/globus-deploy/etc/globus-jobmanager.conf -type sge -rdn 
+jobmanager-sge -machine-type cluster</font></b>
+
+
+<b><font color="#0000ff">Long Summary:</font></b>
+
+Basic integration through Globus GRAM (Globus Resource Allocation 
+Manager) scripts are already available from Globus Toolkit 
+distribution. If you downloaded the Globus source, you will find the 
+following files:
+
+./ResourceManagement/gram/libraries/job_manager/globus-script-grd-poll.in
+./ResourceManagement/gram/libraries/job_manager/globus-script-grd-queue.in
+./ResourceManagement/gram/libraries/job_manager/globus-script-grd-rm.in
+./ResourceManagement/gram/libraries/job_manager/globus-script-grd-submit.in
+
+Once you build and install the globus, the scripts are located at the 
+following directory, e.g., 
+
+Under Install dir:
+
+./services/sparc-sun-solaris2.8/libexec/globus-script-grd-poll
+./services/sparc-sun-solaris2.8/libexec/globus-script-grd-rm
+./services/sparc-sun-solaris2.8/libexec/globus-script-grd-submit
+./services/sparc-sun-solaris2.8/libexec/globus-script-grd-queue
+
+Under deploy dir:
+
+./libexec/globus-script-grd-poll
+./libexec/globus-script-grd-queue
+./libexec/globus-script-grd-rm
+./libexec/globus-script-grd-submit
+
+After deploying the globus, you need to add "jobmanager-grd" service to 
+each deployment (if you didn't do it during the deployment) in order to 
+use the integration between Globus and SGE. This can be done by editing 
+the following file:
+
+<b><font color="#0000ff">$GLOBUS_DEPLOY_DIR/etc/globus-services</font></b>
+
+and add the "<b><font color="#0000ff">jobmanager-grd</font></b>" entry shown below as a single line.
+
+<b><font color="#0000ff">jobmanager-grd stderr_log,local_cred - 
+/misc/globus-deploy/libexec/globus-jobmanager globus-jobmanager -conf 
+/misc/globus-deploy/etc/globus-jobmanager.conf -type grd -rdn 
+jobmanager-grd -machine-type cluster</font></b>
+
+
+Also you can create a new manager, "<b><font color="#0000ff">jobmanager-sge</font></b>", by replacing
+"grd" with "sge" for GRAM scripts and add the following service,
+
+<b><font color="#0000ff">jobmanager-sge stderr_log,local_cred - 
+/misc/globus-deploy/libexec/globus-jobmanager globus-jobmanager -conf 
+/misc/globus-deploy/etc/globus-jobmanager.conf -type sge -rdn 
+jobmanager-sge -machine-type cluster</font></b>
+
+
+
+</pre>
+
+    <hr>
+    <address><a href="mailto:chansup.byun@sun.com">Chansup Byun</a></address>
+<!-- Created: Wed Jan 16 16:17:43 EST 2002 -->
+<!-- hhmts start -->
+Last modified: Mon Feb  4 10:28:38 EST 2002
+<!-- hhmts end -->
+
+</body>
+</html>

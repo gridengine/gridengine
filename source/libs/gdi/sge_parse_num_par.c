@@ -46,8 +46,7 @@
 
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_complexL.h"
-#include "sge_answerL.h"
+#include "sge_answer.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_parse_num_par.h"
@@ -137,15 +136,10 @@ int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
 }
 
 /* enable_infinity enhancement: if 0 no infinity value is allowed */
-int extended_parse_ulong_val(
-double *dvalp,
-u_long32 *uvalp,
-u_long32 type,
-const char *s,
-char *error_str,
-int error_len,
-int enable_infinity  
-) {
+int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
+                             const char *s, char *error_str, int error_len,
+                             int enable_infinity) 
+{
    int retval = 0; /* error */
    char dummy[10];
    u_long32 dummy_uval;
@@ -264,9 +258,8 @@ const char *s
  *    bitmask of checkpoint specifers
  *    0 if attr_str == NULL or nothing set or value may be a time value
  *-----------------------------------------------------------*/
-int sge_parse_checkpoint_attr(
-const char *attr_str 
-) {
+int sge_parse_checkpoint_attr(const char *attr_str) 
+{
    int opr;
 
    DENTER(TOP_LAYER, "sge_parse_checkpoint_attr");
@@ -305,9 +298,8 @@ const char *attr_str
    return opr;
 }
 
-const char *get_checkpoint_when(
-int bitmask  
-) {
+const char *get_checkpoint_when(int bitmask) 
+{
    int i = 0;
    static char when[32];
    DENTER(TOP_LAYER, "get_checkpoint_string");
@@ -334,9 +326,8 @@ int bitmask
    return when;
 }
 
-int is_checkpoint_when_valid(
-int bitmask 
-) {
+int is_checkpoint_when_valid(int bitmask) 
+{
    int ret = 0;
    int mask = 0;
    DENTER(TOP_LAYER, "is_checkpoint_when_valid");
@@ -353,11 +344,8 @@ int bitmask
    return ret;
 }
 
-char *resource_descr(
-double dval,
-u_long32 type,
-char *buffer 
-) {
+char *resource_descr(double dval, u_long32 type, char *buffer) 
+{
    int secs, minutes, hours, days;
    char c;
    static char text[100];
@@ -426,10 +414,7 @@ char *buffer
  * r1 == r2      == 0   
  * r1 >  r2      > 0   
  */
-int rlimcmp(
-sge_rlim_t r1,
-sge_rlim_t r2 
-) {
+int rlimcmp(sge_rlim_t r1, sge_rlim_t r2) {
    if (r1 == r2)
       return 0;
    if (r1==RLIM_INFINITY)
@@ -445,10 +430,8 @@ sge_rlim_t r2
  * if the result would exceed sge_rlim_t
  * the result is set to RLIM_INFINITY
  */
-sge_rlim_t mul_infinity(
-sge_rlim_t rlim,
-sge_rlim_t muli 
-) {
+sge_rlim_t mul_infinity(sge_rlim_t rlim, sge_rlim_t muli) 
+{
    if (rlim == RLIM_INFINITY ||
        muli == RLIM_INFINITY )
       return RLIM_INFINITY;
@@ -466,10 +449,8 @@ sge_rlim_t muli
  * if the result would exceed sge_rlim_t
  * the result is set to RLIM_INFINITY
  */
-static sge_rlim_t add_infinity(
-sge_rlim_t rlim,
-sge_rlim_t offset 
-) {
+static sge_rlim_t add_infinity(sge_rlim_t rlim, sge_rlim_t offset) 
+{
    if (rlim == RLIM_INFINITY ||
        offset == RLIM_INFINITY )
       return RLIM_INFINITY;
@@ -772,12 +753,9 @@ RETURN
       0 - parsing error
 
 */
-int sge_parse_limit(
-sge_rlim_t *rlvalp,
-char *s,
-char *error_str,
-int error_len 
-) {
+int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str, 
+                    int error_len) 
+{
    DENTER(CULL_LAYER, "sge_parse_limit");
 
    /*

@@ -61,10 +61,10 @@ enum {
 };
 
 LISTDEF(RT_Type)
-   SGE_ULONG(RT_tid)
-   SGE_HOST(RT_hostname)       /* CR - hostname change */
-   SGE_ULONG(RT_status)
-   SGE_ULONG(RT_state)
+   SGE_STRING(RT_tid, CULL_DEFAULT)
+   SGE_HOST(RT_hostname, CULL_DEFAULT)       /* CR - hostname change */
+   SGE_ULONG(RT_status, CULL_DEFAULT)
+   SGE_ULONG(RT_state, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(RTN)

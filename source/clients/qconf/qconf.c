@@ -29,17 +29,18 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qconf.h"
-#include "sge_exit.h"
 #include "sig_handlers.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_clients_common.h"
+#include "msg_common.h"
 
 extern char **environ;
 
@@ -48,8 +49,8 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv)
 {
-   int cl_err = 0;
-
+   int cl_err = 0, ret;
+   
    DENTER_MAIN(TOP_LAYER, "qconf");
 
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
@@ -61,7 +62,9 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QCONF);
 
-   if (reresolve_me_qualified_hostname() != CL_OK) {
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
+      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }   
 

@@ -42,18 +42,19 @@
 #include "gdi_qmod.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
+#include "sge_answer.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
-#include "sge_timestop.h"
+#include "sge_time.h"
 #include "qmon_timer.h"
 #include "qmon_appres.h"
 #include "qmon_globals.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "sge_time.h"
 #include "sge_feature.h"
 #include "qmon_init.h"
+#include "sge_job.h"
 
 #define for_each2(ep1, lp1, ep2, lp2) \
    for (ep1=lFirst(lp1), ep2=lFirst(lp2); ep1 && ep2;\
@@ -196,7 +197,7 @@ lList **answerp
 
    DENTER(GUI_LAYER, "qmonMirrorMultiAnswer");
 
-   starttime(0);
+   sge_stopwatch_start(0);
 
    /*
    ** mask the sgeee lists in SGE mode
@@ -221,12 +222,12 @@ lList **answerp
 
    if (status != CL_OK) {
       if (status == CL_UNKNOWN_RECEIVER)
-         sprintf(msg, "Can't reach qmaster\n");
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       else
-         sprintf(msg, "Can't reach:\n%s\n", cl_errstr(status));
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
 
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
-                                                msg, "Retry", "Abort",
+                                                msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
       /*
       ** we don't want to retry, so go down
@@ -277,7 +278,7 @@ lList **answerp
       }
    }
    mal = lFreeList(mal);
-   log_time(0, "qmonMirrorMulti:");
+   sge_stopwatch_log(0, "qmonMirrorMulti:");
 
    DEXIT;
    return 0;
@@ -314,7 +315,8 @@ lEnumeration *what
    DENTER(GUI_LAYER, "qmonDelList");
 
    if (!lpp) {
-      sge_add_answer(&alp, "lpp is NULL", STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, "lpp is NULL", 
+                      STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -324,7 +326,7 @@ lEnumeration *what
     * alp contains several answer elements for 
     * SGE_GDI_DEL
     */
-   starttime(0);
+   sge_stopwatch_start(0);
    
    alp = sge_gdi(type, SGE_GDI_DEL, lpp, where, what); 
 
@@ -336,11 +338,10 @@ lEnumeration *what
             u_long32 jid = atol(lGetString(ep, ID_str));
             DPRINTF(("Job: " u32 "gets removed\n", jid));
             if (local) {
-               lGetElemUlong(local, JB_job_number, jid); 
+               job_list_locate(local, jid); 
             }
             else {
-               sep = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), 
-                                    JB_job_number, jid);
+               sep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), jid);
                if (sep) {
                   lListElem *jatep;
                   for_each (jatep, lGetList(sep, JB_ja_tasks)) {
@@ -375,7 +376,8 @@ printf("__________________________________\n");
                   lDelElemHost(local, nm, lGetHost(ep, nm));
                   break;
                default:
-                  sge_add_answer(&alp, "data type not lStringT or lHostT", STATUS_ESEMANTIC, 0);
+                  answer_list_add(&alp, "data type not lStringT or lHostT", 
+                                  STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                   DPRINTF(("qmonDelList: data type not lStringT or lHostT\n"));
                   break;
             }
@@ -383,7 +385,7 @@ printf("__________________________________\n");
       }
    }
 
-   log_time(0, "SGE_GDI_DEL:");
+   sge_stopwatch_log(0, "SGE_GDI_DEL:");
    
    DEXIT;
    return alp; 
@@ -410,7 +412,7 @@ lEnumeration *what
    if (!what ) 
       goto error;
    
-   starttime(0);
+   sge_stopwatch_start(0);
    
    if (type == SGE_JOB_LIST)
       alp = sge_gdi(type, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
@@ -426,7 +428,7 @@ lEnumeration *what
       }
    }
 
-   log_time(0, "SGE_GDI_ADD:");
+   sge_stopwatch_log(0, "SGE_GDI_ADD:");
    
    DEXIT;
    return alp; 
@@ -493,7 +495,7 @@ lEnumeration *what
     * alp contains several answer elements for 
     * SGE_GDI_MOD
     */
-   starttime(0);
+   sge_stopwatch_start(0);
 
 #if 0
    /* 
@@ -513,7 +515,7 @@ lEnumeration *what
                *local = lCreateList(lGetListName(*lpp), lGetListDescr(*lpp));
             else {
                if (nm == JB_job_number) {
-                  rem = lGetElemUlong(*local, nm, lGetUlong(ep, nm));
+                  rem = job_list_locate(*local, lGetUlong(ep, nm));
                } else {
                   listDescriptor = lGetListDescr(*local);
                   dataType = lGetPosType(listDescriptor, lGetPosInDescr(listDescriptor, nm));
@@ -539,7 +541,7 @@ lEnumeration *what
          }
       }
    } 
-   log_time(0, "SGE_GDI_MOD:");
+   sge_stopwatch_log(0, "SGE_GDI_MOD:");
    
    DEXIT;
    return alp; 
@@ -574,13 +576,13 @@ int action
     * get the answer list for error reporting 
     * alp contains several answer elements for 
     */
-   starttime(0);
+   sge_stopwatch_start(0);
    
    alp = gdi_qmod(lp, force, action);
 
    qmonMirrorMultiAnswer(l2s(type), &alp);
    
-   log_time(0, "CHANGE_STATE:");
+   sge_stopwatch_log(0, "CHANGE_STATE:");
    
    DEXIT;
    return alp; 

@@ -71,7 +71,7 @@ int set_conf_timestr(lList **alpp, lList **clpp, int fields[], const char *key, 
 
 int set_conf_memstr(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
-int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, char **enum_strings);
+int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, const char **enum_strings);
 
 int set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int sub_name_nm);
 

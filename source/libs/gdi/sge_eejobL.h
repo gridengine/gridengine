@@ -53,9 +53,9 @@ enum {
 };
 
 LISTDEF(SGEJ_Type)
-   SGE_DOUBLE(SGEJ_ticket)
-   SGE_ULONG(SGEJ_job_number)
-   SGE_REF(SGEJ_job_reference)
+   SGE_DOUBLE(SGEJ_ticket, CULL_DEFAULT)
+   SGE_ULONG(SGEJ_job_number, CULL_DEFAULT)
+   SGE_REF(SGEJ_job_reference, JRL_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SGEJN)

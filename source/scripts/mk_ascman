@@ -45,11 +45,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-if ( ! $?CVSROOT ) then
-   echo "CVSROOT must be set"
-   exit 1
-endif
-
 set MANBUILDDIR = $1/MANSBUILD_$2
 set MANMODE = $2
 set MANASC  = $3
@@ -182,7 +177,7 @@ if ( "$MANHTML" == 1 ) then
          echo Processing $i
          set bn = `basename $i .${n}`
          # man -M$MANBUILDDIR/SEDMAN/man/ $bn | man2html -solaris > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
-         man -M$MANBUILDDIR/SEDMAN/man/ $bn | man2html -cgiurl '../htmlman$section/$title.html' -solaris > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
+         man -M$MANBUILDDIR/SEDMAN/man/ $bn | man2html -cgiurl '../htmlman$section/$title.html' -solaris | sed '2s/BODY/BODY BGCOLOR=white/' > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
       end
    end   
    #
@@ -196,7 +191,7 @@ if ( "$MANHTML" == 1 ) then
          set base = `basename $f`
          set title = `basename $base .html`
          echo '<LI><A HREF=' >> $MANBUILDDIR/HTMLMAN/index.html
-         echo "htmlman${n}/$base" >> $MANBUILDDIR/HTMLMAN/index.html
+         echo "htmlman${n}/$base" target="PAGE">> $MANBUILDDIR/HTMLMAN/index.html
          echo ">$title</A>" >> $MANBUILDDIR/HTMLMAN/index.html 
       end
       echo '</UL></P>' >> $MANBUILDDIR/HTMLMAN/index.html

@@ -39,6 +39,7 @@ struct schedd_confel {
     u_long32    schedule_interval;      /* how often to attemt to schedule */
     u_long32    maxujobs;               /* limit on max running jobs per user */
     u_long32    queue_sort_method;      /* use seq_no to sort else use load */
+    u_long32    user_sort;
     lList*      job_load_adjustments;   /* load we use per job slot to correct host load */
     u_long32    load_adjustment_decay_time; /* after this time we assume our load sensors */
                                         /* have registered the job load */
@@ -67,6 +68,9 @@ int setScheddConfFromCmdLine(sge_schedd_conf_type *);
 
 /* should get used to access job_load_adjustments */
 
-int sc_set(lList **alpp, sge_schedd_conf_type *sc, lListElem *sc_ep, u_long32 *sip);
+int sc_set(lList **alpp, sge_schedd_conf_type *sc, lListElem *sc_ep, 
+           u_long32 *sip, lList *cmplx_lis);
 
+int set_user_sort(int user_sort);
+int get_user_sort(void);
 #endif /* __SCHEDD_CONF_H */

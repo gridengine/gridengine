@@ -1,4 +1,4 @@
- #___INFO__MARK_BEGIN__
+#___INFO__MARK_BEGIN__
 ##########################################################################
 #
 #  The Contents of this file are made available subject to the terms of
@@ -34,13 +34,13 @@
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6c/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6g/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is
 # installed
 #
-set KRB_HOME = /vol2/tools/SW/krb5-1.2.2/$buildarch
+set KRB_HOME = /vol2/tools/SW/krb5/$buildarch
 
 # 
 # INSURE4_LIBDIR the directory where the insure library is installed
@@ -62,11 +62,13 @@ set SWIG = /vol2/tools/SW/$buildarch/bin/swig
 
 #
 # PERL path
-# Location of a copyright.h file which containes a copyright string
-# which should be included in each binary part of Grid Engine for courtesy
-# binaries
 #
 set PERL = /vol2/tools/SW/$buildarch/bin/perl
+
+#
+# TCLSH path
+#
+set TCLSH = /vol2/tools/SW/$buildarch/bin/tclsh8.3
 
 #
 # Location of a copyright.h file which containes a copyright string

@@ -29,6 +29,15 @@
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!___INFO__MARK_END__
+!!
+!! the part to : is the key
+!! the part after the : is the translation there are additional font attributes
+!!                      that have to be kept (@fB, @fR, @fI, @f[BIG]) in the
+!!                      translated string as well
+!! the language identifier after _Messages_ is what you would specify in LANG
+!! e.g. for german it is 'de' but this can be changed automatically with 
+!! a script
+!!
 _Messages_.de.@fBAttributes: @fBEigenschaften
 _Messages_.de.@fBType: @fBTyp
 _Messages_.de.@fBAFS Parameters: @fBAFS Parameter

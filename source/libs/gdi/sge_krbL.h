@@ -56,12 +56,12 @@ enum {
 };
 
 LISTDEF( KRB_Type )
-   SGE_STRING( KRB_commproc )
-   SGE_ULONG( KRB_id )
-   SGE_HOST( KRB_host )                    /* CR - hostname change */
-   SGE_ULONG( KRB_timestamp )
-   SGE_STRING( KRB_auth_context )
-   SGE_LIST( KRB_tgt_list )
+   SGE_STRING(KRB_commproc, CULL_DEFAULT)
+   SGE_ULONG(KRB_id, CULL_DEFAULT)
+   SGE_HOST(KRB_host, CULL_DEFAULT)                    /* CR - hostname change */
+   SGE_ULONG(KRB_timestamp, CULL_DEFAULT)
+   SGE_STRING(KRB_auth_context, CULL_DEFAULT)
+   SGE_LIST(KRB_tgt_list, KTGT_Type, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF( KRBN )
@@ -86,8 +86,8 @@ enum {
 };
 
 LISTDEF( KTGT_Type )
-   SGE_ULONG( KTGT_id )
-   SGE_STRING( KTGT_tgt )
+   SGE_ULONG(KTGT_id, CULL_DEFAULT)
+   SGE_STRING(KTGT_tgt, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF( KTGTN )

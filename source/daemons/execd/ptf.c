@@ -44,9 +44,7 @@
 #include "sgermon.h"
 #include "sge_time.h"
 #include "sge_log.h"
-#include "sge_switch_user.h"
 #include "sge.h"
-#include "job.h"
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sge_conf.h"
@@ -56,7 +54,9 @@
 #include "exec_ifm.h"
 #include "pdc.h"
 #include "sge_feature.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
+#include "sge_uidgid.h"
+#include "sge_pe_task.h"
 
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
@@ -118,7 +118,6 @@ int setpriority(int which, id_t who, int prio);
 #endif
 
 #include "sge_all_listsL.h"
-#include "sge_copy_append.h"
 #include "commlib.h"
 
 #ifdef USE_DC
@@ -185,10 +184,12 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
                                           double sum_adjusted_proportion,
                                           double sum_last_interval_usage,
                                           double *min_share,
-                                          double *max_share);
+                                          double *max_share,
+                                          double *max_ticket_share);
 
 static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
-                                             double max_share);
+                                             double max_share,
+                                             double max_ticket_share);
 
 static void ptf_get_usage_from_data_collector(void);
 
@@ -257,7 +258,7 @@ static int got_release = 0;
 
 #endif
 
-/****** ptf/ptf_get_osjobid() *************************************************
+/****** execd/ptf/ptf_get_osjobid() *******************************************
 *  NAME
 *     ptf_get_osjobid() -- return the job id 
 *
@@ -291,7 +292,7 @@ static osjobid_t ptf_get_osjobid(lListElem *osjob)
    return osjobid;
 }
 
-/****** ptf/ptf_set_osjobid() *************************************************
+/****** execd/ptf/ptf_set_osjobid() *******************************************
 *  NAME
 *     ptf_set_osjobid() -- set os job id 
 *
@@ -319,7 +320,7 @@ static void ptf_set_osjobid(lListElem *osjob, osjobid_t osjobid)
 #endif
 }
 
-/****** ptf/ptf_build_usage_list() ********************************************
+/****** execd/ptf/ptf_build_usage_list() **************************************
 *  NAME
 *     ptf_build_usage_list() -- create a new usage list from an existing list 
 *
@@ -388,7 +389,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
    return usage_list;
 }
 
-/****** ptf/ptf_reinit_queue_priority() ***************************************
+/****** execd/ptf/ptf_reinit_queue_priority() *********************************
 *  NAME
 *     ptf_reinit_queue_priority() -- set static priority 
 *
@@ -447,7 +448,7 @@ void ptf_reinit_queue_priority(u_long32 job_id, u_long32 ja_task_id,
    DEXIT;
 }
 
-/****** ptf/ptf_set_job_priority() ********************************************
+/****** execd/ptf/ptf_set_job_priority() **************************************
 *  NAME
 *     ptf_set_job_priority() -- Update job priority 
 *
@@ -474,7 +475,7 @@ static void ptf_set_job_priority(lListElem *job)
    DEXIT;
 }
 
-/****** ptf/ptf_set_native_job_priority() *************************************
+/****** execd/ptf/ptf_set_native_job_priority() *******************************
 *  NAME
 *     ptf_set_native_job_priority() -- Change job priority  
 *
@@ -505,7 +506,7 @@ static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob,
 
 #if defined(__sgi) && !defined(IRIX5)
 
-/****** ptf/ptf_setpriority_ash() *********************************************
+/****** execd/ptf/ptf_setpriority_ash() ***************************************
 *  NAME
 *     ptf_setpriority_ash() -- Change priority of processes 
 *
@@ -719,7 +720,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
 
 #elif defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 
-/****** ptf/ptf_setpriority_jobid() ******************************************
+/****** execd/ptf/ptf_setpriority_jobid() *************************************
 *  NAME
 *     ptf_setpriority_ash() -- Change priority of processes 
 *
@@ -761,27 +762,61 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 
 #  if defined(NECSX4) || defined(NECSX5)
 
-   /*
-    * NEC nice values range from 0 to 39.
-    * According to the nicej(2) man page, nicej returns the new
-    * nice value minus 20, so -1 is a valid return code. Errno
-    * is not set upon a successful call, so we can't tell the
-    * difference between success and failure if we are setting
-    * the nice value to 19. We don't generate an error message
-    * if the nicej(2) call fails and we are trying to set the
-    * nice value to 19 (no big deal).
-    */ 
+   {
+      int timesliced = 0;
 
-   nice = nicej(ptf_get_osjobid(osjob), 0);
-   if (nice != -1 || pri == 19) {
-      if (nicej(ptf_get_osjobid(osjob), pri - (nice+20)) == -1 && pri != 19) {
-	 if (errno != ESRCH) {
-	    ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
-		   u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+      /*
+       * If the timeslice value is set then set the timeslice
+       * scheduling parameter. This gives nice proportional
+       * scheduling for SX jobs. PTF_MIN_PRIORITY and
+       * PTF_MAX_PRIORITY define the time slice range to use.
+       * Values are in 1/HZ seconds, where HZ is 200.
+       *
+       *      1000 = 5 seconds
+       *	    200 = 1 seconds
+       */
+
+      if (lGetDouble(job, JL_timeslice) > 0 && lGetUlong(job, JL_interactive) == 0) {
+	 dispset2_t attr;
+	 int timeslice;
+	 osjobid_t jobid = ptf_get_osjobid(osjob);
+
+	 if (dispcntl(SG_JID, jobid, DCNTL_GET2, &attr) != -1) {
+	    attr.tmslice = (int) lGetDouble(job, JL_timeslice);
+	    if (dispcntl(SG_JID, jobid, DCNTL_SET2, &attr) == -1) {
+	       ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
+		      u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+	    } else {
+               timesliced = 1;
+            }
+
 	 }
-      } else {
-	 DPRINTF(("NICEJ(" u32 ", " u32 ")\n",
-		  (u_long32) ptf_get_osjobid(osjob), (u_long32) pri));
+      }
+
+      /*
+       * NEC nice values range from 0 to 39.
+       * According to the nicej(2) man page, nicej returns the new
+       * nice value minus 20, so -1 is a valid return code. Errno
+       * is not set upon a successful call, so we can't tell the
+       * difference between success and failure if we are setting
+       * the nice value to 19. We don't generate an error message
+       * if the nicej(2) call fails and we are trying to set the
+       * nice value to 19 (no big deal).
+       */ 
+
+      if (!timesliced) {
+	 nice = nicej(ptf_get_osjobid(osjob), 0);
+	 if (nice != -1 || pri == 19) {
+	    if (nicej(ptf_get_osjobid(osjob), pri - (nice+20)) == -1 && pri != 19) {
+	       if (errno != ESRCH) {
+		  ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
+			 u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+	       }
+	    } else {
+	       DPRINTF(("NICEJ(" u32 ", " u32 ")\n",
+			(u_long32) ptf_get_osjobid(osjob), (u_long32) pri));
+	    }
+	 }
       }
    }
 
@@ -791,7 +826,7 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
 
-/****** ptf/ptf_setpriority_jobid() ******************************************
+/****** execd/ptf/ptf_setpriority_addgrpid() **********************************
 *  NAME
 *     ptf_setpriority_addgrpid() -- Change priority of processes
 *
@@ -802,6 +837,9 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 *  FUNCTION
 *     This function is only available for the architecture SOLARIS, ALPHA and
 *     LINUX. All processes belonging to "job" and "osjob" will get a new i
+*     priority.
+*
+*     This function assumes the the "max" priority is smaller than the "min"
 *     priority.
 *
 *  INPUTS
@@ -849,7 +887,7 @@ static void ptf_setpriority_addgrpid(lListElem *job, lListElem *osjob,
 
 #endif
 
-/****** ptf/ptf_get_job() *****************************************************
+/****** execd/ptf/ptf_get_job() ***********************************************
 *  NAME
 *     ptf_get_job() -- look up the job for the supplied job_id and return it 
 *
@@ -876,7 +914,7 @@ static lListElem *ptf_get_job(u_long job_id)
    return job;
 }
 
-/****** ptf/ptf_get_job_os() ***************************************************
+/****** execd/ptf/ptf_get_job_os() ********************************************
 *  NAME
 *     ptf_get_job_os() -- look up the job for the supplied OS job_id 
 *
@@ -1029,7 +1067,7 @@ static lListElem *ptf_process_job(osjobid_t os_job_id, const char *task_id_str,
    return job;
 }
 
-/****** ptf/ptf_get_usage_from_data_collector() *******************************
+/****** execd/ptf/ptf_get_usage_from_data_collector() *************************
 *  NAME
 *     ptf_get_usage_from_data_collector() -- get usage from PDC 
 *
@@ -1366,6 +1404,7 @@ static void ptf_calc_job_proportion_pass1(lListElem *job,
    share = ((double) lGetUlong(job, JL_tickets) / sum_of_job_tickets) *
       1000.0 + 1.0;
    lSetDouble(job, JL_share, share);
+   lSetDouble(job, JL_ticket_share, (double) lGetUlong(job, JL_tickets) / sum_of_job_tickets);
 
    /*
     * Calculate each jobs proportion value based on the job's tickets
@@ -1425,7 +1464,8 @@ static void ptf_calc_job_proportion_pass2(lListElem *job,
 static void ptf_calc_job_proportion_pass3(lListElem *job,
                                           double sum_adjusted_proportion,
                                           double sum_last_interval_usage,
-                                          double *min_share, double *max_share)
+                                          double *min_share, double *max_share,
+                                          double *max_ticket_share)
 {
    double job_adjusted_current_proportion = 0;
 
@@ -1441,6 +1481,7 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
 
    *max_share = MAX(*max_share, job_adjusted_current_proportion);
    *min_share = MIN(*min_share, job_adjusted_current_proportion);
+   *max_ticket_share = MAX(*max_ticket_share, lGetDouble(job, JL_ticket_share));
 
 #if 0
     DPRINTF(("XXXXXXX  minshare: %f, max_share: %f XXXXXXX\n", *min_share, 
@@ -1450,46 +1491,63 @@ static void ptf_calc_job_proportion_pass3(lListElem *job,
 
 /*--------------------------------------------------------------------
  * ptf_set_OS_scheduling_parameters
+ *
+ * This function assumes the the "max" priority is smaller than the "min"
+ * priority.
  *--------------------------------------------------------------------*/
-
 static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
-                                             double max_share)
+                                             double max_share,
+                                             double max_ticket_share)
 {
    lListElem *job;
-   static long pri_range, pri_min = 1000, pri_max = -1000;
+   static long pri_range, pri_min = -999, pri_max = -999;
    long pri_min_tmp, pri_max_tmp;
    long pri;
-   char *env;
-   int val;
-
+   
    DENTER(TOP_LAYER, "ptf_set_OS_scheduling_parameters");
 
-
-   pri_min_tmp = PTF_MIN_PRIORITY;
-   if ((env = getenv("PTF_MIN_PRIORITY")))
-      if (sscanf(env, "%d", &val) == 1)
-         pri_min_tmp = val;
    if (ptf_min_priority != -999)
       pri_min_tmp = ptf_min_priority;
+   else
+      pri_min_tmp = PTF_MIN_PRIORITY;   
 
-   pri_max_tmp = PTF_MAX_PRIORITY;
-   if ((env = getenv("PTF_MAX_PRIORITY")))
-      if (sscanf(env, "%d", &val) == 1)
-         pri_max_tmp = val;
    if (ptf_max_priority != -999)
       pri_max_tmp = ptf_max_priority;
+   else
+      pri_max_tmp = PTF_MAX_PRIORITY;   
 
+   /* 
+    * For OS'es where we enforce the values of max and min priority verify
+    * the the values are in the boundaries of PTF_OS_MAX_PRIORITY and
+    * PTF_OS_MIN_PRIORITY.
+    */
+   if (ENFORCE_PRI_RANGE) {
+      pri_max_tmp = MAX(pri_max_tmp, PTF_OS_MAX_PRIORITY);
+      pri_min_tmp = MIN(pri_min_tmp, PTF_OS_MIN_PRIORITY);
+   }
+   
+   /*
+    * Ensure that the max priority can't get a bigger value than
+    * the min priority (otherwise the "range" gets wrongly calculated
+    */         
+   if (pri_max_tmp > pri_min_tmp)
+      pri_max_tmp = pri_min_tmp;
+      
+   /* If the value has changed set pri_max/pri_min/pri_range and log */
    if (pri_max != pri_max_tmp || pri_min != pri_min_tmp) {
+      extern u_long32 logginglevel;
+      u_long32 old_ll = logginglevel;
+      
       pri_max = pri_max_tmp;
       pri_min = pri_min_tmp;
       pri_range = pri_min - pri_max;
-
+   
+      logginglevel = LOG_INFO;   
       INFO((SGE_EVENT, MSG_PRIO_PTFMINMAX_II, (int) pri_max, (int) pri_min));
+      logginglevel = old_ll;
    }
 
-   /*
-    * Set the priority for each job
-    */
+   /* Set the priority for each job */
    for_each(job, job_list) {
 
 #if 0
@@ -1529,6 +1587,15 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 
 #endif
 
+      if (pri_min > 50 && pri_max > 50) {
+         if (max_ticket_share > 0) {
+  	         lSetDouble(job, JL_timeslice, 
+                       MAX(pri_max, lGetDouble(job, JL_ticket_share) *
+                                    pri_min / max_ticket_share));
+         } else {
+            lSetDouble(job, JL_timeslice, pri_min);
+         }
+      }
       lSetLong(job, JL_pri, pri);
       ptf_set_job_priority(job);
    }
@@ -1585,28 +1652,25 @@ int ptf_job_started(osjobid_t os_job_id, const char *task_id_str,
  * ptf_job_complete - process completed job
  *--------------------------------------------------------------------*/
 
-int ptf_job_complete(lListElem *completed_job)
+int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, lList **usage)
 {
-   lList *job_list = ptf_jobs;
-   lListElem *job, *osjob, *ja_task;
-   u_long job_id = lGetUlong(completed_job, JB_job_number);
-   const char *tid;
-   int job_complete;
-   lListElem *completed_task = NULL;
-   u_long32 ja_task_id = 0;
+   lListElem *ptf_job, *osjob;
+   lList *osjobs;
 
    DENTER(TOP_LAYER, "ptf_job_complete");
 
-   job = ptf_get_job(job_id);
+   ptf_job = ptf_get_job(job_id);
 
-   if (job == NULL) {
+   if (ptf_job == NULL) {
       return PTF_ERROR_JOB_NOT_FOUND;
    }
+
+   osjobs = lGetList(ptf_job, JL_OS_job_list);
 
    /*
     * if job is not complete, go get latest job usage info
     */
-   if (!(lGetUlong(job, JL_state) & JL_JOB_COMPLETE)) {
+   if (!(lGetUlong(ptf_job, JL_state) & JL_JOB_COMPLETE)) {
       ptf_get_usage_from_data_collector();
    }
 
@@ -1614,41 +1678,40 @@ int ptf_job_complete(lListElem *completed_job)
     * Get usage for completed job
     *    (If this for a sub-task then we return the sub-task usage)
     */
-   tid = lGetString(completed_job, JB_pe_task_id_str);
-   for_each(ja_task, lGetList(completed_job, JB_ja_tasks)) {
-      ja_task_id = lGetUlong(ja_task, JAT_task_number);
+   *usage = _ptf_get_job_usage(ptf_job, ja_task_id, pe_task_id); 
 
-      completed_task = job_search_task(completed_job, NULL, ja_task_id, 0);
-      lSetList(completed_task, JAT_usage_list,
-               _ptf_get_job_usage(job, ja_task_id, tid));
+   /* Search ja/pe ptf task */
+   for_each(osjob, osjobs) {
+      if(lGetUlong(osjob, JO_ja_task_ID) == ja_task_id) {
+         const char *osjob_pe_task_id = lGetString(osjob, JO_task_id_str);
+         if(pe_task_id != NULL && 
+            osjob_pe_task_id != NULL &&
+            strcmp(pe_task_id, osjob_pe_task_id) == 0) {
+            break;
+         } else {
+            break;
+         }   
+      }
    }
 
+   if(osjob == NULL) {
+      return PTF_ERROR_JOB_NOT_FOUND;
+   }
+   
    /*
     * Mark osjob as complete and see if all tracked osjobs are done
     * Tell data collector to stop collecting data for this job
     */
-   job_complete = 1;
-   for_each(osjob, lGetList(job, JL_OS_job_list)) {
-      const char *osjob_tid = lGetString(osjob, JO_task_id_str);
-
-      u_long jstate = lGetUlong(osjob, JO_state);
-
-      if ((!tid && !osjob_tid)
-          || (tid && osjob_tid && !strcmp(tid, osjob_tid))) {
-         lSetUlong(osjob, JO_state, jstate | JL_JOB_DELETED);
+   lSetUlong(osjob, JO_state, lGetUlong(osjob, JO_state) | JL_JOB_DELETED);
 #ifdef USE_DC
-         psIgnoreJob(ptf_get_osjobid(osjob));
+   psIgnoreJob(ptf_get_osjobid(osjob));
 #endif
-      } else if (!(jstate & JL_JOB_DELETED)) {
-         job_complete = 0;
-      }
-   }
 
 #ifndef USE_DC
 # ifdef MODULE_TEST
 
    {
-      int procfd = lGetUlong(job, JL_procfd);
+      int procfd = lGetUlong(ptf_job, JL_procfd);
 
       if (procfd > 0)
          close(procfd);
@@ -1659,24 +1722,15 @@ int ptf_job_complete(lListElem *completed_job)
    /*
     * Remove job/task from job/task list
     */
-   if (job_complete && completed_task) {
-      lList *os_jatasks;
-      lListElem *os_jatask, *nxt_os_jatask;
 
-      DPRINTF(("PTF: Removing job " u32 "." u32 "\n", job_id, ja_task_id));
-      os_jatasks = lGetList(job, JL_OS_job_list);
-      nxt_os_jatask = lFirst(os_jatasks);
-      while ((os_jatask = nxt_os_jatask)) {
-         nxt_os_jatask = lNext(nxt_os_jatask);
-         if (ja_task_id == lGetUlong(os_jatask, JO_ja_task_ID)) {
-            lRemoveElem(os_jatasks, os_jatask);
-         }
-      }
-      if (lGetNumberOfElem(os_jatasks) == 0) {
-         DPRINTF(("PTF: Removing job\n"));
-         lDechainElem(job_list, job);
-         lFreeElem(job);
-      }
+   DPRINTF(("PTF: Removing job " u32 "." u32 ", petask %s\n", 
+            job_id, ja_task_id, pe_task_id == NULL ? "none" : pe_task_id));
+   lRemoveElem(osjobs, osjob);
+
+   if (lGetNumberOfElem(osjobs) == 0) {
+      DPRINTF(("PTF: Removing job\n"));
+      lDechainElem(ptf_jobs, ptf_job);
+      lFreeElem(ptf_job);
    }
 
    DEXIT;
@@ -1750,6 +1804,7 @@ int ptf_adjust_job_priorities(void)
    double sum_adjusted_proportion = 0;
    double min_share = 100.0;
    double max_share = 0;
+   double max_ticket_share = 0;
    double sum_interval_usage = 0;
    double sum_of_last_usage = 0;
 
@@ -1766,7 +1821,7 @@ int ptf_adjust_job_priorities(void)
     * just get jobs usage in SGE mode 
     * this is necessary to force job resource limits 
     */
-   if (feature_is_enabled(FEATURE_REPRIORISATION)) {
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION)) {
 
       /*
        * Do pass 0 of calculating job proportional share of resources
@@ -1803,7 +1858,7 @@ int ptf_adjust_job_priorities(void)
       for_each(job, job_list) {
          ptf_calc_job_proportion_pass3(job, sum_proportion,
                                        sum_interval_usage, &min_share,
-                                       &max_share);
+                                       &max_share, &max_ticket_share);
       }
 
 #ifdef PTF_NEW_ALGORITHM
@@ -1872,7 +1927,8 @@ int ptf_adjust_job_priorities(void)
       /*
        * Set the O.S. scheduling parameters for the jobs
        */
-      ptf_set_OS_scheduling_parameters(job_list, min_share, max_share);
+      ptf_set_OS_scheduling_parameters(job_list, min_share, max_share,
+                                       max_ticket_share);
    }
    next = now + PTF_SCHEDULE_TIME;
 
@@ -1937,14 +1993,13 @@ static lList *_ptf_get_job_usage(lListElem *job, u_long ja_task_id,
 
 int ptf_get_usage(lList **job_usage_list)
 {
-   lList *job_list, *temp_usage_list, *new_ja_task_list;
-   lListElem *job, *new_job, *osjob, *new_ja_task;
+   lList *job_list, *temp_usage_list;
+   lListElem *job, *osjob;
    lEnumeration *what;
 
    DENTER(TOP_LAYER, "ptf_get_usage");
 
-   what = lWhat("%T(%I %I %I)", JB_Type, JB_job_number, JB_ja_tasks,
-                JB_pe_task_id_str);
+   what = lWhat("%T(%I %I)", JB_Type, JB_job_number, JB_ja_tasks);
 
    temp_usage_list = lCreateList("PtfJobUsageList", JB_Type);
    job_list = ptf_jobs;
@@ -1953,55 +2008,38 @@ int ptf_get_usage(lList **job_usage_list)
       u_long32 job_id = lGetUlong(job, JL_job_ID);
 
       for_each(osjob, lGetList(job, JL_OS_job_list)) {
+         lListElem *tmp_ja_task;
+         lListElem *tmp_pe_task;
          u_long32 ja_task_id = lGetUlong(osjob, JO_ja_task_ID);
+         const char *pe_task_id = lGetString(osjob, JO_task_id_str);
 
-         if (!(lGetUlong(osjob, JO_state) & JL_JOB_DELETED)) {
-            int insert = 1;
-
-            for_each(tmp_job, temp_usage_list) {
-
-               if (lGetUlong(tmp_job, JB_job_number) == job_id &&
-                   lGetString(tmp_job, JB_pe_task_id_str) &&
-                   lGetString(osjob, JO_task_id_str) &&
-                   !strcmp(lGetString(tmp_job, JB_pe_task_id_str),
-                           lGetString(osjob, JO_task_id_str))) {
-
-                  new_ja_task = lCreateElem(JAT_Type);
-                  lSetUlong(new_ja_task, JAT_task_number, ja_task_id);
-
-#if 0
-                  {
-                     lListElem *uep;
-                     for_each (uep, lGetList(osjob, JO_usage_list))
-                        printf("%s=%f%c", lGetString(uep, UA_name),
-                                             lGetDouble(uep, UA_value), lNext(uep)?',':'\n');
-                  }
-#endif
-                  lSetList(new_ja_task, JAT_usage_list,
-                           lCopyList(NULL, lGetList(osjob, JO_usage_list)));
-                  lAppendElem(lGetList(tmp_job, JB_ja_tasks), new_ja_task);
-                  insert = 0;
-               }
-            }
-            if (insert) {
-               /* Job not found => Create Job and JobArrayTask */
-               new_ja_task_list = lCreateList("", JAT_Type);
-               new_job = lCreateElem(JB_Type);
-               new_ja_task = lCreateElem(JAT_Type);
-
-               lSetUlong(new_ja_task, JAT_task_number, ja_task_id);
-               lSetList(new_ja_task, JAT_usage_list,
-                        lCopyList(NULL, lGetList(osjob, JO_usage_list)));
-               lAppendElem(new_ja_task_list, new_ja_task);
-               lSetUlong(new_job, JB_job_number, lGetUlong(job, JL_job_ID));
-               lSetString(new_job, JB_pe_task_id_str,
-                          lGetString(osjob, JO_task_id_str));
-               lSetList(new_job, JB_ja_tasks, new_ja_task_list);
-               lAppendElem(temp_usage_list, new_job);
-            }
+         if (lGetUlong(osjob, JO_state) & JL_JOB_DELETED) {
+            continue;
          }
-      }
-   }
+
+         tmp_job = job_list_locate(temp_usage_list, job_id);
+         if(tmp_job == NULL) {
+            tmp_job = lCreateElem(JB_Type);
+            lSetUlong(tmp_job, JB_job_number, job_id);
+            lAppendElem(temp_usage_list, tmp_job);
+         }
+
+         tmp_ja_task = job_search_task(tmp_job, NULL, ja_task_id);
+         if(tmp_ja_task == NULL) {
+            tmp_ja_task = lAddSubUlong(tmp_job, JAT_task_number, ja_task_id, JB_ja_tasks, JAT_Type);
+         }
+
+         if(pe_task_id != NULL) {
+            tmp_pe_task = ja_task_search_pe_task(tmp_ja_task, pe_task_id);
+            if(tmp_pe_task == NULL) {
+               tmp_pe_task = lAddSubStr(tmp_ja_task, PET_id, pe_task_id, JAT_task_list, PET_Type);
+            }
+            lSetList(tmp_pe_task, PET_usage, lCopyList(NULL, lGetList(osjob, JO_usage_list)));
+         } else {
+            lSetList(tmp_ja_task, JAT_usage_list, lCopyList(NULL, lGetList(osjob, JO_usage_list)));
+         }
+      } /* for each osjob */
+   } /* for each ptf job */
 
    *job_usage_list = lSelect("PtfJobUsageList", temp_usage_list, NULL, what);
 
@@ -2028,9 +2066,9 @@ int ptf_init(void)
       return -1; 
    }
 
-   switch2start_user();
+   sge_switch2start_user();
    if (psStartCollector()) {
-      switch2admin_user();
+      sge_switch2admin_user();
       DEXIT;
       return -1;
    }
@@ -2047,6 +2085,14 @@ int ptf_init(void)
          }
       }
    }
+#elif defined(NECSX5) || defined(NECSX6)
+
+   if (getuid() == 0) {
+      if (nicex(0, -10) == -1) {
+	 ERROR((SGE_EVENT, MSG_PRIO_NICEMFAILED_S, strerror(errno)));
+      }
+   }
+
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
    if (getuid() == 0) {
       if (setpriority(PRIO_PROCESS, getpid(), PTF_MAX_PRIORITY) < 0) {
@@ -2054,7 +2100,7 @@ int ptf_init(void)
       }
    }
 #endif
-   switch2admin_user();
+   sge_switch2admin_user();
    DEXIT;
    return 0;
 }
@@ -2219,7 +2265,7 @@ static int ptf_kill(u_long job_id, int sig)
 
    if (job) {
       cc = 0;
-      switch2start_user();
+      sge_switch2start_user();
       for_each(osjob, lGetList(job, JL_OS_job_list)) {
 #if defned(__sgi) || defined(ALPHA)
          lListElem *proc;
@@ -2231,7 +2277,7 @@ static int ptf_kill(u_long job_id, int sig)
          cc += killm(C_JOB, ptf_get_osjobid(osjob), sig);
 #endif
       }
-      switch2admin_user();
+      sge_switch2admin_user();
    }
    DEXIT;
    return cc;
@@ -2287,22 +2333,6 @@ void dump_list(lList *list)
    fclose(f);
 }
 
-
-void dump_list_to_file(lList *list, char *file)
-{
-   FILE *f;
-
-   if (!(f = fopen(file, "w+"))) {
-      fprintf(stderr, MSG_ERROR_COULDNOTOPENSTDOUTASFILE);
-      exit(1);
-   }
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBLIST);
-   }
-   fclose(f);
-}
-
-
 #ifdef MODULE_TEST
 
 #define TESTJOB "./cpu_bound"
@@ -2318,7 +2348,7 @@ int main(int argc, char **argv)
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type) gettext,
+   sge_init_language_func((gettext_func_type) gettext,
                          (setlocale_func_type) setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type) textdomain);
@@ -2430,8 +2460,7 @@ int main(int argc, char **argv)
       perror("newarraysess");
       exit(2);
    }
-
-   printf(MSG_JOB_MYASHIS_X, u64c(getash()));
+   printf("My ash is "u64"\n", u64c(getash()));
 
 #endif
 

@@ -37,89 +37,96 @@
 /* 
 ** utilbin/adminrun.c
 */
-#define MSG_UTILBIN_USAGE                    _("usage:") 
-#define MSG_COMMAND_RUNCOMMANDASUSERNAME_S     _("run commandline under %s of given user\n")
-#define MSG_COMMAND_EXECUTEFAILED_S          _("can't execute command \"%s\"\n")
-#define MSG_SYSTEM_RESOLVEUSERFAILED_S       _("can't resolve username \"%s\"\n")
+#define MSG_UTILBIN_USAGE                    _MESSAGE(57000, _("usage:") ) 
+#define MSG_COMMAND_RUNCOMMANDASUSERNAME_S     _MESSAGE(57001, _("run commandline under "SFN" of given user\n"))
+#define MSG_COMMAND_EXECUTEFAILED_S          _MESSAGE(57002, _("can't execute command "SFQ"\n"))
+#define MSG_SYSTEM_RESOLVEUSERFAILED_S       _MESSAGE(57003, _("can't resolve username "SFQ"\n"))
 
 /* 
 ** utilbin/gdi_request.c
 */ 
-#define MSG_SYSTEM_QMASTERNOTALIVE           _("qmaster not alive\n")
-#define MSG_SYSTEM_GDISETUPERROR             _("sge_gdi_setup error\n")
-#define MSG_SYSTEM_MULTIREQUEST_I            _("%d. ----- Multirequest")
-#define MSG_SYSTEM_6SINGLEREQUEST_I          _("%d. ----- 6 single requests")
+/* #define MSG_SYSTEM_QMASTERNOTALIVE           _message(57004, _("qmaster not alive\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_GDISETUPERROR             _message(57005, _("sge_gdi_setup error\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_MULTIREQUEST_I            _message(57006, _("%d. ----- Multirequest")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_6SINGLEREQUEST_I          _message(57007, _("%d. ----- 6 single requests")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 
 ** utilbin/checkprog.c
 */ 
-#define MSG_COMMAND_USAGECHECKPROG           _("\ncheckprog pid processname\ncheck the first 8 letters of process basename\n\nexit status: 0 if process was found\n             1 if process was not found\n             2 if ps program couldn't be spawned\n")
-#define MSG_COMMAND_USAGEGETPROGS            _("\ngetprogs processname\ncheck and list pids of \"processname\"\n\nexit status: 0 if process(es) were found\n             1 if process(es) was not found\n             2 if ps program couldn't be spawned\n")
-#define MSG_COMMAND_CALLCHECKPROGORGETPROGS  _("program must be called as \"checkprog\" or \"getprogs\"\n")
-#define MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS _("pid \"%d\" is not running or has another program name than \"%s\"\n")
-#define MSG_PROC_PIDISRUNNINGWITHNAME_IS     _("pid \"%d\" with process name \"%s\" is running\n")
-#define MSG_COMMAND_SPANPSFAILED             _("could not spawn ps command\n")
-#define MSG_COMMAND_RUNPSCMDFAILED_S         _("could not run \"%s\" to get pids of processes\n")
-#define MSG_PROC_FOUNDNOPROCESS_S            _("found no running processes with name \"%s\"\n")
-#define MSG_PROC_FOUNDPIDSWITHNAME_S         _("found the following pids which have process name \"%s\"\n")
+#define MSG_COMMAND_USAGECHECKPROG           _MESSAGE(57008, _("\ncheckprog pid processname\ncheck the first 8 letters of process basename\n\nexit status: 0 if process was found\n             1 if process was not found\n             2 if ps program couldn't be spawned\n"))
+#define MSG_COMMAND_USAGEGETPROGS            _MESSAGE(57009, _("\ngetprogs processname\ncheck and list pids of \"processname\"\n\nexit status: 0 if process(es) were found\n             1 if process(es) was not found\n             2 if ps program couldn't be spawned\n"))
+#define MSG_COMMAND_CALLCHECKPROGORGETPROGS  _MESSAGE(57010, _("program must be called as \"checkprog\" or \"getprogs\"\n"))
+#define MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS _MESSAGE(57011, _("pid \"%d\" is not running or has another program name than "SFQ"\n"))
+#define MSG_PROC_PIDISRUNNINGWITHNAME_IS     _MESSAGE(57012, _("pid \"%d\" with process name "SFQ" is running\n"))
+#define MSG_COMMAND_SPANPSFAILED             _MESSAGE(57013, _("could not spawn ps command\n"))
+#define MSG_COMMAND_RUNPSCMDFAILED_S         _MESSAGE(57014, _("could not run "SFQ" to get pids of processes\n"))
+#define MSG_PROC_FOUNDNOPROCESS_S            _MESSAGE(57015, _("found no running processes with name "SFQ"\n"))
+#define MSG_PROC_FOUNDPIDSWITHNAME_S         _MESSAGE(57016, _("found the following pids which have process name "SFQ"\n"))
 
 
 
 /* 
 ** utilbin/filestat.c
 */ 
-#define MSG_COMMAND_STATFAILED               _("stat failed")
-#define MSG_SYSTEM_UIDRESOLVEFAILED          _("can't resolve userid")
+#define MSG_COMMAND_STATFAILED               _MESSAGE(57017, _("stat failed"))
+#define MSG_SYSTEM_UIDRESOLVEFAILED          _MESSAGE(57018, _("can't resolve userid"))
 
 
 
 /* 
 ** utilbin/gethostbyaddr.c
 */ 
-#define MSG_SYSTEM_GETHOSTBYADDRFAILED       _("gethostbyaddr() failed")
-#define MSG_SYSTEM_HOSTNAMEIS_S              _("Hostname: %s\n")
-#define MSG_SYSTEM_ALIASES                   _("Aliases:  ")
-#define MSG_SYSTEM_ADDRESSES                 _("Host Address(es): ")
+#define MSG_SYSTEM_GETHOSTBYADDRFAILED       _MESSAGE(57019, _("gethostbyaddr() failed"))
+#define MSG_SYSTEM_HOSTNAMEIS_S              _MESSAGE(57020, _("Hostname: "SFN"\n"))
+#define MSG_SYSTEM_ALIASES                   _MESSAGE(57021, _("Aliases:  "))
+#define MSG_SYSTEM_ADDRESSES                 _MESSAGE(57022, _("Host Address(es): "))
 
 
 
 /* 
 ** utilbin/gethostname.c
 */ 
-#define MSG_COMMAND_USAGE_GETHOSTNAME        _("get resolved hostname of this host\n")
-#define MSG_SYSTEM_GETHOSTNAMEFAILED         _("gethostname() failed")
-#define MSG_SYSTEM_GETHOSTBYNAMEFAILED       _("gethostbyname() failed")
+#define MSG_COMMAND_USAGE_GETHOSTNAME        _MESSAGE(57023, _("get resolved hostname of this host\n"))
+#define MSG_SYSTEM_GETHOSTNAMEFAILED         _MESSAGE(57024, _("gethostname() failed"))
+#define MSG_SYSTEM_GETHOSTBYNAMEFAILED       _MESSAGE(57025, _("gethostbyname() failed"))
 
 
 /* 
 ** utilbin/getservbyname.c
 */ 
-#define MSG_COMMAND_USAGE_GETSERVBYNAME      _("get number of a tcp service\n")
-#define MSG_SYSTEM_SERVICENOTFOUND_S         _("service %s not found\n")
+#define MSG_COMMAND_USAGE_GETSERVBYNAME      _MESSAGE(57026, _("get number of a tcp service\n"))
+#define MSG_SYSTEM_SERVICENOTFOUND_S         _MESSAGE(57027, _("service "SFN" not found\n"))
 
 
 /* 
 ** utilbin/loadcheck.c
 */ 
-#define MSG_SYSTEM_RETMEMORYINDICESFAILED    _("failed retrieving memory indices\n")
+#define MSG_SYSTEM_RETMEMORYINDICESFAILED    _MESSAGE(57028, _("failed retrieving memory indices\n"))
 
 
 /* 
 ** utilbin/permutation.c
 */ 
-#define MSG_UTILBIN_PERMUSAGE1   _("options are:\n")
-#define MSG_UTILBIN_PERMUSAGE2   _("silent mode\n")
-#define MSG_UTILBIN_PERMUSAGE3   _("sleep 'n' seconds after 1 second work\n")
-#define MSG_UTILBIN_PERMUSAGE4   _("do work 'n' times using 'n' processes\n")
-#define MSG_UTILBIN_PERMUSAGE5   _("with range s.th. like a-k\n")
+#define MSG_UTILBIN_PERMUSAGE1   _MESSAGE(57029, _("options are:\n"))
+#define MSG_UTILBIN_PERMUSAGE2   _MESSAGE(57030, _("silent mode\n"))
+#define MSG_UTILBIN_PERMUSAGE3   _MESSAGE(57031, _("sleep 'n' seconds after 1 second work\n"))
+#define MSG_UTILBIN_PERMUSAGE4   _MESSAGE(57032, _("do work 'n' times using 'n' processes\n"))
+#define MSG_UTILBIN_PERMUSAGE5   _MESSAGE(57033, _("with range s.th. like a-k\n"))
 
 
-
+/*
+**  utilbin/infotext.c
+*/
+#define SGE_INFOTEXT_TESTSTRING_S "Welcome, "SFN"\nhave a nice day!\n"
+#define SGE_INFOTEXT_UNDERLINE  "-"
+/* #define SGE_INFOTEXT_TESTSTRING_S_L10N _message(57034, _(SGE_INFOTEXT_TESTSTRING_S)) __TS Removed automatically from testsuite!! TS__*/
+/* #define SGE_INFOTEXT_UNDERLINE_L10N    _message(57035, _(SGE_INFOTEXT_UNDERLINE)) __TS Removed automatically from testsuite!! TS__*/
+#define SGE_INFOTEXT_ONLY_ALLOWED_SS _MESSAGE(57036, _("\nThere are only two answers allowed: "SFQ" or "SFQ"!\n\n"))
 
 /* 
 ** utilbin/range.c
 */ 
-/* #define MSG_COMMAND_USAGE_RANGE              _("usage: range lower upper\n") */
+/* #define MSG_COMMAND_USAGE_RANGE              _message(57037, _("usage: range lower upper\n") )  __TS Removed automatically from testsuite!! TS__*/
 
 #endif /* __MSG_UTILBIN_H */

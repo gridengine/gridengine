@@ -51,11 +51,11 @@ enum {
 };
 
 LISTDEF(ID_Type)
-   SGE_STRING(ID_str)
-   SGE_TLIST(ID_ja_structure, RN_Type)
-   SGE_ULONG(ID_action)
-   SGE_ULONG(ID_force)
-   SGE_TLIST(ID_user_list, ST_Type)
+   SGE_STRING(ID_str, CULL_DEFAULT)
+   SGE_LIST(ID_ja_structure, RN_Type, CULL_DEFAULT)
+   SGE_ULONG(ID_action, CULL_DEFAULT)
+   SGE_ULONG(ID_force, CULL_DEFAULT)
+   SGE_LIST(ID_user_list, ST_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(IDN)

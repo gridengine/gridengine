@@ -33,44 +33,165 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>  
+#include <ctype.h>
 
 #include "sgermon.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
+#include "sge_unistd.h"
+#include "sge_dstring.h"
+#include "sge_prog.h"
+#include "sge_string.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
-#include "sge_jobL.h"
-#include "sge_complexL.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
 #include "parse.h"
-#include "parse_range.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "utility.h"
 #include "sge_parse_num_par.h"
-#include "sge_string.h"
 #include "show_job.h"
-#include "sge_string_append.h"
 #include "sge_range.h"
 #include "sge_schedd_text.h"
-#include "job.h"
+#include "sge_answer.h"
+
+#include "msg_gdilib.h"
+
+#define RANGE_SEPARATOR_CHARS ","
 
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
-                              StringBufferT *dyn_taskrange_str);
+                              dstring *dyn_taskrange_str, int ignore_step);
 
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2);
+
+static void expand_range_list(lListElem *r, lList **rl);
+
+/* we keep a descending sorted list of non overlapping ranges */
+/* why descending? don't ask me! ask the initiator of this function */
+static void expand_range_list(
+lListElem *r,
+lList **rl
+) {
+   u_long32 rmin, rmax, rstep;
+   lListElem *ep, *rr;
+
+   DENTER(TOP_LAYER, "expand_range_list");
+
+   rmin = lGetUlong(r, RN_min);
+   rmax = lGetUlong(r, RN_max);
+   rstep = lGetUlong(r, RN_step);
+
+   /* create list */
+   if ( !*rl ) {
+      *rl = lCreateList("ranges", RN_Type);
+   }
+
+   if ( lGetNumberOfElem(*rl)!=0 ) {
+      ep = lFirst(*rl);
+      while (ep) {
+
+         if (rstep != lGetUlong(ep, RN_step) || rstep > 1 ||
+             lGetUlong(ep, RN_step) > 1) {
+            lInsertElem(*rl, NULL, r);
+            break;
+         } else if (rmin > lGetUlong(ep, RN_max)) {
+
+            /* 
+            ** r and ep are non-overlapping and r is to be
+            ** sorted ahead of ep.
+            */
+            lInsertElem(*rl, NULL, r);
+            break;
+
+         } else if ( rmax < lGetUlong(ep, RN_min)) {
+            /* 
+            ** r and ep are non-overlapping and r is to be
+            ** sorted after ep ==> go for the next iteration
+            */
+            ep = lNext(ep);
+            if (!ep)
+               /* We are at the end of the list ==> append r */
+               lAppendElem(*rl, r);
+
+            continue;
+
+         } else if ((rmax <= lGetUlong(ep, RN_max)) &&
+                    (rmin >= lGetUlong(ep, RN_min))) {
+
+            /* 
+            ** r is fully contained within ep ==> delete it 
+            */
+            lFreeElem(r);
+            break;
+
+         } else if (rmin < lGetUlong(ep, RN_min)) {
+
+            /* 
+            ** ep is either fully contained within r
+            ** or r overlaps ep at ep's bottom ==>
+            ** overwrite ep and see if further list elements
+            ** are covered also;
+            */
+            if (rmax > lGetUlong(ep, RN_max)) {
+               /* r contains ep */
+               lSetUlong(ep, RN_max, rmax);
+            }
+            lSetUlong(ep, RN_min, rmin);
+
+            /* we're already sure we can free r */
+            lFreeElem(r);
+            rr = ep;
+            ep = lNext(ep);
+            while(ep) {
+               if (rmin < lGetUlong(ep, RN_min)) {
+
+                  /* it also contains this one */
+                  r = ep;
+                  ep = lNext(ep);
+                  lRemoveElem(*rl, r);
+
+               } else if (rmin <= lGetUlong(ep, RN_max)) {
+
+                  /* these overlap ==> glue them */
+                  lSetUlong(rr, RN_min, lGetUlong(ep, RN_min));
+
+                  r = ep;
+                  ep = lNext(ep);
+                  lRemoveElem(*rl, r);
+                  break;
+
+               } else
+                  /* they are non overlapping */
+                  break;
+
+               ep = lNext(ep);
+            }
+
+            /* we're now sure we inserted it */
+            break;
+         } else if (rmax > lGetUlong(ep, RN_max)) {
+            /*
+            ** r and ep overlap and r starts above ep
+            ** ==> glue them
+            */
+            lSetUlong(ep, RN_max, rmax);
+            lFreeElem(r);
+            break;
+         }
+      }
+   }
+   else {
+      lAppendElem(*rl, r);
+   }
+
+   DEXIT;
+   return;
+}
 
 /****** gdi/range/range_correct_end() *****************************************
 *  NAME
@@ -80,9 +201,9 @@ static int range_is_overlapping(const lListElem *range1,
 *     static void range_correct_end(lListElem *range) 
 *
 *  FUNCTION
-*     This function modifies the the 'end' id of the 'range' element if it is
-*     not correct. After the modification the 'end' id is the last valid
-*     id which is part of the range. 
+*     This function modifies the the 'end' id of the 'range' element 
+*     if it is not correct. After the modification the 'end' id is 
+*     the last valid id which is part of the range. 
 *
 *  INPUTS
 *     lListElem *range - RN_Type 
@@ -93,6 +214,8 @@ static int range_is_overlapping(const lListElem *range1,
 *  EXAMPLE
 *     1-6:2 (1,3,5) will be modified to 1-5:2 
 *
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_correct_end(lListElem *range) 
 {
@@ -100,13 +223,18 @@ void range_correct_end(lListElem *range)
       u_long32 start, end, step;
 
       range_get_all_ids(range, &start, &end, &step);  
-      if ((end - start) % step) {
-         u_long32 factor;
+      if (step > 0) {
+         if ((end - start) % step) {
+            u_long32 factor;
 
-         factor = (end - start) / step;
-         end = start + factor * step;
+            factor = (end - start) / step;
+            end = start + factor * step;
+            range_set_all_ids(range, start, end, step);
+         } 
+      } else {
+         step = end - start;
          range_set_all_ids(range, start, end, step);
-      } 
+      }
    }
 }
 
@@ -134,6 +262,8 @@ void range_correct_end(lListElem *range)
 *     1-5:3    5-10:6      => 1
 *     1-5:3    6-10:4      => 0
 *
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2)
@@ -158,7 +288,8 @@ static int range_is_overlapping(const lListElem *range1,
 *     range_list_initialize() -- (Re)initialize a range list 
 *
 *  SYNOPSIS
-*     void range_list_initialize(lList **range_list, lList **answer_list) 
+*     void range_list_initialize(lList **range_list, 
+*                                lList **answer_list) 
 *
 *  FUNCTION
 *     'range_list' will be created if it does not exist. If it already
@@ -171,6 +302,9 @@ static int range_is_overlapping(const lListElem *range1,
 *  RESULT
 *     *range_list will be an empty RN_Type list
 *     *answer_list may contain error messages 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_list_initialize(lList **range_list, lList **answer_list) 
 {
@@ -186,10 +320,10 @@ void range_list_initialize(lList **range_list, lList **answer_list)
             lRemoveElem(*range_list, range);
          } 
       } else {
-         *range_list = lCreateList("range list", RN_Type);
+         *range_list = lCreateList("", RN_Type);
          if (*range_list == NULL) {
-            sge_add_answer(answer_list, "unable to create range list",
-                           STATUS_ERROR1, NUM_AN_ERROR);
+            answer_list_add(answer_list, "unable to create range list",
+                           STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          }
       }
    }
@@ -203,7 +337,8 @@ void range_list_initialize(lList **range_list, lList **answer_list)
 *     u_long32 range_list_get_number_of_ids(const lList *range_list) 
 *
 *  FUNCTION
-*     This function determines the number of ids contained in 'range_list' 
+*     This function determines the number of ids contained 
+*     in 'range_list' 
 *
 *  INPUTS
 *     const lList *range_list - RN_Type list 
@@ -212,7 +347,10 @@ void range_list_initialize(lList **range_list, lList **answer_list)
 *     u_long32 - number of ids
 *
 *  EXAMPLE
-*     1-5:2, 7-10:3, 20-23:1 (1, 3, 5, 7, 10, 20, 21, 22, 23)   => 9
+*     1-5:2, 7-10:3, 20-23:1 (1, 3, 5, 7, 10, 20, 21, 22, 23) => 9
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 u_long32 range_list_get_number_of_ids(const lList *range_list)
 {
@@ -227,7 +365,7 @@ u_long32 range_list_get_number_of_ids(const lList *range_list)
 
 /****** gdi/range/range_get_number_of_ids() ************************************
 *  NAME
-*     range_get_number_of_ids() -- Determines the number of ids within a range
+*     range_get_number_of_ids() -- Number of ids within a range
 *
 *  SYNOPSIS
 *     u_long32 range_list_get_number_of_ids(const lList *range_list) 
@@ -243,6 +381,9 @@ u_long32 range_list_get_number_of_ids(const lList *range_list)
 *
 *  EXAMPLE
 *     1-5:2 (1, 3, 5)   => 3
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 u_long32 range_get_number_of_ids(const lListElem *range) 
 {
@@ -258,62 +399,80 @@ u_long32 range_get_number_of_ids(const lListElem *range)
 *
 *  SYNOPSIS
 *     void range_list_print_to_string(const lList *range_list, 
-*                                     StringBufferT *string) 
+*                                     dstring *string) 
 *
 *  FUNCTION
 *     Print all ranges given in 'range_list' into the dynamic string 
 *
 *  INPUTS
 *     const lList *range_list - RN_Type 
-*     StringBufferT *string   - dynamic string 
+*     dstring *string         - dynamic string 
+*     int ignore_step         - ignore step for printing
 *
 *  RESULT
 *     string will be modified
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
-void range_list_print_to_string(const lList *range_list, StringBufferT *string) 
+void range_list_print_to_string(const lList *range_list, 
+                                dstring *string,
+                                int ignore_step) 
 {
-   if (range_list != NULL && string != NULL) {
-      lListElem *range;
-      u_long32 start, end, step;
+   if (string != NULL) {
+      if (range_list != NULL) {
+         lListElem *range;
+         u_long32 start, end, step;
 
-      for_each(range, range_list) {
-         range_get_all_ids(range, &start, &end, &step);
-         add_taskrange_str(start, end, step, string);
+         for_each(range, range_list) {
+            range_get_all_ids(range, &start, &end, &step);
+            add_taskrange_str(start, end, step, string, ignore_step);
+         }
+      } else {
+         sge_dstring_append(string, "UNDEFINED"); 
       }
-   }
+   } 
 }
 
 /****** gdi/range/range_list_get_first_id() ***********************************
 *  NAME
-*     range_list_get_first_id() -- Returns first id contained in the list
+*     range_list_get_first_id() -- First id contained in the list
 *
 *  SYNOPSIS
 *     u_long32 range_list_get_first_id(const lList *range_list, 
 *                                      lList **answer_list) 
 *
 *  FUNCTION
-*     The first id of the first range element of the list will be returned. 
+*     The first id of the first range element of the list will 
+*     be returned. If 'range_list' is NULL or empty 0 will be
+*     returned and 'answer_list' will be filled with an error 
+*     message.
 *
 *  INPUTS
 *     const lList *range_list - RN_Type list  
-*     lList **answer_list     - pointer to an AN_Type list 
+*     lList **answer_list     - Pointer to an AN_Type list 
 *
 *  RESULT
-*     u_long32 - first id
+*     u_long32 - First id or 0
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
+*     gdi/range/range_list_get_last_id()
 ******************************************************************************/
 u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list) 
 {
    u_long32 start = 0;
-   lListElem *range = lFirst(range_list);
+   lListElem *range = NULL;
 
    DENTER(BASIS_LAYER, "range_list_get_first_id");
+   range = lFirst(range_list);
    if (range) {
       u_long32 end, step;
 
       range_get_all_ids(range, &start, &end, &step);
    } else {
-      sge_add_answer(answer_list, "range_list containes no elements",
-                     STATUS_ERROR1, NUM_AN_ERROR);
+      answer_list_add(answer_list, "range_list containes no elements",
+                     STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
    DEXIT;
    return start;
@@ -328,28 +487,38 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
 *                                    lList **answer_list) 
 *
 *  FUNCTION
-*     The last id of the last range element of the list will be returned. 
+*     The last id of the last range element of the list will be 
+*     returned. If 'range_list' is NULL or empty 0 will be
+*     returned and 'answer_list' will be filled with an error
+*     message. 
 *
 *  INPUTS
 *     const lList *range_list - RN_Type list  
-*     lList **answer_list     - pointer to an AN_Type list 
+*     lList **answer_list     - Pointer to an AN_Type list 
 *
 *  RESULT
-*     u_long32 - last id
+*     u_long32 - Last id or 0
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
+*     gdi/range/range_list_get_first_id()
 ******************************************************************************/
 u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list) 
 {
    u_long32 end = 0;
-   lListElem *range = lLast(range_list);
-
+   lListElem *range = NULL;
+   
+   DENTER(BASIS_LAYER, "range_list_get_last_id");
+   range = lLast(range_list);
    if (range) {
       u_long32 start, step;
 
       range_get_all_ids(range, &start, &end, &step);
    } else {
-      sge_add_answer(answer_list, "range_list containes no elements",
-                     STATUS_ERROR1, NUM_AN_ERROR);
+      answer_list_add(answer_list, "range_list containes no elements",
+                     STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
+   DEXIT;
    return end;
 }
 
@@ -358,11 +527,12 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 *     range_sort_uniq_compress() -- makes range lists fit as a fiddle 
 *
 *  SYNOPSIS
-*     void range_sort_uniq_compress(lList *range_list, lList **answer_list) 
+*     void range_sort_uniq_compress(lList *range_list, 
+*                                   lList **answer_list) 
 *
 *  FUNCTION
-*     After a call to this function 'range_list' fulfills following
-*     conditions:
+*     After a call to this function 'range_list' fulfills 
+*     following conditions:
 *        (1) all ids are in ascending order
 *        (2) each id is contained in the list only once
 *        (3) ids are grouped so that a minimum of range elements exist 
@@ -376,23 +546,26 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 *
 *  EXAMPLE
 *     12-12:7,1-7:1,3-5:2,14-16:2   => 1-7:1,12-16:2
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 ******************************************************************************/
 void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 {
+   DENTER(TOP_LAYER, "range_sort_uniq_compress");
    if (range_list) {
       lListElem *range1, *next_range1;
       lListElem *range2, *next_range2;
       lList *tmp_list;
-
       /*
        * Sort the incomming stuff
        */
-      lSortList2(range_list, "%I+", RN_min);
+      lPSortList(range_list, "%I+", RN_min);
 
       /* 
        * Remove overlapping ranges
        */ 
-      tmp_list = lCreateList("tmp list", RN_Type); 
+      tmp_list = lCreateList("", RN_Type); 
       if (tmp_list) {
          next_range1 = lFirst(range_list);
          while ((range1 = next_range1)) {
@@ -430,13 +603,14 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
           */
          range_list_compress(range_list);
       } else {
-         sge_add_answer(answer_list, "unable to create range list",
-                        STATUS_ERROR1, NUM_AN_ERROR);            
+         answer_list_add(answer_list, "unable to create range list",
+                        STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
       }
    }
+   DEXIT;
 }
 
-/****** gdi/range/range_list_compress() ****************************************
+/****** gdi/range/range_list_compress() ***************************************
 *  NAME
 *     range_list_compress() -- Joins sequenced ranges within a list 
 *
@@ -444,9 +618,9 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 *     void range_list_compress(lList *range_list) 
 *
 *  FUNCTION
-*     Consecutive ranges within the list will be joined by this function. 
-*     Following pre-conditions have to be fulfilled, so that this function
-*     works correctly:
+*     Consecutive ranges within the list will be joined by this 
+*     function. Following pre-conditions have to be fulfilled, so 
+*     that this function works correctly:
 *        (1) ids have to be in ascending order
 *        (2) Only the first/last id of a range may be contained
 *            in the predecessor/successor range
@@ -459,9 +633,13 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 *
 *  EXAMPLE
 *     1-3:1,4-5:1,6-8:2,8-10:2   => 1-5:1,6-10:2 
-*******************************************************************************/
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
+******************************************************************************/
 void range_list_compress(lList *range_list) 
 {
+   DENTER(TOP_LAYER, "range_list_compress");
    if (range_list != NULL) {
       lListElem *range1 = NULL;
       lListElem *range2 = NULL;
@@ -509,6 +687,7 @@ void range_list_compress(lList *range_list)
          next_range2 = lNext(next_range1);
       }             
    }
+   DEXIT;
 }
 
 /****** gdi/range/range_list_is_id_within() ***********************************
@@ -528,6 +707,9 @@ void range_list_compress(lList *range_list)
 *
 *  RESULT
 *     int - 0 or 1 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 int range_list_is_id_within(const lList *range_list, u_long32 id) 
 {
@@ -540,6 +722,94 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
          break;
       }
    } 
+   return ret;
+}
+
+/****** gdi/range/range_list_containes_id_less_than() *************************
+*  NAME
+*     range_list_containes_id_less_than() -- is one id less than the given id
+*
+*  SYNOPSIS
+*     int range_list_containes_id_less_than(const lList *range_list, 
+*                                           u_long32 id) 
+*
+*  FUNCTION
+*     Is at least one id in the "range_list" less than "id" 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list 
+*     u_long32 id             - number 
+*
+*  RESULT
+*     int - 0 or 1
+*******************************************************************************/
+int range_list_containes_id_less_than(const lList *range_list, u_long32 id)
+{
+   lListElem *range = NULL;
+   int ret = 0;
+
+   for_each(range, range_list) {
+      if (range_containes_id_less_than(range, id)) {
+         ret = 1;
+         break;
+      }
+   }
+   return ret;
+}
+
+/****** gdi/range/range_list_is_empty() ***************************************
+*  NAME
+*     range_list_is_empty() -- check if id lists containes ids 
+*
+*  SYNOPSIS
+*     int range_list_is_empty(const lList *range_list) 
+*
+*  FUNCTION
+*     Returns true (1) if "range_list" containes no ids. 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list 
+*
+*  RESULT
+*     int - 0 or 1 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type
+*******************************************************************************/
+int range_list_is_empty(const lList *range_list)
+{
+   return (range_list_get_number_of_ids(range_list) == 0);
+}
+
+/****** gdi/range/range_containes_id_less_than() ******************************
+*  NAME
+*     range_containes_id_less_than() -- at least one id less than given id 
+*
+*  SYNOPSIS
+*     int range_containes_id_less_than(const lListElem *range, u_long32 id) 
+*
+*  FUNCTION
+*     This function tests if at least one id in "range" is less than "id" 
+*
+*  INPUTS
+*     const lListElem *range - RN_Type element 
+*     u_long32 id            - number 
+*
+*  RESULT
+*     int - 0 or 1 
+*******************************************************************************/
+int range_containes_id_less_than(const lListElem *range, u_long32 id)
+{
+   int ret = 0;
+
+   if (range) {
+      u_long32 start, end, step;
+
+      range_get_all_ids(range, &start, &end, &step);
+      if (start < id) {
+         ret = 1;
+      }
+   }
    return ret;
 }
 
@@ -559,6 +829,9 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
 *
 *  RESULT
 *     int - 0 or 1 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 int range_is_id_within(const lListElem *range, u_long32 id) 
 {
@@ -575,7 +848,7 @@ int range_is_id_within(const lListElem *range, u_long32 id)
    return ret;
 }
 
-/****** sge_range/range_list_remove_id() **************************************
+/****** gdi/range/range_list_remove_id() **************************************
 *  NAME
 *     range_list_remove_id() -- remove an id from a range list 
 *
@@ -593,6 +866,9 @@ int range_is_id_within(const lListElem *range, u_long32 id)
 *
 *  RESULT
 *     range_list and answer_list may be modified 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id) 
 {
@@ -625,8 +901,8 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
                   range_set_all_ids(new_range, id + step, end, step);
                   lInsertElem(*range_list, range, new_range);
                } else {
-                  sge_add_answer(answer_list, "unable to split range element",
-                                 STATUS_ERROR1, NUM_AN_ERROR);     
+                  answer_list_add(answer_list, "unable to split range element",
+                                 STATUS_ERROR1, ANSWER_QUALITY_ERROR);     
                }
                break;
             }
@@ -643,12 +919,14 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
 *     range_list_move_first_n_ids() -- split a range list 
 *
 *  SYNOPSIS
-*     void range_list_move_first_n_ids(lList **range_list, lList **answer_list, 
-*                                      lList **range_list2, u_long32 n) 
+*     void range_list_move_first_n_ids(lList **range_list, 
+*                                      lList **answer_list, 
+*                                      lList **range_list2, 
+*                                      u_long32 n) 
 *
 *  FUNCTION
-*     The first 'n' ids within 'range_list' will be moved into 'range_list2'.
-*     Error messages may be found in 'answer_list' 
+*     The first 'n' ids within 'range_list' will be moved into 
+*     'range_list2'. Error messages may be found in 'answer_list' 
 *
 *  INPUTS
 *     lList **range_list  - pointer to a RN_Type list (source) 
@@ -658,6 +936,9 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
 *
 *  RESULT
 *     range_list, range_list2, answer_list may be modified 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
                                  lList **range_list2, u_long32 n) 
@@ -672,12 +953,7 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
              id <= lGetUlong(range, RN_max);
              id += lGetUlong(range, RN_step)) {  
             range_list_insert_id(range_list2, answer_list, id);
-#if 1 /* 
-       * EB: should fix the performance problem within the scheduler 
-       *     reported by JG 
-       */
             range_list_compress(*range_list2);
-#endif
             if (--n == 0) {
                break;
             }
@@ -712,38 +988,31 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *
 *  NOTES
 *     It may be possible that 'id' is multiply contained in 'range_list' 
-*     after using this function. Use range_list_compress() to eliminate
-*     them.
+*     after using this function. Use range_list_compress() or 
+*     range_sort_uniq_compress() to eliminate them.
 *
 *  RESULT
 *     range_list and answer_list may be modified 
 *
 *  SEE ALSO
+*     gdi/range/RN_Type 
 *     gdi/range/range_list_compress()
+*     gdi/range/range_sort_uniq_compress()
 *******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
    lListElem *range, *prev_range, *next_range;
    int inserted = 0;
-   DENTER(TOP_LAYER, "range_insert_id");
+   DENTER(CULL_LAYER, "range_insert_id");
 
-#if 0 /* EB: debug */
-{
-   StringBufferT dstring = {NULL, 0};
-
-   range_list_print_to_string(*range_list, &dstring);
-   fprintf(stderr, "%s\n", dstring.s);
-   sge_string_free(&dstring);
-}
-#endif
-   lSortList2(*range_list, "%I+", RN_min);
+   lPSortList(*range_list, "%I+", RN_min);
 
    range = NULL;
    if (*range_list == NULL) {
-      *range_list = lCreateList("range list", RN_Type);
+      *range_list = lCreateList("", RN_Type);
       if (*range_list == NULL) {
-         sge_add_answer(answer_list, "unable to insert id into range",
-                        STATUS_ERROR1, NUM_AN_ERROR);  
+         answer_list_add(answer_list, "unable to insert id into range",
+                        STATUS_ERROR1, ANSWER_QUALITY_ERROR);  
       }
    }
    prev_range = lLast(*range_list);
@@ -861,6 +1130,9 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 *     u_long32 *min          - start value 
 *     u_long32 *max          - end value 
 *     u_long32 *step         - step size 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
                        u_long32 *step)
@@ -872,13 +1144,13 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
    }
 }
 
-/****** sge_range/range_set_all_ids() *****************************************
+/****** gdi/range/range_set_all_ids() *****************************************
 *  NAME
 *     range_set_all_ids() -- writes 'start', 'end' and 'step' 
 *
 *  SYNOPSIS
-*     void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max, 
-*                            u_long32 step) 
+*     void range_set_all_ids(lListElem *range, u_long32 min, 
+*                            u_long32 max, u_long32 step) 
 *
 *  FUNCTION
 *     Writes 'min' (start), 'max' (end) and 'step' into a range element 
@@ -891,6 +1163,9 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
 *
 *  NOTES
 *     Step values will be nomalized. (e.g. 1-1:3 => 1-1:1)
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
                        u_long32 step)
@@ -904,7 +1179,7 @@ void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
 
 /****** gdi/range/range_list_calculate_union_set() *****************************
 *  NAME
-*     range_list_calculate_union_set() -- Compute union set of two range lists 
+*     range_list_calculate_union_set() -- Union set of two range lists 
 *
 *  SYNOPSIS
 *     void range_list_calculate_union_set(lList **range_list, 
@@ -925,6 +1200,9 @@ void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
 *
 *  RESULT
 *     range_list and answer_list may be modified 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
 void range_list_calculate_union_set(lList **range_list, 
                                     lList **answer_list,
@@ -933,14 +1211,13 @@ void range_list_calculate_union_set(lList **range_list,
 {
    if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
       *range_list = lFreeList(*range_list);
-      *range_list = lCopyList("union_set range list",
-                              range_list1 ? range_list1 : range_list2);
+      *range_list = lCopyList("", range_list1 ? range_list1 : range_list2);
       if (*range_list) {
          goto error;
       }
 
       range_sort_uniq_compress(*range_list, answer_list);
-      if (answer_list_is_error_in_list(answer_list)) {
+      if (answer_list_has_error(answer_list)) {
          goto error;
       }
 
@@ -962,19 +1239,19 @@ void range_list_calculate_union_set(lList **range_list,
 
 error:
    *range_list = lFreeList(*range_list);
-   sge_add_answer(answer_list, "unable to calculate union set", 
-                  STATUS_ERROR1, NUM_AN_ERROR);
+   answer_list_add(answer_list, "unable to calculate union set", 
+                  STATUS_ERROR1, ANSWER_QUALITY_ERROR);
 }
 
-/****** gdi/range/range_calculate_difference_set() *****************************
+/****** gdi/range/range_list_calculate_difference_set() ***********************
 *  NAME
-*     range_calculate_difference_set() -- calculate difference set list 
+*     range_list_calculate_difference_set() -- Difference set list 
 *
 *  SYNOPSIS
-*     void range_calculate_difference_set(lList **range_list, 
-*                                         lList **answer_list, 
-*                                         const lList *range_list1, 
-*                                         const lList *range_list2) 
+*     void range_list_calculate_difference_set(lList **range_list, 
+*                                              lList **answer_list, 
+*                                              const lList *range_list1, 
+*                                              const lList *range_list2) 
 *
 *  FUNCTION
 *     'range_list' will contain all ids part of 'range_list1' but not
@@ -985,12 +1262,16 @@ error:
 *     lList **answer_list      - pointer to AN_Type list 
 *     const lList *range_list1 - first source RN_Type list 
 *     const lList *range_list2 - second source RN_Type list 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
-void range_calculate_difference_set(lList **range_list, lList **answer_list,
-                                    const lList *range_list1, 
-                                    const lList *range_list2)
+void range_list_calculate_difference_set(lList **range_list, 
+                                         lList **answer_list,
+                                         const lList *range_list1, 
+                                         const lList *range_list2)
 {
-   DENTER(TOP_LAYER, "range_calculate_difference_set");
+   DENTER(TOP_LAYER, "range_list_calculate_difference_set");
    if (range_list != NULL && range_list1 != NULL) {
       *range_list = lFreeList(*range_list);
       *range_list = lCopyList("difference_set range list", range_list1);
@@ -999,7 +1280,7 @@ void range_calculate_difference_set(lList **range_list, lList **answer_list,
       }
 
       range_sort_uniq_compress(*range_list, answer_list);
-      if (answer_list_is_error_in_list(answer_list)) {
+      if (answer_list_has_error(answer_list)) {
          goto error;
       }            
 
@@ -1012,7 +1293,7 @@ void range_calculate_difference_set(lList **range_list, lList **answer_list,
             range_get_all_ids(range2, &start2, &end2, &step2);
             for (; start2 <= end2; start2 += step2) {
                range_list_remove_id(range_list, answer_list, start2);
-               if (answer_list_is_error_in_list(answer_list)) {
+               if (answer_list_has_error(answer_list)) {
                   goto error;
                }
             }
@@ -1025,34 +1306,38 @@ void range_calculate_difference_set(lList **range_list, lList **answer_list,
  
 error:
    *range_list = lFreeList(*range_list);
-   sge_add_answer(answer_list, "unable to calculate union set",
-                  STATUS_ERROR1, NUM_AN_ERROR); 
+   answer_list_add(answer_list, "unable to calculate union set",
+                  STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
    DEXIT;
 }
 
-/****** gdi/range/range_calculate_intersection_set() **************************
+/****** gdi/range/range_list_calculate_intersection_set() *********************
 *  NAME
-*     range_calculate_intersection_set() -- compute intersection set 
+*     range_list_calculate_intersection_set() -- Intersection set 
 *
 *  SYNOPSIS
-*     void range_calculate_intersection_set(lList **range_list, 
-*                                           lList **answer_list, 
-*                                           const lList *range_list1, 
-*                                           const lList *range_list2) 
+*     void range_list_calculate_intersection_set(lList **range_list, 
+*                                          lList **answer_list, 
+*                                          const lList *range_list1, 
+*                                          const lList *range_list2) 
 *
 *  FUNCTION
-*     'range_list' will contain all ids which are contained in 'range_list1'
-*     and also in 'range_list2'.
+*     'range_list' will contain all ids which are contained in 
+*     'range_list1' and also in 'range_list2'.
 *
 *  INPUTS
 *     lList **range_list       - pointer to result RN_Type list 
 *     lList **answer_list      - pointer to AN_Type list 
 *     const lList *range_list1 - first source RN_Type list 
 *     const lList *range_list2 - second source RN_Type list 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 *******************************************************************************/
-void range_calculate_intersection_set(lList **range_list, lList **answer_list,
-                                      const lList *range_list1, 
-                                      const lList *range_list2)
+void range_list_calculate_intersection_set(lList **range_list, 
+                                           lList **answer_list,
+                                           const lList *range_list1, 
+                                           const lList *range_list2)
 { 
    *range_list = lFreeList(*range_list);
    if (range_list1 && range_list2) {
@@ -1067,7 +1352,7 @@ void range_calculate_intersection_set(lList **range_list, lList **answer_list,
                lListElem *new_range;
 
                if (*range_list == NULL) {
-                  *range_list = lCreateList("intersection_set", RN_Type);
+                  *range_list = lCreateList("", RN_Type);
                   if (*range_list == NULL) {
                      goto error;
                   }
@@ -1087,197 +1372,308 @@ void range_calculate_intersection_set(lList **range_list, lList **answer_list,
 
 error:
    *range_list = lFreeList(*range_list);
-   sge_add_answer(answer_list, "unable to calculate intersection set",
-                  STATUS_ERROR1, NUM_AN_ERROR);
+   answer_list_add(answer_list, "unable to calculate intersection set",
+                  STATUS_ERROR1, ANSWER_QUALITY_ERROR);
 }
 
-/****** gdi/range/get_taskrange_str() *****************************************
-*  NAME
-*     get_taskrange_str() -- print task id ranges into string 
-*
-*  SYNOPSIS
-*     void get_taskrange_str(lList* task_list, 
-*                            StringBufferT *dyn_taskrange_str) 
-*
-*  FUNCTION
-*     The ids of all tasks contained in 'task_list' will be printed
-*     into 'dyn_taskrange_str' 
-*
-*  INPUTS
-*     lList* task_list                 - JAT_Type list
-*     StringBufferT *dyn_taskrange_str - dynamic string 
-*******************************************************************************/
-void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str) 
-{
-   lListElem *jatep, *nxt_jatep;
-   u_long32 before_last_id = (u_long32)-1;
-   u_long32 last_id = (u_long32)-1;
-   u_long32 id = (u_long32)-1;
-   int diff = -1;      
-   int last_diff = -1;      
-   u_long32 end = (u_long32)-1;
-   u_long32 start = (u_long32)-1;
-   u_long32 step = (u_long32)-1;
-   int state = 1;
-   int counter = 0;
-   int new_start=0;
-
-   lPSortList(task_list, "%I+", JAT_task_number);
-
-   nxt_jatep = lFirst(task_list); 
-   while((jatep=nxt_jatep)) {
-      if (nxt_jatep)
-         nxt_jatep = lNext(nxt_jatep);
-
-      if (last_id!=-1)
-         before_last_id = last_id;
-      if (id!=-1)
-         last_id = id;
-      if (jatep)
-         id = lGetUlong(jatep, JAT_task_number);
-      if (diff)
-         last_diff = diff;
-      if ((last_id != -1) && (id != -1))
-         diff = id - last_id;
-
-      if (last_diff != diff && !new_start) {
-         if (state == 1) {
-            state = 2;
-            start = last_id;
-            counter = 0;
-         } else if (state == 2) {
-            end = last_id;
-            step = (start!=end)?last_diff:0;
-            counter = 0;
-            new_start = 1;
-            add_taskrange_str(start, end, step, dyn_taskrange_str); 
-#if 0
-            fprintf (stderr, "=>start: %ld, end: %ld, step: %ld\n", start, end, step);
-#endif
-
-            start = id;
-         }
-      } else
-         new_start = 0;
-      counter++;
-#if 0
-      fprintf(stderr, "b-id: %+ld l-id: %+ld id: %+ld ld: %+d, d: %+d st: %+d \t start: %ld end: %ld c: %d\n", 
-         before_last_id, last_id, id, last_diff, diff, state, start, end, counter);
-#endif
-   }
-
-   if (before_last_id==-1 && last_id==-1 && id!=-1) {
-      start = end = id;
-      step = 0;
-      add_taskrange_str(start, end, step, dyn_taskrange_str); 
-   } else if (before_last_id==-1 && last_id!=-1 && id!=-1) {
-      start = last_id;
-      end = id;
-      step = end-start;
-      add_taskrange_str(start, end, step, dyn_taskrange_str); 
-   } else if (before_last_id!=-1 && last_id!=-1 && id!=-1) {
-      if (last_diff != diff) {
-         if (counter == 1) {
-            end = id;
-            step = diff;
-#if 0
-            fprintf (stderr, "1 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
-#endif
-         } else {
-            end = id;
-            step = diff;
-#if 0
-            fprintf (stderr, "2 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
-#endif
-         }  
-      } else {
-         end = id;
-         step = diff;
-#if 0
-         fprintf (stderr, "3 -> start: %ld, end: %ld, step: %ld\n", (long) start, (long)end, (long)step);
-#endif
-      }
-      add_taskrange_str(start, end, step, dyn_taskrange_str); 
-   }
-#if 0
-   fprintf (stderr, "=>start: %ld, end: %ld, step: %ld\n", start, end, step);
-   fprintf(stderr, "String: %s\n", dyn_taskrange_str->s);
-#endif
-} 
-
-/****** sge_range/add_taskrange_str() *****************************************
+/****** gdi/range/add_taskrange_str() *****************************************
 *  NAME
 *     add_taskrange_str() -- Appends a range to a dynamic string 
 *
 *  SYNOPSIS
-*     static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
-*                                   StringBufferT *dyn_taskrange_str) 
+*     static void add_taskrange_str(u_long32 start, 
+*                                   u_long32 end, 
+*                                   int step, 
+*                                   dstring *dyn_taskrange_str) 
 *
 *  FUNCTION
-*     Appends a range to a dynamic string 
+*     Appends a range to a dynamic string.
 *
 *  INPUTS
-*     u_long32 start                   - min id 
-*     u_long32 end                     - max id 
-*     int step                         - step size 
-*     StringBufferT *dyn_taskrange_str - dynamic string 
+*     u_long32 start             - min id 
+*     u_long32 end               - max id 
+*     int step                   - step size 
+*     dstring *dyn_taskrange_str - dynamic string 
+*     int ignore_step            - ignore step for output
+*
+*  SEE ALSO
+*     gdi/range/RN_Type 
 ******************************************************************************/
-static void add_taskrange_str(
-u_long32 start,
-u_long32 end,
-int step,
-StringBufferT *dyn_taskrange_str 
-) {
+static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
+                              dstring *dyn_taskrange_str, int ignore_step) 
+{
    char tail[256]="";
 
    if (dyn_taskrange_str->size > 0) {
-      sge_string_append(dyn_taskrange_str, ",");
+      sge_dstring_append(dyn_taskrange_str, ",");
    }
 
-   if (start == end)
+   if (start == end) {
       sprintf(tail, u32, start);
-   else if (start+step == end)
+   } else if (start+step == end) {
       sprintf(tail, u32","u32, start, end);
-   else {
-      sprintf(tail, u32"-"u32":%d", start, end, step); 
+   } else {
+      if (ignore_step) {
+         sprintf(tail, u32"-"u32, start, end); 
+      } else {
+         sprintf(tail, u32"-"u32":%d", start, end, step); 
+      }
    }
-   sge_string_append(dyn_taskrange_str, tail);
+   sge_dstring_append(dyn_taskrange_str, tail);
 }
 
-/****** gdi/range/split_task_group() *******************************************
-*  NAME
-*     split_task_group() -- Splits a list into two parts
-*
-*  SYNOPSIS
-*     lList* split_task_group(lList **in_list) 
-*
-*  FUNCTION
-*     All tasks which have the same state (JAT_status, JAT_state) like
-*     the first element of 'in_list' will be removed from 'in_list' and 
-*     returned by this function.
-*
-*  INPUTS
-*     lList **in_list - JAT_Type list 
-*
-*  RESULT
-*     lList* - JAT_Type list (elements with equivalent state)
-*******************************************************************************/
-lList* split_task_group(lList **in_list) 
+void range_parse_from_string(lListElem **range,
+                             lList **alpp,
+                             const char *rstr,
+                             int step_allowed,
+                             int inf_allowed) {
+   const char *old_str;
+   char *dptr;
+   u_long32 rmin, rmax, ldummy, step = 1;
+   lListElem *r;
+   char msg[BUFSIZ];
+
+   DENTER(TOP_LAYER, "range_parse_from_string");
+
+   old_str = rstr;
+
+   if (!strcasecmp(rstr, "UNDEFINED")) {
+      DEXIT;
+      *range = NULL;
+      return;
+   }
+   r = lCreateElem(RN_Type);
+
+   rmin = rmax = 0;
+   if (rstr[0] == '-') {
+      /* rstr e.g. is "-<n>" ==> min=1 */
+      rmin = 1;
+      rstr++;
+      if (*rstr == '\0') {
+         if (inf_allowed) {
+            /* rstr is just "-" <==> "1-inf" */
+            lSetUlong(r, RN_min, rmin);
+            lSetUlong(r, RN_max, RANGE_INFINITY);
+            DEXIT;
+            *range = r;
+            return;
+         }
+         else {
+            DEXIT;
+            *range = NULL;
+            return;
+         }
+      }
+   }
+
+   /* rstr should point to a decimal now */
+   ldummy = strtol(rstr,&dptr,10);
+   if ((ldummy == 0) && (rstr == dptr)) {
+      sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
+      answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      lFreeElem(r);
+      DEXIT;
+      *range = NULL;
+      return;
+   }
+
+   if (rmin != 0) {
+      /* rstr is "-<n>" and ldummy contains <n>
+       * dptr poits right after <n>.
+       */
+      if (*dptr != '\0' || (step_allowed && *dptr != ':')) {
+         sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                        old_str, rstr);
+         answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeElem(r);
+         DEXIT;
+         *range = NULL;
+         return;
+      }
+      /* <n> is the max-value */
+      rmax = ldummy;
+
+   } else { /* rmin==0) */
+      /*
+      ** rstr is "<n>" or "<n>-..." and ldummy contains <n>
+      ** dptr poits right after <n>.
+      */
+      if (*dptr == '\0') {
+         /* rstr is just "<n>" */
+         rmin = ldummy;
+         rmax = ldummy;
+      } else {
+         /* rstr should be "<n>-..." */
+         if (!(*dptr == '-' || isdigit((int) *(dptr+1)) || *(dptr+1) == '\0'
+               || (step_allowed && *dptr == ':'))) {
+            /* ... but isn't */
+            sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                           old_str, dptr);
+            answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            lFreeElem(r);
+            DEXIT;
+            *range = NULL;
+            return;
+         } else {
+            /* it is. set min to ldummy. now, what's after the - */
+            rmin = ldummy;
+            rstr  = dptr+1;
+            if (*rstr == '\0') {
+               /* the range string was "<n>-" <==> "ldummy-inf" */
+               if (inf_allowed)
+                  rmax = RANGE_INFINITY;
+               else {
+                  DEXIT;
+                  *range = NULL;
+                  return;
+               }
+            } else {
+               /* the trailer should contain a decimal - go for it */
+               ldummy = strtol(rstr,&dptr,10);
+               if ((ldummy == 0) && (rstr == dptr)) {
+                  sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S , rstr);
+                  answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lFreeElem(r);
+                  DEXIT;
+                  *range = NULL;
+                  return;
+               }
+
+               if (!(*dptr == '\0' || (step_allowed && *dptr == ':'))) {
+                  sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                           rstr, dptr);
+                  answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lFreeElem(r);
+                  DEXIT;
+                  *range = NULL;
+                  return;
+               }
+               /* finally, we got the max-value in ldummy */
+               rmax = ldummy;
+               if (step_allowed && *dptr && *dptr == ':') {
+                  rstr  = dptr+1;
+                  ldummy = strtol(rstr,&dptr,10);
+                  if ((ldummy == 0) && (rstr == dptr)) {
+                     sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S , rstr);
+                     answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     lFreeElem(r);
+                     DEXIT;
+                     *range = NULL;
+                     return;
+                  }
+                  if (*dptr != '\0') {
+                     sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS ,
+                              rstr, dptr);
+                     answer_list_add(alpp, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     lFreeElem(r);
+                     DEXIT;
+                     *range = NULL;
+                     return;
+                  }
+                  /* finally, we got the max-value in ldummy */
+                  step = ldummy;
+               }
+            } /* if (*rstr == '\0') -- else clause */
+         } /* if (*dptr != '-') -- else clause */
+      } /* if (*dptr == '\0') -- else clause */
+   } /* if (r->min != 0) -- else clause */
+
+   /* We're ready? Not quite! We still have to check whether min<=max */
+   if (rmin > rmax) {
+      ldummy = rmax;
+      rmax = rmin;
+      rmin = ldummy;
+   }
+
+   lSetUlong(r, RN_min, rmin);
+   lSetUlong(r, RN_max, rmax);
+   lSetUlong(r, RN_step, step);
+
+   /* Ughhhh! Done ... */
+
+   DEXIT;
+   *range = r;
+   return;
+}
+
+/* 
+
+   converts a range string into a range cull list
+
+   an undefined range return NULL
+
+   if alpp is delivered no exit occurs instead the function fills the 
+   answer list and returns NULL, *alpp must be NULL !
+
+*/
+
+void range_list_parse_from_string(lList **rl,
+                                  lList **alpp,
+                                  const char *str,
+                                  int just_parse,
+                                  int step_allowed,
+                                  int inf_allowed)
 {
-   lCondition *where = NULL;
-   lList *out_list = NULL;
-   u_long32 status = 0, state = 0;
+   const char *s;
+   lListElem *r = NULL;
+   lList *range_list = NULL;
+   int undefined = 0, first = 1;
 
-   if (in_list && *in_list) {
-      status = lGetUlong(lFirst(*in_list), JAT_status);
-      state = lGetUlong(lFirst(*in_list), JAT_state);
-      
-      where = lWhere("%T(%I != %u || %I != %u)", JAT_Type,
-                        JAT_status, status, JAT_state, state);
-      lSplit(in_list, &out_list, NULL, where);
+   DENTER(TOP_LAYER, "parse_ranges");
 
-      where = lFreeWhere(where);
+   if (!rl)
+      rl = &range_list;
+
+   for (s = sge_strtok(str, RANGE_SEPARATOR_CHARS);
+        s;
+        s = sge_strtok(NULL, RANGE_SEPARATOR_CHARS)) {
+      if ( !first && undefined ) {
+         /* first was undefined - no more ranges allowed */
+         ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED ));
+         if (alpp) {
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            *rl = NULL;
+            return;
+         }
+         else
+            SGE_EXIT(1);
+      }
+
+      range_parse_from_string(&r, alpp, s, step_allowed, inf_allowed);
+
+      if (!r) {
+         if (first)  {
+            undefined = 1;
+         }
+         else {
+            /* second range may not be undefined ! */
+            ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE ));
+            if (alpp) {
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               *rl = NULL;
+               return;
+            }
+            else
+               SGE_EXIT(1);
+         }
+      }
+      first = 0;
+
+      if (!just_parse) {
+         /* insert into range list; malloc new elements;
+         ** free unecessary elements
+         */
+         if (r)
+            expand_range_list(r, rl);
+      }
+      else {
+         lFreeElem(r);
+      }
    }
-
-   return out_list;
+   DEXIT;
+   return;
 }
+
+

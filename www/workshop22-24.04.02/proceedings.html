@@ -1,0 +1,1572 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta http-equiv="CONTENT-TYPE" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <meta name="CREATED" content="20020425;10113800">
+   <meta name="CHANGED" content="20020510;10125500">
+<style>
+	<!--
+		@page { margin-left: 1.05in; margin-right: 1.05in; margin-top: 0.98in; margin-bottom: 0.98in }
+		P { margin-bottom: 0.06in; text-align: justify; page-break-before: auto }
+		H1 { margin-top: 0.29in; margin-bottom: 0.28in; text-align: center }
+		H1.western { font-family: "Albany", sans-serif; font-size: 16pt }
+		H1.cjk { font-size: 16pt }
+		H1.ctl { font-size: 16pt }
+		H2 { margin-bottom: 0.08in; text-align: left; page-break-before: auto }
+		H2.western { font-family: "Albany", sans-serif; font-size: 14pt; font-style: normal }
+		H2.cjk { font-size: 14pt; font-style: italic }
+		H2.ctl { font-size: 14pt; font-style: italic }
+		H3 { margin-top: 0.25in; margin-bottom: 0.2in }
+		H3.western { font-family: "Albany", sans-serif; font-size: 13pt }
+		H4 { margin-top: 0.17in; margin-bottom: 0.2in; page-break-before: auto }
+		H4.western { font-family: "Albany", sans-serif; font-size: 11pt; font-style: normal }
+		H4.cjk { font-size: 11pt; font-style: italic }
+		H4.ctl { font-size: 11pt; font-style: italic }
+		H5 { margin-top: 0.08in; margin-bottom: 0.08in }
+		H5.western { font-family: "Albany", sans-serif; font-size: 11pt; font-style: normal }
+		H5.cjk { font-size: 11pt }
+		H5.ctl { font-size: 11pt }
+		H6 { margin-bottom: 0.08in }
+		H6.western { font-family: "Albany", sans-serif; font-size: 10pt }
+		H6.cjk { font-size: 10pt }
+		H6.ctl { font-size: 10pt }
+		TD P { margin-bottom: 0.06in; text-align: justify; page-break-before: auto }
+	-->
+	</style>
+</head>
+<body LANG="en-US">
+&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<blockquote>
+<h1 CLASS="western">
+GRID ENGINE WORKSHOP</h1>
+</blockquote>
+
+<blockquote>
+<center><font face="Helvetica, sans-serif"><font size=-1>April 22 - 24,
+2002</font></font></center>
+</blockquote>
+
+<blockquote>
+<center><font face="Helvetica, sans-serif"><font size=-1>Sun Microsystems
+Gridware GmbH</font></font></center>
+</blockquote>
+
+<blockquote>
+<center><font face="Helvetica, sans-serif"><font size=-1>Dr.-Leo-Ritter-Stra&szlig;e
+7 D-93049 Regensburg, Germany</font></font></center>
+</blockquote>
+The first SGE Development Workshop brought together Grid Engine users,
+developers and development partners from sixteen organizations, out of
+research and industry, in six different countries. The attendees participated
+in introductory sessions to the Grid Engine project and a code walk through,
+had the opportunity to give an overview on their own Grid Engine projects,
+and to learn about others' Grid interests, foci and results. Breakout sessions
+on several topics further stimulated discussion of common interests. Additional
+Grid Engine Development Workshops will be proposed on the project mail
+lists.
+<p>
+<hr WIDTH="100%">
+<p><b><font face="Arial,Helvetica"><font size=+1>CONTENTS</font></font></b>
+<br>&nbsp;
+<div ID="Table of Contents1">
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><b><font face="Arial,Helvetica"><font size=+1><a href="#Participants">Participants</a></font></font></b></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">&nbsp;
+<br><b><font face="Arial,Helvetica"><font size=+1><a href="#Agenda">Agenda</a></font></font></b></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">&nbsp;
+<br><b><font face="Arial,Helvetica"><font size=+1><a href="#Presentations">Presentations</a></font></font></b>
+<blockquote><b><font face="Arial,Helvetica"><font size=+1>Sun Grid Computing
+Strategy and Projects</font></font></b>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Gentzsch">Sun
+Grid Computing Strategy</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Ferstl">The Grid
+Engine Project</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Alefeld">Working
+in the Grid Engine Project Part I</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Haas">Working
+in the Grid Engine Project Part II</a></font></font></blockquote>
+
+<blockquote><b><font face="Arial,Helvetica"><font size=+1>Partner Grid
+Engine Projects</font></font></b>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Kloock">Workstation-Cluster
+at Ford of Europe</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Stair">Integration,
+Support and Development Projects Related to Grid Engine</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Cawood">Using
+Sun Grid Engine and Globus to Schedule Across a Combination of Local and
+Remote Machines</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Kurowski">GridLab
+and Progress as the Examples of Cooperation between SGE and Grid Research
+at PSNC</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Edgecombe">Secure
+Grid and Portal Computing</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Stahlberg">Sun
+TCP Bioinformatics Application Integration on Heterogenous Server Platforms</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Newhouse">Portals
+and Resource Scheduling at Imperial College</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Dew">The White
+Rose Computational Grid</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Lorenz">Scheduling
+in an HPC environment</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Sorensen">Covering
+the Spectrum Grid Activities@UCL</a></font></font>
+<br><font face="Arial,Helvetica"><font size=+1><a href="#Sunderam">Overview
+of Sun Center of Excellence in Geosciences at the University of Houston</a></font></font></blockquote>
+<b><font face="Arial,Helvetica"><font size=+1><a href="#Special Interest Group Meetings">Special
+Interest Group Meetings</a></font></font></b></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">&nbsp;
+<br><b><font face="Arial,Helvetica"><font size=+1><a href="#Closing Discussion">Closing
+Discussion</a></font></font></b></div>
+</div>
+
+<p><br>
+<hr WIDTH="100%">
+<h2 CLASS="western">
+<a NAME="Participants"></a>Participants</h2>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=4 WIDTH="590" >
+<caption><COL WIDTH=582></caption>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Anjomshoaa, Ali</b>
+
+<p STYLE="page-break-before: auto">University of Edinburgh
+<br>EPCC
+<br>James Clerk Maxwell Building
+<br>Mayfield Road
+<br>Edinburgh EH9 3JZ, UK&nbsp;
+
+<p STYLE="page-break-before: auto">Tel: +44 (0)131 650 6717
+<br>Fax: +44 (0)131 650 6555
+<br><a href="mailto:a.anjomshoaa@epcc.ed.ac.uk">a.anjomshoaa@epcc.ed.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Alefeld, Andr&eacute;</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany
+<p>Tel: +49 (0)941 3075 255
+<br>Fax: +49 (0)941 3075 222
+<br><a href="mailto:andre.alefeld@sun.com">andre.alefeld@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Barr, John</b>
+<p>Sun Microsystems LTD.
+<br>Java House, Guillemont Park
+<br>Minley Road, Blackwater
+<br>Camberley
+<br>Surrey GU17 9QG UK&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +44 (0)1252 421157&nbsp;
+
+<p STYLE="margin-bottom: 0in">Fax: +44 (0)1252 420105
+<br><a href="mailto:john.barr@sun.com">john.barr@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Bablick, Ernst</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany
+<p>Tel: +49 (0)941 3075 135
+<br>Fax: +49 (0)941 3075 222
+<br><a href="mailto:ernst.bablick@sun.com">ernst.bablick@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Cafaro, Prof. Massimo</b>
+<p>Universit&agrave; degli Studi di Lecce
+<br>Dipartimento di Ingegneria dell'Innovazione
+<br>Via Monteroni
+<br>I-73100 Lecce, Italy
+<p>Tel: +39 0832 320 284
+<br>Fax: +39 0832 320 279
+<br><a href="mailto:Massimo.cafaro@unile.it">Massimo.cafaro@unile.it</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Cawood, Geoff</b>
+<p>University of Edinburgh
+<br>EPCC
+<br>James Clerk Maxwell Building
+<br>Mayfield Road
+<br>Edinburgh EH9 3JZ, UK&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +44 (0)131 650 5818
+<br>Fax: +44 (0)131 650 6555
+<br><a href="mailto:g.cawood@epcc.ed.ac.uk">g.cawood@epcc.ed.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Dew, Prof. Peter M.</b>
+<p>University of Leeds
+<br>Information Systems Services
+<br>Leeds LS2 9JT, UK
+<p>Tel: +44 (0)113 233&nbsp;
+<br><a href="mailto:dew@comp.leeds.ac.uk">dew@comp.leeds.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Edgecombe, Dr. Kenneth</b>
+
+<p STYLE="margin-bottom: 0in">Queen's University
+<br>High Performance Computing Virtual Laboratory
+<br>HPCVL
+<br>Queen's University&nbsp;
+
+<p STYLE="margin-bottom: 0in">141 Collingwood Street&nbsp;
+
+<p STYLE="margin-bottom: 0in">Kingston, ON
+<p>K7L 3X6 Canada&nbsp;
+
+<p STYLE="margin-bottom: 0in"><a href="mailto:edgecomk@post.queensu.ca">edgecomk@post.queensu.ca</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Ferstl, Fritz</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +49 (0)941 3075 110
+<br>Fax: +49 (0)941 3075 222
+<p><a href="mailto:fritz.ferstl@sun.com">fritz.ferstl@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Furmento, Dr. Nathalie</b>
+<p>London E-Science Centre
+<br>Imperial College
+<br>Department of Computing
+<br>180 Queen's Gate
+<br>London SW7 2BZ, UK&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +44 (0)207-594-8310
+<br>Fax:+44 (0)207-581-8024&nbsp;
+
+<p STYLE="margin-bottom: 0in"><a href="mailto:n.furmento@doc.ic.ac.uk">n.furmento@doc.ic.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Gabler, Joachim</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany
+<p>Tel: +49 (0)941 3075 233
+<br>Fax: +49 (0)941 3075 222&nbsp;
+
+<p STYLE="margin-bottom: 0in"><a href="mailto:joachim.gabler@sun.com">joachim.gabler@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Gentzsch, Dr. Wolfgang</b>
+<p>Sun Microsystems Inc.
+<br>901 San Antonio Road
+<br>MPK29-301
+<br>Palo Alto, CA 94303-4900, USA
+<p>Tel: +1 650 786 2032
+<br><a href="mailto:wolfgang.gentzsch@sun.com">wolfgang.gentzsch@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Haas, Andreas</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany
+<p>Tel: +49 (0)941 3075 131
+<br>Fax: +49 (0)941 3075 222
+<br><a href="mailto:andreas.haas@sun.com">andreas.haas@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Ismail, Dr. Mathew</b>
+<p>University of Warwick
+<br>Centre for Scientific Computing
+<br>Coventry, CV4 7AL, UK
+<p>Tel: +44 (0)2476 574100
+<br><a href="mailto:Matthew.Ismail@warwick.ac.uk">Matthew.Ismail@warwick.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Kirstein, Prof. Dr. Peter</b>
+<p>University College London
+<br>Department of Computer Science
+<br>Gower Street
+<br>London WC1E 6BT, UK
+<p>Tel: +44 (0)171 380 7285
+<br>Fax: +44 (0)171 387 1397
+<br><a href="mailto:P.Kirstein@cs.ucl.ac.uk">P.Kirstein@cs.ucl.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Kloock, Martin</b>
+<p>cards Engineering GmbH&amp;Co. KG
+<br>Robert-Perthel-Stra&szlig;e 19
+<br>D-50739 K&ouml;ln, Germany
+<p>Tel: +49 (0)221 179520
+<br>Fax: +49 (0)221 179529
+<br><a href="mailto:martin.kloock@cardse.com">martin.kloock@cardse.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Kupczyk, Miroslaw, M.Sc.;</b>
+<p>Poznan Supercomputing and Networking Center
+<br>ul. Noskowskiego 10
+<br>Pl-61-704 Poznan, Poland
+<p>Tel: +48 61 858 20 52
+<br>Fax: +48 61 852 59 54
+<br><a href="mailto:miron@man.poznan.pl">miron@man.poznan.pl</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Kurowski, Krzysztof, M.Sc.</b>
+<p>Poznan Supercomputing and Networking Center
+<br>ul. Noskowskiego 10
+<br>Pl-61-704 Poznan, Poland
+<p>Tel: +48 61 858 20 72
+<br>Fax: +48 61 852 59 54
+<br><a href="mailto:krzysztof.kurowski@man.poznan.pl">krzysztof.kurowski@man.poznan.pl</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Lippert, Lothar</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany
+<p>Tel: +49 (0)941 3075 123
+<br>Fax: +49 (0)941 3075 222
+<br><a href="mailto:lothar.lippert@sun.com">lothar.lippert@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Lorenz, Andrea</b>
+<p>Aachen University of Technology
+<br>Center for Computing and Communication
+<br>Seffenter Weg 23
+<br>D-52074 Aachen, Germany
+<p>Tel: +49 (0)241 80-29791
+<br>Fax: +49 (0)241 80-22504
+<br><a href="mailto:lorenz@rz.rwth-aachen.de">lorenz@rz.rwth-aachen.de</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Newhouse, Dr. Steven</b>
+<p>Imperial College
+<br>Department of Computing
+<br>180 Queen's Gate
+<br>London SW7 2BZ, UK
+<p>Tel: +44 (0)20 7594 8316
+<br>Fax: +44 (0)20 7581 8024
+<br><a href="mailto:s.newhouse@doc.ic.ac.uk">s.newhouse@doc.ic.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Novotny, Jason</b>
+<p>Max-Planck-Institut f&uuml;r Gravitationsphysik
+<br>Am M&uuml;hlenberg 1
+<br>D-14476 Golm, Germany
+<p>Tel: +49 (0)331 567 7203
+<p><a href="mailto:JDNovotny@lbl.gov">JDNovotny@lbl.gov</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Piontek, Tomasz</b>
+<p>Poznan Supercomputing and Networking Center
+<br>ul. Noskowskiego 10
+<br>Pl-61-704 Poznan, Poland
+<p>Tel: +48 61 858 20 72
+<br>Fax: +48 61 852 59 54
+<br><a href="mailto:piontek@man.poznan.pl">piontek@man.poznan.pl</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Piwowarek, Pawl</b>
+<p>Poznan Supercomputing and Networking Center
+<br>ul. Noskowskiego 10
+<br>Pl-61-704 Poznan, Poland&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +48 61 858 20 72
+<br>Fax: +48 61 852 59 54
+<p><a href="mailto:pivero@man.poznan.pl">pivero@man.poznan.pl</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Reissmann, Christian</b>
+<p>Sun Microsystems Gridware
+<br>Dr. -Leo-Ritter-Stra&szlig;e 7
+<br>D-93049 Regensburg, Germany
+<p>Tel: +49 (0)941 3075 112
+<br>Fax: +49 (0)941 3075 222
+<br><a href="mailto:christian.reissmann@sun.com">christian.reissmann@sun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Saleem, Asif</b>
+<p>Imperial College
+<br>Department of Computing
+<br>180 Queen's Gate
+<br>London SW7 2BZ, UK
+<p>Tel: +44 (0)20 7594 8316
+<br>Fax: +44 (0)20 7581 8024
+<br><a href="mailto:asif@doc.ic.ac.uk">asif@doc.ic.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Schmidt, Egon</b>
+<p>cards Engineering GmbH&amp;Co. KG
+<br>Robert-Perthel-Stra&szlig;e 19
+<br>D-50739 K&ouml;ln, Germany
+<p>Tel: +49 (0)221 179520
+<br>Fax: +49 (0)221 179529
+<br><a href="mailto:egon.schmidt@cardse.de">egon.schmidt@cardse.de</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Schmidt, Dr. Joanna</b>
+<p>University of Leeds
+<br>Information Systems Services
+<br>Leeds LS2 9JT, UK
+<p>Tel: 0113 233 5375
+<br><a href="mailto:j.g.schmidt@leeds.ac.uk">j.g.schmidt@leeds.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Seed, Thomas</b>
+<p>University of Edinburgh
+<br>EPCC
+<br>James Clerk Maxwell Building
+<br>Mayfield Road
+<br>Edinburgh EH9 3JZ, UK&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +44 (0)131 650 5818
+<br>Fax: +44 (0)131 650 6555
+<p><a href="mailto:t.seed@epcc.ed.ac.uk">t.seed@epcc.ed.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Sloan, Terry</b>
+<p>University of Edinburgh
+<br>EPCC
+<br>James Clerk Maxwell Building
+<br>Mayfield Road
+<br>Edinburgh EH9 3JZ, UK&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +44 (0)131 650 5818
+<br>Fax: +44 (0)131 650 6555
+<p><a href="mailto:t.sloan@epcc.edu.ac.uk">t.sloan@epcc.edu.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>S&oslash;rensen, Dr. S&oslash;ren-Aksel</b>
+<p>University College of London
+<br>Department of Computer Science
+<br>Gower Street
+<br>London WC1E 6BT, UK
+<p>Tel: +44 (0)171 380 7285
+<br>Fax: +44 (0)171 387 1397
+<br><a href="mailto:S.Soerensen@cs.ucl.ac.uk">S.Soerensen@cs.ucl.ac.uk</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Spormann, Annett</b>
+<p>cards Engineering GmbH&amp;Co. KG
+<br>Robert-Perthel-Stra&szlig;e 19
+<br>D-50739 K&ouml;ln, Germany
+<p>Tel: +49 (0)221 179520
+<br>Fax: +49 (0)221 179529
+<br><a href="mailto:annett.spormann@cardse.de">annett.spormann@cardse.de</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Sundaram, Babu</b>
+<p>University of Houston
+<br>Department of Computer Science
+<br>501, PGH
+<br>4800, Calhoun Rd
+<br>Houston, Texas 77204, USA
+<p><a href="mailto:babusun@Bayou.uh.edu">babusun@Bayou.uh.edu</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Stair, Craig R.</b>
+<p>Raytheon
+<br>P.O. Box 660023
+<br>Dallas, Texas, 75266-0023, USA
+<p>Tel: +1 972 205 7677
+<br>Fax: +1 972 205 4740
+<br><a href="mailto:craig.stair@raytheon.com">craig.stair@raytheon.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Stahlberg, Eric, Ph.D.</b>
+<p>Ohio Supercomputer Center
+<br>1224 Kinnear Road
+<br>Columbus, OH 43212-1163, USA
+<p>Tel: +1 614 292 2696
+<br>Fax: +1 614 292 7168
+<br><a href="mailto:eas@osc.edu">eas@osc.edu</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Tollefsrud, John</b>
+<p>Sun Microsystems Inc.
+<br>901 San Antonio Road
+<br>UMPK29-302
+<br>Palo Alto, CA 94303-4900
+<p>Tel: +1 650 786 2037
+<br>Fax: +1 650 786 8390
+<br><a href="john.tollefsrud@engsun.com">john.tollefsrud@engsun.com</a>
+<p>&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=TOP WIDTH="582"><b>Wehrens, Oliver</b>
+<p>Max-Planck-Institut f&uuml;r Gravitationsphysik
+<br>Am M&uuml;hlenberg 1
+<br>D-14476 Golm, Germany&nbsp;
+
+<p STYLE="margin-bottom: 0in">Tel: +49 (0)331 567 7203
+<p><a href="mailto:wehrens@mac.com">wehrens@mac.com</a>
+<p>
+<hr WIDTH="100%">
+<br>&nbsp;</td>
+</tr>
+</table>
+
+<h2 CLASS="western">
+<a NAME="Agenda"></a>Agenda</h2>
+
+<p><br><b><font face="Helvetica, sans-serif"><font size=-1>Day 1 - Monday,
+April 22</font></font></b>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=4 WIDTH="594" STYLE="page-break-before: auto" >
+<caption>&nbsp;</caption>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.375" SDNUM="1033;0;HH:MM">
+<div STYLE="font-weight: medium; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>09:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Welcome
+(Fritz Ferstl)</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.385416666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="font-weight: medium; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>09:15</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Sun
+Grid Computing Strategy (Wolfgang Gentzsch)</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.427083333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="font-weight: medium; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>10:15</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Grid
+Engine, Overview and Roadmap (Fritz Ferstl)</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.458333333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="font-weight: medium; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>11:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Break</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.479166666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="font-weight: medium; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>11:30</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>The
+Grid Engine Project (Fritz Ferstl)</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.5" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>12:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Lunch</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.552083333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>13:15</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Working
+in the Grid Engine Project - Part I (Andr&eacute; Alefeld)</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.614583333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>14:45</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Break</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.635416666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>15:15</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Working
+in the Grid Engine Project - Part II (Andreas Haas)</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.708333333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>17:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Adjourn</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDNUM="1033;0;HH:MM">&nbsp;</td>
+
+<td VALIGN=TOP WIDTH="537">&nbsp;</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="41" SDVAL="0.791666666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>19:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Dinner
+Invitation ("Leerer Beutel" - Bertold Stra&szlig;e - see map)</font></font></div>
+</td>
+</tr>
+</table>
+
+<p><b>Day 2 - Tuesday, April 23</b>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=4 WIDTH="595" NOSAVE STYLE="page-break-before: auto" >
+<caption>&nbsp;</caption>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.375" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>09:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Partner
+Grid Engine Projects&nbsp;</font></font></b></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDNUM="1033;0;HH:MM"><font size=-1>&nbsp;</font></td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Integration
+and Support for Grid Engine</font></font></b>
+<p><font face="Helvetica, sans-serif"><font size=-1>Martin Kloock, Cards
+Engineering&nbsp;</font></font></div>
+<font face="Helvetica, sans-serif"><font size=-1>Workstation Cluster at
+Ford of Europe</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Craig Stair, Raytheon</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Integration, Support
+and Development Projects Related to Grid Engine</font></font></td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDNUM="1033;0;HH:MM"></td>
+
+<td VALIGN=TOP WIDTH="537">
+<div STYLE="page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Grid
+Computing (Globus etc.) &amp; Grid Engine</font></font></b></div>
+</td>
+</tr>
+
+<tr ALIGN=LEFT NOSAVE>
+<td VALIGN=BOTTOM WIDTH="42" SDNUM="1033;0;HH:MM"><font size=-1>&nbsp;</font></td>
+
+<td ALIGN=LEFT VALIGN=TOP WIDTH="537" NOSAVE><font face="Helvetica, sans-serif"><font size=-1>Geoff
+Cawood, EPCC</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Using Sun Grid Engine
+and Globus to Schedule Across a Combination of Local and Remote Machines</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Krzysztof Kurowski,
+PSNC&nbsp;</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>"Gridlab" and "Progress"
+as the Examples of Cooperation Between SGE and Grid Research at PSNC</font></font></td>
+</tr>
+
+<tr ALIGN=LEFT NOSAVE>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.4375" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>10:30</font></font></div>
+</td>
+
+<td ALIGN=LEFT VALIGN=TOP WIDTH="537" NOSAVE>
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Break&nbsp;</font></font></div>
+</td>
+</tr>
+</table>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=4 WIDTH="553" NOSAVE STYLE="page-break-before: auto" >
+<caption>&nbsp;</caption>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="38" SDVAL="0.458333333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>11:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="499">
+<div STYLE="page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Partner
+Grid Engine Projects cont'd&nbsp;</font></font></b></div>
+</td>
+</tr>
+
+<tr NOSAVE>
+<td VALIGN=BOTTOM WIDTH="38" SDNUM="1033;0;HH:MM"><font size=-1>&nbsp;</font></td>
+
+<td VALIGN=TOP WIDTH="499" NOSAVE>
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Grid
+Engine and Portals</font></font></b>
+<br><font face="Helvetica, sans-serif"><font size=-1>Kenneth Edgecombe,
+HPCVL</font></font></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Secure
+Grid and Portal Computing</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Eric Stahlberg, OSC</font></font></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Sun
+TCP Bioinformatics Application Integration on Heterogeneous Server Platforms</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Steven Newhouse, Imperial
+College&nbsp;</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Portals and Resource
+Scheduling at Imperial College</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>P. M. Dew, Univ. of
+Leeds</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>The White Rose Computational
+Grid&nbsp;</font></font></div>
+</td>
+</tr>
+</table>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=4 WIDTH="597" STYLE="page-break-before: auto; page-break-inside: avoid" >
+<caption>&nbsp;</caption>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.520833333333333" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>12:30</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="539">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Lunch</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.5625" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>13:30</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="539">
+<div STYLE="page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Partner
+Grid Engine Projects cont'd</font></font></b></div>
+</td>
+</tr>
+
+<tr VALIGN=TOP>
+<td WIDTH="42" SDNUM="1033;0;HH:MM"><font size=-1>&nbsp;</font></td>
+
+<td WIDTH="539">
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Scheduler
+Enhancements for Grid Engine and other Topics</font></font></b>
+<br><font face="Helvetica, sans-serif"><font size=-1>Andrea Lorenz, RWTH
+Aachen</font></font></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Scheduling
+in an HPC Environment</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Soren-Aksel Sorensen,
+UCL-CS</font></font></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Covering
+the Spectrum - UCL-CS Grid Related Activities</font></font>
+<br><font face="Helvetica, sans-serif"><font size=-1>Babu Sundaram, University
+of Houston</font></font></div>
+
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Overview
+of set up of the Campus Grid, EZ-Grid system at UH&nbsp;</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.604166666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>14:30</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="539">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Adjourn</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.666666666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>16:00</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="539">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>Walk
+through Regensburg</font></font></div>
+</td>
+</tr>
+
+<tr>
+<td VALIGN=BOTTOM WIDTH="42" SDVAL="0.729166666666667" SDNUM="1033;0;HH:MM">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>17:30</font></font></div>
+</td>
+
+<td VALIGN=TOP WIDTH="539">
+<div STYLE="page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>At
+people's disposal</font></font></div>
+</td>
+</tr>
+</table>
+
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><b><font face="Helvetica, sans-serif"><font size=-1>Day
+3 -&nbsp; Wednesday, April 24</font></font></b>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>09:00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Project Wrap Up; Build Special Interest Groups</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>09:30&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Special Interest Group Meetings</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>11:00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Break</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>11:30&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Special Interest Group Meetings cont'd</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>12:30&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Lunch</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>14:00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Presentation of SIGs</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>15:00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Roundtable discussion</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>15:45&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Closing Remarks (Fritz Ferstl)</font></font>
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto"><font face="Helvetica, sans-serif"><font size=-1>16:00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>&nbsp;
+End</b></font></font>
+<br>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+
+<p STYLE="margin-bottom: 0in; page-break-before: auto">
+<hr WIDTH="100%">
+<h3 CLASS="western">
+<a NAME="Presentations"></a><font size=+3>Presentations</font></h3>
+
+<h3 CLASS="western">
+<b><font face="Arial,Helvetica"><font size=+3>Sun Grid Computing Strategy
+and Projects</font></font></b></h3>
+
+<blockquote>
+<h5 CLASS="western">
+<a NAME="Gentzsch"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/Gentzsch_pres.pdf">Sun
+Grid Computing Strategy</a></font></h5>
+
+<blockquote>
+<h5 CLASS="western">
+<b><font size=+1>By Wolfgang Gentzsch, Sun Microsystems Inc.</font></b></h5>
+</blockquote>
+
+<h5 CLASS="western">
+<a NAME="Ferstl"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/GE-workshop-project_ff.pdf">The
+Grid Engine Project</a></font></h5>
+
+<blockquote><b><font size=+1>By Fritz Ferstl, Sun Microsystems Gridware</font></b></blockquote>
+
+<h5 CLASS="western">
+<a NAME="Alefeld"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/sun_part1aa.pdf">Working
+in the Grid Engine Project: Part I</a></font></h5>
+
+<blockquote><b><font size=+1>By Andr&eacute; Alefeld, Sun Microsystems
+Gridware</font></b></blockquote>
+
+<h5 CLASS="western">
+<a NAME="Haas"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/sun_part2ah.pdf">Working
+in the Grid Engine Project: Part II</a></font></h5>
+
+<blockquote><b><font size=+1>By Andreas Haas, Sun Microsystems Gridware</font></b></blockquote>
+</blockquote>
+
+<h3 CLASS="western">
+<font size=+3>Partner Grid Engine Projects</font></h3>
+
+<h4 CLASS="western">
+<font size=+2>Integration and Support for Grid Engine</font></h4>
+
+<blockquote>
+<h4 CLASS="western">
+<a NAME="Kloock"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/cards_pres_new.pdf">Workstation-Cluster
+at Ford of Europe</a></font></h4>
+
+<blockquote><b><font size=+1>By Martin Kloock, Cards Engineering</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+In August 1998 cards Engineering was able to place an on-site support contract
+at Ford Motor Company in Cologne/Merkenich. I started there maintaining
+the CAE (Computer Aided Engineering) application server. About 50 CAE applications
+are installed on their server which is a SUN Ultra Enterprise 450. My activity
+covered the installation of the applications, 1st- and 2nd-level helpdesk
+and the license maintenance of all these products. Additionally I had to
+collaborate very closely with the Ford colleagues in Dunton/UK and Dearborn/USA.
+<p>During this time some Ford people thought about a better usage of their
+workstations (w/s), mainly HPs and altogether about 800 w/s. Additionally
+they thought they could decrease the costs the Cray supercomputer was producing.
+<p>About at the same time SUN acquired Gridware and we saw a good opportunity
+to help Ford with introducing a resource management system. With our close
+connections to SUN we were able to introduce SGE at Ford and to create
+a workstation cluster in two development departments at Ford. After one
+of my colleagues from the Cologne cards PIT team took over my job maintaining
+the CAE server I was able to work on the w/s cluster based on a new contract.
+<p>In these months from summer 2001 until April 2002 SGE was installed
+on about 80 w/s and adapted 8 CAE applications (i.e. Radioss, Nastran,
+Fluent) for the workstation cluster for using them in serial (1 CPU or
+w/s) and/or parallel mode. This had to be done by changing startup scripts,
+GUI configurations and creating submit scripts. Additionally I configured
+the cluster due to user's wishes.
+<p>With the help of some SUN guys we were able to convince the responsible
+persons at Ford of Europe that SGE is a good product which does exactly
+what they requested. Unfortunately we were not able to convince the Ford
+of US people completely. Over there LSF and PBS, two competitive products,
+are very strong and already used before we began with SGE. Nevertheless
+it was possible to install a productive w/s cluster in Cologne and Dunton/UK
+and to satisfy the users concerning their needs.
+<h5 CLASS="western">
+<a NAME="Stair"></a><font size=+1>Integration, Support and Development
+Projects Related to Grid Engine</font></h5>
+
+<blockquote><b><font size=+1>By Craig Stair, Raytheon</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+Raytheon&amp;rsquo;s High Performance Computing(HPC) team has been engaged
+in large-scale supercomputer-based systems development, deployment, operation,
+and maintenance for 30 years. The team works continuously to maintain its
+comprehensive knowledge of IBM, SGI, SUN, Compaq, HP, Cray/NEC, and end-to-end
+storage solutions/file systems. Raytheon&amp;rsquo;s in-house technical
+strengths for high-end systems development includes systems architecture
+engineering, system performance engineering, modeling, applications performance
+engineering, facilities engineering and implementation.</blockquote>
+
+<div STYLE="margin-bottom: 0in">
+<blockquote>Raytheon&amp;rsquo;s presentation at the GridEngine Developers&amp;rsquo;
+Workshop will give an overview of Raytheon&amp;rsquo;s capabilities in
+HPC and well as our involvement with GridEngine Enterprise Edition. Raytheon
+has been involved in the development of this software since its inception
+and provided many of the key code components. Raytheon processes unique
+capability in deploying and providing support for GridEngine Enterprise
+Edition.
+<p>Presentation currently not available.
+<br>&nbsp;</blockquote>
+</div>
+
+<h4 CLASS="western">
+<font size=+2>Grid Computing (Globus etc.) &amp; Grid Engine</font></h4>
+
+<blockquote>
+<h5 CLASS="western">
+<a NAME="Cawood"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/epcc_pres_ff.pdf">Using
+Sun Grid Engine and Globus to Schedule Across a Combination of Local and
+Remote Machines</a></font></h5>
+
+<blockquote><b><font size=+1>By Geoff Cawood and Paul Graham, Edinburgh
+Parallel Computing Centre, EPCC</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+The aim of this collaboration between EPCC and Sun is to produce a job
+scheduler (based on SGE) which can submit jobs to both local and remote
+machines. Globus will provide a secure means of running jobs on remote
+sites.
+<br>The project is still at an early fact-finding stage so this talk will
+compare some potential solution strategies and invite comments from the
+floor on the technical issues arising.
+<h5 CLASS="western">
+<font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/PSNC_pres2.pdf">GridLab and Progress
+as the Examples of Cooperation between SGE and Grid Research at PSNC</a></font></h5>
+
+<blockquote><a NAME="Kurowski"></a><b><font size=+1>By Krzysztof Kurowski,
+Poznan Supercomputing and Networking Center, PSNC</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+Grid research and development at Poznan Supercomputing and Networking Center
+(PSNC) will be presented during the SGE Workshop. Amongst different projects
+the presentation will be focused on GridLab and Progress projects and their
+relationships to SGE.
+<br>Two important aspects of Grid technology, which have been largely ignored,
+form the basis of the GridLab Project, which aims to build components for
+Grid applications, and realistic testbeds for their development: Co-development
+of Infrastructure and Applications and Dynamic Grid Computing.
+<br>In case of Progress project, scientific portal and Grid environment
+for SUN Servers will be developed based on SUN technologies. The main goal
+of this project is to provide reliable and easy access to the Grid as well
+as support research community with many useful tools and services.</blockquote>
+
+<h4 CLASS="western">
+<font size=+2>Grid Engine and Portals</font></h4>
+
+<blockquote>
+<h5 CLASS="western">
+<a NAME="Edgecombe"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/HPCVL_pres2.pdf">Secure
+Grid and Portal Computing</a></font></h5>
+
+<blockquote><b><font size=+1>By Kenneth Edgecombe, HPCVL</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+HPCVL was formed by a consortium of four universities (Carleton University,
+Queen's University, the Royal Military College of Canada, and the University
+of Ottawa) to provide a secure innovative High Performance Computing (HPC)
+environment for researchers. This environment is now being built with contributions
+from the four member institutions, the Canada Foundation for Innovation,
+the Ontario Innovation Trust, the Ontario Research and Development Fund,
+Sun Microsystems, IBM, and Entrust.
+<br>The progress being made, the roadmap for future developments, and the
+acceptance by researchers will be reviewed. The partnership with Sun Microsystems
+will be highlighted and progress on the Centre for Secure Grid and Portal
+Computing discussed.
+<h5 CLASS="western">
+<a NAME="Stahlberg"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/OSCC_pres2.pdf">Sun
+TCP Bioinformatics Application Integration on Heterogenous Server Platforms</a></font></h5>
+
+<blockquote><b><font size=+1>By Eric Stahlberg, Ohio Supercomputer Center,
+OSC</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+A brief overview of efforts made to integrate applications of running on
+a variety of server architectures without using SGE will be presented.
+Proof-of-concept integration approaches for using the Technical Compute
+Portal with Time Logic DeCypher bioinformatics algorithm accelerators,
+Cray and SGI origin systems will be discussed. Issues and potential problems
+associated with the implementations will be highlighted.
+<br>&nbsp;
+<h5>
+<a NAME="Newhouse"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/imperial_c_pres.pdf">Portals
+and Resource Scheduling at Imperial College</a></font></h5>
+
+<blockquote><b><font size=+1>By Steven Newhouse, Imperial College, London</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+The London e-Science Centre at Imperial College, one of the eight Regional
+Centres within the UK e-Science program, is involved in the construction
+of Grid infrastructures within the College and in the UK through the use
+of SGE, Globus and its own grid middleware - ICENI.
+<br>As part of the Centre's activities, and as a Sun Centre of Excellence,
+we have been developing middleware to support an e-Science Portal at the
+College (based on uPortal), the use of the Technical Compute Portal to
+access Sun Grid Engine through the uPortal infrastructure, and the integration
+of scheduling infrastructures (such as SGE) through a web service enabled
+DRMAA interface.
+<br>The presentation will comprise an overview of this work and its future
+directions.
+<h5 CLASS="western">
+<a NAME="Dew"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/uni_leedsv2b.pdf">The
+White Rose Computational Grid</a></font></h5>
+
+<blockquote><b><font size=+1>By P. M. Dew, University of Leeds</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+This talk will describe the manner in which the Sun Grid Engine (SGE) and
+the Technical Computing Portal (TCP) are to be used in support of collaborative
+e-Science projects at the White Rose universities. Our presentation will
+include an example of the UK e-Science project, DAME (Distributed Aircraft
+Maintenance Environment), which aims to deliver a grid test-bed for distributed
+diagnostics. The project builds on the White Rose Computational Grid, based
+on the Sun Grid Engine, and the Technical Computing Portal that will provide
+a Web-based interface to technical applications executed on any of the
+White Rose Computational Grid nodes.</blockquote>
+
+<h4 CLASS="western">
+<font size=+2>Scheduler Enhancements for Grid Engine and other Topics</font></h4>
+
+<blockquote>
+<h5 CLASS="western">
+<a NAME="Lorenz"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/rwth_pres.pdf">Scheduling
+in an HPC environment</a></font></h5>
+
+<blockquote><b><font size=+1>By Andrea Lorenz, RWTH Aachen</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+With the purchase of RWTH's SunFire equipment the old queueing system (GNQS)
+was replaced by SGE.
+<br>The operational part works right out of the box, however, for our job
+load characteristics with a broad range of job sizes with respect to memory
+and required CPUs, the standard scheduler gives only a poor utilization.
+<br>In the talk the specific requirements and our approaches to meet them
+are presented.
+<h5 CLASS="western">
+<a NAME="Sorensen"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/uni_coll_lond_pres.pdf">Covering
+the Spectrum Grid Activities@UCL</a></font></h5>
+
+<blockquote><b><font size=+1>By S&oslash;ren-Aksel S&oslash;rensen, University
+College of London, UCL-CS</font></b></blockquote>
+
+<h5 CLASS="western">
+<a NAME="Sunderam"></a><font size=+1><a href="/project/gridengine-download/workshop22-24.04.02/presentations/uni_houston_pres2.pdf">Overview
+of Sun Center of Excellence in Geosciences at the University of Houston</a></font></h5>
+
+<blockquote><b><font size=+1>By Babu Sunderam, University of Houston</font></b></blockquote>
+
+<h6 CLASS="western">
+<font size=+0>Abstract:</font></h6>
+University of Houston (UH) is a Sun Center of Excellence in Geo sciences.
+Recently, University of Houston obtained a hardware grant and setting up
+a campus grid to aggregate resources across the campus. Major participants
+include the HPCTools research group lead by Dr. Barbara Chapman, High performance
+computing center, Advanced Geosciences lab and Mechanical engineering.
+At this workshop, we will present an overview of the hardware and software
+setup of this campus grid under construction. Also, we explain the EZ-Grid
+system being developed at UH for easier setup, managing and efficient usage
+of grid environments. The major components of the system include integrated
+resource broker, usage policy management frameworks and information services.
+The interfaces with Globus toolkit and Sun Grid Engine are to be presented.
+We also expect to receive feedback from the workshop participants on improving
+our EZ-Grid system and tightly integrating with Sun Grid Engine software.</blockquote>
+
+<h3 CLASS="western">
+
+<hr WIDTH="100%"></h3>
+
+<h3 CLASS="western">
+<a NAME="Special Interest Group Meetings"></a><font size=+3>Special Interest
+Group Meetings</font></h3>
+
+<h4 CLASS="western">
+<font size=+1>Globus Integration and Brokers</font></h4>
+
+<div STYLE="margin-bottom: 0in"><u>Participants</u>:</div>
+
+<div STYLE="margin-bottom: 0in">Ali Ajomshoaa, EPCC</div>
+
+<div STYLE="margin-bottom: 0in">Geoff Cawood, EPCC</div>
+
+<div STYLE="margin-bottom: 0in">Thomas Seed, EPCC</div>
+
+<div STYLE="margin-bottom: 0in">Terry Sloan, EPCC</div>
+
+<div STYLE="margin-bottom: 0in">John Tollefsrud, Sun Mircosystems</div>
+
+<div STYLE="margin-bottom: 0in">Craig Stair, Raytheon</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Kurowski, Krzysztof,
+PSNC</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Pawel Piwowarek,
+PSNC</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Tomasz Piontek,
+PSNC</div>
+
+<div STYLE="margin-bottom: 0in">Miroslaw Kupczyk, PSNC</div>
+
+<div STYLE="margin-bottom: 0in">Massimo Cafaro, University of Lecce</div>
+
+<div STYLE="margin-bottom: 0in">Babu Sundaram, University of Houston</div>
+
+<div STYLE="margin-bottom: 0in">John Barr, Sun Microsystems</div>
+
+<div STYLE="margin-bottom: 0in">Steven Newhouse, Imperial College</div>
+
+<div STYLE="margin-bottom: 0in">Asif Saleem, Imperial College</div>
+
+<div STYLE="margin-bottom: 0in">Christian Reissmann, Sun Microsystems</div>
+
+<div STYLE="margin-bottom: 0in">Fritz Ferstl, Sun Microsystems
+<br>&nbsp;</div>
+
+<div STYLE="margin-bottom: 0in"><u>Discussion points were:</u></div>
+
+<ul>
+<div STYLE="margin-bottom: 0in">
+<li>
+Objectives/plans/achievements of the organizations participating in the
+SIG.</li>
+
+<li>
+User requirements; expected scenarios to be solved.</li>
+
+<li>
+Action items.</li>
+</div>
+</ul>
+
+<div STYLE="margin-top: 0.07in; margin-bottom: 0.08in; font-weight: medium; page-break-before: auto; page-break-after: avoid"><i><font face="Albany, sans-serif">Objectives/Plans/Achievements</font></i></div>
+
+<blockquote>
+<li STYLE="margin-bottom: 0in">
+EPCC: Integrate Globus and Grid Engine with broker on top. Project has
+started. Prototype to be available by end of 2002. Project to be finalized
+in 2 years.</li>
+
+<li STYLE="margin-bottom: 0in">
+Imperial College: Integrate Grid Engine with Globus via web services and
+Jini. Brokerage needed for own operation of site &amp;ndash; better sooner
+than later.</li>
+
+<li STYLE="margin-bottom: 0in">
+Univ. of Houston: Build broker for Globus and integrate with Grid Engine.
+Gram enhancements. Prototype already exists.</li>
+
+<li STYLE="margin-bottom: 0in">
+PSNC: Grid architecture based on Globus integrating Grid Engine and self
+developed broker. Special requirement is that Grid service requirements
+can appear within already executing jobs. Project is in architecture definition
+phase.</li>
+
+<li STYLE="margin-bottom: 0in">
+Raytheon: Has concrete customers which are looking for Grid architectures
+and solutions today.</li>
+
+<li STYLE="margin-bottom: 0in">
+Sun: Looking for the best technology to take to the market and to solve
+the problems of existing and future customers with Grid requirements.</li>
+</blockquote>
+
+<div STYLE="margin-top: 0.07in; margin-bottom: 0.08in; font-weight: medium; page-break-before: auto; page-break-after: avoid"><i><font face="Albany, sans-serif">Requirements/Scenarios</font></i>
+<p>Some SIG participants already have collected user/customer requirements
+for grid infrastructures. They will investigate to make them available
+to the SIG via an appropriate e-mail alias.</div>
+
+<div STYLE="margin-top: 0.07in; margin-bottom: 0.08in; font-weight: medium; page-break-before: auto; page-break-after: avoid">&nbsp;
+<br><i><font face="Albany, sans-serif">Action Items</font></i></div>
+
+<blockquote>
+<div STYLE="margin-bottom: 0in">
+<li>
+Setup a SIG mailing list (F. Ferstl).</li>
+
+<li>
+Each participant to submit requirements, use cases and objectives as available.</li>
+
+<li>
+Each participant to submit designs, concept papers, etc. as available.</li>
+</div>
+</blockquote>
+
+<h4 CLASS="western">
+TCP Interest Group</h4>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><u>Participants:</u></div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Jason Novotny,
+MPI for Gravitational Physics</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Oliver Wehrens,
+MPI for Gravitational Physics</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Eric Stahlberg,
+OSC</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Ken Edgecombe,
+HPCVL</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Asif Saleem, Imperial
+College</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Lothar Lippert,
+Sun Microsystems</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">Andre Alefeld,
+Sun Microsystems
+<br>&nbsp;</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto"><u>Discussion
+points were:</u></div>
+
+<ul>
+<div STYLE="margin-bottom: 0in; page-break-before: auto">
+<li>
+Current State &amp; what's missing</li>
+
+<li>
+Goals</li>
+
+<li>
+Short term goals</li>
+</div>
+</ul>
+
+<div STYLE="margin-top: 0.07in; margin-bottom: 0.08in; font-weight: medium; page-break-before: auto; page-break-after: avoid"><i><font face="Albany, sans-serif">Current
+State &amp; what's missing</font></i>
+<p>The current state of the TCP have been discussed and missing features
+and enhancement requests for a future feature set have been identified.</div>
+
+<blockquote>
+<li>
+iPlanet Portal server is currently required</li>
+
+<li>
+installation currently sometimes difficult, at least not straightforward,
+needs cleanup</li>
+
+<li>
+installation under root -> root access should be singled out in a special
+controlled component, the rest should for security reasons not run as root</li>
+
+<li>
+adding of new applications needs a lot of admin interaction and adoptions,
+so it is currently not easy</li>
+
+<li>
+MAC browser cannot work with TCP (netlets)</li>
+
+<li>
+NT support not available</li>
+
+<li>
+configurability not too easy</li>
+
+<li>
+missing documentation, buglist, FAQ</li>
+
+<li>
+shared filesystem needed in the current implementation</li>
+
+<li>
+Unix account necessary</li>
+
+<li>
+file organization of TCP generated files not structured enough</li>
+
+<li>
+hook to an existing security framework/environment missing</li>
+
+<li>
+prototype is running quite stable and reliable</li>
+
+<li>
+setup changes are requiring some amount of admin work, should be easier</li>
+
+<li>
+access of password protected web content from a channel was not possible</li>
+
+<li>
+Javascript is required</li>
+
+<li>
+navigation within forms should be enhanced (too many windows popping up/down)</li>
+
+<li>
+customizable views for different users dependent on their authentication/authorization
+record should be possible</li>
+
+<li>
+workflow integration would be nice, macro functionality to replay a set
+of actions</li>
+
+<li>
+netlet technology available, but has restrictions (with VNC e.g. OpenGL
+not working); should be available to get visualization from a host where
+the data are or which has the corresponding capabilities</li>
+</blockquote>
+
+<div STYLE="margin-top: 0.07in; margin-bottom: 0.08in; font-weight: medium; page-break-before: auto; page-break-after: avoid"><i><font face="Albany, sans-serif">Goals</font></i></div>
+
+<blockquote>
+<li>
+utility functions should be supported by the portal (e.g. converters, visualizers
+etc.)</li>
+
+<li>
+better output handling should be available (e.g. visualization from any
+machine through VNC or whatever, output file handling should be more sophisticated
+to suppress unnecessary file transfers)</li>
+
+<li>
+independence from iPlanet</li>
+
+<li>
+On what standards is TCP based and who is defining them ?</li>
+
+<li>
+ease of installation/administration/application integration</li>
+
+<li>
+user profiles should exist and be connected to a security infrastructure,
+logging and trace facilities should be available</li>
+
+<li>
+user space customization and application adding should in certain limits
+be possible</li>
+
+<li>
+better job monitoring facilities should be available</li>
+
+<li>
+web service support</li>
+
+<li>
+EJB support for persistence</li>
+</blockquote>
+
+<div STYLE="margin-top: 0.07in; margin-bottom: 0.08in; font-weight: medium; page-break-before: auto; page-break-after: avoid"><i><font face="Albany, sans-serif">Short
+term goals</font></i></div>
+
+<blockquote>
+<li>
+create TCP (shall be renamed) Open Source Project with mailing list, source
+code repository (project will be hosted on GE Open Source site)</li>
+
+<li>
+around end of May/beginning of June the current version of TCP with some
+smaller changes will be available (if the legal issues concerning the O'Reilly
+Servlet Book code have been clarified)</li>
+
+<li>
+project guidelines (java programming guidelines, I18N support, etc.) shall
+be made available</li>
+
+<li>
+Legal issues shall be clarified</li>
+</blockquote>
+
+<h4 CLASS="western">
+Parallel Jobs and Scheduling</h4>
+
+<div STYLE="margin-bottom: 0in"><u>Participants:</u></div>
+
+<div STYLE="margin-bottom: 0in">&nbsp;
+<br>Nathalie Furmento, Imperial College</div>
+
+<div STYLE="margin-bottom: 0in">S&oslash;ren-Aksel S&oslash;renson, University
+College of London</div>
+
+<div STYLE="margin-bottom: 0in">Andrea Lorenz, RWTH Aachen</div>
+
+<div STYLE="margin-bottom: 0in">Matthew Ismail, Warwick Centre for Scientific
+Computing</div>
+
+<div STYLE="margin-bottom: 0in">Andreas Haas, Sun Microsystems</div>
+
+<div STYLE="margin-bottom: 0in; page-break-before: auto">&nbsp;
+<br><u>The following questions were discussed in this forum:</u></div>
+
+<p><br><b>What concepts does SGE provide for parallel scheduling?</b>
+<blockquote><a href="http://gridengine.sunsource.net/project/gridengine-download/SGE53AdminUserDoc.pdf?content-type=application/pdf">Sun
+Grid Engine 5.3, Administration and User's Guide</a> (Chapter: Managing
+Parallel Environments, see page 271: The Allocation rule input..) and <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman5/sge_pe.html">sge_pe
+(5)</a></blockquote>
+<b>What is the difference between so called loose and tight integration
+for parallel jobs?</b>
+<blockquote><a href="http://gridengine.sunsource.net/project/gridengine-download/SGE53AdminUserDoc.pdf?content-type=application/pdf">Sun
+Grid Engine 5.3, Administration and User's Guide </a>(Chapter: Tight Integration
+of PEs and Sun Grid Engine Software, page 277)</blockquote>
+<b>Which requirements are to be fulfilled by parallel jobs to make them
+run under SGE?</b>
+<blockquote>None</blockquote>
+<b>What are the issues when designing a general interface for writing customized
+schedulers?</b>
+<blockquote><a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/schedd/schedd.html?content-type=text/html">Scheduler
+Documentation</a></blockquote>
+
+<h2 CLASS="western">
+
+<hr WIDTH="100%"></h2>
+
+<h3 CLASS="western">
+<a NAME="Closing Discussion"></a><font size=+3>Closing Discussion</font></h3>
+The workshop was closed with a roundtable discussion around the topics:
+<ul>
+<li>
+<b>Grid visions for the mid and long term future</b></li>
+
+<li>
+<b>Applications suitable for Grids</b></li>
+</ul>
+The discussion was quite controversial. The visions stated ranged from
+Grids consisting of tightly managed resource provider centers coupled by
+Grid infrastructure to a globally spread pool of resources where everything
+is a Grid service. If there is any conclusion which can be drawn from the
+discussion then it is that more information exchange is required between
+those researching in the Grid space and those being interested in operating
+Grid environments to solve exisiting problems. This information exchange
+seems mostly needed in the definition of user requirements and problem
+scenarios to be solved.
+<div TYPE=FOOTER>&nbsp;</div>
+
+</body>
+</html>

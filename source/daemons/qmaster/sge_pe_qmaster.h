@@ -46,19 +46,12 @@ int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 /* funtions called via gdi and inside the qmaster */
 int sge_del_pe(lListElem *, lList **, char *, char *);
 
-/* find a specific pe */
-lListElem *sge_locate_pe(const char *pe_name);
-
-lListElem *sge_match_pe(const char *wildcard);
-
 /* to do at qmasters startup */
 void debit_all_jobs_from_pes(lList *pe_list);
 
 void debit_job_from_pe(lListElem *pep, int slots, u_long32 job_id);
 
 void reverse_job_from_pe(lListElem *pep, int slots, u_long32 job_id);
-
-int validate_pe(int startup, lListElem *pep, lList **alpp);
 
 #endif /* __SGE_PE_QMASTER_H */
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/01/30 09:18:52 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/07/29 15:54:31 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2002/01/30 09:18:52 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2002/07/29 15:54:31 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -249,7 +249,7 @@ for details on the queue configuration format.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-Mqattr fname q_name,...\fP	\fI<modify queue attributes>\fP"
-DEPRECATED: Use -Mattr!
+DEPRECATED: Use -Rattr!
 .br
 Allows changing of selected queue configuration attributes in multiple 
 queues with a single command. In all queues contained in the comma 
@@ -308,11 +308,15 @@ Requires root/manager privileges.
 Allows adding specifications to a single
 configuration list attribute in multiple instances
 of an object with a single command. Currently
-supported objects are the queue and the host
-configuration being specified as
+supported objects are the queue, the host, the parallel environment
+and the checkpointing interface configuration being specified as
 .I queue
-or
+,
 .I exechost
+,
+.I pe
+or
+.I ckpt
 in \fBobj_spec\fP. The queue
 .B load_thesholds
 parameter is an example of a list attribute. With the \fB\-aattr\fP option,
@@ -556,6 +560,15 @@ is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root or manager privileges.
 .\"
+.IP "\fB\-Astree fname\fP	\fI<add share tree>\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
+for xxQS_NAME_Cxx systems.
+.br
+Adds the definition of a share tree to the system (see
+.M share_tree 5 ) 
+from the file fname.
+Requires root or manager privileges.
+.\"
 .IP "\fB\-au user,... acl_name,...\fP	\fI<add users to ACLs>\fP"
 Adds users to xxQS_NAMExx user access lists (ACLs). User lists
 are used for queue usage authentication. Requires
@@ -613,11 +626,16 @@ development tool. Requires root/manager/operator privileges.
 Allows deleting specifications in a single
 configuration list attribute in multiple instances
 of an object with a single command. Currently
-supported objects are the queue and the host
+supported objects are the queue, the host, the parallel environment
+and the checkpointing interface
 configuration being specified as
 .I queue
+,
+.I exechost
+,
+.I pe
 or
-.I host
+.I ckpt
 in \fBobj_spec\fP. The queue
 .B load_thesholds
 parameter is an example of a list attribute. With the \fB\-dattr\fP option,
@@ -783,15 +801,17 @@ Requires root or manager privilege.
 Allows changing a single configuration attribute in
 multiple instances of an object with a single
 command. Currently supported objects are the
-queue and the host configuration being specified as
+queue, the host,
+the parallel environment and the checkpointing interface
+configuration being specified as
 .I queue
+,
+.I exechost
+,
+.I pe
 or
-.I host
+.I ckpt
 in \fBobj_spec\fP.
-.br
-\fBNote\fP, that "\-mattr queue attr_name val q_name, ..." is
-equivalent to "\-mqattr attr_name val q_name,..."
-(see below). The latter is available for backward compatibility.
 .br
 The name of the configuration attribute to be modified is specified with
 .B attr_name
@@ -931,7 +951,7 @@ for details on the queue configuration format.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mqattr attr_name q_name,...\fP	\fI<modify queue attributes>\fP"
-DEPRECATED: Use -mattr!
+DEPRECATED: Use -rattr!
 .br
 Allows changing of a single queue configuration attribute in multiple 
 queues with a single command. In all queues contained in the comma 
@@ -983,6 +1003,15 @@ the modified data is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root or manager privileges.
 .\"
+.IP "\fB\-Mstree fname\fP	\fI<modify share tree>\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
+for xxQS_NAME_Cxx systems.
+.br
+Modifies the definition of the share tree (see
+.M share_tree 5 ). 
+The modified sharetree is read from file fname.
+Requires root or manager privileges.
+.\"
 .IP "\fB\-mu acl_name\fP	\fI<modify user access lists>\fP"
 Retrieves the current configuration for the specified user access list, 
 executes an editor (either
@@ -1010,10 +1039,16 @@ Requires root or manager privilege.
 Allows replacing a single configuration list
 attribute in multiple instances of an object with a
 single command. Currently supported objects are the
+queue, the host, the parallel environment and the checkpointing
+interface configuration being specified as
 queue and the host configuration being specified as
-.I queue 
-or
+.I queue
+,
 .I exechost
+,
+.I pe
+or
+.I ckpt
 in \fBobj_spec\fP. The queue
 .B load_thesholds
 parameter is an example of a list attribute. With
@@ -1021,6 +1056,10 @@ the \fB\-rattr\fP option, such lists can be replaced,
 while entries can be added to them with \fB\-aattr\fP,
 deleted with \fB\-dattr\fP, and modified with
 \fB\-mattr\fP.
+.br
+\fBNote\fP, that "\-rattr queue attr_name val q_name, ..." is
+equivalent to "\-mqattr attr_name val q_name,..."
+(see below). The latter is available for backward compatibility.
 .br
 The name of the configuration attribute to be modified is specified with
 .B attr_name

@@ -53,7 +53,7 @@ EXECD_SRC   =  execd.c \
               procfs.c \
               ptf.c \
               reaper_execd.c \
-              report.c \
+              sge_report_execd.c \
               setup_execd.c \
               tmpdir.c \
 
@@ -61,21 +61,16 @@ EXECD_ADD_SRC =  usage.c \
                  sge_options.c \
               admin_mail.c \
               config_file.c \
-              job_report.c \
-				  job.c \
               mail.c \
-              path_aliases.c \
               read_object.c \
               read_write_job.c \
               read_write_queue.c \
+              sge_dirent.c \
               execution_states.c \
               sig_handlers.c \
-              sge_conf.c \
               job_log.c \
               startprog.c \
-              utility_daemon.c \
-              shutdown.c \
-              opt_silent.c
+              shutdown.c 
             
               
 EXECD_OBJS    = $(EXECD_SRC:.c=.o)
@@ -165,8 +160,8 @@ ptf.o: 		$(EXECD_DIR)/ptf.c
 reaper_execd.o:	$(EXECD_DIR)/reaper_execd.c
 		$(CC) $(CFLAGS) -c $(EXECD_DIR)/reaper_execd.c
 
-report.o   : $(EXECD_DIR)/report.c
-		$(CC) $(CFLAGS) -c $(EXECD_DIR)/report.c
+sge_report_execd.o   : $(EXECD_DIR)/sge_report_execd.c
+		$(CC) $(CFLAGS) -c $(EXECD_DIR)/sge_report_execd.c
 
 setup_execd.o   : $(EXECD_DIR)/setup_execd.c
 		$(CC) $(CFLAGS) -c $(EXECD_DIR)/setup_execd.c

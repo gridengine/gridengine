@@ -37,8 +37,8 @@
 #include "sge_log.h" 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "msg_utilib.h"
 #include "qmaster_heartbeat.h"
+
 #include "msg_daemons_common.h"
 
 /*--------------------------------------------------------------

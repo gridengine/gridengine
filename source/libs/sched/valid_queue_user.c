@@ -32,16 +32,16 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sge_answerL.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
 #include "valid_queue_user.h"
 #include "sge_string.h"
-
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_userset.h"
 #include "sge_gdi_intern.h"
+
 #include "msg_schedd.h"
 
 static int sge_contained_in_access_list_(const char *user, const char *group, 
@@ -144,17 +144,16 @@ int sge_contained_in_access_list(const char *user, const char *group,
 {
    const char *entry_name;
    lListElem *acl_entry;
-
    DENTER(TOP_LAYER,"sge_contained_in_access_list");
-
    for_each (acl_entry, lGetList(acl, US_entries)) {
       entry_name = lGetString(acl_entry,UE_name);
+      if (!entry_name)
+          continue;
       if (entry_name[0] == '@') {
          if (group && !strcmp(&entry_name[1], group)) {
             if (alpp) {
-               sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS, group, lGetString(acl, US_name));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
-                     
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS, group, lGetString(acl, US_name)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             }
             DEXIT;
             return 1;
@@ -162,17 +161,14 @@ int sge_contained_in_access_list(const char *user, const char *group,
       } else {
          if (user && !strcmp(entry_name, user)) {
             if (alpp) {
-               sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS, user, lGetString(acl, US_name));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
-                     
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS, user, lGetString(acl, US_name)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             }
             DEXIT;
             return 1;
          }
       }
    }
-
    DEXIT;
    return 0;
 }
-

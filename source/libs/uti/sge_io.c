@@ -29,28 +29,49 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <stdlib.h>     
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <errno.h>
 
 #include "sgermon.h"
+#include "sge_log.h"
 #include "sge_io.h"
+#include "sge_unistd.h"
 
-/************************************************************************/
+#include "msg_utilib.h"  
 
-int sge_readnbytes(
-register int sfd,
-register char *ptr,
-register int n 
+#define BUFFER     4096
+#define FILE_CHUNK (100*1024)  
 
-/*
-   sge_readnbytes - read n bytes from file descriptor 
- */
-
-) {
-
+/****** uti/io/sge_readnbytes() ***********************************************
+*  NAME
+*     sge_readnbytes() -- Read n bytes from file descriptor  
+*
+*  SYNOPSIS
+*     int sge_readnbytes(register int sfd, register char *ptr, 
+*                        register int n) 
+*
+*  FUNCTION
+*     Read n bytes from file descriptor. 
+*
+*  INPUTS
+*     register int sfd   - file descriptor 
+*     register char *ptr - pointer to buffer 
+*     register int n     - number of bytes 
+*
+*  RESULT
+*     int - number of bytes read
+*  
+*  SEE ALSO
+*     uti/io/sge_writenbytes()
+******************************************************************************/
+int sge_readnbytes(register int sfd, register char *ptr, register int n) 
+{
    int i;                       /* number of bytes read */
    int nleft = n;               /* number of bytes still to read */
 
@@ -66,32 +87,45 @@ register int n
          DPRINTF(("sge_readnbytes: returning %d\n", i));
          DEXIT;
          return (i);
-      }
-      else {
+      } else {
          if (i == 0)
             break;
-      }                         /* if */
+      } 
       nleft -= i;
       ptr += i;
-   }                            /* while */
+   } 
 
    DPRINTF(("sge_readnbytes: returning %d\n", nleft));
    DEXIT;
    return (n - nleft);
 
-}                               /* sge_readnbytes */
+}            
 
-/************************************************************************/
-int sge_writenbytes(
-register int sfd,
-register const char *ptr,
-register int n 
-
-/*
-   sge_writenbytes - write n bytes to file descriptor
- */
-
-) {
+/****** uti/io/sge_writenbytes() **********************************************
+*  NAME
+*     sge_writenbytes() -- Write n bytes to file descriptor 
+*
+*  SYNOPSIS
+*     int sge_writenbytes(register int sfd, register const char *ptr, 
+*                         register int n) 
+*
+*  FUNCTION
+*     Write n bytes to file descriptor 
+*
+*  INPUTS
+*     register int sfd         - file descriptor 
+*     register const char *ptr - pointer to buffer 
+*     register int n           - number of bytes 
+*
+*  RESULT
+*     int - number of bytes written
+*
+*  SEE ALSO
+*     uti/io/sge_readnbytes()
+******************************************************************************/
+int sge_writenbytes(register int sfd, register const char *ptr, 
+                    register int n) 
+{
 
    int i;                       /* number of bytes written */
    int nleft = n;               /* number of bytes still to write */
@@ -112,12 +146,580 @@ register int n
          DPRINTF(("sge_writenbytes: returning %d\n", i));
          DEXIT;
          return (i);
-      }                         /* if */
+      }              
       nleft -= i;
       ptr += i;
-   }                            /* while */
+   }                   
 
    DEXIT;
    return (n);
+} 
 
-}                               /* sge_writenbytes */
+/****** uti/io/sge_filecmp() **************************************************
+*  NAME
+*     sge_filecmp() -- Compare two files
+*
+*  SYNOPSIS
+*     int sge_filecmp(const char *name0, const char *name1)
+*
+*  FUNCTION
+*     Compare two files. They are equal if:
+*        - both of them have the same name
+*        - if a stat() succeeds for both files and
+*          i-node/device-id are equal
+*
+*     we are not sure
+*     - if stat() failes for at least one of the files
+*       (It could be that both pathes direct to the same
+*       file not existing)
+*
+*  INPUTS
+*     const char *name0 - 1st filename
+*     const char *name1 - 2nd filename
+*
+*  RESULT
+*     int - Identical?
+*         0 - Yes.
+*         1 - No they are not equivalent.
+******************************************************************************/
+int sge_filecmp(const char *name0, const char *name1)
+{
+   SGE_STRUCT_STAT buf0, buf1;
+ 
+   DENTER(TOP_LAYER, "filecmp");
+ 
+   if (!strcmp(name0, name1)) {
+      DEXIT;
+      return 0;
+   }
+ 
+   if (SGE_STAT(name0, &buf0)<0) {
+      DEXIT;
+      return 1;
+   }
+ 
+   if (SGE_STAT(name1, &buf1)<0) {
+      DEXIT;
+      return 1;
+   }
+ 
+   if (buf0.st_ino == buf1.st_ino && buf0.st_dev == buf1.st_dev) {
+      DEXIT;
+      return 0;
+   } else {
+      DEXIT;
+      return 1;
+   }
+}          
+
+/****** uti/io/sge_copy_append() **********************************************
+*  NAME
+*     sge_copy_append() -- Copy/append one file to another 
+*
+*  SYNOPSIS
+*     int sge_copy_append(char *src, const char *dst, 
+*                         sge_mode_t mode) 
+*
+*  FUNCTION
+*     Copy/append content from 'src' to 'dst' 
+*
+*  INPUTS
+*     char *src       - source filename 
+*     const char *dst - destination filename 
+*     sge_mode_t mode - mode 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  SEE ALSO
+*     uti/io/sge_mode_t
+******************************************************************************/
+int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
+{
+#define CPBUF 1024
+
+   char buf[CPBUF];
+   int fdsrc, fddst, error, modus, rs, ws;
+
+   DENTER(TOP_LAYER, "sge_copy_append");
+  
+   if (src == NULL || dst == NULL || strlen(src) == 0 || strlen(dst) == 0 ||
+      !(mode == SGE_MODE_APPEND || mode == SGE_MODE_COPY)) {
+      DEXIT;
+      return -1;   
+   }
+   if (!strcmp(src, dst)) {
+      DEXIT;
+      return -1;
+   }   
+ 
+   /* Return if source file doesn't exist */
+   if ((fdsrc = open(src, O_RDONLY)) == -1) {
+      DEXIT;
+      return -1;
+   }   
+     
+   if (mode == SGE_MODE_APPEND)
+      modus = O_WRONLY | O_APPEND | O_CREAT;
+   else
+      modus = O_WRONLY | O_CREAT;      
+    
+   if ((fddst = open(dst, modus, 0666)) == -1) {
+      DEXIT;
+      return -1;
+   }    
+    
+   error = FALSE;
+   while (TRUE) {
+      rs = read(fdsrc, buf, 512);
+      if (rs == -1 && errno == EINTR)
+         continue;
+      else if (rs == -1)
+         error = TRUE;
+    
+      if (!error && rs > 0) {      
+         while (TRUE) {   
+            ws = write(fddst, buf, rs);
+            if (ws == -1 && errno == EINTR)   
+               continue;
+            else if (ws == -1) {
+               error = TRUE;
+               break;
+            } 
+            else
+               break;
+         }
+      }
+      if (error)
+         break;
+      if (rs == 0)
+         break;   
+   }           
+    
+   close(fdsrc);
+   close(fddst);
+ 
+   DEXIT;
+   return (error ? -1: 0);
+}
+
+/****** uti/io/sge_bin2string() ***********************************************
+*  NAME
+*     sge_bin2string() -- Put binary stream into a string 
+*
+*  SYNOPSIS
+*     char* sge_bin2string(FILE *fp, int size) 
+*
+*  FUNCTION
+*     Read a binary steam from given file descriptor 'fp' and
+*     write it into (dynamically) malloced buffer as "ASCII" format.
+*  
+*     "ASCII" format means:
+*           '\0' is written as '\\' '\0' 
+*           '\\' is written as '\\' '\\'
+*           End of buffer is written as '\0'
+*
+*  INPUTS
+*     FILE *fp - file descriptor 
+*     int size - size of the buffer used within this function 
+*
+*  RESULT
+*     char* - malloced buffer
+*
+*  SEE ALSO
+*     uti/io/sge_string2bin()
+******************************************************************************/
+char *sge_bin2string(FILE *fp, int size) 
+{
+   int i, fd;
+   char inbuf[BUFFER], outbuf[2*BUFFER];
+   char *inp, *outp;
+   char *dstbuf;
+   int len,             /* length of current tmp buffer */
+       dstbuflen,       /* total length of destination buffer */
+       chunksize,       /* chunks for realloc */
+       lastpos,         /* last position in destination buffer */
+       error;
+   
+   if ((fd = fileno(fp)) == -1)
+      return NULL;
+
+   chunksize = 20480;
+   
+   if (size <= 0)       /* no idea about buffer, malloc in chunks */
+      size = chunksize;
+
+   dstbuf = (char *) malloc(size+1);
+   dstbuflen = size;
+   lastpos = 0;
+
+   error = FALSE;
+
+   while (1) {
+      i = read(fd, inbuf, BUFFER);
+      if (i > 0) {
+         inp = inbuf;
+         outp = outbuf;
+         while (inp < &inbuf[i]) {
+            if (*inp == '\\') {
+               *outp++ = '\\';
+               *outp++ = '\\';
+            }
+            else if (*inp == '\0') {
+               *outp++ = '\\';
+               *outp++ = '0';
+            }
+            else
+               *outp++ = *inp;
+            inp++;
+         }
+
+
+         len = outp - outbuf;
+
+         if (lastpos + len > dstbuflen) {
+            if ((dstbuf = realloc(dstbuf, lastpos + len + chunksize)) == NULL) {
+               error = TRUE;
+               break;
+            }   
+            dstbuflen = lastpos + len + chunksize;
+
+         }
+         
+         memcpy(&dstbuf[lastpos], outbuf, len);
+         lastpos += len;
+
+      }
+      else if (i == 0) {
+         break;
+      }
+      else {
+         if (errno != EINTR) {
+            error=TRUE;
+            break;
+         }
+      }
+   }
+
+   if (error) {
+      free(dstbuf);
+      return NULL;
+   }
+   else {
+      if ((dstbuf = realloc(dstbuf, lastpos+1)) == NULL)
+         return NULL;
+      dstbuf[lastpos] = '\0';
+      return dstbuf;
+   }
+}
+
+/****** uti/io/sge_string2bin() ***********************************************
+*  NAME
+*     sge_string2bin() -- Write 'binary' string into file 
+*
+*  SYNOPSIS
+*     int sge_string2bin(FILE *fp, const char *buf) 
+*
+*  FUNCTION
+*     Write 'binary' string into file 
+*
+*  INPUTS
+*     FILE *fp        - file descriptor 
+*     const char *buf - "ASCII" string (see sge_bin2string())
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  SEE ALSO
+*     uti/io/sge_bin2string()
+******************************************************************************/
+int sge_string2bin(FILE *fp, const char *buf) 
+{
+   char outbuf[BUFFER];
+   char *outp;
+   int fd;
+      
+   if ((fd = fileno(fp)) == -1)
+      return -1;
+   
+   if (!buf)
+      return -1;
+         
+   while (*buf) {
+      outp = outbuf;
+      while (*buf && (outp - outbuf < BUFFER)) {
+         if (*buf == '\\') {
+            if (*(buf+1) == '\\')
+               *outp++ = '\\';
+            else
+               *outp++ = '\0';
+            buf+=2;    
+         }   
+         else
+            *outp++ = *buf++;
+      }
+      
+      if (write(fd, outbuf, outp - outbuf) != outp - outbuf)
+         return -1;
+   }      
+   return 0;
+}
+
+/****** uti/io/sge_file2string() **********************************************
+*  NAME
+*     sge_file2string() -- Load file into string
+*
+*  SYNOPSIS
+*     char* sge_file2string(const char *fname, int *len)
+*
+*  FUNCTION
+*     Load file into string
+*
+*  INPUTS
+*     const char *fname - filename
+*     int *len          - number of bytes read
+*
+*  RESULT
+*     char* - malloced string buffer
+*
+*  SEE ALSO
+*     uti/io/sge_string2file()
+*     uti/io/sge_stream2string()
+******************************************************************************/
+char *sge_file2string(const char *fname, int *len)
+{
+   FILE *fp;
+   SGE_STRUCT_STAT statbuf;
+   int size, i;
+   char *str;
+ 
+   DENTER(CULL_LAYER, "sge_file2string");
+ 
+   if (SGE_STAT(fname, &statbuf))
+      return NULL;
+ 
+   size = statbuf.st_size;
+   if (len)
+      *len = size;
+ 
+   if (!(fp = fopen(fname, "r"))) {
+      ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
+      DEXIT;
+      return NULL;
+   }
+ 
+   if (!(str = malloc(size+1))) {
+      fclose(fp);
+      DEXIT;
+      return NULL;
+   }
+ 
+   /*
+   ** With fread(..., size, 1, ...),
+   ** Windows cannot read <size> bytes here, because in
+   ** text mode the trailing ^Z is ignored.
+   ** CRLF -> LF conversion reduces size even further.
+   ** Therefore, the file has less than size-1 bytes if read
+   ** in text (ascii) mode.
+   ** Correctly, fread returns 0, because 0 elements of
+   ** size <size> were read.
+   */
+#ifdef WIN32 /* fread call and evaluation of return value is different */
+   i = fread(str, 1, size, fp);
+   if (i == 0) {
+      free(str);
+      fclose(fp);
+      DEXIT;
+      return NULL;
+   }
+   str[i] = '\0';    /* delimit this string */   
+   if (len) {
+      *len = i;
+   }
+#else
+   i = fread(str, size, 1, fp);
+   if (i != 1) {
+      ERROR((SGE_EVENT, MSG_FILE_FREADFAILED_SS, fname, strerror(errno)));
+      free(str);
+      fclose(fp);
+      DEXIT;
+      return NULL;
+   }
+   str[size] = '\0';    /* delimit this string */
+#endif
+ 
+ 
+   fclose(fp);
+   DEXIT;
+   return str;
+}
+ 
+/****** uti/io/sge_stream2string() ********************************************
+*  NAME
+*     sge_stream2string() -- Read string from stream
+*
+*  SYNOPSIS
+*     char* sge_stream2string(FILE *fp, int *len)
+*
+*  FUNCTION
+*     Read string from stream
+*
+*  INPUTS
+*     FILE *fp - file descriptor
+*     int *len - number of bytes read
+*
+*  RESULT
+*     char* - pointer to malloced string buffer
+*
+*  SEE ALSO
+*     uti/io/sge_file2string()
+*     uti/io/sge_string2file()
+******************************************************************************/ 
+char *sge_stream2string(FILE *fp, int *len)
+{
+   char *str, *new;
+   int filled = 0;
+   int malloced_len, i;
+ 
+   DENTER(TOP_LAYER, "sge_stream2string");
+ 
+   if (!(str = malloc(FILE_CHUNK))) {
+      DEXIT;
+      return NULL;
+   }
+   malloced_len = FILE_CHUNK;
+ 
+   /* malloced_len-filled-1 cause we reserve space for \0 termination */
+   while ((i = fread(&str[filled], 1, malloced_len-filled-1, fp)) > 0) {
+      filled += i;
+      if (malloced_len == filled) {
+         new = realloc(str, malloced_len+FILE_CHUNK);
+         if (!new) {
+            free(str);
+            DEXIT;
+            return NULL;
+         }
+         str = new;
+         malloced_len += FILE_CHUNK;
+      }
+ 
+      if (feof(fp)) {
+         DPRINTF(("got EOF\n"));
+         break;
+      }
+   }
+   str[filled] = '\0';  /* NULL termination */
+   *len = filled;
+ 
+   DEXIT;
+   return str;
+}
+ 
+/****** uti/io/sge_string2file() **********************************************
+*  NAME
+*     sge_string2file() -- Write string into file
+*
+*  SYNOPSIS
+*     int sge_string2file(const char *str, int len, const char *fname)
+*
+*  FUNCTION
+*     Write string into file 
+*
+*  INPUTS
+*     const char *str   - pointer to buffer
+*     int len           - number of bytes which should be written
+*     const char *fname - filename
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  SEE ALSO
+*     uti/io/sge_file2string()  
+*     uti/io/sge_stream2string()
+******************************************************************************/ 
+int sge_string2file(const char *str, int len, const char *fname)
+{
+   FILE *fp;
+ 
+   DENTER(TOP_LAYER, "sge_string2file");
+ 
+   if (!(fp = fopen(fname, "w"))) {
+      ERROR((SGE_EVENT, MSG_FILE_OPENFAILED_S , fname));
+      DEXIT;
+      return -1;
+   }
+   if (!len)
+      len = strlen(str);
+ 
+   if (fwrite(str, len, 1, fp) != 1) {
+      int old_errno = errno;
+      ERROR((SGE_EVENT, MSG_FILE_WRITEBYTESFAILED_IS, len, fname));
+      fclose(fp);
+      unlink(fname);
+      errno = old_errno;
+      DEXIT;
+      return -1;
+   }
+ 
+   fclose(fp);
+   DEXIT;
+   return 0;
+}          
+
+/****** uti/io/sge_tmpnam() ***************************************************
+*  NAME
+*     sge_tmpnam() -- Replacement for tmpnam() 
+*
+*  SYNOPSIS
+*     char* sge_tmpnam(char *fname) 
+*
+*  FUNCTION
+*     Replacement for tmpnam() 
+*
+*  INPUTS
+*     char *fname - filename 
+*
+*  RESULT
+*     char* - filename 
+*
+*  NOTE
+*     This function does NOT support static buffers with WIN32
+******************************************************************************/
+char *sge_tmpnam(char *fname)
+{
+#ifndef WIN32  /* tmpnam */
+   return tmpnam(fname);
+#else
+   char *basename;
+ 
+   if (!fname) {
+      /*
+      ** static buffer not supported
+      */
+      return NULL;
+   }
+   if (!tmpnam(fname)) {
+      return NULL;
+   }
+ 
+   /*
+   ** tmpnam in GNUWIN32 returns /tmp/sdsdfsdf
+   ** external programs cannot resolve GNU mounts
+   */
+   basename = strrchr(fname, '/');
+   if (!basename) {
+      return fname;
+   }
+   /*
+   ** evaluation of TEMP var missing here
+   */
+   memmove(fname, basename + 1, strlen(basename + 1) + 1);
+   return fname;
+#endif
+}           

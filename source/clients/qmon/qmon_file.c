@@ -37,9 +37,9 @@
 #include "qmon_cull.h"
 #include "qmon_browser.h"
 #include "qmon_file.h"
-#include "sge_answerL.h"
+#include "sge_unistd.h"
 #include "sge_gdi_intern.h"
-#include "sge_stat.h" 
+#include "sge_answer.h"
 
 lList* qmonReadFile(
 char *filename 
@@ -53,7 +53,8 @@ char *filename
    DENTER(GUI_LAYER, "qmonReadFile");
 
    if (!filename) {
-      sge_add_answer(&answer, "No filename specified", STATUS_ESYNTAX, 0);
+      answer_list_add(&answer, "No filename specified", 
+                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -64,7 +65,7 @@ char *filename
    if (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG ||
             !(fp = fopen(filename, "r"))) {
       sprintf(buf, "Cant open file '%s' for reading !", filename);
-      sge_add_answer(&answer, buf, STATUS_ESYNTAX, 0);
+      answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -76,7 +77,7 @@ char *filename
    */
    if (!(text = XtMalloc((unsigned)(statb.st_size + 1)))) {
       sprintf(buf, "Cant alloc enough space for %s", filename);
-      sge_add_answer(&answer, buf, STATUS_ESYNTAX, 0);
+      answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       fclose(fp);
       DEXIT;
       return answer;
@@ -84,7 +85,7 @@ char *filename
 
    if (!fread(text, sizeof (char), statb.st_size + 1, fp)) {
       sprintf(buf, "May not have read entire file!\n");
-      sge_add_answer(&answer, buf, STATUS_ESYNTAX, 0);
+      answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
    }
 
    text[statb.st_size] = 0; /* be sure to NULL-terminate */

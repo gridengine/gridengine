@@ -55,8 +55,8 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
-#include "def.h"
-#include "parse_range.h"
+#include "sge_answer.h"
+#include "sge_range.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -71,6 +71,7 @@
 #include "qmon_globals.h"
 #include "sge_feature.h"
 #include "resolve_host.h"
+#include "rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
 
@@ -108,6 +109,7 @@ typedef struct _tCClEntry {
    int max_aj_instances;
    int max_aj_tasks;
    int max_u_jobs;
+   int max_jobs;
    lList *cluster_users;
    lList *cluster_xusers;
    lList *cluster_projects;
@@ -249,6 +251,10 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, max_u_jobs), 
       XtRImmediate, NULL },
 
+   { "max_jobs", "max_jobs", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, max_jobs), 
+      XtRImmediate, NULL },
+
    { "cluster_users", "cluster_users", QmonRUS_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_users),
       XtRImmediate, NULL },
@@ -343,15 +349,20 @@ static Widget cluster_global_layout = 0;
 static Widget cluster_host = 0;
 
 static Widget cluster_qmaster_spool_dir = 0;
+static Widget cluster_qmaster_spool_dir_label = 0;
 static Widget cluster_execd_spool_dir = 0;
+static Widget cluster_execd_spool_dir_label = 0;
 static Widget cluster_admin_mail = 0;
+static Widget cluster_admin_mail_label = 0;
 static Widget cluster_login_shells = 0;
+static Widget cluster_login_shells_label = 0;
 static Widget cluster_default_domain = 0;
 static Widget cluster_min_uid = 0;
 static Widget cluster_min_gid = 0;
 static Widget cluster_max_aj_instances = 0;
 static Widget cluster_max_aj_tasks = 0;
 static Widget cluster_max_u_jobs = 0;
+static Widget cluster_max_jobs = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
@@ -392,6 +403,13 @@ static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
 static Widget cluster_gid_range = 0;
 static Widget cluster_admin_user = 0;
+static Widget cluster_admin_user_label = 0;
+static Widget cluster_default_domain_label = 0;
+static Widget cluster_qmaster_params_label = 0;
+static Widget cluster_schedd_params_label = 0;
+static Widget cluster_set_token_cmd_label = 0;
+static Widget cluster_pag_cmd_label = 0;
+static Widget cluster_token_extend_time_label = 0;
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownClusterConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -464,8 +482,8 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 void updateClusterList(void)
 {
-   lList *cl;
-   XmString *selectedItems;
+   lList *cl = NULL;
+   XmString *selectedItems = NULL;
    Cardinal selectedItemCount;
    Cardinal itemCount;
    XmString xglobal;
@@ -473,8 +491,9 @@ void updateClusterList(void)
    DENTER(GUI_LAYER, "updateClusterList");
 
    cl = qmonMirrorList(SGE_CONFIG_LIST);
-   lPSortList(cl, "%I+", CONF_hname);
    UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_hname);
+   XmListMoveItemToPos(cluster_host_list, "global", 1);
+
    XtVaGetValues( cluster_host_list,
                   XmNselectedItems, &selectedItems,
                   XmNselectedItemCount, &selectedItemCount,
@@ -556,8 +575,9 @@ lListElem *ep
       items = (XmString*) malloc(sizeof(XmString)*itemCount); 
 
       for(cep = lFirst(confl), i=0; cep; cep = lNext(cep), i++) {
-         sprintf(buf, "%-20.20s %s", lGetString(cep, CF_name),
-                        lGetString(cep, CF_value));
+         const char *name = lGetString(cep, CF_name);
+         const char *value = lGetString(cep, CF_value);
+         sprintf(buf, "%-20.20s %s", name ? name : "", value ? value : "");
          items[i] = XmStringCreateLtoR(buf, "LIST");
       }
       XtVaSetValues( cluster_conf_list, 
@@ -663,16 +683,24 @@ Widget parent
                            "cluster_xprojects", &cluster_xprojects,
                            "cluster_qmaster_spool_dir", 
                                     &cluster_qmaster_spool_dir,
+                           "cluster_qmaster_spool_dir_label", 
+                                    &cluster_qmaster_spool_dir_label,
                            "cluster_execd_spool_dir", 
                                     &cluster_execd_spool_dir,
+                           "cluster_execd_spool_dir_label", 
+                                    &cluster_execd_spool_dir_label,
                            "cluster_admin_mail", &cluster_admin_mail,
+                           "cluster_admin_mail_label", &cluster_admin_mail_label,
                            "cluster_login_shells", &cluster_login_shells,
+                           "cluster_login_shells_label", &cluster_login_shells_label,
                            "cluster_default_domain", &cluster_default_domain,
+                           "cluster_default_domain_label", &cluster_default_domain_label,
                            "cluster_min_uid", &cluster_min_uid,
                            "cluster_min_gid", &cluster_min_gid,
                            "cluster_max_aj_instances", &cluster_max_aj_instances,
                            "cluster_max_aj_tasks", &cluster_max_aj_tasks,
                            "cluster_max_u_jobs", &cluster_max_u_jobs,
+                           "cluster_max_jobs", &cluster_max_jobs,
                            "cluster_zombie_jobs", &cluster_zombie_jobs,
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
@@ -688,7 +716,9 @@ Widget parent
                            "cluster_loglevel", &cluster_loglevel,
                            "cluster_ignore_fqdn", &cluster_ignore_fqdn,
                            "cluster_qmaster_params", &cluster_qmaster_params,
+                           "cluster_qmaster_params_label", &cluster_qmaster_params_label,
                            "cluster_schedd_params", &cluster_schedd_params,
+                           "cluster_schedd_params_label", &cluster_schedd_params_label,
                            "cluster_execd_params", &cluster_execd_params,
                            "cluster_shepherd_cmd", &cluster_shepherd_cmd,
                            "cluster_rsh_daemon", &cluster_rsh_daemon,
@@ -696,19 +726,24 @@ Widget parent
                            "cluster_rlogin_daemon", &cluster_rlogin_daemon,
                            "cluster_rlogin_command", &cluster_rlogin_command,
                            "cluster_set_token_cmd", &cluster_set_token_cmd,
+                           "cluster_set_token_cmd_label", &cluster_set_token_cmd_label,
+                           "cluster_pag_cmd_label", &cluster_pag_cmd_label,
                            "cluster_pag_cmd", &cluster_pag_cmd,
+                           "cluster_token_extend_time_label", 
+                                    &cluster_token_extend_time_label,
                            "cluster_token_extend_time", 
                                     &cluster_token_extend_time,
                            "cluster_gid_range", 
                                     &cluster_gid_range,
                            "cluster_admin_user", 
                                     &cluster_admin_user,
+                           "cluster_admin_user_label", 
+                                    &cluster_admin_user_label,
                            NULL);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
       XtUnmanageChild(cluster_enforce_project);
       XtUnmanageChild(cluster_enforce_user);
-      XtUnmanageChild(cluster_gid_range);
       XtVaGetValues( cluster_projectsPB,
                      XmtNlayoutIn, &cluster_projects_col,
                      NULL);
@@ -943,20 +978,28 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 {
    DENTER(GUI_LAYER, "qmonClusterLayoutSetSensitive");
 
-
    XtSetSensitive(cluster_qmaster_spool_dir, False);
+   XtSetSensitive(cluster_qmaster_spool_dir_label, False);
+
    XtSetSensitive(cluster_execd_spool_dir, False);
+   XtSetSensitive(cluster_execd_spool_dir_label, False);
+
    XtSetSensitive(cluster_ignore_fqdn, False);
    XtSetSensitive(cluster_default_domain, False);
+   XtSetSensitive(cluster_default_domain_label, False);
    XtSetSensitive(cluster_admin_user, False);
+   XtSetSensitive(cluster_admin_user_label, False);
    
    XtSetSensitive(cluster_admin_mail, mode);
+   XtSetSensitive(cluster_admin_mail_label, mode);
    XtSetSensitive(cluster_login_shells, mode);
+   XtSetSensitive(cluster_login_shells_label, mode);
    XtSetSensitive(cluster_min_uid, mode);
    XtSetSensitive(cluster_min_gid, mode);
    XtSetSensitive(cluster_max_aj_instances, mode);
    XtSetSensitive(cluster_max_aj_tasks, mode);
    XtSetSensitive(cluster_max_u_jobs, mode);
+   XtSetSensitive(cluster_max_jobs, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
    XtSetSensitive(cluster_stat_log_time, mode);
    XtSetSensitive(cluster_stat_log_timePB, mode);
@@ -973,7 +1016,9 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
 
    XtSetSensitive(cluster_qmaster_params, mode);
+   XtSetSensitive(cluster_qmaster_params_label, mode);
    XtSetSensitive(cluster_schedd_params, mode);
+   XtSetSensitive(cluster_schedd_params_label, mode);
   
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtSetSensitive(cluster_enforce_project, mode);
@@ -986,8 +1031,11 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtSetSensitive(cluster_set_token_cmd, mode);
+      XtSetSensitive(cluster_set_token_cmd_label, mode);
       XtSetSensitive(cluster_pag_cmd, mode);
+      XtSetSensitive(cluster_pag_cmd_label, mode);
       XtSetSensitive(cluster_token_extend_time, mode);
+      XtSetSensitive(cluster_token_extend_time_label, mode);
    }
 
    DEXIT;
@@ -1072,6 +1120,7 @@ int local
    char max_aj_instances[255];
    char max_aj_tasks[255];
    char max_u_jobs[255];
+   char max_jobs[255];
    char zombie_jobs[20];
    static char buf[4*BUFSIZ];
    Boolean first;
@@ -1379,21 +1428,32 @@ int local
       }
 #endif
 
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         if (clen->gid_range && clen->gid_range[0] != '\0') {
-            if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
-               strcpy(errstr, "Cannot parse GID Range !");
-               alp = lFreeList(alp);
-               goto error;
-            }
+      if (clen->gid_range && clen->gid_range[0] != '\0') {
+         lList *range_list = NULL;     /* RN_Type */
+         int incorrect_gid_range = 0;
 
+         range_list_parse_from_string(&range_list, &alp, clen->gid_range,
+                                      0, 0, INF_NOT_ALLOWED);
+         if (strcasecmp(clen->gid_range, "none") && range_list == NULL) { 
+            incorrect_gid_range = 1;
+         } else if (range_list_containes_id_less_than(range_list,
+                                                    GID_RANGE_NOT_ALLOWED_ID)) {
+            range_list = lFreeList(range_list);
+            incorrect_gid_range = 1;
+         }
+
+         if (incorrect_gid_range) {
+            strcpy(errstr, "Cannot parse GID Range !");
+            alp = lFreeList(alp);
+            goto error;
+         } else {
             ep = lGetElemStr(confl, CF_name, "gid_range");
             if (!ep) {
                new = lCreateElem(CF_Type);
                lSetString(new, CF_name, "gid_range");
-            }
-            else
+            } else {
                new = lCopyElem(ep);
+            }
             lSetString(new, CF_value, clen->gid_range);
             lAppendElem(lp, new);
          }
@@ -1480,6 +1540,10 @@ int local
       sprintf(max_u_jobs, "%d", clen->max_u_jobs);
       lSetString(ep, CF_value, max_u_jobs);
          
+      ep = lGetElemStr(confl, CF_name, "max_jobs");
+      sprintf(max_jobs, "%d", clen->max_jobs);
+      lSetString(ep, CF_value, max_jobs);
+
       ep = lGetElemStr(confl, CF_name, "finished_jobs");
       sprintf(zombie_jobs, "%d", clen->zombie_jobs);
       lSetString(ep, CF_value, zombie_jobs);
@@ -1625,6 +1689,33 @@ int local
       lSetString(ep, CF_value, buf);
 
         
+      if (clen->gid_range && clen->gid_range[0] != '\0') {
+         lList *range_list = NULL;     /* RN_Type */
+         int incorrect_gid_range = 0;
+
+         range_list_parse_from_string(&range_list, &alp, clen->gid_range,
+                                      0, 0, INF_NOT_ALLOWED);
+         if (strcasecmp(clen->gid_range, "none") && range_list == NULL) { 
+            incorrect_gid_range = 1;
+         } else if (range_list_containes_id_less_than(range_list,
+                                                   GID_RANGE_NOT_ALLOWED_ID)) {
+            range_list = lFreeList(range_list);
+            incorrect_gid_range = 1;
+         }
+
+         if (incorrect_gid_range) {
+            strcpy(errstr, "Cannot parse GID Range !");
+            alp = lFreeList(alp);
+            goto error;
+         } else {
+            ep = lGetElemStr(confl, CF_name, "gid_range");
+            if (!ep)
+               ep = lAddElemStr(&confl, CF_name, "gid_range", CF_Type);
+            lSetString(ep, CF_value, clen->gid_range);
+         }
+      } else {
+         lDelElemStr(&confl, CF_name, "gid_range");
+      }
 
       if (feature_is_enabled(FEATURE_SGEEE)) {
          if (clen->enforce_project >= 0 && 
@@ -1639,21 +1730,6 @@ int local
          ep = lGetElemStr(confl, CF_name, "enforce_user");
          lSetString(ep, CF_value, str);
 
-         if (clen->gid_range && clen->gid_range[0] != '\0') {
-            if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
-               strcpy(errstr, "Cannot parse GID Range !");
-               alp = lFreeList(alp);
-               goto error;
-            }
-   
-            ep = lGetElemStr(confl, CF_name, "gid_range");
-            if (!ep)
-               ep = lAddElemStr(&confl, CF_name, "gid_range", CF_Type);
-            lSetString(ep, CF_value, clen->gid_range);
-         }
-         else {
-            lDelElemStr(&confl, CF_name, "gid_range");
-         }
          /*
          ** (x)projects
          */
@@ -1892,6 +1968,7 @@ tCClEntry *clen
    StringConst max_aj_instances;
    StringConst max_aj_tasks;
    StringConst max_u_jobs;
+   StringConst max_jobs;
    StringConst zombie_jobs;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
@@ -1938,6 +2015,10 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "max_u_jobs"))) {
       max_u_jobs = lGetString(ep, CF_value);
       clen->max_u_jobs = max_u_jobs ? atoi(max_u_jobs) : 0;
+   }
+   if ((ep = lGetElemStr(confl, CF_name, "max_jobs"))) {
+      max_jobs = lGetString(ep, CF_value);
+      clen->max_jobs = max_jobs ? atoi(max_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
       zombie_jobs = lGetString(ep, CF_value);
@@ -2035,6 +2116,10 @@ tCClEntry *clen
                            US_Type, US_name, NULL);
    }
 
+   if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
+      clen->gid_range = XtNewString(lGetString(ep, CF_value));
+
+
    if (feature_is_enabled(FEATURE_SGEEE)) {
       if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
          str = lGetString(ep, CF_value);
@@ -2049,9 +2134,6 @@ tCClEntry *clen
          clen->enforce_user = 0;
       else
          clen->enforce_user = 1;
-
-      if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
-         clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
       if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
          clen->cluster_projects = lFreeList(clen->cluster_projects);
@@ -2205,6 +2287,7 @@ tCClEntry *clen
    clen->max_aj_instances = 0;
    clen->max_aj_tasks = 0;
    clen->max_u_jobs = 0;
+   clen->max_jobs = 0;
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;

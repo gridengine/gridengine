@@ -1,0 +1,556 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>Grid Engine Common Problems</TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT=" ">
+	<META NAME="CREATED" CONTENT="20020111;13083600">
+	<META NAME="CHANGED" CONTENT="20020419;13045300">
+	<STYLE>
+	<!--
+		@page { size: 21.59cm 27.94cm }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US">
+<H1><FONT COLOR="#336699"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Common
+problems using Grid Engine</B></FONT></FONT></H1>
+<P STYLE="margin-bottom: 0cm">The present HOWTO goes over some
+commonly seen problems experienced when using Grid Engine, and
+appropriate solutions. The information is presented in a tabular
+chart, using the following scheme:</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<TABLE WIDTH=288 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: avoid">
+	<COL WIDTH=136>
+	<COL WIDTH=134>
+	<THEAD>
+		<TR>
+			<TH COLSPAN=2 WIDTH=278 VALIGN=TOP BGCOLOR="#ff8080">
+				<P><I>Category</I></P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR>
+			<TH COLSPAN=2 WIDTH=278 VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><I>Symptom</I></P>
+			</TH>
+		</TR>
+		<TR VALIGN=TOP>
+			<TH WIDTH=136>
+				<P><I>Cause</I></P>
+			</TH>
+			<TH WIDTH=134>
+				<P><I>Resolution</I></P>
+			</TH>
+		</TR>
+	</TBODY>
+</TABLE>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P STYLE="margin-bottom: 0cm">For problems which are not explicitly
+mentioned here, search for a symptom in the appropriate category
+which matches your problem as closely as possible, and see if the
+resolution fixes your particular case.</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<H3>Categories:</H3>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#batch">Batch Submit</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#monitoring">Monitoring</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#miscerrmsg">Miscellaneous
+	Error Messages</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#interactive">Qrsh/Interactive
+	Jobs</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#qmake">Qmake</A></P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="#qmon">Qmon</A></P>
+</UL>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<HR>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: avoid">
+	<COL WIDTH=128*>
+	<COL WIDTH=128*>
+	<THEAD>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="batch"></A>Batch Submit</P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P>My output file for my job says 
+				</P>
+				<PRE>&quot;Warning: no access to tty; thus no job control in this shell...&quot;</PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P>One or more of your login files contain an stty command. These
+				commands are only useful if there is a terminal present. 
+				</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>In Sun Grid Engine batch jobs, there is no termional
+				associated with these jobs. You need to either remove all stty
+				commands from your login files, or bracket them with an 'if'
+				statement which checks for a terminal before processing. An
+				example of this is below: 
+				</P>
+				<PRE>/bin/csh:
+stty -g            # checks terminal status
+if ($status == 0)  # succeeds if a terminal is present
+&lt;place all stty commands in here&gt;
+endif</PRE>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				job standard error log file says:</FONT></FONT></FONT></P>
+				<PRE STYLE="margin-bottom: 0.5cm">`tty`: Ambiguous</PRE><P>
+				<FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>but
+				there is no reference to tty in user's shell which is called in
+				job script</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">shell_start_mode
+				is by default posix_compliant; therefore, all job scripts run
+				with the shell specified in the queue definition, not the one
+				specified on the first line of the job script</FONT></FONT>.</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>use
+				the -S flag to qsub, or change shell_start_mode to unix_behavior</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>I
+				can run my job script from the command line, but it fails when
+				run via qsub.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Process
+				limits could be being set for your job. To test this, write a
+				test script which does limit and limit -h. Execute both
+				interactively at the shell prompt and through qsub to compare the
+				result.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>make
+				sure to remove any commands in configuration files which sets
+				limits in your shell.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="monitoring"></A>Monitoring</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Exec
+				hosts report a load of 99.99</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>There
+				are a few things that could cause your exec hosts to report a
+				load of 99.99:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<OL>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+					execd is not running on the host.</FONT></FONT></FONT></P>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>A
+					default domain is incorrectly specified</FONT></FONT></FONT></P>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+					qmaster host sees the exec host as a different name as the exec
+					host sees itself.</FONT></FONT></FONT></P>
+				</OL>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Depending
+				on the cause, here are the appropriate solutions</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<OL>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Start
+					up the execd as root on the host by running the
+					$SGE_ROOT/default/common/rcsge script </FONT></FONT></FONT>
+					</P>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Run
+					'qconf -mconf' as the Sun Grid Engine administrator and change
+					the default_domain to none. </FONT></FONT></FONT>
+					</P>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Please
+					see the AppNote/HOWTO <A HREF="http://supportforum.sun.com/gridengine/appnote_loadinfo.html" TARGET="_child">loadinfo</A> for more
+					information. </FONT></FONT></FONT>
+					</P>
+				</OL>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="miscerrmsg"></A>Miscellaneous Error Messages</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>A
+				warning is printed to &lt;cell&gt;/spool/&lt;host&gt;/messages
+				every 30 seconds. The messages look like this: </FONT></FONT></FONT>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE STYLE="margin-bottom: 0.5cm">Tue Jan 23 21:20:46 2001|execd|meta|W|local 
+configuration meta not defined - using global configuration </PRE><P>
+				<FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>But
+				there IS a file for each host in &lt;cell&gt;/common/local_conf/,
+				each with FDQN.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				hostname resolving at your machine &quot;meta&quot; returnes the
+				short name, while at your master machine &quot;meta&quot; with
+				FQDN is returned. </FONT></FONT></FONT>
+				</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Make
+				sure that all of your /etc/hosts files and your NIS table are
+				consistent with this respect. In this example, there could be a
+				line like</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE STYLE="margin-bottom: 0.5cm">168.0.0.1 meta meta.your.domain</PRE><P STYLE="margin-bottom: 0cm">
+				<FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>in
+				/etc/hosts of the host &quot;meta&quot; while it should be
+				instead</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>168.0.0.1 meta.your.domain meta</PRE>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P>Occasionally I see &quot;CHECKSUM ERROR&quot;, &quot;WRITE
+				ERROR&quot; or &quot;READ ERROR&quot; messages in the &quot;messages&quot;
+				files of the daemons. Do I need to worry about these?</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P>As long as these messages do not appear in a one second
+				interval (they<BR>typically may appear between 1-30 times per
+				day), there is no need<BR>to do anything on this issue.</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Jobs
+				will finish on a particular queue: qmaster/messages:</FONT></FONT></FONT></P>
+				<PRE STYLE="margin-bottom: 0.5cm">Wed Mar 28 10:57:15 2001|qmaster|masterhost|I|job 490.1 finished on host exechost </PRE><P STYLE="margin-bottom: 0cm">
+				<FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>But
+				then the following errors are seen on the exec host: </FONT></FONT></FONT>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>exechost/messages:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE STYLE="margin-bottom: 0.5cm">Wed Mar 28 10:57:15 2001|execd|exechost|E|can't find directory 
+&quot;active_jobs/490.1&quot; for reaping job 490.1</PRE><P STYLE="margin-bottom: 0cm">
+				<BR>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>exechost/messages:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>Wed Mar 28 10:57:15 2001|execd|exechost|E|can't remove directory 
+&quot;active_jobs/490.1&quot;: opendir(active_jobs/490.1) failed: Input/output error </PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				$SGE_ROOT directory, which is automounted, is being unmounted,
+				causing the sge_execd to lose its cwd.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Use
+				a local spool directory for you execd host. Set the parameter
+				execd_spool_dir using qmon or qconf.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="interactive"></A>Qrsh/Interactive Jobs</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Submitting
+				interactive jobs with qrsh, I get the error: </FONT></FONT></FONT>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE STYLE="margin-bottom: 0.5cm">% qrsh -l mem_free=1G error: error: no suitable queues </PRE><P>
+				<FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Yet
+				queues are available for batch jobs using qsub, and can be
+				queried using qhost -l mem_free=1G and qstat -f -l mem_free=1G.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>The
+				message &quot;error: no suitable queues&quot; results from the
+				&quot;-w e&quot; submit option which is active by default for
+				interactive jobs like qrsh (look for &quot;-w e&quot; in for
+				qrsh(1)). This option causes the submit command to fail, if the
+				qmaster does not know for sure that the job will be dispatchable
+				according to the current cluster configuration. The intension of
+				this mechanism is to decline job requests in advance in case they
+				can't be granted.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>In
+				this case 'mem_free' is configured to be a consumable resource,
+				but you have not specified the amount of memory being available
+				at each the host. The memory load values are deliberately not
+				considered for this check, because they vary, so they can't be
+				seen as part of the cluster configuration. To overcome this you
+				can either </FONT></FONT></FONT>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<UL>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>omit
+					this check generally by overriding qrsh's default setting &quot;-w
+					e&quot; explicitly by submitting it with &quot;-w n&quot; (can
+					also be put into $SGE_ROOT/&lt;cell&gt;/common/cod_request)</FONT></FONT></FONT></P>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>if
+					you intend managing 'mem_free' as a consumbale resource specify
+					the 'mem_free' capacity for your hosts in 'complex_values' of
+					host_conf(5) by using 'qconf -me &lt;hostname&gt;'</FONT></FONT></FONT></P>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>if
+					you don't intend managing 'mem_free' as consumable resource make
+					it a non-consumable resource again in the 'consumable' column of
+					complex(5) by using 'qconf -mc host'</FONT></FONT></FONT></P>
+				</UL>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>qrsh
+				wont dispatch to the same node it is on. From a qsh shell:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>host2 [49]% qrsh -inherit host2 hostname
+error: executing task of job 1 failed: 
+
+host2 [50]% qrsh -inherit host4 hostname
+<FONT COLOR="#000000"><FONT FACE="Cumberland, monospace"><FONT SIZE=2><SPAN LANG="en-US">host4</SPAN></FONT></FONT></FONT></PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>gid_range
+				not sufficient. It should be defined as a range, not a single
+				number. SGEEE assigns each job on a host a distinct gid.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Adjust
+				gid_range using 'qconf -mconf' or qmon. The suggested range is:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>gid_range                 20000-20100</PRE>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>qrsh
+				-inherit -V does not work when used inside a parallel job:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>cannot get connection to &quot;qlogin_starter&quot;</PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>This
+				problem occurs with nested qrsh calls, and is due to the -V
+				switch. The first qrsh -inherit call will set the environment
+				variable TASK_ID (the id of the tightly integrated task within
+				the parallel job). The second qrsh -inherit call will then use
+				this environment variable for registration of its task which will
+				fail as it tries to start a task with the same id as the already
+				running first task.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>You
+				can either</FONT></FONT></FONT></P>
+				<UL>
+					<LI><P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>unset
+					TASK_ID before calling qrsh -inherit</FONT></FONT></FONT></P>
+					<LI><P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>not
+					use the -V switch, but -v and export only the environment
+					variables really needed.</FONT></FONT></FONT></P>
+				</UL>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>qrsh
+				does not seem to work at all:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>host2$ qrsh -verbose hostname
+local configuration host2 not defined - using global configuration 
+waiting for interactive job to be scheduled ...
+Your interactive job 88 has been successfully scheduled.
+Establishing /share/gridware/utilbin/solaris64/rsh session to host exehost ...
+rcmd: socket: Permission denied
+/share/gridware/utilbin/solaris64/rsh exited with exit code 1
+reading exit code from shepherd ... 
+error: error waiting on socket for client to connect: Interrupted system call
+error: error reading returncode of remote command
+cleaning up after abnormal exit of /share/gridware/utilbin/solaris64/rsh
+host2$ </PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Permissions
+				for qrsh are not set properly</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Check
+				the permissions of the following files. They are located in
+				$SGE_ROOT/utilbin/. </FONT></FONT></FONT>
+				</P>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Note
+				that rlogin and rsh need to be setuid and owned by root. </FONT></FONT></FONT>
+				</P>
+				<PRE>-r-s--x--x 1 root root 28856 Sep 18 06:00 rlogin*
+-r-s--x--x 1 root root 19808 Sep 18 06:00 rsh*
+-rwxr-xr-x 1 sgeadmin adm 128160 Sep 18 06:00 rshd*</PRE><P STYLE="margin-bottom: 0cm">
+				<BR>
+				</P>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>NOTE:
+				the $SGE_ROOT directory also needs to be NFS-mounted with the
+				&quot;setuid&quot; option. If it is mounted with &quot;nosuid&quot;
+				from your submit client, then qrsh (and associated commands) will
+				not work.</FONT></FONT></FONT></P>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="qmake"></A>Qmake</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>When
+				trying to start a distributed make qmake exits with the following
+				error message:</FONT></FONT></FONT></P>
+				<PRE>qrsh_starter: executing child process qmake failed: No such file or directory</PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Grid
+				Engine will start an instance of qmake on the execution host. If
+				the Grid Engine environment (esp. the PATH) is not setup in the
+				users</FONT></FONT></FONT></P>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>shell
+				resource file (.profile/.cshrc) this qmake call will fail.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Use
+				the -v option to export the PATH to the qmake job. A typical
+				qmake call is</FONT></FONT></FONT></P>
+				<PRE>qmake -v PATH -cwd -pe make 2-10 --</PRE>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>When
+				doing qmake, the error seen is:</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<PRE>waiting for interactive job to be scheduled ...timeout (4 s) 
+expired while waiting on socket fd 5
+
+Your &quot;qrsh&quot; request could not be scheduled, try again later.</PRE>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>ARCH
+				variable could be set incorrectly in shell which called qmake</FONT></FONT></FONT></P>
+				<P STYLE="margin-bottom: 0cm"><BR>
+				</P>
+				<P><BR>
+				</P>
+			</TD>
+			<TD WIDTH=50%>
+				<P STYLE="margin-bottom: 0cm"><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Set
+				ARCH variable correctly to a supported value matching a host
+				available in your cluster, or else specify the correct value at
+				submit time, eg,</FONT></FONT></FONT></P>
+				<PRE>qmake -v ARCH=solaris64 ...</PRE>
+			</TD>
+		</TR>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ff8080">
+				<P><A NAME="qmon"></A>Qmon</P>
+			</TH>
+		</TR>
+		<TR>
+			<TD COLSPAN=2 WIDTH=100% VALIGN=TOP BGCOLOR="#ffcc99">
+				<P STYLE="font-weight: medium">Why am I am having refresh
+				problems when running Qmon? 
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=50%>
+				<P><FONT COLOR="#000000"><FONT FACE="Thorndale, serif"><FONT SIZE=3>Your
+				system needs to be updated with the proper Xserver patch.</FONT></FONT></FONT></P>
+			</TD>
+			<TD WIDTH=50%>
+				<P><FONT FACE="Thorndale, serif"><FONT COLOR="#000000">X-server
+				Patch <A HREF="http://sunsolve.Sun.COM/pub-cgi/show.pl?target=patches/patch-access" TARGET="_child">105633-48</A>
+				fixes the problem of the icons not refreshing properly as well as
+				icons painting over non-qmon windows. It is important to install
+				the patch in console mode (no X running) otherwise the patch
+				installation will fail</FONT></FONT></P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P STYLE="margin-bottom: 0cm">Last updated: <SDFIELD TYPE=DATETIME SDNUM="1033;1033;MMM D, YYYY">Apr 19, 2002</SDFIELD></P>
+</BODY>
+</HTML>

@@ -32,13 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_report_execd.h"
 
-
-#include "report.h"
 extern report_source execd_report_sources[];
 
 lList *sge_build_load_report(void);
-
 
 #endif /* __LOAD_AVG_H */
 

@@ -33,32 +33,30 @@
 #include <signal.h>
 
 #ifdef WIN32NATIVE
-//#	include "def.h"
 #	include "win32nativetypes.h"
 #endif /* WIN32NATIVE */
 
 #include "sge_gdi.h"
 #include "sge_gdi_intern.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
 #include "sgermon.h"
-#include "sge_exit.h"
-#include "utility.h"
+#include "sge_unistd.h"
 #include "qm_name.h"
 #include "sge_security.h"
 
 static void default_exit_func(int i);
 
-static exit_func_type gdi_exit_func = default_exit_func;
+static sge_exit_func_t gdi_exit_func = default_exit_func;
 
 static int made_setup = 0;
 static int program_id = QUSERDEFINED;
 static int isalive = 0;
 static int exit_on_error = 1;
 
-/****** gdi_setup/sge_gdi_setup() **********************************************
+/****** gdi/setup/sge_gdi_setup() *********************************************
 *  NAME
 *     sge_gdi_setup() -- setup GDI 
 *
@@ -76,8 +74,7 @@ static int exit_on_error = 1;
 *     AE_OK            - everything is fine
 *     AE_QMASTER_DOWN  - the master is down 
 *
-********************************************************************************
-*/
+******************************************************************************/
 int sge_gdi_setup(const char *programname)
 {
    lList *alp = NULL;
@@ -86,7 +83,7 @@ int sge_gdi_setup(const char *programname)
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -98,12 +95,11 @@ int sge_gdi_setup(const char *programname)
    sge_setup(program_id, exit_on_error?NULL:&alp);
    if (alp) {
       alp = lFreeList(alp);
-/*       fprintf(stderr, "%s", lGetString(lFirst(alp), AN_text)); */
       DEXIT;
       return AE_QMASTER_DOWN;
    }
    prepare_enroll(programname, 0, NULL);
-   install_exit_func(gdi_exit_func);
+   sge_install_exit_func(gdi_exit_func);
 
 
    /* check if master is alive */
@@ -123,9 +119,9 @@ int sge_gdi_setup(const char *programname)
 }
 
 
-/****** gdi_setup/sge_gdi_param() **********************************************
+/****** gdi/setup/sge_gdi_param() *********************************************
 *  NAME
-*     sge_gdi_param() -- add some additional parameters for sge_gdi_setup() 
+*     sge_gdi_param() -- add some additional params for sge_gdi_setup() 
 *
 *  SYNOPSIS
 *     int sge_gdi_param(int param, int intval, char* strval) 
@@ -136,25 +132,26 @@ int sge_gdi_setup(const char *programname)
 *
 *  INPUTS
 *     int param    - constant identifying the parameter 
-*                       SET_MEWHO - intval will be the program id
-*                       SET_LEAVE - strval is a pointer to an exit function
-*                       SET_EXIT_ON_ERROR - intval is 0 or 1
-*                       SET_ISALIVE - 0 or 1 -  do check whether master is alive
+*                       SET_MEWHO - 
+*                          intval will be the program id
+*                       SET_LEAVE - 
+*                          strval is a pointer to an exit function
+*                       SET_EXIT_ON_ERROR - 
+*                          intval is 0 or 1
+*                       SET_ISALIVE - 0 or 1 -  
+*                          do check whether master is alive
 *     int intval   - integer value or 0 
 *     char* strval - string value or NULL 
 *
 *  RESULT
 *     AE_OK            - parameter was set successfully
-*     AE_ALREADY_SETUP - sge_gdi_setup() was called befor sge_gdi_param() 
+*     AE_ALREADY_SETUP - sge_gdi_setup() was called beforie 
+*                        sge_gdi_param() 
 *     AE_UNKNOWN_PARAM - param is an unknown constant
 *
-********************************************************************************
-*/
-int sge_gdi_param(
-int param,
-int intval,
-char *strval 
-) {
+******************************************************************************/
+int sge_gdi_param(int param, int intval, char *strval) 
+{
    DENTER(TOP_LAYER, "sge_gdi_param");
 
    if (made_setup) {
@@ -170,7 +167,7 @@ char *strval
       isalive = 1;
       break;
    case SET_LEAVE:
-      gdi_exit_func = (exit_func_type) strval;
+      gdi_exit_func = (sge_exit_func_t) strval;
       break;
    case SET_EXIT_ON_ERROR:
       exit_on_error = intval;
@@ -184,15 +181,14 @@ char *strval
    return AE_OK;
 }
 
-static void default_exit_func(
-int i 
-) {
+static void default_exit_func(int i) 
+{
    sge_security_exit(i); 
 
    leave_commd();  /* tell commd we're going */
 }
 
-/****** gdi_shutdown/sge_gdi_shutdown() ****************************************
+/****** gdi/setup/sge_gdi_shutdown() ******************************************
 *  NAME
 *     sge_gdi_shutdown() -- gdi shutdown.
 *
@@ -200,15 +196,9 @@ int i
 *     int sge_gdi_shutdown()
 *
 *  FUNCTION
-*     This function has to be called before quitting the program. It cancels
-*     registration at commd.
-*
-*  INPUTS
-*
-*  RESULT
-*
-********************************************************************************
-*/  
+*     This function has to be called before quitting the program. It 
+*     cancels registration at commd.
+******************************************************************************/  
 int sge_gdi_shutdown()
 {
    DENTER(TOP_LAYER, "sge_gdi_shutdown");

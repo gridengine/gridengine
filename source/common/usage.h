@@ -50,6 +50,7 @@ enum {
    OA_CKPT_SEL,
    OA_DATE_TIME,
    OA_DESTIN_ID_LIST,
+   OA_DESTIN_ID_LIST2,
    OA_HOLD_LIST,
    OA_HOST_ID_LIST,
    OA_JOB_ID_LIST,
@@ -62,7 +63,8 @@ enum {
    OA_NODE_LIST,
    OA_NODE_PATH,
    OA_NODE_SHARES_LIST,
-   OA_PATH_LIST,
+   OA_PATH_LIST,  
+   OA_FILE_LIST,
    OA_PRIORITY,
    OA_RESOURCE_LIST,
    OA_SERVER,
@@ -89,6 +91,5 @@ extern int start_commd;
 
 void mark_argument_syntax(int argument_number);
 void sge_usage(FILE *fp);
-void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
 #endif /* __USAGE_H */

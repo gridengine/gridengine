@@ -37,7 +37,7 @@
 #include "commlib.h"
 #include "sge_gdi_intern.h"
 #include "msg_commd.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_language.h"
 #include "sge_feature.h"
 
@@ -50,9 +50,8 @@ void usage()
 {
    printf("%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
-   printf("%s\n commdcntl [-k | -t level | -d] [-p commdport] [-U] [-host dst_host]\n", MSG_USAGE);
-
-   printf("          [-gid commprocname] [-unreg commprocname id]\n");
+   printf("%s sgecommdcntl [-k | -t level | -d] [-p commdport] [-U] \\\n", MSG_USAGE);
+   printf("       [-host dst_host] [-gid commprocname] [-unreg commprocname id]\n");
    printf("    -k     %s",MSG_COMMDCNTL_k_OPT_USAGE);
    printf("    -t     %s",MSG_COMMDCNTL_t_OPT_USAGE);
    printf("    -d     %s \"/tmp/commd/commd.dump\"\n",MSG_COMMDCNTL_d_OPT_USAGE);

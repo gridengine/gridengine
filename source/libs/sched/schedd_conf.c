@@ -37,16 +37,12 @@
 #	include <unistd.h>
 #endif
 
-
 #include "sge_conf.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
 #include "sge_string.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
-#include "sge_schedconfL.h"
-#include "sge_answerL.h"
+#include "sge_schedd_conf.h"
 #include "cull.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
@@ -55,12 +51,15 @@
 #include "sge_feature.h"
 #include "cull_parse_util.h"
 #include "sge_log.h"
-#include "parse_range.h"
+#include "sge_answer.h"
+#include "sge_range.h"
+#include "sge_schedd_conf.h"
+#include "sge_complex.h"
+
 #include "msg_schedd.h"
-#include "sge_dirent.h"
 
 sge_schedd_conf_type scheddconf = { 
-   NULL, 0, 0, 0, 0, NULL, 0, NULL 
+   NULL, 0, 0, 0, 0, 0, NULL, 0, NULL 
 };
 lList *schedd_config_list = NULL;
 
@@ -80,7 +79,8 @@ int sc_set(
 lList **alpp,             /* AN_Type */ 
 sge_schedd_conf_type *sc, /* if NULL we just check sc_ep */
 lListElem *sc_ep,         /* SC_Type */  
-u_long32 *si              /* here scheduling interval gets written */
+u_long32 *si,             /* here scheduling interval gets written */
+lList *cmplx_list
 ) {
    char tmp_buffer[1024], tmp_error[1024];
    u_long32 uval;
@@ -94,8 +94,8 @@ u_long32 *si              /* here scheduling interval gets written */
    s = lGetString(sc_ep, SC_algorithm);
    if ( !s || (strcmp(s, "default") && strcmp(s, "simple_sched") 
       && strncmp(s, "ext_", 4))) {
-      sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME ); 
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME_S, s)); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -107,9 +107,9 @@ u_long32 *si              /* here scheduling interval gets written */
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, 
        s=lGetString(sc_ep, SC_schedule_interval), tmp_error, 
        sizeof(tmp_error),0) ) {
-         sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
-         "schedule_interval", tmp_error);    
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
+         "schedule_interval", tmp_error));    
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
    }
@@ -132,7 +132,10 @@ u_long32 *si              /* here scheduling interval gets written */
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "queue_sort_method"));
 
    /* --- SC_user_sort */
-   uval = lGetUlong(sc_ep, SC_user_sort);
+   uval = lGetBool(sc_ep, SC_user_sort);
+   if(sc) {
+      sc->user_sort = uval;
+   }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , uval?MSG_TRUE:MSG_FALSE, "user_sort"));
 
    /* --- SC_job_load_adjustments */
@@ -154,7 +157,7 @@ u_long32 *si              /* here scheduling interval gets written */
    ret=sge_fill_requests(lGetList(qep, nm), Master_Complex_List, 1, 0, 1);
    if (ret) {
    /* error message gets written by sge_fill_requests into SGE_EVENT */
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, NUM_AN_ERROR);
+   answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    DEXIT;
    return STATUS_EUNKNOWN;
    }
@@ -175,9 +178,9 @@ u_long32 *si              /* here scheduling interval gets written */
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, 
          s=lGetString(sc_ep, SC_load_adjustment_decay_time), tmp_error, 
          sizeof(tmp_error),0)) {
-      sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, 
-         "load_adjustment_decay_time", tmp_error);    
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, 
+         "load_adjustment_decay_time", tmp_error));    
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -186,10 +189,15 @@ u_long32 *si              /* here scheduling interval gets written */
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
 
    /* --- SC_load_formula */
+   if (cmplx_list != NULL &&
+       !schedd_conf_is_valid_load_formula(sc_ep, alpp, cmplx_list)) {
+      DEXIT;
+      return -1;
+   }
    if (sc) {
       sc->load_formula = sge_strdup(sc->load_formula, 
          lGetString(sc_ep, SC_load_formula));
-      strip_blanks(sc->load_formula);
+      sge_strip_blanks(sc->load_formula);
    }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, 
          lGetString(sc_ep, SC_load_formula), "load_formula"));
@@ -211,18 +219,19 @@ u_long32 *si              /* here scheduling interval gets written */
       else if (!strcmp("job_list", key)) 
          ikey = SCHEDD_JOB_INFO_JOB_LIST;
       else {
-         sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM );
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
       /* check list of groups */
       if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
          key = strtok(NULL, "\n");
-         if (!(rlp=parse_ranges(key, 0, 0, &alp, NULL, INF_NOT_ALLOWED))) {
+         range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
+         if (rlp == NULL) {
             lFreeList(alp);
-            sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST);
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }   
@@ -244,9 +253,9 @@ u_long32 *si              /* here scheduling interval gets written */
       if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, 
             s=lGetString(sc_ep, SC_sgeee_schedule_interval), tmp_error, 
             sizeof(tmp_error),0)) {
-         sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
-            "sgeee_schedule_interval", tmp_error);    
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , 
+            "sgeee_schedule_interval", tmp_error));    
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -305,4 +314,15 @@ u_long32 *si              /* here scheduling interval gets written */
 
    DEXIT;
    return 0;
+}
+
+int set_user_sort(int user_sort) 
+{
+   scheddconf.user_sort = user_sort;
+   return scheddconf.user_sort;
+}
+
+int get_user_sort(void)
+{
+   return scheddconf.user_sort;
 }

@@ -1,0 +1,83 @@
+Bugs fixed in SGE 5.3p2 since release 5.3p1
+-------------------------------------------
+
+Issue   Sun BugId  Description
+---------------------------------------------------------------------------------------------------
+214     4658716    protocol doing termin. on failure for tightly integr. par. job could be leaner
+325     4716824    qlogin and qrsh accept unsupported options
+328     4718880    qsub/qalter -l <shortcut_name>... might select wrong resource.
+        4719218    "Job Submission" GUI: blank text in pop out window
+331     4719755    wrong port output in qstat error message when qmaster not reachable
+        4721129    A misoperation in host configuration on qmon leads to qmaster daemon's death
+        4721134    qmon gets shutdown with the message "Segmentation Fault" in terminal
+        4721181    Wrong path for qmaster messages file in exe host installation
+        4722060    CLI: invalid option "-jid jid" for qconf in qconf -help
+        4723543    Too small panes and cells to display some item names
+346     4727457    Proper $SGE_CELL setting fails with non default cell in settings.sh
+345     4727515    maxujobs prevents dispatching even if job limit is not reached
+        4728293    qmon gets shutdown with a word "global" in Cluster Configuration
+355     4731288    qmon cluster config dialog does not show gid_range in SGE product mode
+356     4731347    can configure fshare/otickets in acls of type DEPT
+        4731348    access_list(5) man page does not describe file format for SGEEE ACL's
+370     4732031    OK without hostname in host_configuration kill sge_qmaster
+359     4732545    gethostbyaddr in ~/solaris64 doesn't work.
+        4733043    qmon dumps core when mouse over an interactive job in Job Control window
+        4733089    qmon dies after checking 'transfer' in 'queue control' window
+        4733092    requirement for installation process of exec host with non root user
+360     4733859    Userset "defaultdepartment" accepts users in CLI
+        4735258    CLI: Wrong info for usage
+363     4735972    scheduler crashes if all subnodes of a node have 0 shares in sharetree
+371     4739596    rlim_fd_max > 1024 can cause 32 bit daemons to crash at startup phase
+350     4740335    qmon dies with changes in Edit Tickets on Solaris64.
+313     4740350    problems with destin_id_list syntax
+333     4740407    SGEEE: Insufficient checking for PTF_{MIN,MAX}_PRIORITY in execd_params
+330     4740578    load formula of the scheduler
+354     4741230    qmod help output is incomplete
+350     4742082    Calculation failure in Functional policy wit hvery large numbers
+219     4742133    rcsge startup script has hardwired execd_spool_dir for "stop" procedure
+374     4742189    schedd_job_info = true causes immense daemons memory growth in large systems
+342     4744523    no error message for interactive job start failure due to wrong DISPLAY settings
+325     4745387    qsh, qrsh and qlogin silently ignore options -ac, -dc, -sc and -w
+335     4745399    qmake without any information about parallel execution fails
+327     4745404    qmake does an incorrect resource request if ARCH is an empty string
+379     4747829    accounting record about qrsh termination incomplete
+302     4753668    prevent deletion of still referenced objects
+308     4753669    qconf gets commd timeout
+        4753766    Various fixes for 5.3p2 in man pages 
+        4754435    OpenSSL 0.9.6c security vulnerability
+389     4755931    possible file access problems on 64-bit file system with 32-bit binaries
+383                Fixed restart_command for checkpoint jobs
+                   linux clients use port 65535 by error if COMMD_PORT/sge_commd service not set
+                   Exiting sgeee jobs can be shown in qmon dialog dialog for pending jobs
+                   Documentation update for loose Sun HPC cluster tools integration
+
+
+Bugs fixed in SGE 5.3p1 since release 5.3
+-----------------------------------------
+
+Issue	Sun BugId  Description
+---------------------------------------------------------------------------------------------------
+182                allow arguments for *_command and *_daemon parameters in cluster config
+215     4673738    disallow "none" load formula and do additional tests for the correctness
+223 	4700286    complex default value not considered for load/suspend thresholds
+226	4665780    qmaster error message during startup: global configuration doesn't exist - creat
+229	4668148    solaris psets won't be used by SGE
+231 	4697491    signal notification can prevent delivery of actual suspend/termination signal
+232 	4708239    Allow specification of arguments to [rsh|rlogin|qlogin]_[daemon|command]
+236	4670664    parallel jobs (e.g. qmake) fail
+237	4670669    error message "can't set additional group id for job" for interactive jobs
+239	4675410    queue suspend threshold alarm nsuspend>1 does not susp. multiple jobs
+240	4675416    use of suspend thresholds can break user sort policy and cause logging
+243	4676340    memory leak in sge_schedd
+247     4696768    SGE(EE) allows to submit binary job scripts
+250     4682966    qsh(1) ignores -S <shell> in sge_request(5) files
+251     4683852    qalter on running jobs can confuse consumable mgmt
+259     4686157    qhost -j is broken
+271     4692957    non-privileged users can submit jobs with priority higher than 0
+272 	4708235    SGE should allow to start qrsh jobs when /etc/nologin exits
+275 	4706929    qmon does not display job predecessors in job control
+284 	4699665    qstat resource based job selection broken
+287 	4701640    problems launching jobs from qtcsh with "&"
+299     4677087    execd could crash when executing tightly integrated parallel jobs
+311 	4712023    global load values can prevent dispatching of jobs
+314 	4713013    qacct may display incorrect accounting information

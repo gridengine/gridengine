@@ -30,7 +30,7 @@ script <i>sge5</i> with the <i>-shadowd</i>&nbsp; option.</font>
 <p><font size=+1>Note that the shadowd will <b>not</b> start a new qmaster/schedd
 if the file "lock" exists in the qmaster spool directory. This file is
 written by the qmaster in the case of a regular shutdown of the cluster
-(<i>qconf -km</i>). The shadowd identifies inavailability of the qmaster
+(<i>qconf -km</i>). The shadowd identifies unavailability of the qmaster
 service first by reading a so called heartbeat file, which an active qmaster
 updates from time to time. If it does not get updated, the shadowd will
 <b>not</b>

@@ -39,16 +39,15 @@
              
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_me.h"
 #include "sge_conf.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_peL.h"
+#include "sge_ja_task.h"
+#include "sge_job.h"
+#include "sge_pe_task.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_usageL.h"
-#include "sge_queueL.h"
-#include "sge_job_reportL.h"
 #include "dispatcher.h"
 #include "sge_parse_num_par.h"
 #include "reaper_execd.h"
@@ -61,13 +60,17 @@
 #include "symbols.h"
 #include "exec_job.h"
 #include "read_write_job.h"
-#include "sge_switch_user.h"
 #include "execution_states.h"
-#include "sge_stat.h" 
 #include "msg_execd.h"
 #include "sge_string.h"
 #include "sge_feature.h"
+#include "sge_uidgid.h"
 #include "sge_security.h"
+#include "sge_unistd.h"
+#include "sge_hostname.h"
+#include "sge_prog.h"
+#include "get_path.h"
+#include "sge_report.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -80,7 +83,7 @@
 #include "sge_stringL.h"
 
 #if COMPILE_DC
-static int repriorisation_enabled = 0;
+static int reprioritization_enabled = 0;
 #endif
 
 extern volatile int dead_children;
@@ -88,13 +91,12 @@ extern volatile int waiting4osjid;
 
 
 static int sge_start_jobs(void);
-static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *slave_jep, lListElem *slave_jatep);
+static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
 
 extern int shut_me_down;
 extern volatile int jobs_to_start;
 
 extern lList *jr_list;
-extern lList *Master_Job_List;
 
 #ifdef COMPILE_DC
 static void notify_ptf(void);
@@ -137,14 +139,11 @@ static void notify_ptf()
             }
 
             for_each(tep, lGetList(jatep, JAT_task_list)) {
-               lListElem* task_jatep;
-
-               task_jatep = lFirst(lGetList(tep, JB_ja_tasks));
-               if (lGetUlong(task_jatep, JAT_status) == JWAITING4OSJID) {
+               if (lGetUlong(tep, PET_status) == JWAITING4OSJID) {
                   switch ( register_at_ptf(jep, jatep, tep)) {
                      case 0:   
                         /* succeeded */
-                        lSetUlong(task_jatep, JAT_status, JRUNNING);
+                        lSetUlong(tep, PET_status, JRUNNING);
 
                         /* spool state transition */ 
                         write_job = 1;
@@ -162,8 +161,8 @@ static void notify_ptf()
                }
             }
             if (write_job)
-               job_write_spool_file(jep, 
-                  lGetUlong(jatep, JAT_task_number), SPOOL_WITHIN_EXECD);
+               job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
+                                    NULL, SPOOL_WITHIN_EXECD);
          }
       }
 
@@ -213,9 +212,9 @@ void force_job_rlimit()
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             double lim;
 
-            if (hostcmp(me.qualified_hostname, 
+            if (sge_hostcmp(me.qualified_hostname, 
                  lGetHost(gdil_ep, JG_qhostname)) 
-                || !(q = lFirst(lGetList(gdil_ep, JG_queue))))
+                || !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
 
             nslots = lGetUlong(gdil_ep, JG_slots);
@@ -330,23 +329,22 @@ int answer_error
    notify_ptf();
 
    if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-      switch2start_user();
+      sge_switch2start_user();
       ptf_update_job_usage();
-      switch2admin_user();
+      sge_switch2admin_user();
    }
-   if (feature_is_enabled(FEATURE_REPRIORISATION) && !deactivate_ptf) {
-      switch2start_user();
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
+      sge_switch2start_user();
       DPRINTF(("ADJUST PRIORITIES\n"));
       ptf_adjust_job_priorities();
-      switch2admin_user();
-      repriorisation_enabled = 1;
+      sge_switch2admin_user();
+      reprioritization_enabled = 1;
    } else {
       /* Here we will make sure that each job which was started
-         in SGEEE-Mode (repriorisation) will get its initial
+         in SGEEE-Mode (reprioritization) will get its initial
          queue priority if this execd alternates to SGE-Mode */
-      if (repriorisation_enabled) {
-         lListElem *job, *jatask;
-         lListElem *slave_job, *slave_jatask;
+      if (reprioritization_enabled) {
+         lListElem *job, *jatask, *petask;
 
          for_each(job, Master_Job_List) {
             lListElem *master_queue;
@@ -354,7 +352,7 @@ int answer_error
             for_each (jatask, lGetList(job, JB_ja_tasks)) {
                int priority;
                master_queue = 
-                        responsible_queue(job, jatask, NULL, NULL);
+                        responsible_queue(job, jatask, NULL);
                priority = atoi(lGetString(master_queue, QU_priority));
 
                DPRINTF(("Set priority of job "u32"."u32" running in"
@@ -368,21 +366,20 @@ int answer_error
                   NULL,
                   priority);
 
-               for_each(slave_job, lGetList(jatask, JAT_task_list)) {
-                  slave_jatask = lFirst(lGetList(slave_job, JB_ja_tasks)); 
+               for_each(petask, lGetList(jatask, JAT_task_list)) {
                   master_queue = 
-                        responsible_queue(slave_job, slave_jatask, job, jatask);
+                        responsible_queue(job, jatask, petask);
                   priority = atoi(lGetString(master_queue, QU_priority));
                   DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
                      "in queue %s to %d\n", 
-                     lGetUlong(slave_job, JB_job_number), 
-                     lGetUlong(slave_jatask, JAT_task_number),
-                     lGetString(slave_job, JB_pe_task_id_str),
+                     lGetUlong(job, JB_job_number), 
+                     lGetUlong(jatask, JAT_task_number),
+                     lGetString(petask, PET_id),
                      lGetString(master_queue, QU_qname), priority));
                   ptf_reinit_queue_priority(
-                     lGetUlong(slave_job, JB_job_number),
-                     lGetUlong(slave_jatask, JAT_task_number),
-                     lGetString(slave_job, JB_pe_task_id_str),
+                     lGetUlong(job, JB_job_number),
+                     lGetUlong(jatask, JAT_task_number),
+                     lGetString(petask, PET_id),
                      priority);
                }
             }
@@ -390,7 +387,7 @@ int answer_error
       } else {
          DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
       }
-      repriorisation_enabled = 0;
+      reprioritization_enabled = 0;
    }
 #endif
       
@@ -407,8 +404,8 @@ int answer_error
       lListElem *master_q;
 
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         master_q = lFirst(lGetList(lFirst(
-                           lGetList(jatep, JAT_granted_destin_identifier_list)), JG_queue));
+         master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+                               JG_queue);
 
          if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {       /* initialize everything */
             if (strcasecmp(lGetString(master_q, QU_s_rt), "infinity")) {
@@ -466,7 +463,7 @@ int answer_error
    if(simulate_hosts) {
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jep, JB_end_time) <= now) {
+            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
                lListElem *jr = NULL;
                u_long32 jobid, jataskid;
                u_long32 wallclock;
@@ -479,14 +476,14 @@ int answer_error
                if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
                   ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
                          u32c(jobid), u32c(jataskid)));
-                  jr = add_job_report(jobid, jataskid, NULL);
+                  jr = add_job_report(jobid, jataskid, NULL, jep);
                }
 
                lSetUlong(jr, JR_state, JEXITING);
                add_usage(jr, "submission_time", NULL, lGetUlong(jep, JB_submission_time));
                add_usage(jr, "start_time", NULL, lGetUlong(jatep, JAT_start_time));
-               add_usage(jr, "end_time", NULL, lGetUlong(jep, JB_end_time));
-               wallclock = lGetUlong(jep, JB_end_time) - lGetUlong(jatep, JAT_start_time);
+               add_usage(jr, "end_time", NULL, lGetUlong(jatep, JAT_end_time));
+               wallclock = lGetUlong(jatep, JAT_end_time) - lGetUlong(jatep, JAT_start_time);
                add_usage(jr, "ru_wallclock", NULL, wallclock);
                add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, wallclock * 0.5);
                add_usage(jr, "ru_utime", NULL, wallclock * 0.4 );
@@ -495,6 +492,7 @@ int answer_error
             
                
                lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+               flush_jr = 1;
             }
          }
       }   
@@ -541,7 +539,7 @@ int answer_error
 /*****************************************************************************/
 static int sge_start_jobs()
 {
-   lListElem *jep, *jatep, *tep;
+   lListElem *jep, *jatep, *petep;
    int state_changed;
 
    DENTER(TOP_LAYER, "sge_start_jobs");
@@ -554,17 +552,16 @@ static int sge_start_jobs()
 
    for_each(jep, Master_Job_List) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         state_changed = exec_job_or_task(jep, jatep, NULL, NULL);
+         state_changed = exec_job_or_task(jep, jatep, NULL);
 
          /* visit all tasks */
-         for_each(tep, lGetList(jatep, JAT_task_list))
-            state_changed |= exec_job_or_task(tep, lFirst(lGetList(tep, JB_ja_tasks)),
-                                                   jep, jatep);
+         for_each(petep, lGetList(jatep, JAT_task_list))
+            state_changed |= exec_job_or_task(jep, jatep, petep);
 
          /* now save this job so we are up to date on restart */
          if (state_changed)
             job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
-               SPOOL_WITHIN_EXECD);
+                                 NULL, SPOOL_WITHIN_EXECD);
       }
    }
 
@@ -576,33 +573,44 @@ static int sge_start_jobs()
 static int exec_job_or_task(
 lListElem *jep,
 lListElem *jatep,
-lListElem *slave_jep,
-lListElem *slave_jatep 
+lListElem *petep
 ) {
    char err_str[256];
    int pid;
-   const char *tid;
    u_long32 now;
 
    DENTER(TOP_LAYER, "exec_job_or_task");
 
-   if (lGetUlong(jatep, JAT_status) != JIDLE) {
-      DEXIT;
-      return 0;
-   }
+   /* we only handle idle jobs or tasks */
+   /* JG: TODO: make a function is_task_idle(jep, jatep, petep) */
+   {
+      u_long32 status;
+
+      if(petep != NULL) {
+         status = lGetUlong(petep, PET_status);
+      } else {
+         status = lGetUlong(jatep, JAT_status);
+      }
+
+      if (status != JIDLE) {
+         DEXIT;
+         return 0;
+      }
+   }   
 
    now = sge_get_gmt();
-   lSetUlong(jatep, JAT_start_time, now);
 
    /* we might simulate another host */
+   /* JG: TODO: make a function simulate_start_job_or_task() */
    if(simulate_hosts == 1) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(hostcmp(host, me.qualified_hostname) != 0) {
+      if(sge_hostcmp(host, me.qualified_hostname) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 
          DPRINTF(("Simulating job "u32"."u32"\n", 
                   lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number)));
+         lSetUlong(jatep, JAT_start_time, now);
          lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
 
          /* set time when job shall be reported as finished */
@@ -623,39 +631,50 @@ lListElem *slave_jatep
             }   
          }
 
-         lSetUlong(jep, JB_end_time, now + duration);
+         lSetUlong(jatep, JAT_end_time, now + duration);
          return 1;
       }
    }
 
+   if(petep != NULL) {
+      lSetUlong(petep, PET_start_time, now);
 #ifdef COMPILE_DC
-   lSetUlong(jatep, JAT_status, JWAITING4OSJID);
-   waiting4osjid = 1;
+      lSetUlong(petep, PET_status, JWAITING4OSJID);
+      waiting4osjid = 1;
 #else
-   lSetUlong(jatep, JAT_status, JRUNNING);
+      lSetUlong(petep, PET_status, JRUNNING);
 #endif
+   } else {
+      lSetUlong(jatep, JAT_start_time, now);
+#ifdef COMPILE_DC
+      lSetUlong(jatep, JAT_status, JWAITING4OSJID);
+      waiting4osjid = 1;
+#else
+      lSetUlong(jatep, JAT_status, JRUNNING);
+#endif
+   }
 
    if (getenv("FAILURE_BEFORE_EXEC")) {
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");
    }
    else
-      pid = sge_exec_job(jep, jatep, slave_jep, slave_jatep, err_str);
+      pid = sge_exec_job(jep, jatep, petep, err_str);
 
    if (pid < 0) {
       flush_jr = 1;      
       switch (pid) {
          case -1:
-            execd_job_start_failure(jep, jatep, err_str, GFSTATE_NO_HALT);
+            execd_job_start_failure(jep, jatep, petep, err_str, GFSTATE_NO_HALT);
             break;
          case -2:
-            execd_job_start_failure(jep, jatep, err_str, GFSTATE_QUEUE);
+            execd_job_start_failure(jep, jatep, petep, err_str, GFSTATE_QUEUE);
             break;
          case -3:
-            execd_job_start_failure(jep, jatep, err_str, GFSTATE_JOB);
+            execd_job_start_failure(jep, jatep, petep, err_str, GFSTATE_JOB);
             break;
          default:
-            execd_job_start_failure(jep, jatep, err_str, GFSTATE_HOST);
+            execd_job_start_failure(jep, jatep, petep, err_str, GFSTATE_HOST);
             break;
       }
       DEXIT;
@@ -663,11 +682,16 @@ lListElem *slave_jatep
    }
    DTIMEPRINTF(("TIME IN EXECD FOR STARTING THE JOB: " u32 "\n",
                 sge_get_gmt()-now));
-   lSetUlong(jatep, JAT_pid, pid);
-   tid = lGetString(jep, JB_pe_task_id_str);
+   
+   if(petep != NULL) {
+      lSetUlong(petep, PET_pid, pid);
+   } else {
+      lSetUlong(jatep, JAT_pid, pid);
+   }
+
    DPRINTF(("***EXECING "u32"."u32" on %s (tid = %s) (pid = %d)\n",
             lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 
-            me.unqualified_hostname, tid?tid:"0", pid));
+            me.unqualified_hostname, petep != NULL ? lGetString(petep, PET_id) : "0", pid));
 
    DEXIT;
    return 1;
@@ -675,28 +699,32 @@ lListElem *slave_jatep
 
 #ifdef COMPILE_DC
 int register_at_ptf(
-lListElem *jep,
-lListElem *jatep,
-lListElem *tep 
+lListElem *job,
+lListElem *ja_task,
+lListElem *pe_task 
 ) {
-   const char *task_id_str=NULL;
-   u_long32 jobid;   
-   u_long32 jataskid;   
+   u_long32 job_id;   
+   u_long32 ja_task_id;   
+   const char *pe_task_id = NULL;
+
    int success, newerrno;
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) 
    gid_t addgrpid;
-   char addgrpid_path[SGE_PATH_MAX];
+   dstring addgrpid_path = DSTRING_INIT;
 #else   
-   char osjobid_path[SGE_PATH_MAX];
+   dstring osjobid_path = DSTRING_INIT;
    osjobid_t osjobid;   
 #endif   
    DENTER(TOP_LAYER, "register_at_ptf");
 
-   jobid = lGetUlong(jep, JB_job_number);
-   jataskid = lGetUlong(jatep, JAT_task_number);
+   job_id = lGetUlong(job, JB_job_number);
+   ja_task_id = lGetUlong(ja_task, JAT_task_number);
+   if (pe_task != NULL) { 
+      pe_task_id = lGetString(pe_task, PET_id);
+   }
 
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
    /**
@@ -704,30 +732,29 @@ lListElem *tep
     **/
    
    /* open addgrpid file */
-   if (tep) { 
-      task_id_str = lGetString(tep, JB_pe_task_id_str);
-      sprintf(addgrpid_path, ACTIVE_DIR"/"u32"."u32"/%s/"ADDGRPID, jobid, jataskid, 
-               task_id_str);
-   }
-   else {
-      sprintf(addgrpid_path, ACTIVE_DIR"/"u32"."u32"/"ADDGRPID, jobid, jataskid);
-   }
-   DPRINTF(("Registering job "u32"."u32" task \"%s\" with PTF\n", jobid, jataskid, 
-            task_id_str?task_id_str:""));
+   sge_get_active_job_file_path(&addgrpid_path,
+                                job_id, ja_task_id, pe_task_id, ADDGRPID);
+   DPRINTF(("Registering job %s with PTF\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
-   if (SGE_STAT(addgrpid_path, &sb) && errno == ENOENT) {
-      DPRINTF(("still waiting for addgrpid of job "u32"."u32"\n", 
-         jobid, jataskid));
+   if (SGE_STAT(sge_dstring_get_string(&addgrpid_path), &sb) && errno == ENOENT) {
+      DPRINTF(("still waiting for addgrpid of job %s\n", 
+         job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      sge_dstring_free(&addgrpid_path);       
       DEXIT;
       return(1);
    }  
 
-   if (!(fp = fopen(addgrpid_path, "r"))) {
-      ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SUUS, addgrpid_path, u32c(jobid), u32c(jataskid), strerror(errno)));
+   if (!(fp = fopen(sge_dstring_get_string(&addgrpid_path), "r"))) {
+      ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SSS, sge_dstring_get_string(&addgrpid_path), 
+             job_get_id_string(job_id, ja_task_id, pe_task_id), strerror(errno)));
+      sge_dstring_free(&addgrpid_path);       
       DEXIT;
       return(-1);
    }
-   
+  
+   sge_dstring_free(&addgrpid_path);       
+
    /* read addgrpid */
    success = (fscanf(fp, gid_t_fmt, &addgrpid)==1);
    newerrno = errno;
@@ -741,8 +768,10 @@ lListElem *tep
       int ptf_error;
 
       DPRINTF(("Register job with AddGrpId at "pid_t_fmt" PTF\n", addgrpid));
-      if ((ptf_error = ptf_job_started(addgrpid, task_id_str, jep, jataskid))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_UUS, u32c(jobid), u32c(jataskid), ptf_errstr(ptf_error)));
+      if ((ptf_error = ptf_job_started(addgrpid, pe_task_id, job, ja_task_id))) {
+         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_SS, 
+                job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                ptf_errstr(ptf_error)));
          DEXIT;
          return (1);
       }
@@ -754,31 +783,37 @@ lListElem *tep
       lListElem *jr;
 
       sprintf(addgrpid_str, pid_t_fmt, addgrpid);
-      if ((jr=get_job_report(jobid, jataskid, task_id_str)))
+      if ((jr=get_job_report(job_id, ja_task_id, pe_task_id)))
          lSetString(jr, JR_osjobid, addgrpid_str); 
-      DPRINTF(("job "u32"."u32" addgrpid = %s\n", jobid, jataskid, addgrpid_str));
+      DPRINTF(("job %s: addgrpid = %s\n", 
+               job_get_id_string(job_id, ja_task_id, pe_task_id), addgrpid_str));
    }
 #else
    /* read osjobid if possible */
-   if (tep) {
-      task_id_str = lGetString(tep, JB_pe_task_id_str);
-      sprintf(osjobid_path, ACTIVE_DIR"/"u32"."u32"/%s/"OSJOBID, jobid, jataskid, task_id_str);
-   } else {
-      sprintf(osjobid_path, ACTIVE_DIR"/"u32"."u32"/"OSJOBID, jobid, jataskid);
-   }
-   DPRINTF(("Registering job "u32"."u32" task \"%s\" with PTF\n", jobid, jataskid, task_id_str?task_id_str:""));
+   sge_get_active_job_file_path(&osjobid_path,
+                                job_id, ja_task_id, pe_task_id, OSJOBID);
+   
+   DPRINTF(("Registering job %s with PTF\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
 
-   if (SGE_STAT(osjobid_path, &sb) && errno == ENOENT) {
-      DPRINTF(("still waiting for osjobid of job "u32"\n", jobid));
+   if (SGE_STAT(sge_dstring_get_string(&osjobid_path), &sb) && errno == ENOENT) {
+      DPRINTF(("still waiting for osjobid of job %s\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      sge_dstring_free(&osjobid_path);      
       DEXIT;
       return 1;
    } 
 
-   if (!(fp=fopen(osjobid_path, "r"))) {
-      ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SUUS, osjobid_path, u32c(jobid), u32c(jataskid), strerror(errno)));
+   if (!(fp=fopen(sge_dstring_get_string(&osjobid_path), "r"))) {
+      ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SSS, sge_dstring_get_string(&osjobid_path), 
+             job_get_id_string(job_id, ja_task_id, pe_task_id), 
+             strerror(errno)));
+      sge_dstring_free(&osjobid_path);      
       DEXIT;
       return -1;
    }
+
+   sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
    newerrno = errno;
@@ -791,8 +826,10 @@ lListElem *tep
 
    {
       int ptf_error;
-      if ((ptf_error = ptf_job_started(osjobid, task_id_str, jep, jataskid))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_UUS,  u32c(jobid), u32c(jataskid), ptf_errstr(ptf_error)));
+      if ((ptf_error = ptf_job_started(osjobid, pe_task_id, job, ja_task_id))) {
+         ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_SS,  
+                job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                ptf_errstr(ptf_error)));
          DEXIT;
          return -1;
       }
@@ -804,9 +841,11 @@ lListElem *tep
       lListElem *jr;
 
       sprintf(osjobid_str, OSJOBID_FMT, osjobid);
-      if ((jr=get_job_report(jobid, jataskid, task_id_str)))
+      if ((jr=get_job_report(job_id, ja_task_id, pe_task_id)))
          lSetString(jr, JR_osjobid, osjobid_str); 
-      DPRINTF(("job "u32"."u32" osjobid = %s\n", jobid, jataskid, osjobid_str));
+      DPRINTF(("job %s: osjobid = %s\n", 
+               job_get_id_string(job_id, ja_task_id, pe_task_id),
+               osjobid_str));
    }
 #endif
 

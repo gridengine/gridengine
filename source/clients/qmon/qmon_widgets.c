@@ -53,7 +53,7 @@
 #include "sge_time.h"
 #include "parse_mail.h"
 #include "sge_parse_date_time.h"
-#include "parse_range.h"
+#include "sge_range.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -62,7 +62,6 @@
 #include "qmon_submit.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
-#include "utility.h"
 
 #if 0
 #include "Outline.h"
@@ -605,13 +604,19 @@ Cardinal size
       str = buf;
    }
    if (type == QmonQRN_Type) {
-      strcpy(buf, "");
-      show_ranges(buf, 0, NULL, list);
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(list, &range_string, 1);
+      strcpy(buf, sge_dstring_get_string(&range_string));
+      sge_dstring_free(&range_string);
       str = buf;
    }
    if (type == QmonQTRN_Type) {
-      strcpy(buf, "");
-      show_ranges(buf, 1, NULL, list);
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(list, &range_string, 0);
+      strcpy(buf, sge_dstring_get_string(&range_string));
+      sge_dstring_free(&range_string);
       str = buf;
    }
    if (type == QmonQPN_Type) {
@@ -679,19 +684,21 @@ Cardinal size
 
    if (str && str[0] != '\0') {
       if ( type == QmonQENV_Type || type == QmonQCTX_Type )
-         cull_parse_variable_list(&ret_list, str, 0); 
+         var_list_parse_from_string(&ret_list, str, 0); 
       if (type == QmonQST_Type) {
          lString2List(str, &ret_list, ST_Type, STR, " ");
       }
       if (type == QmonQRN_Type) {
-         ret_list = parse_ranges(str, 0, 0, &alp, NULL, INF_ALLOWED);
+         range_list_parse_from_string(&ret_list, &alp, str,
+                                      0, 0, INF_ALLOWED);
          if (alp) {
             qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
       if (type == QmonQTRN_Type) {
-         ret_list = parse_ranges(str, 0, 1, &alp, NULL, INF_NOT_ALLOWED);
+         range_list_parse_from_string(&ret_list, &alp, str,
+                                      0, 1, INF_NOT_ALLOWED);
          if (alp) {
             qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);

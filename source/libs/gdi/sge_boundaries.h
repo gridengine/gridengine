@@ -193,12 +193,8 @@ enum NameSpaceBoundaries {
    JC_LOWERBOUND = QR_UPPERBOUND + 1,
    JC_UPPERBOUND = JC_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* combined job/queue list as needed in execd to hold jobs/queues */
-   JQ_LOWERBOUND = JC_UPPERBOUND + 1,
-   JQ_UPPERBOUND = JQ_LOWERBOUND + 1*BASIC_UNIT - 1,
-
    /* string list */
-   ST_LOWERBOUND = JQ_UPPERBOUND + 1,
+   ST_LOWERBOUND = JC_UPPERBOUND + 1,
    ST_UPPERBOUND = ST_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* jobs granted destination identifier list */
@@ -245,12 +241,16 @@ enum NameSpaceBoundaries {
    SC_LOWERBOUND = STN_UPPERBOUND + 1,
    SC_UPPERBOUND = SC_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* no longer used, just to fix the order of nms */
-   YYYCONF_LOWERBOUND = SC_UPPERBOUND + 1,
-   YYYCONF_UPPERBOUND = YYYCONF_LOWERBOUND + 1*BASIC_UNIT - 1,
+   /* pe task object */
+   PET_LOWERBOUND = SC_UPPERBOUND + 1,
+   PET_UPPERBOUND = PET_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* pe task request object */
+   PETR_LOWERBOUND = PET_UPPERBOUND + 1,
+   PETR_UPPERBOUND = PETR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* job report */
-   JR_LOWERBOUND = YYYCONF_UPPERBOUND + 1,
+   JR_LOWERBOUND = PETR_UPPERBOUND + 1,
    JR_UPPERBOUND = JR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* license report */
@@ -285,16 +285,8 @@ enum NameSpaceBoundaries {
    PA_LOWERBOUND = KRB_UPPERBOUND + 1,
    PA_UPPERBOUND = PA_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* obsolete - reuse me */
-   CS_LOWERBOUND = PA_UPPERBOUND + 1,
-   CS_UPPERBOUND = CS_LOWERBOUND + 1*BASIC_UNIT - 1,
-
-   /* obsolete - reuse me */
-   CO_LOWERBOUND = CS_UPPERBOUND + 1,
-   CO_UPPERBOUND = CO_LOWERBOUND + 1*BASIC_UNIT - 1,
-
    /* job reference */
-   JRE_LOWERBOUND = CO_UPPERBOUND + 1,
+   JRE_LOWERBOUND = PA_UPPERBOUND + 1,
    JRE_UPPERBOUND = JRE_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* id struct used for qmod request */
@@ -414,14 +406,28 @@ enum NameSpaceBoundaries {
 
    /* submit user */
    SU_LOWERBOUND = FE_UPPERBOUND + 1,
-   SU_UPPERBOUND = SU_LOWERBOUND + 1*BASIC_UNIT - 1
+   SU_UPPERBOUND = SU_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* security connection list  */
+   SEC_LOWERBOUND = FE_UPPERBOUND + 1,
+   SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1,
+
+   /* spooling framework */
+   SPC_LOWERBOUND = SEC_UPPERBOUND + 1,
+   SPC_UPPERBOUND = SPC_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   SPR_LOWERBOUND = SPC_UPPERBOUND + 1,
+   SPR_UPPERBOUND = SPR_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   SPT_LOWERBOUND = SPR_UPPERBOUND + 1,
+   SPT_UPPERBOUND = SPT_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   SPTR_LOWERBOUND = SPT_UPPERBOUND + 1,
+   SPTR_UPPERBOUND = SPTR_LOWERBOUND + 1 * BASIC_UNIT -1
 
    /* CHANGE LAST_UPPERBOUND below !!!!!!!!!!!!! */
       
-   /* security connection list  */
-  ,SEC_LOWERBOUND = FE_UPPERBOUND + 1,
-   SEC_UPPERBOUND = SEC_LOWERBOUND + 1*BASIC_UNIT - 1
-#  define LAST_UPPERBOUND SEC_UPPERBOUND
+#  define LAST_UPPERBOUND SPTR_UPPERBOUND
 
 #ifdef QIDL
 /* this is just a fake boundary. there is no QIDL cull */
@@ -431,6 +437,8 @@ enum NameSpaceBoundaries {
 /* of this enum. don't append anything behind this */
   ,QIDL_LOWERBOUND = LAST_UPPERBOUND + 1,
    QIDL_UPPERBOUND = QIDL_LOWERBOUND + 2*BASIC_UNIT - 1
+#  undef LAST_UPPERBOUND   
+#  define LAST_UPPERBOUND QIDL_UPPERBOUND
 #endif
 };
 

@@ -34,18 +34,16 @@
 
 #include "sge_gdi_intern.h"
 #include "commlib.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
-#include "utility.h"
 #include "qm_name.h"
 #include "pack.h"
 #include "sge_feature.h"
-#include "msg_utilib.h"
-#include "msg_gdilib.h"
 #include "sge_security.h"
+#include "sge_unistd.h"
+
+#include "msg_gdilib.h"
 
 static void sge_log_commd_state_transition(int cl_err);
 enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
@@ -73,6 +71,11 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    set_commlib_param(CL_P_NAME, 0, name, NULL);
    set_commlib_param(CL_P_ID, id, NULL, NULL);
    set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
+
+   if (me.who == QCONF) {
+      set_commlib_param(CL_P_TIMEOUT_SRCV, 3600, NULL, NULL);
+      set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
+   }
 
    if (!(me.who == QMASTER || me.who == EXECD || me.who == SCHEDD || me.who == COMMDCNTL)) {
       const char *masterhost; 
@@ -304,14 +307,19 @@ int synchron
       *id = usid;
 
    /* fill it in the packing buffer */
-   init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
+   i = init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
+   if(i != PACK_SUCCESS) {
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(i)));
+      DEXIT;
+      return CL_READ;
+   }
 
    if (rhost[0] == '\0') {    /* If we receive from anybody return the sender */
       strcpy(rhost, host);
    }
 
    DEXIT;
-   return 0;
+   return CL_OK;
 }
 
 
@@ -358,3 +366,45 @@ u_long32 *mid
    DEXIT;
    return ret;
 }
+
+/*-------------------------------------------------------------------------*
+ * check_isalive
+ *    check if master is registered and alive
+ *    calls is_commd_alive() and ask_commproc()
+ * returns
+ *    0                    if qmaster is enrolled at sge_commd
+ *    > 0                  commlib error number (always positve)
+ *    CL_FIRST_FREE_EC+1   can't get masterhost
+ *    CL_FIRST_FREE_EC+2   can't connect to commd
+ *-------------------------------------------------------------------------*/
+int check_isalive(const char *masterhost) 
+{
+   int alive = 0;
+ 
+   DENTER(TOP_LAYER, "check_isalive");
+ 
+   if (!masterhost) {
+      DPRINTF(("can't get masterhost\n"));
+      DEXIT;
+      return CL_FIRST_FREE_EC+1;
+   }
+ 
+   /* check if prog is alive */
+   if (me.who == QMON) {
+      if (!is_commd_alive()) {
+         DPRINTF(("can't connect to commd\n"));
+         DEXIT;
+         return CL_FIRST_FREE_EC+2;
+      }
+   }
+ 
+   alive = ask_commproc(masterhost, prognames[QMASTER], 1);
+ 
+   if (alive) {
+      DPRINTF(("no qmaster: ask_commproc(\"%s\", \"%s\", %d): %s\n",
+               masterhost, prognames[QMASTER], 1, cl_errstr(alive)));
+   }
+ 
+   DEXIT;
+   return alive;
+} 

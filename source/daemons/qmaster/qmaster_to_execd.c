@@ -29,74 +29,216 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include <string.h>
+
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "qmaster_to_execd.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "msg_qmaster.h"
 #include "commlib.h"
 
-static int notify_new_conf(const char *hostname, int progname_id);
+#include "msg_qmaster.h"
 
-/*
-** NAME
-**   notify_new_conf_2_execd - tell execd that its conf is outdated
-** PARAMETER
-**   hep     - host element to be notified, EH_Type
-** RETURN
-**   -1      - could not send message
-**   -2      - no execd host known on that host
-** EXTERNAL
-**   prognames
-** DESCRIPTION
-**   sends the message TAG_GET_NEW_CONF to an execution daemon.
-**   This function is executed when the qmaster receives a configuration
-**   report which is not up to date.
-*/
-int notify_new_conf_2_execd(
-lListElem *hep 
-) {
-   int ret;
-   const char *hostname;
-   
-   DENTER(BASIS_LAYER, "notify_new_conf_2_execd");
-   
-   hostname = lGetHost(hep, EH_name);
-   ret = notify_new_conf(hostname, EXECD);
+static int host_notify_about_X(lListElem *host,
+                               u_long32 x,
+                               int tag,
+                               int progname_id);
 
-   DEXIT;
-   return ret;
-}
+/****** qmaster/host/host_notify_about_X() *************************************
+*  NAME
+*     host_notify_about_X() -- Send X to comproc 
+*
+*  SYNOPSIS
+*     static int host_notify_about_X(lListElem *host, 
+*                                    u_long32 x, 
+*                                    int tag, 
+*                                    int progname_id) 
+*
+*  FUNCTION
+*     Sends the information "x" which will be tagged with "tag" to
+*     the comproc on "host" which is identified by "progname_id". 
+*
+*     Following combinations are meaningfull in the moment:
+*
+*        x              tag                  progname_id
+*        -------------- -------------------- ------------
+*        0 or 1         TAG_KILL_EXECD       EXECD               
+*        featureset id  TAG_NEW_FEATURES     EXECD
+*        *              TAG_GET_NEW_CONF     EXECD
+*
+*  INPUTS
+*     lListElem *host  - EH_Type element 
+*     u_long32 x       - data 
+*     int tag          - tag for data 
+*     int progname_id  - programm name id 
+*
+*  RESULT
+*     int - error state
+*         0 - no error
+*        -1 - error
+*        -2 - comproc with id "progname_id" not known on "host" 
+*
+*  NOTES
+*     We send an unacknowledged request for the moment. 
+*     I would have a better feelin if we make some sort of acknowledgement. 
+*
+*  SEE ALSO
+*     qmaster/host/host_notify_about_featureset()
+*******************************************************************************/
+static int host_notify_about_X(lListElem *host,
+                               u_long32 x,
+                               int tag,
+                               int progname_id)
+{
+   const char *hostname = NULL;
+   sge_pack_buffer pb;
+   int ret = 0;
+   DENTER(TOP_LAYER, "host_notify_about_X");
 
+   hostname = lGetHost(host, EH_name);
+   if (progname_id == EXECD) {
+      u_short id = 1;
+      const char *commproc = prognames[progname_id];
 
-/*-------------------------------------------------------------------------*/
-static int notify_new_conf(
-const char *hostname,
-int progname_id 
-) {
-   int ret;
-   u_short id;
-
-   DENTER(BASIS_LAYER, "notify_new_conf");
-
-
-   id = 1;
-   if (!last_heard_from(prognames[progname_id], &id, hostname)) {
-      ERROR((SGE_EVENT, MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS, 
-               prognames[progname_id], hostname));
-      DEXIT;
-      return -2;
+      if (!last_heard_from(commproc, &id, hostname)) {
+         ERROR((SGE_EVENT, MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS,
+                commproc, hostname));
+         ret = -2;
+         goto error;
+      }
    }
 
-   if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, TAG_GET_NEW_CONF,
-                    NULL, 0))
-      ret = -1;
-   else
-      ret = 0;
+   if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
+      u_long32 dummy;
 
+      packint(&pb, x);
+      if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, tag,
+                              &pb, &dummy)) {
+         ret = -1;
+      } else {
+         ret = 0;
+      }
+      clear_packbuffer(&pb);
+   } else {
+      ret = -1;
+   }
+
+error:
    DEXIT;
    return ret;
 }
 
+/****** qmaster/host/host_notify_about_new_conf() *****************************
+*  NAME
+*     host_notify_about_new_conf() -- Notify execd about new config. 
+*
+*  SYNOPSIS
+*     int host_notify_about_new_conf(lListElem *host) 
+*
+*  FUNCTION
+*     Notify execd that there is a new configuration available.
+*
+*  INPUTS
+*     lListElem *host - EH_Type element 
+*
+*  RESULT
+*     int - see host_notify_about_X() 
+*
+*  SEE ALSO
+*     qmaster/host/host_notify_about_X()
+*******************************************************************************/
+int host_notify_about_new_conf(lListElem *host) 
+{
+   u_long32 dummy = 0;  /* value has no special meaning */
+
+   return host_notify_about_X(host, dummy, TAG_GET_NEW_CONF, EXECD);
+}
+
+/****** qmaster/host/host_notify_about_kill() *********************************
+*  NAME
+*     host_notify_about_kill() -- Send kill command to execd 
+*
+*  SYNOPSIS
+*     int host_notify_about_kill(lListElem *host, int kill_command) 
+*
+*  FUNCTION
+*     Send the given "kill_command" to the execution "host". 
+*
+*  INPUTS
+*     lListElem *host - EH_Type 
+*     int kill_command   - command 
+*
+*  RESULT
+*     int - see host_notify_about_X() 
+*
+*  SEE ALSO
+*     qmaster/host/host_notify_about_X()
+*******************************************************************************/
+int host_notify_about_kill(lListElem *host, int kill_command)
+{
+   return host_notify_about_X(host, kill_command, TAG_KILL_EXECD, EXECD);
+}
+
+/****** qmaster/host/host_notify_about_featureset() ****************************
+*  NAME
+*     host_notify_about_featureset() -- Send featureset to execd 
+*
+*  SYNOPSIS
+*     int host_notify_about_featureset(lListElem *host, 
+*                                      featureset_id_t featureset)
+*
+*  FUNCTION
+*     Send the given "featureset" id to the execution "host".
+*
+*  INPUTS
+*     lListElem *host            - EH_Type 
+*     featureset_id_t featureset - id 
+*
+*  RESULT
+*     int - see host_notify_about_X() 
+*
+*  SEE ALSO
+*     qmaster/host/host_notify_about_X()
+*******************************************************************************/
+int host_notify_about_featureset(lListElem *host, featureset_id_t featureset)
+{
+   return host_notify_about_X(host, featureset, TAG_NEW_FEATURES, EXECD);
+}
+
+/****** qmaster/host/host_list_notify_about_featureset() **********************
+*  NAME
+*     host_list_notify_about_featureset() -- Send featureset to execds
+*
+*  SYNOPSIS
+*     void host_list_notify_about_featureset(lList *host_list, 
+*                                            featureset_id_t featureset) 
+*
+*  FUNCTION
+*     Send the given "featureset" id to all exec hosts mentioned in
+*     "host_list".
+*
+*  INPUTS
+*     lList *host_list           - EH_Type list 
+*     featureset_id_t featureset - id 
+*
+*  RESULT
+*     void - None 
+*******************************************************************************/
+void host_list_notify_about_featureset(lList *host_list,
+                                       featureset_id_t featureset)
+{
+   lListElem *host;
+   DENTER(TOP_LAYER, "host_list_notify_about_featureset");
+
+   for_each(host, host_list) {
+      const char *hostname = lGetHost(host, EH_name);
+
+      if (strcmp(hostname, SGE_TEMPLATE_NAME) &&
+          strcmp(hostname, SGE_GLOBAL_NAME)) {
+         host_notify_about_featureset(host, featureset);
+      }
+   }
+   DEXIT;
+}

@@ -40,7 +40,6 @@
 #include "sge_log.h"
 #include "cull.h"
 #include "sge_select_queue.h"
-#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_resource.h"
 #include "sge_complex_schedd.h"
@@ -50,25 +49,26 @@
 #include "sge_pe_schedd.h"
 #include "slots_used.h"
 
+#include "sge_orderL.h"
 #include "sge_requestL.h"
-#include "sge_queueL.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
-#include "sge_peL.h"
-#include "sge_complexL.h"
-#include "sge_usersetL.h"
-#include "sge_schedconfL.h"
-#include "sge_ckptL.h"
-#include "sge_userprjL.h"
+#include "sge_pe.h"
+#include "sge_complex.h"
+#include "sge_schedd_conf.h"
 #include "sort_hosts.h"
 #include "schedd_monitor.h"
 #include "schedd_message.h"
 #include "msg_schedd.h"
 #include "sge_schedd_text.h"
-#include "jb_now.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
+#include "sge_schedd_conf.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_userprj.h"
+#include "sge_host.h"
+#include "sge_ckpt.h"
 
 int scheduled_fast_jobs;
 int scheduled_complex_jobs;
@@ -121,11 +121,11 @@ static int ensure_forced(lListElem *job, char *main_cplx_name, char *obj_name,
                          const char *obj_kex, lList *user_complex, 
                          lList *cplx_list);
 
-static int sge_check_load_alarm(const char *name, const char *load_value,
+static int sge_check_load_alarm(char *reason, const char *name, const char *load_value,
                                 const char *limit_value, u_long32 relop,
                                 u_long32 type, lListElem *hep,
-                                lListElem *hlep, u_long32 lc_host,
-                                u_long32 lc_global, lList *load_adjustments); 
+                                lListElem *hlep, double lc_host,
+                                double lc_global, lList *load_adjustments, int load_is_value); 
 
 char* trace_resource(lListElem *ep) 
 {
@@ -264,7 +264,7 @@ static int sge_select_resource(lList *complex_attributes, lList *resources,
             continue;
 
          /* consumable && used in this global/host/queue && not requested */
-         if (lGetUlong(attr, CE_consumable) &&  !is_requested(resources, name)) {   
+         if (lGetBool(attr, CE_consumable) &&  !is_requested(resources, name)) {   
             lListElem *default_request;
             char tmp_reason[2048];
 
@@ -465,7 +465,7 @@ static int fulfilled(lListElem *rep, lList *given_attr, char *reason,
    }
 
    /* check whether attrib is requestable */
-   if (!allow_non_requestable && !lGetUlong(cplx_el, CE_request)) {
+   if (!allow_non_requestable && !lGetBool(cplx_el, CE_request)) {
       if (reason) {
          strncpy(reason, MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE , reason_size);
          strncat(reason, attrname, reason_size);
@@ -476,7 +476,7 @@ static int fulfilled(lListElem *rep, lList *given_attr, char *reason,
    }
 
    /* search for responsible (global, host, queue) maximum utilization */
-   if (ccl && lGetUlong(cplx_el, CE_consumable))
+   if (ccl && lGetBool(cplx_el, CE_consumable))
       util_max_ep = get_util_max(cplx_el, ccl);
 
 #if 0
@@ -547,7 +547,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job owner has access rights to the queue */
    if (!sge_has_access(lGetString(job, JB_owner), lGetString(job, JB_group), queue, acl_list)) {
       DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, queue_name));
-      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_S, "queue", queue_name);
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "queue", queue_name);
       DEXIT;
       return 1;
    }
@@ -555,13 +555,13 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job can run in queue based on project */
    if ((projects = lGetList(queue, QU_projects))) {
       if ((!(project = lGetString(job, JB_project)))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASNOPRJ_S,
+         schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
             "queue", queue_name);
          DEXIT;
          return 9;
       }
-      if ((!lGetElemStr(projects, UP_name, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
+      if ((!userprj_list_locate(projects, project))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "queue", queue_name);
          DEXIT;
          return 9;
@@ -571,8 +571,8 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* check if job can run in queue based on excluded projects */
    if ((projects = lGetList(queue, QU_xprojects))) {
       if (((project = lGetString(job, JB_project)) &&
-           lGetElemStr(projects, UP_name, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
+           userprj_list_locate(projects, project))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
             project, "queue", queue_name);
          DEXIT;
          return 9;
@@ -583,7 +583,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    if (lGetList(job, JB_hard_queue_list)) {
 
       if (!queues_are_requestable(cplx_list)) {
-         schedd_add_message(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
             queue_name);
          DEXIT;
          return 5;
@@ -593,7 +593,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          DPRINTF(("Queue \"%s\" is not contained in the hard "
            "queue list (-q) that was requested by job %d\n",
                queue_name, (int) job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,  
             queue_name);
          DEXIT;
          return 5;
@@ -603,7 +603,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    /* is this queue a candidate for being the master queue? */
    if (lGetList(job, JB_master_hard_queue_list)) {
       if (!queues_are_requestable(cplx_list)) {
-         schedd_add_message(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,  
             queue_name);
          DEXIT;
          return 5;
@@ -629,7 +629,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       if (!(lGetUlong(queue, QU_qtype) & PQ)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
             "job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S,  
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S,  
             queue_name);
    
          DEXIT;
@@ -643,7 +643,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          if (!lGetSubCaseStr(pe, QR_name, SGE_ATTRVAL_ALL, PE_queue_list)) {
             DPRINTF(("Queue \"%s\" is not in queue list of PE \"%s\" requested "
                "by job %d\n", queue_name, lGetString(pe, PE_name), (int)job_id));
-            schedd_add_message(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,  
+            schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,  
                queue_name, lGetString(pe, PE_name));
             DEXIT;
             return 3;
@@ -656,7 +656,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
       if (!(lGetUlong(queue, QU_qtype) & CQ)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
          DEXIT;
          return 6;
       }
@@ -669,7 +669,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
             DPRINTF(("Queue \"%s\" is not in queue list of ckpt \"%s\" "
                "requested by job %d\n", 
                queue_name, lGetString(ckpt, CK_name), (int)job_id));
-            schedd_add_message(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
+            schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
                queue_name, lGetString(ckpt, CK_name));
             DEXIT;
             return 6;
@@ -678,12 +678,12 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
    }   
 
    /* to be activated as soon as immediate jobs are available */
-   if (JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) { /* immediate job */
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
       /* is it an interactve job and an interactive queue ? */
       if (!lGetString(job, JB_script_file) && !(lGetUlong(queue, QU_qtype) & IQ)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
                   "job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
          DEXIT;
          return 7;
       } else /* is it a batch job and a batch or transfer queue ? */
@@ -692,19 +692,19 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
           !(lGetUlong(queue, QU_qtype) & TQ)) {
          DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
          return 4;
       }
    }
 
-   if (!pe && !ckpt && !JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) { /* serial (batch) job */
+   if (!pe && !ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* serial (batch) job */
       /* is it a batch or transfer queue */
       if (!(lGetUlong(queue, QU_qtype) & BQ) &&
           !(lGetUlong(queue, QU_qtype) & TQ)) {
          DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
                   "requested by job %d\n", queue_name, (int)job_id));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
          DEXIT;
          return 4;
       }
@@ -714,7 +714,7 @@ static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job,
          (lGetUlong(queue, QU_qtype) & (PQ|BQ|TQ)) == PQ) {
       DPRINTF(("Queue \"%s\" is not a serial (batch or transfer) queue as "
                "requested by job %d\n", queue_name, (int)job_id));
-      schedd_add_message(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
+      schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
       DEXIT;
       return 4;
    }
@@ -772,11 +772,11 @@ static int requested_forced_attr(lListElem *job, lListElem *cplx,
    DENTER(TOP_LAYER, "requested_forced_attr");
 
    for_each (attr, lGetList(cplx, CX_entries)) {
-      if (lGetUlong(attr, CE_forced) &&
+      if (lGetBool(attr, CE_forced) &&
          !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
          DPRINTF(("job "u32" does not request 'forced' resource \"%s\" of %s %s\n",
                   lGetUlong(job, JB_job_number), lGetString(attr, CE_name), obj_name, obj_key));
-         schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOTREQFORCEDRES_SS, lGetString(attr, CE_name), obj_key);
+         schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOTREQFORCEDRES_SS, lGetString(attr, CE_name), obj_key);
          DEXIT;
          return 0;
       }
@@ -859,7 +859,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
          lGetList(host, EH_xacl), acl_list)) {
       DPRINTF(("Job %d has no permission for host %s\n",
                (int)job_id, eh_name));
-      schedd_add_message(job_id, SCHEDD_INFO_HASNOPERMISSION_S,
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_SS,
          "host", eh_name);
       DEXIT;
       return 1;
@@ -869,14 +869,14 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    if ((projects = lGetList(host, EH_prj))) {
    
       if ((!(project = lGetString(job, JB_project)))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASNOPRJ_S,
+         schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
             "host", eh_name);
          DEXIT;
          return 2;
       }
 
-      if ((!lGetElemStr(projects, UP_name, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
+      if ((!userprj_list_locate(projects, project))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "host", eh_name);
          DEXIT;
          return 3;
@@ -886,8 +886,8 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
    /* check if job can run on host based on excluded projects */
    if ((projects = lGetList(host, EH_xprj))) {
       if (((project = lGetString(job, JB_project)) &&
-           lGetElemStr(projects, UP_name, project))) {
-         schedd_add_message(job_id, SCHEDD_INFO_EXCLPRJ_SS,
+           userprj_list_locate(projects, project))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
             project, "host", eh_name);
          DEXIT;
          return 4;
@@ -912,7 +912,7 @@ static int sge_why_not_job2host(lListElem *job, lListElem *ja_task,
              && lGetUlong(ruep, RU_task_number) == task_id) {
             DPRINTF(("RU: Job "u32"."u32" Host "SFN"\n", job_id,
                task_id, eh_name));
-            schedd_add_message(job_id, SCHEDD_INFO_CLEANUPNECESSARY_S,
+            schedd_mes_add(job_id, SCHEDD_INFO_CLEANUPNECESSARY_S,
                eh_name);
             DEXIT;
             return 5;
@@ -943,15 +943,16 @@ static int is_requested(lList *req, const char *attr)
    return 0;
 }
 
-static int sge_check_load_alarm(const char *name, const char *load_value, 
+static int sge_check_load_alarm(char *reason, const char *name, const char *load_value, 
                                 const char *limit_value, u_long32 relop, 
                                 u_long32 type, lListElem *hep, 
-                                lListElem *hlep, u_long32 lc_host, 
-                                u_long32 lc_global, lList *load_adjustments) 
+                                lListElem *hlep, double lc_host, 
+                                double lc_global, lList *load_adjustments, int load_is_value) 
 {
    lListElem *job_load;
    double limit, load;
    int match;
+   char lc_diagnosis1[1024], lc_diagnosis2[1024];
    
    DENTER(TOP_LAYER, "sge_check_load_alarm");
 
@@ -961,19 +962,29 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
       case TYPE_MEM:
       case TYPE_BOO:
       case TYPE_DOUBLE:
-         if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0) ||
-             !parse_ulong_val(&limit, NULL, type, limit_value, NULL, 0)) {
+         if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0)) {
+            if (reason)
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS, load_value, name);
             DEXIT;
             return 1;
          }
-         /* load correction */
-         if (((hlep && lc_host) || lc_global) &&
-            (job_load = lGetElemStr(load_adjustments, CE_name, name))) {  
-            const char *s;
+         if (!parse_ulong_val(&limit, NULL, type, limit_value, NULL, 0)) {
+            if (reason)
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS, name, limit_value);
+            DEXIT;
+            return 1;
+         }
+         if (load_is_value) { /* we got no load - this is just the complex value */
+            strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNOLOAD);
+         } else if (((hlep && lc_host) || lc_global) &&
+            (job_load = lGetElemStr(load_adjustments, CE_name, name))) { /* load correction */
+            const char *load_correction_str;
             double load_correction;
 
-            s = lGetString(job_load, CE_stringval);
-            if (!parse_ulong_val(&load_correction, NULL, type, s, NULL, 0)) {
+            load_correction_str = lGetString(job_load, CE_stringval);
+            if (!parse_ulong_val(&load_correction, NULL, type, load_correction_str, NULL, 0)) {
+               if (reason)
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS, name, load_correction_str);
                DEXIT;
                return 1;
             }
@@ -994,16 +1005,24 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
                   if (nproc != 1) {
                      load_correction /= nproc;
                   }
+                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOSTNP_SFI,
+                         load_correction_str, lc_host, nproc);
+               } else {
+                  sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGHOST_SF,
+                         load_correction_str, lc_host);
                }
-            } else
+            } else {
                load_correction *= lc_global;
-
+               sprintf(lc_diagnosis1, MSG_SCHEDD_LCDIAGGLOBAL_SF,
+                         load_correction_str, lc_global);
+            }
             /* it depends on relop in complex config
             whether load_correction is pos/neg */
             switch (relop) {
             case CMPLXGE_OP:
             case CMPLXGT_OP:
                load += load_correction;
+               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGPOSITIVE_SS, load_value, lc_diagnosis1);
                break;
 
             case CMPLXNE_OP:
@@ -1012,12 +1031,22 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
             case CMPLXLE_OP:
             default:
                load -= load_correction;
+               sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGNEGATIVE_SS, load_value, lc_diagnosis1);
                break;
             }
-         }
+         } else 
+            strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE);
 
          /* is threshold exceeded ? */
          if (resource_cmp(relop, load, limit)) {
+            if (reason) {
+               if (type == TYPE_BOO)
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS,
+                        name, load?MSG_TRUE:MSG_FALSE, lc_diagnosis2, map_op2str(relop), limit_value);
+               else
+                  sprintf(reason, MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS,
+                        name, load, lc_diagnosis2, map_op2str(relop), limit_value);
+            }
             DEXIT;
             return 1;
          }
@@ -1032,16 +1061,20 @@ static int sge_check_load_alarm(const char *name, const char *load_value,
             if (type==TYPE_CSTR)
                match = strcasecmp(limit_value, load_value);
             else
-               match = hostcmp(limit_value, load_value);
+               match = sge_hostcmp(limit_value, load_value);
          }
 
          if (!match) {
+            if (reason)
+               sprintf(reason, MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS, name, load_value, map_op2str(relop), limit_value);
             DEXIT;
             return 1;
          }
 
          break;
       default:
+         if (reason)
+            sprintf(reason, MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S, name);
          DEXIT;
          return 1;
    }
@@ -1093,13 +1126,14 @@ static int resource_cmp(u_long32 relop, double req, double src_dl)
       0 no
 */
 
-int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list, 
+int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *exechost_list, 
                    lList *complex_list, lList *load_adjustments) {
    lListElem *hep, *global_hep, *tep;
    u_long32 ulc_factor; 
    const char *load_value; 
    const char *limit_value;
    double lc_host = 0, lc_global = 0;
+   int load_is_value;
    
    DENTER(TOP_LAYER, "sge_load_alarm");
 
@@ -1109,9 +1143,11 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
       return 0;
    }
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
+   hep = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
 
    if(!hep) { 
+      if (reason)
+         sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOHOST_S, lGetHost(qep, QU_qhostname));
       /* no host for queue -> ERROR */
       DEXIT;
       return 1;
@@ -1122,7 +1158,7 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
       lc_host = ((double)ulc_factor)/100;
    }   
 
-   if ((global_hep = lGetElemHost(exechost_list, EH_name, "global")) != NULL) {
+   if ((global_hep = host_list_locate(exechost_list, "global")) != NULL) {
       if ((lGetPosViaElem(global_hep, EH_load_correction_factor) >= 0)
           && (ulc_factor=lGetUlong(global_hep, EH_load_correction_factor)))
          lc_global = ((double)ulc_factor)/100;
@@ -1136,7 +1172,9 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
       name = lGetString(tep, CE_name);
 
       /* complex attriute definition */
-      if (!(cep = sge_locate_complex_attr(name, complex_list))) {
+      if (!(cep = complex_list_locate_attr(complex_list, name))) {
+         if (reason)
+            sprintf(reason, MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S, name);
          /* no complex attribute for threshold -> ERROR */
          DEXIT;
          return 1;
@@ -1144,26 +1182,25 @@ int sge_load_alarm(lListElem *qep, lList *threshold, lList *exechost_list,
 
       relop = lGetUlong(cep, CE_relop);
 
-      if((hlep = lGetSubStr(hep, HL_name, name, EH_load_list)) == NULL) {
-         if((glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
-            /* no host or global load value -> ERROR */
-            DEXIT;
-            return 1;
-         }   
-      }
-
-      if (hlep) {
+      if ((hlep = lGetSubStr(hep, HL_name, name, EH_load_list)) == NULL &&
+         (glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
+         /* use complex default as value */
+         load_value = lGetString(cep, CE_stringval);
+         load_is_value = 1;
+      } else if (hlep) {
          load_value = lGetString(hlep, HL_value);
+         load_is_value = 0;
       } else {
          load_value = lGetString(glep, HL_value);
+         load_is_value = 0;
       }
 
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(sge_check_load_alarm(name, load_value, limit_value, relop, type,
+      if(sge_check_load_alarm(reason, name, load_value, limit_value, relop, type,
                               hep, hlep, lc_host, lc_global, 
-                              load_adjustments)) {
+                              load_adjustments, load_is_value)) {
          DEXIT;
          return 1;
       }   
@@ -1204,7 +1241,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       return reason;
    }
 
-   hep = lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname));
+   hep = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
 
    if(!hep) { 
       /* no host for queue -> ERROR */
@@ -1213,7 +1250,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       return reason;
    }
 
-   global_hep = lGetElemHost(exechost_list, EH_name, "global");
+   global_hep = host_list_locate(exechost_list, "global");
 
    for_each (tep, threshold) {
       lListElem *hlep = NULL, *glep = NULL, *cep  = NULL;
@@ -1223,7 +1260,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       name = lGetString(tep, CE_name);
 
       /* complex attriute definition */
-      if (!(cep = sge_locate_complex_attr(name, complex_list))) {
+      if (!(cep = complex_list_locate_attr(complex_list, name))) {
          /* no complex attribute for threshold -> ERROR */
          sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
          strncat(reason, buffer, reason_size);
@@ -1251,9 +1288,9 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(sge_check_load_alarm(name, load_value, limit_value, relop, type,
+      if(sge_check_load_alarm(NULL, name, load_value, limit_value, relop, type,
                               hep, hlep, 0, 0,
-                              NULL)) {
+                              NULL, 0)) {
          char dom_str[5];    /* dominance as string */
          u_long32 dom_val;   /* dominance as u_long */
 
@@ -1309,6 +1346,7 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
    lCondition *where;
    lListElem *qep;
    int ret, load_alarm, nverified = 0;
+   char reason[2048];
 
    DENTER(TOP_LAYER, "sge_split_queue_load");
 
@@ -1330,16 +1368,17 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
                            lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
          nverified++;
 
-         if (sge_load_alarm(qep, thresholds, exechost_list, complex_list, load_adjustments)!=0) {
+         if (sge_load_alarm(reason, qep, thresholds, exechost_list, complex_list, load_adjustments)!=0) {
             load_alarm = 1;
             if (ttype==QU_suspend_thresholds) {
-               DPRINTF(("queue %s tagged to be in suspend alarm\n", 
-                     lGetString(qep, QU_qname)));
-               schedd_add_global_message(SCHEDD_INFO_QUEUEINALARM_S, lGetString(qep, QU_qname));
+               DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
+                     lGetString(qep, QU_qname), reason));
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_qname), reason);
             } else {
-               DPRINTF(("queue %s tagged to be overloaded\n", 
-                     lGetString(qep, QU_qname)));
-               schedd_add_global_message(SCHEDD_INFO_QUEUEOVERLOADED_S, lGetString(qep, QU_qname));
+               DPRINTF(("queue %s tagged to be overloaded: %s\n", 
+                     lGetString(qep, QU_qname), reason));
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname),
+reason);
             }
          }
       }
@@ -1415,7 +1454,7 @@ int nslots
       lListElem* mes_queue;
 
       for_each(mes_queue, *full)
-         schedd_add_global_message(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(mes_queue, QU_qname));
 
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , *full, QU_qname);
       if (do_free_list) {
@@ -1474,7 +1513,7 @@ lList **suspended         /* QU_Type */
       lListElem* mes_queue;
 
       for_each(mes_queue, *suspended)
-         schedd_add_global_message(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_qname));
  
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , *suspended, QU_qname);
       if (do_free_list) {
@@ -1533,7 +1572,7 @@ lList **disabled         /* QU_Type */
       lListElem* mes_queue;
 
       for_each(mes_queue, *disabled)
-         schedd_add_global_message(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_qname));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_qname));
  
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_qname);
       if (do_free_list) {
@@ -1546,14 +1585,14 @@ lList **disabled         /* QU_Type */
    return ret;
 }
 
-/****** sge_select_queue/sge_replicate_queues_suitable4job() *******************
+/****** sched/select_queue/sge_replicate_queues_suitable4job() ****************
 *  NAME
-*     sge_replicate_queues_suitable4job() -- select resources for a certain job
+*     sge_replicate_queues_suitable4job() -- select res. for a job
 *
 *  RESULT
-*     A JG_Type list refering the selected resources (queues) for that job
-*
-*******************************************************************************/
+*     A JG_Type list refering the selected resources (queues) for 
+*     that job
+******************************************************************************/
 lList* sge_replicate_queues_suitable4job(
 lList *queues,       /* QU_Type */
 lListElem *job,      /* JB_Type */
@@ -1602,10 +1641,9 @@ int host_order_changed) {
       const char *eh_name, *qname;
 
       /* untag all queues */
-      for_each(qep, queues)
-         lSetUlong(qep, QU_tagged, 0);
+      queue_list_clear_tags(queues);
 
-      global_hep = lGetElemHost(host_list, EH_name, "global");
+      global_hep = host_list_locate(host_list, "global");
 
       ccl[0] = lGetList(global_hep, EH_consumable_config_list);
       ccl[1] = NULL;
@@ -1691,7 +1729,7 @@ int host_order_changed) {
          /* do static and dynamic checks for "global" host */ 
          if (!sge_why_not_job2host(job, ja_task, global_hep, complex_list, acl_list)) {
             for_each (qep, queues) { /* in queue sort order */
-               hep = lGetElemHost(host_list, EH_name, lGetHost(qep, QU_qhostname));
+               hep = host_list_locate(host_list, lGetHost(qep, QU_qhostname));
                ccl[1] = lGetList(hep, EH_consumable_config_list);
                ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -1821,7 +1859,7 @@ int host_order_changed) {
             
             if (!(allocation_rule = sge_pe_slots_per_host(pe, total_slots))) {
                max_slots_all_hosts = total_slots;
-               schedd_add_message(job_id, SCHEDD_INFO_PEALLOCRULE_S, lGetString(pe, PE_name));
+               schedd_mes_add(job_id, SCHEDD_INFO_PEALLOCRULE_S, lGetString(pe, PE_name));
                continue;
             }
             minslots = ALLOC_RULE_IS_BALANCED(allocation_rule)?allocation_rule:1;
@@ -1896,7 +1934,7 @@ int host_order_changed) {
                   if (host_slots>=minslots) {
                      /* tag amount of slots we can get served with resources limited per queue */
                      for_each (qep, queues) {
-                        if (hostcmp(lGetHost(qep, QU_qhostname), eh_name))
+                        if (sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name))
                            continue;
                         qname = lGetString(qep, QU_qname);
 
@@ -2091,7 +2129,7 @@ int host_order_changed) {
 
          /* ensure host of this queue has enough slots */
          eh_name = lGetHost(qep, QU_qhostname);
-         hep = lGetElemHost(host_list, EH_name, eh_name);
+         hep = host_list_locate(host_list, eh_name);
          if ((int) lGetUlong(hep, EH_tagged) >= minslots && 
                (int) lGetUlong(hep, EH_seq_no)==-1) {
             lSetUlong(hep, EH_seq_no, host_seq_no++);
@@ -2128,7 +2166,7 @@ int host_order_changed) {
             queue of the master host to be at the first position */
          master_eh_name = lGetHost(master_hep, EH_name);
          for_each (qep, queues) {
-            if (hostcmp(master_eh_name, lGetHost(qep, QU_qhostname)))
+            if (sge_hostcmp(master_eh_name, lGetHost(qep, QU_qhostname)))
                continue;
             if (lGetUlong(qep, QU_tagged4schedule))
                break;
@@ -2175,7 +2213,7 @@ int host_order_changed) {
             for_each (qep, queues) {
                int qtagged;
 
-               if (hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
+               if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                   continue;
 
                qname = lGetString(qep, QU_qname);
@@ -2221,7 +2259,7 @@ int host_order_changed) {
 }
 
 
-/****** sge_select_queue/available_slots_at_queue() ****************************
+/****** sched/select_queue/available_slots_at_queue() *************************
 *  NAME
 *     available_slots_at_queue() -- return # of slots in queue for job
 *
@@ -2232,8 +2270,7 @@ int host_order_changed) {
 *
 *  RESULT
 *     int - the # of slots
-*
-*******************************************************************************/
+******************************************************************************/
 int available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, 
 complex_list, acl_list, load_adjustments, host_slots, ccl, ndispatched, 
 global_hep, total_slots, hep)
@@ -2297,7 +2334,7 @@ lListElem *hep;
          debit_host_consumable(job, hep, complex_list, host_slots);
       }
 
-      load_alarm = sge_load_alarm(qep, lGetList(qep, QU_load_thresholds), 
+      load_alarm = sge_load_alarm(NULL, qep, lGetList(qep, QU_load_thresholds), 
             host_list, complex_list, load_adjustments);
 
       if (global_hep) {
@@ -2317,7 +2354,7 @@ lListElem *hep;
       if (load_alarm) { 
          DPRINTF(("%s (%d global slots/%d host slots) would set queue \"%s\" in load alarm state\n", 
                job_descr(job_id), total_slots, host_slots, qname));
-         schedd_add_message(job_id, SCHEDD_INFO_WOULDSETQEUEINALARM_DS,
+         schedd_mes_add(job_id, SCHEDD_INFO_WOULDSETQEUEINALARM_DS,
             host_slots, qname);
          DEXIT;
          return 0;
@@ -2350,7 +2387,7 @@ lListElem *hep;
       return 0;
    }
    if (!(qslots = lGetDouble(cep, CE_doubleval))) {
-      schedd_add_message(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
+      schedd_mes_add(job_id, SCHEDD_INFO_NOSLOTSINQUEUE_S, qname);
    }
 
    /* get QU_job_slots of queue */
@@ -2370,7 +2407,7 @@ lListElem *hep;
                      lGetList(job, JB_hard_resource_list));
             if (*buff && (buff[strlen(buff) - 1] == '\n'))
                buff[strlen(buff) - 1] = 0;
-            schedd_add_message(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
+            schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
             
          } 
          continue;
@@ -2392,7 +2429,7 @@ lListElem *hep;
 }
 
 
-/****** sge_select_queue/available_slots_at_host() *****************************
+/****** sched/select_queue/available_slots_at_host() **************************
 *  NAME
 *     available_slots_at_host() -- return # of slots at host for job
 *
@@ -2403,8 +2440,7 @@ lListElem *hep;
 *
 *  RESULT
 *     int - the # of slots
-*
-*******************************************************************************/
+******************************************************************************/
 static int available_slots_at_host(lList *host_resources, lListElem *job,
                                    lListElem *ja_task, lListElem *host,
                                    int hslots, int minslots, 
@@ -2447,7 +2483,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
             if (*buff && (buff[strlen(buff) - 1] == '\n'))
                buff[strlen(buff) - 1] = 0;
 
-            schedd_add_message(job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, 
+            schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, 
                buff, eh_name, reason);
          }
 /*          DPRINTF(("HOST failed %s %d slots: %s\n", eh_name, hslots, reason));    */
@@ -2460,7 +2496,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
    return (hslots<minslots)?0:hslots;
 }
 
-/****** sge_select_queue/available_slots_global() ******************************
+/****** sched/select_queue/available_slots_global() ***************************
 *  NAME
 *     available_slots_global() -- return # of global slots for job
 *
@@ -2471,8 +2507,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
 *
 *  RESULT
 *     int - the # of slots
-*
-*******************************************************************************/
+******************************************************************************/
 static int available_slots_global(global_resources, job, ja_task, pe_object, host_list, complex_list, global_slots, ccl, acl_list)
 lList **global_resources;
 lListElem *job;
@@ -2496,7 +2531,7 @@ lList *acl_list;
 
    /* check if job has access to any hosts globally */
    if (sge_why_not_job2host(job, ja_task, 
-         lGetElemHost(host_list, EH_name, SGE_GLOBAL_NAME ), complex_list, acl_list)>0) {
+         host_list_locate(host_list, SGE_GLOBAL_NAME ), complex_list, acl_list)>0) {
       DEXIT;
       return 0;
    }
@@ -2510,7 +2545,7 @@ lList *acl_list;
       global_slots = num_in_range(global_slots, lGetList(job, JB_pe_range));
 
       if (!global_slots) {
-         schedd_add_message (lGetUlong(job, JB_job_number) , SCHEDD_INFO_NOSLOTSUPPORTBYPE_S, 
+         schedd_mes_add (lGetUlong(job, JB_job_number) , SCHEDD_INFO_NOSLOTSUPPORTBYPE_S, 
                   lGetString(pe_object, PE_name));
          DEXIT;
          return 0;
@@ -2520,7 +2555,7 @@ lList *acl_list;
 
    /* initially looked at global slots */
    if (!*global_resources)
-      global_complexes2scheduler(global_resources, lGetElemHost(host_list, EH_name, "global"), complex_list, 0);
+      global_complexes2scheduler(global_resources, host_list_locate(host_list, "global"), complex_list, 0);
  
    for (; global_slots; 
             global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {
@@ -2549,7 +2584,7 @@ lList *acl_list;
       unparse_resources(NULL, buff, sizeof(buff) - 1, lGetList(job, JB_hard_resource_list));
       if (*buff && (buff[strlen(buff) - 1] == '\n'))
          buff[strlen(buff) - 1] = 0;
-      schedd_add_message (lGetUlong(job, JB_job_number), SCHEDD_INFO_CANNOTRUNGLOBALLY_SS,
+      schedd_mes_add (lGetUlong(job, JB_job_number), SCHEDD_INFO_CANNOTRUNGLOBALLY_SS,
               buff, reason);
    }
 
@@ -2728,7 +2763,9 @@ lListElem *job,
 lList *granted,
 lList *global_queue_list,
 lList *complex_list,
-u_long32 *total_slotsp 
+u_long32 *total_slotsp,
+lList *orders_list   /* needed to warn on jobs that get dispatched and suspended
+                        on subordinate in the very same interval */
 ) {
    int pe_slots = 0;
    int qslots, total;
@@ -2761,6 +2798,20 @@ u_long32 *total_slotsp
             if (!tst_sos(qslots,        total, 0, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, 0, so)) {   /* but now                */
                ret |= sos_schedd(lGetString(so, SO_qname), global_queue_list);
+
+               /* warn on jobs that were dispatched into that queue in
+                  the same scheduling interval based on the orders list */
+               {
+                  lListElem *order;
+                  for_each (order, orders_list) {
+                     if (lGetUlong(order, OR_type) != ORT_start_job)
+                        continue;
+                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_qname), OR_queuelist)) {
+                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
+                        u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_qname)));
+                     }
+                  }
+               }
             }
          }
 
@@ -2811,7 +2862,7 @@ lList *complex_list
 
    if (     !(cxep=lGetElemStr(complex_list, CX_name, SGE_QUEUE_NAME))
         ||  !(ceep=lGetElemStr(lGetList(cxep, CX_entries), CE_name, "qname"))
-        ||  !lGetUlong(ceep, CE_request)) 
+        ||  !lGetBool(ceep, CE_request)) 
       return 0;  
    else 
       return 1;  

@@ -66,13 +66,13 @@ enum {
 };
 
 ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
-   SGE_KSTRINGHU(US_name)       /* configured name spooled */
-   SGE_ULONG(US_type)         /* configured type spooled */
-   SGE_ULONG(US_fshare)       /* configured share spooled */
-   SGE_ULONG(US_oticket)      /* configured override tickets spooled */
-   SGE_XULONG(US_job_cnt)     /* local to schedd */
-   SGE_XULONG(US_pending_job_cnt) /* local to schedd */
-   SGE_TLIST(US_entries, UE_Type)     /* UE_Type */
+   SGE_STRING(US_name, CULL_HASH | CULL_UNIQUE)       /* configured name spooled */
+   SGE_ULONG(US_type, CULL_DEFAULT)         /* configured type spooled */
+   SGE_ULONG(US_fshare, CULL_DEFAULT)       /* configured share spooled */
+   SGE_ULONG(US_oticket, CULL_DEFAULT)      /* configured override tickets spooled */
+   SGE_ULONG(US_job_cnt, CULL_DEFAULT)     /* local to schedd */
+   SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT) /* local to schedd */
+   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT)     /* UE_Type */
 LISTEND 
 
 NAMEDEF(USEN)
@@ -103,7 +103,7 @@ enum {
 };
 
 SLISTDEF(UE_Type, UserEntry)
-   SGE_STRINGHU(UE_name)
+   SGE_STRING(UE_name, CULL_HASH | CULL_UNIQUE)
 LISTEND 
 
 NAMEDEF(UEN)
@@ -122,8 +122,8 @@ enum {
 };
 
 LISTDEF(JC_Type)
-   SGE_STRINGHU(JC_name)
-   SGE_ULONG(JC_jobs)
+   SGE_STRING(JC_name, CULL_HASH | CULL_UNIQUE)
+   SGE_ULONG(JC_jobs, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(JCN)

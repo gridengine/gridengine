@@ -322,10 +322,10 @@ Master_impl.h Master_skel.cpp Master.cpp Master_skel.h: Master.h
 # test client
 #---------------------------------------------------------------------
 client: client.o CosEventComm.o CosEventComm_skel.o \
-        CosEventChannelAdmin.o sge_str_from_file.o elem_codes.o \
+        CosEventChannelAdmin.o sge_io.o elem_codes.o \
         basic_types.o $(OBJECTOBJ) cull_multitype.o Master.o
 		$(CXX) -o $@ $(LFLAGS) client.o CosEventComm.o CosEventComm_skel.o \
-                CosEventChannelAdmin.o sge_str_from_file.o elem_codes.o \
+                CosEventChannelAdmin.o sge_io.o elem_codes.o \
                 basic_types.o $(OBJECTOBJ) \
                 Master.o $(OBLIB) \
                 $(CULLLIB) $(GDILIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(LIBS) $(PTHRDSLIB)

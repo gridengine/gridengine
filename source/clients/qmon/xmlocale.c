@@ -42,8 +42,11 @@
 **   remove ~/Xmlocale and test again, this should fail (Label should be black)
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
+#include <Xm/Label.h>
 
 String fallbacks[] = { "*fontList: 9x14=tag", NULL};
 
@@ -55,7 +58,7 @@ void exitCB(Widget w, XtPointer cld, XtPointer cad)
 
 int main(int argc, char **argv)
 {
-   Widget toplevel, rc, pb;
+   Widget toplevel, rc, pb, label;
    XtAppContext app;
    XmString xstr;
 
@@ -66,6 +69,8 @@ int main(int argc, char **argv)
    
    rc = XtVaCreateWidget("RowCol", xmRowColumnWidgetClass,
                          toplevel, NULL);
+   label = XtVaCreateManagedWidget("Label", xmLabelWidgetClass, 
+                                rc, NULL);
    xstr = XmStringCreateLocalized("ÑsTTÉírÉèoÉÖeÉît");
    pb = XtVaCreateManagedWidget("PB", xmPushButtonWidgetClass, 
                                 rc, XmNlabelString, xstr, NULL);

@@ -1070,6 +1070,7 @@ XtPointer cld, cad;
       return;
    }
    pl = qmonMirrorList(SGE_PROJECT_LIST);
+   lPSortList(pl, "%I+", UP_name);
    n = lGetNumberOfElem(pl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*(n+1)); 
@@ -1126,7 +1127,7 @@ XtPointer cld, cad;
    }
    else
       qmonMessageShow(w, True, 
-            "Please configure a project first.");
+            "@{Please configure a project first !}");
    
    DEXIT;
 }

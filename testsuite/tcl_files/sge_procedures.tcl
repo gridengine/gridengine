@@ -36,10 +36,6 @@ global module_name
 set module_name "sge_procedures.tcl"
 
 
-
-
-
-
 # procedures
 #                                                             max. column:     |
 #****** sge_procedures/test() ******
@@ -158,6 +154,34 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGEEE_5.3beta1)      2
    set versions(SGEEE_5.3beta2)      2
    set versions(SGE_5.3beta2)        2
+   set versions(SGEEE_5.3beta2_1)    2
+   set versions(SGE_5.3beta2_1)      2
+   set versions(SGEEE_5.3beta2_2)    2
+   set versions(SGE_5.3beta2_2)      2
+   set versions(SGEEE_5.3.1beta1)    2
+   set versions(SGE_5.3.1beta1)      2
+   set versions(SGEEE_5.3.1beta2)    2
+   set versions(SGE_5.3.1beta2)      2
+   set versions(SGEEE_5.3.1beta3)    2
+   set versions(SGE_5.3.1beta3)      2
+   set versions(SGEEE_5.3.1beta4)    2
+   set versions(SGE_5.3.1beta4)      2
+   set versions(SGEEE_5.3.1beta5)    2
+   set versions(SGE_5.3.1beta5)      2
+   set versions(SGEEE_5.3.1beta6)    2
+   set versions(SGE_5.3.1beta6)      2
+   set versions(SGEEE_5.3.1beta7)    2
+   set versions(SGE_5.3.1beta7)      2
+   set versions(SGEEE_5.3.1beta8)    2
+   set versions(SGE_5.3.1beta8)      2
+   set versions(SGEEE_5.3.1beta9)    2
+   set versions(SGE_5.3.1beta9)      2
+   set versions(SGEEE_5.3p1)         2
+   set versions(SGE_5.3p1)           2
+   set versions(SGEEE_5.3p2)         2
+   set versions(SGE_5.3p2)           2
+   set versions(SGEEE_pre6.0_(Maintrunk))    3
+   set versions(SGE_pre6.0_(Maintrunk))      3
 
    
     
@@ -255,6 +279,302 @@ proc get_execd_spool_dir {host} {
 }
 
 
+#****** sge_procedures/check_messages_files() **********************************
+#  NAME
+#     check_messages_files() -- check messages files for errors and warnings
+#
+#  SYNOPSIS
+#     check_messages_files { } 
+#
+#  FUNCTION
+#     This procedure reads in all cluster messages files from qmaster and
+#     execd and returns the messages with errors or warnings.
+#
+#  RESULT
+#     string with parsed file output
+#
+#*******************************************************************************
+proc check_messages_files { } {
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER
+
+
+   set full_info ""
+
+   foreach host $CHECK_CORE_EXECD {
+      set status [ check_execd_messages $host 1] 
+      append full_info "\n=========================================\n"
+      append full_info "execd: $host\n"
+      append full_info "file : [check_execd_messages $host 2]\n"
+      append full_info "=========================================\n"
+      append full_info $status
+   }
+
+   set status [ check_schedd_messages 1] 
+   append full_info "\n=========================================\n"
+   append full_info "schedd: $CHECK_CORE_MASTER\n"
+   append full_info "file   : [check_schedd_messages 2]\n"
+   append full_info "=========================================\n"
+   append full_info $status
+
+   set status [ check_qmaster_messages 1] 
+   append full_info "\n=========================================\n"
+   append full_info "qmaster: $CHECK_CORE_MASTER\n"
+   append full_info "file   : [check_qmaster_messages 2]\n"
+   append full_info "=========================================\n"
+   append full_info $status
+   return $full_info
+}
+
+
+#****** sge_procedures/get_qmaster_messages_file() *****************************
+#  NAME
+#     get_qmaster_messages_file() -- get path to qmaster's messages file
+#
+#  SYNOPSIS
+#     get_qmaster_messages_file { } 
+#
+#  FUNCTION
+#     This procedure returns the path to the running qmaster's messages file
+#
+#  RESULT
+#     path to qmaster's messages file
+#
+#  SEE ALSO
+#     sge_procedures/get_execd_messages_file()
+#     sge_procedures/get_schedd_messages_file()
+#
+#*******************************************************************************
+proc get_qmaster_messages_file { } {
+   return [ check_qmaster_messages 2 ]
+}
+
+#****** sge_procedures/check_qmaster_messages() ********************************
+#  NAME
+#     check_qmaster_messages() -- get qmaster messages file content
+#
+#  SYNOPSIS
+#     check_qmaster_messages { { show_mode 0 } } 
+#
+#  FUNCTION
+#     This procedure locates the qmaster messages file (using qconf -sconf) 
+#     and returns the output of cat.
+#
+#  INPUTS
+#     { show_mode 0 } - if not 0: return only warning and error lines
+#                       if     2: return only path to qmaster messages file
+#
+#  RESULT
+#     output string
+#
+#  SEE ALSO
+#     sge_procedures/check_execd_messages()
+#     sge_procedures/check_schedd_messages()
+#*******************************************************************************
+proc check_qmaster_messages { { show_mode 0 } } {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_CORE_MASTER
+
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program_arg "-sconf global" 
+   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+
+   set output [ split $output "\n" ]
+   set spool_dir "unkown"
+   foreach line $output {
+      if { [ string first "qmaster_spool_dir" $line ] >= 0 } {
+         set spool_dir [ lindex $line 1 ]
+      }
+   }
+   puts $CHECK_OUTPUT "\"$spool_dir\""
+
+   set messages_file "$spool_dir/messages"
+
+   if { $show_mode == 2 } {
+      return $messages_file
+   }   
+
+   set return_value ""
+
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages_file
+   for { set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+       set line $file_array($i)
+       if { ( [ string first "|E|" $line ] >= 0 )   || 
+            ( [ string first "|W|" $line ] >= 0 )   ||
+            ( $show_mode == 0               )  }   {
+            append return_value "line $i: $line\n"
+       }
+   }
+   return $return_value
+}
+
+#****** sge_procedures/get_schedd_messages_file() ******************************
+#  NAME
+#     get_schedd_messages_file() -- get path to scheduler's messages file
+#
+#  SYNOPSIS
+#     get_schedd_messages_file { } 
+#
+#  FUNCTION
+#     This procedure returns the path to the running scheduler's messages file
+#
+#  RESULT
+#     path to scheduler's messages file
+#
+#  SEE ALSO
+#     sge_procedures/get_execd_messages_file()
+#     sge_procedures/get_qmaster_messages_file()
+#*******************************************************************************
+proc get_schedd_messages_file { } {
+   return [ check_schedd_messages 2 ]
+}
+
+#****** sge_procedures/check_schedd_messages() *********************************
+#  NAME
+#     check_schedd_messages() -- get schedulers messages file content
+#
+#  SYNOPSIS
+#     check_schedd_messages { { show_mode 0 } } 
+#
+#  FUNCTION
+#     This procedure locates the schedd messages file (using qconf -sconf) 
+#     and returns the output of cat.
+#
+#  INPUTS
+#     { show_mode 0 } - if not 0: return only warning and error lines
+#                       if     2: return only path to schedd messages file
+#
+#  RESULT
+#     output string
+#
+#  SEE ALSO
+#     sge_procedures/check_execd_messages()
+#     sge_procedures/check_qmaster_messages()
+#*******************************************************************************
+proc check_schedd_messages { { show_mode 0 } } {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_CORE_MASTER
+
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program_arg "-sconf global" 
+   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+
+   set output [ split $output "\n" ]
+   set spool_dir "unkown"
+   foreach line $output {
+      if { [ string first "qmaster_spool_dir" $line ] >= 0 } {
+         set spool_dir [ lindex $line 1 ]
+      }
+   }
+
+   set messages_file "$spool_dir/schedd/messages"
+
+   if { $show_mode == 2 } {
+      return $messages_file
+   }   
+
+   set return_value ""
+
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages_file
+   for { set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+       set line $file_array($i)
+       if { ( [ string first "|E|" $line ] >= 0 )   || 
+            ( [ string first "|W|" $line ] >= 0 )   ||
+            ( $show_mode == 0               )  }   {
+            append return_value "line $i: $line\n"
+       }
+   }
+   return $return_value
+}
+
+
+#****** sge_procedures/get_execd_messages_file() *******************************
+#  NAME
+#     get_execd_messages_file() -- get messages file path of execd
+#
+#  SYNOPSIS
+#     get_execd_messages_file { hostname } 
+#
+#  FUNCTION
+#     This procedure returns the full path to the given execd's messages file
+#
+#  INPUTS
+#     hostname - hostname where the execd is running
+#
+#  RESULT
+#     path to messages file of the given execd host
+#
+#  SEE ALSO
+#     sge_procedures/get_qmaster_messages_file()
+#     sge_procedures/get_schedd_messages_file()
+#
+#*******************************************************************************
+proc get_execd_messages_file { hostname } {
+   return [ check_execd_messages $hostname 2 ]
+}
+
+#****** sge_procedures/check_execd_messages() **********************************
+#  NAME
+#     check_execd_messages() -- get execd messages file content
+#
+#  SYNOPSIS
+#     check_execd_messages { hostname { show_mode 0 } } 
+#
+#  FUNCTION
+#     This procedure locates the execd messages file (using qconf -sconf) 
+#     and returns the output of cat.
+#
+#  INPUTS
+#     hostname        - hostname of execd
+#     { show_mode 0 } - if not 0: return only warning and error lines
+#                       if     2: return only path to execd messages file
+#
+#  RESULT
+#     output string
+#
+#  SEE ALSO
+#     sge_procedures/check_qmaster_messages()
+#     sge_procedures/check_schedd_messages()
+#*******************************************************************************
+proc check_execd_messages { hostname { show_mode 0 } } {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT
+
+   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program_arg "-sconf $hostname" 
+   set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+   if { [string first "execd_spool_dir" $output ] < 0 } {
+      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+      set program_arg "-sconf global" 
+      set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
+   }
+
+   set output [ split $output "\n" ]
+   set spool_dir "unkown"
+   foreach line $output {
+      if { [ string first "execd_spool_dir" $line ] >= 0 } {
+         set spool_dir [ lindex $line 1 ]
+      }
+   }
+   puts $CHECK_OUTPUT "\"$spool_dir\""
+
+   set messages_file "$spool_dir/$hostname/messages"
+   if { $show_mode == 2 } {
+      return $messages_file
+   }
+
+   set return_value ""
+
+   get_file_content $hostname $CHECK_USER $messages_file
+   for { set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+       set line $file_array($i)
+       if { ( [ string first "|E|" $line ] >= 0 ) || 
+            ( [ string first "|W|" $line ] >= 0 ) ||
+            ( $show_mode == 0 )                }  {
+            append return_value "line $i: $line\n"
+       }
+   }
+   return $return_value
+} 
 
 
 #                                                             max. column:     |
@@ -519,6 +839,7 @@ proc set_exechost { change_array host } {
 # 0    if ok
 
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_HOST
 
   upvar $change_array chgar
 
@@ -555,7 +876,8 @@ proc set_exechost { change_array host } {
         lappend vi_commands [format "%c" 27]
      }
   } 
-  set result [handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" "changed"]
+  set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
+  set result [handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
   if { $result == -2 } {
      set result 0
   }
@@ -569,66 +891,36 @@ proc set_exechost { change_array host } {
 
 
 
-#                                                             max. column:     |
-#****** sge_procedures/get_loadsensor_path() ******
-# 
+#****** sge_procedures/get_loadsensor_path() ***********************************
 #  NAME
-#     get_loadsensor_path -- ??? 
+#     get_loadsensor_path() -- get loadsensor for host
 #
 #  SYNOPSIS
-#     get_loadsensor_path { arch } 
+#     get_loadsensor_path { host } 
 #
 #  FUNCTION
-#     ??? 
+#     This procedure will read the load sensor path for the given host
 #
 #  INPUTS
-#     arch - ??? 
+#     host - hostname to get loadsensor for
 #
 #  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
+#     full path name of loadsensor 
 #
 #  SEE ALSO
 #     ???/???
-#*******************************
-proc get_loadsensor_path { arch } {
-   global CHECK_LOADSENSOR_DIR_CONFIG_FILE CHECK_CONFIG_DIR CHECK_OUTPUT
+#*******************************************************************************
+proc get_loadsensor_path { host } {
+   global CHECK_OUTPUT
+   global ts_host_config
 
-   set config "$CHECK_CONFIG_DIR/$CHECK_LOADSENSOR_DIR_CONFIG_FILE"  
-   set sensor_path ""
-
-   if { [file exists $config] } {
-      set file_p [ open $config r ]
-      set line_no 0
-      while { [gets $file_p line] >= 0 } {
-         if { [string first "#" $line ] == 0 } {
-#            puts $CHECK_OUTPUT "found comment in line $line_no"
-            continue
-         }
-         set tmp_arch [ lindex $line 0 ]
-         set tmp_path [ lindex $line 1 ]
-
-#         puts $CHECK_OUTPUT "\"$tmp_arch\" \"$tmp_path\""
-         if { [ string compare $tmp_arch $arch] == 0 } {
-#            puts $CHECK_OUTPUT "found matching architecture entry $tmp_arch"
-            set sensor_path $tmp_path
-#            puts $CHECK_OUTPUT "path is \"$tmp_path\""
-         }
-         incr line_no 1
-      }
-      close $file_p 
-   } else {
-     add_proc_error "get_loadsensor_path" -1 "config file \"$config\" not found"
+   if { [ info exists ts_host_config($host,loadsensor) ] != 1 } {
+      add_proc_error "get_loadsensor_path" -1 "no host configuration found for host \"$host\""
+      return ""
    }
-   return $sensor_path
+
+   set loadsensor $ts_host_config($host,loadsensor)
+   return $loadsensor
 }
 
 #
@@ -658,70 +950,14 @@ proc get_loadsensor_path { arch } {
 #
 proc get_gid_range { user port } {
 
-  global CHECK_CONFIG_DIR CHECK_OUTPUT
+  global CHECK_OUTPUT
+  global ts_user_config
 
-  set config "$CHECK_CONFIG_DIR/gid-range.conf"
-  set range "13001-13500"
-  set range_step 200
-  set used_ranges ""
-  
-  if { [file exists $config] } {
-    set file_p [ open $config r ]
-    set line_no 0
-    while { [gets $file_p line ] >= 0 } {
-       if { [string first "#" $line ] == 0 } {
-          debug_puts "found comment in line $line_no"
-          incr line_no 1
-          continue
-       }
-       if { [string first "|" $line ] > 0 } {
-          set help [split $line "|"]
-         
-          set gidlist([lindex $help 0],[lindex $help 1]) [lindex $help 2] 
-          lappend used_ranges [lindex $help 2] 
-          debug_puts "found entry in line $line_no"
-       }
-       incr line_no 1 
-    }
-    close $file_p
-    set names [array names gidlist]
-    foreach elem $names {
-       debug_puts "\"$elem\" has gid: $gidlist($elem)"
-    }
-    if { [ info exists gidlist($user,$port)] } {
-       puts $CHECK_OUTPUT "found entry for $user on port $port: gid-gange is $gidlist($user,$port)"
-       return $gidlist($user,$port)
-    } else {
-       set highest_val 20000
-       foreach elem $used_ranges {
-          set help [split $elem "-"]
-          set low_val  [lindex $help 0]
-          set high_val [lindex $help 1]
-          if { $high_val > $highest_val } {
-             set highest_val $high_val
-          }
-       }
-       set new_range [expr ( $highest_val + 1 ) ]
-       set new_end [expr ( $new_range + [ expr ( $range_step - 1 ) ] ) ]
-       append new_range "-"
-       append new_range $new_end
-       puts $CHECK_OUTPUT "creating new range for $user on port $port: $new_range"
-       set file_p [open $config "a"]
-       puts $file_p "$user|$port|$new_range"
-       close $file_p
-       return $new_range
-    }
-  } else {
-    puts "file does not exist, createing new one"
-    # file does not exist, create new file with new entry
-    set file_p [open $config "w"]
-    puts $file_p "# gid range configuration file"
-    puts $file_p "# each line is one entry:"
-    puts $file_p "# user      port        range"
-    puts $file_p "$user|$port|$range"
-    close $file_p
-    return $range
+  if { [ info exists ts_user_config($port,$user) ] } {
+     return $ts_user_config($port,$user)
   }
+  add_proc_error "get_gid_range" -1 "no gid range defined for user $user on port $port"
+  return ""
 }
 
 
@@ -871,7 +1107,7 @@ proc reset_schedd_config {} {
   global CHECK_PRODUCT_TYPE
  
   set default_array(algorithm)                  "default"
-  set default_array(schedule_interval)          "0:0:15"
+  set default_array(schedule_interval)          "0:0:10"
   set default_array(maxujobs)                   "0"
   set default_array(queue_sort_method)          "load"
   set default_array(user_sort)                  "false"
@@ -883,7 +1119,7 @@ proc reset_schedd_config {} {
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
      set default_array(queue_sort_method)          "share"
-     set default_array(sgeee_schedule_interval)    "00:01:00"
+     set default_array(sgeee_schedule_interval)    "00:00:40"
      set default_array(halftime)                   "168"
      set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
      set default_array(compensation_factor)        "5"
@@ -1180,6 +1416,7 @@ proc get_complex { change_array complex_list } {
 #*******************************
 proc set_config { change_array {host global} {do_add 0}} {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER
   upvar $change_array chgar
   set values [array names chgar]
 
@@ -1205,7 +1442,18 @@ proc set_config { change_array {host global} {do_add 0}} {
         lappend vi_commands [format "%c" 27]
      }
   } 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands "modified" "edit failed" "added" ]
+  if { [resolve_version] > 2 } {
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+     set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  } else {
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
+     set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
+  }
+
+
+  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
   if { ($result != 0) &&  ($result != -3) } {
      add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
   }
@@ -1242,6 +1490,7 @@ proc set_config { change_array {host global} {do_add 0}} {
 #*******************************************************************************
 proc set_complex { change_array complex_list } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]
 
@@ -1264,7 +1513,11 @@ proc set_complex { change_array complex_list } {
         lappend vi_commands [format "%c" 27]
      }
   } 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mc $complex_list" $vi_commands "modified" "edit failed" "added" ]
+  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
+  set MODIFIED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_MODIFIEDIN]]
+  set ADDED       [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_MULTIPLY_ADDEDTO]]
+
+  set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
   if { $result != 0  } {
      add_proc_error "set_complex" -1 "could not modify complex $complex_list ($result)"
   }
@@ -1340,7 +1593,7 @@ proc set_complex { change_array complex_list } {
 #*******************************
 proc set_schedd_config { change_array } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_OUTPUT
+  global CHECK_OUTPUT CHECK_CORE_MASTER
   upvar $change_array chgar
 
   set values [array names chgar]
@@ -1354,8 +1607,8 @@ proc set_schedd_config { change_array } {
      set newVal [join $newVal1 {\/}]
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   }
-
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands "changed scheduler configuration" ]  
+  set CHANGED_SCHEDD_CONFIG [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION]]
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG ]  
 
   if { $result != 0 } {
      add_proc_error "set_schedd_config" -1 "error changing scheduler configuration"
@@ -1546,9 +1799,12 @@ proc get_schedd_config { change_array } {
 #*******************************
 proc set_queue { q_name change_array } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_OUTPUT
+  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST
 
   upvar $change_array chgar
 
+
+  puts $CHECK_OUTPUT "setting queue parameters for queue \"$q_name\""
   set values [array names chgar]
 
   set vi_commands ""
@@ -1562,7 +1818,10 @@ proc set_queue { q_name change_array } {
      set newVal [join $newVal1 {\/}]
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mq ${q_name}" $vi_commands "modified" "not a queuename"]
+  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+  set NOT_A_QUEUENAME [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QUEUE_XISNOTAQUEUENAME_S] $q_name ]
+  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mq ${q_name}" $vi_commands $MODIFIED $NOT_A_QUEUENAME]
   if { $result == -2 } {
     add_proc_error "set_queue" -1 "$q_name is not a queue"
   }
@@ -1676,6 +1935,7 @@ proc set_queue { q_name change_array } {
 proc add_queue { change_array {fast_add 0} } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
+  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST
 
   upvar $change_array chgar
   set values [array names chgar]
@@ -1758,10 +2018,13 @@ proc add_queue { change_array {fast_add 0} } {
      set result ""
      set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
      puts $CHECK_OUTPUT $result
-     if { [string first "added" $result ] < 0 } {
+     set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+     set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $default_array(qname) $QUEUE ]
+
+     if { [string match "*$ADDED" $result ] == 0 } {
         add_proc_error "add_queue" "-1" "qconf error or binary not found"
         return
-     }
+     } 
      return
   }
 
@@ -1775,7 +2038,11 @@ proc add_queue { change_array {fast_add 0} } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands "added" "already exists" ]  
+  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+  set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
   if { $result != 0 } {
      add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
   }
@@ -1835,6 +2102,7 @@ proc add_queue { change_array {fast_add 0} } {
 proc add_exechost { change_array {fast_add 0} } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
+  global CHECK_CORE_MASTER
 
   upvar $change_array chgar
   set values [array names chgar]
@@ -1877,7 +2145,9 @@ proc add_exechost { change_array {fast_add 0} } {
      set result ""
      set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Ae ${tmpfile}" } result ]
      puts $CHECK_OUTPUT $result
-     if { [string first "added" $result ] < 0 } {
+     set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S] "*"
+
+     if { [string match "*$ADDED" $result] == 0 } {
         add_proc_error "add_exechost" "-1" "qconf error or binary not found"
         return
      }
@@ -1894,7 +2164,10 @@ proc add_exechost { change_array {fast_add 0} } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ae" $vi_commands "added" "already exists" ]  
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S] "*"
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ae" $vi_commands $ADDED $ALREADY_EXISTS ]  
   if { $result != 0 } {
      add_proc_error "add_exechost" -1 "could not add queue [set chgar(qname)] (error: $result)"
   }
@@ -1927,7 +2200,7 @@ proc add_exechost { change_array {fast_add 0} } {
 # 
 #*******************************************************************************
 proc get_scheduling_info { job_id { check_pending 1 }} {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_CORE_MASTER
 
    if { $check_pending == 1 } {
       set result [ wait_for_jobpending $job_id "leeper" 120 ]
@@ -1935,7 +2208,12 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          return "job not pending"
       }
    }
-   set my_timeout [ expr ( [timestamp] + 120 ) ]
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
+   # timeout 120
+
+   set my_timeout [ expr ( [timestamp] + 30 ) ] 
    while { 1 } {
       if { [get_qstat_j_info $job_id ] } {
          set help_var_name "scheduling info" 
@@ -1944,7 +2222,17 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          } else {
             set sched_info "no messages available"
          }
-         if { [string first "no messages available" $sched_info] < 0 } {
+         set help_var_name [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_SCHEDULINGINFO]] 
+         if { [info exists qstat_j_info($help_var_name)] } {
+            set sched_info $qstat_j_info($help_var_name)
+         } else {
+            set sched_info "no messages available"
+         }
+
+
+         set INFO_NOMESSAGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOMESSAGE]]
+
+         if { [string first "no messages available" $sched_info] < 0 && [string first $INFO_NOMESSAGE $sched_info] < 0 } {
             puts $CHECK_OUTPUT $sched_info
             return $sched_info
          }
@@ -1980,7 +2268,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
 #
 #*******************************************************************************
 proc add_access_list { user_array list_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_CORE_MASTER 
 
   set arguments ""
   foreach elem $user_array {
@@ -1993,7 +2281,8 @@ proc add_access_list { user_array list_name } {
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -au $arguments" 
   } result ]
   puts $CHECK_OUTPUT $result
-  if { [string first "added" $result ] < 0 } {
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_ADDTOACL_SS ] $user_array $list_name]
+  if { [string first "added" $result ] < 0 && [string first $ADDED $result ] < 0 } {
      add_proc_error "add_access_list" "-1" "could not add access_list $list_name"
      return -1
   }
@@ -2023,14 +2312,18 @@ proc add_access_list { user_array list_name } {
 #*******************************************************************************
 proc del_access_list { list_name } {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST
 
   set result ""
   set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dul $list_name" 
   } result ]
    puts $CHECK_OUTPUT $result
+  set USER [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_USERSET]]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $list_name $USER]
+  puts $CHECK_OUTPUT $REMOVED
 
-  if { [string first "removed" $result ] < 0 } {
+  if { [ string match "*$REMOVED" $result ] == 0 } {
      add_proc_error "add_access_list" "-1" "could not delete access_list $list_name"
      return -1
   }
@@ -2074,18 +2367,20 @@ proc del_access_list { list_name } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc del_queue { q_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
 
   set result ""
   set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dq ${q_name}" 
   } result ]
 
-  if { [string first "removed" $result ] < 0 } {
+  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
+
+  if { [string match "*$REMOVED" $result ] == 0 } {
      add_proc_error "del_queue" "-1" "could not delete queue $q_name"
      return -1
-  }
-
+  } 
   return 0
 }
 
@@ -2237,16 +2532,19 @@ proc get_queue { q_name change_array } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc suspend_queue { qname } {
- global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+ global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST
 
   log_user 0 
   set timeout 30
+  set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_SUSPENDQ_SSS] "*" "*" "*" ]
 
+  
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $qname"
   set sid [ open_spawn_process $program  ]     
   set sp_id [ lindex $sid 1 ]
   set result -1	
+
   log_user 0 
   expect {
      -i $sp_id full_buffer {
@@ -2254,6 +2552,9 @@ proc suspend_queue { qname } {
          add_proc_error "suspend_queue" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
      }
      -i $sp_id "was suspended" {
+         set result 0
+     }
+      -i $sp_id $WAS_SUSPENDED {
          set result 0
      }
 
@@ -2302,11 +2603,13 @@ proc suspend_queue { qname } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc unsuspend_queue { queue } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST
 
   set timeout 30
   log_user 0 
    
+  set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_UNSUSPENDQ_SSS] "*" "*" "*" ]
+
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -us $queue"
   set sid [ open_spawn_process $program  ]     
@@ -2320,6 +2623,9 @@ proc unsuspend_queue { queue } {
          add_proc_error "unsuspend_queue" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
       -i $sp_id "unsuspended queue" {
+         set result 0 
+      }
+      -i $sp_id  $UNSUSP_QUEUE {
          set result 0 
       }
       -i $sp_id default {
@@ -2368,6 +2674,7 @@ proc unsuspend_queue { queue } {
 proc disable_queue { queuelist } {
  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer 
   global CHECK_OUTPUT CHECK_HOST CHECK_USER
+  global CHECK_CORE_MASTER CHECK_USER
   
   set return_value ""
   # spawn process
@@ -2400,6 +2707,16 @@ proc disable_queue { queuelist } {
      foreach elem $res_split {
         if { [ string first "has been disabled" $result ] >= 0 } {
            incr nr_disabled 1 
+        } else {
+           # try to find localized output
+           foreach q_name $queues {
+              set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
+               
+              if { [ string match "*$HAS_DISABLED" $result ] } {
+                 incr nr_disabled 1
+                 break
+              } 
+           }
         }
      }
   }    
@@ -2445,7 +2762,7 @@ proc disable_queue { queuelist } {
 #*******************************
 proc enable_queue { queuelist } {
   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer 
-  global CHECK_OUTPUT CHECK_HOST CHECK_USER
+  global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_CORE_MASTER 
   
   set return_value ""
   # spawn process
@@ -2473,11 +2790,19 @@ proc enable_queue { queuelist } {
      set result ""
      set catch_return [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -e $queues" } result ]
      debug_puts $CHECK_OUTPUT "enable queue(s) $queues"
-  
      set res_split [ split $result "\n" ]   
      foreach elem $res_split {
         if { [ string first "has been enabled" $result ] >= 0 } {
            incr nr_enabled 1 
+        } else {
+           # try to find localized output
+           foreach q_name $queues {
+              set BEEN_ENABLED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_ENABLEQ_SSS] $q_name $CHECK_USER "*" ]
+              if { [ string match "*$BEEN_ENABLED" $result ] } {
+                 incr nr_enabled 1
+                 break
+              } 
+           }
         }
      }
   }    
@@ -2597,6 +2922,7 @@ proc get_queue_state { queue } {
 proc add_checkpointobj { change_array } {
 
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST
 
   upvar $change_array chgar
   set values [array names chgar]
@@ -2613,7 +2939,11 @@ proc add_checkpointobj { change_array } {
   set my_ckpt_name [set chgar(ckpt_name)]
   set my_args "-ackpt $my_ckpt_name"
  
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands "added" "already exists" "referenced in queue list of checkpoint*does not exist"] 
+  set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $chgar(ckpt_name)]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(ckpt_name) "checkpoint interface" ]
+  set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
   
   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
@@ -2646,9 +2976,11 @@ proc add_checkpointobj { change_array } {
 #     sge_procedures/add_checkpointobj()
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER
   
-  log_user 0
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $checkpoint_name "*" ]
+
+  log_user 0 
   set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dckpt" "$checkpoint_name"]
   set sp_id [ lindex $id 1 ]
   set timeout 30
@@ -2661,9 +2993,13 @@ proc del_checkpointobj { checkpoint_name } {
       set result -1
       add_proc_error "del_checkpointobj" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
     }
+    -i $sp_id $REMOVED {
+      set result 0
+    }
     -i $sp_id "removed" {
       set result 0
     }
+
     -i $sp_id default {
       set result -1
     }
@@ -2747,6 +3083,7 @@ proc add_pe { change_array } {
 
 
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER
 
   upvar $change_array chgar
   set values [array names chgar]
@@ -2760,7 +3097,12 @@ proc add_pe { change_array } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands "added" "already exists" "does not exist" ]
+  set ADDED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
+
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS $NOT_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_pe" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_pe" -1 "parallel environment \"[set chgar(pe_name)]\" already exists" }
@@ -2814,7 +3156,7 @@ proc add_user { change_array } {
 # default_project NONE  
 # 
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
-
+  global CHECK_CORE_MASTER CHECK_USER
   upvar $change_array chgar
   set values [array names chgar]
 
@@ -2832,7 +3174,10 @@ proc add_user { change_array } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands "added" "already exists" ]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
+
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands $ADDED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_user" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists" }
@@ -2886,6 +3231,7 @@ proc add_prj { change_array } {
 # xacl      NONE  
 # 
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+  global CHECK_CORE_MASTER CHECK_USER
 
   upvar $change_array chgar
   set values [array names chgar]
@@ -2904,8 +3250,10 @@ proc add_prj { change_array } {
      set newVal [join $newVal1 {\/}]
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
-
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands "added" "already exists" ]
+#  set PROJECT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PROJECT]]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_prj" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_prj" -1 "\"[set chgar(name)]\" already exists" }
@@ -2940,9 +3288,11 @@ proc add_prj { change_array } {
 #*******************************
 proc del_pe { mype_name } {
    
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER
 
-  log_user 0
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mype_name "*" ]
+
+  log_user 0 
   set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dp" "$mype_name"]
   set sp_id [ lindex $id 1 ]
 
@@ -2955,9 +3305,13 @@ proc del_pe { mype_name } {
       set result -1
       add_proc_error "del_pe" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
     }
+    -i $sp_id $REMOVED {
+      set result 0
+    }
     -i $sp_id "removed" {
       set result 0
     }
+
     -i $sp_id default {
       set result -1
     }
@@ -3003,12 +3357,14 @@ proc del_pe { mype_name } {
 #     ???/???
 #*******************************
 proc del_prj { myprj_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_USER CHECK_CORE_MASTER
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "cod" ] == 0 } {
-     set_error -1 "del_prj - not possible for codine systems"
+  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+     set_error -1 "del_prj - not possible for sge systems"
      return
   }
+
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $myprj_name "*" ]
 
   log_user 0
   set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dprj" "$myprj_name"]
@@ -3025,6 +3381,10 @@ proc del_prj { myprj_name } {
     -i $sp_id "removed" {
       set result 0
     }
+    -i $sp_id $REMOVED {
+      set result 0
+    }
+
     -i $sp_id default {
       set result -1
     }
@@ -3068,12 +3428,14 @@ proc del_prj { myprj_name } {
 #     ???/???
 #*******************************
 proc del_user { myuser_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "cod" ] == 0 } {
-     set_error -1 "del_user - not possible for codine systems"
+  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+     set_error -1 "del_user - not possible for sge systems"
      return
   }
+
+  set REMOVED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*" ]
 
   log_user 0
   set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-duser" "$myuser_name"]
@@ -3088,6 +3450,9 @@ proc del_user { myuser_name } {
       add_proc_error "del_user" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
     }
     -i $sp_id "removed" {
+      set result 0
+    }
+    -i $sp_id $REMOVED {
       set result 0
     }
     -i $sp_id default {
@@ -3133,7 +3498,9 @@ proc del_user { myuser_name } {
 #     ???/???
 #*******************************
 proc del_calendar { mycal_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER
+  
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mycal_name "*" ]
 
   log_user 0
   set id [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dcal" "$mycal_name"]
@@ -3150,6 +3517,10 @@ proc del_calendar { mycal_name } {
     -i $sp_id "removed" {
       set result 0
     }
+    -i $sp_id $REMOVED {
+      set result 0
+    }
+
     -i $sp_id default {
       set result -1
     }
@@ -3213,9 +3584,11 @@ proc del_calendar { mycal_name } {
 #*******************************
 proc add_calendar { change_array } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
 
+  puts $CHECK_OUTPUT "adding calendar $chgar(calendar_name)"
   set values [array names chgar]
 
   set vi_commands ""
@@ -3227,7 +3600,9 @@ proc add_calendar { change_array } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
   # xyz is neccessary, as there is no template for calendards existing!!!
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands "added" "already exists"]
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
   if { $result == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_calendar" -1 "\"[set chgar(calendar_name)]\" already exists" }
   if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add callendar \"[set chgar(calendar_name)]\"" }
@@ -3556,12 +3931,59 @@ proc wait_for_queue_state { queue state wait_timeout } {
    }
 }
 
+
+#****** sge_procedures/soft_execd_shutdown() ***********************************
+#  NAME
+#     soft_execd_shutdown() -- soft shutdown of execd
+#
+#  SYNOPSIS
+#     soft_execd_shutdown { host } 
+#
+#  FUNCTION
+#     This procedure starts a qconf -ke $host. If qconf reports an error,
+#     the execd is killed by the shtudown_system_deamon() procedure.
+#     After that qstat is called. When the load value for the given 
+#     host-queue ($host.q) is 99.99 the procedure returns without error.
+#     
+#  INPUTS
+#     host - execution daemon host to shutdown
+#
+#  RESULT
+#     0 - success
+#    -1 - error
+#
+#  SEE ALSO
+#     sge_procedures/shutdown_system_daemon()
+#*******************************************************************************
+proc soft_execd_shutdown { host } {
+ 
+   global CHECK_CORE_MASTER CHECK_OUTPUT
+   global CHECK_PRODUCT_ROOT CHECK_USER CHECK_ARCH
+
+   set tries 0
+   while { $tries <= 8 } {   
+      incr tries 1
+      set result [ start_remote_prog $CHECK_CORE_MASTER $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-ke $host" ]
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state, hard killing execd"
+         shutdown_system_daemon $host execd
+      }
+      set load [wait_for_unknown_load 15 "${host}.q" 0]
+      if { $load == 0 } {
+         puts $CHECK_OUTPUT "execd on host $host reports 99.99 load value"
+         return 0
+      }
+   }
+   add_proc_error "soft_execd_shutdown" -1 "could not shutdown execd on host $host"
+   return -1
+}
+
 #****** sge_procedures/wait_for_unknown_load() *********************************
 #  NAME
 #     wait_for_unknown_load() -- wait for load to get >= 99 for a list of queues
 #
 #  SYNOPSIS
-#     wait_for_unknown_load { seconds queue_array } 
+#     wait_for_unknown_load { seconds queue_array { do_error_check 1 } } 
 #
 #  FUNCTION
 #     This procedure is starting the qstat -f command and parse the output for
@@ -3570,19 +3992,21 @@ proc wait_for_queue_state { queue state wait_timeout } {
 #     generated after timeout.
 #
 #  INPUTS
-#     seconds     - number of seconds to wait before creating timeout error
-#     queue_array - an array of queue names for which to wait
+#     seconds        - number of seconds to wait before creating timeout error
+#     queue_array    - an array of queue names for which to wait
+#     do_error_check - (optional) if 1: report errors
+#                                 if 0: don't report errors
 #
 #  SEE ALSO
 #     sge_procedures/wait_for_load_from_all_queues()
 #  
 #*******************************************************************************
-proc wait_for_unknown_load { seconds queue_array } {
+proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
    global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
    while { 1 } {
-      sleep 5
+      sleep 1
       puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
       set result ""
       set catch_return [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result ]
@@ -3628,18 +4052,19 @@ proc wait_for_unknown_load { seconds queue_array } {
          }
 
          if { $failed == 0 } {
-            return 
+            return 0
          }
       } else {
         puts $CHECK_OUTPUT "qstat error or binary not found"
       }
 
       set runtime [expr ( [timestamp] - $time) ]
-      if { $runtime >= $seconds } {
+      if { $runtime >= $seconds && $do_error_check == 1 } {
           add_proc_error "wait_for_unknown_load" -1 "timeout waiting for load values >= 99"
           return -1
       }
    }
+   return 0
 }
 
 
@@ -3699,7 +4124,7 @@ proc wait_for_end_of_all_jobs { seconds } {
       if { $seconds > 0 } {
          set runtime [expr ( [timestamp] - $time) ]
          if { $runtime >= $seconds } {
-             add_proc_error "wait_for_end_of_all_jobs" -1 "timeout waiting for load values < 99"
+             add_proc_error "wait_for_end_of_all_jobs" -1 "timeout waiting for end of all jobs:\n\"$result\""
              return -1
          }
       }
@@ -3747,7 +4172,7 @@ proc mqattr { attribute entry queue_list } {
 # -1 on error
 # 0 on success
   
-  global CHECK_PRODUCT_ROOT CHECK_ARCH
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER
 
   puts "Trying to change attribute $attribute of queues $queue_list to $entry."
 
@@ -3767,14 +4192,13 @@ proc mqattr { attribute entry queue_list } {
   
   foreach elem $help {
      set queue_name [lindex $queue_list $counter]
-     set tosearch "modified \"$queue_name\""       ;# string we want to see
-     set position [string last "$tosearch" "$elem"];# stores the position of $tosearch
-         if { $position < 0 } {
-            puts "Could not modify queue $queue_name."
-            set return_value -1                    ;# if one operation fails, we return -1
-         } else {
-            puts "Modified queue $queue_name successfully."
-         }
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $queue_name "*"]
+     if { [ string match "*$MODIFIED*" $elem ] != 1 } {
+        puts $CHECK_OUTPUT "Could not modify queue $queue_name."
+        set return_value -1
+     } else {
+        puts "Modified queue $queue_name successfully."
+     }
      incr counter 1
    }                                       
 
@@ -3812,7 +4236,11 @@ proc mqattr { attribute entry queue_list } {
 #     sge_procedures/unsuspend_job()
 #*******************************
 proc suspend_job { id } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
+
+   set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] "*" "*" "*" ]
+   set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] "*" "*" ]
+
 
    log_user 0 
 	set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $id"
@@ -3827,6 +4255,12 @@ proc suspend_job { id } {
          set result -1 
          add_proc_error "suspend_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
+	   -i $sp_id $SUSPEND1 {
+	      set result 0 
+	   }
+	   -i $sp_id $SUSPEND2 {
+	      set result 0 
+	   }
 	   -i $sp_id "suspended job" {
 	      set result 0 
 	   }
@@ -3868,7 +4302,11 @@ proc suspend_job { id } {
 #     sge_procedures/suspend_job()
 #*******************************
 proc unsuspend_job { job } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST
+
+
+  set UNSUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_UNSUSPENDTASK_SUU] "*" "*" "*" ]
+  set UNSUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_UNSUSPENDJOB_SU] "*" "*" ]
 
   log_user 0 
   # spawn process
@@ -3883,6 +4321,12 @@ proc unsuspend_job { job } {
        -i $sp_id full_buffer {
           set result -1 
           add_proc_error "unsuspend_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+       }
+       -i $sp_id $UNSUSPEND1 {
+          set result 0 
+       }
+       -i $sp_id $UNSUSPEND2 {
+          set result 0 
        }
        -i $sp_id "unsuspended job" {
           set result 0 
@@ -3903,6 +4347,49 @@ proc unsuspend_job { job } {
 }
 
 
+#****** sge_procedures/is_job_id() *********************************************
+#  NAME
+#     is_job_id() -- check if job_id is a real sge job id
+#
+#  SYNOPSIS
+#     is_job_id { job_id } 
+#
+#  FUNCTION
+#     This procedure returns 1 if the given job id is a guilty sge job id
+#
+#  INPUTS
+#     job_id - job id
+#
+#  RESULT
+#     1 on success, 0 on error
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc is_job_id { job_id } {
+
+   if { [string is integer $job_id] != 1} {
+      if { [set pos [string first "." $job_id ]] >= 0 } {
+         incr pos -1
+         set array_id [  string range $job_id 0 $pos] 
+         incr pos 2
+         set task_rest [ string range $job_id $pos end]
+         if { [string is integer $array_id] != 1} {
+            add_proc_error "is_job_id" -1 "unexpected task job id: $array_id (no integer)"
+            return 0
+         } 
+      } else {
+         add_proc_error "is_job_id" -1 "unexpected job id: $job_id (no integer)"
+         return 0
+      }
+   }
+   if { $job_id <= 0 } {
+      add_proc_error "is_job_id" -1 "unexpected job id: $job_id (no positive number)"
+      return 0
+   }
+   return 1
+}
+
 #                                                             max. column:     |
 #****** sge_procedures/delete_job() ******
 # 
@@ -3910,13 +4397,15 @@ proc unsuspend_job { job } {
 #     delete_job -- delete job with jobid
 #
 #  SYNOPSIS
-#     delete_job { jobid } 
+#     delete_job { jobid { wait_for_end 0 }} 
 #
 #  FUNCTION
 #     This procedure will delete the job with the given jobid
 #
 #  INPUTS
-#     jobid - job identification number
+#     jobid              - job identification number
+#     { wait_for_end 0 } - optional, if not 0: wait for end of job 
+#                          (till qstat -f $jobid returns "job not found")
 #
 #  RESULT
 #     0   - ok
@@ -3925,40 +4414,88 @@ proc unsuspend_job { job } {
 #  SEE ALSO
 #     sge_procedures/submit_job()
 #*******************************
-proc delete_job { jobid } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+proc delete_job { jobid { wait_for_end 0 }} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
 
-   # spawn process
-   log_user 0
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $jobid"
-   set id [ open_spawn_process $program  ]
-   set sp_id [ lindex $id 1 ]
+
+   sleep 1
+   set REGISTERED1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELTASK_SUU] "*" "*" "*"]
+   set REGISTERED2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_REGDELJOB_SU] "*" "*" ]
+   set DELETED1  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETETASK_SUU] "*" "*" "*"]
+   set DELETED2  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_DELETEJOB_SU] "*" "*" ]
+
+   puts $CHECK_OUTPUT "delete_job - debug 1"
+
    set result -1
-   set timeout 30 	
-   log_user 0 
 
-   expect {
-       -i $sp_id full_buffer {
-          set result -1
-          add_proc_error "delete_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-       }
-       -i $sp_id "registered the job" {
-          set result 0
-       }
-       -i $sp_id "has deleted job" {
-          set result 0
-       }
-       -i $sp_id default {
-          set result -1 
-       }
-       
-
+   if { [ is_job_id $jobid] } {
+      # spawn process
+      log_user 1
+      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $jobid"
+      set id [ open_spawn_process $program  ]
+      set sp_id [ lindex $id 1 ]
+      set timeout 60 	
+      log_user 1
+   
+      expect {
+          -i $sp_id full_buffer {
+             set result -1
+             add_proc_error "delete_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+          }
+          -i $sp_id $REGISTERED1 {
+             puts $CHECK_OUTPUT $expect_out(0,string)
+             set result 0
+          }
+          -i $sp_id $REGISTERED2 {
+             puts $CHECK_OUTPUT $expect_out(0,string)
+             set result 0
+          }
+          -i $sp_id "registered the job" {
+             puts $CHECK_OUTPUT $expect_out(0,string)
+             set result 0
+          }
+          -i $sp_id  $DELETED1 {
+             puts $CHECK_OUTPUT $expect_out(0,string)
+             set result 0
+          }
+          -i $sp_id  $DELETED2 {
+             puts $CHECK_OUTPUT $expect_out(0,string)
+             set result 0
+          }
+          -i $sp_id "has deleted job" {
+             puts $CHECK_OUTPUT $expect_out(0,string)
+             set result 0
+          }
+          -i $sp_id default {
+             set result -1 
+          }
+      }
+      # close spawned process 
+      close_spawn_process $id 1
+      log_user 1
+   } else {
+      add_proc_error "delete_job" -1 "job id is no integer"
    }
-   # close spawned process 
-   close_spawn_process $id 1
-   log_user 1
    if { $result != 0 } {
       add_proc_error "delete_job" -1 "could not delete job $jobid"
+   }
+   if { $wait_for_end != 0 && $result == 0 } {
+      set my_timeout [timestamp]
+      set my_second_qdel_timeout $my_timeout
+      incr my_second_qdel_timeout 80
+      incr my_timeout 160
+      while { [get_qstat_j_info $jobid ] != 0 } {
+          puts $CHECK_OUTPUT "waiting for jobend ..."
+          if { [timestamp] > $my_timeout } {
+             add_proc_error "delete_job" -1 "timeout while waiting for jobend"
+             break;
+          }
+          if { [timestamp] > $my_second_qdel_timeout } {
+             set my_second_qdel_timeout $my_timeout
+             delete_job $jobid
+          }
+          sleep 2
+      }
    }
    return $result
 }
@@ -4015,9 +4552,9 @@ proc delete_job { jobid } {
 #     sge_procedures/delete_job()
 #     check/add_proc_error()
 #*******************************
-proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""} { cd_dir ""} } {
+proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} } {
   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
-  global open_spawn_buffer
+  global open_spawn_buffer CHECK_DEBUG_LEVEL
 
   set return_value " "
 
@@ -4031,6 +4568,35 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
 
   set arch [resolve_arch $host]
 
+  set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+  set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
+  set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
+  set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+  set JOB_ARRAY_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "*" "*" "*" "*" "*" "*" ]
+  set JOB_ARRAY_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "__JOB_ID__" "" "" "" "__JOB_NAME__" "__JOB_ARG__"]
+
+
+  set TRY_LATER           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER]]
+  set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
+  set USAGE               [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USAGE_USAGESTRING] ]
+
+  set UNAMBIGUOUSNESS [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU] "*" "*" "*" "*" ]
+  set NON_AMBIGUOUS   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU] "*" "*" "*" ]
+  set UNKNOWN_OPTION  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_ANSWER_UNKOWNOPTIONX_S] "*" ]
+  set NO_ACC_TO_PRJ1  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS] "*" "*"]
+  set NO_ACC_TO_PRJ2  [translate $CHECK_HOST 1 0 0   [sge_macro MSG_STREE_USERTNOACCESS2PRJ_SS] "*" "*"]
+  set NOT_ALLOWED1    [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_NOPERMS_SS] "*" "*"]
+  set NOT_ALLOWED2    [translate $CHECK_HOST 1 0 0   [sge_macro MSG_JOB_PRJNOSUBMITPERMS_S] "*" ]
+  set NOT_REQUESTABLE [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S] "*" ]
+  set CAN_T_RESOLVE   [translate $CHECK_HOST 1 0 0   [sge_macro MSG_SGETEXT_CANTRESOLVEHOST_S] "*" ]
+  set UNKNOWN_RESOURCE1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWN_RESOURCE_S] "*" ]
+  set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+  set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
+  set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
+
+  append USAGE " qsub"
+
+  puts $CHECK_OUTPUT "job submit args:\n$args"
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
   if { $cd_dir != "" } {
@@ -4042,95 +4608,294 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
   set sp_id [ lindex $id 1 ]
 
   set timeout $submit_timeout
-  
-  log_user 0
-  expect {
-       -i $sp_id full_buffer {
-          set return_value -1    
-          add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-       }
-       -i $sp_id timeout {
-          set return_value -1 
-       }
-       -i $sp_id eof {
-          set return_value -1
-       }
-       -i $sp_id "job*has been submitted" {
+  set do_again 1
+
+
+  log_user 0  ;# debug log_user 0
+  if { $CHECK_DEBUG_LEVEL != 0 } {
+     log_user 1
+  }
+
+  while { $do_again == 1 } {
+     set do_again 0
+     expect {
+          -i $sp_id full_buffer {
+             set return_value -1    
+             add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+          }
+          -i $sp_id timeout {
+             puts $CHECK_OUTPUT "submit_job - timeout(1)"
+             add_proc_error "submit_job" "-1" "got timeout(1) error\nexpect_out(buffer):\n\"$expect_out(buffer)\""
+             set return_value -1 
+          }
+          -i $sp_id eof {
+             puts $CHECK_OUTPUT "submit_job - end of file unexpected"
+             set return_value -1
+          }
+          -i $sp_id -- $NOT_ALLOWED_WARNING {
+             puts $CHECK_OUTPUT "got warning: job can't run in any queue" 
+             set outtext $expect_out(0,string) 
+             puts $CHECK_OUTPUT "string is: \"$outtext\""
+             set do_again 1
+          }
+          -i $sp_id -- $WARNING_OPTION_ALREADY_SET {
+             puts $CHECK_OUTPUT "got warning: option has already been set" 
+             set outtext $expect_out(0,string) 
+             puts $CHECK_OUTPUT "string is: \"$outtext\""
+             set do_again 1
+          }
+          -i $sp_id -- $JOB_SUBMITTED {
+             set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
+             set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
+             set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+             if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+                add_proc_error "submit_job" "-1" "locale switches parameter for qsub string! This is not supported yet"
+             }
+             incr job_id_pos -1
+             set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
+             set job_id_prefix_length [ string length $job_id_prefix]
+   
+             set outtext $expect_out(0,string) 
+#             puts $CHECK_OUTPUT "string is: \"$outtext\""
+   #          puts $CHECK_OUTPUT "dummy  is: \"$JOB_SUBMITTED_DUMMY\""
+             set id_pos [ string first $job_id_prefix $outtext]
+             incr id_pos $job_id_prefix_length
+             set submitjob_jobid [string range $outtext $id_pos end]
+             set space_pos [ string first " " $submitjob_jobid ]
+             set submitjob_jobid [string range $submitjob_jobid 0 $space_pos ]
+             set submitjob_jobid [string trim $submitjob_jobid]
+             if {[string first "." $submitjob_jobid] >= 0} {
+                puts $CHECK_OUTPUT "This is a job array"
+                set new_jobid [lindex [split $submitjob_jobid "."] 0]
+                puts $CHECK_OUTPUT "Array has ID $new_jobid"
+                set submitjob_jobid $new_jobid 
+             }
+   
+   # try to figure out more
+             set timeout 30
+             expect {
+                -i $sp_id full_buffer {
+                   set return_value -1
+                   add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                }
+                -i $sp_id timeout {
+                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
+                   set return_value -1 
+                }
+                -i $sp_id "_exit_status_" {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id eof {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id $SUCCESSFULLY  {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id $TRY_LATER {
+                   set return_value -6
+                }
+                
+             }       
+   
+          }
+          -i $sp_id -- $JOB_ARRAY_SUBMITTED {
+             set job_id_pos [ string first "__JOB_ID__" $JOB_ARRAY_SUBMITTED_DUMMY ]
+             set job_name_pos [ string first "__JOB_NAME__" $JOB_ARRAY_SUBMITTED_DUMMY ]
+             set job_arg_pos [ string first "__JOB_ARG__" $JOB_ARRAY_SUBMITTED_DUMMY ]
+             if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+                add_proc_error "submit_job" "-1" "locale switches parameter for qsub string! This is not supported yet"
+             }
+             incr job_id_pos -1
+             set job_id_prefix [ string range $JOB_ARRAY_SUBMITTED_DUMMY 0 $job_id_pos ]
+             set job_id_prefix_length [ string length $job_id_prefix]
+   
+             set outtext $expect_out(0,string) 
+   #          puts $CHECK_OUTPUT "string is: \"$outtext\""
+   #          puts $CHECK_OUTPUT "dummy  is: \"$JOB_ARRAY_SUBMITTED_DUMMY\""
+             set id_pos [ string first $job_id_prefix $outtext]
+             incr id_pos $job_id_prefix_length
+             set submitjob_jobid [string range $outtext $id_pos end]
+             set space_pos [ string first " " $submitjob_jobid ]
+             set submitjob_jobid [string range $submitjob_jobid 0 $space_pos ]
+             set submitjob_jobid [string trim $submitjob_jobid]
+             if {[string first "." $submitjob_jobid] >= 0} {
+                puts $CHECK_OUTPUT "This is a job array"
+                set new_jobid [lindex [split $submitjob_jobid "."] 0]
+                puts $CHECK_OUTPUT "Array has ID $new_jobid"
+                set submitjob_jobid $new_jobid 
+             }
+   
+   # try to figure out more
+             set timeout 30
+             expect {
+                -i $sp_id full_buffer {
+                   set return_value -1
+                   add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                }
+                -i $sp_id timeout {
+                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
+                   set return_value -1 
+                }
+                -i $sp_id "_exit_status_" {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id eof {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id $SUCCESSFULLY  {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id $TRY_LATER {
+                   set return_value -6
+                }
+                
+             }       
+   
+          }
           
-          set outtext $expect_out(0,string) 
-          set submitjob_jobid [lindex $outtext 1];
-          if {[string first "." $submitjob_jobid] >= 0} {
-             puts $CHECK_OUTPUT "This is a job array"
-             set new_jobid [lindex [split $submitjob_jobid "."] 0]
-             puts $CHECK_OUTPUT "Array has ID $new_jobid"
-             set submitjob_jobid $new_jobid 
-          }
-
-# try to figure out more
-          set timeout 30
-          expect {
-             -i $sp_id full_buffer {
-                set return_value -1
-                add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-             }
-             -i $sp_id timeout {
-                set return_value -1 
-             }
-             -i $sp_id "_exit_status_" {
-                puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
-                set return_value $submitjob_jobid 
-             }
-             -i $sp_id eof {
-                puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
-                set return_value $submitjob_jobid 
-             }
-             -i $sp_id "successfully scheduled" {
-                puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
-                set return_value $submitjob_jobid 
-             }
-             -i $sp_id "try again later" {
-                set return_value -6
-             }
+          
+          -i $sp_id -- "job*has been submitted" {
              
-          }       
-
-       }
-       -i $sp_id -- "usage: qsub" {
-          puts $CHECK_OUTPUT "got usage ..."
-          if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
-             set return_value -2 
-          } else { 
-             set return_value -3
+             set outtext $expect_out(0,string) 
+             set submitjob_jobid [lindex $outtext 1];
+             if {[string first "." $submitjob_jobid] >= 0} {
+                puts $CHECK_OUTPUT "This is a job array"
+                set new_jobid [lindex [split $submitjob_jobid "."] 0]
+                puts $CHECK_OUTPUT "Array has ID $new_jobid"
+                set submitjob_jobid $new_jobid 
+             }
+   
+   # try to figure out more
+             set timeout 30
+             expect {
+                -i $sp_id full_buffer {
+                   set return_value -1
+                   add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                }
+                -i $sp_id timeout {
+                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
+                   set return_value -1 
+                }
+                -i $sp_id "_exit_status_" {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id eof {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id "successfully scheduled" {
+                   puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                   set return_value $submitjob_jobid 
+                }
+                -i $sp_id "try again later" {
+                   set return_value -6
+                }
+                
+             }       
+   
           }
-       } 
-       -i $sp_id -- "job_number" {
-         if {[string first "verify" $args] >= 0 } {
-            set return_value -4
-         } else {
-            set return_value -5
-         } 
-       }
-       -i $sp_id -- "submit a job with more than" {
-          set return_value -7
-       }
-       -i $sp_id -- "unknown resource" {
-          set return_value -8
-       }
-       -i $sp_id -- "can't resolve hostname" {
-          set return_value -9
-       }
-       -i $sp_id -- "configured as non requestable" {
-          set return_value -10
-       }
-       -i $sp_id -- "not allowed to submit jobs" {
-          set return_value -11
-       }
-       -i $sp_id -- "no access to project" {
-          set return_value -12
-       }
-       -i $sp_id -- "Unknown option" {
-          set return_value -13
-       }
+   
+          -i $sp_id -- "usage: qsub" {
+             puts $CHECK_OUTPUT "got usage ..."
+             if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
+                set return_value -2 
+             } else { 
+                set return_value -3
+             }
+          } 
+          -i $sp_id -- $USAGE {
+             puts $CHECK_OUTPUT "got usage ..."
+             if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
+                set return_value -2 
+             } else { 
+                set return_value -3
+             }
+          } 
+   
+          -i $sp_id -- "job_number" {
+            if {[string first "verify" $args] >= 0 } {
+               set return_value -4
+            } else {
+               set return_value -5
+            } 
+          }
+          -i $sp_id --  $TO_MUCH_TASKS {
+             set return_value -7
+          }
+          -i $sp_id -- "submit a job with more than" {
+             set return_value -7
+          }
+          -i $sp_id -- $UNKNOWN_RESOURCE1 {
+             set return_value -8
+          }
+          -i $sp_id -- $UNKNOWN_RESOURCE2 {
+             set return_value -8
+          }
+          -i $sp_id -- "unknown resource" {
+             set return_value -8
+          }
+          -i $sp_id --  $CAN_T_RESOLVE {
+             set return_value -9
+          }
+          -i $sp_id -- "can't resolve hostname" {
+             set return_value -9
+          }
+          -i $sp_id --  $NOT_REQUESTABLE {
+             set return_value -10
+          }
+          -i $sp_id -- "configured as non requestable" {
+             set return_value -10
+          }
+          
+          -i $sp_id --  $NOT_ALLOWED1 {
+             set return_value -11
+          }       
+          -i $sp_id --  $NOT_ALLOWED2 {
+             set return_value -11
+          }       
+          -i $sp_id -- "not allowed to submit jobs" {
+             set return_value -11
+          }
+          -i $sp_id --  $NO_ACC_TO_PRJ1 {
+             puts $CHECK_OUTPUT "got string(2): \"$expect_out(0,string)\""
+             set return_value -12
+          }
+          -i $sp_id --  $NO_ACC_TO_PRJ2 {
+         
+             set return_value -12
+          }
+          -i $sp_id -- "no access to project" {
+             set return_value -12
+          }
+          -i $sp_id -- $UNKNOWN_OPTION {
+             set return_value -13
+          }
+          -i $sp_id -- "Unknown option" {
+             set return_value -13
+          }
+          -i $sp_id -- $NON_AMBIGUOUS {
+             set return_value -14
+          }
+          -i $sp_id -- "non-ambiguous jobnet predecessor" {
+             set return_value -14
+          }
+          -i $sp_id -- $UNAMBIGUOUSNESS {
+             set return_value -15
+          }
+          -i $sp_id -- "using job name \"*\" for*violates reference unambiguousness" {
+             set return_value -15
+          }
+          -i $sp_id -- $ERROR_OPENING {
+             set return_value -16
+          }
+        }
      }
  
      # close spawned process 
@@ -4143,24 +4908,73 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
    
      if {$do_error_check == 1} { 
        switch -- $return_value {
-          "-1" { add_proc_error "submit_job" $return_value "timeout error" }
-          "-2" { add_proc_error "submit_job" 0 "usage was printed on -help or commandfile argument - ok" }
-          "-3" { add_proc_error "submit_job" $return_value "usage was printed NOT on -help or commandfile argument - error" }
-          "-4" { add_proc_error "submit_job" 0 "verify output was printed on -verify argument - ok" }
-          "-5" { add_proc_error "submit_job" $return_value "verify output was NOT printed on -verfiy argument - error" }
-          "-6" { add_proc_error "submit_job" $return_value "job could not be scheduled, try later - error" }
-          "-7" { add_proc_error "submit_job" $return_value "has to much tasks - error" }
-          "-8" { add_proc_error "submit_job" $return_value "unknown resource - error" }
-          "-9" { add_proc_error "submit_job" $return_value "can't resolve hostname - error" }
-          "-10" { add_proc_error "submit_job" $return_value "resource not requestable - error" }
-          "-11" { add_proc_error "submit_job" $return_value "not allowed to submit jobs - error" }
-          "-12" { add_proc_error "submit_job" $return_value "no acces to project - error" }
-          "-13" { add_proc_error "submit_job" $return_value "Unkown option - error" }
+          "-1"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-2"  { add_proc_error "submit_job" 0  [get_submit_error $return_value]  }
+          "-3"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-4"  { add_proc_error "submit_job" 0  [get_submit_error $return_value]  }
+          "-5"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-6"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-7"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-8"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-9"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-10" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-11" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-12" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-13" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-14" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-15" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-16" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
      }
+     if { $return_value <= 0 && $do_error_check != 1 } {
+        puts $CHECK_OUTPUT "submit_job returned error: [get_submit_error $return_value]"
+     }
+     puts $CHECK_OUTPUT "submit job: returning job id: $return_value"
      return $return_value
+}
+
+#****** sge_procedures/get_submit_error() **************************************
+#  NAME
+#     get_submit_error() -- resolve negative error value from submit_job()
+#
+#  SYNOPSIS
+#     get_submit_error { error_id } 
+#
+#  FUNCTION
+#     This procedure is used to get an error text from an negative return
+#     value of the submit_job() procedure.
+#
+#  INPUTS
+#     error_id - negative return value from submit_job() call
+#
+#  RESULT
+#     Error text
+#
+#  SEE ALSO
+#     sge_procedures/submit_job()
+#*******************************************************************************
+proc get_submit_error { error_id } {
+   switch -- $error_id {
+      "-1"  { return "timeout error" }
+      "-2"  { return "usage was printed on -help or commandfile argument - ok" }
+      "-3"  { return "usage was printed NOT on -help or commandfile argument - error" }
+      "-4"  { return "verify output was printed on -verify argument - ok" }
+      "-5"  { return "verify output was NOT printed on -verfiy argument - error" }
+      "-6"  { return "job could not be scheduled, try later - error" }
+      "-7"  { return "has to much tasks - error" }
+      "-8"  { return "unknown resource - error" }
+      "-9"  { return "can't resolve hostname - error" }
+      "-10" { return "resource not requestable - error" }
+      "-11" { return "not allowed to submit jobs - error" }
+      "-12" { return "no acces to project - error" }
+      "-13" { return "Unkown option - error" }
+      "-14" { return "non-ambiguous jobnet predecessor - error" }
+      "-15" { return "job violates reference unambiguousness - error" }
+      "-16" { return "error opening file - error" }
+      default { return "unknown error" }
+   }
 }
 
 #                                                             max. column:     |
@@ -4433,13 +5247,16 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
    set back ""
    set help [split $result "\n"]
    foreach line $help { 
+#      puts $CHECK_OUTPUT $line
       if { [lindex $line 0] == $jobid } {
          lappend back $line
+         continue
       }
       if { $add_empty != 0 } {
-         if { [llength $line] == 9 } {
+         if { [llength $line] == 8 } {
             lappend back "-1 $line"
             puts $CHECK_OUTPUT "adding empty job lines" 
+            continue
          }
       }
       if { $get_all != 0 } {
@@ -4563,7 +5380,16 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
       set result "$result\n"
       set my_result ""
       set help [split $result "\n"]
-      foreach elem $help {
+      foreach elem_org $help {
+         set elem $elem_org
+         # removing message id for localized strings
+         if { [string first "\[" $elem ] == 0 } {
+            set close_pos [ string first "\]" $elem ]
+            incr close_pos 1
+            set elem [ string range $elem $close_pos end]
+            set elem [ string trim $elem]
+            debug_puts "removing message id: \"$elem\""
+         }
          if { [string first ":" $elem] >= 0 } {
             append my_result "\n$elem" 
          } else {
@@ -4572,10 +5398,11 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
       }
       set my_result "$my_result\n"
       parse_qstat_j my_result jobinfo $jobid 
-#      set a_names [array names jobinfo]
+      set a_names [array names jobinfo]
 #      foreach elem $a_names {
-#         puts $jobinfo($elem)
+#         puts "$elem: $jobinfo($elem)"
 #      }
+#      wait_for_enter
       return 1
    }
    return 0
@@ -4718,14 +5545,15 @@ proc get_qacct {jobid {variable qacct_info}} {
 proc is_job_running { jobid jobname } {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT check_timestamp
 
-   set mytime [timestamp]
+   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
 
+   set mytime [timestamp]
    if { $mytime == $check_timestamp } {
       sleep 1
    }
    set check_timestamp $mytime
 
-   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
+
 
    if { $catch_state != 0 } {
       puts $CHECK_OUTPUT "debug: $result"
@@ -4857,7 +5685,6 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    return -1
 }
 
-
 # wait for start of job ($jobid,$jobname) ; timeout after $seconds
 # results : -1 on timeout ; 0 on jobstart
 #                                                             max. column:     |
@@ -4906,6 +5733,13 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
   
   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
 
+  if { [is_job_id $jobid] != 1  } {
+     if { $do_errorcheck == 1 } {
+          add_proc_error "wait_for_jobstart" -1 "got unexpected job id: $jobid"
+     }
+     return -1
+  }
+
   if { $do_tsm == 1 } {
      puts $CHECK_OUTPUT "Trigger scheduler monitoring"
      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
@@ -4913,6 +5747,9 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
   }
 
   puts $CHECK_OUTPUT "Waiting for start of job $jobid ($jobname)"
+  if { $do_errorcheck != 1 } {
+     puts $CHECK_OUTPUT "error check is switched off"
+  }
    
   set time [timestamp]
   while {1} {
@@ -4973,19 +5810,41 @@ proc wait_for_end_of_transfer { jobid seconds } {
   
   set time [timestamp] 
   while {1} {
-    sleep 1
     set run_result [get_standard_job_info $jobid ]
-    set run_result [ lindex $run_result 0 ]
-    set state [lindex $run_result 4]
- 
-    if { [string first "t" $state ] < 0} {
+    set job_state ""
+    set had_error 0
+    foreach line $run_result {
+       set tmp_job_id [lindex $line 0]
+       set tmp_job_state [ lindex $line 4 ]
+       if { $tmp_job_id == $jobid } {
+          if { $job_state == "" } {
+             set job_state $tmp_job_state
+          } else {
+             if { $job_state != $tmp_job_state } {
+                puts $CHECK_OUTPUT "job has different states ..."
+                set had_error 1
+                break
+             }
+          }
+       }
+    }
+
+    if { $had_error != 0 } {
+       sleep 1
+       continue
+    }
+
+    if { [string first "t" $job_state ] < 0} {
+       puts $CHECK_OUTPUT "job $jobid is running ($job_state)"
        break;
     }
+    
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
        add_proc_error "wait_for_end_of_transfer" -1 "timeout waiting for job \"$jobid\""
        return -1
     }
+    sleep 1
   }
   return 0
 }
@@ -4999,7 +5858,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     wait_for_jobpending -- wait for job to get into pending state
 #
 #  SYNOPSIS
-#     wait_for_jobpending { jobid jobname seconds } 
+#     wait_for_jobpending { jobid jobname seconds { or_running 0 } } 
 #
 #  FUNCTION
 #     This procedure will return when the job is in pending state.
@@ -5008,6 +5867,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     jobid   - job identification number
 #     jobname - name of the job
 #     seconds - timeout value in seconds
+#     { or_running 0 } - if job is allready running, report no error
 #
 #  RESULT
 #     -1  on timeout
@@ -5026,16 +5886,26 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobpending { jobid jobname seconds} {
+proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
   
   global CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "Waiting for job $jobid ($jobname) to get in pending state"
-  
+ 
+
+  if { [is_job_id $jobid] != 1} {
+     puts $CHECK_OUTPUT "job is not integer"
+     add_proc_error "wait_for_jobpending" -1 "unexpected job id: $jobid"
+     return -1
+  }
+
   set time [timestamp] 
   while {1} {
     set run_result [is_job_running $jobid $jobname]
     if {$run_result == 0} {
+       break;
+    }
+    if {$run_result == 1 && $or_running == 1  } {
        break;
     }
     set runtime [expr ( [timestamp] - $time) ]
@@ -5076,7 +5946,9 @@ proc wait_for_jobpending { jobid jobname seconds} {
 #*******************************
 proc hold_job { jobid } {
 
-   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer
+   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST
+
+   set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
 
    # spawn process
    log_user 0
@@ -5094,6 +5966,9 @@ proc hold_job { jobid } {
           add_proc_error "hold_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value" 
        }
        -i $sp_id "modified hold of job" {
+          set result 0
+       }
+       -i $sp_id $MODIFIED_HOLD {
           set result 0
        }
        -i $sp_id default {
@@ -5137,22 +6012,33 @@ proc hold_job { jobid } {
 #*******************************
 proc release_job { jobid } {
 
-   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer
+   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST
  
    # spawn process
    log_user 0
+
+   set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
+   set MODIFIED_HOLD_ARRAY [ translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JATASK_SUU] "*" "*" "*"]
+
    set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls $jobid"
    set id [ open_spawn_process $program  ]
    set sp_id [ lindex $id 1 ]
    set timeout 30
    set result -1	
-   log_user 0 
+   log_user 0
 
    expect {
        -i $sp_id full_buffer {
           set result -1
           add_proc_error "release_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
        }
+       -i $sp_id $MODIFIED_HOLD {
+          set result 0
+       }
+       -i $sp_id $MODIFIED_HOLD_ARRAY {
+          set result 0
+       }
+ 
        -i $sp_id "modified hold of job" {
           set result 0
        }
@@ -5179,7 +6065,9 @@ proc release_job { jobid } {
 #     wait_for_jobend -- wait for end of job
 #
 #  SYNOPSIS
-#     wait_for_jobend { jobid jobname seconds } 
+#     wait_for_jobend { jobid jobname seconds 
+#                       { runcheck 1} 
+#                       { wait_for_end 0 } } 
 #
 #  FUNCTION
 #     This procedure is testing first if the given job is really running. After
@@ -5189,6 +6077,13 @@ proc release_job { jobid } {
 #     jobid   - job identification number
 #     jobname - name of job
 #     seconds - timeout in seconds
+#
+#     optional parameters:
+#     { runcheck }     - if 1 (default): check if job is running
+#     { wait_for_end } - if 0 (default): no for real job end waiting (job
+#                                        removed from qmaster internal list)
+#                        if NOT 0:       wait for qmaster to remove job from
+#                                        internal list
 #
 #  RESULT
 #      0 - job stops running
@@ -5213,7 +6108,7 @@ proc release_job { jobid } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
+proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
   
   global CHECK_OUTPUT
 
@@ -5234,13 +6129,28 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
     } 
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
-       add_proc_error "wait_for_jobend" -1 "timeout waiting for job \"$jobid\" \"$jobname\""
+       add_proc_error "wait_for_jobend" -1 "timeout waiting for job \"$jobid\" \"$jobname\":\nis_job_running returned $run_result"
        return -1
     }
     sleep 1
   }
+
+  if { $wait_for_end != 0 } {
+      set my_timeout [timestamp]
+      incr my_timeout 90
+      while { [get_qstat_j_info $jobid ] != 0 } {
+          puts $CHECK_OUTPUT "waiting for jobend ..."
+          sleep 2
+          if { [timestamp] > $my_timeout } {
+             add_proc_error "wait_for_jobend" -1 "timeout while waiting for jobend"
+             break;
+          }
+      }
+   }
+
   return 0
 }
+
 
 #                                                             max. column:     |
 #****** sge_procedures/get_version_info() ******
@@ -5264,12 +6174,25 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} } {
 proc get_version_info {} {
    global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_TYPE CHECK_OUTPUT
-    
+   global CHECK_CHECKTREE_ROOT
+ 
+
+   if { [info exists CHECK_PRODUCT_ROOT] != 1 } {
+      set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
+      return $CHECK_PRODUCT_VERSION_NUMBER
+   }
+   
    if { [file isfile "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"] == 1 } {
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-help" } result
+      set qmaster_running [ catch { 
+         eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sh" 
+      } result ]
+
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-help" } result
       set help [ split $result "\n" ] 
-      if { ([ string first "fopen" [ lindex $help 0] ] >= 0) || 
-           ([ string first "error" [ lindex $help 0] ] >= 0) } {
+      if { ([ string first "fopen" [ lindex $help 0] ] >= 0)        || 
+           ([ string first "error" [ lindex $help 0] ] >= 0)        || 
+           ([ string first "product_mode" [ lindex $help 0] ] >= 0) ||   
+           ($qmaster_running != 0) } {
           set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
           return $CHECK_PRODUCT_VERSION_NUMBER
       }
@@ -5277,35 +6200,40 @@ proc get_version_info {} {
       if { [ string first "exit" $CHECK_PRODUCT_VERSION_NUMBER ] >= 0 } {
          set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
       } else {
-         set product_mode_file [ open "$CHECK_PRODUCT_ROOT/default/common/product_mode" "r" ]
-         gets $product_mode_file line
-         if { $CHECK_PRODUCT_FEATURE == "secure" } {
-             if { [ string first "csp" $line ] < 0 } {
-                 puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
-         } else {
-             if { [ string first "csp" $line ] >= 0 } {
-                 puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
+         if { [file isfile $CHECK_PRODUCT_ROOT/default/common/product_mode ] == 1 } {
+            set product_mode_file [ open $CHECK_PRODUCT_ROOT/default/common/product_mode "r" ]
+            gets $product_mode_file line
+            if { $CHECK_PRODUCT_FEATURE == "csp" } {
+                if { [ string first "csp" $line ] < 0 } {
+                    puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            } else {
+                if { [ string first "csp" $line ] >= 0 } {
+                    puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            }
+            if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+                if { [ string first "sgeee" $line ] < 0 } {
+                    puts $CHECK_OUTPUT "resolve_version - no sgeee system"
+                    puts $CHECK_OUTPUT "please remove the file"
+                    puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/default/common/product_mode"
+                    puts $CHECK_OUTPUT "\nif you want to install a new sge system"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            } else {
+                if { [ string first "sgeee" $line ] >= 0 } {
+                    puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            }
+            close $product_mode_file
          }
-         if { $CHECK_PRODUCT_TYPE == "sgeee" } {
-             if { [ string first "sgeee" $line ] < 0 } {
-                 puts $CHECK_OUTPUT "resolve_version - no sgeee system"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
-         } else {
-             if { [ string first "sgeee" $line ] >= 0 } {
-                 puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
-         }
-         close $product_mode_file
       }  
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
@@ -5354,7 +6282,7 @@ proc startup_qmaster {} {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
-   global schedd_debug master_debug CHECK_DISPLAY_OUTPUT
+   global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
       if { [have_root_passwd] != 0  } {
@@ -5366,18 +6294,18 @@ proc startup_qmaster {} {
       set startup_user $CHECK_USER
    } 
 
-   puts $CHECK_OUTPUT "starting up qmaster on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   puts $CHECK_OUTPUT "starting up qmaster and scheduler on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
    set arch [resolve_arch $CHECK_CORE_MASTER]
 
    if { $master_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster" ""
    }
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
    }
@@ -5389,6 +6317,62 @@ proc startup_qmaster {} {
 #      add_proc_error "startup_qmaster" -1 "qmaster on host $CHECK_CORE_MASTER is allready running"
 #      return -1
 #   }
+   return 0
+}
+
+#****** sge_procedures/startup_scheduler() *************************************
+#  NAME
+#     startup_scheduler() -- ??? 
+#
+#  SYNOPSIS
+#     startup_scheduler { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc startup_scheduler {} {
+   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
+   global schedd_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+      if { [have_root_passwd] != 0  } {
+         add_proc_error "startup_scheduler" "-2" "no root password set or ssh not available"
+         return -1
+      }
+      set startup_user "root"
+   } else {
+      set startup_user $CHECK_USER
+   } 
+
+   puts $CHECK_OUTPUT "starting up scheduler on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   set arch [resolve_arch $CHECK_CORE_MASTER]
+
+   if { $schedd_debug != 0 } {
+      puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+   } else {
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
+   }
+   
    return 0
 }
 
@@ -5431,7 +6415,7 @@ proc startup_qmaster {} {
 proc startup_execd { hostname } {
    global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   global CHECK_START_SCRIPT_NAME
+   global CHECK_START_SCRIPT_NAME CHECK_CORE_MASTER
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
  
@@ -5447,10 +6431,13 @@ proc startup_execd { hostname } {
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
    set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-execd"]
 
-   if { [string first "execd is already running" $output] >= 0 } {
+   set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
+
+   if { [string match "*$ALREADY_RUNNING" $output ] } {
       add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
       return -1
    }
+
    return 0
 }
 
@@ -5510,11 +6497,11 @@ proc startup_shadowd { hostname } {
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
    set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-shadowd"]
-
+   puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0
    }
-   add_proc_error "startup_shadowd" -1 "could not start shadowd on host $hostname"
+   add_proc_error "startup_shadowd" -1 "could not start shadowd on host $hostname:\noutput:\"$output\""
    return -1
 }
 
@@ -5632,34 +6619,53 @@ proc are_master_and_scheduler_running { hostname qmaster_spool_dir } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
+proc shutdown_master_and_scheduler {hostname qmaster_spool_dir} {
+   shutdown_scheduler $hostname $qmaster_spool_dir
+   shutdown_qmaster $hostname $qmaster_spool_dir
+}
 
+#****** sge_procedures/shutdown_scheduler() ************************************
+#  NAME
+#     shutdown_scheduler() -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_scheduler { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc shutdown_scheduler {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_TYPE CHECK_ARCH
 
-   puts $CHECK_OUTPUT "shutdown_master_and_scheduler ..."
+   puts $CHECK_OUTPUT "shutdown_scheduler ..."
 
    puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "killing qmaster and scheduler on host $hostname ..."
+   puts $CHECK_OUTPUT "killing scheduler on host $hostname ..."
    puts $CHECK_OUTPUT "retrieving data from spool dir $qmaster_spool_dir"
 
 
 
-   set qmaster_pid -1
-   set scheduler_pid -1
-
-   set qmaster_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/qmaster.pid" ]
-   set qmaster_pid [ string trim $qmaster_pid ]
-   if { $prg_exit_state != 0 } {
-      set qmaster_pid -1
-   }
-
-   set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
-   set scheduler_pid [ string trim $scheduler_pid ]
-   if { $prg_exit_state != 0 } {
-      set scheduler_pid -1
-   }
-
+   set scheduler_pid [ get_scheduler_pid $hostname $qmaster_spool_dir ]
 
    get_ps_info $scheduler_pid $hostname
    if { ($ps_info($scheduler_pid,error) == 0) } {
@@ -5671,12 +6677,148 @@ proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
          shutdown_system_daemon $hostname sched
 
       } else {
-         add_proc_error "shutdown_master_and_scheduler" "-1" "scheduler pid $scheduler_pid not found"
+         add_proc_error "shutdown_scheduler" "-1" "scheduler pid $scheduler_pid not found"
          set scheduler_pid -1
       }
    } else {
-      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed, pid=$scheduler_pid"
+      add_proc_error "shutdown_scheduler" "-1" "ps_info failed (1), pid=$scheduler_pid"
       set scheduler_pid -1
+   }
+
+   puts $CHECK_OUTPUT "done."
+}  
+#****** sge_procedures/is_scheduler_alive() ************************************
+#  NAME
+#     is_scheduler_alive() -- ??? 
+#
+#  SYNOPSIS
+#     is_scheduler_alive { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc is_scheduler_alive { hostname qmaster_spool_dir } {
+
+   set scheduler_pid [get_scheduler_pid $hostname $qmaster_spool_dir]
+   get_ps_info $scheduler_pid $hostname
+   
+   set alive 0
+   if { ($ps_info($scheduler_pid,error) == 0) } {
+      if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
+         set alive 1
+      }
+   }
+
+   return $alive
+}
+
+#****** sge_procedures/get_scheduler_pid() *************************************
+#  NAME
+#     get_scheduler_pid() -- ??? 
+#
+#  SYNOPSIS
+#     get_scheduler_pid { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc get_scheduler_pid { hostname qmaster_spool_dir } {
+   global CHECK_USER 
+
+   set scheduler_pid -1
+   set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
+   set scheduler_pid [ string trim $scheduler_pid ]
+   if { $prg_exit_state != 0 } {
+      set scheduler_pid -1
+   }
+   return $scheduler_pid
+}
+
+#****** sge_procedures/shutdown_qmaster() **************************************
+#  NAME
+#     shutdown_qmaster() -- ??? 
+#
+#  SYNOPSIS
+#     shutdown_qmaster { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     hostname          - ??? 
+#     qmaster_spool_dir - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc shutdown_qmaster {hostname qmaster_spool_dir} {
+   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
+   global CHECK_PRODUCT_TYPE CHECK_ARCH
+
+   puts $CHECK_OUTPUT "shutdown_qmaster ..."
+
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "killing qmaster on host $hostname ..."
+   puts $CHECK_OUTPUT "retrieving data from spool dir $qmaster_spool_dir"
+
+
+
+   set qmaster_pid -1
+
+   set qmaster_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/qmaster.pid" ]
+   set qmaster_pid [ string trim $qmaster_pid ]
+   if { $prg_exit_state != 0 } {
+      set qmaster_pid -1
    }
 
    get_ps_info $qmaster_pid $hostname
@@ -5690,11 +6832,11 @@ proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
          shutdown_system_daemon $hostname qmaster
 
       } else {
-         add_proc_error "shutdown_master_and_scheduler" "-1" "qmaster pid $qmaster_pid not found"
+         add_proc_error "shutdown_qmaster" "-1" "qmaster pid $qmaster_pid not found"
          set qmaster_pid -1
       }
    } else {
-      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed, pid=$qmaster_pid"
+      add_proc_error "shutdown_qmaster" "-1" "ps_info failed (2), pid=$qmaster_pid"
       set qmaster_pid -1
    }
    puts $CHECK_OUTPUT "done."
@@ -5960,9 +7102,13 @@ global CHECK_ADMIN_USER_SYSTEM
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc shutdown_core_system {} {
-global CHECK_HOST CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE CHECK_CORE_EXECD 
-global CHECK_CORE_MASTER CHECK_CORE_INSTALLED CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_TYPE
-global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
+global CHECK_ARCH 
+global CHECK_PRODUCT_ROOT 
+global CHECK_CORE_EXECD 
+global CHECK_CORE_MASTER 
+global CHECK_OUTPUT
+global CHECK_USER
+global CHECK_ADMIN_USER_SYSTEM do_compile
 
    puts $CHECK_OUTPUT "killing qmaster, scheduler and all execds in the cluster ..."
 
@@ -5993,15 +7139,20 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
           puts $CHECK_OUTPUT $result
        } else {
           puts $CHECK_OUTPUT $result
+          puts $CHECK_OUTPUT "\"sgecommdcntl -k\" must be started by root user (to get reserved port)!"
+          puts $CHECK_OUTPUT "try again as root user ..." 
           if { $prg_exit_state == 255 } {
              if { [ have_root_passwd ] == -1 } {
                 set_root_passwd 
              }
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+             if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
+                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+             }
           }
           if { $prg_exit_state == 0 } {
              set do_it_as_root 1 
              puts $CHECK_OUTPUT $result
+             puts $CHECK_OUTPUT "sgecommdcntl -k -host $elem - success"
           } else {
              set do_ps_kill 1
              puts $CHECK_OUTPUT "shutdown_core_system - commdcntl error or binary not found"
@@ -6060,7 +7211,7 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
 #     ???/???
 #*******************************
 proc gethostname {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT
+  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
 
   set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
   if { $catch_return == 0 } {
@@ -6068,9 +7219,30 @@ proc gethostname {} {
      set newname [lindex $result 0]
      return $newname
   } else {
-     puts $CHECK_OUTPUT "proc gethostname - gethostname error or binary not found"
-     puts $CHECK_OUTPUT "error: $result"
-     puts $CHECK_OUTPUT "error: $catch_return"
+     debug_puts "proc gethostname - gethostname error or binary not found"
+     debug_puts "error: $result"
+     debug_puts "error: $catch_return"
+     debug_puts "trying local hostname call ..."
+     set catch_return [ catch { exec "hostname" } result ]
+     if { $catch_return == 0 } {
+        set result [split $result "."]
+        set newname [lindex $result 0]
+        debug_puts "got hostname: \"$newname\""
+        return $newname
+     } else {
+        debug_puts "local hostname error or binary not found"
+        debug_puts "error: $result"
+        debug_puts "error: $catch_return"
+        debug_puts "trying local HOST environment variable ..."
+        if { [ info exists env(HOST) ] } {
+           set result [split $env(HOST) "."]
+           set newname [lindex $result 0]
+           if { [ string length $newname ] > 0 } {
+               debug_puts "got hostname_ \"$newname\""
+               return $newname
+           } 
+        }
+     }
      return "unknown"
   }
 } 
@@ -6107,8 +7279,7 @@ proc gethostname {} {
 #*******************************
 proc resolve_arch { { host "none" } } {
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER
-
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
 
   if { [ info exists arch_cache($host) ] } {
      return $arch_cache($host)
@@ -6118,14 +7289,22 @@ proc resolve_arch { { host "none" } } {
      puts $CHECK_OUTPUT "user not set, aborting"
      return "unknown"
   }
-
-  if { [ string compare $host "none" ] == 0 } {
-      set prg_exit_state [ catch { eval exec "$CHECK_PRODUCT_ROOT/util/arch" } result ]
-  } else {
-      puts $CHECK_OUTPUT "resolve_arch: resolving architecture for host $host"
-      set result [ start_remote_prog $host $CHECK_USER "$CHECK_PRODUCT_ROOT/util/arch" "" ]
+  
+  if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
+     debug_puts "source directory not set, aborting"
+     return "unknown"
   }
 
+ 
+
+  if { [ string compare $host "none" ] == 0 || 
+       [ string compare $host $CHECK_HOST ] == 0 } {
+      set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
+  } else {
+      debug_puts "resolve_arch: resolving architecture for host $host"
+      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0 0]
+  }
+  set result [string trim $result]
   set result2 [split $result "\n"]
   if { [ llength $result2 ] > 1 } {
      puts $CHECK_OUTPUT "util/arch script returns more than 1 line output ..."
@@ -6143,13 +7322,13 @@ proc resolve_arch { { host "none" } } {
       return "unknown"
   }
   if { [string first ":" $result] >= 0 } {
-     puts $CHECK_OUTPUT "architecture or file \"$CHECK_PRODUCT_ROOT/util/arch\" not found"
+     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
      return "unknown"
   }
   set result [lindex $result 0]  ;# remove CR
 
   if { [ string compare $result "" ] == 0 } {
-     puts $CHECK_OUTPUT "architecture or file \"$CHECK_PRODUCT_ROOT/util/arch\" not found"
+     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
      return "unknown"
   } 
 
@@ -6255,11 +7434,11 @@ proc resolve_host { name { long 0 } } {
 
   set remote_arch [ resolve_arch $name ]
 
-  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" ]
+  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" prg_exit_state 60 0 "" 0 ]
   set result [ lindex $result 0 ]  ;# removing /r /n
 
   if { $prg_exit_state != 0 } {
-     puts $CHECK_OUTPUT "proc reslove_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
+     puts $CHECK_OUTPUT "proc resolve_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
      return "unknown"
   }
 

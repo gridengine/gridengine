@@ -81,7 +81,7 @@ int sstate
       {"assumedly after job", SSTATE_FAILURE_AFTER_JOB},
       {"migrating", SSTATE_MIGRATE},
       {"rescheduling", SSTATE_AGAIN},
-      {"opening output file", SSTATE_OPEN_OUTPUT},
+      {"opening input/output file", SSTATE_OPEN_OUTPUT},
       {"searching requested shell", SSTATE_NO_SHELL},
       {"changing into working directory", SSTATE_NO_CWD},
    };

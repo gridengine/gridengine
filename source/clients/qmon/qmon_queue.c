@@ -51,12 +51,9 @@
 #include <Xmt/Dialogs.h>
 #include <Xmt/SetValue.h>
 
-
-
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge.h"
-#include "def.h"
 #include "sge_sched.h"
 #include "qmon_rmon.h"
 #include "qmon_queue.h"
@@ -75,9 +72,10 @@
 #include "qmon_qcustom.h"
 #include "qmon_jobcustom.h"
 #include "sge_feature.h"
+#include "sge_queue.h"
+#include "sge_host.h"
 #include "sge_complex_schedd.h"
 #include "slots_used.h"
-#include "utility.h"
 #include "Matrix.h"
 #include "load_correction.h"
 
@@ -113,23 +111,23 @@ static XmtHashTable QueueHashTable = NULL;
 static tQueueButton* QBG[QUEUE_MAX_VERT];
 
 static XmtMenuItem queue_popup_items[] = {
-   {XmtMenuItemLabel, "@fBQUEUE ACTIONS"},
+   {XmtMenuItemLabel, "@{@fBQUEUE ACTIONS}"},
    {XmtMenuItemSeparator},
-   {XmtMenuItemPushButton, "Add", 'A', "Meta<Key>A", "Meta+A",
+   {XmtMenuItemPushButton, "@{Add}", 'A', "Meta<Key>A", "Meta+A",
          qmonQCPopup, NULL },
-   {XmtMenuItemPushButton, "Modify", 'M', "Meta<Key>M", "Meta+M",
+   {XmtMenuItemPushButton, "@{Modify}", 'M', "Meta<Key>M", "Meta+M",
          qmonQueueModify, NULL},
 /*    {XmtMenuItemPushButton, "DeleteDialog", 'l', "Meta<Key>L", "Meta+L", */
 /*          qmonQCPopup, (XtPointer)QC_DELETE }, */
-   {XmtMenuItemPushButton, "Delete", 'D', "Meta<Key>D", "Meta+D",
+   {XmtMenuItemPushButton, "@{Delete}", 'D', "Meta<Key>D", "Meta+D",
          qmonQueueDeleteQuick, NULL},
-   {XmtMenuItemPushButton, "Suspend", 'S', "Meta<Key>S", "Meta+S",
+   {XmtMenuItemPushButton, "@{Suspend}", 'S', "Meta<Key>S", "Meta+S",
          qmonQueueChangeState, (XtPointer)QSUSPENDED},
-   {XmtMenuItemPushButton, "Resume", 'R', "Meta<Key>R", "Meta+R",
+   {XmtMenuItemPushButton, "@{Resume}", 'R', "Meta<Key>R", "Meta+R",
          qmonQueueChangeState, (XtPointer)QRUNNING},
-   {XmtMenuItemPushButton, "Disable", 'i', "Meta<Key>I", "Meta+I",
+   {XmtMenuItemPushButton, "@{Disable}", 'i', "Meta<Key>I", "Meta+I",
          qmonQueueChangeState, (XtPointer)QDISABLED},
-   {XmtMenuItemPushButton, "Enable", 'E', "Meta<Key>E", "Meta+E",
+   {XmtMenuItemPushButton, "@{Enable}", 'E', "Meta<Key>E", "Meta+E",
          qmonQueueChangeState, (XtPointer)QENABLED}
 };
 
@@ -241,7 +239,7 @@ void updateQueueList(void)
       lListElem *re;
 
       if (!filter_on) {
-         setButtonLabel(queue_customize, "Customize *");
+         setButtonLabel(queue_customize, "@{Customize +}");
          filter_on = True;
       }
       /* 
@@ -257,7 +255,7 @@ void updateQueueList(void)
    }  
    else {
       if (filter_on) {
-         setButtonLabel(queue_customize, "Customize");
+         setButtonLabel(queue_customize, "@{Customize}");
          filter_on = False;
       }
    }
@@ -852,9 +850,9 @@ lListElem *qep
    correct_capacities(ehl, cl);
    queue_complexes2scheduler(&ncl, qep, ehl, cl, 0);
 
-   sprintf(info, "Attributes for queue %s", lGetString(qep, QU_qname));
+   sprintf(info, "%s %s", XmtLocalize(matrix, "Attributes for queue", "Attributes for queue"), lGetString(qep, QU_qname));
 
-   xstr = XmtCreateLocalizedXmString(matrix, info);
+   xstr = XmtCreateXmString(info);
    XtVaSetValues(XtParent(matrix), XmNdialogTitle, xstr, NULL);
    XmStringFree(xstr);
 
@@ -922,8 +920,7 @@ lListElem *qep
    lListElem *ep;
    int qtype;
    char buf[BUFSIZ];
-   String qtypes[] = { "BATCH", "INTERACTIVE", "CHECKPOINT", "PARALLEL", 
-                     "TRANSFER" };
+   String qtypes[] = { "BATCH", "INTERACTIVE", "CHECKPOINT", "PARALLEL" }; 
    const char *str, *str2;
 
    DENTER(GUI_LAYER, "qmonQueueShowBrowserInfo");
@@ -934,7 +931,7 @@ lListElem *qep
 
    qtype = lGetUlong(qep, QU_qtype);
    buf[0] = '\0';
-   for (i=0; i<5; i++) {
+   for (i=0; i<sizeof(qtypes); i++) {
       if (qtype & (1<<i))
          sprintf(buf, "%s%s ", buf, qtypes[i]); 
    }      
@@ -961,7 +958,7 @@ lListElem *qep
    sprintf(info, "%s\n", info); 
 
    sprintf(info, WIDTH"%s\n", info, "Rerun Job:", 
-                     lGetUlong(qep, QU_rerun) ? "True" : "False");
+                     lGetBool(qep, QU_rerun) ? "True" : "False");
 
    str = lGetString(qep, QU_notify);
    sprintf(info, WIDTH"%s\n", info, "Notify Job Interval:",  str ? str : ""); 
@@ -1170,10 +1167,10 @@ XtPointer cld, cad;
          job_slots = lGetUlong(q, QU_job_slots);
          job_slots_used = qslots_used(q);
          qstate = lGetUlong(q, QU_state); 
-         sge_get_states(QU_qname, qstates, qstate);
-         if ( sge_load_alarm(q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
+         queue_get_state_string(qstates, qstate);
+         if ( sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
             alarm_set = 1;
-         if (sge_load_alarm(q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
+         if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
             suspend_threshold_alarm = 1;
 
 
@@ -1279,14 +1276,14 @@ XtPointer cld, cad;
          if (qstate & QSUSPENDED_ON_SUBORDINATE)
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
                               x + 1 * sbw + 1, y + 1,
-                              sbw/2 - 1, sbh - 1); 
+                              sbw - 2, (sbh/2 + sbh % 2)); 
 
          /* queue suspended */
-         if (suspend_threshold_alarm)
+         if (suspend_threshold_alarm) {
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
-                              x + 1 * sbw + 1 + sbw/2, y + 1,
-                              sbw/2 - 1, sbh/2 - 1);
-      
+                              x + 1 * sbw + 1, y + (sbh/2 + sbh % 2),
+                              sbw - 2, (sbh/2 + sbh % 2 - 1));
+         }
          /* queue suspended */
          if ((qstate & QSUSPENDED) ) 
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
@@ -1522,7 +1519,7 @@ const char *qhostname
    }
    
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   ehp = lGetElemHost(ehl, EH_name, qhostname);
+   ehp = host_list_locate(ehl, qhostname);
    if (ehp)
       lep = lGetSubStr(ehp, HL_name, "arch", EH_load_list);
 

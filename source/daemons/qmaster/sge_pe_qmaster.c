@@ -34,14 +34,8 @@
 #include <fnmatch.h>
 
 #include "sge.h"
-#include "utility.h"
-#include "def.h"
-#include "sge_peL.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_eventL.h"
-#include "sge_answerL.h"
-#include "sge_usersetL.h"
+#include "sge_pe.h"
+#include "sge_ja_task.h"
 #include "sge_pe_qmaster.h"
 #include "job_log.h"
 #include "sge_queue_qmaster.h"
@@ -51,19 +45,20 @@
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_job_schedd.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_userset.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
 
-extern lList *Master_Pe_List;
-extern lList *Master_Userset_List;
-extern lList *Master_Job_List;
 
 static char object_name[] = "parallel environment";
 
@@ -99,14 +94,14 @@ int sub_command
    attr_mod_ulong(pe, new_pe, PE_slots, "slots");
 
    /* ---- PE_control_slaves */
-   attr_mod_ulong(pe, new_pe, PE_control_slaves, "control_slaves");
+   attr_mod_bool(pe, new_pe, PE_control_slaves, "control_slaves");
 
    /* ---- PE_job_is_first_task */
-   attr_mod_ulong(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
+   attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
    /* ---- PE_queue_list */
    if (lGetPosViaElem(pe, PE_queue_list)>=0) {
-      if (verify_qr_list(alpp, lGetList(pe, PE_queue_list), MSG_OBJ_QLIST,
+      if (queue_reference_list_validate(alpp, lGetList(pe, PE_queue_list), MSG_OBJ_QLIST,
                   MSG_OBJ_PE, pe_name)!=STATUS_OK /* && !startup */)
          goto ERROR;
 
@@ -119,7 +114,7 @@ int sub_command
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
-      if (verify_acl_list(alpp, lGetList(pe, PE_user_list), MSG_OBJ_USERLIST,
+      if (userset_list_validate_acl_list(alpp, lGetList(pe, PE_user_list), MSG_OBJ_USERLIST,
             object_name, pe_name)!=STATUS_OK)
          goto ERROR;
 
@@ -132,7 +127,7 @@ int sub_command
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
-      if (verify_acl_list(alpp, lGetList(pe, PE_xuser_list), MSG_OBJ_XUSERLIST,
+      if (userset_list_validate_acl_list(alpp, lGetList(pe, PE_xuser_list), MSG_OBJ_XUSERLIST,
             object_name, pe_name)!=STATUS_OK)
          goto ERROR;
       attr_mod_sub_list(alpp, new_pe, PE_xuser_list,
@@ -140,7 +135,7 @@ int sub_command
    }
 
    if (lGetPosViaElem(pe, PE_xuser_list)>=0 || lGetPosViaElem(pe, PE_user_list)>=0) {
-      if (multiple_occurrencies(
+      if (multiple_occurances(
             alpp,
             lGetList(new_pe, PE_user_list),
             lGetList(new_pe, PE_xuser_list),
@@ -159,14 +154,14 @@ int sub_command
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                lNm2Str(PE_allocation_rule), "validate_pe"));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
 
       if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
          ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -191,7 +186,7 @@ gdi_object_t *object
    if (!write_pe(1, 2, pep)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(pep, PE_name)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -220,26 +215,17 @@ gdi_object_t *object
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   deletes an parallel environment object
-
-*/
-int sge_del_pe(
-lListElem *pep,
-lList **alpp,
-char *ruser,
-char *rhost 
-) {
+int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost) 
+{
    int pos;
-   lListElem *ep;
-   const char *pe;
+   lListElem *ep = NULL;
+   const char *pe = NULL;
 
    DENTER(TOP_LAYER, "sge_del_pe");
 
    if ( !pep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -247,7 +233,7 @@ char *rhost
    if ((pos = lGetPosViaElem(pep, PE_name)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(PE_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -255,22 +241,40 @@ char *rhost
    pe = lGetPosString(pep, pos);
    if (!pe) {
       ERROR((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
-   if ((ep=sge_locate_pe(pe))==NULL) {
+   if ((ep=pe_list_locate(Master_Pe_List, pe))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, pe));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
+   }
+
+   /* 
+    * Try to find references in other objects
+    */
+   {
+      lList *local_answer_list = NULL;
+
+      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List)) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
+                         ANSWER_QUALITY_ERROR);
+         local_answer_list = lFreeList(local_answer_list);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    /* remove host file */
    if (sge_unlink(PE_DIR, pe)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -283,27 +287,9 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, pe, object_name ));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
-}
-
-/* try to find a pe that matches with 
-   requested wildcard expression for pe */ 
-lListElem *sge_match_pe(
-const char *wildcard 
-) {
-   lListElem *pep;
-   for_each (pep, Master_Pe_List)
-      if (!fnmatch(wildcard, lGetString(pep, PE_name), 0))
-         return pep;
-   return NULL;
-}
-
-lListElem *sge_locate_pe(
-const char *pe_name 
-) {
-   return lGetElemStr(Master_Pe_List, PE_name, pe_name);
 }
 
 void debit_all_jobs_from_pes(
@@ -326,7 +312,7 @@ lList *pe_list
          slots = 0;
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if ((ISSET(lGetUlong(jatep, JAT_status), JRUNNING) ||      /* is job running  */
-                   ISSET(lGetUlong(jatep, JAT_status), JTRANSITING))     /* or transisting  */
+                   ISSET(lGetUlong(jatep, JAT_status), JTRANSFERING))     /* or transfering  */
                 && lGetString(jatep, JAT_granted_pe)                     /* is job parallel */
                 && !strcmp(pe_name, lGetString(jatep, JAT_granted_pe))) {/* this pe         */
                slots += sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
@@ -385,84 +371,3 @@ u_long32 job_id  /* needed for job logging */
    return;
 }
 
-int validate_pe(
-int startup,
-lListElem *pep,
-lList **alpp 
-) {
-   const char *s;
-   const char *pe_name;
-   int ret;
-
-   DENTER(TOP_LAYER, "validate_pe");
-
-   pe_name = lGetString(pep, PE_name);
-   if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
-      ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
-      DEXIT;
-      return STATUS_EEXIST; 
-   }
-
-   /* register our error function for use in replace_params() */
-   config_errfunc = error;
-
-   /* -------- start_proc_args */
-   s = lGetString(pep, PE_start_proc_args);
-   if (s && replace_params(s, NULL, 0, pe_variables )) {
-      ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   /* -------- stop_proc_args */
-   s = lGetString(pep, PE_stop_proc_args);
-   if (s && replace_params(s, NULL, 0, pe_variables )) {
-      ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   /* -------- allocation_rule */
-   s = lGetString(pep, PE_allocation_rule);
-   if (!s)  {
-      ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(PE_allocation_rule), "validate_pe"));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
-      ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   /* -------- PE_queue_list */
-   if ((ret=verify_qr_list(alpp, lGetList(pep, PE_queue_list), MSG_OBJ_QLIST, 
-               MSG_OBJ_PE, pe_name))!=STATUS_OK && !startup) {
-      DEXIT;
-      return ret;
-   }
-
-   /* -------- PE_user_list */
-   if ((ret=verify_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST, 
-               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
-
-   /* -------- PE_xuser_list */
-   if ((ret=verify_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST, 
-               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
-
-   DEXIT;
-   return STATUS_OK;
-}

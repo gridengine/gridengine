@@ -44,7 +44,7 @@
 
 
 #include "commd.h"
-#include "host.h"
+#include "sge_hostname.h"
 
 /* If a commproc does not wait in a receive and doesn't anything else with 
    the commd. commd consideres him gone and cleans his internal structures. 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2001/07/20 08:18:59 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2002/07/19 09:11:52 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMAKE 1 "$Date: 2001/07/20 08:18:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMAKE 1 "$Date: 2002/07/19 09:11:52 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 .PP
@@ -74,13 +74,28 @@ The syntax of
 makefiles corresponds to
 .I gmake
 and is described in the "GNU Make Manual".
-.\"
-.\"
+.PP
+A typical qmake call will use the xxQS_NAMExx commandline options 
+-cwd to have a scheduled make started in the current working directory on 
+the execution host, -v PATH if the xxQS_NAMExx environment is not setup
+in the users .cshrc or .profile shell resource file and request slots in a  
+parallel environment (see 
+.M sge_pe 5
+).
+.PP
+If no resource request (xxQS_NAMExx commandline option -l) is specified, 
+qmake will use the environment variable ARCH to request the same architecture 
+for task execution as has the submit host.
+If ARCH is set, the architecture specified in ARCH will be requested by 
+inserting the option -l arch=$ARCH into the commandline options.
+If ARCH is not set, the make tasks can be executed on any available architecture.
+As this is critical for typical make (compile) jobs, a warning will be output.
+.PP
 .SH EXAMPLES
 .sp 1
 .nf
 .RS
-qmake -pe compiling 1-10 --
+qmake -cwd -v PATH -pe compiling 1-10 --
 .RE
 .fi
 .sp 1
@@ -93,7 +108,7 @@ as many parallel tasks as slots have been granted by xxQS_NAMExx.
 .sp 1
 .nf
 .RS
-qmake -- -j 4
+qmake -cwd -v PATH -- -j 4
 .RE
 .fi
 .sp 1
@@ -102,7 +117,7 @@ the same architecture as the submit host.
 .sp 1
 .nf
 .RS
-qmake -l arch=solaris -pe make 3
+qmake -cwd -v PATH -l arch=solaris -pe make 3
 .RE
 .fi
 .sp 1
@@ -125,7 +140,7 @@ can be submitted by
 .sp 1
 .nf
 .RS
-qsub -pe make 1-10 [furter xxqs_name_sxx options] <script>
+qsub -cwd -v PATH -pe make 1-10 [furter xxqs_name_sxx options] <script>
 .RE
 .fi
 .sp 1
@@ -160,6 +175,11 @@ The name of the default cell, i.e. \fBdefault\fP.
 If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
+.\"
+.IP "\fBARCH\fP" 1.5i
+The architecture of the submit host. If this variable is set in 
+the submission environment, qmake 
+will request the given architecture for job execution (see DESCRIPTION above).
 .\"
 .IP "\fBCOMMD_PORT\fP" 1.5i
 If set, specifies the tcp port on which
@@ -229,6 +249,8 @@ ar ru libx.a x.o
 .\"
 .SH SEE ALSO
 .M submit 1
+, 
+.M sge_pe 5
 as well as
 .M make 1
 (GNU make manpage) and

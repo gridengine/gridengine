@@ -50,29 +50,11 @@ common_messages:
 ###############################################################################
 COMMON_DIR = $(SDIR)/common
 
-COMMON_SRC = sge_conf.c \
-            sge_groups.c \
+COMMON_SRC = \
             sge_options.c \
-            sge_sharetree.c \
-            sge_complex.c \
-            complex_history.c \
             execution_states.c \
-            job.c \
             parse_job_cull.c \
             parse_qsub.c \
-            path_aliases.c \
-            read_object.c \
-            read_write_cal.c \
-            read_write_ckpt.c \
-            read_write_host.c \
-            read_write_host_group.c \
-            read_write_pe.c \
-            read_write_queue.c \
-            read_write_ume.c \
-            read_write_userprj.c \
-            read_write_userset.c \
-            rw_configuration.c \
-            sched_conf.c \
             sig_handlers.c \
             usage.c
 
@@ -86,74 +68,17 @@ include $(COMMON_DIR)/common_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-sge_conf.o:  	$(COMMON_DIR)/sge_conf.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_conf.c
-
-sge_groups.o   : $(COMMON_DIR)/sge_groups.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_groups.c
-
 sge_options.o:	$(COMMON_DIR)/sge_options.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_options.c
 
-sge_sharetree.o: $(COMMON_DIR)/sge_sharetree.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_sharetree.c
-
-sge_complex.o: $(COMMON_DIR)/sge_complex.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_complex.c
-
-complex_history.o:	$(COMMON_DIR)/complex_history.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/complex_history.c
-   
 execution_states.o: $(COMMON_DIR)/execution_states.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/execution_states.c
-
-job.o      : $(COMMON_DIR)/job.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/job.c
 
 parse_job_cull.o    : $(COMMON_DIR)/parse_job_cull.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/parse_job_cull.c
 
 parse_qsub.o:	$(COMMON_DIR)/parse_qsub.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/parse_qsub.c
-
-path_aliases.o    : $(COMMON_DIR)/path_aliases.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/path_aliases.c
-
-read_object.o:   $(COMMON_DIR)/read_object.c
-		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(COMMON_DIR)/read_object.c
-
-read_write_cal.o:	$(COMMON_DIR)/read_write_cal.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_cal.c
-
-read_write_ckpt.o:	$(COMMON_DIR)/read_write_ckpt.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_ckpt.c
-
-read_write_host.o   : $(COMMON_DIR)/read_write_host.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_host.c
-
-read_write_host_group.o:	$(COMMON_DIR)/read_write_host_group.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_host_group.c
-
-read_write_pe.o:	$(COMMON_DIR)/read_write_pe.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_pe.c
-
-read_write_queue.o:	$(COMMON_DIR)/read_write_queue.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_queue.c
-
-read_write_ume.o:	$(COMMON_DIR)/read_write_ume.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_ume.c
-
-read_write_userprj.o:	$(COMMON_DIR)/read_write_userprj.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_userprj.c
-
-read_write_userset.o:	$(COMMON_DIR)/read_write_userset.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/read_write_userset.c
-
-rw_configuration.o:  $(COMMON_DIR)/rw_configuration.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/rw_configuration.c
-
-sched_conf.o   : $(COMMON_DIR)/sched_conf.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sched_conf.c
 
 sig_handlers.o   : $(COMMON_DIR)/sig_handlers.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sig_handlers.c

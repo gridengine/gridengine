@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/wait.h>
@@ -41,7 +40,7 @@
 #include "sgermon.h"
 #include "sge_afsutil.h"
 #include "sge_language.h"
-#include "sge_stat.h" 
+#include "sge_unistd.h"
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +57,7 @@ int main(int argc, char *argv[])
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -71,7 +70,7 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-   if ((tokenbuf = read_token(TOKEN_FILE)) == NULL) {
+   if ((tokenbuf = sge_read_token(TOKEN_FILE)) == NULL) {
       DEXIT;
       return 1;
    }   
@@ -107,7 +106,7 @@ int main(int argc, char *argv[])
 
       if (last_token_set + token_extend_time - renew_before < now) {
          DPRINTF(("renewing AFS token : %s %s %d\n", command, user, token_extend_time));
-         if (extend_afs_token(command, tokenbuf, user, token_extend_time, err_str))
+         if (sge_afs_extend_token(command, tokenbuf, user, token_extend_time, err_str))
             DPRINTF(("AFS token renewal failed\n"));
          else
             last_token_set = sge_get_gmt();

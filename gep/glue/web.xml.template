@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!DOCTYPE web-app PUBLIC
+  "-//Sun Microsystems, Inc.//DTD Web Application 1.2//EN"
+  "file:/etc/opt/SUNWam/dtd/web-app_2_2.dtd">
+
+<web-app>
+    <servlet>
+        <servlet-name>SunTCP</servlet-name>
+        <servlet-class>
+            com.sun.gep.SunTCP
+        </servlet-class>
+        <init-param>
+            <param-name>sgp_root</param-name>
+            <param-value>
+                SGP_ROOT/
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>app_home</param-name>
+            <param-value>
+                APP_HOME/
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>sge_root</param-name>
+            <param-value>
+                SGE_ROOT/
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>sge_cell</param-name>
+            <param-value>
+                SGE_CELL
+            </param-value>
+            <description></description>
+        </init-param>
+         <init-param>
+            <param-name>commd_port</param-name>
+            <param-value>
+                COMMD_PORT
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>vncroot</param-name>
+            <param-value>
+                VNC_ROOT
+            </param-value>
+            <description></description>
+        </init-param>
+        <load-on-startup/>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminTCP</servlet-name>
+        <servlet-class>
+            com.sun.gep.AdminTCP
+        </servlet-class>
+        <init-param>
+            <param-name>sgp_root</param-name>
+            <param-value>
+                SGP_ROOT/
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>app_home</param-name>
+            <param-value>
+                APP_HOME/
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>sge_root</param-name>
+            <param-value>
+                SGE_ROOT/
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>sge_cell</param-name>
+            <param-value>
+                SGE_CELL
+            </param-value>
+            <description></description>
+        </init-param>
+        <init-param>
+            <param-name>commd_port</param-name>
+            <param-value>
+                COMMD_PORT
+            </param-value>
+            <description></description>
+        </init-param>
+        <load-on-startup/>
+    </servlet>
+<servlet-mapping>
+    <servlet-name>SunTCP</servlet-name>
+    <url-pattern>/SunTCP</url-pattern>
+</servlet-mapping>
+<servlet-mapping>
+    <servlet-name>AdminTCP</servlet-name>
+    <url-pattern>/AdminTCP</url-pattern>
+</servlet-mapping>
+</web-app>

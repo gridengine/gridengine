@@ -95,7 +95,7 @@ Qmon*pe_ask_shell.xmtChildren: unmanaged XmtLayout pe_ask_layout;
 
 Qmon*pe_ask_shell.pe_ask_layout.autoUnmanage:  False
 Qmon*pe_ask_shell.pe_ask_layout.resizePolicy:  RESIZE_NONE
-Qmon*pe_ask_shell.pe_ask_layout.dialogTitle:   Add/Modify PE
+Qmon*pe_ask_shell.pe_ask_layout.dialogTitle:   @{Add/Modify PE}
 Qmon*pe_ask_shell.pe_ask_layout.fontList:      $dialog_font
 
 Qmon*pe_ask_shell.pe_ask_layout.XmtInputField.marginWidth:       2

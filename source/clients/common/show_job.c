@@ -30,8 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <time.h>
+#include <string.h>
 
-#include "def.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_resource.h"
@@ -40,18 +40,21 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "utility.h"
-#include "parse_range.h"
 #include "get_path.h"
-#include "job.h"
 #include "sge_parse_num_par.h"
 #include "sge_feature.h"
 #include "msg_clients_common.h"
+#include "sge_job.h"
+#include "symbols.h"
+#include "sge_var.h"
+#include "sge_range.h"
 
-void cull_show_job(
-lListElem *job,
-int flags 
-) {
+static void sge_show_checkpoint(int how, int op);
+static void sge_show_y_n(int op, int how);
+static void sge_show_mail_options(int op, int how);
+
+void cull_show_job(lListElem *job, int flags) 
+{
    const char *delis[] = {NULL, ",", "\n"};
    time_t ultime;   /* used to be u_long32, but problem w/ 64 bit times */
 
@@ -62,14 +65,12 @@ int flags
       return;
    }
 
-DTRACE;
    if (!(flags & FLG_QALTER)) {
       if (lGetUlong(job, JB_job_number))
          printf("job_number:                 %d\n", (int) lGetUlong(job, JB_job_number));
       else
          printf("job_number:                 %s\n", MSG_JOB_UNASSIGNED);
    }
-DTRACE;
 
    if (lGetPosViaElem(job, JB_exec_file)>=0)
       if (lGetString(job, JB_exec_file))
@@ -78,11 +79,6 @@ DTRACE;
    if (lGetPosViaElem(job, JB_submission_time)>=0)
       if ((ultime = lGetUlong(job, JB_submission_time))) {
          printf("submission_time:            %s", ctime((time_t *) &ultime));
-      }
-
-   if (lGetPosViaElem(job, JB_end_time)>=0)
-      if ((ultime = lGetUlong(job, JB_end_time))) {
-         printf("end_time:                   %s", ctime((time_t *) &ultime));
       }
 
    if (lGetPosViaElem(job, JB_owner)>=0) {
@@ -105,37 +101,40 @@ DTRACE;
    if (lGetPosViaElem(job, JB_gid)>=0)
       printf("gid:                        %d\n", (int) lGetUlong(job, JB_gid));
 
-   if (lGetPosViaElem(job, JB_sge_o_home)>=0)
-      if (lGetString(job, JB_sge_o_home))
-         printf("sge_o_home:                 %s\n", lGetString(job, JB_sge_o_home));
+   {
+      const char *name[] = {
+         "O_HOME", 
+         "O_LOGNAME", 
+         "O_PATH", 
+         "O_SHELL", 
+         "O_TZ", 
+         "O_WORKDIR", 
+         "O_HOST",
+         NULL
+      };
+      const char *fmt_string[] = {
+         "sge_o_home:                 %s\n",
+         "sge_o_log_name:             %s\n",
+         "sge_o_path:                 %s\n",
+         "sge_o_shell:                %s\n",
+         "sge_o_tz:                   %s\n",
+         "sge_o_workdir:              %s\n",
+         "sge_o_host:                 %s\n",
+         NULL
+      };
+      int i = -1;
+      
+      while (name[++i] != NULL) {
+         const char *value;
+         char fullname[MAX_STRING_SIZE];
 
-   if (lGetPosViaElem(job, JB_sge_o_log_name)>=0)
-      if (lGetString(job, JB_sge_o_log_name))
-         printf("sge_o_log_name:             %s\n", lGetString(job, JB_sge_o_log_name));
-
-   if (lGetPosViaElem(job, JB_sge_o_path)>=0)
-      if (lGetString(job, JB_sge_o_path))
-         printf("sge_o_path:                 %s\n", lGetString(job, JB_sge_o_path));
-
-   if (lGetPosViaElem(job, JB_sge_o_mail)>=0)
-      if (lGetString(job, JB_sge_o_mail))
-         printf("sge_o_mail:                 %s\n", lGetString(job, JB_sge_o_mail));
-
-   if (lGetPosViaElem(job, JB_sge_o_shell)>=0)
-      if (lGetString(job, JB_sge_o_shell))
-         printf("sge_o_shell:                %s\n", lGetString(job, JB_sge_o_shell));
-
-   if (lGetPosViaElem(job, JB_sge_o_tz)>=0)
-      if (lGetString(job, JB_sge_o_tz))
-         printf("sge_o_tz:                   %s\n", lGetString(job, JB_sge_o_tz));
-
-   if (lGetPosViaElem(job, JB_sge_o_workdir)>=0)
-      if (lGetString(job, JB_sge_o_workdir))
-         printf("sge_o_workdir:              %s\n", lGetString(job, JB_sge_o_workdir));
-
-   if (lGetPosViaElem(job, JB_sge_o_host)>=0)
-      if (lGetHost(job, JB_sge_o_host))
-         printf("sge_o_host:                 %s\n", lGetHost(job, JB_sge_o_host));
+         sprintf(fullname, "%s%s", VAR_PREFIX, name[i]);
+         value = job_get_env_string(job, fullname);
+         if (value != NULL) {
+            printf(fmt_string[i], value);
+         }
+      }
+   }
 
    if (lGetPosViaElem(job, JB_execution_time)>=0)
       if ((ultime = lGetUlong(job, JB_execution_time)))
@@ -145,9 +144,9 @@ DTRACE;
       if (lGetString(job, JB_account))
          printf("account:                    %s\n", lGetString(job, JB_account));
 
-   if (lGetPosViaElem(job, JB_checkpoint_object)>=0)
-      if (lGetString(job, JB_checkpoint_object))
-         printf("checkpoint_object:          %s\n", lGetString(job, JB_checkpoint_object));
+   if (lGetPosViaElem(job, JB_checkpoint_name)>=0)
+      if (lGetString(job, JB_checkpoint_name))
+         printf("checkpoint_object:          %s\n", lGetString(job, JB_checkpoint_name));
 
    if (lGetPosViaElem(job, JB_checkpoint_attr)>=0)
       if (lGetUlong(job, JB_checkpoint_attr)) {
@@ -161,10 +160,6 @@ DTRACE;
          printf("checkpoint_interval:        ");
          printf("%d seconds\n", (int) lGetUlong(job, JB_checkpoint_interval));
       }
-
-   if (lGetPosViaElem(job, JB_cell)>=0)
-      if (lGetString(job, JB_cell))
-         printf("cell:                       %s\n", lGetString(job, JB_cell));
 
    if (lGetPosViaElem(job, JB_cwd)>=0) {
       if (lGetString(job, JB_cwd))
@@ -195,14 +190,10 @@ DTRACE;
             delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_full_listing)>=0)
-      if (lGetUlong(job, JB_full_listing))
-         printf("full_listing:               %s\n", "-f");
-
    if (lGetPosViaElem(job, JB_merge_stderr)>=0)
-      if (lGetUlong(job, JB_merge_stderr)) {
+      if (lGetBool(job, JB_merge_stderr)) {
          printf("merge:                      ");
-         sge_show_y_n(lGetUlong(job, JB_merge_stderr), SGE_STDOUT);
+         sge_show_y_n(lGetBool(job, JB_merge_stderr), SGE_STDOUT);
          printf("\n");
       }
 
@@ -238,7 +229,7 @@ DTRACE;
       }
 
    if (lGetPosViaElem(job, JB_notify)>=0)
-      printf("notify:                     %s\n", (lGetUlong(job, JB_notify) ? "TRUE" : "FALSE"));
+      printf("notify:                     %s\n", (lGetBool(job, JB_notify) ? "TRUE" : "FALSE"));
 
    if (lGetPosViaElem(job, JB_job_name)>=0) {
       if (lGetString(job, JB_job_name))
@@ -255,6 +246,16 @@ DTRACE;
          printf("stdout_path_list:           ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdout_path_list), fields, 
             delis, FLG_NO_DELIS_STRINGS);
+      }
+   
+   if (lGetPosViaElem(job, JB_stdin_path_list)>=0)
+      if (lGetList(job, JB_stdin_path_list)) {
+         intprt_type fields[] = { PN_host, PN_path, 0 };
+
+         delis[0] = ":";
+         printf("stdin_path_list:            ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdin_path_list), 
+            fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
    if (lGetPosViaElem(job, JB_priority)>=0)
@@ -283,20 +284,12 @@ DTRACE;
             fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_reauth_time)>=0)
-      if (lGetUlong(job, JB_reauth_time))
-         printf("reauth_time:                %d\n", (int) lGetUlong(job, JB_reauth_time));
-
    if (lGetPosViaElem(job, JB_restart)>=0)
       if (lGetUlong(job, JB_restart)) {
          printf("restart:                    ");
          sge_show_y_n((lGetUlong(job, JB_restart)==2)?0:1, SGE_STDOUT);
          printf("\n");
       }
-
-   if (lGetPosViaElem(job, JB_signal)>=0)
-      if (lGetUlong(job, JB_signal))
-         printf("signal:                     %d\n", (int) lGetUlong(job, JB_signal));
 
    if (lGetPosViaElem(job, JB_shell_list)>=0)
       if (lGetList(job, JB_shell_list)) {
@@ -312,15 +305,31 @@ DTRACE;
       if (lGetUlong(job, JB_verify))
          printf("verify:                     %s\n", "-verify");
 
-   if (lGetPosViaElem(job, JB_env_list)>=0)
+   if (lGetPosViaElem(job, JB_env_list)>=0) {
+      int print_new_line = 1;
+
       if (lGetList(job, JB_env_list)) {
+         lList *print = NULL;
+         lList *do_not_print = NULL;
          intprt_type fields[] = {VA_variable, VA_value, 0 };
 
          delis[0] = "=";
          printf("env_list:                   ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_env_list), 
+
+         print = lGetList(job, JB_env_list);
+         var_list_split_prefix_vars(&print, &do_not_print, VAR_PREFIX);
+         uni_print_list(stdout, NULL, 0, print, 
             fields, delis, FLG_NO_DELIS_STRINGS);
+         if (lGetNumberOfElem(print) > 0) {
+            print_new_line = 0;
+         }
+         lAddList(print, do_not_print);
       }
+      if (print_new_line) {
+         printf("\n");
+      }
+   } 
+   
 
    if (lGetPosViaElem(job, JB_job_args)>=0)
       if (lGetList(job, JB_job_args) || (flags & FLG_QALTER)) {
@@ -360,10 +369,6 @@ DTRACE;
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_message)>=0)
-      if (lGetString(job, JB_message))
-         printf("message:                    %s\n", lGetString(job, JB_message));
-
    if (lGetPosViaElem(job, JB_script_size)>=0)
       if (lGetUlong(job, JB_script_size))
          printf("script_size:                "uu32"\n", lGetUlong(job, JB_script_size));
@@ -380,23 +385,16 @@ DTRACE;
       if (lGetString(job, JB_job_source))
          printf("job_source:                 %s\n", lGetString(job, JB_job_source));
 
-   if (lGetPosViaElem(job, JB_ext)>=0)
-      if (lGetUlong(job, JB_ext))
-         printf("ext:                        %s\n", "-ext");
-
    if (lGetPosViaElem(job, JB_pe)>=0)
       if (lGetString(job, JB_pe)) {
-         char str[256 + 1];
+         dstring range_string = DSTRING_INIT;
 
-         show_ranges(str, 0, NULL, lGetList(job, JB_pe_range));
+         range_list_print_to_string(lGetList(job, JB_pe_range), 
+                                    &range_string, 1);
          printf("parallel environment:  %s range: %s\n",
-            lGetString(job, JB_pe), str);
+                lGetString(job, JB_pe), sge_dstring_get_string(&range_string));
+         sge_dstring_free(&range_string);
       }
-
-   if (lGetPosViaElem(job, JB_scheduling_priority)>=0)
-      if (lGetUlong(job, JB_scheduling_priority))
-         printf("scheduling_priority:        %d\n", 
-            (int) lGetUlong(job, JB_scheduling_priority));
 
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
@@ -418,26 +416,9 @@ DTRACE;
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_pvm_pid)>=0)
-      if (lGetUlong(job, JB_pvm_pid))
-         printf("pvm_pid:                    %d\n", (int) lGetUlong(job, JB_pvm_pid));
-
    if (lGetPosViaElem(job, JB_verify_suitable_queues)>=0)
       if (lGetUlong(job, JB_verify_suitable_queues))
          printf("verify_suitable_queues:     %d\n", (int)lGetUlong(job, JB_verify_suitable_queues));
-
-   if (lGetPosViaElem(job, JB_sig)>=0)
-      if (lGetUlong(job, JB_sig))
-         printf("sig:                        %d\n", (int) lGetUlong(job, JB_sig));
-
-   if (lGetPosViaElem(job, JB_notified)>=0)
-      if (lGetUlong(job, JB_notified))
-         printf("notified:                   %d\n", (int) lGetUlong(job, JB_notified));
-
-   if (lGetPosViaElem(job, JB_reauth_gmt)>=0)
-      if ((ultime = lGetUlong(job, JB_reauth_gmt))) {
-         printf("reauth_gmt:                 %s", ctime((time_t *) &ultime));
-      }
 
    if (lGetPosViaElem(job, JB_soft_wallclock_gmt)>=0)
       if ((ultime = lGetUlong(job, JB_soft_wallclock_gmt))) {
@@ -448,18 +429,6 @@ DTRACE;
       if ((ultime = lGetUlong(job, JB_hard_wallclock_gmt))) {
          printf("hard_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
-
-   if (lGetPosViaElem(job, JB_suspend_enable)>=0)
-      if (lGetUlong(job, JB_suspend_enable))
-         printf("suspend_enable:             %d\n", (int) lGetUlong(job, JB_suspend_enable));
-
-   if (lGetPosViaElem(job, JB_soc_xsoc)>=0)
-      if (lGetUlong(job, JB_soc_xsoc))
-         printf("soc_xsoc:                   %d\n", (int) lGetUlong(job, JB_soc_xsoc));
-
-   if (lGetPosViaElem(job, JB_force)>=0)
-      if (lGetUlong(job, JB_force))
-         printf("force:                      %d\n", (int) lGetUlong(job, JB_force));
 
    if (lGetPosViaElem(job, JB_version)>=0)
       if (lGetUlong(job, JB_version))
@@ -479,73 +448,10 @@ DTRACE;
    if (lGetPosViaElem(job, JB_ja_structure)>=0) {
       u_long32 start, end, step;
 
-      job_get_ja_task_ids(job, &start, &end, &step);
-      if (is_array(job))
+      job_get_submit_task_ids(job, &start, &end, &step);
+      if (job_is_array(job))
          printf("job-array tasks:            "u32"-"u32":"u32"\n", start, end, step);
    }
-
-#if 0
-
-   if (lGetPosViaElem(job, JB_share)>=0)
-      if (lGetDouble(job, JB_share))
-         printf("share:                      %f\n", lGetDouble(job, JB_share));
-
-   if (lGetPosViaElem(job, JB_pid)>=0)
-      if (lGetUlong(job, JB_pid))
-         printf("pid:                        %d\n", (int) lGetUlong(job, JB_pid));
-
-   if (lGetPosViaElem(job, JB_status)>=0)
-      if (lGetUlong(job, JB_status))
-         printf("status:                     %d\n", (int) lGetUlong(job, JB_status));
-
-   if (lGetPosViaElem(job, JB_start_time)>=0)
-      if ((ultime = lGetUlong(job, JB_start_time))) {
-         printf("start_time:                 %s", ctime((time_t *) &ultime));
-      }
-
-   if (lGetPosViaElem(job, JB_granted_destin_identifier_list)>=0)
-      if (lGetList(job, JB_granted_destin_identifier_list)) {
-         intprt_type fields[] = { JG_qname, JG_qhostname, JG_slots, 0 };
-
-         delis[0] = ":";
-         printf("granted_destin_identifier_list:");
-         uni_print_list(stdout, NULL, 0,
-            lGetList(job, JB_granted_destin_identifier_list), fields, delis, 0);
-      }
-
-   if (lGetPosViaElem(job, JB_master_queue)>=0)
-      if (lGetString(job, JB_master_queue))
-         printf("master_queue:               %s\n", lGetString(job, JB_master_queue));
-
-   if (lGetPosViaElem(job, JB_state)>=0)
-      if (lGetUlong(job, JB_state)) {
-         printf("state:                      ");
-         sge_show_states(JB_job_number, SGE_STDOUT, lGetUlong(job, JB_state));
-         printf("\n");
-      }
-
-   if (lGetPosViaElem(job, JB_pending_signal)>=0)
-      if (lGetUlong(job, JB_pending_signal))
-         printf("pending_signal:             %d\n", (int) lGetUlong(job, JB_pending_signal));
-
-   if (lGetPosViaElem(job, JB_pending_signal_delivery_time)>=0)
-      if ((ultime = lGetUlong(job, JB_pending_signal_delivery_time))) {
-         printf("pending_signal_delivery_time: %s", ctime((time_t *) &ultime));
-      }
-
-   if (lGetPosViaElem(job, JB_osjobid)>=0)
-      if (lGetString(job, JB_osjobid))
-         printf("osjobid:                    %s\n", lGetString(job, JB_osjobid));
-
-   if (lGetPosViaElem(job, JB_usage_list)>=0)
-      if (lGetList(job, JB_usage_list))
-         printf("usage list:                 %s\n", "FORMAT NOT YET IMPLEMENTED!!!");
-
-   if (lGetPosViaElem(job, JB_suitable)>=0)
-      if (lGetUlong(job, JB_suitable))
-         printf("suitable:                   %d\n", (int) lGetUlong(job, JB_suitable));
-
-#endif
 
    if (lGetPosViaElem(job, JB_context)>=0)
       if (lGetList(job, JB_context)) {
@@ -558,8 +464,13 @@ DTRACE;
       }
 
    /* display online job usage separately for each array job but summarized over all pe_tasks */
-#define SUM_UP_USAGE(pe_task, dst, attr) \
-      if ((uep=lGetSubStr(pe_task, UA_name, attr, JAT_scaled_usage_list))) { \
+#define SUM_UP_JATASK_USAGE(ja_task, dst, attr) \
+      if ((uep=lGetSubStr(ja_task, UA_name, attr, JAT_scaled_usage_list))) { \
+         dst += lGetDouble(uep, UA_value); \
+      }
+
+#define SUM_UP_PETASK_USAGE(pe_task, dst, attr) \
+      if ((uep=lGetSubStr(pe_task, UA_name, attr, PET_scaled_usage))) { \
          dst += lGetDouble(uep, UA_value); \
       }
 
@@ -569,28 +480,37 @@ DTRACE;
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
          double cpu, mem, io, vmem, maxvmem;
          static char cpu_usage[100], vmem_usage[100], maxvmem_usage[100];
+         int first_task = 1;
 
-         if (!lPrev(jatep))
+         /* jobs whose job start orders were not processed to the end
+            due to a qmaster/schedd collision appear in the JB_ja_tasks
+            list but are not running - thus we may not print usage for those */
+         if (lGetUlong(jatep, JAT_status)!=JRUNNING &&
+             lGetUlong(jatep, JAT_status)!=JTRANSFERING)
+            continue;
+
+         if (first_task) {
             printf("usage %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
-         else
+            first_task = 0;
+         } else
             printf("      %4d:                  ", (int)lGetUlong(jatep, JAT_task_number));
 
          cpu = mem = io = vmem = maxvmem = 0.0;
 
          /* master task */
-         SUM_UP_USAGE(jatep, cpu, USAGE_ATTR_CPU);
-         SUM_UP_USAGE(jatep, vmem, USAGE_ATTR_VMEM);
-         SUM_UP_USAGE(jatep, mem, USAGE_ATTR_MEM);
-         SUM_UP_USAGE(jatep, io, USAGE_ATTR_IO);
-         SUM_UP_USAGE(jatep, maxvmem, USAGE_ATTR_MAXVMEM);
+         SUM_UP_JATASK_USAGE(jatep, cpu, USAGE_ATTR_CPU);
+         SUM_UP_JATASK_USAGE(jatep, vmem, USAGE_ATTR_VMEM);
+         SUM_UP_JATASK_USAGE(jatep, mem, USAGE_ATTR_MEM);
+         SUM_UP_JATASK_USAGE(jatep, io, USAGE_ATTR_IO);
+         SUM_UP_JATASK_USAGE(jatep, maxvmem, USAGE_ATTR_MAXVMEM);
 
          /* slave tasks */
          for_each (pe_task_ep, lGetList(jatep, JAT_task_list)) {
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), cpu, USAGE_ATTR_CPU);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), vmem, USAGE_ATTR_VMEM);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), mem, USAGE_ATTR_MEM);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_IO);
-            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_MAXVMEM);
+            SUM_UP_PETASK_USAGE(pe_task_ep, cpu, USAGE_ATTR_CPU);
+            SUM_UP_PETASK_USAGE(pe_task_ep, vmem, USAGE_ATTR_VMEM);
+            SUM_UP_PETASK_USAGE(pe_task_ep, mem, USAGE_ATTR_MEM);
+            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_IO);
+            SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_MAXVMEM);
          }
 
          printf("cpu=%s, mem=%-5.5f GBs, io=%-5.5f, vmem=%s, maxvmem=%s\n",
@@ -605,3 +525,123 @@ DTRACE;
    return;
 }
 
+static void sge_show_checkpoint(int how, int op) 
+{
+   int i = 0;
+   int count = 0;
+   stringT tmp_str;
+ 
+   DENTER(TOP_LAYER, "sge_show_checkpoint");
+ 
+   memset(tmp_str, 0, sizeof(tmp_str));
+ 
+   if (VALID(CHECKPOINT_AT_MINIMUM_INTERVAL, op)) {
+      tmp_str[count] = CHECKPOINT_AT_MINIMUM_INTERVAL_SYM;
+      count++;
+   }
+ 
+   if (VALID(CHECKPOINT_AT_SHUTDOWN, op)) {
+      tmp_str[count] = CHECKPOINT_AT_SHUTDOWN_SYM;
+      count++;
+   }
+ 
+   if (VALID(CHECKPOINT_SUSPEND, op)) {
+      tmp_str[count] = CHECKPOINT_SUSPEND_SYM;
+      count++;
+   }
+ 
+   if (VALID(NO_CHECKPOINT, op)) {
+      tmp_str[count] = NO_CHECKPOINT_SYM;
+      count++;
+   }
+ 
+   if (VALID(SGE_STDOUT, how)) {
+      printf("%s", tmp_str);
+      for (i = count; i < 4; i++)
+         printf(" ");
+   }              
+
+   if (VALID(SGE_STDERR, how)) {
+      fprintf(stderr, "%s", tmp_str);
+      for (i = count; i < 4; i++)
+         fprintf(stderr, " ");
+   }
+ 
+   DEXIT;
+ 
+   return;
+}   
+
+static void sge_show_y_n(int op, int how) 
+{
+   stringT tmp_str;
+ 
+   DENTER(TOP_LAYER, "sge_show_y_n");
+ 
+   if (op)
+      sprintf(tmp_str, "y");
+   else
+      sprintf(tmp_str, "n");
+ 
+   if (VALID(how, SGE_STDOUT))
+      printf("%s", tmp_str);
+ 
+   if (VALID(how, SGE_STDERR))
+      fprintf(stderr, "%s", tmp_str);
+ 
+   DEXIT;
+   return;
+}         
+
+static void sge_show_mail_options(int op, int how) 
+{
+   int i = 0;
+   int count = 0;
+   stringT tmp_str;
+ 
+   DENTER(TOP_LAYER, "sge_show_mail_list");
+ 
+   if (VALID(MAIL_AT_ABORT, op)) {
+      tmp_str[count] = MAIL_AT_ABORT_SYM;
+      count++;
+   }
+ 
+   if (VALID(MAIL_AT_BEGINNING, op)) {
+      tmp_str[count] = MAIL_AT_BEGINNING_SYM;
+      count++;
+   }
+ 
+   if (VALID(MAIL_AT_EXIT, op)) {
+      tmp_str[count] = MAIL_AT_EXIT_SYM;
+      count++;
+   }
+ 
+   if (VALID(NO_MAIL, op)) {
+      tmp_str[count] = NO_MAIL_SYM;
+      count++;
+   }
+ 
+   if (VALID(MAIL_AT_SUSPENSION, op)) {
+      tmp_str[count] = MAIL_AT_SUSPENSION_SYM;
+      count++;
+   }
+ 
+   tmp_str[count] = '\0';       /* ensure string terminator */
+ 
+   if (VALID(SGE_STDOUT, how)) {
+      printf("%s", tmp_str);
+      for (i = count; i < 4; i++)
+         printf(" ");
+ 
+   }
+ 
+   if (VALID(SGE_STDERR, how)) {
+      fprintf(stderr, "%s", tmp_str);
+      for (i = count; i < 4; i++)
+         fprintf(stderr, " ");
+ 
+   }
+ 
+   DEXIT;
+   return;
+} 

@@ -1,39 +1,85 @@
-<table border="0" cellpadding="2" cellspacing="0" width="100%">
-<tr>
-<td><H2><font color="#336699" class="PageHeader">Tracking Interactive Idle Time</font></H2></td>
-</tr>
-</table>
-<table border="0" cellpadding="2" cellspacing="0" width="100%">
-<tr>
-<td>
-
-<br><br>
-<BLOCKQUOTE STYLE="margin-left: 0in; margin-right: 1.18in; text-align: justify">
-This note explains how to set up Grid Engine to track interactive
-idle time for desktop workstations. This is useful if you want to use
-desktop workstations only when the owner is not using it. If the
-owner returns and moves the mouse, the queue on this host is
-suspended along with the jobs currently running. When the system is
-again idle for 5 minutes (or any other amount of time), the jobs on
-the host will be resumed. <BR><BR>It is necessary to first add the
-attribute to the host complex: 
-</BLOCKQUOTE>
-<PRE STYLE="margin-left: 0.79in; margin-right: 0.79in; margin-bottom: 0.2in; text-align: justify">
-   iidle  ii   DOUBLE infinity   &lt;=   NO   NO   0</PRE><BLOCKQUOTE STYLE="margin-left: 0in; margin-right: 1.18in; text-align: justify">
-If you need more information on how to do this, see the appnote
-<A HREF="/project/gridengine/howto/resource.html">Attaching A Resource To A Host
-in Grid Engine</A>. <BR><BR>Then, you need to have a script (load
-sensor) to keep track of the current idle time on each host. A sample
-script is included below. <BR><BR>Finally, in the main qmon window,
-click on &quot;Cluster Configuration&quot;. Highlight either
-&quot;global&quot;, or only certain hosts for this to run on, then
-click on &quot;Modify&quot;. On the &quot;General Settings&quot; tab,
-add the path and name of the load sensor program to the load sensor
-box. Once OK is pressed, the load sensor will be automatically
-started on each host. This may take several minutes. 
-</BLOCKQUOTE>
-<HR>
-<PRE STYLE="margin-left: 0.39in; margin-right: 0.39in; text-align: justify">#!/bin/sh
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="CREATED" CONTENT="20020419;13120900">
+	<META NAME="CHANGED" CONTENT="20020419;13565900">
+	<STYLE>
+	<!--
+		P.text-body-indent { margin-left: 0.5cm }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US">
+<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE="page-break-before: always">
+	<TR>
+		<TD>
+			<H2><FONT COLOR="#336699">Tracking Interactive Idle Time</FONT></H2>
+		</TD>
+	</TR>
+</TABLE>
+<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0>
+	<TR>
+		<TD>
+			<P><BR><BR>
+			</P>
+			<P CLASS="text-body-indent" ALIGN=JUSTIFY>This note explains how
+			to set up Grid Engine to track interactive idle time for desktop
+			workstations. This is useful if you want to use desktop
+			workstations only when the owner is not using it. If the owner
+			returns and moves the mouse, the queue on this host is suspended
+			along with the jobs currently running. When the system is again
+			idle for 5 minutes (or any other amount of time), the jobs on the
+			host will be resumed. <BR><BR>It is necessary to first add the
+			resource to the host complex:</P>
+			<PRE STYLE="margin-left: 0.53cm; margin-right: 2.01cm; margin-bottom: 0.51cm; text-align: justify">name   shortcut   type   value      relop   requestable   consumable   default<BR>iidle  ii         DOUBLE infinity   &lt;=      NO            NO           0</PRE><P CLASS="text-body-indent" ALIGN=JUSTIFY>
+			If you need more information on how to do this, see the appnote
+			<A HREF="../../../../../../../project/gridengine/howto/resource.html">Attaching
+			A Resource To A Host in Grid Engine</A>. <BR><BR>Then, you need to
+			have a script (load sensor) to keep track of the current idle time
+			on each host. A sample script is included below. Also, look in the
+			Grid Engine distribution under
+			$SGE_ROOT/util/resources/loadsensors for some other examples.<BR><BR>In
+			the main qmon window, click on &quot;Cluster Configuration&quot;.
+			Highlight either &quot;global&quot;, or only certain hosts for
+			this to run on, then click on &quot;Modify&quot;. On the &quot;General
+			Settings&quot; tab, add the path and name of the load sensor
+			program to the load sensor box. Once OK is pressed, the load
+			sensor will be automatically started on each host. This may take
+			several minutes.</P>
+			<P CLASS="text-body-indent" ALIGN=JUSTIFY>Finally, you need to
+			configure the queue(s) to suspend a queue when the idle time is
+			below 5 minutes (or any length of time) and unsuspend it when it
+			is above. In the main qmon window, click on &quot;Queue
+			Configuration&quot;. Highlight a queue running on the desktop
+			workstation and click on &quot;Modify&quot;. On the &quot;Load/Suspend
+			Thresholds&quot; tab, under the &quot;Suspend Thresholds&quot;
+			table, click on the &quot;Load&quot; title heading and you will
+			see the &quot;Select an Item&quot; popup window. Choose the idle
+			time resource, (eg, iidle) and click OK. In the &quot;Value&quot;
+			column, enter the thresholds time in hr:min:sec format (eg, five
+			minutes would be 0:5:0). Press Return</P>
+			<P CLASS="text-body-indent" ALIGN=JUSTIFY>The right side of the
+			&quot;Queue Configuration: Modify&quot; window shows the
+			additional paramters &quot;Suspend interval&quot; and &quot;Jobs
+			suspended per interval&quot;. Typically, for this kind of setup,
+			you would set the &quot;Jobs suspended per interval&quot; equal to
+			the number of slots in the queue, and the &quot;Suspend interval&quot;
+			equal to some fraction of the Suspend Threshold, eg,1 minute for a
+			5 or 10 minute Suspend Threshold. NOTE: make sure this is not
+			lower than the &quot;Load Report Time&quot; interval (Qmon --&gt;
+			Cluster Configuration). When you are finished, click OK for the
+			&quot;Queue Configuration: Modify&quot; window. 
+			</P>
+			<P CLASS="text-body-indent" ALIGN=JUSTIFY>Now, all jobs running in
+			that queue will get suspended if the mouse or keyboard on the
+			desktop workstation is moved, and will get unsuspended after the
+			mouse and keyboard have been idle for 5 minutes (plus a margin of
+			time equal to the Suspend Interval).</P>
+			<HR>
+			<PRE STYLE="margin-left: 0.99cm; margin-right: 0.99cm; text-align: justify">#!/bin/sh
 
 # (c) 2000 Sun Microsystems, Inc
 #
@@ -83,5 +129,10 @@ while [ $end = false ]; do
    echo &quot;$myhost:iidle:$idletime&quot;
    echo &quot;end&quot;
 done</PRE>
-<p></p>
-</table>
+		</TD>
+	</TR>
+</TABLE>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

@@ -29,20 +29,23 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "gdi_qmod.h"
 #include "sig_handlers.h"
-#include "sge_exit.h"
 #include "parse_qsub.h"
 #include "parse.h"
 #include "usage.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_feature.h"
 #include "sge_language.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qmod.h"
@@ -219,7 +222,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qmod_usage(stderr, NULL);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -296,7 +299,7 @@ int usageshowed = 0;
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if(!usageshowed)
         qmod_usage(stderr, NULL);
-     sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }
@@ -325,17 +328,17 @@ char *what
    if(!what) {
       /* display full usage */
       fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE); 
-      fprintf(fp, "  [-c]       %s", MSG_QMOD_c_OPT_USAGE);
-      fprintf(fp, "  [-d]       %s", MSG_QMOD_d_OPT_USAGE);
-      fprintf(fp, "  [-e]       %s", MSG_QMOD_e_OPT_USAGE);
-      fprintf(fp, "  [-f]       %s", MSG_QMOD_f_OPT_USAGE);
-      fprintf(fp, "  [-help]    %s", MSG_QMOD_help_OPT_USAGE);
-      fprintf(fp, "  [-r]       %s", MSG_QMOD_r_OPT_USAGE);
-      fprintf(fp, "  [-s]       %s", MSG_QMOD_s_OPT_USAGE);
-      fprintf(fp, "  [-us]      %s", MSG_QMOD_us_OPT_USAGE);
-      fprintf(fp, "  [-verify]  %s", MSG_QMOD_verify_OPT_USAGE);
-      fprintf(fp, "  job_queue_list\n");
+      fprintf(fp, "   [-c job_queue_list]  %s", MSG_QMOD_c_OPT_USAGE);
+      fprintf(fp, "   [-d queue_list]      %s", MSG_QMOD_d_OPT_USAGE);
+      fprintf(fp, "   [-e queue_list]      %s", MSG_QMOD_e_OPT_USAGE);
+      fprintf(fp, "   [-f]                 %s", MSG_QMOD_f_OPT_USAGE);
+      fprintf(fp, "   [-help]              %s", MSG_QMOD_help_OPT_USAGE);
+      fprintf(fp, "   [-r job_queue_list]  %s", MSG_QMOD_r_OPT_USAGE);
+      fprintf(fp, "   [-s job_queue_list]  %s", MSG_QMOD_s_OPT_USAGE);
+      fprintf(fp, "   [-us job_queue_list] %s", MSG_QMOD_us_OPT_USAGE);
+      fprintf(fp, "   [-verify]            %s", MSG_QMOD_verify_OPT_USAGE);
       fprintf(fp, "job_queue_list          {job_tasks|queue}[{,| }{job_tasks|queue}{,| }...]\n");
+      fprintf(fp, "queue_list              {queue}[{,| }{queue}{,| }...]\n");
       fprintf(fp, "job_tasks               job_id['.'task_id_range]\n");
       fprintf(fp, "task_id_range           task_id['-'task_id[':'step]]\n");
 

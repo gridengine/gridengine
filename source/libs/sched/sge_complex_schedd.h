@@ -55,11 +55,6 @@ int get_global_load_correction(void);
 
 void monitor_dominance(char *str, u_long32 mask);
 
-lListElem* sge_locate_complex_attr(const char *name, lList *complex_list);
-
-lListElem *find_attribute_in_complex_list(const char *attrname, 
-                                          lListElem *first);
-
 int global_complexes2scheduler(lList **new_complex_list, 
                                lListElem *global_host, lList *complex_list, 
                                int recompute_debitation_dependent);
@@ -88,6 +83,10 @@ int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
 const char *map_op2str(u_long32 op);
 
 const char *map_type2str(u_long32 type);
+
+int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, int primary_key, int sub_command, char *attr_name, char *object_name);
+
+int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 
 #endif /* __SGE_COMPLEX_SCHEDD_H */
 

@@ -35,20 +35,17 @@
 #include <errno.h>
 
 #include "sgermon.h"
-#include "sge_answerL.h"
-#include "sge_eventL.h"
-#include "sge_confL.h"
-#include "sge_schedconfL.h"
+#include "sge_schedd_conf.h"
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_complexL.h"
 #include "sched_conf.h"
 #include "sched_conf_qmaster.h"
 #include "sge_m_event.h"
 #include "sge_sched.h"
 #include "sge_log.h"
 #include "setup_path.h"
-#include "msg_utilib.h"
+#include "sge_answer.h"
+#include "sge_complex.h"
+
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
@@ -66,20 +63,20 @@ char *ruser,
 char *rhost 
 ) {
    u_long32 si;
-   lListElem *schedd = NULL;
+/*    lListElem *schedd = NULL; */
    u_long32 old_SC_weight_tickets_deadline_active, old_SC_weight_tickets_override;
 
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
 
    if ( !confp || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    /* just check and log */
-   if (sc_set(alpp, NULL, confp, &si)) {
+   if (sc_set(alpp, NULL, confp, &si, Master_Complex_List)) {
       /* alpp gets filled by sc_set() */
       ERROR((SGE_EVENT, lGetString(lLast(*alpp), AN_text))); 
       DEXIT;
@@ -102,22 +99,22 @@ char *rhost
       old_SC_weight_tickets_override);
    lAppendElem(*confl, lCopyElem(confp));
 
-   if (write_sched_configuration(1, 2, lFirst(*confl)) == NULL) {
-      sge_add_answer(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, 0);
-      DEXIT;
-      return -1;
+   {
+      char common_dir[SGE_PATH_MAX];
+      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path.cell_root, COMMON_DIR);
+      if (write_sched_configuration(1, 2, common_dir, lFirst(*confl)) == NULL) {
+         answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return -1;
+      }
    }
 
 
    sge_add_event(NULL, sgeE_SCHED_CONF, 0, 0, NULL, confp);
 
-   if ((schedd=sge_locate_scheduler())) {
-      sge_flush_events(schedd, FLUSH_EVENTS_SET);
-   }
-
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return STATUS_OK;

@@ -41,6 +41,9 @@
 #include "schedd_conf.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
+#include "sge_complex.h"
+#include "sge_queue.h"
+#include "sge_host.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time) 
@@ -57,7 +60,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
       return 1;
    }
 
-   global_host = lGetElemHost(host_list, EH_name, "global");
+   global_host = host_list_locate(host_list, "global");
    now = sge_get_gmt();
 
    for_each (job, running_jobs) {   
@@ -90,7 +93,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
             u_long32 slots;
             
             qnm = lGetString(granted_queue, JG_qname);
-            qep = lGetElemStr(queue_list, QU_qname, qnm);
+            qep = queue_list_locate(queue_list, qnm);
             if (qep == NULL) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
                         "list of job "u32"."u32"\n", qnm, job_id, ja_task_id));
@@ -177,7 +180,7 @@ lList *complex_list
          const char *attr_name = lGetString(ep, HL_name);
  
          /* seach for appropriate complex attribute */
-         if (!(cep=sge_locate_complex_attr(attr_name, complex_list)))
+         if (!(cep=complex_list_locate_attr(complex_list, attr_name)))
             continue;
 
          type = lGetUlong(cep, CE_valtype);
@@ -200,7 +203,7 @@ lList *complex_list
             lSetString(ep, HL_value, sval);
          }
 
-         if (!lGetUlong(cep, CE_consumable))
+         if (!lGetBool(cep, CE_consumable))
             continue;
          if (!(total=lGetSubStr(hep, CE_name, attr_name, EH_consumable_config_list)))
             continue;

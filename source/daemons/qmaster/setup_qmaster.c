@@ -35,18 +35,13 @@
 #include <errno.h>
 
 #include "sge.h"
-#include "def.h"
 #include "sge_conf.h"
 #include "commlib.h"
-#include "sge_copy_append.h"   
-#include "sge_chdir.h"
-#include "sge_mkdir.h"
-#include "sge_exit.h"
 #include "subordinate_qmaster.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_sched.h"
-#include "opt_silent.h"
 #include "sge_all_listsL.h"
+#include "read_list.h"
 #include "read_write_host.h"
 #include "read_write_cal.h"
 #include "read_write_manop.h"
@@ -55,19 +50,18 @@
 #include "read_write_ume.h"
 #include "read_write_job.h"
 #include "read_write_userset.h"
+#include "read_write_sharetree.h"
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_queue_qmaster.h"
-#include "sge_manop.h"
-#include "sge_complex.h"
+#include "sge_manop_qmaster.h"
 #include "slots_used.h"
 #include "complex_qmaster.h"
 #include "complex_history.h"
 #include "path_history.h"
 #include "opt_history.h"
-#include "job.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "configuration_qmaster.h"
 #include "qmaster_heartbeat.h"
 #include "qm_name.h"
@@ -75,6 +69,7 @@
 #include "sched_conf_qmaster.h"
 #include "read_write_userprj.h"
 #include "sge_sharetree.h"
+#include "sge_sharetree_qmaster.h"
 #include "sge_userset.h"
 #include "read_write_ckpt.h"
 #include "read_write_queue.h"
@@ -82,65 +77,42 @@
 #include "sge_feature.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
-#include "utility_daemon.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "setup_qmaster.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "utility.h"
 #include "resolve_host.h"
-#include "sge_switch_user.h"
 #include "config_file.h"
 #include "sge_qmod_qmaster.h"
 #include "time_event.h"
 #include "sge_give_jobs.h"
 #include "sge_user_mapping.h"
-#include "sge_groups.h"
 #include "setup_path.h"
 #include "reschedule.h"
-#include "sge_stat.h" 
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "reschedule.h"
-#include "sge_washing_machine.h"
-#include "sge_job_jatask.h"
-#include "sge_file_path.h"
+#include "sge_job.h"
+#include "sge_spool.h"
+#include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_sharetree_qmaster.h"
+#include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
+#include "sge_ckpt.h"
+#include "sge_userprj.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_sharetree.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
 
-extern lList *Master_Project_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Userset_List;
-extern lList *Master_Sched_Config_List;
-extern lList *Master_User_List;
-extern lList *Master_Config_List;
-extern lList *Master_Queue_List;
-extern lList *Master_Job_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Submithost_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Ckpt_List;
-extern lList *Master_Pe_List;
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
-extern lList *Master_Calendar_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Zombie_List;
-
-#ifndef __SGE_NO_USERMAPPING__
 #include "msg_common.h"
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
-static int sge_read_user_mapping_entries_from_disk(void);
-static int sge_read_host_group_entries_from_disk(void);
-#endif
 
-static int reresolve_host(lListElem *ep, int nm, char *object_name, char *object_dir);
-
-static int sge_read_host_list_from_disk(void);
-static int sge_read_pe_list_from_disk(void);
-static int sge_read_ckpt_list_from_disk(void);
-static int sge_read_cal_list_from_disk(void);
 static int remove_invalid_job_references(int user);
 
 static int debit_all_jobs_from_qs(void);
@@ -148,10 +120,9 @@ static int debit_all_jobs_from_qs(void);
 /*------------------------------------------------------------*/
 int sge_setup_qmaster()
 {
-   lList *direntries;
-   lListElem *jep, *ep, *qep, *tmpqep, *direntry = NULL;
+   lListElem *jep, *ep, *tmpqep;
    static int first = TRUE;
-   int ret, config_tag = 0;
+   int ret;
    lListElem *lep = NULL;
    lList *alp=NULL;
    char err_str[1024];
@@ -174,10 +145,20 @@ int sge_setup_qmaster()
    /* register our error function for use in replace_params() */
    config_errfunc = error;
 
+
+   /*
+    * Initialize Master lists and hash tables, if necessary 
+    */
+   if(Master_Job_List == NULL) {
+      Master_Job_List = lCreateList("Master_Job_List", JB_Type);
+   }
+   cull_hash_new(Master_Job_List, JB_owner, 0);
+
    /*
    ** get cluster configuration
    */
-   read_all_configurations(&Master_Config_List);
+   read_all_configurations(&Master_Config_List, 
+                           path.conf_file, path.local_conf_dir);
    ret = select_configuration(me.qualified_hostname, Master_Config_List, &lep);
    if (ret) {
       if (ret == -3)
@@ -196,15 +177,7 @@ int sge_setup_qmaster()
    sge_show_conf();         
    new_config = 1;
 
-   /*
-   ** switch to admin user
-   */
-   if (set_admin_username(conf.admin_user, err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(1);
-   }
-
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
       SGE_EXIT(1);
    }
@@ -230,10 +203,11 @@ int sge_setup_qmaster()
    ** we are in the master spool dir now 
    ** log messages into ERR_FILE in master spool dir 
    */
-   sge_copy_append(TMP_ERR_FILE_QMASTER, ERR_FILE, SGE_APPEND);
-   switch2start_user();
+   sge_copy_append(TMP_ERR_FILE_QMASTER, ERR_FILE, SGE_MODE_APPEND);
+   sge_switch2start_user();
    unlink(TMP_ERR_FILE_QMASTER);   
-   switch2admin_user();
+   sge_switch2admin_user();
+   sge_log_set_auser(1);
    error_file = ERR_FILE;
 
    /* 
@@ -289,21 +263,21 @@ int sge_setup_qmaster()
 
    
 
-   if (!sge_locate_host(SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST)) {
+   if (!host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
       if (sge_add_host_of_type(SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
-   if (!sge_locate_host(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST)) {
+   if (!host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
       if (sge_add_host_of_type(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
-   if (!sge_locate_host(me.qualified_hostname, SGE_ADMINHOST_LIST)) {
+   if (!host_list_locate(Master_Adminhost_List, me.qualified_hostname)) {
       if (sge_add_host_of_type(me.qualified_hostname, SGE_ADMINHOST_LIST)) {
          DEXIT;
          return -1;
@@ -329,7 +303,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("manager_list----------------------------\n"));
    read_manop(SGE_MANAGER_LIST);
-   if (!lGetElemStr(Master_Manager_List, MO_name, "root")) {
+   if (!manop_is_manager("root")) {
       lAddElemStr(&Master_Manager_List, MO_name, "root", MO_Type);
 
       if (write_manop(1, SGE_MANAGER_LIST)) {
@@ -350,7 +324,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("operator_list----------------------------\n"));
    read_manop(SGE_OPERATOR_LIST);
-   if (!lGetElemStr(Master_Operator_List, MO_name, "root")) {
+   if (!manop_is_operator("root")) {
       lAddElemStr(&Master_Operator_List, MO_name, "root", MO_Type);
 
       if (write_manop(1, SGE_OPERATOR_LIST)) {
@@ -363,47 +337,12 @@ int sge_setup_qmaster()
 
 
    DPRINTF(("userset_list------------------------------\n"));
-   Master_Userset_List = lCreateList("user set list", US_Type);
-   direntries = sge_get_dirents(USERSET_DIR);
-   if (direntries) {
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINUSERSETS);
-
-      for_each(direntry, direntries) {
-         const char *userset = lGetString(direntry, STR);
-
-         if (userset[0] != '.') {
-            if (!silent()) {
-               printf(MSG_SETUP_USERSET_S , lGetString(direntry, STR));
-            }
-            if (verify_str_key(&alp, userset, "userset")) {
-               DEXIT;
-               return -1;
-            }  
-
-            ep = cull_read_in_userset(USERSET_DIR, userset, 1, 0, NULL); 
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, USERSET_DIR, 
-                        userset));
-               DEXIT;
-               return -1;
-            }
-
-            if(sge_verify_userset_entries(lGetList(ep, US_entries), NULL, 1) == STATUS_OK) {
-               lAppendElem(Master_Userset_List, ep);
-            } else {
-               lFreeElem(ep);
-            }
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", USERSET_DIR, userset);
-            unlink(buffer);
-         }
-      }
-      direntries = lFreeList(direntries);
+   if (sge_read_userset_list_from_disk()) {
+      DEXIT;
+      return -1;
    }
 
+   DPRINTF(("calendar list ------------------------------\n"));
    if (sge_read_cal_list_from_disk()) {
       DEXIT;
       return -1;
@@ -418,144 +357,20 @@ int sge_setup_qmaster()
    }
 #endif
 
-
    DPRINTF(("queue_list---------------------------------\n"));
-   direntries = sge_get_dirents(QUEUE_DIR);
-   if (direntries) {
-      const char *queue_str;
-      
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINQUEUES);
-      for_each(direntry, direntries) {
-
-         queue_str = lGetString(direntry, STR);
-         if (queue_str[0] != '.') {
-            config_tag = 0;
-            if (!silent()) {
-               printf(MSG_SETUP_QUEUE_S, lGetString(direntry, STR));
-            }
-            if (verify_str_key(&alp, queue_str, "queue")) {
-               DEXIT;
-               return -1;
-            }   
-            qep = cull_read_in_qconf(QUEUE_DIR, lGetString(direntry, STR), 1, 
-                  0, &config_tag, NULL);
-            if (!qep) {
-               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, QUEUE_DIR, 
-                        lGetString(direntry, STR)));
-               DEXIT;
-               return -1;
-            }
-            if (config_tag & CONFIG_TAG_OBSOLETE_VALUE) {
-               /* an obsolete config value was found in the file.
-                  spool it out again to have the newest version on disk. */
-               cull_write_qconf(1, 0, QUEUE_DIR, lGetString(direntry, STR), 
-                     NULL, qep);
-               INFO((SGE_EVENT, MSG_CONFIG_QUEUEXUPDATED_S, 
-                     lGetString(direntry, STR)));
-            }
-            
-            if (!strcmp(lGetString(direntry, STR), SGE_TEMPLATE_NAME) && 
-                !strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME)) {
-               /* 
-                  we do not keep the queue template in the main queue list 
-                  to be compatible with other old code in the qmaster
-               */
-               qep = lFreeElem(qep);
-               sge_unlink(QUEUE_DIR, lGetString(direntry, STR));
-               WARNING((SGE_EVENT, MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED));
-            }
-            else if (!strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME)) {
-               /*
-                  oops!  found queue 'template', but not in file 'template'
-               */
-               ERROR((SGE_EVENT, MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT));
-               qep = lFreeElem(qep);
-            }
-            else {
-               lListElem *exec_host;
-
-               /* handle slots from now on as a consumble attribute of queue */
-               slots2config_list(qep); 
-
-               /* setup actual list of queue */
-               debit_queue_consumable(NULL, qep, Master_Complex_List, 0);
-
-               /* init double values of consumable configuration */
-               sge_fill_requests(lGetList(qep, QU_consumable_config_list), Master_Complex_List, 1, 0, 1);
-
-               if (verify_complex_list(NULL, "queue", lGetString(qep, QU_qname),
-                              lGetList(qep, QU_complex_list))!=STATUS_OK) {
-                  qep = lFreeElem(qep);            
-                  DEXIT;
-                  return -1;
-               }
-               if (ensure_attrib_available(NULL, qep, QU_load_thresholds) ||
-                   ensure_attrib_available(NULL, qep, QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, qep, QU_consumable_config_list)) {
-                  qep = lFreeElem(qep); 
-                  DEXIT;
-                  return -1;
-               }
-
-               sge_add_queue(qep);
-               state = lGetUlong(qep, QU_state);
-               SETBIT(QUNKNOWN, state);
-               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
-               lSetUlong(qep, QU_state, state);
-
-               set_qslots_used(qep, 0);
-               
-               if (!(exec_host = sge_locate_host(lGetHost(qep, QU_qhostname), 
-                   SGE_EXECHOST_LIST))) {
-                  if (lGetUlong(qep, QU_qtype) & TQ) {
-                     ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
-                     lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
-                     lRemoveElem(Master_Queue_List, qep);
-                  }
-                  else {
-                     if (sge_add_host_of_type(lGetHost(qep, QU_qhostname), 
-				SGE_EXECHOST_LIST)) {
-                        qep = lFreeElem(qep);
-                        lFreeList(direntries);
-                        DEXIT;
-                        return -1;
-                     }
-                  }
-               } 
-
-               /*
-               ** make a start for the history when Sge first starts up
-               ** or when history has been deleted
-               */
-               if (!is_nohist() && lGetString(qep, QU_qname) &&
-                   !is_object_in_history(STR_DIR_QUEUES, lGetString(qep, QU_qname))) {
-                  int ret;
-                  
-                  ret = sge_write_queue_history(qep);
-                  if (ret) {
-                     WARNING((SGE_EVENT, MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S,
-                        lGetString(qep, QU_qname)));
-                  }
-               }
-            }
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", QUEUE_DIR, queue_str);
-            unlink(buffer);
-         }
-      }
-      lFreeList(direntries);
-      set_queues_to_unknown(); 
+   if (sge_read_queue_list_from_disk()) {
+     DEXIT;
+     return -1;
    }
-   
 
+
+   DPRINTF(("pe_list---------------------------------\n"));
    if (sge_read_pe_list_from_disk()) {
       DEXIT;
       return -1;
    }
 
+   DPRINTF(("ckpt_list---------------------------------\n"));
    if (sge_read_ckpt_list_from_disk()) {
       DEXIT;
       return -1;
@@ -631,9 +446,14 @@ int sge_setup_qmaster()
    rebuild_signal_events();
 
    /* scheduler configuration stuff */
-   if (!silent()) 
+   if (!sge_silent_get()) 
       printf(MSG_CONFIG_READINGINSCHEDULERCONFIG);
-   Master_Sched_Config_List = read_sched_configuration(path.sched_conf_file, 1, &alp);
+    
+   {
+      char common_dir[SGE_PATH_MAX];
+      sprintf(common_dir, "%s"PATH_SEPARATOR"%s", path.cell_root, COMMON_DIR); 
+      Master_Sched_Config_List = read_sched_configuration(common_dir, path.sched_conf_file, 1, &alp);
+   }
    if (!Master_Sched_Config_List) {
       ERROR((SGE_EVENT, "%s\n", lGetString(lFirst(alp), AN_text)));
       DEXIT;
@@ -646,80 +466,19 @@ int sge_setup_qmaster()
       sge_mkdir(PROJECT_DIR, 0755, 1);
 
       /* SGEEE: read user list */
-      Master_User_List = lCreateList("user list", UP_Type);
-      direntries = sge_get_dirents(USER_DIR);
-      if (direntries) {
-         if (!silent()) 
-            printf(MSG_CONFIG_READINGINUSERS);
-         
-         for_each(direntry, direntries) {
-            const char *direntry_str;
-            
-            direntry_str = lGetString(direntry, STR); 
-            if (direntry_str[0] != '.') { 
-               config_tag = 0;
-               if (!silent()) 
-                  printf(MSG_SETUP_USER_S, lGetString(direntry, STR));
-
-               ep = cull_read_in_userprj(USER_DIR, lGetString(direntry, STR), 1,
-                                          1, &config_tag);
-               if (!ep) {
-                  ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, USER_DIR, 
-                           lGetString(direntry, STR)));
-                  DEXIT;
-                  return -1;
-               }
-
-               lAppendElem(Master_User_List, ep);
-            } else {
-               char buffer[256];
-
-               sprintf(buffer, "%s/%s", USER_DIR, direntry_str); 
-               unlink(buffer);
-            }
-         }
-         direntries = lFreeList(direntries);
+      if (sge_read_user_list_from_disk()) {
+         DEXIT;
+         return -1;
       }
+
       remove_invalid_job_references(1);
 
       /* SGE: read project list */
-      Master_Project_List = lCreateList("project list", UP_Type);
-      direntries = sge_get_dirents(PROJECT_DIR);
-      if (direntries) {
-         if (!silent()) 
-            printf(MSG_CONFIG_READINGINPROJECTS);
-
-         for_each(direntry, direntries) {
-            const char *userprj_str;
-
-            userprj_str = lGetString(direntry, STR);
-            if (userprj_str[0] != '.') {
-               config_tag = 0;
-               if (!silent()) 
-                  printf(MSG_SETUP_PROJECT_S, lGetString(direntry, STR));
-               if (verify_str_key(&alp, userprj_str, "project")) {
-                  DEXIT;
-                  return -1;
-               }  
-               ep = cull_read_in_userprj(PROJECT_DIR, lGetString(direntry, STR), 1,
-                                          0, &config_tag);
-               if (!ep) {
-                  ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, PROJECT_DIR, 
-                           lGetString(direntry, STR)));
-                  DEXIT;
-                  return -1;
-               }
-
-               lAppendElem(Master_Project_List, ep);
-            } else {
-               char buffer[256];
-
-               sprintf(buffer, "%s/%s", PROJECT_DIR, userprj_str);
-               unlink(buffer);
-            }
-         }
-         lFreeList(direntries);
+      if (sge_read_project_list_from_disk()) {
+         DEXIT;
+         return -1;
       }
+
       remove_invalid_job_references(0);
    }
    
@@ -727,6 +486,13 @@ int sge_setup_qmaster()
       /* SGEEE: read share tree */
       ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
       if (ep) {
+         lList *alp = NULL;
+         lList *found = NULL;
+         ret = check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
+               NULL, &found);
+         found = lFreeList(found);
+         alp = lFreeList(alp); 
+
          Master_Sharetree_List = lCreateList("sharetree list", STN_Type);
          lAppendElem(Master_Sharetree_List, ep);
       }
@@ -750,10 +516,10 @@ int sge_setup_qmaster()
       lListElem *template_host_elem = NULL;
 
       /* get "global" element pointer */
-      global_host_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME);   
+      global_host_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);   
 
       /* get "template" element pointer */
-      template_host_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME);
+      template_host_elem = host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME);
   
       for_each(host, Master_Exechost_List) {
          if ( (host != global_host_elem ) && (host != template_host_elem ) ) {
@@ -787,7 +553,7 @@ int user
          next = lNext(upu);
 
          jobid = lGetUlong(upu, UPU_job_number);
-         if (!sge_locate_job(jobid)) {
+         if (!job_list_locate(Master_Job_List, jobid)) {
             lRemoveElem(lGetList(up, UP_debited_job_usage), upu);
             WARNING((SGE_EVENT, "removing reference to no longer existing job "u32" of %s "SFQ"\n",
                            jobid, user?"user":"project", lGetString(up, UP_name)));
@@ -804,455 +570,6 @@ int user
    DEXIT;
    return 0;
 }
-
-#ifndef __SGE_NO_USERMAPPING__
-static int sge_read_host_group_entries_from_disk()
-{ 
-  lList*     direntries = NULL; 
-  lListElem* direntry = NULL;
-  lListElem* ep = NULL;
-  const char*      hostGroupEntry = NULL;
-  int        ret = 0;  /* 0 means ok */
-
-  DENTER(TOP_LAYER, "sge_read_host_group_entries_from_disk");
- 
- 
-  direntries = sge_get_dirents(HOSTGROUP_DIR);
-  if (direntries) {
-     if (Master_Host_Group_List == NULL) {
-        Master_Host_Group_List = lCreateList("main host group list", GRP_Type);
-     }  
-     if (!silent()) { 
-        printf(MSG_CONFIG_READINGHOSTGROUPENTRYS);
-     }
-     
-     for_each(direntry, direntries) {
-        hostGroupEntry = lGetString(direntry, STR);
-
-        if (hostGroupEntry[0] != '.') {
-           if (!silent()) { 
-              printf(MSG_SETUP_HOSTGROUPENTRIES_S, hostGroupEntry);
-           }
-
-           ep = cull_read_in_host_group(HOSTGROUP_DIR, hostGroupEntry , 1, 0, NULL); 
-           lAppendElem(Master_Host_Group_List, ep);
-        } else {
-           char buffer[256];
-
-           sprintf(buffer, "%s/%s", HOSTGROUP_DIR, hostGroupEntry);
-           unlink(buffer);
-        }   
-     } 
-     direntries = lFreeList(direntries);
- 
-     ep = Master_Host_Group_List->first;  
-
-     while (ep != NULL) {
-        hostGroupEntry = lGetString(ep, GRP_group_name);
-        if (hostGroupEntry != NULL) {
-           DPRINTF(("----------------> checking group '%s'\n",hostGroupEntry));
-        }  
-        if (sge_verify_host_group_entry(NULL, Master_Host_Group_List,ep,hostGroupEntry) == FALSE) {
-           WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGHOSTGROUP_S, hostGroupEntry  ));
-           
-           lDechainElem(Master_Host_Group_List, ep);
-           lFreeElem(ep);
-           ep = NULL;
-           ep = Master_Host_Group_List->first;
-        } else {
-           ep = ep->next;
-        }
-     } 
-  }
-
-  /* everything is done very well ! */
-  DEXIT; 
-  return ret;
-}
-
-
-static int sge_read_user_mapping_entries_from_disk()
-{ 
-  lList*     direntries = NULL; 
-  lListElem* direntry = NULL;
-  lListElem* ep = NULL;
-  const char*      ume = NULL;
-  int        ret = 0;  /* 0 means ok */
-
-  DENTER(TOP_LAYER, "sge_read_user_mapping_entries_from_disk");
- 
- 
-  direntries = sge_get_dirents(UME_DIR);
-  if (direntries) {
-     if (Master_Usermapping_Entry_List == NULL) {
-        Master_Usermapping_Entry_List = 
-           lCreateList("Master_Usermapping_Entry_List", UME_Type);
-     }  
-     if (!silent()) { 
-        printf(MSG_CONFIG_READINGUSERMAPPINGENTRY);
-     }
-     
-     for_each(direntry, direntries) {
-         ume = lGetString(direntry, STR);
-
-         if (ume[0] != '.') {
-            if (!silent()) { 
-               printf(MSG_SETUP_MAPPINGETRIES_S, ume);
-            }
-
-            ep = cull_read_in_ume(UME_DIR, ume , 1, 0, NULL); 
-         
-            if (sge_verifyMappingEntry(NULL, Master_Host_Group_List,ep, ume, 
-               Master_Usermapping_Entry_List) == TRUE) {
-               lAppendElem(Master_Usermapping_Entry_List, ep);
-            } else {
-               WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGMAPPINGFOR_S,  ume ));  
-               ep = lFreeElem(ep);
-               ep = NULL; 
-            } 
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", UME_DIR, ume);
-            unlink(buffer);
-         }
-     } 
-     direntries = lFreeList(direntries);
-  }
-  
-  /* everything is done very well ! */
-  DEXIT; 
-  return ret;
-}
-#endif
-
-static int sge_read_host_list_from_disk()
-{
-   lList *direntries;
-   lListElem *ep, *direntry;
-   const char *host;
-
-   DENTER(TOP_LAYER, "sge_read_host_list_from_disk");
-
-   /* 
-   ** read exechosts into Master_Exechost_List 
-   */
-   if (!Master_Exechost_List)
-      Master_Exechost_List = lCreateList("Master_Exechost_List", EH_Type);
-
-   direntries = sge_get_dirents(EXECHOST_DIR);
-   if(direntries) {
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINEXECUTIONHOSTS);
-      
-      for_each(direntry, direntries) {
-
-         host = lGetString(direntry, STR);
-         if (host[0] != '.') {
-            DPRINTF(("Host: %s\n", host));
-            ep = cull_read_in_host(EXECHOST_DIR, host, CULL_READ_SPOOL, EH_name, 
-                                   NULL, NULL);
-            if (!ep) {
-               direntries = lFreeList(direntries);
-               DEXIT; 
-               return -1;
-            }
-
-           /* resolve hostname anew */
-            if (reresolve_host(ep, EH_name, "exec host", EXECHOST_DIR)) {
-               DEXIT;
-               return -1; /* general problems */
-            }
-
-            /* necessary to setup actual list of exechost */
-            debit_host_consumable(NULL, ep, Master_Complex_List, 0);
-
-            /* necessary to init double values of consumalbe configuration */
-            sge_fill_requests(lGetList(ep, EH_consumable_config_list), 
-                  Master_Complex_List, 1, 0, 1);
-
-            if (verify_complex_list(NULL, "host", lGetHost(ep, EH_name),
-                        lGetList(ep, EH_complex_list))!=STATUS_OK) {
-               DEXIT;
-               return -1;
-            }
-            if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
-               ep = lFreeElem(ep);
-               DEXIT;
-               return -1;
-            }
-
-            lAppendElem(Master_Exechost_List, ep);
-            /*
-            ** make a start for the history when Sge first starts up
-            ** or when history has been deleted
-            */
-            if (!is_nohist() && lGetHost(ep, EH_name) &&
-                !is_object_in_history(STR_DIR_EXECHOSTS, 
-                   lGetHost(ep, EH_name))) {
-               int ret;
-            
-               ret = write_host_history(ep);
-               if (ret) {
-                  WARNING((SGE_EVENT, MSG_CONFIG_CANTWRITEHISTORYFORHOSTX_S,
-                           lGetHost(ep, EH_name)));
-               }
-            }
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", EXECHOST_DIR, host);
-            unlink(buffer);
-         }
-      }
-      direntries = lFreeList(direntries);
-   }
-
-   /* 
-   ** read adminhosts into Master_Adminhost_List 
-   */
-   if (!Master_Adminhost_List)
-      Master_Adminhost_List = lCreateList("Master_Adminhost_List", AH_Type);
-
-   direntries = sge_get_dirents(ADMINHOST_DIR);
-   if(direntries) {
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINADMINHOSTS);
-      for_each(direntry, direntries) {
-         host = lGetString(direntry, STR);
-
-         if (host[0] != '.') {
-            DPRINTF(("Host: %s\n", host));
-            ep = cull_read_in_host(ADMINHOST_DIR, host, CULL_READ_SPOOL, AH_name, NULL, NULL);
-            if (!ep) {
-               direntries = lFreeList(direntries);
-               DEXIT; 
-               return -1;
-            } 
-
-            /* resolve hostname anew */
-            if (reresolve_host(ep, AH_name, "admin host", ADMINHOST_DIR)) {
-               direntries = lFreeList(direntries);
-               DEXIT;
-               return -1; /* general problems */
-            }
-
-            lAppendElem(Master_Adminhost_List, ep);
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", ADMINHOST_DIR, host);
-            unlink(buffer);  
-         }
-      }
-      direntries = lFreeList(direntries);
-   }
-
-   /* 
-   ** read submithosts into Master_Submithost_List 
-   */
-   if (!Master_Submithost_List)
-      Master_Submithost_List = lCreateList("Master_Submithost_List", SH_Type);
-
-   direntries = sge_get_dirents(SUBMITHOST_DIR);
-   if(direntries) {
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINSUBMITHOSTS);
-      for_each(direntry, direntries) {
-         host = lGetString(direntry, STR);
-         if (host[0] != '.') {
-            DPRINTF(("Host: %s\n", host));
-            ep = cull_read_in_host(SUBMITHOST_DIR, host, CULL_READ_SPOOL, 
-               SH_name, NULL, NULL);
-            if (!ep) {
-               direntries = lFreeList(direntries);
-               DEXIT; 
-               return -1;
-            } 
-
-            /* resolve hostname anew */
-            if (reresolve_host(ep, SH_name, "submit host", SUBMITHOST_DIR)) {
-               DEXIT;
-               return -1; /* general problems */
-            }
-
-            lAppendElem(Master_Submithost_List, ep);
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", SUBMITHOST_DIR, host);
-            unlink(buffer);             
-         }
-      }
-      direntries = lFreeList(direntries);
-   }
-
-   DEXIT;
-   return 0;
-}
-
-static int sge_read_pe_list_from_disk()
-{
-   lList *direntries;
-   lList *alp = NULL;
-   lListElem *ep, *direntry;
-   int ret = 0;
-   const char *pe;
-
-   DENTER(TOP_LAYER, "sge_read_pe_list_from_disk");
-   
-   if (!Master_Pe_List)
-      Master_Pe_List = lCreateList("Master_Pe_List", PE_Type);
-
-   direntries = sge_get_dirents(PE_DIR);
-   if(direntries) {
-      if (!silent()) {
-         printf(MSG_CONFIG_READINGINGPARALLELENV);
-      }
-      for_each(direntry, direntries) {
-         pe = lGetString(direntry, STR);
-         if (pe[0] != '.') {
-            if (!silent()) {
-               printf(MSG_SETUP_PE_S, pe);
-            }
-            if (verify_str_key(&alp, pe, "pe")) {
-               DEXIT;
-               return -1;
-            }       
-            ep = cull_read_in_pe(PE_DIR, pe, 1, 0, NULL, NULL);
-            if (!ep) {
-               ret = -1;
-               break;
-            }
-
-            if (validate_pe(1, ep, NULL)!=STATUS_OK) {
-               ret = -1;
-               break;
-            }
-            lAppendElem(Master_Pe_List, ep);
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", PE_DIR, pe);
-            unlink(buffer);
-         }
-      }
-      direntries = lFreeList(direntries);
-   }
-
-   DEXIT;
-   return ret;
-}
-
-
-
-static int sge_read_cal_list_from_disk()
-{
-   lList *direntries;
-   lListElem *aep, *ep, *direntry;
-   int ret = 0;
-   const char *cal;
-   const char *s;
-   lList *alp = NULL;
-
-   DENTER(TOP_LAYER, "sge_read_cal_list_from_disk");
-   
-   if (!Master_Calendar_List)
-      Master_Calendar_List = lCreateList("Master_Calendar_List", CAL_Type);
-
-   direntries = sge_get_dirents(CAL_DIR);
-   if(direntries) {
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINCALENDARS);
-      for_each(direntry, direntries) {
-         cal = lGetString(direntry, STR);
-
-         if (cal[0] != '.') {
-            if (!silent()) {
-               printf(MSG_SETUP_CALENDAR_S, cal);
-            }
-            if (verify_str_key(&alp, cal, "cal")) {
-               DEXIT;
-               return -1;
-            }      
-            ep = cull_read_in_cal(CAL_DIR, cal, 1, 0, NULL, NULL);
-            if (!ep) {
-               ret = -1;
-               break;
-            }
-
-            if (parse_year(&alp, ep) || parse_week(&alp, ep)) {
-               if (!(aep = lFirst(alp)) || !(s = lGetString(aep, AN_text)))
-                  s = MSG_UNKNOWNREASON;
-               ERROR((SGE_EVENT,MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS, 
-                     cal, s));
-               lFreeList(alp);
-               ret = -1;
-               break;
-            }
-
-            lAppendElem(Master_Calendar_List, ep);
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", CAL_DIR, cal);
-            unlink(buffer);  
-         }
-      }
-      direntries = lFreeList(direntries);
-   }
-
-   DEXIT;
-   return ret;
-}
-
-static int sge_read_ckpt_list_from_disk()
-{
-   lList *direntries;
-   lListElem *ep, *direntry;
-   const char *ckpt;
-
-   DENTER(TOP_LAYER, "sge_read_ckpt_list_from_disk");
-   
-   if (!Master_Ckpt_List)
-      Master_Ckpt_List = lCreateList("Master_Ckpt_List", CK_Type);
-
-   direntries = sge_get_dirents(CKPTOBJ_DIR);
-   if(direntries) {
-      if (!silent()) 
-         printf(MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS);
-      for_each(direntry, direntries) {
-         ckpt = lGetString(direntry, STR);
-
-         if (ckpt[0] != '.') {
-            if (!silent()) 
-               printf(MSG_SETUP_CKPT_S, ckpt);
-            ep = cull_read_in_ckpt(CKPTOBJ_DIR, ckpt, 1, 0, NULL, NULL);
-            if (!ep) {
-               DEXIT;
-               return -1;
-            }
-
-            if (validate_ckpt(ep, NULL)!=STATUS_OK) {
-               DEXIT;
-               return -1;
-            }
-            
-            lAppendElem(Master_Ckpt_List, ep);
-         } else {
-            char buffer[256];
-
-            sprintf(buffer, "%s/%s", CKPTOBJ_DIR, ckpt);
-            unlink(buffer);
-         }
-      }
-      direntries = lFreeList(direntries);
-   }
-   DEXIT;
-   return 0;
-}
-
-
 #if 0
 static int sge_read_object_dir(
 char *obj_dir,
@@ -1337,17 +654,17 @@ static int debit_all_jobs_from_qs()
             queue_name = lGetString(gdi, JG_qname);
             slots = lGetUlong(gdi, JG_slots);
             
-            if (!(qep = lGetElemStr(Master_Queue_List, QU_qname, queue_name))) {
+            if (!(qep = queue_list_locate(Master_Queue_List, queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
                   queue_name, u32c(lGetUlong(jep, JB_job_number))));
                lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);   
             }
 
             /* debit in all layers */
-            debit_host_consumable(jep, sge_locate_host("global", 
-                     SGE_EXECHOST_LIST), Master_Complex_List, slots);
-            debit_host_consumable(jep, hep = sge_locate_host(
-                     lGetHost(qep, QU_qhostname), SGE_EXECHOST_LIST), 
+            debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
+                     "global"), Master_Complex_List, slots);
+            debit_host_consumable(jep, hep = host_list_locate(
+                     Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
                      Master_Complex_List, slots);
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             if (!master_hep)
@@ -1355,7 +672,7 @@ static int debit_all_jobs_from_qs()
          }
 
          /* check for resend jobs */
-         if (lGetUlong(jatep, JAT_status) == JTRANSITING) {
+         if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
             trigger_job_resend(lGetUlong(jatep, JAT_start_time), master_hep, 
                   jid, tid);
          }
@@ -1364,65 +681,5 @@ static int debit_all_jobs_from_qs()
 
    DEXIT;
    return ret;
-}
-
-static int reresolve_host(
-lListElem *ep,
-int nm,
-char *object_name,
-char *object_dir 
-) {
-   char *old_name;
-   const char *new_name;
-   int ret;
-   int pos;
-   int dataType;
-
-   DENTER(TOP_LAYER, "reresolve_host");
-
-
-   pos = lGetPosViaElem(ep, nm);
-   dataType = lGetPosType(lGetElemDescr(ep),pos);
-   if (dataType == lHostT) {
-      old_name = strdup(lGetHost(ep, nm));
-   } else {
-      old_name = strdup(lGetString(ep, nm));
-   }
-   ret = sge_resolve_host(ep, nm);
-   if (ret != CL_OK ) {
-      if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
-         /* finish qmaster setup only if hostname resolving
-            does not work at all generally or a timeout
-            indicates that commd itself blocks in resolving
-            a host, e.g. when DNS times out */
-         ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS,
-                  object_name, old_name, cl_errstr(ret)));
-         free(old_name);
-         DEXIT;
-         return -1;
-      }
-      WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS,
-               object_name, old_name));
-   }
-
-   /* rename config file if resolving changed name */
-   if (dataType == lHostT) {
-      new_name = lGetHost(ep, nm);
-   } else {
-      new_name = lGetString(ep, nm);
-   }
-   if (strcmp(old_name, new_name)) {
-      if (!write_host(1, 2, ep, nm, NULL)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, new_name));
-         free(old_name);
-         DEXIT;
-         return -1;
-      }
-      sge_unlink(object_dir, old_name);
-   }
-   free(old_name);
-
-   DEXIT;
-   return 0;
 }
 

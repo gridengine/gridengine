@@ -67,9 +67,12 @@ void sge_change_queue_version_exechost(const char *exechost_name);
 
 lListElem *get_local_conf_val(const char *host, const char *name);  
 
-int notify_new_features(lListElem *host, featureset_id_t featureset, const char *target);
-
 void master_notify_execds(void);
+
+int host_notify_about_X(lListElem *host,
+                        u_long32 x,
+                        int tag,
+                        int progname_id);
 
 #endif /* __SGE_HOST_QMASTER_H */
 

@@ -37,7 +37,6 @@ SCHEDD_SDIR = $(SDIR)/daemons/schedd
 SCHEDD_TARGETS = sge_schedd sge_share_mon
 
 SCHEDD_SRC  = sge_schedd.c \
-             sge_c_event.c \
              scheduler.c \
              sge_access_tree.c \
              sge_category.c \
@@ -46,12 +45,9 @@ SCHEDD_SRC  = sge_schedd.c \
 
 SCHEDD_ADD_SRC = job_log.c \
              category.c \
-             sge_complex.c \
-             job.c \
+             read_write_complex.c \
              parse_job_cull.c \
              parse_qsub.c \
-             path_aliases.c \
-             sge_conf.c \
              sge_options.c \
              sge_orders.c \
              sge_pe_schedd.c \
@@ -123,9 +119,6 @@ sge_access_tree.o : $(SCHEDD_SDIR)/sge_access_tree.c
 sge_category.o : $(SCHEDD_SDIR)/sge_category.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_category.c
 
-sge_c_event.o : $(SCHEDD_SDIR)/sge_c_event.c
-	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_c_event.c
-
 sge_process_events.o : $(SCHEDD_SDIR)/sge_process_events.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_process_events.c
 
@@ -136,7 +129,7 @@ interactive_sched.o : $(SCHEDD_SDIR)/interactive_sched.c
 # -------------------------------------------------
 # this modules belong into a scheduling library
 # for being accessable from qmaster, qstat, qmon and may be others
-# there are still some ugly dependencies (sge_complex.c)
+# there are still some ugly dependencies (read_write_complex.c)
 
 sge_share_mon.o: $(SCHEDD_SDIR)/sge_share_mon.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_share_mon.c

@@ -54,16 +54,15 @@
 #include <Xmt/MsgLine.h>
 
 /*----------------------------------------------------------------------------*/
+#include "sge_unistd.h"
+#include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge_parse_date_time.h"
 #include "sge_userset.h"
-#include "sge_me.h"
 #include "Matrix.h"
 #include "symbols.h"
 #include "parse_qsub.h"
-#include "parse_range.h"
-#include "sge_str_from_file.h"
 #include "sge_time.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
@@ -85,19 +84,17 @@
 #include "qmon_job.h"
 #include "qmon_init.h"
 #include "sge_feature.h"
-#include "utility.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
-#include "sge_copy_append.h"
-#include "sge_arch.h"
 #include "sge_range.h"
-#include "job.h"
-#include "path_aliases.h"
-#include "jb_now.h"
+#include "sge_path_alias.h"
 #include "setup_path.h"
 #include "qm_name.h"
-#include "sge_stat.h" 
 #include "sge_security.h" 
+#include "sge_job.h"
+#include "sge_stdlib.h"
+#include "sge_io.h"
+#include "sge_var.h"
+#include "sge_answer.h"
 
 extern char **environ;
 
@@ -193,6 +190,10 @@ XtResource sm_resources[] = {
    { "stdoutput_path_list", "stdoutput_path_list", QmonRPN_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, stdoutput_path_list),
       XtRImmediate, NULL },
+   
+   { "stdinput_path_list", "stdinput_path_list", QmonRPN_Type,
+      sizeof(lList*), XtOffsetOf(tSMEntry, stdinput_path_list),
+      XtRImmediate, NULL },
 
    { "stderror_path_list", "stderror_path_list", QmonRPN_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, stderror_path_list),
@@ -237,10 +238,6 @@ XtResource sm_resources[] = {
       sizeof(lList*), XtOffsetOf(tSMEntry, master_queue_list),
       XtRImmediate, NULL },
 
-   { "qs_args", "qs_args", QmonRST_Type,
-      sizeof(lList*), XtOffsetOf(tSMEntry, qs_args),
-      XtRImmediate, NULL },
-
    { "hold_jid", "hold_jid", QmonRJRE_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, hold_jid),
       XtRImmediate, NULL },
@@ -255,6 +252,13 @@ XtResource stdoutput_list_resources[] = {
 
    { "stdoutput_path_list", "stdoutput_path_list", QmonRPN_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, stdoutput_path_list),
+      XtRImmediate, NULL }
+};
+
+XtResource stdinput_list_resources[] = {
+
+   { "stdinput_path_list", "stdinput_path_list", QmonRPN_Type,
+      sizeof(lList*), XtOffsetOf(tSMEntry, stdinput_path_list),
       XtRImmediate, NULL }
 };
 
@@ -303,13 +307,16 @@ static Widget qmonSubmitCreate(Widget parent);
 static void qmonSubmitPopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitGetScript(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitBinary(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckInput(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitCommitInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitOutputMerge(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitShellList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitMailList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitStderrList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitStdoutList(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitStdinList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitEnvList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCtxList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCancel(Widget w, XtPointer cld, XtPointer cad);
@@ -368,6 +375,8 @@ static Widget submit_shellPB = 0;
 static Widget submit_output_merge = 0;
 static Widget submit_stdoutput = 0;
 static Widget submit_stdoutputPB = 0;
+static Widget submit_stdinput = 0;
+static Widget submit_stdinputPB = 0;
 static Widget submit_stderror = 0;
 static Widget submit_stderrorPB = 0;
 static Widget submit_env = 0;
@@ -386,8 +395,9 @@ static Widget submit_task_hold = 0;
 static Widget submit_now = 0;
 static Widget submit_restart = 0;
 static Widget submit_main_link = 0; 
-static Widget submit_interactive = 0;
 static Widget submit_message = 0;
+static Widget submit_interactive = 0;
+static Widget submit_binary = 0;
 static Widget submit_tasks = 0;
 
 static Widget submit_edit = 0;
@@ -404,10 +414,12 @@ static Widget shell_list_w = 0;
 static Widget mail_list_w = 0;
 static Widget stderror_list_w = 0;
 static Widget stdoutput_list_w = 0;
+static Widget stdinput_list_w = 0;
 static Widget env_list_w = 0;
 static Widget ctx_list_w = 0;
 
-static tSubmitMode submit_mode_data = {SUBMIT_NORMAL, SUBMIT_NORMAL, 0};
+static tSubmitMode submit_mode_data = {SUBMIT_NORMAL, 
+                                       SUBMIT_NORMAL|SUBMIT_SCRIPT, 0};
 static tSMEntry SMData; 
 /*-------------------------------------------------------------------------*/
 
@@ -476,6 +488,7 @@ XtPointer cld, cad;
    ** reset interactive mode
    */
    XmToggleButtonSetState(submit_interactive, 0, True);
+   XmToggleButtonSetState(submit_binary, 0, True);
 
    /*
    ** reset; fill the dialog in qalter mode
@@ -518,8 +531,8 @@ XtPointer cld, cad;
          DEXIT;
          return;
       }
-      job_to_set = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), JB_job_number,
-                                    submit_mode_data.job_id);
+      job_to_set = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+                                   submit_mode_data.job_id);
       /*
       ** is it an interactive job ?
       */
@@ -530,6 +543,13 @@ XtPointer cld, cad;
       else {
          DPRINTF(("qalter batch mode\n"));
          XmToggleButtonSetState(submit_interactive, 1, True);
+      }
+      if (JOB_TYPE_IS_BINARY(lGetUlong(job_to_set, JB_type))) {
+         DPRINTF(("binary submission\n"));
+         XmToggleButtonSetState(submit_binary, 1, True);
+      } else {
+         DPRINTF(("Script submission\n"));
+         XmToggleButtonSetState(submit_binary, 0, True);
       }
 
       /*
@@ -559,6 +579,7 @@ XtPointer cld, cad;
    ** set sensitivity depending on submit mode
    ** if called in SUBMIT_QALTER_PENDING mode
    */
+
    qmonSubmitSetSensitive(submit_mode_data.mode, submit_mode_data.sub_mode);
 
    /*
@@ -595,10 +616,14 @@ String qmonSubmitRequestType(void)
    XmtDialogGetDialogValues(submit_layout, &SMData);
 
    if (SMData.pe) {
-      sprintf(buf, "@fBParallel Job Request: %s", SMData.pe); 
+      sprintf(buf, 
+              XmtLocalize(submit_layout, "@fBParallel Job Request - %s",
+                           "@fBParallel Job Request - %s"),
+              SMData.pe); 
    }
    else
-      strcpy(buf, "@fBSerial Job");
+      strcpy(buf, 
+             XmtLocalize(submit_layout, "@fBSerial Job", "@fBSerial Job"));
                            
 
    DEXIT;
@@ -686,6 +711,7 @@ Widget parent
                           "submit_script", &submit_script,
                           "submit_shellPB", &submit_shellPB,
                           "submit_stdoutputPB", &submit_stdoutputPB,
+                          "submit_stdinputPB", &submit_stdinputPB,
                           "submit_stderrorPB", &submit_stderrorPB,
                           "submit_mail_userPB", &submit_mail_userPB,
                           "submit_envPB", &submit_envPB,
@@ -698,6 +724,7 @@ Widget parent
                           "submit_resources", &submit_resources,
                           "submit_shell", &submit_shell,
                           "submit_stdoutput", &submit_stdoutput,
+                          "submit_stdinput", &submit_stdinput,
                           "submit_stderror", &submit_stderror,
                           "submit_output_merge", &submit_output_merge,
                           "submit_cwd", &submit_cwd,
@@ -730,6 +757,7 @@ Widget parent
                           "submit_main_link", &submit_main_link,
                           "submit_message", &submit_message,
                           "submit_interactive", &submit_interactive,
+                          "submit_binary", &submit_binary,
                           "submit_job_args", &submit_job_args,
                           NULL);
    
@@ -755,12 +783,16 @@ Widget parent
    /* callbacks */
    XtAddCallback(submit_interactive, XmNvalueChangedCallback, 
                      qmonSubmitInteractive, NULL);
+   XtAddCallback(submit_binary, XmNvalueChangedCallback, 
+                     qmonSubmitBinary, NULL);
    XtAddCallback(submit_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
    XtAddCallback(submit_script, XmNactivateCallback, 
                      qmonSubmitReload, NULL);
    XtAddCallback(submit_script, XmtNverifyCallback, 
                      qmonSubmitCheckInput, NULL);
+   XtAddCallback(submit_script, XmtNinputCallback, 
+                     qmonSubmitCommitInput, NULL);
    XtAddCallback(submit_scriptPB, XmNactivateCallback, 
                      qmonSubmitGetScript, NULL);
    XtAddCallback(submit_name, XmtNverifyCallback, 
@@ -795,6 +827,8 @@ Widget parent
                      qmonSubmitOutputMerge, NULL);
    XtAddCallback(submit_stdoutputPB, XmNactivateCallback, 
                      qmonSubmitStdoutList, NULL);
+   XtAddCallback(submit_stdinputPB, XmNactivateCallback, 
+                     qmonSubmitStdinList, NULL);
    XtAddCallback(submit_stderrorPB, XmNactivateCallback, 
                      qmonSubmitStderrList, NULL);
    XtAddCallback(submit_exec_timePB, XmNactivateCallback, 
@@ -846,6 +880,16 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
+   if (!cbs->set) {
+      SETBIT(SUBMIT_NORMAL, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_QSH, submit_mode_data.sub_mode);
+   } else {
+      SETBIT(SUBMIT_QSH, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_NORMAL, submit_mode_data.sub_mode);
+   }  
+
+   XmToggleButtonSetState(submit_binary, 0, True); 
+   
    /*
    ** clear the entries and set default name of job
    */
@@ -854,10 +898,7 @@ XtPointer cld, cad;
    /*
    ** reset the sensitivity depending on state
    */
-   if (!cbs->set) {
-      submit_mode_data.sub_mode = SUBMIT_NORMAL;
-   } else {
-      submit_mode_data.sub_mode = SUBMIT_QSH;
+   if (ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
@@ -868,6 +909,35 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_env, buf); 
       XmToggleButtonSetState(submit_now, 1, True);
    }
+
+   qmonSubmitSetSensitive(submit_mode_data.mode, submit_mode_data.sub_mode);
+
+   DEXIT;
+}   
+
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitBinary(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*) cad;
+   char buf[512];
+   String dsp;
+
+   DENTER(GUI_LAYER, "qmonSubmitBinary");
+
+   if (!cbs->set) {
+      SETBIT(SUBMIT_SCRIPT, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_BINARY, submit_mode_data.sub_mode);
+   } else {
+      SETBIT(SUBMIT_BINARY, submit_mode_data.sub_mode);
+      CLEARBIT(SUBMIT_SCRIPT, submit_mode_data.sub_mode);
+   }   
+   
+   /*
+    * clear the entries and set default name of job
+    */
+   qmonSubmitClear(w, NULL, NULL);
 
    qmonSubmitSetSensitive(submit_mode_data.mode, submit_mode_data.sub_mode);
 
@@ -888,7 +958,7 @@ int submode
    else
       sensitive = False;
    
-   if (submode == SUBMIT_QSH)
+   if (ISSET(submode, SUBMIT_QSH))
       sensitive2 = False;
    else
       sensitive2 = True;
@@ -911,12 +981,13 @@ int submode
    XtSetSensitive(submit_execution_time, sensitive2);
    XtSetSensitive(submit_exec_timePB, sensitive2);
    XtSetSensitive(submit_stdoutput, sensitive2);
+   XtSetSensitive(submit_stdinput, sensitive2);
    XtSetSensitive(submit_stderror, sensitive2);
+   XtSetSensitive(submit_stdoutputPB, sensitive2);
+   XtSetSensitive(submit_stdinputPB, sensitive2); 
    XtSetSensitive(submit_stderrorPB, sensitive2);
-   XtSetSensitive(submit_stdoutputPB, sensitive2);
-   XtSetSensitive(submit_stdoutputPB, sensitive2);
    XtSetSensitive(submit_output_merge, sensitive2);
-   XtSetSensitive(submit_now, sensitive2);
+/*    XtSetSensitive(submit_now, sensitive2); */
 
    /*
    ** detail submit dialogue section, mail allowed only for abort
@@ -956,6 +1027,7 @@ int submode
    ** action buttons
    */
    XtSetSensitive(submit_interactive, sensitive);
+   XtSetSensitive(submit_binary, sensitive && sensitive2);
    XtSetSensitive(submit_reload, sensitive);
    XtSetSensitive(submit_edit, sensitive);
    XtSetSensitive(submit_save, sensitive);
@@ -1089,6 +1161,7 @@ XtPointer cld, cad;
    Boolean status;
    char message[] = "@{submit.asksubmittime.Enter the submit time in the\nfollowing format: [[CC]]YY]MMDDhhmm[.ss]\nor leave the current time and press ok}";
    char exec_time[128];
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitExecTime");
 
@@ -1103,8 +1176,13 @@ XtPointer cld, cad;
    ** validate exec_time and show warning msgbox
    */
    if (status) {
-      SMData.execution_time = sge_parse_date_time(exec_time, NULL, NULL);
-      XmtDialogSetDialogValues(submit_layout, &SMData);
+      SMData.execution_time = sge_parse_date_time(exec_time, NULL, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+      } else {   
+         XmtDialogSetDialogValues(submit_layout, &SMData);
+      }   
    }
 
    DEXIT;
@@ -1122,6 +1200,7 @@ XtPointer cld, cad;
    char message[] = "@{submit.askdeadlinetime.Enter the deadline time in the\nfollowing format: [[CC]]YY]MMDDhhmm.[ss]\nor leave the current time and press ok}";
    char deadline_time[128];
    char *set_deadline_time = NULL;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitDeadline");
 
@@ -1141,9 +1220,13 @@ XtPointer cld, cad;
    ** validate deadline_time and show warning msgbox
    */
    if (status) {
-      SMData.deadline = sge_parse_date_time(deadline_time, NULL, NULL);
-      XmtDialogSetDialogValues(submit_layout, &SMData);
-
+      SMData.deadline = sge_parse_date_time(deadline_time, NULL, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+      } else {   
+         XmtDialogSetDialogValues(submit_layout, &SMData);
+      }   
    }
 
    DEXIT;
@@ -1178,9 +1261,10 @@ XtPointer cld, cad;
       /*
       ** validate input, return error message
       */
-      if ( (!SMData.job_script || SMData.job_script[0] == '\0') && 
-               submit_mode_data.sub_mode != SUBMIT_QSH ) {
-         sprintf(buf, "Job Script required\n");
+      if ((!SMData.job_script || SMData.job_script[0] == '\0') && 
+          !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
+         sprintf(buf, XmtLocalize(w, "Job Script required !", 
+                  "Job Script required !"));
          goto error;
       }
 
@@ -1194,13 +1278,24 @@ XtPointer cld, cad;
          pe = strtok(theInput, " ");
          pe_range = strtok(NULL, "\n");
          if (!(pe_range && pe_range[0] != '\0')) {
-            sprintf(buf, "Parallel Environment requires valid name and valid range !");
+            sprintf(buf, 
+               XmtLocalize(w, 
+               "Parallel Environment requires valid name and valid range !", 
+               "Parallel Environment requires valid name and valid range !")
+            );
             goto error;
-         }
-         else {
-            parse_ranges(pe_range, 1, 0, &alp, NULL, INF_ALLOWED);
+         } else {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, pe_range,
+                                         1, 0, INF_ALLOWED);
+            range_list = lFreeList(range_list);
             if (alp) {
-               sprintf(buf, "Parallel Environment requires valid name and valid range !");
+               sprintf(buf, 
+                  XmtLocalize(w, 
+                  "Parallel Environment requires valid name and valid range !", 
+                  "Parallel Environment requires valid name and valid range !")
+               );
                alp = lFreeList(alp);
                goto error;
             }
@@ -1209,13 +1304,21 @@ XtPointer cld, cad;
 
       if (!(lp = lCreateElemList("JobSubmitList", JB_Type, 1))) {
          DPRINTF(("lCreateElemList failure\n"));
-         sprintf(buf, "Job submission failed\n");
+         sprintf(buf, 
+                 XmtLocalize(w, 
+                             "Job submission failed", 
+                             "Job submission failed")
+         );
          goto error;
       }
 
       if (!qmonSMToCull(&SMData, lFirst(lp), 0)) {
          DPRINTF(("qmonSMToCull failure\n"));
-         sprintf(buf, "Job submission failed\n");
+         sprintf(buf, 
+                 XmtLocalize(w, 
+                             "Job submission failed", 
+                             "Job submission failed")
+         );
          goto error;
       }
 
@@ -1241,7 +1344,7 @@ XtPointer cld, cad;
                         JB_job_number, &lp, NULL, what);
 
       if (lFirst(alp) && (lGetUlong(lFirst(alp), AN_status) == STATUS_OK
-            || lGetUlong(lFirst(alp), AN_quality) != NUM_AN_ERROR))
+            || lGetUlong(lFirst(alp), AN_quality) != ANSWER_QUALITY_ERROR))
          status = True;
 
       qmonMessageBox(w, alp, just_verify);
@@ -1251,25 +1354,30 @@ XtPointer cld, cad;
          /*
          ** start a timer for immediate jobs to check if submission succeeded
          */
-         if (JB_NOW_IS_IMMEDIATE(lGetUlong(lFirst(lp), JB_now))) {
+         if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(lFirst(lp), JB_type))) {
             job_number = lGetUlong(lFirst(lp), JB_job_number);
             qmonTimerCheckInteractive(w, (XtPointer)job_number, NULL);
          } 
          updateJobList();
 /*          strcpy(task_str, ""); */
-/*          get_taskrange_str(lGetList(lFirst(lp), JB_ja_tasks), task_str); */
+/*          ja_task_list_print_to_string(lGetList(lFirst(lp), JB_ja_tasks), task_str); */
 /*          XmtMsgLinePrintf(submit_message, "Job %d (%s) submitted",  */
 /*                 (int)lGetUlong(lFirst(lp), JB_job_number), task_str); */
-         XmtMsgLinePrintf(submit_message, "Job %d submitted", 
+         XmtMsgLinePrintf(submit_message, 
+                           XmtLocalize(w, "Job %d submitted", "Job %d submitted"), 
                            (int)lGetUlong(lFirst(lp), JB_job_number));
          XmtMsgLineClear(submit_message, DISPLAY_MESSAGE_DURATION); 
       }
       else if (!just_verify) {
          int jobid;
          if ( lFirst(lp) && (jobid = (int)lGetUlong(lFirst(lp), JB_job_number)))
-            XmtMsgLinePrintf(submit_message, "Job %d failed", jobid); 
+            XmtMsgLinePrintf(submit_message, 
+                             XmtLocalize(w, "Job %d failed", "Job %d failed"),
+                             jobid); 
          else
-            XmtMsgLinePrintf(submit_message, "Job Submission failed"); 
+            XmtMsgLinePrintf(submit_message, 
+                             XmtLocalize(w, "Job Submission failed", 
+                                          "Job Submission failed")); 
          XmtMsgLineClear(submit_message, DISPLAY_MESSAGE_DURATION); 
       }
       lFreeWhat(what);
@@ -1292,6 +1400,7 @@ XtPointer cld, cad;
          JB_soft_resource_list,
          JB_merge_stderr,
          JB_stdout_path_list,
+         JB_stdin_path_list,
          JB_stderr_path_list,
          JB_mail_options,
          JB_mail_list,
@@ -1299,18 +1408,17 @@ XtPointer cld, cad;
          JB_restart,
          JB_account,
          JB_project,
-         JB_checkpoint_object,
+         JB_checkpoint_name,
          JB_pe_range,
          JB_pe,
          JB_hard_queue_list,
          JB_soft_queue_list,
          JB_master_hard_queue_list,
-         JB_qs_args,
          JB_jid_predecessor_list,
          JB_shell_list,
          JB_env_list,
          JB_verify_suitable_queues,
-         JB_now,
+         JB_type,
          NoName
       };
       int qalter_fields[100];
@@ -1466,15 +1574,14 @@ int read_defaults
    DENTER(GUI_LAYER, "qmonSubmitReadScript");
 
    if (filename[strlen(filename)-1] == '/' || filename[0] == '\0')  {
-      sprintf(msg, "Invalid script name '%s'", filename);
-      qmonMessageShow(w, True, msg);
+      qmonMessageShow(w, True, "Invalid script name '%s'", filename);
       DEXIT;
       return;
    }
 
-   if (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG) {
-      sprintf(msg, "'%s' does not exist or is no regular file !", filename);
-      qmonMessageShow(w, True, msg);
+   if (ISSET(submit_mode_data.sub_mode, SUBMIT_SCRIPT) &&
+       (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG)) {
+      qmonMessageShow(w, True, "File '%s' does not exist or is no regular file !", filename);
       DEXIT;
       return;
    }
@@ -1490,15 +1597,7 @@ int read_defaults
       strcpy(prefix, "#$");
 
    if (read_defaults) {
-      /*
-      ** first of all read the default files
-      ** this is a three stage process
-      ** $SGE_ROOT/sge_request
-      ** $HOME/.sge_request
-      ** ./.sge_request
-      */
-      alp = get_all_defaults_files(&cmdline, environ);
-
+      opt_list_append_opts_from_default_files(&cmdline, &alp, environ);
       if (alp) {
          if (qmonMessageBox(w, alp, 0) == -1) {
             lFreeList(alp);
@@ -1506,32 +1605,39 @@ int read_defaults
             return;
          }
          alp = lFreeList(alp);
-      } 
-   }
+      }
+   }   
 
    /*
    ** stage one of script file parsing
    */ 
-   alp = parse_script_file(filename, prefix, &cmdline, environ, 
-                                 FLG_HIGHER_PRIOR);
-   qmonMessageBox(w, alp, 0);
-   alp = lFreeList(alp);
-
-   if (merge_script) {
-      /*
-      ** stage one ana half of script file parsing
-      ** merge an additional script in to override settings
-      */ 
-      alp = parse_script_file(merge_script, "", &cmdline, environ, 
-                                    FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
+   if (ISSET(submit_mode_data.sub_mode, SUBMIT_SCRIPT)) {
+      alp = parse_script_file(filename, prefix, &cmdline, environ, 
+                              FLG_HIGHER_PRIOR);
       qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
 
-      if (alp) {
-         lFreeList(alp);
-         DEXIT;
-         return;
-      }
-   }   
+      if (merge_script) {
+         /*
+         ** stage one ana half of script file parsing
+         ** merge an additional script in to override settings
+         */ 
+         alp = parse_script_file(merge_script, "", &cmdline, environ, 
+                                 FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
+         qmonMessageBox(w, alp, 0);
+
+         if (alp) {
+            lFreeList(alp);
+            DEXIT;
+            return;
+         }
+      }   
+   } else {
+      alp = parse_script_file(filename, prefix, &cmdline, environ,
+                              FLG_HIGHER_PRIOR | FLG_IGNORE_EMBEDED_OPTS); 
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+   } 
 
    /*
    ** stage two of script file parsing
@@ -1572,7 +1678,7 @@ tSMEntry *data
 ) {
    DENTER(GUI_LAYER, "qmonInitSMData");
    
-   memset((void*)data, sizeof(tSMEntry), 0);
+   memset((void*)data, 0, sizeof(tSMEntry));
    data->verify_mode = SKIP_VERIFY;
 
    DEXIT;
@@ -1641,6 +1747,8 @@ tSMEntry *data
    data->mail_list = lFreeList(data->mail_list);
 
    data->stdoutput_path_list = lFreeList(data->stdoutput_path_list);
+   
+   data->stdinput_path_list = lFreeList(data->stdinput_path_list);
 
    data->stderror_path_list = lFreeList(data->stderror_path_list);
 
@@ -1653,8 +1761,6 @@ tSMEntry *data
    data->soft_queue_list = lFreeList(data->soft_queue_list);
 
    data->master_queue_list = lFreeList(data->master_queue_list);
-
-   data->qs_args = lFreeList(data->qs_args);
 
    data->hold_jid = lFreeList(data->hold_jid);
 
@@ -1675,16 +1781,15 @@ tSMEntry *data,
 char *prefix 
 ) {
    StringConst job_script;
-   StringBufferT dyn_job_tasks = {NULL, 0};
+   dstring dyn_job_tasks = DSTRING_INIT;
    char pe_tasks[BUFSIZ];
-   char pe_range[BUFSIZ];
    StringConst job_name;
    StringConst directive_prefix;
-   StringConst cell;
    StringConst account_string;
    StringConst pe;
    StringConst project;
    StringConst ckpt_obj;
+   const char* tmp_string;
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -1702,10 +1807,11 @@ char *prefix
    else
       data->job_script = NULL;
 
-   if (is_array(jep))
-      get_taskrange_str(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
-   if (dyn_job_tasks.s && (dyn_job_tasks.s)[0] != '\0')
-      data->job_tasks = XtNewString(dyn_job_tasks.s);
+   if (job_is_array(jep))
+      ja_task_list_print_to_string(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
+   tmp_string = sge_dstring_get_string(&dyn_job_tasks);
+   if (tmp_string && tmp_string[0] != '\0')
+      data->job_tasks = XtNewString(tmp_string);
 
    if ((job_name = lGetString(jep, JB_job_name)))
       data->job_name = XtNewString(job_name);
@@ -1724,6 +1830,7 @@ char *prefix
          data->directive_prefix = XtNewString("#$");
    }
 
+#if 0 /* JG: removed JB_cell from job object */     
    if ((cell = lGetString(jep, JB_cell)))
       data->cell = XtNewString(cell);
    else {
@@ -1733,13 +1840,14 @@ char *prefix
       else
          data->cell = XtNewString("default");
    }
+#endif   
 
    if ((project = lGetString(jep, JB_project)))
       data->project = XtNewString(project);
    else
       data->project = NULL;
 
-   if ((ckpt_obj = lGetString(jep, JB_checkpoint_object)))
+   if ((ckpt_obj = lGetString(jep, JB_checkpoint_name)))
       data->ckpt_obj = XtNewString(ckpt_obj);
    else
       data->ckpt_obj = NULL;
@@ -1759,7 +1867,14 @@ char *prefix
          lSetHost(entry, MR_host, me.qualified_hostname);
    }
 
-   data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
+   {
+      lList *env_list = lGetList(jep, JB_env_list);
+      lList *prefix_vars = NULL;
+
+      var_list_split_prefix_vars(&env_list, &prefix_vars, VAR_PREFIX);
+      data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
+      lAddList(lGetList(jep, JB_env_list), prefix_vars);
+   }
 
    data->ctx_list = lCopyList("JB_ctx_list", lGetList(jep, JB_context));
 
@@ -1769,9 +1884,11 @@ char *prefix
 
    data->stdoutput_path_list = lCopyList("JB_stdout_path_list", 
                                        lGetList(jep, JB_stdout_path_list));
+   data->stdinput_path_list = lCopyList("JB_stdin_path_list", 
+                                       lGetList(jep, JB_stdin_path_list));
    data->stderror_path_list = lCopyList("JB_stderr_path_list", 
                                        lGetList(jep, JB_stderr_path_list));
-   data->merge_output = lGetUlong(jep, JB_merge_stderr);
+   data->merge_output = lGetBool(jep, JB_merge_stderr);
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
    data->execution_time = lGetUlong(jep, JB_execution_time);
    data->deadline = lGetUlong(jep, JB_deadline);
@@ -1790,18 +1907,17 @@ char *prefix
    data->master_queue_list = lCopyList("JB_master_hard_queue_list", 
                                     lGetList(jep, JB_master_hard_queue_list));;
 
-   data->qs_args = lCopyList("JB_qs_args", 
-                                    lGetList(jep, JB_qs_args));;
-
    data->hold_jid = lCopyList("JB_jid_predecessor_list", 
                                     lGetList(jep, JB_jid_predecessor_list));;
 
    data->restart = lGetUlong(jep, JB_restart);
 
    if ((pe = lGetString(jep, JB_pe))) {
-      sprintf(pe_tasks, "%s ", pe);  
-      show_ranges(pe_range, 0, NULL, lGetList(jep, JB_pe_range));
-      strcat(pe_tasks, pe_range);
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, 1);
+      sprintf(pe_tasks, "%s %s", pe, sge_dstring_get_string(&range_string));  
+      sge_dstring_free(&range_string);
       data->pe = XtNewString(pe_tasks);
    }
    else
@@ -1813,7 +1929,7 @@ char *prefix
       data->cwd = 0;
       
 #if FIXME
-   if (is_array(jep)) {
+   if (job_is_array(jep)) {
       data->task_range = lCopyList("JB_ja_structure", 
                                  lGetList(jep, JB_ja_structure));
    }
@@ -1830,9 +1946,9 @@ char *prefix
       }
    }
 
-   data->now = JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now));
+   data->now = JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type));
 
-   data->notify = lGetUlong(jep, JB_notify);
+   data->notify = lGetBool(jep, JB_notify);
 
    data->verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
 
@@ -1854,7 +1970,6 @@ int save
 ) {
    int len;
    char *job_script;
-   const char *cp;
    char *s;
    int reduced_job;
    char pe_tasks[BUFSIZ];
@@ -1874,13 +1989,20 @@ int save
    if (!reduced_job) {
       lSetString(jep, JB_directive_prefix, data->directive_prefix);
    
-      if (!save) {
+      if (!save && !ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
          /* Job Script/Name */
          lSetString(jep, JB_script_file, data->job_script);
-         job_script = str_from_file(data->job_script, &len);
+         job_script = sge_file2string(data->job_script, &len);
          lSetString(jep, JB_script_ptr, job_script);
          XtFree((char*)job_script);
          lSetUlong(jep, JB_script_size, len);
+      }
+
+      if (ISSET(submit_mode_data.sub_mode, SUBMIT_BINARY)) {
+         u_long32 type = lGetUlong(jep, JB_type);
+
+         JOB_TYPE_SET_BINARY(type);
+         lSetUlong(jep, JB_type, type); 
       }
    }
 
@@ -1888,36 +2010,32 @@ int save
       /* job with tasks */
       lList *range_list = NULL;
 
-      range_list = parse_ranges(data->job_tasks, 0, 1, &alp, NULL, INF_NOT_ALLOWED);
+      range_list_parse_from_string(&range_list, &alp, data->job_tasks,
+                                   0, 1, INF_NOT_ALLOWED);
 
       if (alp) {
          qmonMessageBox(qmon_submit, alp, 0);
          alp = lFreeList(alp);
          return False;
       }   
-         
-      if (!range_list) {
-         lListElem *tap = NULL;
-         tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
-         lSetUlong(tap, RN_max, 1);
-         lSetUlong(tap, RN_step, 1);
-      }
+        
+      /* initialize JB_ja_structure */
+      if (range_list == NULL) {
+         job_set_submit_task_ids(jep, 1, 1, 1);
+      } else {
+         if (!reduced_job) {
+            lSetList(jep, JB_ja_structure, range_list);
+         }
+         {
+            u_long32 job_type = lGetUlong(jep, JB_type);
+            JOB_TYPE_SET_ARRAY(job_type);
+            lSetUlong(jep, JB_type, job_type);
+         } 
+      } 
 
-#if 1 /* EB: TODO*/
       if (!reduced_job) {
-         lList *n_h_list, *u_h_list, *o_h_list, *s_h_list; 
-
-         n_h_list = lCopyList("range list", range_list);
-         u_h_list = lCreateList("user hold list", RN_Type);
-         o_h_list = lCreateList("operator hold list", RN_Type);
-         s_h_list = lCreateList("system hold list", RN_Type);
-         lSetList(jep, JB_ja_n_h_ids, n_h_list);
-         lSetList(jep, JB_ja_u_h_ids, NULL);
-         lSetList(jep, JB_ja_o_h_ids, NULL);
-         lSetList(jep, JB_ja_s_h_ids, NULL); 
-         lSetList(jep, JB_ja_structure, range_list);
+         job_initialize_id_lists(jep, NULL);      
       }
-#endif
    }
    else {   
       if (reduced_job) {
@@ -1934,25 +2052,10 @@ int save
          lSetList(jep, JB_ja_tasks, jat_list);
       }  
  
-#if 1 /* EB: TODO*/
       if (!reduced_job) {
-         lList *n_h_list;
-         lListElem *tap = NULL;
-         lList *range_list = NULL;
-
-         tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
-         lSetUlong(tap, RN_max, 1);
-         lSetUlong(tap, RN_step, 1);
-
-         n_h_list = lCopyList("range list", range_list);
-
-         lSetList(jep, JB_ja_n_h_ids, n_h_list);
-         lSetList(jep, JB_ja_u_h_ids, NULL);
-         lSetList(jep, JB_ja_o_h_ids, NULL);
-         lSetList(jep, JB_ja_s_h_ids, NULL);
-         lSetList(jep, JB_ja_structure, range_list);
-      }                       
-#endif
+         job_set_submit_task_ids(jep, 1, 1, 1);
+         job_initialize_id_lists(jep, NULL); 
+      }
    }
 
    if (!data->job_name || data->job_name[0] == '\0') {
@@ -1967,7 +2070,7 @@ int save
       lSetString(jep, JB_job_name, data->job_name);
    
    lSetString(jep, JB_project, data->project);
-   lSetString(jep, JB_checkpoint_object, data->ckpt_obj);
+   lSetString(jep, JB_checkpoint_name, data->ckpt_obj);
 
    /* 
     * Here would be the building of script filled job elem, these
@@ -1976,23 +2079,11 @@ int save
       
    /* environment */
    if (!reduced_job) {
-      cp = sge_getenv("HOME");
-      lSetString(jep, JB_sge_o_home, cp);
-      cp = sge_getenv("LOGNAME");
-      lSetString(jep, JB_sge_o_log_name, cp);
-      cp = sge_getenv("PATH");
-      lSetString(jep, JB_sge_o_path, cp);
-      cp = sge_getenv("MAIL");
-      lSetString(jep, JB_sge_o_mail, cp);
-      cp = sge_getenv("SHELL");
-      lSetString(jep, JB_sge_o_shell, cp);
-      cp = sge_getenv("TZ");
-      lSetString(jep, JB_sge_o_tz, cp);
       /*
       ** path aliasing
       */
-      if (build_path_aliases(&path_alias, me.user_name, me.qualified_hostname, 
-                           &alp) == -1) {
+      if (path_alias_list_initialize(&path_alias, &alp, me.user_name, 
+                                     me.qualified_hostname) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
             alp = lFreeList(alp);
@@ -2000,27 +2091,13 @@ int save
             return False;
          }   
       }
-      { 
-         static char cwd_out[SGE_PATH_MAX + 1];
-         static char tmp_str[SGE_PATH_MAX + 1];
-         if (!getcwd(tmp_str, sizeof(tmp_str))) {
-            sge_add_answer(&alp, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
-            if (alp) {
-               qmonMessageBox(qmon_submit, alp, 0);
-               alp = lFreeList(alp);
-               DEXIT;
-               return False;
-            }   
-         }
-         get_path_alias(tmp_str, cwd_out, 
-                           SGE_PATH_MAX, path_alias, 
-                           me.qualified_hostname, NULL);  
-         lSetString(jep, JB_sge_o_workdir, cwd_out);
+      job_initialize_env(jep, &alp, path_alias);
+      if (alp) {
+         qmonMessageBox(qmon_submit, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return False;
       }
-      cp = sge_getenv("HOST");
-      if (!cp)
-         cp = me.unqualified_hostname;
-      lSetHost(jep, JB_sge_o_host, cp);
    }
 
    /* 
@@ -2028,27 +2105,30 @@ int save
     */ 
    lSetUlong(jep, JB_priority, data->priority + (u_long32)BASE_PRIORITY);
    lSetUlong(jep, JB_execution_time, data->execution_time);
-   lSetUlong(jep, JB_merge_stderr, data->merge_output);
-   lSetUlong(jep, JB_notify, data->notify);
+   lSetBool(jep, JB_merge_stderr, data->merge_output);
+   lSetBool(jep, JB_notify, data->notify);
    lSetUlong(jep, JB_restart, data->restart);
    lSetUlong(jep, JB_deadline, data->deadline);
    {
-      u_long32 jb_now = lGetUlong(jep, JB_now);
+      u_long32 jb_now = lGetUlong(jep, JB_type);
       if(data->now) {
-         JB_NOW_SET_IMMEDIATE(jb_now);
+         JOB_TYPE_SET_IMMEDIATE(jb_now);
       } else {
-         JB_NOW_CLEAR_IMMEDIATE(jb_now);
+         JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
       }
-      lSetUlong(jep, JB_now, jb_now);
+      lSetUlong(jep, JB_type, jb_now);
    }   
 
    if (!reduced_job) {
       if (data->cwd) {
-         lSetString(jep, JB_cwd, cwd_string(lGetString(jep, JB_sge_o_home)));
+         const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
+         lSetString(jep, JB_cwd, cwd_string(env_value));
          lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
          path_alias = lFreeList(path_alias);
       }
+#if 0 /* JG: removed JB_cell from job object */     
       lSetString(jep, JB_cell, data->cell);
+#endif      
    }
 
    lSetString(jep, JB_account, data->account_string);
@@ -2073,7 +2153,7 @@ int save
          lList *ja_tasks = lGetList(jep, JB_ja_tasks);
 
          if (ja_tasks) {
-            if (is_array(jep)) {
+            if (job_is_array(jep)) {
                if (data->task_range) {
                   lListElem *range;
                   u_long32 start, end, step;
@@ -2113,9 +2193,10 @@ int save
 
          lXchgList(jep, JB_ja_n_h_ids, &task_ids);
          if (data->task_range) {
-            range_calculate_intersection_set(&u_h_ids, NULL, task_ids,
-                                             data->task_range);
-            range_calculate_difference_set(&n_h_ids, NULL, task_ids, u_h_ids);
+            range_list_calculate_intersection_set(&u_h_ids, NULL, task_ids,
+                                                  data->task_range);
+            range_list_calculate_difference_set(&n_h_ids, NULL, 
+                                                task_ids, u_h_ids);
          } else {
             u_h_ids = task_ids;
          }
@@ -2135,15 +2216,26 @@ int save
    lSetList(jep, JB_stdout_path_list, lCopyList("stdout",
                                              data->stdoutput_path_list));
    
+   DPRINTF(("JB_stdin_path_list %p\n", data->stdinput_path_list));
+   lSetList(jep, JB_stdin_path_list, lCopyList("stdin",
+                                             data->stdinput_path_list));
+   
    DPRINTF(("JB_stderr_path_list %p\n", data->stderror_path_list));
    lSetList(jep, JB_stderr_path_list, lCopyList("stderr", 
                                              data->stderror_path_list));
    
    DPRINTF(("JB_shell_list %p\n", data->shell_list));
    lSetList(jep, JB_shell_list, lCopyList("shell",data->shell_list));
-   
+  
    DPRINTF(("JB_env_list %p\n", data->env_list));
-   lSetList(jep, JB_env_list, lCopyList("env_list", data->env_list));
+   { 
+      lList *env_vars = lGetList(jep, JB_env_list);
+      lList *prefix_vars = NULL;
+   
+      var_list_split_prefix_vars(&env_vars, &prefix_vars, VAR_PREFIX);
+      lSetList(jep, JB_env_list, lCopyList("env_list", data->env_list));
+      lAddList(lGetList(jep, JB_env_list), prefix_vars);
+   }
 
    DPRINTF(("JB_ctx_list %p\n", data->ctx_list));
    lSetList(jep, JB_context, lCopyList("ctx_list", data->ctx_list));
@@ -2176,11 +2268,6 @@ int save
    lSetList(jep, JB_master_hard_queue_list, 
                lCopyList("master_hard_queue_list", data->master_queue_list));
 
-   DPRINTF(("data->qs_args is %s\n", 
-            data->qs_args ? "NOT NULL" : "NULL"));
-   lSetList(jep, JB_qs_args, 
-               lCopyList("qs_args", data->qs_args));
-
    DPRINTF(("data->hold_jid is %s\n", 
             data->hold_jid ? "NOT NULL" : "NULL"));
    lSetList(jep, JB_jid_predecessor_list, 
@@ -2192,7 +2279,8 @@ int save
       strcpy(pe_tasks, data->pe);
       pe = strtok(pe_tasks, " ");
       pe_range =  strtok(NULL, "\n");
-      perl = parse_ranges(pe_range, 0, 0, &alp, NULL, INF_ALLOWED);
+      range_list_parse_from_string(&perl, &alp, pe_range,
+                                   0, 0, INF_ALLOWED);
       if (pe && perl && !alp) { 
          lSetString(jep, JB_pe, pe);
          lSetList(jep, JB_pe_range, perl);
@@ -2281,6 +2369,22 @@ XtPointer cld, cad;
 
    if (!cbs->input || *(cbs->input) == '\0')
       qmonSubmitClear(w, NULL, NULL);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitCommitInput(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   char *cbs = (char *)cad;
+
+   DENTER(GUI_LAYER, "qmonSubmitCommitInput");
+
+   if (!cbs || *(cbs) == '\0') {
+      qmonSubmitClear(w, NULL, NULL);
+   }
 
    DEXIT;
 }
@@ -2446,6 +2550,26 @@ Widget w
                      qmonSubmitOkay, (XtPointer) stdoutput_list_w);
       XtAddCallback(cancel, XmNactivateCallback,
                      qmonSubmitCancel, (XtPointer) stdoutput_list_w);
+
+   }
+   
+   if (!stdinput_list_w) {
+      stdinput_list_w = XmtBuildQueryDialog( w, 
+                                       "submit_stdinput_list_shell", 
+                                       stdinput_list_resources, 
+                                       XtNumber(stdinput_list_resources), 
+                                       "stdinput_list_matrix", &matrix, 
+                                       "stdinput_list_cancel", &cancel,
+                                       "stdinput_list_okay", &okay,
+                                       "stdinput_list_reset", &reset,
+                                       NULL
+                                       );
+      XtAddCallback(reset, XmNactivateCallback, 
+                     qmonSubmitReset, (XtPointer) stdinput_list_w);
+      XtAddCallback(okay, XmNactivateCallback,
+                     qmonSubmitOkay, (XtPointer) stdinput_list_w);
+      XtAddCallback(cancel, XmNactivateCallback,
+                     qmonSubmitCancel, (XtPointer) stdinput_list_w);
 
    }
 
@@ -2672,7 +2796,7 @@ XtPointer cld, cad;
    }
    else
       qmonMessageShow(w, True, 
-            "@{Please configure a project first.}");
+            "@{Please configure a project first !}");
    
    DEXIT;
 }
@@ -2788,6 +2912,28 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
+static void qmonSubmitStdinList(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   DENTER(GUI_LAYER, "qmonSubmitStdinList");
+   /* 
+   ** get the values from the dialog fields, if there have been entries
+   ** in the main dialog get them to set them in the subdialog
+   */
+   XmtDialogGetDialogValues(submit_layout, &SMData);
+   
+   /*
+   ** set the entries in the helper dialog and pop it up
+   */
+   
+   XmtDialogSetDialogValues(stdinput_list_w, &SMData);
+   XtManageChild(stdinput_list_w);
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
 static void qmonSubmitEnvList(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
@@ -2850,10 +2996,24 @@ XtPointer cld, cad;
    /*
    ** reset sensitivity of stderr
    */
-   if (submit_mode_data.sub_mode != SUBMIT_QSH) {
+   if (!ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
       XtSetSensitive(submit_stderror, True);
       XtSetSensitive(submit_stderrorPB, True);
+   } else {
+      char buf[512];
+      String dsp = NULL;
+
+      XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
+      dsp = DisplayString(XtDisplay(w));
+      if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
+         sprintf(buf, "DISPLAY=%s%s", me.qualified_hostname, 
+                        dsp); 
+      else
+         sprintf(buf, "DISPLAY=%s", dsp); 
+      XmtInputFieldSetString(submit_env, buf); 
+      XmToggleButtonSetState(submit_now, 1, True);
    }
+
 
    /*
    ** change the resources pixmap icon if necessary
@@ -2864,7 +3024,6 @@ XtPointer cld, cad;
    ** clear message line
    */
    XmtMsgLineClear(submit_message, XmtMsgLineNow); 
-
 
    DEXIT;
 }
@@ -2928,7 +3087,7 @@ XtPointer cld, cad;
    }
 
    if (selectedItemCount == itemCount) {
-      XmtDisplayWarning(w, NULL, "There must be at least one mail address");
+      XmtDisplayWarning(w, "onemailaddress", "There must be at least one mail address.");
       DEXIT;
       return;
    }

@@ -32,18 +32,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_job_reportL.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_usageL.h"
+#include "sge_ja_task.h"
+#include "sge_usage.h"
 #include "sge_rusage.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_job_schedd.h"
-#include "job.h"
 #include "sge_schedd.h"
-#include "sge_spoolmsg.h"
+#include "sge_job.h"
+#include "sge_spool.h"
+#include "sge_report.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define ARCH_COLUMN ":%s"
@@ -69,13 +68,6 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
 #define SET_HOST_DEFAULT(jr, nm, s) if (!lGetHost(jr, nm)) \
                                       lSetHost(jr, nm, s);
 
-
-#define GET_ULONG_USAGE(lp, name, ep, def) \
-   ((ep=lGetElemStr(lp, UA_name, name))?(u_long32)lGetDouble(ep, UA_value):def)
-
-#define GET_DOUBLE_USAGE(lp, name, ep, def) \
-    ((ep=lGetElemStr(lp, UA_name, name))?lGetDouble(ep, UA_value):def)
-
 /* ------------------------------------------------------------
 
    write usage to a fileptr
@@ -91,26 +83,23 @@ FILE *fp,
 lListElem *jr,
 lListElem *jep,
 lListElem *jatp,
-char *category_str 
+const char *category_str 
 ) {
    int fprintf_count;
-   lListElem *ep;
    lList *usage_list;
-   const char *s;
+   const char *s, *pe_task_id_str;
 #ifdef NEC_ACCOUNTING_ENTRIES
    char arch_dep_usage_string[256] = "";
 #endif
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
-
-
    if (fp == NULL) {
       DEXIT;   
       return (-2);
    } 
    /* for tasks we take usage from job report */
-   if (lGetString(jr, JR_pe_task_id_str))
+   if ((pe_task_id_str=lGetString(jr, JR_pe_task_id_str)))
       usage_list = lGetList(jr, JR_usage);
    else
       usage_list = lGetList(jatp, JAT_usage_list);
@@ -159,27 +148,27 @@ char *category_str
 
       sprintf(arch_dep_usage_string, NECSX_ACTFILE_FPRINTF_FORMAT,
          arch_string,    
-         GET_ULONG_USAGE(usage_list, "necsx_base_prty", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_time_slice", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_num_procs", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_kcore_min", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_mean_size", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_maxmem_size", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_chars_trnsfd", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_blocks_rw", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_inst", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_vector_inst", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_vector_elmt", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_vec_exe", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_flops", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_conc_flops", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_fpec", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_cmcc", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_bccc", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_mt_open", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_io_blocks", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_multi_single", ep, 0),
-         GET_ULONG_USAGE(usage_list, "necsx_max_nproc", ep, 0)
+         usage_list_get_ulong_usage(usage_list, "necsx_base_prty", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_time_slice", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_num_procs", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_kcore_min", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_mean_size", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_maxmem_size", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_chars_trnsfd", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_blocks_rw", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_inst", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_vector_inst", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_vector_elmt", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_vec_exe", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_flops", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_conc_flops", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_fpec", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_cmcc", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_bccc", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_mt_open", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_io_blocks", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_multi_single", 0),
+         usage_list_get_ulong_usage(usage_list, "necsx_max_nproc", 0)
       );
 #else
       arch_dep_usage_string[0] = '\0';
@@ -197,42 +186,42 @@ char *category_str
           lGetString(jep, JB_job_name),
           lGetUlong(jr, JR_job_number),
           lGetString(jep, JB_account),
-          GET_ULONG_USAGE(usage_list, "priority", ep, 0), 
-          GET_ULONG_USAGE(usage_list, "submission_time", ep, 0),
-          GET_ULONG_USAGE(usage_list, "start_time", ep, 0),
-          GET_ULONG_USAGE(usage_list, "end_time", ep, 0),
+          usage_list_get_ulong_usage(usage_list, "priority", 0), 
+          usage_list_get_ulong_usage(usage_list, "submission_time", 0),
+          usage_list_get_ulong_usage(usage_list, "start_time", 0),
+          usage_list_get_ulong_usage(usage_list, "end_time", 0),
           lGetUlong(jr, JR_failed),
-          GET_ULONG_USAGE(usage_list, "exit_status", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_wallclock", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_utime", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_stime", ep, 0),
-          GET_DOUBLE_USAGE(usage_list, "ru_maxrss", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_ixrss", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_ismrss", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_idrss", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_isrss", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_minflt", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_majflt", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_nswap", ep, 0),
-          GET_DOUBLE_USAGE(usage_list, "ru_inblock", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_oublock", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_msgsnd", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_msgrcv", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_nsignals", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_nvcsw", ep, 0),
-          GET_ULONG_USAGE(usage_list, "ru_nivcsw", ep, 0),
+          usage_list_get_ulong_usage(usage_list, "exit_status", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_utime", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_stime", 0),
+          usage_list_get_double_usage(usage_list, "ru_maxrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_ixrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_ismrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_idrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_isrss", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_minflt", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_majflt", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nswap", 0),
+          usage_list_get_double_usage(usage_list, "ru_inblock", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_oublock", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_msgsnd", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_msgrcv", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nsignals", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nvcsw", 0),
+          usage_list_get_ulong_usage(usage_list, "ru_nivcsw", 0),
           lGetString(jep, JB_project) ? lGetString(jep, JB_project) : "none",
           lGetString(jep, JB_department) ? lGetString(jep, JB_department) : "none",
           (s = lGetString(jatp, JAT_granted_pe)) ? s : "none",
           sge_granted_slots(lGetList(jatp, JAT_granted_destin_identifier_list)),
-          is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0,
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_CPU_ACCT, ep, 0),
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_MEM_ACCT, ep, 0),
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IO_ACCT, ep, 0),
+          job_is_array(jep) ? lGetUlong(jatp, JAT_task_number) : 0,
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU_ACCT, 0),
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM_ACCT, 0),
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_IO_ACCT, 0),
           category_str?category_str:"none",
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IOW_ACCT, ep, 0),
-          "none", 
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_MAXVMEM_ACCT, ep, 0)
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_IOW_ACCT, 0),
+          pe_task_id_str?pe_task_id_str:"none",
+          usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM_ACCT, 0)
 #ifdef NEC_ACCOUNTING_ENTRIES
           ,arch_dep_usage_string
 #endif 
@@ -620,7 +609,17 @@ sge_rusage_type *d
    d->io = ((pc=strtok(NULL, ":")))?atof(pc):0;
 
    /* skip job category */
-   pc=strtok(NULL, ":");
+   while ((pc=strtok(NULL, ":")) &&
+          strlen(pc) &&
+          pc[strlen(pc)-1] != ' ' &&
+          strcmp(pc, "none")) {
+      /*
+       * The job category field might contain colons (':').
+       * Therefore we have to skip all colons until we find a " :".
+       * Only if the category is "none" then ":" is the real delimiter.
+       */
+      ;
+   }
 
    d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
 

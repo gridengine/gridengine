@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "shadowd"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   0
 set check_description(0)  "setting up shadowd on 2.nd execd, restart system, kill master, wait for new master, reset system"
 
@@ -113,11 +115,7 @@ set shadowd_moved_master_dir 0
 #     ???/???
 #*******************************
 proc init_level {} {
-  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
-
-  set queue "$CHECK_HOST.qdel_test"
-
-  
+  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state
 
   switch -- $CHECK_ACT_LEVEL {
      "0" {  return 0   } 
@@ -209,7 +207,6 @@ proc shadowd_setup {} {
    set file_p [ open "$CHECK_PRODUCT_ROOT/default/common/$shadowd_file" "w" ]
    puts $file_p $shadowd_hostname
    close $file_p   
-  
    set_error 0 "ok"
 }
 
@@ -422,10 +419,10 @@ proc shadowd_wait_for_startup {} {
 
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "removing qmasters lock ..."
-
-
+   puts $CHECK_OUTPUT "file: \"$shadowd_master_spool_dir/lock\""
+   
    start_remote_tcl_prog $CHECK_CORE_MASTER $CHECK_USER "file_procedures.tcl" "delete_file" "$shadowd_master_spool_dir/lock"
- 
+   
   
    set time [timestamp]
    while { 1 } {
@@ -444,7 +441,6 @@ proc shadowd_wait_for_startup {} {
    } 
    
    wait_for_load_from_all_queues 600
-
    set_error 0 "ok"
 }
 
@@ -560,7 +556,6 @@ proc shadowd_cleanup {} {
       puts $CHECK_OUTPUT "restoring old qmaster spool directory"
       move_qmaster_spool_dir $shadowd_original_master_spool_dir
    }
-
    set_error 0 "ok"
 }
 

@@ -49,10 +49,7 @@
 
 #include "cull.h"
 #include "sge_load_sensor.h"
-#include "sge_load_reportL.h"
-#include "sge_peopen.h"
 #include "sgermon.h"
-#include "sge_me.h"
 
 struct times {
    int sek;

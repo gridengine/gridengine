@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>Install on systems with multiple network interfaces</TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT="Paulo Bulhoes">
+	<META NAME="CREATED" CONTENT="20021004;13113800">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20021122;11332900">
+	<STYLE>
+	<!--
+		@page { margin-left: 3.18cm; margin-right: 3.18cm; margin-top: 2.54cm; margin-bottom: 2.54cm }
+		H1 { color: #000000 }
+		P { color: #000000 }
+		H2 { color: #000000 }
+		H3 { color: #000000 }
+		PRE { color: #000000 }
+		A:link { color: #0000ee }
+		A:visited { color: #551a8b }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" TEXT="#000000" LINK="#0000ee" VLINK="#551a8b" BGCOLOR="#ffffff">
+<H1><FONT SIZE=4>How to install the Grid Engine software on hosts
+with multiple network interfaces </FONT>
+</H1>
+<P STYLE="margin-bottom: 0cm">This document describes how to install
+Grid Engine on machines with multiple network interafces (multi-homed
+host). A special case, using the Solaris<SUP>TM</SUP> Operating
+Environment IP Multipathing (IPMP) technology for IP failover, is
+described in a <A HREF="howto_ipmp_ge.html">separate HOWTO</A>.</P>
+<H2><B>Systems on multiple networks</B></H2>
+<P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+Suppose we have two ethernet interfaces (say hme0 and hme1) on each
+machine. One interface is associated with general traffic, NFS file
+sharing and so on</P>
+<P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+(hme0) and the other is dedicated to Grid Engine communications
+(hme1). We would like to set up Grid Engine so that it communicates
+only on the Grid Engine dedicated network. In this example, there is
+a Grid Engine master node (sun-master) and three exec hosts (sun-1,
+sun-2, sun-3)</P>
+<H3>Setting up the networks</H3>
+<P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+In /etc, there will be file called hostname.hme0 populated with the
+hostname (eg sun-1) and another file called hostname.hme1 populated
+with the grid engine interface name (eg sun-1-grid). In the
+/etc/hosts file, there should of course, be entries for the SGE
+interface as well as the standard interface</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<PRE>#
+# Grid Engine Network 
+#
+192.168.7.2     sun-master-grid
+192.168.7.3     sun-1-grid
+192.168.7.11    sun-2-grid
+192.168.7.12    sun-3-grid</PRE><P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+When both networks are functioning correctly, install gridengine.</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<H3>Making Grid Engine use the SGE network</H3>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Install SGE on all hosts.</P>
+	<LI><P STYLE="margin-bottom: 0cm">Under SGE_ROOT/SGE_CELL/common,
+	create a file named host_aliases and populate as follows.</P>
+	<PRE># cat host_aliases
+sun-master-grid sun-master
+sun-1-grid sun-1
+sun-2-grid sun-2
+sun-3-grid sun-3</PRE>
+	<LI><P STYLE="margin-bottom: 0cm">Check that SGE can resolve all the
+	hostnames correctly:</P>
+	<PRE># cd /gridware/sge/utilbin/solaris64
+# ./gethostbyname -aname sun-1
+sun-1-grid
+# ./gethostbyname -aname sun-1-grid
+sun-1-grid
+# </PRE>
+</UL>
+<H3>Modify the configuration</H3>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Shut down the exec hosts</P>
+	<PRE># /etc/init.d/rcsge stop
+/gridware/sge/default/spool/sun-1-grid/active_jobs: No such file or directory
+   Shutting down Grid Engine communication daemon
+# ps -ef |grep sge
+#</PRE>
+	<LI><P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+	And then also shut down the master, usiing the same command</P>
+	<LI><P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+	Alter the file SGE_ROOT/SGE_CELL/common/act_qmaster to read the name
+	of the masters' grid engine interface rather than the hostname (eg
+	sun-master-grid) 
+	</P>
+</UL>
+<H3>Startup Grid Engine</H3>
+<P STYLE="margin-bottom: 0cm; font-style: normal; font-weight: medium">
+Start up the master node now:</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<PRE># /etc/init.d/rcsge
+   starting sge_qmaster
+starting program: /gridware/sge/bin/solaris64/sge_commd
+using service &quot;sge_commd&quot;
+bound to port 536
+Reading in complexes:
+        Complex &quot;host&quot;.
+        Complex &quot;queue&quot;.
+Reading in execution hosts.
+Reading in administrative hosts.
+Reading in submit hosts.
+Reading in usersets:
+        Userset &quot;defaultdepartment&quot;.
+        Userset &quot;deadlineusers&quot;.
+Reading in queues:
+        Queue &quot;sun-1.q&quot;.
+        Queue &quot;sun-2.q&quot;.
+        Queue &quot;sun-3.q&quot;.
+Reading in parallel environments:
+        PE &quot;make&quot;.
+Reading in scheduler configuration
+cant load sharetree (cant open file sharetree: No such file or directory), 
+starting up with empty sharetree
+   starting sge_schedd
+# </PRE><P STYLE="margin-bottom: 0cm">
+<BR>
+</P>
+<P STYLE="margin-bottom: 0cm">Now start up the SGE exec hosts</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<PRE># /etc/init.d/rcsge start
+   starting sge_execd
+starting program: /gridware/sge/bin/solaris64/sge_commd
+using service &quot;sge_commd&quot;
+bound to port 536
+#</PRE><H3>
+Check it has worked</H3>
+<P STYLE="margin-bottom: 0cm">Snoop the network to check that the
+correct interfaces are being used:</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<PRE># qsub -q sun-1 test.sh
+# snoop -V -d hme1 sun-1-grid
+sun-master-grid -&gt; sun-1-grid TCP D=46883 S=536 Syn Ack=2694354350 \
+  Seq=2537161622 Len=0 Win=49640 Options=&lt;mss 1460,nop,nop,sackOK&gt;
+sun-1-grid -&gt; sun-master-grid TCP D=536 S=46883 Ack=2537161623 \
+  Seq=2694354350 Len=0 Win=49640
+
+<B>Trademarks</B> </PRE><P>
+Sun and Solaris are trademarks or registered trademarks of Sun
+Microsystems, Inc. in the United States and other countries. Sun et
+Solaris sont des marques d&eacute;pos&eacute;es ou enregistr&eacute;es
+de Sun Microsystems, Inc. aux Etats-Unis et dans d'autres pays. 
+</P>
+</BODY>
+</HTML>

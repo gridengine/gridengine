@@ -1,5 +1,5 @@
 <HTML>
-<BODY>
+<BODY BGCOLOR=white>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
@@ -118,8 +118,8 @@ FORMAT
   when
      The points of time when checkpoints are expected to be  gen-
      erated.  Valid values for this parameter are composed by the
-     letters <I>s</I>, <I>m</I> and <I>x</I> and any combinations thereof without  any
-     separating  character  in  between.  The  same  letters  are
+     letters <I>s</I>, <I>m</I>, <I>x</I> and <I>r</I> and any combinations  thereof  without
+     any  separating  character  in between. The same letters are
      allowed for the -<I>c</I> option of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> command which  will
      overwrite the definitions in the used checkpointing environ-
      ment.  The meaning of the letters is defined as follows:
@@ -136,6 +136,13 @@ FORMAT
           as  soon as the job gets suspended (manually as well as
           automatically).
 
+     <I>r</I>    A job will be rescheduled (not checkpointed)  when  the
+          host  on which the job currently runs went into unknown
+          state and the  time  interval  <I>reschedule</I>_<I>unknown</I>  (see
+          <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>) defined in the global/local cluster confi-
+          guration will be exceeded.
+
+
 RESTRICTIONS
      Note, that the functionality of any checkpointing, migration
      or  restart  procedures  provided  by  default with the Grid
@@ -150,6 +157,7 @@ RESTRICTIONS
      proper fashion, the checkpointing mechanism may behave unex-
      pectedly, Grid Engine has no means to detect this.
 
+
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,   <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,
      <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
@@ -157,6 +165,50 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </PRE>
 <HR>

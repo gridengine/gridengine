@@ -36,26 +36,20 @@ DAEMONS_COMMON_DIR = $(SDIR)/daemons/common
 
 DAEMONS_COMMON_SRC = admin_mail.c \
                     category.c \
-                    config_file.c \
                     err_trace.c \
                     job_log.c \
-                    job_report.c \
                     lock.c \
                     mail.c \
-                    opt_silent.c \
                     qlogin_starter.c \
                     qmaster_heartbeat.c \
                     qmaster_running.c \
-                    read_write_job.c \
-                    setenv.c \
                     setosjobid.c \
                     shutdown.c \
                     startprog.c \
                     unparse_job_cull.c \
                     sge_processes_irix.c \
                     pdc.c \
-                    procfs.c \
-                    utility_daemon.c
+                    procfs.c
 
 DAEMONS_COMMON_OBJS = $(DAEMONS_COMMON_SRC:.c=.o)
 
@@ -91,26 +85,17 @@ admin_mail.o : $(DAEMONS_COMMON_DIR)/admin_mail.c
 category.o:	$(DAEMONS_COMMON_DIR)/category.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/category.c
 
-config_file.o:  $(DAEMONS_COMMON_DIR)/config_file.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/config_file.c
-
 err_trace.o:	$(DAEMONS_COMMON_DIR)/err_trace.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) $(MEMCFLAG) -c $(DAEMONS_COMMON_DIR)/err_trace.c
 
 job_log.o   : $(DAEMONS_COMMON_DIR)/job_log.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/job_log.c
 
-job_report.o   : $(DAEMONS_COMMON_DIR)/job_report.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/job_report.c
-
 lock.o: 	$(DAEMONS_COMMON_DIR)/lock.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/lock.c
 
 mail.o:		$(DAEMONS_COMMON_DIR)/mail.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/mail.c
-
-opt_silent.o: $(DAEMONS_COMMON_DIR)/opt_silent.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/opt_silent.c
 
 qlogin_starter.o: $(DAEMONS_COMMON_DIR)/qlogin_starter.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/qlogin_starter.c
@@ -120,12 +105,6 @@ qmaster_heartbeat.o: $(DAEMONS_COMMON_DIR)/qmaster_heartbeat.c
 
 qmaster_running.o:	$(DAEMONS_COMMON_DIR)/qmaster_running.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/qmaster_running.c
-
-read_write_job.o:	$(DAEMONS_COMMON_DIR)/read_write_job.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/read_write_job.c
-
-setenv.o:	$(DAEMONS_COMMON_DIR)/setenv.c
-		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/setenv.c
 
 setosjobid.o: $(DAEMONS_COMMON_DIR)/setosjobid.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/setosjobid.c
@@ -148,5 +127,3 @@ pdc.o: 	$(DAEMONS_COMMON_DIR)/pdc.c
 procfs.o: 	$(DAEMONS_COMMON_DIR)/procfs.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(DAEMONS_COMMON_DIR)/procfs.c
 
-utility_daemon.o   : $(DAEMONS_COMMON_DIR)/utility_daemon.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/utility_daemon.c

@@ -1,4 +1,1967 @@
+JG-2003-01-02-0  Enhancem.  Prevent lex scanner to be generated after each 
+                            checkout. Instead, the checked in scanner is used.
+
+SD-2002-12-19-2  Enhancem.  A new qmaster_params attribute called
+                            SCHEDULER_TIMEOUT will allow the scheduler GDI event
+                            acknowledge timeout (default is 10 minutes) to be
+                            configured to a specific value. I have also added
+                            GEEE profiling information which reports the number
+                            of seconds required for specific parts of GEEE
+                            scheduling (pending job ticket calculation, job
+                            sorting, active job ticket calculation, and job
+                            placement). These changes will provide additional
+                            feedback for further reducing job scheduling
+                            overhead and improving scheduler scalability.
+
+AH-2002-12-19-1  Bugfix     job arguments larger than 10k crash qmaster
+                            and introduced static dstrings
+                 IZ:        #440
+                 Bugtraq:   #4792036
+                 Review:    EB
+
+JG-2002-12-19-0  Bugfix:    - Accesstree was corrupted in the sge scheduler due
+                              to a bug in the event handling.
+                            - Wrong error output if a userlist shall be deleted
+                              that is still referenced in an execution host.
+
+JG-2002-12-18-0  Bugfix:    Fixed problem with ACK mechanism between qmaster 
+                            and execd.
+                 IZ:        #352
+                 Testsuite: Fixed problem retrieving local spool directory.
+
+CR-2002-12-18-0  Testsuite: Fixed bug which will result in a timeout error
+                            when testsuite tries to delete a local spool
+                            directory on a remote host
+
+JG-2002-12-17-0  Enhancem.  Improved performance / scalability for job submit.
+
+JG-2002-12-16-0  Bugfix:    qrsh without command reported "protocol error".
+                 IZ:        #431
+
+AH-2002-12-12-1  Bugfix     conflicting policies can cause job being started and
+                            immediately suspended
+                 IZ:        #437
+                 Bugtraq:   #4790592
+                 Bugfix     failover to shadow master leaves sge_schedd on the
+                            original qmaster host
+                 IZ:        #441
+                 Bugtraq:   #4787623
+                 Review:    AS
+
+JG-2002-12-12-0  Cleanup:   More general handling for code deleting from 
+                            ranges in job handling.
+                            Removed unneccessary and expensive range handling 
+                            in job_enroll().
+                            Improved (example scheduler) simple_scheduler.
+
+EB-2002-12-11-1  Bugfix:    Eleminated compilation warnings for architecture
+                            glinux in combination with gcc 3.2
+
+EB-2002-12-11-0  Bugfix:    job logging file exists but is empty in certain
+                            configurations
+                 IZ:        #439
+                 Bugtraq:   #4791908
+                 Review:    AS
+
+JG-2002-12-10-0  Enhancem.: Create separate libraries for different spooling
+                            methods.
+                 Bugfix:    Fixed broken build for creation of shared SGE libs.
+
+EB-2002-12-09-0  Bugfix:    qstat -j shows messages concerning queues although 
+                            schedd_job_info=false
+                            sge_schedd process consumes more memory than needed
+                            if schedd_job_info=true
+                            Job notification signals won't be delivered if 
+                            user redefines suspend_method or terminate_method
+                 IZ:        #432 #435 #436
+                 Bugtraq:   #4787598 #4790540 #4790547
+                 Review:    JG
+
+CR-2002-12-09-1  Testsuite: migration test now L10N compatible
+
+CR-2002-12-09-0  Testsuite: Removing evtl. existing access lists in 
+                            install_core_system check 
+
+CR-2002-12-06-2  Testsuite: Fixed bug in submit_del test ( running on system
+                 Bugfix:    with large queue count will report errors on 
+                            starup )
+
+CR-2002-12-06-1  Testsuite: Fixed bug in access_lists test for sge systems
+                 Bugfix:
+
+CR-2002-12-06-0  Testsuite: - Setting shared library path in start_remote_prog()
+                            - Changed parameter settings for some tests
+
+JG-2002-12-05-0  Bugfix:    Script submission for qrsh broke tight integration.
+
+CR-2002-12-05-1  Testsuite: fixed errors in error_states check and complex
+                 Bugfix:    check
+
+CR-2002-12-05-0  Bugfix:    Used wrong macro (SFQ) for fixing messages macros 
+                            in commit CR-2002-12-03-1
+
+CR-2002-12-04-0  Testsuite: Running more than one testsuite on the same host
+                 Bugfix:    causes problems, because both testsuites will use
+                            same files in local /tmp directory
+                            - new procedures: get_tmp_directory_name() and
+                                              get_tmp_file_name()
+                 Issue:     #381
+
+EB-2002-12-04-1  Testsuite: Fixed bug in checktree/functional/binary_submission
+
+CR-2002-12-03-1  L10N:      Modified messages for spool files. 
+                            The "#" (comment start) sign should not belong to 
+                            l10n message.
+
+CR-2002-12-03-0  Testsuite: a) Bugfix: procedure del_access_list()
+                            b) Added new error handling for submit_job() 
+                               (error open file) The error handling is used by 
+                               binary_submission test.
+
+CR-2002-12-02-2  Testsuite: a) test job_environment:
+                               report only warning for JOB_NAME bug if version
+                               is <= 5.3p2
+                            b) removed qrsh_trap test from qrsh test
+
+CR-2002-12-02-1  Testsuite: a) setting default configuration max_unheard to
+                               00:01:00
+                            b) new procedure: soft_execd_shutdown() 
+
+CR-2002-12-02-0  Testsuite: a) Removed unused, duplicate message macro from 
+                               source
+                            b) Removed wait_for_enter() call in submit_del test
+                               after pass2 (blocked automatic testsuite run)
+
+CR-2002-11-29-1  Testsuite: L10N bugfixes
+
+CR-2002-11-29-0  Testsuite: a) using testsuite root directory for lockfile, not
+                 Bugfix:       testsuite results directory.
+                            b) get_version_info() may not reset 
+                               install_core_system
+                               test if version is not ascertainable.
+
+CR-2002-11-28-2  Cleanup:   un-commented message macros not used in source code
+                 L10N:
+
+CR-2002-11-28-1  Testsuite: added code to un-comment unused message macros
+                            ( code itself is also un-commented in procedure
+                              check_c_source_code_files_for_macros() )
+
+CR-2002-11-27-3  Cleanup:   a) removed/corrected duplicate message ids
+                 Testsuite: b) handle_vi_edit() procedure reports now an error
+                               if no expected parameter string matches the 
+                               output of vi.
+
+CR-2002-11-27-2  Testsuite: removed hostname parameter in translate call. Using
+                 Bugfix:    asterisk "*" instead. Now long hostnames will not
+                 L10N:      influent string parsing anymore.
+
+CR-2002-11-27-1  Testsuite: a) submit_del check: debug modifications
+                            b) new procedure: 
+                               check_c_source_code_files_for_macros()
+                               This procedure will return macros, that are
+                               unused in source code.
+                            c) open_remote_spawn_process() closing connection
+                               when execution script not exists on remote host.
+
+CR-2002-11-27-0  Testsuite: a) get_version_info() must test if product mode file
+                 Bugfix:       exists, before opening the file. If file wasn't
+                               available a TCL error occured.
+                            b) increased default timeout for submit_job() and
+                               added more debug output for timeout errors.
+
+CR-2002-11-26-0  Testsuite: increased timeouts in qmaster complex check. Old
+                            timeout was too short to let the execd load values
+                            timeout at qmaster.
+
+CR-2002-11-25-1  Testsuite: a) start_remote_tcl_prog() in shadowd test broken, 
+                 Bugfix:       because of new testsuite configuration file 
+                               setup (checked in CR-2002-11-20-0). 
+                            b) project_access_lists test used wrong sge_macro()
+                               call for 5.3p2 system
+                            
+
+EB-2002-11-25-1  Bugfix:    qstat -f output broken for pe jobs on same queue
+                 IZ:        #430
+                 Review:    CR
+
+EB-2002-11-25-0  Bugfix:    qsh -q hostname is not working
+                 IZ:        #429
+                 Review:    JG
+
+CR-2002-11-25-0  Testsuite: test binary_submission -> added version check -
+                               check works only for 
+                               sge/ee version > SGE(EE) 5.3p2
+
+CR-2002-11-22-3  Testsuite: qmod - reschedule test:
+                               parallel job test should not submit job with
+                               -t 1 parameter (-t 1 is now a task job, this
+                               leaded into a missinterpretation of testsuite)
+
+CR-2002-11-22-2  Testsuite: qrsh output change in maintrunc - adapted changes
+                            into testsuite
+
+CR-2002-11-22-0  Bugfix:    Uninitialized pointer caused segmentation fault in 
+                            qsh/qrsh on submit only hosts.
+                 Testsuite: more info output for submit_hosts test
+
+CR-2002-11-21-1  Testsuite: new testsuite configuration parameter: 
+                            add_compile_archs
+                              - new ts_config_version is 1.2
+                              - Forced compilation for specified architectures
+                              
+
+CR-2002-11-21-0  Testsuite: remove source code macro dump file after source
+                            code update ( procedure compile_source() ) and
+                            create a new one.
+
+CR-2002-11-20-1  Testsuite: install_core_system check doesn't work without 
+                 Bugfix:    root password (noroot)
+
+CR-2002-11-20-0  Testsuite: Added l10n enhancements, new configuration files
+                            (new procedures for file spooling, gettext features,
+                             sge_macro (use macros from source code) ...)
+
+EB-2002-11-15-0  Testsuite: Added new tests which will find bug #126
+                 IZ:        #427
+
+EB-2002-11-20-0  Bugfix:    race condition if signals are to be delivered in
+                            job's startup phase
+                 IZ:        #126
+                 Bugtraq:   #4780316
+                 Review:    AH
+
+CR-2002-11-19-3  L10N       - modified message definitions
+                            - new command line parameters for infotext:
+                              raw     : return localized format string
+                              __eoc__ : stop option parsing (after this option)
+
+JG-2002-11-19-0  Enhancem.: First part of a flat file spooling module
+                            containing generic functions for input/output
+                            of any objects in different formats.
+                 Cleanup:   Several cleanup issues done in libuti and libgdi.
+
+AH-2002-11-18-1  Bugfix:    Complex values for user defined complexes
+                              are rejected with global host.
+                 IZ         418
+                 Bugtraq    4776754
+                 Review     AS
+
+EB-2002-11-15-0  Testsuite: Added two new tests which try to find
+                            bug #402 and #423
+                 IZ:        #425, #426
+
+AA-2002-11-14-0  Kerberos:  changes to fix build problems with krb5
+
+EB-2002-11-14-0  Bugfix:    - memopy leak in execd
+                            - stepsize 0 in array job specification
+                              results in qmaster exception
+                            - job env variables SGE_TASK_* might be
+                              overwritten by qsub -v
+                 IZ:        #423, #424, #402, #264
+                 Bugtraq:   #4778757, #4778758, #4778762
+                 Review:    partially AH
+
+EB-2002-11-12-0  Enhancem.: Allow qsub -b y to handle built-in commands
+                 Issue:     #25 #26
+                 Review:    AH
+
+JG-2002-11-04-0  Enhancem.: Added utility functions for profiling.
+                            Made scheduler use these profiling functions 
+                            instead of former explicit implementation.
+                            Made event mirror and spooling test client use 
+                            profiling functions.
+
+EB-2002-11-04-0  Enhancem.: Allow binary submission with qsub and
+                            allow script submission with qrsh
+                 Issue:     #25 #26
+                 Review:    AH
+
+JG-2002-10-31-2  Bugfix:    Event mirror interface: the event 
+                            sgeE_JOB_MOD_SCHED_PRIORITY was not handled 
+                            correctly.
+                            Spooling framework (classic): Removing local 
+                            configurations used incorrect path.
+
+JG-2002-10-31-1  Bugfix:    shepherd dumped core when starting command with
+                            unix behaviour (e.g. pe_start procedure).
+
+JG-2002-10-31-0  Enhancem.  Documentation and some small enhancements for the 
+                            spooling framework.
+                            Adapted naming conventions and wrote documentation 
+                            for a number of functions in libgdi.
+
+JG-2002-10-29-0  Enhancem.  Initial part of a spooling framework supporting
+                            the current "classic" spooling.
+                            A test program is provided mirroring all spooled
+                            data to a separate directory structure.
+                            Further documentation and fine tuning still to
+                            be done.
+
+JG-2002-10-24-0  Testsuite: qrsh tight integration test used unsupported
+                            qrsh -inherit option -N
+
+SD-2002-10-17-0  Bugfix:    SGEEE - Fixed bug in the pending functional
+                            ticket calculation which incorrectly
+                            calculated the number of functional tickets
+                            for some pending jobs.
+                 Changed:   sge_schedd
+
+AA-2002-10-16-0  BUGFIX:    openssl0.9.6g in aimk.site
+
+SD-2002-10-15-1  Bugfix:    Fix no newline problem with path aliases file
+                            If the last line in the path aliases file 
+                            (sge_aliases) did not have a new line, qsub would 
+                            core.
+                 IZ:        398
+                 Changed:   qsub, qsh, qmon, ...
+
+JG-2002-10-15-0  Bugfix:    compilation failed using gcc-3.x
+                 IZ:        #395
+                 Enhancem.  Introduced new module libs/gdi/sge_usage that
+                            contains usage and usage list related functions.
+                 IZ:        #397
+
+AA-2002-10-15-0  I18N:      dist/locale/en/qmon_messages.ad and qmon_help.ad
+                            added
+
+JG-2002-10-14-0  Bugfix:    Reduce communication overhead of sending orders
+                            and setting busy state of scheduler by using one
+                            sge_gdi_multi request.
+                            Removed misleading debug output in event client
+                            interface.
+                 IZ:        #307           
+
+JG-2002-10-11-3  Enhancem.  Replaced explicit event handling of sge_schedd by 
+                            the use of the event mirror interface.
+                 IZ:        #351
+
+JG-2002-10-11-2  Bugfix:    Fixes in event mirror interface:
+                            - events for queue (un)suspend on subordinate were 
+                              not handled
+                            - fixed a potential memory leak
+
+JG-2002-10-11-1  Bugfix:    Changing the event delivery interval of an event 
+                            client had only effect for the next but one 
+                            delivery.
+
+JG-2002-10-11-0  Bugfix:    qlogin and qrsh checked the DISPLAY variable
+                            this is only necessary for qsh.
+
+AH-2002-10-10-1  Bugfix:    Fix problem with user .cshrc error causing
+                            [pro|epi]log,pe-[start|stop] failure and setting 
+                            queue into error state.  [pro|epi]log,pe-[start|stop] 
+                            are now started with "unix_behavior" i.e plain
+                            execvp(). This allows admins to prevent .cshrc/.profile
+                            from being sourced when #!/bin/csh -f or #!/bin/sh -f is
+                            used.
+                 IZ:        391
+                 Bugtraq:   4756556
+                 Review:    AS
+                 Changed    sge_shepherd
+
+JG-2002-10-08-2  Bugfix:    An eventclient processing events slower than
+                            the event delivery interval could get into
+                            an endless loop.
+
+AH-2002-10-08-1  Bugfix:    Commd read the host alias file each time when
+                            a hostname was not found in commd's host list.
+                            Now host alias file is read only at commd 
+                            startup or when a COMMD_UNIQUEHOST request with
+                            refresh_aliases = true is received.
+                 Review:    AS
+                 Changed:   sge_commd
+
+JG-2002-10-08-1  Bugfix:    Fixed memory access problem in event mirror 
+                            interface.
+
+JG-2002-10-08-0  Bugfix:    Fixed memory leaks and uninitialized pointer 
+                            problems.
+
+AH-2002-10-07-1  Bugfix:    Fixed problem with non-resvolvable hosts in
+                            host_aliases file causing wrong resolving results.
+                 IZ:        392
+                 Bugtraq:   4756557
+
+CR-2002-10-02-1  Testsuite: added sleep 1 command in procedure "delete_job" and
+                 Workaround increased wait timeout. Testsuite seems to have problems
+                            with deleting jobs. This may be connected with IZ issue
+                            #126 (qdel of just submitted job). When the signal  
+                            delivering bug is fixed, the timeout and the sleep
+                            should be taken back.
+
+EB-2002-10-02-0  Cleanup:   division by zero does not cause core
+                 IZ:        390
+                 Changed:   all binaries for solaris[64|86] architecture
+
+JG-2002-10-01-0  Enhancem.  Initial Part of port for HP-UX 11 64 bit
+
+CR-2002-10-01-0  Bugfix:    got compiler warning "unused variable `src_qname'"
+
+EB-2002-09-25-0  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog
+                            for pending jobs.
+                 IZ:        388 
+                 Changed:   qmon
+
+EB-2002-09-30-0  Bugfix:    Fix of EB-2002-09-12-1.
+
+JG-2002-09-30-0  Enhancem.  Created a "simple scheduling interface" for the
+                            integration of the MAUI scheduler.
+                            source/libs/sched/simple_scheduler.c contains an 
+                            example how to use it.
+                 IZ:        #339
+
+CR-2002-09-30-0  Testsuite: - qsh/qrsh does not accept -o/-e arguments anymore
+                 Bugfix:    - added version support for 5.3.1beta9 and
+                              5.3p2
+
+EB-2002-09-25-1  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog
+                            for pending jobs.
+                 IZ:        #388 
+                 Changed:   qmon
+
+EB-2002-09-25-0  Bugfix:    qconf gets commd timeout
+                 IZ:        #308
+                 Bugtraq:   #4753669
+                 Review:    AH
+                 Changed:   qconf
+
+CR-2002-09-25-0  Testsuite  error when comparing host architectures and
+                            detecting duplicate compile hosts
+                 Bugfix:    
+
+CR-2002-09-24-1  Testsuite  Testsuite enhancement to test final packages
+                 Enhancem.
+                 IZ:        #369
+
+CR-2002-09-24-0  Bugfix:    using SGE_STRUCT_STAT macro instead of
+                            "struct stat". Reason: compile error for
+                            SOLARIS86
+
+CR-2002-09-23-3  Bugfix:    2 sentences need to be i18ned in master 
+                 Bugtraq:   #4746079
+
+JG-2002-09-23-0  Enhancem.  Created a gdi library interface (sge_mirror) 
+                            for the mirroring of qmaster lists.
+                 IZ:        #351           
+
+CR-2002-09-23-0  Bugfix:    infotext doesn't support the reorder of conversion
+                            specifications (merge)
+                 Bugtraq:   #4739811
+                            Bug not fixed for ALPHA, ALPHA5, ALINUX architecture
+
+CR-2002-09-20-1  Bugfix:    infotext doesn't support the reorder of conversion
+                            specifications (merge)
+                 Bugtraq:   #4739811
+
+SD-2002-09-19-0  Bugfix:    Fixed restart_command for checkpoint jobs
+                 IZ:        #383
+                 Changed:   sge_shepherd
+
+JG-2002-09-17-1  Bugfix:    qsh jobs without or with local DISPLAY variable
+                            set have to be rejected.
+                 IZ:        #342
+                 Bugtraq:   #4744523
+                 Changed:   sge_qmaster, sge_execd, qsh, submit.1
+
+JG-2002-09-17-0  Bugfix:    If a task of a tightly integrated job died through 
+                            a signal (e.g. SIGXCPU), the job was not terminated
+                            and the signalling information not visible in the 
+                            accounting record.
+                 Bugtraq:   #4747829
+                 IZ:        #379
+
+CR-2002-09-16-1: Bugfix:    - removed message l10n for mail subjects
+
+CR-2002-09-13-1: Testsuite: - "-secure" now default aimk compile option
+                 Enhancem.: - try to get DISPLAY from user environment at 
+                              startup
+                            - removed all "gets stdin" statements in expect/tcl
+                              scripts due expect "interact" problem. Using now
+                              a shell script for user input. This is a workaround
+                              for a "hanging" vi unter expect control. "gets stdin"
+                              seems to "block" the stdin for expect "interact" command
+                            - new menu entry: "(26) enter testsuite setup"
+                            - new menu entry: "(27) set command line options"
+                              (change testsuite options without exit testsuite;this
+                               enables the user to change setup without terminate
+                               testsuite -> existing rlogins stay open)
+                              (master and scheduler debug and setting SGE_DEBUG_LEVEL
+                               can now also changed "online")
+
+CR-2002-09-13-0: Bugfix:    Typo in message
+                 Bugtraq:   #4746705
+
+EB-2002-09-12-2: Cleanup:   Added two functions which might be used to
+                            retrieve the size of a CULL-list or element:
+                              cull_get_list_packsize()
+                              cull_get_elem_packsize()
+
+EB-2002-09-12-1: Bugfix:    msg size used in tight PE integr. job start sync.
+                            protocol should be smaller
+                 Issue:     #213
+                 Bugtraq:   #4658706
+                 Review:    AH
+                 Changed:   sge_execd, sge_qmaster
+
+EB-2002-09-12-0  Bugfix:    protocot doing termin. on failure for tightly
+                            integr. par. job could be leaner
+                 Issue:     #214
+                 Bugtraq:   #4658716
+                 Review:    AH
+                 Changed:   sge_qmaster
+
+JG-2002-09-12-1  Bugfix     qrsh and qlogin accept unexpected options.
+                            qsh/qrsh/qlogin did not accept options
+                            -ac, -dc, -sc and -w
+                 IZ:        #325
+                 Bugtraq:   #4716824
+                 Changed:   qsh
+
+JG-2002-09-12-0  Bugfix:    qmake without information about parallel execution
+                            on commandline failed.
+                            qmake made an incorrect resource request if the
+                            ARCH environment variable was an empty string.
+                 IZ:        #335, #327
+                 Bugtraq:   #4745399, 4745404
+                 Changed:   qmake
+
+EB-2002-09-11-0  Bugfix:    schedd_job_info = true causes immense daemons
+                            memory growth
+                 IZ:        #374
+                 Bugtraq:   #4742189
+                 Review:    AH
+                 Changed:   sge_schedd
+
+EB-2002-09-10-0  Enhancem.: Initial Part of AIX 5.1 port
+                 Review:    JG
+
+CR-2002-09-10-1  Bugfix:    L10N - (setlocale() returns e.g. fr_FR on LINUX)
+                            cutting of characters after "_" for building message
+                            file directory path.
+
+CR-2002-09-09-2  I18N:      invalid escape sequence in one of msgid
+                 Bugtraq:   #4743505
+                 Changed:   inst_sgeee usage output
+
+
+AA-2002-09-05-0  I18N:      - Calculation failure in Functional policy
+                            - Wrong mnemonic on qmon main window
+                            - qmon dies with changes in Edit Tickets 
+                              on Solaris64
+                            - suspend_threshold in queue icon display nearly 
+                              not visible
+                 Bugtraq:   #4742082, #4729085, #4740335
+                 IZ:        #350
+
+EB-2002-09-04-0  Bugfix:    qmod help output is incomplete
+                 Issue:     #354
+                 Bugtraq:   #4741230
+                 Review:    AH
+                 Changed:   qmod
+
+CR-2002-09-03-0  Testsuite: duplicate hostnames in configuration should be 
+                            detected
+                 Issue:     #300
+                            also testing for duplicate architectures in
+                            compile_source procedure.
+
+AS-2002-09-02-0  Bugfix:    Insufficient checking for PTF_*_PRIORITY values
+                 Issue:     #333
+                 Bugtraq:   #4740407
+                 Changed:   sge_execd
+
+AH-2002-09-02-1  Doc:       qmod man page for "-r" incorrect (user)
+                            daemons to crash at startup phase
+                 Issue:     #193
+
+CR-2002-09-02-1  Testsuite: - enhancements for project_access_lists test
+                            - added version information for 5.3.1beta5 -
+                              5.3.1beta8
+
+EB-2002-09-02-0  Bugfix:    problems with destin_id_list syntax
+                 Issue:     #313
+                 Bugtraq:   #4740350
+                 Review:    AH
+                 Changed:   qsub, qalter, qsh
+
+AH-2002-08-30-1  Bugfix:    solaris 32 bit: rlim_fd_max > 1024 can cause 32 bit 
+                            daemons to crash at startup phase
+                 Issue:     #371
+                 Bugtraq:   #4739596
+                 Changed:   sge_qmaster sge_execd sge_commd sge_schedd 
+                            sge_shadowd
+
+CR-2002-08-29-1  Bugfix:    corrected mistake in writing in debug messages
+                            for localization
+                 Changed:   All binaries using i18n
+
+AA-2002-08-28-1  I18N:      version string and copyright strings for infotext
+                 Review:    AS
+                 Changed:   infotext
+
+AA-2002-08-28-0  Bugfix:    OK without hostname in host_configuration kill 
+                            sge_qmaster
+                 Issues:    #370
+                 Bugtraq:   #4732031
+                 Review:    CR
+                 Changed:   sge_qmaster
+
+AH-2002-08-28-1  Doc:       man page typo for sge_aliases
+                 Issue:     #347
+                 Doc:       access_list(5) man page does not describe file 
+                            format for SGEEE mode
+                 Issue:     #357
+                 Doc:       Output of prolog/epilog for interactive jobs not
+                            mentioned
+                 Issue:     #367
+
+SD-2002-08-23-1  Enhancem.  Updated MPI/Myrinet integration for latest release
+                            of MPICH-GM.
+                 Changed:   startmpi.sh, sge_mpirun
+
+EB-2002-08-23-0  Bugfix:    scheduler crashes if defaultuser has 0 shares in 
+                            sharetree
+                 Issues:    #363
+                 Bugtraq:   #4735972
+                 Review:    AS
+                 Changed:   sge_schedd
+
+AA-2002-08-22-0  I18N:      bunch of fixes for l10n
+                 Bugtraq:   #4733802, #4733201, #4733089, #4733043,
+                            #4731976, #4731990, #4731967, #4731958,
+                            #4731944, #4731935, #4731273, #4729700
+                 Issue:     ????????, ????????, #375,     ????????,
+                            ????????, ????????, ????????, ????????,
+                            ????????, ????????, ????????, ????????
+
+EB-2002-08-22-0  Bugfix:    Userset "defaultdepartment" accepts users in CLI
+                 Bugtraq:   #4733859
+                 Issues:    #360
+                 Review:    AS
+                 Changed:   sge_qmaster, qconf
+
+AS-2002-08-22-0  Bugfix:    print correct progname in usage
+                 Bugtraq:   #4735258
+                 Changed:   sge_qmaster sge_execd, sge_shadowd, sgecommdcntl
+
+EB-2002-08-21-0  Bugfix:    qmaster error message during startup: global
+                            configuration doesn't exist - creating
+                 Bugtraq:   #4665780
+                 Issues:    #226
+                 Review:    AS
+                 Changed:   sge_qmaster, qconf, qmon
+
+AA-2002-08-21-0  Bugfix:    gid_range bugfix for SGE mode in qmon
+                 Bugtraq:   #4731288
+                 Issues:    #355
+                 Changed:   qmon
+
+AS-2002-08-19-0  Bugfix:    gethostbyaddr binary not working on solaris64
+                 Bugtraq:   #4732545
+                 Issue:     #359
+                 Changed:   gethostbyaddr
+
+SD-2002-08-14-0  Enhancem.  Updated Kerberos integration to handle cross-domain
+                            authentication correctly when storing the forwarded
+                            credentials in the credentials cache.
+                 Changed:   put_cred
+
+JG-2002-08-08-0  Enhancem.  Added RFE document for a mirroring module based
+                            on the event client interface.
+
+EB-2002-08-08-0  I18N:      Messages in some types of mail notification are
+                            not i18ned.
+                 Bugtraq:   #4728217
+                 Changed:   sge_execd, sge_qmaster
+
+EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is
+                            not reached
+                 Issue:     #345
+                 Bugtraq:   #4727515
+                 Review:    AH, AS
+                 Changed:   sge_schedd
+
+CR-2002-08-02-0: Testsuite: delete_job: when wait_for_end is specified, delete
+                            job a second time
+
+CR-2002-08-01-0: Testsuite: - Several changes for maintrunc compatibility
+                            - better setup error behaviour
+                 Bugfix:    ckpt_migration_test fails due to reference checks
+                 Issue:     #340
+
+JG-2002-08-01-0: Bugfix:    Systems with security framework enabled did not 
+                            work with cull version checking (JG-2002-07-17-0).
+
+CR-2002-07-31-1: Bugfix:    English messages show up when running install 
+                            in localized environment (fix for "fr" Solaris 8
+                            and 9)   
+                 Bugtraq:   #4719203
+                 Changed:   all binaries
+
+
+JG-2002-07-29-0: Enhancem.  Complete implementation and use of boolean and 
+                            object CULL data types.
+                            Added module tests for CULL list functionality
+                            and CULL packing.
+                 Issue:     #324
+                 Cleanup:   Removed unused function lSortLlist2.
+                 Bugfix:    Fixed Bug in lDumpElem.
+                            Fixed memory access bug.
+
+CR-2002-07-31-0  Bugfix:    addend missing #ifdef __SGE_NO_USERMAPPING__ 
+                            lines to preserve sge_options[] array
+
+AH-2002-07-29-2  Doc:       Describe the 'all' keyword for queue_list in
+                            sge_pe(5) and checkpoint(5).
+                 Issue:     #319
+                 Doc:       Describe qconf -mqattr switch as the deprecated
+                            form of the -rattr and not of the -mattr switch.
+                            Mention that ?attr switch familiy operates also
+                            on PE and ckpt objects.
+                 Issue:     #321
+
+CR-2002-07-29-3: Bugfix:    CLI: invalid option "-jid jid" for qconf in 
+                            qconf -help
+                 Bugtraq:   #4722060
+                            (merged CR-2002-07-29-0 and CR-2002-07-29-1)
+                           
+EB-2002-07-26-1: Cleanup:   - moved code
+                            - added ADOC comments
+                            - reimplemented sge_setenv()
+                            - eliminated some header files
+
+CR-2002-07-26-4: Bugfix:    merged l10n fixes from V53_beta2_BRANCH
+
+CR-2002-07-26-3: Bugfix:    removed debug output from qsh client
+
+EB-2002-07-26-0: Cleanup:   removed duplicated code.
+
+EB-2002-07-24-0: Cleanup:   removed code which someone copied in the past. 
+
+CR-2002-07-24-0: Bugfix:    wrong port output in qstat error message when 
+                            qmaster
+                 Issue:     #331
+                 Bugtraq:   #4719755
+
+CR-2002-07-23-0: Testsuite: new feature for delete_job: wait for jobend 
+                 Bugfix:    project_access_lists and access_lists could not
+                            always delete parallel environments, because they
+                            was used not full completed jobs
+
+JG-2002-07-23-0: Enhancem.: CULL objects and CULL lists "know" which of their
+                            attributes have changed.
+
+EB-2002-07-23-1: Bugfix:    job array task index values range not documented
+                 Issue:     #283
+
+EB-2002-07-23-0: Bugfix:    qsub/qalter -l <shortcut_name>... might select 
+                            wrong resource.
+                 Issue:     #328
+                 Bugtraq:   #4718880
+                 Changed:   sge_qmaster
+
+CR-2002-07-22-4: Bugfix:    (merge) Junk messages in installation
+                 Bugtraq:   #4705066
+
+CR-2002-07-22-3: Testsuite: (merge) New version strings for 5.3.1beta3 and beta4
+                 Enhancem.: 
+
+EB-2002-07-22-2: Testsuite: testsuite didn't find aimk
+                            use -z 9 for cvs update
+
+EB-2002-07-22-1: Enhancem.: job input file
+                 Issue:     #294
+
+EB-2002-07-22-0: Bugfix:    missing \n in qstat -j output
+
+CR-2002-07-19-0: Bugfix:    fixed broken build from CR-2002-07-18-4 on some
+                            platforms.
+
+JG-2002-07-19-0: Doc:       updated qmake manpage to reflect usage of the
+                            ARCH environment variable.
+
+JG-2002-07-18-0: Bugfix:    qsh mechanism passing options to xterm was broken.
+                            help output for qrsh and qlogin contained 
+                            unsupported options.
+
+CR-2002-07-18-4: Bugfix     i18n messages without _() macro will not get into
+                            the gridengine.pot file. Fixed not i10n messages.
+
+CR-2002-07-18-2: Bugfix     (merge from V53_beta2_BRANCH)
+                            i18n aimk compilation for SOLARIS86 did not translate
+                            i18n code
+                 Bugfix:    i18n wrong function call in infotext binary - l10n
+                            not working
+                 Bugtraq:   #4715919           
+
+JG-2002-07-17-0: Enhancem.  Include version information in the cull packbuffer 
+                            and do version check before unpacking messages.
+                 Issue:     #322           
+
+CR-2002-07-15-0: Testsuite: solved dependence on user environment variable HOST. 
+                 Bugfix:     
+
+EB-2002-07-11-0: Bugfix:    qacct displays incorrect accounting information
+                 Issue:     #314
+                 Bugtraq:   #4713013
+                 Changed:   qacct
+
+CR-2002-07-10-0: Testsuite: don't check LAST_HOST variable in job_environement
+                            check. environment variable not supported in
+                            this release
+
+AH-2002-07-10-2: Enhancem.: Further improved load alarm/suspend alarm
+                            diagnosis messages
+                 Changed:   sge_schedd
+
+AH-2002-07-10-1: Bugfix:    Fixed problems with global load values
+                            preventing job dispatching
+                 Changed:   sge_qmaster
+                 Issue:     #311
+                 Bugtraq:   #4712023
+
+EB-2002-07-10-0: Bugfix:    missing environment variables in job env.
+
+AA-2002-07-10ß0: Security:  validity of CA cert -> -days in InitCA() in inst_sge
+
+CR-2002-07-09-1: Testsuite: merge from V53_beta2_BRANCH
+                 Enhancem.: - new check "functional/job_environment" testing
+                              job environment variables (e.g. JOB_NAME)
+                 Issue      #267
+
+CR-2002-07-09-0: Enhancem.: merges from V53_beta2_BRANCH
+                            (CR-2002-07-09-0, CR-2002-07-08-0)
+
+JG-2002-07-05-1: Enhancem.: new bitfield implementation in utilib.
+
+JG-2002-07-05-0: Testsuite: system_tests/qmaster/error_states: has to wait
+                            for job to leave qmaster before deleting pe due 
+                            to new reference checking (EB-2002-06-27-1).
+
+JG-2002-07-04-1: Cleanup:   Changed the macros for cull object definition to 
+                            provide easier and more flexible object type 
+                            definitions.
+                 Issue:     #305           
+
+EB-2002-07-04-0: Doc:       renamed "job array" to "array job" in 
+                            the manual pages                          
+
+JG-2002-07-04-0: Bugfix:    non immediate interactive jobs (-now no) failed,
+                            for immediate qsub jobs (-now yes) the job script
+                            was not checked.
+
+AA-2002-07-04-0: Bugfix:    Job dependency display in qmon
+                 Issue:     #275 affects only qmon
+                 Bugtraq:   #4706929
+
+JG-2002-07-03-0: Bugfix:    Deleting ckpt objects and pe objects could
+                            make qmaster dump core.
+
+AH-2002-07-02-3: Bugfix:    Fix problem with flittering load adjustment
+                 Issue:     #309
+                 Bugtraq:   #4710514
+                 Changed:   sge_schedd
+
+AH-2002-07-02-1: Bugfix:    Added missing newline character to error msg.
+
+EB-2002-07-02-0: Cleanup:   see EB-2002-06-30-0
+
+SD-2002-07-01-0: Enhancem:  Updated MPICH/Myrinet integration
+
+EB-2002-07-01-0: Cleanup:   see EB-2002-06-30-0
+
+CR-2002-07-01-0: Bugfix:    Fixed wrong message format defines for L18N/I10N
+
+EB-2002-07-01-0: Bugfix:    Fix of EB-2002-06-17-0
+
+EB-2002-06-30-0: Cleanup:   in gdi library
+                            - removed code which was duplicated in the past
+                            - moved functions in differnet modules
+                            - renamed several function
+                            - wrote ADOC comments
+                            - ...
+
+EB-2002-06-28-0: Bugfix:    Fix of EB-2002-06-17-0
+
+JG-2002-06-28-0: Testsuite: Test case for tightly integrated parallel jobs, 
+                            basic version testing pure functionality and 
+                            behaviour in massive parallel environments.
+                 Issue:     #13
+
+JG-2002-06-27-0: Bugfix:    qrsh -inherit failed with error 
+                            "COMMPROC ALREADY REGISTERED"
+                 Issue:     #303           
+
+EB-2002-06-27-1: Bugfix:    prevent deletion of still referenced objects
+                            - PE objects
+                            - CKPT objects
+                 Issue:     #302 
+                 Bugtraq:   #4753668
+
+AH-2002-06-27-0: Enhancem.: Improved load alarm/suspend alarm diagnosis 
+                            messages
+
+EB-2002-06-27-0: Enhancem.: array job parameters in job array env
+                 Issue:     #264
+
+CR-2002-06-26-1: Testsuite: - new default parameter for wait_for_jobpending()
+                 (Merged)     (return if job is already started)  
+                 Enhancem.: - changed timeout values for access_list and
+                              project_acces_lists test   
+
+EB-2002-06-26-1: Bugfix:    qdel / qdel -f produces no output if execd is down
+                 Issue:     #238
+
+EB-2002-06-26-0: Cleanup:   replace all %s in messages by macros SFN and SFQ
+                 Issue:     #252
+
+CR-2002-06-25-0: Bugfix:    script syntax error in exe host installation
+                 Issue:     #297
+                 Bugtraq:   #4705893
+
+CR-2002-06-24-0: Enhancem.  I18N : added message ids, switched off per default
+                            later: use qmaster/execd parameter to enable
+                                   error id output change "on the fly".
+
+EB-2002-06-24-0: Bugfix:    host group CLI contains "DO NOT MODIFY .." comment
+                 Issue:     #293
+
+EB-2002-06-23-0: Cleanup:   Moved/renamed functions
+                            Moved messages into correct msg_* files
+                            Added ADOC comments
+                 Issue:     #278, #281, #282
+                            
+
+EB-2002-06-17-0: Enhancem.: Now it is possible to address pe tasks with
+                            the spooling functions for jobs.
+
+CR-2002-06-17-3: Bugfix:    removed old i18n setup code
+
+CR-2002-06-17-0: Bugfix:    Don't produce infotext error message "Binary not
+                            compiled with gettext!"
+
+JG-2002-06-14-0: Bugfix:    The job environment variable JOB_NAME was set 
+                            incorrectly.
+                 Doc:       Updated man page - it contained false information 
+                            concerning JOB_NAME.           
+                 Cleanup:   Cleaned up the way how execd detects and handles 
+                            interactive jobs.           
+                 Issue:     #255           
+                 Issue:     #266           
+
+CR-2002-06-13-6: Testsuite: testing issue #140 also for pending jobs
+                 Enhancem.: (merged from V53_beta2_BRANCH)
+
+JG-2002-06-13-0: Enhancem.  qtcsh: If a command is started in the background 
+                            using qrsh, the qrsh option -nostdin is used to 
+                            avoid qrsh being suspended.
+                 Issue:     #287
+                 Bugtraq:   #4701640
+
+AA-2002-06-13-0: Fix:       introduced lWhatAll, removed obsolete header files from SGE.i
+                            perlgui proto working again
+
+CR-2002-06-13-2: Testsuite: merged qstat -l / -q /-pe / -U option tests
+                            from V53_beta2_BRANCH
+                 Issue:     #286
+
+CR-2002-06-13-1: Testsuite: add. bugfix for html output in compile_source()
+
+CR-2002-06-13-0: Testsuite: error in html output in compile_source()
+
+AH-2002-06-12-1: Bugfix:    Prevent use of soft requests for consumables. This
+                            addresses problems related to IZ #223 / BT #4700286.
+                            However it does not introduce debitation for soft
+                            resource requests.
+
+CR-2002-06-12-0: Testsuite: cleaning up html directory when starting compiling
+
+CR-2002-06-11-1: Testsuite: new testsuite checks
+                 Issue:     #140
+                 Issue:     #141
+                 Issue:     #171
+
+EB-2002-06-11-0: Bugfix:    qstat shows waiting jobs of other PEs
+                 Issue:     #284
+                 Bugtraq:   #4699665
+                 Changed:   qstat
+
+CR-2002-06-11-0: Testsuite: compile_source(): add install errors to html page when
+                            install host is not in compile hosts
+
+AH-2002-06-11-0: Bugfix:    Complex default value was not used for load thresholds
+                            in cases when no load value was available.
+                 Issue:     #223
+                 Bugtraq:   #4683852
+
+CR-2002-06-11-0: Testsuite: compile_source(): tcl error on connection timeout
+                 Bugfix:
+
+EB-2002-06-07-0: Bugfix:    disallow "none" in load_formula and addition
+                            tests for the correctness
+                 Issue:     #215
+                 Bugtraq:   #4673738
+
+EB-2002-06-07-0: Cleanup:   ADOC comments
+
+AH-2002-06-07-1: Bugfix:    Prevent qalter -l res=val on running jobs for 
+                            consumable resources to prevent corruption of 
+                            consumable managment
+                 Issue:     #251
+                 Bugtraq:   #4683852
+
+JG-2002-06-07-0: Cleanup:   Replaced %s in messages with macros SFN and SFQ
+                            for all libs. Fixed problems with multiply defined
+                            messages.
+                 Issue:     #252           
+
+JG-2002-06-06-0: Bugfix:    Building Grid Engine with shared libs was broken.
+
+AH-2002-06-05-1: Bugfix:    Fix problem with notify mechanism causing actual
+                            termination/suspension signal being delayed 
+                            endlessly
+                 Issue:     #231
+                 Bugtraq:   #4697491
+
+JG-2002-06-05-3: Cleanup:   Replaced %s in messages with macros SFN and SFQ
+                            for utilib.
+                 Issue:     #252           
+
+JG-2002-06-05-2: Bugfix:    qsub allowed submission of binary files
+                 Issue:     #247
+                 Bugtraq:   #4696768
+
+JG-2002-06-05-1: Bugfix:    Error handling when reading configuration at 
+                            qmaster startup was incomplete and produced 
+                            confusing error messages.
+                 Issue:     #226
+                 Bugtraq:   #4665780
+
+JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines 
+                            were incorrect.
+                 Issue:     #246
+
+SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
+                 Issue:     #273
+
+JG-2002-05-31-1: Doc:       Improved howto for qrsh with ssh.
+
+JG-2002-05-31-0: Enhancem.: rshd: new switch -i: ignore /etc/nologin
+                 Issue:     #272
+
+AH-2002-05-29-1: Bugfix:    Fix bug allowing non-privileged users to submit jobs
+                            with priority higher than 0
+                 Issue:     #271
+                 Bugtraq:   #4692957
+
+CR-2002-05-29-2: Bugfix:    - uninitialized function pointer compiler warning
+
+JG-2002-05-29-2: Enhancem.: Allow specification of arguments to 
+                            [rsh|rlogin|qlogin]_[daemon|command]
+                 Issue:     #232           
+
+CR-2002-05-29-1: Testsuite: - docu of HTML procedures
+
+CR-2002-05-29-0: Testsuite: - added prototype functions for HTML generation
+                 Enhancem.: - new parameter for testsuite: html_dir
+                            - compile_source() procedure will generate HTML
+                              output in html_dir directory
+
+JG-2002-05-29-1: Cleanup:   make dstring functions return a const char * 
+                            instead of char *
+                 Issue:     #265
+
+JG-2002-05-29-0: Cleanup:   use of library functions, typos,
+                            improved job_get_id_string()
+                 Issue:     #258           
+
+CR-2002-05-28-0: Testsuite: test new qrsh options -h and -hold_jid
+                 Issue:     #66
+
+JG-2002-05-28-0: Cleanup:   common function calls to create the active job 
+                            directories in execd. 
+                            Replace static buffers for building paths by 
+                            dynamic strings (dstring).
+                            Handle KEEP_ACTIVE with restarted jobs.
+                 Issues:    #254, #261           
+
+AH-2002-05-28-1: Bugfix:    Fix messages printed when GDI client fails contacting 
+                            qmaster
+
+JG-2002-05-27-0: Bugfix:    qsh ignored -S <shell> in sge_request(5) files
+                 Issue:     #250
+                 Bugtraq:   #4682966
+
+AA-2002-05-27-0: I18N.:     I18N/L10N changes
+
+CR-2002-05-24-1: Enhancem.: merged L10N Changes for install scripts from
+                            V53_beta2_BRANCH
+
+CR-2002-05-24-0: Bugfix:    - removed unused variable in infotext.c
+
+JG-2002-05-24-0: Bugfix:    qalter -verify failed.
+
+CR-2002-05-23-0: Enhancem.: - added infotext_msg_parse.tcl
+                            - merge of infotext changes in V53_beta2_BRANCH
+
+JG-2002-05-23-1: Bugfix:    qlogin jobs made execd crash.
+
+JG-2002-05-23-0: Cleanup:   Made behaviour of sge_dstring_sprintf conformable 
+                            to sprintf. 
+                            New functions sge_dstring_sprintf_append 
+                            (old behaviour of sge_dstring_sprintf) 
+                            and sge_dstring_clear.
+
+JG-2002-05-22-1: Cleanup:   Use a common function call to build paths in a jobs
+                            active_jobs directory.
+                            Use a common function call to output 
+                            job/jatask/petask ids.
+                 Issues:    #254, #258
+
+JG-2002-05-22-0: Doc:       Fixed description of the environment variable 
+                            SGE_TASK_ID for non array jobs in submit man page.
+
+JG-2002-05-21-1: Bugfix:    Recycling of additional group ids did not respect 
+                            tightly integrated pe tasks.
+                 Issue:     #263
+
+CR-2002-05-21-0: Bugfix:    smaller bugfixes in infotext binary
+
+JG-2002-05-21-0: Cleanup:   Moved job_report related commodity functions to 
+                            libs/gdi.
+                            Common code to create paths.
+                            Sum up usage of finished pe tasks in a container 
+                            pe task and remove them from the ja tasks pe task 
+                            list (merge of JG-2002-03-20-0 from 
+                            V53_beta2_BRANCH).
+                            Other minor changes in the handling of pe tasks.
+                 Doc:       Documentation of the pe task and pe task 
+                            request types.
+                 Issues:    201, 254
+
+EB-2002-05-21-1: Cleanup:   Added missing ADOC comments in utilib
+
+EB-2002-05-21-0: Enhancem.: Prevent master from accepting jobs without 
+                            id range specification 
+                 Issue:     #260
+
+CR-2002-05-16-0: Enhancem.: - i18n changes for inst_sge (part 1)
+                            - renamed sge_printf into infotext
+                              (INteractive Formatted lOcalized TEXT)
+                            - added infotext features
+                              (-wait -auto -ask options)
+
+EB-2002-05-06-0: Bugfix:    qhost -j is broken
+                 Issue:     #259
+                 Bugtraq:   #4686157
+                 Changed:   qhost
+
+CR-2002-05-14-0: Cleanup:   - Using dstring in sge_printf 
+                            - some dstring function enhancements
+                            - fixed bug in sge_dstring_append()
+
+JG-2002-05-14-2: Doc:       Coding styleguide, format for special comments.
+
+JG-2002-05-14-1: Bugfix:    MPI tight integration rsh wrapper contained
+                            shortcut syntax not executed correctly by all
+                            shells.
+
+JG-2002-05-14-0: Cleanup:   Introduced an own pe task datatype in cull, that
+                            replaces the former use of a complete job object
+                            for each pe task.
+                            Fixed some bugs in the handling of tightly 
+                            integrated parallel jobs.
+                 Issues:    #201, #221, #225
+
+CR-2002-05-14-0: Cleanup:   Removed unused schedd variable in sge_c_gdi_add()
+
+AH-2002-05-13-1: Change:    Do no longer flush events immediately after orders 
+                            arrival to 'guarantee' scheduling is done not more 
+                            often than specified with schedule_interval in 
+                            sched_conf(5). 
+                 Changed:   sge_qmaster
+
+CR-2002-05-13-0: Enhancem.: new source files for sge_printf binary in utilbin
+
+EB-2002-05-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param.
+                 Issues:    #248
+
+EB-2002-05-09-0: Cleanup:   libgdi:
+                            - Moved some functions into libuti
+                            - Put all 'answer' specific functions into a module 
+                            - Pooled code which was copied in the past
+                            - Eliminated 'old' pe-range code. Range module
+                              is used instead.
+                            - Modified and added several ADOC comments 
+
+EB-2002-05-08-0: Bugfix:    Fix of EB-2002-05-04-0
+
+CR-2002-05-06-0: Testsuite: Fixed testsuite dependencies
+
+AH-2002-05-06-1: Bugfix:    Fix typo in simple.sh job example
+
+EB-2002-05-04-0: Cleanup:   Job object:
+                            - moved some attributes into the environment
+                            - created new module to access VA_Type lists
+                            - summurized submit client code
+                            - added ADOC comments
+
+CR-2002-05-03-1: Testsuite: - removed rsh with rlogin calls
+                 Bugfix:    - compile source has set wrong LIBPATH on AIX
+                            - new parameter for create_shell_script(),
+                              start_remote_prog(), open_remote_spawn_process()
+                              (source_settings_file parameter)
+                            - new procedure: get_submit_error(): 
+                              resolve submit error value
+
+EB-2002-05-03-0: Bugfix:    Fixed bug of JG-2002-04-29-0.
+
+JG-2002-05-03-0: Bugfix:    Fixed messed up JB_Type from JG-2002-04-29-0.
+
+EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch 
+                            on dev mailing list (Mon, 15 Apr 2002)
+                            - Memory leak in scheduler
+                 Issues:    #243
+                 Bugtraq:   #4676340
+
+JG-2002-04-29-1: Enhancem.: Contribution of Guiseppe Palumbo: Make the
+                            ibm-loadsensor script work with AIX 5.1.0
+
+AH-2002-04-29-1: Change:    In the sched_conf(5) man page it was wrongly
+                            documented that the maxujobs setting is only in
+                            effect when the user_sort policy is activated and
+                            that it is not available at all in a SGEEE system.
+                            Furthermore it was wrongly documented that the
+                            maxujobs limitation is applied separately to each
+                            priority group.
+                 Issue:     #249
+                 Bugtraq:   #4681454
+
+CR-2002-04-29-1: Testsuite: - check if qmaster/scheduler are alive before starting
+                              any test
+                            - modified timeouts of some tests
+                            - added error information on some tests
+                            - new procedures:
+                              is_scheduler_alive()
+                              get_scheduler_pid()
+                             
+
+JG-2002-04-29-0: Cleanup:   Job object:
+                            - removed unused attributes and corresponging code
+                            - moved JB_end_time to jatask object
+                            - reordered attributes to reflect logical relations
+
+EB-2002-04-29-0: Cleanup:   removed old code/comments/debug code
+
+CR-2002-04-29-0: Testsuite: added sleep in compile_source() procedure to
+                            give NFS time to update remote directories
+                            when creating dependencies
+
+CR-2002-04-26-1: Testsuite: depend was done on cvs checkout host, not at
+                            first compile host
+                 Bugfix:    
+
+CR-2002-04-26-0: Testsuite: merges from V53_beta2_BRANCH
+
+AH-2002-04-26-1: Bugfix:    - queue nsuspend > 1 was not used to suspend
+                              multiple jobs in a queue at a time in case
+                              of a suspend threshold alarm.
+                 Issue:     #239
+                 Bugtraq:   #4675410
+                            - use of suspend thresholds and user sort
+                              policy could cause "inconsistent access tree data"
+                              schedd logging and break user sort policy
+                 Issue:     #240
+                 Bugtraq:   #4675416
+
+EB-2002-04-25-0: Enhancem.: Summarize answer messages for array jobs
+                 Issue:     #209 (partially)
+
+JG-2002-04-22-2: Cleanup:   Function hostcmp no longer needed in qmake
+                            integration (remote-sge.c).
+
+JG-2002-04-22-1: Enhancem.: Improved verbose output in qmake.
+                            Start tasks on localhost also per qrsh - slower,
+                            but tasks are identifiable in accounting.
+
+JG-2002-04-22-0: Bugfix:    If more then 1 task of a parallel job was started
+                            in a queue, retrieving exit code of a task and
+                            signaling a task was unreliable as the TASK_ID
+                            variable was no longer exported to the tasks
+                            environment. Replaced the TASK_ID mechanism by
+                            an entry in the jobs config.
+                 Issue:     #236
+
+JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had 
+                            already the maximum number of group id's.
+                 Enhancem.: More detailed description in error output
+                 Issue:     #237
+
+SD-2002-04-18-3: Feature:   Updated distinst to install mpi/myrinet PE
+                            integration
+
+SD-2002-04-18-2: Feature:   MPI MPICH/Myrinet parallel integration
+                 Bugfix:    Fixed dist/mpi/rsh to handle hostname before
+			    or after options
+
+CR-2002-04-18-1: Testsuite: 
+                 Bugfix:    testsuite did no aimk -only-depend
+
+CR-2002-04-18-0: Testsuite: 
+                 Bugfix:    testsuite only updates the c source code
+                 Issue:     #187
+
+EB-2002-04-17-2: Bugfix:    error in qmasters job deletion code
+                 Issue:     #235 
+
+AA-2002-04-17-0: Bugfix:    Broken build for aix
+                            correction in csp.html
+
+JG-2002-04-17-1: Enhancem.: New qconf options -Astree and -Mstree
+                 Issue:     #133
+
+EB-2002-04-17-1: Cleanup:   summarized client code
+                 Issue:     #153
+
+CR-2002-04-17-0: Testsuite: 
+                 Enhancem.: new file procedure: get_all_subdirectories()
+                 Bugfix:    report error if cat failes in procedure
+                            get_file_content()
+                            
+JG-2002-04-17-0: Cleanup:   multiple defines for same error message
+                 Issue:     #203
+
+EB-2002-04-17-0: Cleanup:   multiply defined function 
+                 Issue:     #202
+
+EB-2002-04-16-0: Cleanup:   building range strings for enrolled tasks
+
+JG-2002-04-16-0: Enhancem.: In simulation mode (qmaster_param simulate_hosts=1)
+                            one qsub call can submit any number of identical 
+                            jobs by setting the job context variable 
+                            SGE_MULTI_SUBMIT to the number of jobs to be 
+                            created.
+
+CR-2002-04-12-3: Testsuite: demo_config_dir files should not be used in
+                            default settings file
+                 Issue:     #163   
+                 
+
+CR-2002-04-12-2: Testsuite: removed all rsh calls, testsuite will now
+                            only use rlogin.
+                 Issue:     #180
+                 Bugfix:    fixed tcl error when using help option
+
+JG-2002-04-12-0: Doc:       Added howto describing how to use ssh as
+                            transport mechanism for qrsh.
+                 Issue:     #228
+
+CR-2002-04-12-0: Bugfix:    corrected spelling mistakes
+
+CR-2002-04-11-4: Testsuite: - only produce warning when re_init core
+                              system resets cluster/schedd configuration
+                            - removed DEMO category
+                            - new interactive menu points:
+                              (23) compile and pre install binaries
+                              (24) compile and pre install, then install 
+                                   and run not completed tests
+                              (25) set testsuite debug level
+             
+
+CR-2002-04-11-2: Testsuite: Remove temp script files at startup of next 
+                            check function instead of next check. This
+                            should reduce the number of files to delete
+                            at one pass.
+
+CR-2002-04-11-1: Testsuite: Some further modifications for CR-2002-04-11-0
+
+EB-2002-04-11-0: Bugfix:    Solaris processor sets / Migration script
+                            - fix: solaris psets won't be used
+                            - fix: checkpointed job migration on bad exit state 
+                            - some cleanup within shepherd concerning
+                              ckpt/pset code
+                            - ADOC comments 
+                 Issue:     #229, #174
+                 Bugtraq:   #4668148
+
+CR-2002-04-11-0: Testsuite: Added testsuite categories, modified framework
+                 Enhancem.  
+
+JG-2002-04-11-0: Bugfix:    In simulation mode, job reports were not flushed 
+                            at (simulated) job end.
+
+EB-2002-04-10-1: Cleanup:   Moved messages
+
+EB-2002-04-10-0: Cleanup:   Cleanup within CULL library
+                            - ADOC comments for all nonstatic functions
+                            - minor modifications
+
+JG-2002-04-09-0: Enhancem.  Further generalization of the event client 
+                            interface:
+                            - sge_locate_scheduler -> sge_locate_event_client
+                            - reinit_schedd -> reinit_event_client
+                            - special handling at registration not only for 
+                              scheduler but any special event client
+                            - make datatypes of enums and use these types 
+                              instead of int or u_long32 in access functions
+                            - extend event client modify request to allow 
+                              changing of the busy state, remove special 
+                              handling for scheduler busy state in qmaster
+                            - updated documentation
+
+JG-2002-04-08-3: Bugfix:    qrsh -h made debug output (a job object).
+
+JG-2002-04-08-2: Enhancem.  Performance optimization for the processing
+                            of job reports.
+
+JG-2002-04-08-1: Merge:     Merged JG-2002-03-26-1 from V53_beta2_BRANCH
+                 Bugfix:    At startup qmaster removed pending messages too
+                            late (after daemonizing instead of after
+                            enrolling).  In rare cases (starting schedd
+                            immediately after qmaster daemonized on a fast
+                            machine) this could produce an error and cause a
+                            delayed registration of the scheduler.
+
+JG-2002-04-08-0: Merge:     Merged JG-2002-03-21-0 from V53_beta2_BRANCH
+                 Bugfix:    prioritization of messages to qmaster could
+                            block reports from execd's to qmaster and make
+                            the system unusable.
+                            Set "no prioritization" as default, behaviour
+                            can be changed via env variable
+                            SGE_PRIORITY_TAGS.
+                 Enhancem.  Performance enhancement for the deletion of large
+                            numbers of jobs.
+
+CR-2002-04-05-2: Bugfix:    Fixed compiler warning in ptf.c 
+
+JG-2002-04-05-3: Doc:       Linked both versions of the event client interface
+                            documentation (5.3 and maintrunc) from the modules
+                            overview document.
+
+JG-2002-04-05-2: Doc:       Updated HTML documentation for the event client
+                            interface generated from adoc comments.
+
+CR-2002-04-05-1: Testsuite: - reinserted rsh test on testsuite setup
+                              configuration
+                            - merged large_cluster test from 
+                              V52_beat2_BRANCH
+
+JG-2002-04-05-1: Cleanup:   removed meanwhile meaningless comments in
+                            qlogin_starter module.
+
+CR-2002-04-05-0: Testsuite: - more function parameters for logfile_wait()
+                 Enhancem.  - new procedure: close_logfile_wait()
+                            - output changes
+                            - new procedure: get_schedd_messages_file()
+                            - new procedure: check_schedd_messages()
+
+JG-2002-04-05-0: Enhancem.  Further cleanup and enhancement of the
+                            event client interface:
+                            - general implementation for flushing of events 
+                              replaces special handling for scheduler in 
+                              qmaster
+                            - a new "busy policy" replaces special handling for
+                              scheduler with global variables in qmaster
+                            - a clientdata field in the event client object is
+                              used for checking of orders sequence numbers 
+                              instead of using a global variable
+                            - lots of additional documentation
+
+SD-2002-04-04-1: Feature:   Merges from V53_beta2_sx6_BRANCH
+                            SX architecture updates
+                            - Support dynamic setting of timeslice values
+                            - Set execd to high priority to prevent swapping
+                            - Only set # of processes limit for job (not process)
+                            - Updated SX checkpoint scripts
+                            - Renamed "necsx5" architecture to "sx"
+                            - Set resource limits after setting the OS
+                              job id in builtin_starter.c so that job
+                              resource limits will work on the SX-6.
+                            Added support to control restart timeout
+                            delays using environment variables.
+
+CR-2002-04-04-0  Testsuite: 
+                 Bugfix:    test shartree: deleting sharetree before adding
+                            a new one.
+                 Bugfix:    start_remote_prog(): allow shell build-in command
+                                                 "cd"
+
+
+CR-2002-04-03-0  Testsuite: - replaced rsh calls with start_remote_proc()
+                              and open_remote_spawn_process() calls
+                            - new procedures:
+                              wait_for_remote_file()
+                                  -> wait for file to appear on remote host
+                                     (should fix NFS problems)
+                              init_logfile_wait()
+                              logfile_wait()
+                                  -> new tail mechanism for parsing logfiles
+                              washing_machine()
+                              get_qmaster_messages_file()
+                              get_execd_messages_file()
+                                  -> get path to messages files
+                            - enhanced procedures:
+                              start_remote_prog()
+                              
+JG-2002-04-02-2  Feature    Compile time switch -DCULL_NO_HASH to
+                            switch of hashing of cull lists - mainly
+                            usefull for performance comparison.
+
+JG-2002-04-02-1  Merge:     merged JG-2002-04-02-0, JG-2002-03-28-2, 
+                            JG-2002-03-28-1, JG-2002-03-28-0 
+                            from V53_beta2_BRANCH
+                 Testsuite: Fixed problems when creating HTML charts
+                            in large_cluster test.
+                 Testsuite: - sge_procedures: new functions shutdown_qmaster, 
+                              shutdown_scheduler and startup_scheduler.
+                            - large_cluster test: shutdown scheduler before 
+                              initializing new test to get time for first 
+                              scheduling.
+                 Testsuite: Create HTML output after each run level.
+                 Testsuite: large_cluster test: submit jobs in parallel from
+                            multiple hosts.
+
+CR-2002-04-02-0  Testsuite: testsuite should not fail if writing a script
+                            file fails
+                 Issue:     #186
+
+CR-2002-03-28-1  Testsuite: - merges from V53_beta2_BRANCH
+
+CR-2002-03-28-0  Testsuite: - new menu point: check messages files of
+                              execds and qmaster
+                            - new tcl file procedure: get_file_content()
+                            - new sge procedure: check_execd_messages()
+                            - new sge procedure: check_qmaster_messages()
+                            - new sge procedure: check_messages_files()
+                            - added new version: "SGEEE pre6.0 (Maintrunk)"
+                            - added new version: "SGE pre6.0 (Maintrunk)"
+
+
+JG-2002-03-28-0  Merge:     merged JG-2002-03-27-0 from V53_beta2_BRANCH
+                 Testsuite: large_cluster test:
+                            - fixed problems due to change of runlevel
+                            - output cluster utilization in test report
+
+AH-2002-03-27-1  Enhancm.:  Changed Maintrunk GRM_GDI_VERSION to a very high value
+                            and renamed from "5.3beta2" this version to 
+                            "pre6.0 (Maintrunc)"
+
+CR-2002-03-27-2  Merge:     merged inst_sge from V53_beta2_BRANCH
+
+CR-2002-03-27-1  Bugfix:    Fixed broken shadow daemon qmaster startup functionality 
+                            merge from V53_beta2_BRANCH
+
+SD-2002-03-26-2  Bugfix:    Fixed "missing node XXXXX in dst trees" problem where
+                            a temporary share tree node was being sent to qmaster
+
+AH-2002-03-26-1  Bugfix:    Found and fixed infinite loop in commd in case host
+                            formerly resolved by gethostbyname(3) is no longer
+                            resolvable. Also fix commd option -dhr which was -drh
+                            before.
+                 Bugtraq:   #4658193
+                 Issue:     #212
+
+CR-2002-03-26-5  Bugfix:    fixed broken aimk -secure build
+
+CR-2002-03-26-4  Testsuite: merge from V53_beta2_BRANCH
+                 Bugfix:
+
+CR-2002-03-26-3  Merge:     merge from V53_beta2_BRANCH
+                 Bugfix:    - wrong error handling if qmaster is down and
+                              user tries qdel -f 
+                            - changed code formating
+                 Bugfix:    qstat -f -> 
+                            8 x times logging: "... neither submit nor admin host"
+
+                 Bugfix:    can't resolve hostname "%-.100s" from act_qmaster file
+                            message
+
+                 Bugfix:    qacct output formatting
+
+                 Bugfix:    changed error messages when master commd is not
+                            reachable.
+
+                 Bugfix:    removed forgotten #if0 - #endif statement which
+                            chauses scheduler to abort() on testsuite's 
+                            path_alias check.
+
+                 Bugfix:    scheduler generates high CPU load for 1-2 minutes
+                            when sge_commd is killed.
+                 Issue:     #197
+               
+JG-2002-03-26-0  Testsuite: Installation with many hosts did not work due to
+                            some buffer (commandline?) being too small.
+                            Pass hostnames to install_qmaster in a file.
+
+AH-2002-03-25-3  Bugfix:    gethostbyname -aname was broken
+                 Optimiz.:  Ensure global conf is read only one time by
+                            AH-2002-03-22-0 code
+
+AH-2002-03-25-2  Bugfix:    Ensure shepherd mapping signals do not hit shepherd
+                            itself because of signal handler not installed when 
+                            signals are released by sigprocmask(2)
+
+AH-2002-03-25-1  Bugfix:    Retrieve ignore_fqdn and default_domain at client/daemon
+                            startup from global cluster config to overcome problems
+                            with hashing of hostnames in certain cases.
+
+JG-2002-03-25-0  Testsuite: Bugfix: In a cluster with very similar hostnames
+                            testsuite wrongly reused open remote connections.
+
+AA-2002-03-22-0  Merge:     - override, functional policy dialogue sorting
+                            - qhost formating
+                            - sec_lib SGE_KEYFILE, SGE_CERTFILE
+
+EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
+
+EB-2002-03-21-1  Enhancem.: sort output of qconf -sep
+
+EB-2002-03-21-0  Bugfix:    local config not written as admin user at startup
+                 Issue:     #198
+
+CR-2002-03-20-1  Testsuite: sending "vt100" when client host is using tset
+                            for terminal settings.
+
+EB-2002-03-20-1  Bugfix:    can't receive request: READ ERROR
+                            - replaced closeconnection(0) calls within 
+                              recvfromcommd() through closeconnection(1) calls 
+                              in case of read error
+                            - improved logging; additional messages may be 
+                              found in the messages files of the daemons which 
+                              might help if these errors occure again
+                 Issue:     #176 (partially)
+
+CR-2002-03-20-0             merge from V53_beta2_BRANCH
+                 Bugfix:    qselect/qstat -U is (partially) broken
+                 Issue:     #191
+
+
+AA-2002-03-19-2: Merge:     merge from V53beta2 branch
+                            - AA-2002-03-19-1, AA-2002-03-18-2, AA-2002-03-18-1,
+                              AA-2002-03-18-0
+
+AA-2002-03-19-1: Feature:   - install doc for CSP security 2
+
+AA-2002-03-19-0: Feature:   - install doc for CSP security
+
+CR-2002-03-19-2  Bugfix:    additional fix for CR-2002-03-19-0 checkin
+
+CR-2002-03-19-1  Testsuite: (Merge from V53_beta2_BRANCH)
+                            - stop install_core_system check if qmaster 
+                              is not reachable after installing last execd
+                            - shutdown_core_system(): only try to use root
+                              access if password is available
+
+CR-2002-03-19-0  Bugfix:    Fixed broken build for IRIX6 arch
+
+CR-2002-03-18-1             (merge from V53_beta2_BRANCH)
+                 Bugfix:    Mail on suspend wasn't working
+                 Issue:     #86
+ 
+                 Bugfix:    Wrong error message when service sge_commd 
+                            is not available    
+                 Issue:     #158
+
+CR-2002-03-18-0  Testsuite: - qdel check: (merge from V53_beta2_BRANCH)
+                              1) clear all error states on test cleanup
+                              2) leave test loop on job submission error
+                            - new version numbers: SGEEE_5.3beta2_2 and
+                                                   SGE_5.3beta2_2
+
+EB-2002-03-18-0  Enhancem.: Modifications for redhat 7.2 (gcc 2.96)
+
+AH-2002-03-15-5  Bugfix:    Ensure after execd installation the host needs to 
+                            be only exec host but not admin host or submit host
+
+EB-2002-03-15-0: Bugfix:    qmaster code accepted qsub -t task specification
+                            which included the id 0 => loop in schedd
+                 Issue:     #192
+
+AH-2002-03-15-3  Doc:       Added information about qmod [-e|-s|..] queue_list
+                            syntax (wildcards).
+
+AH-2002-03-15-1: Bugfix:    Changed scheme used for creation of id used for
+                            qrsh -inherit sub-tasks to fix accounting
+                            data leak with
+                            multiple runs of a par. application within a
+                            job. Also
+                            write id into accounting file.
+                 Bugtraq:   #4447392
+
+EB-2002-03-13-0: Bugfix:    handling of faulty migrate script
+                            - improved logging
+                            - shepherd internal state will be reset.
+                              Further migrate requests will be initiated
+                 Issue:     #146 (partially)
+
+JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the 
+                            necessity to use the options -v PATH and -cwd.
+
+JG-2002-03-11-1  Doc:       - Updated adoc description: Some new categories,
+                              replacement of the --Introduction categories,
+                              an example how to document cull objects.
+                            - adoc: Allow entries beginning with '-' to be
+                              included in the function index.
+                            - Updated some autodoc headers to reflect changes
+                              described above.
+
+JG-2002-03-11-0  Cleanup:   Moved event client interface (client code) from
+                            scheduler to the gdi library and removed 
+                            all scheduler dependencies left from previous
+                            cleanup step.
+
+JG-2002-03-08-0  Testsuite: Make testsuite work for users that use a csh as
+                            login shell (open_remote_spawn_process).
+
+AA-2002-03-07-0: Bugfix:    Addition of acl to project generated core dump due
+                            to uninitialized pointer
+
+EB-2002-03-07-1: Bugfix:    Array Tasks, inconsistent handling of multiple 
+                            task ranges
+                 Issue:     #49
+
+EB-2002-03-07-0: Bugfix:    inconsistences between qstat/qmon output and 
+                            internal state
+                 Issue:     #179
+
+EB-2002-03-06-1: Doc.:      Added documentation for (auto)rescheduling
+                            - removed RESCHEDULE_UNKNOWN from sge_conf
+                            - added reschedule_unknown to sge_conf
+                            - added r to when attribute of checkpoint 
+                            - changed qsub -m doc.
+                            - added doc. for qmod -r
+                 Issue:     #23
+
+EB-2002-03-06-0: ADoc:      JB_Type, JAT_Type, RN_Type got ADOC Header 
+
+JG-2002-03-06-0: Doc.:      Enhanced description of execd_params
+                            SET_[SGE|COD|GRD]_ENV.
+                 Issue:     #120
+
+AH-2002-03-05-1: Doc.:      Fixed description of seq_no queue parameter
+                            in queue_conf(5).
+                 Bugtraq:   #4490117
+
+CR-2002-03-05-0: Testsuite: - removed forgotten wait_for_enter calls()
+
+CR-2002-03-04-1: Testsuite: - sge/ee installation path (product root) should
+                              not be longer than 60 chars ( workaround, because
+                              output of ps -ef command is truncated on some
+                              machines )
+                            - fixed error in path_alias test: automounter 
+                              /tmp_dir/ problem !
+                            - submit_del (signal) test did not clear 
+                              queues in error state at cleanup 
+                            - modified error output in 
+                              shutdown_master_and_scheduler() procedure
+                              
+
+CR-2002-03-04-0: Bugfix:    hostname resolving check was executed even when
+                            ignore_fqdn = true was set.
+
+
+EB-2002-03-04-2: Bugfix:    'qdel <array-jid>' might cause qmaster core 
+                            depending on the tasks history.
+                 Issue:     #173
+
+AH-2002-03-04-3: Enhancem.: Added PVM 3.4.4 Virtual Machine ID setting
+                            to startpvm.sh from Andrew Shewmaker
+
+AH-2002-03-04-0: Bugfix:    A set of fixes on initiative from Patrik Koch
+
+EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
+                            did not exist.
+                 Issue:     #171
+
+EB-2002-03-04-0: Bugfix:    schedd_runlog file was not written by a 
+                            'qconf -tsm' command
+                 Issue:     #170
+
+CR-2002-03-01-2: Bugfix:    error in CR-2002-03-01-1 when showing only one 
+                            long project/dep/...  by using 
+                            e.g. -P LONG_PROJECT_NAME  - fixed
+
+CR-2002-03-01-1: Bugfix:    qacct truncates project/department/... names to
+                 Enhancem.: x chars. -> calculate column with by searching
+                            for largest element
+                 Issue:     #150
+
+EB-2002-03-01-1: Bugfix:    inconsistences between qstat and qmon output
+                 Issue:     #148  
+
+CR-2002-03-01-0: Testsuite: - using source/dist/util/arch from source directory
+                              and not from product_root/util/arch. This 
+                              prevents errors on testsuite first setup call. 
+
+EB-2002-03-01-0: Bugfix:    "scheduler tries to schedule xxx twice" logging in
+                            qmaster
+                 Issue:     #167     
+
+CR-2002-03-01-0: Testsuite: - runlevel of large_cluster performance test set to
+                              300++ ( day )
+
+CR-2002-02-28-1: Testsuite:
+                 Enhancem.: - new test: system_tests/sheperd/submit_del
+                              testing sheperd signaling with sheperd wrapper
+                              script.
+                 Issue:     #125  (Part 1)
+                 Bugfix:    - fixed typo in system_tests/clients/qdel
+                            - removed unused var in system_tests/shadowd/migrate
+
+CR-2002-02-28-0: Testsuite:  
+                 Bugfix:    - wrong error message in wait_for_end_of_all_jobs()
+                 Enhancem.  - submit_job() generates output for timeout and eof
+                              error
+                 Enhancem.  - 2 new parameters for create_shell_script()
+
+JG-2002-02-27-0: Doc:       Documented the qrsh -noshell option in the
+                            qrsh/submit man page.
+                 Issue:     #132           
+
+EB-2002-02-26-1: Bugfix:    Fixed one problem repoted bye Patrik Koch.
+                            - switched call order in
+                              job_delete_not_enrolled_ja_task()
+                            - added some ADOC comments for scheduler
+
+EB-2002-02-26-0: Enhancem:  Some modifications for EB-2002-01-23-1
+                            - return value 25 for qrsh, qsh, qlogin, qresub
+                            - modified man qubmit man page
+
+CR-2002-02-26-1: Testsuite: - changed name of product feature for secure mode 
+                              from "secure" to "csp"
+                            - compile option will now automatically add 
+                              "-secure" to CHECK_AIMK_COMPILE_OPTIONS when 
+                              product feature is "csp"
+ 
+CR-2002-02-26-0: Feature:   qmaster installation script will now check if
+                            sge_qmaster binary is compiled with aimk -secure
+                            when -csp option is used, otherwise installation
+                            of qmaster will fail.
+
+JG-2002-02-26-0: Bugfix:    qlogin did no longer work for solaris exec hosts.
+                 Issue:     #151
+
+CR-2002-02-25-0: Testsuite: new test: qsub -hold_jid JOBNAME test
+                 Issue:     #124
+
+AA-2002-02-25-0: Testsuite: security test changes
+
+EB-2002-02-25-0: Bugfix:    missing header file
+
+AA-2002-02-25-0: Bugfix:    missing header file, obsolete code removed
+
+EB-2002-02-24-0: Cleanup:   in 'libuti' and 'libgdi'
+                            - moved functions from libgdi into libuti
+                            - rearranged/modified/created modules
+                            - some function names have been changed
+                            - added ADOC comments for all not commented 
+                              non-static functions
+
+SD-2002-02-22-2: Feature:   Added support to control restart timeout
+                            delays using environment variables.
+
+AA-2002-02-22-1: Bugfix:    sec_lib.c memleak fix, reconnect functionality
+
+AA-2002-02-22-0: Cleanup:   insure compile for tcsh
+                            LINUX6 crypto lib as libcrypto.a.insure
+
+CR-2002-02-21-0: Testsuite: added scripts/qlogin.sh (used for qmod
+                            reschedule test)
+
+CR-2002-02-20-0: Testsuite: cleanup of qmod reschedule test
+                 Issue:     #118
+
+EB-2002-02-20-0: Enhancem.: need means for limiting total number of 
+                            jobs in a cluster 
+                 Issue:     #136
+                 Cleanup:   utilib; added ADOC comments
+
+EB-2002-02-19-1: Cleanup:   Moved/deleted some functiones (part 2/2)
+                            Added ADOC comments
+                 Issue:     #152
+
+EB-2002-02-19-0: Cleanup:   Moved/deleted some functiones (part 1/2)
+                 Issue:     #152 
+
+EB-2002-02-18-1: Cleanup:   Integarte common/job.c functions into 
+                            libs/gdi/sge_job_jatask.c
+                 Issue:     #142
+
+SD-2002-02-18-2: Bugfix:    - Set resource limits after setting the OS
+                              job id in builtin_starter.c so that job
+                              resource limits will work on the SX-6.
+
+CR-2002-02-18-1: Testsuite: added new check_function in qdel test
+                         
+EB-2002-02-18-0: Bugfix:    Attempt to unlink directory + bogus error message
+                            - finished jobs have no task instanced
+                              => do not create a directory
+                              => put whole zombie job into one file
+                                 $SGE_ROOT/default/spool/qmaster/zombies/ ...
+                                    ... xx/yyyy/zzzz (zzzz is a file)
+                 Issue:     #149
+
+CR-2002-02-18-0: Testsuite: - alleviate testsuite setup
+
+CR-2002-02-15-0: Testsuite: - compile option: handle eof and response timeout 
+
+CR-2002-02-14-0: Testsuite: - Bugfix: error on updating defaults file version
+                            - is_job_running() now first will get the current
+                              job state and then evtl. make a sleep (timing)  
+                            
+EB-2002-02-14-0: Bugfix:    - Error in qdel return message if task does not 
+                              exist
+                 Issue:     #144
+                  
+CR-2002-02-13-0: Testsuite: secure feature: 
+                               - add user keys for submit only hosts
+                               - submit large script mod. timeout for
+                                 job end waiting
+                               - submit hosts test: wait for end of
+                                 transfer before deleting job
+
+AS-2002-02-13-2: Bugfix:    install "UPGRADE" file and shared libraries with
+                            "mk_dist" and "distinst"
+
+AS-2002-02-13-1: Enhancem.:  added README.inst_sgeee to SGE_ROOT to explain how to 
+                             install SGE as SGEEE
+
+AS-2002-02-13-0: Change:    set version string to "5.3beta2_1"
+             
+EB-2002-02-12-0: Bugfix:    - step size was ignored from qdel command for job arrays
+                            - qmaster crashed when job array task id range comprises 
+                              non existing task at the end
+                 Issue:     #138 #139
+
+AS-2002-02-12-0: Bugfix:    Sun HPC installation script failed since default
+                            queue type now is already PARALLEL
+
+CR-2002-02-05-0: Testsuite: - wait_for_end_of_transfer() is now waiting that
+                              all lines of the qstat output have the same job state
+                            - install core system test using get_binary_path() for 
+                              tar binary (used for secure product feature)
+                            - bugfix setting defaults file path (if not absolute)
+                            - rework of migration test (removed unnecessary error
+                              checks) 
+                            
+
+JG-2002-02-05-1: Testsuite: Enable testsuite to setup a cluster on a filesystem
+                            where root has no write access.
+                            This is only a first step. A comprehensive solution
+                            has to be implemented, see issue #135
+
+JG-2002-02-05-0: Testsuite: Enhanced "large_cluster" test:
+                            - testcase "throughput cluster" (loadcorrection and
+                              loadthresholds switched off)
+                            - testcase "usersort" (scheduling param user_sort
+                              enabled)
+                            - monitor size of qmaster and scheduler
+                            - check if all slots are filled in first scheduling
+                              run
+
 AS-2002-02-04-1: CVS        Created V53_beta2_BRANCH
+----------------------------------------------------
 
 AS-2002-02-04-0: Doc:       updated courtesy download pages to reflect
                             changes for Grid Engine 5.3beta2 download
@@ -987,6 +2950,8 @@ EB-2001-11-05-0: Bugfix: Ckpt jobs and jobs exiting with exit state 99
 AH-2001-11-05-0: Fixes with qstat -pe <pe_name> and qselect -pe <pe_name>
                  - 'all' keyword in PE's queue_list was not honoured
                  - non-parallel queues were selected
+                 Bugtraq: #4584673
+
 
 JG-2001-11-02-1: qstat -j aborted when writing usage of pe tasks
 

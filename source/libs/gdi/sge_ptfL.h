@@ -53,6 +53,8 @@ enum {
    JL_state,
    JL_tickets,
    JL_share,
+   JL_ticket_share,
+   JL_timeslice,
    JL_usage,
    JL_old_usage_value,
    JL_adjusted_usage,
@@ -71,26 +73,28 @@ enum {
 };
 
 LISTDEF(JL_Type)
-   SGE_ULONG(JL_job_ID)       /* job identifier */
-   SGE_LIST(JL_OS_job_list)   /* O.S. job list */
-   SGE_ULONG(JL_state)        /* job state (JL_JOB_*) */
-   SGE_ULONG(JL_tickets)      /* job tickets */
-   SGE_DOUBLE(JL_share)       /* ptf interval share */
-   SGE_DOUBLE(JL_usage)       /* ptf interval combined usage */
-   SGE_DOUBLE(JL_old_usage_value)     /* ptf interval combined usage */
-   SGE_DOUBLE(JL_adjusted_usage)      /* ptf interval adjusted usage */
-   SGE_DOUBLE(JL_last_usage)  /* ptf last interval combined usage */
-   SGE_DOUBLE(JL_old_usage)   /* prev interval combined usage */
-   SGE_DOUBLE(JL_proportion)
-   SGE_DOUBLE(JL_adjusted_proportion)
-   SGE_DOUBLE(JL_adjusted_current_proportion)
-   SGE_DOUBLE(JL_actual_proportion)
-   SGE_DOUBLE(JL_diff_proportion)
-   SGE_DOUBLE(JL_last_proportion)
-   SGE_DOUBLE(JL_curr_pri)
-   SGE_LONG(JL_pri)
-   SGE_ULONG(JL_procfd)       /* /proc file descriptor */
-   SGE_ULONG(JL_interactive)  /* interactive flag */
+   SGE_ULONG(JL_job_ID, CULL_DEFAULT)       /* job identifier */
+   SGE_LIST(JL_OS_job_list, JO_Type, CULL_DEFAULT)   /* O.S. job list */
+   SGE_ULONG(JL_state, CULL_DEFAULT)        /* job state (JL_JOB_*) */
+   SGE_ULONG(JL_tickets, CULL_DEFAULT)      /* job tickets */
+   SGE_DOUBLE(JL_share, CULL_DEFAULT)       /* ptf interval share */
+   SGE_DOUBLE(JL_ticket_share, CULL_DEFAULT) /* ptf job ticket share */
+   SGE_DOUBLE(JL_timeslice, CULL_DEFAULT)   /* ptf calculated timeslice (SX) */
+   SGE_DOUBLE(JL_usage, CULL_DEFAULT)       /* ptf interval combined usage */
+   SGE_DOUBLE(JL_old_usage_value, CULL_DEFAULT)     /* ptf interval combined usage */
+   SGE_DOUBLE(JL_adjusted_usage, CULL_DEFAULT)      /* ptf interval adjusted usage */
+   SGE_DOUBLE(JL_last_usage, CULL_DEFAULT)  /* ptf last interval combined usage */
+   SGE_DOUBLE(JL_old_usage, CULL_DEFAULT)   /* prev interval combined usage */
+   SGE_DOUBLE(JL_proportion, CULL_DEFAULT)
+   SGE_DOUBLE(JL_adjusted_proportion, CULL_DEFAULT)
+   SGE_DOUBLE(JL_adjusted_current_proportion, CULL_DEFAULT)
+   SGE_DOUBLE(JL_actual_proportion, CULL_DEFAULT)
+   SGE_DOUBLE(JL_diff_proportion, CULL_DEFAULT)
+   SGE_DOUBLE(JL_last_proportion, CULL_DEFAULT)
+   SGE_DOUBLE(JL_curr_pri, CULL_DEFAULT)
+   SGE_LONG(JL_pri, CULL_DEFAULT)
+   SGE_ULONG(JL_procfd, CULL_DEFAULT)       /* /proc file descriptor */
+   SGE_ULONG(JL_interactive, CULL_DEFAULT)  /* interactive flag */
 LISTEND 
 
 NAMEDEF(JLN)
@@ -99,6 +103,8 @@ NAMEDEF(JLN)
    NAME("JL_state")
    NAME("JL_tickets")
    NAME("JL_share")
+   NAME("JL_ticket_share")
+   NAME("JL_timeslice")
    NAME("JL_usage")
    NAME("JL_old_usage_value")
    NAME("JL_adjusted_usage")
@@ -137,13 +143,13 @@ enum {
 };
 
 LISTDEF(JO_Type)
-   SGE_ULONG(JO_OS_job_ID)    /* O.S. job id (lower 32 bits) */
-   SGE_ULONG(JO_OS_job_ID2)   /* O.S. job id (upper 32 bits) */
-   SGE_ULONG(JO_ja_task_ID)   /* job array task id */
-   SGE_STRING(JO_task_id_str) /* task ID string */
-   SGE_ULONG(JO_state)        /* job state (JL_JOB_*) */
-   SGE_LIST(JO_usage_list)    /* ptf interval usage */
-   SGE_LIST(JO_pid_list)      /* process ID list */
+   SGE_ULONG(JO_OS_job_ID, CULL_DEFAULT)    /* O.S. job id (lower 32 bits) */
+   SGE_ULONG(JO_OS_job_ID2, CULL_DEFAULT)   /* O.S. job id (upper 32 bits) */
+   SGE_ULONG(JO_ja_task_ID, CULL_DEFAULT)   /* job array task id */
+   SGE_STRING(JO_task_id_str, CULL_DEFAULT) /* task ID string */
+   SGE_ULONG(JO_state, CULL_DEFAULT)        /* job state (JL_JOB_*) */
+   SGE_LIST(JO_usage_list, UA_Type, CULL_DEFAULT)    /* ptf interval usage */
+   SGE_LIST(JO_pid_list, JP_Type, CULL_DEFAULT)      /* process ID list */
 LISTEND 
 
 NAMEDEF(JON)
@@ -168,8 +174,8 @@ enum {
 };
 
 LISTDEF(JP_Type)
-   SGE_ULONGHU(JP_pid)          /* process ID */
-   SGE_ULONG(JP_background)   /* background flag */
+   SGE_ULONG(JP_pid, CULL_HASH | CULL_UNIQUE)          /* process ID */
+   SGE_ULONG(JP_background, CULL_DEFAULT)   /* background flag */
 LISTEND 
 
 NAMEDEF(JPN)

@@ -36,7 +36,7 @@
 #include "commlib.h"
 #include "sgermon.h"
 #include "sig_handlers.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 
 static void sge_terminate(int);
 static void sge_sigpipe_handler(int);
@@ -153,7 +153,8 @@ int me_who
 
 
    /******** signal handler for SIGCHLD AND SIGPIPE *******/
-   if ((me_who == EXECD) || 
+   if ((me_who == QCONF) ||
+       (me_who == EXECD) || 
        (me_who == QMASTER) ||
        (me_who == SCHEDD) || 
        (me_who == PVM_TASKER)) {

@@ -40,9 +40,8 @@ QACCT_SRC = qacct.c
 
 QACCT_ADD_SRC = \
             sge_rusage.c \
-            sge_complex.c \
+            read_write_complex.c \
             complex_history.c \
-            job.c \
             read_object.c \
             read_write_host.c \
             read_write_queue.c \
@@ -53,7 +52,7 @@ QACCT_OBJS = $(QACCT_SRC:.c=.o)
 
 QACCT_ADD_OBJS = $(QACCT_ADD_SRC:.c=.o)
 
-QACCT_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lsched -lcull -lcom -luti -lrmon
+QACCT_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
 QACCT_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 

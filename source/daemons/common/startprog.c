@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
-#include <unistd.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -41,13 +40,13 @@
 #include <fcntl.h> 
 #include <errno.h>
 
+#include "sge_unistd.h"
 #include "basis_types.h"
-#include "sge_arch.h"
 #include "startprog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_stat.h" 
 #include "sge_time.h"
+#include "sge_prog.h"
 #include "msg_daemons_common.h"
 
 static int do_wait(pid_t);
@@ -99,6 +98,8 @@ int startprog(int out, int err,
        *ptr = '\0';
        strcat(prog_path, name);
        if (SGE_STAT(prog_path, &sb)) {
+          ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
+               prog_path, strerror(errno)));
           DEXIT;
           return -2;
        }
@@ -115,6 +116,8 @@ int startprog(int out, int err,
     if (SGE_STAT(prog_path, &sb)) {
        sprintf(prog_path, "%s/%s", path, name);
        if (SGE_STAT(prog_path, &sb)) {
+          ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
+               prog_path, strerror(errno)));
           DEXIT;
           return -2;
        }   

@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>  
 #include <string.h>
 #include <stdlib.h>
 
@@ -39,40 +38,35 @@
 #include "sge.h"
 #include "sge_conf.h"
 #include "rw_configuration.h"
-#include "sge_chdir.h"
-#include "sge_mkdir.h"
 #include "sge_log.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_stringL.h"
 #include "sge_gdi_intern.h"
-#include "sge_copy_append.h"
 #include "job_report_execd.h"
 #include "execd_ck_to_do.h"
 #include "setup_execd.h"
 #include "sge_load_sensor.h"
 #include "cull_file.h"
-#include "utility_daemon.h"
-#include "sge_daemonize.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "sge_getloadavg.h"
-#include "sge_switch_user.h"
-#include "sge_exit.h"
+#include "sge_prog.h"
 #include "sge_string.h"
-#include "sge_stat.h"
 #include "reaper_execd.h"
 #include "execution_states.h"
+#include "sge_feature.h"
+#include "read_write_job.h"
+#include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_os.h"
+#include "sge_job.h"
+
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
-#include "sge_feature.h"
-#include "read_write_job.h"
 
-extern char execd_spool_dir[];
+extern char execd_spool_dir[SGE_PATH_MAX];
 extern lList *execd_config_list;
 extern lList *jr_list;
-extern lList *Master_Job_List;
 
 char execd_messages_file[SGE_PATH_MAX];
 
@@ -91,12 +85,12 @@ void sge_setup_sge_execd()
    /*
    ** switch to admin user
    */
-   if (set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
       SGE_EXIT(1);
    }
@@ -117,10 +111,11 @@ void sge_setup_sge_execd()
    sge_chdir(me.unqualified_hostname, 1); 
    /* having passed the  previous statement we may 
       log messages into the ERR_FILE  */
-   sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_APPEND);
-   switch2start_user();
+   sge_copy_append(TMP_ERR_FILE_EXECD, ERR_FILE, SGE_MODE_APPEND);
+   sge_switch2start_user();
    unlink(TMP_ERR_FILE_EXECD);
-   switch2admin_user();
+   sge_switch2admin_user();
+   sge_log_set_auser(1);
    sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
            me.unqualified_hostname, ERR_FILE);
    error_file = execd_messages_file;
@@ -182,10 +177,10 @@ int job_initialize_job(lListElem *job)
 
       ja_task_id = lGetUlong(ja_task, JAT_task_number);
 
-      add_job_report(job_id, ja_task_id, job);
+      add_job_report(job_id, ja_task_id, NULL, job);
                                                                                       /* add also job reports for tasks */
       for_each (pe_task, lGetList(ja_task, JAT_task_list)) {
-         add_job_report(job_id, ja_task_id, pe_task);
+         add_job_report(job_id, ja_task_id, lGetString(pe_task, PET_id), job);
       }
 
       /* does active dir exist ? */
@@ -195,10 +190,10 @@ int job_initialize_job(lListElem *job)
          stringT active_dir = "";
 
          sge_get_file_path(active_dir, JOB_ACTIVE_DIR, FORMAT_DEFAULT,
-                           SPOOL_WITHIN_EXECD, job_id, ja_task_id);
+                           SPOOL_WITHIN_EXECD, job_id, ja_task_id, NULL);
          if (SGE_STAT(active_dir, &stat_buffer)) {
             /* lost active directory - initiate cleanup for job */
-            execd_job_run_failure(job, ja_task, "lost active dir of running "
+            execd_job_run_failure(job, ja_task, NULL, "lost active dir of running "
                                   "job", GFSTATE_HOST);
             continue;
          }
@@ -216,13 +211,12 @@ int job_initialize_job(lListElem *job)
             }
          }
          for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
-            if (lGetUlong(lFirst(lGetList(pe_task, JB_ja_tasks)),
-                  JAT_status) == JRUNNING) {
+            if (lGetUlong(pe_task, PET_status) == JRUNNING) {
                ret=register_at_ptf(job, ja_task, pe_task);
                if (ret) {
                   ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS,
                      (ret == 1 ? MSG_DELAYED : MSG_FAILED),
-                     u32c(job_id), lGetString(pe_task, JB_pe_task_id_str)));
+                     u32c(job_id), lGetString(pe_task, PET_id)));
                }
             }
          }

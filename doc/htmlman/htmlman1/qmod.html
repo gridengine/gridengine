@@ -1,5 +1,5 @@
 <HTML>
-<BODY>
+<BODY BGCOLOR=white>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
@@ -42,6 +42,10 @@ OPTIONS
      -help
           Prints a listing of all options.
 
+     -r   If applied to queues, reschedules  all  jobs  currently
+          running  in  this  queue.   If applied to running jobs,
+          reschedules the jobs.
+
      -s   If applied to queues, suspends the queues and any  jobs
           which  might  be  active.  If  applied to running jobs,
           suspends the jobs. If a job is  both  suspended  expli-
@@ -69,9 +73,9 @@ OPTIONS
               <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][ <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>] ...]
 
           If present, the <I>task</I>_<I>range</I> restricts the effect of  the
-          <I>qmod</I> operation to the job array task range specified as
+          <I>qmod</I> operation to the array job task range specified as
           suffix to the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  for
-          further details on job arrays).
+          further details on array jobs).
 
           The task range specifier has  the  form  n[-m[:s]][,n[-
           m[:s]], ...] or n[-m[:s]][ n[-m[:s]] ...] and thus con-
@@ -80,6 +84,16 @@ OPTIONS
           the complete task id range. Each range may be a  single
           number,  a simple range of the form n-m or a range with
           a step size.
+
+          The <I>queue</I>_<I>list</I> is specified by  one  of  the  following
+          forms:
+
+              <I>queuename</I>[,<I>queuename</I> ...]
+              <I>queuename</I>[ <I>queuename</I> ...]
+
+          Alternatively a wildcard charcter "*" can be  used  for
+          specifying  queues,   e.g.  "s*" will select all queues
+          starting with "s".
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -92,7 +106,6 @@ ENVIRONMENTAL VARIABLES
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
                          set.
-
                          The  name  of  the  default  cell,  i.e.
                          default.
 
@@ -125,19 +138,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

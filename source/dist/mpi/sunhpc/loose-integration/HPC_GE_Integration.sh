@@ -195,16 +195,21 @@ ScreenExecHost()
        for myq in `$ECHO $QLIST`
        do {
           myehname=`qconf -sq $myq | grep hostname | nawk '{print $2}'`
+          myshort_ehname=`echo $myehname | nawk '{ sub(/\./," ",$0); print $0}' | nawk '{print $1}'`
 #
 #         check if my queue uses the exection host in review
 #
-          if [ "$myehname" = "$myeh" ]; then
-	     if [ "$NAPPEAR" = "" ]; then
-		NAPPEAR="YES"
-	     elif [ "$NAPPEAR" = "YES" ]; then
-		NAPPEAR="MULTIPLE"
-                MQLIST="$MQLIST $myeh"
-	     fi
+          if [ "$myshort_ehname" = "$myeh" ]; then
+             if [ "$NAPPEAR" = "" ]; then
+                NAPPEAR="YES"
+             elif [ "$NAPPEAR" = "YES" ]; then
+                NAPPEAR="MULTIPLE"
+#
+#               Use what's defined in SGE
+#               (SGE may use FQDN while HPC CT uses short hostname)
+#
+                MQLIST="$MQLIST $myehname"
+             fi
           fi
        }
        done
@@ -445,7 +450,12 @@ echo "cat > \$1 << EOF_QUEUE" >> $q_template.$$.sh
                  else if  ( temp[1] == "hostname" ) {
                     sub(/unknown/, "$exhost", line[i]); print line[i] }
                  else if  ( temp[1] == "qtype" ) {
-                    print line[i] " PARALLEL" }
+                    m = match(line[i],"PARALLEL")
+                    if ( m <= 0 ) {
+                       print line[i] " PARALLEL" }
+                    else {
+                       print line[i] }
+                    }
                  else if  ( temp[1] == "slots" ) {
                     sub(/1/, "$nslots", line[i]); print line[i] }
                  else if  ( temp[1] == "suspend_method" ) {

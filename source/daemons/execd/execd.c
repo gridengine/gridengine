@@ -33,24 +33,18 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h" 
-#include "sge_arch.h"
-#include "sge_daemonize.h"
-#include "sge_exit.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
-#include "sge_log_pid.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
-#include "def.h"
 #include "dispatcher.h"
 #include "execd_ck_to_do.h"
 #include "execd_get_new_conf.h"
@@ -60,6 +54,7 @@
 #include "execd_ticket.h"
 #include "job_log.h"
 #include "job_report_execd.h"
+#include "sge_report_execd.h"
 #include "load_avg.h"
 #include "parse.h"
 #include "sge_feature.h"
@@ -69,14 +64,18 @@
 #include "sig_handlers.h"
 #include "startprog.h"
 #include "usage.h"
-#include "sge_switch_user.h"
 #include "read_write_job.h"
-#include "sge_file_path.h"
-
+#include "sge_os.h"
+#include "sge_stdlib.h"
+#include "sge_spool.h"
+#include "sge_answer.h"
 #include "basis_types.h"
-#include "msg_utilib.h"
-#include "msg_execd.h"
 #include "sge_language.h"
+#include "sge_job.h"
+
+#include "msg_common.h"
+#include "msg_execd.h"
+#include "msg_gdilib.h"
 
 #ifdef COMPILE_DC
 #   include "ptf.h"
@@ -94,8 +93,6 @@ volatile int waiting4osjid = 1;
 char execd_spool_dir[SGE_PATH_MAX];
 
 lList *execd_config_list = NULL;
-lList *Master_Job_List = NULL;
-lList *Master_Zombie_List = NULL;
 
 static void execd_exit_func(int i);
 static void execd_register(void);
@@ -143,7 +140,7 @@ char **argv
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -170,7 +167,7 @@ char **argv
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
-   install_exit_func(execd_exit_func);
+   sge_install_exit_func(execd_exit_func);
    sge_setup_sig_handlers(EXECD);
 
    memset(priority_tags, 0, sizeof(priority_tags));
@@ -180,7 +177,7 @@ char **argv
    sge_setup(EXECD, NULL);   
    prepare_enroll(prognames[EXECD], 1, priority_tags);
 
-   if ((i=occupy_first_three())>=0) {
+   if ((i=sge_occupy_first_three())>=0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
       SGE_EXIT(1);
    }     
@@ -273,7 +270,7 @@ char **argv
 
    execd_register();
 
-   sge_log_pid(EXECD_PID_FILE);
+   sge_write_pid(EXECD_PID_FILE);
 
    /* at this point we are sure we are the only sge_execd */
    /* first we have to report any reaped children that might exist */
@@ -317,7 +314,7 @@ char **argv
       }
 
       if (i) {             
-         ERROR((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
+         WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
 
          if (shut_me_down == 1) {
             sge_shutdown();
@@ -503,7 +500,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDARG_S, *sp);
       sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -559,7 +556,7 @@ char *filename;
       sprintf(str, MSG_PARSE_TOOMANYARGS);
       if(!usageshowed)
          sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }

@@ -40,11 +40,9 @@ QSTAT_SRC = qstat.c
 
 QSTAT_ADD_SRC = \
                qstat_printing.c \
-               sge_complex.c \
+               read_write_complex.c \
                show_job.c \
-               sge_conf.c \
                sig_handlers.c \
-               job.c \
                usage.c sge_options.c
 
 QSTAT_OBJS = $(QSTAT_SRC:.c=.o)

@@ -90,6 +90,9 @@ case "hp10":
 case "hp11":
    set BUILDARCH = HP11
    breaksw
+case "hp11-64":
+   set BUILDARCH = HP1164
+   breaksw
 case "irix6":
    set BUILDARCH = IRIX6
    breaksw
@@ -98,6 +101,7 @@ case "necsx4":
    breaksw
 case "necsx5":
 case "necsx6":
+case "sx":
    set BUILDARCH = NECSX5
    breaksw
 case "osf4":
@@ -117,6 +121,9 @@ case "solaris86":
    breaksw
 case "tru64":
    set BUILDARCH = ALPHA5
+   breaksw
+case "aix51":
+   set BUILDARCH = AIX51
    breaksw
 default:
    echo oops - no mapping for architecure \"$buildarch\" defined yet
@@ -222,7 +229,7 @@ endif
 
 set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
-set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/spool -I../libs/spool/classic -I../libs/spool/flatfile -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0
@@ -241,6 +248,7 @@ set   SHAREDEXT    = ".so"
 set   SHAREDLD     = ""
 set   SHARED_CFLAGS = ""
 set   SHARED_LFLAGS = ""
+set   DLLIB         = "-ldl"
 set   STATIC        = 0
 set   IRIX_ABI      = ""
 set   IRIX_ARCHDEF  = IRIX6
@@ -252,7 +260,7 @@ set   FC           = f77
 set   LFLAGS       = "-L."
 set   LIBS         = "-lm"
 set   OPTIMIZATION = 0
-set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.40"
+set   GETTEXTBASE = "$SOURCE/3rdparty/gettext"
 set   MAKEZLIB    = 0
 set   TPLIB       = ""	# 3rdparty libs
 set   MAKESTRPTIME = 0
@@ -268,7 +276,7 @@ set   ARFLAGS     = rscv
 set   MAKE        = make
 set   PARALLEL    = ""
 set   USE_QMAKE   = 0
-set   MESSAGES    = "../dist/locale/gridengine.pot"
+set   MESSAGES    = "../dist/locale/gridenginenotuniq.pot"
 set   MESSAGES_BIN = "gridengine.mo"
 set   SGE_DEPEND  = 0
 set   QMON        = 1
@@ -322,6 +330,7 @@ switch ($BUILDARCH)
    case LINUX6:
    case SOLARIS:
    case SOLARIS64:
+   case SOLARIS86:
       set WITH_GETTEXT = 1
       breaksw
    default:
@@ -523,8 +532,9 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case  "-mo"
+      echo "BUILDARCH=$BUILDARCH"
       if ( $BUILDARCH == solaris || $BUILDARCH == solaris64 ) then
-         util/msgmerge.csh
+         scripts/msgmerge.csh
       else
          echo "Use a solaris machine"                                                 endif
       exit 0
@@ -628,16 +638,37 @@ while ($#argv >= 1 && $?found)
       set PERLGUI_CLEAN = "perlgui_clean"
       breaksw
    case  "-po"
-      if ( $BUILDARCH == glinux ) then
-         util/msgmerge.csh merge
+      if ( $buildarch == glinux ) then
+         scripts/msgmerge.csh merge
          echo ""
          echo "==========READY FOR TRANSLATION========="
          echo ""
+      else
+         echo "Must be done on glinux"
+         exit 1
       endif
       exit 0
       breaksw
    case  "-pot"
-      $0 -intl -noqmon messages
+      if ( $buildarch != glinux ) then
+         echo "Must be done on glinux architecture"
+         exit 1
+      endif   
+      rm -f dist/locale/gridenginenotuniq.pot
+      rm -f dist/locale/gridengine.pot
+      $0 -intl -only-core messages
+      echo "Adding script messages"
+      setenv BUILDARCH $BUILDARCH
+      foreach f ( dist/inst_sge  dist/util/setfileperm.sh dist/util/arch_variables \
+                  dist/util/qhold.sh dist/util/sgeCA/sge_ca )
+         set pf = "/tmp/`basename $f`.pot"
+         $TCLSH scripts/infotext_msg_parse.tcl -F $pf $f
+         echo "Appending script pot file $pf" 
+         cat $pf >> dist/locale/gridenginenotuniq.pot
+         rm $pf
+      end
+      echo "Uniqing pot file"
+      scripts/msgmerge.csh merge
       exit 0
       breaksw
    case "-pr-geee":  
@@ -729,9 +760,40 @@ case AIX43:
    
    set CXX      = xlC
    set MAKE     = make
-   set CFLAGS   = "$OFLAG -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set CXXFLAGS   = "$OFLAG -DAIX4 -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
+   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
+
+   if ( $STATIC == 1 ) then
+      set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
+      set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
+   endif
+
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+   breaksw
+
+case AIX51:
+   set OFLAG    = "-O -qmaxmem=8192"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3 -qstrict -qmaxmem=8192"
+   endif
+
+   set CXX      = xlC
+   set MAKE     = make
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -804,6 +866,8 @@ case ALPHA5:
    set CXX = "cxx"
    set WFLAG   = "-w2"
    # set WFLAG = ""
+
+   set DLLIB = ""
 
    set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
@@ -949,6 +1013,7 @@ case IRIX6*:
 
 case HP10:
    set MAKE = gmake
+   set DLLIB = ""
    set OFLAG = "-O"
    if ( $CC == gcc ) then
       if ( $OPTIMIZATION == 1 ) then
@@ -999,6 +1064,7 @@ case HP10:
 case HP11:
    set MAKE = gmake
    set OFLAG = "-O"
+   set DLLIB = ""
    if ( $CC == gcc ) then
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "-O3"
@@ -1013,6 +1079,57 @@ case HP11:
       set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
       set CXXFLAGS = "$OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set SHAREDLD = ld
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "+z"
+      set SHARED_LFLAGS = "-L. -b +s"
+   endif
+
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
+   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
+   set LIBS     = "-lnsl $LIBS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set XMTDEF   = "-DNO_EDITRES"
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "$XMTDEF $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
+
+   if ( $STATIC == 1 ) then
+      set LFLAGS = "-Wl,-a,archive $LFLAGS"
+   endif
+   set SHAREDEXT = ".sl"
+   set LFLAGS = "-Wl,+s $LFLAGS"
+   breaksw
+
+case HP1164:
+   set MAKE = gmake
+   set OFLAG = "-O"
+   set DLLIB = ""
+   if ( $CC == gcc ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   else
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
+      set CXX = "aCC"
+      set CFLAGS = "-Ae $OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   endif
+
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
@@ -1066,8 +1183,14 @@ case LINUX6:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set CXXFLAGS = "-Wno-error $CXXFLAGS"
+      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
+
+   if ( $CC == "gcc" && `gcc --version` == "2.96") then
+      set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
+   endif
+
    set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
    set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1091,7 +1214,11 @@ case LINUX6:
    else
      set GLIBC20DEF = ""
    endif
-   set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   if ( "$ADOC" != 1 ) then
+      set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   else 
+      set CFLAGS   = "$OFLAG $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   endif
    set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
@@ -1099,7 +1226,7 @@ case LINUX6:
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set XMTDEF   = ""
-   set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
@@ -1215,6 +1342,7 @@ case SOLARIS86:
    endif
 
    set LOADAVGLIBS = "-lkvm -lkstat"
+   set DIVBYZERO = "-fns -ftrap=division"
 #  set PARALLEL = "-j 1"
 #  set MAKE=gmake
    if ( $CC == gcc ) then
@@ -1229,6 +1357,11 @@ case SOLARIS86:
       endif   
    endif
 
+   if ( $DEBUGGED == 1 ) then
+      set DEBUG_FLAG = "-g"
+      set OFLAG = ""
+   endif
+
    if ( $GPROFFED == 1 ) then
       set OFLAG = "-O"
       if ( $CC == gcc ) then
@@ -1237,11 +1370,6 @@ case SOLARIS86:
       else
          set DEBUG_FLAG = "-g -xpg"
       endif
-   endif
-
-   if ( $DEBUGGED == 1 ) then
-      set DEBUG_FLAG = "-g"
-      set OFLAG = ""
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
@@ -1260,6 +1388,7 @@ case SOLARIS86:
       set SOL64BITFLAG = ""
       if ( $CC == cc || $CC == insure ) then
          set MEMCFLAG=-Xa
+         set LFLAGS = "$DIVBYZERO -xildoff $LFLAGS"
       endif
    endif
 
@@ -1269,8 +1398,8 @@ case SOLARIS86:
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 
-   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
-   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG -DHAVE_STD -mt"
+   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO"
+   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO -DHAVE_STD -mt"
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
@@ -1295,7 +1424,7 @@ case SOLARIS86:
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
    set XCFLAGS  = "-Xc -DNeedFunctionPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-lXm -lXt -lXext -lX11 -lw -lgen"
+   set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
    set RANLIB   = "echo"
 
@@ -1409,15 +1538,17 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "LINUX6" ) then
+      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "SOLARIS86" || $COMPILE_ARCH == "LINUX6" ) then
          set LIBINTL = ""
+         set HFLAGS = ""
       else
+         set HFLAGS = "-I$GETTEXTBASE/$BUILDARCH/include"
          set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
          set LIBINTL = "-lintl -lnlsut"
       endif
    endif
    set LIBS = "$LIBINTL $LIBS"
-   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ -I$GETTEXTBASE/$BUILDARCH/include"
+   set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ $HFLAGS"
    set CXXFLAGS = "$CXXFLAGS"
 else
    set XGETTEXT = ""
@@ -1488,7 +1619,7 @@ endif
 if ( "$BUILDGETTEXT" == 1 ) then
    echo ________G_E_T_T_E_X_T___________
 
-   cd $SOURCE/3rdparty/gettext-0.10.40
+   cd $SOURCE/3rdparty/gettext
    $SOURCE/scripts/install.gridware $COMPILE_ARCH
    if ( $status != 0 ) then
       echo not done
@@ -1639,6 +1770,7 @@ if ( "$CORE" == 1 ) then
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "DLLIB=$DLLIB" \
        "MEMCFLAG=$MEMCFLAG" \
        "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
    if ( $status != 0 ) then
@@ -1781,6 +1913,10 @@ if ( "$QTCSH" == 1) then
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
 
+   if ( "$CC" == "insure" ) then
+      setenv CC insure
+   endif
+
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \
          "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" $argv
@@ -1832,13 +1968,13 @@ if ( "$ADOC" == 1) then
    set REVISION = `grep GDI_VERSION libs/gdi/version.c | cut -f 2 -d '"'`
 
    echo "Creating documentation for libs: libs.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Libraries" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_LIBS >libs.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Libraries" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_LIBS -o $COMPILE_ARCH/libs.texi
 
    echo "Creating documentation for core system: core.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE >core.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE -o $COMPILE_ARCH/core.texi
 
    echo "Creating documentation for testsuite: testsuite.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE >testsuite.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE -o $COMPILE_ARCH/testsuite.texi
 
    echo "To create a html or pdf documentation, execute for example"
    echo "texi2html libs.texi   or"

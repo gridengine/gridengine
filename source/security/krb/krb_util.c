@@ -44,22 +44,16 @@
 #include "basis_types.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "utility.h"
-#include "sge_copy_append.h"
 #include "read_write_job.h"
 #include "commlib.h"
 
 #include "sge.h"
-#include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_time.h"
-#include "sge_me.h"
-#include "sge_max_nis_retries.h"
+#include "sge_uidgid.h"
 
-#include "sge_complex.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "msg_krb.h"
 
 #include "krb_data.h"
@@ -228,7 +222,7 @@ lList *joblist
 
 		  }
 
-                  job_write_spool_file(job, 0, SPOOL_DEFAULT);;
+                  job_write_spool_file(job, 0, NULL, SPOOL_DEFAULT);;
 
 		  if (new_creds[0])
 		     krb5_free_creds(context, new_creds[0]);

@@ -57,6 +57,10 @@ coshepherd_depend:
 	$(DEPEND) -f$(COSHEPHERD_DIR)/coshepherd_dependencies $(COSHEPHERD_DIR)/*.c
 
 coshepherd_messages:
+	@echo Creating $@
+	@for i in `ls $(COSHEPHERD_DIR)/*.c`; do \
+		$(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ; \
+	done
 
 ###############################################################################
 # rules to build binaries

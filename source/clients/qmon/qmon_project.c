@@ -47,8 +47,9 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
+#include "sge_userprj.h"
 #include "commlib.h"
-#include "def.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -251,7 +252,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ep = lGetElemStr(qmonMirrorList(SGE_PROJECT_LIST), UP_name, prjname);
+   ep = userprj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjname);
 
    XtFree((char*) prjname);
 
@@ -414,7 +415,7 @@ XtPointer cld, cad;
       XtVaSetValues( project_name_w,
                      XmNeditable, False,
                      NULL);
-      prjp = lGetElemStr(qmonMirrorList(SGE_PROJECT_LIST), UP_name, prjstr);
+      prjp = userprj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjstr);
       XtFree((char*)prjstr);
       if (prjp) {
          add_mode = 0;
@@ -442,8 +443,8 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *prjl = NULL;
-   lList *alp;
-   lEnumeration *what;
+   lList *alp = NULL;
+   lEnumeration *what = NULL;
    Boolean status = False;
    XmString xprjname = NULL;
    StringConst prjname = NULL;

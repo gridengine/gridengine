@@ -45,20 +45,17 @@ extern "C" {
 /* the request himself */
 enum {
    RQ_requests = RQ_LOWERBOUND,
-   RQ_pe_name,
-   RQ_pe_ranges
+   RQ_pe_name
 };
 
 LISTDEF(RQ_Type)
-   SGE_LIST(RQ_requests)      /* RE_Type */
-   SGE_STRING(RQ_pe_name)
-   SGE_LIST(RQ_pe_ranges)
+   SGE_LIST(RQ_requests, RE_Type, CULL_DEFAULT)      /* RE_Type */
+   SGE_STRING(RQ_pe_name, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(RQN)
    NAME("RQ_requests")
    NAME("RQ_pe_name")
-   NAME("RQ_pe_ranges")
 NAMEEND
 
 #define RQS sizeof(RQN)/sizeof(char*)
@@ -70,8 +67,8 @@ enum {
 };
 
 SLISTDEF(RE_Type, Request)
-   SGE_TLIST(RE_ranges, RN_Type)
-   SGE_TLIST(RE_entries, CE_Type)     /* consists of elements with type CE_Type */
+   SGE_LIST(RE_ranges, RN_Type, CULL_DEFAULT)
+   SGE_LIST(RE_entries, CE_Type, CULL_DEFAULT)     /* consists of elements with type CE_Type */
 LISTEND 
 
 NAMEDEF(REN)

@@ -1,5 +1,5 @@
 <HTML>
-<BODY>
+<BODY BGCOLOR=white>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
@@ -7,8 +7,7 @@ NAME
 
 SYNOPSIS
      sge_qmaster [ -help ]  [  -lj  log_file  ]  [  -nohist  ]  [
-     -noread-argfile  ]  [ -nostart-commd ] [ -nostart-schedd ] [
-     -nowrite-argfile ] [ -s ] [ -truncate-argfile ]
+     -nostart-commd ] [ -s ] [
 
      sge_qmaster -show-license
 
@@ -37,51 +36,14 @@ OPTIONS
           requests in  the  <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>  command-line.  This  switch
           suppresses writing to this database.
 
-     -noread-argfile
-          On primary start-up, <I>sge</I>_<I>qmaster</I>  writes  its  command-
-          line  arguments to a file. During later start-ups, this
-          argument file will be read and the options contained in
-          the  file  will  be used as if supplied at the command-
-          line. This option suppresses reading  of  the  argument
-          file.
-
      -nostart-commd
           Do  not  start-up   <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>   automatically   with
           <I>sge</I>_<I>qmaster</I>.
-
-     -nostart-schedd
-          Do  not  startup   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>   automatically   with
-          <I>sge</I>_<I>qmaster</I>.   <I>sge</I>_<I>qmaster</I>  currently  does  not  start
-          <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B> automatically. Thus this  option  has  no
-          effect.
-
-     -nowrite-argfile
-          On primary start-up, <I>sge</I>_<I>qmaster</I>  writes  its  command-
-          line  arguments to a file. During later start-ups, this
-          argument file will be read and the options contained in
-          the  file  will  be used as if supplied at the command-
-          line. This option suppresses writing  of  the  argument
-          file.
 
      -s   turns on <I>sge</I>_<I>qmaster</I>s silent mode. Usually  <I>sge</I>_<I>qmaster</I>
           displays a license information on startup and waits for
           a return to continue. With the  -<I>s</I>  switch  <I>sge</I>_<I>qmaster</I>
           starts up silently.
-
-     -show-license
-          Displays the current  licensing  information  for  your
-          Grid  Engine  system.  This  option  also works if your
-          license has expired and <I>sge</I>_<I>qmaster</I> would exit  immedi-
-          ately  otherwise.  Use  the  displayed  information  to
-          request an appropriate license from  your  Grid  Engine
-          support contact.
-
-     -truncate-argfile
-          On primary start-up, <I>sge</I>_<I>qmaster</I>  writes  its  command-
-          line  arguments to a file. During later start-ups, this
-          argument file will be read and the options contained in
-          the  file  will  be used as if supplied at the command-
-          line. This option truncates the argument file.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -142,21 +104,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 </PRE>

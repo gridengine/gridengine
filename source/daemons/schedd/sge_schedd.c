@@ -34,40 +34,30 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
-#include "sge_chdir.h"
-#include "sge_copy_append.h"
-#include "sge_daemonize.h"
-#include "sge_exit.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
-#include "sge_log_pid.h"
-#include "sge_me.h"
-#include "sge_mkdir.h"
 #include "sge_orders.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_schedd.h"
 #include "sgermon.h"
 #include "commlib.h"
-#include "sge_complex.h"
 #include "scheduler.h"
 #include "sge_feature.h"
 #include "shutdown.h"
 #include "sge_sched.h"
 #include "schedd_monitor.h"
 #include "sig_handlers.h"
-#include "utility.h"
 #include "sge_conf.h"
 #include "sge_process_events.h"
-#include "sge_switch_user.h"
 #include "basis_types.h"
 #include "qm_name.h"
 #include "msg_schedd.h"
@@ -77,19 +67,24 @@
 #include "setup_path.h" 
 #include "sge_time.h" 
 #include "job_log.h" 
-
+#include "sge_uidgid.h"
+#include "sge_io.h"
+#include "sge_spool.h"
+#include "sge_hostname.h"
+#include "sge_os.h"
+#include "sge_answer.h"
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
 int start_on_master_host = 0;
+int sgeee_mode = 0;
 
-static int sge_ck_qmaster(void);
+static int sge_ck_qmaster(const char *former_master_host);
 static int parse_cmdline_schedd(int argc, char **argv);
 static void usage(FILE *fp);
 static void schedd_exit_func(int i);
 static int sge_setup_sge_schedd(void);
-static void sge_subscribe_schedd(void);
 int daemonize_schedd(void);
 
 extern char *error_file;
@@ -98,12 +93,12 @@ extern char *error_file;
 /* array used to select from different scheduling alorithms */
 sched_func_struct sched_funcs[] =
 {
-   {"default",      "Default scheduler",   event_handler_default_scheduler, (void *)scheduler },
+   {"default",      "Default scheduler",   subscribe_default_scheduler, event_handler_default_scheduler, (void *)scheduler },
 #ifdef SCHEDULER_SAMPLES
-   {"ext_mysched",  "sample #1 scheduler", event_handler_default_scheduler, (void *)my_scheduler },
-   {"ext_mysched2", "sample #2 scheduler", event_handler_my_scheduler,      (void *)scheduler },
+   {"ext_mysched",  "sample #1 scheduler", subscribe_default_scheduler, event_handler_default_scheduler, (void *)my_scheduler },
+   {"ext_mysched2", "sample #2 scheduler", subscribe_my_scheduler,      event_handler_my_scheduler,      (void *)scheduler },
 #endif
-   {NULL, NULL}
+   {NULL, NULL, NULL, NULL}
 };
 
 
@@ -117,6 +112,7 @@ char *argv[]
    int check_qmaster;
    const char *master_host;
    int ret;
+   char initial_qmaster_host[1024];
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
@@ -125,7 +121,7 @@ char *argv[]
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -138,13 +134,13 @@ char *argv[]
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
-   install_exit_func(schedd_exit_func);
+   sge_install_exit_func(schedd_exit_func);
    sge_setup_sig_handlers(SCHEDD);
 
    sge_setup(SCHEDD, NULL);
    prepare_enroll(prognames[SCHEDD], 1, NULL);
 
-   if ((ret = occupy_first_three()) >= 0) {
+   if ((ret = sge_occupy_first_three()) >= 0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I , ret));
       SGE_EXIT(1);
    }
@@ -152,20 +148,21 @@ char *argv[]
    lInit(nmv);
 
    feature_initialize_from_file(path.product_mode_file);
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
-
-   /* prepare event client mechanism */
-   ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
-   sge_subscribe_schedd();
 
    /* daemonizes if qmaster is unreachable */
    check_qmaster = sge_setup_sge_schedd();
 
+   /* prepare event client/mirror mechanism */
+   sge_schedd_mirror_register();
+
    master_host = sge_get_master(0);
-   if (hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
+   if (sge_hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
       SGE_EXIT(1);
    }
+   strncpy(initial_qmaster_host, master_host, sizeof(initial_qmaster_host)-1);
 
    if (!getenv("SGE_ND")) {
       int fd;
@@ -178,7 +175,7 @@ char *argv[]
    }
 
    starting_up();
-   sge_log_pid(SCHEDD_PID_FILE);
+   sge_write_pid(SCHEDD_PID_FILE);
 
 #if RAND_ERROR
    rand_error = 1;
@@ -193,10 +190,8 @@ char *argv[]
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
 
    while (1) {
-      lList* event_list = NULL;
-
       if (shut_me_down) {
-         ec_deregister();
+         sge_mirror_shutdown();
          sge_shutdown();
       }   
 
@@ -204,65 +199,33 @@ char *argv[]
          sigpipe_received = 0;
          INFO((SGE_EVENT, "SIGPIPE received"));
       }
-         
+      
       if (check_qmaster) {
-         if ((ret = sge_ck_qmaster()) < 0) {
+         if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
-         }
-         else if (ret > 0) {
+         } else if (ret > 0) {
             sleep(10);
             continue;
          }
       }
 
-      ret = ec_get(&event_list);
-
-      {
-         static u_long32 last_list = 0;
-         if (ret == CL_OK) {
-            last_list = sge_get_gmt();
-            check_qmaster = 0;
-         } else {
-            if (last_list && (sge_get_gmt() > last_list + ec_get_edtime() * 10)) {
-               DPRINTF(("QMASTER ALIVE TIMEOUT EXPIRED\n"));
-               ec_mark4registration();
-               check_qmaster = 1;
-            }
-            continue;
-         }
+      if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
+         check_qmaster = TRUE;
+         continue;
       }
 
-      /* pass event list to event handler of current scheduler 
-         the event handler also starts a dispatch epoch 
-
-         a change on the scheduler algorithm is also sent as an event,
-         and must be recognized by the current scheduler. It must lead 
-         to a new registration of schedd with qmaster as the new 
-         scheduler needs the initial events */
-
-      ret = sched_funcs[current_scheduler].event_func(event_list);
-
-      if (ret) {
-         ec_mark4registration();
-         check_qmaster = 1;
-         if (ret == -1) {              /* error in event layer */
-            WARNING((SGE_EVENT, MSG_SCHEDD_REREGISTER_ERROR));
-         } else if (ret == 1) {        /* schedd parameter changed */
-            INFO((SGE_EVENT, MSG_SCHEDD_REREGISTER_PARAM));
-         } 
-#if 0
-         else /* (ret == 2) */ {     /* shutdown order from qmaster */           
-            extern u_long32 logginglevel;
-            u_long32 old_ll = logginglevel;
-            logginglevel = LOG_INFO;
-            INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
-                  feature_get_product_name(FS_VERSION),
-                  feature_get_featureset_name(feature_get_active_featureset_id())));
-            logginglevel = old_ll;
-         }
-#endif
+      /* event processing can trigger a re-registration, 
+       * -> if qmaster goes down
+       * -> the scheduling algorithm was changed
+       * in this case do not start a scheduling run
+       */
+      if(ec_need_new_registration()) {
+         check_qmaster = TRUE;
+         continue;
       }
+
+      sched_funcs[current_scheduler].event_func();
    }
 }
 
@@ -304,16 +267,25 @@ static int parse_cmdline_schedd(int argc, char *argv[])
  *  1 failed but we should retry (also check_isalive() failed)
  * -1 error 
  *----------------------------------------------------------------*/
-static int sge_ck_qmaster()
+static int sge_ck_qmaster(const char *former_master_host)
 {
    lList *alp, *lp = NULL;
    int success, old_timeout;
    lEnumeration *what;
    lCondition *where;
+   const char *current_master;
 
    DENTER(TOP_LAYER, "sge_ck_qmaster");
 
-   if (check_isalive(sge_get_master(0))) {
+   current_master = sge_get_master(1);
+   if (former_master_host && sge_hostcmp(current_master, former_master_host)) {
+      ERROR((SGE_EVENT, MSG_QMASTERMOVEDEXITING_SS, former_master_host,
+      current_master));
+      DEXIT;
+      return -1;
+   }
+
+   if (check_isalive(current_master)) {
       DPRINTF(("qmaster is not alive\n"));
       DEXIT;
       return 1;
@@ -389,8 +361,11 @@ static int sge_ck_qmaster()
    lp = lFreeList(lp);
 
 /*---------------------------------------------------------------*/
+#if 0
+   /* JG: this is not necessary: SCHED_CONF is sent at 
+    * event client registration 
+    */
    DPRINTF(("Requesting scheduler configuration from qmaster\n"));
-
    what = lWhat("%T(ALL)", SC_Type);
    alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
    what = lFreeWhat(what);
@@ -412,13 +387,14 @@ static int sge_ck_qmaster()
    }
 
    alp = NULL;
-   if (sc_set(&alp, &scheddconf, lFirst(lp), NULL))
+   if (sc_set(&alp, &scheddconf, lFirst(lp), NULL, NULL))
       ERROR((SGE_EVENT, "%s", lGetString(lFirst(alp), AN_text)));
 
    ec_set_edtime(scheddconf.schedule_interval);
    use_alg(scheddconf.algorithm);
 
    lp = lFreeList(lp);
+#endif
 
    DEXIT;
    return 0;
@@ -435,7 +411,7 @@ const char *alg_name
 ) {
    int i = 0;
    int scheduler_before = current_scheduler;
-   int (*event_func_before)(lList *) = sched_funcs[current_scheduler].event_func;
+   int (*event_func_before)(void) = sched_funcs[current_scheduler].event_func;
 
    DENTER(TOP_LAYER, "use_alg");
 
@@ -499,12 +475,12 @@ static int sge_setup_sge_schedd()
    /*
    ** switch to admin user
    */
-   if (set_admin_username(conf.admin_user, err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSWITCHTOADMINUSER ));
       SGE_EXIT(1);
    }
@@ -517,16 +493,16 @@ static int sge_setup_sge_schedd()
    sge_chdir(SCHED_SPOOL_DIR, 1);
 
    /* having passed this statement we may log messages into the ERR_FILE */
-   sge_copy_append(TMP_ERR_FILE_SCHEDD, ERR_FILE, SGE_APPEND);
-   switch2start_user();
+   sge_copy_append(TMP_ERR_FILE_SCHEDD, ERR_FILE, SGE_MODE_APPEND);
+   sge_switch2start_user();
    unlink(TMP_ERR_FILE_SCHEDD);
-   switch2admin_user();
+   sge_switch2admin_user();
+   sge_log_set_auser(1);
    error_file = ERR_FILE;
-   sge_log_as_admin_user();
    /* suppress the INFO messages during setup phase */
    saved_logginglevel = logginglevel;
    logginglevel = LOG_WARNING;
-   if ((ret = sge_ck_qmaster()) < 0) {
+   if ((ret = sge_ck_qmaster(NULL)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));
       SGE_EXIT(1);
    }
@@ -572,152 +548,31 @@ int sge_before_dispatch(void)
       lFreeElem(global);
       lFreeElem(local);
       new_global_config = 0;
+
+      /* flushing information might have changed */
+      if(ec_get_flush(sgeE_JOB_DEL) != flush_finish_sec) {
+         ec_set_flush(sgeE_JOB_DEL, flush_finish_sec);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
+         ec_set_flush(sgeE_JATASK_MOD, flush_finish_sec);
+         ec_set_flush(sgeE_JATASK_DEL, flush_finish_sec);
+      }
+      if(ec_get_flush(sgeE_JOB_ADD) != flush_submit_sec) {
+         ec_set_flush(sgeE_JOB_ADD, flush_submit_sec);
+      }
+      ec_commit();
    }
 
    DEXIT;
    return 0;
 }
 
-/* handling administrative events is independent of the scheduler algorithm */
-/*
-*                                                             max. column:     |
-*/
-/****** sge_schedd/handle_administrative_events() ******
-*  NAME
-*     handle_administrative_events() -- ??? 
-*
-*  SYNOPSIS
-*     int handle_administrative_events(u_long32 type, lListElem *event) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     u_long32 type    - ??? 
-*     lListElem *event - ??? 
-*
-*  RESULT
-*    0 this event was not an administrative event
-*   -1 reregister at qmaster
-*    1 handled administrative event
-*    2 got a shutdown event: do not schedule, finish immediately instead
-*
-********************************
-*/
-int handle_administrative_events(u_long32 type, lListElem *event)
+void sge_schedd_mirror_register()
 {
-   int ret = 1;
+   /* register as event mirror */
+   sge_mirror_initialize(EV_ID_SCHEDD, "scheduler");
+   ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
+   ec_set_clientdata(-1);
 
-   DENTER(TOP_LAYER, "handle_administrative_events");
-
-   switch (type) {
-
-      /* ======================================================
-       * administrative events  
-       */
-
-   case sgeE_SHUTDOWN:
-      INFO((SGE_EVENT, MSG_EVENT_GOTSHUTDOWNFROMQMASTER ));
-      shut_me_down = 1;
-      ret = 2;
-      break;
-
-   case sgeE_QMASTER_GOES_DOWN:
-      INFO((SGE_EVENT, MSG_EVENT_GOTMASTERGOESDOWNMESSAGEFROMQMASTER ));
-      if (start_on_master_host)
-         shut_me_down = 1;
-      else {
-         sleep(8);
-         ec_mark4registration();
-         ret = -1;
-      }
-      break;
-
-   case sgeE_SCHEDDMONITOR:
-      monitor_next_run = 1;
-      DPRINTF(("monitoring next scheduler run"));
-      break;
-
-   case sgeE_GLOBAL_CONFIG:
-      DPRINTF(("notification about new global configuration\n"));
-      new_global_config = 1;
-      break;
-
-   default:
-      /* non-administrative events - 
-         these must be handled by caller of this func */
-      ret = 0;
-      break;
-   }
-
-   DEXIT;
-   return ret;
+   /* subscribe events */
+   sched_funcs[current_scheduler].subscribe_func();
 }
-
-static void sge_subscribe_schedd(void)
-{
-   ec_subscribe(sgeE_CKPT_LIST);
-   ec_subscribe(sgeE_CKPT_ADD);
-   ec_subscribe(sgeE_CKPT_DEL);
-   ec_subscribe(sgeE_CKPT_MOD);
-
-   ec_subscribe(sgeE_COMPLEX_LIST);
-   ec_subscribe(sgeE_COMPLEX_ADD);
-   ec_subscribe(sgeE_COMPLEX_DEL);
-   ec_subscribe(sgeE_COMPLEX_MOD);
-
-   ec_subscribe(sgeE_EXECHOST_LIST);
-   ec_subscribe(sgeE_EXECHOST_ADD);
-   ec_subscribe(sgeE_EXECHOST_DEL);
-   ec_subscribe(sgeE_EXECHOST_MOD);
-
-   ec_subscribe(sgeE_GLOBAL_CONFIG);
-
-   ec_subscribe(sgeE_JATASK_DEL);
-   ec_subscribe(sgeE_JATASK_MOD);
-
-   ec_subscribe(sgeE_JOB_LIST);
-   ec_subscribe(sgeE_JOB_ADD);
-   ec_subscribe(sgeE_JOB_DEL);
-   ec_subscribe(sgeE_JOB_MOD);
-   ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
-   ec_subscribe(sgeE_JOB_FINAL_USAGE);
-   ec_subscribe(sgeE_JOB_USAGE);
-
-   ec_subscribe(sgeE_NEW_SHARETREE);
-
-   ec_subscribe(sgeE_PROJECT_LIST);
-   ec_subscribe(sgeE_PROJECT_DEL);
-   ec_subscribe(sgeE_PROJECT_ADD);
-   ec_subscribe(sgeE_PROJECT_MOD);
-
-   ec_subscribe(sgeE_PE_LIST);
-   ec_subscribe(sgeE_PE_ADD);
-   ec_subscribe(sgeE_PE_DEL);
-   ec_subscribe(sgeE_PE_MOD);
-
-   ec_subscribe(sgeE_QMASTER_GOES_DOWN);
-
-   ec_subscribe(sgeE_QUEUE_LIST);
-   ec_subscribe(sgeE_QUEUE_ADD);
-   ec_subscribe(sgeE_QUEUE_DEL);
-   ec_subscribe(sgeE_QUEUE_MOD);
-   ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
-   ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
-
-   ec_subscribe(sgeE_SCHED_CONF);
-
-   ec_subscribe(sgeE_SHUTDOWN);
-
-   ec_subscribe(sgeE_USER_LIST);
-   ec_subscribe(sgeE_USER_ADD);
-   ec_subscribe(sgeE_USER_DEL);
-   ec_subscribe(sgeE_USER_MOD);
-
-   ec_subscribe(sgeE_USERSET_LIST);
-   ec_subscribe(sgeE_USERSET_DEL);
-   ec_subscribe(sgeE_USERSET_ADD);
-   ec_subscribe(sgeE_USERSET_MOD);
-}
-
-

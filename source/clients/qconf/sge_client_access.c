@@ -33,12 +33,13 @@
 #include <stdlib.h>
 
 #include "sge_gdi_intern.h"
-#include "sge_usersetL.h"
-#include "sge_answerL.h"
 #include "sge_client_access.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
+#include "sge_answer.h"
+#include "sge_userset.h"
+
 #include "msg_qconf.h"
 
 
@@ -54,11 +55,14 @@ lList *new_answers
 
    if (alpp) { /* append all answers to existing list */
       lAddList(*alpp, new_answers); 
-   }
-   else { /* write errors to stderr */
-      for_each (answer, new_answers) 
-         if (sge_get_recoverable(answer) != STATUS_OK) 
+   } else { /* write errors to stderr */
+      for_each (answer, new_answers) {
+         answer_exit_if_not_recoverable(answer);
+         if (answer_get_status(answer) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(answer, AN_text));
+         }   
+      }
+
       lFreeList(new_answers);
    }
 
@@ -131,7 +135,7 @@ lList *acl_args
 
          if (already) {
             status = STATUS_EEXIST;
-            sprintf(SGE_EVENT, MSG_GDI_USERINACL_SS, user_name, acl_name);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_USERINACL_SS, user_name, acl_name));
          }
          else {
             if ((status = lGetUlong(lFirst(answers), AN_status))!=STATUS_OK) {
@@ -142,15 +146,15 @@ lList *acl_args
                   sprintf(SGE_EVENT, "%s", cp);
                }
                else {
-                  sprintf(SGE_EVENT, MSG_GDI_CANTADDTOACL_SS, user_name, acl_name);
+                  SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_CANTADDTOACL_SS, user_name, acl_name));
                }
-            }
-            else 
+            } else {
                sprintf(SGE_EVENT, MSG_GDI_ADDTOACL_SS, user_name, acl_name);
+            }
             answers = lFreeList(answers);
          }
-         sge_add_answer(alpp, SGE_EVENT, status, 
-            ((status == STATUS_OK) ? NUM_AN_INFO : NUM_AN_ERROR));
+         answer_list_add(alpp, SGE_EVENT, status, 
+            ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
          acl = lFreeList(acl);
 
       }
@@ -219,24 +223,25 @@ lList *acl_args
 
          if (status != STATUS_OK) {
             if (status == STATUS_EEXIST) {
-               sprintf(SGE_EVENT, MSG_GDI_ACLDOESNOTEXIST_S, acl_name);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_ACLDOESNOTEXIST_S, acl_name));
                breakit = 1;        
             }
 	    else if (status == STATUS_EEXIST + 1) {
-               sprintf(SGE_EVENT, MSG_GDI_USERNOTINACL_SS, user_name, acl_name);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_USERNOTINACL_SS, user_name, acl_name));
             }
             else if (cp) {
                sprintf(SGE_EVENT, "%s", cp);
             }
 	    else {
-               sprintf(SGE_EVENT, MSG_GDI_CANTDELFROMACL_SS,  user_name, acl_name);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_GDI_CANTDELFROMACL_SS,  user_name, acl_name));
             }
 
          }
-         else 
+         else {
             sprintf(SGE_EVENT, MSG_GDI_DELFROMACL_SS, user_name, acl_name);
-         sge_add_answer(alpp, SGE_EVENT, status, 
-                        ((status == STATUS_OK) ? NUM_AN_INFO : NUM_AN_ERROR));
+         }
+         answer_list_add(alpp, SGE_EVENT, status, 
+                        ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
          acl = lFreeList(acl);
          
          if (cp) {

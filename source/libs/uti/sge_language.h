@@ -47,9 +47,14 @@ typedef char* (*setlocale_func_type)(int lc, const char *name);
 typedef char* (*bindtextdomain_func_type)(const char *domainname, const char *dirname);
 typedef char* (*textdomain_func_type)(const char *donainname);
 
-void install_language_func(gettext_func_type, setlocale_func_type, bindtextdomain_func_type, textdomain_func_type);
+void sge_init_language_func(gettext_func_type, setlocale_func_type, bindtextdomain_func_type, textdomain_func_type);
 
+const char *sge_gettext__(char *x);
 const char *sge_gettext(char *x);
+const char *sge_gettext_(int msg_id, const char *msg_str);
+void sge_set_message_id_output(int flag);
+int sge_get_message_id_output(void);
+
 #endif
 
 #endif /* __SGE_LANGUAGE_H */

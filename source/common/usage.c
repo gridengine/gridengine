@@ -32,17 +32,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "opt_silent.h"
+
+#include "sge_stdio.h"
+
 #include "usage.h"
 #include "sge_feature.h"
 
-#include "def.h"
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_prognames.h"
-#include "sge_me.h"
+#include "sge_prog.h"
 #include "sge_options.h"
-#include "sge_exit.h"
+#include "sge_unistd.h"
+
+#include "msg_common.h"
 #include "msg_gdilib.h"
 
 static void print_marked(FILE *fp);
@@ -52,17 +54,6 @@ static void usage_silent(FILE *fp);
 int start_commd = 1; 
 
 static int marker[OA__END];
-
-void print_option_syntax(
-FILE *fp,
-const char *option,
-const char *meaning 
-) {
-   if (!meaning)
-      fprintf(fp,"   %s\n", option);
-   else
-      fprintf(fp,"   %-40.40s %s\n",  option, meaning);
-}
 
 void mark_argument_syntax(
 int argument_number 
@@ -87,6 +78,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME; 
      case OA_DESTIN_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST; 
+     case OA_DESTIN_ID_LIST2:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST2;
      case OA_HOLD_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST; 
      case OA_HOST_ID_LIST:
@@ -113,6 +106,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST; 
      case OA_PATH_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST; 
+     case OA_FILE_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_FILE_LIST; 
      case OA_PRIORITY:
          return MSG_GDI_ARGUMENTSYNTAX_OA_PRIORITY; 
      case OA_RESOURCE_LIST:
@@ -174,6 +169,8 @@ void sge_usage(
 FILE *fp 
 ) {
 
+  char namebuf[128];
+  
 #define PRINTITD(o,d) print_option_syntax(fp,o,d)
 #define PRINTIT(o) print_option_syntax(fp,o,NULL)
 #define MARK(n) mark_argument_syntax(n)
@@ -181,7 +178,15 @@ FILE *fp
    DENTER(TOP_LAYER, "sge_usage");
 
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
-   fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , prognames[me.who]);
+   
+   if (!strcmp(prognames[me.who], "execd"))
+      strcpy(namebuf, "sge_execd");
+   else if (!strcmp(prognames[me.who], "qmaster"))
+      strcpy(namebuf, "sge_qmaster");
+   else
+      strcpy(namebuf, prognames[me.who]);
+         
+   fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , namebuf);
 
    /* reset all option markers */
    memset(marker, 0, sizeof(marker));
@@ -318,7 +323,11 @@ FILE *fp
    }
 
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(astree_OPT, me.who)) {
-      PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE );
+      PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE);
+   }
+
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Astree_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_ASTREE_FNAME, MSG_GDI_UTEXT_ASTREE_FNAME);
    }
 
    if (VALID_OPT(au_OPT, me.who)) {
@@ -351,6 +360,10 @@ FILE *fp
    if (VALID_OPT(A_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_A_OPT_ACCOUNT_STRING , MSG_GDI_UTEXT_A_OPT_ACCOUNT_STRING );
       MARK(OA_ACCOUNT_STRING);
+   }
+
+   if (VALID_OPT(b_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_b_OPT_YN, MSG_GDI_UTEXT_b_OPT_YN);
    }
 
    if (VALID_OPT(c_OPT, me.who)) {
@@ -517,8 +530,7 @@ FILE *fp
    if (VALID_OPT(e_OPT, me.who)) {
       if (me.who == QMOD) {
          PRINTITD(MSG_GDI_USAGE_e_OPT , MSG_GDI_UTEXT_e_OPT);
-      }
-      else {
+      } else {
          PRINTITD(MSG_GDI_USAGE_e_OPT_PATH_LIST, MSG_GDI_UTEXT_e_OPT_PATH_LIST );
          MARK(OA_PATH_LIST);
       }
@@ -561,6 +573,11 @@ FILE *fp
    if (VALID_OPT(hold_jid_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_hold_jid_OPT , MSG_GDI_UTEXT_hold_jid_OPT );
       MARK(OA_JOB_IDENTIFIER_LIST);
+   }
+   
+   if (VALID_OPT(i_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_i_OPT_PATH_LIST, MSG_GDI_UTEXT_i_OPT_PATH_LIST );
+      MARK(OA_FILE_LIST);
    }
 
    if (VALID_OPT(inherit_OPT, me.who)) {
@@ -612,7 +629,7 @@ FILE *fp
    if (VALID_OPT(masterq_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST, 
          MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND );
-      MARK(OA_DESTIN_ID_LIST);
+      MARK(OA_DESTIN_ID_LIST2);
    }
 
    if (VALID_OPT(mattr_OPT, me.who)) {
@@ -728,6 +745,10 @@ FILE *fp
       MARK(OA_NODE_PATH);
    }
 
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mstree_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_MSTREE_FNAME, MSG_GDI_UTEXT_MSTREE_FNAME);
+   }
+
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstree_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_MSTREE , MSG_GDI_UTEXT_MSTREE );
    }
@@ -767,7 +788,7 @@ FILE *fp
    if (VALID_OPT(now_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_now_OPT_YN, MSG_GDI_UTEXT_now_OPT_YN);
    }
-
+   
    if (VALID_OPT(M_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_M_OPT_MAIL_LIST, MSG_GDI_UTEXT_M_OPT_MAIL_LIST);
       MARK(OA_MAIL_LIST);
@@ -824,7 +845,7 @@ FILE *fp
          PRINTITD(MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST, 
             MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO);
       }
-      MARK(OA_DESTIN_ID_LIST);
+      MARK(OA_DESTIN_ID_LIST2);
    }
 
    if (VALID_OPT(qs_args_OPT, me.who)) {
@@ -1146,6 +1167,6 @@ static void usage_silent(
 FILE *fp 
 ) {
    DENTER(TOP_LAYER, "usage_silent");
-   print_option_syntax(fp, "[-s]", "startup silently");
+   print_option_syntax(fp, "[-s]", MSG_GDI_USAGE_SILENT);
    DEXIT;
 }

@@ -38,22 +38,20 @@
 #	include <unistd.h>
 #endif
 #include <stdlib.h>
-#include "def.h"
 #include "commlib.h"
+#include "sge_stdlib.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_gdi.h"
 #include "sge_multiL.h"
-#include "sge_answerL.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "sge_exit.h"
-#include "sge_max_nis_retries.h"
 #include "sge_uidgid.h"
-#include "utility.h"
 #include "qm_name.h"
+#include "sge_unistd.h"
+#include "sge_security.h"
+#include "sge_answer.h"
 #ifdef KERBEROS
 #  include "krb_lib.h"
 #endif
@@ -61,29 +59,40 @@
 #ifdef QIDL
 #include "qidl_c_gdi.h"
 #endif
-#include "msg_utilib.h"
+
+#include "msg_common.h"
 #include "msg_gdilib.h"
-#include "sge_security.h"
 
-static int sge_send_receive_gdi_request(char *rhost, char *commproc, u_short id, sge_gdi_request *out, sge_gdi_request **in);
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        char *rhost, 
+                                        char *commproc, 
+                                        u_short id, 
+                                        sge_gdi_request *out, 
+                                        sge_gdi_request **in);
 
-static int sge_get_gdi_request(char *rhost, char *commproc, u_short *id, sge_gdi_request **arp);
+static int sge_get_gdi_request(int *commlib_error,
+                               char *rhost,
+                               char *commproc,
+                               u_short *id,
+                               sge_gdi_request **arp);
+
 
 #ifdef QIDL
-static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **in);
+static int sge_handle_local_gdi_request(sge_gdi_request *out,
+                                        sge_gdi_request **in);
 #endif
 
-/****** sge_gdi_request/sge_gdi() **********************************************
+/****** gdi/request/sge_gdi() *************************************************
 *  NAME
 *     sge_gdi() -- request, change or delete data in the master daemon
 *
 *  SYNOPSIS
-*     lList* sge_gdi(u_long32 target, u_long32 cmd, lList** lpp, lCondition* cp,
-*                    lEnumeration* enp) 
+*     lList* sge_gdi(u_long32 target, u_long32 cmd, lList** lpp, 
+*                    lCondition* cp, lEnumeration* enp) 
 *
 *  FUNCTION
-*     Using this function an application can operate on a linked lists (CULL) 
-*     stored in the master daemon. 
+*     Using this function an application can operate on a linked lists 
+*     (CULL) stored in the master daemon. 
 *
 *  INPUTS
 *     u_long32 target   - References a list of the master 
@@ -99,7 +108,8 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **
 *           The 'operation' describes what to do with elements directly
 *           contained within lpp.
 *           The 'subcommand' bits gives the master some hints how
-*           to handle elements in sublists contained in the elements of lpp.
+*           to handle elements in sublists contained in the elements 
+*           of lpp.
 *
 *           operation:
 *              SGE_GDI_GET - get a list of objects
@@ -116,31 +126,34 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **
 *           (a complete list ob enum values and valid combinations 
 *            can be found in sge_gdi.h)
 *
-*     lList** lpp       - This parameter is used to get a list in case of 
-*           SGE_GDI_GET command. The caller is responsible for freeing by 
-*           using lFreeList(). In the other cases the caller passes a list 
-*           containing the (sub)elements to add/modify/delete.
-*           sge_gdi() doesn't free the passed list.
+*     lList** lpp       - This parameter is used to get a list in case 
+*           of SGE_GDI_GET command. The caller is responsible for 
+*           freeing by using lFreeList(). In the other cases the caller 
+*           passes a list containing the (sub)elements to 
+*           add/modify/delete. sge_gdi() doesn't free the passed list.
 *
-*     lCondition* cp    - Points to a lCondition as it is build by lWhere
-*           (refer to CULL documentation). This enumeration describes the 
-*           fields in the request list of an SGE_GDI_GET-request.  
+*     lCondition* cp    - Points to a lCondition as it is build by 
+*           lWhere (refer to CULL documentation). This enumeration 
+*           describes the fields in the request list of an 
+*           SGE_GDI_GET-request.  
 *
-*     lEnumeration* enp - Points to a lEnumerations structure build by lWhat()
-*           (refer to CULL documentation) in case of SGE_GDI_GET command. This
-*           enumeration describes the fields in the requested list. 
+*     lEnumeration* enp - Points to a lEnumerations structure build 
+*           by lWhat() (refer to CULL documentation) in case of 
+*           SGE_GDI_GET command. This enumeration describes the fields 
+*           in the requested list. 
 *
 *  RESULT
-*     returns a CULL list reporting success/failure of the operation. This list 
-*     gets allocated by sge_gdi. Again the caller is responsible for freeing.
-*     A response is a list element containing a field with a status value
-*     (AN_status). The value STATUS_OK is used in case of success. STATUS_OK 
-*     and other values are defined in sge_answerL.h. the second field (AN_text)
-*     in a response list element is a string that describes the performed 
-*     operation or a description of an error.
-*     Each call od sge_gdi passes a list with at least one respone to the 
-*     caller. The response list of a SGE_GDI_GET-operation containes only one
-*     element reporting success or failure.  
+*     returns a CULL list reporting success/failure of the operation. 
+*     This list gets allocated by sge_gdi. Again the caller is 
+*     responsible for freeing. A response is a list element containing 
+*     a field with a status value (AN_status). The value STATUS_OK is 
+*     used in case of success. STATUS_OK and other values are defined 
+*     in sge_answerL.h. the second field (AN_text) in a response list 
+*     element is a string that describes the performed operation or a 
+*     description of an error.
+*     Each call od sge_gdi passes a list with at least one respone to 
+*     the caller. The response list of a SGE_GDI_GET-operation 
+*     containes only one element reporting success or failure.  
 *    
 *  EXAMPLE
 *     In following directory you can find small applications which
@@ -151,15 +164,10 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **
 *     More detailed examples can be found in the client applications 
 *     (qconf, qsub ...)
 *
-********************************************************************************
-*/
-lList* sge_gdi(
-u_long32 target,
-u_long32 cmd,
-lList **lpp,
-lCondition *cp,
-lEnumeration *enp 
-) {
+******************************************************************************/
+lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
+               lEnumeration *enp) 
+{
    lList *alp = NULL;
    lList *mal = NULL;
    u_long32 id;
@@ -188,16 +196,17 @@ lEnumeration *enp
    return alp;
 }
 
-/****** sge_gdi_request/sge_gdi_multi() ****************************************
+/****** gdi/request/sge_gdi_multi() *******************************************
 *  NAME
-*     sge_gdi_multi() -- request, change or delete multiple lists in master 
+*     sge_gdi_multi() -- get, change or delete multiple lists  
 *
 *  SYNOPSIS
-*     int sge_gdi_multi(lList** alpp, int mode, u_long32 target, u_long32 cmd, 
-*        lList* lp, lCondition* cp, lEnumeration* enp, lList** malpp) 
+*     int sge_gdi_multi(lList** alpp, int mode, u_long32 target, 
+*                       u_long32 cmd, lList* lp, lCondition* cp, 
+*                       lEnumeration* enp, lList** malpp) 
 *
 *  FUNCTION
-*     In some situations it is necessary to change multiple master lists.
+*     In some situations it is necessary to change multiple master lists
 *     Normally someone would use multiple sge_gdi() requests which would 
 *     raise frequent commlib communication.
 *
@@ -214,8 +223,9 @@ lEnumeration *enp
 *     lList** alpp      - result of this sge_gdi_multi() call 
 *
 *     int mode          - What should the function do with this request 
-*        SGE_GDI_RECORD - record a GDI request (no commlib communication)
-*        SGE_GDI_SEND - send all recorded GDI requests including the current one
+*        SGE_GDI_RECORD - record a GDI request (no commlib comm.)
+*        SGE_GDI_SEND   - send all recorded GDI requests including 
+*                         the current one
 *
 *     u_long32 target   - References a list of the master
 *              SGE_JOB_LIST    - list of jobs
@@ -229,8 +239,9 @@ lEnumeration *enp
 *           'subcommand'.
 *           The 'operation' describes what to do with elements directly
 *           contained within lpp.
-*           The 'subcommand' bits gives the master some hints how
-*           to handle elements in sublists contained in the elements of lpp.
+*           The 'subcommand' bits gives the master some hints how to 
+*           handle elements in sublists contained in the elements 
+*           of lpp.
 *
 *           operation:
 *              SGE_GDI_GET - get a list of objects
@@ -251,44 +262,38 @@ lEnumeration *enp
 *           containing the (sub)elements to add/modify/delete.
 *           sge_gdi_multi() doesn't free the passed list.
 *
-*     lCondition* cp    - Points to a lCondition as it is build by lWhere
-*           (refer to CULL documentation). This enumeration describes the
-*           fields in the request list of an SGE_GDI_GET-request.
+*     lCondition* cp    - Points to a lCondition as it is build by 
+*           lWhere (refer to CULL documentation). This enumeration 
+*           describes the fields in the request list of an 
+*           SGE_GDI_GET-request.
 *
-*     lEnumeration* enp - Points to a lEnumerations structure build by lWhat()
-*           (refer to CULL documentation) in case of SGE_GDI_GET command. This
-*           enumeration describes the fields in the requested list.  
+*     lEnumeration* enp - Points to a lEnumerations structure build 
+*           by lWhat() (refer to CULL documentation) in case of 
+*           SGE_GDI_GET command. This enumeration describes the fields 
+*           in the requested list.  
 *
 *     lList** malpp     - in case of mode=SGE_GDI_SEND this parameter
 *           returns informations for each invidual request previously
 *           stored with sge_gdi_multi(mode=SGE_GDI_RECORD). 
-*           sge_gdi_extract_answer() can be used to get the answer list for
-*           one of these GDI requests.
+*           sge_gdi_extract_answer() can be used to get the answer 
+*           list for one of these GDI requests.
 *
 *  RESULT
 *     -1  - if an error occured
 *     (positive integer) - id which identifies the current gdi request.
-*        The returned ids are only unique until this function was called with
-*        SGE_GDI_SEND as mode. Ids returned by this function can be used
-*        with sge_gdi_extract_answer() to get answer lists for single GDI 
-*        requests.
+*        The returned ids are only unique until this function was 
+*        called with SGE_GDI_SEND as mode. Ids returned by this 
+*        function can be used with sge_gdi_extract_answer() to get 
+*        answer lists for single GDI requests.
 *
 *  EXAMPLE
 *     Please have a look into the qstat client application. This client
 *     demonstrates the use of this function very good. 
 *
-********************************************************************************
-*/
-int sge_gdi_multi(
-lList **alpp,
-int mode,
-u_long32 target,
-u_long32 cmd,
-lList *lp,
-lCondition *cp,
-lEnumeration *enp,
-lList **malpp 
-) {
+******************************************************************************/
+int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
+                  lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp) 
+{
    lListElem *map = NULL;
    sge_gdi_request *request = NULL;
    sge_gdi_request *answer = NULL;
@@ -305,6 +310,7 @@ lList **malpp
    char username[128];
    char groupname[128];
    int status = 0;
+   int commlib_error = CL_OK;
 
    DENTER(GDI_LAYER, "sge_gdi_multi");
 
@@ -313,12 +319,12 @@ lList **malpp
    if (!lp && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET 
        || operation == SGE_GDI_TRIGGER || 
        (operation == SGE_GDI_DEL && target == SGE_SHARETREE_LIST))) {
-      sprintf(SGE_EVENT, MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT );
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT ));
       goto error;
    }
 
    if (!(request = new_gdi_request())) {
-      sprintf(SGE_EVENT, MSG_GDI_CANTCREATEGDIREQUEST );
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANTCREATEGDIREQUEST ));
       goto error;
    }
    
@@ -349,22 +355,21 @@ lList **malpp
       request->cp =  NULL;
       request->enp = NULL; 
    }
-   
 
    /* 
    ** user info
    */
    uid = getuid();
    if (sge_uid2user(uid, username, sizeof(username), MAX_NIS_RETRIES)) {
-      sprintf(SGE_EVENT, MSG_GDI_GETPWUIDXFAILEDERRORX_IS , 
-              (int)uid, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETPWUIDXFAILEDERRORX_IS , 
+              (int)uid, strerror(errno)));
       goto error;
    }
    gid = getgid();
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {
-      sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_IS , 
-              (int)gid, strerror(errno));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_IS , 
+              (int)gid, strerror(errno)));
       goto error; 
    }
 
@@ -404,6 +409,7 @@ lList **malpp
 #endif
          /* FIX_CONST */
          status = sge_send_receive_gdi_request(
+            &commlib_error, 
             (char*)sge_get_master(reread_qmaster_file), 
             (char*)prognames[QMASTER], 
             0, first, &answer);
@@ -421,25 +427,27 @@ lList **malpp
 #endif
 
       if (status != 0) {
+
          reread_qmaster_file = 1;
 
          /* failed to contact qmaster ? */
          /* So we build an answer structure */
          switch (status) {
             case -2:
-               sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
                break;
             case -3:
-               sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED );
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
                break;
             case -4:
-               sprintf(SGE_EVENT, MSG_SGETEXT_NOQMASTER);
+               /* fills SGE_EVENT with diagnosis information */
+               SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(commlib_error, SGE_EVENT));
                break;
             case -5:
-               sprintf(SGE_EVENT, MSG_GDI_SIGNALED );
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIGNALED ));
                break;
             default:
-               sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status);
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status));
                break;
          }
          goto error;
@@ -474,7 +482,7 @@ lList **malpp
 
    error:
       if (alpp)
-         sge_add_answer(alpp, SGE_EVENT, STATUS_NOQMASTER, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
       answer = free_gdi_request(answer);
       first = free_gdi_request(first);
       last = NULL;
@@ -483,17 +491,17 @@ lList **malpp
       return -1;
 }
 
-/****** sge_gdi_request/sge_gdi_extract_answer() ******************************
+/****** gdi/request/sge_gdi_extract_answer() **********************************
 *  NAME
 *     sge_gdi_extract_answer() -- exctact answers of a multi request.
 *
 *  SYNOPSIS
-*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, 
-*        lList* mal, lList** olpp) 
+*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, 
+*                                   int id, lList* mal, lList** olpp) 
 *
 *  FUNCTION
-*     This function extracts the answer for each invidual request on previous
-*     sge_gdi_multi() calls. 
+*     This function extracts the answer for each invidual request on 
+*     previous sge_gdi_multi() calls. 
 *
 *  INPUTS
 *     u_long32 cmd    - bitmask which decribes the operation 
@@ -508,28 +516,23 @@ lList **malpp
 *     lList* mal      - List of answer/response lists returned from
 *        sge_gdi_multi(mode=SGE_GDI_SEND)
 *
-*     lList** olpp    - This parameter is used to get a list in case of
-*           SGE_GDI_GET command. The caller is responsible for freeing by
-*           using lFreeList(). 
+*     lList** olpp    - This parameter is used to get a list in case 
+*           of SGE_GDI_GET command. The caller is responsible for 
+*           freeing by using lFreeList(). 
 *
 *  RESULT
-*     returns a CULL list reporting success/failure of the operation. This list
-*     gets allocated by GDI. The caller is responsible for freeing.
-*     A response is a list element containing a field with a status value
-*     (AN_status). The value STATUS_OK is used in case of success. STATUS_OK
-*     and other values are defined in sge_answerL.h. the second field (AN_text)
-*     in a response list element is a string that describes the performed
-*     operation or a description of an error.
-*
-*******************************************************************************
-*/
-lList *sge_gdi_extract_answer(
-u_long32 cmd,
-u_long32 target,
-int id,
-lList *mal,
-lList **olpp 
-) {
+*     returns a CULL list reporting success/failure of the operation. 
+*     This list gets allocated by GDI. The caller is responsible 
+*     for freeing. A response is a list element containing a field 
+*     with a status value (AN_status). The value STATUS_OK is used 
+*     in case of success. STATUS_OK and other values are defined in 
+*     sge_answerL.h. the second field (AN_text) in a response list 
+*     element is a string that describes the performed operation or 
+*     a description of an error.
+******************************************************************************/
+lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
+                              lList *mal, lList **olpp) 
+{
    lList *alp = NULL;
    lListElem *map = NULL;
    int operation, sub_command;
@@ -540,8 +543,8 @@ lList **olpp
    sub_command = SGE_GDI_GET_SUBCOMMAND(cmd);
 
    if (!mal || id < 0) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
-      sge_add_answer(&alp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+      answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -555,8 +558,8 @@ lList **olpp
    if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
        (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
       if (!olpp) {
-         sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC);
-         sge_add_answer(&alp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+         answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return alp;
       }
@@ -569,24 +572,40 @@ lList **olpp
    return alp;
 }
   
-
-
-/*-----------------------------------------------------
- * sge_send_receive_gdi_request
- *
- * sends and receives an gdi request structure
- *
- * returns:
- *      0 ok
- *     -1 failed before communication
- *     -2 failed sending gdi request
- *     -3 failed receiving gdi request
- *     -4 check_isalive() failed
- *     -5 failed due to a received signal
- *-----------------------------------------------------*/
-static int sge_send_receive_gdi_request(char *rhost, 
+/****** gdi/request/sge_send_receive_gdi_request() ****************************
+*  NAME
+*     sge_send_receive_gdi_request() -- snd and rcv a gdi structure 
+*
+*  SYNOPSIS
+*     static int sge_send_receive_gdi_request(char *rhost, 
+*                                char *commproc, u_short id, 
+*                                sge_gdi_request *out, 
+*                                sge_gdi_request **in) 
+*
+*  FUNCTION
+*     sends and receives an gdi request structure 
+*
+*  INPUTS
+*     char *rhost          - ??? 
+*     char *commproc       - ??? 
+*     u_short id           - ??? 
+*     sge_gdi_request *out - ??? 
+*     sge_gdi_request **in - ??? 
+*
+*  RESULT
+*     static int - 
+*        0 ok
+*        -1 failed before communication
+*        -2 failed sending gdi request
+*        -3 failed receiving gdi request
+*        -4 check_isalive() failed
+*        -5 failed due to a received signal  
+******************************************************************************/
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        char *rhost, 
                                         char *commproc, 
-                                        u_short id, sge_gdi_request *out,
+                                        u_short id, 
+                                        sge_gdi_request *out,
                                         sge_gdi_request **in)
 {
    int ret;
@@ -606,22 +625,23 @@ static int sge_send_receive_gdi_request(char *rhost,
       return -1;
    }   
    
+   ret = sge_send_gdi_request(1, rhost, commproc, id, out);
+   *commlib_error = ret;
 
-   if ((ret = sge_send_gdi_request(1, rhost, commproc, id, out))) {
+   if (ret) {
       if (ret == CL_INTR) {
          DEXIT;
          return -5;
-      } else if (check_isalive(rhost)) {
+      } else if (( *commlib_error = check_isalive(rhost))) {
          DEXIT;
          return -4;
-      }
-      else {
+      } else {
          DEXIT;
          return -2;
       }   
    }
 
-   while (!(ret = sge_get_gdi_request(rhost, commproc, &id, in))) {
+   while (!(ret = sge_get_gdi_request(commlib_error, rhost, commproc, &id, in))) {
       DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
             (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
       DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
@@ -651,24 +671,37 @@ static int sge_send_receive_gdi_request(char *rhost,
    return 0;
 }
 
-
-/*-----------------------------------------------------------------
- *  sge_send_gdi_request
- *  
- *      0 success
- *     -1 common failed sending
- *     -2 not enough memory
- *     -3 format error while unpacking
- *     -4 no commd
- *     -5 no peer enrolled
- *-----------------------------------------------------------------*/
-int sge_send_gdi_request(
-int sync,
-const char *rhost,
-const char *commproc,
-int id,
-sge_gdi_request *ar 
-) {
+/****** gdi/request/sge_send_gdi_request() ************************************
+*  NAME
+*     sge_send_gdi_request() -- send gdi request 
+*
+*  SYNOPSIS
+*     int sge_send_gdi_request(int sync, const char *rhost, 
+*                              const char *commproc, int id, 
+*                              sge_gdi_request *ar) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     int sync             - ??? 
+*     const char *rhost    - ??? 
+*     const char *commproc - ??? 
+*     int id               - ??? 
+*     sge_gdi_request *ar  - ??? 
+*
+*  RESULT
+*     int - 
+*         0 success
+*        -1 common failed sending
+*        -2 not enough memory
+*        -3 format error while unpacking
+*        -4 no commd
+*        -5 no peer enrolled   
+*******************************************************************************/
+int sge_send_gdi_request(int sync, const char *rhost, const char *commproc,
+                         int id, sge_gdi_request *ar) 
+{
    sge_pack_buffer pb;
    int ret, size;
 
@@ -714,27 +747,45 @@ sge_gdi_request *ar
       return -1;
    }
 
-   ret = sge_send_any_request(sync, NULL, rhost, commproc, id, &pb, TAG_GDI_REQUEST);
+   ret = sge_send_any_request(sync, NULL, rhost, commproc, id, &pb, 
+                              TAG_GDI_REQUEST);
    clear_packbuffer(&pb);
 
    DEXIT;
    return ret;
 }
 
-
-/*----------------------------------------------------------------- 
- *  sge_get_gdi_request
- *
- *      0 success 
- *     -1 common failed getting
- *     -2 not enough memory 
- *     -3 format error while unpacking
- *     -4 no commd
- *     -5 no peer enrolled
- *
- *-----------------------------------------------------------------*/
-static int sge_get_gdi_request(char *host, char *commproc, 
-                               u_short *id, sge_gdi_request** arp)
+/****** gdi/request/sge_get_gdi_request() *************************************
+*  NAME
+*     sge_get_gdi_request() -- ??? 
+*
+*  SYNOPSIS
+*     static int sge_get_gdi_request(char *host, char *commproc, 
+*                                    u_short *id, sge_gdi_request** arp) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     char *host            - ??? 
+*     char *commproc        - ??? 
+*     u_short *id           - ??? 
+*     sge_gdi_request** arp - ??? 
+*
+*  RESULT
+*     static int - 
+*         0 success 
+*        -1 common failed getting
+*        -2 not enough memory 
+*        -3 format error while unpacking
+*        -4 no commd
+*        -5 no peer enrolled
+*******************************************************************************/
+static int sge_get_gdi_request(int *commlib_error,
+                               char *host,
+                               char *commproc, 
+                               u_short *id,
+                               sge_gdi_request** arp)
 {
    sge_pack_buffer pb;
    int tag = TAG_GDI_REQUEST; /* this is what we want */
@@ -742,10 +793,11 @@ static int sge_get_gdi_request(char *host, char *commproc,
 
    DENTER(GDI_LAYER, "sge_get_gdi_request");
 
-   if (sge_get_any_request(host, commproc, id, &pb, &tag, 1)) {
+   if ( (*commlib_error = sge_get_any_request(host, commproc, id, &pb, &tag, 1))) {
       DEXIT;
       return -1;
    }
+
 
    ret = sge_unpack_gdi_request(&pb, arp);
    switch (ret) {
@@ -754,17 +806,17 @@ static int sge_get_gdi_request(char *host, char *commproc,
 
    case PACK_ENOMEM:
       ret = -2;
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_NOTENOUGHMEMORYFORUNPACKINGGDIREQUEST ));
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
       break;
 
    case PACK_FORMAT:
       ret = -3;
-      ERROR((SGE_EVENT, MSG_GDI_REQUESTFORMATERRORWHILEUNPACKING ));
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
       break;
 
    default:
       ret = -1;
-      ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST ));
+      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
       break;
    }
 
@@ -778,20 +830,29 @@ static int sge_get_gdi_request(char *host, char *commproc,
    return ret;
 }
 
-
-/*-------------------------------------------------------------- 
- * sge_unpack_gdi_request
- * unpacks an gdi_request structure
- *
- *  returns:
- *      0 on success
- *     -1 not enough memory
- *      -2 format error
- *--------------------------------------------------------------*/
-int sge_unpack_gdi_request(
-sge_pack_buffer *pb,
-sge_gdi_request **arp 
-) {
+/****** gdi/request/sge_unpack_gdi_request() **********************************
+*  NAME
+*     sge_unpack_gdi_request() -- unpacks an gdi_request structure 
+*
+*  SYNOPSIS
+*     int sge_unpack_gdi_request(sge_pack_buffer *pb, 
+*                                sge_gdi_request **arp) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     sge_pack_buffer *pb   - ??? 
+*     sge_gdi_request **arp - ??? 
+*
+*  RESULT
+*     int - 
+*         0 on success
+*        -1 not enough memory
+*        -2 format error 
+******************************************************************************/
+int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp) 
+{
    int ret;
    sge_gdi_request *ar = NULL;
    sge_gdi_request *prev_ar = NULL;
@@ -807,8 +868,15 @@ sge_gdi_request **arp
       if ((ret=unpackint(pb, &(ar->op)) )) goto error;
       if ((ret=unpackint(pb, &(ar->target)) )) goto error;
 
-
       if ((ret=unpackint(pb, &(ar->version)) )) goto error;
+      /* JG: TODO (322): At this point we should check the version! 
+      **                 The existent check function verify_request_version
+      **                 cannot be called as neccesary data structures are 
+      **                 available here (e.g. answer list).
+      **                 Better do these changes at a more general place 
+      **                 together with (hopefully coming) further communication
+      **                 redesign.
+      */
 DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->lp)) )) goto error;
 DTRACE;      
@@ -885,10 +953,8 @@ DTRACE;
 /*--------------------------------------------------------------
  * sge_pack_gdi_request
  *--------------------------------------------------------------*/
-int sge_pack_gdi_request(
-sge_pack_buffer *pb,
-sge_gdi_request *ar 
-) {
+int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar) 
+{
    int ret;
 
    DENTER(GDI_LAYER, "sge_pack_gdi_request");
@@ -980,9 +1046,7 @@ sge_gdi_request *new_gdi_request()
 
 
 /*------------------------------------------------------------*/
-sge_gdi_request *free_gdi_request(
-sge_gdi_request *ar 
-) {
+sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
    sge_gdi_request *next;
 
    DENTER(GDI_LAYER, "free_gdi_request");
@@ -1010,120 +1074,6 @@ sge_gdi_request *ar
 
    DEXIT;
    return NULL;
-}
-
-
-/*--------------------------------------------------------------- 
- * sge_add_answer
- *
- *  Add an answer element to an answer list.
- *  This is used for answering requests.
- *---------------------------------------------------------------*/
-int sge_add_answer(
-lList **alpp,
-const char *report,
-u_long32 status,
-u_long32 quality 
-) {
-   lListElem *aep;
-
-   DENTER(GDI_LAYER, "sge_add_answer");
-   if ( !alpp ) {
-      DEXIT;
-      return -1;
-   }
-
-   /* build new answer element */
-   aep = lCreateElem(AN_Type);
-   lSetString(aep, AN_text, report);
-   lSetUlong(aep, AN_status, status);
-   lSetUlong(aep, AN_quality, quality);
-   
-   /* create a list for the answers */
-   if (!*alpp)
-      *alpp = lCreateList("answer", AN_Type);
-
-   lAppendElem(*alpp, aep);
-
-   DEXIT;
-   return 0;
-}
-
-int answer_list_is_error_in_list(lList **answer_list)
-{
-   lListElem *answer = NULL;
-   int ret = 0;
-
-   if (answer_list != NULL) {
-      for_each(answer, *answer_list) {
-         if (lGetUlong(answer, AN_quality) ==  NUM_AN_ERROR) {
-            ret = 1;
-            break;
-         }
-      }
-   }
-   return ret;
-}                   
-
-/*-----------------------------------------------------------------------*/
-const char *quality_text(
-lListElem *aep 
-) {
-   u_long32 q;
-   static char *qt[] = {
-      "ERROR",
-      "WARNING",
-      "INFO"
-   };
-   if ((q = lGetUlong(aep, AN_quality))>2)
-      q = 0;
-   return qt[q];  
-}
-
-
-/*----------------------------------------------------------------------- 
- * sge_get_recoverable
- *
- *  Used for analyzing the answer of an gdi request.
- *  This is client code and exits if there is no sense proceeding (May be 
- *  the master cant be contacted ...).
- *  errors are printed to stderr and are returned.
- *   
- *  terminates if necessary 
- *  or returns the status value 
- *-----------------------------------------------------------------------*/
-u_long32 sge_get_recoverable(
-lListElem *aep 
-) {
-   int pos;
-   u_long32 status;
-
-   DENTER(GDI_LAYER, "sge_get_recoverable");
-
-   if (!aep) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      SGE_EXIT(1);
-   }
-
-   /* is the list element an answer element ? */
-   if ( (pos = lGetPosViaElem(aep, AN_status))<0) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, 
-            lNm2Str(AN_status), SGE_FUNC));
-      SGE_EXIT(1);
-   }
-
-   switch (status = lGetPosUlong(aep, pos)) {
-      case STATUS_NOQMASTER:
-      case STATUS_NOCOMMD:
-      case STATUS_ENOKEY:
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         SGE_EXIT(1);
-      default:
-         break;
-   }
-
-   DEXIT;
-   return status;
 }
 
 #ifdef QIDL

@@ -1,0 +1,7 @@
+OREILLY_SERVLET=/cod_home/andre/OPENSOURCE/gridengine-private/gp/lib/cos.jar
+IPS=/opt
+IPS_DOMAIN=Germany.Sun.COM
+IWS_HOST_INSTANCE=https-es-ergb01-01.Germany.Sun.COM
+IWS_HOST_VS=https-es-ergb01-01.Germany.Sun.COM
+VNC_ROOT=/gridware/Tools/GridPortal/vnc-3.3.5-sparc_solaris_2.5
+APP_HOME=/gridware/Tools/GridPortal/apps

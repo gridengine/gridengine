@@ -38,14 +38,14 @@
 #include "sge_c_gdi.h"
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_calendar_qmaster.h"
-#include "sge_manop.h"
-#include "sge_me.h"
+#include "sge_manop_qmaster.h"
 #include "complex_qmaster.h"
 #include "sge_pe_qmaster.h"
+#include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "sge_m_event.h"
 #include "sched_conf_qmaster.h"
@@ -57,48 +57,34 @@
 #include "sge_feature.h"
 #include "sge_qmod_qmaster.h"
 #include "read_write_queue.h"
-#include "sec.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qmaster.h"
 #include "resolve_host.h"
 #include "sge_user_mapping.h"
-#include "msg_utilib.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "msg_gdilib.h"
 #include "sge_time.h"  
 #include "version.h"  
 #include "sge_security.h"  
+#include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_ckpt.h"
+#include "sge_queue.h"
+#include "sge_userprj.h"
+#include "sge_job.h"
+#include "sge_userset.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_sharetree.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
+
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
-#endif
-
-extern lList *Master_User_List;
-extern lList *Master_Userset_List;
-extern lList *Master_Project_List;
-extern lList *Master_Sharetree_List;
-extern lList *Master_Config_List;
-extern lList *Master_Sched_Config_List;
-extern lList *Master_Complex_List;
-extern lList *Master_Job_List;
-extern lList *Master_Queue_List;
-extern lList *Master_Submithost_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_Ckpt_List;
-extern lList *Master_Pe_List;
-extern lList *Master_Manager_List;
-extern lList *Master_Operator_List;
-extern lList *Master_Calendar_List;
-extern lList *Master_Job_Schedd_Info_List;
-extern lList *Master_Zombie_List;
-
-#ifndef __SGE_NO_USERMAPPING__
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
 #endif
 
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int *before, int *after);
@@ -113,7 +99,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
-static int sge_chck_get_perm_host(lList **alpp, u_long32 target, char *host, char *commproc);
+static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
 
 
 /* ------------------------------ generic gdi objects --------------------- */
@@ -174,6 +160,7 @@ int id
       { 0x100000F1, "5.3beta1 without hashing" },
       { 0x100000F2, "5.3beta1" },
       { 0x100000F3, "5.3beta2" },
+      { 0x100000F4, "5.3" },
       { 0,          NULL   }
    };
 
@@ -194,7 +181,7 @@ int id
    else
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSIUS,
          host, commproc, id, u32c(version), feature_get_product_name(FS_VERSION)));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EVERSION, 0);
+   answer_list_add(alpp, SGE_EVENT, STATUS_EVERSION, ANSWER_QUALITY_ERROR);
 
    DEXIT;
    return 1;
@@ -224,6 +211,7 @@ sge_gdi_request *answer
 
    DENTER(TOP_LAYER, "sge_c_gdi");
 
+
    answer->op = request->op;
    answer->target = request->target;
    answer->sequence_id = request->sequence_id;
@@ -237,7 +225,7 @@ sge_gdi_request *answer
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -246,7 +234,7 @@ sge_gdi_request *answer
       CRITICAL((SGE_EVENT, MSG_GDI_NULL_IN_GDI_SSS,  
                (!user)?MSG_OBJ_USER:"", 
                (!group)?MSG_OBJ_GROUP:"", host));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -254,7 +242,7 @@ sge_gdi_request *answer
    if (!sge_security_verify_user(request->host, request->commproc, request->id, user)) {
       CRITICAL((SGE_EVENT, MSG_SEC_CRED_SSSI, user, request->host, 
                   request->commproc, request->id));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOSUCHUSER, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -365,8 +353,8 @@ sge_gdi_request *answer
       break;
 
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_UNKNOWNOP);
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_UNKNOWNOP));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       break;
    }
 
@@ -414,14 +402,14 @@ int *after
 
    DENTER(GDI_LAYER, "sge_c_gdi_get");
 
-   if (sge_chck_get_perm_host(&(answer->alp), request->target, request->host, request->commproc)) {
+   if (sge_chck_get_perm_host(&(answer->alp), request )) {
       DEXIT;
       return;
    }
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -433,8 +421,8 @@ int *after
    case SGE_PROJECT_LIST:
    case SGE_SHARETREE_LIST:
       if (!feature_is_enabled(FEATURE_SGEEE)) {
-         sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT));
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT)));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -446,7 +434,7 @@ int *after
       if (!qep) {
          /* could not get queue template */
          ERROR((SGE_EVENT, MSG_OBJ_GENQ));
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -460,22 +448,22 @@ int *after
          lAppendElem(lp, qep);
       else {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTGET_SS, user, MSG_OBJ_QLIST));
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       }         
       break;
 #ifdef QHOST_TEST
    case SGE_QHOST:
 /* lWriteListTo(request->lp, stdout); */
       sprintf(SGE_EVENT, "SGE_QHOST\n");
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       DEXIT;
       return;
 #endif
 
    default:
       if (!ao) {
-         sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -496,7 +484,7 @@ int *after
    }   
          
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
-   sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    
    DEXIT;
    return;
@@ -524,14 +512,14 @@ int sub_command
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
    if (!request->host || !user || !request->commproc) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -550,8 +538,8 @@ int sub_command
       case SGE_PROJECT_LIST:
       case SGE_SHARETREE_LIST:
          if (!feature_is_enabled(FEATURE_SGEEE)) {
-            sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) );
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) ));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
          }
@@ -579,9 +567,7 @@ int sub_command
          {
             u_long32 event_number, now;
             static u_long32 last_order_arrived = 0;
-
-            scheduler_busy = 0;
-
+            
             /* statistics */
             if (lFirst(request->lp) == ep) {
                now = sge_get_gmt();
@@ -600,25 +586,39 @@ int sub_command
                ep = lLast(request->lp); /* this will exit the loop */
 
                if (ret==-2)
-                  reinit_schedd();
+                  reinit_event_client(EV_ID_SCHEDD);
             }
-            /* trigger sending of generated events directly to schedd 
-             * but only if events available
-             */
-            if (event_number != sge_get_next_event_number(EV_ID_SCHEDD)) {
-               lListElem *schedd = sge_locate_scheduler();
-               if(schedd != NULL) {
-                  sge_flush_events(schedd, FLUSH_EVENTS_SET);
-               }
-            }   
          }
          break;
       case SGE_JOB_LIST:
-         /* submit needs to know user and group */
-         sge_gdi_add_job(ep, &(answer->alp), 
-                         (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                         &(answer->lp) : NULL, 
-                         user, host, request);
+         if(simulate_hosts == 1) {
+            int multi_job = 1;
+            int i;
+            lList *context = lGetList(ep, JB_context);
+            if(context != NULL) {
+               lListElem *multi = lGetElemStr(context, VA_variable, "SGE_MULTI_SUBMIT");
+               if(multi != NULL) {
+                  multi_job = atoi(lGetString(multi, VA_value));
+                  DPRINTF(("Cloning job %d times in simulation mode\n", multi_job));
+               }
+            }
+            
+            for(i = 0; i < multi_job; i++) {
+               lListElem *clone = lCopyElem(ep);
+               sge_gdi_add_job(clone, &(answer->alp), 
+                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                               &(answer->lp) : NULL, 
+                               user, host, request);
+               lFreeElem(clone);                
+            }
+            
+         } else {
+            /* submit needs to know user and group */
+            sge_gdi_add_job(ep, &(answer->alp), 
+                            (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                            &(answer->lp) : NULL, 
+                            user, host, request);
+         }
          break;
 
       case SGE_QUEUE_LIST:
@@ -643,8 +643,8 @@ int sub_command
 
       default:
          if (!ao) {
-            sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
          } 
          if (request->target==SGE_EXECHOST_LIST && 
@@ -692,7 +692,7 @@ int sub_command
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -714,8 +714,8 @@ int sub_command
          sge_del_sharetree(&Master_Sharetree_List, &(answer->alp), user,host);
          break;
       default:
-         sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
       }
    }
@@ -735,8 +735,8 @@ int sub_command
          case SGE_PROJECT_LIST:
          case SGE_SHARETREE_LIST:
             if (!feature_is_enabled(FEATURE_SGEEE)) {
-               sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT));
-               sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT)));
+               answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                DEXIT;
                return;
             }
@@ -807,8 +807,8 @@ int sub_command
             break;
 #endif /* __SGE_NO_USERMAPPING__ */                           
          default:
-            sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
          }
       }
@@ -838,14 +838,14 @@ int sub_command
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
    if (!request->host || !user || !request->commproc) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -867,8 +867,8 @@ int sub_command
          break;
 
       default:
-         sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
       }
    }
@@ -892,7 +892,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -906,7 +906,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
       lUlong value;
       /* create PERM_Type list for answer structure*/
-      lp = lCreateList("permissons", PERM_Type);
+      lp = lCreateList("permissions", PERM_Type);
       ep = lCreateElem(PERM_Type);
       lAppendElem(lp,ep);
 
@@ -947,14 +947,14 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
     /* check for manager permission */
     value = 0;
-    if (lGetElemStr(Master_Manager_List, MO_name, user ) != NULL ) {
+    if (manop_is_manager(user)) {
        value = 1; 
     }   
     lSetUlong(ep, PERM_manager, value);
 
     /* check for operator permission */
     value = 0;
-    if (lGetElemStr(Master_Operator_List, MO_name, user ) != NULL ) {
+    if (manop_is_operator(user)) {
        value = 1; 
     }   
     lSetUlong(ep, PERM_operator, value);
@@ -968,7 +968,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
   }
 
   sprintf(SGE_EVENT, MSG_GDI_OKNL);
-  sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO); 
+  answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO); 
   DEXIT;
   return;
 }
@@ -986,7 +986,7 @@ sge_gdi_request *answer
     break;
   default:
     WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
-    sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0); 
+    answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR); 
     break;
   }
   DEXIT;
@@ -1008,9 +1008,9 @@ sge_gdi_request *answer
    case SGE_MASTER_EVENT: /* kill master */
    case SGE_EVENT_LIST: /* kill scheduler */
    case SGE_SC_LIST: /* trigger scheduler monitoring */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+      if (!host_list_locate(Master_Adminhost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
-         sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -1040,7 +1040,7 @@ sge_gdi_request *answer
       break;
    default:
       WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       break;
    }
    DEXIT;
@@ -1064,7 +1064,7 @@ int sub_command
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -1088,8 +1088,8 @@ int sub_command
       case SGE_PROJECT_LIST:
       case SGE_SHARETREE_LIST:
          if (!feature_is_enabled(FEATURE_SGEEE)) {
-            sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) );
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) ));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
          }
@@ -1148,8 +1148,8 @@ int sub_command
 
       default:
          if (!ao) {
-            sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, 0);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
          } 
          sge_gdi_add_mod_generic(&(answer->alp), ep, 0, ao, user, host,
@@ -1195,9 +1195,9 @@ char *user
    case SGE_HOST_GROUP_LIST:
    case SGE_FEATURESET_LIST:
       /* user must be a manager */
-      if (sge_manager(user)) {
+      if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ENOMGR, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -1205,9 +1205,9 @@ char *user
 
    case SGE_USERSET_LIST:
       /* user must be a operator */
-      if (sge_operator(user)) {
+      if (!manop_is_operator(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEOPERATOR_S, user));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ENOMGR, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -1235,8 +1235,8 @@ char *user
       */  
       break;
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ENOIMP, 0);
+      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -1244,6 +1244,7 @@ char *user
    DEXIT;
    return 0;
 }
+
 
 static int sge_chck_mod_perm_host(
 lList **alpp,
@@ -1280,9 +1281,9 @@ lListElem *ep
    case SGE_FEATURESET_LIST:
       
       /* host must be SGE_ADMINHOST_LIST */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+      if (!host_list_locate(Master_Adminhost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -1290,11 +1291,12 @@ lListElem *ep
 
    case SGE_EXECHOST_LIST:
       
-      /* host must be SGE_ADMINHOST_LIST */
-      if ( strcmp(commproc, prognames[EXECD]) && 
-            !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+      /* host must be either admin host or exec host and execd */
+
+      if (!(host_list_locate(Master_Adminhost_List, host) ||
+         (host_list_locate(Master_Exechost_List, host) && !strcmp(commproc, prognames[EXECD])))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -1308,9 +1310,9 @@ lListElem *ep
       */
       if ( mod && (lGetPosViaElem(ep, JB_override_tickets) >= 0)) {
          /* host must be SGE_ADMINHOST_LIST */
-         if ( !sge_locate_host(host, SGE_ADMINHOST_LIST)) {
+         if (!host_list_locate(Master_Adminhost_List, host)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return 1;
          }
@@ -1318,9 +1320,9 @@ lListElem *ep
       }    
 #endif      
       /* host must be SGE_SUBMITHOST_LIST */
-      if ( !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
+      if (!host_list_locate(Master_Submithost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, host));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return 1;
       }
@@ -1331,17 +1333,17 @@ lListElem *ep
          performs modify requests on itself
          it must be on a submit or an admin host 
        */
-      if ( (!sge_locate_host(host, SGE_SUBMITHOST_LIST)) 
-        && (!sge_locate_host(host, SGE_ADMINHOST_LIST))) {
+      if ( (!host_list_locate(Master_Submithost_List, host)) 
+        && (!host_list_locate(Master_Adminhost_List, host))) {
         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
-        sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+        answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
         DEXIT;
         return 1;
       }
       break;
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ENOIMP, 0);
+      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -1352,12 +1354,24 @@ lListElem *ep
 
 static int sge_chck_get_perm_host(
 lList **alpp,
-u_long32 target,
-char *host,
-char *commproc
+sge_gdi_request *request
 ) {
-
+   u_long32 target;
+   char *host     = NULL;
+   char *commproc = NULL;
+   static int last_id = -1; 
+   
    DENTER(TOP_LAYER, "sge_chck_get_perm_host");
+
+   /* reset the last_id counter on first sequence number we won't
+      log the same error message twice in an api multi request */
+   if (request->sequence_id == 1) {
+      last_id = -1;
+   }
+
+   target = request->target;
+   host = request->host;
+   commproc = request->commproc;
 
    /* check permissions of host */
    switch (target) {
@@ -1371,7 +1385,6 @@ char *commproc
    case SGE_QUEUE_LIST:
    case SGE_COMPLEX_LIST:
    case SGE_PE_LIST:
-   case SGE_CONFIG_LIST:
    case SGE_SC_LIST:
    case SGE_USER_LIST:
    case SGE_USERSET_LIST:
@@ -1387,19 +1400,46 @@ char *commproc
    case SGE_ZOMBIE_LIST:
    case SGE_JOB_SCHEDD_INFO:
       
-      /* host must be SGE_ADMINHOST_LIST */
-      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
-           !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+      /* host must be admin or submit host */
+      if ( !host_list_locate(Master_Adminhost_List, host) &&
+           !host_list_locate(Master_Submithost_List, host)) {
+
+         if (last_id != request->id) {     /* only log the first error
+                                              in an api multi request */
+            ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         } else {    
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         }
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
+         last_id = request->id;       /* this indicates that the error
+                                         is allready locked */
+         DEXIT;
+         return 1;
+      }
+      break;
+
+   case SGE_CONFIG_LIST:
+      /* host must be admin or submit host or exec host */
+      if ( !host_list_locate(Master_Adminhost_List, host) &&
+           !host_list_locate(Master_Submithost_List, host) &&
+           !host_list_locate(Master_Exechost_List, host)) {
+         if (last_id != request->id) {  /* only log the first error
+                                              in an api multi request */
+            ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         } else {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         }
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
+         last_id = request->id;       /* this indicates that the error
+                                         is allready locked */
          DEXIT;
          return 1;
       }
       break;
 
    default:
-      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ENOIMP, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -1444,7 +1484,7 @@ int sub_command
    /* DO COMMON CHECKS AND SEARCH OLD OBJECT */
    if (!instructions || !object) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1453,7 +1493,7 @@ int sub_command
    if (lGetPosViaElem(instructions, object->key_nm)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS ,
             lNm2Str(object->key_nm), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1464,9 +1504,10 @@ int sub_command
           object->key_nm == AH_name||
           object->key_nm == SH_name) && 
           sge_resolve_host(instructions, object->key_nm)) {
+      const char *host = lGetHost(instructions, object->key_nm);    
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-            lGetHost(instructions, object->key_nm)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            host ? host : "NULL"));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -1500,7 +1541,7 @@ int sub_command
       ERROR((SGE_EVENT, add?
             MSG_SGETEXT_ALREADYEXISTS_SS:MSG_SGETEXT_DOESNOTEXIST_SS, 
             object->object_name, name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1510,7 +1551,7 @@ int sub_command
          ? lCreateElem(object->type) 
          : lCopyElem(old_obj)))) {
       ERROR((SGE_EVENT, MSG_MEM_MALLOC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -1591,7 +1632,7 @@ int sub_command
       add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
           MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, name, object->object_name));
 
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
     
    DEXIT;
    return STATUS_OK;

@@ -31,53 +31,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-/****** gdilib/jb_now ***************************************
-*
-*  NAME
-*     jb_now -- macros to handle flag JB_now 
-*
-*  SYNOPSIS
-*
-*  FUNCTION
-*
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
 
-#define JB_NOW_IMMEDIATE  0x01L
-#define JB_NOW_QSH        0x02L
-#define JB_NOW_QLOGIN     0x04L
-#define JB_NOW_QRSH       0x08L
-#define JB_NOW_QRLOGIN    0x10L
+/* EB: Content has been moved to libs/gdi/sge_job.h */
 
-#define JB_NOW_STR_IMMEDIATE  "IMMEDIATE"
-#define JB_NOW_STR_QSH        "INTERACTIVE"
-#define JB_NOW_STR_QLOGIN     "QLOGIN"
-#define JB_NOW_STR_QRSH       "QRSH"
-#define JB_NOW_STR_QRLOGIN    "QRLOGIN"
-
-#define JB_NOW_CLEAR_IMMEDIATE(jb_now)    jb_now = jb_now & 0xF8L 
-
-#define JB_NOW_SET_IMMEDIATE(jb_now)      jb_now =  jb_now | JB_NOW_IMMEDIATE
-#define JB_NOW_SET_QSH(jb_now)            jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QSH
-#define JB_NOW_SET_QLOGIN(jb_now)         jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QLOGIN
-#define JB_NOW_SET_QRSH(jb_now)           jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QRSH
-#define JB_NOW_SET_QRLOGIN(jb_now)        jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QRLOGIN
-
-#define JB_NOW_IS_IMMEDIATE(jb_now)       (jb_now & JB_NOW_IMMEDIATE)
-#define JB_NOW_IS_QSH(jb_now)             (jb_now & JB_NOW_QSH)
-#define JB_NOW_IS_QLOGIN(jb_now)          (jb_now & JB_NOW_QLOGIN)
-#define JB_NOW_IS_QRSH(jb_now)            (jb_now & JB_NOW_QRSH)
-#define JB_NOW_IS_QRLOGIN(jb_now)         (jb_now & JB_NOW_QRLOGIN)
 #endif /* __JB_NOW_H */

@@ -45,8 +45,7 @@
 #include "qmon_message.h"
 #include "qmon_browser.h"
 #include "qmon_appres.h"
-#include "sge_answerL.h"
-
+#include "sge_answer.h"
 
 static Widget qmon_msg_box = 0;
 static Widget msg_text_w = 0;
@@ -62,6 +61,7 @@ void qmonMessageShow(Widget w, Boolean msg_box, StringConst fmt, ...)
 {
    va_list arg_list;
    char buf[BUFSIZ];
+   char *l10nfmt;
    
    DENTER(GUI_LAYER, "qmonMessageShow");
 
@@ -78,9 +78,11 @@ void qmonMessageShow(Widget w, Boolean msg_box, StringConst fmt, ...)
       
       case MSG_BROWSER:
 #endif
-         (void)vsprintf(buf, fmt, arg_list);
+         l10nfmt = XmtLocalize(w, fmt, fmt);
+         (void)vsprintf(buf, l10nfmt, arg_list);
          if (qmonBrowserObjectEnabled(BROWSE_MSG)) {
             qmonBrowserShow(buf);
+            qmonBrowserShow("\n");
          }
 
          if (msg_box) {
@@ -151,7 +153,7 @@ int show_always
 
       if (!msg)
          continue;
-      if (aq == NUM_AN_ERROR)
+      if (aq == ANSWER_QUALITY_ERROR)
          error = True;
       if ((as != STATUS_OK) || show_always) { 
          show = True;
@@ -227,19 +229,19 @@ XtPointer cld, cad;
 
             answer_status = lGetUlong(aep, AN_status);
 	    quality = lGetUlong(aep, AN_quality);
-            if (quality == NUM_AN_ERROR) {
+            if (quality == ANSWER_QUALITY_ERROR) {
                sprintf(msg, "%s\nPlease correct above errors first !\n", 
                         lGetString(aep, AN_text));
                qmonMessageShow(w, True, msg);
                DEXIT;
                return;
             }
-            else if (quality == NUM_AN_WARNING) {
+            else if (quality == ANSWER_QUALITY_WARNING) {
                sprintf(msg, "WARNING!\n%s\n", 
                         lGetString(aep, AN_text));
                qmonMessageShow(w, True, msg);
 	    }
-            else if (quality == NUM_AN_INFO) {
+            else if (quality == ANSWER_QUALITY_INFO) {
                qmonMessageShow(w, True, lGetString(aep, AN_text));
 	    }
          }

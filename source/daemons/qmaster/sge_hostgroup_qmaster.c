@@ -43,30 +43,24 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_conf.h"
-#include "utility.h"
 #include "read_write_host_group.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_groupL.h"
 #include "sge_stringL.h"
 #include "sge_string.h"
-#include "gdi_utility_qmaster.h"
-#include "sge_groups.h"
-#include "sge_usermapL.h"
+#include "gdi_utility.h"
+#include "sge_usermap.h"
 #include "sge_hostgroup_qmaster.h"
 #include "sge_user_mapping.h"
+#include "sge_answer.h"
+#include "sge_unistd.h"
+#include "sge_hostgroup.h"
 
 #ifndef __SGE_NO_USERMAPPING__
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_utilib.h"
-
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
-
 
 /****** src/hostgrp_mod() **********************************
 *
@@ -171,10 +165,10 @@ int sub_command
    if (add == 1) {
       /* GRP_group_name -------------------------------*/
 
-      if (check_fname(groupName) != 0) {
+      if (sge_is_valid_filename(groupName) != 0) {
          /* no correct filename */
          ERROR((SGE_EVENT,MSG_HGRP_GROUPXNOTGUILTY_S, groupName ));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }  
@@ -184,7 +178,7 @@ int sub_command
       memberList = lGetList(modp, GRP_member_list);
       if (memberList != NULL) {
          ERROR((SGE_EVENT, MSG_HGRP_MEMBERLISTFORXEXISTS_S, groupName ));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -224,7 +218,7 @@ int sub_command
          if (tmpMember != NULL) {
             if (sge_add_member2group(modp, tmpMember) != TRUE) {
                ERROR((SGE_EVENT, MSG_HGRP_CANTADDMEMBERXTOGROUPY_SS, tmpMember ,groupName ));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EUNKNOWN;
             }
@@ -449,7 +443,7 @@ gdi_object_t *object
       const char* groupName = NULL;
       groupName = lGetString(upe, GRP_group_name); 
       ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, groupName ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -520,7 +514,7 @@ char *rhost
    DENTER(TOP_LAYER, "sge_del_hostgroup");
    if ( !cep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -532,7 +526,7 @@ char *rhost
    if (groupName == NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(GRP_group_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }   
@@ -540,7 +534,7 @@ char *rhost
    ep = sge_get_group_elem(Master_Host_Group_List,groupName);
    if (ep == NULL) { 
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, "host group entry", groupName ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;  
    }   
@@ -559,7 +553,7 @@ char *rhost
           if (sge_getUserNameForHost(Master_Host_Group_List, mapList, groupName) != NULL) {
              /* found reference in user mapping */
              ERROR((SGE_EVENT, MSG_ANSER_CANTDELETEHGRPXREFERENCEDINUSERMAPPINGFORCLUSTERUSERY_SS, groupName, clusterName ));
-             sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
              DEXIT;
              return STATUS_EEXIST;
           }
@@ -570,7 +564,7 @@ char *rhost
    /* remove host file */
    if (sge_unlink(HOSTGROUP_DIR, groupName)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, "host group entry",groupName ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -602,7 +596,7 @@ char *rhost
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost,groupName , "host group entry"  ));
 
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 

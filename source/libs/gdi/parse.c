@@ -32,18 +32,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "sgermon.h"
-#include "sge_exit.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
-#include "sge_peL.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
+#include "sge_pe.h"
 #include "sge_stringL.h"
 #include "parse_qsubL.h"
-#include "sge_answerL.h"
 #include "sge_job_refL.h"
 #include "usage.h"
 #include "sge_parse_num_par.h"
@@ -51,13 +46,12 @@
 #include "sge_parse_date_time.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sge_me.h"
-#include "sge_rangeL.h"
 #include "sge_identL.h"
-#include "parse_range.h"
 #include "msg_common.h"
 #include "msg_gdilib.h"
-
+#include "sge_answer.h"
+#include "sge_range.h"
+#include "sge_job.h"
 
 int hard = TRUE;
 
@@ -156,8 +150,8 @@ lList **alpp
    job_str = str;
 
    if ((token = strtok(NULL, ""))) {
-      task_id_range_list = parse_ranges(token, 0, 1, alpp, NULL, 
-                                          INF_NOT_ALLOWED);
+      range_list_parse_from_string(&task_id_range_list, alpp, token,
+                                   0, 1, INF_NOT_ALLOWED);
       if (*alpp) {
          /*
          ** free the dupped string
@@ -326,7 +320,7 @@ lListElem *ep; /* SPA_Type */
            && !strncmp(longopt, *sp, strlen(longopt)-1)) ) {
       if(!*(++rp) || (**rp == '-')) {
          sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, *sp);
-         sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return rp;
       }
@@ -373,7 +367,7 @@ lList **alpp
       string str;
       if(!*() || (**rp == '-')) {
          sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, *sp);
-         sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
+         answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return rp;
       }
@@ -523,7 +517,7 @@ lList **ppdestlist
                lGetString(sep, STR), &tmp_alp) == -1) {
             sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
                lGetString(sep, STR));
-            sge_add_answer(alpp, str, STATUS_ESEMANTIC, 0);
+            answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
             lRemoveElem(*ppcmdline, ep);
             DEXIT;
@@ -578,3 +572,68 @@ lList *string_list
    return (group_opt);
 }
 
+/* ------------------------------------------ 
+   JG: TODO: make ADOC header
+   parses an enumeration of specifiers into value
+   the first specifier is interpreted
+   as 1, second as 2, third as 4 ..
+   
+   return value
+
+   0 ok
+   -1 error
+
+*/
+int sge_parse_bitfield_str(const char *str, const char *set_specifier[], 
+                           u_long32 *value, const char *name, lList **alpp) 
+{
+   const char *s;
+   const char **cpp;
+   u_long32 bitmask;
+   /* isspace() character plus "," */
+   static char delim[] = ", \t\v\n\f\r";
+   DENTER(TOP_LAYER, "sge_parse_bitfield_str");
+   
+   *value = 0;
+
+   for (s = sge_strtok(str, delim); s; s=sge_strtok(NULL, delim)) {
+
+      bitmask = 1;
+      for (cpp=set_specifier; **cpp != '\0'; cpp++) {
+         if (!strcasecmp(*cpp, s)) {
+
+            if ( *value & bitmask ) {
+               /* whops! unknown specifier */
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS, *cpp, name)); 
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return FALSE;
+            }
+
+            *value |= bitmask;
+            break;
+         }
+         else   
+            bitmask <<= 1;
+      }
+
+      if ( **cpp == '\0' ) {
+         /* whops! unknown specifier */
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS, s, name)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return FALSE;
+      }
+
+   }
+
+   if (!value) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S , name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return FALSE;
+
+   }
+   DEXIT;
+   return TRUE;
+}

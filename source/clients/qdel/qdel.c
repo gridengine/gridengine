@@ -29,24 +29,25 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
+
 #include "sgermon.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "usage.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sig_handlers.h"
 #include "parse.h"
-
-#include "msg_gdilib.h"
+#include "sge_answer.h"
 #include "gdi_checkpermissions.h"
 #include "sge_feature.h"
+#include "sge_unistd.h"
+
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qdel.h"
@@ -150,11 +151,24 @@ int main(int argc, char **argv) {
    /* Has the user the permission to use the the '-f' (forced) flag */
    have_master_privileges = FALSE;
    if (force == 1) {
-      have_master_privileges = sge_gdi_check_permission(MANAGER_CHECK);
+      have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
       if (have_master_privileges == -10) {
-         fprintf(stderr, MSG_SGETEXT_NOQMASTER);
+         /* -10 indicates no connection to qmaster */
+
+         /* fills SGE_EVENT with diagnosis information */
+         if (alp != NULL) {
+            if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+            }
+            lFreeList(alp);
+            alp = NULL;
+         }
          goto error_exit;
       }  
+      if (alp != NULL) {
+         lFreeList(alp);
+         alp = NULL;
+      }
    }
 
    /* delete the job */
@@ -327,7 +341,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qdel_usage(stderr, NULL);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -394,10 +408,12 @@ lListElem *ep;
       }
    }
    if ((*pallusers || *ppuserlist) && *ppreflist) {
-      sge_add_answer(&alp, MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED, STATUS_EUNKNOWN, 0);
+      answer_list_add(&alp, MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
    if (*ppuserlist && *pallusers) {
-      sge_add_answer(&alp, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, 0);
+      answer_list_add(&alp, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
 
    DEXIT;

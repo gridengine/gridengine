@@ -61,7 +61,6 @@
 #include "qmon_request.h"
 #include "qmon_util.h"
 #include "basis_types.h"
-#include "def.h"
 #include "sge_sched.h"
 #include "sge_signal.h"
 #include "sge_time.h"
@@ -71,17 +70,17 @@
 #include "gdi_qmod.h"
 #include "sge_gdi_intern.h"
 #include "sge_feature.h"
-#include "parse_range.h"
 #include "qmon_matrix.h"
 #include "sge_range.h"
 #include "parse.h"
-#include "job.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "sge_schedd_text.h"
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 #include "sge_range.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -134,13 +133,13 @@ static Pixel qmonJobStateToColor(Widget w, lListElem *jep);
 static Boolean qmonDeleteJobForMatrix(Widget w, Widget matrix, lList **local);
 static lList* qmonJobBuildSelectedList(Widget matrix, lDescr *dp, int nm);
 /* static void qmonResizeCB(Widget w, XtPointer cld, XtPointer cad); */
-static Boolean AskForHold(Widget w, Cardinal *hold, StringBufferT *dyn_tasks);
+static Boolean AskForHold(Widget w, Cardinal *hold, dstring *dyn_tasks);
 static void AskHoldCancelCB(Widget w, XtPointer cld, XtPointer cad);
 static void AskHoldOkCB(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad);
 /*-------------------------------------------------------------------------*/
-static int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, StringBufferT *sb);
-static int show_info_for_job(FILE *fp, lList **alpp, StringBufferT *sb);
+static int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, dstring *sb);
+static int show_info_for_job(FILE *fp, lList **alpp, dstring *sb);
 
 
 /*-------------------------------------------------------------------------*/
@@ -441,9 +440,9 @@ int row
       if (!jat) {
          lListElem *first_elem = lFirst(tasks);
 
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(tasks);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(tasks, NULL);
 
             jat = job_get_ja_task_template(job, task_id);       
@@ -540,6 +539,7 @@ void updateJobList(void)
    lListElem *qep = NULL;
    lCondition *where_run = NULL;
    lCondition *where_unfinished = NULL;
+   lCondition *where_exiting = NULL;
    lEnumeration *what = NULL;
    lCondition *where_no_template = NULL;
    lCondition *where_notexiting = NULL;
@@ -575,9 +575,10 @@ void updateJobList(void)
                                     "template");
    what_queue = lWhat("%T(ALL)", QU_Type);
    where_notexiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
-   where_run = lWhere("%T((%I m= %u || %I m= %u) && (!(%I m= %u)))", 
-                        JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSITING,
-                        JAT_state, JEXITING);
+   where_run = lWhere("%T((%I m= %u || %I m= %u) && (!(%I m= %u)))",
+                      JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSFERING,
+                      JAT_state, JEXITING);
+   where_exiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
  
    jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
 
@@ -592,13 +593,13 @@ void updateJobList(void)
 
    if (rl || ol) {
       if (!filter_on) {
-         setButtonLabel(job_customize, "Customize *");
+         setButtonLabel(job_customize, "@{Customize +}");
          filter_on = True;
       }
    }
    else {
       if (filter_on) {
-         setButtonLabel(job_customize, "Customize");
+         setButtonLabel(job_customize, "@{Customize}");
          filter_on = False;
       }
    }
@@ -688,13 +689,15 @@ void updateJobList(void)
    */
    for_each (jep, jl) {
       lList *rtasks = lCopyList("rtasks", lGetList(jep, JB_ja_tasks));
+      lList *etasks = NULL;
       lList *ptasks = NULL;
       lListElem *jap;
       int tow = 0;
       /*
-      ** split into running and pending tasks
+      ** split into running, pending and exiting tasks 
       */
       lSplit(&rtasks, &ptasks, "rtasks", where_run);
+      lSplit(&ptasks, &etasks, "etasks", where_exiting);
 
 #if 0 /* EB: debug code */
       printf("========> jep\n");
@@ -705,6 +708,8 @@ void updateJobList(void)
       lWriteListTo(rtasks, stdout); 
       printf("========> ptasks\n"); 
       lWriteListTo(ptasks, stdout); 
+      printf("========> etasks\n");
+      lWriteListTo(etasks, stdout);
 #endif
       /*
       ** for running tasks we have to set the suspend_on_subordinate flag
@@ -719,13 +724,11 @@ void updateJobList(void)
                lList *ehl = qmonMirrorList(SGE_EXECHOST_LIST);
                lList *cl = qmonMirrorList(SGE_COMPLEX_LIST);
                qnm = lGetString(lFirst(ql), JG_qname);
-               qep = lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, qnm);
+               qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), qnm);
                if (qep) {
-      /*             lList *lt = lGetList(qep, QU_load_thresholds); */
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
-                  if (/* sge_load_alarm(qep, lt, ehl, cl, NULL) || */
-                           sge_load_alarm(qep, st, ehl, cl, NULL)) {
+                  if ( sge_load_alarm(NULL, qep, st, ehl, cl, NULL)) {
                      jstate = lGetUlong(jap, JAT_state);
                      jstate &= ~JRUNNING; /* unset bit jrunning */
                      /* set bit jsuspended_on_subordinate */
@@ -739,7 +742,7 @@ void updateJobList(void)
             tow++;                                                            
          }
          rtasks = lFreeList(rtasks);
-         row++;
+         row += tow;
       }
       /*
       ** pending jobs
@@ -749,7 +752,7 @@ void updateJobList(void)
             lList *task_group;
 
             lSplit(&ptasks, NULL, NULL, where_notexiting);
-            while (( task_group = split_task_group(&ptasks))) {
+            while (( task_group = ja_task_list_split_group(&ptasks))) {
                qmonJobToMatrix(job_pending_jobs, jep, NULL, task_group,
                               JOB_DISPLAY_MODE_PENDING, pow);
                task_group = lFreeList(task_group);
@@ -804,12 +807,14 @@ void updateJobList(void)
          }
          job_destroy_hold_id_lists(jep, range_list);
       }
+      etasks = lFreeList(etasks);
    }
 
    /*
    ** free the where/what
    */
    where_run = lFreeWhere(where_run);
+   where_exiting = lFreeWhere(where_exiting);
    where_notexiting = lFreeWhere(where_notexiting);
    where_unfinished = lFreeWhere(where_unfinished);
    what = lFreeWhat(what);
@@ -1027,6 +1032,7 @@ XtPointer cad
 static lList* qmonJobBuildSelectedList(matrix, dp, nm)
 Widget matrix;
 lDescr *dp;
+int nm;
 {
    int i;
    int rows;
@@ -1075,7 +1081,7 @@ lDescr *dp;
                                     atol(lGetString(idp, ID_str)), dp);
                            lSetList(jep, JB_ja_structure, 
                                  lCopyList("", lGetList(idp, ID_ja_structure)));
-                           job_get_ja_task_ids(jep, &start, &end, &step); 
+                           job_get_submit_task_ids(jep, &start, &end, &step); 
                            for_each(ip, lGetList(idp, ID_ja_structure)) {
                               start = lGetUlong(ip, RN_min);
                               end = lGetUlong(ip, RN_max);
@@ -1215,8 +1221,8 @@ XtPointer cld, cad;
       lAddList(jl, rl);
    
    if (jl) {
-      StringBufferT dyn_tasks = {NULL, 0};
-      StringBufferT dyn_oldtasks = {NULL, 0};
+      dstring dyn_tasks = DSTRING_INIT;
+      dstring dyn_oldtasks = DSTRING_INIT;
       lListElem *selected_job;
       lListElem *selected_ja_task;
       u_long32 selected_job_id;
@@ -1228,8 +1234,7 @@ XtPointer cld, cad;
       */
       selected_job = lFirst(jl);
       selected_job_id = lGetUlong(selected_job, JB_job_number);
-      job = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), JB_job_number, 
-                          selected_job_id);
+      job = job_list_locate(qmonMirrorList(SGE_JOB_LIST), selected_job_id);
       selected_ja_task = lFirst(lGetList(selected_job, JB_ja_tasks));
       selected_ja_task_id = lGetUlong(selected_ja_task, JAT_task_number);
       if (job_is_enrolled(job, selected_ja_task_id)) {
@@ -1238,9 +1243,10 @@ XtPointer cld, cad;
          new_hold = job_get_ja_task_hold_state(job, selected_ja_task_id);
       }
 
-      if (lGetNumberOfElem(jl) == 1 && is_array(job)) {
-         get_taskrange_str(lGetList(selected_job, JB_ja_tasks), &dyn_tasks);
-         sge_string_append(&dyn_oldtasks, dyn_tasks.s);
+      if (lGetNumberOfElem(jl) == 1 && job_is_array(job)) {
+         ja_task_list_print_to_string(lGetList(selected_job, JB_ja_tasks), 
+                                     &dyn_tasks);
+         sge_dstring_append(&dyn_oldtasks, dyn_tasks.s);
       }
 
       status_ask = AskForHold(w, &new_hold, &dyn_tasks); 
@@ -1286,8 +1292,8 @@ XtPointer cld, cad;
          XbaeMatrixDeselectAll(job_running_jobs);
 
       }
-      sge_string_free(&dyn_tasks);
-      sge_string_free(&dyn_oldtasks);
+      sge_dstring_free(&dyn_tasks);
+      sge_dstring_free(&dyn_oldtasks);
    }
    else
       qmonMessageShow(w, True, "@{There are no jobs selected !}");
@@ -1385,8 +1391,8 @@ Boolean *ctd
                   str = XbaeMatrixGetCell(w, row, 0);
                   if (str && *str != '\0') {
                      job_nr = atoi(str);
-                     jep = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), 
-                                          JB_job_number, (u_long32)job_nr);
+                     jep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+                                          (u_long32)job_nr);
                      if (jep) {
                         sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
                         qmonBrowserShow(line);
@@ -1411,7 +1417,6 @@ lListElem *jep
 
    static char info[60000];
    char buf[1024];
-   const char *str;
 
 /*    int status; */
 
@@ -1421,7 +1426,7 @@ lListElem *jep
    sprintf(info, WIDTH"%s\n", info, "Job Name:", 
                   lGetString(jep, JB_job_name));
    sprintf(info, WIDTH"%s\n", info, "Job Script:", 
-                  lGetString(jep, JB_script_file));
+                  lGetString(jep, JB_script_file) ? lGetString(jep, JB_script_file): "-NA-");
    sprintf(info, WIDTH"%s\n", info, "Owner:", 
                   lGetString(jep, JB_owner));
    sprintf(info, WIDTH"%d\n", info, "Priority:", 
@@ -1443,7 +1448,7 @@ lListElem *jep
             sprintf(info, WIDTH"%s\n", info, "Status:", 
                      "Idle");
             break;
-         case JTRANSITING:
+         case JTRANSFERING:
             sprintf(info, WIDTH"%s\n", info, "Status:", 
                      "Transiting");
             break;
@@ -1460,49 +1465,21 @@ lListElem *jep
 #endif
 
 #if 0
-   sprintf(info, WIDTH"%s\n", info, "Execution Time:", 
-               sge_ctime(lGetUlong(jep, JB_execution_time)));
-   str = lGetString(jep, JB_sge_o_home);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_HOME:", str ? str : "");
-
-   str = lGetString(jep, JB_sge_o_log_name);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_LOG_NAME:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_path);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_PATH:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_mail);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_MAIL:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_shell);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_SHELL:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_tz);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_TZ:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_workdir);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_WORKDIR:", str ? str : ""); 
-
-   str = lGetHost(jep, JB_sge_o_host);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_HOST:", str ? str : ""); 
-#endif
-
-   str = lGetString(jep, JB_cell);
-   sprintf(info, WIDTH"%s\n", info, "Cell:", str ? str : "default"); 
-
-#if 0
    str = lGetString(jep, JB_directive_prefix);
    sprintf(info, WIDTH"%s\n", info, "Directive Prefix:", str ? str : "#$"); 
 #endif
 
    sprintf(info, WIDTH"%s\n", info, "Checkpoint Object:", 
-         lGetString(jep, JB_checkpoint_object) ? 
-            lGetString(jep, JB_checkpoint_object) : "");
+         lGetString(jep, JB_checkpoint_name) ? 
+            lGetString(jep, JB_checkpoint_name) : "");
 
    if (lGetString(jep, JB_pe)) {
-      show_ranges(buf, 0, NULL, lGetList(jep, JB_pe_range));
+      dstring range_string = DSTRING_INIT;
+
+      range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, 1);
       sprintf(info, WIDTH"%s %s\n", info, "Requested PE:", 
-               lGetString(jep, JB_pe), buf);
+              lGetString(jep, JB_pe), sge_dstring_get_string(&range_string));
+      sge_dstring_free(&range_string);
    }
 
 #ifdef FIXME
@@ -1544,7 +1521,7 @@ lListElem *jep
 static Boolean AskForHold(
 Widget w,
 Cardinal *hold,
-StringBufferT *dyn_tasks 
+dstring *dyn_tasks 
 ) {
    static tAskHoldInfo AskHoldInfo;      
    Widget shell = XmtGetShell(w);
@@ -1639,8 +1616,8 @@ StringBufferT *dyn_tasks
       String ts;
       *hold = XmtChooserGetState(hold_flags);
       ts = XmtInputFieldGetString(hold_tasks);
-      sge_string_free(dyn_tasks);
-      sge_string_append(dyn_tasks, ts ? ts : ""); 
+      sge_dstring_free(dyn_tasks);
+      sge_dstring_append(dyn_tasks, ts ? ts : ""); 
       DEXIT;
       return True;
    }
@@ -1674,7 +1651,7 @@ static void qmonJobScheddInfo(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   StringBufferT sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;
    lList *jl = NULL;
 
    lDescr info_descr[] = {
@@ -1688,9 +1665,10 @@ XtPointer cld, cad;
    
    qmonBrowserOpen(w, NULL, NULL);
    if (jl ? (show_info_for_jobs(jl, NULL, NULL, &sb) == 0) :  
-            (show_info_for_job(NULL, NULL, &sb) == 0) && sb.s) {
-      qmonBrowserShow(sb.s);
-      free(sb.s);
+            (show_info_for_job(NULL, NULL, &sb) == 0) && 
+               sge_dstring_get_string(&sb)) {
+      qmonBrowserShow(sge_dstring_get_string(&sb));
+      sge_dstring_free(&sb);
    }
    else 
       qmonBrowserShow("---------Could not get scheduling info--------\n");
@@ -1757,7 +1735,7 @@ static int show_info_for_jobs(
 lList *jid_list,
 FILE *fp,
 lList **alpp,
-StringBufferT *sb
+dstring *sb
 ) {
    lListElem *j_elem = 0;
    lList* jlp = NULL;
@@ -1782,7 +1760,7 @@ StringBufferT *sb
          if (fp)
             fprintf(fp, "%s", lGetString(aep, AN_text));
          if (alpp) {
-            sge_add_answer(alpp, lGetString(aep, AN_text),
+            answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
          schedd_info = FALSE;
@@ -1811,7 +1789,7 @@ StringBufferT *sb
          if (fp)
             fprintf(fp, "%s", lGetString(aep, AN_text));
          if (alpp) {
-            sge_add_answer(alpp, lGetString(aep, AN_text),
+            answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
          jobs_exist = FALSE;
@@ -1829,7 +1807,7 @@ StringBufferT *sb
       lListElem *sme;
  
       if (line_separator)
-         sge_string_printf(sb, "\n");
+         sge_dstring_sprintf_append(sb, "\n");
       else
          line_separator = 1;
 /*       cull_show_job(j_elem, 0); */
@@ -1840,12 +1818,12 @@ StringBufferT *sb
             /* global schduling info */
             for_each (mes, lGetList(sme, SME_global_message_list)) {
                if (first_run) {
-                  sge_string_printf(sb, "%s", "scheduling info:            ");
+                  sge_dstring_sprintf_append(sb, "%s", "scheduling info:            ");
                   first_run = 0;
                }
                else
-                  sge_string_printf(sb, "%s", "                            ");
-               sge_string_printf(sb, "%s\n", lGetString(mes, MES_message));
+                  sge_dstring_sprintf_append(sb, "%s", "                            ");
+               sge_dstring_sprintf_append(sb, "%s\n", lGetString(mes, MES_message));
             }
  
             /* job scheduling info */
@@ -1854,14 +1832,14 @@ StringBufferT *sb
             mes = lFindFirst(lGetList(sme, SME_message_list), where);
             if (mes) {
                if (first_run) {
-                  sge_string_printf(sb, "%s", "scheduling info:            ");
+                  sge_dstring_sprintf_append(sb, "%s", "scheduling info:            ");
                   first_run = 0;
                }
                else
-                  sge_string_printf(sb, "%s\n", lGetString(mes, MES_message));
+                  sge_dstring_sprintf_append(sb, "%s\n", lGetString(mes, MES_message));
             }
             while ((mes = lFindNext(mes, where)))
-               sge_string_printf(sb, "                            %s\n",
+               sge_dstring_sprintf_append(sb, "                            %s\n",
                                     lGetString(mes, MES_message));
             lFreeWhere(where);
          }
@@ -1877,7 +1855,7 @@ StringBufferT *sb
 static int show_info_for_job(
 FILE *fp,
 lList **alpp,
-StringBufferT *sb
+dstring *sb
 ) {
    lList *ilp = NULL, *mlp = NULL;
    lListElem* aep = NULL;
@@ -1906,7 +1884,7 @@ StringBufferT *sb
          if (fp)
             fprintf(fp, "%s", lGetString(aep, AN_text));
          if (alpp) {
-            sge_add_answer(alpp, lGetString(aep, AN_text),
+            answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
          }
          schedd_info = FALSE;
@@ -1924,15 +1902,15 @@ StringBufferT *sb
       first_run = 1;
       for_each (mes, lGetList(sme, SME_global_message_list)) {
          if (first_run) {
-            sge_string_printf(sb, "%s", "scheduling info:            ");
+            sge_dstring_sprintf_append(sb, "%s", "scheduling info:            ");
             first_run = 0;
          }
          else
-            sge_string_printf(sb, "%s", "                            ");
-         sge_string_printf(sb, "%s\n", lGetString(mes, MES_message));
+            sge_dstring_sprintf_append(sb, "%s", "                            ");
+         sge_dstring_sprintf_append(sb, "%s\n", lGetString(mes, MES_message));
       }                                               
       if (!first_run)
-         sge_string_printf(sb, "\n");
+         sge_dstring_sprintf_append(sb, "\n");
  
       first_run = 1;
  
@@ -1964,7 +1942,7 @@ StringBufferT *sb
             }
  
             if (strlen(text) >= MAX_LINE_LEN || ids_per_line >= MAX_IDS_PER_LINE || header) {
-               sge_string_printf(sb, "%s", text);
+               sge_dstring_sprintf_append(sb, "%s", text);
                text[0] = 0;
                ids_per_line = 0;
                first_row = 0;
@@ -1975,7 +1953,7 @@ StringBufferT *sb
                   printf("\n\n");
                else
                   first_run = 0;
-               sge_string_printf(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
+               sge_dstring_sprintf_append(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
                first_row = 1;
             }
  
@@ -1997,7 +1975,7 @@ StringBufferT *sb
          }
       }
       if (text[0] != 0)
-         sge_string_printf(sb, "%s\n", text);
+         sge_dstring_sprintf_append(sb, "%s\n", text);
    }
  
    lFreeList(ilp);

@@ -42,13 +42,49 @@ extern "C" {
 
 /* *INDENT-OFF* */ 
 
-/* 
- * Load Sensor Element
- *
- * The attributes of this element show the state of a load sensor.
- * A list of these elements is used in the execd.
- */
-
+/****** gdi/loadsensor/--LS_Type **********************************************
+*  NAME
+*     LS_Type - CULL load sensor element
+*     
+*  ELEMENTS
+*     SGE_STRING(LS_name)        
+*        name of this load sensor, no hashing, 
+*        we only have few loadsensors/host 
+*
+*     SGE_STRING(LS_command)     
+*        absolute path of the ls script 
+*
+*     SGE_STRING(LS_pid)         
+*        pid of the ls process 
+*
+*     SGE_REF(LS_in)             
+*        stdin to the ls process (type: FILE*) 
+*
+*     SGE_REF(LS_out)            
+*        stdout of the ls process (type: FILE*) 
+*
+*     SGE_REF(LS_err)            
+*        stderr of the ls process (type: FILE*) 
+*
+*     SGE_BOOL(LS_has_to_restart)        
+*        should we restart the ls script?
+*
+*     SGE_ULONG(LS_tag)          
+*        tag for internal use
+*
+*     SGE_LIST(LS_incomplete)    
+*        current values we got from the ls script 
+*
+*     SGE_LIST(LS_complete)      
+*        last complete set of ls values 
+*
+*     SGE_ULONG(LS_last_mod)     
+*        last modification time of ls script 
+*
+*  FUNCTION
+*     The attributes of this element show the state of a load sensor.
+*     A list of these elements is used in the execd.
+******************************************************************************/
 enum {
    LS_name = LS_LOWERBOUND,
    LS_command,
@@ -64,17 +100,17 @@ enum {
 };
 
 LISTDEF(LS_Type)
-   SGE_STRING(LS_name)        /* name of this load sensor, no hashing, we only have few loadsensors/host */
-   SGE_STRING(LS_command)     /* absolute path of the ls script */
-   SGE_STRING(LS_pid)         /* pid of the ls process */
-   SGE_REF(LS_in)             /* stdin to the ls process (type: FILE*) */
-   SGE_REF(LS_out)            /* stdout of the ls process (type: FILE*) */
-   SGE_REF(LS_err)            /* stderr of the ls process (type: FILE*) */
-   SGE_BOOL(LS_has_to_restart)        /* should we restart the ls script? */
-   SGE_ULONG(LS_tag)          /* tag for internal use */
-   SGE_LIST(LS_incomplete)    /* current values we got from the ls script */
-   SGE_LIST(LS_complete)      /* last complete set of ls values */
-   SGE_ULONG(LS_last_mod)     /* last modification time of ls script */
+   SGE_STRING(LS_name, CULL_DEFAULT)       
+   SGE_STRING(LS_command, CULL_DEFAULT)   
+   SGE_STRING(LS_pid, CULL_DEFAULT)      
+   SGE_REF(LS_in, SGE_ANY_SUBTYPE, CULL_DEFAULT)         /* type is FILE * */
+   SGE_REF(LS_out, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE * */
+   SGE_REF(LS_err, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE * */
+   SGE_BOOL(LS_has_to_restart, CULL_DEFAULT) 
+   SGE_ULONG(LS_tag, CULL_DEFAULT)         
+   SGE_LIST(LS_incomplete, LR_Type, CULL_DEFAULT)  
+   SGE_LIST(LS_complete, LR_Type, CULL_DEFAULT)   
+   SGE_ULONG(LS_last_mod, CULL_DEFAULT) 
 LISTEND 
 
 NAMEDEF(LSN)
@@ -97,4 +133,4 @@ NAMEEND
 #ifdef  __cplusplus
 }
 #endif
-#endif                          /* __SGE_LOADSENSORL_H */
+#endif /* __SGE_LOADSENSORL_H */

@@ -32,36 +32,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>  
 #include <fnmatch.h>
 
 #include "sgermon.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge.h"
-#include "sge_timestop.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
+#include "sge_stdlib.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
 #include "sig_handlers.h"
-#include "sge_jobL.h"
-#include "sge_complexL.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
 #include "sge_feature.h"
 #include "parse.h"
-#include "parse_range.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "utility.h"
+#include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
 #include "show_job.h"
@@ -70,13 +61,18 @@
 #include "sge_schedd_text.h"
 #include "qm_name.h"
 #include "load_correction.h"
-#include "sge_stat.h" 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qstat.h"
 #include "sge_conf.h" 
 #include "sgeee.h" 
 #include "sge_support.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_ckpt.h"
+#include "sge_complex.h"
+#include "sge_queue.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -87,7 +83,7 @@
 static void get_all_lists(lList **queue_l, lList **job_l, lList **complex_l, lList **exechost_l, lList **sc_l, lList **pe_l, lList **ckpt_l, lList **acl_l, lList **zombie_l, lList *qrl, lList *perl, lList *ul, u_long32 full_listing);
 static int select_by_hard_queue_list(lList *queue_list, lList *hql); 
 static int select_by_pe_list(lList *queue_list, lList *peref_list, lList *pe_list);
-static int select_by_queue_user_list(lList *queue_list, lList *queue_user_list, lList *acl_list);
+static int select_by_queue_user_list(lList *exechost_list, lList *queue_list, lList *queue_user_list, lList *acl_list);
 static lList *sge_parse_cmdline_qstat(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource, lList **pplqueueref, lList **ppluser, lList **pplqueue_user, lList **pplpe, u_long32 *pfull, u_long32 *pempty, char **hostname, u_long32 *job_info, u_long32 *group_opt, lList **ppljid);
 static int qstat_usage(FILE *fp, char *what);
@@ -193,7 +189,6 @@ char **argv
       SGE_EXIT(1);
    }
 
-
    set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
 
@@ -210,7 +205,9 @@ char **argv
       SGE_EXIT(ret);
    }
 
-   starttime(0);
+   sge_stopwatch_start(0);
+
+
    get_all_lists(
       &queue_list, 
       qselect_mode?NULL:&job_list, 
@@ -226,9 +223,9 @@ char **argv
       user_list,
       full_listing);
 
-   init_complex_double_values(complex_list);
+   complex_list_init_double_attr(complex_list);
 
-   log_time(0, "Time for getting all lists");
+   sge_stopwatch_log(0, "Time for getting all lists");
    
    if (getenv("MORE_INFO")) {
       if(global_showjobs) {
@@ -259,10 +256,7 @@ char **argv
 
    DPRINTF(("------- selecting queues -----------\n"));
    /* all queues are selected */
-   for_each(qep, queue_list) {
-      if (strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME))
-         lSetUlong(qep, QU_tagged, TAG_SHOW_IT);
-   }
+   queue_list_set_tag(queue_list, QUEUE_TAG_IGNORE_TEMPLATE, TAG_SHOW_IT);
 
    /* unseclect all queues not selected by a -q (if exist) */
    if (lGetNumberOfElem(queueref_list)>0) {
@@ -277,7 +271,7 @@ char **argv
 
    /* unseclect all queues not selected by a -U (if exist) */
    if (lGetNumberOfElem(queue_user_list)>0) {
-      if ((nqueues=select_by_queue_user_list(queue_list, queue_user_list, acl_list))<0) {
+      if ((nqueues=select_by_queue_user_list(exechost_list , queue_list, queue_user_list, acl_list))<0) {
          SGE_EXIT(1);
       }
 
@@ -327,8 +321,8 @@ char **argv
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
          queue_complexes2scheduler(&ce, qep, exechost_list, complex_list, 0);
-         ccl[0] = lGetList(lGetElemHost(exechost_list, EH_name, "global"), EH_consumable_config_list);
-         ccl[1] = (ep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname)))?
+         ccl[0] = lGetList(host_list_locate(exechost_list, "global"), EH_consumable_config_list);
+         ccl[1] = (ep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname)))?
                   lGetList(ep, EH_consumable_config_list):NULL;
          ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -419,11 +413,11 @@ char **argv
          int ret, show_job;
 
          pe = lGetString(jep, JB_pe)?
-                  lGetElemStr(pe_list, PE_name, lGetString(jep, JB_pe)):
+                  pe_list_locate(pe_list, lGetString(jep, JB_pe)):
                   NULL; /* aargh ! wildcard pe */
-         ckpt = lGetString(jep, JB_checkpoint_object)?
-                     lGetElemStr(ckpt_list, CK_name, 
-                        lGetString(jep, JB_checkpoint_object)): NULL;
+         ckpt = lGetString(jep, JB_checkpoint_name)?
+                           ckpt_list_locate(ckpt_list, 
+                           lGetString(jep, JB_checkpoint_name)): NULL;
          show_job = 0;
 
          for_each(qep, queue_list) {
@@ -440,12 +434,18 @@ char **argv
          }   
          
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if (!show_job && !(lGetUlong(jatep, JAT_status) == JRUNNING || (lGetUlong(jatep, JAT_status) == JTRANSITING))) {
+            if (!show_job && !(lGetUlong(jatep, JAT_status) == JRUNNING || (lGetUlong(jatep, JAT_status) == JTRANSFERING))) {
                DPRINTF(("show task "u32"."u32"\n",
                        lGetUlong(jep, JB_job_number),
                        lGetUlong(jatep, JAT_task_number)));
                lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable) & ~TAG_SHOW_IT);
             }
+         }
+         if (!show_job) {
+            lSetList(jep, JB_ja_n_h_ids, NULL);
+            lSetList(jep, JB_ja_u_h_ids, NULL);
+            lSetList(jep, JB_ja_o_h_ids, NULL);
+            lSetList(jep, JB_ja_s_h_ids, NULL);
          }
       }
       set_qs_state(QS_STATE_FULL);
@@ -506,10 +506,6 @@ char **argv
          }
          jatep = tmp_jatep;
       }
-#if 0 /* EB: we need the container for the pending jobs */
-      if (lGetNumberOfElem(task_list) == 0)
-         lRemoveElem(job_list, jep);
-#endif
       jep = tmp;
    }
 
@@ -645,7 +641,7 @@ u_long32 show
 
          nw = lWhere("%T(%I->%T(!(%I m= %u || %I m= %u))",
                      JB_Type, JB_ja_tasks, JAT_Type,
-                     JAT_status, JRUNNING, JAT_status, JTRANSITING); 
+                     JAT_status, JRUNNING, JAT_status, JTRANSFERING); 
 
          if (!jw)
             jw = nw;
@@ -668,11 +664,11 @@ u_long32 show
                      JB_owner,
                      JB_script_file,
                      JB_group,
-                     JB_now,
+                     JB_type,
                      JB_pe,
-                     JB_checkpoint_object,
+                     JB_checkpoint_name,
                      JB_jid_predecessor_list,
-                     JB_sge_o_mail,
+                     JB_env_list,
                      JB_priority,
                      JB_job_name,
                      JB_project,
@@ -722,11 +718,11 @@ u_long32 show
                      JB_job_number, 
                      JB_owner,
                      JB_group,
-                     JB_now,
+                     JB_type,
                      JB_pe,
-                     JB_checkpoint_object,
+                     JB_checkpoint_name,
                      JB_jid_predecessor_list,
-                     JB_sge_o_mail,
+                     JB_env_list,
                      JB_priority,
                      JB_job_name,
                      JB_project,
@@ -792,13 +788,6 @@ u_long32 show
    ** pe list 
    */ 
    if (pe_l) {   
-      for_each(ep, peref_list) {
-         nw = lWhere("%T(%I p= %s)", PE_Type, PE_name, lGetString(ep, STR));
-         if (!pw)
-            pw = nw;
-         else
-            pw = lOrWhere(pw, nw);
-      }
       pe_all = lWhat("%T(%I%I%I%I)", PE_Type, PE_name, PE_queue_list, PE_job_is_first_task, PE_control_slaves);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL);
@@ -840,7 +829,6 @@ u_long32 show
          SGE_EXIT(1);
       }
    }
-
    /*
    ** scheduler configuration
    */
@@ -996,13 +984,13 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (sc_config) {
-      if (lGetUlong(lFirst(*sc_l), SC_user_sort)) {
+      if (lGetBool(lFirst(*sc_l), SC_user_sort)) {
          set_user_sort(1);
       }
    }
    alp = lFreeList(alp);
 
-   /* -- apply global configuration for hostcmp() scheme */
+   /* -- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
       printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
@@ -1074,7 +1062,7 @@ lList *hql
 */
 static int select_by_pe_list(
 lList *queue_list,
-lList *peref_list,
+lList *peref_list,   /* STR_Type */
 lList *pe_list 
 ) {
    int nqueues = 0;
@@ -1083,14 +1071,23 @@ lList *pe_list
 
    DENTER(TOP_LAYER, "select_by_pe_list");
 
-   /* iterate through peref_list and build up a new pe_list 
-    *  containing only those pe's referenced in peref_list 
-    *
-    * we transfer only pe's matching the pattern, so
-    * there is no need to look at this list again
-    */
-   pe_selected = pe_list;
+  /*
+   * iterate through peref_list and build up a new pe_list
+   * containing only those pe's referenced in peref_list
+   */
+   for_each(pe, peref_list) {
+      lListElem *ref_pe;   /* PE_Type */
+      lListElem *copy_pe;  /* PE_Type */
 
+      ref_pe = pe_list_locate(pe_list, lGetString(pe, STR));
+      copy_pe = lCopyElem(ref_pe);
+      if (pe_selected == NULL) {
+         const lDescr *descriptor = lGetElemDescr(ref_pe);
+
+         pe_selected = lCreateList("", descriptor);
+      }
+      lAppendElem(pe_selected, copy_pe);
+   }
    if (lGetNumberOfElem(pe_selected)==0) {
       fprintf(stderr, MSG_PE_NOSUCHPARALLELENVIRONMENT);
       return -1;
@@ -1119,6 +1116,9 @@ lList *pe_list
          nqueues++;
    }
 
+   if (pe_selected != NULL) {
+      lFreeList(pe_selected);
+   }
    DEXIT;
    return nqueues;
 }
@@ -1132,29 +1132,111 @@ lList *pe_list
 
 */
 static int select_by_queue_user_list(
+lList *exechost_list,
 lList *queue_list,
 lList *queue_user_list,
 lList *acl_list 
 ) {
    int nqueues = 0;
-   lListElem *qu, *qep;
+   lListElem *qu = NULL;
+   lListElem *qep = NULL;
+   lListElem *ehep = NULL;
+   lList *h_acl = NULL;
+   lList *h_xacl = NULL;
+   lList *global_acl = NULL;
+   lList *global_xacl = NULL;
+   lList *config_acl = NULL;
+   lList *config_xacl = NULL;
+ 
 
    DENTER(TOP_LAYER, "select_by_queue_user_list");
 
    /* untag all queues where no of the users has access */
+
+   ehep = host_list_locate(exechost_list, "global"); 
+   global_acl  = lGetList(ehep, EH_acl);
+   global_xacl = lGetList(ehep, EH_xacl);
+
+   config_acl  = conf.user_lists;
+   config_xacl = conf.xuser_lists; 
+
+
    for_each(qep, queue_list) {
       int access = 0;
+      const char *host_name = NULL;
+
+      /* get exec host list element for current queue 
+         and its access lists */
+      host_name = lGetHost(qep,QU_qhostname);
+      ehep = host_list_locate(exechost_list, host_name); 
+      h_acl  = lGetList(ehep, EH_acl);
+      h_xacl = lGetList(ehep, EH_xacl);
+
       for_each (qu, queue_user_list) {
+         int q_access = 0;
+         int h_access = 0;
+         int gh_access = 0;
+         int conf_access = 0;
+
          const char *name = lGetString(qu, STR);
-         if ((access = (name[0]=='@')?
-               sge_has_access(NULL, &name[1], qep, acl_list): /* group */
-               sge_has_access(name, NULL, qep, acl_list))) /*user */
+         if (name == NULL)
+            continue;
+
+         DPRINTF(("-----> checking queue user: %s\n", name )); 
+
+         DPRINTF(("testing queue access lists\n"));
+         q_access = (name[0]=='@')?
+               sge_has_access(NULL, &name[1], qep, acl_list): 
+               sge_has_access(name, NULL, qep, acl_list); 
+         if (!q_access) {
+            DPRINTF(("no access\n"));
+         } else {
+            DPRINTF(("ok\n"));
+         }
+
+         DPRINTF(("testing host access lists\n"));
+         h_access = (name[0]=='@')?
+               sge_has_access_(NULL, &name[1], h_acl, h_xacl , acl_list):
+               sge_has_access_(name, NULL, h_acl, h_xacl , acl_list); 
+         if (!h_access) {
+            DPRINTF(("no access\n"));
+         }else {
+            DPRINTF(("ok\n"));
+         }
+
+         DPRINTF(("testing global host access lists\n"));
+         gh_access = (name[0]=='@')?
+               sge_has_access_(NULL, &name[1], global_acl , global_xacl , acl_list):
+               sge_has_access_(name, NULL,global_acl , global_xacl , acl_list);
+         if (!gh_access) {
+            DPRINTF(("no access\n"));
+         }else {
+            DPRINTF(("ok\n"));
+         }
+
+         DPRINTF(("testing cluster config access lists\n"));
+         conf_access = (name[0]=='@')?
+               sge_has_access_(NULL, &name[1],config_acl , config_xacl , acl_list): 
+               sge_has_access_(name, NULL, config_acl , config_xacl  , acl_list); 
+         if (!conf_access) {
+            DPRINTF(("no access\n"));
+         }else {
+            DPRINTF(("ok\n"));
+         }
+
+         access = q_access && h_access && gh_access && conf_access;
+         if (!access) {
             break;
+         }
       }
-      if (!access)
+      if (!access) {
+         DPRINTF(("no access for queue %s\n", lGetString(qep,QU_qname) ));
          lSetUlong(qep, QU_tagged, 0);
-      else 
+      }
+      else {
+         DPRINTF(("access for queue %s\n", lGetString(qep,QU_qname) ));
          nqueues++;
+      }
    }
 
    DEXIT;
@@ -1268,7 +1350,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_ANSWER_INVALIDOPTIONARGX_S, *sp);
       qstat_usage(stderr, NULL);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -1415,7 +1497,8 @@ lList **ppljid
                   sprintf(str, MSG_OPTIONS_WRONGARGUMENTTOSOPT);
                   if (!usageshowed)
                      qstat_usage(stderr, NULL);
-                  sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+                  answer_list_add(&alp, str, 
+                                  STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                   DEXIT;
                   return alp;
                }  
@@ -1488,7 +1571,7 @@ lList **ppljid
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if (!usageshowed)
         qstat_usage(stderr, NULL);
-     sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }
@@ -1560,7 +1643,7 @@ char *what
       fprintf(fp, "destin_id_list           queue[,queue,...]\n");
       fprintf(fp, "pe_list                  pe[,pe,...]\n");
       fprintf(fp, "resource_list            resource[=value][,resource[=value],.  ..]\n");
-      fprintf(fp, "user_list                user[@host][,user[@host],...]\n");
+      fprintf(fp, "user_list                user|@group[,user|@group],...]\n");
       fprintf(fp, "resource_attributes      resource,resource,.\n");
    } else {
       /* display option usage */

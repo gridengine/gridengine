@@ -36,36 +36,33 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
-#include "sge_rangeL.h"
+#include "sge_ja_task.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
 #include "sge_stringL.h"
 #include "sge_identL.h"
 #include "sge_job_refL.h"
-#include "sge_str_from_file.h"
-#include "sge_me.h"
 #include "sge_resource.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
-#include "path_aliases.h"
+#include "sge_path_alias.h"
 #include "parse.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
-#include "utility.h"
 #include "unparse_job_cull.h"
 #include "sge_language.h"
 #include "sge_feature.h"
 #include "msg_common.h"
-#include "jb_now.h"
 #include "sge_range.h"
-#include "job.h"
+#include "sge_job.h"
+#include "sge_stdlib.h"
+#include "sge_io.h"
+#include "sge_prog.h"
+#include "sge_var.h"
+#include "sge_answer.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -76,7 +73,6 @@
 ** USE_CLIENT_QSH
 */
 
-static void strip_quotes(char **pstr);
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -104,10 +100,8 @@ static void strip_quotes(char **pstr);
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_job_parameter(
-lList *cmdline,
-lListElem **pjob 
-) {
+lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob) 
+{
    const char *cp;
    lListElem *ep;
    lList *answer = NULL;
@@ -117,7 +111,8 @@ lListElem **pjob
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
    if (!pjob) {
-      sge_add_answer(&answer,  MSG_PARSE_NULLPOINTERRECEIVED , STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer,  MSG_PARSE_NULLPOINTERRECEIVED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -125,7 +120,8 @@ lListElem **pjob
    if (!*pjob) {
       *pjob = lCreateElem(JB_Type);
       if (!*pjob) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -138,7 +134,8 @@ lListElem **pjob
       tmpl_task_list = lCreateList("template task list", JAT_Type);
       tmpl_task = lCreateElem(JAT_Type);
       if (!tmpl_task_list || !tmpl_task) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         answer_list_add(&answer, MSG_MEM_MEMORYALLOCFAILED, 
+                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
@@ -153,72 +150,67 @@ lListElem **pjob
       lSetString(*pjob, JB_owner, me.user_name);
    }
    lSetUlong(*pjob, JB_uid, me.uid);
-   lSetString(*pjob, JB_sge_o_home, sge_getenv("HOME"));
-   lSetString(*pjob, JB_sge_o_log_name, sge_getenv("LOGNAME"));
-   lSetString(*pjob, JB_sge_o_path, sge_getenv("PATH"));
-   lSetString(*pjob, JB_sge_o_mail, sge_getenv("MAIL"));
-   lSetString(*pjob, JB_sge_o_shell, sge_getenv("SHELL"));
-   lSetString(*pjob, JB_sge_o_tz, sge_getenv("TZ"));
+
    /*
    ** path aliasing
    */
-   if (build_path_aliases(&path_alias, me.user_name, me.qualified_hostname, 
-                        &answer) == -1) {
+   if (path_alias_list_initialize(&path_alias, &answer, me.user_name, 
+                                  me.qualified_hostname) == -1) {
       DEXIT;
       return answer;
    }
-   { 
-      static char cwd_out[SGE_PATH_MAX + 1];
-      static char tmp_str[SGE_PATH_MAX + 1];
-      if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
-         DEXIT;
-         return answer;
-      }
-      get_path_alias(tmp_str, cwd_out, 
-                        SGE_PATH_MAX, path_alias, 
-                        me.qualified_hostname, NULL);  
-      lSetString(*pjob, JB_sge_o_workdir, cwd_out);
+
+   job_initialize_env(*pjob, &answer, path_alias);
+   if (answer) {
+      DEXIT;
+      return answer;
    }
-   lSetHost(*pjob, JB_sge_o_host, 
-      ((cp = sge_getenv("HOST")) ? cp : me.unqualified_hostname));
+
+#if 0 /* JG: removed JB_cell from job object */
    if (lGetString(*pjob, JB_cell)) {
       lSetString(*pjob, JB_cell, me.default_cell);
    }
+#endif   
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
 
-   DTRACE;
+
+   /*
+    * -b
+    */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-b"))) {
+      if (lGetInt(ep, SPA_argval_lIntT) == 1) {
+         u_long32 jb_now = lGetUlong(*pjob, JB_type);
+
+         JOB_TYPE_SET_BINARY(jb_now);
+         lSetUlong(*pjob, JB_type, jb_now);
+      }
+      lRemoveElem(cmdline, ep);
+   }
 
    /*
     * -t
     */
-   {
-      lList *range_list = NULL;
-      lList *n_h_list;
+   ep = lGetElemStr(cmdline, SPA_switch, "-t");
+   if (ep != NULL) {
+      lList *range_list = lGetList(ep, SPA_argval_lListT);
+      lList *new_range_list = lCopyList("",  range_list);
 
-      ep = lGetElemStr(cmdline, SPA_switch, "-t");
-      if (ep) {
-         range_list = lGetList(ep, SPA_argval_lListT);
-         lSetList(*pjob, JB_ja_structure, lCopyList("range list", range_list)); 
-      } else {
-         job_set_ja_task_ids(*pjob, 1, 1, 1);
-         range_list = lGetList(*pjob, JB_ja_structure);
+      lSetList(*pjob, JB_ja_structure, new_range_list);
+      lRemoveElem(cmdline, ep);
+   
+      {
+         u_long32 job_type = lGetUlong(*pjob, JB_type);
+         JOB_TYPE_SET_ARRAY(job_type);
+         lSetUlong(*pjob, JB_type, job_type);
       }
-      n_h_list = lCopyList("range list", range_list);
-      if (!n_h_list) {
-         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
-         DEXIT;
-         return answer;
-      }     
-      lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
-      lSetList(*pjob, JB_ja_u_h_ids, NULL);
-      lSetList(*pjob, JB_ja_o_h_ids, NULL);
-      lSetList(*pjob, JB_ja_s_h_ids, NULL);
-
-      if (ep) {
-         lRemoveElem(cmdline, ep);
-      }
+   } else {
+      job_set_submit_task_ids(*pjob, 1, 1, 1);
+   }
+   job_initialize_id_lists(*pjob, &answer);
+   if (answer != NULL) {
+      DEXIT;
+      return answer;
    }
 
    /*
@@ -289,15 +281,17 @@ lListElem **pjob
       lRemoveElem(cmdline, ep);
    }
 
+#if 0 /* JG: removed JB_cell from job object */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cell"))) {
       lSetString(*pjob, JB_cell, lGetString(ep, SPA_argval_lStringT));
       me.default_cell = sge_strdup(me.default_cell, 
          lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, ep);
    }
+#endif
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
-      lSetString(*pjob, JB_checkpoint_object, lGetString(ep, SPA_argval_lStringT));
+      lSetString(*pjob, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, ep);
    }
 
@@ -312,21 +306,24 @@ lListElem **pjob
       char tmp_str[SGE_PATH_MAX + 1];
       char tmp_str2[SGE_PATH_MAX + 1];
       char tmp_str3[SGE_PATH_MAX + 1];
+      const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
-      if (!chdir(lGetString(*pjob, JB_sge_o_home))) {
+      if (!chdir(env_value)) {
          if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-            sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
          chdir(tmp_str);
          if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
-            sprintf(tmp_str3, "%s%s", lGetString(*pjob, JB_sge_o_home), 
+            sprintf(tmp_str3, "%s%s", env_value, 
                (char *) tmp_str + strlen(tmp_str2));
             strcpy(tmp_str, tmp_str3);
          }
@@ -384,7 +381,8 @@ lListElem **pjob
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
       lRemoveElem(cmdline, ep);
       sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, error_string, 
+                      STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -404,7 +402,7 @@ lListElem **pjob
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
-      lSetUlong(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
+      lSetBool(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
       lRemoveElem(cmdline, ep);
    }
 
@@ -447,19 +445,19 @@ lListElem **pjob
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-      lSetUlong(*pjob, JB_notify, TRUE);
+      lSetBool(*pjob, JB_notify, TRUE);
       lRemoveElem(cmdline, ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-now"))) {
-      u_long32 jb_now = lGetUlong(*pjob, JB_now);
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
       if(lGetInt(ep, SPA_argval_lIntT)) {
-         JB_NOW_SET_IMMEDIATE(jb_now);
+         JOB_TYPE_SET_IMMEDIATE(jb_now);
       } else {
-         JB_NOW_CLEAR_IMMEDIATE(jb_now);
+         JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
       }
 
-      lSetUlong(*pjob, JB_now, jb_now);
+      lSetUlong(*pjob, JB_type, jb_now);
 
       lRemoveElem(cmdline, ep);
    }
@@ -471,7 +469,10 @@ lListElem **pjob
    ** job element pointer the field name the option list and the option
    ** name and the field is filled
    */
-   parse_list_simple(cmdline, "-o", *pjob, JB_stdout_path_list, PN_host, PN_path, FLG_LIST_MERGE);
+   parse_list_simple(cmdline, "-o", *pjob, JB_stdout_path_list, PN_host, 
+                     PN_path, FLG_LIST_MERGE);
+   parse_list_simple(cmdline, "-i", *pjob, JB_stdin_path_list, PN_host, 
+                     PN_path, FLG_LIST_MERGE);
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
       lSetUlong(*pjob, JB_priority, 
@@ -593,7 +594,8 @@ lListElem **pjob
          strcat(error_string, cp);
       }
       strcat(error_string, "\n");
-      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, error_string, 
+                      STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
    cp = lGetString(*pjob, JB_script_file);
@@ -610,7 +612,7 @@ lListElem **pjob
    return answer;
 }
 
-/****** parse_job_cull/parse_script_file() *************************************
+/****** client/parse_job_cull/parse_script_file() *****************************
 *  NAME
 *     parse_script_file() -- parse a job script or a job defaults file
 *
@@ -651,9 +653,6 @@ lListElem **pjob
 *                              FLG_USE_NO_PSEUDOS:  do not create pseudoargs 
 *                                                   for script pointer and 
 *                                                   length
-*                              FLG_DONT_ADD_SCRIPT: do not add the script as a
-*                                                   pseudoarg if it is not yet 
-*                                                   there
 *
 *  RESULT
 *     lList* - answer list, AN_Type, or NULL if everything was ok, 
@@ -687,8 +686,9 @@ u_long32 flags
    static const char default_prefix[] = "#$";
    unsigned int dpl; /* directive_prefix length */
    FILE *fp;
-   char *filestrptr;
+   char *filestrptr = NULL;
    int script_len;
+   int parsed_chars = 0;
    char **str_table;
    lList *alp, *answer = NULL; 
    lListElem *aep;
@@ -705,175 +705,187 @@ u_long32 flags
 
    if (!lpp_options) {
       /* no place where to put result */
-      sge_add_answer(&answer, MSG_ANSWER_CANTPROCESSNULLLIST, STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_ANSWER_CANTPROCESSNULLLIST, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
 
-   if (script_file && strcmp(script_file, "-")) {
-      /* are we able to access this file? */
-      if ((fp = fopen(script_file, "r")) == NULL) {
-         sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-         sge_add_answer(&answer, error_string, STATUS_EDISK, 0);
-         DEXIT;
-         return answer;
-      }
-      
-      fclose(fp);
-
-      /* read the script file in one sweep */
-      filestrptr = str_from_file(script_file, &script_len);
-
-      if (!filestrptr) {
-         sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-         sge_add_answer(&answer, error_string, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return answer;
-      }
-   } else {
-      /* no script file but input from stdin */
-      filestrptr = str_from_stream(stdin, &script_len);
-      if (!filestrptr) {
-         sge_add_answer(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return answer;
-      }
-   }
-
-   /* no prefix for special comments given - try to find one in current commandline
-   ** or take default
-   */
-   if (!directive_prefix) {
-      lListElem *ep;
-
-      ep = lGetElemStr(*lpp_options, SPA_switch, "-C");
-      if (ep) {
-         directive_prefix = lGetString(ep, SPA_argval_lStringT);
-      }
-      if (!directive_prefix) {
-         directive_prefix = default_prefix;
-      }
-   }
-   dpl = strlen(directive_prefix);
-
-   /* now look for job parameters in script file */
-   s = filestrptr;
-   while(*s != 0) {
-      int length = 0;
-      char *parameters = NULL;
-      char *d = buffer;
-
-      /* copy MAX_STRING_SIZE bytes maximum */
-      while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
-         *d++ = *s++;
-         length++;
-      }
-
-      /* terminate target string */
-      *d = 0;
-      
-      /* skip linefeed */
-      if(*s == '\n') {
-         s++;
-      }
-      
-      parameters = buffer;
-
-      /*
-      ** If directive prefix is zero string then all lines except
-      ** comment lines are read, this makes it possible to parse
-      ** defaults files with this function.
-      ** If the line contains no SGE options, we set parameters to NULL.
-      */
-
-      if(dpl == 0) {
-         /* we parse a settings file (e.g. sge_request): skip comment lines */
-         if(*parameters == '#') {
-            parameters = NULL;
-         }
-      } else {
-         /* we parse a script file with special comments */
-         if(strncmp(parameters, directive_prefix, dpl) == 0) {
-            parameters += dpl;
-            while(isspace(*parameters)) {
-               parameters++;
-            }
-         } else {
-            parameters = NULL;
-         }
-      }
-
-      /* delete trailing garbage */
-      if(parameters != NULL) {
-         for(i = strlen(parameters) - 1; i >= 0; i--) {
-            if(isspace(parameters[i])) {
-               parameters[i] = 0;
-            } else {
-               break;
-            }
-         }
-      }
-
-      if(parameters != NULL && *parameters != 0) {
-         DPRINTF(("parameter in script: %s\n", parameters));
-
-         /*
-         ** here cull comes in 
-         */
-
-         /* so str_table has to be freed afterwards */
-         str_table = string_list(parameters, " \t\n", NULL);
-         
-         for (i=0; str_table[i]; i++) {
-            DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
-         }
-         strip_quotes(str_table);
-         for (i=0; str_table[i]; i++) {
-            DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
-         }
-
-         /*
-         ** problem: error handling missing here and above
-         */
-         alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
-
-         for_each(aep, alp) {
-            u_long32 quality;
-            u_long32 status = STATUS_OK;
-
-            status = lGetUlong(aep, AN_status);
-            quality = lGetUlong(aep, AN_quality);
-            if (quality == NUM_AN_ERROR) {
-               DPRINTF(("%s", lGetString(aep, AN_text)));
-               do_exit = 1;
-            }
-            else {
-               DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
-            }
-            sge_add_answer(&answer, lGetString(aep, AN_text), status, quality);
-         }
-
-         lFreeList(alp);
-         if (do_exit) {
+   if (!(flags & FLG_IGNORE_EMBEDED_OPTS)) {
+      if (script_file && strcmp(script_file, "-")) {
+         /* are we able to access this file? */
+         if ((fp = fopen(script_file, "r")) == NULL) {
+            sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, 
+                    strerror(errno));
+            answer_list_add(&answer, error_string, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
+         
+         fclose(fp);
 
-         free((char*) str_table);
+         /* read the script file in one sweep */
+         filestrptr = sge_file2string(script_file, &script_len);
+
+         if (!filestrptr) {
+            sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, 
+                    script_file);
+            answer_list_add(&answer, error_string, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+      } else {
+         /* no script file but input from stdin */
+         filestrptr = sge_stream2string(stdin, &script_len);
+         if (!filestrptr) {
+            answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+      }
+
+      /* 
+       * no prefix for special comments given - i
+       * try to find one in current commandline
+       * or take default
+       */
+      if (!directive_prefix) {
+         lListElem *ep;
+
+         ep = lGetElemStr(*lpp_options, SPA_switch, "-C");
+         if (ep) {
+            directive_prefix = lGetString(ep, SPA_argval_lStringT);
+         }
+         if (!directive_prefix) {
+            directive_prefix = default_prefix;
+         }
+      }
+      dpl = strlen(directive_prefix);
+
+      /* now look for job parameters in script file */
+      s = filestrptr;
+      while(*s != 0) {
+         int length = 0;
+         char *parameters = NULL;
+         char *d = buffer;
+
+         /* copy MAX_STRING_SIZE bytes maximum */
+         while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
+            *d++ = *s++;
+            length++;
+            parsed_chars++;
+         }
+
+         /* terminate target string */
+         *d = 0;
+         
+         /* skip linefeed */
+         if(*s == '\n') {
+            s++;
+            parsed_chars++;
+         }
+         
+         parameters = buffer;
 
          /*
-         ** -C option is ignored in scriptfile - delete all occurences
+         ** If directive prefix is zero string then all lines except
+         ** comment lines are read, this makes it possible to parse
+         ** defaults files with this function.
+         ** If the line contains no SGE options, we set parameters to NULL.
          */
-         {
-            lListElem *ep;
+
+         if(dpl == 0) {
+            /* we parse a settings file (e.g. sge_request): skip comment lines */
+            if(*parameters == '#') {
+               parameters = NULL;
+            }
+         } else {
+            /* we parse a script file with special comments */
+            if(strncmp(parameters, directive_prefix, dpl) == 0) {
+               parameters += dpl;
+               while(isspace(*parameters)) {
+                  parameters++;
+               }
+            } else {
+               parameters = NULL;
+            }
+         }
+
+         /* delete trailing garbage */
+         if(parameters != NULL) {
+            for(i = strlen(parameters) - 1; i >= 0; i--) {
+               if(isspace(parameters[i])) {
+                  parameters[i] = 0;
+               } else {
+                  break;
+               }
+            }
+         }
+
+         if(parameters != NULL && *parameters != 0) {
+            DPRINTF(("parameter in script: %s\n", parameters));
+
+            /*
+            ** here cull comes in 
+            */
+
+            /* so str_table has to be freed afterwards */
+            str_table = string_list(parameters, " \t\n", NULL);
             
-            while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
-               lRemoveElem(lp_new_opts, ep);
+            for (i=0; str_table[i]; i++) {
+               DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+            }
+            sge_strip_quotes(str_table);
+            for (i=0; str_table[i]; i++) {
+               DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
+            }
+
+            /*
+            ** problem: error handling missing here and above
+            */
+            alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
+
+            for_each(aep, alp) {
+               u_long32 quality;
+               u_long32 status = STATUS_OK;
+
+               status = lGetUlong(aep, AN_status);
+               quality = lGetUlong(aep, AN_quality);
+               if (quality == ANSWER_QUALITY_ERROR) {
+                  DPRINTF(("%s", lGetString(aep, AN_text)));
+                  do_exit = 1;
+               }
+               else {
+                  DPRINTF(("Warning: %s\n", lGetString(aep, AN_text)));
+               }
+               answer_list_add(&answer, lGetString(aep, AN_text), status, quality);
+            }
+
+            lFreeList(alp);
+            if (do_exit) {
+               DEXIT;
+               return answer;
+            }
+
+            free((char*) str_table);
+
+            /*
+            ** -C option is ignored in scriptfile - delete all occurences
+            */
+            {
+               lListElem *ep;
+               
+               while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
+                  lRemoveElem(lp_new_opts, ep);
+               }
             }
          }
       }
    }
-   
+
    if (!(flags & FLG_USE_NO_PSEUDOS)) {
       /*
       ** if script is not yet there we add it to the command line,
@@ -912,78 +924,4 @@ u_long32 flags
 
    DEXIT;
    return answer;
-}
-
-
-static void strip_quotes(
-char **pstr 
-) {
-   char *cp, *cp2;
-
-   DENTER(TOP_LAYER, "strip_quotes");
-
-   if (!pstr) {
-      DEXIT;
-      return;
-   }
-
-   for (; *pstr; pstr++) {
-      for (cp2 = cp = *pstr; *cp; cp++) {
-         if (*cp == '"') {
-            *cp2++ = *cp;
-         }
-      }
-   }
-
-   DEXIT;
-   return;
-}
-
-
-/****** src/add_parent_uplink() **********************************
-*
-*  NAME
-*     add_parent_uplink() -- add PARENT jobid to job context 
-*
-*  SYNOPSIS
-*
-*     #include "parse_job_cull.h"
-*     #include <src/parse_job_cull.h>
-* 
-*     void add_parent_uplink(lListElem *job);
-*       
-*
-*  FUNCTION
-*     If we have JOB_ID in environment implicitly put it into the 
-*     job context variable PARENT if was not explicitly set using 
-*     "-sc PARENT=$JOBID". By doing this we preserve information 
-*     about the relationship between these two jobs.
-* 
-*  INPUTS
-*    job - the job structure
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-void add_parent_uplink(
-lListElem *job 
-) {
-   char *job_id;
-   lListElem *cp;
-   if ((job_id=getenv("JOB_ID")) && 
-            !lGetSubStr(job, VA_variable, CONTEXT_PARENT, JB_context)) { 
-      cp = lAddSubStr(job, VA_variable, CONTEXT_PARENT, JB_context, VA_Type);
-      lSetString(cp, VA_value, job_id);
-   }
 }

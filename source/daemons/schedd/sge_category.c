@@ -34,55 +34,37 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "def.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
-#include "sge_ckptL.h"
-#include "sge_complexL.h"
-#include "sge_eventL.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_job_schedd.h"
+#include "sge_job.h"
 #include "sge_log.h"
-#include "sge_peL.h"
+#include "sge_pe.h"
 #include "sge_schedd.h"
 #include "sge_process_events.h"
-#include "sge_prognames.h"
-#include "sge_queueL.h"
+#include "sge_prog.h"
 #include "sge_ctL.h"
-#include "sge_schedconfL.h"
-#include "sge_usersetL.h"
-#include "sge_userprjL.h"
+#include "sge_schedd_conf.h"
 #include "sge_time.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "cull_sort.h"
-#include "event.h"
+#include "sge_event.h"
 #include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "unparse_job_cull.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "parse_qsubL.h"
 #include "sge_access_tree.h"
 #include "parse.h"
 #include "sge_category.h"
-#include "msg_schedd.h"
 #include "category.h"
 
-#include "jb_now.h"
+#include "msg_schedd.h"
 
 /* Categories of the job are managed here */
 lList *CATEGORY_LIST = NULL;
-
-/*-------------------------------------------------------------------*
- * sge_process_all_events
- * 
- *  returns 
- *    1 no events
- *    0 ok trigger scheduling
- *   -1 event protocol error or no qmaster 
- *-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------*/
 /*    add job´s category to the ´global´ category list, if it doesn´t      */
@@ -92,27 +74,28 @@ lList *CATEGORY_LIST = NULL;
 int sge_add_job_category( lListElem *job, lList *acl_list) {
 
    lListElem *cat = NULL;
-   char *cstr;
+   const char *cstr;
    u_long32 rc = 0, jobid;
    static char no_requests[] = "no-requests";
+   dstring category_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_add_job_category");
    
-   cstr = sge_build_job_category(job, acl_list);
-
+   cstr = sge_build_job_category(&category_str, job, acl_list);
    if (!cstr) 
-      cstr = strdup(no_requests);
+      cstr = sge_dstring_copy_string(&category_str, no_requests);
 
    jobid = lGetUlong(job, JB_job_number);
    if (!CATEGORY_LIST)
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
    else {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
-/*       DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr)); */
    }
 
-   if (!cat) {
-/*       DPRINTF(("Job "u32": Added %s to category list\n", jobid, cstr)); */
+   if (cat) {
+      DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr));
+   } else {
+      DPRINTF(("Job "u32": Added %s to category list\n", jobid, cstr));
       cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
    }   
    /* increment ref counter and set reference to this element */
@@ -123,8 +106,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
    /* 
    ** free cstr
    */
-   if (cstr)
-      free(cstr);
+   sge_dstring_free(&category_str);
 
    DEXIT;
    return 0;

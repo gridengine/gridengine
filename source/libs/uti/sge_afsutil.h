@@ -34,12 +34,12 @@
 
 #define TOKEN_FILE "token.afs"
 
-char *read_token(const char *file);
+char *sge_read_token(const char *file);
 
-int extend_afs_token(const char *command, char *tokenbuf, const char *user, 
+int sge_afs_extend_token(const char *command, char *tokenbuf, const char *user, 
                      int token_extend_time, char *err_str);
 
-int get_token_cmd(const char *tokencmdname, char *buf);
+int sge_get_token_cmd(const char *tokencmdname, char *buf);
 
 #endif /* __SGE_AFSUTIL_H */
 

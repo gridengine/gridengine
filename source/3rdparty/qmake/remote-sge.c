@@ -299,8 +299,6 @@ struct finished_job *saved_status = NULL;
 static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump_ptr, int block);
 static void read_and_save_remote_status();
 
-static int hostcmp(const char *h1, const char *h2);
-
 /****** Interactive/qmake/remote_exit() ***************************************
 *
 *  NAME
@@ -1197,7 +1195,7 @@ void set_default_options()
 
    /* determine architecture */
    architecture = getenv("ARCH");
-   if(architecture == NULL) {
+   if(architecture == NULL || strlen(architecture) == 0) {
       fprintf(stderr, "qmake: *** cannot determine architecture from environment variable ARCH\n");
       fprintf(stderr, "           no default architecture set\n");
       return;
@@ -1215,8 +1213,7 @@ void set_default_options()
       /* if no resource requests, insert to use same architecture */
       /* copy old sge options */
       argv = sge_argv;
-      sge_argv = (char **)malloc((sge_argc + 
-                                     (insert_resource_request ? 3 : 0)) * sizeof(char *));
+      sge_argv = (char **)malloc((sge_argc + (insert_resource_request ? 3 : 0)) * sizeof(char *));
 
       if(sge_argv == NULL) {
          remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
@@ -1355,7 +1352,7 @@ static void equalize_pe_j()
    char **argv;
    static char buffer[100];
 
-   /* no -pe sge option set? */
+   /* -pe sge option set? Then take this one */
    for(i = 0; i < sge_argc; i++) {
       if(!strcmp(sge_argv[i], "-pe")) {
          return;
@@ -1376,33 +1373,35 @@ static void equalize_pe_j()
       }
    }
   
-   if(nslots > 1) {
-      if(be_verbose) {
-         fprintf(stderr, "inserting pe request to sge options: -pe make 1-%d\n", nslots);
-      }
-   
-      /* insert pe into sge options */
-      /* copy old sge options */
-      argv = sge_argv;
-      sge_argv = (char **)malloc((sge_argc + 3) * sizeof(char *));
-
-      if(sge_argv == NULL) {
-         remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
-      }
-
-      for(i = 0; i < sge_argc; i++) {
-         sge_argv[i] = argv[i];
-      }
-   
-      /* append pe */
-      sprintf(buffer, "1-%d", nslots);
-      sge_argv[sge_argc++] = "-pe";
-      sge_argv[sge_argc++] = "make";
-      sge_argv[sge_argc++] = buffer;
-   
-      /* free old sge_argv */
-      free(argv);
+   if(nslots < 1) {
+      nslots = 1;
    }
+
+   if(be_verbose) {
+      fprintf(stderr, "inserting pe request to sge options: -pe make 1-%d\n", nslots);
+   }
+   
+   /* insert pe into sge options */
+   /* copy old sge options */
+   argv = sge_argv;
+   sge_argv = (char **)malloc((sge_argc + 3) * sizeof(char *));
+
+   if(sge_argv == NULL) {
+      remote_exit(EXIT_FAILURE, "malloc failed", strerror(errno));
+   }
+
+   for(i = 0; i < sge_argc; i++) {
+      sge_argv[i] = argv[i];
+   }
+
+   /* append pe */
+   sprintf(buffer, "1-%d", nslots);
+   sge_argv[sge_argc++] = "-pe";
+   sge_argv[sge_argc++] = "make";
+   sge_argv[sge_argc++] = buffer;
+
+   /* free old sge_argv */
+   free(argv);
 }
 
 
@@ -1967,14 +1966,6 @@ int start_remote_job (char **argv, char **envp,
       } else {
          /* remote execution possible */
          hostname = next_host();
-
-         if(hostcmp(hostname, localhost) == 0) {
-            /* remote exec on localhost? No! */
-            if(be_verbose) {
-               fprintf(stderr, "local start on host %s\n", hostname);
-            }
-            exec_remote = 0;
-         }   
       }
    }
  
@@ -2271,13 +2262,16 @@ static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump
    *signal_ptr    = 0;
    *coredump_ptr  = 0;
 
+   /* suppress misleading error messages */
+   errno = 0;
+
    /* get info about dead children */
    child_pid = waitpid(-1, &status, block ? 0 : WNOHANG);
 
    /* waitpid failed? */
    if(child_pid <= 0) {
       if(be_verbose) {
-         fprintf(stderr, "waiting for child failed: %s\n", strerror(errno));
+         fprintf(stderr, "waiting for child failed: %s\n", errno == 0 ? "timeout" : strerror(errno));
       }   
       return child_pid;
    }
@@ -2439,55 +2433,6 @@ int remote_kill (int id, int sig)
    }
    
    return kill(id, sig);
-}
-
-
-/****** qmake/hostcmp() ***************************************
-*
-*  NAME
-*     hostcmp - compare two hostnames
-*
-*  SYNOPSIS
-*     static int hostcmp(const char *h1, const char *h2);
-*
-*  FUNCTION
-*     compare two hostnames
-*
-*  INPUTS
-*     h1 
-*     h2
-*
-*  RESULT
-*     return values like strcmp()
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*     Comparing is done always by ignoring FQDN. This is appropriate for
-*     almost any site but not for certain multidomain installations.
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
-static int hostcmp(const char *h1, const char *h2)
-{
-   char h1_cpy[MAXHOSTNAMELEN], h2_cpy[MAXHOSTNAMELEN];
-   char *s;
-
-   if ((s = strchr(h1, '.')))
-      strncpy(h1_cpy, h1, s - h1);
-   else
-      strcpy(h1_cpy, h1);
-
-   if ((s = strchr(h2, '.')))
-      strncpy(h2_cpy, h2, s - h2);
-   else
-      strcpy(h2_cpy, h2);
-
-   return strcasecmp(h1_cpy, h2_cpy);
 }
 
 /****** qmake/main() ***************************************

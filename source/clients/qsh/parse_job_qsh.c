@@ -34,34 +34,31 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
-#include "sge_jobL.h"
-#include "sge_answerL.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
-#include "sge_hostL.h"
 #include "sge_stringL.h"
 #include "sge_resource.h"
 #include "dispatcher.h"
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "parse_job_qsh.h"
-#include "sge_me.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "utility.h"
 #include "resolve_host.h"
-#include "path_aliases.h"
+#include "sge_path_alias.h"
 #include "msg_common.h"
-#include "job.h"
-#include "sge_rangeL.h"
 #include "sge_job_refL.h"
-
-#include "jb_now.h"
+#include "sge_job.h"
+#include "sge_stdlib.h"
+#include "sge_prog.h"
+#include "sge_var.h"
+#include "sge_answer.h"
+#include "sge_range.h"
+#include "sge_host.h"
 
 /*
 ** NAME
@@ -79,7 +76,8 @@
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
+lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) 
+{
    const char *cp;
    lListElem *ep;
    lList *answer = NULL;
@@ -89,7 +87,8 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    DENTER(TOP_LAYER, "cull_parse_qsh_parameter"); 
 
    if (!pjob) {
-      sge_add_answer(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 0);
+      answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -101,38 +100,27 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
       lSetString(*pjob, JB_owner, me.user_name);
    }
    lSetUlong(*pjob, JB_uid, me.uid);
-   lSetString(*pjob, JB_sge_o_home, sge_getenv("HOME"));
-   lSetString(*pjob, JB_sge_o_log_name, sge_getenv("LOGNAME"));
-   lSetString(*pjob, JB_sge_o_path, sge_getenv("PATH"));
-   lSetString(*pjob, JB_sge_o_mail, sge_getenv("MAIL"));
-   lSetString(*pjob, JB_sge_o_shell, sge_getenv("SHELL"));
-   lSetString(*pjob, JB_sge_o_tz, sge_getenv("TZ"));
+
    /*
    ** path aliasing
    */
-   if (build_path_aliases(&path_alias, me.user_name, me.qualified_hostname, 
-                        &answer) == -1) {
+   if (path_alias_list_initialize(&path_alias, &answer, me.user_name, 
+                                  me.qualified_hostname) == -1) {
       DEXIT;
       return answer;
    }
-   { 
-      static char cwd_out[SGE_PATH_MAX + 1];
-      static char tmp_str[SGE_PATH_MAX + 1];
-      if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
-         DEXIT;
-         return answer;
-      }
-      get_path_alias(tmp_str, cwd_out, 
-                        SGE_PATH_MAX, path_alias, 
-                        me.qualified_hostname, NULL);  
-      lSetString(*pjob, JB_sge_o_workdir, cwd_out);
+
+   job_initialize_env(*pjob, &answer, path_alias);
+   if (answer) {
+      DEXIT;
+      return answer;
    }
-   lSetHost(*pjob, JB_sge_o_host, 
-      ((cp = sge_getenv("HOST")) ? cp : me.unqualified_hostname));
+
+#if 0 /* JG: removed JB_cell from job object */      
    if (lGetString(*pjob, JB_cell)) {
       lSetString(*pjob, JB_cell, me.default_cell);
    }
+#endif   
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
    lSetUlong(*pjob, JB_verify_suitable_queues, SKIP_VERIFY);
@@ -142,25 +130,28 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    ** the default is to decide via the queue configuration
    ** we turn this off here explicitly (2 is no)
    */
-   job_now = lGetUlong(*pjob, JB_now);
-   if (JB_NOW_IS_QSH(job_now) || JB_NOW_IS_QLOGIN(job_now)
-       || JB_NOW_IS_QRSH(job_now) || JB_NOW_IS_QRLOGIN(job_now)) {
+   job_now = lGetUlong(*pjob, JB_type);
+   if (JOB_TYPE_IS_QSH(job_now) || JOB_TYPE_IS_QLOGIN(job_now)
+       || JOB_TYPE_IS_QRSH(job_now) || JOB_TYPE_IS_QRLOGIN(job_now)) {
       lSetUlong(*pjob, JB_restart, 2);
    }
 
-   while (JB_NOW_IS_QRSH(job_now)
+   while (JOB_TYPE_IS_QRSH(job_now)
           && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-      lSetUlong(*pjob, JB_notify, TRUE);
+      lSetBool(*pjob, JB_notify, TRUE);
       lRemoveElem(cmdline, ep);
    }  
 
    /* 
-   ** turn on immediate scheduling as default - can be overwriten by option -now n 
-   */
-   lSetUlong(*pjob, JB_now, JB_NOW_IMMEDIATE);
+    * turn on immediate scheduling as default  
+    * can be overwriten by option -now n 
+    */
+   {
+      u_long32 type = lGetUlong(*pjob, JB_type);
 
-   DTRACE;
-
+      JOB_TYPE_SET_IMMEDIATE(type);
+      lSetUlong(*pjob, JB_type, type);
+   }
 
    /*
    ** -clear option is special, is sensitive to order
@@ -211,32 +202,37 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
       lRemoveElem(cmdline, ep);
    }
 
+#if 0 /* JG: removed JB_cell from job object */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cell"))) {
       lSetString(*pjob, JB_cell, lGetString(ep, SPA_argval_lStringT));
       me.default_cell = sge_strdup(me.default_cell, 
          lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, ep);
    }
+#endif   
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
       char tmp_str[SGE_PATH_MAX + 1];
       char tmp_str2[SGE_PATH_MAX + 1];
       char tmp_str3[SGE_PATH_MAX + 1];
+      const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
-      if (!chdir(lGetString(*pjob, JB_sge_o_home))) {
+      if (!chdir(env_value)) {
          if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-            sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
          chdir(tmp_str);
          if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
-            sprintf(tmp_str3, "%s%s", lGetString(*pjob, JB_sge_o_home), 
+            sprintf(tmp_str3, "%s%s", env_value, 
                (char *) tmp_str + strlen(tmp_str2));
             strcpy(tmp_str, tmp_str3);
          }
@@ -269,29 +265,12 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    ** a little redesign of cull would be nice
    ** see parse_list_simple
    */
-#if 1 /* EB: todo */   
-{
-   lList *range_list;
-   lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
-
-   job_set_ja_task_ids(*pjob, 1, 1, 1);
-   range_list = lGetList(*pjob, JB_ja_structure);
-
-   n_h_list = lCopyList("range list", range_list);
-   u_h_list = lCreateList("user hold list", RN_Type);
-   o_h_list = lCreateList("operator hold list", RN_Type);
-   s_h_list = lCreateList("system hold list", RN_Type);
-   if (!n_h_list || !u_h_list || !o_h_list || !s_h_list) {
-      sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+   job_set_submit_task_ids(*pjob, 1, 1, 1);
+   job_initialize_id_lists(*pjob, &answer);
+   if (answer != NULL) {
       DEXIT;
       return answer;
-   }     
-   lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
-   lSetList(*pjob, JB_ja_u_h_ids, NULL);
-   lSetList(*pjob, JB_ja_o_h_ids, NULL);
-   lSetList(*pjob, JB_ja_s_h_ids, NULL);
-}
-#endif
+   }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       int in_hold_state = 0;
@@ -314,9 +293,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
       if (in_hold_state) {
          lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
       }
-#if 1 /* EB: TODO */
-      lWriteElemTo(*pjob, stderr);
-#endif
       lRemoveElem(cmdline, ep);
    }
 
@@ -345,7 +321,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
 
       lRemoveElem(cmdline, ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -384,14 +360,14 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-now"))) {
-      u_long32 jb_now = lGetUlong(*pjob, JB_now);
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
       if(lGetInt(ep, SPA_argval_lIntT)) {
-         JB_NOW_SET_IMMEDIATE(jb_now);
+         JOB_TYPE_SET_IMMEDIATE(jb_now);
       } else {
-         JB_NOW_CLEAR_IMMEDIATE(jb_now);
+         JOB_TYPE_CLEAR_IMMEDIATE(jb_now);
       }
 
-      lSetUlong(*pjob, JB_now, jb_now);
+      lSetUlong(*pjob, JB_type, jb_now);
 
       lRemoveElem(cmdline, ep);
    }
@@ -466,13 +442,17 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    }
 
    /*
-   ** handling for display:
-   ** command line has highest priority
-   ** then comes environment variable DISPLAY which was given via -v
-   ** then comes environment variable DISPLAY read from environment
-   ** if we have none of that, we must resolve the host
-   ** we put the display switch into the variable list
-   ** otherwise, we'd have to add a field to the job structure
+   * handling for display:
+   * command line (-display) has highest priority
+   * then comes environment variable DISPLAY which was given via -v
+   * then comes environment variable DISPLAY read from environment
+   *
+   * If a value for DISPLAY is set, it is checked for completeness:
+   * In a GRID environment, it has to contain the name of the display host.
+   * DISPLAY variables of form ":id" are not allowed and are deleted.
+   *
+   * we put the display switch into the variable list
+   * otherwise, we'd have to add a field to the job structure
    */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-display"))) {
       lList  *lp;
@@ -524,71 +504,34 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
          strcat(str, cp);
       }
       strcat(str, "\n");
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
-   if (!(ep = lGetElemStr(lGetList(*pjob, JB_env_list), VA_variable, 
-         "DISPLAY"))) {
-      const char *display;
-      char *new_display = NULL;
-      lList  *lp;
-      lListElem *vep;
-      char str[1024 + 1];
+   {
+      lListElem *ep;
 
-      display = sge_getenv("DISPLAY");
+      ep = lGetSubStr(*pjob, VA_variable, "DISPLAY", JB_env_list);
 
-      lp = lGetList(*pjob, JB_env_list);
-      if (!lp) {
-         lp = lCreateList("env list", VA_Type);
-         lSetList(*pjob, JB_env_list, lp);
+      /* if DISPLAY not set from -display or -v option,
+       * try to read it from the environment
+       */
+      if(ep == NULL) {
+         const char *display;
+         display = getenv("DISPLAY");
+
+         if(display != NULL) {
+            ep = lAddSubStr(*pjob, VA_variable, "DISPLAY", JB_env_list, VA_Type);
+            lSetString(ep, VA_value, display);   
+         }   
       }
-
-      vep = lCreateElem(VA_Type);
-      lSetString(vep, VA_variable, "DISPLAY");
-
-      if (!display || (*display == ':')) {
-         lListElem *hep;
-         const char *ending = NULL;
-
-         if (display) {
-            ending = display;
-         }
-
-         hep = lCreateElem(EH_Type);
-         lSetHost(hep, EH_name, me.unqualified_hostname);
-            
-         switch (sge_resolve_host(hep, EH_name)) {
-            case 0:
-               break;
-            case -1:
-               sprintf(str, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S,
-                  cl_errstr(-1));
-               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
-               lFreeElem(hep);
-               DEXIT;
-            return answer;
-            default:
-               sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, 
-                       lGetHost(hep, EH_name));
-               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
-               lFreeElem(hep);
-            DEXIT;
-            return answer;
-         }
-         new_display = malloc(strlen(lGetHost(hep, EH_name)) + 4 + 1 +
-                           (ending ? strlen(ending) : 0));
-         strcpy(new_display, lGetHost(hep, EH_name));
-         strcat(new_display, (ending ? ending : ":0.0"));
-         lFreeElem(hep);
-         lSetString(vep, VA_value, new_display);
-         FREE(new_display);
-      } else {
-         lSetString(vep, VA_value, display);
-      }
-
-      lAppendElem(lp, vep);
    }
 
+   /* check DISPLAY on the client side before submitting job to qmaster 
+    * only needed for qsh 
+    */
+   if(me.who == QSH) {
+      job_check_qsh_display(*pjob, &answer, FALSE);
+   }
 
    DEXIT;
    return answer;

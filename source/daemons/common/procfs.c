@@ -78,8 +78,7 @@ int verydummyprocfs;
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
-#include "sge_sysconf.h"
-#include "sge_stat.h" 
+#include "sge_unistd.h"
 
 #if !defined(CRAY)
 #include "procfs.h"
@@ -189,7 +188,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    if (add_grp_id == 0)
       return;
 
-   max_groups = sge_sysconf(sge_sysconf_NGROUPS_MAX);
+   max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0)
       if (shepherd_trace) {
          char err_str[256];
@@ -396,7 +395,7 @@ int time_stamp
    DENTER(TOP_LAYER, "pt_dispatch_proc_to_job");
 
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
-   max_groups = sge_sysconf(sge_sysconf_NGROUPS_MAX);
+   max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0) {
       ERROR((SGE_EVENT, MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY));
       DEXIT;

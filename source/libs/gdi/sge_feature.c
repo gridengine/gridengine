@@ -32,25 +32,22 @@
 #include <string.h>
 
 #include "sge.h"
-#include "utility.h"
-#include "def.h"
-#include "sge_answerL.h"
+#include "basis_types.h"
 #include "job_log.h"
-#include "sge_queue_qmaster.h"
-#include "sge_host_qmaster.h"
+#include "sge_queue_qmaster.h"  /* JG: TODO: libgdi depends from qmaster! */
+#include "sge_host_qmaster.h"   /*           this has to be resolved!     */ 
 #include "sge_m_event.h"
 #include "config_file.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "gdi_utility_qmaster.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
+#include "gdi_utility.h"
+#include "sge_answer.h"
 #include "sge_feature.h"         
-#include "msg_gdilib.h"
 #include "version.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 #define FEATURESET_DEFAULT FEATURESET_SGE
 
@@ -89,7 +86,7 @@ static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = {
 };
 
 static feature_names_t feature_list[] = {
-   {FEATURE_REPRIORISATION,         "repriorisation"},
+   {FEATURE_REPRIORITIZATION,       "reprioritization"},
    {FEATURE_REPORT_USAGE,           "report_usage"},
    {FEATURE_NO_SECURITY,            "no_security"},
    {FEATURE_AFS_SECURITY,           "afs_security"},
@@ -109,8 +106,10 @@ static feature_names_t featureset_list[] = {
    {FEATURESET_SGEEE_DCE,           "sgeee-dce"},
    {FEATURESET_SGE_KERBEROS,        "sge-kerberos"},
    {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},
-/* if changed, please update setup_commd_path.c */
-/* function use_reserved_port()  */
+/*
+ * if changed, please update setup_commd_path.c 
+ * function use_reserved_port() 
+ */
    {FEATURESET_SGE_RESERVED_PORT,   "sge-reserved_port"},  
    {FEATURESET_SGEEE_RESERVED_PORT, "sgeee-reserved_port"},
    {FEATURESET_SGE_CSP,             "sge-csp"},
@@ -125,7 +124,7 @@ lList *Master_FeatureSet_List = NULL;
 
 static void feature_initialize(void);  
 
-/****** sge_feature/feature_initialize() **************************************
+/****** gdi/feature/feature_initialize() **************************************
 *  NAME
 *     feature_initialize() -- initialize this module 
 *
@@ -141,9 +140,7 @@ static void feature_initialize(void);
 *
 *  RESULT
 *     initialized Master_FeatureSet_List
-*
-*******************************************************************************
-*/
+******************************************************************************/
 static void feature_initialize(void)
 {
    if (!Master_FeatureSet_List) {
@@ -170,7 +167,7 @@ static void feature_initialize(void)
    }
 }                 
 
-/****** sge_feature/feature_initialize_from_file() ****************************
+/****** gdi/feature/feature_initialize_from_file() ****************************
 *  NAME
 *     feature_initialize_from_file() -- tag one featureset as active 
 *
@@ -179,8 +176,8 @@ static void feature_initialize(void)
 *
 *  FUNCTION
 *     This function reads the product mode string from file and
-*     tags the corresponding featureset enty within the Master_FeatureSet_List
-*     as active.
+*     tags the corresponding featureset enty within the 
+*     Master_FeatureSet_List as active.
 *
 *  INPUTS
 *     char *filename - product mode filename 
@@ -190,9 +187,7 @@ static void feature_initialize(void)
 *       -1 invalid filename
 *       -2 file doesn't exist
 *       -3 unknown mode-string in file
-*
-*******************************************************************************
-*/
+******************************************************************************/
 int feature_initialize_from_file(const char *filename) 
 {
    int ret;
@@ -232,7 +227,7 @@ int feature_initialize_from_file(const char *filename)
    return ret;
 }
 
-/****** sge_feature/feature_initialize_from_string() **************************
+/****** gdi/feature/feature_initialize_from_string() **************************
 *  NAME
 *     feature_initialize_from_string() -- tag one featureset as active 
 *
@@ -240,8 +235,9 @@ int feature_initialize_from_file(const char *filename)
 *     int feature_initialize_from_string(char *mode) 
 *
 *  FUNCTION
-*     This function interprets the mode string and tags the corresponding 
-*     featureset enty within the Master_FeatureSet_List as active.  
+*     This function interprets the mode string and tags the 
+*     corresponding featureset enty within the Master_FeatureSet_List 
+*     as active.  
 *
 *  INPUTS
 *     char *mode - product mode string (valid strings are defined in
@@ -250,10 +246,9 @@ int feature_initialize_from_file(const char *filename)
 *  RESULT
 *     0 OK
 *    -3 unknown mode-string
-*
-*******************************************************************************
-*/
-int feature_initialize_from_string(const char *mode) {
+******************************************************************************/
+int feature_initialize_from_string(const char *mode) 
+{
    featureset_id_t id;
    int ret;
 
@@ -270,7 +265,7 @@ int feature_initialize_from_string(const char *mode) {
    return ret;
 }
 
-/****** sge_feature/feature_activate() ****************************************
+/****** gdi/feature/feature_activate() ****************************************
 *  NAME
 *     feature_activate() -- switches the active featureset 
 *
@@ -278,8 +273,9 @@ int feature_initialize_from_string(const char *mode) {
 *     void feature_activate(featureset_ id) 
 *
 *  FUNCTION
-*     Marks the current active featureset within the Master_FeatureSet_List
-*     as inactive and flags the featureset given as parameter as active.
+*     Marks the current active featureset within the 
+*     Master_FeatureSet_List as inactive and flags the featureset 
+*     given as parameter as active.
 *      
 *
 *  INPUTS
@@ -287,12 +283,9 @@ int feature_initialize_from_string(const char *mode) {
 *
 *  RESULT
 *     modifies the Master_FeatureSet_List  
-*
-*******************************************************************************
-*/
-void feature_activate(
-featureset_id_t id 
-) {
+******************************************************************************/
+void feature_activate(featureset_id_t id) 
+{
    lListElem *active_set;
    lListElem *inactive_set;
 
@@ -317,7 +310,7 @@ featureset_id_t id
    DEXIT;
 }
  
-/****** sge_feature/feature_is_active() ***************************************
+/****** gdi/feature/feature_is_active() ***************************************
 *  NAME
 *     feature_is_active() -- is featureset active? 
 *
@@ -334,12 +327,9 @@ featureset_id_t id
 *  RESULT
 *     0 (false)
 *     1 (true) 
-*
-*******************************************************************************
-*/
-int feature_is_active(
-featureset_id_t id 
-) {
+******************************************************************************/
+int feature_is_active(featureset_id_t id) 
+{
    lListElem *feature;
    int ret = 0;
 
@@ -352,7 +342,7 @@ featureset_id_t id
    return ret;
 }
 
-/****** sge_feature/feature_get_active_featureset_id() ************************
+/****** gdi/feature/feature_get_active_featureset_id() ************************
 *  NAME
 *     feature_get_active_featureset_id() -- current active featureset 
 *
@@ -364,9 +354,7 @@ featureset_id_t id
 *
 *  RESULT
 *     featureset_id_t - (find the definition in the .h file)
-*
-******************************************************************************
-*/
+******************************************************************************/
 featureset_id_t feature_get_active_featureset_id(void) 
 {
    lListElem *feature;
@@ -383,7 +371,7 @@ featureset_id_t feature_get_active_featureset_id(void)
    return ret;  
 }
 
-/****** sge_feature/feature_get_featureset_name() *****************************
+/****** gdi/feature/feature_get_featureset_name() *****************************
 *  NAME
 *     feature_get_featureset_name() -- return the product mode string
 *
@@ -398,12 +386,9 @@ featureset_id_t feature_get_active_featureset_id(void)
 *
 *  RESULT
 *     mode string 
-*
-******************************************************************************
-*/
-const char *feature_get_featureset_name(
-featureset_id_t id 
-) {
+******************************************************************************/
+const char *feature_get_featureset_name(featureset_id_t id) 
+{
    int i = 0;
    char *ret = "<<unknown>>";
 
@@ -418,9 +403,9 @@ featureset_id_t id
    return ret; 
 }
 
-/****** sge_feature/feature_get_featureset_id() *******************************
+/****** gdi/feature/feature_get_featureset_id() *******************************
 *  NAME
-*     feature_get_featureset_id() -- returns a constant for a featureset string 
+*     feature_get_featureset_id() -- Value for a featureset string 
 *
 *  SYNOPSIS
 *     featureset_id_t feature_get_featureset_id(char* name) 
@@ -430,16 +415,14 @@ featureset_id_t id
 *     a given featureset string 
 *
 *  INPUTS
-*     char* name - feature set name earlier known as product mode string 
+*     char* name - feature set name earlier known as product 
+*                  mode string 
 *
 *  RESULT
 *     featureset_id_t 
-*
-*******************************************************************************
-*/
-featureset_id_t feature_get_featureset_id(
-const char *name 
-) {
+******************************************************************************/
+featureset_id_t feature_get_featureset_id(const char *name) 
+{
    int i = 0;
    featureset_id_t ret = FEATURESET_UNINITIALIZED;
 
@@ -458,7 +441,7 @@ const char *name
    return ret;
 }
 
-/****** sge_feature/feature_get_product_name() *******************************
+/****** gdi/feature/feature_get_product_name() *******************************
 *  NAME
 *     feature_get_product_name() -- get product name string 
 *
@@ -480,12 +463,9 @@ const char *name
 *
 *  RESULT
 *     char* - static string
-*
-*******************************************************************************
-*/
-const char *feature_get_product_name(
-featureset_product_name_id_t style 
-) {
+******************************************************************************/
+const char *feature_get_product_name(featureset_product_name_id_t style) 
+{
    const char *long_name  = "";
    const char *short_name = "";
    const char *version    = "";
@@ -542,7 +522,7 @@ featureset_product_name_id_t style
    return ret;
 }
  
-/****** sge_feature/feature_is_enabled() **************************************
+/****** gdi/feature/feature_is_enabled() **************************************
 *  NAME
 *     feature_is_enabled() -- 0/1 whether the feature is enabled 
 *
@@ -550,8 +530,8 @@ featureset_product_name_id_t style
 *     int feature_is_enabled(feature_id_t id) 
 *
 *  FUNCTION
-*     return true or false whether the given feature is enabled or disabled
-*     in the current active featureset 
+*     return true or false whether the given feature is enabled or 
+*     disabled in the current active featureset 
 *
 *  INPUTS
 *     feature_id_t id 
@@ -559,12 +539,9 @@ featureset_product_name_id_t style
 *  RESULT
 *     0 (false)
 *     1 (true)
-*
-*******************************************************************************
-*/
-int feature_is_enabled(
-feature_id_t id 
-) {
+******************************************************************************/
+int feature_is_enabled(feature_id_t id) 
+{
    lListElem *active_set;
    lListElem *feature = NULL;
    int ret = 0;
@@ -581,7 +558,7 @@ feature_id_t id
    return ret;
 }  
  
-/****** sge_feature/feature_get_name() ****************************************
+/****** gdi/feature/feature_get_name() ****************************************
 *  NAME
 *     feature_get_name() -- returns the feature as string 
 *
@@ -596,13 +573,11 @@ feature_id_t id
 *
 *  RESULT
 *     char* - name of the given feature constant 
-*             (or "<<unknown>>" when the id isn't a valid feature constant) 
-*
-*******************************************************************************
-*/
-const char *feature_get_name(
-feature_id_t id 
-) {
+*             (or "<<unknown>>" when the id isn't a valid 
+*              feature constant) 
+******************************************************************************/
+const char *feature_get_name(feature_id_t id) 
+{
    int i = 0;
    char *ret = "<<unknown>>";
 
@@ -617,7 +592,7 @@ feature_id_t id
    return ret; 
 }
  
-/****** sge_feature/feature_get_id() ******************************************
+/****** gdi/feature/feature_get_id() ******************************************
 *  NAME
 *     feature_get_id() -- translates a feature string into the constant 
 *
@@ -632,12 +607,9 @@ feature_id_t id
 *
 *  RESULT
 *     feature_id_t 
-*
-*******************************************************************************
-*/
-feature_id_t feature_get_id(
-const char *name 
-) {
+******************************************************************************/
+feature_id_t feature_get_id(const char *name) 
+{
    int i = 0;
    feature_id_t ret = FEATURESET_UNINITIALIZED;
 

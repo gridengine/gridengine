@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -38,27 +39,39 @@
 
 #include "basis_types.h"
 #include "sge_afsutil.h"
-#include "sge_peopen.h"
 #include "sgermon.h"
-#include "sge_copy_append.h"
-#include "msg_utilib.h"
-#include "sge_stat.h"
+#include "sge_io.h"
+#include "sge_unistd.h"
+#include "sge_stdio.h"
 
-                     
-/*------------------------------------------------------
- * read_token
- * read token from file, malloc buffer, add '\0' byte and
- * return pointer to buffer
- *------------------------------------------------------*/
-char *read_token(
-const char *file 
-) {
+#include "msg_utilib.h"
+
+/****** uti/afsutil/sge_read_token() ******************************************
+*  NAME
+*     sge_read_token() -- read token from file 
+*
+*  SYNOPSIS
+*     char* sge_read_token(const char *file) 
+*
+*  FUNCTION
+*     Read token from file, malloc buffer, add '\0' byte and
+*     return pointer to buffer.
+*
+*  INPUTS
+*     const char *file - filename 
+*
+*  RESULT
+*     char* - pointer to a malloced buffer or 
+*             NULL if error occured
+******************************************************************************/
+char *sge_read_token(const char *file) 
+{
    SGE_STRUCT_STAT sb;
    int fd;
    char *tokenbuf;
    size_t size;
 
-   DENTER(TOP_LAYER, "read_token");
+   DENTER(TOP_LAYER, "sge_read_token");
 
    if (SGE_STAT(file, &sb)) {
       DTRACE;
@@ -90,49 +103,68 @@ const char *file
    return tokenbuf;
 }
 
-/*-------------------------------------------------------------------
- * extend_afs_token
- * call command, pipe content of tokenbuf to command, using
- * user as arg1 and token_extend_time as arg2
- * return 0  in case of sucess, 
- *        -1 in case of failure
- *-------------------------------------------------------------------*/
-int extend_afs_token(
-const char *command,
-char *tokenbuf,
-const char *user,
-int token_extend_time,
-char *err_str 
-) {
+/****** uti/afsutil/sge_afs_extend_token() ************************************
+*  NAME
+*     sge_afs_extend_token() -- Extend an AFS token
+*
+*  SYNOPSIS
+*     int sge_afs_extend_token(const char *command, char *tokenbuf, 
+*                              const char *user, int token_extend_time, 
+*                              char *err_str) 
+*
+*  FUNCTION
+*     Call 'command', pipe content of 'tokenbuf' to 'command', using
+*     'user' as arg1 and 'token_extend_time' as arg2 
+*
+*  INPUTS
+*     const char *command   - command 
+*     char *tokenbuf        - input for command 
+*     const char *user      - 1st argument for command 
+*     int token_extend_time - 2nd argument for command 
+*     char *err_str         - error message 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int sge_afs_extend_token(const char *command, char *tokenbuf, const char *user,
+                     int token_extend_time, char *err_str) 
+{
    pid_t command_pid;
    FILE *fp_in, *fp_out, *fp_err;
    int ret;
    char cmdbuf[SGE_PATH_MAX+128];
 
-   DENTER(TOP_LAYER, "extend_afs_token");
+   DENTER(TOP_LAYER, "sge_afs_extend_token");
 
    sprintf(cmdbuf, "%s %s %d", command, user, token_extend_time);
-   if (err_str)
+   if (err_str) {
       strcpy(err_str, cmdbuf);
+   }
 
-   command_pid = peopen("/bin/sh", 0, cmdbuf, NULL, NULL, &fp_in, &fp_out, &fp_err);
+   command_pid = sge_peopen("/bin/sh", 0, cmdbuf, NULL, NULL, 
+                        &fp_in, &fp_out, &fp_err);
    if (command_pid == -1) {
-      if (err_str)
+      if (err_str) {
          sprintf(err_str, MSG_TOKEN_NOSTART_S , cmdbuf);
+      }
       DEXIT;
       return -1;
    }
     
    if (sge_string2bin(fp_in, tokenbuf) == -1) {
-      if (err_str)
+      if (err_str) {
          sprintf(err_str, MSG_TOKEN_NOWRITEAFS_S , cmdbuf);
+      }
       DEXIT;
       return -1;
    }
 
-   if ((ret = peclose(command_pid, fp_in, fp_out, fp_err, NULL)) != 0) {
-      if (err_str)
+   if ((ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL)) != 0) {
+      if (err_str) {
          sprintf(err_str, MSG_TOKEN_NOSETAFS_SI , cmdbuf, ret);
+      }
       DEXIT;
       return -1;
    }
@@ -140,41 +172,55 @@ char *err_str
    return 0;
 }
 
-
-/*-------------------------------------------------------------------
- * get_token_cmd
- * check if "tokencmdname" file exist and is executable
- * log error messages to stderr if buf = NULL, else log message in buf
- * return 0 if sucess
- *        1 in case of error
- *-------------------------------------------------------------------*/
-int get_token_cmd(
-const char *tokencmdname,
-char *buf 
-) {
+/****** uti/afsutil/sge_get_token_cmd() ***************************************
+*  NAME
+*     sge_get_token_cmd() -- Check if 'tokencmdname' is executable 
+*
+*  SYNOPSIS
+*     int sge_get_token_cmd(const char *tokencmdname, char *buf) 
+*
+*  FUNCTION
+*     Check if 'tokencmdname' exists and is executable. If an error
+*     occures write a error message into 'buf' if not NULL. 
+*     Otherwise write error messages to stderr.
+*
+*  INPUTS
+*     const char *tokencmdname - command 
+*     char *buf                - NULL or buffer for error message 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*         1 - Error
+******************************************************************************/
+int sge_get_token_cmd(const char *tokencmdname, char *buf) 
+{
     SGE_STRUCT_STAT sb;
 
     if (!tokencmdname || !strlen(tokencmdname)) {
-       if (!buf)
+       if (!buf) {
           fprintf(stderr, MSG_COMMAND_NOPATHFORTOKEN);
-       else   
+       } else {   
           strcpy(buf, MSG_COMMAND_NOPATHFORTOKEN);
+       }
        return 1;
     }   
     
     if (SGE_STAT(tokencmdname, &sb) == -1) {
-       if (!buf) 
+       if (!buf) {
           fprintf(stderr, MSG_COMMAND_NOFILESTATUS_S , tokencmdname);
-       else
+       } else {
           sprintf(buf, MSG_COMMAND_NOFILESTATUS_S , tokencmdname);
+       }
        return 1;
     }   
     
     if (!(sb.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))) {
-       if (!buf) 
+       if (!buf) {
           fprintf(stderr, MSG_COMMAND_NOTEXECUTABLE_S , tokencmdname);
-       else
+       } else {
           sprintf(buf, MSG_COMMAND_NOTEXECUTABLE_S , tokencmdname);
+       }
        return 1;
     }
     

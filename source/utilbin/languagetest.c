@@ -58,29 +58,23 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "languagetest");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);
+#else
+   printf ("\n Binary not compiled with gettext!!!\n");
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
 
    printf ("\ntest of gettext:\n\n");
    printf ("sample text (not localized)        : %s\n", TESTSTRING);
-   printf ("sample text (localized)            : %s\n", _(TESTSTRING));
+   printf ("sample text (localized)            : %s\n", _SGE_GETTEXT__((char*)_(TESTSTRING)));
 
    printf (TESTSTRING2 , "not localized");
-   printf (_(TESTSTRING2) , "localized");
+   printf (_SGE_GETTEXT__((char*)_(TESTSTRING2)) , "localized");
   
-#if 0  
-   printf ("\nOutput now is sge_printf():");
-
-   sge_printf ("\ntest of gettext:\n\n");
-   sge_printf ("sample text (not localized)        : %s\n", TESTSTRING);
-   sge_printf ("sample text (localized)            : %s\n", _(TESTSTRING));
-
-#endif
 
 #ifdef _SGE_WCHAR_TEST_
    printf ("\n\nConverting String to wchar:\n"); 

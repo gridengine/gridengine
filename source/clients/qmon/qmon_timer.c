@@ -35,6 +35,7 @@
 #include "commlib.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
+#include "sge_answer.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_timer.h"
@@ -43,7 +44,6 @@
 #include "qmon_globals.h"
 #include "qmon_init.h"
 #include "qmon_message.h"
-#include "utility.h"
 #include "qm_name.h"
 
 static tTimer timer_struct;
@@ -390,12 +390,12 @@ XtIntervalId *id
 
    if (status != CL_OK) {
       if (status == CL_UNKNOWN_RECEIVER)
-         sprintf(msg, "can't reach qmaster\n");
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       else
-         sprintf(msg, "can't reach:\n%s\n", cl_errstr(status));
+         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
 
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
-                                                msg, "Retry", "Abort",
+                                                msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
       /*
       ** we don't want to retry, so go down
@@ -419,7 +419,10 @@ XtIntervalId *id
    ep = lFirst(lp);
 
    if (!ep) {
-      sprintf(msg, "No free slots for interactive job %d !", (int) job_number);
+      sprintf(msg, 
+              XmtLocalize(AppShell, "No free slots for interactive job %d !",
+                          "No free slots for interactive job %d !"), 
+                          (int) job_number);
       qmonMessageShow(AppShell, True, msg);
       cont = False;
    }
@@ -428,7 +431,7 @@ XtIntervalId *id
       lListElem *jatep;
       for_each (jatep, lGetList(ep, JB_ja_tasks)) {
          if ((lGetUlong(jatep, JAT_status) & JRUNNING) || 
-            (lGetUlong(jatep, JAT_status) & JTRANSITING))
+            (lGetUlong(jatep, JAT_status) & JTRANSFERING))
             cont = False;
          else
             cont = True;

@@ -37,7 +37,6 @@ QMASTER_DIR = $(SDIR)/daemons/qmaster
 QMASTER_TARGETS = sge_qmaster
 
 QMASTER_SRC =  qmaster$(QIDLEXT).c  \
-              gdi_utility_qmaster.c \
               ck_to_do_qmaster.c \
               sge_c_ack.c \
               sge_c_gdi$(QIDLEXT).c \
@@ -46,11 +45,9 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_give_jobs$(QIDLEXT).c \
               reschedule.c \
               job_exit.c \
-              sge_host.c \
               sge_host_qmaster.c \
-              sge_job.c \
-              sge_m_event$(QIDLEXT).c \
-              sge_manop.c \
+              sge_job_qmaster.c \
+              sge_manop_qmaster.c \
               sge_pe_qmaster.c \
               sge_ckpt_qmaster.c \
               sge_qmod_qmaster.c \
@@ -60,41 +57,38 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_userprj_qmaster.c \
               sge_usermap_qmaster.c \
               sge_hostgroup_qmaster.c \
-              sge_userset.c \
               sge_userset_qmaster.c \
               complex_qmaster.c \
               configuration_qmaster.c \
               job_report_qmaster.c \
-              read_write_manop.c \
               qmaster_to_execd.c \
               sched_conf_qmaster.c \
-              sec.c \
               setup_qmaster.c \
               subordinate_qmaster.c \
               time_event.c \
-              sge_user_mapping.c \
-              opt_history.c 
+              sge_user_mapping.c
              
-QMASTER_ADD_SRC = usage.c sge_options.c sge_conf.c job_log.c \
-              startprog.c utility_daemon.c shutdown.c opt_silent.c \
+QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
+              startprog.c shutdown.c \
               admin_mail.c \
               category.c \
-              sge_complex.c \
+              read_write_complex.c \
               complex_history.c \
               config_file.c \
               execution_states.c \
-              job.c \
-              job_report.c \
               lock.c \
               mail.c \
-              path_aliases.c \
+              opt_history.c \
               qmaster_heartbeat.c \
               qmaster_running.c \
+              read_list.c \
+              sge_dirent.c \
               read_object.c \
               read_write_cal.c  \
               read_write_ckpt.c  \
               read_write_host.c \
               read_write_job.c \
+              read_write_manop.c \
               read_write_pe.c  \
               read_write_ume.c  \
               read_write_host_group.c \
@@ -103,10 +97,9 @@ QMASTER_ADD_SRC = usage.c sge_options.c sge_conf.c job_log.c \
               read_write_userset.c \
               rw_configuration.c \
               sched_conf.c \
-              sge_sharetree.c \
+              read_write_sharetree.c \
               sig_handlers.c \
-              unparse_job_cull.c \
-              sge_groups.c
+              unparse_job_cull.c 
 
 QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
@@ -155,14 +148,8 @@ sge_qmod_qmaster.o:	$(QMASTER_DIR)/sge_qmod_qmaster.c
 ck_to_do_qmaster.o:	$(QMASTER_DIR)/ck_to_do_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/ck_to_do_qmaster.c
 
-gdi_utility_qmaster.o:	$(QMASTER_DIR)/gdi_utility_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/gdi_utility_qmaster.c
-
 sge_userset_qmaster.o:	$(QMASTER_DIR)/sge_userset_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_userset_qmaster.c
-
-sge_userset.o: 	$(QMASTER_DIR)/sge_userset.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_userset.c
 
 sge_c_ack.o:    $(QMASTER_DIR)/sge_c_ack.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_c_ack.c
@@ -173,14 +160,11 @@ sge_c_gdi$(QIDLEXT).o:	$(QMASTER_DIR)/sge_c_gdi.c
 sge_calendar_qmaster$(QIDLEXT).o: $(QMASTER_DIR)/sge_calendar_qmaster.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_calendar_qmaster.c
 
-sge_job.o:	$(QMASTER_DIR)/sge_job.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_job.c
+sge_job_qmaster.o:	$(QMASTER_DIR)/sge_job_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_job_qmaster.c
 
-sge_m_event$(QIDLEXT).o:	$(QMASTER_DIR)/sge_m_event.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_m_event.c
-
-sge_manop.o:	$(QMASTER_DIR)/sge_manop.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_manop.c
+sge_manop_qmaster.o:	$(QMASTER_DIR)/sge_manop_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_manop_qmaster.c
 
 sge_follow.o:   $(QMASTER_DIR)/sge_follow.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_follow.c
@@ -190,9 +174,6 @@ sge_give_jobs$(QIDLEXT).o: $(QMASTER_DIR)/sge_give_jobs.c
 
 reschedule.o: $(QMASTER_DIR)/reschedule.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/reschedule.c   
-
-sge_host.o: $(QMASTER_DIR)/sge_host.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_host.c
 
 sge_host_qmaster.o: $(QMASTER_DIR)/sge_host_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_host_qmaster.c
@@ -233,14 +214,8 @@ job_exit.o   : $(QMASTER_DIR)/job_exit.c
 job_report_qmaster.o   : $(QMASTER_DIR)/job_report_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/job_report_qmaster.c
 
-read_write_manop.o:	$(QMASTER_DIR)/read_write_manop.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/read_write_manop.c
-
 sched_conf_qmaster.o   : $(QMASTER_DIR)/sched_conf_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sched_conf_qmaster.c
-
-sec.o      : $(QMASTER_DIR)/sec.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sec.c
 
 setup_qmaster.o   : $(QMASTER_DIR)/setup_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/setup_qmaster.c
@@ -263,5 +238,3 @@ qmaster_to_execd.o   : $(QMASTER_DIR)/qmaster_to_execd.c
 qmaster_license.o : $(QMASTER_DIR)/qmaster_license.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/qmaster_license.c
 
-opt_history.o: 	$(QMASTER_DIR)/opt_history.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/opt_history.c

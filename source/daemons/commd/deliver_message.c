@@ -34,7 +34,7 @@
 #include "message.h"
 #include "commd_io.h"
 #include "sge_time.h"
-#include "sge_crc.h"
+#include "sge_io.h"
 
 void deliver_message(message *mp, int local);
 
@@ -62,13 +62,13 @@ int local
    /* first calculate headerlen */
    len = 0;
    if (!local) {
-      tohostname = get_mainname(mp->to.host);
+      tohostname = sge_host_get_mainname(mp->to.host);
       len += pack_string_len(tohostname);
       len += pack_string_len(mp->to.name);
       len += pack_ushort_len(mp->to.id);
    }
    len += pack_ulong_len(mp->mid);
-   fromhostname = get_mainname(mp->from.host);
+   fromhostname = sge_host_get_mainname(mp->from.host);
    len += pack_string_len(fromhostname);
    len += pack_string_len(mp->from.name);
    len += pack_ushort_len(mp->from.id);
@@ -94,7 +94,7 @@ int local
    cp = pack_ulong(mp->flags, mp->prolog);
    cp = pack_ushort(mp->headerlen, cp);
    cp = pack_ulong(mp->buflen, cp);
-   cp = pack_ulong(cksum((char*)mp->prolog, PROLOGLEN-4), cp);
+   cp = pack_ulong(sge_cksum((char*)mp->prolog, PROLOGLEN-4), cp);
 
    mp->bufprogress = mp->prolog;
 

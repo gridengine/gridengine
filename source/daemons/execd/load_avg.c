@@ -35,36 +35,32 @@
 #include <float.h>
 
 #include "sge_gdi_intern.h"
-#include "sge_load_reportL.h"
-#include "sge_hostL.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
-#include "sge_jataskL.h"
-#include "sge_job_reportL.h"
-#include "sge_reportL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
+#include "sge_prog.h"
 #include "commlib.h"
 
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
-#include "sge_arch.h"
-#include "sge_nprocs.h"
-#include "sge_getloadavg.h"
 #include "load_avg.h"
-#include "sge_loadmem.h"
 #include "execd_ck_to_do.h"
-#include "report.h"
-#include "sge_me.h"
+#include "sge_report_execd.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_switch_user.h"
 #include "sge_conf.h"
 #include "sge_parse_num_par.h"
 #include "msg_execd.h"
 #include "sge_string.h"
 #include "sge_feature.h"
+#include "sge_uidgid.h"
+#include "sge_hostname.h"
+#include "sge_os.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_report.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -91,12 +87,9 @@ int report_seqno = 0;
 
 extern lList *execd_config_list;
 extern lList *jr_list;
-extern lList *Master_Job_List;
 
-/*-------------------------------------------------------------------------*/
-static int execd_add_load_report(
-lList *report_list 
-) {
+static int execd_add_load_report(lList *report_list) 
+{
    lListElem *report;
 
    /*
@@ -117,10 +110,8 @@ lList *report_list
 }
 
 
-/*-------------------------------------------------------------------------*/
-static int execd_add_conf_report(
-lList *report_list 
-) {
+static int execd_add_conf_report(lList *report_list) 
+{
    lListElem *report;
    /*
    ** 2. report about the configuration versions
@@ -139,11 +130,8 @@ lList *report_list
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static int execd_add_license_report(
-lList *report_list 
-) {
+static int execd_add_license_report(lList *report_list) 
+{
    lListElem *report;
    /*
    ** 3. license report
@@ -172,11 +160,8 @@ lList *report_list
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static int execd_add_job_report(
-lList *report_list 
-) {
+static int execd_add_job_report(lList *report_list) 
+{
    lListElem *job_report = NULL;
 
    /* in case of SGE we need to update the usage list 
@@ -202,11 +187,7 @@ lList *report_list
    return 0;
 }
 
-
-
-
-/*-------------------------------------------------------------------------*/
-lList *sge_build_load_report()
+lList *sge_build_load_report(void)
 {
    lList *lp = NULL;
    lListElem *ep;
@@ -233,9 +214,9 @@ lList *sge_build_load_report()
    */
 
    /* build up internal report list */
-   switch2start_user();
+   sge_switch2start_user();
    sge_get_loadavg(&lp);
-   switch2admin_user(); 
+   sge_switch2admin_user(); 
 
    /* get load report from external load sensor */
    sge_ls_get(&lp);
@@ -244,7 +225,7 @@ lList *sge_build_load_report()
    /* retrieve num procs first - we need it for all other derived load values */
    ep = lGetElemStrFirst(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
    while(ep != NULL) {
-      if ((hostcmp(lGetHost(ep, LR_host), me.qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
+      if ((sge_hostcmp(lGetHost(ep, LR_host), me.qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
          nprocs = MAX(1, atoi(s));
          break;
       }   
@@ -322,12 +303,8 @@ lList *sge_build_load_report()
    return lp;
 }
 
-
-
-/*-------------------------------------------------------------------------*/
-static int sge_get_loadavg(
-lList **lpp 
-) {
+static int sge_get_loadavg(lList **lpp) 
+{
    double avg[3];
    int loads;
    int nprocs; 
@@ -400,7 +377,7 @@ lList **lpp
 #ifdef SGE_LOADMEM
    /* memory load report */
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
-   if (loadmem(&mem_info)) {
+   if (sge_loadmem(&mem_info)) {
       static int mem_fail = 0;
       if (!mem_fail) {
          ERROR((SGE_EVENT, MSG_LOAD_NOMEMINDICES));
@@ -551,16 +528,11 @@ lList **lpp
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-
-static void update_job_usage()
+static void update_job_usage(void)
 {
    lList *usage_list = NULL;
    lListElem *jr;
    lListElem *usage;
-   int job_id_index, job_ja_task_index, job_pe_task_id_str_index;
-   const lDescr* dp;
 
    DENTER(TOP_LAYER, "update_job_usage");
 
@@ -582,7 +554,6 @@ static void update_job_usage()
          }
       }
    }
-
 #endif
 
    if (sharetree_reserved_usage)
@@ -593,11 +564,6 @@ static void update_job_usage()
       return;
    }
 
-   /*
-      we got a list with the fields JB_job_number,
-      JB_usage_list, JB_pe_task_id_str - we may
-      not make any assumptions on other fields
-   */
    if (lGetNumberOfElem(usage_list)<=0) {
       /* could be an empty list head */
       lFreeList(usage_list);
@@ -605,51 +571,28 @@ static void update_job_usage()
       return;
    }
 
-   dp = lGetListDescr(usage_list);
-   if ((job_id_index = lGetPosInDescr(dp, JB_job_number))<0) {
-      ERROR((SGE_EVENT, "missing job number in usage list from ptf"));
-      lFreeList(usage_list);
-      DEXIT;
-      return;
-   }
-
-   if ((job_ja_task_index = lGetPosInDescr(dp, JB_ja_tasks))<0) {
-      ERROR((SGE_EVENT, "missing ja task list in usage list from ptf"));
-      lFreeList(usage_list);
-      DEXIT;
-      return; }
-
-   if ((job_pe_task_id_str_index = lGetPosInDescr(dp, JB_pe_task_id_str))<0) {
-      ERROR((SGE_EVENT, "missing task ID str in usage list from ptf"));
-      lFreeList(usage_list);
-      DEXIT;
-      return;
-   }
-
    /* replace existing usage in the job report with the new one */
    for_each(usage, usage_list) {
-      u_long32 jobid;
-      const char *taskidstr;
-      lList* ja_tasks;
-      lListElem *ja_task, *uep;
+      u_long32 job_id;
+      lListElem *ja_task;
 
-      jobid = lGetPosUlong(usage, job_id_index);
-      taskidstr = lGetPosString(usage, job_pe_task_id_str_index);
-      ja_tasks = lGetPosList(usage, job_ja_task_index);
+      job_id = lGetUlong(usage, JB_job_number);
 
-      for_each (ja_task, ja_tasks) {
-         u_long32 jataskid;
+      for_each (ja_task, lGetList(usage, JB_ja_tasks)) {
+         u_long32 ja_task_id;
+         lListElem *uep;
+         lListElem *pe_task;
 
-         jataskid = lGetUlong(ja_task, JAT_task_number);
+         ja_task_id = lGetUlong(ja_task, JAT_task_number);
          /* search matching job report */
-         if (!(jr = get_job_report(jobid, jataskid, taskidstr))) {
+         if (!(jr = get_job_report(job_id, ja_task_id, NULL))) {
             /* should not happen in theory */
             ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
-               "task %s contained in job usage from ptf", jobid, jataskid,
-          taskidstr ? taskidstr : "<none>"));
+               "contained in job usage from ptf", job_id, ja_task_id));
             continue;
          }
 
+         /* JG: TODO: make a function updating all load values in job report */
          /* replace cpu/mem/io with newer values */
          if ((uep = lGetSubStr(ja_task, UA_name, USAGE_ATTR_CPU, JAT_usage_list))) {
             DPRINTF(("added/updated 'cpu' usage: %f\n", lGetDouble(uep, UA_value)));
@@ -676,8 +619,50 @@ static void update_job_usage()
             add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
          }
 
-         DPRINTF(("---> updating job report usage for job "u32" task \"%s\"\n",
-             jobid, taskidstr?taskidstr:""));
+         DPRINTF(("---> updating job report usage for job "u32"."u32"\n",
+             job_id, ja_task_id));
+
+         for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+            const char *pe_task_id = lGetString(pe_task, PET_id);
+
+            /* search matching job report */
+            if (!(jr = get_job_report(job_id, ja_task_id, pe_task_id))) {
+               /* should not happen in theory */
+               ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
+                  "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
+               continue;
+            }
+
+            /* replace cpu/mem/io with newer values */
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_CPU, PET_usage))) {
+               DPRINTF(("added/updated 'cpu' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_CPU, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_MEM, PET_usage))) {
+               DPRINTF(("added/updated 'mem' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_MEM, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_IO, PET_usage))) {
+               DPRINTF(("added/updated 'io' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_IO, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_IOW, PET_usage))) {
+               DPRINTF(("added/updated 'iow' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_IOW, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_VMEM, PET_usage))) {
+               DPRINTF(("added/updated 'vmem' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_VMEM, NULL, lGetDouble(uep, UA_value));
+            }
+            if ((uep = lGetSubStr(pe_task, UA_name, USAGE_ATTR_MAXVMEM, PET_usage))) {
+               DPRINTF(("added/updated 'maxvmem' usage: %f\n", lGetDouble(uep, UA_value)));
+               add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
+            }
+
+            DPRINTF(("---> updating job report usage for job "u32"."u32" task \"%s\"\n",
+                job_id, ja_task_id, pe_task_id));
+
+         }
       }
    }
 
@@ -688,15 +673,14 @@ static void update_job_usage()
 }
 
 /* calculate reserved resource usage */
-static void get_reserved_usage(
-lList **job_usage_list 
-) {
+static void get_reserved_usage(lList **job_usage_list) 
+{
    lList *temp_job_usage_list, *new_ja_task_list;
    lListElem *q=NULL, *jep, *gdil_ep, *jatep, *new_job, *new_ja_task;
    double cpu_val, vmem_val, io_val, iow_val, vmem, maxvmem;
    u_long32 jobid;
    char err_str[128];
-   const char *taskidstr;
+   const char *taskidstr = NULL;
    lEnumeration *what;
    u_long32 now;
    double wall_clock_time;
@@ -704,19 +688,19 @@ lList **job_usage_list
    DENTER(TOP_LAYER, "get_reserved_usage");
 
    now = sge_get_gmt();
-   what = lWhat("%T(%I %I %I)", JB_Type, JB_job_number, JB_ja_tasks,
-                JB_pe_task_id_str);
+   what = lWhat("%T(%I %I)", JB_Type, JB_job_number, JB_ja_tasks);
 
    temp_job_usage_list = lCreateList("JobResUsageList", JB_Type);
 
+   /* We only have to loop over jobs and ja tasks.
+    * It probably does not make sense to report a reserved usage
+    * on the pe task level.
+    */
    for_each (jep, Master_Job_List) {
-
       jobid = lGetUlong(jep, JB_job_number);
-      taskidstr = lGetString(jep, JB_pe_task_id_str);
       new_job = lCreateElem(JB_Type);
       new_ja_task_list = lCreateList("jat_list", JAT_Type);
       lSetUlong(new_job, JB_job_number, jobid);
-      lSetString(new_job, JB_pe_task_id_str, taskidstr);
       lSetList(new_job, JB_ja_tasks, new_ja_task_list);
       lAppendElem(temp_job_usage_list, new_job);
 
@@ -746,9 +730,9 @@ lList **job_usage_list
 
             double lim, h_vmem_lim, s_vmem_lim;
 
-            if (hostcmp(me.qualified_hostname,
+            if (sge_hostcmp(me.qualified_hostname,
                   lGetHost(gdil_ep, JG_qhostname)) ||
-                  !(q = lFirst(lGetList(gdil_ep, JG_queue))))
+                  !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
 
             nslots = lGetUlong(gdil_ep, JG_slots);

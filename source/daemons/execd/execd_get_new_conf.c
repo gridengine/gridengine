@@ -36,7 +36,6 @@
 #include "sge_load_sensor.h"
 #include "sgermon.h"
 #include "admin_mail.h"
-#include "sge_me.h"
 #include "sge_string.h"
 
 extern lList *execd_config_list;
@@ -56,12 +55,13 @@ char *err_str;
 int answer_error;
 {
    int ret;
+   u_long32 dummy; /* always 0 */ 
 
    DENTER(TOP_LAYER, "execd_get_new_conf");
 
-   ret = get_merged_configuration(&execd_config_list);
+   unpackint(pb, &dummy);
 
-   /* EB */
+   ret = get_merged_configuration(&execd_config_list);
 
    /*
    ** admin mail block is released on new conf

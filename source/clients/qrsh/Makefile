@@ -38,7 +38,7 @@ QRSH_TARGETS = qrsh_starter
 
 QRSH_SRC = qrsh_starter.c
 
-QRSH_ADD_SRC = sge_getpwnam.c config_file.c
+QRSH_ADD_SRC = config_file.c
 
 QRSH_OBJS = $(QRSH_SRC:.c=.o)
 

@@ -32,21 +32,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
 #include "basis_types.h"
 
+#define MSG_GDI_USERINACL_SS          _MESSAGE(5000, _(SFQ" is already in access list "SFQ"\n"))
+#define MSG_GDI_CANTADDTOACL_SS       _MESSAGE(5001, _("can't add "SFQ" to access list "SFQ"\n"))
+#define MSG_GDI_ADDTOACL_SS           _MESSAGE(5002, _("added "SFQ" to access list "SFQ"\n"))
+#define MSG_GDI_ACLDOESNOTEXIST_S     _MESSAGE(5003, _("access list "SFQ" doesn't exist\n"))
+#define MSG_GDI_USERNOTINACL_SS       _MESSAGE(5004, _("user "SFQ" is not in access list "SFQ"\n"))
+#define MSG_GDI_CANTDELFROMACL_SS     _MESSAGE(5005, _("can't delete user "SFQ" from access list "SFQ"\n"))
+#define MSG_GDI_DELFROMACL_SS         _MESSAGE(5006, _("deleted user "SFQ" from access list "SFQ"\n"))
+#define MSG_HOST_NEEDAHOSTNAMEORALL   _MESSAGE(5007, _("Need a hostname or the keyword \"all\"\n"))
 
-/*
-** sge_client_access.c
-*/
-#define MSG_GDI_USERINACL_SS          _("\"%s\" is already in access list \"%s\"\n")
-#define MSG_GDI_CANTADDTOACL_SS       _("can't add \"%s\" to access list \"%s\"\n")
-#define MSG_GDI_ADDTOACL_SS           _("added \"%s\" to access list \"%s\"\n")
-#define MSG_GDI_ACLDOESNOTEXIST_S     _("access list \"%s\" doesn't exist\n")
-#define MSG_GDI_USERNOTINACL_SS       _("user \"%s\" is not in access list \"%s\"\n")
-#define MSG_GDI_CANTDELFROMACL_SS     _("can't delete user \"%s\" from access list \"%s\"\n")
-#define MSG_GDI_DELFROMACL_SS         _("deleted user \"%s\" from access list \"%s\"\n")
-#define MSG_HOST_NEEDAHOSTNAMEORALL            _("Need a hostname or the keyword \"all\"\n")
+#define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _MESSAGE(5008, _("no option argument provided to "SFQ""))
 
 #endif /* __MSG_QCONF_H */
 

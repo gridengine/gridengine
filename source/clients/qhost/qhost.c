@@ -38,17 +38,15 @@
 
 #include "basis_types.h"
 #include "sge.h"
-#include "def.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
-#include "sge_exit.h"
 #include "commlib.h"
 #include "sig_handlers.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_feature.h"
-
-#include "sge_copy_append.h"
+#include "sge_unistd.h"
+#include "sge_stdlib.h"
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_resource.h"
@@ -57,8 +55,6 @@
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
-#include "sge_complex.h"
-#include "utility.h"
 #include "qstat_printing.h"
 #include "sge_range.h"
 #include "load_correction.h"
@@ -67,7 +63,11 @@
 #include "msg_clients_common.h"
 #include "msg_qhost.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 #include "sge_log.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_complex.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -180,7 +180,7 @@ char **argv
       show);
 
 
-   init_complex_double_values(cl);
+   complex_list_init_double_attr(cl);
 
    /*
    ** handle -l request for host
@@ -203,23 +203,18 @@ char **argv
             continue;
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
+
          ce = NULL;
-
          host_complexes2scheduler(&ce, ep, ehl, cl, 0);
-         
-
          selected = sge_select_queue(ce, resource_match_list, 1, NULL, 0, -1, NULL);
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
-
          ce = lFreeList(ce);
       }
+
       /*
       ** reduce the hostlist, only the tagged ones survive
       */
-  
-       
-
       where = lWhere("%T(%I == %u)", EH_Type, EH_tagged, 1);
       lSplit(&ehl, NULL, NULL, where);
       where = lFreeWhere(where);
@@ -242,14 +237,14 @@ char **argv
    ** format and print the info
    */
 
-#define HEAD_FORMAT "%-20.20s %-10.10s %-5.5s %-5.5s %-8.8s %-8.8s %-8.8s %-8.8s\n"
+#define HEAD_FORMAT "%-20s %-10.10s %5.5s %5.5s %8.8s %8.8s %8.8s %8.8s\n"
 
    for_each(ep, ehl) {
       if (print_header) {
          print_header = 0;
          printf(HEAD_FORMAT,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC, MSG_HEADER_LOAD,
              MSG_HEADER_MEMTOT, MSG_HEADER_MEMUSE, MSG_HEADER_SWAPTO, MSG_HEADER_SWAPUS);
-         printf("--------------------------------------------------------------------------------\n");
+         printf("-------------------------------------------------------------------------------\n");
       }
       sge_print_host(ep);
       sge_print_resources(ehl, cl, resource_list, ep, show);
@@ -302,7 +297,7 @@ lListElem *hep
       num_proc = lGetString(lep, HL_value); 
    else
       num_proc = "-";
-   
+
    /*
    ** load_avg
    */
@@ -374,18 +369,18 @@ u_long32 show
    DENTER(TOP_LAYER, "sge_print_queues");
 
    for_each(qep, qlp) {
-      if (!hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
+      if (!sge_hostcmp(lGetHost(qep, QU_qhostname), lGetHost(host, EH_name))) {
          char buf[80];
 
          if (show & QHOST_DISPLAY_QUEUES) { 
             /*
             ** Header/indent
             */
-            printf(" ");
+            printf("   ");
             /*
             ** qname
             */
-            printf("%-20.20s ", lGetString(qep, QU_qname));
+            printf("%-20s ", lGetString(qep, QU_qname));
             /*
             ** qtype
             */
@@ -405,11 +400,11 @@ u_long32 show
             state = lGetUlong(qep, QU_state);
             load_thresholds = lGetList(qep, QU_load_thresholds);
             suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
-            if (sge_load_alarm(qep, load_thresholds, ehl, cl, NULL))
+            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL))
                state |= QALARM; 
-            if (sge_load_alarm(qep, suspend_thresholds, ehl, cl, NULL))
+            if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL))
                state |= QSUSPEND_ALARM; 
-            sge_get_states(QU_qname, state_string, state);
+            queue_get_state_string(state_string, state);
             printf("%s", state_string);
             
             /*
@@ -531,7 +526,6 @@ u_long32 type
       "INTERACTIVE",
       "CHECKPOINTING",
       "PARALLEL",
-      "TRANSFER",
       ""
    };
 
@@ -648,7 +642,7 @@ lList *alp = NULL;
       /* oops */
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qhost_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -698,7 +692,7 @@ lListElem *ep;
             if (sge_resolve_host(ep, STR)) {
                char buf[BUFSIZ];
                sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,STR) );
-               sge_add_answer(&alp, buf, STATUS_ESYNTAX, 0);
+               answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DEXIT;
                return alp; 
             }
@@ -744,7 +738,7 @@ lListElem *ep;
      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if (!usageshowed)
         qhost_usage(stderr);
-     sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }
@@ -915,16 +909,16 @@ lWriteListTo(ehl, stdout);
             jw = lAndWhere(jw, nw);
       }
 
-      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
+      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
                      JB_job_number, 
                      JB_script_file,
                      JB_owner,
                      JB_group,
-                     JB_now,
+                     JB_type,
                      JB_pe,
-                     JB_checkpoint_object,
+                     JB_checkpoint_name,
                      JB_jid_predecessor_list,
-                     JB_sge_o_mail,
+                     JB_env_list,
                      JB_priority,
                      JB_job_name,
                      JB_project,
@@ -938,7 +932,13 @@ lWriteListTo(ehl, stdout);
                      JB_hard_queue_list,
                      JB_soft_queue_list,
                      JB_ja_structure,
-                     JB_ja_tasks );
+                     JB_ja_tasks,
+                     JB_ja_n_h_ids,
+                     JB_ja_u_h_ids,
+                     JB_ja_s_h_ids,
+                     JB_ja_o_h_ids,
+                     JB_ja_z_ids 
+                    );
 
 /* printf("======================================\n"); */
 /* lWriteWhereTo(jw, stdout); */
@@ -1073,7 +1073,7 @@ lWriteListTo(ehl, stdout);
    }
    alp = lFreeList(alp);
 
-   /* --- apply global configuration for hostcmp() scheme */
+   /* --- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
       printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);

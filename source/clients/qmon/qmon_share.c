@@ -61,6 +61,7 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "sge_support.h"
+#include "sge_answer.h"
 
 enum _modes {
    ADD_MODE,
@@ -121,7 +122,7 @@ static Widget st_paste = 0;
 static Widget st_halflife_unit = 0;
 static Widget st_message = 0;
 
-static int sharetree_mode = STT_USER; /* User Sharetree */
+/* static int sharetree_mode = STT_USER;  User Sharetree */
 static lList *paste_tree = NULL;
 
 static tSTREntry ratio_data;
@@ -199,6 +200,7 @@ static XtResource ratio_resources[] = {
 static void qmonShareTreePopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonShareTreeOkay(Widget w, XtPointer cld, XtPointer cad);
 static void qmonShareTreeShowMore(Widget w, XtPointer cld, XtPointer cad);
+static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad);
 static void qmonShareTreeUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonShareTreeHighlight(Widget w, XtPointer cld, XtPointer cad);
 static void qmonShareTreeMenu(Widget w, XtPointer cld, XtPointer cad);
@@ -331,7 +333,8 @@ Widget parent
 ) {
    Widget st_layout, st_close, st_update, st_more, st_apply, st_delete,
             st_cpu, st_io, st_mem, st_cpu_t, st_mem_t, st_io_t, st_mod_node,
-            st_add_leaf, st_add_node, st_main_link, st_next, st_find;
+            st_add_leaf, st_add_node, st_main_link, st_next, st_find, 
+            st_clear_usage;
    static int cpu_index = 0;
    static int mem_index = 1;
    static int io_index = 2;
@@ -345,6 +348,7 @@ Widget parent
                            "st_update", &st_update,
                            "st_tree", &st_tree,
                            "st_more", &st_more,
+                           "st_clear_usage", &st_clear_usage,
                            "st_delete", &st_delete,
                            "st_add_leaf", &st_add_leaf,
                            "st_add_node", &st_add_node,
@@ -432,6 +436,8 @@ Widget parent
                      qmonShareTreeOkay, NULL);
    XtAddCallback(st_more, XmNactivateCallback, 
                      qmonShareTreeShowMore, (XtPointer)st_ratio);
+   XtAddCallback(st_clear_usage, XmNactivateCallback, 
+                     qmonShareTreeClearUsage, NULL);
    XtAddCallback(st_update, XmNactivateCallback, 
                      qmonShareTreeUpdate, (XtPointer)st_tree);
    XtAddCallback(st_delete, XmNactivateCallback, 
@@ -935,6 +941,82 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
+static void qmonShareTreeClearUsage(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *alp = NULL;
+   lList *alp2 = NULL;
+   lList *ul = NULL;
+   lList *pl = NULL;
+   lListElem *ep = NULL;
+   Boolean status, answer;
+
+   DENTER(GUI_LAYER, "qmonShareTreeClearUsage");
+
+
+   status = XmtAskForBoolean(w, "xmtBooleanDialog", 
+                  "@{stree.askdel.Do you really want to\nclear the usage ?}", 
+                  "@{Clear}", "@{Cancel}", NULL, XmtNoButton, XmDIALOG_WARNING, 
+                  False, &answer, NULL);
+      
+   if (!answer) { 
+      DEXIT;
+      return;
+   }   
+
+   qmonMirrorMultiAnswer(USER_T | PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+   ul = qmonMirrorList(SGE_USER_LIST);
+   pl = qmonMirrorList(SGE_PROJECT_LIST);
+
+   /* clear user usage */
+   for_each(ep, ul) {
+      lSetList(ep, UP_usage, NULL);
+      lSetList(ep, UP_project, NULL);
+   }
+
+   /* clear project usage */
+   for_each(ep, pl) {
+      lSetList(ep, UP_usage, NULL);
+      lSetList(ep, UP_project, NULL);
+   }
+
+   /* update user usage */
+   if (ul) {
+      alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &ul, NULL, NULL);
+   }
+
+   /* update project usage */
+   if (pl) {
+      alp2 = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &pl, NULL, NULL);
+   }
+
+   if (alp || alp2) {
+      if (alp)
+         lAddList(alp, alp2);
+      else   
+         alp = alp2;
+      if (!qmonMessageBox(w, alp, 0)) {
+         XmtMsgLinePrintf(st_message, "Success");
+         XmtMsgLineClear(st_message, DISPLAY_MESSAGE_DURATION); 
+      } else {  
+         XmtMsgLinePrintf(st_message, "Failure");
+         XmtMsgLineClear(st_message, DISPLAY_MESSAGE_DURATION); 
+      }
+   }
+
+   alp = lFreeList(alp);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
 static void qmonShareTreeDeleteNode(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
@@ -970,7 +1052,6 @@ XtPointer cld, cad;
    Boolean answer = False;
    Boolean status = False;
    lList *alp = NULL;
-   static int first_time = 1;
 
    DENTER(GUI_LAYER, "qmonShareTreeUpdate");
 
@@ -1051,11 +1132,7 @@ XtPointer cld, cad;
    
    ListTreeHighlightItem(tree, root_node, True);
    ListTreeRefreshOn(tree);
-   if (first_time) {
-      first_time = 0;
-   } else {  
-      ListTreeMakeItemVisible(tree, root_node);
-   }
+   ListTreeMakeItemVisible(tree, root_node);
 
    /*
    ** set the share tree sensitive to enable editing
@@ -1280,7 +1357,7 @@ int depth
       else
          sprintf(buf, "Node %d", i);
       lSetString(ep, STN_name, buf);
-      lSetUlong(ep, STN_type, STT_USER);
+/*       lSetUlong(ep, STN_type, STT_USER); */
       lSetUlong(ep, STN_shares, i+1);
       if (depth > 0) {
          lSetList(ep, STN_children, buildShac(ep, depth-1));
@@ -1427,6 +1504,7 @@ lList *shac
    lList *sublist = NULL;
    char buf[1024];
    static int level = 0;
+   Boolean branch = False;
 
    DENTER(GUI_LAYER, "CullToTree");
 
@@ -1437,9 +1515,13 @@ lList *shac
       */
       name = lGetString(ep, STN_name);
       sublist = lGetList(ep, STN_children);
+      if (sublist || (lGetUlong(ep, STN_type) == STT_PROJECT))
+         branch = True;
+      else   
+         branch = False;
       sprintf(buf, "%s", name ? name : "-NoName-"); 
       node = add_node(tree, parent, buf, 
-                  sublist ? ItemBranchType : ItemLeafType, UPDATE_MODE);
+                  branch ? ItemBranchType : ItemLeafType, UPDATE_MODE);
       node_data(node, 0, (XtPointer) ep);
 
       /*
@@ -1484,7 +1566,7 @@ ListTreeItem *item
       ep = lAddElemStr(&lp, STN_name, node->text, STN_Type);
       data = (tSTNUserData*)node->user_data;
       lSetUlong(ep, STN_shares, data->share);
-      lSetUlong(ep, STN_type, sharetree_mode);
+/*       lSetUlong(ep, STN_type, sharetree_mode); */
 
       if (ListTreeFirstChild(node))
          lSetList(ep, STN_children, TreeToCull(tree, node));

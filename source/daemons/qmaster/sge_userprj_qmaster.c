@@ -45,15 +45,8 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_conf.h"
-#include "sge_hostL.h"
 #include "sge_usageL.h"
-#include "sge_userprjL.h"
-#include "sge_usersetL.h"
-#include "sge_eventL.h"
-#include "sge_queueL.h"
-#include "sge_share_tree_nodeL.h"
 #include "read_write_userprj.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
@@ -62,17 +55,16 @@
 #include "cull_parse_util.h"
 #include "config.h"
 #include "sge_log.h"
-#include "gdi_utility_qmaster.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
+#include "gdi_utility.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_userprj.h"
+#include "sge_host.h"
+#include "sge_userset.h"
+#include "sge_sharetree.h"
 
-extern lList *Master_Sharetree_List;
-extern lList *Master_Project_List;
-extern lList *Master_User_List;
-extern lList *Master_Queue_List;
-extern lList *Master_Exechost_List;
-extern lList *Master_User_List;
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 int userprj_mod(
 lList **alpp,
@@ -101,7 +93,7 @@ int sub_command
    if (add) {
       if (!strcmp(userprj, "default")) {
          ERROR((SGE_EVENT, MSG_UP_NOADDDEFAULT_S, obj_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto Error;
       }
       /* may not add user with same name as an existing project */
@@ -109,7 +101,7 @@ int sub_command
                         UP_name, userprj)) {
          ERROR((SGE_EVENT, MSG_UP_ALREADYEXISTS_SS,user_flag ? MSG_OBJ_PRJ : MSG_OBJ_USER , userprj));
 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto Error;
       }
       if (verify_str_key(alpp, userprj, obj_name))
@@ -153,9 +145,9 @@ int sub_command
          /* make sure default project exists */
          if ((dproj = lGetPosString(ep, pos))) {
             if (!Master_Project_List ||
-                !sge_locate_user_prj(dproj, Master_Project_List)) {
+                !userprj_list_locate(Master_Project_List, dproj)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_PRJ, dproj));
-               sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                goto Error;
             }
          }
@@ -168,9 +160,9 @@ int sub_command
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_acl, lCopyList("acl", lp));
 
-         if (verify_acl_list(alpp, lGetList(ep, UP_acl), "user_lists", 
+         if (userset_list_validate_acl_list(alpp, lGetList(ep, UP_acl), "user_lists", 
                "project", lGetString(ep, UP_name))!=STATUS_OK) {
-            /* answerlist gets filled by verify_acl_list() in case of errors */
+            /* answerlist gets filled by userset_list_validate_acl_list() in case of errors */
             goto Error;
          }
       }
@@ -179,16 +171,16 @@ int sub_command
       if ((pos=lGetPosViaElem(ep, UP_xacl))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_xacl, lCopyList("xacl", lp));
-         if (verify_acl_list(alpp, lGetList(ep, UP_xacl), "xuser_lists", 
+         if (userset_list_validate_acl_list(alpp, lGetList(ep, UP_xacl), "xuser_lists", 
                "project", lGetString(ep, UP_name))!=STATUS_OK) {
-            /* answerlist gets filled by verify_acl_list() in case of errors */
+            /* answerlist gets filled by userset_list_validate_acl_list() in case of errors */
             goto Error;
          }
       }
 
       if (lGetPosViaElem(modp, UP_xacl)>=0 || 
           lGetPosViaElem(modp, UP_acl)>=0) {
-         if (multiple_occurrencies( alpp,
+         if (multiple_occurances( alpp,
                lGetList(modp, UP_acl),
                lGetList(modp, UP_xacl),
                US_name, userprj, 
@@ -270,16 +262,16 @@ int user        /* =1 user, =0 project */
 
    if ( !up_ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    name = lGetString(up_ep, UP_name);
 
-   if (!(ep=sge_locate_user_prj(name, *upl))) {
+   if (!(ep=userprj_list_locate(*upl, name))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, user? MSG_OBJ_USER : MSG_OBJ_PRJ, name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -287,7 +279,7 @@ int user        /* =1 user, =0 project */
    /* ensure this u/p object is not referenced in actual share tree */
    if (getNode(Master_Sharetree_List, name, user ? STT_USER : STT_PROJECT, 0)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DELETE_UP_IN_SHARE_TREE_SS, user?MSG_OBJ_USER:MSG_OBJ_PRJ, name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -297,17 +289,17 @@ int user        /* =1 user, =0 project */
 
       /* check queues */
       for_each (ep, Master_Queue_List) {
-         if (lGetElemStr(lGetList(ep, QU_projects), UP_name, name)) {
+         if (userprj_list_locate(lGetList(ep, QU_projects), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                   MSG_OBJ_PRJS, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
-         if (lGetElemStr(lGetList(ep, QU_xprojects), UP_name, name)) {
+         if (userprj_list_locate(lGetList(ep, QU_xprojects), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                   MSG_OBJ_XPRJS, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
@@ -315,34 +307,34 @@ int user        /* =1 user, =0 project */
 
       /* check hosts */
       for_each (ep, Master_Exechost_List) {
-         if (lGetElemStr(lGetList(ep, EH_prj), UP_name, name)) {
+         if (userprj_list_locate(lGetList(ep, EH_prj), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                   MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
-         if (lGetElemStr(lGetList(ep, EH_xprj), UP_name, name)) {
+         if (userprj_list_locate(lGetList(ep, EH_xprj), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                   MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
       }
 
       /* check global configuration */
-      if (lGetElemStr(conf.projects, UP_name, name)) {
+      if (userprj_list_locate(conf.projects, name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                MSG_OBJ_PRJS, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
-      if (lGetElemStr(conf.xprojects, UP_name, name)) {
+      if (userprj_list_locate(conf.xprojects, name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                MSG_OBJ_XPRJS, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -350,7 +342,7 @@ int user        /* =1 user, =0 project */
       /* check user list for reference */
       if ((myep = lGetElemStr(Master_User_List, UP_default_project, name))) {
          ERROR((SGE_EVENT, MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS, name, lGetString (myep, UP_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -363,7 +355,7 @@ int user        /* =1 user, =0 project */
    sprintf(fname , "%s/%s", user ? USER_DIR : PROJECT_DIR, name);
    if (unlink(fname)) {
       ERROR((SGE_EVENT, MSG_FILE_RM_S, fname));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EDISK;
    }
@@ -372,19 +364,11 @@ int user        /* =1 user, =0 project */
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, name, user?MSG_OBJ_USER:MSG_OBJ_PRJ));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;
    return STATUS_OK;
 }
-
-lListElem *sge_locate_user_prj(
-const char *up_name,
-lList *upl 
-) {
-   return lGetElemStr(upl, UP_name, up_name);
-}
-
 
 int verify_userprj_list(
 lList **alpp,
@@ -402,7 +386,7 @@ const char *obj_name   /* e.g. "fangorn"  */
       if (!lGetElemStr(userprj_list, UP_name, lGetString(up, UP_name))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNPROJECT_SSSS, lGetString(up, UP_name), 
                attr_name, obj_descr, obj_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }

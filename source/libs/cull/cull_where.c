@@ -43,13 +43,12 @@
 
 #include "msg_cull.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
 
 #include "sgermon.h"
 #include "cull_whereP.h"
 #include "cull_parse.h"
 #include "cull_lerrnoP.h"
-
-/* -------- intern prototypes --------------------------------- */
 
 static lCondition *read_val(lDescr *dp, va_list *app);
 static lCondition *factor(lDescr *dp, va_list *app);
@@ -65,18 +64,29 @@ static lCondition *_negfactor(lDescr *dp, WhereArgList *wapp);
 static lCondition *_sum(lDescr *dp, WhereArgList *wapp);
 static lCondition *_subscope(WhereArgList *wapp);
 
-/* =========== implementation ================================= */
+#if 0 /* EB: not used */
+static lCondition *_lWhere(const char *fmt, WhereArgList wap);
+#endif
 
-/* ------------------------------------------------------------ 
-
-   comines two conditions cp0 and cp1 
-   logically with an "OR"  
-
- */
-lCondition *lOrWhere(
-const lCondition *cp0,
-const lCondition *cp1 
-) {
+/****** cull/where/lOrWhere() *************************************************
+*  NAME
+*     lOrWhere() -- Combines two conditions with an OR
+*
+*  SYNOPSIS
+*     lCondition* lOrWhere(const lCondition *cp0, const lCondition *cp1) 
+*
+*  FUNCTION
+*     Combines the conditions 'cp0' and 'cp1' logically with an OR 
+*
+*  INPUTS
+*     const lCondition *cp0 - first condition 
+*     const lCondition *cp1 - second condition 
+*
+*  RESULT
+*     lCondition* - cp0 OR cp1 
+******************************************************************************/
+lCondition *lOrWhere(const lCondition *cp0, const lCondition *cp1) 
+{
    lCondition *newcp;
 
    DENTER(TOP_LAYER, "lOrWhere");
@@ -101,16 +111,25 @@ const lCondition *cp1
    return newcp;
 }
 
-/* ------------------------------------------------------------ 
-
-   comines two conditions cp0 and cp1 
-   logically with an "AND"  
-
- */
-lCondition *lAndWhere(
-const lCondition *cp0,
-const lCondition *cp1 
-) {
+/****** cull/where/lAndWhere() ************************************************
+*  NAME
+*     lAndWhere() -- Cobines two conditions with an AND 
+*
+*  SYNOPSIS
+*     lCondition* lAndWhere(const lCondition *cp0, const lCondition *cp1) 
+*
+*  FUNCTION
+*     Combines the conditions 'cp0' and 'cp1' with an logical AND. 
+*
+*  INPUTS
+*     const lCondition *cp0 - first condition 
+*     const lCondition *cp1 - second condition 
+*
+*  RESULT
+*     lCondition* - 'cp0' AND 'cp1' 
+******************************************************************************/
+lCondition *lAndWhere(const lCondition *cp0, const lCondition *cp1) 
+{
    lCondition *newcp;
 
    DENTER(TOP_LAYER, "lAndWhere");
@@ -135,15 +154,22 @@ const lCondition *cp1
    return newcp;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a lCondition struct (for debugging purposes)
-
- */
-void lWriteWhereTo(
-const lCondition *cp,
-FILE *fp 
-) {
+/****** cull/where/lWriteWhereTo() ********************************************
+*  NAME
+*     lWriteWhereTo() -- Write a condition struct to file stream.
+*
+*  SYNOPSIS
+*     void lWriteWhereTo(const lCondition *cp, FILE *fp) 
+*
+*  FUNCTION
+*     Write a condition struct to file stream. 
+*
+*  INPUTS
+*     const lCondition *cp - condition 
+*     FILE *fp             - file stream 
+******************************************************************************/
+void lWriteWhereTo(const lCondition *cp, FILE *fp) 
+{
    int i;
    static int depth = -1;
    char space[80];
@@ -233,28 +259,25 @@ FILE *fp
          return;
       }
 
-      switch (cp->operand.cmp.mt) {
+      switch (mt_get_type(cp->operand.cmp.mt)) {
       case lIntT:
          if (!fp) {
             DPRINTF(("%s %d\n", out, cp->operand.cmp.val.i));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %d\n", out, cp->operand.cmp.val.i);
          }
          break;
       case lUlongT:
          if (!fp) {
             DPRINTF(("%s "u32"\n", out, cp->operand.cmp.val.ul));
-         }
-         else {
+         } else {
             fprintf(fp, "%s "u32"\n", out, cp->operand.cmp.val.ul);
          }
          break;
       case lStringT:
          if (!fp) {
             DPRINTF(("%s \"%s\"\n", out, cp->operand.cmp.val.str));
-         }
-         else {
+         } else {
             fprintf(fp, "%s \"%s\"\n", out, cp->operand.cmp.val.str);
          }
          break;
@@ -262,8 +285,7 @@ FILE *fp
       case lHostT:
          if (!fp) {
             DPRINTF(("%s \"%s\"\n", out, cp->operand.cmp.val.host));
-         }
-         else {
+         } else {
             fprintf(fp, "%s \"%s\"\n", out, cp->operand.cmp.val.host);
          }
          break;
@@ -274,40 +296,42 @@ FILE *fp
       case lFloatT:
          if (!fp) {
             DPRINTF(("%s %f\n", out, cp->operand.cmp.val.fl));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %f\n", out, cp->operand.cmp.val.fl);
          }
          break;
       case lDoubleT:
          if (!fp) {
             DPRINTF(("%s %f\n", out, cp->operand.cmp.val.db));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %f\n", out, cp->operand.cmp.val.db);
          }
          break;
       case lLongT:
          if (!fp) {
             DPRINTF(("%s %ld\n", out, cp->operand.cmp.val.l));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %ld\n", out, cp->operand.cmp.val.l);
+         }
+         break;
+      case lBoolT:
+         if (!fp) {
+            DPRINTF(("%s %s\n", out, cp->operand.cmp.val.b ? "true" : "false"));
+         } else {
+            fprintf(fp, "%s %s\n", out, cp->operand.cmp.val.b ? "true" : "false");
          }
          break;
       case lCharT:
          if (!fp) {
             DPRINTF(("%s %c\n", out, cp->operand.cmp.val.c));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %c\n", out, cp->operand.cmp.val.c);
          }
          break;
       case lRefT:
          if (!fp) {
             DPRINTF(("%s %p\n", out, cp->operand.cmp.val.ref));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %p\n", out, cp->operand.cmp.val.ref);
          }
          break;
@@ -393,17 +417,30 @@ FILE *fp
    return;
 }
 
-/* ------------------------------------------------------------
-
-   lWhere builds the lCondition tree.
-   The condition is stated as a format string and an associated 
-   va_alist of the following form:
-
-   %I field ( unequal lList: J_id)
-   == comparison operator ( <, >, <=, >=, !=, ==)
-   %d value type descriptor (%s string, %d int, %u ulong) : 375
-
- */
+/****** cull/where/lWhere() ***************************************************
+*  NAME
+*     lWhere() -- Creates a condition tree 
+*
+*  SYNOPSIS
+*     lCondition* lWhere(const char *fmt, ...) 
+*
+*  FUNCTION
+*     Creates a condition tree. The condition is stated as a format 
+*     string and an associated list of additional parameters.
+*
+*  INPUTS
+*     const char *fmt - format string
+*                       %I                         - JB_job_number
+*                                                    (!= lList)
+*                       ==, <, >, <=, >=, !=, ==   - comp. operator
+*                       %s                         - string
+*                       %d                         - int
+*                       %u                         - ulong
+*     ...             - additional Arguments 
+*
+*  RESULT
+*     lCondition* - new condition 
+******************************************************************************/
 lCondition *lWhere(const char *fmt,...)
 {
    lCondition *cond;
@@ -436,9 +473,8 @@ lCondition *lWhere(const char *fmt,...)
    return cond;
 }
 
-static lCondition *subscope(
-va_list *app 
-) {
+static lCondition *subscope(va_list *app) 
+{
    lDescr *dp = NULL;
    lCondition *cp = NULL;
 
@@ -481,10 +517,8 @@ va_list *app
    return cp;
 }
 
-static lCondition *sum(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *sum(lDescr *dp, va_list *app) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "sum");
@@ -510,10 +544,8 @@ va_list *app
    return cp;
 }
 
-static lCondition *product(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *product(lDescr *dp, va_list *app) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "product");
@@ -539,10 +571,8 @@ va_list *app
    return cp;
 }
 
-static lCondition *factor(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *factor(lDescr *dp, va_list *app) 
+{
    lCondition *cp;
 
    DENTER(CULL_LAYER, "factor");
@@ -596,10 +626,8 @@ va_list *app
 
 }
 
-static lCondition *read_val(
-lDescr *dp,
-va_list *app 
-) {
+static lCondition *read_val(lDescr *dp, va_list *app) 
+{
    /*       
       without the usage of s insight throws
       a READ_OVERFLOW 
@@ -658,7 +686,7 @@ va_list *app
    case SUBSCOPE:
       cp->op = token;
       eat_token();
-      if (cp->operand.cmp.mt != lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          cp = lFreeWhere(cp);
          LERROR(LEINCTYPE);
          DEXIT;
@@ -677,33 +705,33 @@ va_list *app
 
    switch (scan(NULL)) {
    case INT:
-      if (cp->operand.cmp.mt != lIntT)
+      if (mt_get_type(cp->operand.cmp.mt) != lIntT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEINTT );
       cp->operand.cmp.val.i = va_arg(*app, lInt);
       break;
 
    case STRING:
-      if ( (cp->operand.cmp.mt != lStringT ) && (cp->operand.cmp.mt != lHostT )   )
+      if ( (mt_get_type(cp->operand.cmp.mt) != lStringT ) && (mt_get_type(cp->operand.cmp.mt) != lHostT )   )
          incompatibleType(MSG_CULL_WHERE_SHOULDBESTRINGT );
-      if ( cp->operand.cmp.mt == lStringT ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lStringT ) {
          s = va_arg(*app, char *);
          cp->operand.cmp.val.str = strdup((char *) s);
          /* cp->operand.cmp.val.str = strdup(va_arg(*app, char *)); */
       } 
-      if ( cp->operand.cmp.mt == lHostT ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lHostT ) {
          s = va_arg(*app, char *);
          cp->operand.cmp.val.host = strdup((char *) s);
       }
       break;
 
    case ULONG:
-      if (cp->operand.cmp.mt != lUlongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lUlongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEULONGT);
       cp->operand.cmp.val.ul = va_arg(*app, lUlong);
       break;
 
    case FLOAT:
-      if (cp->operand.cmp.mt != lFloatT)
+      if (mt_get_type(cp->operand.cmp.mt) != lFloatT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEFLOATT);
       /* a float value is stored as a double in the va_list */
       /* so we have to read it as a double value                              */
@@ -711,25 +739,39 @@ va_list *app
       break;
 
    case DOUBLE:
-      if (cp->operand.cmp.mt != lDoubleT)
+      if (mt_get_type(cp->operand.cmp.mt) != lDoubleT)
          incompatibleType( MSG_CULL_WHERE_SHOULDBEDOUBLET);
       cp->operand.cmp.val.db = va_arg(*app, lDouble);
       break;
 
    case LONG:
-      if (cp->operand.cmp.mt != lLongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lLongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBELONGT);
       cp->operand.cmp.val.l = va_arg(*app, lLong);
       break;
 
    case CHAR:
-      if (cp->operand.cmp.mt != lCharT)
+      if (mt_get_type(cp->operand.cmp.mt) != lCharT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBECHART);
+#if USING_GCC_2_96 || __GNUC__ == 3
+      cp->operand.cmp.val.c = va_arg(*app, int);
+#else
       cp->operand.cmp.val.c = va_arg(*app, lChar);
+#endif
+      break;
+
+   case BOOL:
+      if (mt_get_type(cp->operand.cmp.mt) != lBoolT)
+         incompatibleType(MSG_CULL_WHERE_SHOULDBEBOOL);
+#if USING_GCC_2_96 || __GNUC__ == 3
+      cp->operand.cmp.val.b = va_arg(*app, int);
+#else
+      cp->operand.cmp.val.b = va_arg(*app, lBool);
+#endif
       break;
 
    case REF:
-      if (cp->operand.cmp.mt != lRefT)
+      if (mt_get_type(cp->operand.cmp.mt) != lRefT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEREFT );
       cp->operand.cmp.val.ref = va_arg(*app, lRef);
       break;
@@ -746,46 +788,45 @@ va_list *app
    return cp;
 }
 
-/* ############################################################# */
-/* ------------------------------------------------------------
+#if 0 /* EB: not used */
 
-   _lWhere builds the lCondition tree.
-   The condition is stated as a format string and an associated 
-   WhereArgList of the following form:
-
-   %I field ( unequal lList: J_id)
-   == comparison operator ( <, >, <=, >=, !=, ==)
-   %d value type descriptor (%s string, %d int, %u ulong) : 375
-
-   Ansi Prototype:
-   lCondition* _lWhere( char *fmt, WhereArgList wap) 
-
-   The WhereArg struct is built as follows:
-   struct _WhereArg {
-   lDescr      *descriptor;
-   int         field;
-   lMultitype  *value;
-   };
-   e.g. where = lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", QueueT,
-   Q_hostname, "durin.q", Q_ownerlist, OwnerT, O_ownerage, 22);
-
-   -- the corresponding WhereArgList is:
-   WhereArg whereargs[20];
-
-   whereargs[0].descriptor = QueueT;
-   whereargs[1].field      = Q_hostname;
-   whereargs[1].value.str  = "durin.q";
-   whereargs[2].field      = Q_ownerlist;
-   whereargs[2].descriptor = OwnerT;
-   whereargs[3].field      = O_ownerage;
-   whereargs[3].value.i    = 22;
-
-   where = _lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", whereargs);
- */
-lCondition *_lWhere(
-const char *fmt,
-WhereArgList wap 
-) {
+/****** cull/where/_lWhere() **************************************************
+*  NAME
+*     _lWhere() -- Builds a condition tree 
+*
+*  SYNOPSIS
+*     static lCondition* _lWhere(const char *fmt, WhereArgList wap) 
+*
+*  FUNCTION
+*     Builds a condition tree. Information for the condition tree
+*     has to be given by a format string and a argument list. 
+*
+*  INPUTS
+*     const char *fmt  - format string 
+*     WhereArgList wap - argument array 
+*
+*  RESULT
+*     lCondition* - condition 
+*
+*  EXAMPLE
+*     where0 and where1 condition are equivalent:
+*        where0 = lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", 
+*                        QueueT, Q_hostname, "durin.q", 
+*                        Q_ownerlist, OwnerT, O_ownerage, 22);
+*
+*        WhereArg whereargs[20];
+*        whereargs[0].descriptor = QueueT;
+*        whereargs[1].field      = Q_hostname;
+*        whereargs[1].value.str  = "durin.q";
+*        whereargs[2].field      = Q_ownerlist;
+*        whereargs[2].descriptor = OwnerT;
+*        whereargs[3].field      = O_ownerage;
+*        whereargs[3].value.i    = 22;
+*        where1 = _lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", 
+*                         whereargs);
+*******************************************************************************/
+static lCondition *_lWhere(const char *fmt, WhereArgList wap) 
+{
    lCondition *cond;
 
    DENTER(CULL_LAYER, "_lWhere");
@@ -814,9 +855,10 @@ WhereArgList wap
    return cond;
 }
 
-static lCondition *_subscope(
-WhereArgList *wapp 
-) {
+#endif
+
+static lCondition *_subscope(WhereArgList *wapp) 
+{
    lDescr *dp = NULL;
    lCondition *cp = NULL;
 
@@ -828,8 +870,11 @@ WhereArgList *wapp
       return NULL;
    }
    eat_token();                 /* eat %T */
-   /* Deliver descriptor & increment the WhereArgList to the next element */
-/*    DPRINTF(("(*wapp) = %p\n", *wapp)); */
+   /* 
+    * Deliver descriptor & increment the WhereArgList to 
+    * the next element 
+    */
+   /*    DPRINTF(("(*wapp) = %p\n", *wapp)); */
    dp = (*wapp)++->descriptor;
    if (!(dp)) {
       LERROR(LEDESCRNULL);
@@ -862,10 +907,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_sum(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_sum(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "_sum");
@@ -891,10 +934,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_product(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_product(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "_product");
@@ -920,10 +961,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_factor(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_factor(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp;
 
    DENTER(CULL_LAYER, "_factor");
@@ -948,10 +987,8 @@ WhereArgList *wapp
    return cp;
 }
 
-static lCondition *_negfactor(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_negfactor(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp;
 
    DENTER(CULL_LAYER, "_negfactor");
@@ -977,10 +1014,8 @@ WhereArgList *wapp
 
 }
 
-static lCondition *_read_val(
-lDescr *dp,
-WhereArgList *wapp 
-) {
+static lCondition *_read_val(lDescr *dp, WhereArgList *wapp) 
+{
    lCondition *cp;
    int token;
 
@@ -1035,7 +1070,7 @@ WhereArgList *wapp
    case SUBSCOPE:
       cp->op = token;
       eat_token();
-      if (cp->operand.cmp.mt != lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;
@@ -1053,34 +1088,34 @@ WhereArgList *wapp
 
    switch (scan(NULL)) {
    case INT:
-      if (cp->operand.cmp.mt != lIntT)
+      if (mt_get_type(cp->operand.cmp.mt) != lIntT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEINTT);
 /*       DPRINTF(("(*wapp)->value.i = %d\n", (*wapp)->value.i)); */
       cp->operand.cmp.val.i = (*wapp)++->value.i;
       break;
 
    case STRING:
-      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT)   )
+      if ( (mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)   )
          incompatibleType(MSG_CULL_WHERE_SHOULDBESTRINGT);
 
-      if ( cp->operand.cmp.mt == lStringT ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lStringT ) {
          /* DPRINTF(("(*wapp)->value.str = %s\n", (*wapp)->value.str)); */
          cp->operand.cmp.val.str = (*wapp)++->value.str;
       } 
-      if ( cp->operand.cmp.mt == lHostT   ) {
+      if ( mt_get_type(cp->operand.cmp.mt) == lHostT   ) {
          cp->operand.cmp.val.host = (*wapp)++->value.host;
       }
       break;
 
    case ULONG:
-      if (cp->operand.cmp.mt != lUlongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lUlongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEULONGT);
 /*       DPRINTF(("(*wapp)->value.ul = %ul\n", (*wapp)->value.ul)); */
       cp->operand.cmp.val.ul = (*wapp)++->value.ul;
       break;
 
    case FLOAT:
-      if (cp->operand.cmp.mt != lFloatT)
+      if (mt_get_type(cp->operand.cmp.mt) != lFloatT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEFLOATT);
       /* a float value is stored as a double in the va_list */
       /* so we have to read it as a double value                              */
@@ -1089,28 +1124,35 @@ WhereArgList *wapp
       break;
 
    case DOUBLE:
-      if (cp->operand.cmp.mt != lDoubleT)
+      if (mt_get_type(cp->operand.cmp.mt) != lDoubleT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEDOUBLET);
 /*       DPRINTF(("(*wapp)->value.db = %f\n", (*wapp)->value.db)); */
       cp->operand.cmp.val.db = (*wapp)++->value.db;
       break;
 
    case LONG:
-      if (cp->operand.cmp.mt != lLongT)
+      if (mt_get_type(cp->operand.cmp.mt) != lLongT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBELONGT);
 /*       DPRINTF(("(*wapp)->value.l = %ld\n", (*wapp)->value.l)); */
       cp->operand.cmp.val.l = (*wapp)++->value.l;
       break;
 
    case CHAR:
-      if (cp->operand.cmp.mt != lCharT)
+      if (mt_get_type(cp->operand.cmp.mt) != lCharT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBECHART);
 /*       DPRINTF(("(*wapp)->value.c = %c\n", (*wapp)->value.c)); */
       cp->operand.cmp.val.c = (*wapp)++->value.c;
       break;
 
+   case BOOL:
+      if (mt_get_type(cp->operand.cmp.mt) != lBoolT)
+         incompatibleType(MSG_CULL_WHERE_SHOULDBEBOOL);
+/*       DPRINTF(("(*wapp)->value.b = %c\n", (*wapp)->value.b)); */
+      cp->operand.cmp.val.b = (*wapp)++->value.b;
+      break;
+
    case REF:
-      if (cp->operand.cmp.mt != lRefT)
+      if (mt_get_type(cp->operand.cmp.mt) != lRefT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEREFT);
 /*       DPRINTF(("(*wapp)->value.ref = %p\n", (*wapp)->value.ref)); */
       cp->operand.cmp.val.ref = (*wapp)++->value.ref;
@@ -1128,10 +1170,10 @@ WhereArgList *wapp
       "p=" as operator is not allowed with other types than lStringT
       "h=" as operator is not allowed with other types than lStringT
     */
-   if ((cp->op == BITMASK && cp->operand.cmp.mt     != lUlongT )                                                                ||
-       ( (cp->op == STRCASECMP && cp->operand.cmp.mt  != lStringT) && (cp->op == STRCASECMP && cp->operand.cmp.mt  != lHostT) ) ||
-       ( (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lStringT) && (cp->op == HOSTNAMECMP && cp->operand.cmp.mt != lHostT) ) ||
-       ( (cp->op == PATTERNCMP && cp->operand.cmp.mt  != lStringT) && (cp->op == PATTERNCMP && cp->operand.cmp.mt  != lHostT) ))
+   if ((cp->op == BITMASK && mt_get_type(cp->operand.cmp.mt)     != lUlongT )                                                                ||
+       ( (cp->op == STRCASECMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == STRCASECMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ) ||
+       ( (cp->op == HOSTNAMECMP && mt_get_type(cp->operand.cmp.mt) != lStringT) && (cp->op == HOSTNAMECMP && mt_get_type(cp->operand.cmp.mt) != lHostT) ) ||
+       ( (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ))
       incompatibleType(MSG_CULL_WHERE_OPERANDHITNOTOPERATORERROR );
 
    eat_token();
@@ -1140,15 +1182,24 @@ WhereArgList *wapp
    return cp;
 }
 
-/* ############################################################# */
-/* ------------------------------------------------------------ 
-
-   lFreeWhere frees all conditions depending on cp.
- */
-lCondition *lFreeWhere(
-lCondition *cp 
-) {
-
+/****** cull/where/lFreeWhere() ***********************************************
+*  NAME
+*     lFreeWhere() -- Free a condition
+*
+*  SYNOPSIS
+*     lCondition* lFreeWhere(lCondition *cp) 
+*
+*  FUNCTION
+*     Free a condition.
+*
+*  INPUTS
+*     lCondition *cp - condition 
+*
+*  RESULT
+*     lCondition* - NULL
+******************************************************************************/ 
+lCondition *lFreeWhere(lCondition *cp) 
+{
    DENTER(CULL_LAYER, "lFreeWhere");
 
    if (!cp) {
@@ -1168,18 +1219,18 @@ lCondition *cp
    case PATTERNCMP:
    case HOSTNAMECMP:
 
-      if (cp->operand.cmp.mt == lStringT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
          if (cp->operand.cmp.val.str) {
             free(cp->operand.cmp.val.str);
          }
       }
-      if (cp->operand.cmp.mt == lHostT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
          if (cp->operand.cmp.val.host) {
             free(cp->operand.cmp.val.host);
          }
       }
    case SUBSCOPE:
-      if (cp->operand.cmp.mt == lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lListT) {
          lFreeWhere(cp->operand.cmp.val.cp);
       }
       break;
@@ -1202,16 +1253,27 @@ lCondition *cp
    return NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lCompare returns true(1) or false(0). It decides if the element ep
-   suffices the condition cp.
- */
-
-int lCompare(
-const lListElem *ep,
-const lCondition *cp 
-) {
+/****** cull/where/lCompare() *************************************************
+*  NAME
+*     lCompare() -- Decide if a element suffices a condition 
+*
+*  SYNOPSIS
+*     int lCompare(const lListElem *ep, const lCondition *cp) 
+*
+*  FUNCTION
+*     Decide if a element suffices a condition.
+*
+*  INPUTS
+*     const lListElem *ep  - element 
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     int - result
+*         0 - flase
+*         1 - true 
+******************************************************************************/
+int lCompare(const lListElem *ep, const lCondition *cp) 
+{
    int result = 0;
    const char *str1, *str2;
 
@@ -1238,7 +1300,7 @@ const lCondition *cp
    case GREATER:
    case SUBSCOPE:
 
-      switch (cp->operand.cmp.mt) {
+      switch (mt_get_type(cp->operand.cmp.mt)) {
       case lIntT:
          result = intcmp(lGetPosInt(ep, cp->operand.cmp.pos), cp->operand.cmp.val.i);
          break;
@@ -1276,26 +1338,37 @@ const lCondition *cp
          break;
 
       case lUlongT:
-         result = ulongcmp(lGetPosUlong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ul);
+         result = ulongcmp(lGetPosUlong(ep, cp->operand.cmp.pos), 
+                           cp->operand.cmp.val.ul);
          break;
       case lListT:
-         result = (lFindFirst(lGetPosList(ep, cp->operand.cmp.pos), cp->operand.cmp.val.cp) != NULL);
+         result = (lFindFirst(lGetPosList(ep, cp->operand.cmp.pos), 
+                              cp->operand.cmp.val.cp) != NULL);
          DEXIT;
          return result;
       case lFloatT:
-         result = floatcmp(lGetPosFloat(ep, cp->operand.cmp.pos), cp->operand.cmp.val.fl);
+         result = floatcmp(lGetPosFloat(ep, cp->operand.cmp.pos), 
+                           cp->operand.cmp.val.fl);
          break;
       case lDoubleT:
-         result = doublecmp(lGetPosDouble(ep, cp->operand.cmp.pos), cp->operand.cmp.val.db);
+         result = doublecmp(lGetPosDouble(ep, cp->operand.cmp.pos), 
+                            cp->operand.cmp.val.db);
          break;
       case lLongT:
-         result = longcmp(lGetPosLong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.l);
+         result = longcmp(lGetPosLong(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.l);
          break;
       case lCharT:
-         result = charcmp(lGetPosChar(ep, cp->operand.cmp.pos), cp->operand.cmp.val.c);
+         result = charcmp(lGetPosChar(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.c);
+         break;
+      case lBoolT:
+         result = boolcmp(lGetPosBool(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.b);
          break;
       case lRefT:
-         result = refcmp(lGetPosRef(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ref);
+         result = refcmp(lGetPosRef(ep, cp->operand.cmp.pos), 
+                         cp->operand.cmp.val.ref);
          break;
       default:
          unknownType("lCompare");
@@ -1331,27 +1404,27 @@ const lCondition *cp
 
    case STRCASECMP:
    case HOSTNAMECMP:
-      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT) ) {
+      if ((mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-      if (cp->operand.cmp.mt == lStringT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
          if (cp->op == STRCASECMP ) {
             result = SGE_STRCASECMP(lGetPosString(ep, cp->operand.cmp.pos),
                                 cp->operand.cmp.val.str);
          } else {
-            result = hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
+            result = sge_hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
                              cp->operand.cmp.val.str);
          }
          result = (result == 0);
       }
-      if (cp->operand.cmp.mt == lHostT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
          if (cp->op == STRCASECMP ) {
             result = SGE_STRCASECMP(lGetPosHost(ep, cp->operand.cmp.pos),
                                 cp->operand.cmp.val.host);
          } else {
-            result = hostcmp(lGetPosHost(ep, cp->operand.cmp.pos),
+            result = sge_hostcmp(lGetPosHost(ep, cp->operand.cmp.pos),
                              cp->operand.cmp.val.host);
          }
          result = (result == 0);
@@ -1361,27 +1434,30 @@ const lCondition *cp
       break;
 
    case PATTERNCMP:
-      if ( (cp->operand.cmp.mt != lStringT) && (cp->operand.cmp.mt != lHostT) ) {
+      if ((mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-      if (cp->operand.cmp.mt == lStringT) {
-         result = !fnmatch(cp->operand.cmp.val.str, lGetPosString(ep, cp->operand.cmp.pos), 0);
+      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
+         result = !fnmatch(cp->operand.cmp.val.str, 
+                           lGetPosString(ep, cp->operand.cmp.pos), 0);
       } 
-      if (cp->operand.cmp.mt == lHostT) {
-         result = !fnmatch(cp->operand.cmp.val.host, lGetPosHost(ep, cp->operand.cmp.pos), 0);
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
+         result = !fnmatch(cp->operand.cmp.val.host, 
+                           lGetPosHost(ep, cp->operand.cmp.pos), 0);
       }
       break;
 
 
    case BITMASK:
-      if (cp->operand.cmp.mt != lUlongT) {
+      if (mt_get_type(cp->operand.cmp.mt) != lUlongT) {
          unknownType("lCompare");
          DEXIT;
          return 0;
       }
-      result = bitmaskcmp(lGetPosUlong(ep, cp->operand.cmp.pos), cp->operand.cmp.val.ul);
+      result = bitmaskcmp(lGetPosUlong(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.ul);
       break;
 
    case AND:
@@ -1414,13 +1490,24 @@ const lCondition *cp
    return result;
 }
 
-/* ------------------------------------------------------------ 
-
-   lCopyWhere copy a lCondition tree 
- */
-lCondition *lCopyWhere(
-const lCondition *cp 
-) {
+/****** cull/where/lCopyWhere() ***********************************************
+*  NAME
+*     lCopyWhere() -- Copy a condition
+*
+*  SYNOPSIS
+*     lCondition* lCopyWhere(const lCondition *cp) 
+*
+*  FUNCTION
+*     Copy a condition.
+*
+*  INPUTS
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     lCondition* - Copy of 'cp'
+******************************************************************************/
+lCondition *lCopyWhere(const lCondition *cp) 
+{
 
    lCondition *new = NULL;
 
@@ -1454,7 +1541,7 @@ const lCondition *cp
       new->operand.cmp.mt = cp->operand.cmp.mt;
       new->operand.cmp.nm = cp->operand.cmp.nm;
 
-      switch (cp->operand.cmp.mt) {
+      switch (mt_get_type(cp->operand.cmp.mt)) {
       case lIntT:
          new->operand.cmp.val.i = cp->operand.cmp.val.i;
          break;
@@ -1469,6 +1556,8 @@ const lCondition *cp
          break;
       case lListT:
          break;
+      case lObjectT:
+         break;
       case lFloatT:
          new->operand.cmp.val.fl = cp->operand.cmp.val.fl;
          break;
@@ -1477,6 +1566,9 @@ const lCondition *cp
          break;
       case lLongT:
          new->operand.cmp.val.l = cp->operand.cmp.val.l;
+         break;
+      case lBoolT:
+         new->operand.cmp.val.b = cp->operand.cmp.val.b;
          break;
       case lCharT:
          new->operand.cmp.val.c = cp->operand.cmp.val.c;
@@ -1490,7 +1582,7 @@ const lCondition *cp
          return NULL;
       }
    case SUBSCOPE:
-      if (cp->operand.cmp.mt == lListT) {
+      if (mt_get_type(cp->operand.cmp.mt) == lListT) {
          new->operand.cmp.pos = cp->operand.cmp.pos;
          new->operand.cmp.mt = cp->operand.cmp.mt;
          new->operand.cmp.nm = cp->operand.cmp.nm;

@@ -50,7 +50,7 @@
 #include "commlib.h" 
 #include "sge_gdi.h" 
 #include "sge_gdi_intern.h" 
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_all_listsL.h" 
 #include "qmon_rmon.h"
 #include "qmon_init.h"
@@ -65,12 +65,12 @@
 #include "qmon_appres.h"
 #include "qmon_globals.h"
 #include "qmon_util.h"
-#include "sge_exit.h"
 #include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_gdilib.h"
-#include "utility.h"
+#include "sge_unistd.h"
 #include "qm_name.h"
+
+#include "msg_clients_common.h"
+#include "msg_common.h"
 
 static String icon_names[] = {
    "21cal",
@@ -220,21 +220,25 @@ String name
 /*-------------------------------------------------------------------------*/
 void qmonInitSge( char *progname) 
 {
-   int cl_err = 0;
-   
+   int error = 0;
    DENTER(GUI_LAYER, "qmonInitSge");
    
-   sge_qmon_log(True);
+   sge_log_set_qmon(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QMON]))) {
-      if (cl_err == CL_FIRST_FREE_EC+2 || cl_err == AE_QMASTER_DOWN)
-         fprintf(stderr, MSG_SGETEXT_NOQMASTER);
-      else   
-         ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if ((error=sge_gdi_setup(prognames[QMON]))) {
+      /* fills SGE_EVENT with diagnosis information */
+      if (error == AE_QMASTER_DOWN ||
+          error == CL_FIRST_FREE_EC+2 || 
+          error == CL_FIRST_FREE_EC+1 ) {
+         error = -1;  /* this error code is ambiguous, make 
+                         no suggestions in error message */ 
+      }
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(error,SGE_EVENT));
+      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }
-   sge_qmon_log(False);
+   sge_log_set_qmon(False);
 
    DEXIT;
 }
@@ -277,6 +281,12 @@ Display *dpy,     /* unused */
 String xnl,
 XtPointer closure  /* unused */
 ) {
+   char *languste = NULL;
+
+   if (getenv("XMTDEBUGFINDFILE")) {
+      printf("xnl = '%s'\n", xnl);
+   }
+
    if (!strcasecmp(xnl, "relabel"))
       xnl = "C";
 
@@ -287,14 +297,19 @@ XtPointer closure  /* unused */
       XtWarning("locale not supported by Xlib, locale set to C");
       setlocale(LC_ALL, "C");
    }
-   else {
-      setlocale(LC_NUMERIC, "C");
-   }
+   
+   setlocale(LC_NUMERIC, "C");
    
    if (! XSetLocaleModifiers(""))
       XtWarning("X locale modifiers not supported, using default");
 
-   return setlocale(LC_ALL, NULL); /* re-query in case overwritten */
+   languste = setlocale(LC_MESSAGES, NULL);
+
+   if (getenv("XMTDEBUGFINDFILE")) {
+      printf("languste: '%s'\n", languste);
+   }   
+   
+   return languste; /* re-query in case overwritten */
 }
 #endif 
 
@@ -319,12 +334,7 @@ Cardinal num_args
 
    DENTER(GUI_LAYER, "XmtInitialize");
 
-#ifndef LINUX
-   setlocale(LC_NUMERIC, "C");
-   XtSetLanguageProc(NULL, NULL, NULL);
-#else
    XtSetLanguageProc(NULL, myXtDefaultLanguageProc, NULL);
-#endif   
 
    for (i=0; i<*argc_in_out; i++) {
       if (!strcmp(argv_in_out[i], "-cmap")) {

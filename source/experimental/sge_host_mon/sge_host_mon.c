@@ -43,14 +43,11 @@
 #include "sge_time.h"
 #include "sort_hosts.h"
 #include "sgeee.h"
-#include "sge_schedconfL.h"
-#include "sge_jobL.h"
+#include "sge_schedd_conf.h"
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "schedd_conf.h"
 #include "sge_language.h"
-#include "msg_schedd.h"
 
 #define HOST_USAGE_ATTR_CPU     "cpu"
 #define HOST_USAGE_ATTR_MEM     "mem"
@@ -92,7 +89,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -112,7 +110,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -127,7 +126,8 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -143,13 +143,14 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **complex)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
    lFreeList(alp);
    alp = NULL;
-      if (sc_set(&alp, &scheddconf, lFirst(*config), NULL))
+      if (sc_set(&alp, &scheddconf, lFirst(*config), NULL, NULL))
         fprintf(stderr, "%s\n", lGetString(lFirst(alp), AN_text));
 
 
@@ -306,7 +307,7 @@ FILE *fpdchu;
           fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(running_job_elem, JB_job_number), lGetHost(rjq, JG_qhostname));
 #endif
           job_usage_list = NULL;
-          if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) == 0) {
+          if (sge_hostcmp(lGetHost(rjq, JG_qhostname), host_name) == 0) {
 
 #ifdef TEST_CALC_HOST_USAGE
             fprintf(fpdchu, "found running job on host %s \n", host_name);
@@ -336,7 +337,7 @@ FILE *fpdchu;
                     } /* if (lGetString(job_usage_elem, UA_name)=="io")*/
                   } /* if (lGetString(job_usage_elem, UA_name)=="mem")*/                }  /* if (lGetString(job_usage_elem, UA_name)=="cpu")*/
              }  /*for_each(job_usage_elem, job_usage_list)*/
-          }  /* if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) ==
+          }  /* if (sge_hostcmp(lGetHost(rjq, JG_qhostname), host_name) ==
 0) */
         } /* for_each (rjq, lGetList(running_job_elem, JB_granted_destin_identifier_list))*/
       }  /* for_each (running_job_elem, running_jobs) */
@@ -361,7 +362,7 @@ was added here because it was a convenient place to gather the information */
           fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(finished_job_elem, JB_job_number), lGetHost(fjq, JG_qhostname));
 #endif
           job_usage_list = NULL;
-          if (hostcmp(lGetHost(fjq, JG_qhostname), host_name) == 0) {
+          if (sge_hostcmp(lGetHost(fjq, JG_qhostname), host_name) == 0) {
 #ifdef TEST_CALC_HOST_USAGE
             fprintf(fpdchu, "found finished job on host %s \n", host_name);
 #endif
@@ -387,7 +388,7 @@ was added here because it was a convenient place to gather the information */
                     } /* if (lGetString(job_usage_elem, UA_name)=="io")*/
                   } /* if (lGetString(job_usage_elem, UA_name)=="mem")*/                }  /* if (lGetString(job_usage_elem, UA_name)=="cpu")*/
             }  /*for_each(job_usage_elem, job_usage_list)*/
-          }  /* if (hostcmp(lGetHost(fjq, JG_qhostname), host_name) ==
+          }  /* if (sge_hostcmp(lGetHost(fjq, JG_qhostname), host_name) ==
 0) */
         } /* for_each (fjq, lGetList(finished_job_elem, JB_granted_destin_identifier_list))*/
       }  /* for_each (finished_job_elem, finished_jobs) */
@@ -909,7 +910,7 @@ int main(int argc, char **argv)
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -1050,26 +1051,3 @@ int main(int argc, char **argv)
 
    return 0;
 }
-
-
-
-
-#ifdef notdef
-static void
-dump_list_to_file(lList *list, char *file)
-{
-   FILE *f;
-
-   if (!(f=fopen(file, "w+"))) {
-      fprintf(stderr, MSG_FILE_OPENSTDOUTASFILEFAILED);
-      exit(1);
-   }
-
-   if (lDumpList(f, list, 0) == EOF) {
-      fprintf(stderr, MSG_ERROR_UNABLETODUMPLIST );
-   }
-
-   fclose(f);
-}
-#endif
-

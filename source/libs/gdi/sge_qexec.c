@@ -38,11 +38,10 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#include "sge_max_nis_retries.h"
 #include "cull.h"
 #include "commlib.h"
 #include "commd_message_flags.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sge_gdi.h"
 #include "sge_gdi_intern.h"
 #include "sge_uidgid.h"
@@ -50,13 +49,12 @@
 #include "pack_job_delivery.h"
 #include "sge_qexec.h"
 #include "sge_qexecL.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_stringL.h"
 #include "msg_gdilib.h"
 #include "sge_security.h"
-
-#include "jb_now.h"
+#include "sge_var.h"
 
 static lList *remote_task_list = 0;
 static char lasterror[1024];
@@ -64,9 +62,8 @@ static char lasterror[1024];
 /* option flags for rcv_from_execd() */
 #define OPT_SYNCHRON 1
 
-#define LOCATE_RTASK(tid) lGetElemUlong(remote_task_list, RT_tid, tid)
+#define LOCATE_RTASK(tid) lGetElemStr(remote_task_list, RT_tid, tid)
 
-static char program_name[1024] = "libgdi.a";
 static int rcv_from_execd(int options, int tag); 
 
 const char *qexec_last_err(void)
@@ -74,14 +71,14 @@ const char *qexec_last_err(void)
    return lasterror;
 }
 
-/****** gdi/sge_qexecve() ************************************************
+/****** gdi/sge/sge_qexecve() ************************************************
 *  NAME
-*     sge_qexecve() -- start a task in a tightly integrated parallel job
+*     sge_qexecve() -- start a task in a tightly integrated par. job
 *
 *  SYNOPSIS
-*     sge_tid_t sge_qexecve(const char *hostname, const char *path, 
-*                           const char *argv[], const lList *env_lp, 
-*                           int is_qrsh) 
+*     sge_tid_t sge_qexecve(const char *hostname, const char *queuename, 
+*                           const char *cwd, const lList *environment
+*                           const lList *path_aliases)
 *
 *  FUNCTION
 *     Starts a task in a tightly integrated job.
@@ -93,210 +90,155 @@ const char *qexec_last_err(void)
 *
 *  INPUTS
 *     const char *hostname - name of the host on which to start the task
-*     const char *path     - complete path of the command to start
-*     const char *argv[]   - argument vector for the command to start
-*     const lList *env_lp  - list containing environment variable settings
-*                            for the task that override the default environment
-*     int is_qrsh          - is the task to be started a qrsh -inherit task?
-*                            0 means 0, != 0 means yes
+*     const lList *environment  - list containing environment variable 
+*                            settings for the task that override the 
+*                            default environment
+*     const lList *path_aliases - optional a path alias list
 *
 *  RESULT
 *     sge_tid_t - the task id, if the task can be executed,
 *                 a value <= 0 indicates an error.
 *
-*******************************************************************************/
-sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *cwd,
-                      const char *argv[], const lList *env_lp, 
-                      int is_qrsh)
+******************************************************************************/
+sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
+                      const char *cwd, const lList *environment,
+                      const lList *path_aliases)
 {
-char localhost[1000];
 char myname[256];
 const char *s;
-   int ret, i, uid;
-   sge_tid_t tid = 0;
-   lListElem *rt, *jep, *arg_ep, *env_ep, *jgelem=NULL, *taskep;
-   lList *env, *arg_lp = NULL;
+   int ret, uid;
+   sge_tid_t tid = NULL;
+   lListElem *petrep;
+   lListElem *rt;
    sge_pack_buffer pb;
-   u_long32 jobid;
+   u_long32 jobid, jataskid;
    u_long32 dummymid;
-   int no_ack = 0;
 
    DENTER(TOP_LAYER, "sge_qexecve");
 
-   /* use local host if no hostname is given */
-   if (!hostname) {
-      if (gethostname(localhost, sizeof(localhost) - 1)) {
-         sprintf(lasterror, MSG_GDI_RETRIEVINGLOCALHOSTNAMEFAILED_S , strerror(errno));
-         DEXIT;
-         return -1;
-      }
-      hostname = localhost;
+   if(hostname == NULL) {
+      sprintf(lasterror, MSG_GDI_INVALIDPARAMETER_SS, "sge_qexecve", "hostname");
+      DEXIT;
+      return NULL;
    }
 
    /* resolve user */
-   if (sge_uid2user((uid=getuid()), myname, sizeof(myname)-1, MAX_NIS_RETRIES)) {
+   if(sge_uid2user((uid=getuid()), myname, sizeof(myname)-1, MAX_NIS_RETRIES)) {
       sprintf(lasterror, MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS , 
             uid, strerror(errno));
       DEXIT;
-      return -1;
+      return NULL;
    }
    
-   {  
-      lListElem *ep;
-      if ( !(s=getenv("JOB_ID")) && 
-      (!(ep=lGetElemStr(env_lp, VA_variable, "JOB_ID")) || !(s=lGetString(ep, VA_value)))) {
-         sprintf(lasterror, MSG_GDI_MISSINGJOBIDENVIRONMENT );
+   if((s=getenv("JOB_ID")) == NULL) {
+      sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "JOB_ID");
+      DEXIT;
+      return NULL;
+   }
+
+   if(sscanf(s, u32, &jobid) != 1) {
+      sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, "JOB_ID");
+      DEXIT;
+      return NULL;
+   }
+
+   /* for compatibility we need to check SGE_, GRD_ and COD_TASK_ID */
+   {
+      int i;
+      int found = 0;
+      const char *variables[] = {
+         "SGE_TASK_ID",
+         "GRD_TASK_ID",
+         "COD_TASK_ID"
+      };
+
+      for(i = 0; i < 3; i++) {
+         if((s=getenv(variables[i])) != NULL) {
+            found = 1;
+            if(strcmp(s, "undefined") == 0) {
+               jataskid = 1;
+            } else {
+               if(sscanf(s, u32, &jataskid) != 1) {
+                  sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, variables[i]);
+                  DEXIT;
+                  return NULL;
+               }
+            }
+         }
+      }
+
+      if(!found) {
+         sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "[SGE|GRD|COD]_TASK_ID");
          DEXIT;
-         return -1;
+         return NULL;
       }
    }
-   if (sscanf(s, u32, &jobid)!=1) {
-      sprintf(lasterror, MSG_GDI_STRINGINJOBIDISINVALID_S , s);
-      DEXIT;
-      return -1;
-   }
 
-   /* ---- build up job structure (see gdilib/sge_jobL.h) */
-   jep = lCreateElem(JB_Type);
+   /* ---- build up pe task request structure (see gdilib/sge_petaskL.h) */
+   petrep = lCreateElem(PETR_Type);
 
-   lSetUlong(jep, JB_job_number, jobid); 
-   lSetString(jep, JB_owner, myname);
+   lSetUlong(petrep, PETR_jobid, jobid);
+   lSetUlong(petrep, PETR_jataskid, jataskid);
+   lSetString(petrep, PETR_owner, myname);
 
    if(cwd != NULL) {
-      lSetString(jep, JB_cwd, cwd);
+      lSetString(petrep, PETR_cwd, cwd);
    }
 
-   if(is_qrsh) {
-      lSetUlong(jep, JB_now, JB_NOW_QRSH);
-      lSetString(jep, JB_script_file, JB_NOW_STR_QRSH);
-   } else {
-      /* fill in absolute exec path to task executable */
-      lSetString(jep, JB_script_file, path);
-
-      /* build up task argument list */
-      for (i = 1; argv[i]; i++) {
-         if (!arg_lp) {
-            arg_lp = lCreateList("task arguments", ST_Type);
-            lSetList(jep, JB_job_args, arg_lp);
-         }
-         arg_ep = lCreateElem(ST_Type);
-         lSetString(arg_ep, STR, argv[i]);
-         lAppendElem(arg_lp, arg_ep);
-      }
+   if(environment != NULL) {
+      lSetList(petrep, PETR_environment, lCopyList("environment", environment));
    }
 
-   env = lCopyList("env_list", env_lp);
-
-   /* user may propose a task id */
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_TASK_ID_NAME))) {
-      s = lGetString(env_ep, VA_value);
-      /* user proposes a task id */
-      if (!(tid=atoi(s))) {
-         sprintf(lasterror, MSG_GDI_PROPOSEDTASKIDINVALID_SS , OVERWRITE_TASK_ID_NAME, s);
-         DEXIT;
-         return -1;
-      }
-      if (LOCATE_RTASK(tid)) {
-         sprintf(lasterror, MSG_GDI_TASKEXISTS_S , s);
-         DEXIT;
-         return -1;
-      }
+   if(path_aliases != NULL) {
+      lSetList(petrep, PETR_path_aliases, lCopyList("path_aliases", path_aliases));
    }
 
-   /* user may overwrite the program name that is transfered to the execd */
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_PROGRAM_NAME))) {
-      strcpy(program_name, lGetString(env_ep, VA_value));
-      lDelElemStr(&env, VA_variable, OVERWRITE_PROGRAM_NAME);
+
+   if(queuename != NULL) {
+      lSetString(petrep, PETR_queuename, queuename);
    }
-
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_STDOUT))) {
-      lAddSubStr(jep, PN_path, lGetString(env_ep, VA_value), JB_stdout_path_list, PN_Type);
-      lDelElemStr(&env, VA_variable, OVERWRITE_STDOUT);
-   } else 
-      lAddSubStr(jep, PN_path, "/dev/null", JB_stdout_path_list, PN_Type);
-
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_STDERR))) {
-      lAddSubStr(jep, PN_path, lGetString(env_ep, VA_value), JB_stderr_path_list, PN_Type);
-      lDelElemStr(&env, VA_variable, OVERWRITE_STDERR);
-   } else 
-      lAddSubStr(jep, PN_path, "/dev/null", JB_stderr_path_list, PN_Type);
-
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_MERGE))) {
-      lSetUlong(jep, JB_merge_stderr, strcasecmp(lGetString(env_ep, VA_value), "true"));
-      lDelElemStr(&env, VA_variable, OVERWRITE_MERGE);
-   }
-
-   /* put an element into JB_ja_tasks list */
-   {
-      lListElem *tep;
-      tep = lAddSubUlong(jep, JAT_task_number, 1, JB_ja_tasks, JAT_Type);
-   }
-
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_QUEUE))) {
-      for_each(taskep, lGetList(jep, JB_ja_tasks)) {
-         jgelem = lAddSubStr(taskep, JG_qname, lGetString(env_ep, VA_value), 
-            JAT_granted_destin_identifier_list, JG_Type);
-      }
-      /* JG_qhostname is better to be filled in by execd */
-      lSetUlong(jgelem, JG_slots, 1);
-      lDelElemStr(&env, VA_variable, OVERWRITE_QUEUE);
-   }
-
-   if ((env_ep=lGetElemStr(env, VA_variable, OVERWRITE_NO_ACK))) {
-      DPRINTF(("requested to get no ack\n"));
-      no_ack = 1;
-   }
-
-   lSetList(jep, JB_env_list, env);
-   env = NULL;
 
    set_commlib_param(CL_P_COMMDHOST, 0, hostname, NULL); 
 
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-      lFreeElem(jep);
-      lFreeList(env);
+      lFreeElem(petrep);
       sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
       DEXIT;
-      return -1;
+      return NULL;
    }
 
-   pack_job_delivery(&pb, jep, NULL, NULL);
+   pack_job_delivery(&pb, petrep, NULL, NULL);
 
    ret = gdi_send_message_pb(1, prognames[EXECD], 0, hostname,
             TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);
 
-   lFreeElem(jep);
-   lFreeList(env);
+   lFreeElem(petrep);
 
    if (ret) {
       sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS , hostname, cl_errstr(ret));
       DEXIT;
-      return -1;
+      return NULL;
    }
   
    /* add list into our remote task list */
-   rt = lAddElemUlong(&remote_task_list, RT_tid, tid, RT_Type);
+   rt = lAddElemStr(&remote_task_list, RT_tid, "none", RT_Type);
    lSetHost(rt, RT_hostname, hostname);
+   lSetUlong(rt, RT_state, RT_STATE_WAIT4ACK);
 
-   if (no_ack) {
-      lSetUlong(rt, RT_state, RT_STATE_EXITED);
-      lSetUlong(rt, RT_status, 0); /* assume (hope) everything worked fine */
-   } else 
-      lSetUlong(rt, RT_state, RT_STATE_WAIT4ACK);
+   rcv_from_execd(OPT_SYNCHRON, TAG_JOB_EXECUTION);
+   tid = (sge_tid_t) lGetString(rt, RT_tid);
 
-   if (!tid) { /* get it from execd */
-      /* fprintf(stderr, "receiving tid\n"); fflush(stderr); */
-      rcv_from_execd(OPT_SYNCHRON, TAG_JOB_EXECUTION);
-      tid = lGetUlong(rt, RT_tid);
+   if(strcmp(tid, "none") == 0) {
+      tid = NULL;
    }
 
    DEXIT;
    return tid;
 }
 
-sge_tid_t sge_qwaittid(
+int sge_qwaittid(
 sge_tid_t tid,
 int *status,
 int options 
@@ -309,8 +251,8 @@ int options
    if (!(options&WNOHANG))
       rcv_opt |= OPT_SYNCHRON;
 
-   if (tid && !(rt=LOCATE_RTASK(tid))) {
-      sprintf(lasterror, MSG_GDI_TASKNOTEXIST_I , (int) tid);
+   if (tid != NULL && !(rt=LOCATE_RTASK(tid))) {
+      sprintf(lasterror, MSG_GDI_TASKNOTEXIST_S , tid);
       DEXIT;
       return -1;
    }
@@ -355,9 +297,8 @@ int tag
    u_short compressed;
 
    lListElem *rt_rcv;
-   char *task_id_as_str = NULL;
    u_long32 exit_status=0;
-   u_long32 tid=0;
+   sge_tid_t tid = NULL;
 
    DENTER(TOP_LAYER, "rcv_from_execd");
 
@@ -380,15 +321,20 @@ int tag
       return 1;
    }
 
-   init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
+   ret = init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
+   if(ret != PACK_SUCCESS) {
+      sprintf(lasterror,  MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret));
+      DEXIT;
+      return -1;
+   }
 
    switch (tag) {
    case TAG_TASK_EXIT:
-      unpackstr(&pb, &task_id_as_str);
+      unpackstr(&pb, &tid);
       unpackint(&pb, &exit_status);
       break;
    case TAG_JOB_EXECUTION:
-      unpackint(&pb, &tid);
+      unpackstr(&pb, &tid);
       break;
    default:
       break;
@@ -399,16 +345,14 @@ int tag
    switch (tag) {
    case TAG_TASK_EXIT:
       /* change state in exited task */
-      if (!(rt_rcv = lGetElemUlong(remote_task_list, RT_tid, 
-            atoi(task_id_as_str)))) {
+      if (!(rt_rcv = lGetElemStr(remote_task_list, RT_tid, 
+            tid))) {
          sprintf(lasterror, MSG_GDI_TASKNOTFOUND_S , 
-               task_id_as_str);
-         free(task_id_as_str);
+               tid);
+         free(tid);
          DEXIT;
          return -1;
       }
-
-      free(task_id_as_str);
 
       lSetUlong(rt_rcv, RT_status, exit_status);
       lSetUlong(rt_rcv, RT_state, RT_STATE_EXITED);
@@ -416,17 +360,19 @@ int tag
 
    case TAG_JOB_EXECUTION:
       /* search task without taskid */
-      if (!(rt_rcv = lGetElemUlong(remote_task_list, RT_tid, 0))) {
-         sprintf(lasterror, MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S , task_id_as_str);
+      if (!(rt_rcv = lGetElemStr(remote_task_list, RT_tid, "none"))) {
+         sprintf(lasterror, MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S , tid);
          DEXIT;
          return -1;
       }
-      lSetUlong(rt_rcv, RT_tid, tid);
+      lSetString(rt_rcv, RT_tid, tid);
       break;
 
    default:
       break;
    }
+
+   free(tid);
 
    DEXIT;
    return 0;

@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -40,39 +39,38 @@
 #include <netdb.h>
 #include <fcntl.h>
 
+#include "sge_stdio.h"
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi_intern.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "qm_name.h"
-#include "sge_copy_append.h"
-#include "sge_get_confval.h"
-#include "sge_exit.h"
 #include "sig_handlers.h"
 #include "qmaster_heartbeat.h"
 #include "lock.h"
 #include "startprog.h"
 #include "sge_gethostbyname.h"
-#include "sge_me.h"
-#include "sge_daemonize.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "commlib.h"
 #include "rw_configuration.h"
 #include "sge_all_listsL.h"
-#include "sge_switch_user.h"
 #include "sge_feature.h"
 #include "setup_path.h"
-#include "sge_pids.h"
-#include "sge_log_pid.h"
+#include "sge_os.h"
 #include "shutdown.h"
-
-#include "msg_gdilib.h"
+#include "sge_uidgid.h"
 #include "sge_language.h"
-#include "msg_daemons_common.h"
-#include "msg_shadowd.h"
 #include "sge_string.h"
 #include "usage.h"
+#include "sge_io.h"
+#include "sge_spool.h"
+#include "sge_hostname.h"
+
+#include "msg_common.h"
+#include "msg_daemons_common.h"
+#include "msg_shadowd.h"
 
 #ifndef FALSE
 #   define FALSE 0
@@ -91,6 +89,10 @@
 #  define GET_ACTIVE_INTERVAL 240
 #  define DELAY_TIME          600 
 #endif
+
+static int check_interval = CHECK_INTERVAL;
+static int get_active_interval = GET_ACTIVE_INTERVAL;
+static int delay_time = DELAY_TIME;
 
 char binpath[SGE_PATH_MAX];
 char oldqmaster[SGE_PATH_MAX];
@@ -188,12 +190,27 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
+   /* initialize recovery control variables */
+   {
+      char *s;
+      int val;
+      if ((s=getenv("SGE_CHECK_INTERVAL")) &&
+          sscanf(s, "%d", &val) == 1)
+         check_interval = val;
+      if ((s=getenv("SGE_GET_ACTIVE_INTERVAL")) &&
+          sscanf(s, "%d", &val) == 1)
+         get_active_interval = val;
+      if ((s=getenv("SGE_DELAY_TIME")) &&
+          sscanf(s, "%d", &val) == 1)
+         delay_time = val;
+   }
+         
    /* This needs a better solution */
    umask(022);
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -210,17 +227,17 @@ char **argv
       char *conf_string;
       pid_t shadowd_pid;
 
-      if ((conf_string = get_confval("qmaster_spool_dir", path.conf_file))) {
+      if ((conf_string = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE,
             conf_string, me.unqualified_hostname);
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
-         if ((shadowd_pid = readpid(shadowd_pidfile))) {
+         if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
             char *shadowd_name;
 
             DPRINTF(("shadowd_pid: %d\n", shadowd_pid));
             shadowd_name = SGE_SHADOWD;
 
-            if (!checkprog(shadowd_pid, shadowd_name, PSCMD)) {
+            if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
                SGE_EXIT(1);
             }
@@ -233,14 +250,14 @@ char **argv
    priority_tags[1] = TAG_FINISH_REQUEST;
    prepare_enroll(prognames[SHADOWD], 1, priority_tags);
 
-   install_exit_func(shadowd_exit_func);
+   sge_install_exit_func(shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
 
    lInit(nmv);
 
    parse_cmdline_shadowd(argc, argv);
 
-   if (!(cp = get_confval("qmaster_spool_dir", path.conf_file))) {
+   if (!(cp = sge_get_confval("qmaster_spool_dir", path.conf_file))) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, 
          path.conf_file));
       DEXIT;
@@ -253,23 +270,24 @@ char **argv
       SGE_EXIT(1);
    }
 
-   admin_user = read_adminuser_from_configuration(path.conf_file, 
+   admin_user = read_adminuser_from_configuration(NULL, path.conf_file, 
       SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
 
-   if (set_admin_username(admin_user, err_str)) {
+   if (sge_set_admin_username(admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
 
-   if (switch2admin_user()) {
+   if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTSWITCHTOADMIN_USER));
       SGE_EXIT(1);
    }
 
    sprintf(shadow_err_file, "messages_shadowd.%s", me.unqualified_hostname);
    sprintf(qmaster_out_file, "messages_qmaster.%s", me.unqualified_hostname);
-   sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_APPEND);
+   sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_MODE_APPEND);
    unlink(TMP_ERR_FILE_SHADOWD);
+   sge_log_set_auser(1);
    error_file = shadow_err_file;
 
    FD_ZERO(&fds);
@@ -277,7 +295,7 @@ char **argv
       FD_SET(fd, &fds);
    }
    sge_daemonize(get_commlib_state_closefd()?NULL:&fds);
-   sge_log_pid(shadowd_pidfile);
+   sge_write_pid(shadowd_pidfile);
 
    starting_up();
    
@@ -288,7 +306,7 @@ char **argv
 
    delay = 0;
    while (TRUE) {
-      sleep(CHECK_INTERVAL);
+      sleep(check_interval);
 
       if (shut_me_down) {
          extern u_long32 logginglevel;
@@ -311,12 +329,12 @@ char **argv
       /* We could read two times the heartbeat */
       if (last_heartbeat != -1 && 
           heartbeat != -1 && 
-          (now - last >= (GET_ACTIVE_INTERVAL + delay))) {
+          (now - last >= (get_active_interval + delay))) {
          delay = 0;
          if ((last_heartbeat - heartbeat) == 0) {
             DPRINTF(("heartbeat not changed since seconds: %d\n", 
                (int) (now - last)));
-            delay = DELAY_TIME;
+            delay = delay_time;
             if (!(ret = check_if_valid_shadow(path.shadow_masters_file))) {
                if (qmaster_lock(QMASTER_LOCK_FILE)) {
                   ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
@@ -358,16 +376,16 @@ char **argv
                         err = 2;
                      } 
 
-                     switch2start_user();
+                     sge_switch2start_user();
                      ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
-                     switch2admin_user();
+                     sge_switch2admin_user();
                      if (ret)
                         ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
                      else {
                         sleep(5);
-                        switch2start_user();
+                        sge_switch2start_user();
                         ret = startprog(out, err, NULL, binpath, schedd_name, NULL);
-                        switch2admin_user();
+                        sge_switch2admin_user();
                         if (ret)
                            ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
                      }
@@ -416,7 +434,7 @@ char *oldqmaster
     return -1;
  }
  
- ret = hostcmp(newqmaster, oldqmaster);
+ ret = sge_hostcmp(newqmaster, oldqmaster);
  
  DPRINTF(("strcmp() of old and new qmaster returns: %d\n", ret));
  
@@ -476,23 +494,21 @@ char *shadow_master_file
    }
 
    /* we can't get binary path */
-   if (!(cp = get_confval("binary_path", path.conf_file))) {
+   if (!(cp = sge_get_confval("binary_path", path.conf_file))) {
       WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path.conf_file));
       DEXIT;
       return -1;
-   }
-   else {
+   } else {
+      sprintf(binpath, cp); /* copy global configuration path */
       sprintf(localconffile, "%s/%s", path.local_conf_dir, me.qualified_hostname);
-      cp2 = get_confval("binary_path", localconffile);
+      cp2 = sge_get_confval("binary_path", localconffile);
       if (cp2) {
-         DPRINTF(("found local conf binary path: "));
-         strcpy(binpath, cp2);
-      }   
-      else {
-         DPRINTF(("global conf binary path: "));   
-         strcpy(binpath, cp);
+         strcpy(binpath, cp2); /* overwrite global configuration path */
+         DPRINTF(("found local conf binary path:\n"));
+      } else {
+         DPRINTF(("global conf binary path:\n"));   
       }
-      DPRINTF(("%s\n", binpath));   
+      DPRINTF((""SFQ"\n", binpath));   
    }
    
    DPRINTF(("we are a candidate for shadow master\n"));
@@ -529,7 +545,7 @@ char *file
       for (cp = strtok(buf, " \t\n,"); cp; cp = strtok(NULL, " \t\n,")) {
          hp = sge_gethostbyname(cp);
          if (hp && hp->h_name) {
-            if (!hostcmp(host, hp->h_name)) {
+            if (!sge_hostcmp(host, hp->h_name)) {
                fclose(fp);
                DEXIT;
                return 0;
@@ -559,7 +575,7 @@ char **argv
 
       fprintf(stdout, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
 
-      fprintf(stdout, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , prognames[me.who]);
+      fprintf(stdout, "%s sge_shadowd [options]\n", MSG_GDI_USAGE_USAGESTRING);
 
       PRINTITD(MSG_GDI_USAGE_help_OPT , MSG_GDI_UTEXT_help_OPT );
       SGE_EXIT(0);
@@ -567,4 +583,3 @@ char **argv
 
    DEXIT;
 }
-

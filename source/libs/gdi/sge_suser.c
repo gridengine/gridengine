@@ -31,19 +31,35 @@
 /*___INFO__MARK_END__*/
 
 #include "sge.h"
-#include "utility.h"
-#include "def.h"
 #include "sgermon.h"
 #include "basis_types.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_answerL.h"
+#include "sge_ja_task.h"
+#include "sge_answer.h"
 #include "sge_log.h"
 #include "msg_qmaster.h"   
 #include "sge_suserL.h"
+#include "sge_job.h"
 #include "sge_suser.h"
+
 #include "msg_qmaster.h"
 
+/****** gdi/suser/Master_SUser_List *******************************************
+*  NAME
+*     Master_SUser_List -- list of submit users 
+*
+*  SYNOPSIS
+*     lList *Master_SUser_List; 
+*
+*  FUNCTION
+*     The global variable 'Master_SUser_List' is hold within the master
+*     daemon. It containes one CULL element of type 'SU_Type' for each
+*     user which submittet a job.
+*     Enties within this list have to be updated when a new job 
+*     enters/leaves the SGE/SGEEE system
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+******************************************************************************/
 lList *Master_SUser_List;
 
 /****** gdi/suser/suser_list_add() ********************************************
@@ -67,6 +83,10 @@ lList *Master_SUser_List;
 *
 *  RESULT
 *     lListElem* - SU_Type element or NULL
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
 ******************************************************************************/
 lListElem *suser_list_add(lList **suser_list, lList **answer_list,
                           const char *suser_name)
@@ -87,11 +107,12 @@ lListElem *suser_list_add(lList **suser_list, lList **answer_list,
 *     suser_list_find() -- find a user entry in a list 
 *
 *  SYNOPSIS
-*     lListElem* suser_list_find(lList *suser_list, const char *suser_name) 
+*     lListElem* suser_list_find(lList *suser_list, 
+*                                const char *suser_name) 
 *
 *  FUNCTION
-*     This function tries to find the first entry for user "suser_name" in
-*     the list "suser_list".
+*     This function tries to find the first entry for user "suser_name" 
+*     in the list "suser_list".
 *
 *  INPUTS
 *     lList *suser_list      - SU_Type list 
@@ -99,6 +120,10 @@ lListElem *suser_list_add(lList **suser_list, lList **answer_list,
 *
 *  RESULT
 *     lListElem* - SU_Type element pointer or NULL
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
 ******************************************************************************/
 lListElem *suser_list_find(lList *suser_list, const char *suser_name)
 {
@@ -125,6 +150,10 @@ lListElem *suser_list_find(lList *suser_list, const char *suser_name)
 *
 *  RESULT
 *     void - NONE
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
 ******************************************************************************/
 void suser_increase_job_counter(lListElem *suser)
 {
@@ -132,8 +161,6 @@ void suser_increase_job_counter(lListElem *suser)
       u_long32 jobs = lGetUlong(suser, SU_jobs) + 1;
 
       lSetUlong(suser, SU_jobs, jobs);
-      DPRINTF((U32CFormat" jobs are registered for user "SFQ"\n",
-               jobs, lGetString(suser, SU_name)));
    }
 }
 
@@ -152,16 +179,27 @@ void suser_increase_job_counter(lListElem *suser)
 *
 *  RESULT
 *     void - NONE
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
 ******************************************************************************/
 void suser_decrease_job_counter(lListElem *suser)
 {
+   DENTER(TOP_LAYER, "suser_decrease_job_counter");
+
    if (suser != NULL) {
-      u_long32 jobs = lGetUlong(suser, SU_jobs) - 1;
-      
-      lSetUlong(suser, SU_jobs, jobs);
-      DPRINTF((U32CFormat" jobs are registered for user "SFQ"\n",
-               jobs, lGetString(suser, SU_name)));
+      u_long32 jobs = lGetUlong(suser, SU_jobs);
+    
+      if (jobs == 0) {
+         ERROR((SGE_EVENT, MSG_SUSERCNTISALREADYZERO_S, 
+                lGetString(suser, SU_name))); 
+      } else {
+         jobs -= 1;
+         lSetUlong(suser, SU_jobs, jobs);
+      }
    }
+   DEXIT;
 }
 
 /****** gdi/suser/suser_get_job_counter() *************************************
@@ -179,6 +217,10 @@ void suser_decrease_job_counter(lListElem *suser)
 *
 *  RESULT
 *     u_long32 - number of jobs 
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
 ******************************************************************************/
 u_long32 suser_get_job_counter(lListElem *suser)
 {
@@ -195,7 +237,8 @@ u_long32 suser_get_job_counter(lListElem *suser)
 *     suser_register_new_job() -- try to register a new job 
 *
 *  SYNOPSIS
-*     int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs, 
+*     int suser_register_new_job(const lListElem *job, 
+*                                u_long32 max_u_jobs, 
 *                                int force_registration) 
 *
 *  FUNCTION
@@ -217,6 +260,11 @@ u_long32 suser_get_job_counter(lListElem *suser)
 *  RESULT
 *     int - 1 => limit would be exceeded
 *           0 => otherwise
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
+*     qmaster/job/job_list_register_new_job()
 ******************************************************************************/
 int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
                            int force_registration)
@@ -256,6 +304,10 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
 *
 *  RESULT
 *     void - NONE
+*
+*  SEE ALSO
+*     gdi/suser/SU_Type
+*     gdi/suser/Master_SUser_List  
 ******************************************************************************/
 void suser_unregister_job(const lListElem *job)
 {

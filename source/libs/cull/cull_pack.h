@@ -63,6 +63,9 @@ int cull_pack_cont(sge_pack_buffer *pb, const lMultiType *mp, const lDescr *dp);
 int cull_unpack_elem(sge_pack_buffer *pb, lListElem **epp, const lDescr *dp);
 int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep);
 
+int cull_unpack_object(sge_pack_buffer *pb, lListElem **epp);
+int cull_pack_object(sge_pack_buffer *pb, const lListElem *ep);
+
 /*
  *
  *   lList
@@ -86,6 +89,12 @@ int cull_pack_enum(sge_pack_buffer *pb, const lEnumeration *ep);
  */
 int cull_unpack_cond(sge_pack_buffer *pb, lCondition **cpp);
 int cull_pack_cond(sge_pack_buffer *pb, const lCondition *cp);
+
+/*
+ *
+ */
+size_t cull_get_list_packsize(const lList *list);
+size_t cull_get_elem_packsize(const lListElem *elem);
 
 #ifdef  __cplusplus
 }

@@ -49,10 +49,10 @@ enum {
 };
 
 LISTDEF(MA_Type)
-   SGE_ULONG(MA_id)
-   SGE_LIST(MA_objects)       /* list which is returned in get requests, *
+   SGE_ULONG(MA_id, CULL_DEFAULT)
+   SGE_LIST(MA_objects, CULL_ANY_SUBTYPE, CULL_DEFAULT)       /* list which is returned in get requests, *
                                * any type */
-   SGE_LIST(MA_answers)       /* AN_Type */
+   SGE_LIST(MA_answers, AN_Type, CULL_DEFAULT)       /* AN_Type */
 LISTEND 
 
 NAMEDEF(MAN)

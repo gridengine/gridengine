@@ -34,11 +34,13 @@
 
 
 
-typedef int (*tShepherd_trace)(char *str);
+typedef int (*tShepherd_trace)(const char *str);
 
+void shepherd_error_sprintf(char *format, ...);
 void shepherd_error(char *str);
 void shepherd_error_impl(char *str, int do_exit);
-int shepherd_trace(char *str);
+int shepherd_trace(const char *str);
+int shepherd_trace_sprintf(const char *format, ...);
 void err_trace_chown_files(int uid);
 extern int foreground;      /* != 0 if we can write to stderr/out     */
 void shepherd_log_as_admin_user(void);

@@ -42,7 +42,6 @@
 #include "sge.h"
 #include "sge_log.h"
 #include "sgermon.h"
-
 #include "sge_getloadavg.h"
 
 #if defined(SOLARIS) 
@@ -828,10 +827,7 @@ int nelem
             loadavg[1] += cpu_buffer.psp_avg_5_min;
             loadavg[2] += cpu_buffer.psp_avg_15_min;
          }
-      } 
-      loadavg[0] /= cpus;
-      loadavg[1] /= cpus;
-      loadavg[2] /= cpus;
+      }
       return 3;
    } else {
       return -1;
@@ -1092,24 +1088,27 @@ int nelem
 
 #ifdef SGE_LOADCPU
 
-/****** sge_getloadavg/sge_getcpuload() ****************************************
+/****** uti/os/sge_getcpuload() ***********************************************
 *  NAME
-*     sge_getcpuload() -- retrieve cpu utilization percentage 
+*     sge_getcpuload() -- Retrieve cpu utilization percentage 
 *
 *  SYNOPSIS
 *     int sge_getcpuload(double *cpu_load) 
 *
 *  FUNCTION
-*     retrieve cpu utilization percentage (load value "cpu")
+*     Retrieve cpu utilization percentage (load value "cpu")
 *
 *  INPUTS
-*     double *cpu_load - caller passes adr of double variable for cpu load
+*     double *cpu_load - caller passes adr of double variable 
+*                        for cpu load
 *
 *  RESULT
-*     int   != 0 indicates error
-*
-*******************************************************************************/
-int sge_getcpuload(double *cpu_load) {
+*     int - error state
+*         0 - OK
+*        !0 - Error 
+******************************************************************************/
+int sge_getcpuload(double *cpu_load) 
+{
    double load;
    int ret;
 

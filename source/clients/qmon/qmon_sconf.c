@@ -49,8 +49,9 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
+#include "sge_range.h"
 #include "commlib.h"
-#include "def.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -68,7 +69,6 @@
 #include "AskForTime.h"
 #include "sge_feature.h"
 #include "sge_sched.h"
-#include "parse_range.h"
 #include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
@@ -415,7 +415,7 @@ lListElem *sep
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
-      data.user_sort = lGetUlong(sep, SC_user_sort) ? 1 : 0;
+      data.user_sort = lGetBool(sep, SC_user_sort);
    }
 
    /*
@@ -538,7 +538,7 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
-      lSetUlong(sep, SC_user_sort, (u_long32) data.user_sort);
+      lSetBool(sep, SC_user_sort, (u_long32) data.user_sort);
    }
 
    /*
@@ -566,7 +566,7 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    if (feature_is_enabled(FEATURE_SGEEE)) {
       if (!data.sgeee_schedule_interval || 
             data.sgeee_schedule_interval[0] == '\0') {
-         qmonMessageShow(qmon_sconf, True, "@{SGE Schedule Interval required!}");
+         qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
          DEXIT;
          return False;
       }
@@ -586,7 +586,13 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
          break;
       case 2:
          str = XmtInputFieldGetString(sconf_job_range);
-         parse_ranges(str, 1, 0, &alp, NULL, INF_NOT_ALLOWED);
+         {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, str,
+                                         1, 0, INF_NOT_ALLOWED);
+            range_list = lFreeList(range_list);
+         }
          if (alp) {
             qmonMessageShow(sconf_job_range, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);

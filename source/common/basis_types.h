@@ -38,15 +38,45 @@
 #  include <libintl.h>
 #  include <locale.h>
 #  include "sge_language.h"
-#  define _(x)   sge_gettext(x)
+#  define SGE_ADD_MSG_ID(x) (sge_set_message_id_output(1),(x),sge_set_message_id_output(0),1) ? 1 : 0 
+#  define _(x)               sge_gettext(x)
+#  define _MESSAGE(x,y)      sge_gettext_((x),(y))
+#  define _SGE_GETTEXT__(x)  sge_gettext__(x)
 #else
-#  define _(x)     (x)
+#  define SGE_ADD_MSG_ID(x) (x)
+#  define _(x)              (x)
+#  define _MESSAGE(x,y)     (y)
+#  define _SGE_GETTEXT__(x) (x)
 #endif
 
+#ifndef FALSE
+#   define FALSE                (0)
+#endif
 
+#ifndef TRUE
+#   define TRUE                 (1)
+#endif
+
+typedef enum {
+  false = 0,
+  true
+} bool;
+
+#define FALSE_STR "FALSE"
+#define TRUE_STR  "TRUE"
+
+#define FALSE_LEN 5
+#define TRUE_LEN  4
+
+#define NONE_STR  "NONE"
+#define NONE_LEN  4
 
 #define U32CFormat "%ld"
 #define u32c(x)  (unsigned long)(x)
+
+#define X32CFormat "%lx"
+#define x32c(x)  (unsigned long)(x)
+
 
 #if defined(IRIX6) || defined(IRIX64)
 #define u64 "%lld"
@@ -156,6 +186,8 @@ typedef char stringTlong[4*MAX_STRING_SIZE];
 #define SFQ  "\"%-.100s\""
 /* save string format non-quoted */
 #define SFN  "%-.100s"
+/* non-quoted string not limited intentionally */
+#define SN_UNLIMITED  "%s"
 
 /* used for shepherd and procfs */
 #if defined(LINUX) || defined(SUN4) || defined(AIX4) || defined(HP10) || defined(HP11)

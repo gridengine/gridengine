@@ -32,11 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_c_gdi.h"
-
-void set_queues_to_unknown(void);
 
 int sge_gdi_add_mod_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost, int add, int sub_command);
 
@@ -45,10 +41,7 @@ int sge_gdi_delete_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost)
 int sge_change_queue_version(lListElem *qep, int add, int write_history);
 
 /* old functions underlaying the gdi functions */
-int sge_add_queue(lListElem *qep);
 int sge_del_queue(const char *qname);
-
-void sge_add_queue_event(u_long32 type, lListElem *qep);
 
 int check_qsiq_lic(int licensed_qsi_queues, int verbose);
 
@@ -56,13 +49,7 @@ int check_qsiq_lic(int licensed_qsi_queues, int verbose);
 int verify_project_list(lList **alpp, char *obj_name, char *qname, lList *project_list);
 #endif
 
-int verify_complex_list(lList **alpp, const char *obj_name, const char *qname, 
-                        lList *complex_list);
-
-int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
-
-void sge_clear_tags(void);
-lListElem *sge_locate_queue(const char *cp);
+int queue_set_initial_state(lListElem *queue, char *rhost);
 
 #endif /* __SGE_QUEUE_QMASTER_H */
 

@@ -60,7 +60,6 @@
 #include "qmon_matrix.h"
 #include "sge.h"
 #include "symbols.h"
-#include "sge_complex.h"
 #include "sge_sched.h"      
 #include "commlib.h"
 #include "sge_gdi_intern.h"
@@ -68,15 +67,15 @@
 #include "sge_all_listsL.h"
 #include "IconList.h"
 #include "sge_feature.h"
-#include "parse_range.h"
-#include "sge_hash.h"
+#include "sge_htable.h"
 #include "sge_range.h"
-#include "job.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
-#include "utility.h"
 #include "sge_range.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_host.h"
+#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 
 /*-------------------------------------------------------------------------*/
@@ -131,8 +130,8 @@ static int is_job_runnable_on_queues(lListElem *jep, lList *queue_list, lList *e
 /* there are fixed columns at the beginning of the natrix                  */
 /*-------------------------------------------------------------------------*/
 
-static HashTable JobColumnPrintHashTable = NULL;
-static HashTable NameMappingHashTable = NULL;
+static htable JobColumnPrintHashTable = NULL;
+static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
 #define SGEEE_FIELDS    10
@@ -149,7 +148,9 @@ static tJobField job_items[] = {
    { 0, JAT_start_time, "@{StartTime}", 12, 30, PrintStartTime },
    { 0, JB_execution_time, "@{ScheduleTime}", 12, 30, PrintTime },
    { 0, JB_account, "@{AccountString}", 15, 50, PrintString },
+#if 0 /* JG: removed JB_cell from job object */   
    { 0, JB_cell, "@{Cell}", 10, 30, PrintString },
+#endif   
    { 0, JB_cwd, "@{CWD}", 10, 30, PrintString },
    { 0, JB_stderr_path_list, "@{StderrPaths}", 15, 100, PrintPathList },
    { 0, JAT_hold, "@{Hold}", 10, 30, PrintHold },
@@ -217,9 +218,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
  
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
             jat = job_get_ja_task_template(ep, task_id);
@@ -273,9 +274,9 @@ int nm
          if (eleml && !jat) {
             lListElem *first_elem = lFirst(eleml);
        
-            if (is_obj_of_type(first_elem, JAT_Type)) {
+            if (object_has_type(first_elem, JAT_Type)) {
                jat = lFirst(eleml);
-            } else if (is_obj_of_type(first_elem, RN_Type)) {
+            } else if (object_has_type(first_elem, RN_Type)) {
                u_long32 task_id = range_list_get_first_id(eleml, NULL);
        
                jat = job_get_ja_task_template(ep, task_id);
@@ -337,9 +338,9 @@ int nm
          if (eleml && !jat) {
             lListElem *first_elem = lFirst(eleml);
     
-            if (is_obj_of_type(first_elem, JAT_Type)) {
+            if (object_has_type(first_elem, JAT_Type)) {
                jat = lFirst(eleml);
-            } else if (is_obj_of_type(first_elem, RN_Type)) {
+            } else if (object_has_type(first_elem, RN_Type)) {
                u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
                jat = job_get_ja_task_template(ep, task_id);
@@ -391,7 +392,7 @@ int nm
 
    DENTER(GUI_LAYER, "PrintBool");
 
-   if (lGetUlong(ep, nm))
+   if (lGetBool(ep, nm))
       str = XtNewString("True");
    else
       str = XtNewString("False");
@@ -441,7 +442,7 @@ int nm
    String str;
    lList *pred;
    lListElem *jep = NULL;
-   char buf[ 10 * BUFSIZ];
+   char buf[ 100 * BUFSIZ];
 
    DENTER(GUI_LAYER, "PrintPredecessors");
 
@@ -449,7 +450,7 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, pred) {
-      sprintf(buf, "%s %d", buf, (int) lGetUlong(jep, JRE_job_number));
+      sprintf(buf, "%s %s", buf, lGetString(jep, JRE_job_name));
    }
    str = XtNewString(buf);
 
@@ -465,14 +466,14 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   char buf[BUFSIZ];
+   dstring range_string = DSTRING_INIT;
    String str;
 
    DENTER(GUI_LAYER, "PrintPERange");
 
-   show_ranges(buf, 0, NULL, lGetList(ep, nm));
-
-   str = XtNewString(buf);
+   range_list_print_to_string(lGetList(ep, nm), &range_string, 1);
+   str = XtNewString(sge_dstring_get_string(&range_string));
+   sge_dstring_free(&range_string);
 
    DEXIT;
    return str;
@@ -518,9 +519,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
 
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
 
             jat = job_get_ja_task_template(ep, task_id);
@@ -528,7 +529,7 @@ int nm
       }
 
       running = lGetUlong(jat, JAT_status)==JRUNNING ||
-                  lGetUlong(jat, JAT_status)==JTRANSITING;
+                  lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled cpu usage */
       if (!(up = lGetSubStr(jat, UA_name, USAGE_ATTR_CPU, JAT_scaled_usage_list)))
@@ -609,9 +610,9 @@ const char *field
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
     
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
@@ -619,7 +620,7 @@ const char *field
       }     
 
       running = lGetUlong(jat, JAT_status)==JRUNNING ||
-                  lGetUlong(jat, JAT_status)==JTRANSITING;
+                  lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled mem usage */
       if (!(up = lGetSubStr(jat, UA_name, field,
@@ -659,9 +660,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
     
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
@@ -669,7 +670,7 @@ int nm
       }     
 
       running = lGetUlong(jat, JAT_status)==JRUNNING ||
-                  lGetUlong(jat, JAT_status)==JTRANSITING;
+                  lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled io usage */
       if (!(up = lGetSubStr(jat, UA_name, USAGE_ATTR_IO,
@@ -805,9 +806,9 @@ int nm
    if (eleml && !jat) {
       lListElem *first_elem = lFirst(eleml);
  
-      if (is_obj_of_type(first_elem, JAT_Type)) {
+      if (object_has_type(first_elem, JAT_Type)) {
          jat = lFirst(eleml);
-      } else if (is_obj_of_type(first_elem, RN_Type)) {
+      } else if (object_has_type(first_elem, RN_Type)) {
          u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
          jat = job_get_ja_task_template(ep, task_id);
@@ -872,7 +873,7 @@ int nm
    }
    else if (eleml) {
       buf[0] = '\0';
-      get_taskrange_str(eleml, buf);
+      ja_task_list_print_to_string(eleml, buf);
    }
 
    str = XtNewString(buf);
@@ -909,40 +910,42 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   StringBufferT dyn_buf = {NULL, 0};
+   dstring dyn_buf = DSTRING_INIT;
    String str;
 
    DENTER(GUI_LAYER, "PrintJobTaskId");
    /*
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
-   sge_string_printf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
-   if (is_array(ep)) {
-      StringBufferT dyn_buf2 = {NULL, 0};
+   sge_dstring_sprintf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
+   if (job_is_array(ep)) {
+      dstring dyn_buf2 = DSTRING_INIT;
+      const char* tmp_string = NULL;
 
       if (jat) {
-         sge_string_printf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
+         sge_dstring_sprintf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
       } else if (eleml) {
          lListElem *first_elem = lFirst(eleml);
 
-         if (is_obj_of_type(first_elem, JAT_Type)) {
-            get_taskrange_str(eleml, &dyn_buf2);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
-            range_list_print_to_string(eleml, &dyn_buf2);
+         if (object_has_type(first_elem, JAT_Type)) {
+            ja_task_list_print_to_string(eleml, &dyn_buf2);
+         } else if (object_has_type(first_elem, RN_Type)) {
+            range_list_print_to_string(eleml, &dyn_buf2, 0);
          }
       }
-      if (dyn_buf2.s) {
-         sge_string_append(&dyn_buf, ".");
-         sge_string_append(&dyn_buf, dyn_buf2.s);
-         sge_string_free(&dyn_buf2);
+      tmp_string = sge_dstring_get_string(&dyn_buf2);
+      if (tmp_string) {
+         sge_dstring_append(&dyn_buf, ".");
+         sge_dstring_append(&dyn_buf, tmp_string);
+         sge_dstring_free(&dyn_buf2);
       }
    }
 
-   DPRINTF(("PrintJobTaskId: %s\n", dyn_buf.s));
+   DPRINTF(("PrintJobTaskId: %s\n", sge_dstring_get_string(&dyn_buf)));
 
-   str = XtNewString(dyn_buf.s);
+   str = XtNewString(sge_dstring_get_string(&dyn_buf));
 
-   sge_string_free(&dyn_buf);
+   sge_dstring_free(&dyn_buf);
 
    DEXIT;
    return str;
@@ -968,9 +971,9 @@ int nm
    if (eleml && !jat) {
       lListElem *first_elem = lFirst(eleml);
  
-      if (is_obj_of_type(first_elem, JAT_Type)) {
+      if (object_has_type(first_elem, JAT_Type)) {
          jat = lFirst(eleml);
-      } else if (is_obj_of_type(first_elem, RN_Type)) {
+      } else if (object_has_type(first_elem, RN_Type)) {
          u_long32 task_id = range_list_get_first_id(eleml, NULL);
  
          jat = job_get_ja_task_template(ep, task_id);  
@@ -994,18 +997,18 @@ int nm
 
       if (tstatus==JRUNNING) {
          tstate |= JRUNNING;
-         tstate &= ~JTRANSITING;
-      } else if (tstatus==JTRANSITING) {
-         tstate |= JTRANSITING;
+         tstate &= ~JTRANSFERING;
+      } else if (tstatus==JTRANSFERING) {
+         tstate |= JTRANSFERING;
          tstate &= ~JRUNNING;
       } else if (tstatus==JFINISHED) {
          tstate |= JEXITING;
-         tstate &= ~(JRUNNING|JTRANSITING);
+         tstate &= ~(JRUNNING|JTRANSFERING);
       }
 
       /* check suspension of queue */
       if (n>0) {
-         qep = lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, 
+         qep = queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST), 
                               lGetString(lFirst(ql), JG_qname));
          if (qep && (lGetUlong(qep, QU_state) & (QSUSPENDED|QSUSPENDED_ON_SUBORDINATE|QCAL_SUSPENDED))) {
             tstate &= ~JRUNNING;                   /* unset bit JRUNNING */
@@ -1024,7 +1027,7 @@ int nm
       }
 
       /* write states into string */
-      sge_get_states(JB_job_number, buf, tstate);
+      job_get_state_string(buf, tstate);
 
       str = XtNewString(buf);
    }
@@ -1054,9 +1057,9 @@ int nm
       if (eleml && !jat) {
          lListElem *first_elem = lFirst(eleml);
     
-         if (is_obj_of_type(first_elem, JAT_Type)) {
+         if (object_has_type(first_elem, JAT_Type)) {
             jat = lFirst(eleml);
-         } else if (is_obj_of_type(first_elem, RN_Type)) {
+         } else if (object_has_type(first_elem, RN_Type)) {
             u_long32 task_id = range_list_get_first_id(eleml, NULL);
     
             jat = job_get_ja_task_template(ep, task_id);
@@ -1275,7 +1278,7 @@ XtPointer cld,cad;
          u_long32 temp;
          XmStringGetLtoR(strlist[i], XmFONTLIST_DEFAULT_TAG, &text);
          temp = XrmStringToQuark(text);
-         if (HashTableLookup(NameMappingHashTable, 
+         if (sge_htable_lookup(NameMappingHashTable, 
                              &temp,
                              (const void **) &job_item)) {
             job_item->show = 1;
@@ -1340,7 +1343,7 @@ XtPointer cld, cad;
                      lCopyList("", jobfilter_resources));
    lSetList(qmon_preferences, PREF_job_filter_owners, 
                      lCopyList("", jobfilter_owners));
-   lSetUlong(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
+   lSetBool(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
    for (j=FIRST_FIELD; j<XtNumber(job_items); j++) {           
       if (job_items[j].show)
          lAddElemStr(&lp, STR, job_items[j].name, ST_Type); 
@@ -1628,10 +1631,10 @@ XtPointer cld
    /*
    ** create JobColumnPrintHashTable
    */
-   JobColumnPrintHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
+   JobColumnPrintHashTable = sge_htable_create(5, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       u_long32 temp = XrmStringToQuark(job_items[i].name);
-      HashTableStore(JobColumnPrintHashTable,
+      sge_htable_store(JobColumnPrintHashTable,
                      &temp,
                      (void *)&job_items[i]);
    }
@@ -1639,14 +1642,14 @@ XtPointer cld
    /*
    ** create NameMappingHashTable
    */
-   NameMappingHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
+   NameMappingHashTable = sge_htable_create(5, dup_func_u_long32, hash_func_u_long32, hash_compare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       String text;
       u_long32 temp;
       XmString xstr = XmtCreateLocalizedXmString(jcu, job_items[i].name);
       XmStringGetLtoR(xstr, XmFONTLIST_DEFAULT_TAG, &text);
       temp = XrmStringToQuark(text);
-      HashTableStore(NameMappingHashTable,
+      sge_htable_store(NameMappingHashTable,
                      &temp,
                      (void *)&job_items[i]);
       XmStringFree(xstr);
@@ -1665,7 +1668,7 @@ XtPointer cld
                                           PREF_job_filter_resources));
       jobfilter_owners = lCopyList("", lGetList(qmon_preferences, 
                                           PREF_job_filter_owners));
-      jobfilter_compact = lGetUlong(qmon_preferences, PREF_job_filter_compact);
+      jobfilter_compact = lGetBool(qmon_preferences, PREF_job_filter_compact);
       jobfilter_fields = lCopyList("", lGetList(qmon_preferences,
                                           PREF_job_filter_fields));
 
@@ -1694,7 +1697,7 @@ XtPointer cld
       */
       for_each(field, jobfilter_fields) {
          u_long32 temp = XrmStringToQuark(lGetString(field, STR));
-         if (HashTableLookup(JobColumnPrintHashTable, 
+         if (sge_htable_lookup(JobColumnPrintHashTable, 
              &temp,
              (const void **) &job_item)) {
             job_item->show = 1;
@@ -1977,8 +1980,8 @@ lList *exec_host_list
       lListElem *ep;
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -2021,8 +2024,8 @@ lList *exec_host_list
       lList *ccl[3];
       lListElem *ep;
 
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 
@@ -2146,8 +2149,8 @@ lList *complex_list
    for_each(qep, queue_list) {
       lList *ccl[3];
       lListElem *ep;
-      ccl[0] = lGetList(lGetElemHost(exec_host_list, EH_name, "global"), EH_consumable_config_list);
-      ccl[1] = (ep=lGetElemHost(exec_host_list, EH_name, lGetHost(qep, QU_qhostname)))?
+      ccl[0] = lGetList(host_list_locate(exec_host_list, "global"), EH_consumable_config_list);
+      ccl[1] = (ep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))?
                lGetList(ep, EH_consumable_config_list):NULL;
       ccl[2] = lGetList(qep, QU_consumable_config_list);
 

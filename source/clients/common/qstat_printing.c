@@ -33,45 +33,41 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>  
 #include <fnmatch.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
-#include "def.h"
 #include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
-#include "sge_complex.h"
 #include "slots_used.h"
 #include "sge_resource.h"
-#include "sge_jobL.h"
-#include "sge_complexL.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
 #include "sge_feature.h"
 #include "parse.h"
-#include "parse_range.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "utility.h"
+#include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_string.h"
 #include "show_job.h"
-#include "sge_string_append.h"
+#include "sge_dstring.h"
 #include "qstat_printing.h"
 #include "sge_range.h"
-#include "job.h"
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
+#include "get_path.h"
+#include "sge_var.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_pe.h"
 
-static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, StringBufferT *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
+static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
 static int sge_print_subtask(lListElem *job, lListElem *ja_task, lListElem *task, int print_hdr, int indent);
 
@@ -90,7 +86,6 @@ static char *queue_types[] = {
    "INTERACTIVE",  
    "CHECKPOINTING",
    "PARALLEL",
-   "TRANSFER",
    ""
 };
 
@@ -150,7 +145,6 @@ lList *qresource_list
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
    printf("%-20.20s ", lGetString(q, QU_qname));
 
-   /* queue types in a sge_show_states-like format */
    qtype(type_string, lGetUlong(q, QU_qtype));
    printf("%-5.5s ", type_string); 
 
@@ -177,16 +171,16 @@ lList *qresource_list
    printf("%-9.9s ", to_print);   
 
    state = lGetUlong(q, QU_state);
-   if (sge_load_alarm(q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, NULL)) {
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, NULL)) {
       state |= QALARM;
       sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "load");
    }
-   if (sge_load_alarm(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, NULL)) {
+   if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, NULL)) {
      state |= QSUSPEND_ALARM;
      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, complex_list, reason, REASON_BUF_SIZE, "suspend");
    }
 
-   sge_get_states(QU_qname, state_string, state);
+   queue_get_state_string(state_string, state);
    printf("%s", state_string); 
    printf("\n");
 
@@ -267,7 +261,7 @@ lList *qresource_list
 static int sge_print_subtask(
 lListElem *job,
 lListElem *ja_task,
-lListElem *task,
+lListElem *pe_task,  /* NULL, if master task shall be printed */
 int print_hdr,
 int indent 
 ) {
@@ -275,40 +269,54 @@ int indent
    u_long32 tstate, tstatus;
    int task_running;
    const char *str;
-   lListElem *ep, *task_task;
-   int sge_mode = feature_is_enabled(FEATURE_SGEEE);
+   lListElem *ep;
+   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
+   lList *usage_list;
+   lList *scaled_usage_list;
 
    DENTER(TOP_LAYER, "sge_print_subtask");
 
    /* is sub-task logically running */
-   task_task = lFirst(lGetList(task, JB_ja_tasks));
-   tstatus = lGetUlong(task_task, JAT_status);
-   task_running = (tstatus==JRUNNING || tstatus==JTRANSITING);
+   if(pe_task == NULL) {
+      tstatus = lGetUlong(ja_task, JAT_status);
+      usage_list = lGetList(ja_task, JAT_usage_list);
+      scaled_usage_list = lGetList(ja_task, JAT_scaled_usage_list);
+   } else {
+      tstatus = lGetUlong(pe_task, PET_status);
+      usage_list = lGetList(pe_task, PET_usage);
+      scaled_usage_list = lGetList(pe_task, PET_scaled_usage);
+   }
+
+   task_running = (tstatus==JRUNNING || tstatus==JTRANSFERING);
 
    if (print_hdr) {
-      printf(QSTAT_INDENT "Sub-tasks:           %-7.7s %5.5s %s %-4.4s %-6.6s\n", 
+      printf(QSTAT_INDENT "Sub-tasks:           %-12.12s %5.5s %s %-4.4s %-6.6s\n", 
              "task-ID",
              "state",
-             sge_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     "
+             sgeee_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "     "
                  : "",
              "stat",
              "failed");
    }
 
-   str = (task==job)?NULL:lGetString(task, JB_pe_task_id_str);
-   printf("   %s%7.7s ", indent?QSTAT_INDENT2:"", str?str:"");
+   if(pe_task == NULL) {
+      str = "";
+   } else {
+      str = lGetString(pe_task, PET_id);
+   }
+   printf("   %s%-12s ", indent?QSTAT_INDENT2:"", str);
 
    /* move status info into state info */
    tstate = lGetUlong(ja_task, JAT_state);
    if (tstatus==JRUNNING) {
       tstate |= JRUNNING;
-      tstate &= ~JTRANSITING;
-   } else if (tstatus==JTRANSITING) {
-      tstate |= JTRANSITING;
+      tstate &= ~JTRANSFERING;
+   } else if (tstatus==JTRANSFERING) {
+      tstate |= JTRANSFERING;
       tstate &= ~JRUNNING;
    } else if (tstatus==JFINISHED) {
       tstate |= JEXITING;
-      tstate &= ~(JRUNNING|JTRANSITING);
+      tstate &= ~(JRUNNING|JTRANSFERING);
    }
 
    if (lGetList(job, JB_jid_predecessor_list) || lGetUlong(ja_task, JAT_hold)) {
@@ -321,39 +329,35 @@ int indent
    }
 
    /* write states into string */ 
-   sge_get_states(JB_job_number, task_state_string, tstate);
+   job_get_state_string(task_state_string, tstate);
    printf("%-5.5s ", task_state_string); 
 
-   if (sge_mode) {
+   if (sgeee_mode) {
       lListElem *up;
 
       /* scaled cpu usage */
-      if (!(up = lGetSubStr(task_task, UA_name, USAGE_ATTR_CPU, 
-         JAT_scaled_usage_list))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) 
          printf("%-10.10s ", task_running?"NA":""); 
       else 
          printf("%s ", resource_descr(lGetDouble(up, UA_value), TYPE_TIM, NULL));
 
       /* scaled mem usage */
-      if (!(up = lGetSubStr(task_task, UA_name, USAGE_ATTR_MEM, 
-         JAT_scaled_usage_list))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) 
          printf("%-7.7s ", task_running?"NA":""); 
       else
          printf("%-5.5f ", lGetDouble(up, UA_value)); 
   
       /* scaled io usage */
-      if (!(up = lGetSubStr(task_task, UA_name, USAGE_ATTR_IO, 
-         JAT_scaled_usage_list))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_IO))) 
          printf("%-7.7s ", task_running?"NA":""); 
       else
          printf("%-5.5f ", lGetDouble(up, UA_value)); 
    }
 
    if (tstatus==JFINISHED) {
-      ep=lGetElemStr(lGetList(task_task, JAT_usage_list), UA_name, 
-            "exit_status");
-      str=(job==task)?"":lGetString(task, JB_sge_o_mail);
-      printf("%-4d %s", ep ? (int)lGetDouble(ep, UA_value) : 0, str?str:"");
+      ep=lGetElemStr(usage_list, UA_name, "exit_status");
+
+      printf("%-4d", ep ? (int)lGetDouble(ep, UA_value) : 0);
    }
 
    putchar('\n');
@@ -400,7 +404,7 @@ char *indent
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
    const char *qnm;
-   StringBufferT dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
 
@@ -437,8 +441,8 @@ char *indent
                   const char *pe_name;
                   lListElem *pe;
                   if (((pe_name=lGetString(jatep, JAT_granted_pe))) &&
-                      ((pe=lGetElemStr(pe_list, PE_name, pe_name))) &&
-                      !lGetUlong(pe, PE_job_is_first_task))
+                      ((pe=pe_list_locate(pe_list, pe_name))) &&
+                      !lGetBool(pe, PE_job_is_first_task))
 
                       slot_adjust = 1;
                }
@@ -455,8 +459,7 @@ char *indent
                         jid = lGetUlong(jlep, JB_job_number);
                         old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
-                        sge_string_free(&dyn_task_str);
-                        sge_string_printf(&dyn_task_str, u32, jataskid);
+                        sge_dstring_sprintf(&dyn_task_str, u32, jataskid);
                         different = (jid != old_jid) || (jataskid != old_jataskid);
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
                               (lGetUlong(jatep, JAT_state) & JRUNNING)) {
@@ -506,7 +509,7 @@ char *indent
          }
       }
    }
-   sge_string_free(&dyn_task_str);
+   sge_dstring_free(&dyn_task_str);
    DEXIT;
 }
 
@@ -525,7 +528,7 @@ u_long32 group_opt
 ) {
    lListElem *nxt, *jep, *jatep, *nxt_jatep;
    int sge_ext;
-   StringBufferT dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
    lList* ja_task_list = NULL;
    int FoundTasks;
 
@@ -537,8 +540,7 @@ u_long32 group_opt
    nxt = lFirst(job_list);
    while ((jep=nxt)) {
       nxt = lNext(jep);
-
-      sge_string_free(&dyn_task_str);
+      sge_dstring_free(&dyn_task_str);
       nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       FoundTasks = 0;
       while((jatep = nxt_jatep)) { 
@@ -546,7 +548,6 @@ u_long32 group_opt
             SGE_EXIT(1);
          }   
          nxt_jatep = lNext(jatep);
-
          if (!(((full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  
                ||
              ((full_listing & QSTAT_DISPLAY_USERHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) 
@@ -578,8 +579,7 @@ u_long32 group_opt
 
                if ((full_listing & QSTAT_DISPLAY_PENDING) && 
                    group_opt != GROUP_TASK_GROUPS) {
-                  sge_string_free(&dyn_task_str);
-                  sge_string_printf(&dyn_task_str, u32, 
+                  sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL,
                                 &dyn_task_str, full_listing, 0, 0, ehl, cl, 
@@ -591,14 +591,6 @@ u_long32 group_opt
                   lAppendElem(ja_task_list, lCopyElem(jatep));
                   FoundTasks = 1;
                }
-#if 0
-   /*    
-    * EB: 
-    *    I can not explain the line below. Why should the first loop start
-    *    at the first element of 'job_list'?
-    */
-               nxt = lFirst(job_list);
-#endif
             }
          }
       }
@@ -607,13 +599,13 @@ u_long32 group_opt
             FoundTasks && ja_task_list) {
          lList *task_group = NULL;
 
-         while ((task_group = split_task_group(&ja_task_list))) {
-            get_taskrange_str(task_group, &dyn_task_str);
+         while ((task_group = ja_task_list_split_group(&ja_task_list))) {
+            ja_task_list_print_to_string(task_group, &dyn_task_str);
 
             sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, 
                           &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");
             task_group = lFreeList(task_group);
-            sge_string_free(&dyn_task_str);
+            sge_dstring_free(&dyn_task_str);
          }
          ja_task_list = lFreeList(ja_task_list);
       }
@@ -623,7 +615,7 @@ u_long32 group_opt
                                      group_opt);
       }
    }
-   sge_string_free(&dyn_task_str);
+   sge_dstring_free(&dyn_task_str);
    DEXIT;
 }
 
@@ -662,12 +654,11 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
    lList *range_list[8];         /* RN_Type */
    u_long32 hold_state[8];
    int i;
+   dstring ja_task_id_string = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "sge_print_jobs_not_enrolled");
- 
    job_create_hold_id_lists(job, range_list, hold_state); 
    for (i = 0; i <= 7; i++) {
-      StringBufferT ja_task_id_string = {NULL, 0};
       lList *answer_list = NULL;
       u_long32 first_id;
       int show = 0;
@@ -681,12 +672,11 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
          ) {
          show = 1;
       }
-
       if (range_list[i] != NULL && show) { 
          if (group_opt == GROUP_TASK_GROUPS) {
-            range_list_print_to_string(range_list[i], &ja_task_id_string);
+            range_list_print_to_string(range_list[i], &ja_task_id_string, 0);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
-            if (answer_list_is_error_in_list(&answer_list) != 1) {
+            if (answer_list_has_error(&answer_list) != 1) {
                lListElem *ja_task = job_get_ja_task_template_hold(job, 
                                                       first_id, hold_state[i]);
                lList *n_h_ids = NULL;
@@ -707,20 +697,17 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
                lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
                lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
             }
-            sge_string_free(&ja_task_id_string);
+            sge_dstring_free(&ja_task_id_string);
          } else {
             lListElem *range; /* RN_Type */
             
             for_each(range, range_list[i]) {
                u_long32 start, end, step;
-
                range_get_all_ids(range, &start, &end, &step);
                for (; start <= end; start += step) { 
                   lListElem *ja_task = job_get_ja_task_template_hold(job,
                                                           start, hold_state[i]);
-
-                  sge_string_free(&ja_task_id_string);
-                  sge_string_printf(&ja_task_id_string, u32, start);
+                  sge_dstring_sprintf(&ja_task_id_string, u32, start);
                   sge_print_job(job, ja_task, NULL, 1, NULL,
                                 &ja_task_id_string, full_listing, 0, 0, 
                                 exechost_list, complex_list, pe_list, indent);
@@ -730,6 +717,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
       }
    }
    job_destroy_hold_id_lists(job, range_list); 
+   sge_dstring_free(&ja_task_id_string);
    DEXIT;
    return STATUS_OK;
 }                          
@@ -747,7 +735,7 @@ u_long32 full_listing
    int sge_ext;
    int first = 1;
    lListElem *jep, *jatep;
-   StringBufferT dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_finished");
 
@@ -774,8 +762,7 @@ u_long32 full_listing
                      printf(MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING);
                      printf(  "################################################################################%s\n", sge_ext?hashes:"");
                   }
-                  sge_string_free(&dyn_task_str);
-                  sge_string_printf(&dyn_task_str, u32, 
+                  sge_dstring_sprintf(&dyn_task_str, u32, 
                                     lGetUlong(jatep, JAT_task_number));
                   sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
                                 full_listing, 0, 0, ehl, cl, NULL, "");   
@@ -785,7 +772,7 @@ u_long32 full_listing
          }
       }
    }
-   sge_string_free(&dyn_task_str);
+   sge_dstring_free(&dyn_task_str);
    DEXIT;
 }
   
@@ -802,7 +789,7 @@ u_long32 full_listing
    int first = 1;
    lListElem *jep, *jatep;
    int sge_ext;
-   StringBufferT dyn_task_str = {NULL, 0};
+   dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_error");
 
@@ -822,14 +809,13 @@ u_long32 full_listing
                   printf(MSG_QSTAT_PRT_ERRORJOBS);
                   printf("################################################################################%s\n", sge_ext?hashes:"");
                }
-               sge_string_free(&dyn_task_str);
-               sge_string_printf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
+               sge_dstring_sprintf(&dyn_task_str, "u32", lGetUlong(jatep, JAT_task_number));
                sge_print_job(jep, jatep, NULL, 1, NULL, &dyn_task_str, full_listing, 0, 0, ehl, cl, NULL, "");
             }
          }
       }
    }
-   sge_string_free(&dyn_task_str);
+   sge_dstring_free(&dyn_task_str);
    DEXIT;
 }
 
@@ -845,7 +831,7 @@ u_long32 full_listing
 ) {
    int sge_ext;
    lListElem *jep;
-   StringBufferT dyn_task_str = {NULL, 0}; 
+   dstring dyn_task_str = DSTRING_INIT; 
 
    DENTER(TOP_LAYER, "sge_print_jobs_zombie");
    
@@ -869,10 +855,10 @@ u_long32 full_listing
                            (QSTAT_DISPLAY_ZOMBIES | QSTAT_DISPLAY_FULL), 
                            sge_ext);
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
-         range_list_print_to_string(z_ids, &dyn_task_str);
+         range_list_print_to_string(z_ids, &dyn_task_str, 0);
          sge_print_job(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
                        full_listing, 0, 0, ehl, cl, NULL, "");
-         sge_string_free(&dyn_task_str);
+         sge_dstring_free(&dyn_task_str);
       }
    }
    DEXIT;
@@ -888,7 +874,7 @@ lListElem *jatep,
 lListElem *qep,
 int print_jobid,
 char *master,
-StringBufferT *dyn_task_str,
+dstring *dyn_task_str,
 u_long32 full_listing,
 int slots,
 int slot,
@@ -900,7 +886,7 @@ char *indent
    char state_string[8];
    static int first_time = 1;
    u_long32 jstate;
-   int sge_ext, sge_mode;
+   int sge_ext, sgeee_mode;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    int running;
@@ -910,13 +896,12 @@ char *indent
    int is_zombie_job;
 
    DENTER(TOP_LAYER, "sge_print_job");
-
    is_zombie_job = job_is_zombie_job(job);
 
    queue_name = qep ? lGetString(qep, QU_qname) : NULL;
 
-   sge_mode = feature_is_enabled(FEATURE_SGEEE);
-   sge_ext = sge_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
+   sge_ext = sgeee_mode && (full_listing & QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
 
    if (first_time) {
@@ -947,7 +932,7 @@ char *indent
                   "ja-task-ID ", 
                tsk_ext?"task-ID ":"",
                tsk_ext?"state ":"",
-               tsk_ext?(sge_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "") : "",
+               tsk_ext?(sgeee_mode ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "") : "",
                tsk_ext?"stat ":"",
                tsk_ext?"failed ":"" );
 
@@ -961,7 +946,7 @@ char *indent
    if (print_jobid)
       printf("%7d ", (int)lGetUlong(job, JB_job_number)); 
    else 
-      printf("       "); 
+      printf("        "); 
 
    /* job priority */
    printf("%5d ", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY); 
@@ -984,8 +969,8 @@ char *indent
 
    /* move status info into state info */
    jstate = lGetUlong(jatep, JAT_state);
-   if (lGetUlong(jatep, JAT_status)==JTRANSITING) {
-      jstate |= JTRANSITING;
+   if (lGetUlong(jatep, JAT_status)==JTRANSFERING) {
+      jstate |= JTRANSFERING;
       jstate &= ~JRUNNING;
    }
 
@@ -999,7 +984,7 @@ char *indent
    }
 
    /* write states into string */ 
-   sge_get_states(JB_job_number, state_string, jstate);
+   job_get_state_string(state_string, jstate);
    printf("%-5.5s ", state_string); 
 
    /* start/submit time */
@@ -1010,7 +995,7 @@ char *indent
 
    /* is job logically running */
    running = lGetUlong(jatep, JAT_status)==JRUNNING || 
-      lGetUlong(jatep, JAT_status)==JTRANSITING;
+      lGetUlong(jatep, JAT_status)==JTRANSFERING;
 
    if (sge_ext) {
       lListElem *up, *pe, *task;
@@ -1022,20 +1007,19 @@ char *indent
       else
          job_usage_list = lCreateList("", UA_Type);
 
-      /* sum sub-task usage based on queue slots */
+      /* sum pe-task usage based on queue slots */
       if (job_usage_list) {
          int subtask_ndx=1;
          for_each(task, lGetList(jatep, JAT_task_list)) {
-            lListElem *dst, *src, *ep, *task_task;
+            lListElem *dst, *src, *ep;
             const char *qname;
 
-            task_task = lFirst(lGetList(task, JB_ja_tasks));
             if (!slots ||
                 (queue_name && 
-                 ((ep=lFirst(lGetList(task_task, JAT_granted_destin_identifier_list)))) &&
+                 ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
                  ((qname=lGetString(ep, JG_qname))) &&
                  !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
-               for_each(src, lGetList(task_task, JAT_scaled_usage_list)) {
+               for_each(src, lGetList(task, PET_scaled_usage)) {
                   if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name))))
                      lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
                   else
@@ -1087,8 +1071,8 @@ char *indent
       /* get tickets for job/slot */
       /* braces needed to suppress compiler warnings */
       if ((pe_name=lGetString(jatep, JAT_granted_pe)) &&
-           (pe=lGetElemStr(pe_list, PE_name, pe_name)) &&
-           lGetUlong(pe, PE_control_slaves)
+           (pe=pe_list_locate(pe_list, pe_name)) &&
+           lGetBool(pe, PE_control_slaves)
          && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, queue_name,
                JAT_granted_destin_identifier_list))) {
          if (slot == 0) {
@@ -1160,8 +1144,8 @@ char *indent
    else
       printf("        ");
 
-   if (dyn_task_str->s && is_array(job))
-      printf("%s", dyn_task_str->s); 
+   if (sge_dstring_get_string(dyn_task_str) && job_is_array(job))
+      printf("%s", sge_dstring_get_string(dyn_task_str)); 
    else
       printf("       ");
 
@@ -1181,23 +1165,19 @@ char *indent
           !strcmp(qname, queue_name)) {
          if (indent++)
             printf("%*s", num_spaces, " ");
-         sge_print_subtask(job, jatep, job, 0, 0);
+         sge_print_subtask(job, jatep, NULL, 0, 0);
          /* subtask_ndx++; */
       }
          
       /* print sub-tasks belonging to this queue */
       for_each(task, task_list) {
-         lListElem* task_task;
-
-         for_each(task_task,  lGetList(task, JB_ja_tasks)) {
-            if (!slots || (queue_name && 
-                 ((ep=lFirst(lGetList(task_task, JAT_granted_destin_identifier_list)))) &&
-                 ((qname=lGetString(ep, JG_qname))) &&
-                 !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
-               if (indent++)
-                  printf("%*s", num_spaces, " ");
-               sge_print_subtask(job, jatep, task, 0, 0);
-            }
+         if (!slots || (queue_name && 
+              ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
+              ((qname=lGetString(ep, JG_qname))) &&
+              !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
+            if (indent++)
+               printf("%*s", num_spaces, " ");
+            sge_print_subtask(job, jatep, task, 0, 0);
          }
       }
 
@@ -1212,12 +1192,15 @@ char *indent
 
    /* print additional job info if requested */
    if (print_jobid && (full_listing & QSTAT_DISPLAY_RESOURCES)) {
-         char buffer[1024];
          printf(QSTAT_INDENT "Full jobname:     %s\n", lGetString(job, JB_job_name)); 
          if (lGetString(job, JB_pe)) {
-            show_ranges(buffer, 0, NULL, lGetList(job, JB_pe_range));
+            dstring range_string = DSTRING_INIT;
+
+            range_list_print_to_string(lGetList(job, JB_pe_range), 
+                                       &range_string, 1);
             printf(QSTAT_INDENT "Requested PE:     %s %s\n", 
-               lGetString(job, JB_pe), buffer); 
+                   lGetString(job, JB_pe), sge_dstring_get_string(&range_string)); 
+            sge_dstring_free(&range_string);
          }
          if (lGetString(jatep, JAT_granted_pe)) {
             lListElem *gdil_ep;
@@ -1227,9 +1210,9 @@ char *indent
             printf(QSTAT_INDENT "Granted PE:       %s "u32"\n", 
                lGetString(jatep, JAT_granted_pe), pe_slots); 
          }
-         if (lGetString(job, JB_checkpoint_object)) 
+         if (lGetString(job, JB_checkpoint_name)) 
             printf(QSTAT_INDENT "Checkpoint Env.:  %s\n", 
-               lGetString(job, JB_checkpoint_object)); 
+               lGetString(job, JB_checkpoint_name)); 
 
          sge_show_re_type_list_line_by_line(QSTAT_INDENT "Hard Resources:   ",
                QSTAT_INDENT2, lGetList(job, JB_hard_resource_list)); 
@@ -1246,7 +1229,7 @@ char *indent
                double dval;
 
                name = lGetString(ce, CE_name);
-               if (!lGetUlong(ce, CE_consumable) || !strcmp(name, "slots") || explicit_job_request(job, name))
+               if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || explicit_job_request(job, name))
                   continue;
 
                parse_ulong_val(&dval, NULL, lGetUlong(ce, CE_valtype), lGetString(ce, CE_default), NULL, 0); 
@@ -1257,9 +1240,9 @@ char *indent
                   if the consumable is specified in the global host. For running we print it
                   if the resource is managed at this node/queue */
                if ((qep && lGetSubStr(qep, CE_name, name, QU_consumable_config_list)) ||
-                   (qep && (hep=lGetElemHost(exechost_list, EH_name, lGetHost(qep, QU_qhostname))) &&
+                   (qep && (hep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname))) &&
                     lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) ||
-                     ((hep=lGetElemHost(exechost_list, EH_name, SGE_GLOBAL_NAME)) &&
+                     ((hep=host_list_locate(exechost_list, SGE_GLOBAL_NAME)) &&
                          lGetSubStr(hep, CE_name, name, EH_consumable_config_list)))
 
                printf("%s%s=%s (default)\n", QSTAT_INDENT, name, lGetString(ce, CE_default));      
@@ -1376,4 +1359,3 @@ u_long32 type
    DEXIT;
    return;
 }
-

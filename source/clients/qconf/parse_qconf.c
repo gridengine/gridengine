@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/time.h>
@@ -40,36 +39,22 @@
 #include <limits.h>
 #include <ctype.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
-#include "def.h"
 #include "sge_options.h"
 #include "sge_gdi_intern.h"
-#include "sge_peL.h"
-#include "sge_jobL.h"
-#include "sge_hostL.h"
-#include "sge_ckptL.h"
-#include "sge_confL.h"
-#include "sge_exit.h"
+#include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_string.h"
 #include "sge_eventL.h"
-#include "sge_queueL.h"
 #include "sge_identL.h"
-#include "sge_manopL.h"
-#include "sge_answerL.h"
-#include "sge_usersetL.h"
-#include "sge_userprjL.h"
-#include "sge_complexL.h"
-#include "sge_calendarL.h"
-#include "sge_schedconfL.h"
-#include "sge_usermapL.h"
-#include "sge_groupL.h"
-#include "sge_share_tree_nodeL.h"
+#include "sge_answer.h"
+#include "sge_usermap.h"
 #include "parse.h"
 #include "usage.h"
 #include "commlib.h"
 #include "config.h"
 #include "rw_configuration.h"
-#include "sge_me.h"
 #include "sge_client_access.h"
 #include "parse_qconf.h"
 #include "sge_host.h"
@@ -80,30 +65,172 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "read_write_host.h"
-#include "sge_complex.h"
 #include "sched_conf.h"
 #include "read_write_userprj.h"
+#include "read_write_sharetree.h"
 #include "sge_sharetree.h"
 #include "sge_userset.h"
 #include "sge_feature.h"
 #include "read_write_ckpt.h"
 #include "read_write_userset.h"
-#include "sge_tmpnam.h"
+#include "read_write_complex.h"
 #include "gdi_tsm.h"
 #include "gdi_checkpermissions.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_stringL.h"
 #include "resolve_host.h"
-#include "utility.h"
-#include "sge_set_def_sig_mask.h"
 #include "scheduler.h"
 #include "sge_support.h"
-#include "msg_gdilib.h"
-#include "sge_stat.h" 
+#include "sge_stdlib.h"
+#include "sge_spool.h"
+#include "sge_signal.h"
+#include "sge_io.h"
+#include "sge_schedd_conf.h"
+#include "sge_userprj.h"
+#include "sge_complex.h"
+#include "sge_manop.h"
+#include "sge_calendar.h"
+#include "sge_hostgroup.h"
+#include "sge_conf.h"
+#include "sge_ckpt.h"
+
+#ifdef USE_FLATFILE_SPOOLING
+#include "sge_spooling_utilities.h"
+#include "sge_spooling_flatfile.h"
+#endif
+
 #include "msg_common.h"
-#include "sge_spoolmsg.h"
 #include "msg_qconf.h"
+
+#ifdef USE_FLATFILE_SPOOLING
+spooling_field CE_sub_fields[] = {
+   {  CE_name, 0, NULL },
+   {  CE_stringval, 0, NULL},
+   {  NoName, 0, NULL},
+};
+
+spooling_field CX_sub_fields[] = {
+   {  CX_name, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field UP_sub_fields[] = {
+   {  UP_name, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field SO_sub_fields[] = {
+   {  SO_qname, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field US_sub_fields[] = {
+   {  US_name, 0, NULL },
+   {  NoName, 0, NULL},
+};
+
+spooling_field QU_fields[] = {
+   {  QU_qname,                 20, "qname",              NULL },
+   {  QU_qhostname,              0, "hostname",           NULL },
+   {  QU_seq_no,                 0, "seq_no",          NULL },
+   {  QU_load_thresholds,        0, "load_thresholds", CE_sub_fields},
+   {  QU_suspend_thresholds,     0, "suspend_thresholds", CE_sub_fields},
+   {  QU_nsuspend,               0, "nsuspend", NULL},
+   {  QU_suspend_interval,       0, "suspend_interval", NULL},
+   {  QU_priority,               0, "priority", NULL},
+   {  QU_min_cpu_interval,       0, "min_cpu_interval", NULL},
+   {  QU_processors,             0, "processors", NULL},
+   {  QU_qtype,                  0, "qtype", NULL},
+   {  QU_rerun,                  0, "rerun", NULL},
+   {  QU_job_slots,              0, "slots", NULL},
+   {  QU_tmpdir,                 0, "tmpdir", NULL},
+   {  QU_shell,                  0, "shell", NULL},
+   {  QU_shell_start_mode,       0, "shell_start_mode", NULL},
+   {  QU_prolog,                 0, "prolog", NULL},
+   {  QU_epilog,                 0, "epilog", NULL},
+   {  QU_starter_method,         0, "starter_method", NULL},
+   {  QU_suspend_method,         0, "suspend_method", NULL},
+   {  QU_resume_method,          0, "resume_method", NULL},
+   {  QU_terminate_method,       0, "terminate_method", NULL},
+   {  QU_notify,                 0, "notify", NULL},
+   {  QU_owner_list,             0, "owner_list", US_sub_fields},
+   {  QU_acl,                    0, "user_lists", US_sub_fields},
+   {  QU_xacl,                   0, "xuser_lists", US_sub_fields},
+   {  QU_subordinate_list,       0, "subordinate_list", SO_sub_fields},
+   {  QU_complex_list,           0, "complex_list", CX_sub_fields},
+   {  QU_consumable_config_list, 0, "complex_values", CE_sub_fields},
+   {  QU_projects,               0, "projects", UP_sub_fields},
+   {  QU_xprojects,              0, "xprojects", UP_sub_fields},
+   {  QU_calendar,               0, "calendar", NULL},
+   {  QU_initial_state,          0, "initial_state", NULL},
+   {  QU_fshare,                 0, "fshare", NULL},
+   {  QU_oticket,                0, "oticket", NULL},
+   {  QU_s_rt,                   0, "s_rt", NULL},
+   {  QU_h_rt,                   0, "h_rt", NULL},
+   {  QU_s_cpu,                  0, "s_cpu", NULL},
+   {  QU_h_cpu,                  0, "h_cpu", NULL},
+   {  QU_s_fsize,                0, "s_fsize", NULL},
+   {  QU_h_fsize,                0, "h_fsize", NULL},
+   {  QU_s_data,                 0, "s_data", NULL},
+   {  QU_h_data,                 0, "h_data", NULL},
+   {  QU_s_stack,                0, "s_stack", NULL},
+   {  QU_h_stack,                0, "h_stack", NULL},
+   {  QU_s_core,                 0, "s_core", NULL},
+   {  QU_h_core,                 0, "h_core", NULL},
+   {  QU_s_rss,                  0, "s_rss", NULL},
+   {  QU_h_rss,                  0, "h_rss", NULL},
+   {  QU_s_vmem,                 0, "s_vmem", NULL},
+   {  QU_h_vmem,                 0, "h_vmem", NULL},
+   {  NoName,                    0, NULL, NULL}
+};
+
+const spool_instr qconf_sub_si = 
+{
+   CULL_NAMELIST | CULL_TUPLELIST,
+   true,
+   true,
+   NULL
+};
+
+const spool_instr qconf_si = 
+{
+   CULL_CONFIGURE,
+   true,
+   true,
+   &qconf_sub_si
+};
+
+const spool_flatfile_instr qconf_sub_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   NULL,
+   "=",
+   ",",
+   NULL,
+   NULL
+};
+
+const spool_flatfile_instr qconf_sfi = 
+{
+   &qconf_si,
+   true,
+   false,
+   true,
+   false,
+   NULL,
+   "\n",
+   "\n",
+   NULL,
+   NULL,
+   &qconf_sub_sfi
+};
+
+#endif
 
 static int sge_edit(char *fname);
 static int sge_next_is_an_opt(char **ptr);
@@ -275,7 +402,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -352,7 +479,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          lFreeList(alp);
@@ -410,7 +537,8 @@ DPRINTF(("ep: %s %s\n",
          where = lFreeWhere(where);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -458,14 +586,16 @@ DPRINTF(("ep: %s %s\n",
          lFreeList(lp);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
          }
 
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S, host);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -513,8 +643,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         
-         sge_get_recoverable(aep);
+        
+         answer_exit_if_not_recoverable(aep); 
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          lFreeList(alp);
          lFreeList(lp);
@@ -546,10 +676,7 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -566,10 +693,7 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -631,7 +755,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -663,7 +787,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -692,7 +816,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -732,7 +856,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
@@ -776,7 +901,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
@@ -823,10 +949,29 @@ DPRINTF(("ep: %s %s\n",
          ep = lFirst(lp);
 
          /* write queue to temp file */
+#ifdef USE_FLATFILE_SPOOLING
+      {
+         lList *answer_list = NULL;
+         const char *result;
+
+         if ((result = spool_flatfile_write_object(&answer_list, ep, 
+                                                   QU_fields, &qconf_sfi, 
+                                                   SP_DEST_TMP, SP_FORM_ASCII,
+                                                   NULL)) == NULL) { 
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+#else
          if (cull_write_qconf(0, FALSE, NULL, NULL, fname, ep)) {
+#endif
             if (sge_error_and_exit(MSG_QUEUE_UNABLETOWRITETEMPLATEQUEUE))
                continue;
          }
+#ifdef USE_FLATFILE_SPOOLING
+         else {
+            strcpy(fname, result);
+            FREE(result);
+         }
+      }   
+#endif
 
          /* edit template file */
          status = sge_edit(fname);
@@ -844,7 +989,25 @@ DPRINTF(("ep: %s %s\n",
          }
 
          /* read it in again */
+#ifdef USE_FLATFILE_SPOOLING
+         {
+            lList *answer_list = NULL;
+
+            ep = spool_flatfile_read_object(&answer_list, QU_Type,
+                                            QU_fields, NULL, &qconf_sfi, 
+                                            SP_FORM_ASCII,
+                                            NULL, fname);
+            if(ep != NULL) {
+               if(!queue_validate(ep, &answer_list)) {
+                  ep = lFreeElem(ep);
+               }
+            }
+
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+         }
+#else
          ep = cull_read_in_qconf(NULL, fname, 0, 0, NULL, NULL);
+#endif
          unlink(fname);
          if (!ep) {
             if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE)) {
@@ -859,7 +1022,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -884,31 +1047,45 @@ DPRINTF(("ep: %s %s\n",
       }
 
 /*----------------------------------------------------------------------------*/
-      /* "-astree" add sharetree */
+      /* "-astree", "-Astree file":  add sharetree */
 
-      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-astree", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+      if (feature_is_enabled(FEATURE_SGEEE) && 
+          (!strcmp("-astree", *spp) || !strcmp("-Astree", *spp))) {
+         if(!strcmp("-astree", *spp)) { 
+            sge_gdi_is_adminhost(me.qualified_hostname);
+            sge_gdi_is_manager(me.user_name);
 
-         /* get the sharetree .. */
-         what = lWhat("%T(ALL)", STN_Type);
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+            /* get the sharetree .. */
+            what = lWhat("%T(ALL)", STN_Type);
+            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
+            what = lFreeWhat(what);
 
-         aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            spp++;
-            continue;
+            aep = lFirst(alp);
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               spp++;
+               continue;
+            }
+            alp = lFreeList(alp);
+    
+            ep = lFirst(lp);
+            if (!(ep=edit_sharetree(ep)))
+               continue;
+
+            lp = lFreeList(lp);
+         } else {
+            char errstr[1024];
+            spp = sge_parser_get_next(spp);
+           
+            ep = read_sharetree(*spp, NULL, 0, errstr, 1, NULL);
+            if (!ep) {
+               fprintf(stderr, errstr);
+               if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
+                  continue;
+            }      
          }
-         alp = lFreeList(alp);
- 
-         ep = lFirst(lp);
-         if (!(ep=edit_sharetree(ep)))
-            continue;
-
-         lp = lFreeList(lp);
-
+         
          newlp = lCreateList("sharetree add", STN_Type);
          lAppendElem(newlp, ep);
 
@@ -917,7 +1094,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_TREE_CHANGEDSHARETREE);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -946,7 +1124,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1043,7 +1222,8 @@ DPRINTF(("ep: %s %s\n",
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
             what = lFreeWhat(what);
             ep = lFirst(alp);
-            if (sge_get_recoverable(ep) == STATUS_OK)
+            answer_exit_if_not_recoverable(ep);
+            if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, MSG_TREE_MODIFIEDSHARETREE);
             else
                fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -1083,9 +1263,7 @@ DPRINTF(("ep: %s %s\n",
          /* add all users/groups from lp to the acls in alp */
          sge_client_add_user(&alp, lp, arglp);
 
-         for_each(aep,alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          arglp = lFreeList(arglp);
          lp = lFreeList(lp);
@@ -1101,7 +1279,25 @@ DPRINTF(("ep: %s %s\n",
 
          spp = sge_parser_get_next(spp);
 
+#ifdef USE_FLATFILE_SPOOLING
+         {
+            lList *answer_list = NULL;
+
+            ep = spool_flatfile_read_object(&answer_list, QU_Type,
+                                            QU_fields, NULL, &qconf_sfi, 
+                                            SP_FORM_ASCII,
+                                            NULL, *spp);
+            if(ep != NULL) {
+               if(!queue_validate(ep, &answer_list)) {
+                  ep = lFreeElem(ep);
+               }
+            }
+
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+         }
+#else
          ep = cull_read_in_qconf(NULL, *spp, 0, 0, NULL, NULL);
+#endif
          if (!ep)
             if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
                continue;
@@ -1113,7 +1309,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -1138,7 +1334,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1151,7 +1348,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1173,19 +1371,13 @@ DPRINTF(("ep: %s %s\n",
          /* update user usage */
          if (lp) {
             alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-            for_each(aep, alp) {
-               sge_get_recoverable(aep);
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
-            }
+            answer_list_on_error_print_or_exit(&alp, stderr);
          }
 
          /* update project usage */
          if (lp2) {
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
-            for_each(aep, alp) {
-               sge_get_recoverable(aep);
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
-            }
+            answer_list_on_error_print_or_exit(&alp, stderr);
          }
 
          alp = lFreeList(alp);
@@ -1206,10 +1398,7 @@ DPRINTF(("ep: %s %s\n",
             lSetUlong(ep, ID_action, QCLEAN);
          }
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
-         for_each(aep, alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
          spp++;
@@ -1242,10 +1431,7 @@ DPRINTF(("ep: %s %s\n",
          lp = lCreateList("cal's to del", CAL_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1264,10 +1450,7 @@ DPRINTF(("ep: %s %s\n",
          lp = lCreateList("ckpt interfaces to del", CK_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1311,10 +1494,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1331,10 +1511,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1354,10 +1531,7 @@ DPRINTF(("ep: %s %s\n",
          lp = lCreateList("pe's to del", PE_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1377,10 +1551,7 @@ DPRINTF(("ep: %s %s\n",
                lString2List(*spp, &lp, QU_Type, QU_qname, ", ");
 
                alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-               for_each(aep, alp) {
-                  sge_get_recoverable(aep);
-                  fprintf(stderr, "%s", lGetString(aep, AN_text));
-               }
+               answer_list_on_error_print_or_exit(&alp, stderr);
                alp = lFreeList(alp);
                lp = lFreeList(lp);
             }
@@ -1425,9 +1596,7 @@ DPRINTF(("ep: %s %s\n",
 
          /* remove users/groups from lp from the acls in alp */
          sge_client_del_user(&alp, lp, arglp);
-         for_each(aep,alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          lp = lFreeList(lp);
          alp = lFreeList(alp);
          arglp = lFreeList(arglp);
@@ -1446,10 +1615,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, US_Type, US_name, ", ");
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1466,10 +1632,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1488,10 +1651,7 @@ DPRINTF(("ep: %s %s\n",
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1514,7 +1674,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -1581,7 +1742,8 @@ DPRINTF(("ep: %s %s\n",
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
             what = lFreeWhat(what);
             ep = lFirst(alp);
-            if (sge_get_recoverable(ep) == STATUS_OK)
+            answer_exit_if_not_recoverable(ep);
+            if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, MSG_TREE_MODIFIEDSHARETREE);
             else
                fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -1604,10 +1766,7 @@ DPRINTF(("ep: %s %s\n",
          /* no adminhost/manager check needed here */
          
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_DEL, NULL, NULL, NULL);
-         for_each(aep,alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -1631,9 +1790,10 @@ DPRINTF(("ep: %s %s\n",
 
          alp = gdi_kill(NULL, me.default_cell, 0, SCHEDD_KILL);
          for_each(aep, alp) {
-            if (sge_get_recoverable(aep) != STATUS_OK)
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK)
                sge_parse_return = 1;
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            answer_print_text(aep, stderr, NULL, NULL);
          }
 
          alp = lFreeList(alp);
@@ -1648,9 +1808,7 @@ DPRINTF(("ep: %s %s\n",
       if (!strcmp("-km", *spp)) {
          /* no adminhost/manager check needed here */
          alp = gdi_kill(NULL, me.default_cell, 0, MASTER_KILL);
-         for_each(aep, alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
 
          spp++;
@@ -1675,11 +1833,7 @@ DPRINTF(("ep: %s %s\n",
             lString2List(*spp, &lp, ID_Type, ID_str, ", ");
             alp = gdi_kill(lp, me.default_cell, 0, opt);
          }      
-
-         for_each(aep, alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
          spp++;
@@ -1724,10 +1878,7 @@ DPRINTF(("ep: %s %s\n",
             alp = gdi_kill(lp, me.default_cell, 0, opt);
          }
 
-         for_each(aep, alp) {
-            sge_get_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          lp = lFreeList(lp);
          spp++;
@@ -1777,7 +1928,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
               fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -1830,7 +1982,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -1872,7 +2024,8 @@ DPRINTF(("ep: %s %s\n",
             lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
               fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -1925,7 +2078,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -1975,7 +2128,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2023,7 +2176,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -2045,7 +2199,8 @@ DPRINTF(("ep: %s %s\n",
             
             alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
             ep = lFirst(alp);
-            if (sge_get_recoverable(ep) == STATUS_OK)
+            answer_exit_if_not_recoverable(ep);
+            if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S,
                       host);
             else
@@ -2074,7 +2229,8 @@ DPRINTF(("ep: %s %s\n",
             what = lFreeWhat(what);
 
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
               fprintf(stderr, "%s", lGetString(aep, AN_text));
                spp++;
                continue;
@@ -2127,7 +2283,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -2153,7 +2309,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2172,11 +2329,29 @@ DPRINTF(("ep: %s %s\n",
 
          ep = lFirst(lp);
          
-         /* write queue to temp file */
+#ifdef USE_FLATFILE_SPOOLING
+      {
+         lList *answer_list = NULL;
+         const char *result;
+
+         if ((result = spool_flatfile_write_object(&answer_list, ep, 
+                                                   QU_fields, &qconf_sfi, 
+                                                   SP_DEST_TMP, SP_FORM_ASCII,
+                                                   NULL)) == NULL) { 
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+#else
          if (cull_write_qconf(0, FALSE, NULL, NULL, fname, ep)) {
+#endif
             if (sge_error_and_exit(MSG_QUEUE_UNABLETOWRITEOLDQUEUE))
                continue;
          }
+#ifdef USE_FLATFILE_SPOOLING
+         else {
+            strcpy(fname, result);
+            FREE(result);
+         }
+      }   
+#endif
          old_version = lGetUlong(ep, QU_version);
 
          lp = lFreeList(lp);
@@ -2197,7 +2372,25 @@ DPRINTF(("ep: %s %s\n",
          }
 
          /* read it in again */
+#ifdef USE_FLATFILE_SPOOLING
+         {
+            lList *answer_list = NULL;
+
+            ep = spool_flatfile_read_object(&answer_list, QU_Type,
+                                            QU_fields, NULL, &qconf_sfi, 
+                                            SP_FORM_ASCII,
+                                            NULL, fname);
+            if(ep != NULL) {
+               if(!queue_validate(ep, &answer_list)) {
+                  ep = lFreeElem(ep);
+               }
+            }
+
+            answer_list_print_err_warn(&answer_list, NULL, NULL);
+         }
+#else
          ep = cull_read_in_qconf(NULL, fname, 0, 0, NULL, NULL);
+#endif
          unlink(fname);
          if (!ep) {
             if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE)) {
@@ -2213,7 +2406,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -2424,7 +2617,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_QUEUE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
@@ -2447,7 +2640,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2462,7 +2656,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_SC_LIST, SGE_GDI_MOD, &newlp, NULL, what);
          what = lFreeWhat(what);
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -2473,30 +2668,44 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-      /* "-mstree"  modify sharetree */
+      /* "-mstree", "-Mstree file": modify sharetree */
 
-      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-mstree", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+      if (feature_is_enabled(FEATURE_SGEEE) && 
+          (!strcmp("-mstree", *spp) || !strcmp("-Mstree", *spp))) {
+         if(!strcmp("-mstree", *spp)) {
+            sge_gdi_is_adminhost(me.qualified_hostname);
+            sge_gdi_is_manager(me.user_name);
 
-         /* get the sharetree .. */
-         what = lWhat("%T(ALL)", STN_Type);
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+            /* get the sharetree .. */
+            what = lWhat("%T(ALL)", STN_Type);
+            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
+            what = lFreeWhat(what);
 
-         aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            spp++;
-            continue;
+            aep = lFirst(alp);
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               spp++;
+               continue;
+            }
+            alp = lFreeList(alp);
+    
+            ep = lFirst(lp);
+            if (!(ep=edit_sharetree(ep)))
+               continue;
+
+            lp = lFreeList(lp);
+         } else {
+            char errstr[1024];
+            spp = sge_parser_get_next(spp);
+           
+            ep = read_sharetree(*spp, NULL, 0, errstr, 1, NULL);
+            if (!ep) {
+               fprintf(stderr, errstr);
+               if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
+                  continue;
+            }      
          }
-         alp = lFreeList(alp);
- 
-         ep = lFirst(lp);
-         if (!(ep=edit_sharetree(ep)))
-            continue;
-
-         lp = lFreeList(lp);
 
          newlp = lCreateList("sharetree modify", STN_Type);
          lAppendElem(newlp, ep);
@@ -2505,7 +2714,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &newlp, NULL, what);
          what = lFreeWhat(what);
          ep = lFirst(alp);
-         if (sge_get_recoverable(ep) == STATUS_OK)
+         answer_exit_if_not_recoverable(ep);
+         if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, MSG_TREE_CHANGEDSHARETREE);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -2570,7 +2780,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             ep = lFreeElem(ep);
@@ -2593,7 +2804,8 @@ DPRINTF(("ep: %s %s\n",
 
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             acl = lFreeList(acl);
@@ -2636,7 +2848,8 @@ DPRINTF(("ep: %s %s\n",
 
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_ADD, &acl, NULL, NULL);
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             acl = lFreeList(acl);
@@ -2668,7 +2881,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2690,7 +2904,8 @@ DPRINTF(("ep: %s %s\n",
          if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
             alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
             aep = lFirst(alp);
-            sge_get_recoverable(aep);
+            answer_exit_if_not_recoverable(aep);
+            answer_get_status(aep);
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
          }
@@ -2703,7 +2918,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -2731,7 +2946,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -2752,7 +2968,7 @@ DPRINTF(("ep: %s %s\n",
          /*if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
             aep = lFirst(alp);
-            sge_get_recoverable(aep);
+            answer_exit_if_not_recoverable(aep);
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
          }*/
@@ -2764,7 +2980,7 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         sge_get_recoverable(aep);
+         answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
@@ -2810,7 +3026,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             newep = lFreeElem(newep);
@@ -2839,7 +3056,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
            alp = lFreeList(alp);
            lp = lFreeList(lp);
@@ -2886,7 +3104,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             newep = lFreeElem(newep);
@@ -2915,7 +3134,8 @@ DPRINTF(("ep: %s %s\n",
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
            alp = lFreeList(alp);
            lp = lFreeList(lp);
@@ -2970,7 +3190,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3103,7 +3324,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3231,7 +3453,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3300,7 +3523,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3354,13 +3578,23 @@ DPRINTF(("ep: %s %s\n",
                      what = lFreeWhat(what);
 
                      if(lp)
+#ifdef USE_FLATFILE_SPOOLING
+                        {
+                           lList *answer_list = NULL;
+                           spool_flatfile_write_object(&answer_list, lFirst(lp),
+                           QU_fields, &qconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, NULL);
+                           answer_list_print_err_warn(&answer_list, NULL, NULL);
+                        }   
+#else
                         cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
+#endif
                      else {
-                        fprintf(stderr, MSG_OBJ_UNABLE2FINDQ_S, lGetString(argep, QR_name));
+                        fprintf(stderr, MSG_QUEUE_UNABLE2FINDQ_S, lGetString(argep, QR_name));
                         sge_parse_return = 1;
                      }
                      aep = lFirst(alp);
-                     if(sge_get_recoverable(aep) != STATUS_OK) {
+                     answer_exit_if_not_recoverable(aep);
+                     if(answer_get_status(aep) != STATUS_OK) {
                         fprintf(stderr, "%s", lGetString(aep, AN_text));
                      }
                      lFreeList(alp);
@@ -3382,7 +3616,7 @@ DPRINTF(("ep: %s %s\n",
                cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
             else {
                aep = lFirst(alp);
-               sge_get_recoverable(aep);
+               answer_exit_if_not_recoverable(aep);
                fprintf(stderr, "%s", lGetString(aep, AN_text));
             }
             printf("\n");
@@ -3403,14 +3637,15 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
          }
          alp = lFreeList(alp);
  
-         if (write_sched_configuration(0, 0, lFirst(lp)) == NULL) {
+         if (write_sched_configuration(0, 0, NULL, lFirst(lp)) == NULL) {
             fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
             spp++;
             continue;
@@ -3436,7 +3671,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3503,7 +3739,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3547,7 +3784,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3573,7 +3811,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
 
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3893,7 +4132,8 @@ DPRINTF(("ep: %s %s\n",
                         
             printf("\n");            
             aep = lFirst(alp);
-            if (sge_get_recoverable(aep) != STATUS_OK) {
+            answer_exit_if_not_recoverable(aep);
+            if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
                continue;
             }
@@ -3928,7 +4168,8 @@ DPRINTF(("ep: %s %s\n",
          what = lFreeWhat(what);
                   
          aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s", lGetString(aep, AN_text));
             spp++;
             continue;
@@ -3998,9 +4239,7 @@ DPRINTF(("ep: %s %s\n",
          /* no adminhost/manager check needed here */
 
          alp = gdi_tsm(NULL, NULL);
-         for_each(aep, alp) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          alp = lFreeList(alp);
          
          spp++;
@@ -4161,6 +4400,7 @@ char *fname
       const char *cp = NULL;
 
       sge_set_def_sig_mask(0, NULL);   
+      sge_unblock_all_signals();
       setuid(getuid());
       setgid(getgid());
 
@@ -4269,7 +4509,8 @@ u_long32 target
 
       /* report results */
       ep = lFirst(alp);
-      if (sge_get_recoverable(ep) == STATUS_OK)
+      answer_exit_if_not_recoverable(ep);
+      if (answer_get_status(ep) == STATUS_OK)
          fprintf(stderr, MSG_QCONF_XADDEDTOYLIST_SS, host, name);
       else 
          fprintf(stderr, "%s", lGetString(ep, AN_text));
@@ -4328,7 +4569,7 @@ u_long32 target
 
       /* print results */
       ep = lFirst(alp);
-      sge_get_recoverable(ep);
+      answer_exit_if_not_recoverable(ep);
 		fprintf(stderr, "%s\n", lGetString(ep, AN_text));
 
       lFreeList(alp);
@@ -4391,7 +4632,7 @@ lList *confl
 
    DENTER(TOP_LAYER, "edit_sched_conf");
 
-   if ((fname = write_sched_configuration(0, 1, lFirst(confl))) == NULL) {
+   if ((fname = write_sched_configuration(0, 1, NULL, lFirst(confl))) == NULL) {
       fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
       SGE_EXIT(1);
    }
@@ -4410,7 +4651,7 @@ lList *confl
          return NULL;
    }
    
-   if (!(newconfl = read_sched_configuration(fname, 0, &alp))) {
+   if (!(newconfl = read_sched_configuration(NULL, fname, 0, &alp))) {
       aep = lFirst(alp);
       fprintf(stderr, MSG_QCONF_CANTREADCONFIG_S, lGetString(aep, AN_text));
       unlink(fname);
@@ -4582,7 +4823,8 @@ char *name
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       return 0;
    }
@@ -4636,7 +4878,8 @@ static int show_eventclients()
    what = lFreeWhat(what);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       DEXIT;
       return -1;
@@ -4685,13 +4928,16 @@ static int show_processors()
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       DEXIT;
       return -1;
    }
 
    if (lp) {
+      lPSortList(lp,"%I+", EH_name);
+
       printf("%-25.24s%10.9s%12.11s\n",MSG_TABLE_HOST,MSG_TABLE_PROCESSORS,
             MSG_TABLE_ARCH);
       printf("===============================================\n");
@@ -4867,10 +5113,8 @@ lList *alp
    DENTER(TOP_LAYER, "show_gdi_request_answer");
    if (alp != NULL) {
     
-    
       for_each(aep,alp) {
-        sge_get_recoverable(aep); 
-        /* fprintf(stderr, "%s", lGetString(aep, AN_text)); */
+         answer_exit_if_not_recoverable(aep);
       }
       aep = lLast(alp);
       fprintf(stderr, "%s", lGetString(aep, AN_text));
@@ -5005,7 +5249,7 @@ char *hostname
 }
 
 
-/***p** src/add_host_group_entry() **********************************
+/***p** src/add_host_group_entry() ********************************************
 *
 *  NAME
 *     add_host_group_entry() -- Option qconf -ahgrp
@@ -5029,22 +5273,7 @@ char *hostname
 *
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int add_host_group_entry(
 char *group 
 ) {
@@ -5117,16 +5346,11 @@ char *group
 }
 
 
-/***p** src/mod_user_map_entry() **********************************
-*
+/***p** src/mod_user_map_entry() **********************************************
 *  NAME
 *     mod_user_map_entry() -- Option -mumap 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int mod_user_map_entry (char* user);  
 *
 *  FUNCTION
@@ -5137,29 +5361,12 @@ char *group
 *     can modify the file. At least the modified entries are sent to
 *     the qmaster.
 *
-*
 *  INPUTS
 *     char* user     - name of the cluster user to define the mapping 
-*    
 *
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+*******************************************************************************/
 static int mod_user_map_entry(
 char *user 
 ) {
@@ -5228,8 +5435,7 @@ char *user
    return 0;  
 }
 
-/***p** src/mod_host_group_entry() **********************************
-*
+/***p** src/mod_host_group_entry() ********************************************
 *  NAME
 *     mod_host_group_entry() -- Option qconf -mhgrp 
 *
@@ -5248,29 +5454,12 @@ char *user
 *     can modify the file. At least the modified entries are sent to
 *     the qmaster.
 *
-*
 *  INPUTS
 *     char* group  - name of the host group to modify 
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 int mod_host_group_entry(
 char *group 
 ) { 
@@ -5339,17 +5528,11 @@ char *group
    return 0;  
 }
 
-
-/***p** src/del_host_group_entry() **********************************
-*
+/***p** src/del_host_group_entry() ********************************************
 *  NAME
 *     del_host_group_entry() -- Option qconf -dhgrp
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-*   
 *     static int del_host_group_entry( char* group );  
 *
 *  FUNCTION
@@ -5358,29 +5541,12 @@ char *group
 *     the list to the qmaster in order to remove all entries for
 *     the host group specified in the parameter group.
 *
-*
 *  INPUTS
 *     char* group   - name of the host group to delete
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int del_host_group_entry(
 char *group 
 ) { 
@@ -5410,50 +5576,26 @@ char *group
    return 0; 
 }
 
-
 /***p** src/add_host_group_entry_from_file() **********************************
-*
 *  NAME
 *     add_host_group_entry_from_file() -- Option -Ahgrp 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int add_host_group_entry_from_file (char* filename); 
-*       
 *
 *  FUNCTION
-*     This function is used in the -Ahgrp option of qconf. It will open the file with 
-*     host group entries and send it to the qmaster. The entries in the file are used 
-*     to define host groups for user mapping.
-*
+*     This function is used in the -Ahgrp option of qconf. It will 
+*     open the file with host group entries and send it to the 
+*     qmaster. The entries in the file are used to define host groups 
+*     for user mapping.
 *
 *  INPUTS
 *     char* filename - file with host group definition
 *
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-static int add_host_group_entry_from_file(
-char *filename 
-) {
+******************************************************************************/
+static int add_host_group_entry_from_file(char *filename) {
    lListElem* genericElem = NULL;
    lList* addList         = NULL;
    lList* alp             = NULL; 
@@ -5520,32 +5662,15 @@ char *filename
 *     static int mod_host_group_entry_from_file (char* filename);
 *
 *  FUNCTION
-*     This function is used in the -Mhgrp Option in qconf. It will open the file
-*     with mapping entries and send it to the qmaster. 
-*
+*     This function is used in the -Mhgrp Option in qconf. It will open
+*     the file with mapping entries and send it to the qmaster. 
 *
 *  INPUTS
 *     char* filename - file with host group definition 
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int mod_host_group_entry_from_file(
 char *filename 
 ) {
@@ -5598,47 +5723,25 @@ char *filename
    return 0;  
 }
 
-
-/***p** src/mod_user_map_entry_from_file() **********************************
-*
+/***p** src/mod_user_map_entry_from_file() ************************************
 *  NAME
 *     mod_user_map_entry_from_file() -- Option -Mumap 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int mod_user_map_entry_from_file (char* filename);
 *
 *  FUNCTION
-*     This function is used in the -Mumap Option. It will open the file with mapping 
-*     entries and send it to the qmaster. The entries in the file are used to define
-*     the mapping for the cluster user specified in the parameter user. 
-*
+*     This function is used in the -Mumap Option. It will open 
+*     the file with mapping entries and send it to the qmaster. 
+*     The entries in the file are used to define the mapping 
+*     for the cluster user specified in the parameter user. 
 *
 *  INPUTS
 *     char* filename - file with user mapping definition 
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int mod_user_map_entry_from_file(
 char *filename 
 ) {
@@ -5691,12 +5794,7 @@ char *filename
    return 0;  
 }
 
-
-
-
-
-
-/***p** src/del_user_map_entry() **********************************
+/***p** src/del_user_map_entry() **********************************************
 *
 *  NAME
 *     del_user_map_entry() -- Option -dumap
@@ -5714,29 +5812,12 @@ char *filename
 *     the list to the qmaster in order to remove all entries for
 *     the cluster user specified in the parameter user.
 *
-*
 *  INPUTS
 *     char* user     - name of the cluster user to delete the mapping
 *    
-*
 *  RESULT
 *     int 0 on success, -1 on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 static int del_user_map_entry(
 char *user 
 ) {   
@@ -5790,7 +5871,7 @@ char *fname                     /* != NULL if we read the complex from file */
    DENTER(TOP_LAYER, "add_chg_cmplx");
 
    /* test cmplx_name */
-   if (verify_filename(cmplx_name)) {
+   if (sge_is_valid_filename2(cmplx_name)) {
       fprintf(stderr, MSG_QCONF_XISNOVALIDCOMPLEXNAME_S, cmplx_name);
       DEXIT;
       return -1;
@@ -5816,7 +5897,8 @@ char *fname                     /* != NULL if we read the complex from file */
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
    }
    else {
@@ -5906,7 +5988,8 @@ char *fname                     /* != NULL if we read the complex from file */
 
    /* report results */
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) == STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) == STATUS_OK) {
 
       switch (add) {
          case 0:
@@ -6064,7 +6147,7 @@ lList *arglp
       lFreeList(lp);
 
       for_each(aep, alp) 
-         fprintf(stderr, "%s: %s", quality_text(aep), lGetString(aep, AN_text));
+         fprintf(stderr, "%s", lGetString(aep, AN_text));
    }
 
    DEXIT;
@@ -6093,7 +6176,8 @@ const char *cmplx_name
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       fail = 1;
    }
@@ -6141,7 +6225,8 @@ const char *config_name
    where = lFreeWhere(where);
 
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       fail = 1;
    }
@@ -6180,7 +6265,8 @@ const char *config_name
    ep = lFirst(alp);
    fprintf(stderr, "%s\n", lGetString(ep, AN_text));
 
-   fail = !(sge_get_recoverable(ep) == STATUS_OK);
+   answer_exit_if_not_recoverable(ep);
+   fail = !(answer_get_status(ep) == STATUS_OK);
 
    lFreeList(alp);
    lFreeList(lp);
@@ -6217,7 +6303,8 @@ u_long32 flags
 
    failed = FALSE;
    ep = lFirst(alp);
-   if (sge_get_recoverable(ep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(ep);
+   if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       lFreeList(alp);
       lFreeList(lp);
@@ -6304,8 +6391,9 @@ u_long32 flags
             
    /* report results */
    ep = lFirst(alp);                   
-         
-   failed = !(sge_get_recoverable(ep) == STATUS_OK);
+        
+   answer_exit_if_not_recoverable(ep); 
+   failed = !(answer_get_status(ep) == STATUS_OK);
          
    fprintf(stderr, "%s\n", lGetString(ep, AN_text));
      
@@ -6335,6 +6423,7 @@ static int sge_gdi_is_manager(
 char *user 
 ) {
    int perm_return;
+   lList *alp = NULL; 
    DENTER(TOP_LAYER, "sge_gdi_is_manager");
 
    
@@ -6343,8 +6432,13 @@ char *user
       DEXIT;
       return -1;
    }
-   if ((perm_return = sge_gdi_check_permission(MANAGER_CHECK)) == TRUE) {
+   perm_return = sge_gdi_check_permission(&alp, MANAGER_CHECK);
+   if (perm_return == TRUE) {
      /* user is manager */
+     if (alp != NULL) {
+        lFreeList(alp);
+        alp = NULL;
+     }
      DEXIT;
      return 1;
    }
@@ -6353,10 +6447,22 @@ char *user
    ** user is no manager
    */
    if (perm_return == -10 ) {
-     fprintf(stderr, MSG_SGETEXT_NOQMASTER );
+      /* fills SGE_EVENT with diagnosis information */
+      if (alp != NULL) {
+         lListElem *aep;
+         if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+         }
+      }
    } else {
-     fprintf(stderr, MSG_SGETEXT_MUSTBEMANAGER_S , user);
+      fprintf(stderr, MSG_SGETEXT_MUSTBEMANAGER_S , user);
    }
+
+   if (alp != NULL) {
+      lFreeList(alp);
+      alp = NULL;
+   }
+
    SGE_EXIT(1);
    return 0;
 }
@@ -6405,18 +6511,16 @@ char *host
    where = lFreeWhere(where);
 
    if (!alp) {
-      DEXIT;
-      return -1;
+      SGE_EXIT(1);
    }
    if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       lFreeList(alp);
-      DEXIT;
-      return -1;
+      SGE_EXIT(1);
    }
    lFreeList(alp);
 
-   ep = lGetElemHost(lp, AH_name, host);
+   ep = host_list_locate(lp, host);
 
    if (!ep) {
       /*
@@ -6432,21 +6536,15 @@ char *host
    return 0;
 }
 
-
-/****** src/qconf_modify_attribute() **********************************
-*
+/****** src/qconf_modify_attribute() ******************************************
 *  NAME
 *     qconf_modify_attribute() -- sends a modify request to the master 
 *
 *  SYNOPSIS
 *
-*     static int qconf_modify_attribute (
-*        lList **alpp, 
-*        int from_file,
-*        char ***spp, 
-*        int sub_command,
-*        struct object_info_entry *info_entry
-*     );  
+*     static int qconf_modify_attribute (lList **alpp, int from_file,
+*                                        char ***spp, int sub_command,
+*                                        struct object_info_entry *info_entry); 
 *
 *
 *  FUNCTION
@@ -6482,26 +6580,12 @@ char *host
 *
 *     info_entry -  pointer to a structure with function 
 *                   pointers, string pointers, and CULL names
-*                   
-*                  
 *
 *  RESULT
 *     [alpp] Masters answer for the gdi request
 *     1 for error
 *     0 for success
-*     
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*       
-**************************************************************************
-*/
-
+******************************************************************************/
 static int qconf_modify_attribute(
 lList **alpp,
 int from_file,
@@ -6522,9 +6606,10 @@ struct object_info_entry *info_entry
 
       if (from_file) {
          if (sge_next_is_an_opt(*spp))  {
-            sprintf(SGE_EVENT, MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, 
-               "qconf");
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S, 
+               "qconf"));
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
          }                
          *epp = info_entry->cull_read_in_object(NULL, **spp, 0, 
@@ -6547,23 +6632,23 @@ struct object_info_entry *info_entry
             return 1;
          }                           
          if (lGetNumberOfElem(cflp) > 0) {
-            sprintf(SGE_EVENT, MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
-                    lGetString(lFirst(cflp), CF_name), info_entry->object_name);
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_XISNOTAOBJECTATTRIB_SSS, "qconf", 
+                    lGetString(lFirst(cflp), CF_name), info_entry->object_name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             return 1;
          }
       }
       /* add object name to int vector and transform
          it into an lEnumeration */
       if (add_nm_to_set(fields, info_entry->nm_name) < 0) {
-         sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
-            info_entry->attribute_name);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
+            info_entry->attribute_name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return 1;
       }
 
       if (!(what = lIntVector2What(info_entry->cull_descriptor, fields))) {
-         sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf");
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
          return 1;
       }              
       while (!sge_next_is_an_opt(*spp)) { 
@@ -6597,16 +6682,16 @@ struct object_info_entry *info_entry
                lSetHost(add_qp, info_entry->nm_name, **spp);
                break;
             default:
-               sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf");
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                return 1;
          }
          lAppendElem(qlp, add_qp);
       }
       if (!qlp) {
-         sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
-            "qconf");
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
+            "qconf"));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return 1;
       }
 
@@ -6623,18 +6708,12 @@ struct object_info_entry *info_entry
 }
 
 #ifndef __SGE_NO_USERMAPPING__
-/***p** src/get_user_mapping_list_from_master() **********************************
-*
+/***p** src/get_user_mapping_list_from_master() ******************************
 *  NAME
-*     get_user_mapping_list_from_master() -- get user mapping entry list from master 
+*     get_user_mapping_list_from_master() -- get u. mapping entry list 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static lList*     get_user_mapping_list_from_master(char* user);
-*       
 *
 *  FUNCTION
 *     The function performs a SGE_GDI_GET request to the qmaster in
@@ -6646,22 +6725,7 @@ struct object_info_entry *info_entry
 *  RESULT
 *     lList*     - pointer to UME_Type list (caller must free the list)
 *     NULL       - on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+*******************************************************************************/
 lList* get_user_mapping_list_from_master(
 const char *user 
 ) {
@@ -6682,9 +6746,10 @@ const char *user
 
  
      ep = lFirst(alp);
-     if (sge_get_recoverable(ep) != STATUS_OK) {
+      answer_exit_if_not_recoverable(ep);
+     if (answer_get_status(ep) != STATUS_OK) {
        fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-       if (sge_get_recoverable(ep) == STATUS_ENOIMP) {
+       if (answer_get_status(ep) == STATUS_ENOIMP) {
          alp = lFreeList(alp);
          umlp = lFreeList(umlp);
          SGE_EXIT(1); 
@@ -6702,16 +6767,11 @@ const char *user
    return umlp; 
 }
 
-/****** src/get_host_group_list_from_master() **********************************
-*
+/****** src/get_host_group_list_from_master() *********************************
 *  NAME
-*     get_host_group_list_from_master() -- get GRP_List from master per GDI request 
+*     get_host_group_list_from_master() -- get GRP_List using GDI request 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static lList*     get_host_group_list_from_master(char* group);
 *       
 *  FUNCTION
@@ -6724,19 +6784,7 @@ const char *user
 *  RESULT
 *     lList*      - pointer to GRP_Type list (caller must free the list)
 *     NULL        - on error
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 lList*  get_host_group_list_from_master(
 const char *group 
 ) {
@@ -6757,9 +6805,10 @@ const char *group
 
  
      ep = lFirst(alp);
-     if (sge_get_recoverable(ep) != STATUS_OK) {
+     answer_exit_if_not_recoverable(ep);
+     if (answer_get_status(ep) != STATUS_OK) {
        fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-       if (sge_get_recoverable(ep) == STATUS_ENOIMP) {
+       if (answer_get_status(ep) == STATUS_ENOIMP) {
          alp = lFreeList(alp);
          umlp = lFreeList(umlp);
          SGE_EXIT(1); 
@@ -6778,18 +6827,12 @@ const char *group
 }
 
 #endif /* __SGE_NO_USERMAPPING__ */
-/***p** src/show_user_map_entry() **********************************
-*
+/***p** src/show_user_map_entry() *********************************************
 *  NAME
 *     show_user_map_entry() -- print user map entries of cluster user 
 *
 *  SYNOPSIS
-*
-*     #include "parse_qconf.h"
-*     #include <src/parse_qconf.h>
-* 
 *     static int show_user_map_entry(char *user);
-*       
 *
 *  FUNCTION
 *     print current user mapping entries to stdout. The parameter
@@ -6800,22 +6843,7 @@ const char *group
 *
 *  RESULT
 *     int TRUE on success, FALSE on error
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+******************************************************************************/
 #ifndef __SGE_NO_USERMAPPING__
 static int show_user_map_entry(char *user)
 { 
@@ -6851,20 +6879,12 @@ static int show_user_map_entry(char *user)
 
 #ifndef __SGE_NO_USERMAPPING__
 
-
-
-
-/****** src/show_host_group_entry() **********************************
-*
+/****** src/show_host_group_entry() *******************************************
 *  NAME
 *     show_host_group_entry() -- print houst group to stdout 
 *
 *  SYNOPSIS
-*
-*     "parse_qconf.c"
-* 
 *     static int show_host_group_entry(char* group);
-*       
 *
 *  FUNCTION
 *     This function uses gdi request to get group from qmaster and
@@ -6872,23 +6892,9 @@ static int show_user_map_entry(char *user)
 *      
 *  INPUTS
 *     char* group - name of group
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*     src/()
-*     src/()
-*     
-****************************************************************************
-*/
-static int show_host_group_entry(
-char *group 
-) { 
+******************************************************************************/
+static int show_host_group_entry(char *group) 
+{ 
     lList *grp_lp = NULL;
     lListElem *ep = NULL;
  

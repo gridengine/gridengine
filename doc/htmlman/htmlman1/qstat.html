@@ -1,5 +1,5 @@
 <HTML>
-<BODY>
+<BODY BGCOLOR=white>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
@@ -48,10 +48,10 @@ OPTIONS
           the description of the Full Format  in  section  OUTPUT
           FORMATS below for further detail.
 
-     -g d Displays job arrays verbosely in a  one  line  per  job
-          task  fashion.  By  default, job arrays are grouped and
+     -g d Displays array jobs verbosely in a  one  line  per  job
+          task  fashion.  By  default, array jobs are grouped and
           all tasks with the same status (for pending tasks only)
-          are  displayed  in a single line. The job array task id
+          are  displayed  in a single line. The array job task id
           range field in the output (see section OUTPUT  FORMATS)
           specifies the corresponding set of tasks.
           The -g switch currently  has  only  the  single  option
@@ -111,7 +111,7 @@ OPTIONS
           tasks  of  the displayed parallel jobs. Please refer to
           the OUTPUT FORMATS sub-section  Expanded  Format  below
           for  detailed  information.  Sub-tasks of parallel jobs
-          should not be confused with job  array  tasks  (see  -g
+          should not be confused with array  job  tasks  (see  -g
           option above and -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
 
      -U user,...
@@ -149,23 +149,24 @@ OUTPUT FORMATS
 
      <B>o</B>  the user name of the job owner.
 
-     <B>o</B>  the status of the job - one of t(ransfering),  r(unning),
-        R(estarted),   s(uspended),   S(uspended),   T(hreshold),
-        w(aiting) or h(old).
+     <B>o</B>  the status of the job - one of d(eletion), t(ransfering),
+        r(unning),    R(estarted),    s(uspended),   S(uspended),
+        T(hreshold), w(aiting) or h(old).
 
-        The states t(ransfering) and r(unning)  indicate  that  a
-        job  is  about  to  be  executed or is already executing,
-        whereas   the   states   s(uspended),   S(uspended)   and
-        T(hreshold)  show  that  an already running jobs has been
-        suspended. The s(uspended) state is caused by  suspending
-        the  job  via  the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command, the S(uspended) state
-        indicates that the queue containing the job is  suspended
-        and   therefore   the  job  is  also  suspended  and  the
-        T(hreshold) state shows that at least one suspend  thres-
-        hold   of  the  corresponding  queue  was  exceeded  (see
-        <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) and that the job has been suspended  as  a
+        The state d(eletion) indicates that a  <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>  has  been
+        used  to  initiate job deletion. The states t(ransfering)
+        and r(unning) indicate that a job is about to be executed
+        or  is already executing, whereas the states s(uspended),
+        S(uspended) and T(hreshold) show that an already  running
+        jobs  has been suspended. The s(uspended) state is caused
+        by suspending  the  job  via  the  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>  command,  the
+        S(uspended) state indicates that the queue containing the
+        job is suspended and therefore the job is also  suspended
+        and the T(hreshold) state shows that at least one suspend
+        threshold of the corresponding queue  was  exceeded  (see
+        <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  and  that the job has been suspended as a
         consequence. The state R(estarted) indicates that the job
-        was restarted. This can be caused by a job  migration  or
+        was  restarted.  This can be caused by a job migration or
         because of one of the reasons described in the -r section
         of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> command.
 
@@ -185,7 +186,7 @@ OUTPUT FORMATS
      <B>o</B>  the function of the running jobs (MASTER or SLAVE  -  the
         latter for parallel jobs only).
 
-     <B>o</B>  the job array task id. Will be empty for non-array  jobs.
+     <B>o</B>  the array job task id. Will be empty for non-array  jobs.
         See  the  -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and the -g above for addi-
         tional information.
 
@@ -193,7 +194,7 @@ OUTPUT FORMATS
      tains
 
      <B>o</B>  the parallel task ID (do not confuse parallel tasks  with
-        job array tasks),
+        array job tasks),
 
      <B>o</B>  the status of the  parallel  task  -  one  of  r(unning),
         R(estarted),   s(uspended),   S(uspended),   T(hreshold),
@@ -210,7 +211,6 @@ OUTPUT FORMATS
      Following the header line a section for each queue separated
      by  a horizontal line is provided. For each queue the infor-
      mation printed consists of
-
      <B>o</B>  the queue name,
 
      <B>o</B>  the  queue  type  -  one   of   B(atch),   I(nteractive),

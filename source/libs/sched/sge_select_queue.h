@@ -46,7 +46,7 @@ int sge_match_complex_attributes(lList *given_attr, lList *requested_attr, int q
  * is there a load alarm on this queue
  * 
  */
-int sge_load_alarm(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, lList *load_adjustments);
+int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, lList *load_adjustments);
 
 /* 
  * get reason for alarm state on queue
@@ -113,7 +113,7 @@ int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, l
  * make debitations on all queues that are necessary 
  *
  */
-int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, lList *complex_list, u_long32 *total_slotsp);
+int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, lList *complex_list, u_long32 *total_slotsp, lList *orders_list);
 
 int debit_queue_consumable(lListElem *jep, lListElem *qep, lList *complex_list, int slots);
 

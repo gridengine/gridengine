@@ -40,27 +40,14 @@ extern "C" {
 
 int lDumpElemFp(FILE *fp, const lListElem *ep, int indent);
 int lDumpElem(const char *fname, const lListElem *ep, int indent);
+int lDumpObject(FILE *fp, const lListElem *ep, int indent);
 int lDumpList(FILE *fp, const lList *lp, int indent);
 int lDumpDescr(FILE *fp, const lDescr *dp, int indent);
 
 lListElem *lUndumpElem(FILE *fp, const lDescr *dp);
+lListElem *lUndumpObject(FILE *fp);
 lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp);
 lDescr *lUndumpDescr(FILE *fp);
-
-int fGetBra(FILE *fp);
-int fGetKet(FILE *fp);
-
-int fGetDescr(FILE *fp, lDescr *dp);
-
-int fGetInt(FILE *fp, lInt *value);
-int fGetUlong(FILE *fp, lUlong *value);
-int fGetString(FILE *fp, lString *value);
-int fGetHost(FILE *fp, lHost *value);
-int fGetFloat(FILE *fp, lFloat *value);
-int fGetDouble(FILE *fp, lDouble *value);
-int fGetLong(FILE *fp, lLong *value);
-int fGetChar(FILE *fp, lChar *value);
-int fGetList(FILE *fp, lList **value);
 
 #ifdef  __cplusplus
 }

@@ -35,11 +35,11 @@
 #include "sge.h"
 #include "sge_gdi_intern.h"
 #include "commlib.h"
-#include "sge_hostL.h"
-#include "sge_complexL.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "resolve_host.h"
+#include "sge_complex.h"
+#include "sge_host.h"
 
 /* ------------------------------------------------------------ */
 int sge_resolve_host(

@@ -360,7 +360,7 @@ int how
    lUniqStr(lp, CE_name);
 
    if (how == REQUESTABLE_RESOURCES) { 
-      where = lWhere("%T(%I != %u)", CE_Type, CE_request, 0);
+      where = lWhere("%T(%I != %b)", CE_Type, CE_request, 0);
       if (where)
          lp = lSelectDestroy(lp, where); 
    }
@@ -618,7 +618,7 @@ int maxlen
             ret=sge_resolve_hostname(stringval, unique, EH_name);
             switch ( ret ) {
                case COMMD_NACK_UNKNOWN_HOST:
-                  qmonMessageShow(w, True, "can't resolve host '%s'\n", 
+                  qmonMessageShow(w, True, "Can't resolve host '%s'", 
                                        stringval);
                   status = False;
                   break;

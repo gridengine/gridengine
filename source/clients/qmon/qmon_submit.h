@@ -50,6 +50,7 @@ typedef struct _tSMEntry {
    lList    *shell_list;            /* PN_Type */
    lList    *mail_list;             /* MR_Type */
    lList    *stdoutput_path_list;   /* PN_Type */
+   lList    *stdinput_path_list;    /* PN_Type */
    lList    *stderror_path_list;    /* PN_Type */   
    lList    *hard_resource_list;     
    lList    *soft_resource_list;
@@ -58,7 +59,6 @@ typedef struct _tSMEntry {
    lList    *master_queue_list;       /* QR_Type */
    lList    *env_list;              /* Environment */
    lList    *ctx_list;              /* Context */
-   lList    *qs_args;               /* qs_args */
    lList    *hold_jid;              /* JB_jid_predecessor_list */
    int      mail_options;
    int      merge_output;
@@ -82,10 +82,12 @@ typedef struct _tSubmitMode {
 } tSubmitMode;
 
 enum _tSubmitSensitivityMode {
-   SUBMIT_NORMAL,
-   SUBMIT_QSH,
-   SUBMIT_QALTER_PENDING,
-   SUBMIT_QALTER_RUNNING
+   SUBMIT_NORMAL           = 0x01,
+   SUBMIT_QSH              = 0x02,
+   SUBMIT_BINARY           = 0x04,
+   SUBMIT_SCRIPT           = 0x08,
+   SUBMIT_QALTER_PENDING   = 0x10,
+   SUBMIT_QALTER_RUNNING   = 0x20
 };
 
 void qmonSubmitPopup(Widget w, XtPointer cld, XtPointer cad);

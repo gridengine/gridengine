@@ -48,7 +48,7 @@ enum {
 
 LISTDEF(ST_Type)
    /* misc setup variables */
-   SGE_STRINGH(STR)
+   SGE_STRING(STR, CULL_HASH)
 LISTEND 
 
 NAMEDEF(STN)

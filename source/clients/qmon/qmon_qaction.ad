@@ -198,11 +198,11 @@ Qmon*general_config*calendar.navigationType: TAB_GROUP
 !! the order of the strings is important (->sge_queueL.h)
 Qmon*qtype.chooserType: CheckBox
 Qmon*qtype.strings: \
-   "@{Batch}", "@{Interactive}", "@{Checkpointing}", "@{Parallel}", "@{Transfer}"
+   "@{Batch}", "@{Interactive}", "@{Checkpointing}", "@{Parallel}"
 
 Qmon*shell_start_mode.chooserType: ChooserOption
 Qmon*shell_start_mode.strings: \
-   "@{posix_compliant}", "@{script_from_stdin}", "@{unix_behavior}"
+   "@{NONE}", "@{posix_compliant}", "@{script_from_stdin}", "@{unix_behavior}"
 
 Qmon*initial_state.chooserType: ChooserOption
 Qmon*initial_state.strings: \

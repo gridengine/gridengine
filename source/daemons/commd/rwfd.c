@@ -265,7 +265,7 @@ int commdport
    int i;
    char chr;
    commproc *commp;
-   char *mls_str, *s;
+   char *mls_str;
    u_long mls;
    int did_read = 0;
    
@@ -417,15 +417,17 @@ int commdport
          if (!mls)
             mls = 1024 * 1024;
          if (mp->buflen >= mls) {
+            char *from_name = sge_host_get_mainname(mp->from.host);
+            char *to_name = sge_host_get_mainname(mp->to.host);
             ERROR((SGE_EVENT, MSG_RWFD_BIGXSENDSMESSAGEYBYTESTOZ_USSIIUSSI ,
                     u32c(mls),
-                    (s = mp->from.name) ? s : "*",
-                    (s = get_mainname(mp->from.host)) ? s : "*",
+                    mp->from.name != NULL ? mp->from.name : "*",
+                    from_name != NULL ? from_name : "*",
                     (int) mp->from.id,
                     mp->tag,
                     u32c(mp->buflen),
-                    (s = mp->to.name) ? s : "*",
-                    (s = get_mainname(mp->to.host)) ? s : "*",
+                    mp->to.name != NULL ? mp->to.name : "*",
+                    to_name != NULL ? to_name : "*",
                     (int) mp->to.id));
          }
       }
@@ -739,7 +741,7 @@ int commdport
    fcntl(mp->tofd, F_SETFL, O_NONBLOCK);
 
    he = &mp->to.host->he;
-   tohostname = get_mainname(mp->to.host);
+   tohostname = sge_host_get_mainname(mp->to.host);
 
    memset(&addr, 0, sizeof(addr));
    addr.sin_family = AF_INET;
@@ -865,7 +867,7 @@ int commdport
          mp->ackchar = COMMD_CACK;
       }
       else {
-         if (!strcasecmp(get_mainname(localhost), get_mainname(mp->to.host))) {
+         if (!strcasecmp(sge_host_get_mainname(localhost), sge_host_get_mainname(mp->to.host))) {
             /* The commproc isnot enrolled on this host, but this is the
                target host -> reply negative */
             answer = 1;
@@ -884,7 +886,7 @@ int commdport
 
    /* look whether receiver is a local registered commproc or receiver is
       expected to be on the local host */
-   if (commp || !strcasecmp(get_mainname(localhost), get_mainname(mp->to.host))) {
+   if (commp || !strcasecmp(sge_host_get_mainname(localhost), sge_host_get_mainname(mp->to.host))) {
       /* deliver direct */
       if (commp && commp->w_fd != -1) {
          DEBUG((SGE_EVENT, "receiver commproc is waiting for message (mid=%d, w_fd=%d, w_name=%s, w_id=%d, w_host=%s, w_tag=%d)",

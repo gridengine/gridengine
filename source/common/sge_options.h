@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_prognames.h" 
+#include "sge_prog.h" 
 
 enum {
    NO_OPT = 0,
@@ -48,6 +48,7 @@ enum {
    h_OPT,
 
    hard_OPT,
+   i_OPT,
    j_OPT,
    l_OPT,
    m_OPT,
@@ -77,6 +78,7 @@ enum {
    ext_OPT,
    notify_OPT,
    now_OPT,
+   b_OPT,
 
    masterq_OPT,
    d_OPT,
@@ -172,7 +174,9 @@ enum {
    sprj_OPT,     /* SGE show project */
    sprjl_OPT,    /* SGE show project list */
    mstree_OPT,   /* SGE modify sharetree */
+   Mstree_OPT,   /* SGE modify sharetree from file*/
    astree_OPT,   /* SGE add sharetree */
+   Astree_OPT,   /* SGE add sharetree from file*/
    dstree_OPT,   /* SGE delete sharetree */
    sstree_OPT,   /* SGE show sharetree */
 

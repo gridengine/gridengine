@@ -40,56 +40,39 @@
 extern "C" {
 #endif
 
-/****** gdilib/PERM_LOWERBOUND **********************************
-*
+/****** gdi/sge/PERM_Type *****************************************************
 *  NAME
-*     PERM_LOWERBOUND -- Permission list 
+*     PERM_Type -- CULL Permission element
 *
 *  SYNOPSIS
-*
-*     #include "sge_permissionL.h"
-*     #include <gdilib/sge_permissionL.h>
-* 
-*     enum {
-*        PERM_manager = PERM_LOWERBOUND,       
-*        PERM_operator,                        
-*        PERM_req_host,                            
-*        PERM_req_username,                       
-*        PERM_sge_username                   
-*     };
+*     PERM_Type
+*     +--- PERM_manager: 0 or 1 (1 means user has the right)
+*     +--- PERM_operator: 0 or 1 (1 means user has the right)
+*     +--- PERM_req_host: Name of destination host
+*     +--- PERM_req_username: Username on destination host
+*     +--- PERM_sge_username: Username on master host
 *     
-*     LISTDEF( PERM_Type )
-*        SGE_ULONG    ( PERM_manager  )        0 or 1 (1 means user has the right) 
-*        SGE_ULONG    ( PERM_operator )        0 or 1 (1 means user has the right) 
-*        SGE_STRING   ( PERM_req_host )        Name of destination host            
-*        SGE_STRING   ( PERM_req_username )    Username on destination host         
-*        SGE_STRING   ( PERM_sge_username )    Username on master host 
-*     LISTEND
-*       
-*
 *  FUNCTION
-*     This list is used for an SGE_GDI_PERMCHECK gdi request. The sge_gdi()
-*     function is called with SGE_DUMMY_LIST. The qmaster will fill the list
-*     with the permisson of the user who is calling. If a PERM_Type list
-*     is given to the sge_gdi() function the master is looking for the 
-*     PERM_req_host value. The PERM_req_username and PERM_sge_username values
-*     are filled up with the correct user mapping names.
+*     This list is used for an SGE_GDI_PERMCHECK gdi request. The 
+*     sge_gdi() function is called with SGE_DUMMY_LIST. The qmaster 
+*     will fill the list with the permisson of the user who is calling. 
+*     If a PERM_Type list is given to the sge_gdi() function the 
+*     master is looking for the PERM_req_host value. The 
+*     PERM_req_username and PERM_sge_username values are filled up with 
+*     the correct user mapping names.
 *
-*     The gdi functions sge_gdi_check_permission() and sge_gdi_get_mapping_name()
-*     are using the SGE_GDI_PERMCHECK gdi request. 
+*     The gdi functions sge_gdi_check_permission() and 
+*     sge_gdi_get_mapping_name() are using the SGE_GDI_PERMCHECK gdi 
+*     request. 
 * 
-*  INPUTS
-*
-*  RESULT
-*
 *  EXAMPLE
-*        permList = lCreateList("permissons", PERM_Type);
+*        permList = lCreateList("permissions", PERM_Type);
 *        ep = lCreateElem(PERM_Type);
 *        lAppendElem(permList,ep);
 *        lSetString(ep, PERM_req_host, requestedHost); 
 *     
-*        alp = sge_gdi(SGE_DUMMY_LIST, SGE_GDI_PERMCHECK ,  &permList , NULL,NULL );
-*     
+*        alp = sge_gdi(SGE_DUMMY_LIST, SGE_GDI_PERMCHECK,  &permList, 
+*                      NULL, NULL);
 *        
 *        if (permList != NULL) {
 *           ep = permList->first;
@@ -98,17 +81,11 @@ extern "C" {
 *           } 
 *        }
 *       
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
 *    gdilib/sge_gdi_get_mapping_name()
 *    gdilib/sge_gdi_check_permission()
 *    gdilib/sge_gdi()
-*    
-****************************************************************************
-*/
+*****************************************************************************/
 
 /* *INDENT-OFF* */ 
 
@@ -124,11 +101,11 @@ enum {
 };
 
 LISTDEF(PERM_Type)
-   SGE_ULONG(PERM_manager)            /* 0 or 1 (1 means user has the right) */
-   SGE_ULONG(PERM_operator)           /* 0 or 1 (1 means user has the right) */
-   SGE_HOST(PERM_req_host)          /* Name of destination host */       /* CR - hostname change */
-   SGE_STRING(PERM_req_username)      /* Username on destination host */
-   SGE_STRING(PERM_sge_username)      /* username on master host */
+   SGE_ULONG(PERM_manager, CULL_DEFAULT)            /* 0 or 1 (1 means user has the right) */
+   SGE_ULONG(PERM_operator, CULL_DEFAULT)           /* 0 or 1 (1 means user has the right) */
+   SGE_HOST(PERM_req_host, CULL_DEFAULT)          /* Name of destination host */       /* CR - hostname change */
+   SGE_STRING(PERM_req_username, CULL_DEFAULT)      /* Username on destination host */
+   SGE_STRING(PERM_sge_username, CULL_DEFAULT)      /* username on master host */
 LISTEND 
 
 NAMEDEF(PERMN)

@@ -48,23 +48,19 @@ extern "C" {
 enum {
    CT_str = CT_LOWERBOUND,   /* string of category */
    CT_refcount,              /* number of jobs referencing the string */
-   CT_rejected,              /* has this category been rejected */
-   CT_jobs                   /* jobs which belong to this category */
+   CT_rejected               /* has this category been rejected */
 };
 
-
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
-   SGE_STRINGHU(CT_str)
-   SGE_ULONG(CT_refcount)
-   SGE_ULONG(CT_rejected)
-   SGE_XLIST(CT_jobs, JR_Type)
+   SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
+   SGE_ULONG(CT_refcount, CULL_DEFAULT)
+   SGE_ULONG(CT_rejected, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CTN)
    NAME("CT_str")
    NAME("CT_refcount")
    NAME("CT_rejected")
-   NAME("CT_jobs")
 NAMEEND
 
 /* *INDENT-ON* */

@@ -53,21 +53,19 @@
 #endif
 
 #include "basis_types.h"
+#include "sge_prog.h"
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
-#include "sge_arch.h"
 
 
 static char err_str[1024];
 
-/****** shepherd/write_to_qrsh() ***************************************
-*
+/****** shepherd/qrsh/write_to_qrsh() *****************************************
 *  NAME
 *     write_to_qrsh -- short description
 *
 *  SYNOPSIS
-*     #include "qlogin_starter.h"
 *     void write_to_qrsh(char *data);
 *
 *  FUNCTION
@@ -89,17 +87,7 @@ static char err_str[1024];
 *     4, if the hostname cannot be resolved
 *     5, if connecting to the socket fails
 *     6, if writing the data fails
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
+******************************************************************************/
 int write_to_qrsh(const char *data)
 {
    char *address = NULL;
@@ -178,13 +166,11 @@ int write_to_qrsh(const char *data)
    return 0;
 }
 
-/****** shepherd/write_exit_code_to_qrsh() ***************************************
-*
+/****** shepherd/qrsh/write_exit_code_to_qrsh() *******************************
 *  NAME
 *     write_exit_code_to_qrsh -- write an exit code to qrsh
 *
 *  SYNOPSIS
-*     #include "qlogin_starter.h"
 *     void write_exit_code_to_qrsh(int exit_code)
 *
 *  FUNCTION
@@ -200,19 +186,9 @@ int write_to_qrsh(const char *data)
 *  INPUTS
 *     exit_code - status of the calling process
 *
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     shepherd/write_to_qrsh()
-*
-****************************************************************************
-*/
+*     shepherd/qrsh/write_to_qrsh()
+******************************************************************************/
 void write_exit_code_to_qrsh(int exit_code)
 {
    char buffer[1024];
@@ -232,9 +208,9 @@ void write_exit_code_to_qrsh(int exit_code)
          exit_code = 1;
          
          tmpdir = getenv("TMPDIR");
-         taskid = getenv("TASK_ID");
+         taskid = search_conf_val("pe_task_id");
          SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh - TMPDIR = "
-            "%s, TASK_ID = %s", tmpdir ? tmpdir : "0", 
+            "%s, pe_task_id = %s", tmpdir ? tmpdir : "0", 
             taskid ? taskid : "0"));
          if(tmpdir) {
             if(taskid) {
@@ -261,8 +237,7 @@ void write_exit_code_to_qrsh(int exit_code)
    }
 }
 
-/****** shepherd/get_exit_code_of_qrsh_starter() ***************************************
-*
+/****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
 *  NAME
 *     get_exit_code_of_qrsh_starter -- short description
 *
@@ -277,9 +252,7 @@ void write_exit_code_to_qrsh(int exit_code)
 *  RESULT
 *     the exit code of the process
 *     1, if an error occured while reading the file
-*
-****************************************************************************
-*/
+******************************************************************************/
 int get_exit_code_of_qrsh_starter(void)
 {
    char buffer[1024];
@@ -299,10 +272,11 @@ int get_exit_code_of_qrsh_starter(void)
 
       /* ### */
 
+      /* JG: TODO: do we need qrsh_tmpdir? Isn't it the same as tmpdir? */
       tmpdir = search_conf_val("qrsh_tmpdir");
-      taskid = search_conf_val("qrsh_task_id");
+      taskid = search_conf_val("pe_task_id");
       SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter - TMPDIR = %s,"
-         " TASK_ID = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
+         " pe_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
       if(tmpdir) {
          if(taskid) {
             sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
@@ -323,7 +297,7 @@ int get_exit_code_of_qrsh_starter(void)
    return exit_code;        
 }
 
-/****** shepherd/qlogin_starter() ***************************************
+/****** shepherd/qrsh/qlogin_starter() ****************************************
 *
 *  NAME
 *     qlogin_starter -- short description
@@ -361,17 +335,7 @@ int get_exit_code_of_qrsh_starter(void)
 *     10, if nobody connects to the socket within a one minute
 *     11, if the acception of a connecting client fails
 *     12, if the execution of the daemon fails
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
+******************************************************************************/
 int qlogin_starter(const char *cwd, char *daemon)
 {
    int ret;
@@ -381,16 +345,23 @@ int qlogin_starter(const char *cwd, char *daemon)
    int on = 1;
    int sso = 1;
    int newsfd;
-   int length;
    fd_set fds;
    struct sockaddr_in serv_addr;
-   int len = sizeof(serv_addr);
    struct timeval timeout;
    char buffer[2048];
-   char *args[20]; /* !!!! should be dynamically allocated */
+   char *args[20]; /* JG: TODO: should be dynamically allocated */
    int argc = 0;
    const char *sge_root = NULL;
    char *arch = NULL;
+#if AIX51
+   size_t length;
+   size_t len;
+#else
+   int length;
+   int len;
+#endif
+
+   len = sizeof(serv_addr);
 
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));
@@ -401,13 +372,6 @@ int qlogin_starter(const char *cwd, char *daemon)
       return 4;
    }
 
-/*#ifdef SOLARIS
-   if(setreuid(0, 0)) {
-      SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
-      return 4;
-   } 
-#endif
-*/
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));
    
@@ -422,22 +386,13 @@ int qlogin_starter(const char *cwd, char *daemon)
 
    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
    
-   /* bind an address to socket */
-   /* we start somewhere between 1100 and 1224 and count upwards until one
-      is free. i hope this doesn't interfere too badly with other
-      programs, but i didn't find out how to use a kernel-assigned port */
-   /* port = 1100;  */
-   /* port = 511; */
+   /* bind an address to any socket */
    memset((char *) &serv_addr, 0, sizeof(serv_addr));
-   /* serv_addr.sin_port = htons(port); */
    serv_addr.sin_port = 0; 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
 
    ret = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)); 
-   /* while (((ret = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) < 0) && errno == EINVAL)
-      serv_addr.sin_port = htons(++port); */
-      /* serv_addr.sin_port = htons(--port); */
    
    if(ret != 0) {
       SHEPHERD_TRACE((err_str, "cannot bind socket: %s", strerror(errno)));
@@ -517,6 +472,9 @@ int qlogin_starter(const char *cwd, char *daemon)
    SHEPHERD_TRACE((err_str, "daemon to start: |%s|", daemon));
 
    /* split daemon commandline into single arguments */
+   /* JG: TODO: might contain quoted arguments containing spaces 
+    *           make function to split or use an already existing one
+    */
    args[argc++] = strtok(daemon, " ");
    while((args[argc++] = strtok(NULL, " ")) != NULL);
 

@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int read_all_configurations(lList **lpp);
 int sge_del_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 int sge_mod_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 int is_configuration_up_to_date(lListElem *hep, lList *conf_list, lList *to_check_list);

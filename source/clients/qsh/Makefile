@@ -39,8 +39,8 @@ QSH_TARGETS = qsh
 QSH_SRC = qsh.c parse_job_qsh.c 
 
 QSH_ADD_SRC = parse_job_cull.c parse_qsub.c \
-               sig_handlers.c read_defaults.c  path_aliases.c \
-               show_job.c job.c sge_conf.c usage.c sge_options.c
+               sig_handlers.c read_defaults.c \
+               show_job.c usage.c sge_options.c
 
 QSH_OBJS = $(QSH_SRC:.c=.o)
 

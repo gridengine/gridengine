@@ -38,21 +38,20 @@
 #include <pwd.h>
 #include <errno.h>
 
-#include "sge_arch.h"
-#include "sge_confL.h"
-#include "sge_answerL.h"
-
+#include "sge_answer.h"
 #include "read_object.h"
-#include "sge_getpwnam.h"
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_me.h"
 #include "config.h"
 #include "exec_wrapper.h"
 #include "setup_path.h"
+#include "sge_uidgid.h"
+#include "sge_prog.h"
+#include "sge_answer.h"
+#include "sge_conf.h"
 
-#include "msg_utilib.h"
+#include "msg_common.h"
 
 /* module global variables */
 static lList *task_config = NULL;
@@ -84,8 +83,8 @@ print_func_t ostream
    sprintf(fname, "%s/common/qtask", path.cell_root);
 
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
@@ -110,22 +109,22 @@ print_func_t ostream
 
    /* user settings */
    if (!(pwd = sge_getpwnam(me.user_name))) {
-      sprintf(SGE_EVENT, "invalid user name \"%s\"\n", me.user_name);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , me.user_name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    if (!pwd->pw_dir) {
-      sprintf(SGE_EVENT, "missing home directory for user \"%s\"\n", me.user_name);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , me.user_name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    sprintf(fname, "%s/.qtask", pwd->pw_dir);
    
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
-      sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
@@ -222,9 +221,10 @@ Error:
 }
 
 int sge_execv(
-char *path,   /* this is how tcsh tries to start the command */
+char *path,    /* this is how tcsh tries to start the command */
 char *argv[],
-char *expath  /* this is how user typed in the command */
+char *expath,  /* this is how user typed in the command */
+int close_stdin /* use of qrsh's -nostdin option */
 ) {
    const char *value; 
    char *taskname = NULL, *s, *resreq;
@@ -241,8 +241,8 @@ char *expath  /* this is how user typed in the command */
 
 #if 1
    if (mode_verbose)
-      fprintf(stderr, "sge_execv(path = %s, taskname = %s, expath = %s)\n", 
-         path, taskname?taskname:"<no remote execution>", expath);
+      fprintf(stderr, "sge_execv(path = %s, taskname = %s, expath = %s, close_stdin = %d)\n", 
+         path, taskname?taskname:"<no remote execution>", expath, close_stdin);
 #endif
 
    if (!mode_remote || 
@@ -266,6 +266,7 @@ char *expath  /* this is how user typed in the command */
    }
    newargv = (char **)malloc(sizeof(char *) * (
       1 +                                /* qrsh */
+      (close_stdin?1:0) +                /* -nostdin */
       (mode_verbose?1:0) +               /* -verbose */
       2 +                                /* -now [y|n] */
       narg_resreq +                      /* resource requests to qrsh */
@@ -276,6 +277,9 @@ char *expath  /* this is how user typed in the command */
    /* build argv for qrsh */
    i = 0;
    newargv[i++] = strdup("qrsh");
+
+   if (close_stdin) 
+      newargv[i++] = strdup("-nostdin");
 
    if (mode_verbose) 
       newargv[i++] = strdup("-verbose");

@@ -41,18 +41,28 @@
 #include "cull.h"
 #include "sgermon.h"
 
-/* ---------------------------------------- 
-
-   lGetNumberOfNodes()
-   returns number of elements and 
-   subelements in the sublist 'nm'
-
- */
-int lGetNumberOfNodes(
-const lListElem *ep,
-const lList *lp,
-int nm 
-) {
+/****** cull/tree/lGetNumberOfNodes() *****************************************
+*  NAME
+*     lGetNumberOfNodes() -- Number of elements and subelements 
+*
+*  SYNOPSIS
+*     int lGetNumberOfNodes(const lListElem *ep, const lList *lp, int nm) 
+*
+*  FUNCTION
+*     Returns the number of elements and subelements in the sublist 'nm' 
+*     of the element 'ep' (lp = NULL) or returns the sum of all elements
+*     and subelements within the list 'lp' (ep = NULL)
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     const lList *lp     - list 
+*     int nm              - field name id within element 
+*
+*  RESULT
+*     int - number of elements
+*******************************************************************************/
+int lGetNumberOfNodes(const lListElem *ep, const lList *lp, int nm) 
+{
    int n = 0;
 
    DENTER(CULL_LAYER, "lGetNumberOfNodes");
@@ -62,14 +72,13 @@ int nm
 
       n = 1;
 
-      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && ep->descr[pos].mt == lListT) {
+      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && mt_get_type(ep->descr[pos].mt) == lListT) {
          if ((lp = lGetPosList(ep, pos)))
             n += lGetNumberOfNodes(NULL, lp, nm);
       }
       DEXIT;
       return n;
-   }
-   else {
+   } else {
       for_each(ep, lp) {
          n += lGetNumberOfNodes(ep, NULL, nm);
       }
@@ -78,17 +87,26 @@ int nm
    }
 }
 
-/* ---------------------------------------- 
-
-   lGetNumberOfLeafs()
-   returns number of leafs
-
- */
-int lGetNumberOfLeafs(
-const lListElem *ep,
-const lList *lp,
-int nm 
-) {
+/****** cull/tree/lGetNumberOfLeafs() *****************************************
+*  NAME
+*     lGetNumberOfLeafs() -- Returns the number of leaves 
+*
+*  SYNOPSIS
+*     int lGetNumberOfLeafs(const lListElem *ep, const lList *lp, int nm) 
+*
+*  FUNCTION
+*     Returns the number of leaves 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     const lList *lp     - list 
+*     int nm              - field name if within ep 
+*
+*  RESULT
+*     int - number of leaves 
+******************************************************************************/
+int lGetNumberOfLeafs(const lListElem *ep, const lList *lp, int nm) 
+{
    int n = 0;
 
    DENTER(CULL_LAYER, "lGetNumberOfLeafs");
@@ -96,7 +114,7 @@ int nm
    if (ep) {
       int pos;
 
-      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && ep->descr[pos].mt == lListT) {
+      if ((pos = lGetPosViaElem(ep, nm)) >= 0 && mt_get_type(ep->descr[pos].mt) == lListT) {
          if (!(lp = lGetPosList(ep, pos)))
             n = 1;
          else

@@ -87,18 +87,56 @@ set module_name "control_procedures.tcl"
 proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
+
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $expected_result]] >= 0 } {
+      set help1 [string last "*" $expected_result]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set expected_result [string range $expected_result 0 $help2 ]
+      } else {
+         break
+      }
+   }
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result]] >= 0 } {
+      set help1 [string last "*" $additional_expected_result]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result [string range $additional_expected_result 0 $help2 ]
+      } else {
+         break
+      }
+   }
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result2]] >= 0 } {
+      set help1 [string last "*" $additional_expected_result2]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result2 [string range $additional_expected_result2 0 $help2 ]
+      } else {
+         break
+      }
+   }
+
+
+
+   
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
 #  set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
-      puts $CHECK_OUTPUT "starting -> $prog_binary $prog_args"
+      debug_puts "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
          log_user 1
          set send_speed .05
          set send_line_speed 1
       } else {
-         log_user 0 
+         log_user 0 ;# reisi
          set send_speed .0001
          set send_line_speed .0001
       }
@@ -107,19 +145,30 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set timeout 60
 
       set start_time [ timestamp ] 
-      send -i $sp_id ""
+      send -i $sp_id "G"
       set timeout 1
+      set timeout_count 0
       while { $stop_line_wait == 0 } {
          expect {
             -i $sp_id full_buffer {
                add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set stop_line_wait 1
             }
-            -i $sp_id "line" {
+            -i $sp_id "100%" {
+               send -i $sp_id "1G"      ;# go to first line
                set stop_line_wait 1
             }
+
             -i $sp_id timeout {  
-               send -i $sp_id ""
+#               set stream [open /tmp/cr.txt "a"]              ;# debug
+#               puts -nonewline $stream $expect_out(buffer)  ;# debug $expect_out(buffer) 0,string 
+#               close $stream                                  ;# debug
+               send -i $sp_id "G"
+               incr timeout_count 1
+               if { $timeout_count > 60 } {
+                  add_proc_error "handle_vi_edit" -2 "vi doesn't respond! perhaps this is a \"terminal to wide\" error?"
+                  set stop_line_wait 1
+               }
             }
             -i $sp_id "erminal too wide" {
                add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
@@ -196,19 +245,41 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                -i $sp_id timeout {
                   set result -1
                   set doStop 1
-                  add_proc_error "handle_vi_edit" -1 "timeout error"
+                  add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
                }
                -i $sp_id eof {
+                  if { $result == -100 } {
+                  }
                   set doStop 1
                }
                -i $sp_id "_exit_status_" {
+                  if { $result == -100 } {
+
+                     set pos [string last "\n" $expect_out(buffer)]
+                     incr pos -2
+                     set buffer_message [string range $expect_out(buffer) 0 $pos ]
+                     set pos [string last "\n" $buffer_message]
+                     incr pos 1
+                     set buffer_message [string range $buffer_message $pos end] 
+
+                     set message_txt ""
+                     append message_txt "expect out buffer is:\n"
+                     append message_txt "   \"$buffer_message\"\n"
+                     append message_txt "this doesn't match any given expression:\n"
+                     append message_txt "   \"$expected_result\"\n"
+                     append message_txt "   \"$additional_expected_result\"\n"
+                     append message_txt "   \"$additional_expected_result2\"\n"
+                     add_proc_error "handle_vi_edit" -1 $message_txt
+                  }
                   set doStop 1
                }
            }
         }
      }
-  puts $CHECK_OUTPUT $expect_out(buffer)
   close_spawn_process $id
+
+  # debug output start
+
   log_user 1
   foreach elem $vi_command_sequence {
       debug_puts "sequence: $elem"
@@ -242,6 +313,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
   }
   flush stdout
+  # debug output end
   if {$CHECK_DEBUG_LEVEL != 0} {
     log_user 1
   } else {
@@ -414,8 +486,8 @@ proc ps_grep { forwhat { host "local" } { variable ps_info } } {
 #       up the information into one resulting list
 #
 #     o this procedure should run on following platforms:
-#       solaris64, solaris, osf4, tru64, irix6, aix43, aix42, hp10, hp11, glinux,
-#       and alinux
+#       solaris64, solaris, osf4, tru64, irix6, aix43, aix42, hp10, hp11, 
+#       hp11-64, glinux and alinux
 #
 #  BUGS
 #     ??? 
@@ -445,7 +517,6 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
    #puts "arch on host $host is $host_arch"
    
-
    switch -- $host_arch {
 
       "solaris64" - 
@@ -564,7 +635,22 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    13
          set command_pos 14
       }
- 
+
+      "hp11-64" {
+         set myenvironment(COLUMNS) "500"
+         set myenvironment(UNIX95)  ""
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid gid ppid uid state stime vsz time args\"" prg_exit_state 60 0 myenvironment]
+         set index_names "  PID        GID  PPID        UID S    STIME     VSZ     TIME COMMAND"
+         set pid_pos     0
+         set gid_pos     1
+         set ppid_pos    2
+         set uid_pos     3
+         set state_pos   4
+         set stime_pos   5
+         set vsz_pos     6
+         set time_pos    7
+         set command_pos 8
+      }
       
       "glinux"    { 
          set myenvironment(COLUMNS) "500"
@@ -681,7 +767,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
    # no header found?
    if { $x == $num_lines } {
-      add_proc_error "get_ps_info" "-1" "no usable data from ps command"
+      add_proc_error "get_ps_info" "-1" "no usable data from ps command, host=$host, host_arch=$host_arch"
       return
    }
   

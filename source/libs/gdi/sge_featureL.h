@@ -49,9 +49,9 @@ enum {
 };
 
 LISTDEF(FES_Type)
-   SGE_ULONG(FES_id)
-   SGE_ULONG(FES_active)
-   SGE_LIST(FES_features)
+   SGE_ULONG(FES_id, CULL_DEFAULT)
+   SGE_ULONG(FES_active, CULL_DEFAULT)
+   SGE_LIST(FES_features, FE_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(FESN)
@@ -68,8 +68,8 @@ enum {
 };
 
 LISTDEF(FE_Type)
-   SGE_ULONG(FE_id)           /* unique id (see enum below) */
-   SGE_ULONG(FE_enabled)      /* is this feature currently enabled? */
+   SGE_ULONG(FE_id, CULL_DEFAULT)           /* unique id (see enum below) */
+   SGE_ULONG(FE_enabled, CULL_DEFAULT)      /* is this feature currently enabled? */
 LISTEND 
 
 NAMEDEF(FEN)

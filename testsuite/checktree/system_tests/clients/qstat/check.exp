@@ -34,13 +34,23 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr 
-set check_name         "qstat"
-set check_description(0)  "checking \"qstat -f\" - queue count, slotcount, load"
-set check_needs        "init_core_system"  ;# dependencies of this check (name of other check)
-set check_functions    "check_core_queues"           ;# functions to call (in order)
-set check_errno       "-1"                          ;# 0 -> OK , != 0 means error
-set check_errstr        "was never running"           ;# string for error description
+global check_category check_root_access_needs
 
+
+
+set check_root_access_needs  "yes"
+
+set check_name           "qstat"
+set check_category       "COMPATIBILITY SYSTEM L10N"
+set check_description(0) "checking qstat functionality"
+set check_needs          "init_core_system"      ;# dependencies of this check (name of other check)
+set check_functions      "check_core_queues"     ;# functions to call (in order)
+lappend check_functions  "qstat_option_l"
+lappend check_functions  "qstat_option_q"
+lappend check_functions  "qstat_option_pe"
+lappend check_functions  "qstat_option_U"
+set check_errno          "-1"                    ;# 0 -> OK , != 0 means error
+set check_errstr         "was never running"     ;# string for error description
 
 
 #                                                             max. column:     |
@@ -210,3 +220,307 @@ proc check_core_queues {} {
   # ok - no errors, very very nice ;-) 
   set_error 0 "check_core_queues - no errors"
 }
+
+proc qstat_option_l {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH
+
+  puts $CHECK_OUTPUT "checking qstat -l option ..."
+
+  set my_arch [resolve_arch [lindex $CHECK_CORE_EXECD 0]]
+
+  puts $CHECK_OUTPUT "submitting job requesting arch=$my_arch ..."   
+  
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null -h -l arch=$my_arch"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+
+  
+
+
+  puts $CHECK_OUTPUT "submitting job requesting arch=undefined_arch ..."  
+  set arguments "-o /dev/null -e /dev/null -h -l arch=undefined_arch"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+
+  
+   puts $CHECK_OUTPUT "\nrunning qstat -l arch=$my_arch ..."
+   set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-l" "arch=$my_arch"} result]
+   puts $CHECK_OUTPUT $result
+   if { $exit_code == 0 } {
+      if { [info exists jobinfo] } {
+         unset jobinfo
+      }  
+      parse_qstat result jobinfo "" 0
+      set shown_jobs [ split $jobinfo(index) "," ]
+      set nr_jobs [llength $shown_jobs]
+      incr nr_jobs -1
+      puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+      if { $nr_jobs != 3 } {
+         add_proc_error "qstat_option_l" -1 "qstat -l arch=$my_arch should show exactly three jobs"
+      }
+   } else {
+       add_proc_error "qstat_option_l" -1 "qstat -l arch=$my_arch exit status not 0"
+   }
+
+   puts $CHECK_OUTPUT "\nrunning qstat -l arch=undefined_arch ..."
+   set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-l" "arch=undefined_arch"} result]
+   puts $CHECK_OUTPUT $result
+   if { $exit_code == 0 } {
+      if { [info exists jobinfo] } {
+         unset jobinfo
+      }  
+      parse_qstat result jobinfo "" 0
+      set shown_jobs [ split $jobinfo(index) "," ]
+      set nr_jobs [llength $shown_jobs]
+      incr nr_jobs -1
+      puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+      if { $nr_jobs != -1 } {
+         add_proc_error "qstat_option_l" -1 "qstat -l arch=$my_arch should show no job"
+      }
+   } else {
+       add_proc_error "qstat_option_l" -1 "qstat -l arch=$my_arch exit status not 0"
+   }
+
+  foreach elem $job_id_list {
+     delete_job $elem
+  }
+  wait_for_end_of_all_jobs 60
+
+  set_error 0 "ok"
+}
+
+proc qstat_option_q {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH
+
+  puts $CHECK_OUTPUT "checking qstat -q option ..."
+
+  puts $CHECK_OUTPUT "submitting jobs requesting each queue ..."   
+  set job_id_list ""
+  set counter 0
+  foreach host $CHECK_CORE_EXECD {
+     set qname "${host}.q"
+     puts $CHECK_OUTPUT "\nsubmitting -q $qname ..."
+     
+     set arguments "-o /dev/null -e /dev/null -h -q $qname"
+     set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+     lappend job_id_list $job_id
+     set queue_job_array($qname) $job_id
+  }
+
+  foreach host $CHECK_CORE_EXECD {
+      
+     set qname "${host}.q"
+     puts $CHECK_OUTPUT "\nrunning qstat -q $qname ..."
+     set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-q" "$qname"} result]
+     puts $CHECK_OUTPUT $result
+     
+     set correct_job_id $queue_job_array($qname)
+     puts $CHECK_OUTPUT "job on queue $qname must be $correct_job_id"
+ 
+     if { $exit_code == 0 } {
+        if { [info exists jobinfo] } {
+           unset jobinfo
+        }  
+        parse_qstat result jobinfo "" 0
+        set shown_jobs [ split $jobinfo(index) "," ]
+        set nr_jobs [llength $shown_jobs]
+        incr nr_jobs -1
+        puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+        if { $nr_jobs != 1 } {
+           add_proc_error "qstat_option_l" -1 "qstat -q $qname should show exactly one job"
+        }
+        if { [lindex $shown_jobs 0] != $correct_job_id } {
+           add_proc_error "qstat_option_l" -1 "qstat -q $qname shows wrong job"
+        }
+     } else {
+        add_proc_error "qstat_option_l" -1 "qstat -q $qname exit status not 0"
+     }
+  }
+
+  foreach elem $job_id_list {
+     delete_job $elem
+  }
+  wait_for_end_of_all_jobs 60
+
+  set_error 0 "ok"
+}
+
+
+proc qstat_option_pe {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH 
+
+  puts $CHECK_OUTPUT "checking qstat -pe option ..."
+
+  set mype1(pe_name) "mype1"
+  set mype1(queue_list) "[lindex $CHECK_CORE_EXECD 0].q"
+  set mype1(slots) 2
+  set mype1(allocation_rule) "\$pe_slots"
+  add_pe mype1
+
+  set testq(qname) "test.q"
+  set testq(hostname) "[lindex $CHECK_CORE_EXECD 0]"
+  set testq(load_thresholds) "np_load_avg=7.00"
+  add_queue testq
+
+  set mype2(pe_name) "mype2"
+  set mype2(queue_list) "test.q"
+  set mype2(slots) 2
+  set mype2(allocation_rule) "\$pe_slots"
+  add_pe mype2
+
+
+  puts $CHECK_OUTPUT "submitting job requesting pe mype1 ..."   
+  
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null -h -pe mype1 2"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+
+
+  puts $CHECK_OUTPUT "submitting job requesting pe mype2 ..."  
+  set arguments "-o /dev/null -e /dev/null -h -pe mype2 2"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+
+  
+  puts $CHECK_OUTPUT "\nrunning qstat -pe mype1 ..."
+  set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-pe" "mype1"} result]
+  puts $CHECK_OUTPUT $result
+  if { $exit_code == 0 } {
+     if { [info exists jobinfo] } {
+        unset jobinfo
+     }  
+     parse_qstat result jobinfo "" 0
+     set shown_jobs [ split $jobinfo(index) "," ]
+     set nr_jobs [llength $shown_jobs]
+     incr nr_jobs -1
+     puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+     if { $nr_jobs != 3 } {
+        add_proc_error "qstat_option_pe" -1 "qstat -pe mype1 should show exactly three jobs"
+     }
+  } else {
+      add_proc_error "qstat_option_pe" -1 "qstat -pe mype1 exit status not 0"
+  }
+
+   puts $CHECK_OUTPUT "\nrunning qstat -pe mype2 ..."
+  set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-pe" "mype2"} result]
+  puts $CHECK_OUTPUT $result
+  if { $exit_code == 0 } {
+     if { [info exists jobinfo] } {
+        unset jobinfo
+     }  
+     parse_qstat result jobinfo "" 0
+     set shown_jobs [ split $jobinfo(index) "," ]
+     set nr_jobs [llength $shown_jobs]
+     incr nr_jobs -1
+     puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+     if { $nr_jobs != 1 } {
+        add_proc_error "qstat_option_pe" -1 "qstat -pe mype2 should show exactly one job"
+     }
+  } else {
+      add_proc_error "qstat_option_pe" -1 "qstat -pe mype2 exit status not 0"
+  }
+
+  foreach elem $job_id_list {
+     delete_job $elem
+  }
+  wait_for_end_of_all_jobs 60
+
+  del_pe mype1
+  del_pe mype2
+  del_queue "test.q"
+
+  set_error 0 "ok"
+}
+
+
+proc qstat_option_U {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH 
+  global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+  puts $CHECK_OUTPUT "checking qstat -U option ..."
+
+  set testq(qname) "test.q"
+  set testq(hostname) "[lindex $CHECK_CORE_EXECD 0]"
+  set testq(load_thresholds) "np_load_avg=7.00"
+  set testq(slots) 10
+  set testq(user_lists) deadlineusers 
+  add_queue testq
+
+
+  puts $CHECK_OUTPUT "submitting jobs as user $CHECK_USER ..."   
+  
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null -h -q test.q"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_USER]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_USER]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_USER]
+  lappend job_id_list $job_id
+
+
+  puts $CHECK_OUTPUT "submitting job as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."  
+  set arguments "-o /dev/null -e /dev/null -h -q test.q"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
+  lappend job_id_list $job_id
+  
+  puts $CHECK_OUTPUT "\nrunning qstat -U $CHECK_USER ..."
+  set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-U" "$CHECK_USER"} result]
+  puts $CHECK_OUTPUT $result
+  if { $exit_code == 0 } {
+     if { [info exists jobinfo] } {
+        unset jobinfo
+     }  
+     parse_qstat result jobinfo "" 0
+    set shown_jobs [ split $jobinfo(index) "," ]
+     set nr_jobs [llength $shown_jobs]
+     incr nr_jobs -1
+    puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+     if { $nr_jobs != 3 } {
+        add_proc_error "qstat_option_U" -1 "qstat -U $CHECK_USER should show exactly three jobs"
+    }
+  } else {
+     add_proc_error "qstat_option_U" -1 "qstat -U $CHECK_USER exit status not 0"
+  }
+
+  puts $CHECK_OUTPUT "\nrunning qstat -U $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
+  set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-U" "$CHECK_FIRST_FOREIGN_SYSTEM_USER"} result]
+  puts $CHECK_OUTPUT $result
+  if { $exit_code == 0 } {
+     if { [info exists jobinfo] } {
+        unset jobinfo
+     }  
+     parse_qstat result jobinfo "" 0
+    set shown_jobs [ split $jobinfo(index) "," ]
+     set nr_jobs [llength $shown_jobs]
+     incr nr_jobs -1
+    puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+     if { $nr_jobs != -1 } {
+        add_proc_error "qstat_option_U" -1 "qstat -U $CHECK_FIRST_FOREIGN_SYSTEM_USER should show no jobs"
+    }
+  } else {
+     add_proc_error "qstat_option_U" -1 "qstat -U $CHECK_FIRST_FOREIGN_SYSTEM_USER exit status not 0"
+  }
+
+
+  foreach elem $job_id_list {
+     delete_job $elem
+  }
+  wait_for_end_of_all_jobs 60
+
+  del_queue test.q
+
+  set_error 0 "ok"
+}
+
+

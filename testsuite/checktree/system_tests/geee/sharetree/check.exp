@@ -31,8 +31,12 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+# JG: TODO: Create chart: actual resource share over time based on 
+#           output of sge_share_mon
+
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +55,7 @@ set check_init_level_procedure "share_tree_init_level"
 
 # define test's name and run level descriptions
 set check_name            "share_tree"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   100
 set check_description(0)  "Testing grd share_tree (functional test)"
 set check_description(100)  "Testing grd share_tree"
@@ -87,7 +92,7 @@ proc share_tree_init_level {} {
            return 0    
      } 
      "100" {
-           set share_tree_job_counter       30
+           set share_tree_job_counter       100
            set share_tree_percentage_variation  2
            return 0    
      }
@@ -249,7 +254,10 @@ proc get_normalized_ticket_order { job_list_prj1 job_list_prj2 job_list_prj3 mos
 
 
 proc set_share_tree {} {
-   set s_tree ""
+
+   global CHECK_HOST CHECK_OUTPUT
+
+   set s_tree ""  
    lappend s_tree "id=0"
    lappend s_tree "name=Root"
    lappend s_tree "type=0"
@@ -290,6 +298,9 @@ proc share_tree_setup  {} {
    global CHECK_CORE_EXECD
    global CHECK_ARCH
    global CHECK_PRODUCT_ROOT
+   global CHECK_HOST 
+
+
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -316,7 +327,8 @@ proc share_tree_setup  {} {
    set prj_setup(name) "project3"
    add_prj prj_setup
 
-   
+
+
    set vi_commands "i" 
    set s_tree [set_share_tree]
    foreach elem $s_tree {
@@ -324,7 +336,16 @@ proc share_tree_setup  {} {
    } 
    lappend vi_commands [format "%c" 27]
    lappend  vi_commands "dddddddddddd"
-   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astree" $vi_commands "changed sharetree" "error" ]  
+   
+
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ] 
+ 
+   set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
+   set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
+
+   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astree" $vi_commands $CHANGED_SHARETREE $CAN_T_READ ]  
    if { $result != 0 } {
       add_proc_error "share_tree_setup" -1 "could not add sharetree (error: $result)"
    }
@@ -334,7 +355,7 @@ proc share_tree_setup  {} {
    set my_config(job_load_adjustments) "np_load_avg=0.0"
    set my_config(schedule_interval)    "2:0:0"
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
-   set my_config(halftime)             "1"
+   set my_config(halftime)             "10"
    set_schedd_config my_config
 
    set_error 0 "ok"
@@ -369,6 +390,7 @@ proc share_tree_test {} {
    global share_tree_job_counter CHECK_PROTOCOL_DIR
    global CHECK_SCRIPT_FILE_DIR
    global share_tree_percentage_variation
+   global prj1_id_list prj2_id_list prj3_id_list
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -384,9 +406,9 @@ proc share_tree_test {} {
    set prj3_id_list ""
    set counter $share_tree_job_counter
    while { $counter > 0 } {
-      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 2 $CHECK_PROTOCOL_DIR"]
-      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 2 $CHECK_PROTOCOL_DIR"]
-      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 2 $CHECK_PROTOCOL_DIR"]
+      lappend prj1_id_list [ submit_job "-e /dev/null -o /dev/null -P project1 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
+      lappend prj2_id_list [ submit_job "-e /dev/null -o /dev/null -P project2 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
+      set last_job [ submit_job "-e /dev/null -o /dev/null -P project3 $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/worker.sh 5 $CHECK_PROTOCOL_DIR"]
       lappend prj3_id_list $last_job      
       incr counter -1
    }
@@ -462,7 +484,7 @@ proc share_tree_test {} {
 
    set done 0
    set my_timeout [timestamp]
-   incr my_timeout 400
+   incr my_timeout 10000
    while { $done == 0 && [timestamp] < $my_timeout} {
       set done 1
       set nr_of_jobs 0
@@ -472,6 +494,11 @@ proc share_tree_test {} {
             set done 0
          } 
       }
+
+      if { $done == 1 } {
+         continue
+      }
+
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
       puts -nonewline $CHECK_OUTPUT "."
       flush $CHECK_OUTPUT
@@ -534,31 +561,11 @@ proc share_tree_test {} {
       add_proc_error "share_tree_test" -1 "project3 running percentage not 20 +/- $x % (value=$prj3_percentage)"
    }
 
-
-#   wait_for_jobstart $current_job_id "orker" 30 1
-#   wait_for_jobstart $current_job_id2 "orker" 30 1
-#   wait_for_jobstart $current_job_id3 "orker" 30 1
-
-#   wait_for_jobend $current_job_id "orker" 120
-#   wait_for_enter
-
-
-   foreach job $prj1_id_list {
+   foreach job [concat $prj1_id_list $prj2_id_list $prj3_id_list] {
       if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
          file delete $CHECK_PROTOCOL_DIR/$job
       }
    }
-   foreach job $prj2_id_list {
-      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
-         file delete $CHECK_PROTOCOL_DIR/$job
-      }
-   }
-   foreach job $prj3_id_list {
-      if { [file isfile $CHECK_PROTOCOL_DIR/$job] == 1 } {
-         file delete $CHECK_PROTOCOL_DIR/$job
-      }
-   }
-
 
    set_error 0 "ok" 
 
@@ -571,6 +578,7 @@ proc share_tree_cleanup  {} {
    global CHECK_CORE_EXECD 
    global CHECK_ARCH 
    global CHECK_PRODUCT_ROOT
+   global prj1_id_list prj2_id_list prj3_id_list
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -580,9 +588,23 @@ proc share_tree_cleanup  {} {
    reset_schedd_config
 
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } result
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-   wait_for_end_of_all_jobs 60
-   
+
+   puts $CHECK_OUTPUT "ensure that no jobs are referenced in qmaster any longer ..."
+   foreach job [concat $prj1_id_list $prj2_id_list $prj3_id_list] {
+      puts -nonewline $CHECK_OUTPUT "$job "
+      set my_timeout [timestamp]
+      incr my_timeout 120
+      while { [get_qstat_j_info $job] != 0 } {
+          puts -nonewline $CHECK_OUTPUT "."
+          if { [timestamp] > $my_timeout } {
+             delete_job $job 1
+             break
+          }
+          sleep 1
+      }
+      puts $CHECK_OUTPUT " done"
+   }
+
    foreach elem $CHECK_CORE_EXECD {
       enable_queue "${elem}.q"
    }  
@@ -591,17 +613,14 @@ proc share_tree_cleanup  {} {
 
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-  } result ]
+   } result ]
 
-  puts "result: $result"
-  puts "return: $catch_return "
+  puts "qconf -dstree result: $result"
+  puts "qconf -dstree exit value: $catch_return "
 
   del_prj "project1"
   del_prj "project2"
   del_prj "project3"
-
-  set job [ submit_job "-e /dev/null -o /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 60"]
-  wait_for_jobend $job "leeper" 120 0
 
   set_error 0 "ok"
 }

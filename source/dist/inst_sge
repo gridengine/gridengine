@@ -38,16 +38,14 @@
 
 # Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin
+PATH=/bin:/usr/bin:/usr/bsd
 
 # Easy way to prevent clearing of screen
 #
 CLEAR=clear
 #CLEAR=:
 
-# set to false if you don't want this script uses the i18n functions
-#
-SGE_I18N=true
+
 
 #-------------------------------------------------------------------------
 # USEFUL LOCAL SHELL PROCEDURES
@@ -58,29 +56,21 @@ SGE_I18N=true
 ErrUsage()
 {
    myname=`basename $0`
-   $ECHO "" >&2
-   Translate 3 "Usage: "
-   $ECHO       "$myname -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue] [-csp] [-resport] [-afs]" >&2
-   $ECHO       "     -m        \c" >&2
-   Translate 1 "install qmaster host"
-   $ECHO       "     -x        \c" >&2
-   Translate 1 "install execution host or queueing system transfer host"
-   $ECHO       "     -s        \c" >&2
-   Translate 1 "how to install submit host"
-   $ECHO       "     -fast     \c" >&2
-   Translate 1 "install system with default options"
-   $ECHO       "     -nostrict \c" >&2
-   Translate 1 "do not check %s for write permissions" \$$QSYST_ROOT
-   $ECHO       "     -auto     \c" >&2
-   Translate 1 "auto answer all questions with default, do not wait at prompt"
-   $ECHO     "     -csp      \c" >&2
-   Translate 1 "install system with security framework protocol functionality"
-   $ECHO     "     -afs      \c" >&2
-   Translate 1 "install system with AFS functionality"
-   $ECHO       "     -resport  \c" >&2
-   Translate 1 "install system with reserved port security"
-   $ECHO "" >&2
-
+   $ECHO >&2
+   $INFOTEXT -e \
+             "Usage: %s -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue]\n" \
+             "              [-csp] [-resport] [-afs]\n" \
+             "   -m         install qmaster host\n" \
+             "   -x         install execution host\n" \
+             "   -s         print how to install submit host\n" \
+             "   -fast      do installation with default options\n" \
+             "   -nostrict  do not check \$SGE_ROOT for write permissions\n" \
+             "   -auto      non interactive installation (exec host only)\n" \
+             "   -noqueue   do not install a default queue (exec host only)\n" \
+             "   -csp       install system with security framework protocol\n" \
+             "              functionality\n" \
+             "   -afs       install system with AFS functionality\n" \
+             "   -resport   install system with reserved port security" $myname
    exit 1
 }
 
@@ -122,7 +112,13 @@ PreCheckForFastInstall()
    fi
 
 
-   this_dir_user=`$V5UTILBIN/filestat -owner .`
+   this_dir_user=`$V5UTILBIN/filestat -owner . 2> /dev/null`
+   ret=$?
+   if [ $ret != 0 ]; then
+      $INFOTEXT "\nCan't resolve user name from current directory.\n" \
+                "Installation failed. Exit.\n"
+      exit 1           
+   fi
 
    if [ $this_dir_user = root ]; then
       touch ./tst$$ 2> /dev/null > /dev/null
@@ -145,37 +141,30 @@ PreCheckForFastInstall()
 }
 
 #-------------------------------------------------------------------------
-# Ask the installer for the host name resolving method
+# Ask the installer for the hostname resolving method
 # (IGNORE_FQND=true/false)
 #
 SelectHostNameResolving()
 {
    $CLEAR
-   $ECHO
-   Translate 0 "Select default hostname resolving method"
-   $ECHO "----------------------------------------"
-   $ECHO ""
-   Translate 0 "Are all hosts of your cluster in one DNS domain? If this is"
-   Translate 0 "the case the host names"
-   $ECHO ""
-   Translate 0 "   >%s< and >%s<" hostA hostA.foo.com
-   $ECHO ""
-   Translate 0 "would be treated as eqal, because the DNS domain name >foo.com<"
-   Translate 0 "is ignored when comparing host names."
+   $INFOTEXT -u "\nSelect default Grid Engine hostname resolving method"
+   $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If thisis\n" \
+             "the case the hostnames\n\n" \
+             "   >hostA< and >hostA.foo.com<\n\n" \
+             "would be treated as eqal, because the DNS domain name >foo.com<\n" \
+             "is ignored when comparing hostnames.\n\n"
 
-   Translate 4 "Are all the hosts of your cluster in a single DNS domain"
-   YesNo "\n$transout" y
-   $ECHO
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+             "Are all hosts of your cluster in a single DNS domain (y/n) [y] >> "
    if [ $? = 0 ]; then
       IGNORE_FQDN_DEFAULT=true
-      Translate 0 "Ignoring domainname when comparing hostnames."
+      $INFOTEXT "Ignoring domainname when comparing hostnames."
    else
       IGNORE_FQDN_DEFAULT=false
-      Translate 0 "The domainname is not ignored when comparing hostnames."
+      $INFOTEXT "The domainname is not ignored when comparing hostnames."
    fi
-   $ECHO
-   WaitClear clear
-
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -184,54 +173,56 @@ SelectHostNameResolving()
 CheckCellDirectory()
 {
    $CLEAR
-
    check_cell_error=0
+   error_text=0
    if [ ! -d $COMMONDIR ]; then
-      Translate 4 "common directory not found: %s" $COMMONDIR
+      error_text=1
+      check_cell_error=1
    fi
 
    if [ ! -f $COMMONDIR/configuration ]; then
       if [ $check_cell_error = 0 ]; then
-         Translate 4 "configuration file not found: %s" $COMMONDIR/configuration
+         error_text=2
       fi
       check_cell_error=1
    fi
 
    if [ ! -f $COMMONDIR/act_qmaster ]; then
       if [ $check_cell_error = 0 ]; then
-         Translate 4 "%s file not found: %s" act_qmaster $COMMONDIR/act_qmaster
+         error_text=3
       fi
       check_cell_error=1
    fi
 
-
    if [ $check_cell_error != 0 ]; then
-      transsaved="$transout"
-      $ECHO ""
-      Translate 0 "Checking cell directory"
-      $ECHO "-----------------------"
-      $ECHO ""
-      Translate 0 "Cannot find required files. The following error was returned:"
-      $ECHO ""
-      $ECHO "   >$transsaved<"
-      $ECHO ""
-      Translate 0 "Please make sure that you have installed the qmaster host before"
-      Translate 0 "installing an execd host."
-      $ECHO ""
-      Translate 0 "The installation procedure will only work if you use a shared"
-      Translate 0 "directory (e.g. shared with NFS) for your installation."
-      $ECHO ""
-      Translate 0 "The installation of the execution daemon will abort now."
-      $ECHO ""
-      Translate 4 "Hit <RETURN> to cancel the installation >>"
-      WaitClear noclear "$transout \c"
+      $INFOTEXT -u "\nChecking cell directory"
+      $INFOTEXT "\nCannot find required files. The following error was returned:\n\n"
+
+      if [ $error_text = 1 ]; then
+         $INFOTEXT ">common directory not found: %s<\n" $COMMONDIR
+      fi
+
+      if [ $error_text = 2 ]; then
+         $INFOTEXT ">configuration file not found: %s<\n" $COMMONDIR/configuration
+      fi
+
+      if [ $error_text = 3 ]; then
+         $INFOTEXT ">%s file not found: %s<\n" act_qmaster $COMMONDIR/act_qmaster
+      fi
+
+      $INFOTEXT "\nPlease make sure that you have installed the qmaster host before\n" \
+                "installing an execution host.\n\n" \
+                "The installation procedure will only work if you use a shared\n" \
+                "directory (e.g. shared with NFS) for your installation.\n\n" \
+                "The installation of the execution daemon will abort now.\n"
+
       exit 1
    fi
 }
 
 
 #-------------------------------------------------------------------------
-# Check the host names and put out warning message on probably wrong
+# Check the hostnames and put out warning message on probably wrong
 # hostname resolving
 #
 CheckHostNameResolving()
@@ -239,7 +230,7 @@ CheckHostNameResolving()
 
    resolve_get_configuration=`ExecuteAsAdmin $V5BIN/qconf -sconf global | grep "^ignore_fqdn" `
    resolve_qmaster_params=`echo $resolve_get_configuration | egrep -i "true|1"`
-   if [ "$resolve_qmaster_params" = "" ]; then
+   if [ "x$resolve_qmaster_params" = "x" ]; then
       $ECHO ""
       set IGNORE_FQDN_DEFAULT=false
    else
@@ -253,19 +244,16 @@ CheckHostNameResolving()
    while [ $done = false ]; do
        done=false
        $CLEAR
-       $ECHO ""
-       Translate 0 "Checking host name resolving"
-       $ECHO "----------------------------"
-       $ECHO ""
+       $INFOTEXT -u "\nChecking hostname resolving"
+
        resolve_admin_hosts=`ExecuteAsAdmin $V5BIN/qconf -sh`
-       resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -name`
+       resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -aname`
        resolve_default_domain=`ExecuteAsAdmin $V5BIN/qconf -sconf global | grep "^default_domain" | awk '{print $2}'`
 
        if [ "$resolve_default_domain" = "" ]; then
            resolve_default_domain="none"
        fi
-
-       Translate 0 "This host has the local hostname >%s<." $resolve_this_hostname
+       $INFOTEXT "\nThis host has the local hostname >%s<.\n" $resolve_this_hostname
 
        resolve_default_domain_upper=`echo $resolve_default_domain | tr "[a-z]" "[A-Z]"`
        if [ "$resolve_default_domain_upper" != "NONE" ]; then
@@ -273,61 +261,51 @@ CheckHostNameResolving()
             if [ "$resolve_tmp_name" = "$resolve_this_hostname" ]; then
                 resolve_this_hostname="$resolve_this_hostname.$resolve_default_domain"
 
-                Translate 0 "The default_domain parameter is set in the global configuration"
-                Translate 0 "and added to the unqualified hostname."
-                Translate 0 "As a result the execd on this host would return the following hostname:"
-                $ECHO "\"$resolve_this_hostname\""
+                $INFOTEXT "The default_domain parameter is set in the global configuration\n" \
+                          "and added to the unqualified hostname. As a result the\n" \
+                          "execd on this host would return the following hostname: >%s<\n" \
+                          $resolve_this_hostname
             fi
        fi
+
        resolve_upper_this_hostname=`echo $resolve_this_hostname | tr "[a-z]" "[A-Z]"`
        for i in $resolve_admin_hosts; do
            resolve_upper_admin_hostname=`echo $i | tr "[a-z]" "[A-Z]"`
            if [ "$resolve_upper_admin_hostname" = "$resolve_upper_this_hostname" ]; then
-
-              Translate 0 "This host is resolved correctly."
-
+              $INFOTEXT "This host can be resolved correctly.\n"
               done=true
               break
            fi
        done
+
        if [ $done = false ]; then
-           Translate 0 "This host is unknown on the qmaster host."
-           $ECHO ""
-           $ECHO "-----------------------------------------"
-           $ECHO
-           Translate 0 "Please make sure that you added this host as administrative host!"
-           Translate 0 "If you did not, add this host with"
-           $ECHO
-           $ECHO     "         \"qconf -ah HOSTNAME\""
-           $ECHO
-           Translate 0 "on your qmaster host."
-           $ECHO ""
+           $INFOTEXT "This host is unknown on the qmaster host.\n\n" \
+                     "Please make sure that you added this host as administrative host!\n" \
+                     "If you did not, please add this host now with the command\n\n" \
+                     "   # qconf -ah HOSTNAME\n\n" \
+                     "on your qmaster host.\n"
            if [ $loop_counter != 0 ]; then
-               Translate 0 "If this host is already added as administrative host on your qmaster host,"
-               Translate 0 "there may be a hostname resolving problem on this machine."
-               $ECHO ""
-               Translate 0 "Please check your /etc/hosts file and nsswitch configuration file !"
-               $ECHO ""
-               Translate 0 "Hostname resolving problems will cause the problem that the execution host"
-               Translate 0 "will not be accepted by qmaster. The qmaster will get no load report values"
-               Translate 0 "and show a load value (%s) of %s for this host." load_avg 99.99
-               $ECHO ""
+               $INFOTEXT "If this host is already added as administrative host on your qmaster host\n" \
+                         "there may be a hostname resolving problem on this machine.\n\n" \
+                         "Please check your >/etc/hosts< file and >/etc/nsswitch.conf< file.\n\n" \
+                         "Hostname resolving problems will cause the problem that the\n" \
+                         "execution host will not be accepted by qmaster. Qmaster will\n" \
+                         "receive no load report values and show a load value\n" \
+                         "(>load_avg<) of 99.99 for this host.\n"
                if [ $autoinst = true ]; then
                    exit 1
                fi
            fi
-           $ECHO "$LINE--------------------------------------"
-           $ECHO ""
-           Translate 2 "Check again [Y/N] [Y] >> "
-           INP=`Enter Y`
-           if [ $INP = y -o $INP = Y ]; then
-               done=false
-           else
-               done=true
-           fi
 
+           $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n "Check again (y/n) [y] >> "
+           if [ $? = 0 ]; then
+              done=false
+           else
+              done=true
+           fi
        else
-           WaitClear clear
+           $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+           $CLEAR
            return
        fi
        loop_counter=`expr $loop_counter + 1`
@@ -347,40 +325,33 @@ AskIfDefaultOkAndSetVariables()
 
    SetCellDependentVariables
 
-   $ECHO ""
-   Translate 0 "Confirm %s default installation settings" "$QSYST"
-   $ECHO "$LINE--------------------------------------"
-   $ECHO ""
+   $INFOTEXT -u "\nConfirm Grid Engine default installation settings"
 
-   Translate 0 "The following default settings can be used for an accelerated"
-   Translate 0 "installation procedure:"
-   $ECHO ""
-   $ECHO "   \$$QSYST_ROOT$BLANKS        = $QSYST_ROOT_VAL"
-
+   $INFOTEXT "\nThe following default settings can be used for an accelerated\n" \
+             "installation procedure:\n\n" \
+             "      \$SGE_ROOT          = %s" $QSYST_ROOT_VAL
    if [ "$COMMD_PORT" != "" ]; then
-      $ECHO "   \$COMMD_PORT        = $COMMD_PORT"
+      $INFOTEXT "      \$COMMD_PORT        = %s" $COMMD_PORT
    else
-      $ECHO "   service            = $QSYST_SERVICE"
+      $INFOTEXT "      service            = %s" $QSYST_SERVICE
    fi
 
    if [ $ADMINUSER = default ]; then
-      $ECHO "   admin user account = root"
+      $INFOTEXT "      admin user account = root"
    else
-      $ECHO "   admin user account = $ADMINUSER"
+      $INFOTEXT "      admin user account = %s" $ADMINUSER
    fi
 
    if [ "$QSYST_CELL_VAL" != "default" ]; then
-      $ECHO "   cell name          = $QSYST_CELL_VAL"
+      $INFOTEXT "      cell name          = %s" $QSYST_CELL_VAL
    fi
 
-
-   Translate 4 "Do you want to use these configuration parameters"
-   YesNo "\n$transout" y
-
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+             "\nDo you want to use these configuration parameters (y/n) [y] >> "
    if [ $? = 0 ]; then
-      return 0;
+      return 0
    else
-      return 1;
+      return 1
    fi
 }
 
@@ -392,7 +363,7 @@ AskIfDefaultOkAndSetVariables()
 SetFilePerm()
 {
    f="$1"
-   Translate 0 "Verifying and setting file permissions in >%s<" "$f"
+   $INFOTEXT "Verifying and setting file permissions in >%s<" "$f"
    chmod -R go+r $f
    find $f -type d -exec chmod 755 {} \;
    find $f -type f -perm -100 -exec chmod go+x {} \;
@@ -409,7 +380,7 @@ Makedir()
 {
    file=$1
    if [ ! -d $file ]; then
-       Translate 0 "making %s" "$file"
+       $INFOTEXT "creating directory: %s" "$file"
        ExecuteAsAdmin $MKDIR -p $1
     fi
 
@@ -430,9 +401,7 @@ SetPerm()
 #
 MakeDirsMaster()
 {
-   $ECHO ""
-   Translate 0 "Making directories"
-   $ECHO "------------------"
+   $INFOTEXT -u "\nMaking directories"
    Makedir $QSYST_CELL_VAL
    Makedir $COMMONDIR
    Makedir $HISTDIR
@@ -449,7 +418,8 @@ MakeDirsMaster()
    Makedir $QMDIR/submit_hosts
    Makedir $QMDIR/usersets
 
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -459,11 +429,14 @@ PrintLocalConf()
 {
    arg=$1
    if [ $arg = 1 ]; then
+      $ECHO "# Version: pre6.0"
+      $ECHO "#"
+      $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
+      $ECHO "#"
       $ECHO "conf_version           0"
    fi
    $ECHO "mailer                 $MAILER"
    $ECHO "xterm                  $XTERM"
-   $ECHO "qlogin_command         $QLOGIN_COMMAND"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
 }
@@ -473,6 +446,10 @@ PrintLocalConf()
 #
 PrintConf()
 {
+   $ECHO "# Version: pre6.0"
+   $ECHO "#"
+   $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
+   $ECHO "#"
    $ECHO "conf_version           0"
    $ECHO "qmaster_spool_dir      $QMDIR"
    $ECHO "execd_spool_dir        $CFG_EXE_SPOOL"
@@ -524,10 +501,11 @@ PrintConf()
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
-   $ECHO "ignore_fqdn            true"
+   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"
+   $ECHO "max_jobs               0"
 }
 
 #-------------------------------------------------------------------------
@@ -538,34 +516,29 @@ GetGidRange()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "%s group id range" "$QSYST"
-      $ECHO "$LINE---------------"
-      $ECHO ""
-      Translate 0 "When jobs are started under the control of %s an additional group id is set" $QSYST
-      Translate 0 "on platforms which do not support jobs. This is done to provide maximum control"
-      Translate 0 "for %s jobs." $QSYST
-      Translate 0 "This additional UNIX group id range must be unused group id's in your system."
-      Translate 0 "Each job will be assigned a unique id during the time it is running."
-      Translate 0 "Therefore you need to provide a range of id's which will be assigned"
-      Translate 0 "dynamically for jobs."
-      Translate 0 "The range must be big enough to provide enough numbers for the maximum number"
-      Translate 0 "of %s jobs running at a single moment on a single host. E.g. a range like" $QSYST
-      $ECHO ""
-      Translate 0 "   20000-20100"
-      $ECHO ""
-      Translate 0 "means, that %s will use the group ids from 20000-20100 and provides a range" $QSYST
-      Translate 0 "for 100 %s jobs at the same time on a single host." $QSYST
-      Translate 0 "You can change at any time the group id range in your cluster configuration."
-      $ECHO ""
-      Translate 2 "Please enter a range: "
+      $INFOTEXT -u "\nGrid Engine group id range"
+      $INFOTEXT "\nWhen jobs are started under the control of Grid Engine an additional group id\n" \
+                "is set on platforms which do not support jobs. This is done to provide maximum\n" \
+                "control for Grid Engine jobs.\n\n" \
+                "This additional UNIX group id range must be unused group id's in your system.\n" \
+                "Each job will be assigned a unique id during the time it is running.\n" \
+                "Therefore you need to provide a range of id's which will be assigned\n" \
+                "dynamically for jobs.\n\n" \
+                "The range must be big enough to provide enough numbers for the maximum number\n" \
+                "of Grid Engine jobs running at a single moment on a single host. E.g. a range\n" \
+                "like >20000-20100< means, that Grid Engine will use the group ids from\n" \
+                "20000-20100 and provides a range for 100 Grid Engine jobs at the same time\n" \
+                "on a single host.\n\n" \
+                "You can change at any time the group id range in your cluster configuration.\n"
+
+      $INFOTEXT -n "Please enter a range >> "
 
       CFG_GID_RANGE=`Enter ""`
 
       if [ "$CFG_GID_RANGE" != "" ]; then
-         Translate 0 "Using >%s< as gid range." "$CFG_GID_RANGE"
-         $ECHO
-         WaitClear clear
+         $INFOTEXT -wait -auto $autoinst -n "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " \
+                   "$CFG_GID_RANGE"
+         $CLEAR
          done=true
       fi
    done
@@ -579,38 +552,33 @@ GetDefaultDomain()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "Default domain for hostnames"
-      $ECHO "----------------------------"
-      $ECHO
-      Translate 0 "Sometimes the primary hostname of machines returns the short hostname"
-      Translate 0 "without a domain suffix like >%s<." company.com
-      $ECHO
-      Translate 0 "This can cause problems with getting load values of your execution hosts."
-      $ECHO
-      Translate 0 "If you are using DNS or you are using domains in your >%s< file or" /etc/hosts
-      Translate 0 "your NIS configuration it is usually safe to define a default domain"
-      Translate 0 "because it is only used if your execution hosts return the short hostname"
-      Translate 0 "as their primary name."
-      $ECHO
-      Translate 0 "If your execution hosts reside in more than one domain, the default domain"
-      Translate 0 "parameter must be set on all execution hosts individually."
-      $ECHO
+      $INFOTEXT -u "\nDefault domain for hostnames"
 
-      Translate 4 "Do you want to configure a default domain"
-      YesNo "$transout" y
+      $INFOTEXT "\nSometimes the primary hostname of machines returns the short hostname\n" \
+                  "without a domain suffix like >foo.com<.\n\n" \
+                  "This can cause problems with getting load values of your execution hosts.\n" \
+                  "If you are using DNS or you are using domains in your >/etc/hosts< file or\n" \
+                  "your NIS configuration it is usually safe to define a default domain\n" \
+                  "because it is only used if your execution hosts return the short hostname\n" \
+                  "as their primary name.\n\n" \
+                  "If your execution hosts reside in more than one domain, the default domain\n" \
+                  "parameter must be set on all execution hosts individually.\n"
+
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                "Do you want to configure a default domain (y/n) [y] >> "
       if [ $? = 0 ]; then
-         Translate 2 "\nPlease enter your default domain: "
+         $INFOTEXT -n "\nPlease enter your default domain >> "
          CFG_DEFAULT_DOMAIN=`Enter ""`
          if [ "$CFG_DEFAULT_DOMAIN" != "" ]; then
-            $ECHO
-            Translate 0 "Using >%s< as default domain" $CFG_DEFAULT_DOMAIN
-            WaitClear clear
+            $INFOTEXT -wait -auto $autoinst -n "\nUsing >%s< as default domain. Hit <RETURN> to continue >> " \
+                      $CFG_DEFAULT_DOMAIN
+            $CLEAR
+            done=true
          fi
       else
          CFG_DEFAULT_DOMAIN=none
+         done=true
       fi
-      done=true
    done
 }
 
@@ -637,58 +605,44 @@ GetConfiguration()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "%s cluster configuration" "$QSYST"
-      $ECHO "$LINE----------------------"
-
-      $ECHO ""
-      Translate 0  "Please give the basic configuration parameters of your %s installation:" "$QSYST"
-      $ECHO ""
-      $ECHO "<execd_spool_dir>"
-      $ECHO ""
+      $INFOTEXT -u "\nGrid Engine cluster configuration"
+      $INFOTEXT "\nPlease give the basic configuration parameters of your Grid Engine\n" \
+                "installation:\n\n   <execd_spool_dir>\n\n"
 
       if [ $ADMINUSER != default ]; then
-            Translate 0  "The pathname of the spool directory of the execution hosts. User >%s<" "$ADMINUSER"
+            $INFOTEXT "The pathname of the spool directory of the execution hosts. User >%s<\n" \
+                      "must have the right to create this directory and to write into it.\n" "$ADMINUSER"
       elif [ $euid = 0 ]; then
-            Translate 0 "The pathname of the spool directory of the execution hosts. The user root"
+            $INFOTEXT "The pathname of the spool directory of the execution hosts. User >root<\n" \
+                      "must have the right to create this directory and to write into it.\n"
       else
-            Translate 0 "The pathname of the spool directory of the execution hosts. You"
+            $INFOTEXT "The pathname of the spool directory of the execution hosts. You\n" \
+                      "must have the right to create this directory and to write into it.\n"
       fi
 
-      Translate 0 "must have the right to create this directory and to write into it."
-      $ECHO ""
-      Translate 2 "Default: (%s) >> " $QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool
+      $INFOTEXT -n "Default: [%s] >> " $QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool
 
       CFG_EXE_SPOOL=`Enter $QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool`
 
       $CLEAR
-
-      $ECHO ""
-      $ECHO "<administrator_mail>"
-      $ECHO ""
-      Translate 0 "The email address of the administrator to whom problem reports are sent."
-      $ECHO ""
-      Translate 0 "It's is recommended to configure this parameter. You may use >none<"
-      Translate 0 "if you do not wish to receive administrator mail."
-      $ECHO ""
-      Translate 0 "Please enter an email address in the form"
-      $ECHO ""
-      $ECHO "   \"user@foo.com\""
-      $ECHO ""
-      Translate 2 "Default: (%s) >> " none
+      $INFOTEXT -u "\nGrid Engine cluster configuration (continued)"
+      $INFOTEXT -n "\n<administrator_mail>\n\n" \
+                   "The email address of the administrator to whom problem reports are sent.\n\n" \
+                   "It's is recommended to configure this parameter. You may use >none<\n" \
+                   "if you do not wish to receive administrator mail.\n\n" \
+                   "Please enter an email address in the form >user@foo.com<.\n\n" \
+                   "Default: [none] >> "
 
       CFG_MAIL_ADDR=`Enter none`
 
       $CLEAR
-      $ECHO ""
-      Translate 0 "The following parameters for the cluster configuration were configured:"
-      $ECHO ""
-      $ECHO "   execd_spool_dir        $CFG_EXE_SPOOL"
-      $ECHO "   administrator_mail     $CFG_MAIL_ADDR"
-      $ECHO ""
 
-      Translate 4 "Do you want to change the configuration parameters"
-      YesNo "$transout" n
+      $INFOTEXT "\nThe following parameters for the cluster configuration were configured:\n\n" \
+                "   execd_spool_dir        %s\n" \
+                "   administrator_mail     %s\n" $CFG_EXE_SPOOL $CFG_MAIL_ADDR
+
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+                "Do you want to change the configuration parameters (y/n) [n] >> "
       if [ $? = 1 ]; then
          done=true
       fi
@@ -703,46 +657,32 @@ AddConfiguration()
    useold=false
 
    if [ -f $COMMONDIR/configuration ]; then
-      Translate 0 "Creating global cluster configuration"
-      $ECHO "-------------------------------------"
-      $ECHO ""
-      Translate 0 "A global cluster configuration file already exists."
-
-      Translate 4 "Press <RETURN> to display the configuration >>"
-      WaitClear noclear "\n$transout \c"
+      $INFOTEXT -u "\nCreating global cluster configuration"
+      $INFOTEXT "\nA global cluster configuration file already exists.\n"
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display the configuration >> "
 
       cat $COMMONDIR/configuration |grep -v conf_version |more
 
       QMDIR_IN_CFG=`grep qmaster_spool_dir $COMMONDIR/configuration | awk '{print $2}'`
       if [ "$QMDIR_IN_CFG" != $QMDIR ]; then
          $CLEAR
-         $ECHO ""
-         Translate 0 "ERROR - new qmaster spool directory"
-         $ECHO "-----------------------------------"
-         $ECHO ""
-         Translate 0 "The qmaster spool directory in your existing configuration is set to"
-         $ECHO ""
-         $ECHO "   $QMDIR_IN_CFG"
-         $ECHO ""
-         Translate 0 "and differs from your previous selection during this installation where you"
-         Translate 0 "set the qmaster spool directory to"
-         $ECHO ""
-         $ECHO "   $QMDIR"
-         $ECHO ""
-         Translate 0 "Please either copy your old qmaster spool directory to the new directory and"
-         Translate 0 "edit the existing cluster configuration file to reflect this change and"
-         Translate 0 "restart the installation or delete the current cluster configuration file."
-         $ECHO ""
-
-         Translate 4 "Hit <RETURN> to cancel the installation >>"
-         WaitClear noclear "$transout \c"
+         $INFOTEXT -u "\nERROR - new qmaster spool directory"
+         $INFOTEXT "\nThe qmaster spool directory in your existing configuration is set to\n\n" \
+                   "   %s\n\n" \
+                   "and differs from your previous selection during this installation where you\n" \
+                   "set the qmaster spool directory to\n\n" \
+                   "   %s\n\n" \
+                   "Please either copy your old qmaster spool directory to the new directory and\n" \
+                   "edit the existing cluster configuration file to reflect this change and\n" \
+                   "restart the installation or delete the current cluster configuration file.\n" \
+                   "$QMDIR_IN_CFG" "$QMDIR"
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to cancel the installation >> "
          exit 1
       else
-         Translate 4 "Do you want to create a new configuration"
-         YesNo "$transout" y
+         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                   "Do you want to create a new configuration (y/n) [y] >> "
          if [ $? = 1 ]; then
-            Translate 4 "Using existing configuration. Hit <RETURN> to continue >>"
-            WaitClear noclear "$transout \c"
+            $INFOTEXT -wait -auto $autoinst -n "Using existing configuration. Hit <RETURN> to continue >> "
             useold=true
          fi
       fi
@@ -775,7 +715,14 @@ AddConfiguration()
    fi
 
    if [ $csp = true ]; then
-      CSP_PREFIX=-csp
+      X509_COUNT=`strings $V5BIN/sge_qmaster | grep X509 | wc -l`
+      if [ 50 -gt $X509_COUNT ]; then
+         $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to cancel the installation >> "
+         exit 1
+      else
+         CSP_PREFIX=-csp
+      fi  
    else
       CSP_PREFIX=""
    fi
@@ -789,18 +736,22 @@ AddConfiguration()
 #
 AddLocalConfiguration_With_Qconf()
 {
+
+   $CLEAR
+   $INFOTEXT -u "\nCreating local configuration"
+
    TMPL=/tmp/${HOST}
    rm -f $TMPL
    if [ -f $TMPL ]; then
-      Translate 0 "Sorry - can't create local configuration. Can't delete file >%s<" "$TMPL"
+      $INFOTEXT "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
    else
-      Translate 0 "Creating local configuration for host >%s<" $HOST
+      $INFOTEXT "\nCreating local configuration for host >%s<" $HOST
       PrintLocalConf 0 > /tmp/$HOST
       Execute $V5BIN/qconf -Aconf /tmp/$HOST
       rm -f /tmp/$HOST
-      Translate 0 "Local configuration for host >%s< created." $HOST
+      $INFOTEXT "Local configuration for host >%s< created." $HOST
    fi
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
 }
 
 #-------------------------------------------------------------------------
@@ -810,28 +761,23 @@ AddLocalConfiguration()
 {
    useold=false
 
-   $ECHO ""
-   Translate 0 "Creating local configuration"
+   $CLEAR
+   $INFOTEXT -u "\nCreating local configuration"
    if [ -f $LCONFDIR/$HOST ]; then
-      $ECHO  "----------------------------"
-      $ECHO ""
-      Translate 0 "A local configuration for this host already exists."
+      $INFOTEXT "\nA local configuration for this host already exists.\n"
 
-      Translate 4 "Press <RETURN> to display the configuration >>"
-      WaitClear noclear "\n$transout \c"
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display configuration >> "
 
       cat $LCONFDIR/$HOST |grep -v conf_version |more
 
-      Translate 4 "Do you want to overrride this configuration with a default config"
-      YesNo "\n$transout" n
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+                "\nDo you want to create a new configuration (y/n) [n] >> "
       if [ $? = 1 ]; then
-         Translate 4 "Keeping existing configuration"
+         $INFOTEXT -wait -auto $autoinst -n "Keeping existing configuration. Hit <RETURN> to continue >> "
          useold=true
       else
-         Translate 4 "Creating new local configuration for this host"
-
+         $INFOTEXT -wait -auto $autoinst -n "Creating new local configuration. Hit <RETURN> to continue >> "
       fi
-      WaitClear noclear "\n$transout >> \c"
       $CLEAR
    fi
 
@@ -847,7 +793,7 @@ AddLocalConfiguration()
 #
 AddActQmaster()
 {
-   Translate 0 "Creating >act_qmaster< file"
+   $INFOTEXT "Creating >act_qmaster< file"
 
    TruncCreateAndMakeWriteable $COMMONDIR/act_qmaster
    $ECHO $HOST >> $COMMONDIR/act_qmaster
@@ -859,13 +805,13 @@ AddActQmaster()
 #
 AddDefaultComplexes()
 {
-   Translate 0 "Adding default complexes >host< and >queue<"
+   $INFOTEXT "Adding default complexes >host< and >queue<"
    for c in host queue; do
       if [ -f $QMDIR/complexes/$c -a -s $QMDIR/complexes/$c ]; then
-         Translate 4 "Complex >%s< already exists - should complex be preserved" $c
-         YesNo "$transout" y
+         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                   "Complex >%s< already exists - should complex be preserved (y/n) [y] >> " $c
          if [ $? = 1 ]; then
-            Translate 0 "Overwriting existing complex >%s<" $c
+            $INFOTEXT "Overwriting existing complex >%s<" $c
             ExecuteAsAdmin cp util/resources/complexes/$c $QMDIR/complexes
          fi
       else
@@ -881,11 +827,11 @@ AddDefaultComplexes()
 AddDefaultDepartement()
 {
    if [ $inst = sgeee ]; then
-      Translate 0 "Adding SGEEE >defaultdepartment< userset"
+      $INFOTEXT "Adding SGEEE >defaultdepartment< userset"
       ExecuteAsAdmin $CP util/resources/usersets/defaultdepartment $QMDIR/usersets
       ExecuteAsAdmin $CHMOD $FILEPERM $QMDIR/usersets/defaultdepartment
 
-      Translate 0 "Adding SGEEE >deadlineusers< userset"
+      $INFOTEXT "Adding SGEEE >deadlineusers< userset"
       ExecuteAsAdmin $CP util/resources/usersets/deadlineusers $QMDIR/usersets
       ExecuteAsAdmin $CHMOD 644 $QMDIR/usersets/deadlineusers
 
@@ -900,19 +846,17 @@ AddCommonFiles()
 {
    for f in sge_aliases qtask sge_request; do
       if [ $f = sge_aliases ]; then
-         text="path aliases file"
+         $INFOTEXT "Adding >%s< path aliases file" $f
       elif [ $f = qtask ]; then
-        text="qtcsh sample default request file"
+         $INFOTEXT "Adding >%s< qtcsh sample default request file" $f
       else
-        text="default submit options file"
+         $INFOTEXT "Adding >%s< default submit options file" $f
       fi
-      Translate 0 "Adding >%s< $text" $f
-
       ExecuteAsAdmin cp util/$f $COMMONDIR
       ExecuteAsAdmin chmod $FILEPERM $COMMONDIR/$f
    done
 
-   unset text f
+   unset f
 }
 
 #-------------------------------------------------------------------------
@@ -922,13 +866,13 @@ AddCommonFiles()
 AddPEFiles()
 {
 
-   Translate 0 "Adding default PE environment for >%s<" qmake
+   $INFOTEXT "Adding default parallel environment (PE) for >qmake<"
    for c in make; do
       if [ -f $QMDIR/pe/$c -a -s $QMDIR/pe/$c ]; then
-         Translate 4 "PE >%s< already exists - should PE be preserved" $c
-         YesNo "$transout" y
+         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                   "PE >%s< already exists - should PE be preserved (y/n) [y] >> " $c
          if [ $? = 1 ]; then
-            Translate 0 "Overwriting existing PE >%s<" $c
+            $INFOTEXT "Overwriting existing PE >%s<" $c
             ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
          fi
       else
@@ -937,7 +881,6 @@ AddPEFiles()
    done
    ExecuteAsAdmin chmod $FILEPERM $QMDIR/pe/*
 }
-
 #-------------------------------------------------------------------------
 # AddDefaultManager
 #
@@ -956,11 +899,8 @@ AddDefaultManager()
 ProcessQsystRoot()
 {
    $CLEAR
+   $INFOTEXT -u "\nChecking \$SGE_ROOT directory"
    $ECHO
-   Translate 0 "Checking %s directory" $QSYST_ROOT
-   $ECHO "---------$LINE---------------"
-   $ECHO ""
-
    done=false
    while [ $done = false ]; do
       if [ "`eval echo '$'$QSYST_ROOT`" = "" ]; then
@@ -968,13 +908,11 @@ ProcessQsystRoot()
          export $QSYST_ROOT
          QSYST_ROOT_VAL=`eval echo '$'$QSYST_ROOT`
 
-         Translate 0 "The %s root directory (your current directory) is:" "$QSYST"
-         $ECHO ""
-         $ECHO "   \$$QSYST_ROOT = $QSYST_ROOT_VAL"
-         $ECHO ""
-         Translate 0 "If this directory is not correct (e.g. it may contain an automounter"
-         Translate 0 "prefix) enter the correct path to this directory or hit <RETURN>"
-         Translate 2 "to use default\n    \"%s\" >> " $QSYST_ROOT_VAL
+         $INFOTEXT -n "The Grid Engine root directory (your current directory) is:\n\n" \
+                      "   \$SGE_ROOT = %s\n\n" \
+                      "If this directory is not correct (e.g. it may contain an automounter\n" \
+                      "prefix) enter the correct path to this directory or hit <RETURN>\n" \
+                      "to use default [%s] >> " $QSYST_ROOT_VAL $QSYST_ROOT_VAL
 
          eval $QSYST_ROOT=`Enter $QSYST_ROOT_VAL`
          $ECHO
@@ -994,27 +932,18 @@ ProcessQsystRoot()
          # check if we have write permission
          if [ $ret != 0 ]; then
             $CLEAR
-            $ECHO ""
-            Translate 0 "Can't create a temporary file in the directory"
-            $ECHO ""
-            $ECHO "   \"$QSYST_ROOT_VAL\""
-            $ECHO ""
-            Translate 0 "This may be a permission problem (e.g. no read/write permission"
-            Translate 0 "on a NFS mounted filesystem)."
-            $ECHO ""
-            Translate 0 "Please check your permissions. You may cancel the installation now"
-            Translate 0 "and restart it or continue and try again."
-            $ECHO ""
+            $INFOTEXT "Can't create a temporary file in the directory\n\n   %s\n\n" \
+                      "This may be a permission problem (e.g. no read/write permission\n" \
+                      "on a NFS mounted filesystem).\n" \
+                      "Please check your permissions. You may cancel the installation now\n" \
+                      "and restart it or continue and try again.\n" $QSYST_ROOT_VAL
             unset $QSYST_ROOT
-            WaitClear clear
+            $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+            $CLEAR
          elif [ ! -f tst$$ ]; then
             # check if QSYST_ROOT points to current directory
-            Translate 0 "Your %s environment variable" "\$$QSYST_ROOT"
-            $ECHO ""
-            $ECHO "   \"$QSYST_ROOT_VAL\""
-            $ECHO ""
-            Translate 0 "doesn't match the current directory."
-            $ECHO ""
+            $INFOTEXT "Your \$SGE_ROOT environment variable\n\n   \$SGE_ROOT = %s\n\n" \
+                        "doesn't match the current directory.\n" $QSYST_ROOT_VAL
             ExecuteAsAdmin $RM -f $QSYST_ROOT_VAL/tst$$
             unset $QSYST_ROOT
          else
@@ -1026,9 +955,9 @@ ProcessQsystRoot()
       fi
    done
 
-   Translate 0 "Your %s root directory: %s" $QSYST $QSYST_ROOT_VAL
-   $ECHO
-   WaitClear clear
+   $INFOTEXT "Your \$SGE_ROOT directory: %s\n" $QSYST_ROOT_VAL
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -1044,54 +973,34 @@ GiveHints()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "Using %s" "$QSYST"
-      $ECHO "$LINE------"
-      $ECHO ""
-      Translate 0 "You should now enter the command:"
-      $ECHO ""
-      $ECHO "   % source $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.csh"
-      $ECHO ""
-      Translate 0 "if you are a %s user or" "csh/tcsh"
-      $ECHO ""
-      $ECHO "   # . $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.sh"
-      $ECHO ""
-      Translate 0 "if you are a %s user." "sh/ksh"
-      $ECHO ""
-      Translate 0 " This will set or expand the following environment variables"
-      $ECHO ""
-      Translate 0 "   - %s    (always necessary)" \$$QSYST_ROOT
-      Translate 0 "   - %s    (if you are using a cell other than >default<)" \$$QSYST_CELL
-      Translate 0 "   - %s  (if you haven't added the service %s)" \$COMMD_PORT "$QSYST_SERVICE"
-      Translate 0 "     %s  (to find the %s binaries)" "\$PATH/\$path" "$QSYST"
-      Translate 0 "   - %s     (to access the %s manual pages)" \$MANPATH "$QSYST"
+      $INFOTEXT -u "\nUsing Grid Engine"
+      $INFOTEXT "\nYou should now enter the command:\n\n" \
+                "   source %s\n\n" \
+                "if you are a csh/tcsh user or\n\n" \
+                "   # . %s\n\n" \
+                "if you are a sh/ksh user.\n\n" \
+                "This will set or expand the following environment variables:\n\n" \
+                "   - \$SGE_ROOT    (always necessary)\n" \
+                "   - \$SGE_CELL    (if you are using a cell other than >default<)\n" \
+                "   - \$COMMD_PORT   (if you haven't added the service >sge_commd<)\n" \
+                "   - \$PATH/\$path (to find the Grid Engine binaries)\n" \
+                "   - \$MANPATH     (to access the manual pages)\n" \
+                $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.csh \
+                $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.sh
 
-      $ECHO ""
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to see where Grid Engine logs messages >> "
+      $CLEAR
 
-      Translate 4 "Press <RETURN> to see where %s logs messages >>" $QSYST
-      WaitClear clear "$transout \c"
+      $INFOTEXT -u "\nGrid Engine messages"
+      $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
+                "   /tmp/qmaster_messages (during qmaster startup)\n" \
+                "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
+                "After startup the daemons log thier messages in their spool directories.\n\n" \
+                "   Qmaster:     %s\n" \
+                "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $QMDIR/messages
 
-      $ECHO ""
-      Translate 0 "%s messages" "$QSYST"
-      $ECHO "$LINE---------"
-      $ECHO ""
-      Translate 0 "Messages from %s can be found in" "$QSYST"
-      $ECHO ""
-      Translate 0 "   %s (during %s qmaster startup)" /tmp/qmaster_messages $QSYST
-      Translate 0 "   %s (during %s exec daemon startup)" /tmp/execd_messages $QSYST
-      $ECHO ""
-      Translate 0 "After the startup the daemons log their messages in their spool directories."
-      $ECHO ""
-      Translate 0 "%s qmaster:" "$QSYST"
-      $ECHO ""
-      $ECHO "   $QMDIR/messages"
-      $ECHO ""
-      Translate 0 "%s execution daemon" "$QSYST"
-      $ECHO ""
-      $ECHO "   <execd_spool_dir>/<hostname>/messages"
-
-      Translate 4 "Do you want to see previous screen about using %s again" $QSYST
-      YesNo "\n\n$transout" n
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+                "Do you want to see previous screen about using Grid Engine again (y/n) [n] >> "
       if [ $? = 0 ]; then
          :
       else
@@ -1099,36 +1008,23 @@ GiveHints()
       fi
    done
 
-   $CLEAR
-
    if [ $WHICH = qmaster ]; then
-      $ECHO ""
-      Translate 0 "Your %s qmaster installation is now completed" "$QSYST"
-      $ECHO "$LINE-------------------------------------------"
-      $ECHO ""
-      Translate 0 "Please now login to all hosts where you want to run an execution daemon"
-      Translate 0 "and start the execution host installation procedure."
-      $ECHO ""
-      Translate 0 "If you want to run an execution daemon on this host, please do not forget"
-      Translate 0 "to make the execution host installation in this host as well."
-      $ECHO ""
-      Translate 0 "All execution hosts must be administrative hosts during the installation."
-      $ECHO ""
-      Translate 0 "All hosts which you added to the list of administrative hosts during this"
-      Translate 0 "installation procedure can now be installed."
-      $ECHO ""
-      Translate 0 "You may verify your adminstrative hosts with the command"
-      $ECHO ""
-      $ECHO "   qconf -sh"
-      $ECHO ""
-      Translate 0 " and you may add new adminstrative hosts with the command"
-      $ECHO ""
-      $ECHO "   qconf -ah <hostname>"
-      $ECHO ""
+      $CLEAR
+      $INFOTEXT -u "\nYour Grid Engine qmaster installation is now completed"
+      $INFOTEXT "\nPlease now login to all hosts where you want to run an execution daemon\n" \
+                  "and start the execution host installation procedure.\n\n" \
+                  "If you want to run an execution daemon on this host, please do not forget\n" \
+                  "to make the execution host installation in this host as well.\n\n" \
+                  "All execution hosts must be administrative hosts during the installation.\n" \
+                  "All hosts which you added to the list of administrative hosts during this\n" \
+                  "installation procedure can now be installed.\n\n" \
+                  "You may verify your administrative hosts with the command\n\n" \
+                  "   # qconf -sh\n\n" \
+                  "and you may add new administrative hosts with the command\n\n" \
+                  "   # qconf -ah <hostname>\n"
       exit 0
    else
-      $ECHO ""
-      Translate 0 "Your %s execution daemon installation is now completed." "$QSYST"
+      $INFOTEXT "Your execution daemon installation is now completed."
    fi
 }
 
@@ -1140,107 +1036,95 @@ CheckWhoInstallsQsyst()
    euid=`$V5UTILBIN/uidgid -euid`
    if [ $euid != 0 ]; then
       $CLEAR
-      $ECHO ""
-      Translate 0 "%s - test installation" "$QSYST"
-      $ECHO "$LINE--------------------"
-      $ECHO ""
-      Translate 0 "You are installing %s not as user >root<!" "$QSYST"
-      $ECHO ""
-      Translate 0 "This will allow you to run %s only under your user id for testing" "$QSYST"
-      Translate 0 "a limited functionality of %s." "$QSYST"
-      $ECHO ""
-      Translate 4 "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >>"
-      WaitClear clear "$transout \c"
+      $INFOTEXT -u "\nGrid Engine - test installation"
+      $INFOTEXT "\nYou are installing not as user >root<!\n\n" \
+                  "This will allow you to run Grid Engine only under your user id for testing\n" \
+                  "a limited functionality of Grid Engine.\n"
+      
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
+      $CLEAR
       return 0
    fi
 
    # from here only root
-   this_dir_user=`$V5UTILBIN/filestat -owner .`
+   this_dir_user=`$V5UTILBIN/filestat -owner . 2> /dev/null`
+   ret=$?
+   if [ $ret != 0 ]; then
+      $INFOTEXT "\nCan't resolve user name from current directory.\n" \
+                "Installation failed. Exit.\n"
+      exit 1           
+   fi
 
    if [ $this_dir_user != root ]; then
       $CLEAR
-      $ECHO ""
-      Translate 0 "%s admin user account" "$QSYST"
-      $ECHO "$LINE-------------------"
-      $ECHO ""
-      Translate 0 "The current directory is"
-      $ECHO ""
-      $ECHO "      `pwd`"
-      $ECHO ""
-      Translate 0 "is owned by user"
-      $ECHO ""
-      $ECHO "      $this_dir_user"
-      $ECHO ""
-      Translate 0 "If user >root< does not have write permissons in this directory on *all*"
-      Translate 0 "of the machines where %s will be installed (NFS partitions not exported" "$QSYST"
-      Translate 0 "for user >root< with read/write permissions) it is recommended to install"
-      Translate 0 "%s that all spool files will be created under the user id" "$QSYST"
-      Translate 0 "of user >%s<." $this_dir_user
-      $ECHO ""
-      Translate 0 "IMPORTANT NOTE: The daemons still have to be started by user >%s<" root
+      $INFOTEXT -u "\nGrid Engine admin user account"
 
-      Translate 4 "Do you want to install %s as admin user >%s<" $QSYST $this_dir_user
-      YesNo "\n$transout" y
+      $INFOTEXT "\nThe current directory\n\n" \
+                "   %s\n\n" \
+                "is owned by user\n\n" \
+                "   %s\n\n" \
+                "If user >root< does not have write permissions in this directory on *all*\n" \
+                "of the machines where Grid Engine will be installed (NFS partitions not\n" \
+                "exported for user >root< with read/write permissions) it is recommended to\n" \
+                "install Grid Engine that all spool files will be created under the user id\n" \
+                "of user >%s<.\n\n" \
+                "IMPORTANT NOTE: The daemons still have to be started by user >root<.\n" \
+                `pwd` $this_dir_user $this_dir_user
+
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                "Do you want to install Grid Engine as admin user >%s< (y/n) [y] >> " $this_dir_user
       if [ $? = 0 ]; then
-         $ECHO ""
-         Translate 0 "Installing application as admin user >%s<" "$this_dir_user"
+         $INFOTEXT "Installing Grid Engine as admin user >%s<" "$this_dir_user"
          ADMINUSER=$this_dir_user
-         WaitClear clear
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+         $CLEAR
          return
       else
          $CLEAR
       fi
    fi
 
-   $ECHO ""
-   Translate 0 "Choosing %s admin user account" "$QSYST"
-   $ECHO "$LINE----------------------------"
-   $ECHO ""
-   Translate 0 "You may install %s that all files are created with the user id of an" $QSYST
-   Translate 0 "unprivileged user."
-   $ECHO ""
-   Translate 0 "This will make it possible to install and run %s in directories" $QSYST
-   Translate 0 "where user >%s< has no permissions to create and write files and directories." root
-   $ECHO ""
-   Translate 0 "   - %s still has to be started by user >%s<" "$QSYST" root
-   Translate 0 "   - This directory and all distribution files already should be owned"
-   Translate 0 "     by the %s administrator" "$QSYST"
-   $ECHO ""
-   Translate 4 "Do you want to install %s under an user id other than >%s<" "$QSYST" root
-   YesNo "$transout" y
+   $INFOTEXT -u "\nChoosing Grid Engine admin user account"
+
+   $INFOTEXT "\nYou may install Grid Engine that all files are created with the user id of an\n" \
+             "unprivileged user.\n\n" \
+             "This will make it possible to install and run Grid Engine in directories\n" \
+             "where user >root< has no permissions to create and write files and directories.\n\n" \
+             "   - Grid Engine still has to be started by user >root<\n\n" \
+             "   - this directory should be owned by the Grid Engine administrator\n"
+
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+             "Do you want to install Grid Engine\n" \
+             "under an user id other than >root< (y/n) [y] >> "
 
    if [ $? = 0 ]; then
       done=false
       while [ $done = false ]; do
          $CLEAR
-         $ECHO ""
-         Translate 0 "Choosing a %s admin user name" "$QSYST"
-         $ECHO "$LINE---------------------------"
-         $ECHO ""
-         Translate 2 "Please enter the user name (or >%s<) >> " root
+         $INFOTEXT -u "\nChoosing a Grid Engine admin user name"
+         $INFOTEXT -n "\nPlease enter the user name (or >root<) >> "
          INP=`Enter ""`
          $V5UTILBIN/checkuser -check "$INP"
          if [ $? != 0 ]; then
-            Translate 0 "The user %s does not exist - please correct the username" $INP
-            WaitClear clear
+            $INFOTEXT "User >%s< does not exist - please correct the username" $INP
+            $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+            $CLEAR
          else
-            $ECHO
-            Translate 0 "Installing %s as user >%s<" $QSYST $INP
-            $ECHO
+            $INFOTEXT "\nInstalling Grid Engine as user >%s<\n" $INP
             ADMINUSER=$INP
             if [ $ADMINUSER = root ]; then
                ADMINUSER=default
             fi
-            WaitClear clear
+            $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+            $CLEAR
             done=true
          fi
       done
    else
-      $ECHO
-      Translate 0 "Installing %s as user %s" "$QSYST" root
-      $ECHO
+      $INFOTEXT "\nInstalling Grid Engine as user >root<\n"
       ADMINUSER=default
-      WaitClear clear
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+      $CLEAR
    fi
 }
 
@@ -1260,70 +1144,44 @@ CheckForCommdPort()
    ret=$?
 
    if [ "$COMMD_PORT" != "" ]; then
-      $ECHO ""
-      Translate 0 "%s TCP/IP communication service" "$QSYST"
-      $ECHO "$LINE-----------------------------"
+      $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
       if [ $COMMD_PORT -ge 1 -a $COMMD_PORT -le $commd_port_max ]; then
-         $ECHO ""
-         Translate 0 "Using the environment variable"
-         $ECHO ""
-         $ECHO "   \$COMMD_PORT=$COMMD_PORT"
-         $ECHO ""
-         Translate 0 "as port for communication with >%s<." "$QSYST_COMMD_NAME"
-         $ECHO ""
+         $INFOTEXT "\nUsing the environment variable\n\n" \
+                   "   \$COMMD_PORT=%s\n\n" \
+                     "as port for communication with >sge_commd<.\n\n" $COMMD_PORT
          if [ $ret = 0 ]; then
-            Translate 0 "This overrides the preset TCP/IP service >%s<." "$QSYST_SERVICE"
-            $ECHO ""
+            $INFOTEXT "This overrides the preset TCP/IP service >sge_commd<.\n"
          fi
-         WaitClear clear
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+         $CLEAR
          return
       else
-         $ECHO ""
-         Translate 0 "The environment variable"
-         $ECHO ""
-         $ECHO "   \$COMMD_PORT=$COMMD_PORT"
-         $ECHO ""
-         Translate 0 "has an invalid value (it must be in range 1..%s)." "$commd_port_max"
-         $ECHO ""
-         Translate 4 "Please set %s and restart\nthe installation or configure the service >%s<" \$COMMD_PORT $QSYST_SERVICE
-         WaitClear noclear "$transout >> \c"
-         exit 1
+         $INFOTEXT "\nThe environment variable\n\n" \
+                   "   \$COMMD_PORT=%s\n\n" \
+                   "has an invalid value (it must be in range 1..%s).\n\n" \
+                   "Please set the environment variable \$COMMD_PORT and restart\n" \
+                   "the installation or configure the service >sge_commd<." $COMMD_PORT $commd_port_max
       fi
    fi
 
+   $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_commd<"
    if [ $ret != 0 ]; then
-      $ECHO ""
-      $ECHO "$QSYST \c"
-      Translate 0 "TCP/IP service >%s<" "$QSYST_SERVICE"
-      $ECHO "--------------------------"
-      $ECHO ""
-      Translate 0 "There is no service >%s< available in your >/etc/services< file " "$QSYST_SERVICE"
-      Translate 0 "or in your NIS/NIS+ database."
-      $ECHO ""
-      Translate 0 "You may"
-      $ECHO ""
-      Translate 0 "   - add this service now to your services database"
-      Translate 0 "   - or choose a port number"
-      $ECHO ""
-      Translate 0 "It is recommended to add the service now. If you are using NIS/NIS+ you"
-      Translate 0 "should add the service at your NIS/NIS+ server and not to the local"
-      Translate 0 ">/etc/services< file."
-      $ECHO ""
-      Translate 0 "Please add an entry in the form"
-      $ECHO ""
-      $ECHO "   $QSYST_SERVICE port_number/tcp"
-      $ECHO ""
-      Translate 0 "to your services database and make sure to use an unused port number."
-      $ECHO ""
+      $INFOTEXT "\nThere is no service >sge_commd< available in your >/etc/services< file\n" \
+                "or in your NIS/NIS+ database.\n\n" \
+                "You may add this service now to your services database or choose a port number.\n" \
+                "It is recommended to add the service now. If you are using NIS/NIS+ you should\n" \
+                "add the service at your NIS/NIS+ server and not to the local >/etc/services<\n" \
+                "file.\n\n" \
+                "Please add an entry in the form\n\n" \
+                "   sge_commd <port_number>/tcp\n\n" \
+                "to your services database and make sure to use an unused port number.\n"
 
       if [ "$host_type" = "exec" ]; then
 
-         Translate 0 "Make sure to use the same port number as on the qmaster machine"
-         $ECHO ""
+         $INFOTEXT "Make sure to use the same port number as on the qmaster machine\n"
       fi
-      Translate 4 "Please add the service now or continue to enter a port number >>"
-      WaitClear noclear "$transout \c"
+      $INFOTEXT -wait -auto $autoinst -n "Please add the service now or continue to enter a port number >> "
 
       # Check if $QSYST_SERVICE service is available now
       service_available=false
@@ -1332,47 +1190,40 @@ CheckForCommdPort()
          $V5UTILBIN/getservbyname $QSYST_SERVICE 2>/dev/null
          if [ $? != 0 ]; then
             $CLEAR
-            $ECHO ""
-            Translate 0 "No TCP/IP service >%s< yet" "$QSYST_SERVICE"
-            $ECHO "---------------------------------"
-            $ECHO ""
-            Translate 0 "There is still no service for >%s< available." "$QSYST_SERVICE"
-            $ECHO ""
-            Translate 0 "If you have just added the service it may take a while until the service"
-            Translate 0 "propagates in your network. If this is true we can again check for"
-            Translate 0 "the service >%s<. If you don't want to add this service or if" "$QSYST_SERVICE"
-            Translate 0 "you want to install >%s< just for testing purposes you can enter" "$QSYST"
-            Translate 0 "a port number."
-            $ECHO ""
-            Translate 4 "Check again (press >Y<) or enter port number now (y/number) [Y] >>"
-            $ECHO "$transout \c"
-            INP=`Enter Y`
-            if [ $INP = y -o $INP = Y ]; then
+            $INFOTEXT -u "\nNo TCP/IP service >sge_commd< yet"
+            $INFOTEXT "\nThere is still no service for >sge_commd< available.\n\n" \
+                      "If you have just added the service it may take a while until the service\n" \
+                      "propagates in your network. If this is true we can again check for\n" \
+                      "the service >sge_commd<. If you don't want to add this service or if\n" \
+                      "you want to install Grid Engine just for testing purposes you can enter\n" \
+                      "a port number.\n"
+
+            $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                      "Check again (if not you need to enter a port number later) (y/n) [y] >> "
+            if [ $? = 0 ]; then
                :
             else
+               $INFOTEXT -n "Please enter an unused port number >> "
+               INP=`Enter ""`
                chars=`echo $INP | wc -c`
                chars=`expr $chars - 1`
                digits=`expr $INP : "[0-9][0-9]*"`
                if [ "$chars" != "$digits" ]; then
-                  $ECHO ""
-                  Translate 0 "Invalid input. Must be a number."
+                  $INFOTEXT "\nInvalid input. Must be a number."
                elif [ $INP -le 1 -o $INP -ge $commd_port_max ]; then
-                  $ECHO ""
-                  Translate 0 "Invalid port number. Must be in range [1..$commd_port_max]."
+                  $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $commd_port_max
                elif [ $INP -le 1024 -a $euid != 0 ]; then
-                  $ECHO ""
-                  Translate 0 "You are not user >root<. Use a port above 1024."
+                  $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
                   ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
                   if [ "$ser" = "$INP/tcp" ]; then
-                     $ECHO ""
-                     Translate 0 "Found service with port number >%s< in >/etc/services<. Choose again." "$INP"
+                     $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else
                      done=true
                   fi
                fi
                if [ $done = false ]; then
-                  WaitClear noclear
+                  $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
                fi
             fi
          else
@@ -1384,29 +1235,23 @@ CheckForCommdPort()
       if [ $service_available = false ]; then
          COMMD_PORT=$INP
          export COMMD_PORT
-         $ECHO ""
-         Translate 0 "Using port >%s<." "$COMMD_PORT"
-         Translate 0 "No service >%s< available." "$QSYST_SERVICE"
-         $ECHO ""
-         WaitClear clear
+         $INFOTEXT "\nUsing port >%s<. No service >sge_commd< available.\n" $COMMD_PORT
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+         $CLEAR
       else
          unset COMMD_PORT
-         Translate 0 "Service >%s< is now available." "$QSYST_SERVICE"
-         $ECHO ""
-         WaitClear clear
+         $INFOTEXT "\nService >sge_commd< is now available.\n"
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+         $CLEAR
       fi
    else
-      $ECHO ""
-      Translate 0 "Using the service"
-      $ECHO ""
-      $ECHO "   $QSYST_SERVICE"
-      $ECHO ""
-      Translate 0 "for communication with >%s<." "$QSYST"
-      $ECHO ""
-      WaitClear clear
+      $INFOTEXT "\nUsing the service\n\n" \
+                "   sge_commd\n\n" \
+                "for communication with Grid Engine.\n"
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+      $CLEAR
    fi
 }
-
 #-------------------------------------------------------------------------
 # GetCell
 #
@@ -1417,39 +1262,22 @@ GetCell()
    fi
 
    $CLEAR
-   $ECHO ""
-   Translate 0 "%s cells" "$QSYST"
-   $ECHO "$LINE------"
-   $ECHO ""
-   Translate 0 "%s supports multiple cells." "$QSYST"
-   $ECHO ""
-   Translate 0 "If you are not planning to run multiple %s clusters or if you don't" "$QSYST"
-   Translate 0 "know yet what is a %s cell it is safe to keep the default cell name" "$QSYST"
-   $ECHO ""
-   $ECHO "   \"default\""
-   $ECHO ""
-   Translate 0 "If you want to run multiple cells you can enter a cell name now."
-   Translate 0 "The environment variable"
-   $ECHO ""
-   $ECHO "   $QSYST_CELL=<your_cell_name>"
-   $ECHO ""
-   Translate 0 "will be set for all further %s commands." "$QSYST"
-   $ECHO ""
-
-   Translate 4 "Enter cell name or hit <RETURN> to use default cell >%s<" default
-   $ECHO "$transout >> \c"
-   INP=`Enter ""`
-   if [ "$INP" = "" ]; then
-      eval $QSYST_CELL=default
-   else
-      eval $QSYST_CELL=$INP
-   fi
-
+   $INFOTEXT -u "\nGrid Engine cells"
+   $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                "   default\n\n" \
+                "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                "The environment variable\n\n" \
+                "   \$SGE_CELL=<your_cell_name>\n\n" \
+                "will be set for all further Grid Engine commands.\n\n" \
+                "Enter cell name or hit <RETURN> to use default cell >default< >> "
+   INP=`Enter default`
+   eval $QSYST_CELL=$INP
    QSYST_CELL_VAL=`eval echo '$'$QSYST_CELL`
 
-   Translate 4 "\nUsing default cell: >%s<" $QSYST_CELL_VAL
-
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "\nUsing cell >%s<. Hit <RETURN> to continue >> " $QSYST_CELL_VAL
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -1462,42 +1290,38 @@ GetQmasterSpoolDir()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "%s qmaster spool directory" "$QSYST"
-      $ECHO "$LINE------------------------"
-      $ECHO ""
-      Translate 0 "The qmaster spool directory is the place where the %s qmaster" "$QSYST"
-      Translate 0 "daemon stores the configuration and the state of the queuing system."
-      $ECHO ""
+      $INFOTEXT -u "\nGrid Engine qmaster spool directory"
+      $INFOTEXT "\nThe qmaster spool directory is the place where the qmaster daemon stores\n" \
+                "the configuration and the state of the queuing system.\n\n"
 
       if [ $euid = 0 ]; then
          if [ $ADMINUSER = default ]; then
-            Translate 0 "The >%s< user on this host must have read/write" root
+            $INFOTEXT "User >root< on this host must have read/write accessto the qmaster\n" \
+                      "spool directory.\n"
          else
-            Translate 0 "The admin user >%s< must have read/write" $ADMINUSER
+            $INFOTEXT "The admin user >%s< must have read/write access\n" \
+                      "to the qmaster spool directory.\n" $ADMINUSER
          fi
       else
-         Translate 2 "Your account on this host must have read/write "
+         $INFOTEXT "Your account on this host must have read/write access\n" \
+                   "to the qmaster spool directory.\n"
       fi
 
-      Translate 0 "access to the qmaster spool directory."
-      Translate 0 "If you will install shadow master hosts or if you want to be able to"
-      Translate 0 "start the qmaster daemon on other hosts (see the corresponding section"
-      Translate 0 "in the %s Installation and Administration Manual for details) the account" "$QSYST"
-      Translate 0 "on the shadow master hosts also needs read/write access to this directory."
-      $ECHO ""
-      Translate 0 "Enter spool directory or hit <RETURN> to use default"
-      $ECHO "   \"$QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool/qmaster\" >> \c"
+      $INFOTEXT -n "If you will install shadow master hosts or if you want to be able to start\n" \
+                   "the qmaster daemon on other hosts (see the corresponding sectionin the\n" \
+                   "Grid Engine Installation and Administration Manual for details) the account\n" \
+                   "on the shadow master hosts also needs read/write access to this directory.\n\n" \
+                   "Enter spool directory or hit <RETURN> to use default\n" \
+                   "[%s] >> " \
+                   $QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool/qmaster
 
       QMDIR=`Enter $QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool/qmaster`
 
-      $ECHO ""
-      Translate 0 "The following directory has been selected as qmaster spool directory"
-      $ECHO ""
-      $ECHO "   $QMDIR"
-      $ECHO ""
-      Translate 4 "Do you want to select another qmaster spool directory"
-      YesNo "$transout" n
+      $INFOTEXT "\nThe following directory has been selected as qmaster spool directory:\n\n" \
+                "   %s\n" $QMDIR
+
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+                "Do you want to select another qmaster spool directory (y/n) [n] >> "
 
       if [ $? = 1 ]; then
          done=true
@@ -1511,12 +1335,9 @@ GetQmasterSpoolDir()
 CheckQmasterInstallation()
 {
    $CLEAR
-   $ECHO ""
-   Translate 0 "%s cells"  "$QSYST"
-   $ECHO "$LINE------"
-   $ECHO ""
-   Translate 0 "Please enter cell name which you used for %s qmaster" "$QSYST"
-   Translate 2 "installation or press <RETURN> to use default cell >default< >> "
+   $INFOTEXT -u "\nGrid Engine cells"
+   $INFOTEXT -n "\nPlease enter cell name which you used for the qmaster\n" \
+                "installation or press <RETURN> to use default cell >default< >> "
    INP=`Enter ""`
    if [ "$INP" = "" ]; then
       eval $QSYST_CELL=default
@@ -1529,20 +1350,15 @@ CheckQmasterInstallation()
    SetCellDependentVariables
 
    if [ ! -f $COMMONDIR/act_qmaster -o ! -f $COMMONDIR/configuration ]; then
-      $ECHO ""
-      Translate 0 "Obviously there was no %s qmaster installation" "$QSYST"
-      $ECHO ""
-      Translate 0 "Call >./%s -m<" "$myname"
-      $ECHO ""
-      Translate 0 "on the machine which shall run the %s qmaster" "$QSYST"
-      $ECHO ""
+      $INFOTEXT "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
+                  "on the machine which shall run the Grid Engine qmaster\n"
       exit 1
    else
-      Translate 0 "Using default cell: >%s<" $QSYST_CELL_VAL
-      $ECHO
+      $INFOTEXT "\nUsing cell: >%s<\n" $QSYST_CELL_VAL
    fi
 
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 
    user=`grep admin_user $COMMONDIR/configuration | awk '{ print $2 }'`
 
@@ -1554,13 +1370,13 @@ CheckQmasterInstallation()
 
    if [ "$ADMINUSER" != "$user" ]; then
       if [ "$user" = default ]; then
-         Translate 0 "The admin user >%s< is different than the default >%s<" "$user" default
+         $INFOTEXT "The admin user >%s< is different than the default user >root<\n" \
+                   "in the global cluster configuration.\n" $ADMINUSER
       else
-         Translate 0 "The admin user >%s< doesn't match the admin username >%s<" "$user" $ADMINUSER
+         $INFOTEXT "The admin user >%s< doesn't match the admin username >%s<\n" \
+                   "in the global cluster configuration.\n" $ADMINUSER $user
       fi
-      Translate 0 "in the global cluster configuration."
-      $ECHO
-      Translate 0 "Installation failed. Exit."
+      $INFOTEXT "Installation failed. Exit."
       exit 1
    fi
 }
@@ -1574,11 +1390,8 @@ AddQsystStartUpScript()
    create=$2
 
    $CLEAR
-   $ECHO ""
-   Translate 0 "%s startup script" "$QSYST"
-   $ECHO "$LINE---------------"
-   $ECHO ""
-
+   $INFOTEXT -u "\nGrid Engine startup script"
+   $ECHO
    TMP_V5_STARTUP_FILE=/tmp/rcsge.$$
    STARTUP_FILE_NAME=rcsge
    S95NAME=S95rcsge
@@ -1621,35 +1434,33 @@ AddQsystStartUpScript()
          AddDefaultManager $USER
       fi
 
-      $ECHO ""
-      Translate 0 "Your system wide %s startup script is installed as:" "$QSYST"
-      $ECHO ""
-      $ECHO "   \"$V5_STARTUP_FILE\""
-      $ECHO ""
-      WaitClear clear
-   else
-      $CLEAR
+      $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
+                "   %s<\n\n" $V5_STARTUP_FILE
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    fi
+
+   $CLEAR
 
    if [ $euid != 0 ]; then
       return 0
    fi
 
+   $INFOTEXT -u "\nGrid Engine startup script"
+
    # --- from here only if root installs ---
-   Translate 4 "We can install the startup script that %s is started at machine boot" $QSYST
-   YesNo "\n$transout" y
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+             "\nWe can install the startup script that\n" \
+             "Grid Engine is started at machine boot (y/n) [y] >> "
 
    if [ $? = 1 ]; then
       $CLEAR
       return
    fi
 
-   echo
-
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    if [ "$RC_FILE" = "sysv_rc" ]; then
-      Translate 0 "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
       Execute cp $V5_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
@@ -1664,7 +1475,7 @@ AddQsystStartUpScript()
       if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            Translate 0 "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
          fi
@@ -1683,18 +1494,17 @@ AddQsystStartUpScript()
       grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
       status=$?
       if [ $status != 0 ]; then
-         Translate 0 "Adding application startup to %s" $RC_FILE
+         $INFOTEXT "Adding application startup to %s" $RC_FILE
          # Add the procedure
          #------------------
          $ECHO "" >> $RC_FILE
          $ECHO "" >> $RC_FILE
-         $ECHO "# $QSYST start up" >> $RC_FILE
+         $ECHO "# Grid Engine start up" >> $RC_FILE
          $ECHO "#-$LINE---------" >> $RC_FILE
          $ECHO $V5_STARTUP_FILE >> $RC_FILE
       else
-         Translate 0 "Found a call of %s in $s. Replacing with new call." $STARTUP_FILE_NAME $RC_FILE
-         $ECHO
-         Translate 0 "Your old %s is saved as %s" $RC_FILE $RC_FILE.org.1
+         $INFOTEXT "Found a call of %s in %s. Replacing with new call.\n" \
+                   "Your old file %s is saved as %s" $STARTUP_FILE_NAME $RC_FILE $RC_FILE $RC_FILE.org.1
 
          mv $RC_FILE.org.3 $RC_FILE.org.4    2>/dev/null
          mv $RC_FILE.org.2 $RC_FILE.org.3    2>/dev/null
@@ -1720,7 +1530,8 @@ AddQsystStartUpScript()
       fi
    fi
 
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -1733,18 +1544,13 @@ AddHostsFromFile()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "Adding admin and submit hosts from file"
-      $ECHO "---------------------------------------"
-      $ECHO ""
-      Translate 4 "Please enter the file name which contains the host list:"
-      $ECHO "$transout \c"
+      $INFOTEXT -u "\nAdding admin and submit hosts from file"
+      $INFOTEXT -n "\nPlease enter the file name which contains the host list: "
       file=`Enter none`
       if [ "$file" = "none" -o ! -f "$file" ]; then
-         $ECHO ""
-         Translate 0 "You entered an invalid file name or the file does not exist."
-         Translate 4 "Do you want to enter a new file name"
-         YesNo "\n$transout " y
+         $INFOTEXT "\nYou entered an invalid file name or the file does not exist."
+         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                   "Do you want to enter a new file name (y/n) [y] >> "
          if [ $? = 1 ]; then
             return 1
          fi
@@ -1767,15 +1573,14 @@ AddHostsFromTerminal()
    stop=false
    while [ $stop = false ]; do
       $CLEAR
-      $ECHO ""
-      Translate 0 "Adding admin and submit hosts"
-      $ECHO "-----------------------------"
-      $ECHO ""
-      Translate 0 "Please enter a blank seperated list of hosts. Stop by entering <RETURN>. You"
-      Translate 0 "may repeat this step until you are entering an empty list. You will see"
-      Translate 0 "messages from %s when the hosts are added." "$QSYST"
-      $ECHO ""
-      Translate 2 "Host(s): "
+      $INFOTEXT -u "\nAdding admin and submit hosts"
+      $INFOTEXT "\nPlease enter a blank seperated list of hosts.\n\n" \
+                "Stop by entering <RETURN>. You may repeat this step until you are\n" \
+                "entering an empty list. You will see messages from Grid Engine\n" \
+                "when the hosts are added.\n"
+
+      $INFOTEXT -n "Host(s): "
+
       hlist=`Enter ""`
       for h in $hlist; do
          $V5BIN/qconf -ah $h
@@ -1784,7 +1589,7 @@ AddHostsFromTerminal()
       if [ "$hlist" = "" ]; then
          stop=true
       else
-         WaitClear noclear
+         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
       fi
   done
 }
@@ -1794,23 +1599,18 @@ AddHostsFromTerminal()
 #
 AddHosts()
 {
-   $ECHO ""
-   Translate 0 "Adding %s hosts" "$QSYST"
-   $ECHO "-------$LINE------"
-   $ECHO ""
-   Translate 0 "Please now add the list of hosts, where you will later install your execution"
-   Translate 0 "daemons. These hosts will be also added as valid submit hosts."
-   $ECHO ""
-   Translate 0 "Please enter a blank separated list of your execution hosts. You may"
-   Translate 0 "press <RETURN> if the line is getting too long. Once you are finished"
-   Translate 0 "simply press <RETURN> without entering a name."
-   $ECHO ""
-   Translate 0 "You also may prepare a file with the hostnames of the machines where you plan"
-   Translate 0 "to install %s. This may be convenient if you are installing %s on " "$QSYST"
-   Translate 0 "many hosts."
-   $ECHO ""
-   Translate 4 "Do you want to use a file which contains the list of hosts"
-   YesNo "$transout" n
+   $INFOTEXT -u "\nAdding Grid Engine hosts"
+   $INFOTEXT "\nPlease now add the list of hosts, where you will later install your execution\n" \
+             "daemons. These hosts will be also added as valid submit hosts.\n\n" \
+             "Please enter a blank separated list of your execution hosts. You may\n" \
+             "press <RETURN> if the line is getting too long. Once you are finished\n" \
+             "simply press <RETURN> without entering a name.\n\n" \
+             "You also may prepare a file with the hostnames of the machines where you plan\n" \
+             "to install Grid Engine. This may be convenient if you are installing Grid\n" \
+             "Engine on many hosts.\n\n"
+
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+             "Do you want to use a file which contains the list of hosts (y/n) [n] >> "
    ret=$?
    if [ $ret = 0 ]; then
       AddHostsFromFile
@@ -1821,8 +1621,8 @@ AddHosts()
       AddHostsFromTerminal
    fi
 
-   Translate 4 "Finished adding hosts. Hit <RETURN> to continue >>"
-   WaitClear clear "\n$transout \c"
+   $INFOTEXT -wait -auto $autoinst -n "Finished adding hosts. Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #-------------------------------------------------------------------------
@@ -1845,23 +1645,17 @@ AddQueue()
 #
    slots=`$V5UTILBIN/loadcheck -loadval num_proc | sed "s/num_proc *//"`
 
-   $ECHO ""
-   Translate 0 "Adding a default %s queue for this host" "$QSYST"
-   $ECHO "-----------------$LINE--------------------"
-   $ECHO ""
-   Translate 0 "We can now add a sample queue for this host which"
-   $ECHO ""
-   Translate 0 "    - has the name >%s.q<" "${exechost}"
-   Translate 0 "    - provides %s slot(s) for jobs" "$slots"
-   Translate 0 "    - provides access for any user with an account on this machine"
-   Translate 0 "    - and has no resource limits"
-   $ECHO ""
-   Translate 0 "You do not need to add a queue now, but before running jobs on this host"
-   Translate 0 "need to add a queue with >qconf< or the GUI >qmon<."
-   $ECHO ""
+   $INFOTEXT -u "\nAdding a default Grid Engine queue for this host"
+   $INFOTEXT "\nWe can now add a sample queue for this host with following attributes:\n\n" \
+             "   - the queue has the name >%s.q<\n" \
+             "   - the queue provides %s slot(s) for jobs\n" \
+             "   - the queue provides access for any user with an account on this machine\n" \
+             "   - the queue has no Unix resource limits\n\n" \
+             "You do not need to add a queue now, but before running jobs on this host\n" \
+             "need to add a queue with >qconf< or the GUI >qmon<.\n" $exechost $slots
 
-   Translate 4 "Do you want to add a default queue for this host"
-   YesNo "$transout" y
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+             "Do you want to add a default queue for this host (y/n) [y] >> "
 
    if [ $? = 0 ]; then
       TMPL=/tmp/queue_template.$$
@@ -1871,7 +1665,8 @@ AddQueue()
                   -e "/hostname/s/unknown/$exechost/" \
                   -e "/slots/s/1/$slots/" $TMPL > ${TMPL}.q
       $V5BIN/qconf -Aq ${TMPL}.q
-      WaitClear clear
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+      $CLEAR
       rm -f $TMPL ${TMPL}.q
    fi
 }
@@ -1881,13 +1676,13 @@ AddQueue()
 #
 CreateSettingsFile()
 {
-   Translate 0 "Creating settings files for >%s<" ".profile/.cshrc"
+   $INFOTEXT "Creating settings files for >.profile/.cshrc<"
 
    if [ -f $QSYST_ROOT_VAL/$COMMONDIR/settings.sh ]; then
       ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.sh
    fi
 
-   if [ -f $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh ]; then
+   if [ -f $QSYST_ROOT_VAL/$COMMONDIR/settings.csh ]; then
       ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh
    fi
 
@@ -1916,23 +1711,17 @@ WelcomeTheUser()
       return
    fi
 
-   Translate 0 "Welcome to the %s installation" $QSYST
-   $ECHO "---------------$LINE-------------"
-   $ECHO ""
-   Translate 0 "%s qmaster host installation" $QSYST
-   $ECHO "$LINE--------------------------"
-   $ECHO ""
-   Translate 0 "Before you continue with the installation please read these hints:"
-   $ECHO ""
-   Translate 0 "  - your terminal window should have a size of at least 80x24 characters."
-   $ECHO ""
-   Translate 0 "  - The INTR character is often bound to the key Ctrl-C. The term"
-   Translate 0 "    Ctrl-C is used during the installation if you have the"
-   Translate 0 "    possibility to abort the installation."
-   $ECHO ""
-   Translate 0 "The qmaster installation procedure will take approximately 5-10 minutes."
-   $ECHO ""
-   WaitClear clear
+   $INFOTEXT -u "\nWelcome to the Grid Engine installation"
+   $INFOTEXT -u "\nGrid Engine qmaster host installation"
+   $INFOTEXT "\nBefore you continue with the installation please read these hints:\n\n" \
+             "   - Your terminal window should have a size of at least\n" \
+             "     80x24 characters\n\n" \
+             "   - The INTR character is often bound to the key Ctrl-C.\n" \
+             "     The term >Ctrl-C< is used during the installation if you\n" \
+             "     have the possibility to abort the installation\n\n" \
+             "The qmaster installation procedure will take approximately 5-10 minutes.\n"
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #--------------------------------------------------------------------------
@@ -1943,31 +1732,21 @@ WelcomeTheUserExecHost()
    if [ $autoinst = true ]; then
       return
    fi
+ 
+   $INFOTEXT -u "\nWelcome to the Grid Engine execution host installation"
+   $INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \
+             "this step (with >install_qmaster<) prior the execution host installation.\n\n" \
+             "For a sucessfull installation you need a running Grid Engine qmaster. It is\n" \
+             "also neccesary that this host is an administrative host.\n\n" \
+             "You can verify your current list of administrative hosts with\n" \
+             "the command:\n\n" \
+             "   # qconf -sh\n\n" \
+             "You can add an administrative host with the command:\n\n" \
+             "   # qconf -ah <hostname>\n\n" \
+             "The execution host installation will take approximately 5 minutes.\n"
 
-   Translate 0 "Welcome to the %s installation" "$QSYST"
-   $ECHO "---------------$LINE-------------"
-   $ECHO ""
-   Translate 0 "%s execution host installation" "$QSYST"
-   $ECHO "$LINE----------------------------"
-   $ECHO ""
-   Translate 0 "If you haven't installed the %s qmaster host yet, you must execute" "$QSYST"
-   Translate 0 "this step (with >%s<) prior the execution host installation." "install_qmaster"
-   $ECHO ""
-   Translate 0 "For a sucessfull installation you need a running %s qmaster. It is" "$QSYST"
-   Translate 0 "also neccesary that this host is an administrative host."
-   $ECHO ""
-   Translate 0 "You can verify your current list of administrative hosts with the command:"
-   $ECHO ""
-   $ECHO "   % qconf -sh"
-   $ECHO ""
-   Translate 0 "You can add an administrative host with the command:"
-   $ECHO ""
-   $ECHO "   % qconf -ah <hostname>"
-   $ECHO ""
-   Translate 0 "The execution host installation will take approximately 5 minutes."
-   $ECHO ""
-
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #--------------------------------------------------------------------------
@@ -1975,15 +1754,11 @@ WelcomeTheUserExecHost()
 #
 WelcomeTheUserSubmit()
 {
-   Translate 0 "%s submit host installation" "$QSYST"
-   $ECHO "$LINE-------------------------"
-   $ECHO ""
-   Translate 0 "Adding a submit host to the %s cluster is done with the command:" "$QSYST"
-   $ECHO ""
-   $ECHO "   % qconf -as hostname"
-   $ECHO ""
-   Translate 0 "This command must be entered from a machine which is an administration host."
-   Translate 0 "The %s qmaster machine is by default an administration host." "$QSYST"
+   $INFOTEXT -u "\nGrid Engine submit host installation"
+   $INFOTEXT "\nAdding a submit host to the Grid Engine cluster is done with the command:\n\n" \
+             "   # qconf -as <hostname>\n\n" \
+               "This command must be entered from a machine which is an administration host.\n" \
+               "The qmaster host by default is an administration host."
 }
 
 #--------------------------------------------------------------------------
@@ -1991,15 +1766,11 @@ WelcomeTheUserSubmit()
 #
 StartQmaster()
 {
-   $ECHO ""
-   Translate 0 "%s qmaster and scheduler startup" "$QSYST"
-   $ECHO "$LINE------------------------------"
-   $ECHO ""
-   Translate 0 "Starting %s qmaster and scheduler daemon. Please wait ..." "$QSYST"
-
+   $INFOTEXT -u "\nGrid Engine qmaster and scheduler startup"
+   $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
    $V5_STARTUP_FILE -qmaster
-
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #--------------------------------------------------------------------------
@@ -2007,14 +1778,11 @@ StartQmaster()
 #
 StartExecd()
 {
-   $ECHO ""
-   Translate 0 "%s execution daemon startup" "$QSYST"
-   $ECHO "$LINE-------------------------"
-   $ECHO ""
-   Translate 0 "Starting %s execution daemon daemon. Please wait ..." "$QSYST"
+   $INFOTEXT -u "\nGrid Engine execution daemon startup"
+   $INFOTEXT "\nStarting execution daemon daemon. Please wait ..."
    $V5_STARTUP_FILE -execd
-
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $CLEAR
 }
 
 #--------------------------------------------------------------------------
@@ -2031,7 +1799,7 @@ BINFILES="sge_commd sge_coshepherd \
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
-           testsuidroot uidgid"
+           testsuidroot uidgid infotext"
 
 THIRD_PARTY_FILES=openssl
 
@@ -2039,45 +1807,41 @@ THIRD_PARTY_FILES=openssl
    for f in $BINFILES; do
       if [ \! -f $V5BIN/$f ]; then
          missing=true
-         Translate 0 "missing program %s in directory %s" $f $V5BIN
+         $INFOTEXT "missing program >%s< in directory >%s<" $f $V5BIN
       fi
    done
 
    for f in $THIRD_PARTY_FILES; do
-      if [ ! -f $V5UTILBIN/$f ]; then
-        missing=true
-        Translate 0 "missing program %s in directory %s" $f $V5BIN
+      if [ $f = openssl -a $csp = true ]; then
+         if [ ! -f $V5UTILBIN/$f ]; then
+           missing=true
+           $INFOTEXT "missing program >%s< in directory >%s<" $f $V5BIN
+         fi
       fi
    done
 
    for f in $UTILFILES; do
       if [ ! -f $V5UTILBIN/$f ]; then
          missing=true
-         Translate 0 "missing program %s in directory %s" $f $V5UTILBIN
+         $INFOTEXT "missing program >%s< in directory >%s<" $f $V5UTILBIN
       fi
    done
 
    if [ $missing = true ]; then
-      $ECHO ""
-      Translate 0 "Missing %s binaries!" $QSYST
-      $ECHO ""
-      Translate 0 "A complete installation needs the following binaries in >%s<:" $V5BIN
-      $ECHO ""
-      $ECHO "qacct           qlogin          qrsh            sge_commd       sge_shepherd"
-      $ECHO "qalter          qmake           qselect         sge_coshepherd  sgecommdcntl"
-      $ECHO "qconf           qmod            qsh             sge_execd"
-      $ECHO "qdel            qmon            qstat           sge_qmaster"
-      $ECHO "qhold           qresub          qsub            sge_schedd"
-      $ECHO "qhost           qrls            qtcsh           sge_shadowd"
-      $ECHO ""
-      Translate 0 "The binaries in >%s< are:" $V5UTILBIN
-      $ECHO ""
-      $ECHO "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid"
-      $ECHO "checkprog      gethostbyname  now            rsh"
-      $ECHO "checkuser      gethostname    openssl        rshd"
-      $ECHO "filestat       getservbyname  qrsh_starter   testsuidroot"
-      $ECHO ""
-      Translate 0 "Installation failed. Exit."
+      $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+      "A complete installation needs the following binaries in >%s<:\n\n" \
+      "qacct           qlogin          qrsh            sge_commd       sge_shepherd\n" \
+      "qalter          qmake           qselect         sge_coshepherd  sgecommdcntl\n" \
+      "qconf           qmod            qsh             sge_execd\n" \
+      "qdel            qmon            qstat           sge_qmaster\n" \
+      "qhold           qresub          qsub            sge_schedd\n" \
+      "qhost           qrls            qtcsh           sge_shadowd\n\n" \
+      "The binaries in >%s< are:\n\n" \
+      "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+      "checkprog      gethostbyname  now            rsh            infotext\n" \
+      "checkuser      gethostname    openssl        rshd\n" \
+      "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+      "Installation failed. Exit.\n" $V5BIN $V5UTILBIN
       exit 1
    fi
 }
@@ -2090,27 +1854,24 @@ THIRD_PARTY_FILES=openssl
 SetPermissions()
 {
    $CLEAR
-   $ECHO
-   Translate 0 "Verifying and setting file permissions"
-   $ECHO "--------------------------------------"
+   $INFOTEXT -u "\nVerifying and setting file permissions"
    $ECHO
 
    euid=`$V5UTILBIN/uidgid -euid`
 
    if [ $euid != 0 ]; then
-      Translate 0 "You are not installing as user %s" root
-      $ECHO
-      Translate 0 "Can't set the file owner/group and permissions"
-      $ECHO
-      WaitClear clear
+      $INFOTEXT "You are not installing as user >root<\n"
+      $INFOTEXT "Can't set the file owner/group and permissions\n"
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+      $CLEAR
       return 0
    else
-      Translate 0 "Did you install this version with >pkgadd< or did you already"
-      Translate 4 "verify and set the file permissions of your distribution"
-      YesNo "$transout" y
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                "Did you install this version with >pkgadd< or did you already\n" \
+                "verify and set the file permissions of your distribution (y/n) [y] >> "
       if [ $? = 0 ]; then
-         Translate 4 "We do not verify file permissions. Hit <RETURN> to continue >>"
-         WaitClear clear "\n$transout \c"
+         $INFOTEXT -wait -auto $autoinst -n "We do not verify file permissions. Hit <RETURN> to continue >> "
+         $CLEAR
          return 0
       fi
    fi
@@ -2120,49 +1881,36 @@ SetPermissions()
    ret=$?
    rm -f ./tst$$ 2> /dev/null > /dev/null
    if [ $ret != 0 ]; then
-      $CLEAR
-      Translate 0 "Verifying and setting file permissions (continued)"
-      $ECHO     "--------------------------------------------------"
-      $ECHO
+      $INFOTEXT -u "\nVerifying and setting file permissions (continued)"
 
-      Translate 0 "We can't set file permissions on this machine, because user root"
-      Translate 0 "has not the necessary privileges to change file permissions"
-      Translate 0 "on this file system."
-      $ECHO
-      Translate 0 "Probably this file system is an NFS mount where user root is"
-      Translate 0 "mapped to user >nobody<."
-      $ECHO
-      Translate 0 "Please login now at your file server and set the file permissions and"
-      Translate 0 "ownership of the entire distribution with the script:"
-      $ECHO
-      Translate 0 "   \$$QSYST_ROOT/util/setfileperm.sh <adminuser> <admingroup>"
-      $ECHO
-      Translate 0 "where <adminuser> and <admingroup> are the Unix user/group names under which"
-      Translate 0 "the files should be installed and created."
-      $ECHO
-      Translate 4 "Please hit <RETURN> to continue once you set your file permissions >>"
-      WaitClear clear "$transout \c"
+      $INFOTEXT "\nWe can't set file permissions on this machine, because user root\n" \
+                  "has not the necessary privileges to change file permissions\n" \
+                  "on this file system.\n" \
+                  "Probably this file system is an NFS mount where user root is\n" \
+                  "mapped to user >nobody<.\n" \
+                  "Please login now at your file server and set the file permissions and\n" \
+                  "ownership of the entire distribution with the command:\n" \
+                  "   # \$SGE_ROOT/util/setfileperm.sh <adminuser> <admingroup> \$SGE_ROOT\n\n" \
+                  "where <adminuser> and <admingroup> are the Unix user/group names under which\n" \
+                  "the files should be installed and created.\n\n"
+
+      $INFOTEXT -wait -auto $autoinst -n "Please hit <RETURN> to continue once you set your file permissions >> "
+      $CLEAR
       return 0
    elif [ $fast = false ]; then
       $CLEAR
-      $ECHO
-      Translate 0 "Verifying and setting file permissions"
-      $ECHO "--------------------------------------"
-      $ECHO ""
-      Translate 0 "We may now verify and set the file permissions of your %s distribution." "$QSYST"
-      $ECHO ""
-      Translate 0 "This may be useful since due to unpacking and copying of your"
-      Translate 0 "distribution your files may be unaccessible to other users."
-      $ECHO ""
-      Translate 0 "We will set the permissions of directories and binaries to"
-      $ECHO ""
-      Translate 0 "   755 - that means executable are accessible for the world"
-      $ECHO ""
-      Translate 0 "and for ordinary files to"
-      $ECHO ""
-      Translate 0 "   644 - that means readable for the world"
-      Translate 4 "Do you want to verify and set your file permissions"
-      YesNo "\n$transout" y
+      $INFOTEXT -u "\nVerifying and setting file permissions"
+      $INFOTEXT "\nWe may now verify and set the file permissions of your Grid Engine\n" \
+                "distribution.\n\n" \
+                 "This may be useful since due to unpacking and copying of your distribution\n" \
+                 "your files may be unaccessible to other users.\n\n" \
+                 "We will set the permissions of directories and binaries to\n\n" \
+                 "   755 - that means executable are accessible for the world\n\n" \
+                 "and for ordinary files to\n\n" \
+                 "   644 - that means readable for the world\n\n"
+
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+               "Do you want to verify and set your file permissions (y/n) [y] >> "
       ret=$?
    else
       ret=0
@@ -2188,11 +1936,11 @@ SetPermissions()
 
       util/setfileperm.sh -auto $resportarg $fileowner $filegid $SGE_ROOT
 
-      WaitClear clear
+      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    else
-      Translate 4 "We will not verify your file permissions. Hit <RETURN> to continue >>"
-      WaitClear clear "\n$transout \c"
+      $INFOTEXT -wait -auto $autoinst -n "We will not verify your file permissions. Hit <RETURN> to continue >>"
    fi
+   $CLEAR
 }
 
 #--------------------------------------------------------------------------
@@ -2207,15 +1955,38 @@ InitCA()
 
    # Initialize CA, make directories and get DN info
    #
-   util/sgeCA/sge_ca -init
+   util/sgeCA/sge_ca -init -days 365
 
    if [ $? != 0 ]; then
       CAErrUsage
    fi
-
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
 }
 
+
+#--------------------------------------------------------------------------
+# CheckCSP check that there are no old certs/keys
+#
+CheckCSP()
+{
+
+   if [ $csp = false ]; then
+      return
+   fi
+
+   if [ "$COMMD_PORT" != "" ]; then
+      CA_PORT=port$COMMD_PORT
+   else
+      CA_PORT=sge_commd
+   fi
+
+   $V5UTILBIN/adminrun $ADMINUSER test -f $HOME/.sge/$CA_PORT/$SGE_CELL
+   if [ ! $? ]; then
+      $INFOTEXT -e "Please remove the old CSP security directory \$HOME/.sge/\$CA_PORT/\$SGE_CELL. Exit."
+      exit 1
+   fi
+}
 
 
 #--------------------------------------------------------------------------
@@ -2229,8 +2000,8 @@ InitCA()
 myname=`basename $0`
 
 cmdline=$*
-for  arg in $*; do
-   if [ $arg = -sgeee ]; then
+for arg in $*; do
+   if [ "$arg" = -sgeee ]; then
       myname=inst_sgeee
    fi
 done
@@ -2275,34 +2046,28 @@ fi
 
 . ./util/arch_variables
 
-
 if [ ! -f util/arch ]; then
    $ECHO "missing shell script \"util/arch\""
    exit 1
 fi
 
-#----------------------------------------------------
-# setup i18n
-
-if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
-   unset TEXTDOMAINDIR TEXTDOMAIN
-   TEXTDOMAINDIR="`/bin/pwd`/locale"
-   TEXTDOMAIN=gridengine
-   translation=1
+shlib_path_name=`util/arch -lib`
+old_value=`eval echo '$'$shlib_path_name`
+if [ x$old_value = x ]; then
+   eval $shlib_path_name=lib/$ARCH
 else
-   translation=0
-   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
-   unset LC_NUMERIC LC_TIME LANGUAGE
+   eval $shlib_path_name=$old_value:lib/$ARCH
 fi
-
-# end of internationalization setup
-#----------------------------------------------------
+export $shlib_path_name
 
 umask 022
 
 unset GRD_DEBUG_LEVEL
 unset COD_DEBUG_LEVEL
 unset SGE_DEBUG_LEVEL
+
+unset CODINE_ROOT 
+unset GRD_ROOT
 
 V5BIN=bin/$ARCH
 V5UTILBIN=utilbin/$ARCH
@@ -2316,23 +2081,46 @@ fi
 export $QSYST_CELL
 
 ADMINUSER=default
-
-# exit if there are missing binaries
-#
-CheckBinaries
-
 MYUID=`$V5UTILBIN/uidgid -uid`
 MYGID=`$V5UTILBIN/uidgid -gid`
 DIRPERM=755
 FILEPERM=644
 
-HOST=`$V5UTILBIN/gethostname -name`
 
-if [ "$HOST" = "" ]; then
-   Translate 1 "can't determine your hostname. Installation failed."
-   $ECHO >&2
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
+
+# set column break for automatic line break 
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+
+
+# export locale directory 
+if [ "$SGE_ROOT" = "" ]; then 
+   TMP_SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
+   GRIDLOCALEDIR="$TMP_SGE_ROOT/locale"
+   export GRIDLOCALEDIR
+fi
+
+# set infotext binary path
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+INFOTEXT=$INFOTXT_DUMMY
+if [ ! -f $INFOTXT_DUMMY ]; then
+   $ECHO "can't find \"$INFOTXT_DUMMY\""
+   $ECHO "Installation failed."
    exit 1
 fi
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
+
+
+HOST=`$V5UTILBIN/gethostname -name`
+if [ "$HOST" = "" ]; then
+   $INFOTEXT -e "can't get hostname of this machine. Installation failed."
+   exit 1
+fi
+
 
 #-----------------------------
 # commandline argument parsing
@@ -2384,7 +2172,7 @@ while [ $ARGC != 0 ]; do
       ;;
    *)
       $ECHO "" >&2
-      Translate 1 "Error: Unknown option %s" $1
+      $INFOTEXT -e "Error: Unknown option %s" $1
       ErrUsage $0
       ;;
    esac
@@ -2395,6 +2183,10 @@ done
 if [ "$WHICH" = "undef" ]; then
    ErrUsage $0
 fi
+
+# exit if there are missing binaries
+#
+CheckBinaries
 
 $CLEAR
 
@@ -2423,7 +2215,6 @@ qmaster)
    MakeDirsMaster
    SelectHostNameResolving
    AddConfiguration
-   $CLEAR
    AddLocalConfiguration
    AddActQmaster
    AddDefaultComplexes
@@ -2431,7 +2222,8 @@ qmaster)
    AddDefaultDepartement
    AddCommonFiles
    CreateSettingsFile
-   WaitClear clear
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $CLEAR
    InitCA
    AddQsystStartUpScript $euid true
    StartQmaster
@@ -2454,6 +2246,11 @@ execd)
       CheckForCommdPort exec
    fi
    CheckCellDirectory
+   CheckCSP
+   if [ "$QMDIR" = "" ];then
+      # set qmaster dir
+      QMDIR=$QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool/qmaster
+   fi
    CheckHostNameResolving
    AddLocalConfiguration_With_Qconf
    AddQsystStartUpScript $euid false

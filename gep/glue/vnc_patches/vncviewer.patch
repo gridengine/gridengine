@@ -1,0 +1,66 @@
+*** vnc_sun4_sosV_5.5/vnc_javasrc/vncviewer.java	Thu Jul 11 15:01:43 2002
+--- vnc_sun4_SunTCP/vnc_javasrc/vncviewer.java	Mon Jun  3 16:39:44 2002
+***************
+*** 158,182 ****
+      gbc.weighty = 1.0;
+      gbc.ipadx = 100;
+      gbc.ipady = 50;
+-     gridbag.setConstraints(authenticator,gbc);
+-     add(authenticator);
+-     validate();
+-     if (!inAnApplet) {
+-       f.pack();
+-       f.show();
+-     }
+  
+      boolean authenticationDone = false;
+  
+      while (!authenticationDone) {
+  
+-       synchronized(authenticator) {
+- 	try {
+- 	  authenticator.wait();
+- 	} catch (InterruptedException e) {
+- 	}
+-       }
+- 
+        rfb = new rfbProto(host, port, this);
+  
+        rfb.readVersionMsg();
+--- 158,168 ----
+***************
+*** 191,199 ****
+        case rfbProto.NoAuth:
+  	System.out.println("No authentication needed");
+  	authenticationDone = true;
+! 	break;
+  
+        case rfbProto.VncAuth:
+  	byte[] challenge = new byte[16];
+  	rfb.is.readFully(challenge);
+  
+--- 177,200 ----
+        case rfbProto.NoAuth:
+  	System.out.println("No authentication needed");
+  	authenticationDone = true;
+! 	return;
+  
+        case rfbProto.VncAuth:
++ 	gridbag.setConstraints(authenticator,gbc);
++ 	add(authenticator);
++ 	validate();
++ 	if (!inAnApplet) {
++ 	  f.pack();
++ 	  f.show();
++ 	}
++ 
++ 	synchronized(authenticator) {
++ 	  try {
++ 	    authenticator.wait();
++ 	  } catch (InterruptedException e) {
++ 	  }
++ 	}
++ 
+  	byte[] challenge = new byte[16];
+  	rfb.is.readFully(challenge);
+  

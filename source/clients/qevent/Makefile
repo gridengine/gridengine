@@ -39,7 +39,6 @@ QEVENT_TARGETS = qevent
 QEVENT_SRC = qevent.c
 
 QEVENT_ADD_SRC = \
-               sge_c_event.c \
                usage.c sig_handlers.c sge_options.c
 
 QEVENT_OBJS = $(QEVENT_SRC:.c=.o) 
@@ -48,7 +47,7 @@ QEVENT_ADD_OBJS = $(QEVENT_ADD_SRC:.c=.o)
 
 QEVENT_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QEVENT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+QEVENT_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

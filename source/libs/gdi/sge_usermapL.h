@@ -40,82 +40,32 @@
 extern "C" {
 #endif
 
-/****** gdilib/UME_LOWERBOUND **********************************
-*
+/****** gdi/usermap/UME_Type **************************************************
 *  NAME
-*     UME_LOWERBOUND -- User Mapping Entry List 
+*     UME_Type -- CULL user mapping entry element
 *
 *  SYNOPSIS
-*
-*     #include "sge_usermapL.h"
-*     #include <gdilib/sge_usermapL.h>
-* 
-*     enum {
-*        UME_cluster_user = UME_LOWERBOUND,  / username in sge/sge system /
-*        UME_mapping_list                    / user specific mapping list /
-*     };
-*     
-*     LISTDEF( UME_Type )
-*        SGE_STRING( UME_cluster_user )
-*        SGE_LIST  ( UME_mapping_list )      / UM_Type - list /
-*     LISTEND
-*     
-*     NAMEDEF( UMEN )
-*        NAME( "UME_cluster_user" )
-*        NAME( "UME_mapping_list" )
-*     NAMEEND 
-*       
+*     UME_Type
+*     +--- UME_cluster_user: username in SGE/EE system
+*     +--- UME_mapping_list: user specific mapping list
+*          +--- (UM_mapped_user)
+*          +--- (UM_host_list)
+*                +--- (STR)
 *
 *  FUNCTION
-*
-*   UME_Type list element
-*   |
-*   *---UME_cluster_user (SGE_STRING)
-*   *---UME_mapping_list (SGE_LIST)
-*             |
-*             |
-*             *----UM_mapped_user (SGE_STRING)
-*             *----UM_host_list   (SGE_LIST)
-*                       |
-*                       |
-*                       *----STR  (SGE_STRING)  String list (ST_Type)
-*
-*
-*  INPUTS
-*
-*
-*  RESULT
-*
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
+*     CULL User mapping entry element
+*****************************************************************************/
 
 /* *INDENT-OFF* */  
 
-/* 
- * user mapping entry list 
- */
 enum {
    UME_cluster_user = UME_LOWERBOUND,        /* username in sge/sge system */
    UME_mapping_list          /* user specific mapping list */
 };
 
 LISTDEF(UME_Type)
-   SGE_STRING(UME_cluster_user)
-   SGE_LIST(UME_mapping_list) /* UM_Type - list */
+   SGE_STRING(UME_cluster_user, CULL_DEFAULT)
+   SGE_LIST(UME_mapping_list, UM_Type, CULL_DEFAULT) /* UM_Type - list */
 LISTEND 
 
 NAMEDEF(UMEN)
@@ -123,64 +73,22 @@ NAMEDEF(UMEN)
    NAME("UME_mapping_list")
 NAMEEND
 
-/* *INDENT-ON* */   
-
 #define UMES sizeof(UMEN)/sizeof(char*)
 
-/****** gdilib/UM_LOWERBOUND **********************************
-*
+/* *INDENT-ON* */   
+
+/****** gdi/usermap/UM_Type ***************************************************
 *  NAME
-*     UM_LOWERBOUND -- User Mapping List 
+*     UM_Type -- CULL user mapping element 
 *
 *  SYNOPSIS
-*
-*     #include "sge_usermapL.h"
-*     #include <gdilib/sge_usermapL.h>
-* 
-*     enum {
-*        UM_mapped_user = UM_LOWERBOUND,            / username @foreignhost /
-*        UM_host_list                               / list of hosts /
-*     };
-*     
-*     LISTDEF( UM_Type )
-*        SGE_STRING( UM_mapped_user )
-*        SGE_LIST  ( UM_host_list )                 / ST_Type  -  List / 
-*     LISTEND
-*     
-*     NAMEDEF( UMN )
-*        NAME( "UM_mapped_user" )
-*        NAME( "UM_host_list" ) 
-*     NAMEEND
-*       
+*     UM_Type
+*     +--- UM_mapped_user: username @foreignhost
+*     +--- UM_host_list: list of hosts
 *
 *  FUNCTION
-*
-*
-*  INPUTS
-*
-*
-*  RESULT
-*
-*
-*  EXAMPLE
-*
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-
-/* -------------------- 
-   user mapping list 
- -------------------- */
+*     CULL user mapping
+******************************************************************************/
 
 /* *INDENT-OFF* */  
 
@@ -190,8 +98,8 @@ enum {
 };
 
 LISTDEF(UM_Type)
-   SGE_STRING(UM_mapped_user)
-   SGE_LIST(UM_host_list)            /* ST_Type - List */
+   SGE_STRING(UM_mapped_user, CULL_DEFAULT)
+   SGE_LIST(UM_host_list, ST_Type, CULL_DEFAULT)            /* ST_Type - List */
 LISTEND 
 
 NAMEDEF(UMN)
@@ -199,9 +107,10 @@ NAMEDEF(UMN)
    NAME("UM_host_list")
 NAMEEND
 
+#define UMS sizeof(UMN)/sizeof(char*)
+
 /* *INDENT-ON* */  
 
-#define UMS sizeof(UMN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

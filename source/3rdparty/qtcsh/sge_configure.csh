@@ -1,5 +1,9 @@
 #! /bin/csh -f
-set arch=`../aimk -nomk`
+
+set mycwd = `pwd`
+cd ../..
+set arch=`./aimk -no-mk`
+cd $mycwd
 
 echo "making configure for $arch"
 if ( ! ( -d ${arch} ) ) then
@@ -16,4 +20,4 @@ echo "calling ../configure --srcdir=.. --with-grd=$arch"
 echo "change to directory ./"
 cd ..
 
-echo "you should now call 'cd .. ; aimk -noqmon qtcsh'"
+echo "you should now call 'cd ../.. ; aimk -only-qtcsh'"

@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "job_state_handling_init_level"
 
 # define test's name and run level descriptions
 set check_name            "job_state_handling"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   1
 set check_description(0)  "Test single job state handling"
 set check_description(1)  "Test array job state handling"
@@ -105,7 +107,7 @@ proc job_state_handling_setup  {} {
 
 proc job_state_handling_hold_pending_running_finished {} {
    global CHECK_PRODUCT_ROOT CHECK_CORE_EXECD CHECK_ARCH
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_HOST
    global test_array_jobs
 
    set master_queue [lindex $CHECK_CORE_EXECD 0]
@@ -126,8 +128,6 @@ proc job_state_handling_hold_pending_running_finished {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-
-
    set job_state [ get_job_state $result ]
    if { [ string compare $job_state "hqw" ] != 0 } {
       add_proc_error "job_state_handling_hold_pending_running_finished" -1 "job state not \"hqw\": $job_state"  
@@ -137,7 +137,10 @@ proc job_state_handling_hold_pending_running_finished {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   if { [ string first  "job dropped because of hold" [ get_scheduling_info $result ] ] <  0 } {
+   set scheduling_info_result [ get_scheduling_info $result ]
+   set correct_info [ translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_JOBHOLD_]]
+   if { [ string first  "job dropped because of hold" $scheduling_info_result ] <  0 && 
+        [ string first  $correct_info $scheduling_info_result ] <  0 } {
        add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job dropped because of hold\"" 
    }
    release_job $result   
@@ -187,7 +190,7 @@ proc job_state_handling_error_timehold_jobhold {} {
    global CHECK_PRODUCT_ROOT
    global test_array_jobs
    global CHECK_OUTPUT 
-   global CHECK_ARCH
+   global CHECK_ARCH CHECK_HOST
 
    if { $test_array_jobs == 0 } { 
       set jobargs "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
@@ -219,7 +222,10 @@ proc job_state_handling_error_timehold_jobhold {} {
 
    sleep 2
 
-   if { [ string first "job is in error state" [get_scheduling_info $error_job ] ] < 0 } {
+   set scheduler_info_text [get_scheduling_info $error_job ]
+   set correct_text [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_JOBINERROR_]]
+   if { [ string first "job is in error state" $scheduler_info_text  ] < 0 &&
+        [ string first  $correct_text $scheduler_info_text ] < 0  } {
        add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job is in error state\"" 
    }
    if { [get_qstat_j_info $time_job ] } {
@@ -227,11 +233,18 @@ proc job_state_handling_error_timehold_jobhold {} {
       puts $CHECK_OUTPUT "job $time_job execution time: $qstat_j_info(execution_time)"
       set time_job_execution_time $qstat_j_info(execution_time)
 
-      if { [ string first "execution time not reached" [get_scheduling_info $time_job] ] < 0 } {
+      set scheduler_info_text [get_scheduling_info $time_job]
+      set correct_text [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXECTIME_]]
+
+      if { [ string first "execution time not reached" $scheduler_info_text ] < 0 && 
+           [ string first $correct_text $scheduler_info_text ] < 0 } {
           add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"execution time not reached\"" 
       }
    }
-   if { [ string first "job dropped because of job dependencies" [ get_scheduling_info $waitjob_job] ] < 0 } {
+   set scheduler_info_text [ get_scheduling_info $waitjob_job]
+   set correct_text [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_JOBDEPEND_]]
+   if { [ string first "job dropped because of job dependencies" $scheduler_info_text ] < 0  && 
+        [ string first $correct_text $scheduler_info_text ] < 0  } {
       add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"job dropped because of job dependencies\"" 
    }
 
@@ -267,7 +280,7 @@ proc job_state_handling_error_timehold_jobhold {} {
 
 proc job_state_handling_max_aj_instances {} {
    global CHECK_PRODUCT_ROOT  
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_HOST
    global test_array_jobs CHECK_ARCH
 
    get_config old_config
@@ -319,7 +332,13 @@ proc job_state_handling_max_aj_instances {} {
              }
           }
           if { [llength $tasks_done] < 5 } {
-             if { [ string first "not all array task may be started due to 'max_aj_instances'" [get_scheduling_info $result 0 ] ] < 0 } {
+
+             set scheduling_info_text [get_scheduling_info $result 0 ]
+             set correct_text [ translate $CHECK_HOST 1 0 0 [ sge_macro MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_ ]]
+#             puts $CHECK_OUTPUT "schedd_info_text: $scheduling_info_text"
+#             puts $CHECK_OUTPUT "correct_text    : $correct_text"
+             if { [ string first "not all array task may be started due to 'max_aj_instances'" $scheduling_info_text ] < 0 &&
+                  [ string first $correct_text $scheduling_info_text ] < 0 } {
                 add_proc_error "job_state_handling_hold_pending_running_finished" -1 "scheduling info not \"not all array task may be started due to 'max_aj_instances'\"" 
                 break;
              }

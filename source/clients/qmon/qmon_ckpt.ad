@@ -94,7 +94,7 @@ Qmon*ckpt_ask_shell.xmtChildren: unmanaged XmtLayout ckpt_ask_layout;
 
 Qmon*ckpt_ask_shell.ckpt_ask_layout.autoUnmanage: False
 Qmon*ckpt_ask_shell.ckpt_ask_layout.resizePolicy:  RESIZE_NONE
-Qmon*ckpt_ask_shell.ckpt_ask_layout.dialogTitle: @{Change Checkpoint Object}
+Qmon*ckpt_ask_shell.ckpt_ask_layout.dialogTitle: @{Add/Modify Checkpoint Object}
 !Qmon*ckpt_ask_shell.ckpt_ask_layout.fontList: $fixed_font
 
 Qmon*ckpt_ask_shell.ckpt_ask_layout.XmtInputField.marginWidth:      2

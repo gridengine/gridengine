@@ -1,0 +1,2 @@
+cd /export/apps/A992396549851
+gunzip -c fasta.tgz | tar xf -

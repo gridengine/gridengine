@@ -1,0 +1,4 @@
+#!/bin/sh
+ARCH=`$SGE_ROOT/util/arch`
+export ARCH
+$SGE_ROOT/bin/$ARCH/qmon

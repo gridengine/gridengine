@@ -43,7 +43,7 @@ rm $TMPDIR/machines
 
 rshcmd=rsh
 case "$ARC" in
-   hp|hp10|hp11) rshcmd=remsh ;;
+   hp|hp10|hp11|hp11-64) rshcmd=remsh ;;
    *) ;;
 esac
 rm $TMPDIR/$rshcmd

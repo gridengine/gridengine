@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Cli.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: Cli.c,v 1.2 2002/08/22 15:06:10 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,14 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Cli.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.2  2002/08/22 15:06:10  andre
+ * AA-2002-08-22-0  I18N:      bunch of fixes for l10n
+ *                  Bugtraq:   #4733802, #4733201, #4733089, #4733043,
+ *                             #4731976, #4731990, #4731967, #4731958,
+ *                             #4731944, #4731935, #4731273, #4729700
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -26,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <wchar.h>
 #include <Xmt/XmtP.h>
 #include <Xmt/CliP.h>
 #include <Xmt/Converters.h>
@@ -416,8 +423,9 @@ XtPointer tag, call_data;
     XmTextVerifyCallbackStruct *data = (XmTextVerifyCallbackStruct *)call_data;
 
     /* special case when called from TrimLines */
-    if (cw->cli.permissive) return;
-
+    if (cw->cli.permissive) {
+      return;
+    }
     if (data->startPos < cw->cli.inputpos) {
         data->doit = FALSE;
 #ifdef BACKSPACEBUG
@@ -1382,15 +1390,19 @@ int n;
 #endif
 {
     XmtCliWidget cw = (XmtCliWidget) w;
+    wchar_t wcs[4*BUFSIZ];
+    int mblen = 0;
+
+    mbstowcs(wcs, s, 8*BUFSIZ-1);
+    mblen = wcslen(wcs);
 
     /* XXX
      * we may also want to modify this routine to break long lines
      * at the last column, to avoid horizontal scrolling, which is gross.
      */
-
     XmTextReplace(w, cw->cli.inputpos, cw->cli.inputpos, s);
 
-    cw->cli.inputpos += n;
+    cw->cli.inputpos += mblen;
     /* XXX  this is kind of a hack; Motif 1.2 seems not to
      * adjust the cursor on insertions, at least sometimes,
      * so we adjust it somewhat here

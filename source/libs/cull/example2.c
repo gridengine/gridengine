@@ -272,14 +272,14 @@ int main(int argc, char *argv[])
    };
    int scene, fulfilled, numdiddeldum;
 
-   lList *erglist;
+   lList *erglist = NULL;
    lListElem *job, *queue;
    lCondition *where = NULL;
 
    lEnumeration *w0, *w1, *nothing, *all;
    lList *queuecomplexes = NULL, *attributes = NULL;
    lListElem *attribute, *request;
-   char *operator;
+   const char *operator;
 
    DENTER_MAIN(TOP_LAYER, "example2");
 

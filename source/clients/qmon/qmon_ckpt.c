@@ -47,8 +47,9 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
+#include "sge_ckpt.h"
 #include "commlib.h"
-#include "def.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -294,7 +295,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ep = lGetElemStr(qmonMirrorList(SGE_CKPT_LIST), CK_name, ckpt_name);
+   ep = ckpt_list_locate(qmonMirrorList(SGE_CKPT_LIST), ckpt_name);
 
    XtFree((char*) ckpt_name);
 
@@ -470,7 +471,7 @@ XtPointer cld, cad;
       XtVaSetValues( ckpt_name_w,
                      XmNeditable, False,
                      NULL);
-      ckp = lGetElemStr(qmonMirrorList(SGE_CKPT_LIST), CK_name, ckptstr);
+      ckp = ckpt_list_locate(qmonMirrorList(SGE_CKPT_LIST), ckptstr);
       XtFree((char*)ckptstr);
       if (ckp) {
          add_mode = 0;

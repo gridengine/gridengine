@@ -946,6 +946,25 @@ void XmListAddItemUniqueSorted(Widget list, String item)
    DEXIT;
 }
 
+/*-------------------------------------------------------------------------*/
+void XmListMoveItemToPos(Widget list, String item, int pos)
+{
+   XmString xmitem = NULL;
+   
+   DENTER(GUI_LAYER, "XmListMoveItemToPos");
+
+   if (item && item[0] != '\0') {
+      xmitem = XmtCreateXmString(item);
+      if (XmListItemExists(list, xmitem)) {
+         XmListDeleteItem(list, xmitem);
+         XmListAddItem(list, xmitem, pos);
+      }
+      XmStringFree(xmitem);
+   }   
+   DEXIT;
+}
+
+
 /*
 ** removes leading and trailing whitespace
 ** the string is changed

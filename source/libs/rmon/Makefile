@@ -201,6 +201,13 @@ rmonlib_clean:  rmon_tidy
 
 rmonlib_depend:
 	$(DEPEND) -f$(RMON_DIR)/rmon_dependencies $(RMON_DIR)/*.c
+
+rmonlib_messages:
+	@echo Creating $@
+	@for i in `ls $(RMON_DIR)/*.c`; do \
+	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
+	done
+
 #
 # remove symblols from executables
 #

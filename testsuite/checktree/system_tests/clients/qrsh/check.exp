@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -48,6 +49,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qrsh"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   200
 set check_description(0)    "checking qrsh to one exec host (master)"
 set check_description(200)  "checking qrsh to all exec hosts"
@@ -58,6 +60,8 @@ set check_root_access_needs  "yes"
 
 # define test's procedure order
 set check_functions ""
+lappend check_functions "qrsh_h"                     ;# test -h option
+lappend check_functions "qrsh_hold_jid"              ;# test -hold_jid option
 lappend check_functions "qrsh_function"              ;# is a job executed?
 lappend check_functions "qrsh_alltoall"              ;# qrsh from all hosts to all hosts
 lappend check_functions "qrsh_starter_method"        ;# does the starter method work for qrsh?
@@ -68,9 +72,8 @@ lappend check_functions "qrsh_terminate"             ;# test terminate method
 lappend check_functions "qrsh_qsub_gid"              ;# qsub gid set correctly?
 lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
-lappend check_functions "qrsh_trap"                  ;# started command traps SIGINT
+# lappend check_functions "qrsh_trap"                  ;# started command traps SIGINT
 
-#set check_functions "qrsh_starter_method"
 
 # test specific global variables
 global qrsh_hostlist
@@ -111,7 +114,7 @@ set QSUB_GID_GROUPS "$CHECK_FIRST_FOREIGN_SYSTEM_GROUP"
 #     ???/???
 #*******************************
 proc init_level {} {
-   global CHECK_ACT_LEVEL CHECK_HOST CHECK_CORE_EXECD 
+   global CHECK_ACT_LEVEL CHECK_HOST CHECK_CORE_EXECD CHECK_OUTPUT
    global qrsh_hostlist
 
    switch -exact $CHECK_ACT_LEVEL {
@@ -176,7 +179,7 @@ proc qrsh_function {} {
 
    puts $CHECK_OUTPUT "qrsh functional test"
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
                                       "-l hostname=$host echo qrsh sucessfully started"]
       set sp_id [ lindex $qrsh_id 1 ] 
   
@@ -203,6 +206,193 @@ proc qrsh_function {} {
    set_error 0 "ok"
 }
 
+
+proc qrsh_h {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
+   global CHECK_HOST CHECK_USER
+   global open_spawn_buffer
+
+
+   if { [have_root_passwd] == -1 } {
+      set_error -3 "root access required"
+      return
+   } 
+
+
+   puts $CHECK_OUTPUT "qrsh -h functional test"
+
+   wait_for_end_of_all_jobs 30
+
+   set my_outputs "-o /dev/null -e /dev/null"
+   set arguments "$my_outputs $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   set job_id [submit_job $arguments]
+   delete_job $job_id  ;# now we know the last job id
+
+   incr job_id 1       ;# job id of next job !
+
+   set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+                "-h echo qrsh sucessfully started"]
+   set sp_id [ lindex $qrsh_id 1 ] 
+  
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   wait_for_jobpending $job_id "echo" 60 
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set run_result [get_standard_job_info $job_id ]
+   foreach line $run_result {
+      set tmp_job_id [lindex $line 0]
+      set tmp_job_state [ lindex $line 4 ]
+      puts $CHECK_OUTPUT "job id: $tmp_job_id, job state: $tmp_job_state"
+   }
+
+   if { $tmp_job_state != "hqw" } {
+      add_proc_error "qrsh_h" -1 "qrsh -h job is not in pending state"
+   }
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 15
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            puts $CHECK_OUTPUT "qrsh -h timeout for hold state ok, now releasing job $job_id"
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            add_proc_error "qrsh_h" -1 "qrsh -h failed" 
+         }
+   }
+
+   release_job $job_id
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 60
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            add_proc_error "qrsh_h" -1 "qrsh -h failed for job $job_id"
+            close_spawn_process $qrsh_id
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            puts $CHECK_OUTPUT "qrsh -h ok"
+            close_spawn_process $qrsh_id
+         }
+   }
+   set_error 0 "ok"
+}
+
+
+proc qrsh_hold_jid {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
+   global CHECK_HOST CHECK_USER
+   global open_spawn_buffer
+
+
+   if { [have_root_passwd] == -1 } {
+      set_error -3 "root access required"
+      return
+   } 
+
+
+   puts $CHECK_OUTPUT "qrsh -hold_jid functional test"
+
+   wait_for_end_of_all_jobs 30
+
+   set my_outputs "-o /dev/null -e /dev/null"
+   set arguments "$my_outputs $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 6000"
+   set hold_job_id [submit_job $arguments] 
+   set job_id [ expr ( $hold_job_id + 1 )]
+
+   set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+                "-hold_jid $hold_job_id echo qrsh sucessfully started"]
+   set sp_id [ lindex $qrsh_id 1 ] 
+  
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   wait_for_jobpending $job_id "echo" 60 
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set run_result [get_standard_job_info $job_id ]
+   foreach line $run_result {
+      set tmp_job_id [lindex $line 0]
+      set tmp_job_state [ lindex $line 4 ]
+      puts $CHECK_OUTPUT "job id: $tmp_job_id, job state: $tmp_job_state"
+   }
+
+   if { $tmp_job_state != "hqw" } {
+      add_proc_error "qrsh_h" -1 "qrsh -hold_jid job is not in pending state"
+   }
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 15
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            puts $CHECK_OUTPUT "qrsh -hold_jid timeout for hold state ok, now deleting job $hold_job_id"
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed" 
+         }
+   }
+
+   delete_job $hold_job_id
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
+
+   set timeout 60
+   expect {
+         -i $sp_id full_buffer {
+            close_spawn_process $qrsh_id
+            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            return
+         }
+
+         -i $sp_id default {
+            add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed for job $job_id"
+            close_spawn_process $qrsh_id
+         }
+         -i $sp_id "qrsh sucessfully started" {
+            puts $CHECK_OUTPUT "qrsh -hold_jid ok"
+            close_spawn_process $qrsh_id
+         }
+   }
+   set_error 0 "ok"
+}
 
 #                                                             max. column:     |
 #****** qrsh/qrsh_alltoall() ******
@@ -250,7 +440,7 @@ proc qrsh_alltoall {} {
    foreach source $qrsh_hostlist {
       set source_arch [resolve_arch $source]
       foreach dest $qrsh_hostlist {
-         set qrsh_id [open_remote_spawn_process "$source" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$source_arch/qrsh" "-l hostname=$dest echo qrsh sucessfully started"]
+         set qrsh_id [open_remote_spawn_process "$source" "ts_def_con" "$CHECK_PRODUCT_ROOT/bin/$source_arch/qrsh" "-l hostname=$dest echo qrsh sucessfully started"]
          set sp_id [ lindex $qrsh_id 1 ]                              
          set timeout 60
          expect {
@@ -294,7 +484,7 @@ proc qrsh_starter_method {} {
    }
 
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
                                       "-l hostname=$host echo qrsh sucessfully started"]
       set sp_id [ lindex $qrsh_id 1 ] 
   
@@ -390,9 +580,9 @@ proc qrsh_trap {} {
 
    foreach source $qrsh_hostlist {
       foreach dest $qrsh_hostlist {
-         set qrsh_id [open_remote_spawn_process $source $CHECK_USER $CHECK_ACTUAL_TEST_PATH/remote_submit.sh \
+         set qrsh_id [open_remote_spawn_process $source "ts_def_con" $CHECK_ACTUAL_TEST_PATH/remote_submit.sh \
                                                 "$CHECK_PRODUCT_ROOT $dest exec $CHECK_ACTUAL_TEST_PATH/trap.sh"]
-   
+ 
          if [info exists job_id]  {unset job_id}
          if [info exists job_pid] {unset job_pid}
          # wait for start of testscript
@@ -425,7 +615,8 @@ proc qrsh_trap {} {
          # send signal and parse result
          foreach i "1 2 3" {
             # send SIGINT
-            set result [catch {exec rsh $source /bin/kill -2 $qrsh_pid} output]
+            set output [ start_remote_prog $source $CHECK_USER "/bin/kill" "-2 $qrsh_pid" ] 
+            set result $prg_exit_state
             if { $result != 0 } {
                set_error -1 "signaling qrsh on host $source failed: $output"
                break
@@ -497,23 +688,32 @@ proc qrsh_accounting {} {
    } 
 
    puts $CHECK_OUTPUT "qrsh accounting test"
-   
+   if { [resolve_version] > 2 } {
+      set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "*"]
+      set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "__JOBID__"]
+   } else {
+      set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "*"]
+      set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "__JOBID__"]
+   }
+   set job_id_start [ string first "__JOBID__" $INTERACTIVE_JOB_DUMMY ]
+   puts $CHECK_OUTPUT "parsing for \"$INTERACTIVE_JOB\""
+
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -nostdin -l hostname=$host $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 120"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -nostdin -l hostname=$host $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 120"]
       
       set state startup
       set job_id ""
       set sp_id [ lindex $qrsh_id 1 ] 
+      
 
       while { [string compare $state exit] } {
-         set timeout 80
+         set timeout  80
          expect {
             -i $sp_id full_buffer {
                add_proc_error "qrsh_accounting" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                close_spawn_process $qrsh_id
                set state exit
             }
-
             -i $sp_id timeout {
                if { [string compare $state running] } {
                   close_spawn_process $qrsh_id
@@ -538,14 +738,24 @@ proc qrsh_accounting {} {
                   }
                }
             }
-            -i $sp_id "Your interactive job *\n" {
-               set job_id [lindex $expect_out(0,string) 3]
+            -i $sp_id $INTERACTIVE_JOB {
+               puts "jobstart: \"$expect_out(0,string)\""
+               set job_id [ string range $expect_out(0,string) $job_id_start end]
+               set space_start [ string first " " $job_id ]
+               set job_id [ string range $job_id 0 $space_start ]
+               set job_id [ string trim $job_id ]
+               puts $CHECK_OUTPUT "job id is: \"$job_id\""
                set state scheduled
             }
-            -i $sp_id "Forking" {
+            -i $sp_id "Your interactive job *\n" {
+               set job_id [lindex $expect_out(0,string) 3]
+               puts $CHECK_OUTPUT "job id is: \"$job_id\""
+               set state scheduled
+            }
+            -i $sp_id "Forking" { ;# "Forking" printout is from worker job (utilbin/work.c)
                set state running
             }
-            -i $sp_id "_exit_status_" {
+            -i $sp_id "_exit_status_" {   ;# _exit_status_ is from open_remote_spawn_process - generated script
                if { [string compare $state running] } {
                   add_proc_error "qrsh_accounting"  -1 "qrsh to host $host failed"
                }
@@ -645,7 +855,7 @@ proc qrsh_suspend {} {
          }
       }
       # start qrsh job (shell script that outputs its pid)
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 60"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 60"]
       
       # evaluate pid and JOB_ID
       set done 0
@@ -802,7 +1012,7 @@ proc qrsh_delete {} {
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
       set sp_id [ lindex $qrsh_id 1 ] 
  
       # evaluate pid and JOB_ID
@@ -900,7 +1110,7 @@ proc qrsh_terminate {} {
 
    puts $CHECK_OUTPUT "check if terminate method for a qrsh job gets right job_pid"
 
-   set terminate_out_file "/tmp/terminate.$CHECK_COMMD_PORT"
+   set terminate_out_file [get_tmp_file_name "" "qrsh" $CHECK_COMMD_PORT]
 
    # set terminate method
    foreach host $qrsh_hostlist {
@@ -910,12 +1120,8 @@ proc qrsh_terminate {} {
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
-      start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER ls $terminate_out_file exit_code
-      if {$exit_code == 0} {
-         start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
-      }
-
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
+      start_remote_prog $host $CHECK_USER ls $terminate_out_file exit_code
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
       
       # evaluate pid and JOB_ID
       set timeout 60
@@ -1025,10 +1231,7 @@ proc qrsh_terminate {} {
          }
       }
 
-      start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER ls $terminate_out_file exit_code
-      if {$exit_code == 0} {
-         start_remote_prog $host $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
-      }
+      start_remote_prog $host $CHECK_USER ls $terminate_out_file exit_code
    }
 
    # reset terminate method
@@ -1122,7 +1325,7 @@ proc check_qsub_gid_output {output check_group} {
 #*******************************
 proc qrsh_qsub_gid {} {
    global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PROTOCOL_DIR
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
    global QSUB_GID_USER QSUB_GID_GROUPS CHECK_SECOND_FOREIGN_SYSTEM_USER
    global qrsh_hostlist open_spawn_buffer CHECK_HOST
 
@@ -1131,6 +1334,8 @@ proc qrsh_qsub_gid {} {
       return
    } 
 
+   set USING_FOR     [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USING_SS] "*USE_QSUB_GID=true*" "*"]
+   set FINISHED_JOBS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USING_SS] "*finished_jobs*" "*"]
 
    puts $CHECK_OUTPUT "check if qsub gid is propagated to qrsh job"
 
@@ -1167,7 +1372,7 @@ proc qrsh_qsub_gid {} {
       # spawn a tail -f to messages file and skip first (old) lines
       # we use the second configured test user to avoid having two open_remote_spawn
       # processes with same userid and same host
-      set tail_id [open_remote_spawn_process $host $CHECK_SECOND_FOREIGN_SYSTEM_USER /usr/bin/tail "-f $messages_name"]
+      set tail_id [open_remote_spawn_process $host "ts_def_con" /usr/bin/tail "-f $messages_name"]
       set skipping 1
       set sp_id [ lindex $tail_id 1 ] 
 
@@ -1204,7 +1409,7 @@ proc qrsh_qsub_gid {} {
       
       # wait until USE_QSUB_GID is changed on host
       puts $CHECK_OUTPUT "waiting for configuration change to take effect"
-      set timeout 300
+      set timeout 120
       expect {
          -i $sp_id full_buffer {
             close_spawn_process $tail_id
@@ -1217,7 +1422,11 @@ proc qrsh_qsub_gid {} {
             add_proc_error "qrsh_qsub_gid" -1 "setting execd_params to USE_QSUB_GID=true failed on host $host"
             continue
          }
-         -i $sp_id "using*USE_QSUB_GID=true*" {
+         -i $sp_id $USING_FOR {
+            send -i $sp_id "\003"
+            close_spawn_process $tail_id
+         }
+         -i $sp_id "using*USE_QSUB_GID=true*\n" {
             send -i $sp_id "\003"
             close_spawn_process $tail_id
          }
@@ -1231,7 +1440,7 @@ proc qrsh_qsub_gid {} {
       }
 
       # spawn a tail -f to messages file and skip first (old) lines
-      set tail_id [open_remote_spawn_process $host $CHECK_SECOND_FOREIGN_SYSTEM_USER /usr/bin/tail "-f $messages_name"]
+      set tail_id [open_remote_spawn_process $host "ts_def_con" /usr/bin/tail "-f $messages_name"]
       set sp_id [ lindex $tail_id 1 ] 
       set skipping 1
       while {$skipping == 1} {
@@ -1255,7 +1464,7 @@ proc qrsh_qsub_gid {} {
 
       # wait until USE_QSUB_GID is changed on host
       puts $CHECK_OUTPUT "waiting for configuration change to take effect"
-      set timeout 300
+      set timeout 120
       expect {
          -i $sp_id full_buffer {
             close_spawn_process $tail_id
@@ -1267,6 +1476,10 @@ proc qrsh_qsub_gid {} {
             close_spawn_process $tail_id
             add_proc_error "qrsh_qsub_gid" -1 "clearing execd_params from USE_QSUB_GID=true failed on host $host"
             continue
+         }
+         -i $sp_id $FINISHED_JOBS {
+            send -i $sp_id "\003"
+            close_spawn_process $tail_id
          }
          -i $sp_id "using*finished_jobs*" {
             send -i $sp_id "\003"
@@ -1319,12 +1532,15 @@ proc qrsh_batch {} {
 
 
    puts $CHECK_OUTPUT "check qrsh in immediate and batch mode (-now yes / no)"
+   set COULD_NOT_BE_STARED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
+   set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
+
 
    foreach host $qrsh_hostlist {
       # disable queue
       disable_queue $host.q
       # start qrsh - must be rejected
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $host.q echo blahblah"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $host.q echo blahblah"]
       set sp_id [ lindex $qrsh_id 1 ] 
 
       # evaluate pid and JOB_ID
@@ -1337,7 +1553,11 @@ proc qrsh_batch {} {
          -i $sp_id "blahblah" {
             add_proc_error "qrsh_batch" -1 "qrsh -now yes ran dispite no resources free on host $host"
          }
-         -i $sp_id "*could not be scheduled*" {
+         -i $sp_id $COULD_NOT_BE_STARED {
+            puts $CHECK_OUTPUT "qrsh aborted correctly"
+            set error 0
+         } 
+         -i $sp_id "could not be scheduled*\n" {
             puts $CHECK_OUTPUT "qrsh aborted correctly"
             set error 0
          }
@@ -1357,7 +1577,7 @@ proc qrsh_batch {} {
       }
  
       # start qrsh -now no
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $host.q -now no echo blahblah"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $host.q -now no echo blahblah"]
       # must be in pending jobs
       set sp_id [ lindex $qrsh_id 1 ] 
 
@@ -1370,6 +1590,11 @@ proc qrsh_batch {} {
          -i $sp_id timeout {
             add_proc_error "qrsh_batch" -1 "timeout waiting for qrsh -now no to be submitted to host $host"
             set error 1
+         }
+         -i $sp_id $HAS_BEEN_SUBMITTED {
+            set job_id [lindex $expect_out(0,string) 2]
+            puts $CHECK_OUTPUT "qrsh job $job_id correctly submitted"
+            set error 0
          }
          -i $sp_id "your job * has been submitted" {
             set job_id [lindex $expect_out(0,string) 2]
@@ -1415,6 +1640,9 @@ proc qrsh_batch {} {
             add_proc_error "qrsh_batch" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
          -i $sp_id "blahblah" {
+         }
+         -i $sp_id $COULD_NOT_BE_STARED { 
+            add_proc_error "qrsh_batch" -1 "message \"could not be scheduled\" should not occur with batch jobs"
          }
          -i $sp_id "*could not be scheduled*" {
             add_proc_error "qrsh_batch" -1 "message \"could not be scheduled\" should not occur with batch jobs"
@@ -1476,7 +1704,7 @@ proc qrsh_limits {} {
    set limit_in 10
 
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host -l h_cpu=$limit_in $CHECK_ACTUAL_TEST_PATH/ulimit.sh"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host -l h_cpu=$limit_in $CHECK_ACTUAL_TEST_PATH/ulimit.sh"]
       set sp_id [ lindex $qrsh_id 1 ] 
 
       set timeout 60

@@ -32,10 +32,10 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "gdi_qmod.h"
-#include "sge_answerL.h"
 #include "sgermon.h"
 #include "parse.h"
 #include "msg_gdilib.h"
+#include "sge_answer.h"
 
 /*
 ** NAME
@@ -43,7 +43,8 @@
 ** PARAMETER
 **   ref_list     - queue reference list, ST_Type
 **   option_flags  - 0 or BIT_QMOD_FORCE
-**   action_flag   - QDISABLED, QENABLED, QSUSPENDED, QRUNNING
+**   action_flag   - QDISABLED, QENABLED, QSUSPENDED, 
+**                   QRUNNING, QERROR, QRESCHEDULED
 ** RETURN
 **   answer list 
 ** EXTERNAL
@@ -71,13 +72,13 @@ u_long32 action_flag
    if (!action_flag 
        || ((action_flag != QDISABLED) && (action_flag != QENABLED) && (action_flag != QSUSPENDED) 
            && (action_flag != QRUNNING) && (action_flag != QERROR) && (action_flag != QRESCHEDULED))) {
-     sge_add_answer(&alp, MSG_GDI_INVALIDACTION , STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, MSG_GDI_INVALIDACTION , STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }
 
    if (option_flags && (option_flags != BIT_QMOD_FORCE)) {
-     sge_add_answer(&alp, MSG_GDI_INVALIDOPTIONFLAG , STATUS_ESEMANTIC, 0);
+     answer_list_add(&alp, MSG_GDI_INVALIDOPTIONFLAG , STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
      DEXIT;
      return alp;
    }
@@ -88,7 +89,7 @@ u_long32 action_flag
    for_each(ref, ref_list) {
       name = lGetString(ref, STR);
       if (!name) {
-         sge_add_answer(&alp, MSG_GDI_INVALIDIDENCOUNTERED , STATUS_ENOKEY, 0);
+         answer_list_add(&alp, MSG_GDI_INVALIDIDENCOUNTERED , STATUS_ENOKEY, ANSWER_QUALITY_ERROR);
          DEXIT;
          return alp;
       }
@@ -106,7 +107,7 @@ u_long32 action_flag
       if (!idp) 
          idp = lAddElemStr(&id_list, ID_str, lGetString(ref, STR), ID_Type);
       if (!idp) {
-         sge_add_answer(&alp, MSG_GDI_OUTOFMEMORY , STATUS_EMALLOC, 0);
+         answer_list_add(&alp, MSG_GDI_OUTOFMEMORY , STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          id_list = lFreeList(id_list);
          DEXIT;
          return alp;

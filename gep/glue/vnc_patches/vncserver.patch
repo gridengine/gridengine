@@ -1,0 +1,52 @@
+39,40c39
+< $vncClasses = (((-d "/usr/share/vnc/classes") && "/usr/share/vnc/classes") ||
+<                ((-d "/usr/local/vnc/classes") && "/usr/local/vnc/classes"));
+---
+> $vncClasses = "$ENV{VNC_ROOT}/classes";
+48,49c47
+<        "xterm -geometry 80x24+10+10 -ls -title \"\$VNCDESKTOP Desktop\" &\n".
+<        "twm &\n");
+---
+>        "/usr/dt/bin/Xsession &\n");
+95,102c93,100
+< ($z,$z,$mode) = stat("$vncUserDir/passwd");
+< if (!(-e "$vncUserDir/passwd") || ($mode & 077)) {
+<     warn "\nYou will require a password to access your desktops.\n\n";
+<     system("vncpasswd $vncUserDir/passwd"); 
+<     if (($? >> 8) != 0) {
+< 	exit 1;
+<     }
+< }
+---
+> #($z,$z,$mode) = stat("$vncUserDir/passwd");
+> #if (!(-e "$vncUserDir/passwd") || ($mode & 077)) {
+> #    warn "\nYou will require a password to access your desktops.\n\n";
+> #    system("vncpasswd $vncUserDir/passwd"); 
+> #    if (($? >> 8) != 0) {
+> #	exit 1;
+> #    }
+> # }
+127c125,126
+< srand(time+$$+unpack("L",`cat $vncUserDir/passwd`));
+---
+> #srand(time+$$+unpack("L",`cat $vncUserDir/passwd`));
+> srand(time+$$);
+146c145
+< $cmd .= " -rfbauth $vncUserDir/passwd";
+---
+> #$cmd .= " -rfbauth $vncUserDir/passwd";
+154a154,156
+> # Specify standard Solaris paths
+> $cmd .= " -fp /usr/openwin/lib/X11/fonts/F3bitmaps/,/usr/openwin/lib/X11/fonts/Type1/,/usr/openwin/lib/X11/fonts/Speedo/,/usr/openwin/lib/X11/fonts/misc/,/usr/openwin/lib/X11/fonts/75dpi/,/usr/openwin/lib/X11/fonts/100dpi/";
+> $cmd .= " -co /usr/openwin/lib/X11/rgb";
+155a158
+> 
+535a539,546
+>     #
+>     # Check the VNC_ROOT environment variable is set
+>     #
+> 
+>     if (!defined($ENV{VNC_ROOT})) {
+> 	die "$prog: The VNC_ROOT environment variable is not set.\n";
+>     }
+> 

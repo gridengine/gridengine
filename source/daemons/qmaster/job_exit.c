@@ -33,17 +33,10 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "sge.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_eventL.h"
-#include "sge_job_reportL.h"
+#include "sge_ja_task.h"
 #include "sge_job_refL.h"
-#include "job.h"
-#include "sge_job.h"
+#include "sge_job_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_host.h"
@@ -52,13 +45,11 @@
 #include "sge_give_jobs.h"
 #include "sge_m_event.h"
 #include "read_write_queue.h"
-#include "job_report.h"
 #include "subordinate_qmaster.h"
 #include "execution_states.h"
 #include "sge_feature.h"
 #include "sge_rusage.h"
-#include "sge_me.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "symbols.h"
@@ -69,11 +60,14 @@
 #include "msg_qmaster.h"
 #include "sge_string.h"
 #include "sge_feature.h"
-#include "sge_stat.h"
-#include "sge_spoolmsg.h"
-
-extern lList *Master_Queue_List;
-extern lList *Master_Userset_List;
+#include "sge_unistd.h"
+#include "sge_spool.h"
+#include "sge_hostname.h"
+#include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_report.h"
+#include "sge_report_execd.h"
+#include "sge_userset.h"
 
 /************************************************************************
  Master routine for job exit
@@ -115,7 +109,7 @@ lListElem *jatep
       qname = (char *)MSG_OBJ_UNKNOWNQ;
    err_str = lGetString(jr, JR_err_str);
    if (!err_str)
-      err_str = MSG_OBJ_UNKNOWNREASON;
+      err_str = MSG_UNKNOWNREASON;
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);
@@ -132,15 +126,16 @@ lListElem *jatep
    DPRINTF(("reaping job "u32"."u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
-   if (!(queueep = lGetElemStr(Master_Queue_List, QU_qname, qname))) {
+   if (!(queueep = queue_list_locate(Master_Queue_List, qname))) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
    }
 
    if (failed) {        /* a problem occured */
-      WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, u32c(jobid), u32c(jataskid), 
-             queueep ? lGetHost(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST,
-             general_failure ? MSG_GENERAL : "",
-             get_sstate_description(failed), err_str));
+      WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, u32c(jobid), 
+               u32c(jataskid), 
+               queueep ? lGetHost(queueep, QU_qhostname) : MSG_OBJ_UNKNOWNHOST,
+               general_failure ? MSG_GENERAL : "",
+               get_sstate_description(failed), err_str));
    }
    else
       INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  u32c(jobid), u32c(jataskid), 
@@ -149,9 +144,9 @@ lListElem *jatep
 
    /*-------------------------------------------------*/
 
-   /* test if this job is in state JRUNNING or JTRANSITING */
+   /* test if this job is in state JRUNNING or JTRANSFERING */
    if (lGetUlong(jatep, JAT_status) != JRUNNING && 
-       lGetUlong(jatep, JAT_status) != JTRANSITING) {
+       lGetUlong(jatep, JAT_status) != JTRANSFERING) {
       ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, u32c(lGetUlong(jep, JB_job_number)), u32c(jataskid)));
       return;
    }
@@ -201,7 +196,7 @@ lListElem *jatep
               failed == ESSTATE_DIED_THRU_SIGNAL) &&
             ((lGetUlong(jep, JB_restart) == 1 || 
              (lGetUlong(jep, JB_checkpoint_attr) & ~NO_CHECKPOINT)) ||
-             (!lGetUlong(jep, JB_restart) && lGetUlong(queueep, QU_rerun)))) {
+             (!lGetUlong(jep, JB_restart) && lGetBool(queueep, QU_rerun)))) {
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_job_restarted, 
@@ -257,11 +252,12 @@ lListElem *jatep
       ** in this case we have to halt all queues on this host
       */
       if (general_failure == GFSTATE_HOST) {
-         hep = sge_locate_host(lGetHost(queueep, QU_qhostname), SGE_EXECHOST_LIST);
+         hep = host_list_locate(Master_Exechost_List, 
+                  lGetHost(queueep, QU_qhostname));
          if (hep) {
             host = lGetHost(hep, EH_name);
             for_each(qep, Master_Queue_List) {
-               if (!hostcmp(lGetHost(qep, QU_qhostname), host)) {
+               if (!sge_hostcmp(lGetHost(qep, QU_qhostname), host)) {
                   state = lGetUlong(qep, QU_state);
                   CLEARBIT(QRUNNING,state);
                   SETBIT(QERROR, state);
@@ -294,7 +290,7 @@ lListElem *jatep
 
    FILE *fp;
    int write_result;
-   char *category_str;
+   dstring category_str = DSTRING_INIT;
    SGE_STRUCT_STAT statbuf;
    int write_comment;
 
@@ -307,7 +303,7 @@ lListElem *jatep
 
    fp = fopen(path.acct_file, "a");
    if (!fp) {
-      ERROR((SGE_EVENT, MSG_FILE_NOWRITE_SS, path.acct_file, strerror(errno)));
+      ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, path.acct_file, strerror(errno)));
       DEXIT;
       return;
    }
@@ -320,27 +316,22 @@ lListElem *jatep
       return;
    }   
 
-   category_str = sge_build_job_category(jep, Master_Userset_List);
-   write_result = sge_write_rusage(fp, jr, jep, jatep, category_str);
+   sge_build_job_category(&category_str, jep, Master_Userset_List);
+   write_result = sge_write_rusage(fp, jr, jep, jatep, sge_dstring_get_string(&category_str));
+   sge_dstring_free(&category_str);
+   fclose(fp);
+
    if (write_result == EOF) {
       ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path.acct_file));
-      fclose(fp);
       DEXIT;
       return;
-   }
-   if (category_str)
-      free(category_str); 
-   else if (write_result == -2) {
+   } else if (write_result == -2) {
       /* The file should be open... */
       ERROR((SGE_EVENT, MSG_FILE_WRITEACCT));
-      fclose(fp);
       DEXIT;
       return;
    }
-
-   fclose(fp);
 
    DEXIT;
    return;
 }
-

@@ -107,7 +107,7 @@ extern "C" {
 #define CL_P_ID                   13
 #define CL_P_PRIO_LIST            12
 
-typedef int (*sge_log_ftype)(int, char*, char*, char*, int); 
+typedef int (*sge_log_ftype)(int, const char*, const char*, const char*, int); 
 
 extern char COMMLIB_BUFFER[2048];
 
@@ -182,6 +182,7 @@ unsigned int ask_commproc(const char *host, const char *commprocname, u_short co
 const char *cl_errstr(int n);
 
 int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases);
+void generate_commd_port_and_service_status_message(int commlib_error, char* buffer);
 
 int remove_pending_messages(char *fromcommproc, u_short fromid, char *fromhost, int tag);
 

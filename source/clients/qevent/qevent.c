@@ -32,35 +32,31 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
 
+#include "sge_time.h"
+#include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
-#include "sge_exit.h"
 #include "sig_handlers.h"
 #include "commlib.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "sge_c_event.h"
-#include "event.h"
+#include "sge_event.h"
 
 extern char **environ;
 
-int new_global_config = 0;
-
 int main(int argc, char *argv[]);
-
 
 static void dump_eventlist(lList *event_list)
 {
    lListElem *event;
    for_each(event, event_list) {
       fprintf(stdout, event_text(event));
-#if 0 /* EB: debug */
+#if 1 /* EB: debug */
       lWriteElemTo(event, stdout); 
 #endif
       switch(lGetUlong(event, ET_type)) {
@@ -77,14 +73,12 @@ static void dump_eventlist(lList *event_list)
    }
 }
 
-#define TEST
-
 /************************************************************************/
 int main(int argc, char **argv)
 {
    int cl_err = 0;
    int ret;
-   time_t last_heared = 0;
+   u_long32 last_heared = 0;
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
@@ -107,7 +101,7 @@ int main(int argc, char **argv)
 #endif
 
    while(!shut_me_down) {
-      time_t now = time(0);
+      u_long32 now = sge_get_gmt();
       
       lList *event_list = NULL;
       ret = ec_get(&event_list);

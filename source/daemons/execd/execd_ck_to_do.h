@@ -34,7 +34,7 @@
 
 int execd_ck_to_do(dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
 
-int register_at_ptf(lListElem *jep, lListElem *jatep, lListElem *tep);
+int register_at_ptf(lListElem *jep, lListElem *jatep, lListElem *petep);
 void force_job_rlimit(void);
 
 #endif /* __EXECD_CK_TO_DO_H */

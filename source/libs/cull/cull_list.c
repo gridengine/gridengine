@@ -43,6 +43,7 @@
 #include <stdarg.h>
 
 #include "sgermon.h"
+#include "sge_log.h"
 #include "cull_sortP.h"
 #include "cull_where.h"
 #include "cull_listP.h"
@@ -56,14 +57,70 @@
 static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
 static void lWriteElem_(const lListElem *lp, FILE *fp);
 
-/* =========== implementation ================================= */
-/*
-   copies a whole list element 
+/****** cull/list/-Field_Attributes *************************************************
+*  NAME
+*     Field_Attributes -- Attributes of cull type fields
+*
+*  SYNOPSIS
+*     When a field of a cull object type is defined, any number of 
+*     attributes can be given to the field.
+*
+*     The syntax of the field definition is
+*        <typedef>(<field_name>, <attrib1> [|<attrib2> ...]
+*     e.g.
+*        SGE_STRING(QU_qname, CULL_HASH | CULL_UNIQUE)
+*
+*     The following attributes can be given to a field:
+*        CULL_DEFAULT       
+*           no special settings - default behaviour
+*        CULL_PRIMARY_KEY   
+*           the field is part of the primary key
+*           not yet implemented
+*        CULL_HASH          
+*           a hash table will be created on the field for lists of the 
+*           object type
+*        CULL_UNIQUE        
+*           the field value has to be unique for all objects in a list
+*           currently only used for the definition of hash tables,
+*           but it could be used for general consistency checks.
+*        CULL_SHOW          
+*           the field shall be shown in object output functions
+*           not yet implemented
+*        CULL_CONFIGURE     
+*           the field can be changed by configuration functions
+*           not yet implemented
+*        CULL_SPOOL         
+*           the field shall be spooled
+*           not yet implemented
+*
+*  NOTES
+*     Further attributes can be introduced as necessary, e.g.
+*        CULL_ARRAY - the field is an array of the specified data type
+*
+*  SEE ALSO
+*     cull/list/mt_get_type()
+*     cull/list/mt_do_hashing()
+*     cull/list/mt_is_unique()
+******************************************************************************/
 
- */
-lListElem *lCopyElem(
-const lListElem *ep 
-) {
+/****** cull/list/lCopyElem() *************************************************
+*  NAME
+*     lCopyElem() -- Copies a whole list element 
+*
+*  SYNOPSIS
+*     lListElem* lCopyElem(const lListElem *ep) 
+*
+*  FUNCTION
+*     Copies a whole list element 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*
+*  RESULT
+*     lListElem* - copy of 'ep'
+******************************************************************************/
+lListElem *lCopyElem(const lListElem *ep) 
+{
    lListElem *new;
    lDescr *p;
 
@@ -85,32 +142,50 @@ const lListElem *ep
    /*    if (lCopySwitch(ep, new, i, i) != 0)  */
       
    for (p = &(ep->descr[0]); p->nm != NoName; p++) {
-      
-      if (lCopySwitch(ep, new, p - &(ep->descr[0]), p - &(ep->descr[0])) != 0) {
+      int index =  p - &(ep->descr[0]); 
+
+      if (lCopySwitch(ep, new, index, index) != 0) {
          lFreeElem(new);
          LERROR(LECOPYSWITCH);
          DEXIT;
          return NULL;
       }
+      /* copy changed field information */
+      if(sge_bitfield_get(ep->changed, index)) {
+         sge_bitfield_set(new->changed, index);
+      }
    }
+
    new->status = FREE_ELEM;
 
    DEXIT;
    return new;
 }
 
-/* ------------------------------------------------------------
-
-   copies elements from list element src to dst using
-   the enumeration enp as a mask; or all elements if enp
-   is NULL
-
- */
-int lModifyWhat(
-lListElem *dst,
-const lListElem *src,
-const lEnumeration *enp 
-) {
+/****** cull/list/lModifyWhat() ************************************************
+*  NAME
+*     lModifyWhat() -- Copy parts of an element 
+*
+*  SYNOPSIS
+*     int lModifyWhat(lListElem *dst, const lListElem *src, 
+*                     const lEnumeration *enp) 
+*
+*  FUNCTION
+*     Copies elements from 'src' to 'dst' using the enumeration 'enp'
+*     as a mask or copies all elements if 'enp' is NULL 
+*
+*  INPUTS
+*     lListElem *dst          - destination element
+*     const lListElem *src    - source element
+*     const lEnumeration *enp - mask 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp) 
+{
    int ret, i = 0;
 
    DENTER(CULL_LAYER, "lModifyWhat");
@@ -121,21 +196,34 @@ const lEnumeration *enp
    return ret;
 }
 
-/* ------------------------------------------------------------
-
-   copies elements from list element src to dst using
-   the enumeration enp as a mask; or all elements if enp
-   is NULL
-
-   copying starts at index *jp
-
- */
-int lCopyElemPartial(
-lListElem *dst,
-int *jp,                        /* actual writing index for dst */
-const lListElem *src,
-const lEnumeration *enp 
-) {
+/****** cull/list/lCopyElemPartial() ****************************************
+*  NAME
+*     lCopyElemPartial() -- Copies parts of an element 
+*
+*  SYNOPSIS
+*     int lCopyElemPartial(lListElem *dst, int *jp, 
+*                          const lListElem *src, 
+*                          const lEnumeration *enp) 
+*
+*  FUNCTION
+*     Copies elements from list element 'src' to 'dst' using the
+*     enumeration 'enp' as a mask or copies all elements if
+*     'enp' is NULL. Copying starts at index *jp. 
+*
+*  INPUTS
+*     lListElem *dst          - destination element 
+*     int *jp                 - Where should the copy operation start 
+*     const lListElem *src    - src element 
+*     const lEnumeration *enp - enumeration 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, 
+                     const lEnumeration *enp) 
+{
    int i;
 
    DENTER(CULL_LAYER, "lCopyElemPartial");
@@ -154,6 +242,10 @@ const lEnumeration *enp
             DEXIT;
             return -1;
          }
+         /* copy changed field information */
+         if(sge_bitfield_get(src->changed, i)) {
+            sge_bitfield_set(dst->changed, *jp);
+         }
       }
       break;
 
@@ -167,26 +259,45 @@ const lEnumeration *enp
             DEXIT;
             return -1;
          }
+         /* copy changed field information */
+         if(sge_bitfield_get(src->changed, enp[i].pos)) {
+            sge_bitfield_set(dst->changed, *jp);
+         }
       }
    }
    DEXIT;
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   copies from the list element sep (using index src_idx)
-   to list element dep (using index dst_idx)
-   in dependence of the type
-
- */
-int lCopySwitch(
-const lListElem *sep,
-lListElem *dep,
-int src_idx,
-int dst_idx 
-) {
+/****** cull/list/lCopySwitch() ***********************************************
+*  NAME
+*     lCopySwitch() -- Copy parts of elements indedendent from type 
+*
+*  SYNOPSIS
+*     int lCopySwitch(const lListElem *sep, lListElem *dep, 
+*                     int src_idx, int dst_idx) 
+*
+*  FUNCTION
+*     Copies from the element 'sep' (using index 'src_idx') to
+*     the element 'dep' (using index 'dst_idx') in dependence 
+*     of the type. 
+*
+*  INPUTS
+*     const lListElem *sep - source element 
+*     lListElem *dep       - destination element 
+*     int src_idx          - source index 
+*     int dst_idx          - destination index 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lCopySwitch(const lListElem *sep, lListElem *dep, 
+                int src_idx, int dst_idx) 
+{
    lList *tlp;
+   lListElem *tep;
 
    DENTER(CULL_LAYER, "lCopySwitch");
 
@@ -195,9 +306,8 @@ int dst_idx
       return -1;
    }
 
-   switch (dep->descr[dst_idx].mt) {
+   switch (mt_get_type(dep->descr[dst_idx].mt)) {
    case lUlongT:
-      lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx));
       dep->cont[dst_idx].ul = sep->cont[src_idx].ul;
       break;
    case lStringT:
@@ -205,49 +315,49 @@ int dst_idx
          dep->cont[dst_idx].str = NULL;
       else
          dep->cont[dst_idx].str = strdup(sep->cont[src_idx].str);
-      /* lSetPosString(dep, dst_idx, lGetPosString(sep, src_idx)); */
       break;
    case lHostT:
       if (!sep->cont[src_idx].host)
          dep->cont[dst_idx].host = NULL;
       else
          dep->cont[dst_idx].host = strdup(sep->cont[src_idx].host);
-      /* lSetPosString(dep, dst_idx, lGetPosString(sep, src_idx)); */
       break;
 
    case lDoubleT:
       dep->cont[dst_idx].db = sep->cont[src_idx].db;
-      /* lSetPosDouble(dep, dst_idx, lGetPosDouble(sep, src_idx)); */
       break;
    case lListT:
-      /* if (!(tlp = lGetPosList(sep, src_idx))) 
-       *    lSetPosList(dep, dst_idx, (lList *) NULL);
-       */
-      
-      if (!(tlp = sep->cont[src_idx].glp)) 
+      if ((tlp = sep->cont[src_idx].glp) == NULL) 
          dep->cont[dst_idx].glp = NULL;
       else  
          dep->cont[dst_idx].glp = lCopyList(NULL, tlp);
       break;
+   case lObjectT:
+      if ((tep = sep->cont[src_idx].obj) == NULL) {
+         dep->cont[dst_idx].obj = NULL;
+      } else {
+         lListElem *new = lCopyElem(tep);
+         new->status = OBJECT_ELEM;
+         dep->cont[dst_idx].obj = new;
+      }   
+      break;
    case lIntT:
       dep->cont[dst_idx].i = sep->cont[src_idx].i;            
-      /* lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx)); */
       break;
    case lFloatT:
       dep->cont[dst_idx].fl = sep->cont[src_idx].fl;
-      /* lSetPosFloat(dep, dst_idx, lGetPosFloat(sep, src_idx)); */
       break;
    case lLongT:
       dep->cont[dst_idx].l = sep->cont[src_idx].l;
-      /* lSetPosLong(dep, dst_idx, lGetPosLong(sep, src_idx)); */
       break;
    case lCharT:
       dep->cont[dst_idx].c = sep->cont[src_idx].c;
-      /* lSetPosChar(dep, dst_idx, lGetPosChar(sep, src_idx)); */
+      break;
+   case lBoolT:
+      dep->cont[dst_idx].b = sep->cont[src_idx].b;
       break;
    case lRefT:
       dep->cont[dst_idx].ref = sep->cont[src_idx].ref;
-      /* lSetPosRef(dep, dst_idx, lGetPosChar(sep, src_idx)); */
       break;
    default:
       DEXIT;
@@ -258,14 +368,24 @@ int dst_idx
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the user defined name of a list
-
- */
-const char *lGetListName(
-const lList *lp 
-) {
+/****** cull/list/lGetListName() **********************************************
+*  NAME
+*     lGetListName() -- returns the user defined name of a list 
+*
+*  SYNOPSIS
+*     const char* lGetListName(const lList *lp) 
+*
+*  FUNCTION
+*     Returns the user defined name of a list. 
+*
+*  INPUTS
+*     const lList *lp - list pointer 
+*
+*  RESULT
+*     const char* - list name
+******************************************************************************/
+const char *lGetListName(const lList *lp) 
+{
    DENTER(CULL_LAYER, "lGetListName");
 
    if (!lp) {
@@ -284,14 +404,24 @@ const lList *lp
    return lp->listname;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the descriptor of a list
-
- */
-const lDescr *lGetListDescr(
-const lList *lp 
-) {
+/****** cull/list/lGetListDescr() *********************************************
+*  NAME
+*     lGetListDescr() -- Returns the descriptor of a list 
+*
+*  SYNOPSIS
+*     const lDescr* lGetListDescr(const lList *lp) 
+*
+*  FUNCTION
+*     Returns the descriptor of a list 
+*
+*  INPUTS
+*     const lList *lp - list pointer 
+*
+*  RESULT
+*     const lDescr* - destriptor 
+******************************************************************************/
+const lDescr *lGetListDescr(const lList *lp) 
+{
    DENTER(CULL_LAYER, "lGetListDescr");
 
    if (!lp) {
@@ -303,14 +433,24 @@ const lList *lp
    return lp->descr;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the number of elements in a list
-
- */
-int lGetNumberOfElem(
-const lList *lp 
-) {
+/****** cull/list/lGetNumberOfElem() ******************************************
+*  NAME
+*     lGetNumberOfElem() -- Returns the number of elements in a list 
+*
+*  SYNOPSIS
+*     int lGetNumberOfElem(const lList *lp) 
+*
+*  FUNCTION
+*     Returns the number of elements in a list 
+*
+*  INPUTS
+*     const lList *lp - list pointer 
+*
+*  RESULT
+*     int - number of elements 
+******************************************************************************/
+int lGetNumberOfElem(const lList *lp) 
+{
    DENTER(CULL_LAYER, "lGetNumberOfElem");
 
    if (!lp) {
@@ -323,7 +463,7 @@ const lList *lp
    return lp->nelem;
 }
 
-/****** cull_list/lGetElemIndex() *********************************************
+/****** cull/list/lGetElemIndex() *********************************************
 *  NAME
 *     lGetElemIndex() -- returns the index of element in list lp 
 *
@@ -339,12 +479,9 @@ const lList *lp
 *
 *  RESULT
 *     index number 
-*******************************************************************************
-*/
-int lGetElemIndex(
-const lListElem *ep,
-const lList *lp 
-) {
+******************************************************************************/
+int lGetElemIndex(const lListElem *ep, const lList *lp) 
+{
    int i = -1;
    lListElem *ep2;
 
@@ -365,14 +502,24 @@ const lList *lp
    return i;
 }
 
-/* ------------------------------------------------------------ 
-
-   returns the number of elements behind an element
-
- */
-int lGetNumberOfRemainingElem(
-const lListElem *ep 
-) {
+/****** cull/list/lGetNumberOfRemainingElem() *********************************
+*  NAME
+*     lGetNumberOfRemainingElem() -- Number of following elements 
+*
+*  SYNOPSIS
+*     int lGetNumberOfRemainingElem(const lListElem *ep) 
+*
+*  FUNCTION
+*     Returns the number of elements behind an element 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*
+*  RESULT
+*     int - number of elements 
+******************************************************************************/
+int lGetNumberOfRemainingElem(const lListElem *ep) 
+{
    int i = 0;
 
    DENTER(CULL_LAYER, "lGetNumberOfElem");
@@ -389,7 +536,7 @@ const lListElem *ep
    return i;
 }
 
-/****** cull_list/lGetElemDescr() **********************************************
+/****** cull/list/lGetElemDescr() **********************************************
 *  NAME
 *     lGetElemDescr() -- returns the descriptor of a list element 
 *
@@ -405,11 +552,9 @@ const lListElem *ep
 *  RESULT
 *     Pointer to descriptor 
 *
-*******************************************************************************
-*/
-const lDescr *lGetElemDescr(
-const lListElem *ep 
-) {
+******************************************************************************/
+const lDescr *lGetElemDescr(const lListElem *ep) 
+{
    DENTER(CULL_LAYER, "lGetListDescr");
 
    if (!ep) {
@@ -421,14 +566,21 @@ const lListElem *ep
    return ep->descr;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a given element to monitoring level CULL_LAYER/Info 
-
- */
-void lWriteElem(
-const lListElem *ep 
-) {
+/****** cull/list/lWriteElem() ************************************************
+*  NAME
+*     lWriteElem() -- Write a element to monitoring level CULL_LAYER 
+*
+*  SYNOPSIS
+*     void lWriteElem(const lListElem *ep) 
+*
+*  FUNCTION
+*     Write a element to monitoring level CULL_LAYER a info message 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+******************************************************************************/
+void lWriteElem(const lListElem *ep) 
+{
    DENTER(CULL_LAYER, "lWriteElem");
 
    lWriteElem_(ep, NULL);
@@ -436,15 +588,23 @@ const lListElem *ep
    DEXIT;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a given element to file
-
- */
-void lWriteElemTo(
-const lListElem *ep,
-FILE *fp 
-) {
+/****** cull/list/lWriteElemTo() **********************************************
+*  NAME
+*     lWriteElemTo() -- Write a element to file stream 
+*
+*  SYNOPSIS
+*     void lWriteElemTo(const lListElem *ep, FILE *fp) 
+*
+*  FUNCTION
+*     Write a element to file stream 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     FILE *fp            - file stream 
+*     ???/???
+******************************************************************************/
+void lWriteElemTo(const lListElem *ep, FILE *fp) 
+{
    DENTER(CULL_LAYER, "lWriteElemTo");
 
    lWriteElem_(ep, fp);
@@ -452,19 +612,13 @@ FILE *fp
    DEXIT;
 }
 
-/* ------------------------------------------------------------ 
-
-   basis function for lWriteList{To}
-
- */
-static void lWriteElem_(
-const lListElem *ep,
-FILE *fp 
-) {
+static void lWriteElem_(const lListElem *ep, FILE *fp) 
+{
    int i;
    static int nesting_level = 0;
    char space[128];
    lList *tlp;
+   lListElem *tep;
    const char *str;
 
    DENTER(CULL_LAYER, "lWriteElem");
@@ -485,51 +639,52 @@ FILE *fp
       fprintf(fp, "%s-------------------------------\n", space);
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
-      switch (ep->descr[i].mt) {
+      int changed = sge_bitfield_get(ep->changed, i);
+      switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Integer) = %d\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i)));
+            DPRINTF(("%s%-20.20s (Integer) %c = %d\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Integer) = %d\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i));
+            fprintf(fp, "%s%-20.20s (Integer) %c = %d\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Ulong)   = " u32"\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i)));
+            DPRINTF(("%s%-20.20s (Ulong)   %c = " u32"\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Ulong)   = " u32"\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i));
+            fprintf(fp, "%s%-20.20s (Ulong)   %c = " u32"\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
          if (!fp)
-            DPRINTF(("%s%-20.20s (String)  = %s\n", space,
-                     lNm2Str(ep->descr[i].nm), str ? str : "(null)"));
+            DPRINTF(("%s%-20.20s (String)  %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
          else
-            fprintf(fp, "%s%-20.20s (String)  = %s\n", space,
-                    lNm2Str(ep->descr[i].nm), str ? str : "(null)");
+            fprintf(fp, "%s%-20.20s (String)  %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
          break;
 
       case lHostT:
          str = lGetPosHost(ep, i);
          if (!fp)
-            DPRINTF(("%s%-20.20s (Host)  = %s\n", space,
-                     lNm2Str(ep->descr[i].nm), str ? str : "(null)"));
+            DPRINTF(("%s%-20.20s (Host)    %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
          else
-            fprintf(fp, "%s%-20.20s (Host)  = %s\n", space,
-                    lNm2Str(ep->descr[i].nm), str ? str : "(null)");
+            fprintf(fp, "%s%-20.20s (Host)    %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
          break;
 
       case lListT:
          tlp = lGetPosList(ep, i);
          if (!fp)
-            DPRINTF(("%s%-20.20s (List)    = %s\n", space,
-                     lNm2Str(ep->descr[i].nm), tlp ? "full {" : "empty"));
+            DPRINTF(("%s%-20.20s (List)    %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty"));
          else
-            fprintf(fp, "%s%-20.20s (List)    = %s\n", space,
-                    lNm2Str(ep->descr[i].nm), tlp ? "full {" : "empty");
+            fprintf(fp, "%s%-20.20s (List)    %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
          if (tlp) {
             nesting_level++;
             lWriteList_(tlp, nesting_level, fp);
@@ -540,45 +695,72 @@ FILE *fp
             nesting_level--;
          }
          break;
+
+      case lObjectT:
+         tep = lGetPosObject(ep, i);
+         if (!fp)
+            DPRINTF(("%s%-20.20s (Object)  %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none"));
+         else
+            fprintf(fp, "%s%-20.20s (Object)  %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
+         if (tep) {
+            nesting_level++;
+            lWriteElem_(tep, fp);
+            if (!fp)
+               DPRINTF(("%s}\n", space));
+            else
+               fprintf(fp, "%s}\n", space);
+            nesting_level--;
+         }
+         break;
       case lFloatT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Float)   = %f\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosFloat(ep, i)));
+            DPRINTF(("%s%-20.20s (Float)   %c = %f\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Float)   = %f\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosFloat(ep, i));
+            fprintf(fp, "%s%-20.20s (Float)   %c = %f\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
          break;
       case lDoubleT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Double)  = %f\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosDouble(ep, i)));
+            DPRINTF(("%s%-20.20s (Double)  %c = %f\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Double)  = %f\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosDouble(ep, i));
+            fprintf(fp, "%s%-20.20s (Double)  %c = %f\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
          break;
       case lLongT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Long)    = %ld\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosLong(ep, i)));
+            DPRINTF(("%s%-20.20s (Long)    %c = %ld\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Long)    = %ld\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosLong(ep, i));
+            fprintf(fp, "%s%-20.20s (Long)    %c = %ld\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
+         break;
+      case lBoolT:
+         if (!fp)
+            DPRINTF(("%s%-20.20s (Bool)    %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false"));
+         else
+            fprintf(fp, "%s%-20.20s (Bool)    %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
          break;
       case lCharT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Char)    = %c\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosChar(ep, i)));
+            DPRINTF(("%s%-20.20s (Char)    %c = %c\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Char)    = %c\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosChar(ep, i));
+            fprintf(fp, "%s%-20.20s (Char)    %c = %c\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i));
          break;
       case lRefT:
          if (!fp)
-            DPRINTF(("%s%-20.20s (Ref)    = %p\n", space,
-                     lNm2Str(ep->descr[i].nm), lGetPosRef(ep, i)));
+            DPRINTF(("%s%-20.20s (Ref)     %c = %p\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i)));
          else
-            fprintf(fp, "%s%-20.20s (Ref)    = %p\n", space,
-                    lNm2Str(ep->descr[i].nm), lGetPosRef(ep, i));
+            fprintf(fp, "%s%-20.20s (Ref)     %c = %p\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
          break;
       default:
          unknownType("lWriteElem");
@@ -589,14 +771,21 @@ FILE *fp
    return;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a given list for monitoring level CULL_LAYER/Info 
-
- */
-void lWriteList(
-const lList *lp 
-) {
+/****** cull/list/lWriteList() ************************************************
+*  NAME
+*     lWriteList() -- Write a list to monitoring level CULL_LAYER 
+*
+*  SYNOPSIS
+*     void lWriteList(const lList *lp) 
+*
+*  FUNCTION
+*     Write a list to monitoring level CULL_LAYER as info message. 
+*
+*  INPUTS
+*     const lList *lp - list 
+******************************************************************************/
+void lWriteList(const lList *lp) 
+{
    DENTER(CULL_LAYER, "lWriteList");
 
    lWriteList_(lp, 0, NULL);
@@ -605,15 +794,22 @@ const lList *lp
    return;
 }
 
-/* ------------------------------------------------------------ 
-
-   writes a given list to file 
-
- */
-void lWriteListTo(
-const lList *lp,
-FILE *fp 
-) {
+/****** cull/list/lWriteListTo() **********************************************
+*  NAME
+*     lWriteListTo() -- Write a list to a file stream 
+*
+*  SYNOPSIS
+*     void lWriteListTo(const lList *lp, FILE *fp) 
+*
+*  FUNCTION
+*     Write a list to a file stream 
+*
+*  INPUTS
+*     const lList *lp - list 
+*     FILE *fp        - file stream 
+*******************************************************************************/
+void lWriteListTo(const lList *lp, FILE *fp) 
+{
    DENTER(CULL_LAYER, "lWriteListTo");
 
    lWriteList_(lp, 0, fp);
@@ -622,16 +818,8 @@ FILE *fp
    return;
 }
 
-/* ------------------------------------------------------------ 
-
-   basis function for lWriteList and lWriteListTo 
-
- */
-static void lWriteList_(
-const lList *lp,
-int nesting_level,
-FILE *fp 
-) {
+static void lWriteList_(const lList *lp, int nesting_level, FILE *fp) 
+{
    lListElem *ep;
    char indent[128];
    int i;
@@ -649,15 +837,17 @@ FILE *fp
    indent[i] = '\0';
 
    if (!fp) {
-      DPRINTF(("\n%sList: <%s> #Elements: %d\n",
+      DPRINTF(("\n%sList: <%s> %c #Elements: %d\n",
                indent,
                lGetListName(lp),
+               lp->changed ? '*' : ' ',
                lGetNumberOfElem(lp)));
    }
    else {
-      fprintf(fp, MSG_CULL_LISTXYNROFELEMENTSZ_SSI ,
+      fprintf(fp, "\n%sList: <%s> %c #Elements: %d\n",
               indent,
               lGetListName(lp),
+              lp->changed ? '*' : ' ',
               lGetNumberOfElem(lp));
    }
 
@@ -670,14 +860,24 @@ FILE *fp
    DEXIT;
 }
 
-/* ------------------------------------------------------------ 
-
-   create an element for a specific list 
-
- */
-lListElem *lCreateElem(
-const lDescr *dp 
-) {
+/****** cull/list/lCreateElem() ***********************************************
+*  NAME
+*     lCreateElem() -- Create an element for a specific list 
+*
+*  SYNOPSIS
+*     lListElem* lCreateElem(const lDescr *dp) 
+*
+*  FUNCTION
+*     Create an element for a specific list 
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*
+*  RESULT
+*     lListElem* - element pointer or NULL
+******************************************************************************/
+lListElem *lCreateElem(const lDescr *dp) 
+{
    int n, i;
    lListElem *ep;
 
@@ -707,18 +907,25 @@ const lDescr *dp
    }
    memcpy(ep->descr, dp, sizeof(lDescr) * (n + 1));
 
-   /* copy hashing info in descriptor */
+   /* new descr has no htables yet */
    for (i = 0; i <= n; i++) {
-      if(dp[i].hash != NULL) {
-         ep->descr[i].hash = cull_hash_copy_descr(&dp[i]);
-      }
+      ep->descr[i].ht = NULL;
    }
                   
    ep->status = FREE_ELEM;
    if (!(ep->cont = (lMultiType *) calloc(1, sizeof(lMultiType) * n))) {
       LERROR(LEMALLOC);
+      free(ep->descr);
       free(ep);
       DEXIT;
+      return NULL;
+   }
+
+   if((ep->changed = sge_bitfield_new(n)) == NULL) {
+      LERROR(LEMALLOC);
+      free(ep->cont);
+      free(ep->descr);
+      free(ep);
       return NULL;
    }
 
@@ -726,16 +933,26 @@ const lDescr *dp
    return ep;
 }
 
-/* ------------------------------------------------------------ 
-
-   creates an empty list with a given descriptor 
-   and a user defined listname
-
- */
-lList *lCreateList(
-const char *listname,
-const lDescr *descr 
-) {
+/****** cull/list/lCreateList() ***********************************************
+*  NAME
+*     lCreateList() -- Create an empty list 
+*
+*  SYNOPSIS
+*     lList* lCreateList(const char *listname, const lDescr *descr) 
+*
+*  FUNCTION
+*     Create an empty list with a given descriptor and a user defined
+*     listname. 
+*
+*  INPUTS
+*     const char *listname - list name 
+*     const lDescr *descr  - descriptor 
+*
+*  RESULT
+*     lList* - list pointer or NULL 
+*******************************************************************************/
+lList *lCreateList(const char *listname, const lDescr *descr) 
+{
    lList *lp;
    int i, n;
 
@@ -781,29 +998,42 @@ const lDescr *descr
       lp->descr[i].mt = descr[i].mt;
       lp->descr[i].nm = descr[i].nm;
 
-      /* copy hashing information and create hashtable if necessary */
-      if(descr[i].hash != NULL) {
-         lp->descr[i].hash = cull_hash_create(&descr[i]);
+      /* create hashtable if necessary */
+      if(mt_do_hashing(lp->descr[i].mt)) {
+         lp->descr[i].ht = cull_hash_create(&descr[i]);
       } else {
-         lp->descr[i].hash = NULL;
+         lp->descr[i].ht = NULL;
       }
    }
+
+   lp->changed = 0;
 
    DEXIT;
    return lp;
 }
 
-/* ------------------------------------------------------------ 
-
-   creates an empty list with a given descriptor and a number nr_elem of
-   only initialized elements
-
- */
-lList *lCreateElemList(
-const char *listname,
-const lDescr *descr,
-int nr_elem 
-) {
+/****** cull/list/lCreateElemList() *******************************************
+*  NAME
+*     lCreateElemList() -- Create a list with n elements 
+*
+*  SYNOPSIS
+*     lList* lCreateElemList(const char *listname, const lDescr *descr, 
+*                            int nr_elem) 
+*
+*  FUNCTION
+*     Create a list with a given descriptor and insert 'nr_elem' 
+*     only initialized elements 
+*
+*  INPUTS
+*     const char *listname - list name
+*     const lDescr *descr  - descriptor 
+*     int nr_elem          - number of elements 
+*
+*  RESULT
+*     lList* - list or NULL
+*******************************************************************************/
+lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem) 
+{
    lList *lp = NULL;
    lListElem *ep = NULL;
    int i;
@@ -830,24 +1060,34 @@ int nr_elem
    return lp;
 }
 
-/* ------------------------------------------------------------ 
-
-   frees a list element including strings and sublists  
-
- */
-lListElem *lFreeElem(
-lListElem *ep 
-) {
+/****** cull/list/lFreeElem() *************************************************
+*  NAME
+*     lFreeElem() -- Free a element including strings and sublists 
+*
+*  SYNOPSIS
+*     lListElem* lFreeElem(lListElem *ep) 
+*
+*  FUNCTION
+*     Free a element including strings and sublists 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*
+*  RESULT
+*     lListElem* - NULL 
+******************************************************************************/
+lListElem *lFreeElem(lListElem *ep) 
+{
    int i = 0;
 
    DENTER(CULL_LAYER, "lFreeElem");
 
-   if (!ep) {
+   if (ep == NULL) {
       DEXIT;
       return NULL;
    }
 
-   if (!(ep->descr)) {
+   if (ep->descr == NULL) {
       LERROR(LEDESCRNULL);
       DPRINTF(("NULL descriptor not allowed !!!\n"));
       abort();
@@ -855,11 +1095,11 @@ lListElem *ep
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
       /* remove element from hash tables */
-      if(ep->descr[i].hash != NULL) {
+      if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
       }
       
-      switch (ep->descr[i].mt) {
+      switch (mt_get_type(ep->descr[i].mt)) {
 
       case lIntT:
       case lUlongT:
@@ -867,22 +1107,28 @@ lListElem *ep
       case lDoubleT:
       case lLongT:
       case lCharT:
+      case lBoolT:
       case lRefT:
          break;
 
       case lStringT:
-         if (ep->cont[i].str)
+         if (ep->cont[i].str != NULL)
             free(ep->cont[i].str);
          break;
 
       case lHostT:
-         if (ep->cont[i].host)
+         if (ep->cont[i].host != NULL)
             free(ep->cont[i].host);
          break;
 
       case lListT:
-         if (ep->cont[i].glp)
+         if (ep->cont[i].glp != NULL)
             lFreeList(ep->cont[i].glp);
+         break;
+
+      case lObjectT:
+         if (ep->cont[i].obj != NULL)
+            lFreeElem(ep->cont[i].obj);
          break;
 
       default:
@@ -891,14 +1137,19 @@ lListElem *ep
       }
    }
 
-   /* lFreeElem is not responsible for descriptor array */
-   if (ep->status == FREE_ELEM) {
+   /* lFreeElem is not responsible for list descriptor array */
+   if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
       cull_hash_free_descr(ep->descr); 
       free(ep->descr);
    }   
 
-   if (ep->cont)
+   if(ep->cont != NULL) {
       free(ep->cont);
+   }   
+
+   if(ep->changed != NULL) {
+      ep->changed = sge_bitfield_free(ep->changed);
+   }
 
    free(ep);
 
@@ -906,14 +1157,24 @@ lListElem *ep
    return NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   frees a complete list 
-
- */
-lList *lFreeList(
-lList *lp 
-) {
+/****** cull/list/lFreeList() *************************************************
+*  NAME
+*     lFreeList() -- Frees a list including all elements  
+*
+*  SYNOPSIS
+*     lList* lFreeList(lList *lp) 
+*
+*  FUNCTION
+*     Frees a list including all elements 
+*
+*  INPUTS
+*     lList *lp - list 
+*
+*  RESULT
+*     lList* - NULL 
+******************************************************************************/
+lList *lFreeList(lList *lp) 
+{
    DENTER(CULL_LAYER, "lFreeList");
 
    if (!lp) {
@@ -921,34 +1182,53 @@ lList *lp
       return NULL;
    }
 
-   /* remove all hash tables, it is more efficient than removing it at the end */
-   if (lp->descr)
+   /* 
+    * remove all hash tables, 
+    * it is more efficient than removing it at the end 
+    */
+   if (lp->descr != NULL) {
       cull_hash_free_descr(lp->descr);
+   }   
 
-   while (lp->first)
+   while (lp->first) {
       lRemoveElem(lp, lp->first);
+   }   
 
    if (lp->descr) {
       free(lp->descr);
    }   
 
-   if (lp->listname)
+   if (lp->listname) {
       free(lp->listname);
+   }
+
    free(lp);
 
    DEXIT;
    return NULL;
 }
 
-/* ------------------------------------------------------------
-
-   lAddList concatenates two equal type lists throwing away the
-   second source list
- */
-int lAddList(
-lList *lp0,
-lList *lp1 
-) {
+/****** cull/list/lAddList() **************************************************
+*  NAME
+*     lAddList() -- Concatenate two lists 
+*
+*  SYNOPSIS
+*     int lAddList(lList *lp0, lList *lp1) 
+*
+*  FUNCTION
+*     Concatenate two lists of equal type throwing away the second list 
+*
+*  INPUTS
+*     lList *lp0 - first list 
+*     lList *lp1 - second list 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lAddList(lList *lp0, lList *lp1) 
+{
    lListElem *ep;
    const lDescr *dp0, *dp1;
 
@@ -988,14 +1268,27 @@ lList *lp1
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   lCompListDescr compares two list descriptors
- */
-int lCompListDescr(
-const lDescr *dp0,
-const lDescr *dp1 
-) {
+/****** cull/list/lCompListDescr() ********************************************
+*  NAME
+*     lCompListDescr() -- Compare two descriptors 
+*
+*  SYNOPSIS
+*     int lCompListDescr(const lDescr *dp0, const lDescr *dp1) 
+*
+*  FUNCTION
+*     Compare two descriptors 
+*
+*  INPUTS
+*     const lDescr *dp0 - descriptor one 
+*     const lDescr *dp1 - descriptor two 
+*
+*  RESULT
+*     int - Result of compare operation
+*         0 - equivalent
+*        -1 - not equivalent
+******************************************************************************/
+int lCompListDescr(const lDescr *dp0, const lDescr *dp1) 
+{
    int i, n, m;
 
    DENTER(CULL_LAYER, "lCompListDescr");
@@ -1019,6 +1312,11 @@ const lDescr *dp1
    }
    if (n == m) {
       for (i = 0; i < n; i++) {
+         /* 
+          * comparing the mt field might be too restrictive
+          * former implementation mt only contained the type information 
+          * now also the various flags 
+          */
          if (dp0[i].nm != dp1[i].nm || dp0[i].mt != dp1[i].mt) {
             LERROR(LEDIFFDESCR);
             DEXIT;
@@ -1036,16 +1334,26 @@ const lDescr *dp1
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   copies a list src including strings and sublists
-   the new list get name as listname 
-
- */
-lList *lCopyList(
-const char *name,
-const lList *src 
-) {
+/****** cull/list/lCopyList() *************************************************
+*  NAME
+*     lCopyList() -- Copy a list including strings and sublists 
+*
+*  SYNOPSIS
+*     lList* lCopyList(const char *name, const lList *src) 
+*
+*  FUNCTION
+*     Copy a list including strings and sublists. The new list will
+*     get 'name' as user defined name 
+*
+*  INPUTS
+*     const char *name - list name 
+*     const lList *src - source list 
+*
+*  RESULT
+*     lList* - Copy of 'src' or NULL 
+******************************************************************************/
+lList *lCopyList(const char *name, const lList *src) 
+{
    lList *dst = NULL;
    lListElem *sep;
 
@@ -1082,16 +1390,29 @@ const lList *src
    return dst;
 }
 
-/* ------------------------------------------------------------ 
-
-   inserts new element after element ep in list lp 
-
- */
-int lInsertElem(
-lList *lp,
-lListElem *ep,
-lListElem *new 
-) {
+/****** cull/list/lInsertElem() ***********************************************
+*  NAME
+*     lInsertElem() -- Insert element after another in a list 
+*
+*  SYNOPSIS
+*     int lInsertElem(lList *lp, lListElem *ep, lListElem *new) 
+*
+*  FUNCTION
+*     Insert a 'new' element after element 'ep' into list 'lp'.
+*     If 'ep' is NULL then 'new' will be the first element in 'lp'.
+*
+*  INPUTS
+*     lList *lp      - list 
+*     lListElem *ep  - element 
+*     lListElem *new - new element 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lInsertElem(lList *lp, lListElem *ep, lListElem *new) 
+{
    DENTER(CULL_LAYER, "lInsertElem");
 
    if (!lp) {
@@ -1099,11 +1420,21 @@ lListElem *new
       DEXIT;
       return -1;
    }
+   
    if (!new) {
       LERROR(LEELEMNULL);
       DEXIT;
       return -1;
    }
+   
+   /* is the element new still chained in an other list, this is not allowed ? */
+   if (new->status == BOUND_ELEM || new->status == OBJECT_ELEM) {
+      DPRINTF(("WARNING: tried to insert chained element\n"));
+      lWriteElem(new);
+      DEXIT;
+      abort();
+   }
+
    if (ep) {
       new->prev = ep;
       new->next = ep->next;
@@ -1133,20 +1464,33 @@ lListElem *new
    cull_hash_elem(new);
    
    lp->nelem++;
+   lp->changed = 1;
 
    DEXIT;
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   appends element ep1 at the end of the list lp
-
- */
-int lAppendElem(
-lList *lp,
-lListElem *ep 
-) {
+/****** cull/list/lAppendElem() ***********************************************
+*  NAME
+*     lAppendElem() -- Append element at the end of a list 
+*
+*  SYNOPSIS
+*     int lAppendElem(lList *lp, lListElem *ep) 
+*
+*  FUNCTION
+*     Append element 'ep' at the end of list 'lp' 
+*
+*  INPUTS
+*     lList *lp     - list 
+*     lListElem *ep - element 
+*
+*  RESULT
+*     int - error state 
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lAppendElem(lList *lp, lListElem *ep) 
+{
 #ifdef __INSIGHT__
 /* JG: this code is thorougly tested and really should be ok, but insure complains */
 _Insight_set_option("suppress", "LEAK_ASSIGN");
@@ -1165,7 +1509,7 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
    }
 
    /* is the element ep still chained in an other list, this is not allowed ? */
-   if (ep->status == BOUND_ELEM) {
+   if (ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM) {
       DPRINTF(("WARNING: tried to append chained element\n"));
       lWriteElem(ep);
       DEXIT;
@@ -1192,6 +1536,7 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
 
    cull_hash_elem(ep);
    lp->nelem++;
+   lp->changed = 1;
 
    DEXIT;
    return 0;
@@ -1200,16 +1545,27 @@ _Insight_set_option("unsuppress", "LEAK_ASSIGN");
 #endif
 }
 
-/* ------------------------------------------------------------ 
-
-   remove a list element from a list lp 
-   the element gets deleted
-
- */
-int lRemoveElem(
-lList *lp,
-lListElem *ep 
-) {
+/****** cull/list/lRemoveElem() ***********************************************
+*  NAME
+*     lRemoveElem() -- Delete a element from a list 
+*
+*  SYNOPSIS
+*     int lRemoveElem(lList *lp, lListElem *ep) 
+*
+*  FUNCTION
+*     Remove element 'ep' from list 'lp'. 'ep' gets deleted.
+*
+*  INPUTS
+*     lList *lp     - list 
+*     lListElem *ep - element 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+*******************************************************************************/
+int lRemoveElem(lList *lp, lListElem *ep) 
+{
    DENTER(CULL_LAYER, "lRemoveElem");
 
    if (!lp || !ep) {
@@ -1240,6 +1596,7 @@ lListElem *ep
    ep->prev = ep->next = NULL;
 
    lp->nelem--;
+   lp->changed = 1;
 
    lFreeElem(ep);
 
@@ -1247,16 +1604,25 @@ lListElem *ep
    return 0;
 }
 
-/* ------------------------------------------------------------ 
-
-   remove a list element from a list lp 
-   the element gets not deleted
-
- */
-lListElem *lDechainElem(
-lList *lp,
-lListElem *ep 
-) {
+/****** cull/list/lDechainElem() **********************************************
+*  NAME
+*     lDechainElem() -- Remove a element from a list 
+*
+*  SYNOPSIS
+*     lListElem* lDechainElem(lList *lp, lListElem *ep) 
+*
+*  FUNCTION
+*     Remove element 'ep' from list 'lp'. 'ep' gets not deleted. 
+*
+*  INPUTS
+*     lList *lp     - list 
+*     lListElem *ep - element 
+*
+*  RESULT
+*     lListElem* - dechained element or NULL
+******************************************************************************/
+lListElem *lDechainElem(lList *lp, lListElem *ep) 
+{
    int i;
 
    DENTER(CULL_LAYER, "lDechainElem");
@@ -1288,7 +1654,7 @@ lListElem *ep
 
    /* remove hash entries */
    for(i = 0; ep->descr[i].mt != lEndT; i++) {
-      if(ep->descr[i].hash != NULL) {
+      if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
       }
    }
@@ -1298,74 +1664,185 @@ lListElem *ep
    ep->descr = lCopyDescr(ep->descr);
    ep->status = FREE_ELEM;
    lp->nelem--;
+   lp->changed = 1;
 
    DEXIT;
    return ep;
 }
 
-/* ------------------------------------------------------------ 
+/****** cull/list/lDechainObject() **********************************************
+*  NAME
+*     lDechainObject() -- Remove a element from a list 
+*
+*  SYNOPSIS
+*     lListElem* lDechainObject(lList *lp, int name) 
+*
+*  FUNCTION
+*     Remove element 'ep' from list 'lp'. 'ep' gets not deleted. 
+*
+*  INPUTS
+*     lList *lp     - list 
+*     int name      - attribute name 
+*
+*  RESULT
+*     lListElem* - dechained element or NULL
+******************************************************************************/
+lListElem *lDechainObject(lListElem *parent, int name) 
+{
+   int pos;
+   lListElem *dep;
 
-   lFirst returns the first list element or NULL
+   DENTER(CULL_LAYER, "lDechainObject");
 
- */
-lListElem *lFirst(
-const lList *slp 
-) {
+   if (parent == NULL) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return NULL;
+   }
+
+   pos = lGetPosViaElem(parent, name);
+   if (pos < 0) {
+      /* someone has called lDechainObject() with an invalid name */
+      CRITICAL((SGE_EVENT, MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S ,
+               lNm2Str(name)));
+      DEXIT;
+      abort();
+   }
+
+   if(mt_get_type(parent->descr[pos].mt) != lObjectT) {
+      incompatibleType2(MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S,
+                        lNm2Str(name));
+      DEXIT;
+      abort();
+   }
+  
+   dep = (lListElem *) parent->cont[pos].obj;
+
+   if(dep != NULL) {
+      dep->status = FREE_ELEM;
+      parent->cont[pos].obj = NULL;
+
+      /* remember that field changed */
+      sge_bitfield_set(parent->changed, pos);
+   }
+
+   DEXIT;
+   return dep;
+}
+
+/****** cull/list/lFirst() ****************************************************
+*  NAME
+*     lFirst() -- Return the first element of a list 
+*
+*  SYNOPSIS
+*     lListElem* lFirst(const lList *slp) 
+*
+*  FUNCTION
+*     Return the first element of a list. 
+*
+*  INPUTS
+*     const lList *slp - list 
+*
+*  RESULT
+*     lListElem* - first element or NULL 
+******************************************************************************/
+lListElem *lFirst(const lList *slp) 
+{
    DENTER(CULL_LAYER, "lFirst");
    DEXIT;
    return slp ? slp->first : NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lLast returns the last list element or NULL
-
- */
-lListElem *lLast(
-const lList *slp 
-) {
+/****** cull/list/lLast() *****************************************************
+*  NAME
+*     lLast() -- Returns the last element of a list 
+*
+*  SYNOPSIS
+*     lListElem* lLast(const lList *slp) 
+*
+*  FUNCTION
+*     Returns the last element of a list. 
+*
+*  INPUTS
+*     const lList *slp - list 
+*
+*  RESULT
+*     lListElem* - last element or NULL 
+******************************************************************************/
+lListElem *lLast(const lList *slp) 
+{
    DENTER(CULL_LAYER, "lLast");
    DEXIT;
    return slp ? slp->last : NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lNext returns the next list element or NULL
-
- */
-lListElem *lNext(
-const lListElem *sep 
-) {
+/****** cull/list/lNext() *****************************************************
+*  NAME
+*     lNext() -- Returns the next element or NULL
+*
+*  SYNOPSIS
+*     lListElem* lNext(const lListElem *sep) 
+*
+*  FUNCTION
+*     Returns the next element of 'sep' or NULL 
+*
+*  INPUTS
+*     const lListElem *sep - element 
+*
+*  RESULT
+*     lListElem* - next element or NULL 
+*******************************************************************************/
+lListElem *lNext(const lListElem *sep) 
+{
    DENTER(CULL_LAYER, "lNext");
    DEXIT;
    return sep ? sep->next : NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lPrev returns the next list element or NULL
-
- */
-lListElem *lPrev(
-const lListElem *sep 
-) {
+/****** cull/list/lPrev() *****************************************************
+*  NAME
+*     lPrev() -- Returns the previous element or NULL 
+*
+*  SYNOPSIS
+*     lListElem* lPrev(const lListElem *sep) 
+*
+*  FUNCTION
+*     Returns the previous element or NULL. 
+*
+*  INPUTS
+*     const lListElem *sep - element 
+*
+*  RESULT
+*     lListElem* - previous element 
+******************************************************************************/
+lListElem *lPrev(const lListElem *sep) 
+{
    DENTER(CULL_LAYER, "lPrev");
    DEXIT;
    return sep ? sep->prev : NULL;
 }
 
-/* ------------------------------------------------------------ 
-
-   lFindFirst returns the first element fullfilling the condition cp
-   or NULL if nothing is found, if the condition is NULL the first
-   element is delivered
-
- */
-lListElem *lFindFirst(
-const lList *slp,
-const lCondition *cp 
-) {
+/****** cull/list/lFindFirst() ************************************************
+*  NAME
+*     lFindFirst() -- Returns first element fulfilling condition 
+*
+*  SYNOPSIS
+*     lListElem* lFindFirst(const lList *slp, const lCondition *cp) 
+*
+*  FUNCTION
+*     Returns the first element fulfilling the condition 'cp' or
+*     NULL if nothing is found. If the condition is NULL the first
+*     element is delivered. 
+*
+*  INPUTS
+*     const lList *slp     - list 
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+******************************************************************************/
+lListElem *lFindFirst(const lList *slp, const lCondition *cp) 
+{
    lListElem *ep;
 
    DENTER(CULL_LAYER, "lFindFirst");
@@ -1383,17 +1860,27 @@ const lCondition *cp
    return ep;
 }
 
-/* ------------------------------------------------------------ 
-
-   lFindLast returns the last element fullfilling the condition cp
-   or NULL if nothing is found, if the condition is NULL the first
-   element is delivered
-
- */
-lListElem *lFindLast(
-const lList *slp,
-const lCondition *cp 
-) {
+/****** cull/list/lFindLast() *************************************************
+*  NAME
+*     lFindLast() -- Returns last element fulfilling condition 
+*
+*  SYNOPSIS
+*     lListElem* lFindLast(const lList *slp, const lCondition *cp) 
+*
+*  FUNCTION
+*     Retruns the last element fulfilling the condition 'cp' or NULL
+*     if nothing is found. If the condition is NULL then the last
+*     element is delivered.
+*
+*  INPUTS
+*     const lList *slp     - list 
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     lListElem* - element or NULL
+******************************************************************************/
+lListElem *lFindLast(const lList *slp, const lCondition *cp) 
+{
    lListElem *ep;
 
    DENTER(CULL_LAYER, "lFindLast");
@@ -1411,17 +1898,27 @@ const lCondition *cp
    return ep;
 }
 
-/* ------------------------------------------------------------ 
-
-   lFindNext returns the next element fullfilling the condition cp
-   or NULL if nothing is found, if there is no condition (NULL) the
-   following element is delivered
-
- */
-lListElem *lFindNext(
-const lListElem *ep,
-const lCondition *cp 
-) {
+/****** cull/list/lFindNext() *************************************************
+*  NAME
+*     lFindNext() -- Returns the next element fulfilling condition 
+*
+*  SYNOPSIS
+*     lListElem* lFindNext(const lListElem *ep, const lCondition *cp) 
+*
+*  FUNCTION
+*     Returns the next element fulfilling the condition 'cp' or NULL
+*     if nothing is found. If condition is NULL than the following
+*     element is delivered. 
+*
+*  INPUTS
+*     const lListElem *ep  - element 
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+*******************************************************************************/
+lListElem *lFindNext(const lListElem *ep, const lCondition *cp) 
+{
    DENTER(CULL_LAYER, "lFindNext");
 
    if (!ep) {
@@ -1438,17 +1935,27 @@ const lCondition *cp
    return (lListElem *)ep;
 }
 
-/* ------------------------------------------------------------ 
-
-   lFindPrev returns the previous element fullfilling the condition cp
-   or NULL if nothing is found, if there is no condition (NULL) the
-   following element is delivered
-
- */
-lListElem *lFindPrev(
-const lListElem *ep,
-const lCondition *cp 
-) {
+/****** cull/list/lFindPrev() *************************************************
+*  NAME
+*     lFindPrev() -- Returns previous element fulfilling condition 
+*
+*  SYNOPSIS
+*     lListElem* lFindPrev(const lListElem *ep, const lCondition *cp) 
+*
+*  FUNCTION
+*     Returns the previous element fulfilling the condition 'cp' or
+*     NULL if nothing is found. If condition is NULL than the following
+*     element is delivered. 
+*
+*  INPUTS
+*     const lListElem *ep  - element 
+*     const lCondition *cp - condition 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+******************************************************************************/
+lListElem *lFindPrev(const lListElem *ep, const lCondition *cp) 
+{
    DENTER(CULL_LAYER, "lFindNext");
 
    if (!ep) {
@@ -1465,87 +1972,30 @@ const lCondition *cp
    return (lListElem *) ep;
 }
 
-/* ------------------------------------------------------------ 
-
-   sorts a given list. The sorting order is given by 
-   format string and a va_list. Syntax for fmt: see 
-   lParseSortOrder
-
-   int lSortList2(lList *lp, const char *fmt, ...); 
-
- */
-int lSortList2(lList * lp, const char *fmt, ...)
-{
-   va_list ap;
-   lListElem *temp;
-   lListElem *ep, *cep, *tep;
-
-   lSortOrder *sp;
-
-   DENTER(CULL_LAYER, "lSortList2");
-
-   va_start(ap, fmt);
-   if (!lp) {
-      LERROR(LELISTNULL);
-      va_end(ap);
-      DEXIT;
-      return -1;
-   }
-   if (!fmt) {
-      LERROR(LENOFORMATSTR);
-      DEXIT;
-      va_end(ap);
-      return -1;
-   }
-   if (!(sp = lParseSortOrder(lp->descr, fmt, ap))) {
-      LERROR(LEPARSESORTORD);
-      va_end(ap);
-      DEXIT;
-      return -1;
-   }
-
-   temp = lp->first;
-
-   /* lp->descr must not be NULL'ed, it is used in lInsertElem */
-   lp->first = NULL;
-   lp->last = NULL;
-   lp->nelem = 0;
-
-   while (temp) {
-      tep = NULL;
-      /* lInsertElem resets ep->next, ep->prev */
-      ep = temp;
-      temp = ep->next;
-      /* 
-       * insertion sort:
-       * go through lp until new element < current element in dlp
-       */
-      for_each(cep, lp) {
-         if (lSortCompare(ep, cep, sp) < 0)
-            break;
-         tep = cep;
-      }
-      /* insert in lp at the right position */
-      lInsertElem(lp, tep, ep);
-   }
-
-   sp = lFreeSortOrder(sp);
-
-   va_end(ap);
-
-   DEXIT;
-   return 0;
-}
-
-/* ------------------------------------------------------------ 
-
-   sorts a given list. The sorting order is given by 
-   format string and a va_list. Syntax for fmt: see 
-   lParseSortOrder
-
-   int lPSortList(lList *lp, const char *fmt, ...); 
-
- */
+/****** cull/list/lPSortList() ************************************************
+*  NAME
+*     lPSortList() -- Sort a given list 
+*
+*  SYNOPSIS
+*     int lPSortList(lList * lp, const char *fmt, ...) 
+*
+*  FUNCTION
+*     Sort a given list. The sorting order is given by the format 
+*     string and additional arguments. 
+*
+*  INPUTS
+*     lList * lp      - list 
+*     const char *fmt - format string (see lParseSortOrder()) 
+*     ...             - additional arguments (see lParseSortOrder()) 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  SEE ALSO
+*     cull/list/lParseSortOrder() 
+******************************************************************************/
 int lPSortList(lList * lp, const char *fmt,...)
 {
    va_list ap;
@@ -1577,10 +2027,27 @@ int lPSortList(lList * lp, const char *fmt,...)
    return 0;
 }
 
-int lSortList(
-lList *lp,
-const lSortOrder *sp 
-) {
+/****** cull/list/lSortList() *************************************************
+*  NAME
+*     lSortList() -- Sort list according to sort order object 
+*
+*  SYNOPSIS
+*     int lSortList(lList *lp, const lSortOrder *sp) 
+*
+*  FUNCTION
+*     Sort list according to sort order object. 
+*
+*  INPUTS
+*     lList *lp            - list 
+*     const lSortOrder *sp - sort order object 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lSortList(lList *lp, const lSortOrder *sp) 
+{
    lListElem *ep;
    lListElem **pointer;
    int i, n;
@@ -1594,7 +2061,6 @@ const lSortOrder *sp
 
    /* 
     * step 1: build up a pointer array for use of qsort
-    *
     */
 
    n = lGetNumberOfElem(lp);
@@ -1613,19 +2079,16 @@ const lSortOrder *sp
 
    /* 
     * step 2: sort the pointer array using parsed sort order 
-    *
     */
-   lSetGlobalSortOrder(sp);     /* this is done to pass the sort order */
+   lSetGlobalSortOrder(sp);     
+   /* this is done to pass the sort order */
    /* to the lSortCompare function called */
    /* by lSortCompareUsingGlobal          */
    qsort((void *) pointer, n, sizeof(lListElem *), lSortCompareUsingGlobal);
 
    /* 
-
     * step 3: relink elements in list according pointer array
-    *
     */
-
    lp->first = pointer[0];
    lp->last = pointer[n - 1];
 
@@ -1645,25 +2108,40 @@ const lSortOrder *sp
 
    free(pointer);
 
+   /* JG: TODO: is sorting changing the list? */
+
    DEXIT;
    return 0;
 }
 
-/*-------------------------------------------------------------------------*/
-/* uniq a string key list                                                  */
-/* the list is sorted alphabetically afterwards                            */
-/*-------------------------------------------------------------------------*/
-int lUniqStr(
-lList *lp,
-int keyfield 
-) {
+/****** cull/list/lUniqStr() **************************************************
+*  NAME
+*     lUniqStr() -- Uniq a string key list 
+*
+*  SYNOPSIS
+*     int lUniqStr(lList *lp, int keyfield) 
+*
+*  FUNCTION
+*     Uniq a string key list 
+*
+*  INPUTS
+*     lList *lp    - list 
+*     int keyfield - string field name id 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lUniqStr(lList *lp, int keyfield) 
+{
    lListElem *ep;
    lListElem *rep;
 
    DENTER(CULL_LAYER, "lUniqStr");
 
    /*
-      ** sort the list first to make our algorithm work
+    * sort the list first to make our algorithm work
     */
    if (lPSortList(lp, "%I+", keyfield)) {
       DEXIT;
@@ -1671,7 +2149,7 @@ int keyfield
    }
 
    /*
-      ** go over all elements and remove following elements
+    * go over all elements and remove following elements
     */
    ep = lFirst(lp);
    while (ep) {
@@ -1688,22 +2166,34 @@ int keyfield
    return 0;
 }
 
-
-/*-------------------------------------------------------------------------*/
-/* uniq a string key list                                                  */
-/* the list is sorted alphabetically afterwards                            */
-/*-------------------------------------------------------------------------*/
-int lUniqHost(
-lList *lp,
-int keyfield 
-) {
+/****** cull/list/lUniqHost() *************************************************
+*  NAME
+*     lUniqHost() -- Uniq a host key list 
+*
+*  SYNOPSIS
+*     int lUniqHost(lList *lp, int keyfield) 
+*
+*  FUNCTION
+*     Uniq a hostname key list. 
+*
+*  INPUTS
+*     lList *lp    - list 
+*     int keyfield - host field 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lUniqHost(lList *lp, int keyfield) 
+{
    lListElem *ep;
    lListElem *rep;
 
    DENTER(CULL_LAYER, "lUniqHost");
 
    /*
-      ** sort the list first to make our algorithm work
+    * sort the list first to make our algorithm work
     */
    if (lPSortList(lp, "%I+", keyfield)) {
       DEXIT;
@@ -1711,7 +2201,7 @@ int keyfield
    }
 
    /*
-      ** go over all elements and remove following elements
+    * go over all elements and remove following elements
     */
    ep = lFirst(lp);
    while (ep) {
@@ -1728,3 +2218,92 @@ int keyfield
    return 0;
 }
 
+/****** cull/list/mt_get_type() ************************************************
+*  NAME
+*     mt_get_type() -- get data type for cull object field
+*
+*  SYNOPSIS
+*     int mt_get_type(int mt) 
+*
+*  FUNCTION
+*     Returns the data type of a cull object field given the multitype 
+*     attribute of a cull descriptor.
+*
+*  INPUTS
+*     int mt - mt (multitype) struct element of a field descriptor
+*
+*  RESULT
+*     int - cull data type enum value (from _enum_lMultiType)
+*
+*  EXAMPLE
+*     switch(mt_get_type(descr[i].mt)) {
+*        case lFloatT:
+*           ...
+*     }
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+int mt_get_type(int mt)
+{
+   return mt & 0x000000FF;
+}
+
+/****** cull/list/mt_do_hashing() ************************************************
+*  NAME
+*     mt_do_hashing() -- is there hash access for a field
+*
+*  SYNOPSIS
+*     int mt_do_hashing(int mt) 
+*
+*  FUNCTION
+*     Returns the information if hashing is active for a cull object field 
+*     given the multitype attribute of a cull descriptor.
+*
+*  INPUTS
+*     int mt - mt (multitype) struct element of a field descriptor
+*
+*  RESULT
+*     int - 1, if hashing is requested, else 0
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+int mt_do_hashing(int mt)
+{
+   return mt & CULL_HASH;
+}
+
+/****** cull/list/mt_is_unique() ************************************************
+*  NAME
+*     mt_is_unique() -- is the cull object field unique 
+*
+*  SYNOPSIS
+*     int mt_is_unique(int mt) 
+*
+*  FUNCTION
+*     Returns the information if a certain cull object field is unique within
+*     a cull list given the multitype attribute of a cull descriptor.
+*
+*  INPUTS
+*     int mt - mt (multitype) struct element of a field descriptor
+*
+*  RESULT
+*     int - 1 = unique, 0 = not unique
+*
+*  EXAMPLE
+*     if(mt_is_unique(descr[i].mt)) {
+*        // check for uniqueness before inserting new elemente into a list
+*        if(lGetElemUlong(....) != NULL) {
+*           WARNING((SGE_EVENT, MSG_DUPLICATERECORD....));
+*           return NULL;
+*        }
+*     }
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+int mt_is_unique(int mt)
+{
+   return mt & CULL_UNIQUE;
+}

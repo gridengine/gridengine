@@ -46,6 +46,9 @@
 
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_dstring.h"
+#include "sge_answer.h"
+#include "sge_calendar.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -57,7 +60,6 @@
 #include "qmon_message.h"
 #include "qmon_calendar.h"
 #include "qmon_globals.h"
-#include "sge_string_append.h"
 
 static Widget qmon_cal = 0;
 static Widget cal_names = 0;
@@ -171,7 +173,7 @@ lListElem *ep
    Cardinal itemCount; 
    const char *s;
    int i;
-   StringBufferT sb = {NULL, 0};
+   dstring sb = DSTRING_INIT;
 
    DENTER(GUI_LAYER, "qmonCalendarFillConf");
    
@@ -193,16 +195,18 @@ lListElem *ep
    i = 0;
 
    /* year calendar */
-   sge_string_printf(&sb, "%-20.20s ", "Year");
-   sge_string_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:"NONE");
+   sge_dstring_sprintf(&sb, "%-20.20s ", XmtLocalize(w, "Year", "Year"));
+   sge_dstring_append(&sb, (s=lGetString(ep, CAL_year_calendar))?s:
+                              XmtLocalize(w, "NONE", "NONE"));
    items[i++] = XmStringCreateLtoR(sb.s, "LIST");
-   sge_string_free(&sb);
+   sge_dstring_free(&sb);
 
    /* week calendar */
-   sge_string_printf(&sb, "%-20.20s ", "Week");
-   sge_string_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:"NONE");
-   items[i++] = XmStringCreateLtoR(sb.s, "LIST");
-   sge_string_free(&sb);
+   sge_dstring_sprintf(&sb, "%-20.20s ", XmtLocalize(w, "Week", "Week"));
+   sge_dstring_append(&sb, (s=lGetString(ep, CAL_week_calendar))?s:
+                              XmtLocalize(w, "NONE", "NONE"));
+   items[i++] = XmStringCreateLtoR((char*)sge_dstring_get_string(&sb), "LIST");
+   sge_dstring_free(&sb);
 
    XtVaSetValues( cal_conf_list, 
                   XmNitems, items,
@@ -230,7 +234,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ep = lGetElemStr(qmonMirrorList(SGE_CALENDAR_LIST), CAL_name, calname);
+   ep = calendar_list_locate(qmonMirrorList(SGE_CALENDAR_LIST), calname);
 
    XtFree((char*) calname);
 
@@ -357,7 +361,7 @@ XtPointer cld, cad;
       XtVaSetValues( cal_name_w,
                      XmNeditable, False,
                      NULL);
-      calp = lGetElemStr(qmonMirrorList(SGE_CALENDAR_LIST), CAL_name, calstr);
+      calp = calendar_list_locate(qmonMirrorList(SGE_CALENDAR_LIST), calstr);
       XtFree((char*)calstr);
       if (calp) {
          add_mode = 0;

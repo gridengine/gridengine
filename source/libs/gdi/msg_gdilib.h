@@ -39,62 +39,59 @@
 /*
 ** sge_security.c
 */
-#define MSG_QSH_GET_CREDSTDERR_S _("get_cred stderr: %s")
-#define MSG_QSH_QSUBFAILED    _("qsub failed\n")
-#define MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S    _("can't start command \"%s\" to get token - qsub failed\n")
-#define MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S    _("can't start command \"%s\" to get credentials - qsub failed\n")
-#define MSG_QSH_CANTGETCREDENTIALS    _("warning: could not get credentials\n")
-#define MSG_SEC_NOCRED_USSI           _("could not get credentials for job " U32CFormat " for execution host %s - command \"%s\" failed with return code %d\n")
-#define MSG_SEC_STARTDELCREDCMD_SU    _("can't start command \"%s\" for job " U32CFormat " to delete credentials\n")
-#define MSG_SEC_NOAUTH_U              _("job "U32CFormat" rejected because authentication failed\n")
-#define MSG_SEC_NOSTORECRED_USI       _("could not store credentials for job " U32CFormat" - command \"%s\" failed with return code %d\n")
-#define MSG_SEC_NOSTORECREDNOBIN_US   _("could not store client credentials for job " U32CFormat" - %s binary does not exist\n")
-#define MSG_SEC_DELCREDSTDERR_S       _("delete_cred stderr: %s")
-#define MSG_SEC_DELCREDRETCODE_USI    _("could not delete credentials for job " U32CFormat" - command \"%s\" failed with return code %d\n")
-#define MSG_SEC_DELCREDNOBIN_US       _("could not delete credentials for job "U32CFormat" - %s binary does not exist\n")
-#define MSG_SEC_KRBAUTHFAILURE        _("job "U32CFormat" rejected because authentication failed\n")
-#define MSG_SEC_KRBAUTHFAILUREONHOST  _("job "U32CFormat" rejected because authentication failed on host %s\n")
-#define MSG_SEC_PUTCREDSTDERR_S       _("put_cred stderr: %s")
-#define MSG_SEC_NOSTARTCMD4GETCRED_SU _("can't start command \"%s\" for job " U32CFormat " to get credentials\n")
-#define MSG_SEC_NOCREDNOBIN_US        _("could not get client credentials for job " U32CFormat" - %s binary does not exist\n")
-#define MSG_SEC_KRB_CRED_SSSI         _("denied: request for user \"%s\" does not match Kerberos credentials for connection <%s,%s,%d>\n")         
-#define MSG_SEC_CRED_SSSI         _("denied: request for user \"%s\" does not match credentials for connection <%s,%s,%d>\n")         
-#define MSG_SEC_KRBDECRYPTTGT_US      _("could not decrypt TGT for job " U32CFormat "- %s\n")
-#define MSG_SEC_KRBENCRYPTTGT_SSIS    _("could not encrypt TGT for client <%s,%s,%d> - %s\n")
-#define MSG_SEC_KRBENCRYPTTGTUSER_SUS _("could not encrypt TGT for user %s, job "U32CFormat" - %s")
-#define MSG_SEC_NOUID_SU              _("could not get user ID for %s, job "U32CFormat"\n")
+#define MSG_QSH_GET_CREDSTDERR_S _MESSAGE(43000, _("get_cred stderr: "SFN""))
+#define MSG_QSH_QSUBFAILED    _MESSAGE(43001, _("qsub failed\n"))
+#define MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S    _MESSAGE(43002, _("can't start command "SFQ" to get token - qsub failed\n"))
+#define MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S    _MESSAGE(43003, _("can't start command "SFQ" to get credentials - qsub failed\n"))
+#define MSG_QSH_CANTGETCREDENTIALS    _MESSAGE(43004, _("warning: could not get credentials\n"))
+#define MSG_SEC_NOCRED_USSI           _MESSAGE(43005, _("could not get credentials for job " U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(43006, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
+#define MSG_SEC_NOAUTH_U              _MESSAGE(43007, _("job "U32CFormat" rejected because authentication failed (no credentials supplied)\n"))
+#define MSG_SEC_NOSTORECRED_USI       _MESSAGE(43008, _("could not store credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_NOSTORECREDNOBIN_US   _MESSAGE(43009, _("could not store client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+#define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(43010, _("delete_cred stderr: "SFN""))
+#define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(43011, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(43012, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
+#define MSG_SEC_KRBAUTHFAILURE        _MESSAGE(43013, _("job "U32CFormat" rejected because authentication failed\n"))
+#define MSG_SEC_KRBAUTHFAILUREONHOST  _MESSAGE(43014, _("job "U32CFormat" rejected because authentication failed on host "SFN"\n"))
+#define MSG_SEC_PUTCREDSTDERR_S       _MESSAGE(43015, _("put_cred stderr: "SFN""))
+#define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(43016, _("can't start command "SFQ" for job " U32CFormat " to get credentials\n"))
+#define MSG_SEC_NOCREDNOBIN_US        _MESSAGE(43017, _("could not get client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+#define MSG_SEC_KRB_CRED_SSSI         _MESSAGE(43018, _("denied: request for user "SFQ" does not match Kerberos credentials for connection <"SFN","SFN",%d>\n") )         
+#define MSG_SEC_KRBDECRYPTTGT_US      _MESSAGE(43019, _("could not decrypt TGT for job " U32CFormat "- "SFN"\n"))
+#define MSG_SEC_KRBENCRYPTTGT_SSIS    _MESSAGE(43020, _("could not encrypt TGT for client <"SFN","SFN",%d> - "SFN"\n"))
+#define MSG_SEC_KRBENCRYPTTGTUSER_SUS _MESSAGE(43021, _("could not encrypt TGT for user "SFN", job "U32CFormat" - "SFN""))
+#define MSG_SEC_NOUID_SU              _MESSAGE(43022, _("could not get user ID for "SFN", job "U32CFormat"\n"))
 
 
 /*
 ** sge_resource.c
 */
-#define MSG_PARSE_NOALLOCREQRES       _("unable to alloc space for requested resources\n")
-#define MSG_PARSE_NOALLOCATTRLIST     _("unable to alloc space for attrib. list\n")
-#define MSG_PARSE_NOALLOCRESELEM      _("unable to alloc space for resource element\n")
-#define MSG_PARSE_NOVALIDSLOTRANGE_S  _("\"%s\" must be a valid slot range\n")
-#define MSG_PARSE_NOALLOCATTRELEM     _("unable to alloc space for attrib. element\n")
+#define MSG_PARSE_NOALLOCREQRES       _MESSAGE(43023, _("unable to alloc space for requested resources\n"))
+#define MSG_PARSE_NOALLOCATTRLIST     _MESSAGE(43024, _("unable to alloc space for attrib. list\n"))
+#define MSG_PARSE_NOALLOCRESELEM      _MESSAGE(43025, _("unable to alloc space for resource element\n"))
+#define MSG_PARSE_NOVALIDSLOTRANGE_S  _MESSAGE(43026, _(""SFQ" must be a valid slot range\n"))
+#define MSG_PARSE_NOALLOCATTRELEM     _MESSAGE(43027, _("unable to alloc space for attrib. element\n"))
 
 
 /*
 ** sge_parse_date_time.c
 */
-#define MSG_PARSE_STARTTIMETOOLONG    _("Starttime specifier field length exceeds maximum")
-#define MSG_PARSE_INVALIDSECONDS      _("Invalid format of seconds field.")
-#define MSG_PARSE_INVALIDHOURMIN      _("Invalid format of date/hour-minute field.")
-#define MSG_PARSE_INVALIDMONTH        _("Invalid month specification.")
-#define MSG_PARSE_INVALIDDAY          _("Invalid day specification.")
-#define MSG_PARSE_INVALIDHOUR         _("Invalid hour specification.")
-#define MSG_PARSE_INVALIDMINUTE       _("Invalid minute specification.")
-#define MSG_PARSE_INVALIDSECOND       _("Invalid seconds specification.")
-#define MSG_PARSE_NODATEFROMINPUT     _("Couldn't generate date from input. Perhaps a date before 1970 was specified.")
+#define MSG_PARSE_STARTTIMETOOLONG    _MESSAGE(43028, _("Starttime specifier field length exceeds maximum"))
+#define MSG_PARSE_INVALIDSECONDS      _MESSAGE(43029, _("Invalid format of seconds field."))
+#define MSG_PARSE_INVALIDHOURMIN      _MESSAGE(43030, _("Invalid format of date/hour-minute field."))
+#define MSG_PARSE_INVALIDMONTH        _MESSAGE(43031, _("Invalid month specification."))
+#define MSG_PARSE_INVALIDDAY          _MESSAGE(43032, _("Invalid day specification."))
+#define MSG_PARSE_INVALIDHOUR         _MESSAGE(43033, _("Invalid hour specification."))
+#define MSG_PARSE_INVALIDMINUTE       _MESSAGE(43034, _("Invalid minute specification."))
+#define MSG_PARSE_INVALIDSECOND       _MESSAGE(43035, _("Invalid seconds specification."))
+#define MSG_PARSE_NODATEFROMINPUT     _MESSAGE(43036, _("Couldn't generate date from input. Perhaps a date before 1970 was specified."))
+#define MSG_PARSE_NODATE              _MESSAGE(43038, _("no date specified"))
 
 /*
 ** parse.c
 */
-#define MSG_PARSE_XISNOTAVALIDOPTION_S      _("\"%s\" is not a valid option\n")
-#define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _("no option argument provided to \"%s\"")
-#define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _("ERROR! %s option must have argument\n")
-#define MSG_JOB_XISINVALIDJOBTASKID_S       _("ERROR! %s is a invalid job-task identifier\n")
+#define MSG_JOB_XISINVALIDJOBTASKID_S       _MESSAGE(43040, _("ERROR! "SFN" is a invalid job-task identifier\n"))
 
 
 
@@ -103,844 +100,382 @@
 /* 
 ** gdilib/gdi_qmod.c
 */ 
-#define MSG_GDI_INVALIDACTION          _("invalid action" )
-#define MSG_GDI_INVALIDOPTIONFLAG      _("invalid option flag")
-#define MSG_GDI_INVALIDIDENCOUNTERED   _("encountered invalid id")
-#define MSG_GDI_OUTOFMEMORY            _("out of memory")
+#define MSG_GDI_INVALIDACTION          _MESSAGE(43041, _("invalid action" ))
+#define MSG_GDI_INVALIDOPTIONFLAG      _MESSAGE(43042, _("invalid option flag"))
+#define MSG_GDI_INVALIDIDENCOUNTERED   _MESSAGE(43043, _("encountered invalid id"))
+#define MSG_GDI_OUTOFMEMORY            _MESSAGE(43044, _("out of memory"))
 
 /* 
 ** gdilib/sge_any_request.c
 */ 
-#define MSG_GDI_INITSECURITYDATAFAILED                _("failed initialize security data\n")
-#define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _("failed initialize Kerberos security data\n")
-#define MSG_GDI_ENROLLTOCOMMDFAILED_S                 _("can't enroll to commd: %s\n")
-#define MSG_GDI_COMMDUP                               _("commd is up")
-#define MSG_GDI_COMMDDOWN_S                           _("commd is down: %s")
-#define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _("parameter rhost = NULL for sge_send_any_request()")
-#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _("can't send %ssynchronous message to commproc (%s:%d) on host \"%s\": %s")
-#define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _("parameter rhost = NULL for sge_get_any_request()")
-#define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _("can't receive message from commproc (%s:%d) on host \"%s\": %s")
-
-/* 
-** gdilib/exec_wrapper.c
-*/ 
-#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _("reading config file: specifier \"%s\" given twice for \"%s\"\n")
-
+#define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data\n"))
+/* #define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _message(43046, _("failed initialize Kerberos security data\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_GDI_ENROLLTOCOMMDFAILED_S                 _MESSAGE(43047, _("can't enroll to commd: "SFN"\n"))
+#define MSG_GDI_COMMDUP                               _MESSAGE(43048, _("commd is up"))
+#define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43049, _("commd is down: "SFN""))
+#define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
+#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN""))
+#define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
+#define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43053, _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN""))
 
 /* 
 ** gdilib/sge_parse_num_par.c
 */ 
-#define MSG_GDI_VALUETHATCANBESETTOINF                  _("value that can be set to infinity")
-#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _("reading config file: specifier \"%s\" given twice for \"%s\"\n")
-#define MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS            _("reading conf file: unknown specifier \"%s\" for %s\n")
-#define MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S        _("reading conf file: empty enumeration for \"%s\"\n " )
+#define MSG_GDI_VALUETHATCANBESETTOINF                  _MESSAGE(43055, _("value that can be set to infinity"))
+#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _MESSAGE(43056, _("reading config file: specifier "SFQ" given twice for "SFQ"\n"))
+#define MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS            _MESSAGE(43057, _("reading conf file: unknown specifier "SFQ" for "SFN"\n"))
+#define MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S        _MESSAGE(43058, _("reading conf file: empty enumeration for "SFQ"\n " ))
 
 
 /* 
 ** gdilib/sge_parse_num_val.c
 */ 
-#define MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS             _("Error! Unrecognized value-trailer '%20s' near '%20s'\nI expected multipliers k, K, m and M.\nThe value string is probably badly formed!\n" )
-#define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _("Error! Unexpected end of numerical value near %s.\nExpected one of ',', '/' or '\\0'. Got '%c'\n" )
-#define MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS         _("Error! numerical value near %20s for hour exceeded.\n'%20s' is no valid time specifier!\n")
-#define MSG_GDI_NUMERICALVALUEINVALID_SS                _("Error! numerical value near %20s invalid.\n'%20s' is no valid time specifier!\n" )
-#define MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS       _("Error! numerical value near %20s for minute exceeded.\n'%20s' is no valid time specifier!\n")
-#define MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS         _("Error! numerical value near %20s invalid.\n>%20s< contains no valid decimal or fixed float number\n")
-#define MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS      _("Error! numerical value near %s invalid.\n'%s' contains no valid hex or octal number\n")
+#define MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS             _MESSAGE(43059, _("Error! Unrecognized value-trailer '%20s' near '%20s'\nI expected multipliers k, K, m and M.\nThe value string is probably badly formed!\n" ))
+#define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _MESSAGE(43060, _("Error! Unexpected end of numerical value near "SFN".\nExpected one of ',', '/' or '\\0'. Got '%c'\n" ))
+#define MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS         _MESSAGE(43061, _("Error! numerical value near %20s for hour exceeded.\n'%20s' is no valid time specifier!\n"))
+#define MSG_GDI_NUMERICALVALUEINVALID_SS                _MESSAGE(43062, _("Error! numerical value near %20s invalid.\n'%20s' is no valid time specifier!\n" ))
+#define MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS       _MESSAGE(43063, _("Error! numerical value near %20s for minute exceeded.\n'%20s' is no valid time specifier!\n"))
+#define MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS         _MESSAGE(43064, _("Error! numerical value near %20s invalid.\n>%20s< contains no valid decimal or fixed float number\n"))
+#define MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS      _MESSAGE(43065, _("Error! numerical value near "SFN" invalid.\n'"SFN"' contains no valid hex or octal number\n"))
 
 
 
 /* 
 ** gdilib/sge_qexec.c
-*/ 
-#define MSG_GDI_RETRIEVINGLOCALHOSTNAMEFAILED_S          _("failed retrieving local hostname: %s")
-#define MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS          _("failed resolving uid %d to username: %s")
-#define MSG_GDI_MISSINGJOBIDENVIRONMENT                  _("missing JOB_ID in environment")
-#define MSG_GDI_STRINGINJOBIDISINVALID_S                 _("string \"%s\" in env var JOB_ID is not a valid jobid")
-#define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _("proposed task id %s \"%s\" is invalid")
-#define MSG_GDI_TASKEXISTS_S                             _("task %s already exists")
-#define MSG_GDI_SETUPGDILIBFAILED                        _("failed setting up gdi library")
-#define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _("failed sending task to execd@%s: %s"                  )
-#define MSG_GDI_TASKNOTEXIST_I                           _("task %d does not exist")
-#define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _("rcv_from_exec(): failed enrolling to local sge commd: %s")
-#define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _("failed receiving message from execd: %s %d")
-#define MSG_GDI_TASKNOTFOUND_S                           _("cannot find task with taskid \"%s\"\n")
-#define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _("cannot find task without taskid - should become task \"%s\"")
+*/
+#define MSG_GDI_INVALIDPARAMETER_SS                      _MESSAGE(43066, _("invalid paramter to "SFQ": "SFQ))
+#define MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS          _MESSAGE(43067, _("failed resolving uid %d to username: "SFN""))
+#define MSG_GDI_MISSINGINENVIRONMENT_S                   _MESSAGE(43068, _("missing "SFQ" in environment"))
+#define MSG_GDI_STRINGISINVALID_SS                       _MESSAGE(43069, _("string "SFQ" in env var "SFQ" is not a valid job/taskid"))
+/* #define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _message(43070, _("proposed task id "SFN" "SFQ" is invalid")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_TASKEXISTS_S                             _message(43071, _("task "SFN" already exists")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_SETUPGDILIBFAILED                        _message(43072, _("failed setting up gdi library")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _MESSAGE(43073, _("failed sending task to execd@"SFN": "SFN""                  ))
+#define MSG_GDI_TASKNOTEXIST_S                           _MESSAGE(43074, _("task "SFQ" does not exist"))
+/* #define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _message(43075, _("rcv_from_exec(): failed enrolling to local sge commd: "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _MESSAGE(43076, _("failed receiving message from execd: "SFN" %d"))
+#define MSG_GDI_TASKNOTFOUND_S                           _MESSAGE(43077, _("cannot find task with taskid "SFQ"\n"))
+#define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _MESSAGE(43078, _("cannot find task without taskid - should become task "SFQ""))
 
 
 
 /* 
 ** gdilib/sge_report.c
 */
-#define MSG_GDI_REPORTNOMEMORY_I                         _("not enough memory for packing report: %d bytes\n")
-#define MSG_GDI_REPORTFORMATERROR                        _("format error while packing report\n")
-#define MSG_GDI_REPORTUNKNOWERROR                        _("unexpected error while packing report\n")
+#define MSG_GDI_REPORTNOMEMORY_I                         _MESSAGE(43079, _("not enough memory for packing report: %d bytes\n"))
+#define MSG_GDI_REPORTFORMATERROR                        _MESSAGE(43080, _("format error while packing report\n"))
+#define MSG_GDI_REPORTUNKNOWERROR                        _MESSAGE(43081, _("unexpected error while packing report\n"))
 
 
 /* 
 ** gdilib/config.c
 */
-#define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _("no argument given in config option: %s\n")
-#define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _("missing configuration attribute \"%s\"")
-#define MSG_GDI_CONFIGADDLISTFAILED_S                    _("can't add \"%s\" to list")
-#define MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS              _("value for attribute %s \"%s\" is not an integer\n")
-#define MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS               _("value for attribute %s \"%s\" is not a double\n")
-#define MSG_GDI_CONFIGARGUMENTNOTTIME_SS                 _("value for attribute %s \"%s\" is not time\n")
-#define MSG_GDI_CONFIGARGUMENTNOMEMORY_SS                _("value for attribute %s \"%s\" is not memory\n")
-#define MSG_GDI_CONFIGINVALIDQUEUESPECIFIED              _("reading conf file: invalid queue type specified\n")
-#define MSG_GDI_CONFIGREADFILEERRORNEAR_SS               _("reading conf file: %s error near \"%s\"\n")
-
-
-
+#define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _MESSAGE(43082, _("no argument given in config option: "SFN"\n"))
+#define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _MESSAGE(43083, _("missing configuration attribute "SFQ""))
+#define MSG_GDI_CONFIGADDLISTFAILED_S                    _MESSAGE(43084, _("can't add "SFQ" to list"))
+#define MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS              _MESSAGE(43085, _("value for attribute "SFN" "SFQ" is not an integer\n"))
+#define MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS               _MESSAGE(43086, _("value for attribute "SFN" "SFQ" is not a double\n"))
+#define MSG_GDI_CONFIGARGUMENTNOTTIME_SS                 _MESSAGE(43087, _("value for attribute "SFN" "SFQ" is not time\n"))
+#define MSG_GDI_CONFIGARGUMENTNOMEMORY_SS                _MESSAGE(43088, _("value for attribute "SFN" "SFQ" is not memory\n"))
+#define MSG_GDI_CONFIGINVALIDQUEUESPECIFIED              _MESSAGE(43089, _("reading conf file: invalid queue type specified\n"))
+#define MSG_GDI_CONFIGREADFILEERRORNEAR_SS               _MESSAGE(43090, _("reading conf file: "SFN" error near "SFQ"\n"))
 
 /* 
-** gdilib/parse_range.c
+** gdilib/sge_range.c
 */
-#define MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S          _("Numerical value invalid!\nThe initial portion of string \"%s\" contains no decimal number\n")
-#define MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS      _("Range specifier \"%s\" has unknown trailer \"%s\"\n")
-#define MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED        _("unexpected range following \"UNDEFINED\"\n")
-#define MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE        _("unexpected \"UNDEFINED\" following range\n")
+#define MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S          _MESSAGE(43091, _("Numerical value invalid!\nThe initial portion of string "SFQ" contains no decimal number\n"))
+#define MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS      _MESSAGE(43092, _("Range specifier "SFQ" has unknown trailer "SFQ"\n"))
+#define MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED        _MESSAGE(43093, _("unexpected range following \"UNDEFINED\"\n"))
+#define MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE        _MESSAGE(43094, _("unexpected \"UNDEFINED\" following range\n"))
 
 
 /* 
 ** gdilib/sge_feature.c
 */
-#define MSG_GDI_PRODUCTMODENOTSETFORFILE_S               _("can't read \"%s\" - product mode not set.")
-#define MSG_GDI_INVALIDPRODUCTMODESTRING_S               _("invalid product mode string "SFQ"\n")
-#define MSG_GDI_CORRUPTPRODMODFILE_S                     _("product mode file "SFQ" is incorrect\n")
-#define MSG_GDI_SWITCHFROMTO_SS                          _("switching from "SFQ" to "SFQ" feature set\n")
+#define MSG_GDI_PRODUCTMODENOTSETFORFILE_S               _MESSAGE(43095, _("can't read "SFQ" - product mode not set."))
+#define MSG_GDI_INVALIDPRODUCTMODESTRING_S               _MESSAGE(43096, _("invalid product mode string "SFQ"\n"))
+#define MSG_GDI_CORRUPTPRODMODFILE_S                     _MESSAGE(43097, _("product mode file "SFQ" is incorrect\n"))
+#define MSG_GDI_SWITCHFROMTO_SS                          _MESSAGE(43098, _("switching from "SFQ" to "SFQ" feature set\n"))
 
 /* 
 ** gdilib/qm_name.c
 */
-#define MSG_GDI_NULLPOINTERPASSED                        _("NULL pointer passed to \"master_host\" or \"master_file\"")
-#define MSG_GDI_OPENMASTERFILEFAILED_S                   _("can't open \"%s\" for reading qmaster hostname")
-#define MSG_GDI_READMASTERHOSTNAMEFAILED_S               _("can't read qmaster hostname in \"%s\"")
-#define MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S            _("qmaster hostname in \"%s\" has zero length")
-#define MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI            _("qmaster hostname in \"%s\" exceeds %d characters\n")
-#define MSG_GDI_OPENWRITEMASTERHOSTNAMEFAILED_SS         _("can't open \"%s\" for writing qmaster hostname: %s")
-#define MSG_GDI_WRITEMASTERHOSTNAMEFAILED_S              _("can't write qmaster hostname into \"%s\"")
-#define MSG_GDI_FOPEN_FAILED                             _("fopen("SFQ") failed: %s\n")
+#define MSG_GDI_NULLPOINTERPASSED                        _MESSAGE(43099, _("NULL pointer passed to \"master_host\" or \"master_file\""))
+#define MSG_GDI_OPENMASTERFILEFAILED_S                   _MESSAGE(43100, _("can't open "SFQ" for reading qmaster hostname"))
+#define MSG_GDI_READMASTERHOSTNAMEFAILED_S               _MESSAGE(43101, _("can't read qmaster hostname in "SFQ""))
+#define MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S            _MESSAGE(43102, _("qmaster hostname in "SFQ" has zero length"))
+#define MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI            _MESSAGE(43103, _("qmaster hostname in "SFQ" exceeds %d characters\n"))
+#define MSG_GDI_OPENWRITEMASTERHOSTNAMEFAILED_SS         _MESSAGE(43104, _("can't open "SFQ" for writing qmaster hostname: "SFN""))
+#define MSG_GDI_WRITEMASTERHOSTNAMEFAILED_S              _MESSAGE(43105, _("can't write qmaster hostname into "SFQ""))
+#define MSG_GDI_FOPEN_FAILED                             _MESSAGE(43106, _("fopen("SFQ") failed: "SFN"\n"))
 
 
 /* 
 ** gdilib/resolve.c
 */
-#define MSG_GDI_READMASTERNAMEFAILED_S                   _("unable to read qmaster name: %s")
+#define MSG_GDI_READMASTERNAMEFAILED_S                   _MESSAGE(43107, _("unable to read qmaster name: "SFN""))
 
 
 
 /* 
 ** gdilib/setup.c
 */
-#define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _("%s is not a valid SGE_COMPRESSION_LEVEL\n")
-#define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _("Setting compression level to "U32CFormat"\n")
-#define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _("%s is not a valid SGE_COMPRESSION_THRESHOLD\n")
-#define MSG_GDI_SETCOMPRESSIONTHRESHOLD_D                _("Setting compression threshold to "U32CFormat"\n")
+#define MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S             _MESSAGE(43108, _("can't read "SFQ" - host compare policy not set."))
+#define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _MESSAGE(43109, _(""SFN" is not a valid SGE_COMPRESSION_LEVEL\n"))
+#define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _MESSAGE(43110, _("Setting compression level to "U32CFormat"\n"))
+#define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _MESSAGE(43111, _(""SFN" is not a valid SGE_COMPRESSION_THRESHOLD\n"))
+#define MSG_GDI_SETCOMPRESSIONTHRESHOLD_D                _MESSAGE(43112, _("Setting compression threshold to "U32CFormat"\n"))
 
 
 /* 
 ** gdilib/setup_path.c
 */
-#define MSG_GDI_SGEROOTNOTADIRECTORY_S                   _("$SGE_ROOT=%s is not a directory\n")
-#define MSG_GDI_DIRECTORYNOTEXIST_S                      _("directory doesn't exist: %s\n")
-#define MSG_SGETEXT_NOSGECELL_S                _("cell directory "SFQ" doesn't exist\n")
+#define MSG_GDI_SGEROOTNOTADIRECTORY_S                   _MESSAGE(43113, _("$SGE_ROOT="SFN" is not a directory\n"))
+#define MSG_GDI_DIRECTORYNOTEXIST_S                      _MESSAGE(43114, _("directory doesn't exist: "SFN"\n"))
+#define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(43115, _("cell directory "SFQ" doesn't exist\n"))
 
 
-/* 
-** gdilib/usage.c
-*/
-#define MSG_GDI_ARGUMENTSYNTAX_OA_ACCOUNT_STRING       "account_string          account_name"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_COMPLEX_LIST         "complex_list            complex[,complex,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_CONTEXT_LIST         "context_list            variable[=value][,variable[=value],...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_CKPT_SEL             "ckpt_selector           `n' `s' `m' `x' <interval> "
-#define MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME            "date_time               [[CC]YY]MMDDhhmm[.SS]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST       "destin_id_list          queue[ queue ...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name}[,{job_id|job_name},...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST        "listname_list           listname[,listname,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_LIST            "mail_list               mail_address[,mail_address,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS         "mail_options            `e' `b' `a' `n' `s'"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_LIST            "node_list               node_path[,node_path,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH            "node_path               [/]node_name[[/.]node_name...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST     "node_shares_list        node_path=shares[,node_path=shares,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST            "path_list               [host:]path[,[host:]path,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_PRIORITY             "priority                -1023 - 1024"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_RESOURCE_LIST        "resource_list           resource[=value][,resource[=value],...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_SERVER               "server                  hostname"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_SERVER_LIST          "server_list             server[,server,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_SIGNAL               "signal                  -int_val, symbolic names"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_SIMPLE_CONTEXT_LIST  "simple_context_list     variable[,variable,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_SLOT_RANGE           "slot_range              [n[-m]|[-]m] - n,m > 0"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_STATES               "states                  `e' `q' `r' `t' `h' `w' `m' `s'"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASK_LIST        "job_task_list           job_tasks [,job_tasks, ...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS            "job_tasks               job_id['.'task_id_range]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user[,user,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\""
-#define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
-#define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
-#define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST     "host_list               all | hostname[,hostname,...]" 
 
 
 
-
-#define MSG_GDI_USAGE_USAGESTRING                     _("usage:")
-
-#define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
-#define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _("request a job start time")
-
-
-#define MSG_GDI_USAGE_ac_OPT_COMPLEX_NAME                "[-ac complex_name]"
-#define MSG_GDI_UTEXT_ac_OPT_COMPLEX_NAME                _("add a new complex" )
-
-#define MSG_GDI_USAGE_ac_OPT_CONTEXT_LIST                "[-ac context_list]"
-#define MSG_GDI_UTEXT_ac_OPT_CONTEXT_LIST                _("add context variable(s)")
-
-#define MSG_GDI_USAGE_Ac_OPT_COMPLEX_NAME_FNAME          "[-Ac complex_name fname]"
-#define MSG_GDI_UTEXT_Ac_OPT_COMPLEX_NAME_FNAME          _("add a new complex from file")
-
-#define MSG_GDI_USAGE_acal_OPT_FNAME                     "[-acal calendar_name]"
-#define MSG_GDI_UTEXT_acal_OPT_FNAME                     _("add a new calendar")
-
-#define MSG_GDI_USAGE_Acal_OPT_FNAME                     "[-Acal fname]"
-#define MSG_GDI_UTEXT_Acal_OPT_FNAME                     _("add a new calendar from file")
-
-#define MSG_GDI_USAGE_ackpt_OPT_CKPT_NAME                "[-ackpt ckpt_name]"
-#define MSG_GDI_UTEXT_ackpt_OPT_CKPT_NAME                _("add a ckpt interface definition")
-
-#define MSG_GDI_USAGE_Ackpt_OPT_FNAME                    "[-Ackpt fname]"
-#define MSG_GDI_UTEXT_Ackpt_OPT_FNAME                    _("add a ckpt interface definition from file")
-
-#define MSG_GDI_USAGE_aconf_OPT_HOST_LIST                "[-aconf host_list]"
-#define MSG_GDI_UTEXT_aconf_OPT_HOST_LIST                _("add configurations")
-
-#define MSG_GDI_USAGE_Aconf_OPT_FILE_LIST                "[-Aconf file_list]"
-#define MSG_GDI_UTEXT_Aconf_OPT_FILE_LIST                _("add configurations from file_list")
-
-#define MSG_GDI_USAGE_ae_OPT_EXEC_SERVER_TEMPLATE        "[-ae [exec_server_template]]"
-#define MSG_GDI_UTEXT_ae_OPT_EXEC_SERVER_TEMPLATE        _("add an exec host using a template")
-
-#define MSG_GDI_USAGE_Ae_OPT_FNAME                       "[-Ae fname]"
-#define MSG_GDI_UTEXT_Ae_OPT_FNAME                       _("add an exec host from file")
-
-#define MSG_GDI_USAGE_ah_OPT_HOSTNAME                    "[-ah hostname]"
-#define MSG_GDI_UTEXT_ah_OPT_HOSTNAME                    _("add an administrative host")
-
-#define MSG_GDI_USAGE_am_OPT_USER_LIST                   "[-am user_list]"
-#define MSG_GDI_UTEXT_am_OPT_USER_LIST                   _("add user to manager list")
-
-#define MSG_GDI_USAGE_ao_OPT_USER_LIST                   "[-ao user_list]"
-#define MSG_GDI_UTEXT_ao_OPT_USER_LIST                   _("add user to operator list")
-
-#define MSG_GDI_USAGE_ap_OPT_PE_NAME                     "[-ap pe-name]"
-#define MSG_GDI_UTEXT_ap_OPT_PE_NAME                     _("add a new parallel environment")
-
-#define MSG_GDI_USAGE_Ap_OPT_FNAME                       "[-Ap fname]"
-#define MSG_GDI_UTEXT_Ap_OPT_FNAME                       _("add a new parallel environment from file")
-
-#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq [q_template]]"
-#define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _("add a new queue using the given template")
-
-#define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname]"
-#define MSG_GDI_UTEXT_as_OPT_HOSTNAME                    _("add a submit host")
-
-#define MSG_GDI_USAGE_ASTNODE_NODE_SHARES_LIST           "[-astnode node_shares_list]"
-#define MSG_GDI_UTEXT_ASTNODE_NODE_SHARES_LIST           _("add sharetree node(s)")
-
-#define MSG_GDI_USAGE_ASTREE                             "[-astree]"
-#define MSG_GDI_UTEXT_ASTREE                             _("create/modify the sharetree")
-
-#define MSG_GDI_USAGE_au_OPT_USER_LIST_LISTNAME_LIST     "[-au user_list listname_list]"
-#define MSG_GDI_UTEXT_au_OPT_USER_LIST_LISTNAME_LIST     _("add user(s) to userset list(s)")
-
-#define MSG_GDI_USAGE_Au_OPT_LISTNAME_LIST               "[-Au fname]"
-#define MSG_GDI_UTEXT_Au_OPT_LISTNAME_LIST               _("add userset from file")
-
-#define MSG_GDI_USAGE_AUSER                              "[-auser]"
-#define MSG_GDI_UTEXT_AUSER                              _("add user")
-
-#define MSG_GDI_USAGE_Auser                              "[-Auser fname]"
-#define MSG_GDI_UTEXT_Auser                              _("add user from file")
-
-#define MSG_GDI_USAGE_APRJ                               "[-aprj]"
-#define MSG_GDI_UTEXT_APRJ                               _("add project")
-
-#define MSG_GDI_USAGE_Aprj                               "[-Aprj fname]"
-#define MSG_GDI_UTEXT_Aprj                               _("add project from file")
-
-#define MSG_GDI_USAGE_Mprj_OPT_PROJECT                   "[-Mprj fname]"
-#define MSG_GDI_UTEXT_Mprj_OPT_PROJECT                   _("modify project from file")
-
-#define MSG_GDI_USAGE_A_OPT_ACCOUNT_STRING               "[-A account_string]"
-#define MSG_GDI_UTEXT_A_OPT_ACCOUNT_STRING               _("use account at host")
-
-#define MSG_GDI_USAGE_Aq_OPT_FNAME                       "[-Aq fname]"
-#define MSG_GDI_UTEXT_Aq_OPT_FNAME                       _("add a queue from file")
-
-#define MSG_GDI_USAGE_c_OPT_CKPT_SELECTOR                "[-c ckpt_selector]"
-#define MSG_GDI_UTEXT_c_OPT_CKPT_SELECTOR                _("define type of checkpointing for job")
-
-#define MSG_GDI_USAGE_c_OPT                              "[-c]"
-#define MSG_GDI_UTEXT_c_OPT                              _("clear queue error state")
-
-#define MSG_GDI_USAGE_ckpt_OPT_CKPT_NAME                 "[-ckpt ckpt-name]"
-#define MSG_GDI_UTEXT_ckpt_OPT_CKPT_NAME                 _("request checkpoint method")
-
-#define MSG_GDI_USAGE_clear_OPT                          "[-clear]"
-#define MSG_GDI_UTEXT_clear_OPT                          _("skip previous definitions for job")
-
-#define MSG_GDI_USAGE_clearusage_OPT                     "[-clearusage]"
-#define MSG_GDI_UTEXT_clearusage_OPT                     _("clear all user/project sharetree usage")
-
-#define MSG_GDI_USAGE_cwd_OPT                            "[-cwd]"
-#define MSG_GDI_UTEXT_cwd_OPT                            _("use current working directory")
-
-#define MSG_GDI_USAGE_cq_OPT_DESTIN_ID_LIST              "[-cq destin_id_list]"
-#define MSG_GDI_UTEXT_cq_OPT_DESTIN_ID_LIST              _("clean queue")
-
-#define MSG_GDI_USAGE_C_OPT_DIRECTIVE_PREFIX             "[-C directive_prefix]"
-#define MSG_GDI_UTEXT_C_OPT_DIRECTIVE_PREFIX             _("define command prefix for job script")
-
-#define MSG_GDI_USAGE_d_OPT                              "[-d]"
-#define MSG_GDI_UTEXT_d_OPT                              _("disable")
-
-#define MSG_GDI_USAGE_dc_OPT_COMPLEXNAME                 "[-dc complexname]"
-#define MSG_GDI_UTEXT_dc_OPT_COMPLEXNAME                 _("remove a complex")
-
-#define MSG_GDI_USAGE_dc_OPT_SIMPLE_COMPLEX_LIST         "[-dc simple_context_list]"
-#define MSG_GDI_UTEXT_dc_OPT_SIMPLE_COMPLEX_LIST         _("remove context variable(s)")
-
-#define MSG_GDI_USAGE_dcal_OPT_CALENDAR_NAME             "[-dcal calendar_name]"
-#define MSG_GDI_UTEXT_dcal_OPT_CALENDAR_NAME             _("remove a calendar")
-
-#define MSG_GDI_USAGE_dckpt_OPT_CKPT_NAME                "[-dckpt ckpt_name]"
-#define MSG_GDI_UTEXT_dckpt_OPT_CKPT_NAME                _("remove a ckpt interface definition")
-
-#define MSG_GDI_USAGE_dconf_OPT_HOST_LIST                "[-dconf host_list]"
-#define MSG_GDI_UTEXT_dconf_OPT_HOST_LIST                _("delete local configurations")
-
-#define MSG_GDI_USAGE_de_OPT_HOST_LIST                   "[-de host_list]"
-#define MSG_GDI_UTEXT_de_OPT_HOST_LIST                   _("remove an exec server")
-
-#define MSG_GDI_USAGE_display_OPT_DISPLAY                "[-display display]"
-#define MSG_GDI_UTEXT_display_OPT_DISPLAY                _("set display to display interactive job")
-
-#define MSG_GDI_USAGE_dh_OPT_HOST_LIST                   "[-dh host_list]"
-#define MSG_GDI_UTEXT_dh_OPT_HOST_LIST                   _("remove an administrative host")
-
-#define MSG_GDI_USAGE_dl_OPT_DATE_TIME                   "[-dl date_time]"
-#define MSG_GDI_UTEXT_dl_OPT_DATE_TIME                   _("request a deadline initiation time")
-
-#define MSG_GDI_USAGE_dm_OPT_USER_LIST                   "[-dm user_list]"
-#define MSG_GDI_UTEXT_dm_OPT_USER_LIST                   _("remove user from manager list")
-
-#define MSG_GDI_USAGE_do_OPT_USER_LIST                   "[-do user_list]"
-#define MSG_GDI_UTEXT_do_OPT_USER_LIST                   _("remove user from operator list")
-
-#define MSG_GDI_USAGE_dp_OPT_PE_NAME                     "[-dp pe-name]"
-#define MSG_GDI_UTEXT_dp_OPT_PE_NAME                     _("remove a parallel environment")
-
-#define MSG_GDI_USAGE_dq_OPT_DESTIN_ID_LIST              "[-dq destin_id_list]"
-#define MSG_GDI_UTEXT_dq_OPT_DESTIN_ID_LIST              _("remove a queue")
-
-#define MSG_GDI_USAGE_ds_OPT_HOST_LIST                   "[-ds host_list]"
-#define MSG_GDI_UTEXT_ds_OPT_HOST_LIST                   _("remove submit host")
-
-#define MSG_GDI_USAGE_DSTNODE_NODELIST                   "[-dstnode node_list]"
-#define MSG_GDI_UTEXT_DSTNODE_NODELIST                   _("remove sharetree node(s)")
-
-#define MSG_GDI_USAGE_DSTREE                             "[-dstree]"
-#define MSG_GDI_UTEXT_DSTREE                             _("delete the sharetree")
-
-#define MSG_GDI_USAGE_du_OPT_USER_LIST_LISTNAME_LIST     "[-du user_list listname_list]"
-#define MSG_GDI_UTEXT_du_OPT_USER_LIST_LISTNAME_LIST     _("remove user(s) from userset list(s)")
-
-#define MSG_GDI_USAGE_dul_OPT_LISTNAME_LIST              "[-dul listname_list]"
-#define MSG_GDI_UTEXT_dul_OPT_LISTNAME_LIST              _("remove userset list(s) completely")
-
-#define MSG_GDI_USAGE_DUSER_USER                         "[-duser user_list]"
-#define MSG_GDI_UTEXT_DUSER_USER                         _("delete user")
-
-#define MSG_GDI_USAGE_dprj_OPT_PROJECT                   "[-dprj project_list]"
-#define MSG_GDI_UTEXT_dprj_OPT_PROJECT                   _("delete project")
-
-#define MSG_GDI_USAGE_e_OPT                              "[-e]"
-#define MSG_GDI_UTEXT_e_OPT                              _("enable")
-
-#define MSG_GDI_USAGE_e_OPT_PATH_LIST                    "[-e path_list]"
-#define MSG_GDI_UTEXT_e_OPT_PATH_LIST                    _("specify standard error stream path(s)")
-
-#define MSG_GDI_USAGE_ext_OPT                            "[-ext]"
-#define MSG_GDI_UTEXT_ext_OPT                            _("view also scheduling attributes")
-
-#define MSG_GDI_USAGE_f_OPT                              "[-f]"
-#define MSG_GDI_UTEXT_f_OPT_FULL_OUTPUT                  _("full output")
-#define MSG_GDI_UTEXT_f_OPT_FORCE_ACTION                 _("force action"                              )
-
-#define MSG_GDI_USAGE_h_OPT_HOLD_LIST                    "[-h hold_list]"
-#define MSG_GDI_UTEXT_h_OPT_HOLD_LIST                    _("assign holds for jobs or tasks")
-
-#define MSG_GDI_USAGE_h_OPT                              "[-h]"
-#define MSG_GDI_UTEXT_h_OPT                              _("place user hold on job")
-
-#define MSG_GDI_USAGE_hard_OPT                           "[-hard]"
-#define MSG_GDI_UTEXT_hard_OPT                           _("consider following requests \"hard\"")
-
-#define MSG_GDI_USAGE_help_OPT                           "[-help]"
-#define MSG_GDI_UTEXT_help_OPT                           _("print this help")
-
-#define MSG_GDI_USAGE_hold_jid_OPT                       "[-hold_jid job_identifier_list]"
-#define MSG_GDI_UTEXT_hold_jid_OPT                       _("define jobnet interdependencies")
-
-#define MSG_GDI_USAGE_j_OPT_YN                           "[-j y|n]"
-#define MSG_GDI_UTEXT_j_OPT_YN                           _("merge stdout and stderr stream of job")
-
-#define MSG_GDI_USAGE_jid_OPT_JOB_ID_LIST                "[-jid job_id_list]"
-#define MSG_GDI_UTEXT_jid_OPT_JOB_ID_LIST_PRINTED        _("jobs to be printed")
-#define MSG_GDI_UTEXT_jid_OPT_JOB_ID_LIST_ALTERED        _("jobs to be altered")
-
-#define MSG_GDI_USAGE_jid_OPT_JID                        "[-jid jid]"
-
-
-#define MSG_GDI_USAGE_ke_OPT_HOSTS                       "[-ke[j] host_list"
-#define MSG_GDI_UTEXT_ke_OPT_HOSTS                       _("shutdown execution daemon(s)")
-
-#define MSG_GDI_USAGE_k_OPT_MASTERORSCHEDULINGDAEMON     "[-k{m|s}]"
-#define MSG_GDI_UTEXT_k_OPT_MASTERORSCHEDULINGDAEMON     _("shutdown master|scheduling daemon")
-
-#define MSG_GDI_USAGE_kqs_OPT                            "[-kqs]"
-                         
-
-#define MSG_GDI_USAGE_l_OPT_RESOURCE_LIST                "[-l resource_list]"
-#define MSG_GDI_UTEXT_l_OPT_RESOURCE_LIST                _("request the given resources")
-
-#define MSG_GDI_USAGE_lj_OPT_LOG_FILE                    "[-lj log_file]"
-#define MSG_GDI_UTEXT_lj_OPT_LOG_FILE                    _("write job logging to log file")
-
-#define MSG_GDI_USAGE_m_OPT_MAIL_OPTIONS                 "[-m mail_options]"
-#define MSG_GDI_UTEXT_m_OPT_MAIL_OPTIONS                 _("define mail notification events")
-
-#define MSG_GDI_USAGE_mc_OPT_COMPLEX                     "[-mc [complex]]"
-#define MSG_GDI_UTEXT_mc_OPT_COMPLEX                     _("modify a complex")
-
-#define MSG_GDI_USAGE_mckpt_OPT_CKPT_NAME                "[-mckpt ckpt_name]"
-#define MSG_GDI_UTEXT_mckpt_OPT_CKPT_NAME                _("modify a ckpt interface definition")
-
-#define MSG_GDI_USAGE_Mc_OPT_COMPLEX_NAME_FNAME          "[-Mc complex_name fname]"
-#define MSG_GDI_UTEXT_Mc_OPT_COMPLEX_NAME_FNAME          _("modify a complex from file")
-
-#define MSG_GDI_USAGE_mcal_OPT_CALENDAR_NAME             "[-mcal calendar_name]"
-#define MSG_GDI_UTEXT_mcal_OPT_CALENDAR_NAME             _("modify calendar")
-
-#define MSG_GDI_USAGE_Mcal_OPT_FNAME                     "[-Mcal fname]"
-#define MSG_GDI_UTEXT_Mcal_OPT_FNAME                     _("modify calendar from file")
-
-#define MSG_GDI_USAGE_Mckpt_OPT_FNAME                    "[-Mckpt fname]"
-#define MSG_GDI_UTEXT_Mckpt_OPT_FNAME                    _("modify a ckpt interface definition from file")
-
-#define MSG_GDI_USAGE_mconf_OPT_HOSTLISTORGLOBAL         "[-mconf [host_list|global]]"
-#define MSG_GDI_UTEXT_mconf_OPT_HOSTLISTORGLOBAL         _("modify configurations")
-
-#define MSG_GDI_USAGE_msconf_OPT                         "[-msconf]"
-#define MSG_GDI_UTEXT_msconf_OPT                         _("modify scheduler configuration")
-
-#define MSG_GDI_USAGE_me_OPT_SERVER                      "[-me server]"
-#define MSG_GDI_UTEXT_me_OPT_SERVER                      _("modify exec server")
-
-#define MSG_GDI_USAGE_Me_OPT_FNAME                       "[-Me fname]"
-#define MSG_GDI_UTEXT_Me_OPT_FNAME                       _("modify exec server from file")
-
-#define MSG_GDI_USAGE_mp_OPT_PE_NAME                     "[-mp pe-name]"  
-#define MSG_GDI_UTEXT_mp_OPT_PE_NAME                     _("modify a parallel environment")
-
-#define MSG_GDI_USAGE_Mp_OPT_FNAME                       "[-Mp fname]"
-#define MSG_GDI_UTEXT_Mp_OPT_FNAME                       _("modify a parallel environment from file")
-
-#define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq [queue]]"
-#define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _("modify a queue")
-
-#define MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   "[-mqattr attr_name value destin_id_list]"
-#define MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   _("modify particular queue attributes")
-
-#define MSG_GDI_USAGE_Mq_OPT_FNAME                       "[-Mq fname]"
-#define MSG_GDI_UTEXT_Mq_OPT_FNAME                       _("modify a queue from file")
-
-#define MSG_GDI_USAGE_Mqattr_OPT_FNAME_DESTIN_ID_LIST    "[-Mqattr fname destin_id_list]"
-#define MSG_GDI_UTEXT_Mqattr_OPT_FNAME_DESTIN_ID_LIST    _("modify particular queue attributes from file")
-
-#define MSG_GDI_USAGE_mu_OPT_LISTNAME_LIST               "[-mu listname_list]"
-#define MSG_GDI_UTEXT_mu_OPT_LISTNAME_LIST               _("modify the given userset list")
-
-#define MSG_GDI_USAGE_Mu_OPT_LISTNAME_LIST               "[-Mu fname]"
-#define MSG_GDI_UTEXT_Mu_OPT_LISTNAME_LIST               _("modify userset from file")
-
-#define MSG_GDI_USAGE_muser_OPT_USER                     "[-muser user]"
-#define MSG_GDI_UTEXT_muser_OPT_USER                     _("modify a user")
-
-#define MSG_GDI_USAGE_Muser_OPT_USER                     "[-Muser fname]"
-#define MSG_GDI_UTEXT_Muser_OPT_USER                     _("modify a user from file")
-
-#define MSG_GDI_USAGE_mprj_OPT_PROJECT                   "[-mprj project]"
-#define MSG_GDI_UTEXT_mprj_OPT_PROJECT                   _("modify a project")
-
-#define MSG_GDI_USAGE_MSTNODE_NODE_SHARES_LIST           "[-mstnode node_shares_list]"
-#define MSG_GDI_UTEXT_MSTNODE_NODE_SHARES_LIST           _("modify sharetree node(s)")
-
-#define MSG_GDI_USAGE_MSTREE                             "[-mstree]"
-#define MSG_GDI_UTEXT_MSTREE                             _("modify/create the sharetree")
-
-#define MSG_GDI_USAGE_notify_OPT                         "[-notify]"
-#define MSG_GDI_UTEXT_notify_OPT                         _("notify job before killing/suspending it")
-
-#define MSG_GDI_USAGE_now_OPT_YN                         "[-now y[es]|n[o]]"
-#define MSG_GDI_UTEXT_now_OPT_YN                         _("start job immediately or not at all")
-
-#define MSG_GDI_USAGE_M_OPT_MAIL_LIST                    "[-M mail_list]"
-#define MSG_GDI_UTEXT_M_OPT_MAIL_LIST                    _("notify these e-mail addresses")
-
-#define MSG_GDI_USAGE_N_OPT_NAME                         "[-N name]"
-#define MSG_GDI_UTEXT_N_OPT_NAME                         _("specify job name")
-
-#define MSG_GDI_USAGE_o_OPT_PATH_LIST                    "[-o path_list]"
-#define MSG_GDI_UTEXT_o_OPT_PATH_LIST                    _("specify standard output stream path(s)")
-
-#define MSG_GDI_USAGE_ot_OPT_TICKETS                     "[-ot tickets]"
-#define MSG_GDI_UTEXT_ot_OPT_TICKETS                     _("set job's override tickets")
-
-#define MSG_GDI_USAGE_P_OPT_PROJECT_NAME                 "[-P project_name]"
-#define MSG_GDI_UTEXT_P_OPT_PROJECT_NAME                 _("set job's project")
-
-#define MSG_GDI_USAGE_p_OPT_PRIORITY                     "[-p priority]"
-#define MSG_GDI_UTEXT_p_OPT_PRIORITY                     _("define job's relative priority")
-
-#define MSG_GDI_USAGE_pe_OPT_PE_NAME_SLOT_RANGE          "[-pe pe-name slot_range]"
-#define MSG_GDI_UTEXT_pe_OPT_PE_NAME_SLOT_RANGE          _("request slot range for parallel jobs")
-
-#define MSG_GDI_USAGE_passwd_OPT                         "[-passwd]"
-                       
-#define MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST         "[-masterq destin_id_list]"
-#define MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND    _("bind master task to queue(s)")
-
-
-#define MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST               "[-q destin_id_list]"
-#define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_BIND          _("bind job to queue(s)")
-#define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO          _("print information on given queue")
-
-
-#define MSG_GDI_USAGE_qmon_OPT                           "[-qmon]"
-                        
-
-#define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"
-#define MSG_GDI_UTEXT_qs_args_OPT_ARGS_QS_END            _("deliver args to foreign qs")
-
-#define MSG_GDI_USAGE_r_OPT_YN                           "[-r y|n]"
-#define MSG_GDI_UTEXT_r_OPT_YN                           _("define job as (not) restartable" )
-
-#define MSG_GDI_USAGE_res_OPT                            "[-r]"
-#define MSG_GDI_UTEXT_res_OPT                            _("show requested resources of job(s)")
-
-#define MSG_GDI_USAGE_reauthh_OPT_XSECONDS               "[-reautht #seconds]"
-            
-
-#define MSG_GDI_USAGE_s_OPT_STATES                       "[-s states]"
-                  
-
-#define MSG_GDI_USAGE_s_OPT                              "[-s]"
-#define MSG_GDI_UTEXT_s_OPT                              _("suspend")
-
-#define MSG_GDI_USAGE_s_OPT_SIGNAL                       "[-s signal]"
-
-#define MSG_GDI_USAGE_sc_OPT_COMPLEX_LIST                "[-sc complex_list]"
-#define MSG_GDI_UTEXT_sc_OPT_COMPLEX_LIST_SHOW           _("show given complexes")
-#define MSG_GDI_USAGE_sc_OPT_CONTEXT_LIST                "[-sc context_list]"
-#define MSG_GDI_UTEXT_sc_OPT_CONTEXT_LIST_SET            _("set job context (replaces old context)"    )
-
-#define MSG_GDI_USAGE_scal_OPT_CALENDAR_NAME             "[-scal calendar_name]"
-#define MSG_GDI_UTEXT_scal_OPT_CALENDAR_NAME             _("show given calendar" )
-
-#define MSG_GDI_USAGE_scall_OPT                          "[-scall]"
-#define MSG_GDI_UTEXT_scall_OPT                          _("show a list of all calendar names")
-
-#define MSG_GDI_USAGE_sckpt_OPT_CKPT_NAME                "[-sckpt ckpt_name]"
-#define MSG_GDI_UTEXT_sckpt_OPT_CKPT_NAME                _("show ckpt interface definition")
-
-#define MSG_GDI_USAGE_sckptl_OPT                         "[-sckptl]"
-#define MSG_GDI_UTEXT_sckptl_OPT                         _("show all ckpt interface definitions")
-
-#define MSG_GDI_USAGE_scl_OPT                            "[-scl]"
-#define MSG_GDI_UTEXT_scl_OPT                            _("show a list of all complexes")
-
-#define MSG_GDI_USAGE_sconf_OPT_HOSTLISTORGLOBAL         "[-sconf [host_list|global]]"
-#define MSG_GDI_UTEXT_sconf_OPT_HOSTLISTORGLOBAL         _("show configurations")
-
-#define MSG_GDI_USAGE_sconfl_OPT                         "[-sconfl]"
-#define MSG_GDI_UTEXT_sconfl_OPT                         _("show a list of all local configurations")
-
-#define MSG_GDI_USAGE_se_OPT_SERVER                      "[-se server]"
-#define MSG_GDI_UTEXT_se_OPT_SERVER                      _("show given exec server")
-
-#define MSG_GDI_USAGE_sel_OPT                            "[-sel]"
-#define MSG_GDI_UTEXT_sel_OPT                            _("show a list of all exec servers")
-
-#define MSG_GDI_USAGE_sep_OPT                            "[-sep]"
-#define MSG_GDI_UTEXT_sep_OPT                            _("show a list of all licensed processors")
-
-#define MSG_GDI_USAGE_sh_OPT                             "[-sh]"
-#define MSG_GDI_UTEXT_sh_OPT                             _("show a list of all administrative hosts")
-
-#define MSG_GDI_USAGE_sm_OPT                             "[-sm]"
-#define MSG_GDI_UTEXT_sm_OPT                             _("show a list of all managers")
-
-#define MSG_GDI_USAGE_so_OPT                             "[-so]"
-#define MSG_GDI_UTEXT_so_OPT                             _("show a list of all operators")
-
-#define MSG_GDI_USAGE_soft_OPT                           "[-soft]"
-#define MSG_GDI_UTEXT_soft_OPT                           _("consider following requests as soft")
-
-#define MSG_GDI_USAGE_sp_OPT_PE_NAME                     "[-sp pe-name]"
-#define MSG_GDI_UTEXT_sp_OPT_PE_NAME                     _("show a parallel environment")
-
-#define MSG_GDI_USAGE_spl_OPT                            "[-spl]"
-#define MSG_GDI_UTEXT_spl_OPT                            _("show all parallel environments")
-
-#define MSG_GDI_USAGE_sq_OPT_DESTIN_ID_LIST              "[-sq [destin_id_list]]"
-#define MSG_GDI_UTEXT_sq_OPT_DESTIN_ID_LIST              _("show the given queue"  )
-
-#define MSG_GDI_USAGE_sql_OPT                            "[-sql]"
-#define MSG_GDI_UTEXT_sql_OPT                            _("show a list of all queues")
-
-#define MSG_GDI_USAGE_ss_OPT                             "[-ss]"
-#define MSG_GDI_UTEXT_ss_OPT                             _("show a list of all submit hosts")
-
-#define MSG_GDI_USAGE_sss_OPT                            "[-sss]"
-#define MSG_GDI_UTEXT_sss_OPT                            _("show scheduler state")
-
-#define MSG_GDI_USAGE_ssconf_OPT                         "[-ssconf]"
-#define MSG_GDI_UTEXT_ssconf_OPT                         _("show scheduler configuration")
-
-#define MSG_GDI_USAGE_sstnode_OPT_NODE_LIST              "[-sstnode node_list]"
-#define MSG_GDI_UTEXT_sstnode_OPT_NODE_LIST              _("show sharetree node(s)")
-
-#define MSG_GDI_USAGE_rsstnode_OPT_NODE_LIST              "[-rsstnode node_list]"
-#define MSG_GDI_UTEXT_rsstnode_OPT_NODE_LIST              _("show sharetree node(s) and its children")
-
-#define MSG_GDI_USAGE_sstree_OPT                         "[-sstree]"
-#define MSG_GDI_UTEXT_sstree_OPT                         _("show the sharetree")
-
-#define MSG_GDI_USAGE_aumap_OPT                          "[-aumap user]"
-#define MSG_GDI_UTEXT_aumap_OPT                          _("add new user mapping entry") 
-
-#define MSG_GDI_USAGE_Aumap_OPT                          "[-Aumap mapfile]"
-#define MSG_GDI_UTEXT_Aumap_OPT                          _("add new user mapping entry from file") 
-
-#define MSG_GDI_USAGE_dumap_OPT                          "[-dumap user]"
-#define MSG_GDI_UTEXT_dumap_OPT                          _("delete user mapping entry") 
-
-#define MSG_GDI_USAGE_mumap_OPT                          "[-mumap user]"
-#define MSG_GDI_UTEXT_mumap_OPT                          _("modify user mapping entries") 
-
-#define MSG_GDI_USAGE_sumap_OPT                          "[-sumap user]"
-#define MSG_GDI_UTEXT_sumap_OPT                          _("show user mapping entry") 
-
-#define MSG_GDI_USAGE_sumapl_OPT                         "[-sumapl]"
-#define MSG_GDI_UTEXT_sumapl_OPT                         _("show user mapping entry list") 
-
-#define MSG_GDI_USAGE_Mumap_OPT                          "[-Mumap mapfile]"
-#define MSG_GDI_UTEXT_Mumap_OPT                          _("modify user mapping entry from file")
-
-#define MSG_GDI_USAGE_shgrp_OPT                          "[-shgrp group]"
-#define MSG_GDI_UTEXT_shgrp_OPT                          _("show host group")  
-
-#define MSG_GDI_USAGE_shgrpl_OPT                         "[-shgrpl]"
-#define MSG_GDI_UTEXT_shgrpl_OPT                         _("show host group list")  
-
-#define MSG_GDI_USAGE_ahgrp_OPT                          "[-ahgrp group]"
-#define MSG_GDI_UTEXT_ahgrp_OPT                          _("add new host group entry") 
-
-#define MSG_GDI_USAGE_Ahgrp_OPT                          "[-Ahgrp file]"
-#define MSG_GDI_UTEXT_Ahgrp_OPT                          _("add new host group entry from file") 
-
-#define MSG_GDI_USAGE_dhgrp_OPT                          "[-dhgrp group]"
-#define MSG_GDI_UTEXT_dhgrp_OPT                          _("delete host group entry") 
-
-#define MSG_GDI_USAGE_mhgrp_OPT                          "[-mhgrp group]"
-#define MSG_GDI_UTEXT_mhgrp_OPT                          _("modify host group entry") 
-
-#define MSG_GDI_USAGE_Mhgrp_OPT                          "[-Mhgrp file]"
-#define MSG_GDI_UTEXT_Mhgrp_OPT                          _("modify host group entry from file")
-
-#define MSG_GDI_USAGE_su_OPT_LISTNAME_LIST               "[-su listname_list]"
-#define MSG_GDI_UTEXT_su_OPT_LISTNAME_LIST               _("show the given userset list" )
-
-#define MSG_GDI_USAGE_suser_OPT_USER                     "[-suser user_list]"
-#define MSG_GDI_UTEXT_suser_OPT_USER                     _("show user(s)")
-
-#define MSG_GDI_USAGE_sprj_OPT_PROJECT                   "[-sprj project]"
-#define MSG_GDI_UTEXT_sprj_OPT_PROJECT                   _("show a project")
-
-#define MSG_GDI_USAGE_sul_OPT                            "[-sul]"
-#define MSG_GDI_UTEXT_sul_OPT                            _("show a list of all userset lists")
-
-#define MSG_GDI_USAGE_suserl_OPT                         "[-suserl]"
-#define MSG_GDI_UTEXT_suserl_OPT                         _("show a list of all users")
-
-#define MSG_GDI_USAGE_sprjl_OPT                          "[-sprjl]"
-#define MSG_GDI_UTEXT_sprjl_OPT                          _("show a list of all projects")
-
-#define MSG_GDI_USAGE_S_OPT_PATH_LIST                    "[-S path_list]"
-#define MSG_GDI_UTEXT_S_OPT_PATH_LIST                    _("command interpreter to be used")
-
-#define MSG_GDI_USAGE_t_OPT_TASK_ID_RANGE                "[-t task_id_range]"
-#define MSG_GDI_UTEXT_t_OPT_TASK_ID_RANGE                _("create a job-array with these tasks")
-
-#define MSG_GDI_USAGE_tsm_OPT                            "[-tsm]"
-#define MSG_GDI_UTEXT_tsm_OPT                            _("trigger scheduler monitoring")
-
-#define MSG_GDI_USAGE_u_OPT_USERLISTORUALL               "[-u user_list|-uall]"
-#define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL               _("specify a list of users")
-
-#define MSG_GDI_USAGE_us_OPT                             "[-us]"
-#define MSG_GDI_UTEXT_us_OPT                             _("unsuspend")
-
-#define MSG_GDI_USAGE_v_OPT_VARIABLE_LIST                "[-v variable_list]"
-#define MSG_GDI_UTEXT_v_OPT_VARIABLE_LIST                _("export these environment variables")
-
-#define MSG_GDI_USAGE_verify_OPT                         "[-verify]"
-#define MSG_GDI_UTEXT_verify_OPT                         _("do not submit just verify")
-
-#define MSG_GDI_USAGE_V_OPT                              "[-V]"
-#define MSG_GDI_UTEXT_V_OPT                              _("export all environment variables")
-
-#define MSG_GDI_USAGE_w_OPT_EWNV                         "[-w e|w|n|v]"
-#define MSG_GDI_UTEXT_w_OPT_EWNV                         _("verify mode (error|warning|none|just verify) for jobs")
-
-#define MSG_GDI_USAGE_AT_OPT_FILE                        "[-@ file]"
-#define MSG_GDI_UTEXT_AT_OPT_FILE                        _("read commandline input from file")
-
-#define MSG_GDI_USAGE_nohist_OPT                         "[-nohist]"
-#define MSG_GDI_UTEXT_nohist_OPT                         _("do not write history" )
-
-#define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
-#define MSG_GDI_UTEXT_noread_argfile_OPT                 _("do not read \"qmaster_args\" file")
-
-#define MSG_GDI_USAGE_nowrite_argfile_OPT                "[-nowrite-argfile]"
-#define MSG_GDI_UTEXT_nowrite_argfile_OPT                _("do not write \"qmaster_args\" file")
-
-#define MSG_GDI_USAGE_truncate_argfile_OPT               "[-truncate-argfile]"
-#define MSG_GDI_UTEXT_truncate_argfile_OPT               _("truncate  \"qmaster_args\" file")
-
-#define MSG_GDI_USAGE_nostart_schedd_OPT                 "[-nostart-schedd]"
-#define MSG_GDI_UTEXT_nostart_schedd_OPT                 _("do not start schedd")
-
-#define MSG_GDI_USAGE_nostart_commd_OPT                  "[-nostart-commd]"
-#define MSG_GDI_UTEXT_nostart_commd_OPT                  _("do not start commd")
-
-#define MSG_GDI_USAGE_verbose_OPT                        "[-verbose]"
-#define MSG_GDI_UTEXT_verbose_OPT                        _("verbose information output")
-
-#define MSG_GDI_USAGE_secl_OPT                           "[-secl]"
-#define MSG_GDI_UTEXT_secl_OPT                           _("show event client list)")
-
-#define MSG_GDI_USAGE_kec_OPT                            "[-kec evid_list]"
-#define MSG_GDI_UTEXT_kec_OPT                            _("kill event client")
-
-#define MSG_GDI_USAGE_inherit_OPT                        "[-inherit]"
-#define MSG_GDI_UTEXT_inherit_OPT                        _("inherit existing job environment JOB_ID for rsh")
-
-#define MSG_GDI_USAGE_nostdin_OPT                        "[-nostdin]"
-#define MSG_GDI_UTEXT_nostdin_OPT                        _("suppress stdin for rsh")
-
-#define MSG_GDI_USAGE_noshell_OPT                        "[-noshell]"
-#define MSG_GDI_UTEXT_noshell_OPT                        _("do start command without wrapping <loginshell> -c")
-
-#define MSG_GDI_USAGE_mattr_OPT                          "[-mattr obj_nm attr_nm val obj_id_lst]"
-#define MSG_GDI_UTEXT_mattr_OPT                          _("modify an attribute (or element in a sublist) of an object")
-
-#define MSG_GDI_USAGE_rattr_OPT                          "[-rattr obj_nm attr_nm val obj_id_lst]"
-#define MSG_GDI_UTEXT_rattr_OPT                          _("replace a list attribute of an object")
-
-#define MSG_GDI_USAGE_dattr_OPT                          "[-dattr obj_nm attr_nm val obj_id_lst]"
-#define MSG_GDI_UTEXT_dattr_OPT                          _("delete from a list attribute of an object")
-
-#define MSG_GDI_USAGE_aattr_OPT                          "[-aattr obj_nm attr_nm val obj_id_lst]"
-#define MSG_GDI_UTEXT_aattr_OPT                          _("add to a list attribute of an object") 
-
-#define MSG_GDI_USAGE_Mattr_OPT                          "[-Mattr obj_nm fname obj_id_lst]"
-#define MSG_GDI_UTEXT_Mattr_OPT                          _("modify an attribute (or element in a sublist) of an object")
-
-#define MSG_GDI_USAGE_Rattr_OPT                          "[-Rattr obj_nm fname obj_id_lst]"
-#define MSG_GDI_UTEXT_Rattr_OPT                          _("replace a list attribute of an object")
-
-#define MSG_GDI_USAGE_Dattr_OPT                          "[-Dattr obj_nm fname obj_id_lst]"
-#define MSG_GDI_UTEXT_Dattr_OPT                          _("delete from a list attribute of an object")
-
-#define MSG_GDI_USAGE_Aattr_OPT                          "[-Aattr obj_nm fname obj_id_lst]"
-#define MSG_GDI_UTEXT_Aattr_OPT                          _("add to a list attribute of an object") 
-
-#define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
-#define MSG_GDI_UTEXT_show_license_OPT                   _("show license information")
-
-#define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
-#define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
-#define MSG_GDI_USAGE_MESSAGE_OPR                        "message"
-#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_task_list"
-#define MSG_GDI_USAGE_SCRIPT_OPR                         "[{script|-} [script_args]]"
-#define MSG_GDI_USAGE_SCRIPT_OPR_ARGS                    "[-- script_args]"
-#define MSG_GDI_UTEXT_JOB_ID_OPR                         _("jobid's (and taskid's) of jobs to be altered")
-#define MSG_GDI_UTEXT_SCRIPT_OPR_ARGS                    _("arguments to be used")
-#define MSG_GDI_UTEXT_ATTACH__u_OPT_USERLISTORUALL       _("(not allowed in combination with job_task_list)")
 /* 
 ** gdilib/utility.c
 */
-#define MSG_GDI_STRING_STRINGTOINTFAILED_S               _("unable to convert string \"%s\" to integer\n")
-#define MSG_GDI_MEMORY_MALLOCFAILED                      _("malloc() failure\n")
-#define MSG_GDI_MEMORY_REALLOCFAILED                     _("realloc() failure\n")
-#define MSG_GDI_POINTER_SUFFIXISNULLINSGEUNLINK          _("suffix == NULL in sge_unlink()\n")
-#define MSG_GDI_STRING_LENGTHEXCEEDSMAXSTRINGSIZE_SI     _("strlen($%s) exceeds MAX_STRING_SIZE %d\n")
-
+/* #define MSG_GDI_STRING_STRINGTOINTFAILED_S               _message(43116, _("unable to convert string "SFQ" to integer\n")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 
 ** gdilib/sge_gdi_request.c
 */
-#define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _("NULL pointer passed to sge_gdi_multi()")
-#define MSG_GDI_CANTCREATEGDIREQUEST                     _("can't create gdi request")
-#define MSG_GDI_NEEDUIDINEVIRONMENT                      _("need UID in environment\n")
-#define MSG_GDI_NEEDUSERNAMEINENVIRONMENT                _("need USERNAME in environment\n")
-#define MSG_GDI_NEEDGIDINENVIRONMENT                     _("need GID in environment\n")
-#define MSG_GDI_NEEDGROUPNAMEINENVIRONMENT               _("need GROUPNAME in environment\n")
-#define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _("failed to getpwuid(%d): %s\n")
-#define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _("failed to getgrgid(%d): %s\n")
-#define MSG_GDI_SENDINGGDIREQUESTFAILED                  _("failed sending gdi request\n")
-#define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _("failed receiving gdi request\n")
-#define MSG_GDI_SIGNALED                                 _("signaled\n")
-#define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _("general error (%d) sending and receiving gdi request\n")
-#define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST  _("NULL list passed to sge_send_receive_gdi_request()")
-#define MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST   _("NULL rhost passed to sge_send_receive_gdi_request()")
-#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST  _("not enough memory for packing gdi request\n")
-#define MSG_GDI_REQUESTFORMATERROR                          _("format error while packing gdi request\n")
-#define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST       _("unexpected error while packing gdi request\n")
-#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORUNPACKINGGDIREQUEST _("not enough memory for unpacking gdi request\n")
-#define MSG_GDI_REQUESTFORMATERRORWHILEUNPACKING              _("format error while unpacking gdi request\n")
-#define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _("unexpected error while unpacking gdi request\n")
-#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _("invalid value ("U32CFormat") for ar->op\n")
-#define MSG_GDI_CANTUNPACKGDIREQUEST                       _("can't unpack gdi request"    )
-#define MSG_SGETEXT_NOQMASTER                   _("unable to contact qmaster\n")
+#define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
+#define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
+/* #define MSG_GDI_NEEDUIDINEVIRONMENT                      _message(43119, _("need UID in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_NEEDUSERNAMEINENVIRONMENT                _message(43120, _("need USERNAME in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_NEEDGIDINENVIRONMENT                     _message(43121, _("need GID in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_GDI_NEEDGROUPNAMEINENVIRONMENT               _message(43122, _("need GROUPNAME in environment\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43123, _("failed to getpwuid(%d): "SFN"\n"))
+#define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
+#define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
+#define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request\n"))
+#define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled\n"))
+#define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _MESSAGE(43128, _("general error (%d) sending and receiving gdi request\n"))
+#define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST  _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))
+#define MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST   _MESSAGE(43130, _("NULL rhost passed to sge_send_receive_gdi_request()"))
+#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST  _MESSAGE(43131, _("not enough memory for packing gdi request\n"))
+#define MSG_GDI_REQUESTFORMATERROR                          _MESSAGE(43132, _("format error while packing gdi request\n"))
+#define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST       _MESSAGE(43133, _("unexpected error while packing gdi request\n"))
+#define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S                  _MESSAGE(43134, _("error unpacking gdi request: "SFN"\n"))
+/* #define MSG_GDI_REQUESTFORMATERRORWHILEUNPACKING              _message(43135, _("format error while unpacking gdi request\n")) __TS Removed automatically from testsuite!! TS__ */
+/* #define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _message(43136, _("unexpected error while unpacking gdi request\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
+#define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
+#define MSG_JOB_JLPPNULL                  _MESSAGE(43140, _("jlpp == NULL in job_add_job()\n"))
+#define MSG_JOB_JEPNULL                   _MESSAGE(43141, _("jep == NULL in job_add_job()\n"))
+#define MSG_JOB_JOBALREADYEXISTS_S        _MESSAGE(43142, _("can't add job "SFN" - job already exists\n") ) 
+#define MSG_JOB_NULLNOTALLOWEDT           _MESSAGE(43143, _("job rejected: 0 is an invalid task id\n"))
+#define MSG_JOB_NOIDNOTALLOWED            _MESSAGE(43144, _("job rejected: Job comprises no tasks in its id lists") ) 
+#define MSG_JOB_JOB_ID_U                  _MESSAGE(43145, _(U32CFormat))
+#define MSG_JOB_JOB_JATASK_ID_UU          _MESSAGE(43146, _(U32CFormat"."U32CFormat))
+#define MSG_JOB_JOB_JATASK_PETASK_ID_UUS  _MESSAGE(43147, _(U32CFormat"."U32CFormat" task "SFN))
+
+/* 
+** sge_c_event.c
+*/ 
+#define MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY        _MESSAGE(43148, _("failed to send ACK_EVENT_DELIVERY\n"))
+#define MSG_EVENT_HIGHESTEVENTISXWHILEWAITINGFORY_UU  _MESSAGE(43149, _("highest event number is "U32CFormat" while waiting for "U32CFormat"\n"))
+#define MSG_EVENT_SMALLESTEVENTXISGRTHYWAITFOR_UU     _MESSAGE(43150, _("smallest event number "U32CFormat" is greater than number "U32CFormat" i'm waiting for\n"))
+#define MSG_EVENT_EVENTSWITHNOINCREASINGNUMBERS       _MESSAGE(43151, _("got events with not increasing numbers\n"))
+#define MSG_LIST_FAILEDINCULLUNPACKREPORT             _MESSAGE(43152, _("Failed in cull_unpack report\n"))
+#define MSG_EVENT_ILLEGAL_ID_OR_NAME_US               _MESSAGE(43153, _("Illegal id "U32CFormat" or name "SFQ" in event client registration\n"))
+#define MSG_EVENT_UNINITIALIZED_EC                    _MESSAGE(43154, _("event client not properly initialized (ec_prepare_registration)\n"))
+#define MSG_EVENT_ILLEGALEVENTID_I                    _MESSAGE(43155, _("illegal event id %d\n"))
+#define MSG_EVENT_ILLEGALFLUSHTIME_I                  _MESSAGE(43156, _("illegal flush time %d - must be in the range [0:63]\n"))
+#define MSG_EVENT_NOTREGISTERED                       _MESSAGE(43157, _("event client not registered\n"))
+#define MSG_EVENT_HAVETOHANDLEEVENTS                  _MESSAGE(43158, _("you have to handle the events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN\n"))
+
+/*
+ * sge_schedd_conf.c
+ */
+#define MSG_NONE_NOT_ALLOWED                    _MESSAGE(43159, _("The keyword \"none\" is not allowed in \"load_formula\"\n"))
+#define MSG_NOTEXISTING_ATTRIBUTE_S             _MESSAGE(43160, _("\"load_formula\" references not existing complex attribute "SFQ"\n"))
+#define MSG_WRONGTYPE_ATTRIBUTE_S               _MESSAGE(43161, _("String, CString or Host attributes are not allowed in \"load_formula\": " SFQ "\n"))
 
 
-/* sge_job_jatask.c */
+/* 
+ * event.c
+ */ 
+#define MSG_EVENT_DELJOB_US                        _MESSAGE(43162, _(U32CFormat". EVENT DEL JOB "SFN))
+#define MSG_EVENT_ADDJOB_US                        _MESSAGE(43163, _(U32CFormat". EVENT ADD JOB "SFN))
+#define MSG_EVENT_MODJOB_US                        _MESSAGE(43164, _(U32CFormat". EVENT MOD JOB "SFN))
+#define MSG_EVENT_JOBLISTXELEMENTS_UI              _MESSAGE(43165, _(U32CFormat". EVENT JOB LIST %d Elements"))
+#define MSG_EVENT_DELJOB_SCHEDD_INFO_III                       _MESSAGE(43166, _("%d. EVENT DEL JOB_SCHEDD_INFO %d.%d"))
+#define MSG_EVENT_ADDJOB_SCHEDD_INFO_III                       _MESSAGE(43167, _("%d. EVENT ADD JOB_SCHEDD_INFO %d.%d"))
+#define MSG_EVENT_MODJOB_SCHEDD_INFO_III                       _MESSAGE(43168, _("%d. EVENT MOD JOB_SCHEDD_INFO %d.%d"))
+#define MSG_EVENT_JOB_SCHEDD_INFOLISTXELEMENTS_II              _MESSAGE(43169, _("%d. EVENT JOB_SCHEDD_INFO LIST %d Elements"))
+#define MSG_EVENT_MODSCHEDDPRIOOFJOBXTOY_USI       _MESSAGE(43174, _(U32CFormat". EVENT MODIFY SCHEDULING PRIORITY OF JOB "SFN" TO %d"))
+#define MSG_EVENT_JOBXUSAGE_US                     _MESSAGE(43175, _(U32CFormat". EVENT JOB "SFN" USAGE"))
+#define MSG_EVENT_JOBXFINALUSAGE_US                _MESSAGE(43176, _(U32CFormat". EVENT JOB "SFN" FINAL USAGE"))
+#define MSG_EVENT_DELQUEUEX_IS                     _MESSAGE(43177, _("%d. EVENT DEL QUEUE "SFN""))
+#define MSG_EVENT_ADDQUEUEX_IS                     _MESSAGE(43178, _("%d. EVENT ADD QUEUE "SFN""))
+#define MSG_EVENT_MODQUEUEX_IS                     _MESSAGE(43179, _("%d. EVENT MOD QUEUE "SFN""))
+#define MSG_EVENT_QUEUELISTXELEMENTS_II            _MESSAGE(43180, _("%d. EVENT QUEUE LIST %d Elements"))
+#define MSG_EVENT_UNSUSPENDQUEUEXONSUBORDINATE_IS  _MESSAGE(43181, _("%d. EVENT UNSUSPEND QUEUE "SFN" ON SUBORDINATE"))
+#define MSG_EVENT_SUSPENDQUEUEXONSUBORDINATE_IS    _MESSAGE(43182, _("%d. EVENT SUSPEND QUEUE "SFN" ON SUBORDINATE"))
+#define MSG_EVENT_DELCOMPLEXX_IS                   _MESSAGE(43183, _("%d. EVENT DEL COMPLEX "SFN""))
+#define MSG_EVENT_ADDCOMPLEXX_IS                   _MESSAGE(43184, _("%d. EVENT ADD COMPLEX "SFN""))
+#define MSG_EVENT_MODCOMPLEXX_IS                   _MESSAGE(43185, _("%d. EVENT MOD COMPLEX "SFN""))
+#define MSG_EVENT_COMPLEXLISTXELEMENTS_II          _MESSAGE(43186, _("%d. EVENT COMPLEX LIST %d Elements"))
+#define MSG_EVENT_DELCONFIGX_IS                   _MESSAGE(43187, _("%d. EVENT DEL CONFIG "SFN""))
+#define MSG_EVENT_ADDCONFIGX_IS                   _MESSAGE(43188, _("%d. EVENT ADD CONFIG "SFN""))
+#define MSG_EVENT_MODCONFIGX_IS                   _MESSAGE(43189, _("%d. EVENT MOD CONFIG "SFN""))
+#define MSG_EVENT_CONFIGLISTXELEMENTS_II          _MESSAGE(43190, _("%d. EVENT CONFIG LIST %d Elements"))
+#define MSG_EVENT_DELCALENDARX_IS                  _MESSAGE(43191, _("%d. EVENT DEL CALENDAR "SFN""))
+#define MSG_EVENT_ADDCALENDARX_IS                  _MESSAGE(43192, _("%d. EVENT ADD CALENDAR "SFN""))
+#define MSG_EVENT_MODCALENDARX_IS                  _MESSAGE(43193, _("%d. EVENT MOD CALENDAR "SFN""))
+#define MSG_EVENT_CALENDARLISTXELEMENTS_II         _MESSAGE(43194, _("%d. EVENT CALENDAR LIST %d Elements"))
+#define MSG_EVENT_DELADMINHOSTX_IS                  _MESSAGE(43195, _("%d. EVENT DEL ADMINHOST "SFN""))
+#define MSG_EVENT_ADDADMINHOSTX_IS                  _MESSAGE(43196, _("%d. EVENT ADD ADMINHOST "SFN""))
+#define MSG_EVENT_MODADMINHOSTX_IS                  _MESSAGE(43197, _("%d. EVENT MOD ADMINHOST "SFN""))
+#define MSG_EVENT_ADMINHOSTLISTXELEMENTS_II         _MESSAGE(43198, _("%d. EVENT ADMINHOST LIST %d Elements"))
+#define MSG_EVENT_DELEXECHOSTX_IS                  _MESSAGE(43199, _("%d. EVENT DEL EXECHOST "SFN""))
+#define MSG_EVENT_ADDEXECHOSTX_IS                  _MESSAGE(43200, _("%d. EVENT ADD EXECHOST "SFN""))
+#define MSG_EVENT_MODEXECHOSTX_IS                  _MESSAGE(43201, _("%d. EVENT MOD EXECHOST "SFN""))
+#define MSG_EVENT_EXECHOSTLISTXELEMENTS_II         _MESSAGE(43202, _("%d. EVENT EXECHOST LIST %d Elements"))
+/* #define MSG_EVENT_DELFEATURE_SETX_IS                  _message(43203, _("%d. EVENT DEL FEATURE_SET "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_ADDFEATURE_SETX_IS                  _message(43204, _("%d. EVENT ADD FEATURE_SET "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_MODFEATURE_SETX_IS                  _message(43205, _("%d. EVENT MOD FEATURE_SET "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_FEATURE_SETLISTXELEMENTS_II         _message(43206, _("%d. EVENT FEATURE_SET LIST %d Elements")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_EVENT_DELMANAGERX_IS                  _MESSAGE(43207, _("%d. EVENT DEL MANAGER "SFN""))
+#define MSG_EVENT_ADDMANAGERX_IS                  _MESSAGE(43208, _("%d. EVENT ADD MANAGER "SFN""))
+#define MSG_EVENT_MODMANAGERX_IS                  _MESSAGE(43209, _("%d. EVENT MOD MANAGER "SFN""))
+#define MSG_EVENT_MANAGERLISTXELEMENTS_II         _MESSAGE(43210, _("%d. EVENT MANAGER LIST %d Elements"))
+#define MSG_EVENT_DELOPERATORX_IS                  _MESSAGE(43211, _("%d. EVENT DEL OPERATOR "SFN""))
+#define MSG_EVENT_ADDOPERATORX_IS                  _MESSAGE(43212, _("%d. EVENT ADD OPERATOR "SFN""))
+#define MSG_EVENT_MODOPERATORX_IS                  _MESSAGE(43213, _("%d. EVENT MOD OPERATOR "SFN""))
+#define MSG_EVENT_OPERATORLISTXELEMENTS_II         _MESSAGE(43214, _("%d. EVENT OPERATOR LIST %d Elements"))
+#define MSG_EVENT_DELSUBMITHOSTX_IS                  _MESSAGE(43215, _("%d. EVENT DEL SUBMITHOST "SFN""))
+#define MSG_EVENT_ADDSUBMITHOSTX_IS                  _MESSAGE(43216, _("%d. EVENT ADD SUBMITHOST "SFN""))
+#define MSG_EVENT_MODSUBMITHOSTX_IS                  _MESSAGE(43217, _("%d. EVENT MOD SUBMITHOST "SFN""))
+#define MSG_EVENT_SUBMITHOSTLISTXELEMENTS_II         _MESSAGE(43218, _("%d. EVENT SUBMITHOST LIST %d Elements"))
+#define MSG_EVENT_DELUSERSETX_IS                   _MESSAGE(43219, _("%d. EVENT DEL USER SET "SFN""))
+#define MSG_EVENT_ADDUSERSETX_IS                   _MESSAGE(43220, _("%d. EVENT ADD USER SET "SFN""))
+#define MSG_EVENT_MODUSERSETX_IS                   _MESSAGE(43221, _("%d. EVENT MOD USER SET "SFN""))
+#define MSG_EVENT_USERSETLISTXELEMENTS_II          _MESSAGE(43222, _("%d. EVENT USER SET LIST %d Elements"))
+#define MSG_EVENT_DELUSERX_IS                      _MESSAGE(43223, _("%d. EVENT DEL USER "SFN""))
+#define MSG_EVENT_ADDUSERX_IS                      _MESSAGE(43224, _("%d. EVENT ADD USER "SFN""))
+#define MSG_EVENT_MODUSERX_IS                      _MESSAGE(43225, _("%d. EVENT MOD USER "SFN""))
+#define MSG_EVENT_USERLISTXELEMENTS_II             _MESSAGE(43226, _("%d. EVENT USER LIST %d Elements"))
+#define MSG_EVENT_DELPROJECTX_IS                   _MESSAGE(43227, _("%d. EVENT DEL PROJECT "SFN""))
+#define MSG_EVENT_ADDPROJECTX_IS                   _MESSAGE(43228, _("%d. EVENT ADD PROJECT "SFN""))
+#define MSG_EVENT_MODPROJECTX_IS                   _MESSAGE(43229, _("%d. EVENT MOD PROJECT "SFN""))
+#define MSG_EVENT_PROJECTLISTXELEMENTS_II          _MESSAGE(43230, _("%d. EVENT PROJECT LIST %d Elements"))
+#define MSG_EVENT_DELPEX_IS                        _MESSAGE(43231, _("%d. EVENT DEL PE "SFN""))
+#define MSG_EVENT_ADDPEX_IS                        _MESSAGE(43232, _("%d. EVENT ADD PE "SFN""))
+#define MSG_EVENT_MODPEX_IS                        _MESSAGE(43233, _("%d. EVENT MOD PE "SFN""))
+#define MSG_EVENT_PELISTXELEMENTS_II               _MESSAGE(43234, _("%d. EVENT PE LIST %d Elements"))
+#define MSG_EVENT_SHUTDOWN_I                       _MESSAGE(43235, _("%d. EVENT SHUTDOWN"))
+#define MSG_EVENT_QMASTERGOESDOWN_I                _MESSAGE(43236, _("%d. EVENT QMASTER GOES DOWN"))
+#define MSG_EVENT_TRIGGERSCHEDULERMONITORING_I     _MESSAGE(43237, _("%d. EVENT TRIGGER SCHEDULER MONITORING"))
+#define MSG_EVENT_SHARETREEXNODESYLEAFS_III        _MESSAGE(43238, _("%d. EVENT SHARETREE %d nodes %d leafs"))
+#define MSG_EVENT_SCHEDULERCONFIG_I                _MESSAGE(43239, _("%d. EVENT SCHEDULER CONFIG "))
+#define MSG_EVENT_GLOBAL_CONFIG_I                  _MESSAGE(43240, _("%d. EVENT NEW GLOBAL CONFIG"))
+#define MSG_EVENT_DELCKPT_IS                       _MESSAGE(43241, _("%d. EVENT DEL CKPT "SFN""))
+#define MSG_EVENT_ADDCKPT_IS                       _MESSAGE(43242, _("%d. EVENT ADD CKPT "SFN""))
+#define MSG_EVENT_MODCKPT_IS                       _MESSAGE(43243, _("%d. EVENT MOD CKPT "SFN""))
+#define MSG_EVENT_CKPTLISTXELEMENTS_II             _MESSAGE(43244, _("%d. EVENT CKPT LIST %d Elements"))
+#define MSG_EVENT_DELJATASK_US                     _MESSAGE(43245, _(U32CFormat". EVENT DEL JATASK "SFN""))
+#define MSG_EVENT_MODJATASK_US                     _MESSAGE(43246, _(U32CFormat". EVENT MOD JATASK "SFN""))
+#define MSG_EVENT_ADDPETASK_US                     _MESSAGE(43247, _(U32CFormat". EVENT ADD PETASK "SFN""))
+#define MSG_EVENT_DELPETASK_US                     _MESSAGE(43248, _(U32CFormat". EVENT DEL PETASK "SFN""))
+/* #define MSG_EVENT_MODPETASK_US                     _message(43249, _(U32CFormat". EVENT MOD PETASK "SFN"")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_EVENT_NOTKNOWN_I                       _MESSAGE(43250, _("%d. EVENT ????????"))
+#define MSG_PEREFINJOB_SU                          _MESSAGE(43251, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
+#define MSG_CKPTREFINJOB_SU                        _MESSAGE(43252, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
+#define MSG_SGETEXT_UNKNOWNCOMPLEX_SSS             _MESSAGE(43253, _("denied: complex "SFQ" referenced in "SFN" "SFQ" does not exist\n")) 
+#define MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS      _MESSAGE(43254, _("denied: complex "SFQ" referenced in "SFN" "SFQ" is not a user complex\n") )
+#define MSG_HOSTREFINQUEUE_SS                      _MESSAGE(43255, _("Host object "SFQ" is still referenced in queue "SFQ".\n"))
 
-#define MSG_JOB_REJECTED_NO_TASK_LIST  _("job "u32" was rejected because it was not possible to create task list\n")
-#define MSG_JOB_JLPPNULL              _("jlpp == NULL in job_add_job()\n")
-#define MSG_JOB_JEPNULL               _("jep == NULL in job_add_job()\n")
-#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n") 
+
+/*
+ * sge_job.c
+ */
+#define MSG_JOB_NODISPLAY_S             _MESSAGE(43256, _("no DISPLAY variable found with interactive job "SFN"\n"))
+#define MSG_JOB_EMPTYDISPLAY_S          _MESSAGE(43257, _("empty DISPLAY variable delivered with interactive job "SFN"\n"))
+#define MSG_JOB_LOCALDISPLAY_SS         _MESSAGE(43258, _("local DISPLAY variable "SFQ" delivered with interactive job "SFN"\n"))
+
+/* sge_mirror.c */
+#define MSG_MIRROR_INVALID_EVENT_GROUP_SI          _MESSAGE(43259, _("%s: invalid event group %d\n"))
+#define MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED      _MESSAGE(43260, _("qmaster alive timeout expired\n"))
+#define MSG_MIRROR_CALLBACKFAILED_S                _MESSAGE(43261, _("callback function for event "SFQ" failed\n"))
+
+#define MSG_MIRROR_NOTINITIALIZED                  _MESSAGE(43262, _("event client not yet initialized"))
+#define MSG_MIRROR_BADARG                          _MESSAGE(43263, _("bad argument"))
+#define MSG_MIRROR_TIMEOUT                         _MESSAGE(43264, _("timeout"))
+#define MSG_MIRROR_DUPLICATEKEY                    _MESSAGE(43265, _("duplicate key"))
+#define MSG_MIRROR_KEYNOTFOUND                     _MESSAGE(43266, _("key not found"))
+#define MSG_MIRROR_CALLBACKFAILED                  _MESSAGE(43267, _("callback failed"))
+#define MSG_MIRROR_PROCESSERRORS                   _MESSAGE(43268, _("errors processing events"))
+#define MSG_MIRROR_OK                              _MESSAGE(43269, _("ok"))
+
+#define MSG_EVENT_ADDJATASK_US                    _MESSAGE(43270, _(U32CFormat". EVENT ADD JATASK "SFN""))
+#define MSG_JOB_RECEIVEDINVALIDUSAGEEVENTFORJOB_S  _MESSAGE(43271, _("received invalid job usage event for job "SFN"\n"))
+#define MSG_JOB_CANTFINDJOBFORUPDATEIN_SS          _MESSAGE(43272, _("can't find job "SFN" for update in function "SFN"\n"))
+#define MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS       _MESSAGE(43273, _("can't find array task "SFN" for update in function "SFN"\n"))
+#define MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS       _MESSAGE(43274, _("can't find parallel task "SFN" for update in function "SFN"\n"))
+#define MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS      _MESSAGE(43275, _("can't find queue "SFN" for update in function "SFN"\n"))
+
+/* libs/gdi/sge_pe.c
+ *
+ */
+#define MSG_OBJ_PE                    _MESSAGE(43276, _("parallel environment"))
+#define MSG_OBJ_QLIST                 _MESSAGE(43277, _("queue list"))
+#define MSG_OBJ_USERLIST              _MESSAGE(43278, _("user list"))
+#define MSG_OBJ_XUSERLIST             _MESSAGE(43279, _("xuser list"))
+#define MSG_PE_STARTPROCARGS_SS       _MESSAGE(43280, _("parameter start_proc_args of pe "SFQ": "SFN"\n"))
+#define MSG_PE_STOPPROCARGS_SS        _MESSAGE(43281, _("parameter stop_proc_args of pe "SFQ": "SFN"\n"))
+#define MSG_SGETEXT_MISSINGCULLFIELD_SS         _MESSAGE(43282, _("missing cull field "SFQ" in "SFN"()\n"))
+#define MSG_PE_ALLOCRULE_SS           _MESSAGE(43283, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
+
+/* libs/gdi/sge_ckpt.c
+ *
+ */
+#define MSG_OBJ_CKPTENV_SSS           _MESSAGE(43284, _("parameter "SFN" of ckpt environment "SFQ": "SFN"\n"))
+#define MSG_OBJ_CKPTI                 _MESSAGE(43285, _("checkpoint interface"))
+#define MSG_CKPT_XISNOTASIGNALSTRING_S  _MESSAGE(43286, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
+
+/* 
+ * libs/gdi/sge_queue.c
+ */
+#define MSG_SGETEXT_UNKNOWNQUEUE_SSSS                 _MESSAGE(43287, _("denied: queue "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n"))
+#define MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS        _MESSAGE(43288, _("queuenames and keyword "SFQ" are not allowed in "SFQ" of "SFQ" "SFQ"\n"))
+#define MSG_QUEUE_NULLPTR             _MESSAGE(43289, _("NULL ptr passed to sge_add_queue()\n"))
+
+/*
+ * libs/gdi/sge_userset.c
+ */
+#define MSG_SGETEXT_UNKNOWNUSERSET_SSSS               _MESSAGE(43290, _("denied: userset "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n") ) 
+#define MSG_US_INVALIDUSERNAME        _MESSAGE(43291, _("userset contains invalid (null) user name"))
+
+/*
+ * libs/gdi/sge_object.c
+ */
+#define  MSG_ERRORPARSINGVALUEFORNM_SS _MESSAGE(43292, _("error parsing value "SFQ" for attribute "SFQ"\n"))
+
+
+/*
+ * common/usage.c
+ */
+#define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
+
+
+/*
+ * libs/gdi/sge_answer.c
+ */
+#define MSG_ANSWER_NOANSWERLIST           _MESSAGE(43294, _("no answer list - gdi request failed\n")) 
+
+
+#define MSG_SGETEXT_NO_INTERFACE_S                    _MESSAGE(43295, _("no valid checkpoint interface "SFN"\n") )   
+
 
 #endif /* __MSG_GDILIB_H */
 

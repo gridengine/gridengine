@@ -41,21 +41,15 @@ QCONF_SRC = qconf.c \
             sge_client_access.c
 
 QCONF_ADD_SRC = \
-               rw_configuration.c sge_complex.c sge_userset.c \
-               read_write_userprj.c read_write_pe.c read_write_queue.c \
-               read_write_ckpt.c read_write_cal.c read_write_host.c \
-               read_write_userset.c  sched_conf.c \
-               sge_sharetree.c read_object.c sig_handlers.c \
-               read_write_ume.c read_write_host_group.c sge_groups.c \
-               usage.c sge_options.c
+               usage.c sge_options.c sig_handlers.c
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 
 
 QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o)
 
-QCONF_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QCONF_ADD_LIBS = -lspoolf -lspoolc -lspool -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon $(DLLIB)
 
-QCONF_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+QCONF_LIB_DEPENDS = $(SPOOLFLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

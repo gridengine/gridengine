@@ -54,7 +54,6 @@
 #include "sge_all_listsL.h"
 #include "Matrix.h"
 #include "Tab.h"
-#include "def.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
@@ -79,6 +78,9 @@
 #include "AskForTime.h"
 #include "resolve_host.h"
 #include "sge_feature.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+
 /*-------------------------------------------------------------------------*/
 
 
@@ -265,7 +267,6 @@ static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCResetAll(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAction(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCToggleAction(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCToggleType(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessToggle(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessRemove(Widget w, XtPointer cld, XtPointer cad);
@@ -399,8 +400,8 @@ XtPointer cld, cad;
    ** set the dialog title
    */
    title = XmtCreateLocalizedXmString(qc_dialog, dialog_mode == QC_ADD ? 
-                              "@{@fBQueue Configuration: Add}" :
-                              "@{@fBQueue Configuration: Modify}");
+                              "@{@fBQueue Configuration - Add}" :
+                              "@{@fBQueue Configuration - Modify}");
    XtVaSetValues( qc_dialog,
                   XmNdialogTitle, title,
                   NULL);
@@ -607,8 +608,6 @@ Widget parent
    /* 
    ** General Config
    */
-   XtAddCallback(qtype, XmtNvalueChangedCallback, 
-                     qmonQCToggleType, NULL);
    XtAddCallback(notifyPB, XmNactivateCallback, 
                      qmonQCTime, (XtPointer)notify);
    XtAddCallback(calendarPB, XmNactivateCallback, 
@@ -973,7 +972,7 @@ XtPointer cld, cad;
 
    
    if (current_entry.qname[0] == '\0' || !check_qname(current_entry.qname)) {
-      qmonMessageShow(w, True, "@{No valid Queue name specified\n}");
+      qmonMessageShow(w, True, "@{No valid Queue name specified}");
       XmtChooserSetState(qc_subdialogs, 0, False);
       XmProcessTraversal(qc_qname, XmTRAVERSE_CURRENT);
       DEXIT;
@@ -1033,8 +1032,8 @@ XtPointer cld, cad;
    XmtDialogGetDialogValues(qc_dialog, &current_entry);
 
    if (current_entry.qname) {
-      moq = lCopyElem(lGetElemStr(qmonMirrorList(SGE_QUEUE_LIST), QU_qname, 
-                           current_entry.qname));
+      moq = lCopyElem(queue_list_locate(qmonMirrorList(SGE_QUEUE_LIST),  
+                                        current_entry.qname));
    }
 
    if (moq) {
@@ -1126,7 +1125,7 @@ int how
    
    qmonMirrorMulti(QUEUE_T);
    ql = qmonMirrorList(SGE_QUEUE_LIST);
-   qep = lGetElemStr(ql, QU_qname, qname);
+   qep = queue_list_locate(ql, qname);
    qmonCullToQC(qep, data, how);
 
    DEXIT;
@@ -1232,7 +1231,7 @@ DTRACE;
       else
          data->priority = 0;
       data->job_slots   = lGetUlong(qep, QU_job_slots);
-      data->rerun       = lGetUlong(qep, QU_rerun);
+      data->rerun       = lGetBool(qep, QU_rerun);
       data->seq_no      = lGetUlong(qep, QU_seq_no);
 
       strncpy(data->tmpdir, lGetString(qep, QU_tmpdir) ? 
@@ -1257,8 +1256,10 @@ DTRACE;
          data->initial_state = 0; 
       if (lGetString(qep, QU_shell_start_mode)) {
          if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "unix_behavior"))
-            data->shell_start_mode = 2; 
+            data->shell_start_mode = 3; 
          else if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "script_from_stdin"))
+            data->shell_start_mode = 2; 
+         else if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "posix_compliant"))
             data->shell_start_mode = 1; 
          else 
             data->shell_start_mode = 0; 
@@ -1436,7 +1437,7 @@ lListElem *qep
    lSetUlong(qep, QU_job_slots, data->job_slots);
    /* initialize QU_job_slots_used */
    set_qslots_used(qep, 0);
-   lSetUlong(qep, QU_rerun, data->rerun);
+   lSetBool(qep, QU_rerun, data->rerun);
    lSetUlong(qep, QU_seq_no, data->seq_no);
 
    lSetString(qep, QU_tmpdir, data->tmpdir);
@@ -1459,10 +1460,12 @@ lListElem *qep
    lSetString(qep, QU_terminate_method, data->terminate_method);
 
    if (data->shell_start_mode == 0)
-      lSetString(qep, QU_shell_start_mode, "posix_compliant");
+      lSetString(qep, QU_shell_start_mode, "NONE");
    else if (data->shell_start_mode == 1)
-      lSetString(qep, QU_shell_start_mode, "script_from_stdin");
+      lSetString(qep, QU_shell_start_mode, "posix_compliant");
    else if (data->shell_start_mode == 2)
+      lSetString(qep, QU_shell_start_mode, "script_from_stdin");
+   else if (data->shell_start_mode == 3)
       lSetString(qep, QU_shell_start_mode, "unix_behavior");
    
    /**************************/
@@ -1599,43 +1602,6 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-/* G E N E R A L    P A G E                                                */
-/*-------------------------------------------------------------------------*/
-static void qmonQCToggleType(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
-   int i;
-   
-   DENTER(GUI_LAYER, "qmonQCToggleType");
-
-   /* 
-   ** The item depends on the order of the items in the checkbox
-   ** 4 stands for transfer queue
-   */
-   DPRINTF(("cbs->state = %d\n", cbs->state ));
-   if (cbs->item == 4) {
-      if ((cbs->state & TQ) == TQ) {
-         XmtChooserSetState(w, TQ, False);
-         for (i=0; i<4; i++)
-            XmtChooserSetSensitive(w, i, False);
-      }
-      else {
-         XmtChooserSetState(w, 0, False);
-         for (i=0; i<4; i++)
-            XmtChooserSetSensitive(w, i, True);
-         XmtChooserSetState(w, BQ, False);
-      }
-   }
-   if (cbs->state == 0)
-      XmtChooserSetState(w, BQ, False);
-      
-   DEXIT;
-}   
-
-
-/*-------------------------------------------------------------------------*/
 /* C H E C K P O I N T    P A G E                                          */
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
@@ -1751,7 +1717,7 @@ XtPointer cld, cad;
    if (cbs->column == 1) {
       if (!parse_ulong_val(NULL, &uval, TYPE_TIM, cbs->value, buf, BUFSIZ-1)) {
          if (show_message)
-            qmonMessageShow(w, True, "@{No valid time format: hh:mm:ss or\nINFINITY required !}");
+            qmonMessageShow(w, True, "@{qaction.novalidtime.No valid time format: hh:mm:ss or\nINFINITY required !}");
          show_message = False;
          cbs->doit = False;
       }
@@ -1784,8 +1750,9 @@ XtPointer cld, cad;
    if (cbs->row < 2) {
       limit = XbaeMatrixGetCell(w, cbs->row, 0);
       value = XbaeMatrixGetCell(w, cbs->row, 1);
-      sprintf(buf, "Enter a time value for '@fB%s':", 
-                     limit);
+      sprintf(buf, "%s '@fB%s':", 
+              XmtLocalize(w, "Enter a time value for", 
+              "Enter a time value for"), limit);
       strncpy(stringval, value, BUFSIZ-1);
       status = XmtAskForTime(w, NULL, buf,
                   stringval, sizeof(stringval), NULL, True);
@@ -1796,7 +1763,7 @@ XtPointer cld, cad;
       limit = XbaeMatrixGetCell(w, cbs->row, 0);
       value = XbaeMatrixGetCell(w, cbs->row, 1);
       strncpy(stringval, value, BUFSIZ-1);
-      status = XmtAskForMemory(w, NULL, "@{Enter a memory value",
+      status = XmtAskForMemory(w, NULL, "@{Enter a memory value}",
                   stringval, sizeof(stringval), NULL);
       if (stringval[0] == '\0')
          status = False;

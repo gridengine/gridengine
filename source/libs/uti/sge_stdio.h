@@ -33,6 +33,37 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>  
+#include <unistd.h>
+
+/****** uti/stdio/FPRINTF() ***************************************************
+*  NAME
+*     FPRINTF() -- fprintf() macro 
+*
+*  SYNOPSIS
+*     #define FPRINTF(arguments)
+*     void fprintf(FILE *stream, const char *format, ...)
+*
+*  FUNCTION
+*     This FPRINTF macro has to be used similar to the fprintf 
+*     function. It is not necessary to check the return value. 
+*     In case of an error the macro will jump to a defined label.
+*     The label name is 'FPRINTF_ERROR'.
+*
+*  INPUTS
+*     FILE *stream       - output stream
+*     const char *format - format string
+*     ...
+*
+*  NOTES
+*     Don't forget to define the 'FPRINTF_ERROR'-label
+******************************************************************************/
+
+#include <stdio.h>
+
+#include "basis_types.h"
 
 #define FPRINTF(x) \
    __fprintf_ret = fprintf x; \
@@ -41,5 +72,17 @@
    }
 
 extern int __fprintf_ret;
+
+pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
+                 const char *user, char **env, FILE **fp_in, FILE **fp_out, 
+                 FILE **fp_err);
+ 
+int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err, 
+                struct timeval *timeout); 
+
+void print_option_syntax(FILE *fp, const char *option, const char *meaning);
+
+bool 
+sge_check_stdout_stream(FILE *file, int fd);
 
 #endif /* __SGE_STDIO_H */

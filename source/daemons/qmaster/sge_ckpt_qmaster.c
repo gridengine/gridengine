@@ -33,16 +33,8 @@
 #include <string.h>
 
 #include "sge.h"
-#include "utility.h"
-#include "def.h"
-#include "sge_peL.h"
-#include "sge_ckptL.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
-#include "sge_jataskL.h"
-#include "sge_eventL.h"
-#include "sge_answerL.h"
-#include "sge_usersetL.h"
+#include "sge_pe.h"
+#include "sge_ja_task.h"
 #include "sge_ckpt_qmaster.h"
 #include "job_log.h"
 #include "sge_queue_qmaster.h"
@@ -52,39 +44,34 @@
 #include "sge_m_event.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
-#include "sge_me.h"
 #include "sge_signal.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_job_schedd.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
+#include "sge_stdlib.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+#include "sge_ckpt.h"
+#include "sge_queue.h"
+#include "sge_job.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 #include "msg_qmaster.h"
+
 /* #include "pw_def.h" */
 /* #include "pw_proto.h"  */
 #include "sge_parse_num_par.h"
 
-extern lList *Master_Ckpt_List;
-
-static int sge_count_ckpts(void); 
-
-/****** src/ckpt_mod() ********************************************************
+/****** qmaster/ckpt/ckpt_mod() ***********************************************
 *  NAME
 *     ckpt_mod -- add/modify ckpt object in Master_Ckpt_List 
 *
 *  SYNOPSIS
-*     int ckpt_mod (
-*        lList **alpp;
-*        lListElem *new_ckpt;
-*        lListElem *ckpt; 
-*        int add;
-*        char *ruser;
-*        char *rhost;
-*        gdi_object_t *object;
-*        int sub_command;     
-*     );
+*     int ckpt_mod (lList **alpp, lListElem *new_ckpt, lListElem *ckpt, 
+*                   int add, char *ruser, char *rhost, gdi_object_t *object,
+*                   int sub_command);
 *
 *  FUNCTION
 *     This function will be called from the framework which will
@@ -121,19 +108,10 @@ static int sge_count_ckpts(void);
 *     [alpp] - error messages will be added to this list
 *     0 - success
 *     STATUS_EUNKNOWN - an error occured
-*******************************************************************************
-*/         
-
-int ckpt_mod(
-lList **alpp,
-lListElem *new_ckpt,
-lListElem *ckpt, /* reduced */
-int add,
-char *ruser,
-char *rhost,
-gdi_object_t *object,
-int sub_command 
-) {
+******************************************************************************/ 
+int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
+             char *ruser, char *rhost, gdi_object_t *object, int sub_command) 
+{
    const char *ckpt_name;
 
    DENTER(TOP_LAYER, "ckpt_mod");
@@ -153,7 +131,7 @@ int sub_command
    } else {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(CK_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
       goto ERROR;
    }
    
@@ -191,7 +169,7 @@ int sub_command
          lSetString(new_ckpt, CK_when, get_checkpoint_when(new_flags));
       } else {
          ERROR((SGE_EVENT, MSG_CKPT_INVALIDWHENATTRIBUTE_S, ckpt_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          goto ERROR;
       }
    } 
@@ -222,17 +200,13 @@ ERROR:
    return STATUS_EUNKNOWN;
 }
 
-/****** src/ckpt_spool() ******************************************************
+/****** qmaster/ckpt/ckpt_spool() *********************************************
 *
 *  NAME
 *     ckpt_spool -- spool a ckpt object  
 *
 *  SYNOPSIS
-*     int ckpt_spool(
-*        lList **alpp;
-*        lListElem *ep;
-*        gdi_object_t *object;
-*     );
+*     int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
 *
 *  FUNCTION
 *     This function will be called from the framework which will
@@ -252,20 +226,15 @@ ERROR:
 *     [alpp] - error messages will be added to this list
 *     0 - success
 *     STATUS_EEXIST - an error occured
-*******************************************************************************
-*/         
-
-int ckpt_spool(
-lList **alpp,
-lListElem *ep,
-gdi_object_t *object 
-) {
+******************************************************************************/
+int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object) 
+{
    DENTER(TOP_LAYER, "ckpt_spool");
 
    if (!write_ckpt(1, 2, ep)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
             object->object_name, lGetString(ep, CK_name)));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -273,17 +242,13 @@ gdi_object_t *object
    return 0;
 }
 
-/****** src/ckpt_success() ****************************************************
+/****** qmaster/ckpt/ckpt_success() *******************************************
 *
 *  NAME
 *     ckpt_success -- does something after an successfull modify
 *
 *  SYNOPSIS
-*     int ckpt_success(
-*        lListElem *ep;
-*        lListElem *old_ep;
-*        gdi_object_t *object; 
-*     );
+*     int ckpt_success(lListElem *ep; lListElem *old_ep; gdi_object_t *object);
 *
 *  FUNCTION
 *     This function will be called from the framework which will
@@ -304,13 +269,9 @@ gdi_object_t *object
 *
 *  RESULT
 *     0 - success
-*****************************************************************************
-*/         
-int ckpt_success(
-lListElem *ep,
-lListElem *old_ep,
-gdi_object_t *object 
-) {
+******************************************************************************/ 
+int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
+{
    const char *ckpt_name;
 
    DENTER(TOP_LAYER, "ckpt_success");
@@ -327,19 +288,14 @@ gdi_object_t *object
    return 0;
 }
 
-/****** src/sge_del_ckpt() ****************************************************
+/****** qmaster/ckpt/sge_del_ckpt() *******************************************
 *
 *  NAME
 *     sge_del_ckpt -- delete ckpt object in Master_Ckpt_List 
 *
 *  SYNOPSIS
-*     int sge_del_ckpt(
-*        lListElem *ep;
-*        lList **alpp;
-*        char *ruser;
-*        char *rhost;   
-*     );
-*
+*     int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost);
+* 
 *  FUNCTION
 *     This function will be called from the framework which will
 *     add/modify/delete generic gdi objects.
@@ -356,14 +312,9 @@ gdi_object_t *object
 *     [alpp] - error messages will be added to this list
 *     0 - success
 *     STATUS_EUNKNOWN - an error occured
-*******************************************************************************
-*/         
-int sge_del_ckpt(
-lListElem *ep,
-lList **alpp,
-char *ruser,
-char *rhost 
-) {
+******************************************************************************/ 
+int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost) 
+{
    lListElem *found;
    int pos;
    const char *ckpt_name;
@@ -373,7 +324,7 @@ char *rhost
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -382,7 +333,7 @@ char *rhost
    if ((pos = lGetPosViaElem(ep, CK_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(CK_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -390,23 +341,41 @@ char *rhost
    ckpt_name = lGetPosString(ep, pos);
    if (!ckpt_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }                    
-   found = lGetElemStr(*lpp, CK_name, ckpt_name);
+   found = ckpt_list_locate(*lpp, ckpt_name);
 
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_CKPT, ckpt_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
+   }
+
+   /* 
+    * Try to find references in other objects
+    */
+   {
+      lList *local_answer_list = NULL;
+
+      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List)) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN,
+                         ANSWER_QUALITY_ERROR);
+         local_answer_list = lFreeList(local_answer_list);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    /* remove ckpt file 1st */
    if (sge_unlink(CKPTOBJ_DIR, ckpt_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EDISK;
    }
@@ -420,80 +389,11 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, ckpt_name, MSG_OBJ_CKPT));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }                     
 
-
-/****** src/sge_locate_ckpt() *************************************************
-*
-*  NAME
-*     sge_locate_ckpt -- find a ckpt object in the Master_Ckpt_List 
-*
-*  SYNOPSIS
-*     int sge_locate_ckpt(
-*        char *ckpt_name;
-*     );
-*
-*  FUNCTION
-*     This function will return a ckpt object by name if it exists.
-*
-*
-*  INPUTS
-*     ckpt_name   - name of the ckpt object. 
-*
-*  RESULT
-*     NULL - ckpt object with name "ckpt_name" does not exist
-*     !NULL - pointer to the cull element (CK_Type) 
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*******************************************************************************
-*/         
-
-lListElem *sge_locate_ckpt(
-const char *ckpt_name 
-) {
-   return lGetElemStr(Master_Ckpt_List, CK_name, ckpt_name);
-}
-
-/****** src/sge_change_queue_version_qr_list() ********************************
-*  NAME
-*     sge_change_queue_version_qr_list --  
-*
-*  SYNOPSIS
-*     int sge_change_queue_version_qr_list(
-*        lList *nq; 
-*        lList *oq; 
-*        char *obj_name;
-*        char *ckpt_name;  
-*     );
-*
-*  FUNCTION
-*
-*
-*  INPUTS
-*     nq - QR_Type
-*     oq - QR_Type
-*     obj_name -
-*     ckpt_name -
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*******************************************************************************/         
 void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
                                       const char *obj_name,
                                       const char *ckpt_name) 
@@ -508,7 +408,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    */
    for_each (qrep, nq) {
       q_name = lGetString(qrep, QR_name);
-      if ((qep = sge_locate_queue(q_name))) {
+      if ((qep = queue_list_locate(Master_Queue_List, q_name))) {
          sge_change_queue_version(qep, 0, 0);
          cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
             qep);
@@ -524,7 +424,7 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    for_each (qrep, oq) {
       q_name = lGetString(qrep, QR_name);
       if (!lGetElemStr(nq, QR_name, q_name) 
-          && (qep = sge_locate_queue(q_name))) {
+          && (qep = queue_list_locate(Master_Queue_List, q_name))) {
          sge_change_queue_version(qep, 0, 0);
          cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, 
             qep);
@@ -537,233 +437,3 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
    return;
 }                 
 
-/****** src/validate_ckpt() **************************************************
-*  NAME
-*     validate_ckpt -- validate all ckpt interface parameters 
-*
-*  SYNOPSIS
-*     int validate_ckpt(
-*        lListElem *ep;
-*        lList **alpp; 
-*     );
-*
-*  FUNCTION
-*     This function will test all ckpt interface parameters.
-*     If all are valid then it will return successfull.
-*
-*
-*  INPUTS
-*     ep     - element which sould be verified. 
-*     answer - answer list where the function stored error messages
-*
-*
-*  RESULT
-*     [answer] - error messages will be added to this list
-*     STATUS_OK - success
-*     STATUS_EUNKNOWN or STATUS_EEXIST - error
-*******************************************************************************
-*/         
-int validate_ckpt(
-lListElem *ep,
-lList **alpp 
-) {
-   static char* ckpt_interfaces[] = {
-      "USERDEFINED",
-      "HIBERNATOR",
-      "TRANSPARENT",
-      "APPLICATION-LEVEL",
-      "CPR",
-      "CRAY-CKPT"
-   };
-   static struct attr {
-      int nm;
-      char *text;
-   } ckpt_commands[] = {
-      { CK_ckpt_command, "ckpt_command" },
-      { CK_migr_command, "migr_command" },
-      { CK_rest_command, "restart_command"},
-      { CK_clean_command, "clean_command"},
-      { NoName,           NULL} };
-
-   int i;
-   int found = 0;
-   const char *s, *interface;
-
-   DENTER(TOP_LAYER, "validate_ckpt_obj");
-
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* -------- CK_name */
-   if (verify_str_key(alpp, lGetString(ep, CK_name), "checkpoint interface")) {
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }          
-
-   /*
-   ** check if ckpt obj can be added
-   ** check allowed interfaces and license
-   */
-   if ((interface = lGetString(ep, CK_interface))) {
-      found = 0;
-      for (i=0; i < (sizeof(ckpt_interfaces)/sizeof(char*)); i++) {
-         if (!strcasecmp(interface, ckpt_interfaces[i])) {
-            found = 1;
-            break;
-         }
-      }
-
-      if (!found) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NO_INTERFACE_S, interface));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
-         DEXIT;
-         return STATUS_EEXIST;
-      }
-      
-#ifdef PW
-      /* license check */
-      if (!set_licensed_feature("ckpt")) {
-         if (!strcasecmp(interface, "HIBERNATOR") ||
-             !strcasecmp(interface, "CPR") ||
-             !strcasecmp(interface, "APPLICATION-LEVEL") ||
-             !strcasecmp(interface, "CRAY-CKPT")) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_CKPT_LIC));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-            DEXIT;
-            return STATUS_EEXIST;
-         }
-      }
-#endif      
-   }                     
-
-   for (i=0; ckpt_commands[i].nm!=NoName; i++) {
-      if (replace_params(lGetString(ep, ckpt_commands[i].nm),
-               NULL, 0, ckpt_variables)) {
-         ERROR((SGE_EVENT, MSG_OBJ_CKPTENV,
-               ckpt_commands[i].text, lGetString(ep, CK_name), err_msg));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-         DEXIT;
-         return STATUS_EEXIST;
-      }
-   }
-
-   /* -------- CK_queue_list */
-   if (verify_qr_list(alpp, lGetList(ep, CK_queue_list), MSG_OBJ_QLIST,
-               MSG_OBJ_CKPTI, lGetString(ep, CK_name))!=STATUS_OK) {
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   /* -------- CK_signal */
-   if ((s=lGetString(ep, CK_signal)) &&
-         strcasecmp(s, "none") &&
-         sys_str2signal(s)==-1) {
-      ERROR((SGE_EVENT, MSG_CKPT_XISNOTASIGNALSTRING_S , s));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   DEXIT;
-   return STATUS_OK;
-}              
-
-/****** src/sge_count_ckpts() *************************************************
-*  NAME
-*     sge_count_ckpts -- count the number of ckpt objects 
-*
-*  SYNOPSIS
-*     int sge_count_ckpts(
-*        void
-*     );
-*
-*  FUNCTION
-*     Count the number of currently configured ckpt objects 
-*
-*  RESULT
-*     positive int or 0 - number of ckpt objects
-******************************************************************************
-*/         
-static int sge_count_ckpts()
-{
-   int number_of_ckpts = 0;
-   lList *cl = NULL;
-   static lCondition *have_to_be_licensed = NULL;
-   static lEnumeration *what_all;
-
-   DENTER(TOP_LAYER, "sge_count_ckpts");
-
-   if (Master_Ckpt_List) {
-      if (!have_to_be_licensed) {
-         have_to_be_licensed = lWhere("%T(%I c= %s || %I c= %s || %I c= %s)",
-                                       CK_Type, CK_interface, "HIBERNATOR",
-                                       CK_interface, "CPR",
-                                       CK_interface, "CRAY-CKPT");
-
-         what_all = lWhat("%T(ALL)", CK_Type);
-      }
-
-      cl = lSelect("ckpt_licensed", Master_Ckpt_List, have_to_be_licensed, 
-         what_all);
-      number_of_ckpts = lGetNumberOfElem(cl);
-      lFreeList(cl);
-   }
-
-   DEXIT;
-   return number_of_ckpts;
-}         
-
-/****** src/check_ckpt_lic() **************************************************
-*  NAME
-*     check_ckpt_lic -- check the ckpt license 
-*
-*  SYNOPSIS
-*     int check_ckpt_lic(
-*        int licensed_ckpts;
-*        int verbose;     
-*     );
-*
-*  FUNCTION
-*     Checks if ckpt interfaces exist. If the number
-*     of ckpt objects is > 0 and ckpt is not licensed then 
-*     this function will log a critical error and return 1. 
-*
-*  INPUTS
-*
-*
-*  RESULT
-*     1 - ckpt objects exist and ckpt is not licenses
-*     0 - either ckpt is licensed or 
-*         ckpt is not licensed and no ckpt objects exists
-*******************************************************************************
-*/ 
-int check_ckpt_lic(
-int licensed_ckpts,
-int verbose 
-) {
-   int current_ckpts = 0;
-
-   DENTER(TOP_LAYER, "check_ckpt_lic");
-
-   if ((current_ckpts = sge_count_ckpts()) < 0) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTCOUNT_CKPT_S, SGE_FUNC));
-      return 0;
-   }
-
-   if (current_ckpts > 0 && !licensed_ckpts) {
-      if (verbose) {
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_NO_CKPT_LIC));
-      }
-      DEXIT;
-      return 1;
-   }
-   else {
-      DEXIT;
-      return 0;
-   }
-}       
-    

@@ -38,17 +38,18 @@
 
 /* basis gdi */
 #include "sge.h"
-#include "sge_me.h"
 #include "sge_gdi.h"
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
-#include "sge_hostL.h"
-#include "sge_complexL.h"
-#include "sge_answerL.h"
+#include "sge_ja_task.h"
+#include "sge_answer.h"
 #include "sgermon.h"
 #include "resolve_host.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
+#include "sge_prog.h"
+#include "sge_job.h"
+#include "sge_host.h"
+#include "sge_complex.h"
+
 /* scheduling library */
 #include "sge_complex_schedd.h"
 
@@ -154,7 +155,7 @@ const char *attr_name
 
    lFreeList(alp);
 
-   if (!(hep=lGetElemHost(exechost_list, EH_name, unique))) {
+   if (!(hep=host_list_locate(exechost_list, unique))) {
       lFreeList(exechost_list);
       fprintf(stderr, MSG_LIST_NOEXECHOSTOBJECT_S , unique);
       DEXIT;
@@ -245,7 +246,7 @@ const char *attr_name
 
    
    /* search for host */
-   if (!(hep=lGetElemHost(exechost_list, EH_name, unique))) {
+   if (!(hep=host_list_locate(exechost_list, unique))) {
       fprintf(stderr, MSG_LIST_NOEXECHOSTOBJECT_S , unique);
       lFreeList(complex_list);
       lFreeList(exechost_list);

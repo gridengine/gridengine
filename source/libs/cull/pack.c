@@ -75,6 +75,32 @@
 #endif
 
 
+/****** cull/pack/--CULL_Packing ***************************************
+*
+*  NAME
+*     CULL_Packing -- platform independent exchange format
+*
+*  FUNCTION
+*     The cull packing functions provide a framework for a 
+*     platform independent data representation.
+*
+*     Data is written into a packbuffer. Individual data words
+*     are written in network byte order.
+*
+*     Data in the packbuffer can be compressed.
+*
+*  NOTES
+*     Other platform independent formats, like XML, should be 
+*     implemented.
+*
+*  SEE ALSO
+*     cull/pack/-Versioncontrol
+*
+*     cull/pack/packbitfield()
+*     cull/pack/unpackbitfield()
+****************************************************************************
+*/
+
 static int chunk_size = CHUNK;
 
 #ifdef COMMCOMPRESS
@@ -180,25 +206,46 @@ size_t len
       }
 #endif
 
-/* -------------------------------
-
-   initialize packing buffer
-   memory gets allocated
-   and pointers get initialized
-   size is the amount of memory
-   that gets allocated at initialization
-   for reallocation the size passed to
-   pack_set_chunk gets used
-
-   if no size is given
-   chunk_size gets used
-
-   return values
-   PACK_SUCCESS
-   PACK_ENOMEM
-   PACK_FORMAT
-
- */
+/****** cull/pack/init_packbuffer() *************************************************
+*  NAME
+*     init_packbuffer() -- initialize packing buffer
+*
+*  SYNOPSIS
+*     int init_packbuffer(sge_pack_buffer *pb, int initial_size, 
+*                         int just_count) 
+*
+*  FUNCTION
+*     Initialize a packing buffer.
+*     Allocates the necessary memory. If more memory is needed during the use
+*     of the packbuffer, it will be reallocated increasing the size by 
+*     chunk_size (see function pack_set_chunk).
+*
+*     Since version 6.0, version information is provided in the packbuffer and 
+*     is included in sent messages.
+*     For best possible backward interoperability with former versions, an 
+*     integer with value 0 is padded before the version information as first 
+*     word in the packbuffer. This triggeres error handling in former versions.
+*
+*  INPUTS
+*     sge_pack_buffer *pb - the packbuffer to initialize
+*     int initial_size    - the amount of memory to be allocated at 
+*                           initialization.
+*                           If a value of 0 is given as initial_size, a size 
+*                           of chunk_size (global variable, see function 
+*                           pack_set_chunk) will be used.
+*     int just_count      - if true, no memory will be allocated and the 
+*                           "just_count" property of the packbuffer will 
+*                           be set.
+*
+*  RESULT
+*     int - PACK_SUCCESS on success
+*           PACK_ENOMEM  if memory allocation fails
+*           PACK_FORMAT  if no valid packbuffer is passed
+*
+*  SEE ALSO
+*     cull/pack/-Packing-typedefs
+*     cull/pack/pack_set_chunk()
+*******************************************************************************/
 int init_packbuffer(
 sge_pack_buffer *pb,
 int initial_size,
@@ -217,15 +264,18 @@ int just_count
 #endif
 
    if (!pb) {
-      ERROR((SGE_EVENT, MSG_CULL_FORMATERRORININITPACKBUFFER));
+      ERROR((SGE_EVENT, MSG_CULL_ERRORININITPACKBUFFER_S, MSG_CULL_PACK_FORMAT));
       DEXIT;
       return PACK_FORMAT;
    }   
 
 
    if (!just_count) {
-      if (!initial_size)
+      if (initial_size == 0) {
          initial_size = chunk_size;
+      } else {
+         initial_size += 2 * INTSIZE;  /* space for version information */
+      }
       
       memset(pb, 0, sizeof(sge_pack_buffer));
 #ifdef COMMCOMPRESS
@@ -257,8 +307,7 @@ int just_count
             return PACK_ENOMEM;
          }
          pb->mode = 0;    /* this indicates compression */
-      }
-      else
+      } else
 #endif
       {
          pb->head_ptr = malloc(initial_size);
@@ -271,18 +320,22 @@ int just_count
          pb->mem_size = initial_size;
          pb->mode = -1;    /* this indicates no compression/decompression */
       }
-   }
-   else {
+
+      pb->bytes_used = 0;
+      pb->just_count = 0;
+      pb->version = CULL_VERSION;
+      packint(pb, 0);              /* pad 0 byte -> error handing in former versions */
+      packint(pb, pb->version);    /* version information is included in buffer      */
+   } else {
       pb->head_ptr = pb->cur_ptr = NULL;
       pb->mem_size = 0;
       pb->mode = 0;    /* this indicates compression */
+      pb->bytes_used = 0;
+      pb->just_count = 1;
 #ifdef COMMCOMPRESS
       pb->head_ptr = NULL;
 #endif
    }
-
-   pb->bytes_used = 0;
-   pb->just_count = just_count;
 
    DEXIT;
    return PACK_SUCCESS;
@@ -300,30 +353,65 @@ char *buf,
 u_long32 buflen,
 int compressed 
 ) {
-   if (!pb && !buf)
-      return PACK_FORMAT;
+   DENTER(PACK_LAYER, "init_packbuffer_from_buffer");
 
+   if (!pb && !buf) {
+      DEXIT;
+      return PACK_FORMAT;
+   }   
 #ifndef COMMCOMPRESS
    /* don't understand compressed buffers */
-   if(compressed)
+   if(compressed) {
+      DEXIT;
       return PACK_FORMAT;
+   }   
 #endif
 
    memset(pb, 0, sizeof(sge_pack_buffer));
 #ifdef COMMCOMPRESS
    if(compressed) {
-      if(inflateInit(&(pb->cpr)))
+      if(inflateInit(&(pb->cpr))) {
+         DEXIT;
          return PACK_ENOMEM;
+      }   
       pb->cpr.avail_in = buflen;
       pb->cpr.next_in = (unsigned char*) buf;
    }
 #endif
+
    pb->head_ptr = buf;
    pb->cur_ptr = buf;
    pb->mem_size = buflen;
    pb->bytes_used = 0;
    pb->mode = compressed?1:-1;    /* must decompress or not ? */
 
+   /* check cull version (only if buffer contains any data) */
+   if(buflen > 0) {
+      int ret;
+      u_long32 pad, version;
+
+      if((ret = unpackint(pb, &pad)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      } 
+
+      if((ret = unpackint(pb, &version)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+
+      if(pad != 0 || version != CULL_VERSION) {
+         ERROR((SGE_EVENT, MSG_CULL_PACK_WRONG_VERSION_XX, version, CULL_VERSION));
+         DEXIT;
+         return PACK_VERSION;
+      }
+
+      pb->version = version;
+   } else {
+      pb->version = CULL_VERSION;
+   }
+
+   DEXIT;
    return PACK_SUCCESS;
 }
 
@@ -374,12 +462,12 @@ sge_pack_buffer *pb
       else if(pb->mode == 0 && !pb->just_count)
          deflateEnd(&(pb->cpr));
    }
-#endif
+#else   
    if (pb->head_ptr) {
       free(pb->head_ptr);
       pb->head_ptr = NULL;
    }
-
+#endif
    return;
 }
 
@@ -389,6 +477,7 @@ sge_pack_buffer *pb
 int pb_filled(
 sge_pack_buffer *pb 
 ) {
+#if 0
 #ifdef COMMCOMPRESS
    if(pb->mode != -1 ) {
       if(!pb->head_ptr)
@@ -402,6 +491,10 @@ sge_pack_buffer *pb
          return 0;
       return (pb->cur_ptr != pb->head_ptr);
    }
+#endif
+
+   /* do we have more bytes used than the version information? */
+   return (pb_used(pb) > (2 * INTSIZE));
 }
 
 /*************************************************************
@@ -666,6 +759,54 @@ register const char *str
    return PACK_SUCCESS;
 }
 
+
+/****** cull/pack/packbitfield() ****************************************************
+*  NAME
+*     packbitfield() -- pack a bitfield 
+*
+*  SYNOPSIS
+*     int packbitfield(sge_pack_buffer *pb, bitfield bitfield) 
+*
+*  FUNCTION
+*     Writes the bitfield into the given packbuffer.
+*     The following information will be written:
+*        - the size of the bitfield in bits
+*        - the bitfield itself as binary buffer
+*
+*  INPUTS
+*     sge_pack_buffer *pb - the target packbuffer
+*     bitfield bitfield   - the bitfield to pack
+*
+*  RESULT
+*     int - PACK_SUCCESS on success,
+*           else PACK_* error codes
+*
+*  SEE ALSO
+*     uti/bitfield/--Bitfield
+*     cull/pack/unpackbitfield()
+*******************************************************************************/
+int packbitfield(sge_pack_buffer *pb, bitfield bitfield)
+{
+   int ret;
+   u_long32 char_size;
+
+   DENTER(PACK_LAYER, "packbitfield");
+
+   if((ret = packint(pb, bitfield->size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+   
+   char_size = bitfield->size / 8 + ((bitfield->size % 8) > 0 ? 1 : 0);
+   if((ret = packbuf(pb, bitfield->bf, char_size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
 /* ---------------------------------------------------------
 
    return values:
@@ -729,6 +870,7 @@ u_long32 buf_size
    DEXIT;
    return PACK_SUCCESS;
 }
+
 
 /* --------------------------------------------------------- */
 /*                                                           */
@@ -1044,4 +1186,81 @@ int buf_size
    return PACK_SUCCESS;
 }
 
+/****** cull/pack/unpackbitfield() ****************************************************
+*  NAME
+*     unpackbitfield() -- unpack a bitfield 
+*
+*  SYNOPSIS
+*     int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield) 
+*
+*  FUNCTION
+*     Unpacks a bitfield from a packbuffer.
+*
+*  INPUTS
+*     sge_pack_buffer *pb - the source packbuffer
+*     bitfield *bitfield  - used to return the unpacked bitfield
+*
+*  RESULT
+*     int - PACK_SUCCESS on success,
+*           else PACK_* error codes
+*
+*  SEE ALSO
+*     uti/bitfield/--Bitfield
+*     cull/pack/packbitfield()
+*******************************************************************************/
+int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield)
+{
+   int ret;
+   u_long32 size, char_size;
+   char *buffer;
+
+   DENTER(PACK_LAYER, "unpackbitfield");
+
+   /* unpack the size in bits */
+   if((ret = unpackint(pb, &size)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   /* create new bitfield */
+   *bitfield = sge_bitfield_new(size);
+   if(*bitfield == NULL) {
+      DEXIT;
+      return PACK_ENOMEM;
+   }
+
+   /* unpack contents of the bitfield */
+   char_size = size / 8 + ((size % 8) > 0 ? 1 : 0);
+   if((ret = unpackbuf(pb, &buffer, char_size)) != PACK_SUCCESS) {
+      *bitfield = sge_bitfield_free(*bitfield);
+      DEXIT;
+      return ret;
+   }
+ 
+   /* copy and free buffer */
+   memcpy((*bitfield)->bf, buffer, char_size);
+   free(buffer);
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
+const char *cull_pack_strerror(int errnum)
+{
+   switch(errnum) {
+      case PACK_SUCCESS:
+         return MSG_CULL_PACK_SUCCESS;
+      case PACK_ENOMEM:
+         return MSG_CULL_PACK_ENOMEM;
+      case PACK_FORMAT:
+         return MSG_CULL_PACK_FORMAT;
+      case PACK_BADARG:
+         return MSG_CULL_PACK_BADARG;
+      case PACK_VERSION:
+         return MSG_CULL_PACK_VERSION;
+      default:
+         /* JG: TODO: we should have some global error message for all strerror functions */
+         return "";
+   }
+}
 

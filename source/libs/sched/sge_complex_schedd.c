@@ -40,15 +40,22 @@
 #include "sge_sched.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
 #include "sge_parse_num_par.h"
 #include "sge_static_load.h"
-#include "sge_complex.h"
-#include "msg_schedd.h"
+#include "sge_answer.h"
 #include "sge_language.h"
 #include "sge_string.h"
+#include "sge_hostname.h"
+#include "sge_schedd_conf.h"
+#include "sge_queue.h"
+#include "sge_host.h"
+#include "sge_complex.h"
+#include "gdi_utility.h"
+
+#include "msg_common.h"
+#include "msg_schedd.h"
+
+#include "sge_complex_schedd.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
@@ -161,10 +168,10 @@ int recompute_debitation_dependent
       if (recompute_debitation_dependent) {
          /* touch only debitation dependent attributes */
 #ifndef WIN32NATIVE
-         if (!lGetUlong(ep, CE_consumable) && 
+         if (!lGetBool(ep, CE_consumable) && 
 			 !lGetElemStr(scheddconf.job_load_adjustments, CE_name, name)) {
 #else
-         if (!lGetUlong(ep, CE_consumable)) {
+         if (!lGetBool(ep, CE_consumable)) {
 #endif
             continue;
          }
@@ -172,7 +179,7 @@ int recompute_debitation_dependent
       }
 
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
-      if (get_qs_state()==QS_STATE_FULL && lGetUlong(ep, CE_consumable)) {
+      if (get_qs_state()==QS_STATE_FULL && lGetBool(ep, CE_consumable)) {
 
          if (!(act_ep = lGetElemStr(actual, CE_name, name))) {
             ERROR((SGE_EVENT, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S , name));
@@ -208,7 +215,7 @@ int recompute_debitation_dependent
       } else {
          /* fixed value */
 
-         u_long32 type = lGetUlong(ep, CE_consumable)?
+         u_long32 type = lGetBool(ep, CE_consumable)?
                DOMINANT_TYPE_CONSUMABLE:
                DOMINANT_TYPE_FIXED;
 
@@ -330,9 +337,9 @@ int recompute_debitation_dependent
       name = lGetPosString(ep, pos_CE_name);
       already_here = lGetElemStr(*new_complex, CE_name, name);
 
-      /* Just skip multiple occurrencies of attributes.
+      /* Just skip multiple occurances of attributes.
          It's expensive but the qmaster had to prevent 
-         multiple occurrencies of complexes in queue and 
+         multiple occurances of complexes in queue and 
          host and global */
       if (!recompute_debitation_dependent) {
          if (already_here)
@@ -341,9 +348,9 @@ int recompute_debitation_dependent
          /* only reinit debitation dependent attributes */
 #ifndef WIN32NATIVE
          if (!lGetElemStr(scheddconf.job_load_adjustments, CE_name, name) &&
-                  !lGetUlong(ep, CE_consumable))
+                  !lGetBool(ep, CE_consumable))
 #else
-         if (!lGetUlong(ep, CE_consumable))
+         if (!lGetBool(ep, CE_consumable))
 #endif
             continue; 
       
@@ -402,8 +409,8 @@ int recompute_debitation_dependent
    DENTER(TOP_LAYER, "global_complexes2scheduler");
 
    /* build global complex and add it to result */
-   if ((complex = lGetElemStr(complex_list, CX_name, "global")))
-      fillComplexFromHost(new_complex_list, complex_list, global_host, complex, DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
+   complex = lGetElemStr(complex_list, CX_name, "global");
+   fillComplexFromHost(new_complex_list, complex_list, global_host, complex, DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -430,16 +437,15 @@ int recompute_debitation_dependent
    /* build global complex and add it to result */
    if (recompute_debitation_dependent || !*new_complex_list) {
       global_complexes2scheduler(new_complex_list, 
-                                 lGetElemHost(exechost_list, EH_name, "global"), 
+                                 host_list_locate(exechost_list, "global"), 
                                  complex_list,
                                  recompute_debitation_dependent);
    }
 
    /* build host complex and add it to result */
-   if ((complex = lGetElemStr(complex_list, CX_name, "host"))) {
-      fillComplexFromHost(new_complex_list, complex_list, host, complex, 
-            DOMINANT_LAYER_HOST, recompute_debitation_dependent);
-   }
+   complex = lGetElemStr(complex_list, CX_name, "host");
+   fillComplexFromHost(new_complex_list, complex_list, host, complex, 
+         DOMINANT_LAYER_HOST, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -468,7 +474,7 @@ int recompute_debitation_dependent
       host_complexes2scheduler(
          new_complex_list, 
          queue ?
-            lGetElemHost(exechost_list, EH_name, lGetHost(queue, QU_qhostname))
+            host_list_locate(exechost_list, lGetHost(queue, QU_qhostname))
             :NULL, 
          exechost_list, 
          complex_list, 
@@ -477,8 +483,8 @@ int recompute_debitation_dependent
    }
 
    /* build queue complex and add it to result */
-   if ((complex = lGetElemStr(complex_list, CX_name, "queue")))
-      fillComplexFromQueue(new_complex_list, complex_list, complex, queue, recompute_debitation_dependent);
+   complex = lGetElemStr(complex_list, CX_name, "queue");
+   fillComplexFromQueue(new_complex_list, complex_list, complex, queue, recompute_debitation_dependent);
 
    DEXIT;
    return 0;
@@ -495,20 +501,23 @@ int recompute_debitation_dependent
   values. 
 
   Returns: new_complex
+
+new_complex;                     here we collect resulting attributes  
+complex_list;                    the global complex list               
+host;                            the host or the global host           
+complex;                         he template                          
+layer;                           which layer was dominant?             
+recompute_debitation_dependent;  recompute only attribute types which  
+                                 depend on the amount of debited jobs  
+                                 these types are:                      
+                                 - load corrected load values          
+                                   (-> scheddconf.job_load_adjustments)
+                                 - consumable attributes              
+                                   (-> CE_consumable)                 
  **********************************************************************/
-int fillComplexFromHost(new_complex, complex_list, host, complex, layer, recompute_debitation_dependent)
-lList** new_complex;                /* here we collect resulting attributes  */
-lList* complex_list;                /* the global complex list               */
-lListElem *host;                    /* the host or the global host           */
-lListElem *complex;                 /* the template                          */
-u_long32 layer;                     /* which layer was dominant?             */
-int recompute_debitation_dependent; /* recompute only attribute types which  */
-                                    /* depend on the amount of debited jobs  */
-                                    /* these types are:                      */
-                                    /* - load corrected load values          */
-                                    /*   (-> scheddconf.job_load_adjustments)*/
-                                    /* - consumable attributes               */
-                                    /*   (-> CE_consumable)                  */
+int fillComplexFromHost(lList **new_complex, lList *complex_list, 
+                        lListElem *host, lListElem *complex, u_long32 layer, 
+                        int recompute_debitation_dependent)
 {
    lListElem *cep;
    double lc_factor = 0; /* scaling for load correction */ 
@@ -517,7 +526,8 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    DENTER(TOP_LAYER, "fillComplexFromHost");
 
    /* append main complex "host"/"global" ... */
-   append_complexes(new_complex, complex, layer, recompute_debitation_dependent);
+   if (complex)
+      append_complexes(new_complex, complex, layer, recompute_debitation_dependent);
 
    if (!host) { /* there may be a queue which has no host object yet */
       DEXIT;
@@ -593,7 +603,7 @@ double lc_factor
 #endif
       if (recompute_debitation_dependent) {
          /* touch only debitation dependent attributes */
-         if (!job_load && !lGetUlong(ep, CE_consumable)) {
+         if (!job_load && !lGetBool(ep, CE_consumable)) {
             continue;
          }
 /*          DPRINTF(("%s\tfillComplexFromHost()\n", name)); */
@@ -724,7 +734,7 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
       {"slots",            "s",   QU_job_slots,        TYPE_INT, CMPLXLT_OP},
       {"tmpdir",           "tmp", QU_tmpdir,           TYPE_STR, CMPLXEQ_OP},
       {"seq_no",           "seq", QU_seq_no,           TYPE_INT, CMPLXEQ_OP},
-      {"rerun",            "re",  QU_rerun,            TYPE_INT, CMPLXEQ_OP},
+      {"rerun",            "re",  QU_rerun,            TYPE_BOO, CMPLXEQ_OP},
       {"calendar",         "cal", QU_calendar,         TYPE_STR, CMPLXEQ_OP},
       {"s_rt",             "srt", QU_s_rt,             TYPE_TIM, CMPLXLT_OP},
       {"h_rt",             "hrt", QU_h_rt,             TYPE_TIM, CMPLXLT_OP},
@@ -750,8 +760,8 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    DENTER(TOP_LAYER, "fillComplexFromQueue");
 
    /* append main "queue" complex ... */
-   append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent);
-
+   if (complex)
+      append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent);
 
    if (!queue) {
       DEXIT;
@@ -779,9 +789,9 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
          /* touch only debitation dependent attributes */ 
 #ifndef WIN32NATIVE
          if (!lGetElemStr(scheddconf.job_load_adjustments, CE_name, q2cptr->attrname) &&
-                  !lGetUlong(complexel, CE_consumable)) {
+                  !lGetBool(complexel, CE_consumable)) {
 #else
-         if (!lGetUlong(complexel, CE_consumable)) {
+         if (!lGetBool(complexel, CE_consumable)) {
 #endif
             continue;
          }
@@ -799,13 +809,19 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
 
       case TYPE_TIM:
       case TYPE_MEM:
-      case TYPE_BOO:
       case TYPE_DOUBLE:
          /* read from queue and write into complex */
          if ((value = lGetString(queue, q2cptr->field))) {
             parse_ulong_val(&dval, NULL, q2cptr->type, value, NULL, 0); 
             decide_dominance(complexel, dval, value, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
          } 
+         break;
+
+      case TYPE_BOO:
+         /* read from queue and write into complex */
+         dval = (double)lGetBool(queue, q2cptr->field);
+         sprintf(as_str, "%d", (int)lGetBool(queue, q2cptr->field));
+         decide_dominance(complexel, dval, as_str, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
          break;
 
       case TYPE_STR:
@@ -945,7 +961,7 @@ int force_existence
          if (type==TYPE_CSTR)
             match = strcasecmp(request, offer);
          else
-            match = hostcmp(request, offer);
+            match = sge_hostcmp(request, offer);
       }
       match = !match;
 
@@ -1075,7 +1091,7 @@ int main(int argc, char *argv[], char *envp[])
   
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -1095,61 +1111,6 @@ int main(int argc, char *argv[], char *envp[])
    return 0;
 }
 #endif
-
-lListElem* sge_locate_complex_attr(const char *name, lList *complex_list) 
-{
-   lListElem *cep, *ep;
-
-   DENTER(CULL_LAYER, "sge_locate_complex_attr");
-
-   for_each (cep, complex_list) {
-      if ((ep=find_attribute_in_complex_list(name, lFirst(lGetList(cep, CX_entries))))) {
-         DEXIT;
-         return ep;
-      }
-   }
-
-   DEXIT;
-   return NULL;
-}
-
-/***************************************************************
- Find an attribute in a complex list. 
- Iterate over all Complexes and look into their attribute lists.
- ***************************************************************/
-lListElem *find_attribute_in_complex_list(const char *attrname, 
-                                          lListElem *cmplxl) 
-{
-   lListElem *attr;
-   const char *str;
-   int pos_CE_name, pos_CE_shortcut;
-
-   DENTER(CULL_LAYER, "find_attribute_in_complex_list");
-
-   if (!attrname || !cmplxl) {
-      DEXIT;
-      return NULL;
-   }
-
-   pos_CE_name      = lGetPosViaElem(cmplxl, CE_name);
-   pos_CE_shortcut  = lGetPosViaElem(cmplxl, CE_shortcut);
-    
-   for (attr=cmplxl; attr; attr = lNext(attr)) {
-      /* attrname may be the name or a shortcut */
-      if ((str = lGetPosString(attr, pos_CE_name)) && !strcmp(attrname, str)) {
-         DEXIT;
-         return attr;
-      }
-      if ((str = lGetPosString(attr, pos_CE_shortcut)) && !strcmp(attrname, str)) {
-         DEXIT;
-         return attr;
-      }
-   }
-
-   DEXIT;
-   return NULL;
-}
-
 
 /* Updates all consumable actual values of queue/host
    for 'slots' slots of the given job. Since it is also 
@@ -1176,13 +1137,13 @@ int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
       dval = 0;
 
       /* search default request */  
-      if (!(dcep = sge_locate_complex_attr(name, complex_list))) {
+      if (!(dcep = complex_list_locate_attr(complex_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          DEXIT; 
          return -1;
       } 
 
-      if (!lGetUlong(dcep, CE_consumable)) {
+      if (!lGetBool(dcep, CE_consumable)) {
          /* no error */
          continue;
       }
@@ -1259,4 +1220,94 @@ u_long32 type
    if (type<TYPE_FIRST || type>TYPE_LAST)
       type = 0;
    return typev[type];
-}   
+}
+
+int ensure_attrib_available(
+lList **alpp,
+lListElem *ep,
+int nm 
+) {
+   const char *name, *obj_name = "none", *obj_descr = "none";
+   lListElem *attr;
+   lList *resources = NULL; 
+
+   DENTER(TOP_LAYER, "ensure_attrib_available");
+
+   for_each (attr, lGetList(ep, nm)) {
+      if (!resources) { /* first time build resources list */
+         if ( nm==EH_consumable_config_list ) {
+            if (!strcmp(lGetHost(ep, EH_name), "global"))
+               global_complexes2scheduler(&resources, ep, Master_Complex_List, 0);
+            else 
+               host_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
+            obj_name = lGetHost(ep, EH_name);
+            obj_descr = "host";
+         } else {
+            queue_complexes2scheduler(&resources, ep, Master_Exechost_List, Master_Complex_List, 0);
+            obj_name = lGetString(ep, QU_qname);
+            obj_descr = "queue";
+         }
+      }
+
+      name = lGetString(attr, CE_name);
+      if (!lGetElemStr(resources, CE_name, name)) {
+         resources = lFreeList(resources);
+         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_SSS, name, obj_descr, obj_name));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+   resources = lFreeList(resources);
+
+   DEXIT;
+   return 0;
+}
+
+int attr_mod_threshold(
+lList **alpp,
+lListElem *qep,
+lListElem *new_ep,
+int nm,
+int primary_key,
+int sub_command,
+char *attr_name,
+char *object_name 
+) {
+   int ret;
+
+   DENTER(TOP_LAYER, "attr_mod_threshold");
+
+   /* ---- attribute nm */
+   if (lGetPosViaElem(qep, nm)>=0) {
+      lListElem *tmp_elem;
+
+      DPRINTF(("got new %s\n", attr_name));
+
+      tmp_elem = lCopyElem(new_ep); 
+      attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
+         sub_command, attr_name, object_name, 0); 
+
+      ret=sge_fill_requests(lGetList(tmp_elem, nm), Master_Complex_List, 1, 0, 0);
+      if (ret) {
+         /* error message gets written by sge_fill_requests into SGE_EVENT */
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         lFreeElem(tmp_elem);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+      lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
+      lFreeElem(tmp_elem);
+
+      /* check whether this attrib is available due to complex configuration */
+      if (ensure_attrib_available(alpp, new_ep, nm)) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+

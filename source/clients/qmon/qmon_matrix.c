@@ -39,21 +39,20 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#include "sge_jobL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_rangeL.h"
 #include "sge_usageL.h"
-#include "sge_answerL.h"
-#include "sge_complexL.h"
 #include "sge_requestL.h"
 
 #include "cull.h"
 #include "sge_gdi.h"
-#include "sge_complex.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
-#include "parse_range.h"
+#include "sge_range.h"
+#include "sge_answer.h"
+#include "sge_job.h"
+#include "sge_queue.h"
+#include "sge_complex.h"
+#include "sge_var.h"
+#include "sge_host.h"
 #include "qmon_rmon.h"
 #include "qmon_quarks.h"
 #include "qmon_matrix.h"
@@ -818,9 +817,9 @@ StringConst *ce_entry
       ce_entry[CE_RELOP] = "??";
    }
    ce_entry[CE_VALUE] = lGetString(ep, CE_stringval);
-   ce_entry[CE_REQUEST] = lGetUlong(ep, CE_forced) ? "FORCED" : 
-                           (lGetUlong(ep, CE_request) ? "YES" : "NO");
-   ce_entry[CE_CONSUMABLE] = lGetUlong(ep, CE_consumable) ? "YES" : "NO";
+   ce_entry[CE_REQUEST] = lGetBool(ep, CE_forced) ? "FORCED" : 
+                           (lGetBool(ep, CE_request) ? "YES" : "NO");
+   ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
    ce_entry[CE_DEFAULT] = lGetString(ep, CE_default);
       
    DEXIT;
@@ -895,27 +894,27 @@ String *ce_entry
 
    if (!strcasecmp(ce_entry[CE_REQUEST], "y") 
             || !strcasecmp(ce_entry[CE_REQUEST], "yes"))
-      requestable = 1;
+      requestable = TRUE;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "n") 
             || !strcasecmp(ce_entry[CE_REQUEST], "no"))
-      requestable = 0;
+      requestable = FALSE;
    else if (!strcasecmp(ce_entry[CE_REQUEST], "f") 
             || !strcasecmp(ce_entry[CE_REQUEST], "forced")) {
-      forced = 1;
-      requestable = 1;
+      forced = TRUE;
+      requestable = TRUE;
    }
    else {
       DPRINTF(("invalid requestable entry: %s\n", ce_entry[CE_REQUEST]));
    }
-   lSetUlong(ep, CE_request, requestable);
-   lSetUlong(ep, CE_forced, forced);
+   lSetBool(ep, CE_request, requestable);
+   lSetBool(ep, CE_forced, forced);
 
    if (!strcasecmp(ce_entry[CE_CONSUMABLE], "y") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "yes"))
-      lSetUlong(ep, CE_consumable, 1);
+      lSetBool(ep, CE_consumable, TRUE);
    else if (!strcasecmp(ce_entry[CE_CONSUMABLE], "n") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "no"))
-      lSetUlong(ep, CE_consumable, 0);
+      lSetBool(ep, CE_consumable, FALSE);
 
    lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? ce_entry[CE_DEFAULT]: "");
    
@@ -1167,7 +1166,13 @@ Widget w
             }
          }
          nr_ranges++;
-         lSetList(rep, RE_ranges, parse_ranges(column[0], 0, 0, &alp, NULL, INF_ALLOWED));
+         {
+            lList *range_list = NULL;
+
+            range_list_parse_from_string(&range_list, &alp, column[0], 
+                                         0, 0, INF_ALLOWED);
+            lSetList(rep, RE_ranges, range_list);
+         }
          if (alp) {
             qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);

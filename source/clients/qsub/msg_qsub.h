@@ -35,14 +35,11 @@
 
 #include "basis_types.h"
 
-/*
-** qsub.c
-*/
-#define MSG_QSUB_WARNING_S    _("qsub: warning: %s")
-#define MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED    _("waiting for immediate job to be scheduled ...")
-#define MSG_QSUB_REQUESTFORIMMEDIATEJOBHASBEENCANCELED    _("\nRequest for immediate job has been canceled.\n")
-#define MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER    _("\nYour qsub request could not be scheduled, try again later.\n")
-#define MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U    _("\nYour immediate job " U32CFormat" has been successfully scheduled.\n")
+#define MSG_QSUB_WARNING    _MESSAGE(21000, _("qsub: warning: "))
+#define MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED    _MESSAGE(21001, _("waiting for immediate job to be scheduled ..."))
+#define MSG_QSUB_REQUESTFORIMMEDIATEJOBHASBEENCANCELED    _MESSAGE(21002, _("\nRequest for immediate job has been canceled.\n"))
+#define MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER    _MESSAGE(21003, _("\nYour qsub request could not be scheduled, try again later.\n"))
+#define MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U    _MESSAGE(21004, _("\nYour immediate job " U32CFormat" has been successfully scheduled.\n"))
 
 
 #endif /* __MSG_QSUB_H */

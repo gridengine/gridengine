@@ -50,7 +50,7 @@ Qmon*browser_layout.layout: \
    } \
    # \
    Row { \
-      browser \
+      Stretchable 8 in browser \
       Fixed Shadowed Col { \
          Etched Through 4 2 Caption tl "@{@fBObjects}" browser_object \
          <> \
@@ -80,6 +80,9 @@ Qmon*browser_layout*browser*saveLines:     2000
 Qmon*browser_layout*browser*editable:      False
 Qmon*browser_layout*browser*cursorPositionVisible:  False
 Qmon*browser_layout*browser*autoShowCursorPosition:  False
+Qmon*browser_layout*browser*translations:  #override\n\
+   Shift<Key>osfUp: scroll-backward()\n\
+   Shift<Key>osfDown: scroll-forward()
 
 Qmon*browser_layout*browser.fontList:  $browser_font
 

@@ -42,54 +42,79 @@ extern "C" {
 
 /* *INDENT-OFF* */ 
 
-/* 
- * this data structures describes an parallel environment 
- */
+/****** gdi/pe/--PE_Type ******************************************************
+*  NAME
+*     PE_Type -- CULL
+*
+*  ELEMENTS
+*     SGE_STRING(PE_name)
+*        name of the pe 
+*
+*     SGE_LIST(PE_queue_list)  
+*        QR_Type; which queues have this pe
+*
+*     SGE_ULONG(PE_slots)
+*        number of total slots
+*
+*     SGE_LIST(PE_user_list)   
+*        US_Type; list of allowed users
+*
+*     SGE_LIST(PE_xuser_list)  
+*        US_Type; list of not allowed users
+*
+*     SGE_STRING(PE_start_proc_args)
+*        cmd line sequence for starting the pe
+*
+*     SGE_STRING(PE_stop_proc_args)
+*        cmd line sequence for stopping the pe
+*
+*     SGE_STRING(PE_allocation_rule)
+*        number of processors per machine
+*  
+*     SGE_BOOL(PE_control_slaves)
+*        whether slave tasks get fed into execd
+*
+*     SGE_BOOL(PE_job_is_first_task)
+*        whether the job script also starts first
+*        task like with pvm or job script is just a 
+*        starter doing no work like with mpi, dmake 
+*        --> has only a meaning when
+*        PE_control_slaves is true
+*
+*     SGE_XULONG(PE_used_slots)
+*        internal field; number of used slots
+*        this field gets not spooled, updated dynamically
+******************************************************************************/
 enum {
-
-   /* configuration fields */
-   PE_name = PE_LOWERBOUND,  /* name of the pe */
-   PE_queue_list,            /* which queues have this pe */
-   PE_slots,                 /* number of total slots */
-   PE_user_list,             /* list of allowed users */
-   PE_xuser_list,            /* list of not allowed users */
-   PE_start_proc_args,       /* cmd line sequence for starting the pe */
-   PE_stop_proc_args,        /* cmd line sequence for stopping the pe */
-   PE_allocation_rule,       /* number of processors per machine */
-   PE_control_slaves,        /* whether slave tasks get fed into execd */
-   PE_job_is_first_task,     /* whether the job script also starts first
-                              * task like with pvm or job script is just a 
-                              * starter doing no work like with mpi, dmake 
-                              * --> has only a meaning when
-                              * PE_control_slaves is true */
-
-   /* internal fields */
-   PE_used_slots             /* number of used slots 
-                              * - this field gets not spooled 
-                              * - updated dynamically */
+   PE_name = PE_LOWERBOUND,  
+   PE_queue_list,           
+   PE_slots,               
+   PE_user_list,          
+   PE_xuser_list,         
+   PE_start_proc_args,    
+   PE_stop_proc_args,     
+   PE_allocation_rule,    
+   PE_control_slaves,    
+   PE_job_is_first_task,
+   PE_used_slots            
 };
 
 
 ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
-   /* configuration fields */
-   SGE_KSTRINGHU(PE_name)
-   SGE_XLIST(PE_queue_list, QR_Type)  /* QR_Type, cull only */
-   SGE_ILIST(PE_queue_list, QU_Type)
-   SGE_ULONG(PE_slots)
-   SGE_TLIST(PE_user_list, US_Type)   /* US_Type */
-   SGE_TLIST(PE_xuser_list, US_Type)  /* US_Type */
-   SGE_STRING(PE_start_proc_args)
-   SGE_STRING(PE_stop_proc_args)
-   SGE_STRING(PE_allocation_rule)
-   SGE_BOOL(PE_control_slaves)
-   SGE_BOOL(PE_job_is_first_task)
-
-   /* internal fields */
-   SGE_XULONG(PE_used_slots)
+   SGE_STRING(PE_name, CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(PE_queue_list, QR_Type, CULL_DEFAULT) 
+   SGE_ULONG(PE_slots, CULL_DEFAULT)
+   SGE_LIST(PE_user_list, US_Type, CULL_DEFAULT) 
+   SGE_LIST(PE_xuser_list, US_Type, CULL_DEFAULT) 
+   SGE_STRING(PE_start_proc_args, CULL_DEFAULT)
+   SGE_STRING(PE_stop_proc_args, CULL_DEFAULT)
+   SGE_STRING(PE_allocation_rule, CULL_DEFAULT)
+   SGE_BOOL(PE_control_slaves, CULL_DEFAULT)
+   SGE_BOOL(PE_job_is_first_task, CULL_DEFAULT)
+   SGE_ULONG(PE_used_slots, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(PEN)
-   /* configuration fields */
    NAME("PE_name")
    NAME("PE_queue_list")
    NAME("PE_slots")
@@ -100,31 +125,13 @@ NAMEDEF(PEN)
    NAME("PE_allocation_rule")
    NAME("PE_control_slaves")
    NAME("PE_job_is_first_task")
-
-   /* internal fields  */
    NAME("PE_used_slots")
 NAMEEND
 
+/* *INDENT-ON* */ 
+
 #define PES sizeof(PEN)/sizeof(char*)
 
-/* 
- * queue references - a sublist of the pe object 
- */
-enum {
-   QR_name = QR_LOWERBOUND
-};
-
-LISTDEF(QR_Type)
-   SGE_STRINGHU(QR_name)
-LISTEND 
-
-NAMEDEF(QRN)
-   NAME("QR_name")
-NAMEEND
-
-/* *INDENT-ON* */  
-
-#define QRS sizeof(QRN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

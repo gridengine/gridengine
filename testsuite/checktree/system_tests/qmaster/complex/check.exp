@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "complex_init_level"
 
 # define test's name and run level descriptions
 set check_name            "complex"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "Test host type complex with loadsensor and complex host"
 
@@ -116,7 +118,6 @@ proc complex_setup  {} {
    set queue_complex(test_resolve)  "tr    HOST   unknown    ==    YES    NO    none"
    set_complex queue_complex "queue"
 
-
    set host_complex(test_hostname)  "th    HOST   unknown    ==    YES    NO    none"
    set host_complex(test_arch)      "ta    STRING none       ==    YES    NO    none"
    set host_complex(test_load)      "tl    DOUBLE 99.99      >=    NO     NO    0"
@@ -142,16 +143,13 @@ proc complex_loadsensor_test {} {
    set host [lindex $CHECK_CORE_EXECD 0]
 
    puts $CHECK_OUTPUT "shutdown execd on host $host"
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke $host" ]
 
-   puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state"
-   if { $prg_exit_state != 0 } {
-        shutdown_system_daemon $host execd
-   }
-   wait_for_unknown_load 100 "${host}.q"
+
+   soft_execd_shutdown $host
 
    startup_execd $host
-   wait_for_load_from_all_queues 100 
+
+   wait_for_load_from_all_queues 180 
 
    get_qconf_se_info $host
    if { [string first "test_arch=TEST_ARCH" $qconf_se_info(load_values) ] < 0 } {
@@ -237,16 +235,10 @@ proc complex_cleanup  {} {
    set_config complex_old_config $host
 
    puts $CHECK_OUTPUT "shutdown execd on host $host"
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke $host" ]
 
-   puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state"
-   if { $prg_exit_state != 0 } {
-        shutdown_system_daemon $host execd
-   }
-   wait_for_unknown_load 600 "${host}.q"
-
+   soft_execd_shutdown $host
    startup_execd $host
-   wait_for_load_from_all_queues 100 
+   wait_for_load_from_all_queues 180
 
    set_queue "$host.q" complex_old_queue_config
 

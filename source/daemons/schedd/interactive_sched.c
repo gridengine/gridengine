@@ -31,15 +31,13 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_jobL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_orderL.h"
 #include "sge_orders.h"
 #include "interactive_sched.h"
 #include "sgermon.h"
 #include "sge_range.h"
-#include "jb_now.h"
-#include "sge_job_jatask.h"
+#include "sge_job.h"
 
 /*------------------------------------------------------------------
  * CHECK ALL REMAINING JOBS WHETHER THEY ARE IMMEDIATE JOBS
@@ -64,7 +62,7 @@ lList **opp      /* OR_Type */
       next_job = lNext(job);
 
       /* skip non immediate .. */
-      if (!JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now)))
+      if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type)))
          continue;
 
       /* .. and non idle jobs */

@@ -1,12 +1,12 @@
 <HTML>
-<BODY>
+<BODY BGCOLOR=white>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
      sge_schedd - Grid Engine job scheduling agent
 
 SYNOPSIS
-     sge_schedd [ -help ] [ -k ] [ -salg ]
+     sge_schedd [ -help ]
 
 DESCRIPTION
      <I>sge</I>_<I>schedd</I> computes the scheduling decision in a Grid Engine
@@ -28,15 +28,7 @@ DESCRIPTION
 
 OPTIONS
      -help
-          Prints  a listing of all options.
-
-     -k   Initiates a controlled shutdown of a running <I>sge</I>_<I>schedd</I>
-          on the same host.
-
-     -salg
-          Display a list of  feasible  scheduling  algorithms  to
-          choose   from  via  the  scheduler  configuration  (see
-          <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>).
+          Print version number of the scheduler.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -61,10 +53,10 @@ ENVIRONMENTAL VARIABLES
                     generated is defined.
 
      COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
-                    munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
+                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>   is   expected  to  listen  for
+                    communication requests.   Most  installations
+                    will  use  a  services  map  entry instead to
+                    define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>/<I>schedd</I>
@@ -83,6 +75,14 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
 
 
 

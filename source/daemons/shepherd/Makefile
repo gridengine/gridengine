@@ -41,20 +41,20 @@ SHEPHERD_SRC = shepherd.c \
            am_chdir.c \
            setrlimits.c \
            signal_queue.c \
-           setjoblimit.c
+           sge_shepconf.c \
+           setjoblimit.c \
+           sge_pset.c
 
 SHEPHERD_ADD_SRC = \
            config_file.c \
            err_trace.c \
            execution_states.c \
-           job.c \
            qlogin_starter.c \
-           setenv.c \
            setosjobid.c \
            sge_parse_num_par.c \
            pdc.c \
            procfs.c \
-           sge_processes_irix.c \
+           sge_processes_irix.c
 
 SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 
@@ -62,7 +62,7 @@ SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o)
 
 SHEPHERD_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -110,8 +110,14 @@ am_chdir.o:	$(SHEPHERD_DIR)/am_chdir.c
 signal_queue.o:	$(SHEPHERD_DIR)/signal_queue.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/signal_queue.c
 
+sge_shepconf.o:	$(SHEPHERD_DIR)/sge_shepconf.c
+		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/sge_shepconf.c
+
 setrlimits.o:	$(SHEPHERD_DIR)/setrlimits.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/setrlimits.c
 
 setjoblimit.o: $(SHEPHERD_DIR)/setjoblimit.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/setjoblimit.c
+
+sge_pset.o: $(SHEPHERD_DIR)/sge_pset.c
+		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/sge_pset.c

@@ -33,17 +33,9 @@
 #include <sys/types.h>
 
 #include "sge.h"
-#include "sge_max_nis_retries.h"
 #include "sge_log.h"
 #include "sgermon.h"
-#include "sge_jobL.h"
-#include "sge_queueL.h"
-#include "sge_hostL.h"
-#include "sge_userprjL.h"
-#include "sge_peL.h"
-#include "sge_eventL.h"
-#include "sge_answerL.h"
-#include "sge_usersetL.h"
+#include "sge_pe.h"
 #include "sge_queue_qmaster.h"
 #include "sge_m_event.h"
 #include "sge_userset.h"
@@ -51,26 +43,24 @@
 #include "read_write_queue.h"
 #include "sge_userset_qmaster.h"
 #include "sge_feature.h"
-#include "utility.h"
 #include "sge_conf.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "valid_queue_user.h"
-#include "msg_utilib.h"
+#include "sge_unistd.h"
+#include "sge_answer.h"
+#include "sge_queue.h"
+#include "sge_job.h"
+#include "sge_userprj.h"
+#include "sge_host.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-extern lList *Master_Queue_List;
-extern lList *Master_Project_List;
-extern lList *Master_Userset_List;
-extern lList *Master_Pe_List;
-
-extern lList *Master_Userset_List;
-extern lList *Master_Pe_List;
-extern lList *Master_Exechost_List;
 
 static void sge_change_queue_version_acl(const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);
 static int verify_userset_deletion(lList **alpp, const char *userset_name);
+static int dept_is_valid_defaultdepartment(lListElem *dept, lList **answer_list);
+static int acl_is_valid_acl(lListElem *acl, lList **answer_list);
 
 /*********************************************************************
    sge_add_userset() - Master code
@@ -93,7 +83,7 @@ char *rhost
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -102,7 +92,7 @@ char *rhost
    if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -110,7 +100,7 @@ char *rhost
    userset_name = lGetPosString(ep, pos);
    if (!userset_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -123,12 +113,12 @@ char *rhost
    }
 
    /* search for userset with this name */
-   found = sge_locate_userset(userset_name, *userset_list);
+   found = userset_list_locate(*userset_list, userset_name);
 
    /* no double entries */
    if (found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, MSG_OBJ_USERSET, userset_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -138,7 +128,7 @@ char *rhost
       lSetUlong(ep, US_type, US_ACL);
 
    /* interpret user/group names */
-   ret=sge_verify_userset_entries(lGetList(ep, US_entries), alpp, 0);
+   ret=userset_validate_entries(ep, alpp, 0);
    if ( ret != STATUS_OK ) {
       DEXIT;
       return ret;
@@ -190,7 +180,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -215,7 +205,7 @@ char *rhost
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -224,7 +214,7 @@ char *rhost
    if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -232,15 +222,15 @@ char *rhost
    userset_name = lGetPosString(ep, pos);
    if (!userset_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    /* search for userset with this name and remove it from the list */
-   if (!(found = sge_locate_userset(userset_name, *userset_list))) {
+   if (!(found = userset_list_locate(*userset_list, userset_name))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_USERSET, userset_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -263,7 +253,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -289,7 +279,7 @@ char *rhost
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -298,7 +288,7 @@ char *rhost
    if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -306,28 +296,35 @@ char *rhost
    userset_name = lGetPosString(ep, pos);
    if (!userset_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    /* no double entries */
-   found = sge_locate_userset(userset_name, *userset_list);
+   found = userset_list_locate(*userset_list, userset_name);
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_USERSET, userset_name));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
 
    /* interpret user/group names */
-   ret=sge_verify_userset_entries(lGetList(ep, US_entries), alpp, 0);
+   ret=userset_validate_entries(ep, alpp, 0);
    if (ret!=STATUS_OK) {
       DEXIT;
       return ret;
    }
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
+      /* make sure acl is valid */
+      ret = acl_is_valid_acl(ep, alpp);
+      if (ret != STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
+
       /*
       ** check for users defined in more than one userset if they
       ** are used as departments
@@ -366,7 +363,7 @@ char *rhost
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
 }
@@ -401,71 +398,6 @@ const char *acl_name
    return;
 }
 
-
-/***********************************************************
-   sge_locate_userset() - searches an userset
- ***********************************************************/
-lListElem *sge_locate_userset(
-const char *name,
-lList *lp 
-) {
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "sge_locate_userset");
-
-   for_each(ep, lp)
-      if (!strcasecmp(name, lGetString(ep, US_name))) {
-         DEXIT;
-         return ep;
-      }
-
-   DEXIT;
-   return NULL;
-}
-
-/******************************************************
-   sge_verify_userset_entries()
-      resolves user set/department
-
-   usep
-      cull list (UE_Type)
-   alpp
-      may be NULL
-      is used to build up an answer
-      element in case of error
-
-   returns
-      STATUS_OK         - on success
-      STATUS_ESEMANTIC  - on error
- ******************************************************/
-int sge_verify_userset_entries(
-lList *userset_entries,
-lList **alpp,
-int start_up 
-) {
-   lListElem *ep;
-   int name_pos;
-
-   DENTER(TOP_LAYER, "sge_verify_userset_entries");
-
-   /*
-      resolve cull names to positions
-      for faster access in loop
-   */
-   name_pos = lGetPosInDescr(UE_Type, UE_name);
-
-   for_each(ep, userset_entries)
-      if (!lGetPosString(ep, name_pos)) {
-         ERROR((SGE_EVENT, MSG_US_INVALIDUSERNAME));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 0);
-         DEXIT;
-         return STATUS_ESEMANTIC;
-      }
-
-   DEXIT;
-   return STATUS_OK;
-}
-
 /******************************************************
    sge_verify_department_entries()
       resolves user set/department
@@ -495,6 +427,16 @@ lList **alpp
    lEnumeration *what = NULL;
 
    DENTER(TOP_LAYER, "sge_verify_department_entries");
+
+   /*
+    * make tests for the defaultdepartment
+    */
+   if (!strcmp(lGetString(new_userset, US_name), DEFAULT_DEPARTMENT)) {
+      if (!dept_is_valid_defaultdepartment(new_userset, alpp)) {
+         DEXIT;
+         return STATUS_ESEMANTIC;
+      }
+   }
 
    if (!(lGetUlong(new_userset, US_type) & US_DEPT)) {
       DEXIT;
@@ -540,6 +482,88 @@ lList **alpp
    return STATUS_OK;
 }
 
+/****** qmaster/dept/dept_is_valid_defaultdepartment() ************************
+*  NAME
+*     dept_is_valid_defaultdepartment() -- is defaultdepartment correct 
+*
+*  SYNOPSIS
+*     static int dept_is_valid_defaultdepartment(lListElem *dept, 
+*                                                lList **answer_list) 
+*
+*  FUNCTION
+*     Check if the given defaultdepartment "dept" is valid. 
+*
+*  INPUTS
+*     lListElem *dept     - US_Type defaultdepartment 
+*     lList **answer_list - AN_Type answer list 
+*
+*  RESULT
+*     static int - 0 or 1
+*******************************************************************************/
+static int dept_is_valid_defaultdepartment(lListElem *dept,
+                                           lList **answer_list)
+{
+   int ret = 1;
+   DENTER(TOP_LAYER, "dept_is_valid_defaultdepartment");
+
+   if (dept != NULL) {
+      /* test 'type' */
+      if (!(lGetUlong(dept, US_type) & US_DEPT)) {
+         ERROR((SGE_EVENT, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         ret = 0;
+      }
+      /* test user list */
+      if (lGetNumberOfElem(lGetList(dept, US_entries)) > 0 ) {
+         ERROR((SGE_EVENT, MSG_QMASTER_AUTODEFDEPARTMENT));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         ret = 0;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** qmaster/acl/acl_is_valid_acl() ****************************************
+*  NAME
+*     acl_is_valid_acl() -- is the acl correct 
+*
+*  SYNOPSIS
+*     static int acl_is_valid_acl(lListElem *acl, lList **answer_list) 
+*
+*  FUNCTION
+*     Check if the given "acl" is correct 
+*
+*  INPUTS
+*     lListElem *acl      - US_Type acl 
+*     lList **answer_list - AN_Type list 
+*
+*  RESULT
+*     static int - 0 or 1
+*******************************************************************************/
+static int acl_is_valid_acl(lListElem *acl,
+                            lList **answer_list)
+{
+   int ret = 1;
+   DENTER(TOP_LAYER, "acl_is_valid_acl");
+
+   if (acl != NULL) {
+      if (!(lGetUlong(acl, US_type) & US_DEPT)) {
+         if (lGetUlong(acl, US_fshare) > 0) {
+            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOSHARE));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+            ret = 0;
+         }
+         if (lGetUlong(acl, US_oticket) > 0) {
+            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOTICKET));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+            ret = 0;
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
 
 static lList* do_depts_conflict(
 lListElem *new,
@@ -648,35 +672,10 @@ lList *userset_list
    }
    
    ERROR((SGE_EVENT, MSG_SGETEXT_NO_DEPARTMENT4USER_SS, owner, group));
-   sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+   answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
    DEXIT;
    return 0;
-}
-
-int verify_acl_list(
-lList **alpp,
-lList *acl_list,
-const char *attr_name, /* e.g. "user_lists" */
-const char *obj_descr, /* e.g. "queue"      */
-const char *obj_name   /* e.g. "fangorn.q"  */
-) {
-   lListElem *usp;
-
-   DENTER(TOP_LAYER, "verify_acl_list");
-
-   for_each (usp, acl_list) {
-      if (!lGetElemStr(Master_Userset_List, US_name, lGetString(usp, US_name))) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNUSERSET_SSSS, lGetString(usp, US_name), 
-               attr_name, obj_descr, obj_name));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return STATUS_OK;
 }
 
 
@@ -693,29 +692,28 @@ const char *userset_name
       if (lGetElemStr(lGetList(ep, QU_acl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
       if (lGetElemStr(lGetList(ep, QU_xacl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, lGetString(ep, QU_qname)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
-
    }
 
    for_each (ep, Master_Pe_List) {
       if (lGetElemStr(lGetList(ep, PE_user_list), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                MSG_OBJ_USERLIST, MSG_OBJ_PE, lGetString(ep, PE_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
       if (lGetElemStr(lGetList(ep, PE_xuser_list), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                MSG_OBJ_XUSERLIST, MSG_OBJ_PE, lGetString(ep, PE_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
    }
@@ -725,13 +723,13 @@ const char *userset_name
          if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                   MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }
          if (lGetElemStr(lGetList(ep, UP_xacl), US_name, userset_name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                   MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }
       }
@@ -741,15 +739,15 @@ const char *userset_name
    for_each (ep, Master_Exechost_List) {
       if (lGetElemStr(lGetList(ep, EH_acl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
-               MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+               MSG_OBJ_USERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
       if (lGetElemStr(lGetList(ep, EH_xacl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
-               MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+               MSG_OBJ_XUSERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
@@ -759,14 +757,14 @@ const char *userset_name
    if (lGetElemStr(conf.user_lists, US_name, userset_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
             MSG_OBJ_USERLIST, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
 
    if (lGetElemStr(conf.xuser_lists, US_name, userset_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
             MSG_OBJ_XUSERLIST, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
 

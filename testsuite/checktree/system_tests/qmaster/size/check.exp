@@ -33,11 +33,13 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr 
+global check_category
 global check_root_access_needs
 global check_highest_level
 
 set check_root_access_needs  "yes"
 set check_name         "qmaster-size"
+set check_category     "COMPATIBILITY SYSTEM L10N"
 set check_highest_level 400
 set check_description(0)    "check qmaster/schedd for memory leaks - functional test"
 set check_description(200)  "check qmaster/schedd for memory leaks - normal test"
@@ -361,6 +363,7 @@ proc init_ps {} {
    switch -exact $CHECK_ARCH {
       aix42 -
       aix43 -
+      aix51 -
       irix6 -
       osf4 -
       solaris -
@@ -383,8 +386,9 @@ proc init_ps {} {
          set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
          set size_unit kB
       }
-      hp10 - 
-      hp11 {
+      "hp10" - 
+      "hp11" -
+      "hp11-64" {
          set cmd_ps(master) "ps -p $qmaster_pid -l | tail -1 | awk '{print \$10}'"
          set cmd_ps(schedd) "ps -p $schedd_pid  -l | tail -1 | awk '{print \$10}'"
          set size_unit pages
@@ -1087,8 +1091,6 @@ proc check_flood {} {
 
       foreach host $CHECK_CORE_EXECD {
          puts $CHECK_OUTPUT "start flooding qsubs on host $host"
-#         spawn "rsh" "$host" "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT" "$jobs_per_host" "'$types'" "$num"
-#         lappend spawn_list $spawn_id
          set flood_id [open_remote_spawn_process $host $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT $jobs_per_host '$types' $num"]
          set spawn_id [lindex $flood_id 1]
          set flood_ids($spawn_id) $flood_id

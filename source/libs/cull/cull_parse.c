@@ -109,6 +109,7 @@ const char *s
       "%g",                     /* DOUBLE                  */
       "%o",                     /* LONG                    */
       "%c",                     /* CHAR                    */
+      "%b",                     /* BOOL                    */
       "%p",                     /* REF                     */
 
       "ALL",                    /* CULL_ALL                */

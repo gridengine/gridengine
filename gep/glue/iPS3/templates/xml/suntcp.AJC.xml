@@ -1,0 +1,298 @@
+<iwt:Component name="suntcpAdminJobControl"
+    ver="1.0"
+    idx="a100" >
+<iwt:Att name="suntcpAdminJobControl-helpLink"
+    type="string"
+    desc="Help Page"
+    idx="X-x104"
+    userConfigurable="true"
+    >
+    <Val>user_help/desktop/desktopTOC.html</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-resourceBundle"
+    type="string"
+    idx=""
+    userConfigurable="false"
+    >
+    <Val>iwtURLScraperProvider</Val>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-editType"
+    type="singlechoice"
+    desc="Edit Form Type"
+    idx=""
+    userConfigurable="true"
+    >
+    <Val>edit_subset</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+    <CVal>edit_subset</CVal>
+    <CVal>edit_complete</CVal>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-isDetached"
+    type="boolean"
+    desc="Detached?"
+    idx="X-x101"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-isMinimized"
+    type="boolean"
+    desc="Minimized?"
+    idx="X-x102"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-row"
+    type="string"
+    desc="Row"
+    idx="X-x110"
+    userConfigurable="true"
+    >
+    <Val>1</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-debug"
+    type="boolean"
+    desc="Debugging Output?"
+    idx=""
+    userConfigurable="false"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-templateKeys"
+    type="stringlist"
+    desc="Template Keys"
+    idx=""
+    userConfigurable="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-useGateway"
+    type="boolean"
+    desc="Use Gateway?"
+    idx="a202"
+    userConfigurable="true"
+    >
+    <Val>false</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-column"
+    type="string"
+    desc="Column"
+    idx="X-x109"
+    userConfigurable="true"
+    >
+    <Val>1</Val>
+    <Wperm>ADMIN</Wperm>
+    <Wperm>OWNER</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-timeout"
+    type="string"
+    desc="Content Timeout"
+    idx="a201"
+    userConfigurable="true"
+    >
+    <Val>5</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-hasFrame"
+    type="boolean"
+    desc="Framed?"
+    idx="X-x108"
+    userConfigurable="true"
+    >
+    <Val>true</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-templateFiles"
+    type="stringlist"
+    desc="Template Files"
+    idx=""
+    userConfigurable="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-description"
+    type="string"
+    idx=""
+    userConfigurable="false"
+    >
+    <Val>Admin Job Control</Val>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-url"
+    type="string"
+    desc="Content URL"
+    idx="a200"
+    userConfigurable="true"
+    >
+    <Val>/AdminTCP?action=jobList</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-backgroundColor"
+    type="string"
+    desc="Background Color"
+    idx="a106"
+    userConfigurable="true"
+    >
+    <Val>#DDDDDD</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-title"
+    type="string"
+    desc="Title"
+    idx="a101"
+    userConfigurable="true"
+    >
+    <Val>Job Control</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-refreshTime"
+    type="string"
+    desc="Refresh Time"
+    idx="X-x105"
+    userConfigurable="true"
+    >
+    <Val>0</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Att>
+<iwt:Att name="suntcpAdminJobControl-width"
+    type="singlechoice"
+    desc="Width"
+    idx="X-x100"
+    userConfigurable="true"
+    >
+    <Val>thin</Val>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+    <CVal>thin</CVal>
+    <CVal>thick</CVal>
+    <CVal>full_top</CVal>
+    <CVal>full_bottom</CVal>
+</iwt:Att>
+<iwt:Priv name="suntcpAdminJobControl-isMovable"
+    type="boolean"
+    desc="Movable?"
+    idx="a107"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-isMinimizable"
+    type="boolean"
+    desc="Minimizable?"
+    idx="a102"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-isRemovable"
+    type="boolean"
+    desc="Removable?"
+    idx="a105"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-isEditable"
+    type="boolean"
+    desc="Editable?"
+    idx="X-x107"
+    val="false"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-hasHelp"
+    type="boolean"
+    desc="Help?"
+    idx="X-x106"
+    val="false"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-isDetachable"
+    type="boolean"
+    desc="Detachable?"
+    idx="a103"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-cookiesToForward"
+    type="list"
+    desc="Cookies to Forward"
+    idx="a203"
+    >
+    <Alst>*</Alst>
+    <Dlst></Dlst>
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+<iwt:Priv name="suntcpAdminJobControl-hasBorder"
+    type="boolean"
+    desc="Border?"
+    idx="a104"
+    val="true"
+    >
+    <Wperm>ADMIN</Wperm>
+    <Rperm>ADMIN</Rperm>
+    <Rperm>OWNER</Rperm>
+</iwt:Priv>
+</iwt:Component>

@@ -43,24 +43,23 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_answerL.h"
 #include "sge_conf.h"
-#include "utility.h"
 #include "read_write_ume.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_usermapL.h"
 #include "sge_string.h"
-#include "gdi_utility_qmaster.h"
+#include "gdi_utility.h"
 #include "sge_user_mapping.h"
 #include "sge_usermap_qmaster.h"
+#include "sge_answer.h"
+#include "sge_unistd.h"
+#include "sge_hostgroup.h"
+#include "sge_usermap.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_utilib.h"
 
 #ifndef __SGE_NO_USERMAPPING__
-extern lList *Master_Usermapping_Entry_List;
-extern lList *Master_Host_Group_List;
 
 /****** src/usermap_mod() **********************************
 *
@@ -155,10 +154,10 @@ int sub_command
    if (add == 1) {
       /* UME_cluster_user -------------------------------*/
 
-      if (check_fname(clusterUser) != 0) {
+      if (sge_is_valid_filename(clusterUser) != 0) {
          /* no correct filename */
          ERROR((SGE_EVENT,MSG_UM_CLUSTERUSERXNOTGUILTY_S, clusterUser ));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }  
@@ -168,7 +167,7 @@ int sub_command
       mapList = lGetList(modp, UME_mapping_list);
       if (mapList != NULL) {
          ERROR((SGE_EVENT, MSG_UM_MAPLISTFORXEXISTS_S, clusterUser ));
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -190,7 +189,7 @@ int sub_command
    mapList = lGetList(modp, UME_mapping_list);
    if (mapList == NULL) {
       ERROR((SGE_EVENT, MSG_UM_NOMAPLISTFORXFOUND_S, clusterUser ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    } 
@@ -226,7 +225,7 @@ int sub_command
         actMapName  =  lGetString(mapElem, UM_mapped_user);
         actHostList =  lGetList  (mapElem, UM_host_list);
         INFO((SGE_EVENT,MSG_UM_EXIMINEMAPFORX_S, clusterUser ));
-        sge_add_answer(alpp, SGE_EVENT, STATUS_OK, 0);
+        answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
 
         if (sge_addMappingEntry(alpp, Master_Host_Group_List, mapList , actMapName , actHostList,FALSE) == FALSE) 
         {
@@ -234,7 +233,7 @@ int sub_command
              actMapName = "unknown";
            }
            ERROR((SGE_EVENT, MSG_UM_ERRORADDMAPENTRYXFORY_SS, actMapName ,clusterUser ));
-           sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+           answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
            DEXIT;
            return STATUS_EUNKNOWN;
         } 
@@ -359,7 +358,7 @@ gdi_object_t *object
       const char* clusterUser = NULL;
       clusterUser = lGetString(upe, UME_cluster_user); 
       ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return 1;
    }
@@ -424,7 +423,7 @@ char *rhost
    DENTER(TOP_LAYER, "sge_del_usermap");
    if ( !cep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -436,7 +435,7 @@ char *rhost
    if (clusterUser == NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(UME_cluster_user), SGE_FUNC));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }   
@@ -444,7 +443,7 @@ char *rhost
    ep = sge_getElementFromMappingEntryList(Master_Usermapping_Entry_List, clusterUser);
    if (ep == NULL) { 
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, "user mapping entry", clusterUser ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;  
    }   
@@ -452,7 +451,7 @@ char *rhost
    /* remove host file */
    if (sge_unlink(UME_DIR, clusterUser)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, "user mapping entry",clusterUser ));
-      sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -463,7 +462,7 @@ char *rhost
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost,clusterUser , "user mapping entry"  ));
 
-   sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
    return STATUS_OK;
    

@@ -39,9 +39,7 @@
 
 #include "sge.h"
 #include "sge_gdi_intern.h"
-#include "sge_answerL.h"
 #include "qmon_prefL.h"
-#include "sge_complexL.h"
 #include "sge_stringL.h"
 #include "qmon_preferences.h"
 #include "sge_string.h"
@@ -51,6 +49,10 @@
 #include "sge_log.h"
 #include "version.h"
 #include "sge_feature.h"
+#include "sge_answer.h"
+#include "sge_complex.h"
+
+#include "msg_common.h"
 
 static int read_pref_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
@@ -194,8 +196,8 @@ lListElem *ep
       fp = fopen(filename, "w");
 
    if (!fp) {
-      sprintf(SGE_EVENT, "error writing %s\n", filename);
-      sge_add_answer(&answer, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FILE_ERRORWRITETOFILEX_S, filename));
+      answer_list_add(&answer, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
@@ -268,7 +270,7 @@ lListElem *ep
 
    /* --------- PREF_job_filter_compact */
    fprintf(fp, "job_filter_compact     %s\n", 
-           lGetUlong(ep, PREF_job_filter_compact) ?  "TRUE" : "FALSE");
+           lGetBool(ep, PREF_job_filter_compact) ?  "TRUE" : "FALSE");
 
    if (fp != stdout)
       fclose(fp);

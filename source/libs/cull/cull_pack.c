@@ -43,7 +43,6 @@
 #include "cull_hash.h"
 #include "cull_lerrnoP.h"
 #include "cull_listP.h"
-#include "cull_hashP.h"
 #include "cull_multitypeP.h"
 #include "cull_whatP.h"
 #include "cull_whereP.h"
@@ -77,6 +76,11 @@ int type
 
    switch (type) {
 
+   case lBoolT:
+      ret = unpackint(pb, &i);
+      dst->b = i;
+      break;
+
    case lUlongT:
       ret = unpackint(pb, &i);
       dst->ul = i;
@@ -92,6 +96,10 @@ int type
 
    case lListT:
       ret = cull_unpack_list(pb, &(dst->glp));
+      break;
+
+   case lObjectT:
+      ret = cull_unpack_object(pb, &(dst->obj));
       break;
 
    case lDoubleT:
@@ -141,6 +149,10 @@ int type
 
    switch (type) {
 
+   case lBoolT:
+      ret = packint(pb, src->b);
+      break;
+
    case lUlongT:
       ret = packint(pb, src->ul);
       break;
@@ -155,6 +167,10 @@ int type
 
    case lListT:
       ret = cull_pack_list(pb, src->glp);
+      break;
+
+   case lObjectT:
+      ret = cull_pack_object(pb, src->obj);
       break;
 
    case lDoubleT:
@@ -178,6 +194,82 @@ int type
       break;
    }
 
+   DEXIT;
+   return ret;
+}
+
+/****** cull/pack/cull_get_list_packsize() ************************************
+*  NAME
+*     cull_get_list_packsize() -- Get size of a CULL list
+*
+*  SYNOPSIS
+*     size_t cull_get_list_packsize(const lList *list) 
+*
+*  FUNCTION
+*     Return the number of bytes which "list" would consume in a
+*     pack buffer.
+*
+*  INPUTS
+*     const lList *list - Any CULL list 
+*
+*  RESULT
+*     size_t - Size in bytes
+*
+*  SEE ALSO
+*     cull/pack/cull_get_elem_packsize() 
+******************************************************************************/
+size_t cull_get_list_packsize(const lList *list)
+{
+   size_t ret = 0;
+   DENTER(CULL_LAYER, "cull_get_list_packsize");
+
+   if (list != NULL) {
+      sge_pack_buffer pb;
+
+      init_packbuffer(&pb, 0, 1);
+      if (!cull_pack_list(&pb, list)) {
+         ret = pb_used(&pb);
+      }
+      clear_packbuffer(&pb);
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** cull/pack/cull_get_elem_packsize() ************************************
+*  NAME
+*     cull_get_elem_packsize() -- Get size of a CULL element 
+*
+*  SYNOPSIS
+*     size_t cull_get_elem_packsize(const lListElem *elem) 
+*
+*  FUNCTION
+*     Return the number of bytes which "elem" would consume in a
+*     pack buffer. 
+*
+*  INPUTS
+*     const lListElem *elem - Any CULL element
+*
+*  RESULT
+*     size_t - Size in bytes
+*
+*  SEE ALSO
+*     cull/pack/cull_get_list_packsize()
+*******************************************************************************/
+size_t cull_get_elem_packsize(const lListElem *elem)
+{
+   size_t ret = 0;
+   DENTER(CULL_LAYER, "cull_get_elem_packsize");
+
+   if (elem != NULL) {
+      sge_pack_buffer pb;
+
+      init_packbuffer(&pb, 0, 1);
+      if (!cull_pack_elem(&pb, elem)) {
+         ret = pb_used(&pb);
+      }
+      clear_packbuffer(&pb);
+   }
    DEXIT;
    return ret;
 }
@@ -222,12 +314,11 @@ lDescr **dpp
 
    dp[n].nm = NoName;
    dp[n].mt = lEndT;
-   dp[n].hash = NULL;
+   dp[n].ht = NULL;
 
    /* read in n lDescr fields */
    for (i = 0; i < n; i++) {
       if ((ret = unpackint(pb, &temp))) {
-         cull_hash_free_descr(dp);
          free(dp);
          DEXIT;
          return ret;
@@ -235,31 +326,13 @@ lDescr **dpp
       dp[i].nm = temp;
 
       if ((ret = unpackint(pb, &temp))) {
-         cull_hash_free_descr(dp);
          free(dp);
          DEXIT;
          return ret;
       }
       dp[i].mt = temp;
 
-      if ((ret = unpackint(pb, &temp))) {
-         cull_hash_free_descr(dp);
-         free(dp); 
-         DEXIT;
-      }
-      if(temp == HASH_OFF) {  /* no hashing */
-         dp[i].hash = NULL;  
-      } else {         /* create hashing info */
-         if((dp[i].hash = (lHash *) malloc(sizeof(lHash))) == NULL) {
-            cull_hash_free_descr(dp);
-            free(dp);
-            LERROR(LEMALLOC);
-            DEXIT;
-            return PACK_ENOMEM;
-         }
-         dp[i].hash->type = temp;
-         dp[i].hash->table = NULL;
-      } 
+      dp[i].ht = NULL;
    }
 
    *dpp = dp;
@@ -302,18 +375,6 @@ const lDescr *dp
          DEXIT;
          return ret;
       }
-      /* pack hashing information */
-      if(dp[i].hash == NULL) {
-         if((ret = packint(pb, HASH_OFF))) {
-            DEXIT;
-            return ret;
-         }
-      } else {
-         if((ret = packint(pb, dp[i].hash->type))) {
-            DEXIT;
-            return ret;
-         }
-      }
    }
 
    DEXIT;
@@ -345,7 +406,7 @@ const lDescr *dp
    n = lCountDescr(dp);
 
    for (i = 0; i < n; i++) {
-      if ((ret = cull_pack_switch(pb, &cp[i], dp[i].mt))) {
+      if ((ret = cull_pack_switch(pb, &cp[i], mt_get_type(dp[i].mt)))) {
          DEXIT;
          return ret;
       }
@@ -386,7 +447,7 @@ const lDescr *dp
    }
 
    for (i = 0; i < n; i++) {
-      if ((ret = cull_unpack_switch(pb, &(cp[i]), dp[i].mt))) {
+      if ((ret = cull_unpack_switch(pb, &(cp[i]), mt_get_type(dp[i].mt)))) {
          free(cp);
          DEXIT;
          return ret;
@@ -411,30 +472,33 @@ const lDescr *dp
    PACK_FORMAT
 
  */
-int cull_pack_elem(
-sge_pack_buffer *pb,
-const lListElem *ep 
-) {
+int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep) 
+{
    int ret;
 
    DENTER(CULL_LAYER, "cull_pack_elem");
 
-   if (!(ep->descr)) {
+   if(ep->descr == NULL) {
       DPRINTF(("element descriptor NULL not allowed !!!\n"));
       DEXIT;
       abort();
    }
 
-   if ((ret = packint(pb, ep->status))) {
+   if((ret = packint(pb, ep->status)) != PACK_SUCCESS) {
       DEXIT;
       return ret;
    }
 
-   if (ep->status == FREE_ELEM) {
-      if ((ret = cull_pack_descr(pb, ep->descr))) {
+   if(ep->status == FREE_ELEM) {
+      if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
+   }
+
+   if((ret = packbitfield(pb, ep->changed)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
    }
 
    ret = cull_pack_cont(pb, ep->cont, ep->descr);
@@ -466,30 +530,29 @@ const lDescr *dp                  /* has to be NULL in case of free elements
 
    *epp = NULL;
 
-   if ((ep = (lListElem *) calloc(1, sizeof(lListElem))) == NULL) {
+   if((ep = (lListElem *) calloc(1, sizeof(lListElem))) == NULL) {
       DEXIT;
       return PACK_ENOMEM;
    }
 
-   if ((ret = unpackint(pb, &(ep->status)))) {
+   if((ret = unpackint(pb, &(ep->status))) != PACK_SUCCESS) {
       free(ep);
       DEXIT;
       return ret;
    }
 
-   if (ep->status == FREE_ELEM) {
-      if ((ret = cull_unpack_descr(pb, &(ep->descr)))) {
+   if(ep->status == FREE_ELEM) {
+      if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
          free(ep);
          DEXIT;
          return ret;
       }
-   }
-   else {
+   } else {
       /* 
          if it is not a free element we need 
-         an descriptor from outside 
+         a descriptor from outside 
        */
-      if (!(ep->descr = (lDescr *) dp)) {
+      if((ep->descr = (lDescr *) dp) == NULL) {
          free(ep);
          DEXIT;
          return PACK_BADARG;
@@ -497,7 +560,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
    }
 
    /* This is a hack, to avoid aborts in lAppendElem */
-   if (ep->status == BOUND_ELEM)
+   if(ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM)
       ep->status = TRANS_BOUND_ELEM;
 
    /* 
@@ -505,9 +568,20 @@ const lDescr *dp                  /* has to be NULL in case of free elements
       an element in a defined state - so we may
       call lFreeElem() in case of errors 
     */
-   if ((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr))) {
-      if (ep->status == FREE_ELEM)
+
+   if((ret = unpackbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
+      if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
          free(ep->descr);
+      }
+      free(ep);
+      DEXIT;
+      return ret;
+   }
+    
+   if((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr))) {
+      if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
+         free(ep->descr);
+      }   
       free(ep);
       DEXIT;
       return ret;
@@ -520,6 +594,47 @@ const lDescr *dp                  /* has to be NULL in case of free elements
 }
 
 /* ================================================================ */
+
+/* ------------------------------------------------------------
+
+   cull_pack_object() - packs a sub object
+
+   return values:
+   PACK_SUCCESS
+   PACK_ENOMEM
+   PACK_FORMAT
+
+ */
+int cull_pack_object(
+sge_pack_buffer *pb,
+const lListElem *ep 
+) {
+   int ret;
+
+   DENTER(CULL_LAYER, "cull_pack_object");
+
+   if((ret = packint(pb, ep != NULL)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   if(ep != NULL) {
+      /* pack descriptor */
+      if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+
+      /* pack list element */
+      if((ret = cull_pack_elem(pb, ep)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+   }
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
 
 /* ------------------------------------------------------------
 
@@ -540,33 +655,39 @@ const lList *lp
 
    DENTER(CULL_LAYER, "cull_pack_list");
 
-   if ((ret = packint(pb, lp != NULL))) {
+   if((ret = packint(pb, lp != NULL)) != PACK_SUCCESS) {
       DEXIT;
       return ret;
    }
 
-   if (lp) {
-
-      if ((ret = packint(pb, lp->nelem))) {
+   if(lp != NULL) {
+      if((ret = packint(pb, lp->nelem)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
-      if ((ret = packstr(pb, lp->listname))) {
+      
+      if((ret = packstr(pb, lp->listname)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+      
+      if((ret = packint(pb, lp->changed)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
 
       /* pack descriptor */
-      if ((ret = cull_pack_descr(pb, lp->descr))) {
+      if((ret = cull_pack_descr(pb, lp->descr)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
 
       /* pack each list element */
-      for_each(ep, lp)
-         if ((ret = cull_pack_elem(pb, ep))) {
-         DEXIT;
-         return ret;
+      for_each(ep, lp) {
+         if((ret = cull_pack_elem(pb, ep)) != PACK_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
       }
    }
 
@@ -595,41 +716,49 @@ lList **lpp
 
    u_long32 i=0;
    u_long32 n=0;
+   u_long32 c=0;
 
    DENTER(CULL_LAYER, "cull_unpack_list");
 
    *lpp = NULL;
 
-   if ((ret = unpackint(pb, &i))) {
+   if((ret = unpackint(pb, &i))) {
       DEXIT;
       return ret;
    }
 
    /* do we have an empty list (NULL) ? */
-   if (!i) {
+   if(!i) {
       DEXIT;
       return PACK_SUCCESS;
    }
 
-   if ((lp = (lList *) calloc(1, sizeof(lList))) == NULL) {
+   if((lp = (lList *) calloc(1, sizeof(lList))) == NULL) {
       DEXIT;
       return PACK_ENOMEM;
    }
 
-   if ((ret = unpackint(pb, &n))) {
+   if((ret = unpackint(pb, &n)) != PACK_SUCCESS) {
       lFreeList(lp);
       DEXIT;
       return ret;
    }
 
-   if ((ret = unpackstr(pb, &(lp->listname)))) {
+   if((ret = unpackstr(pb, &(lp->listname))) != PACK_SUCCESS) {
       lFreeList(lp);
       DEXIT;
       return ret;
    }
+
+   if((ret = unpackint(pb, &c)) != PACK_SUCCESS) {
+      lFreeList(lp);
+      DEXIT;
+      return ret;
+   }
+   lp->changed = c;
 
    /* unpack descriptor */
-   if ((ret = cull_unpack_descr(pb, &(lp->descr)))) {
+   if((ret = cull_unpack_descr(pb, &(lp->descr))) != PACK_SUCCESS) {
       lFreeList(lp);
       DEXIT;
       return ret;
@@ -638,8 +767,8 @@ lList **lpp
    cull_hash_create_hashtables(lp);
 
    /* unpack each list element */
-   for (i = 0; i < n; i++) {
-      if ((ret = cull_unpack_elem(pb, &ep, lp->descr))) {
+   for(i = 0; i < n; i++) {
+      if((ret = cull_unpack_elem(pb, &ep, lp->descr)) != PACK_SUCCESS) {
          lFreeList(lp);
          DEXIT;
          return ret;
@@ -648,6 +777,61 @@ lList **lpp
    }
 
    *lpp = lp;
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
+/* ------------------------------------------------------------
+
+   cull_unpack_object() - unpacks a sub object 
+
+   return values:
+   PACK_SUCCESS
+   PACK_ENOMEM
+   PACK_FORMAT
+
+ */
+
+int cull_unpack_object(
+sge_pack_buffer *pb,
+lListElem **epp 
+) {
+   int ret;
+   lDescr *descr;
+   lListElem *ep;
+   u_long32 i=0;
+
+   DENTER(CULL_LAYER, "cull_unpack_object");
+
+   *epp = NULL;
+
+   if((ret = unpackint(pb, &i))) {
+      DEXIT;
+      return ret;
+   }
+
+   /* do we have an empty object (NULL) ? */
+   if(!i) {
+      DEXIT;
+      return PACK_SUCCESS;
+   }
+
+   /* unpack descriptor */
+   if((ret = cull_unpack_descr(pb, &descr)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   /* unpack each element */
+   if((ret = cull_unpack_elem(pb, &ep, descr)) != PACK_SUCCESS) {
+      free(descr);
+      DEXIT;
+      return ret;
+   }
+
+   ep->status = OBJECT_ELEM;
+   *epp = ep;
 
    DEXIT;
    return PACK_SUCCESS;
@@ -887,13 +1071,12 @@ const lCondition *cp
          return ret;
       }
 
-      if (cp->operand.cmp.mt != lListT) {
-         if ((ret = cull_pack_switch(pb, &(cp->operand.cmp.val), cp->operand.cmp.mt))) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
+         if ((ret = cull_pack_switch(pb, &(cp->operand.cmp.val), mt_get_type(cp->operand.cmp.mt)))) {
             DEXIT;
             return ret;
          }
-      }
-      else {
+      } else {
          if ((ret = cull_pack_cond(pb, cp->operand.cmp.val.cp))) {
             DEXIT;
             return ret;
@@ -1004,14 +1187,13 @@ lCondition **cpp
       }
       cp->operand.cmp.nm = i;
 
-      if (cp->operand.cmp.mt != lListT) {
-         if ((ret = cull_unpack_switch(pb, &(cp->operand.cmp.val), cp->operand.cmp.mt))) {
+      if (mt_get_type(cp->operand.cmp.mt) != lListT) {
+         if ((ret = cull_unpack_switch(pb, &(cp->operand.cmp.val), mt_get_type(cp->operand.cmp.mt)))) {
             lFreeWhere(cp);
             DEXIT;
             return ret;
          }
-      }
-      else {
+      } else {
          if ((ret = cull_unpack_cond(pb, &(cp->operand.cmp.val.cp)))) {
             lFreeWhere(cp);
             DEXIT;

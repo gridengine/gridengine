@@ -40,5 +40,7 @@ int get_n_sigs(void);
 void clear_queued_signals(void);
 void report_signal_queue(void);
 
+int shepherd_sys_str2signal(char *override_signal);
+
 
 #endif /* __SIGNAL_QUEUE_H */

@@ -33,16 +33,14 @@
 
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
-#include "sge_rangeL.h"
-#include "sge_queueL.h"
 #include "sge_requestL.h"
-#include "sge_complexL.h"
-#include "sge_complex.h"
-#include "parse_range.h"
 #include "sge_resource.h"
 #include "cull_parse_util.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "sge_range.h"
+#include "sge_complex.h"
+
 #include "msg_gdilib.h"
 
 static void sge_show_ce_type_list(lList *cel, const char *indent, const char *separator);
@@ -116,8 +114,10 @@ const char *hard_soft         /* for name of resources list */
    if (range_str && 
          (*range_str != ' ') && 
          (*range_str != '\0')) {   /* there comes a range */
-      lList *rl;
-      if (!(rl=parse_ranges(range_str, 0, 0, NULL, NULL, INF_ALLOWED))) {
+      lList *rl = NULL;
+      range_list_parse_from_string(&rl, NULL, range_str,
+                                   0, 0, INF_ALLOWED);
+      if (rl == NULL) {
          ERROR((SGE_EVENT, MSG_PARSE_NOVALIDSLOTRANGE_S, range_str));
          lFreeList(resources);
          lFreeList(complex_attributes);
@@ -198,11 +198,23 @@ lList *rlp
    lPSortList(rlp, "%I+", CE_name);
    for_each(rep, rlp) {
       if (lGetList(rep, RE_ranges)) {
-         ret = unparse_ranges(fp, buff, max_len, lGetList(rep, RE_ranges));
-         if (ret) {
-            DEXIT;
-            return ret;
+         dstring range_string = DSTRING_INIT;
+         const char *tmp_string;
+
+         range_list_print_to_string(lGetList(rep, RE_ranges), 
+                                    &range_string, 1);
+         tmp_string = sge_dstring_get_string(&range_string);
+         if (buff != NULL) {
+            if (strlen(tmp_string) > max_len) {
+               DEXIT;
+               return -3;
+            } else {
+               strcat(buff, tmp_string);
+            }
+         } else {
+            fprintf(fp, tmp_string);
          }
+
          if (!fp && buff) {
             cb = strlen(buff);
             buff += cb;
@@ -271,8 +283,11 @@ lList *rel  /* RE_Type List */
    for_each (res, rel) {
       range = lGetList(res, RE_ranges);
       if (range) {
-         show_ranges(NULL, 0, stdout, range);
-         printf(" ");
+         dstring range_string = DSTRING_INIT;
+
+         range_list_print_to_string(range, &range_string, 1);
+         printf("%s ", sge_dstring_get_string(&range_string));
+         sge_dstring_free(&range_string);
       }
       sge_show_ce_type_list(lGetList(res, RE_entries), "", ",");
    }
@@ -331,9 +346,11 @@ lList *rel  /* RE_Type List */
    for_each (res, rel) {
       range = lGetList(res, RE_ranges);
       if (range) {
-         printf("%s", indent);
-         show_ranges(NULL, 0, stdout, range);
-         printf("\n");
+         dstring range_string = DSTRING_INIT;
+
+         range_list_print_to_string(range, &range_string, 1);
+         printf("%s%s\n", indent, sge_dstring_get_string(&range_string));
+         sge_dstring_free(&range_string);
       }
       if (first) {
          printf("%s", label);

@@ -34,10 +34,8 @@
 #include <Xmt/Dialogs.h>
 
 #include "sge_gdi.h"
-#include "sge_answerL.h"
-#include "sge_complexL.h"
-#include "sge_hostL.h"
 #include "sge_stringL.h"
+#include "sge_complex.h"
 
 #include "qmon_rmon.h"
 #include "qmon_matrix.h"
@@ -101,7 +99,7 @@ String name
    ** check input 
    */
    if (is_empty_word(name)) {
-      qmonMessageShow(matrix, True, "Name required !\n");
+      qmonMessageShow(matrix, True, "Name required !");
       DEXIT;
       return;
    }
@@ -182,7 +180,7 @@ lList *entries
            ** build the strings to display 
            */
            StringConst name = lGetString(ep, CE_name);
-/*            String type = lGetUlong(ep, CE_consumable) ? "C" : "F"; */
+/*            String type = lGetBool(ep, CE_consumable) ? "C" : "F"; */
 /*            sprintf(stringval, "%s: %s", type, name ? name : "");  */
            strcpy(stringval, name ? name : ""); 
            strs[i] = XtNewString(stringval);

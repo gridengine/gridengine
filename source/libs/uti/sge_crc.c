@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "sge_crc.h"
 
 static u_long32 crctab[256] =
@@ -87,19 +88,33 @@ static u_long32 crctab[256] =
    0xA2F33668, 0xBCB4666D, 0xB8757BDA, 0xB5365D03, 0xB1F740B4
 };
 
-u_long32 cksum(
-const char *buf,
-int buf_len 
-) {
+/****** uti/io/sge_cksum() ***************************************************
+*  NAME
+*     sge_cksum() -- Calculate checksum  
+*
+*  SYNOPSIS
+*     u_long32 sge_cksum(const char *buf, int buf_len) 
+*
+*  FUNCTION
+*     Create checksum for buffer 'buf' of length 'len'
+*
+*  INPUTS
+*     const char *buf - buffer 
+*     int buf_len     - size of buffer 
+*
+*  RESULT
+*     u_long32 - crc
+******************************************************************************/
+u_long32 sge_cksum(const char *buf, int buf_len) 
+{
    u_long32 crc=0;
    u_long32 length=buf_len;
    unsigned char *cp=(unsigned char *) buf;
 
-   while (length--) 
+   while (length--) {
       crc = ((crc << 8) ^ crctab[((crc >> 24) ^ *(cp++)) & 0xFF]) & 0xFFFFFFFF;
-  
+   }
    length = buf_len;
-
    while (length > 0) {
       crc = ((crc << 8) ^ crctab[((crc >> 24) ^ length) & 0xFF]) & 0xFFFFFFFF;
       length >>= 8;

@@ -56,14 +56,14 @@ enum {
 };
 
 LISTDEF(PGR_Type)
-   SGE_ULONG(PGR_priority)    /* priority of the priority group */
-   SGE_LIST(PGR_subordinated_list)
+   SGE_ULONG(PGR_priority, CULL_DEFAULT)    /* priority of the priority group */
+   SGE_LIST(PGR_subordinated_list, USR_Type, CULL_DEFAULT)
       /* FCFS: jobreference list sorted by arrival time */
       /* USERSORT: list of jobreference lists grouped by users */
-   SGE_ULONG(PGR_sort_me)
+   SGE_ULONG(PGR_sort_me, CULL_DEFAULT)
       /* FCFS: subordinated jobreference list needs to be resorted */
       /* USERSORT: subordinated user list needs to be resorted */
-   SGE_REF(PGR_current)
+   SGE_REF(PGR_current, JRL_Type, CULL_DEFAULT)
       /* FCFS: reference to the current entry in the jobreferences list */
       /* USERSORT: unused */
 LISTEND 
@@ -91,13 +91,13 @@ enum {
 };
 
 LISTDEF(USR_Type)
-   SGE_STRING(USR_name)       /* user name */
-   SGE_ULONG(USR_nrunning_el) /* # of running jobs in event layer */
-   SGE_ULONG(USR_nrunning_dl) /* # of running jobs in dispatch layer */
-   SGE_LIST(USR_job_references)       /* sublist of jobsreferences for that 
+   SGE_STRING(USR_name, CULL_DEFAULT)       /* user name */
+   SGE_ULONG(USR_nrunning_el, CULL_DEFAULT) /* # of running jobs in event layer */
+   SGE_ULONG(USR_nrunning_dl, CULL_DEFAULT) /* # of running jobs in dispatch layer */
+   SGE_LIST(USR_job_references, JRL_Type, CULL_DEFAULT)       /* sublist of jobsreferences for that 
                                        * user */
-   SGE_ULONG(USR_sort_me)     /* job reference list must be resorted */
-   SGE_REF(USR_current)       /* reference to the current entry in the *
+   SGE_ULONG(USR_sort_me, CULL_DEFAULT)     /* job reference list must be resorted */
+   SGE_REF(USR_current, JRL_Type, CULL_DEFAULT)       /* reference to the current entry in the *
                                * jobreferences list */
 LISTEND 
 
@@ -122,9 +122,9 @@ enum {
 };
 
 LISTDEF(JRL_Type)
-   SGE_ULONG(JRL_jobid)       /* jobid used for hasing */
-   SGE_ULONG(JRL_submission_time)     /* submission time of this job array */
-   SGE_REF(JRL_category)      /* category reference */
+   SGE_ULONG(JRL_jobid, CULL_DEFAULT)       /* jobid used for hasing */
+   SGE_ULONG(JRL_submission_time, CULL_DEFAULT)     /* submission time of this job array */
+   SGE_REF(JRL_category, CULL_ANY_SUBTYPE, CULL_DEFAULT)      /* category reference */
 LISTEND 
 
 NAMEDEF(JRLN)

@@ -35,26 +35,30 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "sge_me.h"
-#include "sge_prognames.h"
-#include "sge_answerL.h"
+#include "sge_prog.h"
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
-#include "sge_getme.h"
 #include "setup_path.h"
 #include "qm_name.h"
-#include "msg_gdilib.h"
 #include "commlib.h"
 #include "sge_string.h"
-#include "msg_common.h"
-#include "sge_switch_user.h"
-#include "msg_utilib.h"
 #include "sge_feature.h"
+#include "sge_unistd.h"
+#include "sge_uidgid.h"
+#include "sge_prog.h"
+#include "sge_parse_num_par.h"
+#include "sge_hostname.h"
+#include "sge_spool.h"
+#include "sge_answer.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 extern long compression_level;
 extern long compression_threshold;
+
+static int init_hostcpy_policy(void);
 
 /*******************************************************************/
 void sge_setup(
@@ -66,14 +70,13 @@ lList **alpp
    /*
    ** for setuid clients we must seteuid to the users uid
    */
-   if (run_as_user()) {   
+   if (sge_run_as_user()) {   
       CRITICAL((SGE_EVENT, MSG_SYSTEM_CANTRUNASCALLINGUSER));
       SGE_EXIT(1);
    }   
 
    sge_getme(sge_formal_prog_name);
    memset(&path, 0, sizeof(path));
-
    /* gdi lib call */ 
    sge_setup_paths(me.default_cell, &path, alpp);
 
@@ -87,15 +90,20 @@ lList **alpp
       SGE_EXIT(1);
    }
 
+   /* initialize hostcompare policy consisting 
+      of default_domain and ignore_fqdn settings */
+   if (init_hostcpy_policy()) {
+      SGE_EXIT(1);
+   }
       
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
    /* gdi lib call */
    if (!(me.who == QMASTER || me.who == SHADOWD) && !sge_get_master(1)) {
       if (alpp) {
-         sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
-                     path.act_qmaster_file);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S,
+                     path.act_qmaster_file));
    /* gdi lib call */
-         sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
       }
@@ -110,7 +118,7 @@ lList **alpp
       if(cl) {
          compression_level = (int)strtol(cl, NULL, 10);
          if(compression_level == LONG_MIN || compression_level == LONG_MAX) {
-            sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl));
             compression_level = Z_DEFAULT_COMPRESSION;
          }
       }
@@ -120,7 +128,7 @@ lList **alpp
       if(cl) {
          compression_threshold = (int)strtol(cl, NULL, 10);
          if(compression_threshold == LONG_MIN || compression_threshold == LONG_MAX || compression_threshold < 0) {
-            sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl));
             compression_threshold = 10 * 1024;
          }
       }
@@ -155,4 +163,30 @@ int reresolve_me_qualified_hostname()
    DPRINTF(("me.qualified_hostname: %s\n", me.qualified_hostname));
    DEXIT;
    return CL_OK;
+}
+
+/* initialize policy used in hostcpy() consisting of
+   default_domain and ignore_fqdn settings */
+static int init_hostcpy_policy(void)
+{
+   const char *name[2] = { "ignore_fqdn", "default_domain" };
+   u_long32 uval;
+   char value[2][1025];
+
+   DENTER(TOP_LAYER, "init_hostcpy_policy");
+
+   if (sge_get_confval_array(path.conf_file, 2, name, value)) {
+      ERROR((SGE_EVENT, MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S,
+      path.conf_file));
+      DEXIT;
+      return -1;
+   }
+
+   DPRINTF(("ignore_fqdn: %s default_domain: %s\n", value[0], value[1]));
+   parse_ulong_val(NULL, &uval, TYPE_BOO, value[0], NULL, 0);
+   fqdn_cmp = !uval;
+   default_domain = sge_strdup(default_domain, value[1]);
+
+   DEXIT;
+   return 0;
 }

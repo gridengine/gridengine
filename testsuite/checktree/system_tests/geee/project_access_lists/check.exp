@@ -33,6 +33,7 @@
 
 # define global variable in this namespace
 global check_name 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -51,6 +52,7 @@ set check_init_level_procedure "project_access_lists_init_level"
 
 # define test's name and run level descriptions
 set check_name            "project_access_lists"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "Test project access for queue/cluster/pe"
 
@@ -96,8 +98,10 @@ global project_access_lists_host_conf
 global project_access_lists_queue_conf
 global project_access_lists_global_host_conf
 global project_access_lists_cluster_conf
+global project_access_lists_schedd_conf
 
 proc project_access_lists_setup  {} {
+   global CHECK_GROUP
    global project_access_lists_queue
    global project_access_lists_host
 
@@ -105,6 +109,7 @@ proc project_access_lists_setup  {} {
    global project_access_lists_queue_conf
    global project_access_lists_global_host_conf
    global project_access_lists_cluster_conf
+   global project_access_lists_schedd_conf
 
    global CHECK_CORE_EXECD CHECK_OUTPUT
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
@@ -121,6 +126,11 @@ proc project_access_lists_setup  {} {
    get_queue    $project_access_lists_queue       project_access_lists_queue_conf
    get_exechost project_access_lists_global_host_conf "global"       
    get_config                             project_access_lists_cluster_conf 
+   get_schedd_config                      project_access_lists_schedd_conf
+   set my_schedd_config(schedule_interval)       "0:0:01"
+   set my_schedd_config(sgeee_schedule_interval) "0:0:02"
+   set_schedd_config my_schedd_config
+
 
    set group1 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0]
 
@@ -145,6 +155,10 @@ proc project_access_lists_setup  {} {
    set my_project(acl)  "userB_name"
    add_prj my_project
 
+   if { [string first "unknown" $CHECK_GROUP] >= 0 } {
+      add_proc_error "project_access_lists_setup" -1 "CHECK_GROUP set to unknown"
+   }
+
 
    set_error 0 "ok"
 }
@@ -152,15 +166,22 @@ proc project_access_lists_setup  {} {
 proc test_job_run { id_string job_id } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
 
+   if { $job_id > 0 } {
+      wait_for_jobpending $job_id "leeper" 60 1
+   }
+
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   if { [wait_for_jobstart $job_id "leeper" 120] != 0 } {
-      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
+   if { $job_id < 1 } {
+     add_proc_error "test_job_run" -1 "wrong job id: $job_id, id_string: $id_string\n[get_submit_error $job_id]" 
+   } else {
+      if { [wait_for_jobstart $job_id "leeper" 120] != 0 } {
+         add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
+      }
    }
-   delete_job $job_id
-#   wait_for_jobend $job_id "leeper" 60
+   delete_job $job_id 1
 }
 
 proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
@@ -173,15 +194,11 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
    # "userA_project_name"    C
    # "userB_project_name"    D
 
-
-   puts $CHECK_OUTPUT "id_string is $id_string"
+   
+   puts $CHECK_OUTPUT "\nid_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
-
-   if { [ string first "-P" $jobargs] >= 0 } {
-      set no_P 1
-   } else {
-      set no_P 0
-   }   
+   sleep 2
+   
 
    set job_id_A [ submit_job "-P userA_project_group $jobargs" 0 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
    if { $A_ok == 1 } {
@@ -240,10 +257,46 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
 
 }
 
+proc check_user_job_info { job_id } {
+
+   global CHECK_HOST CHECK_L10N CHECK_OUTPUT
+
+   if { $CHECK_L10N == 1 } {
+      set NOT_THE_CORRECT_PROJECT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS] "*" "*" "*" ]
+      set NOT_ALLOWED_TO_RUN      [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXCLPRJ_SSS] "*" "*" "*" ]
+      set NO_PERMISSION           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*" ]
+      set scheduling_info_text [get_scheduling_info $job_id]
+      puts $CHECK_OUTPUT "schedd info : \"$scheduling_info_text\""
+      puts $CHECK_OUTPUT "matchstring1: \"$NOT_THE_CORRECT_PROJECT\""
+      puts $CHECK_OUTPUT "matchstring2: \"$NOT_ALLOWED_TO_RUN\""
+      puts $CHECK_OUTPUT "matchstring3: \"$NO_PERMISSION\""
+
+      set match1 [string match "*$NOT_THE_CORRECT_PROJECT*"       $scheduling_info_text ]
+      set match2 [string match "*$NOT_ALLOWED_TO_RUN*"            $scheduling_info_text ]
+      set match3 [string match "*$NO_PERMISSION*"                 $scheduling_info_text ]
+      puts $CHECK_OUTPUT $match1
+      puts $CHECK_OUTPUT $match2
+      puts $CHECK_OUTPUT $match3
+      if { $match1 != 1 && $match2 != 1 && $match3 != 1 } {
+         return 1
+      }
+      return 0
+   }
+
+   set scheduling_info_text [get_scheduling_info $job_id]
+   if { [string first "no permission"                $scheduling_info_text ] < 0 && 
+        [string first "not allowed to run"           $scheduling_info_text ] < 0 &&
+        [string first "not have the correct project" $scheduling_info_text ] < 0 
+   } {
+      return 1
+   }
+   return 0
+}
+
 proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT project_access_lists_host CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
-   global project_access_lists_queue
+   global project_access_lists_queue CHECK_HOST
 
    # "userA_project_group"   A
    # "userB_project_group"   B
@@ -252,8 +305,10 @@ proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
 
 
    
-   puts $CHECK_OUTPUT "id_string is $id_string"
+   puts $CHECK_OUTPUT "\nid_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
+
+   sleep 2
  
    if { [ string first "-P" $jobargs] >= 0 } {
       set no_P 1
@@ -305,53 +360,47 @@ proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
       if { $E_ok == 1 } {
          test_job_run "$id_string (E)" $job_id_E
       } else {
-         if { [string first "no permission" [get_scheduling_info $job_id_E] ] < 0 && 
-              [string first "not allowed to run"     [get_scheduling_info $job_id_E] ] < 0 &&
-              [string first "not have the correct project" [get_scheduling_info $job_id_E] ] < 0 } {
+         set NOT_THE_CORRECT_PROJECT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS] "*" "*" "*"]
+         set NOT_ALLOWED_TO_RUN      [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXCLPRJ_SSS] "*" "*" "*"]
+         set NO_PERMISSION           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*"]
+
+         if { [check_user_job_info $job_id_E] } {
             add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_E (E) should not run"
          }
          wait_for_jobpending $job_id_E "leeper" 30
-         delete_job $job_id_E
+         delete_job $job_id_E 1
       }
    }
 
    if { $A_ok == 0 } {
-      if { [string first "no permission" [get_scheduling_info $job_id_A] ] < 0 && 
-           [string first "not allowed to run"     [get_scheduling_info $job_id_A] ] < 0 &&
-           [string first "not have the correct project" [get_scheduling_info $job_id_A] ] < 0 } {
+      if { [check_user_job_info $job_id_A] } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_A (A) should not run"
       }
       wait_for_jobpending $job_id_A "leeper" 30
-      delete_job $job_id_A
+      delete_job $job_id_A 1
    }
  
    if { $B_ok == 0 } {
-      if { [string first "no permission" [get_scheduling_info $job_id_B] ] < 0 && 
-           [string first "not allowed to run"     [get_scheduling_info $job_id_B] ] < 0 &&
-           [string first "not have the correct project" [get_scheduling_info $job_id_B] ] < 0   } {
+      if { [check_user_job_info $job_id_B]  } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_B (B) should not run"
       }
       wait_for_jobpending $job_id_B "leeper" 30
-      delete_job $job_id_B
+      delete_job $job_id_B 1
    }
 
    if { $C_ok == 0 } {
-      if { [string first "no permission" [get_scheduling_info $job_id_C] ] < 0 && 
-           [string first "not allowed to run"     [get_scheduling_info $job_id_C] ] < 0 &&
-           [string first "not have the correct project" [get_scheduling_info $job_id_C] ] < 0 } {
+      if { [check_user_job_info $job_id_C]   } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_C (C) should not run"
       }
       wait_for_jobpending $job_id_C "leeper" 30
-      delete_job $job_id_C
+      delete_job $job_id_C 1
    }
    if { $D_ok == 0 } {
-      if { [string first "no permission" [get_scheduling_info $job_id_D] ] < 0 && 
-           [string first "not allowed to run"     [get_scheduling_info $job_id_D] ] < 0 &&
-           [string first "not have the correct project" [get_scheduling_info $job_id_D] ] < 0 } {
+      if { [check_user_job_info $job_id_D]  } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_D (D) should not run"
       }
       wait_for_jobpending $job_id_D "leeper" 30
-      delete_job $job_id_D
+      delete_job $job_id_D 1
    }
    
 
@@ -364,7 +413,7 @@ proc project_access_lists_global_host {} {
    global CHECK_GROUP 
    global project_access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
 
 
    # testing user and group
@@ -380,7 +429,7 @@ proc project_access_lists_global_host {} {
       set my_global_host(projects)  "NONE"
       set_exechost my_global_host "global"
       run_user_jobs "case 1,$A_USER,$B_USER" "$jobargs" 1 1 0 1   ;# A = 0 (not running) B = 1 (should run)
-   
+
       # case 2
       set my_global_host(xprojects) "NONE"
       set my_global_host(projects)  "$A_USER"
@@ -451,7 +500,6 @@ proc project_access_lists_global_host {} {
    set my_global_host(projects)  "NONE"
    set_exechost my_global_host "global"
 
-
    set_error 0 "ok"
 }
 
@@ -461,7 +509,7 @@ proc project_access_lists_exec_host {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP project_access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
    # testing user and group
    set project_access_lists "{userA_project_name userB_project_name }"
@@ -556,7 +604,7 @@ proc project_access_lists_queue {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
    # testing user and group
    set project_access_lists "{userA_project_name userB_project_name }"
@@ -653,7 +701,7 @@ proc project_access_lists_cluster_config {} {
    global CHECK_GROUP project_access_lists_queue
   
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"  
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"  
 
    # testing user and group
    set project_access_lists "{userA_project_name userB_project_name }"
@@ -750,8 +798,9 @@ proc project_access_lists_project {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -P access_test_project -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
-   
+   set jobargs "-o /dev/null -e /dev/null -P access_test_project -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
+   # second -P switch will overwrite first one in run_user_denied_jobs !
+
    set my_project(name)     "access_test_project"
 
    # testing user and group
@@ -806,7 +855,13 @@ proc project_access_lists_project {} {
       set my_project(acl)  "NONE"
       add_prj my_project
       if { $group_test == 1 } {
+         puts $CHECK_OUTPUT "group test active"
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+
+         puts $CHECK_OUTPUT "CHECK_GROUP is $CHECK_GROUP"
+         puts $CHECK_OUTPUT "group1 is $group1"
+         puts $CHECK_OUTPUT "CHECK_SECOND_FOREIGN_SYSTEM_GROUP is $CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
+
          if { [string first $CHECK_GROUP $group1] >= 0 ||
               [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
             set C_run 0
@@ -814,11 +869,13 @@ proc project_access_lists_project {} {
             set C_run 1
          }
       } else {
+         puts $CHECK_OUTPUT "no group test"
          set C_run 1
       }
+      puts $CHECK_OUTPUT "C_run is $C_run"
       run_user_denied_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 0 0 $C_run
       del_prj "access_test_project"
-
+      puts "case 6 done"
    
       #case 7
       set my_project(xacl) "NONE"
@@ -878,6 +935,7 @@ proc project_access_lists_cleanup  {} {
    global project_access_lists_queue_conf
    global project_access_lists_global_host_conf
    global project_access_lists_cluster_conf
+   global project_access_lists_schedd_conf
 
    global CHECK_CORE_EXECD CHECK_OUTPUT
 
@@ -896,8 +954,9 @@ proc project_access_lists_cleanup  {} {
    set_queue     $project_access_lists_queue project_access_lists_queue_conf
    set_exechost  project_access_lists_global_host_conf "global"
    set_config    project_access_lists_cluster_conf
-   wait_for_end_of_all_jobs 300
+   set_schedd_config project_access_lists_schedd_conf
 
+   wait_for_end_of_all_jobs 300
    set_error 0 "ok"
 }
 

@@ -37,9 +37,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
-
 
 #ifdef QIDL
 #include <pthread.h>
@@ -47,19 +45,14 @@
 #include "qidl_c_gdi.h"
 #endif
 
+#include "sge_unistd.h"
 #include "basis_types.h"
 #include "sge.h"
-#include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_time.h"
-#include "sge_timestop.h"
+#include "sge_stdlib.h"
 #include "sge_string.h"
-#include "sge_log_pid.h"
-#include "sge_mkdir.h"
-#include "sge_daemonize.h"
-#include "sge_me.h"
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "sge_all_listsL.h"
@@ -84,30 +77,35 @@
 #include "shutdown.h"
 #include "parse.h"
 #include "job_log.h"
-#include "opt_silent.h"
 #include "opt_history.h"
 #include "usage.h"
 #include "setup_qmaster.h"
 #include "ck_to_do_qmaster.h"
-#include "sec.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sched_conf_qmaster.h"
 #include "qmaster.h"
 #include "sge_feature.h"
 #include "sge_user_mapping.h"
-#include "sge_groups.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "sge_language.h"
 #include "sge_bitop.h"
 #include "setup_path.h"
-#include "sge_dirent.h"
 #include "sge_security.h"
 #include "read_write_host.h"
 #include "complex_history.h"
-#include "host.h"
-#include "sge_arch.h"
+#include "sge_hostname.h"
+#include "sge_spool.h"
+#include "sge_os.h"
+#include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_hostgroup.h"
+#include "sge_manop.h"
+
+#ifndef __SGE_NO_USERMAPPING__
+#include "sge_usermap.h"
+#endif
+
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 #ifdef PW
 /* The license key - to be replaced when serialized */
@@ -121,35 +119,6 @@ static pthread_t        corba_thread;
 #endif
 
 int in_spool_dir = 0;                 /* to prevent lock file writing */
-
-/*
-** the global lists of the master referenced somewhere else
-*/
-lList *Master_Adminhost_List           = NULL;
-lList *Master_Calendar_List            = NULL;
-lList *Master_Ckpt_List                = NULL;
-lList *Master_Complex_List             = NULL;
-lList *Master_Config_List              = NULL;
-lList *Master_Exechost_List            = NULL;
-lList *Master_Feature_Set_List         = NULL;
-lList *Master_Job_List                 = NULL;
-lList *Master_Job_Schedd_Info_List     = NULL;
-lList *Master_Manager_List             = NULL;
-lList *Master_Operator_List            = NULL;
-lList *Master_Pe_List                  = NULL;
-lList *Master_Project_List             = NULL;
-lList *Master_Queue_List               = NULL;
-lList *Master_Sched_Config_List        = NULL;
-lList *Master_Sharetree_List           = NULL;
-lList *Master_Submithost_List          = NULL;
-lList *Master_User_List                = NULL;
-lList *Master_Userset_List             = NULL;
-lList *Master_Zombie_List              = NULL;
-
-#ifndef __SGE_NO_USERMAPPING__
-lList *Master_Host_Group_List          = NULL;
-lList *Master_Usermapping_Entry_List   = NULL;
-#endif
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void qmaster_exit_func(int i);
@@ -208,7 +177,7 @@ char **argv
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
@@ -235,12 +204,55 @@ char **argv
 
    /* to ensure SGE host_aliasing is considered resolve me.qualified_hostname 
       before commd might be available */
-   if ((s=resolve_hostname_local(me.qualified_hostname)))
+   if ((s=sge_host_resolve_name_local(me.qualified_hostname)))
       me.qualified_hostname = sge_strdup(me.qualified_hostname, s);
 
    memset(priority_tags, 0, sizeof(priority_tags));
-   priority_tags[0] = TAG_ACK_REQUEST;
+
+/*===========================================================================
+Setting message priority tags
+Old behaviour caused problems with qdel all with many jobs 
+and with bit parallel jobs as load/job reports from execd's never
+reached qmaster:
+   priority_tags[0] = TAG_ACK_REQUEST; 
    priority_tags[1] = TAG_GDI_REQUEST;
+
+New behaviour:
+   Priorities can be set via environment variable SGE_PRIORITY_TAGS.
+   SGE_PRIORITY_TAGS can contain a blank separated list of tag id's (values
+   0-n, n = enum value of the TAG_* enum in libs/gdi/sge_gdi_intern.h
+
+   To restore the old behaviour, set 
+   SGE_PRIORITY_TAGS="3 2"
+   
+============================================================================*/
+
+   {
+      char *tag_env = NULL;
+
+      tag_env = getenv("SGE_PRIORITY_TAGS");
+
+      if(tag_env != NULL) {
+         char *tag_tok = NULL;
+         char *tag_str = NULL;
+         int tag_count = 0;
+
+         INFO((SGE_EVENT, MSG_SETTING_PRIORITY_TAGS_S, tag_env));
+         tag_tok = strdup(tag_env);
+         tag_str = strtok(tag_tok, " ");
+         while(tag_str != NULL) {
+            if(tag_count > 8) {
+               WARNING((SGE_EVENT, MSG_TOO_MANY_PRIORITY_TAGS_S, tag_env));
+               break;
+            }   
+            priority_tags[tag_count++] = atoi(tag_str);
+            tag_str = strtok(NULL, " ");
+         }
+
+         free(tag_tok);
+      }
+   }
+
    prepare_enroll(prognames[QMASTER], 1, priority_tags);
 
    /* marker for signal handler for SIGTERM and SIGINT to exit immediately 
@@ -248,7 +260,7 @@ char **argv
     */
    in_main_loop = 0;
    
-   install_exit_func(qmaster_exit_func);
+   sge_install_exit_func(qmaster_exit_func);
    sge_setup_sig_handlers(QMASTER);
    
    lInit(nmv);
@@ -324,6 +336,10 @@ char **argv
     * which need not to be started in this case
     */
    enrolled = check_for_running_qmaster();
+
+   /* don't wanna get old messages */
+   if (enrolled)
+      remove_pending_messages(NULL, 0, 0, 0);
 
    /* --- Here we think we are the only qmaster in the system --- */
    
@@ -418,10 +434,8 @@ char **argv
 
    sge_setup_sig_handlers(QMASTER);
 
-   sge_log_pid(QMASTER_PID_FILE);
+   sge_write_pid(QMASTER_PID_FILE);
 
-   /* don't wanna get old messages */
-   remove_pending_messages(NULL, 0, 0, 0);
 
    /* commlib call to mark all commprocs as unknown */
    reset_last_heard();
@@ -457,10 +471,9 @@ char **argv
       }
 
       if (shut_me_down) {
-         /* slowly! we have to deliver events before shutting down */
+         /* we have to deliver events before shutting down */
          sge_add_event(NULL, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL);
-         sge_flush_events(NULL, FLUSH_EVENTS_SET);
-         scheduler_busy = 0;
+         set_event_client_busy(NULL, 0); /* send event, even if event clients are busy */
          ck_4_deliver_events(now);
 #ifdef QIDL
          unlock_master();
@@ -470,15 +483,15 @@ char **argv
          sge_shutdown();
       }
 
-      starttime(TIMELEVEL);
+      sge_stopwatch_start(TIMELEVEL);
       
       sge_ck_to_do_qmaster(0);
 
-      log_time(TIMELEVEL, "check to do:");
+      sge_stopwatch_log(TIMELEVEL, "check to do:");
 
       DPRINTF(("===========================[EPOCH]=====================================\n"));
 
-      starttime(TIMELEVEL);
+      sge_stopwatch_start(TIMELEVEL);
       
       host[0] = '\0';
       commproc[0] = '\0';
@@ -517,7 +530,7 @@ char **argv
       }
       
       if (i != CL_OK) {
-         log_time(TIMELEVEL, "sge_get_any_request != 0");
+         sge_stopwatch_log(TIMELEVEL, "sge_get_any_request != 0");
          
          if ( i != COMMD_NACK_TIMEOUT ) {
             DPRINTF(("Problems reading request: %s\n", cl_errstr(i)));
@@ -526,8 +539,8 @@ char **argv
          continue;              
       }
       else {
-         log_time(TIMELEVEL, "sge_get_any_request == 0");
-         starttime(TIMELEVEL);
+         sge_stopwatch_log(TIMELEVEL, "sge_get_any_request == 0");
+         sge_stopwatch_start(TIMELEVEL);
       }
 
       switch (tag) {
@@ -536,7 +549,7 @@ char **argv
 #ifdef SECURE
       case TAG_SEC_ANNOUNCE:    /* completly handled in libsec  */
          clear_packbuffer(&pb);
-         log_time(TIMELEVEL, "request handling SEC_ANNOUNCE");
+         sge_stopwatch_log(TIMELEVEL, "request handling SEC_ANNOUNCE");
          break;
 #endif
 
@@ -579,7 +592,7 @@ char **argv
          sge_send_gdi_request(0, host, commproc, id, answer);
          answer = free_gdi_request(answer);
          gdi = free_gdi_request(gdi);
-         log_time(TIMELEVEL, "request handling GDI_REQUEST");
+         sge_stopwatch_log(TIMELEVEL, "request handling GDI_REQUEST");
 
          break;
       /* ======================================== */
@@ -589,7 +602,7 @@ char **argv
 
          sge_c_ack(host, commproc, &pb);
          clear_packbuffer(&pb);
-         log_time(TIMELEVEL, "request handling ACK_REQUEST");
+         sge_stopwatch_log(TIMELEVEL, "request handling ACK_REQUEST");
          break;
 
       /* ======================================== */
@@ -599,7 +612,7 @@ char **argv
 
          sge_event_client_exit(host, commproc, &pb);
          clear_packbuffer(&pb);
-         log_time(TIMELEVEL, "request handling EVENT_CLIENT_EXIT");
+         sge_stopwatch_log(TIMELEVEL, "request handling EVENT_CLIENT_EXIT");
          break;
 
       /* ======================================== */
@@ -616,7 +629,7 @@ char **argv
          sge_c_report(host, commproc, id, report_list);
          lFreeList(report_list);
          report_list = NULL;
-         log_time(TIMELEVEL, "request handling REPORT");
+         sge_stopwatch_log(TIMELEVEL, "request handling REPORT");
          break;
 
       /* ======================================== */
@@ -656,24 +669,24 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
    DENTER(GDI_LAYER, "sge_gdi_kill_master");
    if (sge_get_auth_info(request, &uid, username, &gid, groupname) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
-   if (sge_manager(username)) {
+   if (!manop_is_manager(username)) {
       ERROR((SGE_EVENT, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
    /* do it */
    shut_me_down = 1;
-   sge_flush_events(NULL, FLUSH_EVENTS_SET);
+   /* sge_flush_events(NULL, 0); !!!! not really necessary */
       
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
-   sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    DEXIT;
 }
 
@@ -766,7 +779,7 @@ lList *report_list
    }
   
    /* need exec host for all types of reports */
-   if (!(hep = sge_locate_host(rhost, SGE_EXECHOST_LIST))) {
+   if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
       DEXIT;
       return;
@@ -818,11 +831,7 @@ lList *report_list
                                           lGetList(report, REP_list))) {
             DPRINTF(("configuration on host %s is not up to date\n", rhost));
 
-            if (!strcmp(prognames[EXECD], commproc))
-               ret = notify_new_conf_2_execd(hep);
-
-            ret = notify_new_conf_2_execd(hep);
-
+            ret = host_notify_about_new_conf(hep);
             if (ret) {
                ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
                break;
@@ -963,7 +972,7 @@ lList *alp = NULL;
       sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       printf("%s\n", *sp);
       sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -1014,7 +1023,7 @@ char *filename;
 
       /* -s */
       if(parse_flag(ppcmdline, "-s", &alp, &flag)) {
-         set_silent(1);
+         sge_silent_set(1);
          continue;
       }
       
@@ -1040,7 +1049,7 @@ char *filename;
       sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
       if(!usageshowed)
          sge_usage(stderr);
-      sge_add_answer(&alp, str, STATUS_ESEMANTIC, 0);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }

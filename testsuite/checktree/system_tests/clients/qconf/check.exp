@@ -43,12 +43,14 @@ global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
 global env
+global check_category
 
 # define a level initialization procedure:
 set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qconf"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level    0
 set check_description(0)  "add/remove queues"
 
@@ -108,7 +110,7 @@ proc init_level {} {
   global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue_names
 
   set queue_names     ""
-  for { set i 0 } { $i < 200 }  {incr i 1} {
+  for { set i 0 } { $i < 1000 }  {incr i 1} {
      lappend queue_names "$CHECK_HOST.qconf$i"
   }
 
@@ -151,14 +153,23 @@ proc init_level {} {
 #     ???/???
 #*******************************
 proc qconf_addqueues {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST queue_names
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST queue_names CHECK_OUTPUT
 
    set q_param(hostname)              "$CHECK_HOST"
    set q_param(load_thresholds)       "np_load_avg=7.00"
  
+   set count 0
    foreach queue $queue_names {
       set q_param(qname) "$queue"
-      add_queue q_param
+      if { $count > 50 } {
+         puts $CHECK_OUTPUT "adding queue \"$queue\" with vi"
+         add_queue q_param
+         set count 0
+      } else {
+         puts $CHECK_OUTPUT "adding queue \"$queue\" with file"
+         add_queue q_param 1
+      }
+      incr count 1
    }
 
    set_error 0 "ok"
@@ -196,9 +207,10 @@ proc qconf_addqueues {} {
 #     ???/???
 #*******************************
 proc qconf_removequeues {} {
-   global CHECK_HOST queue_names
+   global CHECK_HOST queue_names CHECK_OUTPUT
 
    foreach queue $queue_names {
+     puts $CHECK_OUTPUT "deleting queue \"$queue\""
      del_queue $queue
    }
 

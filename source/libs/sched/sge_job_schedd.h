@@ -45,11 +45,7 @@ void sge_inc_jc(lList** jcpp, const char *name, int slots);
 
 void sge_dec_jc(lList** jcpp, const char *name, int slots);
 
-int rebuild_jc(lList **jcpp, lList *job_list);
-
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so);
-
-int set_user_sort(int foo);
 
 /*
  * drop all running jobs into the running list 
@@ -120,68 +116,67 @@ lListElem *explicit_job_request(lListElem *jep, const char *name);
 
 int sge_granted_slots(lList *gdil);
 
-/* EB: */
-
 const char *get_name_of_split_value(int value);
 
+/****** sched/sge_job_schedd/SPLIT_-Constants *********************************
+*  NAME
+*     SPLIT_-Constants -- Constants used for split_jobs() 
+*
+*  SYNOPSIS
+*     enum {
+*        SPLIT_FIRST,
+*        SPLIT_PENDING = SPLIT_FIRST,
+*        SPLIT_PENDING_EXCLUDED,
+*        SPLIT_PENDING_EXCLUDED_INSTANCES,
+*        SPLIT_SUSPENDED,
+*        SPLIT_WAITING_DUE_TO_PREDECESSOR,
+*        SPLIT_HOLD,
+*        SPLIT_ERROR,
+*        SPLIT_WAITING_DUE_TO_TIME,
+*        SPLIT_RUNNING,
+*        SPLIT_FINISHED,
+*        SPLIT_LAST
+*     };             
+*
+*  FUNCTION
+*     SPLIT_PENDING     - Pending jobs/tasks which may be dispatched 
+*     SPLIT_PENDING_EXCLUDED     - Pending jobs/tasks which won't 
+*                         be dispatched because this whould exceed 
+*                         'max_u_jobs'
+*     SPLIT_PENDING_EXCLUDED_INSTANCES    - Pending jobs/tasks which 
+*                         won't be dispatched because this whould 
+*                         exceed 'max_aj_instances' 
+*     SPLIT_SUSPENDED   - Suspended jobs/tasks 
+*     SPLIT_WAITING_DUE_TO_PREDECESSOR    - Jobs/Tasks waiting for 
+*                         others to finish
+*     SPLIT_HOLD        - Jobs/Tasks in user/operator/system hold
+*     SPLIT_ERROR       - Jobs/Tasks which are in error state
+*     SPLIT_WAITING_DUE_TO_TIME  - These jobs/tasks are not 
+*                         dispatched because start time is in future
+*     SPLIT_RUNNING     - These Jobs/Tasks won't be dispatched 
+*                         because they are already running
+*     SPLIT_FINISHED    - Already finished jobs/tasks   
+*
+*     SPLIT_FIRST and SPLIT_LAST might be used to build loops.
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/split_jobs() 
+*     sched/sge_job_schedd/trash_splitted_jobs()
+*******************************************************************************/
 enum {
    SPLIT_FIRST,
 
-   /*
-    * Pending jobs/tasks which may be dispatched
-    */
    SPLIT_PENDING = SPLIT_FIRST,
-
-   /* 
-    * Pending jobs/tasks which won't be dispatched because this would
-    * exceed 'maxujobs'
-    */
    SPLIT_PENDING_EXCLUDED,
-
-   /*
-    * Pending jobs/tasks which won't be dispatched because this whould
-    * exceed 'max_aj_instances'
-    */
    SPLIT_PENDING_EXCLUDED_INSTANCES,
-   
-   /*
-    * Suspended jobs/tasks
-    */
    SPLIT_SUSPENDED,
-
-   /* 
-    * Jobs/Tasks waiting for others to finish
-    */
    SPLIT_WAITING_DUE_TO_PREDECESSOR,
-
-   /*
-    * Jobs/Tasks in user/operator/system hold
-    */
    SPLIT_HOLD,
-
-   /*
-    * Jobs/Tasks which are in error state
-    */
    SPLIT_ERROR,
-   
-   /*
-    * These jobs/tasks are not dispatched because start time is in future
-    */
    SPLIT_WAITING_DUE_TO_TIME,
-
-   /*
-    * These Jobs/Tasks won't be dispatched because they are already running
-    */
    SPLIT_RUNNING,
-
-   /*
-    * Already finished jobs/tasks
-    */
    SPLIT_FINISHED,
 
-   /*
-    * This id is used in loops
-    */
    SPLIT_LAST
 };
 
@@ -198,6 +193,8 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 void trash_splitted_jobs(lList **job_list[]);
 
 void job_lists_print(lList **job_list[]);
+
+void user_list_init_jc(lList **user_list, const lList *running_list);
 
 #endif /* __SGE_JOB_SCHEDD_H */
 

@@ -58,6 +58,7 @@
 #include "qmon_appres.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_answer.h"
 
 #include "Matrix.h"
 
@@ -284,6 +285,7 @@ XtPointer cld, cad;
       return;
    }
    lp = qmonMirrorList(fticket_info.list_type);
+
    /*
    ** filter queues
    */
@@ -637,7 +639,7 @@ XtPointer cad
 static void set_functional_share_percentage(
 Widget mw 
 ) {
-   int total_fshare = 0;
+   double total_fshare = 0;
    String str;
    int row, max_fill, last_row, max_rows;
    double percentage;
@@ -655,7 +657,7 @@ Widget mw
       if (!str || *str == '\0')
          break;
       str = XbaeMatrixGetCell(mw, row, 1);
-      total_fshare += atoi(str);
+      total_fshare += atof(str);
    }
    
    /*
@@ -664,7 +666,7 @@ Widget mw
    max_fill = row;
    for (row=0; row<max_fill; row++) {
       str = XbaeMatrixGetCell(mw, row, 1);
-      percentage = atoi(str) * 100;
+      percentage = atof(str) * 100;
       if (total_fshare)
          percentage /= total_fshare;
       else
@@ -680,7 +682,7 @@ Widget mw
    */
    XbaeMatrixSetRowBackgrounds(mw, last_row, &JobSuspPixel, 1);
    XbaeMatrixSetCell(mw, last_row, 0, XmtLocalize2(mw, "Sum", "qmon_fticket", "Sum"));
-   sprintf(buf, "%d", total_fshare);
+   sprintf(buf, "%.0f", total_fshare);
    XbaeMatrixSetCell(mw, last_row, 1, buf);
    sprintf(buf, "%.1f %%", total_percentage);
    XbaeMatrixSetCell(mw, last_row, 2, buf);
@@ -819,6 +821,7 @@ XtPointer cld, cad;
       lFreeWhere(where);
       lFreeWhat(what);
    } 
+   lPSortList(lp, "%I+", fticket_info.field0);
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
    if (fticket_info.list_type == SGE_USERSET_LIST || 
@@ -904,6 +907,7 @@ XtPointer cld, cad;
       where = lFreeWhere(where);
       what = lFreeWhat(what);
    } 
+   lPSortList(lp, "%I+", oticket_info.field0);
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
    if (oticket_info.list_type == SGE_USERSET_LIST || 
@@ -1114,17 +1118,15 @@ int nm1
 
    DENTER(GUI_LAYER, "qmonFOTCullToMatrix");
 
-   if (!lp) {
-      DEXIT;
-      return;
-   }   
-     
-
    /*
    ** delete old matrix entries
    */
    XtVaSetValues(matrix, XmNcells, NULL, NULL);
-   
+   if (!lp) {
+      DEXIT;
+      return;
+   }   
+
    max_rows = XbaeMatrixNumRows(matrix);
 
    for (ep = lFirst(lp), row = 0; ep; ep = lNext(ep), row++) {

@@ -32,26 +32,20 @@
 #include <string.h>
 
 #include "sge.h"
-#include "sge_jobL.h"
-#include "sge_job.h"
-#include "sge_jataskL.h"
-#include "sge_queueL.h"
-#include "sge_eventL.h"
-#include "job.h"
+#include "sge_job_qmaster.h"
+#include "sge_ja_task.h"
 #include "sge_give_jobs.h"
 #include "sge_m_event.h"
 #include "read_write_queue.h"
 #include "read_write_job.h"
-#include "sge_prognames.h"
+#include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time_eventL.h"
 #include "time_event.h"
 #include "msg_qmaster.h"
-#include "sge_job_jatask.h"
-
-extern lList *Master_Queue_List;
-extern lList *Master_Job_List;
+#include "sge_job.h"
+#include "sge_queue.h"
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
@@ -139,12 +133,12 @@ u_long32 ack_ulong2
    case TAG_SIGJOB:
       DPRINTF(("TAG_SIGJOB\n"));
       /* ack_ulong is the jobid */
-      if (!(jep = sge_locate_job(ack_ulong))) {
+      if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, u32c(ack_ulong) ));
          DEXIT;
          return;
       }
-      jatep = job_search_task(jep, NULL, ack_ulong2, 0);
+      jatep = job_search_task(jep, NULL, ack_ulong2);
       if (jatep == NULL) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
          DEXIT;
@@ -152,7 +146,7 @@ u_long32 ack_ulong2
 
       }
 
-      if (!(qep = lGetElemStr(Master_Queue_List, QU_qname, 
+      if (!(qep = queue_list_locate(Master_Queue_List,  
                         lGetString(jatep, JAT_master_queue)))) {
          ERROR((SGE_EVENT, MSG_COM_ACK_US, u32c(ack_ulong), 
                 lGetString(jatep, JAT_master_queue) ?
@@ -190,7 +184,7 @@ u_long32 ack_ulong2
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
-      job_write_spool_file(jep, ack_ulong2, SPOOL_DEFAULT); 
+      job_write_spool_file(jep, ack_ulong2, NULL, SPOOL_DEFAULT); 
       break;
    }
 

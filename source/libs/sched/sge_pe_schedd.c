@@ -34,9 +34,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_peL.h"
-#include "sge_jobL.h"
-#include "sge_hostL.h"
+#include "sge_pe.h"
+#include "sge_job.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
@@ -48,7 +47,10 @@
 #include "schedd_monitor.h"
 #include "sge_schedd_text.h"
 #include "schedd_message.h"
+#include "sge_host.h"
+
 #include "msg_schedd.h"
+
 #ifdef WIN32NATIVE
 #	define strcasecmp( a, b) stricmp( a, b)
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
@@ -207,7 +209,7 @@ lList *acl_list
        || free_slots <= 0) {
       DPRINTF(("no free slots in PE \"%s\" for job %d\n",
             lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
-         schedd_add_message((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S,
+         schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S,
             lGetString(pe, PE_name));
       DEXIT;
       return 1; 
@@ -217,7 +219,7 @@ lList *acl_list
       !num_in_range(free_slots, lGetList(job, JB_pe_range))) {
       DPRINTF(("free slots of PE \"%s\" not in range of job %d\n",
             lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
-         schedd_add_message((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S, 
+         schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S, 
             lGetString(pe, PE_name));
       DEXIT;
       return 1;
@@ -227,7 +229,7 @@ lList *acl_list
          lGetList(pe, PE_user_list), lGetList(pe, PE_xuser_list), acl_list)) {
       DPRINTF(("job %d has no access to parallel environment \"%s\"\n",
             (int)lGetUlong(job, JB_job_number), lGetString(pe, PE_name)));
-      schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOACCESSTOPE_S, 
+      schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOACCESSTOPE_S, 
             lGetString(pe, PE_name));
       DEXIT;
       return 2;

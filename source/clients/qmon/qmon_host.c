@@ -53,6 +53,7 @@
 #include "commlib.h"
 #include "sge.h"
 #include "sge_complex_schedd.h"
+#include "sge_answer.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -72,10 +73,10 @@
 #include "Matrix.h"
 #include "gdi_tsm.h"
 #include "sge_feature.h"
-#include "utility.h"
 #include "resolve_host.h"
-#include "sge_me.h"
 #include "load_correction.h"
+#include "sge_prog.h"
+#include "sge_host.h"
 
 #include "Tab.h"
 
@@ -380,6 +381,7 @@ static void qmonHostFillList(void)
    lp = lSelect("EHL", qmonMirrorList(SGE_EXECHOST_LIST), where, what);
    lPSortList(lp, "%I+", EH_name);
    UpdateXmListFromCull(exechost_list, XmFONTLIST_DEFAULT_TAG, lp, EH_name);
+   XmListMoveItemToPos(exechost_list, "global", 1);
    lp = lFreeList(lp);
    XmListSelectPos(exechost_list, 1, True);
 
@@ -523,7 +525,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ehp = lGetElemHost(qmonMirrorList(SGE_EXECHOST_LIST), EH_name, ehname);
+   ehp = host_list_locate(qmonMirrorList(SGE_EXECHOST_LIST), ehname);
    XtFree((char*) ehname);
 
    if (ehp) {
@@ -957,7 +959,7 @@ String name
       /*
       ** get the selected host element
       */
-      ehp = lGetElemHost(ehl, EH_name, name);
+      ehp = host_list_locate(ehl, name);
       if (host_data.name)
          XtFree((char*)host_data.name);
       host_data.name = XtNewString(name);
@@ -1283,7 +1285,7 @@ XtPointer cld, cad;
 
       switch ( ret ) {
          case COMMD_NACK_UNKNOWN_HOST:
-            qmonMessageShow(w, True, "can't resolve host '%s'\n", host);
+            qmonMessageShow(w, True, "Can't resolve host '%s'", host);
             break;
          case CL_OK:
             what = lWhat("%T(ALL)", dp);
@@ -1400,7 +1402,7 @@ XtPointer cld, cad;
 
       switch ( ret ) {
          case COMMD_NACK_UNKNOWN_HOST:
-            qmonMessageShow(w, True, "can't resolve host '%s'\n", cbs->input);
+            qmonMessageShow(w, True, "Can't resolve host '%s'", cbs->input);
             cbs->okay = False;
             break;
          case CL_OK:

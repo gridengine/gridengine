@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="AUTHOR" CONTENT="Charu Chaubal">
+	<META NAME="CREATED" CONTENT="20021127;10251700">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20021127;12571100">
+</HEAD>
+<BODY LANG="en-US">
+<H1 ALIGN=CENTER>A Prototype of a Multi-Clustering Implementation
+using Transfer Queues</H1>
+<P ALIGN=CENTER>last updated: <SDFIELD TYPE=DATETIME SDNUM="1033;1033;MMMM D, YYYY">November 27, 2002</SDFIELD></P>
+<H2>Background</H2>
+<P>Multi-clustering can be defined as the sharing of compute jobs
+between two or more independently controlled clustergrids. This could
+be desirable, for example, if the owners of the clusters realize that
+there are times when one cluster is lightly-loaded while another has
+a large pending list. In this case, it makes sense to make use of the
+idle resources, at least until the &quot;local&quot; demand for this
+cluster rises again.</P>
+<P>We define the &quot;local&quot; cluster as the cluster with which
+a user would normally interact (qsub, qstat, etc), and &quot;remote&quot;
+cluster as the one to which jobs are dispatched (if deemed
+appropriate).</P>
+<P>One way to implement multi-clustering is with transfer queues. The
+idea is that jobs dispatched to a transfer queue get submitted to a
+remote cluster; this would happen transparently to the user. To have
+jobs going in both directions, simply use transfer queues on both
+sides.</P>
+<H2>Description</H2>
+<P>The prototype described here implements the following ideas:</P>
+<UL>
+	<LI><P>a load sensor which gives the number of pending jobs in the
+	remote cluster</P>
+	<LI><P>a starter method which takes the job script and submits it to
+	the remote cluster</P>
+	<LI><P>suspend, resume, and terminate methods which act upon jobs
+	sent to the remote cluster</P>
+	<LI><P>a transfer queue which implements the methods described
+	above, and which has a load threshold based upon the number of
+	pending jobs in the remote cluster.</P>
+</UL>
+<P>The scripts used to implement the prototype can be downloaded
+here:</P>
+<UL>
+	<LI><P><A HREF="clusterload.sh">load sensor</A></P>
+	<LI><P><A HREF="transfer_starter.sh">starter method</A></P>
+	<LI><P><A HREF="transfer_suspend.sh">suspend method</A>, <A HREF="transfer_resume.sh">resume
+	method</A>, <A HREF="transfer_terminate.sh">terminate method</A></P>
+</UL>
+<H3>Restricting Assumptions:</H3>
+<UL>
+	<LI><P>both clusters share a common &quot;namespace&quot; or
+	&quot;administrative domain&quot;. By this we mean: common
+	usernames/UIDs/GIDs, common filesystem(s), mutually accessible hosts
+	and hostnames, behind the same firewalls, etc.</P>
+	<LI><P>resource requests are simply passed along without
+	modification. This could lead to errors if a particular resource is
+	not defined in the remote cluster.</P>
+	<LI><P>once a job is submitted to the remote cluster, it will remain
+	in the pending list for that cluster until it either runs or is
+	manually deleted. If meanwhile some local resources are freed, the
+	jobs which are pending at the remote cluster will not get rerouted
+	back to the local cluster.</P>
+</UL>
+<H2>Setup</H2>
+<P>To implement this prototype, create a new queue (the transfer
+queue) on any existing host. Configure it as shown below. Implement
+the load sensor on any host (it would make sense to implement it on
+the same host where the transfer queue lives, but that's not
+necessary). Configure that host as shown below.</P>
+<P>NOTE: it is suggested that the transfer queue be implemented on
+the local master host, to keep things simple and to reduce
+communication latency.</P>
+<P>NOTE: make sure this host is both a submit and admin host on the
+<I>remote</I> cluster.</P>
+<P>NOTE: please modify the scripts to match your local environment.
+See the scripts for site-specific variables.</P>
+<P>Test it by submitting jobs directly to the transfer queue, eg, 
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">qsub -q transfer1 -o output.log -j y sleeper.sh </PRE><P STYLE="margin-bottom: 0cm">
+In practice, you would not submit jobs directly to this special
+queue. Rather, one of the following approaches would be taken:</P>
+<OL>
+	<LI><P STYLE="margin-bottom: 0cm">if all jobs are &quot;generic&quot;
+	enough, then it might not matter if they run in the local or remote
+	cluster. In this case, jobs would just be submitted normally, and
+	those which happen to end up in the transfer queue will run remotely</P>
+	<LI><P STYLE="margin-bottom: 0cm">if certain jobs cannot be run on
+	the remote cluster for whatever reason (licensing restrictions,
+	data/binaries inaccessible remotely), then a user-defined complex
+	with a boolean resource (eg, &quot;remote&quot;) should be attached
+	to the transfer queue(s). Jobs which cannot be run remotely could be
+	submitted with a resource request &quot;-l remote=false&quot;. This
+	will prevent those jobs from being dispatched to the transfer
+	queue(s), and hence will not be dispatched remotely.</P>
+</OL>
+<H3>Setup of transfer queue (only relevant lines shown)</H3>
+<PRE>sr3-umpk-01$ qconf -sq transfer1
+qname transfer1
+hostname tcf-b060
+load_thresholds mpk27jobs=5
+qtype BATCH 
+slots 40
+prolog NONE
+epilog NONE
+starter_method /sge/TransferQueues/transfer_starter.sh
+suspend_method /sge/TransferQueues/transfer_suspend.sh
+resume_method /sge/TransferQueues/transfer_resume.sh
+terminate_method /sge/TransferQueues/transfer_terminate.sh</PRE><H3>
+Load sensor implemented on a single host (only relevant lines shown)</H3>
+<PRE>sr3-umpk-01$ qconf -sconf tcf-b060
+tcf-b060:
+load_sensor /sge/TransferQueues/clusterload.sh
+load_report_time 00:00:09</PRE><H2>
+Configuration</H2>
+<UL>
+	<LI><P>the total number of &quot;foreign&quot; jobs in a system
+	(both running and pending) can be specified by setting the number of
+	slots in the transfer queue. It is recommended that this number be
+	set to some fraction of the number of remote slots (eg, 1/3 or 1/4),
+	for a couple of reasons:</P>
+	<UL>
+		<LI><P>if many jobs are dispatched to the remote cluster and are
+		pending there, and the remote cluster gets flooded with higher
+		priority jobs, then all those pending jobs could get trapped,
+		instead of potentially running on free local resources</P>
+		<LI><P>if there are too many jobs dispatched to the remote cluster,
+		then the polling mechanism for the transfer queue becomes too much
+		of a load (but see improvements below)</P>
+	</UL>
+	<LI><P>jobs only get sent to the remote cluster if it is &quot;idle&quot;.
+	The definition of idle is having N or fewer jobs in the remote
+	pending list; N is configurable but might be something like 10% of
+	the total number of remote job slots. This number is used in the
+	load threshold for the transfer queue.</P>
+	<LI><P>if using Grid Engine Enterprise Edition, &quot;foreign&quot;
+	jobs can be assigned a particular project category, either
+	voluntarily in the job request or by giving it an assigned category,
+	and the share of this project in the local cluster modified
+	appropriately. The remote project is set in the transfer starter
+	method.</P>
+</UL>
+<H2>Discussion</H2>
+<UL>
+	<LI><P>see comments in the scripts to see how certain functionality
+	was implemented and why other choices were not used.</P>
+	<LI><P>if this setup is to be used for a high-throughput environment
+	(large numbers of relatively short jobs, especially array jobs), the
+	load sensor will not be able to provide a very accurate measure of
+	the size of the pending list, and might unnecessarily prevent jobs
+	from being dispatched. In this case, you might consider disabling
+	the load threshold, and instead setting the number of slots to a
+	smaller number (eg, 1/10 the number of remote slots). This will
+	meter out the small jobs in a steady but limited stream, thus
+	avoiding the possibility of dispatching too many jobs and
+	overloading the cluster. It would also be useful here to set the
+	polling time to something lower, like 5 seconds. CAUTION: do not set
+	the polling time to anything less than 5 seconds, otherwise the
+	remote cluster will become overloaded with status requests.</P>
+	<LI><P>One convenient way to do resource mapping, especially if the
+	remote cluster has systems of widely varying capabilities, is to use
+	multiple transfer queues for the different types of systems (eg,
+	different Oses, different memory sizes, etc). By setting the
+	resources on the local transfer queue to match a specific type of
+	system on the remote cluster, you can ensure that jobs get
+	dispatched only when the correct type of system is available.</P>
+</UL>
+<H2>Improvements</H2>
+<P>There are some improvements which could be made to the current
+implementation of methods:</P>
+<UL>
+	<LI><P>reduced polling: the currently implementation uses <CODE>qstat</CODE>
+	calls for gathering required information on both the local and
+	remote clusters. This can lead to excessive overhead. Two ways in
+	which this can be improved are:</P>
+	<UL>
+		<LI><P>eliminate the initial <CODE>qstat</CODE> in the starter
+		method, and instead obtain job submission information directly from
+		the job spool directory ($SGE_JOB_SPOOL_DIR/config). One limitation
+		is that this currently will not provide information about the hard
+		and soft requests for the job. This might be acceptable if, for
+		example, you restrict the transfer queue to accept only jobs with
+		certain criteria. In this case, you will know the resource
+		requirements for the job and can hard code them. Multiple transfer
+		queues could be used to implement multiple criteria sets.</P>
+		<LI><P>instead of polling the remote cluster for each job
+		individually, a separate polling process could be used to get a
+		list of <I>all</I> pending/running/suspended jobs from the remote
+		cluster. Then, you would only need to check that list, rather than
+		do multiple repeated qstats.</P>
+	</UL>
+</UL>
+<UL>
+	<LI><P>invalid resource requests: if a request is invalid, have an
+	error handler which sends the job back to the local cluster and
+	marks it ineligible to run at the remote cluster. Currently, the job
+	is just killed.</P>
+	<LI><P>resource request mapping: if special resources are requested,
+	have a way to map them to equivalent resources at the remote
+	cluster.</P>
+	<LI><P>accounting: have a sensible way to retrieve accounting
+	information from the remote cluster. Perhaps, have a '<CODE>qacct_remote</CODE>'
+	command which will get the remote JID from the local accounting
+	record and then do a remote regular <CODE>qacct</CODE> call.</P>
+	<LI><P>also have a way to map <CODE>qalter</CODE> and <CODE>qstat</CODE>
+	commands to the remote cluster. Again, have a <CODE>*_remote</CODE>
+	version of these commands.</P>
+</UL>
+<H2>Future Directions</H2>
+<P>The implementation described here is limited in terms of
+transfering jobs between administrative domains (eg, different
+file/user namespaces, different firewalls,etc). In order to extend
+the concept to multiple domains, the following extensions to the
+MultiCluster concept would require putting additional functionality
+into the Grid Engine code, and most likely, integration with
+functionality provided by other software:</P>
+<UL>
+	<LI><P>Cross domain security and identity.</P>
+	<LI><P>Firewalls, NATs, etc.</P>
+	<LI><P>Data transfer between domains.</P>
+	<LI><P>Brokerage for intelligent routing of jobs based on least
+	cost, minimal time, best resource, or similar criteria.</P>
+	<LI><P>Sharing of resources across domains, e.g. software licenses;
+	policies related to such sharing models.</P>
+	<LI><P>Cross domain accounting, billing, monitoring.</P>
+	<LI><P>Co-scheduling across domains for distributed apps (e.g.
+	computation and visualisation).</P>
+	<LI><P>Cross domain error tracking.</P>
+	<LI><P>Utilization of standardized interfaces for global grids (e.g.
+	OGSA).</P>
+</UL>
+<P>In addition, cross-domain issues tend to rely more upon standard
+APIs and protocols. Currently, these are not well-defined; much work
+towards defining these standards is occuring in standards bodies such
+as the Global Grid Forum (GGF).</P>
+</BODY>
+</HTML>

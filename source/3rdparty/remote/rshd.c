@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.2 2002/01/09 07:23:48 joga Exp $	*/
+/*	$Id: rshd.c,v 1.8 2002/09/11 10:42:33 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -81,11 +81,10 @@
 #include <sys/filio.h>
 #endif
 
-#include <sge_pgrp.h>
+#include <sge_unistd.h>
 #include <setosjobid.h>
-#include <sge_set_uid_gid.h>
 #include <config_file.h>
-#include <sge_switch_user.h>
+#include <sge_uidgid.h>
 
 #if defined SOLARIS || SUN4 || HP11 || HP10 || NECSX5 || CRAY
 #define _PATH_NOLOGIN "/etc/nologin"
@@ -95,7 +94,7 @@
 #include <paths.h>
 #endif
 
-#if defined AIX4 || ALPHA || IRIX6
+#if defined AIX || ALPHA || IRIX6
 #define _PATH_DEFPATH "/usr/bin:/bin"
 #endif
 
@@ -149,6 +148,7 @@ extern int killpg(int pgrp, int sig);
 
 int	keepalive = 1;
 int	check_all;
+int   check_nologin = 1;
 int	log_success;		/* If TRUE, log all successful accesses */
 int	sent_null;
 
@@ -166,7 +166,7 @@ static char	*topdomain __P((char *));
 static void	 usage __P((void));
 int	main __P((int, char *[]));
 
-#define	OPTIONS	"ahlnL"
+#define	OPTIONS	"ahilnL"
 
 int check_rhosts_file = 1;
    
@@ -200,6 +200,9 @@ main(argc, argv)
 			break;
 		case 'L':
 			log_success = 1;
+			break;
+		case 'i':
+			check_nologin = 0;
 			break;
 		case 'h':
 		default:
@@ -260,6 +263,7 @@ doit(fromp)
 	char hostnamebuf[2 * MAXHOSTNAMELEN + 1];
    /* char active_jobs_dir[SGE_PATH_MAX]; */
    char *s_qsub_gid = NULL;
+   char err_str[1024];
 
 
 	(void) signal(SIGINT, SIG_DFL);
@@ -422,9 +426,8 @@ doit(fromp)
    ** and initialize admin user
    */
    {
-      static char err_str[1024];
       read_config("config");
-      if(set_admin_username(get_conf_val("admin_user"), err_str)) {
+      if(sge_set_admin_username(get_conf_val("admin_user"), err_str)) {
          errorstr = err_str;
          goto fail;
       }   
@@ -482,7 +485,7 @@ fail:
 		exit(1);
 	}
 
-	if (pwd->pw_uid && !access(_PATH_NOLOGIN, F_OK)) {
+	if (check_nologin && pwd->pw_uid && !access(_PATH_NOLOGIN, F_OK)) {
 		error("Logins currently disabled.\n");
 		exit(1);
 	}
@@ -566,10 +569,10 @@ fail:
    gid_t add_grp_id;
    
    /* chdir(active_jobs_dir); */
-   switch2admin_user();
+   sge_switch2admin_user();
    foreground = 0; /* setosjobid shall write to shepherd trace file */
    setosjobid(0, &add_grp_id, pwd);
-   switch2start_user();
+   sge_switch2start_user();
    /* chdir(pwd->pw_dir); */
    
 	if (*pwd->pw_shell == '\0')
@@ -588,9 +591,8 @@ fail:
 #if (SOLARIS || ALPHA || LINUX)     
    /* add Additional group id to current list of groups */
    if (add_grp_id) {
-      if (add_group(add_grp_id) == -1) {
-         /* sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED );
-         return 1; */
+      if (sge_add_group(add_grp_id, err_str) == -1) {
+		   error(err_str);
       }
    }
 #endif

@@ -47,14 +47,13 @@
 #define MSG_HEADER_MEMUSE                "MEMUSE"
 #define MSG_HEADER_SWAPTO                "SWAPTO"
 #define MSG_HEADER_SWAPUS                "SWAPUS"
-#define MSG_QHOST_help_OPT_USAGE     _("display this message\n")
-#define MSG_QHOST_h_OPT_USAGE        _("display only selected hosts\n")
-#define MSG_QHOST_q_OPT_USAGE        _("display queues hosted by host\n")
-#define MSG_QHOST_j_OPT_USAGE        _("display jobs hosted by host\n")
-#define MSG_QHOST_l_OPT_USAGE        _("request the given resources\n")
-#define MSG_QHOST_F_OPT_USAGE        _("show (selected) resources\n")
-#define MSG_QHOST_u_OPT_USAGE        _("show only jobs for user\n")
-#define MSG_GDI_JOBSGEGDIFAILED              _("job: sge_gdi failed\n")
+#define MSG_QHOST_help_OPT_USAGE     _MESSAGE(9000, _("display this message\n"))
+#define MSG_QHOST_h_OPT_USAGE        _MESSAGE(9001, _("display only selected hosts\n"))
+#define MSG_QHOST_q_OPT_USAGE        _MESSAGE(9002, _("display queues hosted by host\n"))
+#define MSG_QHOST_j_OPT_USAGE        _MESSAGE(9003, _("display jobs hosted by host\n"))
+#define MSG_QHOST_l_OPT_USAGE        _MESSAGE(9004, _("request the given resources\n"))
+#define MSG_QHOST_F_OPT_USAGE        _MESSAGE(9005, _("show (selected) resources\n"))
+#define MSG_QHOST_u_OPT_USAGE        _MESSAGE(9006, _("show only jobs for user\n"))
 
 #endif /* __MSG_QHOST_H */
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/01/25 13:18:51 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/10/10 12:22:40 $     Revision: $Revision: 1.18 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/01/25 13:18:51 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/10/10 12:22:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -225,7 +225,9 @@ of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
 jobs to be started afterwards. 
 An optional prefix "user@" specifies the user under which this procedure
-is to be started.
+is to be started. The procedures standard
+output and the error output stream are written to the same file used also for
+the standard output and error output of each job.
 This procedure is intended as a means
 for the xxQS_NAMExx administrator to automate the execution of general site
 specific tasks like the preparation of temporary file systems with the
@@ -239,10 +241,6 @@ configurations is can be overwritten by the queue configuration (see
 ). 
 Changing \fBprolog\fP will take
 immediate effect.
-.PP
-\fBNote:\fP \fBprolog\fP is executed \fIexactly\fP as the job script.
-Therefore, all implications described under the parameters
-\fBshell_start_mode\fP and \fBlogin_shells\fP below apply.
 .PP
 The default for \fBprolog\fP is the special value NONE, which prevents
 from execution of a prologue script. 
@@ -279,7 +277,9 @@ The executable path of a shell script that is started after execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
 jobs that has just completed. An optional prefix "user@" specifies the 
-user under which this procedure is to be started.
+user under which this procedure is to be started. The procedures standard
+output and the error output stream are written to the same file used also for
+the standard output and error output of each job.
 This procedure is intended as a means
 for the xxQS_NAMExx administrator to automate the execution of general site
 specific tasks like the cleaning up of temporary file systems with the
@@ -293,10 +293,6 @@ configurations is can be overwritten by the queue configuration (see
 ).
 Changing \fBepilog\fP will take
 immediate effect.
-.PP
-\fBNote:\fP \fBepilog\fP is executed \fIexactly\fP as the job script.
-Therefore, all implications described under the parameters
-\fBshell_start_mode\fP and \fBlogin_shells\fP below apply.
 .PP
 The default for \fBepilog\fP is the special value NONE, which prevents
 from execution of a epilogue script.
@@ -530,6 +526,58 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
+.SH "\fBreschedule_unknown\fP"
+Determines whether jobs on hosts in unknown state
+are rescheduled and thus sent to other hosts. Hosts
+are registered as unknown if
+.M xxqs_name_sxx_master 8
+cannot establish contact to the
+.M xxqs_name_sxx_execd 8
+on those hosts (see
+.B max_unheard
+). Likely reasons are a breakdown of
+the host or a breakdown of the network connection in between, but also
+.M xxqs_name_sxx_execd 8
+may not be executing on such hosts.
+.PP
+In any case, xxQS_NAMExx can reschedule jobs running on such hosts to
+another system.
+.B reschedule_unknown
+controls the time which
+xxQS_NAMExx will wait before jobs are rescheduled after a host became
+unknown. The time format specification is hh:mm:ss. If the special
+value 00:00:00 is set, then jobs will not be rescheduled from this host.
+.PP
+Rescheduling is only initiated for jobs which have activated the rerun flag
+(see the
+.B -r y
+option of
+.M qsub 1
+and the
+.B rerun
+option of
+.M queue_conf 5 ).
+Parallel jobs are only rescheduled if the host on which their
+master task executes is in unknown state. Checkpointing jobs will only be
+rescheduled when the
+.B when
+option of the corresponding checkpointing environment containes an
+appropriate flag. (see
+.M checkpoint 5 ).
+Interactive jobs (see
+.M qsh 1 ,
+.M qrsh 1 ,
+.M qtcsh 1 )
+are not rescheduled.
+.PP
+The default for
+.B reschedule_unknown
+id 00:00:00
+.PP
+The global configuration entry for this value may be over written by 
+the execution host local configuration.
+.\"
+.\"  
 .SH "\fBstat_log_time\fP"
 xxQS_NAMExx periodically logs a snapshot of the status of the queues currently
 configured in the cluster to disk.
@@ -638,6 +686,20 @@ limit is exceeded by a job submission then the submission command exits
 with exit status 25 and an appropriate error message.
 .PP
 Changing \fBmax_u_jobs\fP will take immediate effect.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBmax_jobs\fP"
+The number of active (not finished) jobs simultaneously allowed in xxQS_NAMExx.
+is controlled by this parameter. A value greater than 0 defines the limit. 
+The default value 0 means "unlimited". If the
+.B max_jobs
+limit is exceeded by a job submission then the submission command exits
+with exit status 25 and an appropriate error message.
+.PP
+Changing \fBmax_jobs\fP will take immediate effect.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
@@ -763,7 +825,7 @@ may be overwritten by the execution host local configuration.
 .SH "\fBgid_range\fP"
 The \fBgid_range\fP
 is a comma separated list of range expressions of the form n-m (n as
-well as m being positive non-zero integer numbers), where m is an
+well as m being integer numbers greater than 99), where m is an
 abbreviation for m-m. These numbers are used in
 .M xxqs_name_sxx_execd 8
 to identify processes belonging to the same job.
@@ -810,23 +872,15 @@ overwritten by the execution host local configuration.
 .\"
 .IP "\fIFORBID_RESCHEDULE\fP"
 If this parameter is set, re-queuing of jobs cannot
-be initiated by the job script which is under control 
-of the user. Without this parameter jobs returning the 
-value 99 are rescheduled. This can be used to cause the 
+be initiated by the job script which is under control
+of the user. Without this parameter jobs returning the
+value 99 are rescheduled. This can be used to cause the
 job to be restarted at a different machine, for instance if there
 are not enough resources on the current one.
 .PP
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
-If set to "true" or "1", the \fBexecd_param\fP \fIRESCHEDULE_UNKNOWN\fP
-(see below) is not taken into account.
-.PP
-.IP "\fINO_REPRIORITIZATION\fP"
-If set to "true" or "1", jobs are not repriorized dynamically. Without 
-setting this attribute the \fBpriority\fP parameter in 
-.M sched_conf 5 
-has no durable effect in a SGEEE system because of dynamic reprioritization
-performed by the PTF module inside 
-.M sge_execd 8 .
+If set to "true" or "1", the \fIreschedule_unknown\fP parameter
+is not taken into account.
 .PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
@@ -836,7 +890,7 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBschedd_params\fP"
-This is foreseen for passing additional parameters 
+This is foreseen for passing additional parameters
 to the xxQS_NAMExx scheduler. The following values are recognized currently:
 .\"
 .IP "\fIFLUSH_SUBMIT_SEC\fP, \fIFLUSH_FINISH_SEC\fP"
@@ -944,6 +998,14 @@ execution daemon will not remove the spool directory maintained by
 .M xxqs_name_sxx_shepherd 8
 for a job.
 .PP
+.IP "\fINO_REPRIORITIZATION\fP"
+If set to "true" or "1", jobs are not repriorized dynamically. Without
+setting this attribute the \fBpriority\fP parameter in
+.M sched_conf 5
+has no durable effect in a SGEEE system because of dynamic reprioritization
+performed by the PTF module inside
+.M sge_execd 8 .
+.PP
 .IP "\fIPTF_MIN_PRIORITY\fP, \fIPTF_MAX_PRIORITY\fP"
 The parameters are only available in a xxQS_NAME_EExx system.
 .br
@@ -983,40 +1045,6 @@ no notification signal will be sent. If it is set to \fITSTP\fP, for
 instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
-.IP "\fIRESCHEDULE_UNKNOWN\fP"
-Determines whether jobs on hosts in unknown state are rescheduled and thus
-sent to other hosts. Hosts are registered as unknown if
-.M xxqs_name_sxx_master 8
-cannot establish contact to the
-.M xxqs_name_sxx_execd 8
-on those hosts (see \fBmax_unheard\fP). Likely reasons are a breakdown of
-the host or a breakdown
-of the network connection in between, but also
-.M xxqs_name_sxx_execd 8
-may not be executing on such hosts.
-.br
-In any case, xxQS_NAMExx can reschedule jobs running on such hosts to
-another system. \fIRESCHEDULE_UNKNOWN\fP controls the time which
-xxQS_NAMExx will wait before jobs are rescheduled after a host became
-unknown. The time format
-specification is RESCHEDULE_UNKNOWN=hh:mm:ss. If the special value
-RESCHEDULE_UNKNOWN=00:00:00 is set, then jobs will not be rescheduled from
-this host.
-.br
-Rescheduling is only initiated for jobs which have actiated the rerun flag
-(see the \fB\-r y\fP option of
-.M qsub 1
-and the \fBrerun\fP option of
-.M queue_conf 5 ).
-Parallel jobs are only rescheduled if the host on which their master tasks
-executes is in unknown state. Interactive jobs (see
-.M qsh 1 ,
-.M qrsh 1 ,
-.M qtcsh 1 )
-are not rescheduled. Migrating checkpointing jobs (and starting from the
-last checkpoint) will be supported in
-a future release.
-.PP
 .IP "\fISET_SGE_ENV, SET_COD_ENV, SET_GRD_ENV\fP"
 In qsub(1) you can find a list of environment variables which are
 exported into the execution environment of each xxQS_NAME_EExx job. Some of 
@@ -1032,6 +1060,10 @@ mentioned in qsub(1) and beginning with the corresponding prefix will be
 exported into the job environmnet. Every parameter can be set to
 "true", "1" or "false", "0". Defaults are "SET_SGE_ENV=1, SET_COD_ENV=0 and
 SET_GRD_ENV=0".
+
+If all three parameters are set to "false" or "0" jobs might fail as none of 
+the corresponding environment variables would be set. Therefore in this case
+the environment variables beginning with the prefix "SGE_" are set.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
 If this parameter is set to true, reserved usage is taken for the xxQS_NAME_EExx share

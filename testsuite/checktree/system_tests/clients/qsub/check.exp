@@ -33,23 +33,27 @@
 
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr 
+global check_category
 global check_highest_level check_init_level_procedure
 global CHECK_CORE_EXECD
+global check_root_access_needs
 
 # some parameters to huge_script test
 global HUGE_SCRIPT_SIZE HUGE_SCRIPT_PATTERN HUGE_SCRIPT_TIMEOUT
 global HUGE_SCRIPT_STEPS HUGE_SCRIPT_MAX_SIZE
 
+set check_root_access_needs "yes"
+
 set HUGE_SCRIPT_MIN_SIZE 0
 set HUGE_SCRIPT_MAX_SIZE [expr 16 * 1024 * 1024]
 set HUGE_SCRIPT_STEPS    100
-set HUGE_SCRIPT_TIMEOUT  600
+set HUGE_SCRIPT_TIMEOUT  1000
 set HUGE_SCRIPT_PATTERN  "generated huge script file for testsuite, 100 characters per line .............................. end"
 
 # setup check's highest level
+
 set check_highest_level [llength $CHECK_CORE_EXECD]
 incr check_highest_level -1
-
 
 # set description for each level
 for {set i 0} { $i <= $check_highest_level } { incr i} {
@@ -58,6 +62,7 @@ for {set i 0} { $i <= $check_highest_level } { incr i} {
 
 set check_init_level_procedure "select_queue"
 set check_name         "qsub"
+set check_category     "COMPATIBILITY SYSTEM L10N"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 set check_functions    ""
 lappend check_functions "check_setup_config"
@@ -105,6 +110,7 @@ lappend check_functions "check_option_V"
 lappend check_functions "check_option_w"
 lappend check_functions "check_option_@"
 lappend check_functions "check_huge_script"
+lappend check_functions "check_qhold_jobname"
 lappend check_functions "check_cleanup_config"
 
 
@@ -424,11 +430,7 @@ proc check_hold {} {
 
    # release job 
    puts $CHECK_OUTPUT "check_hold - ok now we release the job"
-   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls" "$result" } qrls_result
-   if { [string first "modified hold of job" $qrls_result] < 0 } {
-      set_error -1 "check_hold - qrls doesn't work"
-      return
-   }
+   release_job $result
 
    # wait for job to start
    if { [wait_for_jobstart $result "leeper" 300] == -1 } {
@@ -451,6 +453,179 @@ proc check_hold {} {
    set_error 0 "no errors"
 }
 
+proc check_qhold_jobname {} {
+ global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST job_output_dir actual_queue
+ global CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # first clean up output directory:  
+   setup_output_directory
+
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 90" 
+   set hold_job1 [submit_job $jobargs] 
+
+   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job2 [submit_job $jobargs] 
+
+
+
+   # wait for jobs to get in pending state
+   wait_for_jobpending $hold_job1 "FIRST" 200
+   wait_for_jobpending $hold_job2 "Sleeper" 200 
+
+
+
+   # job 1 should not run within the next 60 seconds  
+   if { [wait_for_jobstart $hold_job1 "Sleeper" 60 0] != -1 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should not run until yet(1)"
+   } 
+
+
+   # release job 1
+   release_job $hold_job1 
+   wait_for_jobstart $hold_job1 "FIRST" 100
+
+
+
+
+   # job 2 should not run within the next minute 
+   if { [wait_for_jobstart $hold_job2 "Sleeper" 60 0] != -1 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job2 should not run until yet(2)"
+   } 
+
+
+   
+
+   # job1 will stop in ca. 30 sec
+   wait_for_jobend $hold_job1 "FIRST" 100
+   
+   # job2 should run now
+   wait_for_jobstart $hold_job2 "Sleeper" 100
+
+   # job2 should run till end
+   wait_for_jobend $hold_job2 "Sleeper" 100 
+
+
+
+
+   set back [ del_job_files $hold_job1 $job_output_dir 2 ] 
+   if { $back != 2 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 did not produce error and output file"
+   }
+
+   set back [ del_job_files $hold_job2 $job_output_dir 2 ] 
+   if { $back != 2 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job2 did not produce error and output file"
+   }
+
+
+   
+
+   puts $CHECK_OUTPUT "Test wait for not existant job (job should immediately run)"
+   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set job_id [submit_job $jobargs] 
+   wait_for_jobstart $job_id "Sleeper" 60
+   wait_for_jobend $job_id "Sleeper" 60
+
+
+
+   puts $CHECK_OUTPUT "additional job submit with same name test"
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job1 [submit_job $jobargs] 
+
+   puts $CHECK_OUTPUT "additional job submit with same name test"
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job2 [submit_job $jobargs] 
+
+
+   wait_for_jobpending $hold_job1 "FIRST" 60
+   wait_for_jobpending $hold_job2 "FIRST" 60
+
+   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs 0]
+   if { $hold_job3 != -14 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job3 should produce non-ambiguous error"
+   } else {
+      puts $CHECK_OUTPUT "got non-ambiguous error: $hold_job3 - correct"
+   } 
+    
+   delete_job $hold_job1
+
+
+
+   puts $CHECK_OUTPUT "submitting hold job ..."
+   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs]
+    
+
+   puts $CHECK_OUTPUT "submitting job with same name (FIRST) ..."
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   puts $CHECK_OUTPUT $jobargs
+   set hold_job1 [submit_job $jobargs 0] 
+   if { $hold_job1 != -15 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should produce violates reference unambiguousness error"
+   } else {
+      puts $CHECK_OUTPUT "got violates reference unambiguousness error: $hold_job1 - correct"
+   } 
+
+
+   puts $CHECK_OUTPUT "submitting job with same name (FIRST) as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   puts $CHECK_OUTPUT $jobargs
+   set hold_job1 [submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ] 
+
+   release_job $hold_job1
+   wait_for_jobstart $hold_job1 "FIRST" 75
+   wait_for_jobend $hold_job1 "FIRST" 75
+
+   delete_job $hold_job2
+ 
+   wait_for_jobstart $hold_job3 "Sleeper" 75
+   wait_for_jobend $hold_job3 "Sleeper" 75
+
+
+
+   # test foreign user influence ...
+   puts $CHECK_OUTPUT "checking hold for foreign user ..."
+
+   puts $CHECK_OUTPUT "submitting job with same name (FIRST) as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   puts $CHECK_OUTPUT $jobargs
+   set hold_job1 [submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ] 
+
+   puts $CHECK_OUTPUT "submitting hold job ..."
+   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs]
+
+   wait_for_jobstart $hold_job3 "Sleeper" 75
+   wait_for_jobend $hold_job3 "Sleeper" 75
+
+
+
+   puts $CHECK_OUTPUT "additional job submit with same name test"
+   set jobargs "-h -l q=${actual_queue} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job2 [submit_job $jobargs] 
+
+
+   puts $CHECK_OUTPUT "submitting hold job ..."
+   set jobargs "-hold_jid FIRST -l q=${actual_queue} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
+   set hold_job3 [submit_job $jobargs]
+
+   if { [wait_for_jobstart $hold_job3 "Sleeper" 60 0] != -1 } {
+      add_proc_error "check_qhold_jobname" -1 "job $hold_job3 should not run until yet(3)"
+   } 
+
+
+   delete_job $hold_job3
+   delete_job $hold_job2
+   
+   release_job $hold_job1
+   wait_for_jobstart $hold_job1 "FIRST" 60
+   wait_for_jobend $hold_job1 "FIRST" 60
+
+   puts $CHECK_OUTPUT "done."   
+
+   set_error 0 "no errors"
+}
 
 #                                                             max. column:     |
 #****** qsub/check_start_time() ******
@@ -3377,10 +3552,10 @@ proc check_huge_script {} {
          set sched_start [clock seconds]
          set submit_time [expr $sched_start - $submit_start]
          puts $CHECK_OUTPUT "submitting lasted $submit_time s"
-         wait_for_jobstart $result "Sleeper" 300
+         wait_for_jobstart $result "Sleeper" $HUGE_SCRIPT_TIMEOUT
          set run_start [clock seconds]
          set sched_time [expr $run_start - $sched_start]
-         wait_for_jobend $result "Sleeper" 300
+         wait_for_jobend $result "Sleeper" $HUGE_SCRIPT_TIMEOUT
          set run_end [clock seconds]
          set run_time [expr $run_end - $run_start]
          puts $protocol "$submit_size\t$submit_time\t$sched_time\t$run_time"

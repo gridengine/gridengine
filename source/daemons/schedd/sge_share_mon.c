@@ -38,20 +38,17 @@
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
-#include "sge_schedconfL.h"
-#include "sge_jobL.h"
-#include "sge_userprjL.h"
-#include "sge_share_tree_nodeL.h"
+#include "sge_schedd_conf.h"
 #include "sge_usageL.h"
-#include "sge_hostL.h"
-#include "sge_queueL.h"
-#include "sge_usersetL.h"
 #include "sge_time.h"
 #include "msg_schedd.h"
 #include "sge_language.h"
 #include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
+#include "sge_answer.h"
+#include "sge_complex.h"
+#include "sge_userprj.h"
 
 typedef struct {
    int name_format;
@@ -79,7 +76,8 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -99,7 +97,8 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   answer_exit_if_not_recoverable(aep);
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
@@ -118,7 +117,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    lFreeWhat(what);
 
    aep = lFirst(alp);
-   if (sge_get_recoverable(aep) != STATUS_OK) {
+   if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(3);
    }
@@ -404,10 +403,10 @@ print_nodes(FILE *out, lListElem *node, lListElem *parent,
    lList *children = lGetList(node, STN_children);
 
    if (!project)
-      project = lGetElemStr(projects, UP_name, lGetString(node, STN_name));
+      project = userprj_list_locate(projects, lGetString(node, STN_name));
 
    if (children == NULL)
-      user = lGetElemStr(users, UP_name, lGetString(node, STN_name));
+      user = userprj_list_locate(users, lGetString(node, STN_name));
    else
       user = NULL;
 
@@ -478,7 +477,7 @@ main(int argc, char **argv)
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);

@@ -40,8 +40,7 @@
 #include "basis_types.h"
 #include "msg_utilbin.h"
 #include "sge_string.h"
-#include "host.h"
-#include "sge_arch.h"
+#include "sge_hostname.h"
 
 #ifndef h_errno
 extern int h_errno;
@@ -84,16 +83,20 @@ int main(int argc, char *argv[])
 	(h_errno == NO_RECOVERY)?"NO_RECOVERY":
 	(h_errno == NO_DATA)?"NO_DATA":
 	(h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>");
-    perror(MSG_SYSTEM_GETHOSTBYADDRFAILED );
+    perror(MSG_SYSTEM_GETHOSTBYNAMEFAILED );
     exit(1);
   }
 
   if (name_only) {
       const char *s;
-      if (sge_aliasing && (s=resolve_hostname_local(he->h_name)))
+      char tmpname[MAXHOSTLEN+1];
+
+      /* resolve_hostname_local() internally overwrites he->h_name */
+      strcpy(tmpname, he->h_name);
+      if (sge_aliasing && (s=sge_host_resolve_name_local(tmpname)))
          printf("%s\n", s);
       else /* no aliased name */
-         printf("%s\n", he->h_name);
+         printf("%s\n", tmpname);
   } else {
      printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
      printf(MSG_SYSTEM_ALIASES );

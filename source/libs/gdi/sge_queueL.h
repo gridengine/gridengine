@@ -90,8 +90,8 @@ enum {
 };
 
 SLISTDEF(SO_Type, SubordinateQueue)
-   SGE_STRING(SO_qname) /* no hashing, we will not have too many subordinated queues for one queue */
-   SGE_ULONG(SO_threshold)
+   SGE_STRING(SO_qname, CULL_DEFAULT) /* no hashing, we will not have too many subordinated queues for one queue */
+   SGE_ULONG(SO_threshold, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SON)
@@ -101,9 +101,224 @@ NAMEEND
 
 #define SOS sizeof(SON)/sizeof(char*)
 
-/*
- * QU_Type - our queue structure
- */
+/****** gdi/queue/--QU_Type ***************************************************
+*  NAME
+*     QU_Type - CULL queue element
+*
+*  ELEMENTS
+*     SGE_STRING(QU_qname) 
+*        Unique queue name
+*
+*     SGE_HOST(QU_qhostname)
+*        Hostname
+* 
+*     SGE_STRING(QU_tmpdir)  
+*        Temporary working directory
+*     
+*     SGE_STRING(QU_shell)
+*
+*     SGE_LONG(QU_seq_no)   
+*        Sequence # for use by qmon 
+*
+*     SGE_ULONG(QU_queue_number)               
+*        Unique internal # of the queue 
+*
+*     SGE_LIST(QU_load_thresholds)
+*        CE_Type; list of load alarm values 
+*
+*     SGE_LIST(QU_suspend_thresholds) 
+*        CE_Type; list of load alarm val. for job susp 
+*
+*     SGE_ULONG(QU_nsuspend) 
+*        Number of jobs to suspend per time interval
+*
+*     SGE_STRING(QU_suspend_interval)    
+*        suspend interval 
+*
+*     SGE_STRING(QU_priority)     
+*        job priority 
+*
+*     SGE_BOOL(QU_rerun)       
+*        restart a job
+* 
+*     SGE_ULONG(QU_qtype)        
+*        BATCH, INTERACTIVE, BI, ... 
+* 
+*     SGE_STRING(QU_processors)  
+*        string describing ranges of processor nodes 
+*
+*     SGE_ULONG(QU_job_slots)    
+*        number of job slots
+* 
+*     SGE_STRING(QU_calendar)   
+*        name of the calendar or NULL
+*
+*     SGE_STRING(QU_prolog)      
+*        overrides prolog in local conf
+*
+*     SGE_STRING(QU_epilog)      
+*        overrides epilog in local conf
+*
+*     SGE_STRING(QU_shell_start_mode)    
+*        overrides shell_start_mode in local conf 
+*
+*     SGE_STRING(QU_initial_state)       
+*        enabled, disabled or default
+*
+*     SGE_STRING(QU_s_rt)       
+*        soft real time 
+*
+*     SGE_STRING(QU_h_rt)       
+*        hard real time
+* 
+*     SGE_STRING(QU_s_cpu)      
+*        soft cpu 
+*
+*     SGE_STRING(QU_h_cpu)      
+*        hard cpu 
+*
+*     SGE_STRING(QU_s_fsize)    
+*        soft file size
+*
+*     SGE_STRING(QU_h_fsize)    
+*        hard file size
+*
+*     SGE_STRING(QU_s_data)     
+*        soft data size 
+*
+*     SGE_STRING(QU_h_data)     
+*        hard data size 
+*
+*     SGE_STRING(QU_s_stack)    
+*        soft stack size 
+*
+*     SGE_STRING(QU_h_stack)    
+*        hard stack_size 
+*
+*     SGE_STRING(QU_s_core)     
+*        soft core fsize 
+*
+*     SGE_STRING(QU_h_core)     
+*        hard core fsize
+*
+*     SGE_STRING(QU_s_rss)      
+*        soft ressident set size
+*
+*     SGE_STRING(QU_h_rss)      
+*        hard ressident set size
+*
+*     SGE_STRING(QU_s_vmem)     
+*        soft virtual memory size 
+*
+*     SGE_STRING(QU_h_vmem)     
+*        hard virtual memory size 
+*
+*     SGE_ULONG(QU_stamp)       
+*        for the scheduler 
+*
+*     SGE_STRING(QU_min_cpu_interval)    
+*        min time between two ckpt cores
+*
+*     SGE_ULONG(QU_enable_migr)         
+*        flag controlled via qrestart
+*
+*     SGE_ULONG(QU_master)
+*
+*     SGE_ULONG(QU_state)
+*
+*     SGE_STRING(QU_notify)              
+*        seconds to notify job before SIGKILL/SIGSTOP
+*     
+*     SGE_LIST(QU_acl)       
+*        US_Type - valid user linked list
+*
+*     SGE_LIST(QU_xacl)        
+*        US_Type - excluded user list
+*
+*     SGE_LIST(QU_owner_list, US_Type)  
+*        US_Type - list of "owners"
+*
+*     SGE_LIST(QU_subordinate_list) 
+*        SO_Type - string containing list of subordinate Qs
+*
+*     SGE_LIST(QU_complex_list)     
+*        user defined queue complexes CX_Type
+*
+*     SGE_LIST(QU_consumable_config_list) 
+*        CE_Type - consumable resources of queue
+*
+*     SGE_LIST(QU_projects)         
+*        SGEEE - UP_Type - list of projects which have access to 
+*        queue - list contains name only 
+*
+*     SGE_LIST(QU_xprojects)    
+*        SGEEE - UP_Type - list of projects  which have no 
+*        access to queue - list contains name only
+*
+*     SGE_ULONG(QU_fshare)     
+*        SGEEE - functional share 
+*
+*     SGE_ULONG(QU_oticket)    
+*        SGEEE - override tickets the following are ephemeral in 
+*        nature - don't pack them 
+*
+*     SGE_LIST(QU_consumable_actual_list) 
+*        CE_Type actually debited amout of consumable resources of 
+*        queue 
+*
+*     SGE_ULONG(QU_suitable)
+*
+*     SGE_ULONG(QU_tagged)
+*
+*     SGE_ULONG(QU_tagged4schedule)
+*  
+*     SGE_LIST(QU_cached_complexes)      
+*        CE_Type used in scheduler for caching 
+*
+*     SGE_ULONG(QU_cache_version)       
+*        used to decide whether QU_cached_complexes needs a refresh
+*
+*     SGE_ULONG(QU_pending_signal)
+*
+*     SGE_ULONG(QU_pending_signal_delivery_time)
+*
+*     SGE_ULONG(QU_version)             
+*        used to control configuration version of queue 
+*
+*     SGE_STRING(QU_queueing_system)
+*
+*     SGE_ULONG(QU_suspended_on_subordinate) 
+*        number of sos's from other queues for caching only in 
+*        the qmaster
+*
+*     SGE_ULONG(QU_last_suspend_threshold_ckeck) 
+*        time when schedd has checked queues suspend threshold - 
+*        only used in schedd 
+*
+*     SGE_ULONG(QU_job_cnt)          
+*        SGEEE - job reference count only used in schedd 
+*
+*     SGE_ULONG(QU_pending_job_cnt)  
+*        SGEEE - pending job reference count only used in schedd 
+*
+*     SGE_ULONG(QU_soft_violation)   
+*        number of soft request (-l/-q) violations
+*
+*     SGE_ULONG(QU_host_seq_no)      
+*        sequence number of host only used in schedd 
+*
+*     SGE_STRING(QU_starter_method)  
+*        method how to start a job 
+*
+*     SGE_STRING(QU_suspend_method)  
+*        method how to suspend a job 
+*
+*     SGE_STRING(QU_resume_method)   
+*        method how to resume a stopped job
+*
+*     SGE_STRING(QU_terminate_method)
+*        method how to terminate a job 
+******************************************************************************/
 enum {
    QU_qname = QU_LOWERBOUND,
    QU_qhostname,
@@ -168,7 +383,6 @@ enum {
    QU_fshare,
    QU_oticket,
 
-   /* the following are ephemeral in nature - don't pack them */
    QU_consumable_actual_list,
    QU_suitable,
    QU_tagged,
@@ -193,101 +407,82 @@ enum {
 };
 
 ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
-   SGE_KSTRINGHU(QU_qname)      /* name of Q */
-   SGE_HOSTH(QU_qhostname)   /* qualified hostname */ /* CR - hostname change */
-   SGE_STRING(QU_tmpdir)      /* temporary WD */
-   SGE_STRING(QU_shell)
+   SGE_STRING(QU_qname, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_CONFIGURE)
+   SGE_HOST(QU_qhostname, CULL_HASH | CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_tmpdir, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_shell, CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_ULONG(QU_seq_no)                      /* sequence # for use by qmon */
-   SGE_XULONGHU(QU_queue_number)               /* unique internal # of the queue */
-   SGE_TLIST(QU_load_thresholds, CE_Type)    /* - list of load alarm values */
-   SGE_TLIST(QU_suspend_thresholds, CE_Type) /* list of load alarm val. for job susp */
-   SGE_ULONG(QU_nsuspend)                    /* number of jobs to suspend per time 
-                                              * interval */
-   SGE_STRING(QU_suspend_interval)    /* suspend interval */
-   SGE_STRING(QU_priority)     /* job priority */
-   SGE_XULONG(QU_rerun)       /* restart a job */
-   SGE_ULONG(QU_qtype)        /* BATCH, INTERACTIVE, BI, ...  */
-   SGE_STRING(QU_processors)  /* string describing ranges of processor nodes */
-   SGE_ULONG(QU_job_slots)    /* number of job slots */
-   SGE_XSTRING(QU_calendar)   /* name of the calendar or NULL */
-   SGE_IOBJECT(QU_calendar, CAL_Type)
-   SGE_STRING(QU_prolog)      /* overrides prolog in local conf */
-   SGE_STRING(QU_epilog)      /* overrides epilog in local conf */
-   SGE_STRING(QU_shell_start_mode)    /* overrides shell_start_mode in *
-                                       * local conf */
-   SGE_STRING(QU_initial_state)       /* enabled, disabled or default */
-   SGE_XSTRING(QU_s_rt)       /* soft real time */
-   SGE_XSTRING(QU_h_rt)       /* hard real time */
-   SGE_XSTRING(QU_s_cpu)      /* soft cpu */
-   SGE_XSTRING(QU_h_cpu)      /* hard cpu */
-   SGE_XSTRING(QU_s_fsize)    /* soft file size */
-   SGE_XSTRING(QU_h_fsize)    /* hard file size */
-   SGE_XSTRING(QU_s_data)     /* soft data size */
-   SGE_XSTRING(QU_h_data)     /* hard data size */
-   SGE_XSTRING(QU_s_stack)    /* soft stack size */
-   SGE_XSTRING(QU_h_stack)    /* hard stack_size */
-   SGE_XSTRING(QU_s_core)     /* soft core fsize */
-   SGE_XSTRING(QU_h_core)     /* hard core fsize */
-   SGE_XSTRING(QU_s_rss)      /* soft ressident set size */
-   SGE_XSTRING(QU_h_rss)      /* hard ressident set size */
-   SGE_XSTRING(QU_s_vmem)     /* soft virtual memory size */
-   SGE_XSTRING(QU_h_vmem)     /* hard virtual memory size */
-   SGE_XULONG(QU_stamp)       /* for the scheduler */
-   SGE_STRING(QU_min_cpu_interval)    /* min time between two ckpt cores */
-   SGE_XULONG(QU_enable_migr)         /* flag controlled via qrestart */
-   SGE_XULONG(QU_master)
-   SGE_RULONG(QU_state)
-   SGE_STRING(QU_notify)              /* seconds to notify job before SIGKILL/SIGSTOP */
-   SGE_XLIST(QU_acl, US_Type)         /* US_Type - valid user linked list */
-   SGE_XLIST(QU_xacl, US_Type)        /* US_Type - excluded user list */
-   SGE_XLIST(QU_owner_list, US_Type)  /* US_Type - list of "owners" */
-   SGE_TLIST(QU_subordinate_list, SO_Type) /* string containing list of */
-                                           /* subordinate Qs */
-   SGE_TLIST(QU_complex_list, CX_Type)     /* user defined queue complexes CX_Type */
-   SGE_TLIST(QU_consumable_config_list, CE_Type) /* consumable resources of queue */
-   SGE_XLIST(QU_projects, UP_Type)         /* SGEEE - UP_Type - list of projects 
-                                            * which have access to queue - 
-                                            * list contains name only */
-   SGE_LIST(QU_xprojects)    /* SGEEE - UP_Type - list of projects 
-                              * which have no access to queue - 
-                              * list contains name only */
-   SGE_XULONG(QU_fshare)     /* SGEEE - functional share */
-   SGE_XULONG(QU_oticket)    /* SGEEE - override tickets
-                              * the following are ephemeral in nature - 
-                              * don't pack them */
-   SGE_LIST(QU_consumable_actual_list) /* CE_Type actually debited amout of 
-                                        * consumable resources of queue */
-   SGE_XULONG(QU_suitable)
-   SGE_XULONG(QU_tagged)
-   SGE_XULONG(QU_tagged4schedule)
-   SGE_LIST(QU_cached_complexes)      /* CE_Type used in scheduler for *
-                                       * caching */
-   SGE_XULONG(QU_cache_version)       /* used to decide whether *
-                                       * QU_cached_complexes needs a *
-                                       * refresh */
-   SGE_XULONG(QU_pending_signal)
-   SGE_XULONG(QU_pending_signal_delivery_time)
-   SGE_XULONG(QU_version)             /* used to control configuration 
-                                       * version of queue */
-   SGE_XSTRING(QU_queueing_system)
-   SGE_XULONG(QU_suspended_on_subordinate) /* number of sos's from other queues 
-                                            * for caching only in the qmaster */
-   SGE_XULONG(QU_last_suspend_threshold_ckeck) /* time when schedd has checked 
-                                                * queues suspend threshold - only used 
-                                                * in schedd */
-   SGE_XULONG(QU_job_cnt)          /* SGEEE - job reference count 
-                                    * only used in schedd */
-   SGE_XULONG(QU_pending_job_cnt)  /* SGEEE - pending job reference count 
-                                    * only used in schedd */
-   SGE_XULONG(QU_soft_violation)   /* number of soft request (-l/-q) violations
-                                    * only used in schedd */
-   SGE_XULONG(QU_host_seq_no)      /* sequence number of host 
-                                    * only used in schedd */
-   SGE_XSTRING(QU_starter_method)  /* method how to start a job */
-   SGE_XSTRING(QU_suspend_method)  /* method how to suspend a job */
-   SGE_XSTRING(QU_resume_method)   /* method how to resume a stopped job */
-   SGE_XSTRING(QU_terminate_method)/* method how to terminate a job */
+   SGE_ULONG(QU_seq_no, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_ULONG(QU_queue_number, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
+   SGE_LIST(QU_load_thresholds, CE_Type, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_LIST(QU_suspend_thresholds, CE_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_nsuspend, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_suspend_interval, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_priority, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_BOOL(QU_rerun, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_ULONG(QU_qtype, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_STRING(QU_processors, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_job_slots, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_calendar, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_prolog, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_STRING(QU_epilog, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_shell_start_mode, CULL_SPOOL | CULL_CONFIGURE)
+                                 
+   SGE_STRING(QU_initial_state, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_s_rt, CULL_SPOOL | CULL_CONFIGURE)       
+   SGE_STRING(QU_h_rt, CULL_SPOOL | CULL_CONFIGURE)      
+   SGE_STRING(QU_s_cpu, CULL_SPOOL | CULL_CONFIGURE)    
+   SGE_STRING(QU_h_cpu, CULL_SPOOL | CULL_CONFIGURE)   
+   SGE_STRING(QU_s_fsize, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_fsize, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_data, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_h_data, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_s_stack, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_stack, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_s_core, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_h_core, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_s_rss, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_h_rss, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_STRING(QU_s_vmem, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_h_vmem, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_ULONG(QU_stamp, CULL_DEFAULT) 
+   SGE_STRING(QU_min_cpu_interval, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_ULONG(QU_enable_migr, CULL_DEFAULT)     
+   SGE_ULONG(QU_master, CULL_DEFAULT)
+   SGE_ULONG(QU_state, CULL_SPOOL)
+   SGE_STRING(QU_notify, CULL_SPOOL | CULL_CONFIGURE)         
+   SGE_LIST(QU_acl, US_Type, CULL_SPOOL | CULL_CONFIGURE)   
+   SGE_LIST(QU_xacl, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_owner_list, US_Type, CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(QU_subordinate_list, SO_Type, CULL_SPOOL | CULL_CONFIGURE)
+                                         
+   SGE_LIST(QU_complex_list, CX_Type, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_LIST(QU_consumable_config_list, CE_Type, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_LIST(QU_projects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)       
+   SGE_LIST(QU_xprojects, UP_Type, CULL_SPOOL | CULL_CONFIGURE)    
+   SGE_ULONG(QU_fshare, CULL_SPOOL | CULL_CONFIGURE)    
+   SGE_ULONG(QU_oticket, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_LIST(QU_consumable_actual_list, CE_Type, CULL_DEFAULT) 
+   SGE_ULONG(QU_suitable, CULL_DEFAULT)
+   SGE_ULONG(QU_tagged, CULL_DEFAULT)
+   SGE_ULONG(QU_tagged4schedule, CULL_DEFAULT)
+   SGE_LIST(QU_cached_complexes, CE_Type, CULL_DEFAULT)   
+   SGE_ULONG(QU_cache_version, CULL_DEFAULT)   
+   SGE_ULONG(QU_pending_signal, CULL_SPOOL)
+   SGE_ULONG(QU_pending_signal_delivery_time, CULL_SPOOL)
+   SGE_ULONG(QU_version, CULL_SPOOL)   
+   SGE_STRING(QU_queueing_system, CULL_DEFAULT)
+   SGE_ULONG(QU_suspended_on_subordinate, CULL_DEFAULT) 
+   SGE_ULONG(QU_last_suspend_threshold_ckeck, CULL_DEFAULT) 
+   SGE_ULONG(QU_job_cnt, CULL_DEFAULT)          
+   SGE_ULONG(QU_pending_job_cnt, CULL_DEFAULT)
+   SGE_ULONG(QU_soft_violation, CULL_DEFAULT)   
+   SGE_ULONG(QU_host_seq_no, CULL_DEFAULT)    
+                                
+   SGE_STRING(QU_starter_method, CULL_SPOOL | CULL_CONFIGURE)  
+   SGE_STRING(QU_suspend_method, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_resume_method, CULL_SPOOL | CULL_CONFIGURE) 
+   SGE_STRING(QU_terminate_method, CULL_SPOOL | CULL_CONFIGURE)
 LISTEND 
 
 NAMEDEF(QUN)
@@ -352,7 +547,6 @@ NAMEDEF(QUN)
    NAME("QU_fshare")
    NAME("QU_oticket")
 
-   /* the following are ephemeral in nature - don't pack them */
    NAME("QU_consumable_actual_list")
    NAME("QU_suitable")
    NAME("QU_tagged")
@@ -379,6 +573,28 @@ NAMEEND
 /* *INDENT-ON* */ 
 
 #define QUS sizeof(QUN)/sizeof(char*)
+
+/* *INDENT-OFF* */ 
+
+enum {
+   QR_name = QR_LOWERBOUND
+};
+
+LISTDEF(QR_Type)
+   SGE_STRING(QR_name, CULL_HASH | CULL_UNIQUE)
+LISTEND 
+
+NAMEDEF(QRN)
+   NAME("QR_name")
+NAMEEND
+
+/* *INDENT-ON* */  
+
+#define QRS sizeof(QRN)/sizeof(char*)
+
+
+
+/* *INDENT-ON* */  
 #ifdef  __cplusplus
 }
 #endif

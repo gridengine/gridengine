@@ -37,59 +37,56 @@
 /* Definition of new names */
 #include "sge_answerL.h"
 #include "sge_ckptL.h"
-#include "sge_complexL.h"
-#include "sge_confL.h"
 #include "sge_eventL.h"
 #include "sge_histdirL.h"
-#include "sge_hostL.h"
 #include "sge_identL.h"
 #include "sge_jobL.h"
-#include "sge_job_queueL.h"
 #include "sge_job_refL.h"
-#include "sge_job_reportL.h"
 #include "sge_krbL.h"
-#include "sge_load_reportL.h"
-#include "sge_manopL.h"
 #include "sge_orderL.h"
-#include "sge_paL.h"
+#include "sge_path_aliasL.h"
 #include "sge_peL.h"
 #include "sge_ptfL.h"
-#include "sge_qsiL.h"
-#include "sge_queueL.h"
-#include "sge_rangeL.h"
 #include "sge_reportL.h"
 #include "sge_requestL.h"
-#include "sge_schedconfL.h"
-#include "sge_share_tree_nodeL.h"
+#include "sge_schedd_conf.h"
+#include "sge_sharetreeL.h"
 #include "sge_stringL.h"
 #include "sge_usageL.h"
-#include "sge_userprjL.h"
 #include "sge_usersetL.h"
 #include "parse_qsubL.h"
 #include "sge_multiL.h"
 #include "sge_time_eventL.h"
-#include "sge_calendarL.h"
 #include "sge_qexecL.h"
 #include "sge_messageL.h"
-#include "sge_jataskL.h"
+#include "sge_ja_task.h"
 #include "sge_ctL.h"
 #include "sge_access_treeL.h"
 #include "sge_eejobL.h"
 #include "sge_ulongL.h"
 #include "qmon_prefL.h"
 #include "sge_usermapL.h"
-#include "sge_groupL.h"
 #include "sge_permissionL.h"
 #include "sge_loadsensorL.h"
 #include "sge_featureL.h"
 #include "sge_suserL.h"
 #include "sge_secL.h"
+#include "sge_pe_taskL.h"
+#include "sge_varL.h"
+#include "sge_rangeL.h"
+#include "sge_queueL.h"
+#include "sge_userprjL.h"
+#include "sge_hostL.h"
+#include "sge_complexL.h"
+#include "sge_manopL.h"
+#include "sge_calendarL.h"
+#include "sge_hostgroupL.h"
+#include "sge_confL.h"
+#include "sge_spoolingL.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-   int is_obj_of_type(lListElem * ep, lDescr * descr);
 
 #ifdef  __cplusplus
 }
@@ -137,7 +134,6 @@ extern "C" {
       {JC_LOWERBOUND, JCS, JCN},        /* job couter used in schedd */
       {CONF_LOWERBOUND, CONFS, CONFN},  /* config */
       {CF_LOWERBOUND, CFS, CFN},        /* config list */
-      {JQ_LOWERBOUND, JQS, JQN},        /* combined job/queue list */
       {ST_LOWERBOUND, STS, STN},        /* string list */
       {JG_LOWERBOUND, JGS, JGN},        /* jobs sublist of granted destinatin 
                                          * identifiers */
@@ -153,7 +149,8 @@ extern "C" {
       {UP_LOWERBOUND, UPS, UPN},        /* SGEEE - user/project */
       {STN_LOWERBOUND, STNS, STNN},     /* SGEEE - share tree node */
       {SC_LOWERBOUND, SCS, SCN},        /* scheduler config */
-      {YYYCONF_LOWERBOUND, 0, NULL},    /* obsolete - reuse me */
+      {PET_LOWERBOUND, PETS, PETN},     /* PE Task object */
+      {PETR_LOWERBOUND, PETRS, PETRN},   /* PE Task request object */
       {JR_LOWERBOUND, JRS, JRN},        /* Job report */
       {LIC_LOWERBOUND, LICS, LICN},     /* structure of license report */
       {CK_LOWERBOUND, CKS, CKN},        /* checkpointing object */
@@ -161,8 +158,6 @@ extern "C" {
                                          * storing jobs old usage */
       {KRB_LOWERBOUND, KRBS, KRBN},     /* Kerberos connection list */
       {PA_LOWERBOUND, PAS, PAN},        /* Path alias list */
-      {CS_LOWERBOUND, CSS, CSN},        /* obsolete - reuse me */
-      {CO_LOWERBOUND, COS, CON},        /* obsolete - reuse me */
       {JRE_LOWERBOUND, JRES, JREN},     /* job reference */
       {ID_LOWERBOUND, IDS, IDN},        /* id struct used for qmod requests */
       {MA_LOWERBOUND, MAS, MAN},        /* ma struct used for multi gdi
@@ -206,6 +201,11 @@ extern "C" {
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
+
+      {SPC_LOWERBOUND, SPCS, SPCN},     /* Spooling context */
+      {SPR_LOWERBOUND, SPRS, SPRN},     /* Spooling rule */
+      {SPT_LOWERBOUND, SPTS, SPTN},     /* Spooling object type */
+      {SPTR_LOWERBOUND, SPTRS, SPTRN},     /* Spooling rules for object type */
       {0, 0, NULL}
    };
 

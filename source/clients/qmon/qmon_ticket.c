@@ -42,6 +42,7 @@
 
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
+#include "sge_answer.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_globals.h"
@@ -182,12 +183,13 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonPopdownTicketOverview");
 
-   if (data_changed) 
+   if (data_changed) {
       status = XmtAskForBoolean(w, "xmtBooleanDialog", 
                      "@{ticket.asksave.Do you want to save your changes ?}", 
                      "@{Yes}", "@{No}", "@{Cancel}", XmtNoButton, 
-                        XmDIALOG_QUESTION, 
+                        /* XmDIALOG_QUESTION */ XmDIALOG_INFORMATION, 
                      False, &answer, NULL);
+   }
 
    if (status) {
       if (answer)
@@ -424,9 +426,9 @@ XtPointer cld, cad;
       qmonMessageBox(w, alp, 0);
 
       if (alp && lGetUlong(lFirst(alp), AN_status) != STATUS_OK)
-         XmtMsgLinePrintf(tov_message, "Failure");
+         XmtMsgLinePrintf(tov_message, XmtLocalize(w, "Failure", "Failure"));
       else
-         XmtMsgLinePrintf(tov_message, "Success");
+         XmtMsgLinePrintf(tov_message, XmtLocalize(w, "Success", "Success"));
       XmtMsgLineClear(tov_message, DISPLAY_MESSAGE_DURATION); 
 
       data_changed = False;

@@ -34,20 +34,19 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include "def.h"
 #include "cull.h"
 #include "sge_gdi_intern.h"
-#include "sge_confL.h"
-#include "sge_answerL.h"
 #include "sge_parse_num_par.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "config.h"
 #include "sge_string.h"
+#include "sge_answer.h"
+#include "sge_conf.h"
+#include "parse.h"
+
 #include "msg_gdilib.h"
 
-static int sge_parse_enum(const char *str, char *enumv[], u_long32 *uptr, 
-                          const char *name, lList **alpp); 
 /* 
 **
 ** DESCRIPTION
@@ -82,7 +81,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
 
    while (fgets(buffer, buffer_size, fp)) {
       if (last) {
-         free_saved_vars(last);
+         sge_free_saved_vars(last);
          last = NULL;
       }
       /*
@@ -122,8 +121,8 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
 
       if(!value || !(*value)) {
          if (force_value) {
-            sprintf(SGE_EVENT, MSG_GDI_CONFIGNOARGUMENTGIVEN_S , name);
-            sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGNOARGUMENTGIVEN_S , name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             goto Error;
          }
@@ -150,7 +149,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
          ep = lAddElemStr(lpp, nm1, name, dp);
          if (!ep) { 
             ERROR((SGE_EVENT, MSG_GDI_CONFIGADDLISTFAILED_S , name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             goto Error;
          } 
@@ -159,7 +158,7 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
          ep = lAddElemStr(lpp, nm1, name, dp);
          if (!ep) { 
             ERROR((SGE_EVENT, MSG_GDI_CONFIGADDLISTFAILED_S , name));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, NUM_AN_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             goto Error;
          } 
@@ -169,13 +168,13 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
    }
    
    if (last)
-      free_saved_vars(last);
+      sge_free_saved_vars(last);
    DEXIT;
    return 0; 
 
 Error:
    if (last)
-      free_saved_vars(last);
+      sge_free_saved_vars(last);
    return -1;
 }
 
@@ -206,7 +205,7 @@ lList *get_conf_sublist(lList **alpp, lList *lp, int name_nm, int value_nm,
       if (alpp) {
          char error[1000];
          sprintf(error, MSG_GDI_CONFIGMISSINGARGUMENT_S , key);
-         sge_add_answer(alpp, error, STATUS_ESEMANTIC, NUM_AN_ERROR);
+         answer_list_add(alpp, error, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       }
       DEXIT;
       return NULL;
@@ -245,7 +244,7 @@ char *get_conf_value(lList **alpp, lList *lp, int name_nm, int value_nm,
       if (alpp) {
          char error[1000];
          sprintf(error, MSG_GDI_CONFIGMISSINGARGUMENT_S , key);
-         sge_add_answer(alpp, error, STATUS_ESEMANTIC, NUM_AN_ERROR);
+         answer_list_add(alpp, error, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       }
       DEXIT;
       return NULL;
@@ -356,9 +355,9 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?TRUE:FALSE;
    }
    if (!strcasecmp(str, "true"))
-      lSetUlong(ep, name_nm, TRUE);
+      lSetBool(ep, name_nm, TRUE);
    else
-      lSetUlong(ep, name_nm, FALSE);
+      lSetBool(ep, name_nm, FALSE);
       
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
@@ -406,9 +405,9 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?TRUE:FALSE;
    }
    if (sscanf(str, u32, &uval)!=1) {
-      sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS ,
-               key, str); 
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR); 
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS ,
+               key, str)); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
       DEXIT;
       return FALSE;
    }
@@ -485,9 +484,9 @@ _Insight_set_option("suppress", "PARM_NULL");
    }
 
    if ( (sscanf(str, "%lf", &dval)!=1) || ( strncasecmp(str,"inf",3) == 0 ) ) {
-      sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS , 
-               key, str);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS , 
+               key, str));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return FALSE;
    }
@@ -604,8 +603,8 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?TRUE:FALSE;
    }
    if(!parse_ulong_val(NULL, NULL, TYPE_TIM, str, NULL, 0)) {
-      sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTTIME_SS , key, str);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTTIME_SS , key, str));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return FALSE;
    }
@@ -655,8 +654,8 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?TRUE:FALSE;
    }
    if(!parse_ulong_val(NULL, NULL, TYPE_MEM, str, NULL, 0)) {
-      sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOMEMORY_SS , key, str);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOMEMORY_SS , key, str));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return FALSE;
    }
@@ -686,7 +685,7 @@ _Insight_set_option("unsuppress", "PARM_NULL");
  **** The function returns FALSE on error, otherwise TRUE.
  ****/
 int set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
-                  lListElem *ep, int name_nm, char **enum_strings) 
+                  lListElem *ep, int name_nm, const char **enum_strings) 
 {
 #ifdef __INSIGHT__
 /* JG: NULL is OK for fields */
@@ -701,14 +700,14 @@ _Insight_set_option("suppress", "PARM_NULL");
       DEXIT;
       return fields?TRUE:FALSE;
    }
-   if(sge_parse_enum(str, enum_strings, &uval, key, alpp)) {
+   if(!sge_parse_bitfield_str(str, enum_strings, &uval, key, alpp)) {
       DEXIT;
       return FALSE;
    }
    
    if(!uval) {
-      sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED );
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -831,8 +830,8 @@ _Insight_set_option("suppress", "PARM_NULL");
          continue;
       lSetUlong(tmpep, subval_nm, strtol(s, &endptr, 10));
       if (*endptr) {
-         sprintf(SGE_EVENT, MSG_GDI_CONFIGREADFILEERRORNEAR_SS , key, endptr);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGREADFILEERRORNEAR_SS , key, endptr));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DEXIT;
          return FALSE;
       }
@@ -896,68 +895,3 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
 }
 
-/* ------------------------------------------ 
-
-   parses an enumeration of specifiers into value
-   the first specifier is interpreted
-   as 1, second as 2, third as 4 ..
-   
-   return value
-
-   0 ok
-   -1 error
-
-*/
-static int sge_parse_enum(const char *str, char *set_specifier[], 
-                          u_long32 *value, const char *name, lList **alpp) 
-{
-   const char *s;
-   char **cpp;
-   u_long32 bitmask;
-   /* isspace() character plus "," */
-   static char delim[] = ", \t\v\n\f\r";
-   DENTER(TOP_LAYER, "sge_parse_enum");
-   
-   *value = 0;
-
-   for (s = sge_strtok(str, delim); s; s=sge_strtok(NULL, delim)) {
-
-      bitmask = 1;
-      for (cpp=set_specifier; **cpp != '\0'; cpp++) {
-         if (!strcasecmp(*cpp, s)) {
-
-            if ( *value & bitmask ) {
-               /* whops! unknown specifier */
-               sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS, *cpp, name); 
-               sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
-               DEXIT;
-               return -1;
-            }
-
-            *value |= bitmask;
-            break;
-         }
-         else   
-            bitmask <<= 1;
-      }
-
-      if ( **cpp == '\0' ) {
-         /* whops! unknown specifier */
-         sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS, s, name); 
-         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
-         DEXIT;
-         return -1;
-      }
-
-   }
-
-   if (!value) {
-      sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S , name);
-      sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, NUM_AN_ERROR);
-      DEXIT;
-      return -1;
-
-   }
-   DEXIT;
-   return 0;
-}

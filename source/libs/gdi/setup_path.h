@@ -54,8 +54,10 @@
 
 #ifndef WIN32NATIVE
 #  define PATH_SEPARATOR "/"
+#  define PATH_SEPARATOR_CHAR '/'
 #else
 #  define PATH_SEPARATOR "\\"
+#  define PATH_SEPARATOR_CHAR '\\'
 #endif      
 
 typedef struct _sge_path_type {

@@ -1,3 +1,6 @@
+SG-2004-02-26-0: Enhancem:  added halfelife_decay_list to the scheduler config
+                            man page.
+
 AA-2004-02-26-0: Bugfix:    cplx dialogue kept highlighting after closing
                  Changed:   qmon
 
@@ -8,6 +11,12 @@ EB-2004-02-26-0: Bugfix:    qstat -explain did not show messages
                  Issue:     705, 688
                  Review:    SG 
 
+SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It referes to
+                            to the range of 1970 till 2069.
+                 Chaged:    qacct, qsub, qalter,...
+                 Issue:     709
+
+                 
 SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
                             execd to run out of file descriptors
                  Changed:   execd
@@ -26,6 +35,7 @@ DT-2004-02-25-0: Bugfix:    o Fixed qconf -sq queue@hostname output.
 
 SG-2004-02-25-0: Bugfix:    extended the scheduler check for invalid configurations.
                  Issue:     695
+                 Changed:   scheduler
 
 SD-2004-02-24-0: Cleanup:   man page updates, automatic user documentation
                  Issue:     636

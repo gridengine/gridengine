@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/02/25 17:56:56 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/02/26 09:44:30 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/02/25 17:56:56 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/02/26 09:44:30 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -394,6 +394,17 @@ and qmon is only based on the submit time, when the reporting is turned off.
 .br
 The reporting should be turned of in a system with very large amount of jobs by
 setting this param to "false". This parameter is only valid in a xxQS_NAME_EExx system. 
+.\"
+.SS "\fBhalflife_decay_list\fP"
+The halflive_decay_list allows to configure different decay rates for the 
+"finished_jobs usage types, which is used in the pending job ticket calculation
+to account for jobs which have just ended. This allows the user the pending jobs
+algorithm to count finished jobs against a user or project for a configurable decayed 
+time period. The default is set so, that finished jobs are not considered. It is also
+used to determine if the job usage has been added to the user or project usage_list.
+.br
+The halflife_decay_list also allows to configure different decay rates for each usage 
+type being tracked (cpu, io, and mem).
 .\"
 .SS "\fBpolicy_hierarchy\fP"
 This parameter sets up a dependency chain of ticket based

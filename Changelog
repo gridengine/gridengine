@@ -1,3 +1,5 @@
+CR-2001-07-24-1: uninitialzed variables error/warnings on linux in sge_job.c
+
 CR-2001-07-24-0: Testsuite: 
                     - CHECK_EXPECT_MATCH_MAX_BUFFER set to 6,4 MB
                     - enable empty lines when reading in configuration files

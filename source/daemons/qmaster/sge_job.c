@@ -711,8 +711,12 @@ char *rhost,
 int sub_command 
 ) {
    lListElem *nxt, *job = NULL, *jatask, *rn, *tmp_task;
-   u_long32 start, end, step, job_number;
-   int alltasks, showmessage;
+   u_long32 start = 0;
+   u_long32 end = 0;
+   u_long32 step = 0;
+   u_long32 job_number = 0;
+   int alltasks = 0;
+   int showmessage = 0;
    int all_jobs_flag;
    int all_users_flag;
    int jid_flag;

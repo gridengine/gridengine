@@ -1,3 +1,8 @@
+AD-2004-01-07-0: Enhancem:  Did remove preprocessor-conditional for
+                            'GET_SPECIFIC' macros.
+                 Changed:   common
+                 Review:    AH
+
 SG-2004-01-07-0: Bugfix:    Fixed: SG-2003-12-19-0 The scheduler did not get 
                             new jobs or cqueues.
                  Changed:   qmaster, scheduler

@@ -217,7 +217,6 @@ typedef char stringT[MAX_STRING_SIZE];
 #  define FALSE !TRUE
 #endif
 
-#if defined(SGE_MT)
 #define GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \
    if(!pthread_getspecific(key)) { \
@@ -232,11 +231,7 @@ typedef char stringT[MAX_STRING_SIZE];
    } \
    else \
       variable = pthread_getspecific(key)
-#else
-#define GET_SPECIFIC(type, variable, init_func, key, func_name)
-#endif
 
-#if defined(SGE_MT)
 #define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \
    if(!pthread_getspecific(key)) { \
@@ -249,9 +244,6 @@ typedef char stringT[MAX_STRING_SIZE];
    } \
    else \
       variable = pthread_getspecific(key)
-#else
-#define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name)
-#endif
 
 #if !defined(AIX42) && !defined(FREEBSD)
 #define HAS_GETPWNAM_R

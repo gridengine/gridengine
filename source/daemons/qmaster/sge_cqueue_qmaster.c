@@ -40,6 +40,7 @@
 
 #include "sge.h"
 #include "sgermon.h"
+#include "sge_time.h"
 #include "sge_conf.h"
 #include "sge_log.h"
 #include "sge_c_gdi.h"
@@ -73,6 +74,8 @@
 
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
+
+#include "sge_reporting_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -743,6 +746,7 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
    const char *name = lGetString(cqueue, CQ_name);
    lListElem *qinstance;
    dstring key_dstring = DSTRING_INIT;
+   u_long32 now = sge_get_gmt();
 
    DENTER(TOP_LAYER, "cqueue_spool");
    if (!spool_write_object(NULL, spool_get_default_context(), cqueue, 
@@ -767,6 +771,8 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
                             ANSWER_QUALITY_ERROR);
             ret = 1;
          }
+
+         reporting_create_queue_record(NULL, qinstance, now);
       }
    }
 

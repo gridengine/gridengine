@@ -1966,6 +1966,7 @@ bool job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 *     char *str   - containes the state flags for 'qstat'/'qhost' 
 *     u_long32 op - job state bitmask 
 ******************************************************************************/
+/* JG: TODO: use dstring! */
 void job_get_state_string(char *str, u_long32 op)
 {
    queue_or_job_get_states(JB_job_number, str, op);
@@ -2489,6 +2490,7 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
+/* JG: TODO: use dstring! */
 void queue_or_job_get_states(int nm, char *str, u_long32 op)
 {
    int count = 0;

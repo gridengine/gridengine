@@ -65,6 +65,7 @@
 #include "sge_ja_task.h"
 #include "sge_job.h"
 #include "sge_pe_task.h"
+#include "sge_qinstance.h"
 #include "sge_str.h"
 #include "sge_sharetree.h"
 #include "sge_userprj.h"
@@ -151,6 +152,8 @@ lGetStringNotNull(const lListElem *ep, int nm);
 *     qmaster/reporting/reporting_create_acct_record()
 *     qmaster/reporting/reporting_create_host_record()
 *     qmaster/reporting/reporting_create_host_consumable_record()
+*     qmaster/reporting/reporting_create_queue_record()
+*     qmaster/reporting/reporting_create_queue_consumable_record()
 *     qmaster/reporting/reporting_create_sharelog_record()
 *******************************************************************************/
 
@@ -192,6 +195,11 @@ reporting_initialize(lList **answer_list)
    te_add_event(ev);
    te_free_event(ev);
 
+/* JG: TODO: has also be registered, when global config changed.
+ * or do it in reporting_trigger_handler: 
+ * - check, if sharelog is registered,
+ * - if sharelog_time > 0 && not registered: register
+ */
    if (sharelog_time > 0) {
       te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
       ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 1, 0, NULL);
@@ -412,6 +420,8 @@ reporting_create_job_log(lList **answer_list,
       }
 
       event = reporting_get_job_log_name(type);
+
+      *state = '\0';
       job_get_state_string(state, jstate);
       if (message == NULL) {
          message = "";
@@ -572,6 +582,140 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
    return ret;
 }
 
+/****** qmaster/reporting/reporting_create_queue_record() *******************
+*  NAME
+*     reporting_create_queue_record() -- create queue reporting record
+*
+*  SYNOPSIS
+*     bool 
+*     reporting_create_queue_record(lList **answer_list, 
+*                                  const lListElem *queue, 
+*                                  u_long32 report_time) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     const lListElem *queue - the queue to output
+*     u_long32 report_time  - time of the last load report
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_create_queue_record() is MT safe
+*******************************************************************************/
+bool
+reporting_create_queue_record(lList **answer_list,
+                             const lListElem *queue,
+                             u_long32 report_time)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "reporting_create_queue_record");
+
+   if (do_reporting && queue != NULL) {
+      dstring queue_dstring = DSTRING_INIT;
+      char state_buffer[20];
+      *state_buffer = '\0';
+      queue_or_job_get_states(QU_state, state_buffer, 
+                              lGetUlong(queue, QU_state));
+
+      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"U32CFormat"%c%s\n", 
+                          lGetString(queue, QU_qname),
+                          REPORTING_DELIMITER,
+                          lGetHost(queue, QU_qhostname),
+                          REPORTING_DELIMITER,
+                          report_time,
+                          REPORTING_DELIMITER,
+                          state_buffer);
+
+      /* write record to reporting buffer */
+      ret = reporting_create_record(answer_list, "queue", 
+                                    sge_dstring_get_string(&queue_dstring));
+
+      sge_dstring_free(&queue_dstring);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** qmaster/reporting/reporting_create_queue_consumable_record() ********
+*  NAME
+*     reporting_create_queue_consumable_record() -- write queue consumables
+*
+*  SYNOPSIS
+*     bool 
+*     reporting_create_queue_consumable_record(lList **answer_list, 
+*                                             const lListElem *queue, 
+*                                             u_long32 report_time) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     const lListElem *queue - queue to output
+*     u_long32 report_time  - time when consumables changed
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_create_queue_consumable_record() is MT safe
+*******************************************************************************/
+bool
+reporting_create_queue_consumable_record(lList **answer_list,
+                                        const lListElem *queue,
+                                        u_long32 report_time)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "reporting_create_queue_consumable_record");
+
+   if (do_reporting && queue != NULL) {
+      dstring consumable_dstring = DSTRING_INIT;
+
+      /* dump consumables */
+      reporting_write_consumables(answer_list, &consumable_dstring, 
+                                  lGetList(queue, QU_consumable_actual_list), 
+                                  lGetList(queue, QU_consumable_config_list));
+
+      if (sge_dstring_strlen(&consumable_dstring) > 0) {
+         dstring queue_dstring = DSTRING_INIT;
+         char state_buffer[20];
+         *state_buffer = '\0';
+         queue_or_job_get_states(QU_state, state_buffer, 
+                                 lGetUlong(queue, QU_state));
+
+         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"U32CFormat"%c%s%c%s\n", 
+                             lGetString(queue, QU_qname),
+                             REPORTING_DELIMITER,
+                             lGetHost(queue, QU_qhostname),
+                             REPORTING_DELIMITER,
+                             report_time,
+                             REPORTING_DELIMITER,
+                             state_buffer, 
+                             REPORTING_DELIMITER,
+                             sge_dstring_get_string(&consumable_dstring));
+
+
+         /* write record to reporting buffer */
+         ret = reporting_create_record(answer_list, "queue_consumable", 
+                                       sge_dstring_get_string(&queue_dstring));
+         sge_dstring_free(&queue_dstring);
+      }
+
+      sge_dstring_free(&consumable_dstring);
+   }
+
+
+   DEXIT;
+   return ret;
+}
+
 /****** qmaster/reporting/reporting_create_host_record() *******************
 *  NAME
 *     reporting_create_host_record() -- create host reporting record
@@ -606,30 +750,38 @@ reporting_create_host_record(lList **answer_list,
    DENTER(TOP_LAYER, "reporting_create_host_record");
 
    if (do_reporting && host != NULL) {
-      dstring host_dstring = DSTRING_INIT;
+      dstring load_dstring = DSTRING_INIT;
 
-      sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c", 
-                          lGetHost(host, EH_name),
-                          REPORTING_DELIMITER,
-                          report_time,
-                          REPORTING_DELIMITER,
-                          "X",
-                          REPORTING_DELIMITER);
       /* dump load values */
       /* JG: TODO: we need a merged variable list that contains the variable
        * lists from global and local host - or postpone this until a mechnism
        * similar to cluster_queues is found? 
        */
-      reporting_write_load_values(answer_list, &host_dstring, 
+      reporting_write_load_values(answer_list, &load_dstring, 
                                   lGetList(host, EH_load_list), 
                                   lGetList(host, EH_report_variables));
 
-      /* write record to reporting buffer */
-      sge_dstring_append(&host_dstring, "\n");
-      ret = reporting_create_record(answer_list, "host", 
-                                    sge_dstring_get_string(&host_dstring));
+      /* As long as we have no host status information, dump host data only if we have
+       * load values to report.
+       */
+      if (sge_dstring_strlen(&load_dstring) > 0) {
+         dstring host_dstring = DSTRING_INIT;
+         sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c%s\n", 
+                             lGetHost(host, EH_name),
+                             REPORTING_DELIMITER,
+                             report_time,
+                             REPORTING_DELIMITER,
+                             "X",
+                             REPORTING_DELIMITER,
+                             sge_dstring_get_string(&load_dstring));
+         /* write record to reporting buffer */
+         ret = reporting_create_record(answer_list, "host", 
+                                       sge_dstring_get_string(&host_dstring));
 
-      sge_dstring_free(&host_dstring);
+         sge_dstring_free(&host_dstring);
+      }
+
+      sge_dstring_free(&load_dstring);
    }
 
    DEXIT;
@@ -667,29 +819,36 @@ reporting_create_host_consumable_record(lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "reporting_create_host_record");
+   DENTER(TOP_LAYER, "reporting_create_host_consumable_record");
 
    if (do_reporting && host != NULL) {
-      dstring host_dstring = DSTRING_INIT;
-
-      sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c", 
-                          lGetHost(host, EH_name),
-                          REPORTING_DELIMITER,
-                          report_time,
-                          REPORTING_DELIMITER,
-                          "X",
-                          REPORTING_DELIMITER);
+      dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
-      reporting_write_consumables(answer_list, &host_dstring, 
+      reporting_write_consumables(answer_list, &consumable_dstring, 
                                   lGetList(host, EH_consumable_actual_list), 
                                   lGetList(host, EH_consumable_config_list));
 
-      /* write record to reporting buffer */
-      sge_dstring_append(&host_dstring, "\n");
-      ret = reporting_create_record(answer_list, "host_consumable", 
-                                    sge_dstring_get_string(&host_dstring));
-      sge_dstring_free(&host_dstring);
+      if (sge_dstring_strlen(&consumable_dstring) > 0) {
+         dstring host_dstring = DSTRING_INIT;
+
+         sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c%s\n", 
+                             lGetHost(host, EH_name),
+                             REPORTING_DELIMITER,
+                             report_time,
+                             REPORTING_DELIMITER,
+                             "X",
+                             REPORTING_DELIMITER,
+                             sge_dstring_get_string(&consumable_dstring));
+
+
+         /* write record to reporting buffer */
+         ret = reporting_create_record(answer_list, "host_consumable", 
+                                       sge_dstring_get_string(&host_dstring));
+         sge_dstring_free(&host_dstring);
+      }
+
+      sge_dstring_free(&consumable_dstring);
    }
 
 

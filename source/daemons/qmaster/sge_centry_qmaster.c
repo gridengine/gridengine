@@ -58,9 +58,11 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_utility.h"
+#include "sge_time.h"
 
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -305,7 +307,31 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    }
 
    sge_change_queue_version_centry(lGetString(ep, CE_name));
-   
+ 
+   /* changing complex attributes can change consumables.
+    * dump queue and host consumables to reporting file.
+    */
+   {
+      lList *answer_list = NULL;
+      u_long32 now = sge_get_gmt();
+      
+      /* dump all queue consumables */
+      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
+
+         for_each(qinstance, qinstance_list) {
+            reporting_create_queue_consumable_record(&answer_list, hep, now);
+         }
+      }
+      answer_list_output(&answer_list);
+      /* dump all host consumables */
+      for_each (hep, Master_Exechost_List) {
+         reporting_create_host_consumable_record(&answer_list, hep, now);
+      }
+      answer_list_output(&answer_list);
+   }
+
    DEXIT;
    return 0;
 }

@@ -95,6 +95,16 @@ reporting_create_host_consumable_record(lList **answer_list,
                                         u_long32 report_time);
 
 bool
+reporting_create_queue_record(lList **answer_list,
+                              const lListElem *queue,
+                              u_long32 report_time);
+
+bool
+reporting_create_queue_consumable_record(lList **answer_list,
+                                        const lListElem *queue,
+                                        u_long32 report_time);
+
+bool
 reporting_create_sharelog_record(lList **answer_list);
 
 #endif /* _SGE_REPORTING_QMASTER_H_ */

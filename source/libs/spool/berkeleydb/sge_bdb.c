@@ -58,7 +58,7 @@
 
 #include "spool/berkeleydb/sge_bdb.h"
 
-#if 0
+#if 1
 static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT | 
                              CULL_SPOOL_USER;
 #else

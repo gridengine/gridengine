@@ -286,6 +286,7 @@ lListElem *jatep
       if (general_failure && general_failure!=GFSTATE_JOB) {  
          /* general error -> this queue cant run any job */
          qinstance_state_set_error(queueep, true);
+         reporting_create_queue_record(NULL, queueep, timestamp);
          spool_queueep = true;
          ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, 
                 lGetString(queueep, QU_qname), u32c(jobid)));    
@@ -315,6 +316,7 @@ lListElem *jatep
                                                     host, 
                                                     &iterator);
                   qinstance_state_set_error(qinstance, true);
+                  reporting_create_queue_record(NULL, qinstance, timestamp);
 
                   ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, 
                          lGetString(qinstance, QU_qname), u32c(jobid), host));

@@ -40,6 +40,7 @@
 
 #include "sge.h"
 #include "sgermon.h"
+#include "sge_time.h"
 #include "sge_signal.h"
 #include "sge_event_master.h"
 #include "sge_event.h"
@@ -59,6 +60,8 @@
 #include "sge_cqueue.h"
 #include "sge_object.h"
 #include "sge_subordinate.h"
+
+#include "sge_reporting_qmaster.h"
 
 #include "msg_qmaster.h"
 
@@ -557,6 +560,7 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
           */
          if (did_something) {
             qinstance_increase_qversion(this_elem);
+            reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
             ret &= sge_event_spool(answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
                                    lGetHost(this_elem, QU_qhostname), NULL,
@@ -648,6 +652,7 @@ qinstance_change_state_on_calendar(lListElem *this_elem,
       }
       if (state_changed) {
          qinstance_add_event(this_elem, sgeE_QINSTANCE_MOD);
+         reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
       }
    }
    DEXIT;

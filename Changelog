@@ -1,3 +1,7 @@
+JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines 
+                            were incorrect.
+                 Issue:     #246
+
 AS-2002-06-04-2  CVS        Created V531_beta1_TAG
 --------------------------------------------------
 

@@ -286,7 +286,7 @@ if [ "$startup" = true ]; then
 
    #CheckSpoolDir
    #CheckIfLocal SPOOLING_DIR
-   ExecuteAsAdmin $utilbin_dir/berkeley_db_svc $BDBHOMES
+   ExecuteAsAdmin $utilbin_dir/berkeley_db_svc -L SPOOLING_DIR/bdb_messages $BDBHOMES
 else
    echo Stopping Berkeley DB
    Shutdown

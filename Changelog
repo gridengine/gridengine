@@ -1,3 +1,9 @@
+RD-2005-02-25-0: Bugfix:    Problems with BDB RPC server are hard to diagnose
+                 Changed:   bdb_rc_template
+                 Issue:     1418
+                 Bugtraq:   6218379
+                 Review:    AH        
+
 SG-2005-02-25-0: Bugfix:    global scheduler messages are reported multiple times
                  Changed:   scheduler
                  Issue:     1468

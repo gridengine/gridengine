@@ -1,3 +1,6 @@
+AA-2004-02-26-0: Bugfix:    cplx dialogue kept highlighting after closing
+                 Changed:   qmon
+
 EB-2004-02-26-0: Bugfix:    qstat -explain did not show messages
                             qalter -q <queue_pattern_which_will_never_match>
                             is not rejected. (reintroduced by AA-2004-02-21-0)

@@ -292,6 +292,7 @@ XtPointer cld, cad;
       return;
    }
    
+   XbaeMatrixDeselectAll(attr_mx);
    XtUnmanageChild(qmon_cplx);
    XtPopdown(XtParent(qmon_cplx));
 

@@ -37,6 +37,7 @@
 #include "msg_utilbin.h"
 #include "sge_time.h"
 #include "cl_commlib.h"
+#include "sge_arch.h"
 
 static void sighandler_ping(int sig);
 static int pipe_signal = 0;
@@ -57,14 +58,15 @@ static void sighandler_ping(int sig) {
 
 void usage(void)
 {
-  fprintf(stderr, "%s qping [-i <interval>] [-info] [-f] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
-  fprintf(stderr, "   -i    : set ping interval time\n");
-  fprintf(stderr, "   -info : show full status information and exit\n");
-  fprintf(stderr, "   -f    : show full status information on each ping interval\n");
-  fprintf(stderr, "   host  : host name of running component\n");
-  fprintf(stderr, "   port  : port number of running component\n");
-  fprintf(stderr, "   name  : name of running component (e.g.: \"qmaster\" or \"execd\")\n");
-  fprintf(stderr, "   id    : id of running component (e.g.: 1 for daemons)\n\n");
+  fprintf(stderr, "%s qping [-i <interval>] [-info] [-f] [-noalias] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "   -i       : set ping interval time\n");
+  fprintf(stderr, "   -info    : show full status information and exit\n");
+  fprintf(stderr, "   -f       : show full status information on each ping interval\n");
+  fprintf(stderr, "   -noalias : ignore $SGE_ROOT/SGE_CELL/common/host_aliases file\n");
+  fprintf(stderr, "   host     : host name of running component\n");
+  fprintf(stderr, "   port     : port number of running component\n");
+  fprintf(stderr, "   name     : name of running component (e.g.: \"qmaster\" or \"execd\")\n");
+  fprintf(stderr, "   id       : id of running component (e.g.: 1 for daemons)\n\n");
 
   fprintf(stderr, "example:\nqping -info clustermaster 5000 qmaster 1\n");
   exit(1);
@@ -72,9 +74,10 @@ void usage(void)
 
 
 int main(int argc, char *argv[]) {
-   char* comp_host         = NULL;
-   char* comp_name         = NULL;
-   cl_com_handle_t* handle = NULL;
+   char* comp_host          = NULL;
+   char* resolved_comp_host = NULL;
+   char* comp_name          = NULL;
+   cl_com_handle_t* handle  = NULL;
 
    int   parameter_start   = 1;
    int   comp_id           = -1;
@@ -87,6 +90,7 @@ int main(int argc, char *argv[]) {
    int   option_i          = 0;
    int   option_f          = 0;
    int   option_info       = 0;
+   int   option_noalias    = 0;
    int   parameter_count   = 4;
 
    
@@ -101,7 +105,6 @@ int main(int argc, char *argv[]) {
 
 
    for (i=1;i<argc;i++) {
-/*      printf("arg[%d]= %s\n", i, argv[i]); */
       if (argv[i][0] == '-') {
          if (strcmp( argv[i] , "-i") == 0) {
              option_i = 1;
@@ -126,6 +129,11 @@ int main(int argc, char *argv[]) {
          }
          if (strcmp( argv[i] , "-f") == 0) {
              option_f = 1;
+             parameter_count++;
+             parameter_start++;
+         }
+         if (strcmp( argv[i] , "-noalias") == 0) {
+             option_noalias = 1;
              parameter_count++;
              parameter_start++;
          }
@@ -174,9 +182,21 @@ int main(int argc, char *argv[]) {
       exit(1);
    }
 
+   /* set alias file */
+   if ( !option_noalias ) {
+      char *alias_path = sge_get_alias_path();
+      if (alias_path != NULL) {
+         retval = cl_com_set_alias_file(alias_path);
+         if (retval != CL_RETVAL_OK) {
+            fprintf(stderr,"%s\n",cl_get_error_text(retval));
+         }
+         FREE(alias_path);
+      }
+   }
+
    handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, comp_port, "qping", 0, 1,0 );
    if (handle == NULL) {
-      printf("could not create communication handle\n");
+      fprintf(stderr, "could not create communication handle\n");
       cl_com_cleanup_commlib();
       exit(1);
    }
@@ -184,12 +204,21 @@ int main(int argc, char *argv[]) {
    /* enable auto close of ping application */
    cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
 
+
+   retval = cl_com_cached_gethostbyname(comp_host, &resolved_comp_host,NULL, NULL, NULL);
+   if (retval != CL_RETVAL_OK) {
+      fprintf(stderr, "could not resolve hostname %s\n", comp_host);
+      cl_com_cleanup_commlib();
+      exit(1);
+   }
+
+
    while (do_shutdown == 0 ) {
       cl_com_SIRM_t* status = NULL;
-      retval = cl_commlib_get_endpoint_status(handle,comp_host , comp_name, comp_id, &status);
+      retval = cl_commlib_get_endpoint_status(handle, resolved_comp_host , comp_name, comp_id, &status);
       if (retval != CL_RETVAL_OK) {
          printf("endpoint %s/%s/%d at port %d: %s\n", 
-                comp_host, comp_name, comp_id, comp_port, 
+                resolved_comp_host, comp_name, comp_id, comp_port, 
                 cl_get_error_text(retval) );  
          exit_value = 1;
       } else {
@@ -202,7 +231,7 @@ int main(int argc, char *argv[]) {
 
             if (option_info == 0 && option_f == 0) {
                printf(" endpoint %s/%s/%d at port %d is up since %ld seconds\n", 
-                      comp_host, comp_name, comp_id, comp_port,
+                      resolved_comp_host, comp_name, comp_id, comp_port,
                       status->runtime);  
             } else {
                time_t starttime;
@@ -234,6 +263,8 @@ int main(int argc, char *argv[]) {
    retval = cl_commlib_shutdown_handle(handle,0);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
+      free(resolved_comp_host);
+      resolved_comp_host = NULL;
       cl_com_cleanup_commlib();
       exit(1);
    }
@@ -241,7 +272,12 @@ int main(int argc, char *argv[]) {
    retval = cl_com_cleanup_commlib();
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
+      free(resolved_comp_host);
+      resolved_comp_host = NULL;
       exit(1);
    }
+   free(resolved_comp_host);
+   resolved_comp_host = NULL;
+   
    return exit_value;  
 }

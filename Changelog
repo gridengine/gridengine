@@ -1,3 +1,8 @@
+SG-2005-02-04-0: Bugfix:    - fixed build
+                            - fixed wrong memory access
+                 Changed:   all
+                 Review:    AH
+
 CR-2005-02-04-1: Enhancem.: added warning messages when load reports get
                             lost.
                  Issue:     1450

@@ -2543,8 +2543,9 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             int unparsed_string_start = -1;
             for (pos = 0; pos < connection->data_read_buffer_pos; pos++) {
                if ( connection->data_read_buffer[pos] == 0 ) {
-                  unparsed_string_start = pos + 1;
                   cl_bool_t changed_mode = CL_FALSE;
+               
+                  unparsed_string_start = pos + 1;
    
                   /* TODO: implement clean commando syntax parser for debug_clients, etc. */
                   if (strcmp("set tag ALL",(char*)connection->data_read_buffer) == 0) {

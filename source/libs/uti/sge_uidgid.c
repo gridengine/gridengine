@@ -654,12 +654,11 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
          sleep(1);
       }
       
-      sge_free(buf);
-
       /* Bugfix: Issuezilla 1256
        * We need to handle the case when the OS is unable to resolve the GID to
        * a name. [DT] */
       if (gr == NULL) {
+         sge_free(buf);
          DEXIT;
          return 1;
       }
@@ -667,6 +666,8 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       /* cache group name */
       uidgid_state_set_last_groupname(gr->gr_name);
       uidgid_state_set_last_gid(gid);
+
+      sge_free(buf);
    }
    
    if (dst != NULL) {

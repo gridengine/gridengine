@@ -1,13 +1,3 @@
-AH-2004-03-11-0: Enhancem.: Allow inst_berkeley.sh to continue even without 
-                            test regarding local file system for berkley db
-                            directory.
-                 Review:    MD
-   
-EB-2004-03-11-0: Bugfix:    removing a suspend threshold doesn't unsuspend jobs
-                 Issue:     831
-                 Changed:   sge_qmaster
-                 Review:    SG
-
 AS-2004-03-10-0: CVS        Created V60_beta1_target_{BRANCH,TAG}
 -----------------------------------------------------------------
 

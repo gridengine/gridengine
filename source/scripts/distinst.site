@@ -34,4 +34,4 @@
 BASEDIR=/dist/OS-SGEDIST
 
 # Base directory where the openssl binary resides
-OPENSSL_HOME=/vol2/tools/SW/openssl-0.9.7c-static
+OPENSSL_HOME=/vol2/tools/SW/openssl-0.9.7d-static

@@ -34,7 +34,7 @@
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7c-static/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7d-static/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is
@@ -87,5 +87,13 @@ set SUN_COPYRIGHT_DIR  = /off_home/codine/sun-copyright
 #
 # JAM specific settings 
 #
-set JAVA_HOME     = "/vol2/jdk14/$buildarch"
-set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/solaris"
+if ( ! $?JAVA_HOME ) then
+   set JAVA_HOME = /usr/lib/java
+endif   
+if ( $buildarch == glinux) then
+   set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
+   set JINILIB = "/vol2/tools/SW/jini1_2_1_001/lib"
+else   
+   set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/solaris"
+   set JINILIB = "/vol2/tools/SW/jini1_2_1_001/lib"
+endif   

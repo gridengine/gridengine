@@ -235,6 +235,9 @@ char *err_str
    const char *cp;
    char *shell;
    const char *cwd = NULL;
+   char cwd_out_buffer[SGE_PATH_MAX];
+   dstring cwd_out;
+     
    const lList *path_aliases = NULL;
    lList *cplx;
    char dce_wrapper_cmd[128];
@@ -276,6 +279,7 @@ char *err_str
 
    DENTER(TOP_LAYER, "sge_exec_job");
 
+   sge_dstring_init(&cwd_out, cwd_out_buffer, sizeof(cwd_out_buffer));
    sge_dstring_init(&active_dir, active_dir_buffer, sizeof(active_dir_buffer));
 
    SGE_ASSERT((jep));
@@ -438,13 +442,11 @@ char *err_str
 
    /* 3.) if pe task or job set cwd: do path mapping */
    if(cwd != NULL) {
-      static char cwd_out[SGE_PATH_MAX];
-     
       /* path aliasing only for cwd flag set */
       path_alias_list_get_path(path_aliases, NULL,
-                               cwd, uti_state_get_qualified_hostname(), cwd_out, 
-                               SGE_PATH_MAX);
-      cwd = cwd_out;
+                               cwd, uti_state_get_qualified_hostname(), 
+                               &cwd_out);
+      cwd = sge_dstring_get_string(&cwd_out);
       var_list_set_string(&environmentList, "PWD", cwd);
    } else {
    /* 4.) if cwd not set in job: take users home dir */
@@ -498,14 +500,16 @@ char *err_str
          strcpy(script_file, JOB_TYPE_STR_QRLOGIN);
       } else if (jb_now & JOB_TYPE_BINARY) {
          const char *sfile;
-         char script_file_out[SGE_PATH_MAX];
 
          sfile = lGetString(jep, JB_script_file);
          if (sfile != NULL) {
+            dstring script_file_out = DSTRING_INIT;
             path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL, 
                                      sfile, uti_state_get_qualified_hostname(), 
-                                     script_file_out, SGE_PATH_MAX);
-            strcpy(script_file, script_file_out);
+                                     &script_file_out);
+            strncpy(script_file, sge_dstring_get_string(&script_file_out), 
+                    SGE_PATH_MAX);
+            sge_dstring_free(&script_file_out);
          }
       } else {
          if (lGetString(jep, JB_script_file) != NULL) {
@@ -570,12 +574,14 @@ char *err_str
 
          sfile = var_list_get_string(environmentList, var_name); 
          if (sfile != NULL) {
-            char script_file_out[SGE_PATH_MAX];
+            dstring script_file_out = DSTRING_INIT;
 
             path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
                                      sfile, uti_state_get_qualified_hostname(),
-                                     script_file_out, SGE_PATH_MAX);
-            var_list_set_string(&environmentList, var_name, script_file_out);
+                                     &script_file_out);
+            var_list_set_string(&environmentList, var_name, 
+                                sge_dstring_get_string(&script_file_out));
+            sge_dstring_free(&script_file_out);
          }
       }
    }

@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_dstring.h"
+
 #include "sge_path_aliasL.h"
 
 #define PATH_ALIAS_COMMON_FILE    "common/sge_aliases"
@@ -44,6 +46,6 @@ int path_alias_list_initialize(lList **path_alias_list,
 
 int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
                              const char *inpath, const char *myhost,
-                             char *outpath, int outmax);
+                             dstring *outpath);
 
 #endif /* __PATH_ALIASES_H */

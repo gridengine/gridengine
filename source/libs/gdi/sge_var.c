@@ -568,6 +568,7 @@ void var_list_copy_env_vars_and_value(lList **varl,
        * variables which will skip now 
        */
       name = lGetString(env, VA_variable);
+
       if (n > 0 && !strncmp(name, ignore_prefix, n)) {
          continue; 
       }

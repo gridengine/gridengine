@@ -1651,7 +1651,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       var_list_set_string(&env_list, VAR_PREFIX "O_HOST", host);
    } 
    {
-      char cwd_out[SGE_PATH_MAX + 1];
+      dstring cwd_out = DSTRING_INIT;
       char tmp_str[SGE_PATH_MAX + 1];
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
@@ -1661,9 +1661,10 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       }
       path_alias_list_get_path(path_alias_list, NULL, 
                                tmp_str, uti_state_get_qualified_hostname(),
-                               cwd_out, SGE_PATH_MAX);
+                               &cwd_out);
       var_list_set_string(&env_list, VAR_PREFIX "O_WORKDIR", 
-                                     cwd_out);
+                          sge_dstring_get_string(&cwd_out));
+      sge_dstring_free(&cwd_out);
    }
 
 error:

@@ -1,3 +1,7 @@
+JG-2003-02-05-0  Bugfix:    path_aliasing truncated commandline of qrsh jobs
+                 Review:    EB
+                 Changed:   sge_execd
+
 CR-2003-02-05-3  Testsuite: Throughput performance test:
                               gzip of data file to save disk space
 

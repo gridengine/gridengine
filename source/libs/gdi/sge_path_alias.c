@@ -366,18 +366,18 @@ int path_alias_list_initialize(lList **path_alias_list,
 *******************************************************************************/
 int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
                              const char *inpath, const char *myhost,
-                             char *outpath, int outmax)
+                             dstring *outpath)
 {
    lListElem *pap;
    const char *origin;
    const char *translation;
    const char *exec_host;
-   char the_path[SGE_PATH_MAX];
+   dstring the_path = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "path_alias_list_get_path");
 
-   strncpy(outpath, inpath, outmax);
-   strncpy(the_path, outpath, SGE_PATH_MAX); 
+   sge_dstring_copy_string(outpath, inpath);
+   sge_dstring_copy_dstring(&the_path, outpath); 
 
    if (path_aliases && lGetNumberOfElem(path_aliases) > 0) { 
       for_each(pap, path_aliases) {
@@ -387,7 +387,8 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
          exec_host = lGetHost(pap, PA_exec_host);
          translation = lGetString(pap, PA_translation);
 
-         if (strncmp(origin, the_path, orign_str_len )) {
+         if (strncmp(origin, sge_dstring_get_string(&the_path), 
+             orign_str_len )) {
             /* path leaders aren't the same ==> no match */
             continue;
          }
@@ -410,20 +411,25 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
          }
  
          /* copy the alias as leading part of cwd */
-         strcpy(outpath, translation);
+         sge_dstring_copy_string(outpath, translation);
  
          /* now append the trailer of the original cwd */
-         strcat(outpath, the_path + orign_str_len );
+         {  
+            const char *path = sge_dstring_get_string(&the_path);
+            sge_dstring_append(outpath, path + orign_str_len );
+         }
 
-         DPRINTF(("Path "SFQ" has been aliased to "SFQ"\n", inpath, outpath)); 
+         DPRINTF(("Path "SFQ" has been aliased to "SFQ"\n", inpath, sge_dstring_get_string(outpath))); 
  
          /* and we have to start all over again for subsequent aliases */
-         strncpy(the_path, outpath, SGE_PATH_MAX);
+         sge_dstring_copy_dstring(&the_path, outpath);
       }
    } else {
       DPRINTF(("\"path_aliases\" containes no elements\n"));
    }
- 
+
+   sge_dstring_free(&the_path);
+
    DEXIT;
    return 0;
 

@@ -40,10 +40,12 @@
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_host.h"
+#include "slots_used.h"
 #include "sge_feature.h"
 #include "sge_c_gdi.h"
 #include "sge_host_qmaster.h"
-#include "subordinate_qmaster.h"
+#include "sge_queue_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_select_queue.h"
 #include "sge_calendar_qmaster.h"
@@ -115,8 +117,6 @@ static u_long32 queue_get_queue_number(void);
 static void queue_clear_unknown(lListElem *queue) 
 {
    lListElem *ep, *hep;
-   const char *hostname = lGetHost(queue, QU_qhostname);
-   const char *queue_name = lGetString(queue, QU_qname);
 
    DENTER(TOP_LAYER, "queue_clear_unknown");
 

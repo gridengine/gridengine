@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
+	<META NAME="CREATED" CONTENT="20020708;13525400">
+	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
+	<META NAME="CHANGED" CONTENT="20020709;12452900">
+</HEAD>
+<BODY LANG="en-US">
+<P><FONT SIZE=5><B>User-Level Checkpointing using Condor libraries</B></FONT></P>
+<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4><B>Overview</B></FONT></FONT></P>
+<P>Sun Grid Engine provides general support for checkpointing, which
+can be categorized into three types:</P>
+<OL>
+	<LI><P>Application level (checkpointing is hard coded in the
+	application)</P>
+	<LI><P>User level (using checkpointing libraries)</P>
+	<LI><P>Kernel level (OS provided checkpointing)</P>
+</OL>
+<P>This application note will relate to item 2 above. The User level
+checkpointing library selected here is the Condor standalone library
+from the University of Wisconsin's Condor system project at
+<A HREF="http://www.cs.wisc.edu/condor">http://www.cs.wisc.edu/condor</A>.
+The web site contains further information about Condor. 
+</P>
+<BLOCKQUOTE><B>NOTE:</B>The reader is warned here about the set of
+restrictions that come with user level checkpointing libraries. The
+following web page outlines the current Condor checkpointing
+libraries restrictions:</BLOCKQUOTE>
+<PRE STYLE="margin-bottom: 0.5cm">       <A HREF="http://www.cs.wisc.edu/condor/manual/v6.2/1_4Current_Limitations.html">http://www.cs.wisc.edu/condor/manual/v6.2/1_4Current_Limitations.html</A></PRE><P STYLE="margin-top: 0.42cm; page-break-after: avoid">
+<FONT FACE="Albany, sans-serif"><FONT SIZE=4><B>Condor Checkpointing
+library</B></FONT></FONT></P>
+<P>Condor is a full job management system that includes a user level
+checkpointing library. The static Condor checkpointing library, when
+linked, provides a layer around the application to be checkpointed.
+The library will basically intercept the checkpointing signal and
+attempt to save the state of the application together with system
+information in a checkpointing file whose location is determined by
+the user during configuration time. The Condor checkpointing library
+can be used either as an integral part of the Condor system or as
+stand-alone with a separate resource management system such as the
+Sun Grid Engine product. 
+</P>
+<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4><B>Standalone
+checkpointing library setup</B></FONT></FONT></P>
+<P>This document (or How To) will only cover the standalone scenario
+that will be used with the checkpointing facility of the Sun Grid
+Engine software. In this case, there is no need to install the whole
+Condor software because we only care about the following:</P>
+<P STYLE="margin-left: 2cm">a) the entire Condor &quot;lib&quot;
+subdirectory</P>
+<P STYLE="margin-left: 2cm">b) the condor_compile command (from the
+bin subdirectory)</P>
+<P>The condor_compile shell script file needs to be modified at the
+following line:</P>
+<PRE STYLE="margin-bottom: 0.5cm">CONDOR_LIBDIR=`condor_config_val LIB`</PRE><P>
+to:</P>
+<PRE STYLE="margin-bottom: 0.5cm">CONDOR_LIBDIR=&quot;install_path_of_condor_lib&quot; </PRE><P>
+where &quot;install_path_of_condor_lib&quot; is the path to the
+entire contents of the Condor &quot;lib&quot; subdirectory. The above
+setup allows sequential applications to be checkpointed using the
+user level checkpointing Condor libraries. 
+</P>
+<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4><B>Checkpointed
+Application Preparation</B></FONT></FONT></P>
+<P>A regular application that needs to be checkpointed does not
+require any source level modifications. It only needs to be re-linked
+with the Condor checkpointing libraries to take advantage of the
+Checkpointing and Remote System Calls. An easy mechanism which is
+provided by Condor helps to perform the relink operation by using the
+condor_compile command as follows:</P>
+<PRE STYLE="margin-bottom: 0.5cm">condor_compile -condor_standalone <I>command</I> [options/files....] </PRE><P>
+where <CODE><I>command</I></CODE> is any of cc, f77, f90, ld, etc and
+[options/files....] are the normal arguments used by the
+compiler/linker. 
+</P>
+<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4><B>Configuring
+SGE's checkpointing environment</B></FONT></FONT></P>
+<OL TYPE=a>
+	<LI><P>Configure host queue to support checkpointing</P>
+	<LI><P>The application can be set up to checkpoint when the
+	sge_execd daemon is shutdown and when the job is suspended.</P>
+	<LI><P>Configure the job to be rescheduled in case it is suspended.</P>
+	<LI><P>The checkpoint signal should be set up to SIGTSTP because
+	Condor uses it to checkpoint the application and exit. There is
+	however the SIGUSR2 signal used by Condor to checkpoint the
+	application and let it continue its normal execution.</P>
+	<LI><P>Finally, 'userdefined' checkpointing was set. Userdefined
+	checkpointing means that the application periodically writes
+	checkpoints without any interference by SGE. At restart time the
+	application will continue at the last checkpoint. 
+	</P>
+</OL>
+<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4><B>Submitting
+a user level checkpointing job</B></FONT></FONT></P>
+<P>The submission of a checkpointing job in a SGE environment is
+similar to the submission of a regular job with the addition of the
+following options to the qsub command:</P>
+<OL TYPE=a>
+	<LI><P>-ckpt</P>
+	<LI><P>-c [m|s|n|x]. 
+	</P>
+</OL>
+<P><B>EXAMPLE</B> 
+</P>
+<P>Assumptions:</P>
+<OL>
+	<LI><P>I assume that Condor libraries and condor_compile command are
+	installed on the system.</P>
+	<LI><P>The steps described below all have equivalent functions from
+	the qmon(1) GUI. For the sake of simplicity the example is
+	illustrated using the command line.</P>
+	<LI><P>I used a cluster of 2 nodes named hpc0 and hpc1.</P>
+	<LI><P>example.sh is the job script that contains the checkpointed
+	application example_ckpt (source: example.c) 
+	</P>
+</OL>
+<PRE>   # cat example.sh
+   #!/bin/sh 
+   cd /home/omar/wd
+   ./example_ckpt
+   exit </PRE><P>
+<B>What follows is a series of steps to run our example: </B>
+</P>
+<P><B>Step 1:</B> <B>configure SGE for checkpointing.</B> 
+</P>
+<P><I>1a. Create a checkpointing environment</I> <BR>From the command
+line type the following: <BR>Type: qconf -ackpt condor_ckpt <BR>An
+editing session will come up that looks like this: 
+</P>
+<PRE>        ckpt_name          condor_ckpt
+        interface          userdefined
+        ckpt_command       none
+        migr_command       none
+        restart_command    none
+        clean_command      none
+        ckpt_dir           /home/omar/tmp
+        queue_list         NONE
+        signal             none
+        when               sx</PRE><P>
+<BR>Edit the above to make them look like the following: 
+</P>
+<PRE>        ckpt_name          condor_ckpt
+        interface          USERDEFINED
+        ckpt_command       /home/omar/wd/SGE/checkpoint.sh
+        migr_command       /home/omar/wd/SGE/migrate.sh
+        restart_command    /home/omar/wd/SGE/restart.sh
+        clean_command      /home/omar/wd/SGE/clean.sh
+        ckpt_dir           /home/omar/tmp
+        queue_list         hpc0.q hpc1.q
+        signal             USR2
+        when               sx</PRE><P>
+<BR><I>1b. Configure the queues hpc0.q and hpc1.q for checkpointing </I>
+</P>
+<PRE>qconf -mattr queue qtype &quot;CHECKPOINTING BATCH INTERACTIVE&quot; hpc0.q 
+qconf -mattr queue qtype &quot;CHECKPOINTING BATCH INTERACTIVE&quot; hpc1.q</PRE><P>
+<B>NOTE:</B> The contents of the checkpt.sh and migrate.sh are: 
+</P>
+<PRE>        # cat checkpt.sh
+        #!/bin/sh
+        #$ -S /bin/sh
+        # The application spills it pid in the pid file.
+        PID=`cat /home/omar/wd/SGE/pid`
+        kill -USR2 $PID
+        exit
+        
+        # cat migrate.sh
+        #!/bin/sh 
+        #$ -S /bin/sh
+        cd /home/omar/wd/SGE
+        ./example_ckpt -_condor_restart /home/omar/wd/SGE/ss_condor.ckpt
+        exit
+
+        # cat clean.sh
+        #!/bin/sh 
+        #$ -S /bin/sh
+        cd /home/omar/wd
+        # Remove the checkpoint saving file
+        /usr/bin/rm -f /home/omar/wd/SGE/.ckpt
+        # Remove the error log file 
+        /usr/bin/rm -f /home/omar/wd/SGE/submit_ss.e*
+        # Remove the output file 
+        /usr/bin/rm -f /home/omar/wd/SGE/submit_ss.o*
+        exit </PRE><P>
+<B>NOTE:</B> The restart.sh is the same as migrate.sh in our case.
+The clean.sh should be tailored to what the user wants to remove
+because some of the files will be needed for debugging. 
+</P>
+<P><B>Step 2:</B> <B>Prepare the application for checkpointing</B> 
+</P>
+<P><I>2a. modify the line in the condor_compile script from: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">CONDOR_LIBDIR=</PRE><P>
+to</P>
+<PRE STYLE="margin-bottom: 0.5cm">CONDOR_LIBDIR=/condor/lib</PRE><P>
+&quot;/condor/lib&quot; is the install path to the entire contents of
+the Condor &quot;lib&quot; subdirectory. 
+</P>
+<P><I>2b. Execute the following command: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">condor_compile -condor_standalone cc -o example_ckpt example.c </PRE><P>
+<B>Step 3: Submit the checkpointed application. </B>
+</P>
+<P><I>3a. Execute the following command: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">qsub -cwd -v TERM -ckpt condor_ckpt -c x example.script </PRE><P>
+I used the option &quot;-c x&quot; because I wanted the job to be
+checkpointed only when it is suspended. In this example, the job gets
+suspended through suspension of the queue on which the job is running
+(see step 4 &amp; 5). The -c option provides other options and the
+reader is urged to consult the qsub(1) manual page. 
+</P>
+<P><B>Step 4: Suspend hpc0.q queue on which the checkpointing job is
+running. </B>
+</P>
+<P><I>4a. Execute the following command to suspend hpc0.q: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">qmod -s hpc0.q </PRE><P>
+The job will migrate to the other queue hpc1.q. 
+</P>
+<P>Use &quot;qstat -f&quot; to check the new status of jobs/queues. 
+</P>
+<P><I>4b. Execute the following command to unsuspend hpc0.q: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">qmod -us hpc0.q </PRE><P>
+<B>Step 5: Suspend hpc1.q queue on which the checkpointing job is
+running. </B>
+</P>
+<P><I>5a. Execute the following command to suspend hpc1.q: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">qmod -s hpc1.q </PRE><P>
+The job will migrate to the other queue : hpc0.q. 
+</P>
+<P>Use &quot;qstat -f&quot; to check the new status of jobs/queues. 
+</P>
+<P><I>5b. Execute the following command to unsuspend hpc1.q: </I>
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">qmod -us hpc1.q </PRE><P>
+<B>NOTE:</B> Again, the above command line steps can all be
+substituted by functions executed from the qmon(1) GUI tool. 
+</P>
+</BODY>
+</HTML>

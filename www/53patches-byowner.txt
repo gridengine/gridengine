@@ -1,0 +1,186 @@
+Verified Owner  Issue    Bugtraq   Short description (see 5.3 Changelog for more details)
+--------------------------------------------------------------------------------------------------------------------
+         AA              4719218    "Job Submission" GUI: blank text in pop out window
+         AA              4721129    A misoperation in host configuration on qmon leads to qmaster daemon's death
+         AA              4721134    qmon gets shutdown with the message "Segmentation Fault" in terminal
+         AA              4723543    Too small panes and cells to display some item names
+         AA              4728293    qmon gets shutdown with a word "global" in Cluster Configuration
+         AA              4733043    qmon dumps core when mouse over an interactive job in Job Control window
+         AA              4733089    qmon dies after checking 'transfer' in 'queue control' window
+         AA              4749151    sge_ca script -usercert needs RANDFILE env var
+         AA              4754435    OpenSSL 0.9.6c security vulnerability
+         AA              4893432    upgrade to openssl 0.9.7a
+         AA              4949917    qmon seg faults with a user hold job from qtcsh qtask file
+         AA      275     4706929    qmon does not display job predecessors in job control
+         AA      350     4740335    qmon dies with changes in Edit Tickets on Solaris64.
+         AA      350     4742082    Calculation failure in Functional policy wit hvery large numbers
+         AA      355     4731288    qmon cluster config dialog does not show gid_range in SGE product mode
+         AA      370     4732031    OK without hostname in host_configuration kill sge_qmaster
+         AA      449     4802831    cannot set -C to null string as described in man qsub
+         AA      490     4816529    qmon crash when pressing Why for a list of selected jobs
+         AA      493     4818737    SGEEE: huge scheduling times if maxujobs is set
+         AA      541                qlogin/qlogind whitespace checking removed to allow ssh/sshd with optional arguments
+         AA      560     4869784    qmon "Qmon" resource file contains syntax errors
+         AA      626     4957760    Fix needed for CERT CA-2003-26 Multiple Vulnerabilities in SSL/TLS
+         AA      628     4923403    When installing using -csp the sge_ssl* files are not up to date
+
+         AH                         Update on tight integration with Sun HPC ClusterTools 5 (see #626)
+         AH      223     4700286    complex default value not considered for load/suspend thresholds
+         AH      231     4697491    signal notification can prevent delivery of actual suspend/termination signal
+         AH      239     4675410    queue suspend threshold alarm nsuspend>1 does not susp. multiple jobs
+         AH      240     4675416    use of suspend thresholds can break user sort policy and cause logging
+         AH      271     4692957    non-privileged users can submit jobs with priority higher than 0
+         AH      311     4712023    global load values can prevent dispatching of jobs
+         AH      371     4739596    rlim_fd_max > 1024 can cause 32 bit daemons to crash at startup phase
+         AH      391     4756556    .cshrc error causes [pro|epi]log,pe-[start|stop] failure
+         AH      392     4756557    non-resolvable hosts in host_aliases file cause wrong hostname resolving
+         AH      415     4775325    qrong qstat -j diagnosis message wrongly indicates not enough PE slots
+         AH      417     4776821    qtcsh can't be used as normal tcsh
+         AH      418     4776754    complex values for user defined complexes are rejected with global host
+         AH      437     4790592    conflicting policies can cause job being started and immediately suspended
+         AH      440     4792036    job arguments larger than 10k crash qmaster
+         AH      441     4787623    failover to shadow master leaves sge_schedd on the original qmaster host
+         AH      446     4794242    wrong usage reported by qstat -j <jobid>
+         AH      450     4805423    STRING complex attribute handling with RELOP "!=" is broken
+         AH      502     4824104    SGEEE: allow qalter -p for running jobs
+         AH      510     4835832    NOTIFY_SUSP signal only sent for first suspension of job
+         AH      545     4859658    SGE: scheduler crashed when job priorities where changed with qalter
+         AH      549     4851939    unexpected output for qstat -j and qmon "Why?"
+         AH      648                schedd_job_info=true causes large delays scheduling parallel jobs
+
+         AS                         Documentation update for loose Sun HPC cluster tools integration
+         AS              4733092    requirement for installation process of exec host with non root user
+         AS              4735258    CLI: Wrong info for usage
+         AS              4822799    cannot install on Solaris 10
+         AS      2003-07-16-0       fix to enable checkout of current sticky tag version in scripts/mk_ascman
+         AS      219     4742133    rcsge startup script has hardwired execd_spool_dir for "stop" procedure
+         AS      333     4740407    SGEEE: Insufficient checking for PTF_{MIN,MAX}_PRIORITY in execd_params
+         AS      346     4727457    Proper $SGE_CELL setting fails with non default cell in settings.sh
+         AS      359     4732545    gethostbyaddr in ~/solaris64 doesn't work.
+         AS      486                scripts/util/arch: backed out hp11-64 and aix51 detection since no port available yet
+         AS      503                overriding queue limits with job request limits incomplete for NEC
+         AS      506     4847819    sge->sgeee upgrade failed
+         AS      521     4869772    resource limits not correctly set for Linux x86
+         AS      568                Allow "-" sign as first character of load_formula
+
+         CB      627     4958080    suspend and resume with HPC Cluster tools 5 not properly working
+
+         CR              4721181    Wrong path for qmaster messages file in exe host installation
+         CR              4722060    CLI: invalid option "-jid jid" for qconf in qconf -help
+         CR              4750818    linux clients use port 65535 by error if COMMD_PORT/sge_commd service not set
+         CR              4811230    qconf -Muser and qconf -Auser report no success messages
+         CR      331     4719755    wrong port output in qstat error message when qmaster not reachable
+         CR      487     4815774    Uninitialized pointer cause segmentation fault in qsh/qrsh on submit only hosts
+         CR      523     4842844    commd performance, delay for first job start on machines with many job slots 
+         CR      531     4847802    scheduler crashes on Solaris(x86) due to compiler bug
+         CR      577     4885719    disabled infotext error output if SGE_ROOT is not set
+         CR      597                infotext ignores parameters for HP10, HP11 systems
+
+         EB              4731348    access_list(5) man page does not describe file format for SGEEE ACL's
+         EB      126     4780316    race condition if signals are to be delivered in job's startup phase
+         EB      174                Checkpointed job was migrated on bad exit status
+         EB      214     4658716    protocol doing termin. on failure for tightly integr. par. job could be leaner
+         EB      215     4673738    disallow "none" load formula and do additional tests for the correctness
+         EB      229     4668148    solaris psets won't be used by SGE
+         EB      243     4676340    memory leak in sge_schedd
+         EB      251     4683852    qalter on running jobs can confuse consumable mgmt
+         EB      259     4686157    qhost -j is broken
+         EB      264                array job parameters
+         EB      284     4699665    qstat resource based job selection broken
+         EB      302     4753668    prevent deletion of still referenced objects
+         EB      308     4753669    qconf gets commd timeout
+         EB      313     4740350    problems with destin_id_list syntax
+         EB      314     4713013    qacct may display incorrect accounting information
+         EB      328     4718880    qsub/qalter -l <shortcut_name>... might select wrong resource.
+         EB      330     4740578    load formula of the scheduler
+         EB      345     4727515    maxujobs prevents dispatching even if job limit is not reached
+         EB      354     4741230    qmod help output is incomplete
+         EB      356     4731347    can configure fshare/otickets in acls of type DEPT
+         EB      360     4733859    Userset "defaultdepartment" accepts users in CLI
+         EB      363     4735972    scheduler crashes if all subnodes of a node have 0 shares in sharetree
+         EB      374     4742189    schedd_job_info = true causes immense daemons memory growth in large systems
+         EB      388                Exiting sgeee jobs can be shown in qmon dialog dialog for pending jobs
+         EB      389     4755931    possible file access problems on 64-bit file system with 32-bit binaries
+         EB      402     4778762    Array jobs which contain only one task (id=1) will be handled as single job
+         EB      403     4769608    qalter shows wrong priority number when using negative priorities with -p option
+         EB      416     4776016    execd does res. consuming process tracking even if no job is to be controlled
+         EB      423     4778757    stepsize 0 in array job specification results in qmaster exception
+         EB      424     4778758    memcpy leak in execd
+         EB      430     4795475    qstat -f output broken for pe jobs on same queue
+         EB      432     4787598    schedd_job_info messages shown by qstat -j even if it is set to false
+         EB      435     4790540    sge_schedd process consumes more memory than needed if schedd_job_info=true
+         EB      436     4790547    Job notification signals won't be delivered if user redefines suspend_method ...
+         EB      439     4791908    job logging file exists but is empty in certain configurations
+         EB      455     4802171    qacct -l selection broken
+         EB      478     4813188    qstat -r shows wrong dependencies
+         EB      492     4819479    qhost -q -l arch=xx crashes if exec host is down
+         EB      504     4838650    Multiple job script writes for array jobs caused ETXTBSY error
+         EB      508     4833346    qsh/qrsh/qlogin might core with segementation violation
+         EB      509     4841414    Unable to delete task array job with negative increment
+         EB      511     4838595    maxujobs does not count suspended or held jobs
+         EB      514     4838549    maxujobs scheduler config functionality is broken
+         EB      515     4838636    sharetree can't be modified
+         EB      522     4844838    sge_shepherd does not exit on SIGTERM (e.g. on "rcsge stop")
+         EB      524     4842878    qdel -u <user> does not delete all jobs of the user
+         EB      526     4845505    cannot qalter/qhold/qrls several tasks of same job
+         EB      532     4847814    SGEEE: scheduler dispatches wrong jobs when jobs were in error state
+         EB      569                Impossible to disable qmaster profiling
+         EB      572     4883714    SGEEE: qmaster crashed on qdel of tightly integrated PE job with usage_scaling activated
+         EB      578     4885906    NSLOTS and NHOSTS incorrectly set in environment of tightly integrated tasks
+
+         JG              4876169    An incomplete resource request (-l =1) caused qmaster to crash
+         JG      182                allow arguments for *_command and *_daemon parameters in cluster config
+         JG      2003-12-29-0       qrsh_starter will no longer overwrite the DISPLAY if already set
+         JG      226     4665780    qmaster error message during startup: global configuration doesn't exist - creat
+         JG      232     4708239    Allow specification of arguments to [rsh|rlogin|qlogin]_[daemon|command]
+         JG      236     4670664    parallel jobs (e.g. qmake) fail
+         JG      237     4670669    error message "can't set additional group id for job" for interactive jobs
+         JG      247     4696768    SGE(EE) allows to submit binary job scripts
+         JG      250     4682966    qsh(1) ignores -S <shell> in sge_request(5) files
+         JG      272     4708235    SGE should allow to start qrsh jobs when /etc/nologin exits
+         JG      287     4701640    problems launching jobs from qtcsh with "&"
+         JG      299     4677087    execd could crash when executing tightly integrated parallel jobs
+         JG      325     4716824    qlogin and qrsh accept unsupported options
+         JG      325     4745387    qsh, qrsh and qlogin silently ignore options -ac, -dc, -sc and -w
+         JG      327     4745404    qmake does an incorrect resource request if ARCH is an empty string
+         JG      335     4745399    qmake without any information about parallel execution fails
+         JG      342     4744523    no error message for interactive job start failure due to wrong DISPLAY settings
+         JG      379     4747829    accounting record about qrsh termination incomplete
+         JG      380     4818741    startup failure of qrsh job is reported as regular job exit
+         JG      393     4760981    Empty sge_request file causes submission error
+         JG      438     4791238    SGE may create duplicate accounting entries for parallel jobs
+         JG      469,489 4815795    qstat -alarm was broken
+         JG      472     4807677    qrsh crash when command line arguments are longer than 4K
+         JG      485     4813965    Reject tightly integrated array jobs (not supported in SGE 5.3)
+         JG      499     4822742    deleted sharetree showed up again after qmaster restart
+         JG      501     4822746    spooling integrity improvement was missing for sharetree, projects and users
+         JG      513                qrsh (rshd) does not set limits after setting the osjobid (affects e.g. SUPER-UX/SX)
+         JG      547     4860391    qmake dumped core when starting recursive make calls
+         JG      557     4866711    SGE_O_* variables for a task within a tightly integrated job set incorrect
+         JG      575     4881949    Slave tasks of tightly integrated PE jobs not killed when h_rt limit was exceeded
+         JG      579     4885930    failure of master task of a tightly integrated PE job did not delete the job
+         JG      580                 *_RESERVED_USAGE gives wrong values for PE jobs
+         JG      617     4952236    Broken mail option with SGE 5.3p4 qrsh, qsh, qlogin
+         JG      619     4952767    qrsh -notify doesn't work
+         JG      632                Loadsensor output to stderr blocked loadsensor
+
+         SD      2003-11-12-0       Fixed problem reading in qmaster_param halflife_decay_list
+         SD      383                Fixed restart_command for checkpoint jobs
+         SD      398     4816541    no newline character at end of sge_aliases file may crash qsub
+         SD      496                Functional policy pending ticket calculations are not intuitive
+
+         SG      2003-07-17-0       Optimized functional ticket computation (see 2003-07-16)
+         SG      2003-12-08-0       Storing a job template in qmon set -hold_jid to wrong value
+         SG      2003-12-10-0       qsh and qlogin allowed -hold_jid
+         SG      2004-01-22-0       a user cannot be renamed anymore
+         SG      2004-01-26-0       qdel XXXX.YY- deleted the first task...
+         SG      540                enabled output file names to have a ":" inside for qsub
+         SG      544     4886017    qstat crashed, when used with the options -r -s z
+         SG      551     4969825    do not use job task with -hold_jid flag, qlater accepts only tasks when allowed
+         SG      555     4886025    queue name was truncated to 10 chars
+         SG      576     4886026    max_u_jobs could count rejected jobs as submitted
+         SG      585     4930793    minor issues with the sgeee ticket update interval
+         SG      589     4930786    global load values are ignored
+         SG      592     4930789    An overwritten string attribut was ignored in the scheduler
+         SG      607                qhost -F -h Name did not display global consumables
+         SG      635                The reported vmem for a job from the exec host got never smaller

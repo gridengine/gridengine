@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/09/10 12:35:39 $     Revision: $Revision: 1.9.2.8 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/09/11 11:44:45 $     Revision: $Revision: 1.9.2.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/09/10 12:35:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/09/11 11:44:45 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -440,7 +440,7 @@ prior to applying any modifications (if any) appearing in this specific
 command.
 .\"
 .IP "\fB\-cwd\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
 \fIqalter\fP only.
 .sp 1
 Execute the job from the current working directory.
@@ -1098,7 +1098,7 @@ again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
 .IP "\fB\-S [host:]pathname,...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
+Available for \fIqsub\fP, \fIqsh\fP and \fIqalter\fP.
 .sp 1
 Specifies the interpreting shell for the job. Only one \fBpathname\fP
 component without a \fBhost\fP specifier is valid and only one path name
@@ -1191,7 +1191,7 @@ If you use the \fB\-u\fP or \fB\-uall\fP switch it is not permitted to
 specify an additional \fI\job/task_id_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 Defines or redefines the environment variables to
@@ -1234,7 +1234,7 @@ represented by the current command\-line and all pertinent external
 influences.
 .\"
 .IP "\fB\-V\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 Specifies that all environment variables active within the

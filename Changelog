@@ -1,3 +1,10 @@
+JG-2002-09-11-0  Bugfix:    qrsh and qlogin accept unexpected options.
+                            qsh/qrsh/qlogin did not accept options
+                            -ac, -dc, -sc and -w
+                 IZ:        #325
+                 Bugtraq:   #4716824, #4745387
+                 Changed:   qsh, submit.1
+
 EB-2002-09-10-0  Enhancem.: Initial Part of AIX 5.1 port
 
 CR-2002-09-10-0  Bugfix:    L10N - (setlocale() returns e.g. fr_FR on LINUX)
@@ -7,7 +14,7 @@ CR-2002-09-10-0  Bugfix:    L10N - (setlocale() returns e.g. fr_FR on LINUX)
 JG-2002-09-10-0  Bugfix:    qsh jobs without or with local DISPLAY variable 
                             set have to be rejected.
                  IZ:        #342
-                 Bugtraq:   4744523
+                 Bugtraq:   #4744523
                  Changed:   sge_qmaster, qsh, submit.1
 
 CR-2002-09-09-3  I18N:      fixed script errors which caused loose of some

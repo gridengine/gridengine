@@ -79,7 +79,8 @@
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
+lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) 
+{
    const char *cp;
    lListElem *ep;
    lList *answer = NULL;

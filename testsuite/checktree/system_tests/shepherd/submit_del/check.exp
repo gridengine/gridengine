@@ -106,20 +106,23 @@ proc submit_del_setup  {} {
    }
 
    
-   foreach hostname $CHECK_CORE_EXECD {
-      set arch [resolve_arch $hostname]
-      set script_path "$tmp_shepherd_dir/${hostname}_sge_shepherd_wrapper_script" 
-      set sge_shepherd_file "$CHECK_PRODUCT_ROOT/bin/$arch/sge_shepherd"
-      create_shell_script $script_path "sleep" "5\nexec ${sge_shepherd_file}.tmp $*" "" "/bin/csh" 1
-      start_remote_prog $hostname $CHECK_USER "touch" $script_path
-      start_remote_prog $hostname "root" "ls" "${sge_shepherd_file}.tmp"
-      if { $prg_exit_state != 0 } {
-         start_remote_prog $hostname "root" "mv" "$sge_shepherd_file ${sge_shepherd_file}.tmp"
-         start_remote_prog $hostname "root" "ln" "-s $script_path $sge_shepherd_file"
-      } else {
-         puts $CHECK_OUTPUT "will not mv sge_shepherd_file, old sge_shepherd_file.tmp exists"
-      }
-   }
+#   foreach hostname $CHECK_CORE_EXECD {
+#      set arch [resolve_arch $hostname]
+#      set script_path "$tmp_shepherd_dir/${hostname}_sge_shepherd_wrapper_script" 
+#      set sge_shepherd_file "$CHECK_PRODUCT_ROOT/bin/$arch/sge_shepherd"
+#      if {[file isfile $script_path] == 1} {
+#         start_remote_prog $hostname "root" "rm" "$script_path"
+#      }
+#      create_shell_script $script_path "sleep" "5\nexec ${sge_shepherd_file}.tmp $*" "" "/bin/csh" 1
+#      start_remote_prog $hostname $CHECK_USER "touch" $script_path
+#      start_remote_prog $hostname "root" "ls" "${sge_shepherd_file}.tmp"
+#      if { $prg_exit_state != 0 } {
+#         start_remote_prog $hostname "root" "mv" "$sge_shepherd_file ${sge_shepherd_file}.tmp"
+#         start_remote_prog $hostname "root" "ln" "-s $script_path $sge_shepherd_file"
+#      } else {
+#         puts $CHECK_OUTPUT "will not mv sge_shepherd_file, old sge_shepherd_file.tmp exists"
+#      }
+#   }
 
    puts $CHECK_OUTPUT "waiting 15 seconds to give qmaster time to update configurations on execds ..."
    sleep 15
@@ -197,14 +200,15 @@ proc submit_del_cleanup  {} {
    puts $CHECK_OUTPUT $catch_result
    wait_for_end_of_all_jobs 100
 
-   foreach hostname $CHECK_CORE_EXECD {
-      set arch [resolve_arch $hostname]
-      set sge_shepherd_file "$CHECK_PRODUCT_ROOT/bin/$arch/sge_shepherd"
-      start_remote_prog $hostname "root" "rm" "$sge_shepherd_file"
-      start_remote_prog $hostname "root" "mv" "${sge_shepherd_file}.tmp $sge_shepherd_file"
-      set script_path "$tmp_shepherd_dir/${hostname}_sge_shepherd_wrapper_script" 
-      delete_file $script_path
-   }
+#   foreach hostname $CHECK_CORE_EXECD {
+#      set arch [resolve_arch $hostname]
+#      set sge_shepherd_file "$CHECK_PRODUCT_ROOT/bin/$arch/sge_shepherd"
+#      start_remote_prog $hostname "root" "rm" "$sge_shepherd_file"
+#      start_remote_prog $hostname "root" "mv" "${sge_shepherd_file}.tmp $sge_shepherd_file"
+#      set script_path "$tmp_shepherd_dir/${hostname}_sge_shepherd_wrapper_script" 
+#      delete_file $script_path
+#   }
+
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {
       set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c ${hostname}.q" } output ]

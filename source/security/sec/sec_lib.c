@@ -56,7 +56,6 @@
 #include "sge_getpwnam.h"
 #include "sge_arch.h"
 #include "sge_exit.h"
-#include "sge_mkdir.h"
 #include "msg_sec.h"
 #include "msg_gdilib.h"
 
@@ -296,7 +295,12 @@ int sec_init(const char *progname)
    /*
    ** load all algorithms and digests
    */
-   OpenSSL_add_all_algorithms();
+/*    OpenSSL_add_all_algorithms(); */
+   EVP_add_cipher(EVP_rc4());
+   EVP_add_digest(EVP_md5());
+   EVP_add_digest_alias(SN_md5,"ssl2-md5");
+   EVP_add_digest_alias(SN_md5,"ssl3-md5");
+
 
    /* 
    ** FIXME: am I a sge daemon? -> is_daemon() should be implemented
@@ -364,6 +368,7 @@ int sec_init(const char *progname)
    }
 
 #ifdef SEC_RECONNECT   
+#if 0
    /* 
    ** FIXME: install sec_exit functions for utilib
    */
@@ -372,7 +377,9 @@ int sec_init(const char *progname)
       if (sec_undump_connlist())
                 WARNING((SGE_EVENT,"warning: Can't read ConnList\n"));
    }
-   else if(!gsd.is_daemon)
+   else 
+#endif   
+   if(!gsd.is_daemon)
       install_sec_exit_func(sec_write_data2hd);
 
    /*
@@ -681,13 +688,15 @@ static int sec_verify_certificate(X509 *cert)
    X509_STORE_CTX csc;
    int ret;
    int err;
+   char *x509_name = NULL;
 
    DENTER(GDI_LAYER, "sec_verify_certificate");
 
-   DPRINTF(("subject: %s\n", X509_NAME_oneline(X509_get_subject_name(cert), 0, 0)));
+   x509_name = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
+   DPRINTF(("subject: %s\n", x509_name));
+   free(x509_name);
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
    ctx = X509_STORE_new();
-   X509_STORE_set_default_paths(ctx);
    X509_STORE_load_locations(ctx, ca_cert_file, NULL);
    X509_STORE_CTX_init(&csc, ctx, cert, NULL);
    if (getenv("SGE_CERT_DEBUG")) {
@@ -695,16 +704,16 @@ static int sec_verify_certificate(X509 *cert)
    }   
    ret = X509_verify_cert(&csc);
    err = X509_STORE_CTX_get_error(&csc);
-   X509_STORE_CTX_cleanup(&csc);
    X509_STORE_free(ctx);
+   X509_STORE_CTX_cleanup(&csc);
    
    switch (err) {
       case X509_V_ERR_CERT_NOT_YET_VALID:
-         printf("certificate not yet valid\n");
+         ERROR((SGE_EVENT, "certificate not yet valid\n"));
          break;
 
       case X509_V_ERR_CERT_HAS_EXPIRED:
-         printf("certificate has expired\n");
+         ERROR((SGE_EVENT, "certificate has expired\n"));
          break;
    }      
    
@@ -888,7 +897,7 @@ const char *tohost
    /* 
    ** prepare packing buffer
    */
-   if ((i=init_packbuffer(&pb, 8192, 0))) {
+   if ((i=init_packbuffer(&pb, 0, 0))) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
       goto error;
    }
@@ -1134,7 +1143,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    /* 
    ** prepare packbuffer for sending message
    */
-   if ((i=init_packbuffer(&pb_respond, 4096,0))) {
+   if ((i=init_packbuffer(&pb_respond, 0, 0))) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED));
       sec_send_err(commproc, id, host, &pb_respond, 
                    MSG_SEC_INITPACKBUFFERFAILED);
@@ -1155,7 +1164,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    ** read x509 certificate
    */
    tmp = x509_buf;
-   x509 = d2i_X509(NULL, &tmp, x509_len);
+   x509 = d2i_X509(&x509, &tmp, x509_len);
    free(x509_buf);
    x509_buf = NULL;
 
@@ -1631,7 +1640,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commpr
          ASN1_UTCTIME *utctime = ASN1_UTCTIME_new();
          for_each(el, conn_list) {
             const char *dtime = lGetString(el, SEC_ExpiryDate);
-            utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
+            utctime = d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
                                              strlen(dtime));
             debug_print_ASN1_UTCTIME("Valid Time: ", utctime);
             printf("Connection: %d (%s, %s, %d)\n", 
@@ -1833,7 +1842,7 @@ static int sec_reconnect()
    d2i_ASN1_UTCTIME(&gsd.refresh_time, (unsigned char **)&time_str, sizeof(time_str));
       
    /* prepare packing buffer                                       */
-   if ((i=init_packbuffer(&pb, 256,0))) {
+   if ((i=init_packbuffer(&pb, 0, 0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer\n"));
       goto error;
    }
@@ -1907,7 +1916,7 @@ static int sec_write_data2hd()
    DENTER(GDI_LAYER,"sec_write_data2hd");
 
    /* prepare packing buffer                                       */
-   if ((i=init_packbuffer(&pb, 256,0))) {
+   if ((i=init_packbuffer(&pb, 0, 0))) {
       ERROR((SGE_EVENT,"failed init_packbuffer\n"));
       i = -1;
       goto error;
@@ -2207,7 +2216,6 @@ static int sec_update_connlist(const char *host, const char *commproc, int id)
 */
 static int sec_set_secdata(const char *host, const char *commproc, int id)
 {
-   int i;
    lListElem *element=NULL;
    lCondition *where=NULL;
 
@@ -2226,11 +2234,12 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    }
 
    element = lFindFirst(conn_list, where);
+   where = lFreeWhere(where);
    if (!element) {
       ERROR((SGE_EVENT,"no list entry for connection (%s:%s:%d)\n!",
              host,commproc,id));
-      i=-1;
-      goto error;
+      DEXIT;
+      return -1;
    } 
    
    /* 
@@ -2242,12 +2251,8 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    gsd.seq_send = lGetUlong(element, SEC_SeqNoSend);
    gsd.seq_receive = lGetUlong(element, SEC_SeqNoReceive);
    
-   i = 0;
-   error:
-      if(where) 
-         lFreeWhere(where);
-      DEXIT;
-      return(i);
+   DEXIT;
+   return 0;
 }
 
 /*
@@ -2533,7 +2538,6 @@ int is_daemon
          else         
             sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, 
                      SGE_COMMD_SERVICE, sge_get_default_cell());
-         sge_mkdir(userdir, 0700, 1);
          user_local_dir = userdir;
       }
 
@@ -2893,7 +2897,7 @@ int sec_clear_connectionlist(void)
       while (element) {
          lListElem *del_el;
          const char *dtime = lGetString(element, SEC_ExpiryDate);
-         utctime = d2i_ASN1_UTCTIME(NULL, (unsigned char**) &dtime, 
+         utctime = d2i_ASN1_UTCTIME(&utctime, (unsigned char**) &dtime, 
                                           strlen(dtime));
          /* debug_print_ASN1_UTCTIME("utctime: ", utctime); */
          del_el = element;
@@ -2914,4 +2918,3 @@ int sec_clear_connectionlist(void)
    DEXIT;
    return True;
 }
-

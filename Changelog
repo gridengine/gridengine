@@ -1,3 +1,7 @@
+AA-2002-01-28-0: Bugfix:    - GCC_NO_STRICT_PROT broke build on alinux
+                              GCC_NO_STRICT_PROT -> GCC_NOSP in aimk and security/sec/Makefile
+                            - memleak fixes in security/sec/sec_lib.c  
+
 AS-2002-01-28-0: Change:    removed SECURE defined from CULL headers"
 
 SD-2002-01-25-2: Bugfix:    Changed aimk variable name GCC_NO_STRICT_PROTO to

@@ -63,4 +63,4 @@ libsec$(SHAREDEXT):  $(SECLIBOBJS)
 #---------------------------------------------------------------------------
 
 sec_lib.o:	$(SEC_SDIR)/sec_lib.c
-	$(CC) $(CFLAGS) $(GCC_NO_STRICT_PROTO) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(SEC_SDIR)/sec_lib.c
+	$(CC) $(CFLAGS) $(GCC_NOSP) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(SEC_SDIR)/sec_lib.c

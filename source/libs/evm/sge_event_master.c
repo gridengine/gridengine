@@ -1811,7 +1811,7 @@ static void process_sends ()
                /* This has to come after the client is locked. */
                if ((event_client = get_event_client (ec_id)) == NULL) {
                   unlock_client (ec_id);
-                  ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, ec_id, SGE_FUNC));
+                  ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), SGE_FUNC));
                }
                else if (eventclient_subscribed(event_client, type, session)) {
                   add_list_event_direct (event_client, event, true, false);
@@ -1978,7 +1978,7 @@ static void process_acks(void)
       
       if (client == NULL) {
          unlock_client (ec_id);
-         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, ec_id, SGE_FUNC));
+         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), SGE_FUNC));
       }
       else {
          int res = 0;

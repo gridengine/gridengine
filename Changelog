@@ -1,3 +1,5 @@
+JG-2004-04-22-0: Bugfix:    Fixed broken build on lx22-alpha.
+
 AH-2004-04-21-1: Bugfix:    Fix broken qalter -R y|n
                  Issue      982
                  Review:    AD

@@ -725,13 +725,11 @@ char *err_str
       host_slots = 0;
       for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
          int slots;
-         lListElem *qep;
          lList *alp = NULL;
          const char *q_set;
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
-         qep = lFirst(lGetList(gdil_ep, JG_queue)); 
-         q_set = qep ? lGetString(qep, QU_processors) : NULL;
+         q_set = lGetString(gdil_ep, JG_processors);
          pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
             lGetHost(gdil_ep, JG_qhostname),

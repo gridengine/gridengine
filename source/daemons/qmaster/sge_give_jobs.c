@@ -361,9 +361,15 @@ int master
    }
    
    qlp = lCreateList("qlist", QU_Type);
-   /* add all queues referenced in gdil to qlp 
-      (necessary for availability of ALL resource limits and tempdir in queue) */
+   /* 
+    * add all queues referenced in gdil to qlp 
+    * (necessary for availability of ALL resource limits and tempdir in queue) 
+    */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+      const char *src_qname = lGetString(gdil_ep, JG_qname);
+      lListElem *src_qep = lGetElemStr(Master_Queue_List, QU_qname, src_qname);
+
+      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
 #if ENABLE_213_FIX /* EB #213 */
       /*
        * send only master queue and slave queues which reside on the
@@ -372,7 +378,7 @@ int master
       if (!hostcmp(rhost, lGetHost(gdil_ep, JG_qhostname)) ||
           lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)) == gdil_ep) {
 #endif
-         qep = lCopyElem(lGetElemStr(Master_Queue_List, QU_qname, lGetString(gdil_ep, JG_qname)));
+         qep = lCopyElem(src_qep);
 
          /* build minimum of job request and queue resource limit */
          reduce_queue_limit(qep, tmpjep, QU_s_cpu,   "s_cpu");

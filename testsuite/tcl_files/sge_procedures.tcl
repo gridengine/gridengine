@@ -164,15 +164,9 @@ proc get_complex_version {} {
 #     sge_procedures/get_execd_spool_dir()
 #*******************************
 proc get_qmaster_spool_dir {} {
-   global ts_config sge_config check_do_not_use_spool_config_entries CHECK_OUTPUT
+   global ts_config sge_config
 
    set ret "unknown"
-
-   if { $check_do_not_use_spool_config_entries == 1} {
-      puts $CHECK_OUTPUT "\"no_local_spool\" option is set - returning empty spool dir" 
-      return $spooldir
-   }
-
 
    if {![info exists sge_config(qmaster_spool_dir)]} {
       # error

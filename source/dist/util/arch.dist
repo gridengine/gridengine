@@ -141,17 +141,8 @@ HP-UX)
          ARCH=hp10
          ;;
       *.11.*)
-      if [ -x /usr/bin/getconf ]; then
-         bits="`/usr/bin/getconf KERNEL_BITS`"
-         if [ $bits -eq 64 ]; then
-            ARCH=hp11-64
-         else
-            ARCH=hp11
-         fi
-      else
          ARCH=hp11
-       fi
-      ;;
+         ;;
       esac
    esac
    ;;
@@ -180,16 +171,13 @@ Linux)
    2.2.*)
       lxrelease=22
       ;;
-   2.4.*)
+   2.[46].*)
       strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
       if [ $? = 0 ]; then
          lxrelease=UNSUPPORTED-linux2.2-glibc2.0
       else
          lxrelease=24
       fi
-      ;;
-   2.6.*)
-      lxrelease=26
       ;;
    *)
       lxrelease=-UNSUPPORTED-$osrelease

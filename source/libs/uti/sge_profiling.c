@@ -1525,7 +1525,7 @@ void init_array(pthread_t num) {
 }
 
 
-
+/* per process initialization */
 void init_array_first(void) {
 
    int i;
@@ -1550,7 +1550,8 @@ void init_array_first(void) {
 *
 *  FUNCTION
 *     mallocs memory for thread_info_t array (thread name/id mapping) 
-*     for the number of MAX_THREAD_NUM threads
+*     for the number of MAX_THREAD_NUM threads. Must be called once
+*     per process.
 *
 *  INPUTS
 *

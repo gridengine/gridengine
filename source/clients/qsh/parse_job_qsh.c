@@ -539,6 +539,16 @@ lListElem **pjob
       char str[1024 + 1];
 
       display = sge_getenv("DISPLAY");
+
+      lp = lGetList(*pjob, JB_env_list);
+      if (!lp) {
+         lp = lCreateList("env list", VA_Type);
+         lSetList(*pjob, JB_env_list, lp);
+      }
+
+      vep = lCreateElem(VA_Type);
+      lSetString(vep, VA_variable, "DISPLAY");
+
       if (!display || (*display == ':')) {
          lListElem *hep;
          const char *ending = NULL;
@@ -573,17 +583,12 @@ lListElem **pjob
          strcpy(new_display, lGetString(hep, EH_name));
          strcat(new_display, (ending ? ending : ":0.0"));
          lFreeElem(hep);
+         lSetString(vep, VA_value, new_display);
+         FREE(new_display);
+      } else {
+         lSetString(vep, VA_value, display);
       }
 
-      lp = lGetList(*pjob, JB_env_list);
-      vep = lCreateElem(VA_Type);
-      lSetString(vep, VA_variable, "DISPLAY");
-      lSetString(vep, VA_value, new_display);
-      FREE(new_display);
-      if (!lp) {
-         lp = lCreateList("env list", VA_Type);
-         lSetList(*pjob, JB_env_list, lp);
-      }
       lAppendElem(lp, vep);
    }
 

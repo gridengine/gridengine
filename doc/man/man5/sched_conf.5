@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/22 14:01:44 $     Revision: $Revision: 1.17.4.1 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/22 15:48:57 $     Revision: $Revision: 1.17.4.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/07/22 14:01:44 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/07/22 15:48:57 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -334,9 +334,9 @@ Changing \fBparams\fP will take immediate effect.
 The default for \fBparams\fP is none.
 .\"
 .SS \fBreprioritize_interval\fP"
-Interval (HH:MM:SS) to reprioritize jobs on the ecec hosts based on the 
-current ticket amount for  the running jobs. If the interval is set to 
-00:00:00 the reprioritization is turned off.
+Interval (HH:MM:SS) to reprioritize jobs on the exec hosts based on the 
+current ticket amount for the running jobs. If the interval is set to 
+00:00:00 the reprioritization is turned off. The default value is 00:00:00.
 .\"
 .SS "\fBreport_pjob_tickets\fP"
 This parameter allows to tune the system's scheduling run time. It is used

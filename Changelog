@@ -1,3 +1,7 @@
+BD-2003-07-22-0: Cleanup:   Remove definition of MAX_GROUPS.  It is unused.
+                 Changed:   common/basis_types.h
+                 Review:    AS
+
 JG-2003-07-22-0: Bugfix:    Finished JG-2003-07-10-0: *_RESERVED_USAGE gives 
                             wrong values for PE jobs.
                  Cleanup:   Cleanup code related to fix JG-2003-07-09-0.

@@ -191,15 +191,6 @@ typedef char stringT[MAX_STRING_SIZE];
 /* non-quoted string not limited intentionally */
 #define SN_UNLIMITED  "%s"
 
-/* used for shepherd and procfs */
-#if defined(LINUX) || defined(SUN4) || defined(AIX4) || defined(HP10) || defined(HP11)
-#  define MAX_GROUPS NGROUPS
-#elif defined(IRIX6) || defined(SOLARIS)
-#  define MAX_GROUPS NGROUPS_UMAX
-#elif defined(ALPHA) || defined(HP11) || defined(SUN4) || defined(NECSX4) || defined(NECSX5)
-#  define MAX_GROUPS NGROUPS_MAX
-#endif
-
 #if defined(SUN4)
     int setgroups(int ngroups, gid_t gidset[]);
     int seteuid(uid_t euid);

@@ -657,6 +657,7 @@ sge_commit_flags_t commit_flags
    u_long32 now = 0;
    const char *session;
    lList *answer_list = NULL;
+   const char *hostname;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -666,12 +667,16 @@ sge_commit_flags_t commit_flags
 
    now = sge_get_gmt();
 
+   /* need hostname for job_log */
+   hostname = uti_state_get_qualified_hostname();
+
    switch (mode) {
    case COMMIT_ST_SENT:
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
 
-      job_log(jobid, jataskid, MSG_LOG_SENT2EXECD);
+/*       job_log(jobid, jataskid, MSG_LOG_SENT2EXECD); */
+      reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
       /* should use jobs gdil instead of tagging queues */
       global_host_ep = host_list_locate(Master_Exechost_List, "global");
@@ -734,7 +739,8 @@ sge_commit_flags_t commit_flags
 
    case COMMIT_ST_ARRIVED:
       lSetUlong(jatep, JAT_status, JRUNNING);
-      job_log(jobid, jataskid, "job received by execd");
+/*       job_log(jobid, jataskid, MSG_LOG_DELIVERED); */
+      reporting_create_job_log(NULL, now, JL_DELIVERED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_DELIVERED);
       job_enroll(jep, NULL, jataskid);
       {
          dstring buffer = DSTRING_INIT;
@@ -755,6 +761,8 @@ sge_commit_flags_t commit_flags
                u32c(lGetUlong(jep, JB_job_number)), 
                u32c(lGetUlong(jatep, JAT_task_number))));
 
+      reporting_create_job_log(NULL, now, JL_RESTART, MSG_QMASTER, hostname, jr, jep, jatep, NULL, SGE_EVENT);
+      /* JG: TODO: no accounting record created? Or somewhere else? */
       /* add a reschedule unknown list entry to all slave
          hosts where a part of that job ran */
       {
@@ -870,7 +878,8 @@ sge_commit_flags_t commit_flags
       break;
 
    case COMMIT_ST_FINISHED_FAILED:
-      job_log(jobid, jataskid, MSG_LOG_EXITED);
+/*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
+      reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
@@ -882,7 +891,8 @@ sge_commit_flags_t commit_flags
       break;
    case COMMIT_ST_FINISHED_FAILED_EE:
       jobid = lGetUlong(jep, JB_job_number);
-      job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL);
+/*       job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL); */
+      reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
 
@@ -931,7 +941,8 @@ sge_commit_flags_t commit_flags
 
    case COMMIT_ST_DEBITED_EE: /* triggered by ORT_remove_job */
    case COMMIT_ST_NO_RESOURCES: /* triggered by ORT_remove_immediate_job */
-      job_log(jobid, jataskid, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
+/*       job_log(jobid, jataskid, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE); */
+      reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, hostname, jr, jep, jatep, NULL, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jobid = lGetUlong(jep, JB_job_number);
 
       if (mode == COMMIT_ST_NO_RESOURCES)
@@ -946,6 +957,7 @@ sge_commit_flags_t commit_flags
                MSG_JOB_RESCHEDULE_UU, 
                u32c(lGetUlong(jep, JB_job_number)), 
                u32c(lGetUlong(jatep, JAT_task_number))));
+      reporting_create_job_log(NULL, now, JL_RESTART, MSG_QMASTER, hostname, jr, jep, jatep, NULL, SGE_EVENT);
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
@@ -1251,7 +1263,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
     * Remove one ja task
     */
    if (remove_job) {
-      job_log(job_id, ja_task_id, MSG_LOG_EXITED);
+/*       job_log(job_id, ja_task_id, MSG_LOG_EXITED); */
       release_successor_jobs(job);
 
       /*
@@ -1286,7 +1298,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
    } else {
       int is_enrolled = job_is_enrolled(job, ja_task_id);
 
-      job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT);
+/*       job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT); */
 
       if (!no_events) {
          sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_id, ja_task_id, 

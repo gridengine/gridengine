@@ -258,6 +258,7 @@ u_long32 flags
          !strcmp(name, "terminate_method") || 
          !strcmp(name, "qmaster_params") || 
          !strcmp(name, "execd_params") || 
+         !strcmp(name, "reporting_params") || 
          !strcmp(name, "qlogin_command") ||
          !strcmp(name, "rlogin_command") ||
          !strcmp(name, "rsh_command") ||

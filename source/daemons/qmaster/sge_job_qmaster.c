@@ -94,6 +94,7 @@
 #include "sge_qref.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -735,8 +736,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lAppendElem(*lpp, lCopyElem(jep));
    }   
 
-   job_log(lGetUlong(jep, JB_job_number), 0, MSG_LOG_NEWJOB);
-
+/*    job_log(lGetUlong(jep, JB_job_number), 0, MSG_LOG_NEWJOB); */
+   reporting_create_new_job_record(NULL, jep);
    DEXIT;
    return STATUS_OK;
 }
@@ -931,6 +932,7 @@ int sub_command
                    */
                   if (lGetString(job, JB_session))
                      dupped_session = strdup(lGetString(job, JB_session));
+                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
                   sge_add_event(NULL, start_time, sgeE_JATASK_DEL, 
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
@@ -969,6 +971,7 @@ int sub_command
                lListElem_clear_changed_info(job);
                sge_dstring_free(&buffer);
             } else {
+               reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED);
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, 
                              NULL, NULL, dupped_session, NULL);
             }
@@ -1023,6 +1026,7 @@ int sub_command
                         range_list_insert_id(&range_list, NULL, task_number);
                      }
                   }
+                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
                } else {
                   ; /* Task did never exist! - Ignore silently */
                }

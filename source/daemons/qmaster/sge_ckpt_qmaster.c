@@ -37,7 +37,6 @@
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_ckpt_qmaster.h"
-#include "job_log.h"
 #include "sge_host_qmaster.h"
 #include "sge_event_master.h"
 #include "config_file.h"

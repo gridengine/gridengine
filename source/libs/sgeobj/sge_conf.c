@@ -60,7 +60,9 @@
 #include "sge_userset.h"
 #include "sge_host.h"
 
-#include "msg_common.h"
+#include "config_file.h"
+
+#include "msg_sgeobjlib.h"
 
 #define SGE_BIN "bin"
 
@@ -69,22 +71,29 @@ lList *Master_Config_List = NULL;
 
 sge_conf_type conf = { NULL };
 
-int forbid_reschedule = 0;
-int enable_forced_qdel = 0;
-int do_credentials = 1;
-int do_authentication = 1;
-int use_qidle = 0;
-int disable_reschedule = 0;
+bool forbid_reschedule = false;
+bool enable_forced_qdel = false;
+bool do_credentials = true;
+bool do_authentication = true;
+bool use_qidle = false;
+bool disable_reschedule = false;
 
-int do_profiling = false;
+bool do_profiling = false;
  
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
 int execd_priority = 0;
-int keep_active = 0;
+bool keep_active = false;
+
+/* reporting params */
+bool do_accounting         = true;
+bool do_reporting          = false;
+bool do_joblog             = false;
+int reporting_flush_time   = 15;
+int sharelog_time          = 0;
 
 /* allow the simulation of (non existent) hosts */
-int simulate_hosts = 0;
+bool simulate_hosts = false;
 
 /*
  * This value overrides the default scheduler timeout (10 minutes)
@@ -105,13 +114,13 @@ int scheduler_timeout = 0;
  * does not support the sharetree flag so it doesn't matter.
  */
 
-int acct_reserved_usage = 0;
-int sharetree_reserved_usage = 0;
+bool acct_reserved_usage = false;
+bool sharetree_reserved_usage = false;
 
 /* 
  * Use primary group of qsub-host also for the job execution
  */
-int use_qsub_gid = 0;
+bool use_qsub_gid = false;
 
 /*
  * Set job environment variables with following prefixes if the
@@ -121,9 +130,9 @@ int use_qsub_gid = 0;
  *   set_cod_environment => COD_
  *   set_grd_environment => GRD_
  */
-int set_sge_environment = 1;
-int set_cod_environment = 0;
-int set_grd_environment = 0;
+bool set_sge_environment = true;
+bool set_cod_environment = false;
+bool set_grd_environment = false;
 
 /*
  * notify_kill_default and notify_susp_default
@@ -173,6 +182,7 @@ static void clean_conf(sge_conf_type *conf);
 #define MAX_AJ_TASKS              "75000"
 #define MAX_U_JOBS                "0"
 #define MAX_JOBS                  "0"
+#define REPORTING_PARAMS          "accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00"
 
 static tConfEntry conf_entries[] = {
  { "execd_spool_dir",   1, NULL,                1, NULL },
@@ -201,6 +211,7 @@ static tConfEntry conf_entries[] = {
  { "shepherd_cmd",      1, "none",              1, NULL },
  { "qmaster_params",    0, "none",              1, NULL }, 
  { "execd_params",      1, "none",              1, NULL }, 
+ { "reporting_params",  1, REPORTING_PARAMS,    1, NULL },
  { "gid_range",         1, "none",              1, NULL },
  { "finished_jobs",     0, FINISHED_JOBS,       1, NULL },
  { "qlogin_daemon",     1, "none",              1, NULL },
@@ -289,7 +300,7 @@ int type
           * but log into log file 
           */
          log_state_set_log_verbose(0);
-         INFO((SGE_EVENT, MSG_GDI_USING_SS, s, name));
+         INFO((SGE_EVENT, MSG_CONF_USING_SS, s, name));
          log_state_set_log_verbose(old_verbose);
       }
       if (cpp)
@@ -369,6 +380,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "shepherd_cmd", &mconf->shepherd_cmd, NULL, 0);
    chg_conf_val(lpCfg, "qmaster_params", &mconf->qmaster_params, NULL, 0);
    chg_conf_val(lpCfg, "execd_params",  &mconf->execd_params, NULL, 0);
+   chg_conf_val(lpCfg, "reporting_params",  &mconf->reporting_params, NULL, 0);
    chg_conf_val(lpCfg, "finished_jobs", NULL, &mconf->zombie_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "qlogin_daemon", &mconf->qlogin_daemon, NULL, 0);
    chg_conf_val(lpCfg, "qlogin_command", &mconf->qlogin_command, NULL, 0);
@@ -479,37 +491,41 @@ int merge_configuration(lListElem *global, lListElem *local,
       into some convenient global variables */
    {
       const char *s;
-      forbid_reschedule = 0;
-      enable_forced_qdel = 0;
-      do_credentials = 1;
-      do_authentication = 1;
+      forbid_reschedule = false;
+      enable_forced_qdel = false;
+      do_credentials = true;
+      do_authentication = true;
       compression_level = 0;
       compression_threshold = 10 * 1024;
-      use_qidle = 0;
-      disable_reschedule = 0;   
-      simulate_hosts = 0;
+      use_qidle = false;
+      disable_reschedule = false;   
+      simulate_hosts = false;
       scheduler_timeout = 0;
 
-      for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; "))
-         if (!strcasecmp(s, "FORBID_RESCHEDULE")) {
-            DPRINTF(("FORBID_RESCHEDULE\n"));
-            forbid_reschedule = 1;
-         } else if (!strcasecmp(s, "ENABLE_FORCED_QDEL")) {
-            DPRINTF(("ENABLE_FORCED_QDEL\n"));
-            enable_forced_qdel = 1; 
-         } else if (!strcasecmp(s, "NO_SECURITY")) {
-            DPRINTF(("NO_SECURITY\n"));
-            do_credentials = 0;
-         } else if (!strcasecmp(s, "NO_AUTHENTICATION")) {
-            DPRINTF(("NO_AUTHENTICATION\n"));
-            do_authentication = 0;
-         } else if (!strcasecmp(s, "DISABLE_AUTO_RESCHEDULING=true") ||
-                    !strcasecmp(s, "DISABLE_AUTO_RESCHEDULING=1")) {
-            DPRINTF(("DISABLE_AUTO_RESCHEDULING\n"));
-            disable_reschedule = 1;    
-         } else if (!strcasecmp(s, "SIMULATE_HOSTS=1")) {
-            simulate_hosts = 1;   
-         }  else if (!strncasecmp(s, "COMPRESSION_LEVEL", sizeof("COMPRESSION_LEVEL"))) {
+      for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) {
+            /* reversed logic */
+            do_credentials = !do_credentials;
+            continue;
+         } 
+         if (parse_bool_param(s, "NO_AUTHENTICATION", &do_authentication)) {
+            /* reversed logic */
+            do_authentication = !do_authentication;
+            continue;
+         } 
+         if (parse_bool_param(s, "DISABLE_AUTO_RESCHEDULING", &disable_reschedule)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
+            continue;
+         }
+         if (!strncasecmp(s, "COMPRESSION_LEVEL", sizeof("COMPRESSION_LEVEL"))) {
             char *cp;
             cp = strchr(s, '=');
             if (cp && *(cp+1)) {
@@ -520,8 +536,9 @@ int merge_configuration(lListElem *global, lListElem *local,
                   compression_level = 9;  
             }  
             DPRINTF(("COMPRESSION_LEVEL=%d\n", compression_level));
+            continue;
          } 
-         else if (!strncasecmp(s, "COMPRESSION_THRESHOLD", sizeof("COMPRESSION_THRESHOLD"))) {
+         if (!strncasecmp(s, "COMPRESSION_THRESHOLD", sizeof("COMPRESSION_THRESHOLD"))) {
             char *cp;
             cp = strchr(s, '=');
             if (cp && *(cp+1)) {
@@ -530,17 +547,21 @@ int merge_configuration(lListElem *global, lListElem *local,
                   compression_threshold = 0;
             }  
             DPRINTF(("COMPRESSION_THRESHOLD=%d\n", compression_threshold));
-         } else if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
+            continue;
+         } 
+         if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
                     sizeof("SCHEDULER_TIMEOUT")-1)) {
             scheduler_timeout=atoi(&s[sizeof("SCHEDULER_TIMEOUT=")-1]);
+            continue;
          }
+      }
        
       /* always initialize to defaults before we check execd_params */
 #ifdef COMPILE_DC
-      acct_reserved_usage = 0;
-      sharetree_reserved_usage = 0;
+      acct_reserved_usage = false;
+      sharetree_reserved_usage = false;
 #else
-      acct_reserved_usage = 0;
+      acct_reserved_usage = false;
       sharetree_reserved_usage = (feature_is_enabled(FEATURE_SGEEE)!=0);
 #endif
       notify_kill_type = 1;
@@ -548,49 +569,41 @@ int merge_configuration(lListElem *global, lListElem *local,
       ptf_max_priority = -999;
       ptf_min_priority = -999;
       execd_priority = -999;
-      keep_active = 0;
-      use_qsub_gid = 0;
-      set_sge_environment = 1;
-      set_cod_environment = 0;
-      set_grd_environment = 0; 
+      keep_active = false;
+      use_qsub_gid = false;
+      set_sge_environment = true;
+      set_cod_environment = false;
+      set_grd_environment = false; 
 
-      for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; "))
-         if (!strcasecmp(s, "USE_QIDLE")) {
-            DPRINTF(("USE_QIDLE\n"));
-            use_qidle = 1;
-         } else if (!strcasecmp(s, "NO_SECURITY")) { 
-            if (uti_state_get_mewho() == EXECD) {
-               DPRINTF(("NO_SECURITY\n"));
-               do_credentials = 0;
+      for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
+            continue;
+         }
+         if (uti_state_get_mewho() == EXECD) {
+            if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) { 
+               /* reversed logic */
+               do_credentials = !do_credentials;
+               continue;
             }
-         } else if (!strcasecmp(s, "KEEP_ACTIVE=true") ||
-                    !strcasecmp(s, "KEEP_ACTIVE=1"))
-            keep_active = 1;
-         else if (!strcasecmp(s, "NO_AUTHENTICATION")) {
-            if (uti_state_get_mewho() == EXECD) {
-               DPRINTF(("NO_AUTHENTICATION\n"));
-               do_authentication = 0;
+            if (parse_bool_param(s, "NO_AUTHENTICATION", &do_authentication)) {
+               /* reversed logic */
+               do_authentication = !do_authentication;
+               continue;
             }
-         } else if (!strcasecmp(s, "DO_AUTHENTICATION")) {
-            if (uti_state_get_mewho() == EXECD) {
-               DPRINTF(("DO_AUTHENTICATION\n"));
-               do_authentication = 1;
+            if (parse_bool_param(s, "DO_AUTHENTICATION", &do_authentication)) {
+               continue;
             }
-         } else if (!strncasecmp(s, "ACCT_RESERVED_USAGE",
-                                 sizeof("ACCT_RESERVED_USAGE")-1)) {
-            if (!strcasecmp(s, "ACCT_RESERVED_USAGE=false") ||
-                !strcasecmp(s, "ACCT_RESERVED_USAGE=0"))
-               acct_reserved_usage=0;
-            else
-               acct_reserved_usage=1;
-         } else if (!strncasecmp(s, "SHARETREE_RESERVED_USAGE",
-                                 sizeof("SHARETREE_RESERVED_USAGE")-1)) {
-            if (!strcasecmp(s, "SHARETREE_RESERVED_USAGE=false") ||
-                !strcasecmp(s, "SHARETREE_RESERVED_USAGE=0"))
-               sharetree_reserved_usage=0;
-            else
-               sharetree_reserved_usage=1;
-         } else if (!strncasecmp(s, "NOTIFY_KILL", sizeof("NOTIFY_KILL")-1)) {
+         }   
+         if (parse_bool_param(s, "KEEP_ACTIVE", &keep_active)) {
+            continue;
+         }
+         if (parse_bool_param(s, "ACCT_RESERVED_USAGE", &acct_reserved_usage)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "SHARETREE_RESERVED_USAGE", &sharetree_reserved_usage)) {
+            continue;
+         } 
+         if (!strncasecmp(s, "NOTIFY_KILL", sizeof("NOTIFY_KILL")-1)) {
             if (!strcasecmp(s, "NOTIFY_KILL=default")) {
                notify_kill_type = 1;
             } else if (!strcasecmp(s, "NOTIFY_KILL=none")) {
@@ -602,7 +615,9 @@ int merge_configuration(lListElem *global, lListElem *local,
                }
                notify_kill = sge_strdup(NULL, &(s[sizeof("NOTIFY_KILL")]));
             }
-         } else if (!strncasecmp(s, "NOTIFY_SUSP", sizeof("NOTIFY_SUSP")-1)) {
+            continue;
+         } 
+         if (!strncasecmp(s, "NOTIFY_SUSP", sizeof("NOTIFY_SUSP")-1)) {
             if (!strcasecmp(s, "NOTIFY_SUSP=default")) {
                notify_susp_type = 1;
             } else if (!strcasecmp(s, "NOTIFY_SUSP=none")) {
@@ -614,38 +629,56 @@ int merge_configuration(lListElem *global, lListElem *local,
                }
                notify_susp = sge_strdup(NULL, &(s[sizeof("NOTIFY_SUSP")]));
             }
-         } else if (!strncasecmp(s, "USE_QSUB_GID",
-                                 sizeof("USE_QSUB_GID")-1)) {
-            if (!strcasecmp(s, "USE_QSUB_GID=true") ||
-                !strcasecmp(s, "USE_QSUB_GID=1"))
-               use_qsub_gid=1;
-            else
-               use_qsub_gid=0;  
-         } else if (!strncasecmp(s, "SET_SGE_ENV", sizeof("SET_SGE_ENV")-1)) {
-            if (!strcasecmp(s, "SET_SGE_ENV=true") || !strcasecmp(s, "SET_SGE_ENV=1")) {
-               set_sge_environment = 1;                        
-            } else {
-               set_sge_environment = 0;                        
-            }
-         } else if (!strncasecmp(s, "SET_COD_ENV", sizeof("SET_COD_ENV")-1)) {
-            if (!strcasecmp(s, "SET_COD_ENV=true") || !strcasecmp(s, "SET_COD_ENV=1")) {
-               set_cod_environment = 1;                        
-            } else {
-               set_cod_environment = 0;                        
-            }
-         } else if (!strncasecmp(s, "SET_GRD_ENV", sizeof("SET_GRD_ENV")-1)) {
-            if (!strcasecmp(s, "SET_GRD_ENV=true") || !strcasecmp(s, "SET_GRD_ENV=1")) {
-               set_grd_environment = 1;                        
-            } else {
-               set_grd_environment = 0;                        
-            }
-
-         } else if (!strncasecmp(s, "PTF_MAX_PRIORITY", sizeof("PTF_MAX_PRIORITY")-1))
+            continue;
+         } 
+         if (parse_bool_param(s, "USE_QSUB_GID", &use_qsub_gid)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SET_SGE_ENV", &set_sge_environment)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SET_COD_ENV", &set_cod_environment)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SET_GRD_ENV", &set_grd_environment)) {
+            continue;
+         }
+         if (!strncasecmp(s, "PTF_MAX_PRIORITY", sizeof("PTF_MAX_PRIORITY")-1)) {
             ptf_max_priority=atoi(&s[sizeof("PTF_MAX_PRIORITY=")-1]);
-         else if (!strncasecmp(s, "PTF_MIN_PRIORITY", sizeof("PTF_MIN_PRIORITY")-1))
+            continue;
+         }
+         if (!strncasecmp(s, "PTF_MIN_PRIORITY", sizeof("PTF_MIN_PRIORITY")-1)) {
             ptf_min_priority=atoi(&s[sizeof("PTF_MIN_PRIORITY=")-1]);
-         else if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1))
+            continue;
+         }
+         if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1)) {
             execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
+            continue;
+         }
+      }
+
+      /* parse reporting parameters */
+      for (s=sge_strtok(pconf->reporting_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         if (parse_bool_param(s, "accounting", &do_accounting)) {
+            continue;
+         }
+         if (parse_bool_param(s, "reporting", &do_reporting)) {
+            continue;
+         }
+         if (parse_bool_param(s, "joblog", &do_joblog)) {
+            continue;
+         }
+         if (parse_int_param(s, "flush_time", &reporting_flush_time, TYPE_TIM)) {
+            if (reporting_flush_time <= 0) {
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
+               reporting_flush_time = 15;
+            }
+            continue;
+         }
+         if (parse_int_param(s, "sharelog", &sharelog_time, TYPE_TIM)) {
+            continue;
+         }
+      }
    }
 
    if (mlist) {
@@ -653,7 +686,7 @@ int merge_configuration(lListElem *global, lListElem *local,
    }
  
    if (!global) {
-      WARNING((SGE_EVENT, MSG_GDI_NOCONFIGFROMMASTER));
+      WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
       DEXIT;
       return -2;
    }
@@ -661,7 +694,7 @@ int merge_configuration(lListElem *global, lListElem *local,
    if (set_sge_environment == 0 && 
        set_cod_environment == 0 && 
        set_grd_environment == 0) {
-      WARNING((SGE_EVENT, MSG_GDI_NEITHERSGECODGRDSETTINGSGE));
+      WARNING((SGE_EVENT, MSG_CONF_NEITHERSGECODGRDSETTINGSGE));
       set_sge_environment = 1;
    }
    

@@ -273,4 +273,12 @@
 #define MSG_FLOAT_INCORRECTSTRING      _MESSAGE(64273, _("error parsing float value from string "SFQ"\n"))
 #define MSG_QTYPE_INCORRECTSTRING      _MESSAGE(64274, _("error parsing queue type from string "SFQ"\n"))
 
+/*
+** sge_conf.c
+*/
+#define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN"\n"))
+#define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults\n"))
+#define MSG_CONF_NEITHERSGECODGRDSETTINGSGE _MESSAGE(64302, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
+#define MSG_CONF_INVALIDREPORTING_FLUSH_TIME_S  _MESSAGE(64303, _("invalid reporting_flush_time settings: "SFQ"\n"))
+
 #endif /* __MSG_SGEOBJLIB_H */

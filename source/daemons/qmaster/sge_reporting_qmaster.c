@@ -55,11 +55,15 @@
 #include "sge_feature.h"
 #include "sge_object.h"
 #include "sge_centry.h"
-#include "sge_userset.h"
+#include "sge_conf.h"
 #include "sge_host.h"
+#include "sge_ja_task.h"
+#include "sge_job.h"
+#include "sge_pe_task.h"
 #include "sge_str.h"
 #include "sge_sharetree.h"
 #include "sge_userprj.h"
+#include "sge_userset.h"
 
 /* lck */
 #include "sge_lock.h"
@@ -74,17 +78,6 @@
 
 /* messages */
 #include "msg_common.h"
-
-/* flush time in seconds 
- * JG: TODO: this should be a reporting config parameter.
- */
-#define REPORTING_FLUSH_TIME 60
-#define SHARELOG_FLUSH_TIME  600
-
-/* do we need to write an accounting file?
- * JG: TODO: this should be a reporting config parameter
- */
-#define REPORTING_WRITE_ACCOUNTING_FILE true
 
 static const char REPORTING_DELIMITER = '\t';
 
@@ -116,6 +109,11 @@ static bool
 reporting_write_load_values(lList **answer_list, dstring *buffer, 
                             const lList *load_list, const lList *variables);
 
+static const char *
+reporting_get_job_log_name(const job_log_t type);
+
+static const char *
+lGetStringNotNull(const lListElem *ep, int nm);
 
 /****** qmaster/reporting/--Introduction ***************************
 *  NAME
@@ -176,10 +174,11 @@ reporting_initialize(lList **answer_list)
 
    DENTER(TOP_LAYER, "reporting_initialize");
 
-   /* JG: TODO: analyze reporting configuration */
-
    te_add(TYPE_REPORTING_TRIGGER, now, 1, 0, NULL);
-   te_add(TYPE_SHARELOG_TRIGGER, now, 1, 0, NULL);
+
+   if (sharelog_time > 0) {
+      te_add(TYPE_SHARELOG_TRIGGER, now, 1, 0, NULL);
+   }
 
    DEXIT;
    return ret;
@@ -274,11 +273,11 @@ reporting_deliver_trigger(u_long32 type, u_long32 when,
          if (!reporting_create_sharelog_record(&answer_list)) {
             answer_list_output(&answer_list);
          }
-         flush_interval = SHARELOG_FLUSH_TIME;
+         flush_interval = sharelog_time;
          break;
       case TYPE_REPORTING_TRIGGER:
          /* only flush reporting file */
-         flush_interval = REPORTING_FLUSH_TIME;
+         flush_interval = reporting_flush_time;
          break;
       default:
          return;
@@ -289,17 +288,134 @@ reporting_deliver_trigger(u_long32 type, u_long32 when,
       answer_list_output(&answer_list);
    }
 
-   /* validate next_trigger. If it is invalid, set it to one minute after now */
-   now = sge_get_gmt();
-   next_flush = now + flush_interval;
+   /* set next flushing interval and add timer.
+    * flush_interval can be 0, if sharelog is switched off, then don't
+    * add trigger 
+    */
+   if (flush_interval > 0) {
+      now = sge_get_gmt();
+      next_flush = now + flush_interval;
 
-   /* set timerevent for next flush */
-   if (uval0 != 0) {
-      te_add(type, next_flush, 1, 0, NULL);
+      /* set timerevent for next flush */
+      if (uval0 != 0) {
+         te_add(type, next_flush, 1, 0, NULL);
+      }
    }
 
    DEXIT;
    return;
+}
+
+bool
+reporting_create_new_job_record(lList **answer_list, const lListElem *job)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "reporting_create_new_job_record");
+
+   if (do_reporting && do_joblog && job != NULL) {
+      dstring job_dstring = DSTRING_INIT;
+
+      u_long32 job_number, priority, submission_time;
+      const char *job_name, *owner, *group, *project, *department, *account;
+
+      job_number        = lGetUlong(job, JB_job_number);
+      priority          = lGetUlong(job, JB_priority);
+      submission_time   = lGetUlong(job, JB_submission_time);
+      job_name          = lGetStringNotNull(job, JB_job_name);
+      owner             = lGetStringNotNull(job, JB_owner);
+      group             = lGetStringNotNull(job, JB_group);
+      project           = lGetStringNotNull(job, JB_project);
+      department        = lGetStringNotNull(job, JB_department);
+      account           = lGetStringNotNull(job, JB_account);
+
+      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
+                          submission_time, REPORTING_DELIMITER,
+                          job_number, REPORTING_DELIMITER,
+                          job_name, REPORTING_DELIMITER,
+                          owner, REPORTING_DELIMITER,
+                          group, REPORTING_DELIMITER,
+                          project, REPORTING_DELIMITER,
+                          department, REPORTING_DELIMITER,
+                          account, REPORTING_DELIMITER,
+                          priority);
+
+      /* write record to reporting buffer */
+      ret = reporting_create_record(answer_list, "new_job", 
+                                    sge_dstring_get_string(&job_dstring));
+      sge_dstring_free(&job_dstring);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+bool 
+reporting_create_job_log(lList **answer_list,
+                         u_long32 event_time,
+                         const job_log_t type,
+                         const char *user,
+                         const char *host,
+                         const lListElem *job_report,
+                         const lListElem *job, const lListElem *ja_task,
+                         const lListElem *pe_task,
+                         const char *message)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "reporting_create_job_log");
+
+   if (do_reporting && do_joblog && job != NULL) {
+      dstring job_dstring = DSTRING_INIT;
+
+      u_long32 job_id = 0, ja_task_id = 0;
+      const char *pe_task_id = "";
+      u_long32 state_time = 0, jstate;
+      const char *event;
+      char state[20];
+
+      job_id = lGetUlong(job, JB_job_number);
+      if (ja_task != NULL) {
+         ja_task_id = lGetUlong(ja_task, JAT_task_number);
+      }
+      if (pe_task != NULL) {
+         pe_task_id = lGetStringNotNull(pe_task, PET_id);
+      }
+
+      /* JG: TODO: implement the whole job/task state mess */
+      if (pe_task != NULL) {
+         jstate = lGetUlong(pe_task, PET_status);
+      } else if (ja_task != NULL) {
+         jstate = lGetUlong(ja_task, JAT_status);
+      } else {
+         jstate = 0;
+      }
+
+      event = reporting_get_job_log_name(type);
+      job_get_state_string(state, jstate);
+      if (message == NULL) {
+         message = "";
+      }
+
+      sge_dstring_sprintf(&job_dstring, U32CFormat"%c%s%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c"U32CFormat"%c%s\n", 
+                          event_time, REPORTING_DELIMITER,
+                          event, REPORTING_DELIMITER,
+                          job_id, REPORTING_DELIMITER,
+                          ja_task_id, REPORTING_DELIMITER,
+                          pe_task_id, REPORTING_DELIMITER,
+                          state, REPORTING_DELIMITER,
+                          user, REPORTING_DELIMITER,
+                          host, REPORTING_DELIMITER,
+                          state_time, REPORTING_DELIMITER,
+                          message);
+      /* write record to reporting buffer */
+      ret = reporting_create_record(answer_list, "job_log", 
+                                    sge_dstring_get_string(&job_dstring));
+      sge_dstring_free(&job_dstring);
+   }
+
+   DEXIT;
+   return ret;
 }
 
 /****** qmaster/reporting/reporting_create_acct_record() *******************
@@ -338,16 +454,20 @@ reporting_create_acct_record(lList **answer_list,
    char category_buffer[MAX_STRING_SIZE];
    dstring category_dstring;
    dstring job_dstring = DSTRING_INIT;
-   const char *category_string, *job_string;
+   const char *category_string = NULL, *job_string;
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
-   sge_dstring_init(&category_dstring, category_buffer, 
-                    sizeof(category_dstring));
-   category_string = sge_build_job_category(&category_dstring, job, 
-                                            *(userset_list_get_master_list()));
+   /* anything to do at all? */
+   if (do_reporting || do_accounting) {
+      sge_dstring_init(&category_dstring, category_buffer, 
+                       sizeof(category_dstring));
+      category_string = sge_build_job_category(&category_dstring, job, 
+                                          *(userset_list_get_master_list()));
+   }
+
    /* create record for accounting file */
-   if (REPORTING_WRITE_ACCOUNTING_FILE) {
+   if (do_accounting) {
       job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
                                     category_string, ':');
       if (job_string == NULL) {
@@ -360,7 +480,7 @@ reporting_create_acct_record(lList **answer_list,
       }
    }
 
-   if (ret) {
+   if (ret && do_reporting) {
       /* create record in reporting file */
       job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
                                     category_string, REPORTING_DELIMITER);
@@ -409,17 +529,19 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
    
    DENTER(TOP_LAYER, "reporting_write_consumables");
 
-   for_each (cep, actual) {
-      lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
-      if (tep != NULL) {
-         sge_dstring_append(buffer, lGetString(cep, CE_name));
-         sge_dstring_append_char(buffer, '=');
-         centry_print_resource_to_dstring(cep, buffer);
-         sge_dstring_append_char(buffer, '=');
-         centry_print_resource_to_dstring(tep, buffer);
+   if (do_reporting) {
+      for_each (cep, actual) {
+         lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
+         if (tep != NULL) {
+            sge_dstring_append(buffer, lGetString(cep, CE_name));
+            sge_dstring_append_char(buffer, '=');
+            centry_print_resource_to_dstring(cep, buffer);
+            sge_dstring_append_char(buffer, '=');
+            centry_print_resource_to_dstring(tep, buffer);
 
-         if (lNext(cep)) {
-            sge_dstring_append_char(buffer, ','); 
+            if (lNext(cep)) {
+               sge_dstring_append_char(buffer, ','); 
+            }
          }
       }
    }
@@ -461,7 +583,7 @@ reporting_create_host_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_record");
 
-   if (host != NULL) {
+   if (do_reporting && host != NULL) {
       dstring host_dstring = DSTRING_INIT;
 
       sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c", 
@@ -484,6 +606,8 @@ reporting_create_host_record(lList **answer_list,
       sge_dstring_append(&host_dstring, "\n");
       ret = reporting_create_record(answer_list, "host", 
                                     sge_dstring_get_string(&host_dstring));
+
+      sge_dstring_free(&host_dstring);
    }
 
    DEXIT;
@@ -523,7 +647,7 @@ reporting_create_host_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_record");
 
-   if (host != NULL) {
+   if (do_reporting && host != NULL) {
       dstring host_dstring = DSTRING_INIT;
 
       sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c", 
@@ -543,6 +667,7 @@ reporting_create_host_consumable_record(lList **answer_list,
       sge_dstring_append(&host_dstring, "\n");
       ret = reporting_create_record(answer_list, "host_consumable", 
                                     sge_dstring_get_string(&host_dstring));
+      sge_dstring_free(&host_dstring);
    }
 
 
@@ -578,55 +703,57 @@ reporting_create_sharelog_record(lList **answer_list)
 
    DENTER(TOP_LAYER, "reporting_create_sharelog_record");
 
-   /* only create sharelog entries if we have a sharetree */
-   if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
-      dstring prefix_dstring = DSTRING_INIT;
-      dstring data_dstring   = DSTRING_INIT;
-      format_t format;
-      char delim[2];
-      delim[0] = REPORTING_DELIMITER;
-      delim[1] = '\0';
+   if (do_reporting && sharelog_time > 0) {
+      /* only create sharelog entries if we have a sharetree */
+      if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
+         dstring prefix_dstring = DSTRING_INIT;
+         dstring data_dstring   = DSTRING_INIT;
+         format_t format;
+         char delim[2];
+         delim[0] = REPORTING_DELIMITER;
+         delim[1] = '\0';
 
-      /* we need a prefix containing the reporting file std fields */
-      sge_dstring_sprintf(&prefix_dstring, U32CFormat"%csharelog%c",
-                          sge_get_gmt(),
-                          REPORTING_DELIMITER, REPORTING_DELIMITER);
+         /* we need a prefix containing the reporting file std fields */
+         sge_dstring_sprintf(&prefix_dstring, U32CFormat"%csharelog%c",
+                             sge_get_gmt(),
+                             REPORTING_DELIMITER, REPORTING_DELIMITER);
 
-      /* define output format */
-      format.name_format  = false;
-      format.delim        = delim;
-      format.line_delim   = "\n";
-      format.rec_delim    = "";
-      format.str_format   = "%s";
-      format.field_names  = NULL;
-      format.format_times = false;
-      format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
+         /* define output format */
+         format.name_format  = false;
+         format.delim        = delim;
+         format.line_delim   = "\n";
+         format.rec_delim    = "";
+         format.str_format   = "%s";
+         format.field_names  = NULL;
+         format.format_times = false;
+         format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
 
-      /* dump the sharetree data */
-      SGE_LOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
-      SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_READ);
-      SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+         /* dump the sharetree data */
+         SGE_LOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
+         SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_READ);
+         SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
 
-      sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
-                          Master_User_List,
-                          Master_Project_List,
-                          true,
-                          false,
-                          NULL,
-                          &format);
-      SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
-      SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_READ);
-      SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
+         sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
+                             Master_User_List,
+                             Master_Project_List,
+                             true,
+                             false,
+                             NULL,
+                             &format);
+         SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+         SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_READ);
+         SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
 
-      /* write data to reporting buffer */
-      SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-      sge_dstring_append(&reporting_data,
-                         sge_dstring_get_string(&data_dstring));
-      SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+         /* write data to reporting buffer */
+         SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+         sge_dstring_append(&reporting_data,
+                            sge_dstring_get_string(&data_dstring));
+         SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
 
-      /* cleanup */
-      sge_dstring_free(&prefix_dstring);
-      sge_dstring_free(&data_dstring);
+         /* cleanup */
+         sge_dstring_free(&prefix_dstring);
+         sge_dstring_free(&data_dstring);
+      }
    }
 
    DEXIT;
@@ -709,7 +836,7 @@ reporting_flush_accounting(lList **answer_list)
 
    DENTER(TOP_LAYER, "sge_flush_accounting");
 
-   if (REPORTING_WRITE_ACCOUNTING_FILE) {
+   if (do_accounting) {
       SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
       /* write accounting data */
       ret = reporting_flush_report_file(answer_list, &accounting_data, 
@@ -734,18 +861,20 @@ reporting_flush_reporting(lList **answer_list)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "sge_flush_accounting");
+   DENTER(TOP_LAYER, "sge_flush_reporting");
 
-   SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
-   /* write accounting data */
-   ret = reporting_flush_report_file(answer_list, &reporting_data, 
-                               path_state_get_reporting_file());
-   /* clear accounting buffer. We do this regardless of the result of
-    * the writing command. Otherwise, if writing the report file failed
-    * over a longer time period, the reporting buffer could grow endlessly.
-    */
-   sge_dstring_clear(&reporting_data);
-   SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   if (do_reporting) {
+      SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+      /* write reporting data */
+      ret = reporting_flush_report_file(answer_list, &reporting_data, 
+                                        path_state_get_reporting_file());
+      /* clear accounting buffer. We do this regardless of the result of
+       * the writing command. Otherwise, if writing the report file failed
+       * over a longer time period, the reporting buffer could grow endlessly.
+       */
+      sge_dstring_clear(&reporting_data);
+      SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   }
 
    DEXIT;
    return ret;
@@ -887,9 +1016,43 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
    }
      
    /* set time for next flush */  
-   *next_flush = flush + REPORTING_FLUSH_TIME;
+   *next_flush = flush + reporting_flush_time;
 
    DEXIT;
+   return ret;
+}
+
+static const char *
+reporting_get_job_log_name(const job_log_t type)
+{
+   /* JG: TODO: using a switch() would be safer! */
+   static const char *names[] = {
+      "unknown",
+      "pending",
+      "sent",
+      "resent",
+      "delivered",
+      "running",
+      "suspended",
+      "unsuspended",
+      "held",
+      "released",
+      "restart",
+      "migrate",
+      "deleted",
+      "finished"
+   };
+
+   return names[type];
+}
+
+static const char *
+lGetStringNotNull(const lListElem *ep, int nm)
+{
+   const char *ret = lGetString(ep, nm);
+   if (ret == NULL) {
+      ret = "";
+   }
    return ret;
 }
 

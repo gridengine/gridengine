@@ -1,3 +1,9 @@
+JG-2003-12-23-0: Enhancem.: Added infrastructure for job logging and basic job
+                            logging functionality.
+                            Added reporting_params in the global config.
+                            Cleanup of sge_conf parsing code.
+                 Review:    CR
+
 AD-2003-12-23-1: Enhancem:  Did fix the build
                  Changed:   utilbin
 

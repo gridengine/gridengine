@@ -45,6 +45,10 @@ int replace_params(const char *src, char *dst, int dst_len, char **alllowed);
 void delete_config(void);
 int add_config_entry(char *name, char *value);
 
+bool parse_bool_param(const char *string, const char *variable, bool *value);
+bool parse_int_param(const char *input, const char *variable, 
+                     int *value, int type);
+
 extern void (*config_errfunc)(char *);
 
 extern char *pe_variables[];

@@ -229,7 +229,9 @@
 #define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(33151, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(33152, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
 */
-#define MSG_LOG_SENT2EXECD            _MESSAGE(33153, _("sent to execd"))
+#define MSG_LOG_DELETED               _MESSAGE(33151, _("job deleted"))
+#define MSG_LOG_SENT2EXECD            _MESSAGE(33152, _("sent to execd"))
+#define MSG_LOG_DELIVERED             _MESSAGE(33153, _("job received by execd"))
 #define MSG_LOG_EXITED                _MESSAGE(33154, _("job exited"))
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33155, _("job waits for schedds deletion"))
 #define MSG_LOG_DELSGE                _MESSAGE(33156, _("job deleted by schedd"))

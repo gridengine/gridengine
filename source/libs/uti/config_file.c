@@ -34,9 +34,12 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "sgermon.h"
+#include "sge_log.h"
 #include "basis_types.h"
 #include "sge_string.h"
 #include "err_trace.h"
+#include "sge_parse_num_par.h"
 #include "config_file.h"
 #include "msg_daemons_common.h"
 
@@ -420,4 +423,80 @@ char **allowed
       *dp = '\0';
 
    return 0;
+}
+
+bool parse_bool_param(const char *input, const char *variable, bool *value)
+{
+   bool ret = false;
+
+   DENTER(BASIS_LAYER, "parse_bool_param");
+
+   /* variable is set in input */
+   if (strncasecmp(input, variable, strlen(variable)) == 0) {
+      const char *s;
+
+      /* yes, this variable is set */
+      ret = true;
+
+      /* search position of = */
+      s = strchr(input, '=');
+
+      /* only boolean variable contained in input -> value = true */
+      if (s == NULL) {
+         *value = true;
+      } else {
+         /* skip = */
+         s++;
+         /* parse value */
+         if (*s == '1' || strcasecmp(s, "true") == 0) {
+            *value = true;
+         } else {
+            *value = false;
+         }
+      }
+
+      DPRINTF(("%s = %s\n", variable, value ? "true" : "false"));
+   }
+
+   DEXIT;
+   return ret;
+}
+
+bool parse_int_param(const char *input, const char *variable, 
+                     int *value, int type)
+{
+   bool ret = false;
+
+   DENTER(BASIS_LAYER, "parse_ulong_param");
+
+   /* variable is set in input */
+   if (strncasecmp(input, variable, strlen(variable)) == 0) {
+      const char *s;
+
+      /* yes, this variable is set */
+      ret = true;
+
+      /* search position of = */
+      s = strchr(input, '=');
+
+      /* no value contained in input -> value = 0 */
+      if (s == NULL) {
+         *value = 0;
+      } else {
+         u_long32 new_value;
+         /* skip = */
+         s++;
+         /* parse value */
+         if (parse_ulong_val(NULL, &new_value, type, s, NULL, 0)) {
+            *value = new_value;
+         } else {
+            *value = 0;
+         }
+      }
+
+      DPRINTF(("%s = %d\n", variable, value));
+   }
+
+   DEXIT;
+   return ret;
 }

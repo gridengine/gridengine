@@ -66,6 +66,7 @@ struct confel {                       /* cluster configuration parameters */
     char        *shepherd_cmd;
     char        *qmaster_params;
     char        *execd_params;
+    char        *reporting_params;
     char        *gid_range;           /* Range of additional group ids */
     u_long32    zombie_jobs;          /* jobs to save after execution */
     char        *qlogin_daemon;       /* eg /usr/sbin/in.telnetd */
@@ -90,27 +91,33 @@ extern lList *Master_Config_List;
 
 extern sge_conf_type conf;
 
-extern int use_qidle;
-extern int forbid_reschedule;
-extern int do_credentials;   
-extern int do_authentication;  
-extern int acct_reserved_usage;
-extern int sharetree_reserved_usage;
-extern int keep_active;
-extern int simulate_hosts;
+extern bool use_qidle;
+extern bool forbid_reschedule;
+extern bool do_credentials;   
+extern bool do_authentication;  
+extern bool acct_reserved_usage;
+extern bool sharetree_reserved_usage;
+extern bool keep_active;
+extern bool simulate_hosts;
 extern long ptf_max_priority;
 extern long ptf_min_priority;
-extern int use_qsub_gid;
+extern bool use_qsub_gid;
 extern int notify_susp_type;      
 extern char* notify_susp;       
 extern int notify_kill_type;      
 extern char* notify_kill;
-extern int disable_reschedule;  
-extern int set_sge_environment;
-extern int set_grd_environment;
-extern int set_cod_environment;
+extern bool disable_reschedule;  
+extern bool set_sge_environment;
+extern bool set_grd_environment;
+extern bool set_cod_environment;
 extern int scheduler_timeout;
 
+/* reporting params */
+extern bool do_accounting;
+extern bool do_reporting;
+extern bool do_joblog;
+extern int reporting_flush_time;
+extern int sharelog_time;
 
 /* simulation of large clusters: 
  *  - load values will not be trashed

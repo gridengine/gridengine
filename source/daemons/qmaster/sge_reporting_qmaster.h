@@ -38,6 +38,24 @@
 
 #include "sge_object.h"
 
+typedef enum {
+   JL_UNKNOWN,       /* job is in unknown state - should never be seen */
+   JL_PENDING,       /* job is pending */
+   JL_SENT,          /* job has been sent to execd */
+   JL_RESENT,        /* job has been resent to execd - sent hasn't been ack */
+   JL_DELIVERED,     /* job has been delivered - execd replied with ack */
+   JL_RUNNING,       /* job is running (reported by execd) */
+   JL_SUSPENDED,     /* job has been suspended */
+   JL_UNSUSPENDED,   /* job has been unsuspended */
+   JL_HELD,          /* a hold was applied */
+   JL_RELEASED,      /* all holds were released */
+   JL_RESTART,       /* a restart of the job was requested */
+   JL_MIGRATE,       /* a migration was requested */
+   JL_DELETED,       /* the job has been deleted */
+   JL_FINISHED,      /* the job has finished */
+   JL_ERROR,         /* job is in error state */
+} job_log_t;
+
 bool
 reporting_initialize(lList **answer_list);
 
@@ -47,6 +65,20 @@ reporting_shutdown(lList **answer_list);
 void
 reporting_deliver_trigger(u_long32 type, u_long32 when, 
                           u_long32 uval0, u_long32 uval1, const char *key);
+
+bool
+reporting_create_new_job_record(lList **answer_list, const lListElem *job);
+
+bool 
+reporting_create_job_log(lList **answer_list,
+                         u_long32 event_time,
+                         const job_log_t,
+                         const char *user,
+                         const char *host,
+                         const lListElem *job_report,
+                         const lListElem *job, const lListElem *ja_task,
+                         const lListElem *pe_task,
+                         const char *message);
 
 bool
 reporting_create_acct_record(lList **answer_list, 

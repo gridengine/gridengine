@@ -349,11 +349,8 @@
 
 
 /*
-** sge_conf.c
+** sge_schedd_conf.c
 */
-#define MSG_GDI_USING_SS              _MESSAGE(23285, _("using "SFQ" for "SFN"\n"))
-#define MSG_GDI_NOCONFIGFROMMASTER    _MESSAGE(23286, _("could not get configuration from qmaster - using defaults\n"))
-#define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _MESSAGE(23287, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_GDI_INVALIDPOLICYSTRING   _MESSAGE(23288, _("Invalid policy hierachy string. Disabling policy hierachy.\n"))
 
 /*
@@ -1083,6 +1080,13 @@
 #define MSG_OBJ_XUSERLIST                  _MESSAGE(60606, _("xuser list"))
 #define MSG_QCONF_ONLYONERANGE             _MESSAGE(60607, _("ERROR! -t option only allows one range specification\n"))
 #define MSG_FILE_NOTCHANGED                _MESSAGE(60608, _("Object has not been changed\n"))
+
+/*
+ * Objects and components
+ */
+#define MSG_QMASTER     _MESSAGE(60700, _("master"))
+#define MSG_EXECD       _MESSAGE(60701, _("execution daemon"))
+#define MSG_SCHEDD      _MESSAGE(60702, _("scheduler"))
 
 /* =================================================
  * please do not enter new messages after this point,

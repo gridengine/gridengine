@@ -77,6 +77,7 @@
 #include "sge_qref.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -644,8 +645,11 @@ char *host
    u_long32 jataskid = 0;
    u_long32 jobid = 0;
    bool migrate_on_suspend = false;
+   u_long32 now;
 
    DENTER(TOP_LAYER, "qmod_job_suspend");
+
+   now = sge_get_gmt();
 
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
@@ -694,7 +698,7 @@ char *host
       SETBIT(JSUSPENDED, state);
       lSetUlong(jatep, JAT_state, state);
       if (migrate_on_suspend)
-         lSetUlong(jatep, JAT_stop_initiate_time, sge_get_gmt());
+         lSetUlong(jatep, JAT_stop_initiate_time, now);
 
       sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
                       jobid, jataskid, NULL, NULL, NULL,
@@ -730,7 +734,7 @@ char *host
          SETBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          if (migrate_on_suspend)
-            lSetUlong(jatep, JAT_stop_initiate_time, sge_get_gmt());
+            lSetUlong(jatep, JAT_stop_initiate_time, now);
          sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL, NULL, NULL,
                          jep, jatep, NULL, true, true);
@@ -749,12 +753,13 @@ char *host
             SETBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             if (migrate_on_suspend)
-               lSetUlong(jatep, JAT_stop_initiate_time, sge_get_gmt());
+               lSetUlong(jatep, JAT_stop_initiate_time, now);
             sge_event_spool(answer, 0, sgeE_JATASK_MOD, 
                             jobid, jataskid, NULL, NULL, NULL,
                             jep, jatep, NULL, true, true);
          }
       }
+      reporting_create_job_log(NULL, now, JL_SUSPENDED, user, host, NULL, jep, jatep, NULL, NULL);
    }
    DEXIT;
 }
@@ -774,8 +779,11 @@ char *host
    int i;
    u_long32 state = 0;
    u_long32 jobid, jataskid;
+   u_long32 now;
 
    DENTER(TOP_LAYER, "qmod_job_unsuspend");
+
+   now = sge_get_gmt();
 
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
@@ -796,6 +804,7 @@ char *host
          sge_event_spool(answer, 0, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL, NULL, NULL,
                          jep, jatep, NULL, true, true);
+         reporting_create_job_log(NULL, now, JL_UNSUSPENDED, user, host, NULL, jep, jatep, NULL, NULL);
          DEXIT;
          return;
       } 
@@ -902,6 +911,7 @@ char *host
          }
       }
    }
+   reporting_create_job_log(NULL, now, JL_UNSUSPENDED, user, host, NULL, jep, jatep, NULL, NULL);
    DEXIT;
 }
 

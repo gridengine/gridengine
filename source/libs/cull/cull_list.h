@@ -34,7 +34,8 @@
 
 #include <stdio.h> 
 
-#include "sge_htable.h"
+#include "basis_types.h"
+#include "cull/cull_hashP.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -191,7 +192,7 @@ struct _lNameSpace {
 struct _lDescr {
    int nm;                             /* name */
    int mt;                             /* multitype information */
-   htable ht;
+   cull_htable ht;
 };
 
 /* LIST SPECIFIC FUNCTIONS */
@@ -245,10 +246,9 @@ lListElem *lFindPrev(const lListElem *ep, const lCondition *cp);
 lListElem *lFindFirst(const lList *lp, const lCondition *cp);
 lListElem *lFindLast(const lList *lp, const lCondition *cp);
 
-
-int mt_get_type(int mt);
-int mt_do_hashing(int mt);
-int mt_is_unique(int mt);
+#define mt_get_type(mt) ((mt) & 0x000000FF)
+#define mt_do_hashing(mt) ((mt) & CULL_HASH)
+#define mt_is_unique(mt) ((mt) & CULL_UNIQUE)
 
 bool lListElem_is_pos_changed(const lListElem *ep, int pos);
 

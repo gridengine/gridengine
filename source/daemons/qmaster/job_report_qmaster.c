@@ -267,8 +267,8 @@ sge_pack_buffer *pb
 
                      /* 
                       * if we receive a report from execd about
-                      * a 'running' pe_task but the ja_task of the cocerned
-                      * job is still in the 'deleted' state, than
+                      * a 'running' pe_task but the ja_task of the concerned
+                      * job is still in the 'deleted' state, then
                       * we have to initiate the kill of this pe_task.
                       */
                      {

@@ -102,7 +102,8 @@ typedef struct _htable_rec {
     int (*compare_func)(const void *, const void *);   /* pointer to compare function */
 } htable_rec;
 
-
+#define HASH_RESIZE_UP_THRESHOLD 0
+#define HASH_RESIZE_DOWN_THRESHOLD 1
 
 /****** uti/htable/sge_htable_resize() ******************************************
 *  NAME
@@ -336,7 +337,7 @@ void sge_htable_store(htable table, const void* key, const void* data)
     bucket->next = *head;
     *head = bucket;
     table->numentries++;
-    if (table->numentries > table->mask)
+    if (table->numentries > (table->mask << HASH_RESIZE_UP_THRESHOLD))
         sge_htable_resize(table, True);
 }
 
@@ -414,7 +415,7 @@ void sge_htable_delete(htable table, const void* key)
             }
             free((char *) bucket);
             table->numentries--;
-            if (table->numentries < (table->mask>>1))
+            if (table->numentries < (table->mask >> HASH_RESIZE_DOWN_THRESHOLD))
                 sge_htable_resize(table, False);
             return;
         }
@@ -476,7 +477,7 @@ const char *sge_htable_statistics(htable ht, dstring *buffer)
       }
    }
 
-   sge_dstring_sprintf(buffer, 
+   sge_dstring_sprintf_append(buffer, 
            "size: %ld, %ld entries, chains: %ld empty, %ld max, %.1f avg", 
            size, ht->numentries,
            empty, max, 
@@ -536,6 +537,17 @@ const void *dup_func_long(const void *key)
    return dup;
 }
 
+const void *dup_func_pointer(const void *key)
+{
+   char **dup  = NULL;
+   char **cast = (char **)key;
+
+   if((dup = (char **) malloc(sizeof(char *))) != NULL) {
+      *dup = *cast;
+   }
+   return dup;
+}
+
 const void *dup_func_string(const void *key)
 {
    return strdup((const char *)key);
@@ -579,6 +591,15 @@ int hash_func_long(const void *key)
 {
    long *cast = (long*)key;
    return (int)*cast;
+}
+
+int hash_func_pointer(const void *key)
+{
+   char **cast = (char **)key;
+   long tmp = (long)*cast;
+   tmp = tmp >> 7;
+/*    printf("====> %p -> %lx -> %x\n", cast, tmp, (int)tmp); */
+   return (int)tmp;
 }
 
 int hash_func_string(const void *key)
@@ -636,6 +657,14 @@ int hash_compare_long(const void *a, const void *b)
 {
    long *cast_a = (long*)a;
    long *cast_b = (long*)b;
+   return *cast_a - *cast_b;
+}
+
+int hash_compare_pointer(const void *a, const void *b) 
+{
+   char **cast_a = (char **)a;
+   char **cast_b = (char **)b;
+/* printf("++++> %p - %p\n", *cast_a, *cast_b); */
    return *cast_a - *cast_b;
 }
 

@@ -35,8 +35,8 @@
 
 include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/uti/Makefile
-include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/lck/Makefile
+include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/gdi/Makefile

@@ -180,8 +180,9 @@ test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_pack.c
 
 #---
+# JG: TODO: we have a cyclic dependency libcull <-> libsgeobjd. Once this is removed, remove -l sgeobjd!
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti -llck $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lsgeobjd -lrmon -luti -llck -lmalloc $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

@@ -2339,11 +2339,6 @@ int lUniqHost(lList *lp, int keyfield)
 *  NOTES
 *     MT-NOTE: mt_get_type() is MT safe
 *******************************************************************************/
-int mt_get_type(int mt)
-{
-   return mt & 0x000000FF;
-}
-
 /****** cull/list/mt_do_hashing() ************************************************
 *  NAME
 *     mt_do_hashing() -- is there hash access for a field
@@ -2364,11 +2359,6 @@ int mt_get_type(int mt)
 *  SEE ALSO
 *     
 *******************************************************************************/
-int mt_do_hashing(int mt)
-{
-   return mt & CULL_HASH;
-}
-
 /****** cull/list/mt_is_unique() ************************************************
 *  NAME
 *     mt_is_unique() -- is the cull object field unique 
@@ -2398,11 +2388,6 @@ int mt_do_hashing(int mt)
 *  SEE ALSO
 *     
 *******************************************************************************/
-int mt_is_unique(int mt)
-{
-   return mt & CULL_UNIQUE;
-}
-
 bool 
 lListElem_is_pos_changed(const lListElem *ep, int pos)
 {

@@ -1,3 +1,10 @@
+EB-2003-03-17-0  Bugfix:    qsh/qrsh/qlogin might core with segementation 
+                            violation
+                 Issue:     #508
+                 Bugtraq:   #4833346
+                 Review:    JG
+                 Changed:   qsh
+
 AA-2003-03-13-0  Bugfix:    sge->sgeee upgrade failed, corrected
                  Issue:     #506
                  Bugtraq:   
@@ -20,19 +27,19 @@ CR-2003-03-03-0  Enhancem.  - new function in sge_dir.h: sge_is_executable()
                             - qevent client: client can now trigger script
                                 execution on job end events.
 
-AH-2003-02-27-0    Bugfix:    overriding queue limits with job request limits 
-                              is incomplete for OS architecture dependent 
-                               resource limits (NEC)
-                   Issu:      #503
-                   Review     AS
-                   Changed    sge_qmaster
+AH-2003-02-27-0  Bugfix:    overriding queue limits with job request limits 
+                            is incomplete for OS architecture dependent 
+                             resource limits (NEC)
+                 Issue:      #503
+                 Review     AS
+                 Changed    sge_qmaster
 
-EB-2003-02-17-0    Bugfix:    qhost -q -l arch=xx crashes if a grid execution
-                              host is down
-                   Issue:     #492
-                   Bugtraq:   #4819479
-                   Review:    JG
-                   Changed:   qhost
+EB-2003-02-17-0  Bugfix:    qhost -q -l arch=xx crashes if a grid execution
+                            host is down
+                 Issue:     #492
+                 Bugtraq:   #4819479
+                 Review:    JG
+                 Changed:   qhost
 
 AS-2003-02-17-0: CVS        Created V53p3_TAG --> SGE 5.3p3
 -----------------------------------------------------------

@@ -1917,6 +1917,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                SGE_EXIT(EXIT_FAILURE);
             } else {
                lRemoveElem(lp, ep);
+               continue;
             }
          }
 
@@ -1932,6 +1933,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   SGE_EXIT(EXIT_FAILURE);
                } else {
                   lRemoveElem(lp, ep);
+                  continue;
                }
             }
          }
@@ -1944,6 +1946,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   SGE_EXIT(EXIT_FAILURE);
                } else {
                   lRemoveElem(lp, ep);
+                  continue;
                }
             }
          }
@@ -1960,6 +1963,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   SGE_EXIT(EXIT_FAILURE);
                } else {
                   lRemoveElem(lp, ep);
+                  continue;
                }
             }
          }

@@ -3308,6 +3308,7 @@ int is_master
       free(ca_local_root);
    }   
 
+   DEXIT;
    return;
 }
 

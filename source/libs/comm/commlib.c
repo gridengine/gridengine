@@ -305,6 +305,7 @@ int *intval_array
    switch (param) {
    case CL_P_NAME:
       if (!strval) {
+         DEXIT;
          return CL_RANGE;
       }
       commlib_state_set_componentname(strval);
@@ -314,6 +315,7 @@ int *intval_array
       break;
    case CL_P_PRIO_LIST:
       if (!intval_array) {
+         DEXIT;
          return CL_RANGE;
       }  
       commlib_state_set_stored_tag_priority_list(intval_array);
@@ -325,6 +327,7 @@ int *intval_array
 
    case CL_P_COMMDHOST:
       if (!strval || secure_strlen(strval, MAXHOSTLEN + 1) > MAXHOSTLEN) {
+         DEXIT;
          return CL_RANGE;
       }
       DPRINTF(("CL_P_COMMDHOST = %s\n", strval));
@@ -376,8 +379,10 @@ int *intval_array
       break;
       
    default:
+      DEXIT;
       return CL_UNKNOWN_PARAM;
    }
+   DEXIT;
    return CL_OK;
 }
 

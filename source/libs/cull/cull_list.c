@@ -637,130 +637,145 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
       space[i] = ' ';
    space[i] = '\0';
 
-   if (!fp)
+   if (!fp) {
       DPRINTF(("%s-------------------------------\n", space));
-   else
+   } else {
       fprintf(fp, "%s-------------------------------\n", space);
+   }
 
    for (i = 0; ep->descr[i].mt != lEndT; i++) {
       int changed = sge_bitfield_get(ep->changed, i);
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Integer) %c = %d\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Integer) %c = %d\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
+         }
          break;
       case lUlongT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Ulong)   %c = " u32"\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Ulong)   %c = " u32"\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
+         }
          break;
       case lStringT:
          str = lGetPosString(ep, i);
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (String)  %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (String)  %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
+         }
          break;
 
       case lHostT:
          str = lGetPosHost(ep, i);
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Host)    %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)"));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Host)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
+         }
          break;
 
       case lListT:
          tlp = lGetPosList(ep, i);
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (List)    %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty"));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (List)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
+         }
          if (tlp) {
             lWriteList_(tlp, nesting_level + 1, fp);
-            if (!fp)
+            if (!fp) {
                DPRINTF(("%s}\n", space));
-            else
+            } else {
                fprintf(fp, "%s}\n", space);
+            }
          }
          break;
 
       case lObjectT:
          tep = lGetPosObject(ep, i);
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Object)  %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none"));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Object)  %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
+         }
          if (tep) {
             lWriteElem_(tep, nesting_level + 1, fp);
-            if (!fp)
+            if (!fp) {
                DPRINTF(("%s}\n", space));
-            else
+            } else {
                fprintf(fp, "%s}\n", space);
+            }
          }
          break;
       case lFloatT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Float)   %c = %f\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Float)   %c = %f\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
+         }
          break;
       case lDoubleT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Double)  %c = %f\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Double)  %c = %f\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
+         }
          break;
       case lLongT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Long)    %c = %ld\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Long)    %c = %ld\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
+         }
          break;
       case lBoolT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Bool)    %c = %s\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false"));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Bool)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
+         }
          break;
       case lCharT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Char)    %c = %c\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Char)    %c = %c\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosChar(ep, i));
+         }
          break;
       case lRefT:
-         if (!fp)
+         if (!fp) {
             DPRINTF(("%s%-20.20s (Ref)     %c = %p\n", space,
                      lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i)));
-         else
+         } else {
             fprintf(fp, "%s%-20.20s (Ref)     %c = %p\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
+         }
          break;
       default:
          unknownType("lWriteElem");

@@ -1641,7 +1641,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return return_value;
             }
          }
-             CL_LOG(CL_LOG_WARNING,"******** received message ********");
+         CL_LOG(CL_LOG_WARNING,"<-<-<-<-  received message <-<-<-<-");
          CL_LOG_STR(CL_LOG_WARNING,"received message from host:", connection->receiver->comp_host);
          CL_LOG_STR(CL_LOG_WARNING,"which has name:            ", connection->receiver->comp_name);
          CL_LOG_INT(CL_LOG_WARNING,"and id:                    ", connection->receiver->comp_id);
@@ -1661,7 +1661,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
 
          switch(message->message_df) {
             case CL_MIH_DF_BIN:
-               CL_LOG(CL_LOG_INFO,"received binary message");
+               CL_LOG(CL_LOG_WARNING,"received binary message");
                message->message_state = CL_MS_READY;
                if (connection->handler != NULL) { 
                   cl_com_handle_t* handle = connection->handler;
@@ -1672,7 +1672,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                }
                break;
             case CL_MIH_DF_XML:
-               CL_LOG(CL_LOG_INFO,"received XML message");
+               CL_LOG(CL_LOG_WARNING,"received XML message");
                message->message_state = CL_MS_READY;
                if (connection->handler != NULL) { 
                   cl_com_handle_t* handle = connection->handler;
@@ -1683,7 +1683,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                }
                break;
             default:
-               CL_LOG(CL_LOG_INFO,"reseived protocol message");
+               CL_LOG(CL_LOG_INFO,"received protocol message");
                message->message_state = CL_MS_PROTOCOL;
                break;
          }
@@ -1784,7 +1784,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
 
             case CL_MIH_DF_AM:
-               CL_LOG(CL_LOG_INFO,"received ACK message");
+               CL_LOG(CL_LOG_WARNING,"received ACK message");
                return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
@@ -1841,7 +1841,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                      CL_LOG(CL_LOG_WARNING,"received connection close message");
                      connection->ccm_received = 1;
                   } else {
-                     if ( connection->is_client == 1) {
+                     if ( connection->was_accepted == 1) {
                         CL_LOG(CL_LOG_ERROR,"received connection close message from client while sending ccm message - ignoring");
                      } else {
                         CL_LOG(CL_LOG_INFO,"received connection close message");
@@ -1865,7 +1865,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                   return return_value;
                }
                if (connection->connection_state == CL_COM_CONNECTED) {
-                  CL_LOG(CL_LOG_INFO,"received connection close response message");
+                  CL_LOG(CL_LOG_WARNING,"received connection close response message");
                   connection->ccrm_received = 1;
                   connection->connection_sub_state = CL_COM_DONE;  /* CLOSE message */
                   connection->data_write_flag = CL_COM_DATA_NOT_READY;
@@ -2304,27 +2304,47 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
        }
 
        if (message->message_state == CL_MS_READY) {
-          CL_LOG(CL_LOG_WARNING,"******** sent message ********");
-          CL_LOG_STR(CL_LOG_WARNING,"message sent to host:", connection->receiver->comp_host);
-          CL_LOG_STR(CL_LOG_WARNING,"which has name:      ", connection->receiver->comp_name);
-          CL_LOG_INT(CL_LOG_WARNING,"and id:              ", connection->receiver->comp_id);
+          CL_LOG(CL_LOG_WARNING,"->->->->->  sent message ->->->->->");
+          CL_LOG_STR(CL_LOG_WARNING,"message sent to host:      ", connection->receiver->comp_host);
+          CL_LOG_STR(CL_LOG_WARNING,"which has name:            ", connection->receiver->comp_name);
+          CL_LOG_INT(CL_LOG_WARNING,"and id:                    ", connection->receiver->comp_id);
 
           connection->statistic->bytes_sent = connection->statistic->bytes_sent + message->message_length;
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + message->message_length  ;
 
           if (connection->connection_state == CL_COM_CONNECTED) {
-             if (message->message_df == CL_MIH_DF_CCM) {
-                CL_LOG(CL_LOG_INFO,"sent connection close message");
+             switch (message->message_df) {
+                case CL_MIH_DF_CCM:
+                   CL_LOG(CL_LOG_WARNING,"sent connection close message");
+                   connection->connection_sub_state = CL_COM_WAIT_FOR_CCRM;
+                   connection->ccm_sent = 1;
+                   break;
 
-                connection->connection_sub_state = CL_COM_WAIT_FOR_CCRM;
-                connection->ccm_sent = 1;
-             }
-             if (message->message_df == CL_MIH_DF_CCRM) {
-                CL_LOG(CL_LOG_INFO,"sent connection close response message");
-                connection->connection_sub_state = CL_COM_DONE;   /* CLOSE message */
-/*                connection->data_read_flag = CL_COM_DATA_NOT_READY;  REISI TEST */
-                connection->data_write_flag = CL_COM_DATA_NOT_READY;
-                connection->ccrm_sent = 1;
+                case CL_MIH_DF_CCRM:
+                   CL_LOG(CL_LOG_WARNING,"sent connection close response message");
+                   connection->connection_sub_state = CL_COM_DONE;   /* CLOSE message */
+                   connection->data_write_flag = CL_COM_DATA_NOT_READY;
+                   connection->ccrm_sent = 1;
+                   break;
+           
+                case CL_MIH_DF_BIN:
+                   CL_LOG(CL_LOG_WARNING,"sent binary message");
+                   break;
+                case CL_MIH_DF_XML:
+                   CL_LOG(CL_LOG_WARNING,"sent XML message");
+                   break;
+                case CL_MIH_DF_AM:
+                   CL_LOG(CL_LOG_WARNING,"sent acknowledge message");
+                   break;
+                case CL_MIH_DF_SIM:
+                   CL_LOG(CL_LOG_WARNING,"sent status information message");
+                   break;
+                case CL_MIH_DF_SIRM:
+                   CL_LOG(CL_LOG_WARNING,"sent status information response message");
+                   break;
+     
+                default:
+                   CL_LOG(CL_LOG_ERROR,"unexpected data format");
              }
           }
           connection->write_buffer_timeout_time = 0;
@@ -3626,7 +3646,7 @@ static void *cl_com_trigger_thread(void *t_conf) {
       cl_com_host_list_refresh(cl_com_get_host_list());
 
       CL_LOG(CL_LOG_INFO,"wait for event ...");
-      if ((ret_val = cl_thread_wait_for_event(thread_config,1,0 )) != CL_RETVAL_OK) {  /* nothing to do sleep 1 sec */
+      if ((ret_val = cl_thread_wait_for_event(thread_config,1,0 )) != CL_RETVAL_OK) {  /* nothing to do */
          switch(ret_val) {
             case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
                CL_LOG(CL_LOG_INFO,"condition wait timeout");

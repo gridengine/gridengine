@@ -1321,7 +1321,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
    }
  
 
-   if (connection->client_host_name == NULL && connection->is_client != 0) {
+   if (connection->client_host_name == NULL && connection->was_accepted != 0) {
       CL_LOG(CL_LOG_ERROR,"client hostname could not be resolved");
       return CL_RETVAL_GETHOSTNAME_ERROR; 
    }
@@ -1629,7 +1629,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
       }
 
       if ( connection->crm_state == CL_CRM_CS_CONNECTED ) {
-         if ( connection->handler != NULL && connection->is_client != 0 ) {
+         if ( connection->handler != NULL && connection->was_accepted != 0 ) {
             int check_allowed_host_list = 0;
             if (connection->handler->allowed_host_list == NULL && check_allowed_host_list != 0) {
                connection_status_text = "client is not in allowed host list";
@@ -2164,8 +2164,19 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 
    CL_LOG_INT(CL_LOG_INFO,"max fd =", max_fd);
    if (max_fd == -1) {
-      CL_LOG(CL_LOG_INFO, "no entries in open connection list, select abort");
-      return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
+      if ( select_mode == CL_W_SELECT ) {
+         /* return immediate for only write select ( only called by write thread) */
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+      }
+      /* we have no file descriptors, but we do a select with minimal timeout
+         because we don't want to overload the cpu by endless trigger() calls 
+         from application when there is no connection client 
+         (no descriptors part 1)
+      */
+      CL_LOG(CL_LOG_WARNING, "no entries in open connection list ... wait");
+      timeout.tv_sec = 0; 
+      timeout.tv_usec = 100*1000;  /* wait for 1/10 second */
+      max_fd = 0;
    }
 
    if (max_fd + 1 >= FD_SETSIZE) {
@@ -2181,6 +2192,11 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
    my_errno = errno;
 
+   if (max_fd == 0) {
+      /* there were no file descriptors! Return error after select timeout! */
+      /* (no descriptors part 2) */
+      return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+   }
    switch(select_back) {
       case -1:
          if (my_errno == EINTR) {

@@ -407,7 +407,8 @@ struct cl_com_connection_type {
    int           data_read_flag;          /* CL_COM_DATA_READY or CL_COM_DATA_NOT_READY */
    int           connection_state;        /* CL_COM_DISCONNECTED,CL_COM_CLOSING ,CL_COM_CONNECTED ,CL_COM_CONNECTING */
    int           connection_sub_state;    /* depends on connection_state */
-   int           is_client;               /* is set when this is a client connection (from accept) */
+   int           was_accepted;            /* is set when this is a client connection (from accept() ) */
+   int           was_opened;              /* is set when this connection was opened (with open connection) by connect() */ 
    char*         client_host_name;        /* this is the resolved client host name */
    cl_xml_connection_status_t crm_state;  /* state of connection response message (if server) */
    

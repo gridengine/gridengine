@@ -207,18 +207,31 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             struct timeval now;
             gettimeofday(&now,NULL);
             CL_LOG(CL_LOG_INFO,"handle connection timeout times");
+#if 0
+            CL_LOG_INT(CL_LOG_WARNING,"last transfer time      :",connection->last_transfer_time.tv_sec);
+            CL_LOG_INT(CL_LOG_WARNING,"last connection timeout :",h_timeout);
+            CL_LOG_INT(CL_LOG_WARNING,"now it is               :",now.tv_sec);
+#endif
             if (connection->last_transfer_time.tv_sec + h_timeout <= now.tv_sec) {
                if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
-                  CL_LOG(CL_LOG_WARNING,"got connection transfer timeout");
+                  CL_LOG(CL_LOG_WARNING,"got connection transfer timeout ...");
                   if (connection->connection_state == CL_COM_CONNECTED) {
-                     CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
-                     CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
-                     CL_LOG_INT(CL_LOG_WARNING,"component id:              ", connection->remote->comp_id );
+                     if (connection->was_opened != 0) {
+                        CL_LOG(CL_LOG_WARNING,"client connection ignores connection transfer timeout");
+                     } else {
+                        if ( cl_raw_list_get_elem_count(connection->send_message_list) == 0 ) {
+                           CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
+                           CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
+                           CL_LOG_INT(CL_LOG_WARNING,"component id:              ", connection->remote->comp_id );
+                           connection->connection_state = CL_COM_CLOSING;
+                        } else {
+                           CL_LOG(CL_LOG_WARNING,"unsent messages in send list, don't close connection");
+                        }
+                     }
                   } else {
                      CL_LOG(CL_LOG_WARNING,"closing unconnected connection object");
+                     connection->connection_state = CL_COM_CLOSING;
                   }
-                  
-                  connection->connection_state = CL_COM_CLOSING;
                } 
                if (connection->data_flow_type == CL_CM_CT_STREAM) {
                   CL_LOG(CL_LOG_INFO,"ignore connection transfer timeout for stream connection");

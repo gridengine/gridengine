@@ -230,7 +230,8 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
    (*connection)->connection_state = CL_COM_DISCONNECTED;
    (*connection)->data_flow_type = data_flow_type;
    (*connection)->data_format_type = CL_CM_DF_BIN;
-   (*connection)->is_client = 0;
+   (*connection)->was_accepted = 0;
+   (*connection)->was_opened = 0;
    (*connection)->client_host_name = NULL;
 
    /* setup tcp private struct */
@@ -2675,6 +2676,7 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
 
       connection->connection_state = CL_COM_OPENING;   
       connection->connection_sub_state = CL_COM_OPEN_INIT;
+      connection->was_opened = 1;
    }
 
    /* try to connect (open connection) */
@@ -4308,7 +4310,7 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
                (*new_connection)->service_handler_flag = CL_COM_CONNECTION;
                (*new_connection)->connection_state = CL_COM_CONNECTING;
                (*new_connection)->connection_sub_state = CL_COM_READ_INIT;
-               (*new_connection)->is_client = 1;
+               (*new_connection)->was_accepted = 1;
                (*new_connection)->local = cl_com_create_endpoint(connection->local->comp_host,
                                                                  connection->local->comp_name, 
                                                                  connection->local->comp_id );

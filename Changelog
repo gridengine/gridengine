@@ -1,3 +1,9 @@
+CR-2004-01-25-0: Bugfix:    - Fixed "failed gdi request" error message when
+                            connection timed out. (e.g. editing configuration
+                            file for longer than 1 minute)
+                            - Event client(s) will reconnect when connection 
+                            timed out.  
+
 AD-2004-01-24-0: Bugfix:    Did remove unused parameter from 'sge_do_log()'
                             signature.
                  Changed:   uti

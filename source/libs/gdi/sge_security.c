@@ -197,7 +197,19 @@ int compressed
       dummy_mid = *mid;
    }
 
-   ret = cl_commlib_send_message( handle, (char*)tohost ,(char*)tocomproc ,toid , ack_type , (cl_byte_t*)buffer ,(unsigned long)buflen  , &dummy_mid , 0 ,tag,1 , synchron);
+   ret = cl_commlib_send_message( handle, 
+                                  (char*)tohost ,(char*)tocomproc ,toid , 
+                                  ack_type , 
+                                  (cl_byte_t*)buffer ,(unsigned long)buflen,
+                                  &dummy_mid , 0 ,tag,1 , synchron);
+   if (ret != CL_RETVAL_OK) {
+      /* try again ( if connection timed out) */
+      ret = cl_commlib_send_message( handle, 
+                                     (char*)tohost ,(char*)tocomproc ,toid ,
+                                     ack_type , 
+                                     (cl_byte_t*)buffer ,(unsigned long)buflen,
+                                     &dummy_mid , 0 ,tag,1 , synchron);
+   }
 
    DEXIT;
    return ret;
@@ -280,6 +292,21 @@ u_short *compressed
 
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
+
+   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
+      if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
+          /* The connection was closed, reopen it */
+          ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
+          INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (1)\n", fromhost , fromcommproc , u32c(*fromid)));
+          if (ret == CL_RETVAL_OK) {
+             INFO((SGE_EVENT,"reconnected successfully\n"));
+             ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
+          } 
+      } else {
+         DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (1)\n"));
+      }
+   }
+
    if (message != NULL) {
       *buffer = message->message;
       message->message = NULL;
@@ -292,7 +319,7 @@ u_short *compressed
       }
 
       if (sender != NULL) {
-         INFO((SGE_EVENT,"received from: %s,%d\n",sender->comp_host, sender->comp_id));
+         INFO((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
          if (fromcommproc != NULL) {
             strcpy(fromcommproc, sender->comp_name);
          }

@@ -361,7 +361,19 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
 
    INFO((SGE_EVENT,"sending to id: %s,%d, size of message: %ld\n",commproc,id, (unsigned long) pb->bytes_used));
 
-   i = cl_commlib_send_message( handle,(char*)rhost,(char*)commproc , id, ack_type , (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , &dummy_mid ,response_id,tag,1 , synchron);
+   i = cl_commlib_send_message( handle,
+                                (char*) rhost,(char*) commproc , id, 
+                                ack_type , 
+                                (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
+                                &dummy_mid , response_id, tag, 1, synchron);
+   if (i != CL_RETVAL_OK) {
+      /* try again ( if connection timed out ) */
+      i = cl_commlib_send_message( handle,
+                                   (char*)rhost, (char*)commproc , id, 
+                                   ack_type ,
+                                   (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
+                                   &dummy_mid ,response_id,tag,1 , synchron);
+   }
    
    if (mid) {
       *mid = dummy_mid;
@@ -490,6 +502,21 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    cl_commlib_trigger(handle);
    i = cl_commlib_receive_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
+
+   if ( i == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+      if ( commproc[0] != '\0' && rhost[0] != '\0' ) {
+         /* The connection was closed, reopen it */
+         i = cl_commlib_open_connection(handle,rhost,commproc,usid);
+         INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (2)\n", rhost, commproc, u32c(usid)));
+         if (i == CL_RETVAL_OK) {
+            INFO((SGE_EVENT,"reconnected successfully\n"));
+            i = cl_commlib_receive_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
+         }
+      } else {
+         DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (2)\n"));
+      }
+   }
+
    if (i != CL_RETVAL_OK) {
       if (i != CL_RETVAL_NO_MESSAGE) {
          /* This if for errors */

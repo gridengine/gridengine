@@ -148,7 +148,7 @@ extern int main(void)
   }
 
   printf("nr of elems: %ld\n", cl_raw_list_get_elem_count(my_string_list));   
-  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(my_string_list,selem) ) {
+  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(selem) ) {
      printf("elem: %s\n",selem->string);
   }
 
@@ -158,7 +158,7 @@ extern int main(void)
   }
 
   printf("nr of elems: %ld\n", cl_raw_list_get_elem_count(my_string_list));   
-  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(my_string_list,selem) ) {
+  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(selem) ) {
      printf("elem: %s\n",selem->string);
   }
 
@@ -168,7 +168,7 @@ extern int main(void)
   }
 
   printf("nr of elems: %ld\n", cl_raw_list_get_elem_count(my_string_list));   
-  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(my_string_list,selem) ) {
+  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(selem) ) {
      printf("elem: %s\n",selem->string);
   }
 
@@ -179,7 +179,7 @@ extern int main(void)
 
   printf("nr of elems: %ld\n", cl_raw_list_get_elem_count(my_string_list));   
 
-  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(my_string_list,selem) ) {
+  for (selem = cl_string_list_get_first_elem(my_string_list); selem != NULL ; selem = cl_string_list_get_next_elem(selem) ) {
      printf("elem: %s\n",selem->string);
   }
 

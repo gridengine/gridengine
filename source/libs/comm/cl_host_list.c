@@ -186,9 +186,9 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       CL_LOG(CL_LOG_INFO,"no local domain specified");
    }
 
-   CL_LOG_INT(CL_LOG_INFO,"entry_life_time is", ldata->entry_life_time);
-   CL_LOG_INT(CL_LOG_INFO,"entry_update_time is", ldata->entry_update_time);
-   CL_LOG_INT(CL_LOG_INFO,"entry_reresolve_time is", ldata->entry_reresolve_time);
+   CL_LOG_INT(CL_LOG_INFO,"entry_life_time is", (int)ldata->entry_life_time);
+   CL_LOG_INT(CL_LOG_INFO,"entry_update_time is", (int)ldata->entry_update_time);
+   CL_LOG_INT(CL_LOG_INFO,"entry_reresolve_time is", (int)ldata->entry_reresolve_time);
 
    return ret_val;
 }
@@ -257,7 +257,7 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
          cl_host_list_cleanup(destination);
          return ret_val;
       }
-      alias_elem = cl_host_alias_list_get_next_elem(ldata_source->host_alias_list, alias_elem);
+      alias_elem = cl_host_alias_list_get_next_elem(alias_elem);
    }
    cl_raw_list_unlock(ldata_source->host_alias_list);
 
@@ -330,7 +330,7 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
 
 
       cl_host_list_append_host( (*destination) , new_host_spec, 0 );
-      host_elem = cl_host_list_get_next_elem(source, host_elem);
+      host_elem = cl_host_list_get_next_elem(host_elem);
    }
    
 
@@ -571,7 +571,7 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
          elem = NULL;
          break;
       }
-      elem = cl_host_list_get_next_elem(list_p, elem);
+      elem = cl_host_list_get_next_elem(elem);
    } 
 
    if (lock_list != 0) {
@@ -612,7 +612,7 @@ cl_host_list_elem_t* cl_host_list_get_least_elem(cl_raw_list_t* list_p) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_get_next_elem()"
-cl_host_list_elem_t* cl_host_list_get_next_elem(cl_raw_list_t* list_p, cl_host_list_elem_t* elem) {
+cl_host_list_elem_t* cl_host_list_get_next_elem(cl_host_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -630,7 +630,7 @@ cl_host_list_elem_t* cl_host_list_get_next_elem(cl_raw_list_t* list_p, cl_host_l
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_get_last_elem()"
-cl_host_list_elem_t* cl_host_list_get_last_elem(cl_raw_list_t* list_p, cl_host_list_elem_t* elem) {
+cl_host_list_elem_t* cl_host_list_get_last_elem(cl_host_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
 

@@ -223,7 +223,7 @@ cl_raw_list_elem_t* cl_raw_list_append_elem(cl_raw_list_t* list_p, void* data) {
 
    if ( list_p->list_type != CL_LOG_LIST ) {
       CL_LOG_STR(CL_LOG_DEBUG, "list:", list_p->list_name);
-      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", list_p->elem_count); 
+      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", (int)list_p->elem_count); 
    }
    return new_elem;
 }
@@ -322,7 +322,7 @@ void* cl_raw_list_remove_elem(cl_raw_list_t* list_p, cl_raw_list_elem_t* delete_
 
    if ( list_p->list_type != CL_LOG_LIST ) {
       CL_LOG_STR(CL_LOG_DEBUG, "list:", list_p->list_name);
-      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", list_p->elem_count); 
+      CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", (int)list_p->elem_count); 
    }
    return old_data;
 }

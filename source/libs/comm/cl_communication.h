@@ -72,7 +72,7 @@ int cl_com_push_application_error(int cl_error, const char* cl_info);
 
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_host_list_refresh(cl_raw_list_t* host_list);
-int cl_com_cached_gethostbyname( char *host, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
+int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy,int* system_error_val );
 char* cl_com_get_h_error_string(int h_error);
 int cl_com_compare_hosts(char* host1, char* host2);
@@ -113,8 +113,6 @@ int cl_com_free_message(cl_com_message_t** message);
 /* after this line are the main functions used by lib user */
 /* ======================================================= */
 
-int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_port, int connect_port, int data_flow_type, cl_xml_connection_autoclose_t auto_close_mode );
-
 int cl_com_open_connection(cl_com_connection_t* connection, 
                                             int timeout, 
                              cl_com_endpoint_t* remote_endpoint, 
@@ -143,15 +141,24 @@ int cl_com_receive_message(cl_com_connection_t* connection,
 /* ======================================================================================== */
 
 /* setup service */
-int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_com_endpoint_t* local_endpoint );   /* CR check */
+int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,
+                                            cl_com_endpoint_t* local_endpoint );
+
 /* check for new service connection clients */
-int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection ,int timeout_val_sec, int timeout_val_usec ); /* CR check */
+int cl_com_connection_request_handler(cl_com_connection_t* connection,
+                                      cl_com_connection_t** new_connection,
+                                      int timeout_val_sec,
+                                      int timeout_val_usec );
 /* cleanup service */
-int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection);  /* CR check */
+int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection);
 
 /* check open connection list for new messages */
-int cl_com_open_connection_request_handler(int framework_type , cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode ); /* CR check */
-
+int cl_com_open_connection_request_handler(cl_framework_t framework_type,
+                                           cl_raw_list_t* connection_list,
+                                           cl_com_connection_t* service_connection,
+                                           int timeout_val_sec,
+                                           int timeout_val_usec,
+                                           cl_select_method_t select_mode );
 
 #endif /* __CL_COMMUNICATION_H */
 

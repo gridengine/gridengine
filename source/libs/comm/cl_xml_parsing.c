@@ -250,7 +250,6 @@ int cl_xml_parse_GMSH(unsigned char* buffer, unsigned long buffer_length, cl_com
    char help_buf[256];
    unsigned long help_buf_pointer = 0;
    unsigned long buf_pointer = 0;
-   int in_tag = 0;
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long dl_begin = 0;
@@ -266,11 +265,9 @@ int cl_xml_parse_GMSH(unsigned char* buffer, unsigned long buffer_length, cl_com
    while(buf_pointer <= buffer_length) {
       switch( buffer[buf_pointer] ) {
          case '<':
-            in_tag = 1;
             tag_begin = buf_pointer + 1;
          break; 
          case '>':
-            in_tag = 0;
             tag_end = buf_pointer - 1;
             if (tag_begin < tag_end && tag_begin > 0 && tag_end > 0) {
                help_buf_pointer = 0;
@@ -787,7 +784,6 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long crm_end = 0;
    unsigned long cs_begin = 0;
    unsigned long cs_end = 0;
 
@@ -842,7 +838,6 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
 
 
                if (strcmp(help_buf,"/crm") == 0) {
-                  crm_end = buf_pointer - 6;
                   buf_pointer++;
                   continue;
                }
@@ -1170,18 +1165,18 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    (*message)->formats = strdup("not supported");
 
    CL_LOG_STR(CL_LOG_INFO,"version:     ", (*message)->version);
-   CL_LOG_INT(CL_LOG_INFO,"cs_condition:", (*message)->cs_condition);
+   CL_LOG_INT(CL_LOG_INFO,"cs_condition:", (int)(*message)->cs_condition);
    CL_LOG_STR(CL_LOG_INFO,"cs_text:     ", (*message)->cs_text);
    CL_LOG_STR(CL_LOG_INFO,"formats:     ", (*message)->formats);
    CL_LOG_STR(CL_LOG_INFO,"src->host:   ", (*message)->src->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"src->comp:   ", (*message)->src->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"src->id:     ", (*message)->src->comp_id);
+   CL_LOG_INT(CL_LOG_INFO,"src->id:     ", (int)(*message)->src->comp_id);
    CL_LOG_STR(CL_LOG_INFO,"dst->host:   ", (*message)->dst->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"dst->comp:   ", (*message)->dst->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"dst->id:     ", (*message)->dst->comp_id);
+   CL_LOG_INT(CL_LOG_INFO,"dst->id:     ", (int)(*message)->dst->comp_id);
    CL_LOG_STR(CL_LOG_INFO,"rdata->host: ", (*message)->rdata->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"rdata->comp: ", (*message)->rdata->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"rdata->id:   ", (*message)->rdata->comp_id);
+   CL_LOG_INT(CL_LOG_INFO,"rdata->id:   ", (int)(*message)->rdata->comp_id);
 
 
    return CL_RETVAL_OK;
@@ -1225,7 +1220,6 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long mih_end = 0;
  
    unsigned long mid_begin = 0;
    unsigned long mid_end = 0;
@@ -1286,7 +1280,6 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
 
 
                if (strcmp(help_buf,"/mih") == 0) {
-                  mih_end = tag_begin - 2;
                   buf_pointer++;
                   continue;
                }
@@ -1458,12 +1451,12 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
 
 
    CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
-   CL_LOG_INT(CL_LOG_INFO,"mid:     ", (*message)->mid);
-   CL_LOG_INT(CL_LOG_INFO,"dl:      ", (*message)->dl);
+   CL_LOG_INT(CL_LOG_INFO,"mid:     ", (int)(*message)->mid);
+   CL_LOG_INT(CL_LOG_INFO,"dl:      ", (int)(*message)->dl);
    CL_LOG_STR(CL_LOG_INFO,"df:      ", cl_com_get_mih_df_string((*message)->df));
    CL_LOG_STR(CL_LOG_INFO,"mat:     ", cl_com_get_mih_mat_string((*message)->mat));
-   CL_LOG_INT(CL_LOG_INFO,"tag:     ", (*message)->tag);
-   CL_LOG_INT(CL_LOG_INFO,"rid:     ", (*message)->rid);
+   CL_LOG_INT(CL_LOG_INFO,"tag:     ", (int)(*message)->tag);
+   CL_LOG_INT(CL_LOG_INFO,"rid:     ", (int)(*message)->rid);
 
 
    if ( (*message)->dl > CL_DEFINE_MAX_MESSAGE_LENGTH ) {
@@ -1485,7 +1478,6 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long sirm_end = 0;
  
    unsigned long mid_begin = 0;
    unsigned long mid_end = 0;
@@ -1555,7 +1547,6 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 
 
                if (strcmp(help_buf,"/sirm") == 0) {
-                  sirm_end = tag_begin - 2;
                   buf_pointer++;
                   continue;
                }
@@ -1741,13 +1732,13 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 
 
    CL_LOG_STR(CL_LOG_WARNING,"version:   ", (*message)->version);
-   CL_LOG_INT(CL_LOG_WARNING,"mid:       ", (*message)->mid);
-   CL_LOG_INT(CL_LOG_WARNING,"starttime: ", (*message)->starttime);
-   CL_LOG_INT(CL_LOG_WARNING,"runtime:   ", (*message)->runtime);
-   CL_LOG_INT(CL_LOG_WARNING,"brm:       ", (*message)->application_messages_brm);
-   CL_LOG_INT(CL_LOG_WARNING,"bwm:       ", (*message)->application_messages_bwm);
-   CL_LOG_INT(CL_LOG_WARNING,"noc:       ", (*message)->application_connections_noc);
-   CL_LOG_INT(CL_LOG_WARNING,"status:    ", (*message)->application_status);
+   CL_LOG_INT(CL_LOG_WARNING,"mid:       ", (int)(*message)->mid);
+   CL_LOG_INT(CL_LOG_WARNING,"starttime: ", (int)(*message)->starttime);
+   CL_LOG_INT(CL_LOG_WARNING,"runtime:   ", (int)(*message)->runtime);
+   CL_LOG_INT(CL_LOG_WARNING,"brm:       ", (int)(*message)->application_messages_brm);
+   CL_LOG_INT(CL_LOG_WARNING,"bwm:       ", (int)(*message)->application_messages_bwm);
+   CL_LOG_INT(CL_LOG_WARNING,"noc:       ", (int)(*message)->application_connections_noc);
+   CL_LOG_INT(CL_LOG_WARNING,"status:    ", (int)(*message)->application_status);
    CL_LOG_STR(CL_LOG_WARNING,"info:      ", (*message)->info);
 
    return CL_RETVAL_OK;
@@ -1766,7 +1757,6 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long am_end = 0;
  
    unsigned long mid_begin = 0;
    unsigned long mid_end = 0;
@@ -1813,7 +1803,6 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
 
 
                if (strcmp(help_buf,"/am") == 0) {
-                  am_end = tag_begin - 2;
                   buf_pointer++;
                   continue;
                }
@@ -1856,7 +1845,7 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
    }
 
    CL_LOG_STR(CL_LOG_INFO,"version: ", (*message)->version);
-   CL_LOG_INT(CL_LOG_INFO,"mid:     ", (*message)->mid);
+   CL_LOG_INT(CL_LOG_INFO,"mid:     ", (int)(*message)->mid);
 
    return CL_RETVAL_OK;
 
@@ -1876,7 +1865,6 @@ int cl_xml_parse_CCM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long ccm_end = 0;
  
    if (message == NULL || buffer == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -1918,7 +1906,6 @@ int cl_xml_parse_CCM(unsigned char* buffer, unsigned long buffer_length, cl_com_
 
 
                if (strcmp(help_buf,"/ccm") == 0) {
-                  ccm_end = tag_begin - 2;
                   buf_pointer++;
                   continue;
                }
@@ -1957,7 +1944,6 @@ int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long ccrm_end = 0;
  
 
    if (message == NULL || buffer == NULL ) {
@@ -1999,7 +1985,6 @@ int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com
                help_buf[help_buf_pointer] = 0;
 
                if (strcmp(help_buf,"/ccrm") == 0) {
-                  ccrm_end = tag_begin - 2;
                   buf_pointer++;
                   continue;
                }
@@ -2040,7 +2025,6 @@ int cl_xml_parse_SIM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long tag_begin = 0;
    unsigned long tag_end = 0;
    unsigned long version_begin = 0;
-   unsigned long sim_end = 0;
  
    if (message == NULL || buffer == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -2080,9 +2064,7 @@ int cl_xml_parse_SIM(unsigned char* buffer, unsigned long buffer_length, cl_com_
                }
                help_buf[help_buf_pointer] = 0;
 
-
                if (strcmp(help_buf,"/sim") == 0) {
-                  sim_end = tag_begin - 2;
                   buf_pointer++;
                   continue;
                }

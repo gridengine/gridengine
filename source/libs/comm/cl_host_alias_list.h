@@ -58,8 +58,8 @@ int cl_host_alias_list_get_local_resolved_name(cl_raw_list_t* list_p, char* alia
 /* thread functions that will not lock the list */
 cl_host_alias_list_elem_t* cl_host_alias_list_get_first_elem(cl_raw_list_t* list_p);
 cl_host_alias_list_elem_t* cl_host_alias_list_get_least_elem(cl_raw_list_t* list_p);
-cl_host_alias_list_elem_t* cl_host_alias_list_get_next_elem(cl_raw_list_t* list_p, cl_host_alias_list_elem_t* elem);
-cl_host_alias_list_elem_t* cl_host_alias_list_get_last_elem(cl_raw_list_t* list_p, cl_host_alias_list_elem_t* elem);
+cl_host_alias_list_elem_t* cl_host_alias_list_get_next_elem(cl_host_alias_list_elem_t* elem);
+cl_host_alias_list_elem_t* cl_host_alias_list_get_last_elem(cl_host_alias_list_elem_t* elem);
 
 #endif /* __CL_HOST_ALIAS_LIST_H */
 

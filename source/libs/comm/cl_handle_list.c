@@ -122,7 +122,7 @@ int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle,
          ret_val2 = CL_RETVAL_OK;
          break;
       }
-      elem = cl_handle_list_get_next_elem(list_p, elem);
+      elem = cl_handle_list_get_next_elem(elem);
    } 
 
    /* unlock list */
@@ -146,7 +146,7 @@ cl_handle_list_elem_t* cl_handle_list_get_first_elem(cl_raw_list_t* list_p) {  /
    return NULL;
 }
 
-cl_handle_list_elem_t* cl_handle_list_get_next_elem(cl_raw_list_t* list_p, cl_handle_list_elem_t* elem) {   /* CR check */
+cl_handle_list_elem_t* cl_handle_list_get_next_elem(cl_handle_list_elem_t* elem) {   /* CR check */
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -160,7 +160,7 @@ cl_handle_list_elem_t* cl_handle_list_get_next_elem(cl_raw_list_t* list_p, cl_ha
 }
 
 
-cl_handle_list_elem_t* cl_handle_list_get_last_elem(cl_raw_list_t* list_p, cl_handle_list_elem_t* elem) {   /* CR check */
+cl_handle_list_elem_t* cl_handle_list_get_last_elem(cl_handle_list_elem_t* elem) {   /* CR check */
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
    if (elem != NULL) {

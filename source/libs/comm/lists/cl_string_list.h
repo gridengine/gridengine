@@ -52,8 +52,8 @@ int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_l
 /* thread functions that will not lock the list */
 cl_string_list_elem_t* cl_string_list_get_first_elem(cl_raw_list_t* list_p);
 cl_string_list_elem_t* cl_string_list_get_least_elem(cl_raw_list_t* list_p);
-cl_string_list_elem_t* cl_string_list_get_next_elem(cl_raw_list_t* list_p, cl_string_list_elem_t* elem);
-cl_string_list_elem_t* cl_string_list_get_last_elem(cl_raw_list_t* list_p, cl_string_list_elem_t* elem);
+cl_string_list_elem_t* cl_string_list_get_next_elem(cl_string_list_elem_t* elem);
+cl_string_list_elem_t* cl_string_list_get_last_elem(cl_string_list_elem_t* elem);
 
 
 #endif /* __CL_STRING_LIST_H */

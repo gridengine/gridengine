@@ -206,7 +206,7 @@ int cl_thread_wait_for_thread_condition(cl_thread_condition_t* condition, long s
 
 
    pthread_mutex_lock(condition->trigger_count_mutex);
-   CL_LOG_INT(CL_LOG_INFO,"Trigger count:", condition->trigger_count );
+   CL_LOG_INT(CL_LOG_INFO,"Trigger count:", (int)condition->trigger_count );
 
    if ( condition->trigger_count == 0 ) {
       /* trigger count is zero, wait for trigger */
@@ -270,7 +270,7 @@ int cl_thread_wait_for_thread_condition(cl_thread_condition_t* condition, long s
    } else {
       /* trigger count is > zero, do not trigger */
       CL_LOG(CL_LOG_INFO,"Thread was triggerd before wait - continue");
-      CL_LOG_INT(CL_LOG_INFO,"Trigger count:", condition->trigger_count );
+      CL_LOG_INT(CL_LOG_INFO,"Trigger count:", (int)condition->trigger_count );
 
       condition->trigger_count = condition->trigger_count - 1;
       pthread_mutex_unlock(condition->trigger_count_mutex);
@@ -657,11 +657,13 @@ int cl_thread_trigger_event(cl_thread_settings_t *thread_config) {
 #define __CL_FUNCTION__ "cl_thread_func_testcancel()"
 int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    int ret_val = 0;
+   int execute_pop = 0;
    CL_LOG(CL_LOG_INFO, "checking for cancelation ...");
 
 
    /* push default cleanup function */
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
+   /* (void(*)(void*)) */
+   pthread_cleanup_push( (void(*)(void*)) cl_thread_default_cleanup_function, thread_config );
 
    ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
 
@@ -671,7 +673,7 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    }
 
    /* remove cleanup function from stack without execution */
-   pthread_cleanup_pop(0);  /* client_thread_cleanup */
+   pthread_cleanup_pop(execute_pop);  /* client_thread_cleanup */
 
    if ( ret_val != 0) {
       return CL_RETVAL_THREAD_CANCELSTATE_ERROR;

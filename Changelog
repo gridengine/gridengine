@@ -1,3 +1,9 @@
+CR-2004-10-18-0: Cleanup:   - code cleanup of commlib
+                            - removed unused function parameters in list functions
+                            - preparatory work for commlib SSL framework
+                 Review:    AA
+                 Changed:   commlib utilib 
+
 AH-2004-10-18-0: Bugfix:    meaningless job error state diagnosis text in 
                             qstat -j  
                  Review:    JG

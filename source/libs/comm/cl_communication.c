@@ -48,193 +48,16 @@
 #include "cl_util.h"
 #include "cl_data_types.h"
 #include "cl_tcp_framework.h"
+#include "cl_ssl_framework.h"
 #include "cl_message_list.h"
 #include "cl_host_list.h"
 #include "cl_host_alias_list.h"
 #include "cl_endpoint_list.h"
 #include "cl_communication.h"
 
-static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* system_error );
+static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error );
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent, int* system_error_retval );
 static cl_bool_t cl_ingore_timeout = CL_FALSE;
-
-
-/****** cl_communication/cl_com_setup_tcp_connection() *************************
-*  NAME
-*     cl_com_setup_tcp_connection() -- setup a connection type
-*
-*  SYNOPSIS
-*     int cl_com_setup_tcp_connection(cl_com_connection_t* connection, int 
-*     server_port, int connect_port) 
-*
-*  FUNCTION
-*     This function is used to setup the connection type. It will malloc
-*     a cl_com_tcp_private_t structure and set the pointer 
-*     connection->com_private to this structure.
-*
-*     When the connection structure is used to provide a service the server_port
-*     must be specified. If the connection is used to be a client to a service
-*     the connect_port must be specified.
-*
-*     The memory obtained by the malloc() call for the cl_com_tcp_private_t structure 
-*     is released by a call to cl_com_close_connection()
-*
-*  INPUTS
-*     cl_com_connection_t* connection - empty connection structure
-*     int server_port                 - port to provide a tcp service 
-*     int connect_port                - port to connect to
-*     int data_flow_type              - CL_COM_STREAM or CL_COM_MESSAGE
-*
-*  RESULT
-*     int - CL_COMM_XXXX error value or CL_RETVAL_OK for no errors
-*
-*  SEE ALSO
-*
-*     cl_communication/cl_com_close_connection()
-*
-*******************************************************************************/
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_setup_tcp_connection()"
-int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_port, int connect_port, int data_flow_type, cl_xml_connection_autoclose_t auto_close_mode ) {  /* CR check */
-   cl_com_tcp_private_t* com_private = NULL;
-   int ret_val;
-   if (connection == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-   if (*connection != NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-
-   if (data_flow_type != CL_CM_CT_STREAM && data_flow_type != CL_CM_CT_MESSAGE) {
-      return CL_RETVAL_PARAMS;
-   }
-
-   *connection = (cl_com_connection_t*) malloc(sizeof(cl_com_connection_t));
-   if (*connection == NULL) {
-      return CL_RETVAL_MALLOC;
-   }
-   com_private = (cl_com_tcp_private_t*) malloc(sizeof(cl_com_tcp_private_t));
-   if (com_private == NULL) {
-      free(*connection);
-      *connection = NULL;
-      return CL_RETVAL_MALLOC;
-   }
-   memset(com_private, 0, sizeof(cl_com_tcp_private_t));
-
-   (*connection)->crm_state_error = NULL;
-   (*connection)->error_func = NULL;
-   (*connection)->com_private = com_private;
-   (*connection)->ccm_received = 0;
-   (*connection)->ccm_sent = 0;
-   (*connection)->ccrm_received = 0;
-   (*connection)->ccrm_sent = 0;
-   (*connection)->data_buffer_size  = CL_DEFINE_DATA_BUFFER_SIZE;
-   (*connection)->auto_close_type = auto_close_mode;
-
-   (*connection)->data_read_buffer  = (cl_byte_t*) malloc (sizeof(cl_byte_t) * ((*connection)->data_buffer_size) );
-   (*connection)->data_write_buffer = (cl_byte_t*) malloc (sizeof(cl_byte_t) * ((*connection)->data_buffer_size) );
-   (*connection)->read_gmsh_header = (cl_com_GMSH_t*) malloc (sizeof(cl_com_GMSH_t));
-
-   if ( (*connection)->data_read_buffer  == NULL || 
-        (*connection)->data_write_buffer == NULL || 
-        (*connection)->read_gmsh_header  == NULL  ) {
-      free(com_private);
-      com_private = NULL;
-      free( ((*connection)->data_read_buffer) );
-      free( ((*connection)->data_write_buffer) );
-      free( ((*connection)->read_gmsh_header) );
-      free(*connection);
-      *connection = NULL;
-      return CL_RETVAL_MALLOC;
-   }
-
-   (*connection)->read_buffer_timeout_time = 0;
-   (*connection)->write_buffer_timeout_time = 0;
-   (*connection)->read_gmsh_header->dl = 0;
-   (*connection)->data_write_buffer_pos = 0;
-   (*connection)->data_write_buffer_processed = 0;
-   (*connection)->data_write_buffer_to_send = 0;
-   (*connection)->data_read_buffer_pos = 0;
-   (*connection)->data_read_buffer_processed = 0;
-
-   (*connection)->handler = NULL;
-   (*connection)->last_send_message_id = 0;
-   (*connection)->last_received_message_id = 0;
-   (*connection)->received_message_list = NULL;
-   (*connection)->send_message_list = NULL;
-   (*connection)->shutdown_timeout = 0;
-
-   gettimeofday(&((*connection)->last_transfer_time),NULL);
-   memset( &((*connection)->connection_close_time), 0, sizeof(struct timeval));
-   
-
-
-   if ( (ret_val=cl_message_list_setup(&((*connection)->received_message_list), "rcv messages")) != CL_RETVAL_OK ) {
-      free( ((*connection)->data_read_buffer) );
-      free( ((*connection)->data_write_buffer) );
-      free( ((*connection)->read_gmsh_header) );
-      free(com_private);
-      cl_message_list_cleanup(&((*connection)->received_message_list));
-      free(*connection);
-      *connection = NULL;
-      return ret_val;
-   }
-
-   if ( (ret_val=cl_message_list_setup(&((*connection)->send_message_list), "snd messages")) != CL_RETVAL_OK ) {
-      free( ((*connection)->data_read_buffer) );
-      free( ((*connection)->data_write_buffer) );
-      free( ((*connection)->read_gmsh_header) );
-      free(com_private);
-      cl_message_list_cleanup(&((*connection)->received_message_list));
-      cl_message_list_cleanup(&((*connection)->send_message_list));
-      free(*connection);
-      *connection = NULL;
-      return ret_val;
-   }
-
-   (*connection)->statistic = (cl_com_con_statistic_t*) malloc(sizeof(cl_com_con_statistic_t));
-   if ((*connection)->statistic == NULL) {
-      free( ((*connection)->data_read_buffer) );
-      free( ((*connection)->data_write_buffer) );
-      free( ((*connection)->read_gmsh_header) );
-      free(com_private);
-      cl_message_list_cleanup(&((*connection)->received_message_list));
-      cl_message_list_cleanup(&((*connection)->send_message_list));
-      free(*connection);
-      *connection = NULL;
-      return CL_RETVAL_MALLOC;
-   }
-   memset((*connection)->statistic, 0, sizeof(cl_com_con_statistic_t));
-   gettimeofday(&((*connection)->statistic->last_update),NULL);
-
-
-   /* reset connection struct */
-   (*connection)->receiver = NULL;
-   (*connection)->sender   = NULL;
-   (*connection)->local    = NULL;
-   (*connection)->remote   = NULL;
-
-   (*connection)->service_handler_flag = CL_COM_SERVICE_UNDEFINED;
-   com_private->sockfd = -1;
-   (*connection)->framework_type = CL_CT_TCP;
-   (*connection)->connection_type = CL_COM_SEND_RECEIVE;
-   (*connection)->data_write_flag = CL_COM_DATA_NOT_READY;
-   (*connection)->data_read_flag = CL_COM_DATA_NOT_READY;
-   (*connection)->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-   (*connection)->connection_state = CL_COM_DISCONNECTED;
-   (*connection)->data_flow_type = data_flow_type;
-   (*connection)->data_format_type = CL_CM_DF_BIN;
-   (*connection)->was_accepted = 0;
-   (*connection)->was_opened = 0;
-   (*connection)->client_host_name = NULL;
-
-   /* setup tcp private struct */
-   com_private->server_port = server_port;
-   com_private->connect_port = connect_port;
-   return CL_RETVAL_OK;
-}
 
 
 #ifdef __CL_FUNCTION__
@@ -278,7 +101,7 @@ void cl_com_dump_endpoint(cl_com_endpoint_t* endpoint, const char* text) {  /* C
    }
    CL_LOG_STR(CL_LOG_DEBUG, "comp_host :", endpoint->comp_host);
    CL_LOG_STR(CL_LOG_DEBUG, "comp_name :", endpoint->comp_name);
-   CL_LOG_INT(CL_LOG_DEBUG, "comp_id   :", endpoint->comp_id);
+   CL_LOG_INT(CL_LOG_DEBUG, "comp_id   :", (int)endpoint->comp_id);
    if (text) {
       CL_LOG(CL_LOG_DEBUG, "========================");
    }
@@ -308,6 +131,10 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
    return CL_RETVAL_OK;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_setup_message()"
 int cl_com_setup_message(cl_com_message_t** message, cl_com_connection_t* connection, cl_byte_t* data, unsigned long size, cl_xml_ack_type_t ack_type, unsigned long response_id, unsigned long tag) {
 
    int return_value = CL_RETVAL_OK;
@@ -345,6 +172,10 @@ int cl_com_setup_message(cl_com_message_t** message, cl_com_connection_t* connec
    return return_value;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_create_message()"
 int cl_com_create_message(cl_com_message_t** message) {
    if (message == NULL) {
       return CL_RETVAL_PARAMS;
@@ -395,8 +226,8 @@ void  cl_dump_connection(cl_com_connection_t* connection) {   /* CR check */
          cl_com_dump_endpoint(connection->local, "local");
       }
 
-      CL_LOG_INT(CL_LOG_DEBUG,"elements in received_message_list:", cl_raw_list_get_elem_count(connection->received_message_list));
-      CL_LOG_INT(CL_LOG_DEBUG,"elements in send_message_list:", cl_raw_list_get_elem_count(connection->send_message_list));
+      CL_LOG_INT(CL_LOG_DEBUG,"elements in received_message_list:", (int)cl_raw_list_get_elem_count(connection->received_message_list));
+      CL_LOG_INT(CL_LOG_DEBUG,"elements in send_message_list:", (int)cl_raw_list_get_elem_count(connection->send_message_list));
       if (connection->handler == NULL) {
          CL_LOG(CL_LOG_DEBUG,"no handler pointer is set");
       } else {
@@ -429,12 +260,16 @@ void  cl_dump_connection(cl_com_connection_t* connection) {   /* CR check */
 void cl_dump_private(cl_com_connection_t* connection) {  /* CR check */
    if (connection != NULL) {
       switch(connection->framework_type) {
-         case CL_CT_TCP:
+         case CL_CT_TCP: {
             cl_dump_tcp_private(connection);
             break;
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
+         }
+#if 0
+         case CL_CT_SSL: {
+            cl_dump_ssl_private(connection);
             break;
+         }
+#endif
       }
    } else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -456,9 +291,11 @@ int cl_com_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_re
       case CL_CT_TCP: {
          return cl_com_tcp_read_GMSH(connection,only_one_read);
       }
-      default: {
-         CL_LOG(CL_LOG_ERROR,"undefined framework type");
+#if 0
+      case CL_CT_SSL: {
+         return cl_com_ssl_read_GMSH(connection,only_one_read);
       }
+#endif
    }
    return CL_RETVAL_UNDEFINED_FRAMEWORK;
 }
@@ -476,17 +313,13 @@ const char* cl_com_get_framework_type(cl_com_connection_t* connection) {  /* CR 
       case CL_CT_TCP: {
          return "CL_CT_TCP";
       }
-      case CL_CT_GLOBUS: {
-         return "CL_CT_GLOBUS";
+#if 0
+      case CL_CT_SSL: {
+         return "CL_CT_SSL";
       }
-      case CL_CT_JXTA: {
-         return "CL_CT_JXTA";
-      }
-      default: {
-         CL_LOG(CL_LOG_ERROR,"undefined framework type");
-         return "unknown";
-      }
+#endif
    }
+   return "unexpected framework type";
 }
 
 #ifdef __CL_FUNCTION__
@@ -511,11 +344,9 @@ const char* cl_com_get_connection_type(cl_com_connection_t* connection) { /* CR 
       case CL_COM_UNDEFINED: {
          return "CL_COM_UNDEFINED";
       }
-      default: {
-         CL_LOG(CL_LOG_WARNING,"undefined connection type");
-         return "unknown";
-      }
    }
+   CL_LOG(CL_LOG_WARNING,"undefined connection type");
+   return "unknown";
 }
 
 #ifdef __CL_FUNCTION__
@@ -600,26 +431,24 @@ const char* cl_com_get_connection_state(cl_com_connection_t* connection) {   /* 
    }
 
    switch(connection->connection_state ) {
-      case CL_COM_DISCONNECTED: {
-         return "CL_COM_DISCONNECTED";
+      case CL_DISCONNECTED: {
+         return "CL_DISCONNECTED";
       }
-      case CL_COM_CLOSING: {
-         return "CL_COM_CLOSING";
+      case CL_CLOSING: {
+         return "CL_CLOSING";
       }
-      case CL_COM_OPENING: {
-         return "CL_COM_OPENING";
+      case CL_OPENING: {
+         return "CL_OPENING";
       }
-      case CL_COM_CONNECTED: {
-         return "CL_COM_CONNECTED";
+      case CL_CONNECTED: {
+         return "CL_CONNECTED";
       }
-      case CL_COM_CONNECTING: {
-         return "CL_COM_CONNECTING";
-      }
-      default: {
-         CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
-         return "unknown";
+      case CL_CONNECTING: {
+         return "CL_CONNECTING";
       }
    }
+   CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
+   return "unknown";
 }
 
 #ifdef __CL_FUNCTION__
@@ -633,13 +462,13 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
    }
 
    switch(connection->connection_state ) {
-      case CL_COM_DISCONNECTED: {
+      case CL_DISCONNECTED: {
          return "UNEXPECTED CONNECTION SUB STATE";
       }
-      case CL_COM_CLOSING: {
+      case CL_CLOSING: {
          return "UNEXPECTED CONNECTION SUB STATE";
       }
-      case CL_COM_OPENING: {
+      case CL_OPENING: {
          switch( connection->connection_sub_state ) {
             case CL_COM_OPEN_INIT:
                return "CL_COM_OPEN_INIT";
@@ -651,7 +480,7 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "UNEXPECTED CONNECTION SUB STATE";
          }
       }
-      case CL_COM_CONNECTED: {
+      case CL_CONNECTED: {
          switch( connection->connection_sub_state ) {
             case CL_COM_WORK:
                return "CL_COM_WORK";
@@ -674,7 +503,7 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
          }
 
       }
-      case CL_COM_CONNECTING: {
+      case CL_CONNECTING: {
          switch( connection->connection_sub_state ) {
             case CL_COM_READ_INIT:
                return "CL_COM_READ_INIT";
@@ -698,11 +527,9 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "UNEXPECTED CONNECTION SUB STATE";
          }
       }
-      default: {
-         CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
-         return "UNEXPECTED CONNECTION SUB STATE";
-      }
    }
+   CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
+   return "UNEXPECTED CONNECTION SUB STATE";
 }
 
 
@@ -793,14 +620,14 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
       return CL_RETVAL_PARAMS;
    }
    
-   if (connection->connection_state != CL_COM_DISCONNECTED &&
-       connection->connection_state != CL_COM_OPENING) {
+   if (connection->connection_state != CL_DISCONNECTED &&
+       connection->connection_state != CL_OPENING) {
       CL_LOG(CL_LOG_ERROR,"unexpected connection state");
       return CL_RETVAL_CONNECTION_STATE_ERROR;
    }
 
    /* starting this function the first time */
-   if (connection->connection_state == CL_COM_DISCONNECTED) {
+   if (connection->connection_state == CL_DISCONNECTED) {
       if (remote_endpoint   == NULL ||
           local_endpoint    == NULL ||
           receiver_endpoint == NULL ||
@@ -858,32 +685,32 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
       connection->data_read_flag  = CL_COM_DATA_NOT_READY;
       connection->service_handler_flag = CL_COM_CONNECTION;
 
-      connection->connection_state = CL_COM_OPENING;   
+      connection->connection_state = CL_OPENING;   
       connection->connection_sub_state = CL_COM_OPEN_INIT;
-      connection->was_opened = 1;
+      connection->was_opened = CL_TRUE;
    }
 
    /* try to connect (open connection) */
-   if (connection->connection_state == CL_COM_OPENING) {
-      cl_com_tcp_private_t* tcp_private = NULL;
+   if (connection->connection_state == CL_OPENING) {
+      int connect_port = 0;
       int tcp_port = 0;
       int connection_count_reached = 0;
       cl_xml_connection_autoclose_t autoclose = CL_CM_AC_UNDEFINED;
 
       switch(connection->framework_type) {
-         case CL_CT_TCP:
-            tcp_private = (cl_com_tcp_private_t*) connection->com_private;
-            if ( tcp_private == NULL ) {
-               return CL_RETVAL_UNDEFINED_FRAMEWORK;
+         case CL_CT_TCP: {
+            /* get connect port of connection */
+            if ((retval = cl_com_tcp_get_connect_port(connection,&connect_port)) != CL_RETVAL_OK) {
+               return retval;
             }
 
             connection->connection_type = CL_COM_SEND_RECEIVE;
 
-            if ( tcp_private->connect_port <= 0 ) {
-               CL_LOG(CL_LOG_WARNING,"try to find out port of endpoint");
+            if ( connect_port <= 0 ) {
                if ( cl_com_get_known_endpoint_port(connection->remote, &tcp_port) == CL_RETVAL_OK) {
-                  CL_LOG(CL_LOG_WARNING,"endpoint port found");
-                  tcp_private->connect_port = tcp_port;
+                  if ((retval=cl_com_tcp_set_connect_port(connection, tcp_port)) != CL_RETVAL_OK) {
+                     return retval;
+                  }
                } else {
                   CL_LOG(CL_LOG_ERROR,"endpoint port not found");
                }
@@ -930,16 +757,15 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
             } 
             if (retval == CL_RETVAL_OK) {  /* OK */
                CL_LOG(CL_LOG_INFO,"tcp conected");
-               connection->connection_state = CL_COM_CONNECTING;
+               connection->connection_state = CL_CONNECTING;
                connection->connection_sub_state = CL_COM_SEND_INIT;
                connection->data_write_flag = CL_COM_DATA_READY;
             }
             return retval;
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            retval = CL_RETVAL_UNDEFINED_FRAMEWORK;
-            break;
+         }
       }
+      CL_LOG(CL_LOG_ERROR,"undefined framework type");
+      retval = CL_RETVAL_UNDEFINED_FRAMEWORK;
    }
    return retval;
 }
@@ -974,7 +800,7 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
 #endif
 #define __CL_FUNCTION__ "cl_com_close_connection()"
 /* connection_list must be locked */
-int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
+int cl_com_close_connection(cl_com_connection_t** connection) {
    int retval = CL_RETVAL_OK;
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
@@ -992,7 +818,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
       elem = cl_message_list_get_first_elem((*connection)->received_message_list);
       while(elem != NULL) {
          elem2 = elem;
-         elem = cl_message_list_get_next_elem((*connection)->received_message_list,elem);
+         elem = cl_message_list_get_next_elem(elem);
          message = elem2->message;
          if (message->message_state == CL_MS_READY) {
             CL_LOG(CL_LOG_ERROR,"unread message for this connection in received message list");
@@ -1018,7 +844,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
       elem = cl_message_list_get_first_elem((*connection)->send_message_list);
       while(elem != NULL) {
          elem2 = elem;
-         elem = cl_message_list_get_next_elem((*connection)->send_message_list,elem);
+         elem = cl_message_list_get_next_elem(elem);
          message = elem2->message;
          CL_LOG(CL_LOG_ERROR,"unsent message for this connection in send message list");
          CL_LOG_INT(CL_LOG_WARNING,"message state:", message->message_state);
@@ -1046,7 +872,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
       (*connection)->data_read_buffer = NULL;
       (*connection)->data_write_buffer = NULL;
 
-      (*connection)->data_flow_type = -1;
+      (*connection)->data_flow_type = CL_CM_CT_UNDEFINED;
 
       free( (*connection)->client_host_name);
       (*connection)->client_host_name = NULL;
@@ -1059,14 +885,12 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
       (*connection)->statistic = NULL;
 
       switch((*connection)->framework_type) {
-         case CL_CT_TCP:
+         case CL_CT_TCP: {
             retval = cl_com_tcp_close_connection(connection);
             free(*connection);
             *connection = NULL;
             return retval;
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            break;
+         }
       }
    } else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -1283,13 +1107,13 @@ int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct h
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostbyname()"
-static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* system_error ) {
+static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error ) {
 
    struct hostent* he = NULL;
    cl_com_hostent_t *hostent_p = NULL;   
 
    /* check parameters */
-   if (hostent == NULL || host == NULL) {
+   if (hostent == NULL || hostname == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
       return CL_RETVAL_PARAMS;    /* we don't accept NULL pointers */
    }
@@ -1310,7 +1134,7 @@ static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* sys
 #endif
    
    /* use sge_gethostbyname() */
-   he = sge_gethostbyname(host, system_error);
+   he = sge_gethostbyname(hostname, system_error);
    if (he == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
       cl_com_free_hostent(&hostent_p);       /* could not find host */
@@ -1623,7 +1447,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    cl_com_host_spec_t*       elem_host = NULL;
    cl_host_list_data_t* ldata = NULL;
    cl_raw_list_t* hostlist = NULL;
-   cl_com_hostent_t* hostent = NULL;
+   cl_com_hostent_t* myhostent = NULL;
    int function_return = CL_RETVAL_GETHOSTNAME_ERROR;
    int ret_val = CL_RETVAL_OK;
    char* alias_name = NULL;
@@ -1649,23 +1473,23 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    if (hostlist == NULL) {
       int retval;
       CL_LOG(CL_LOG_ERROR,"no global hostlist, resolving without cache");
-      retval = cl_com_gethostbyname(unresolved_host, &hostent, system_error_value);
+      retval = cl_com_gethostbyname(unresolved_host, &myhostent, system_error_value);
       if (retval != CL_RETVAL_OK) {
-         cl_com_free_hostent(&hostent);
+         cl_com_free_hostent(&myhostent);
          return retval;
       }
-      *unique_hostname = strdup(hostent->he->h_name);
+      *unique_hostname = strdup(myhostent->he->h_name);
       if (*unique_hostname == NULL) {
-         cl_com_free_hostent(&hostent);
+         cl_com_free_hostent(&myhostent);
          return CL_RETVAL_MALLOC;
       }
       if (copy_addr != NULL) {
-         memcpy((char*) copy_addr, hostent->he->h_addr, sizeof(struct in_addr));
+         memcpy((char*) copy_addr, myhostent->he->h_addr, sizeof(struct in_addr));
       }
       if (he_copy != NULL) {
-         *he_copy = sge_copy_hostent(hostent->he);
+         *he_copy = sge_copy_hostent(myhostent->he);
       }
-      cl_com_free_hostent(&hostent);
+      cl_com_free_hostent(&myhostent);
       return CL_RETVAL_OK;
    }
 
@@ -1716,7 +1540,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
          }
       }
       elem_host = NULL;
-      elem = cl_host_list_get_next_elem(hostlist,elem);
+      elem = cl_host_list_get_next_elem(elem);
    }
 
    if (elem_host != NULL) {
@@ -1989,14 +1813,14 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
    ldata->last_refresh_time = now.tv_sec;
 
    CL_LOG(CL_LOG_INFO,"checking host entries");
-   CL_LOG_INT(CL_LOG_INFO,"number of cached host entries:", cl_raw_list_get_elem_count(list_p));
+   CL_LOG_INT(CL_LOG_INFO,"number of cached host entries:", (int)cl_raw_list_get_elem_count(list_p));
 
 
 
    elem = cl_host_list_get_first_elem(list_p);
    while(elem != NULL) {
       act_elem = elem;
-      elem = cl_host_list_get_next_elem(list_p,elem);
+      elem = cl_host_list_get_next_elem(elem);
       elem_host = act_elem->host_spec;
 
 
@@ -2050,7 +1874,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
          while(elem != NULL) {
             resolve_host = 0;
             act_elem = elem;
-            elem = cl_host_list_get_next_elem(host_list_copy,elem);
+            elem = cl_host_list_get_next_elem(elem);
             elem_host = act_elem->host_spec;
 
 
@@ -2182,14 +2006,14 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
 
    ldata->last_refresh_time = now.tv_sec;
 
-   CL_LOG_INT(CL_LOG_INFO, "number of endpoint entries:",      cl_raw_list_get_elem_count(list_p));
+   CL_LOG_INT(CL_LOG_INFO, "number of endpoint entries:",(int)cl_raw_list_get_elem_count(list_p));
    
    cl_raw_list_lock(list_p);
 
    elem = cl_endpoint_list_get_first_elem(list_p);
    while(elem != NULL) {
       act_elem = elem;
-      elem = cl_endpoint_list_get_next_elem(list_p,elem);
+      elem = cl_endpoint_list_get_next_elem(elem);
   
       /* static elements aren't removed */
       if (act_elem->is_static == 0) {
@@ -2291,7 +2115,7 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
          }
       }
       elem_host = NULL;
-      elem = cl_host_list_get_next_elem(hostlist,elem);
+      elem = cl_host_list_get_next_elem(elem);
    }
 
    if (elem_host != NULL) {
@@ -2500,11 +2324,9 @@ int cl_com_print_host_info(cl_com_hostent_t *hostent_p ) {
 int cl_com_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data, unsigned long size, unsigned long *only_one_write ) {  /* CR check */
    if (connection != NULL) {
       switch(connection->framework_type) {
-         case CL_CT_TCP:
+         case CL_CT_TCP: {
             return cl_com_tcp_send_message( connection, timeout_time, data, size, only_one_write );
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            break;
+         }
       }
    } else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -2545,11 +2367,9 @@ int cl_com_receive_message(cl_com_connection_t* connection, int timeout_time, cl
      
    if (connection != NULL) {
       switch(connection->framework_type) {
-         case CL_CT_TCP:
+         case CL_CT_TCP: {
             return cl_com_tcp_receive_message(connection, timeout_time, data_buffer, data_buffer_size, only_one_read);
-         default:
-            CL_LOG(CL_LOG_ERROR, "undefined framework type");
-            break;
+         }
       }
    } else {
       CL_LOG(CL_LOG_ERROR, "connection pointer is NULL");
@@ -2592,7 +2412,7 @@ int cl_com_receive_message(cl_com_connection_t* connection, int timeout_time, cl
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_connection_request_handler_setup()"
-int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_com_endpoint_t* local_endpoint) {  /* CR check */
+int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_com_endpoint_t* local_endpoint) {
    int retval = CL_RETVAL_OK;
    if (connection != NULL) {
       if (connection->receiver != NULL ||
@@ -2611,8 +2431,8 @@ int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_c
       connection->service_handler_flag = CL_COM_SERVICE_HANDLER;
 
       switch(connection->framework_type) {
-         case CL_CT_TCP:
-            retval = cl_com_tcp_connection_request_handler_setup(connection,local_endpoint);
+         case CL_CT_TCP: {
+            retval = cl_com_tcp_connection_request_handler_setup(connection);
             if (retval != CL_RETVAL_OK) {
                /* free endpoint */
                cl_com_free_endpoint(&(connection->local));
@@ -2620,9 +2440,7 @@ int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_c
                connection->service_handler_flag = CL_COM_SERVICE_UNDEFINED;
             }
             return retval;
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            break;
+         }
       }
    } else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -2696,14 +2514,14 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
       }
 
       switch(connection->framework_type) {
-         case CL_CT_TCP:
+         case CL_CT_TCP: {
             retval = cl_com_tcp_connection_request_handler(connection,new_connection, sec_param, usec_rest );
             if (*new_connection != NULL && retval == CL_RETVAL_OK) {
                /* setup new cl_com_connection_t */
                (*new_connection)->service_handler_flag = CL_COM_CONNECTION;
-               (*new_connection)->connection_state = CL_COM_CONNECTING;
+               (*new_connection)->connection_state = CL_CONNECTING;
                (*new_connection)->connection_sub_state = CL_COM_READ_INIT;
-               (*new_connection)->was_accepted = 1;
+               (*new_connection)->was_accepted = CL_TRUE;
                (*new_connection)->local = cl_com_create_endpoint(connection->local->comp_host,
                                                                  connection->local->comp_name, 
                                                                  connection->local->comp_id );
@@ -2713,9 +2531,7 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
                }
             }
             return retval;
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            break;
+         }
       }
    }else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -2758,11 +2574,9 @@ int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection) {
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
       switch(connection->framework_type) {
-         case CL_CT_TCP:
+         case CL_CT_TCP: {
             return cl_com_tcp_connection_request_handler_cleanup(connection);
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            break;
+         }
       }
    } else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -2803,11 +2617,10 @@ int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_open_connection_request_handler()"
-
-
 /* WARNING connection list must be locked */
 
-int cl_com_open_connection_request_handler(int framework_type, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec , cl_select_method_t select_mode) {  /* CR check */
+
+int cl_com_open_connection_request_handler(cl_framework_t framework_type, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec , cl_select_method_t select_mode) {  /* CR check */
 
    int usec_rest = 0;
    int full_usec_seconds = 0;
@@ -2819,11 +2632,10 @@ int cl_com_open_connection_request_handler(int framework_type, cl_raw_list_t* co
 
    if (connection_list != NULL) {
       switch(framework_type) {
-         case CL_CT_TCP:
-            return cl_com_tcp_open_connection_request_handler(connection_list,service_connection,sec_param , usec_rest,select_mode );
-         default:
-            CL_LOG(CL_LOG_ERROR,"undefined framework type");
-            break;
+         case CL_CT_TCP: {
+            return cl_com_tcp_open_connection_request_handler(connection_list,service_connection,
+                                                              sec_param , usec_rest,select_mode );
+         }
       }
    }else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");

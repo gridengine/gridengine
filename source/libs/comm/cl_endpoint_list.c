@@ -182,7 +182,7 @@ int cl_endpoint_list_cleanup(cl_raw_list_t** list_p) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_endpoint_list_define_endpoint()"
-int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, int is_static) {
+int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static) {
 
    int ret_val = CL_RETVAL_OK;
    struct timeval now;
@@ -210,7 +210,7 @@ int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* e
          elem->last_used = now.tv_sec;
          elem->service_port = service_port;
          elem->autoclose = autoclose;
-         if (elem->is_static != 0 && is_static == 0 ) {
+         if (elem->is_static == CL_TRUE && is_static == CL_FALSE ) {
             CL_LOG(CL_LOG_DEBUG,"can't set static element to non static");
          } else {
             elem->is_static = is_static;
@@ -224,7 +224,7 @@ int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* e
          }
          return CL_RETVAL_OK;
       }
-      elem = cl_endpoint_list_get_next_elem(list_p, elem);
+      elem = cl_endpoint_list_get_next_elem(elem);
    }
    /* unlock the list */
    if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
@@ -306,7 +306,7 @@ int cl_endpoint_list_get_autoclose_mode(cl_raw_list_t* list_p, cl_com_endpoint_t
          *autoclose = elem->autoclose;
          break;
       }
-      elem = cl_endpoint_list_get_next_elem(list_p, elem);
+      elem = cl_endpoint_list_get_next_elem(elem);
    } 
 
    /* unlock list */
@@ -346,7 +346,7 @@ int cl_endpoint_list_get_service_port(cl_raw_list_t* list_p, cl_com_endpoint_t* 
          *service_port = elem->service_port;
          break;
       }
-      elem = cl_endpoint_list_get_next_elem(list_p, elem);
+      elem = cl_endpoint_list_get_next_elem(elem);
    } 
 
    /* unlock list */
@@ -361,10 +361,9 @@ int cl_endpoint_list_get_service_port(cl_raw_list_t* list_p, cl_com_endpoint_t* 
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_endpoint_list_get_last_touch_time()"
-int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, unsigned long* time) {
+int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, unsigned long* touch_time) {
 
    int back                      = CL_RETVAL_UNKNOWN_ENDPOINT;
-
    int ret_val                   = CL_RETVAL_OK;
    cl_endpoint_list_elem_t* elem = NULL;
    
@@ -375,8 +374,8 @@ int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_
 
    /* set time to 0 if endpoint not found, otherwise return last communication time */
    /* otherwise return error */
-   if (time) {
-      *time = 0;
+   if (touch_time) {
+      *touch_time = 0;
    }
 
    /* lock list */
@@ -390,12 +389,12 @@ int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_
          /* found matching endpoint */
          back = CL_RETVAL_OK;
          CL_LOG_STR(CL_LOG_ERROR,"found endpoint comp_host:",elem->endpoint->comp_host);
-         if (time) {
-            *time = elem->last_used;
+         if (touch_time) {
+            *touch_time = elem->last_used;
          }
          break;
       }
-      elem = cl_endpoint_list_get_next_elem(list_p, elem);
+      elem = cl_endpoint_list_get_next_elem(elem);
    } 
 
    /* unlock list */
@@ -426,7 +425,7 @@ int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t*
 
    elem = cl_endpoint_list_get_first_elem(list_p);
    while ( elem != NULL) { 
-      if (cl_com_compare_endpoints(endpoint, elem->endpoint ) && elem->is_static == 0 ) {
+      if (cl_com_compare_endpoints(endpoint, elem->endpoint ) && elem->is_static == CL_FALSE ) {
          /* found matching endpoint */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          cl_com_free_endpoint(&(elem->endpoint));
@@ -435,7 +434,7 @@ int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t*
          back = CL_RETVAL_OK;
          break;
       }
-      elem = cl_endpoint_list_get_next_elem(list_p, elem);
+      elem = cl_endpoint_list_get_next_elem(elem);
    } 
 
    /* unlock list */
@@ -474,7 +473,7 @@ cl_endpoint_list_elem_t* cl_endpoint_list_get_least_elem(cl_raw_list_t* list_p) 
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_endpoint_list_get_next_elem()"
-cl_endpoint_list_elem_t* cl_endpoint_list_get_next_elem(cl_raw_list_t* list_p, cl_endpoint_list_elem_t* elem) {
+cl_endpoint_list_elem_t* cl_endpoint_list_get_next_elem(cl_endpoint_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -492,7 +491,7 @@ cl_endpoint_list_elem_t* cl_endpoint_list_get_next_elem(cl_raw_list_t* list_p, c
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_endpoint_list_get_last_elem()"
-cl_endpoint_list_elem_t* cl_endpoint_list_get_last_elem(cl_raw_list_t* list_p, cl_endpoint_list_elem_t* elem) {
+cl_endpoint_list_elem_t* cl_endpoint_list_get_last_elem(cl_endpoint_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
 

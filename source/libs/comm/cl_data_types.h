@@ -43,9 +43,13 @@
 #include "cl_xml_parsing.h"
 
 
-#define CL_CT_TCP    1   /* on work */
-#define CL_CT_GLOBUS 2   /* not done: TODO */
-#define CL_CT_JXTA   3   /* not done: TODO */
+/* typedef for Connection Type (CT) */
+typedef enum cl_framework_def {
+   CL_CT_TCP = 1      /* tcp/ip framework */
+#if 0
+   ,CL_CT_SSL        /* secure socket layer  -> on work */
+#endif
+} cl_framework_t;
 
 
 typedef enum cl_select_method_def {
@@ -80,71 +84,68 @@ typedef unsigned char cl_byte_t;
 #endif
 
 /* connection types for cl_com_connection_t->connection_type flag */
-#define CL_COM_RECEIVE      1
-#define CL_COM_SEND         2
-#define CL_COM_SEND_RECEIVE 3
-#define CL_COM_UNDEFINED    4
+typedef enum cl_connection_type {
+   CL_COM_RECEIVE = 1,
+   CL_COM_SEND,
+   CL_COM_SEND_RECEIVE,
+   CL_COM_UNDEFINED
+} cl_connection_t;
 
 /* connection types for cl_com_connection_t->data_write_flag and data_read_flag flag */
-#define CL_COM_DATA_READY     1
-#define CL_COM_DATA_NOT_READY 2
+typedef enum cl_data_ready_flag_type {
+   CL_COM_DATA_READY = 1,
+   CL_COM_DATA_NOT_READY
+} cl_data_ready_flag_t;
 
 /* connection types for cl_com_connection_t->service_handler_flag flag */
-#define CL_COM_SERVICE_HANDLER     1
-#define CL_COM_CONNECTION          2
-#define CL_COM_SERVICE_UNDEFINED   3
+typedef enum cl_service_handler_type {
+   CL_COM_SERVICE_HANDLER = 1,
+   CL_COM_CONNECTION,
+   CL_COM_SERVICE_UNDEFINED
+} cl_service_handler_t;
 
 /*connection types for cl_com_connection_t->connection_state */
-#define CL_COM_DISCONNECTED 1
-#define CL_COM_CLOSING      2
-#define CL_COM_OPENING      3
-#define CL_COM_CONNECTING   4
-#define CL_COM_CONNECTED    5
+typedef enum cl_connection_state_type {
+   CL_DISCONNECTED = 1,
+   CL_CLOSING,
+   CL_OPENING,
+   CL_CONNECTING,
+   CL_CONNECTED
+} cl_connection_state_t;
 
 /*connection types for cl_com_connection_t->connection_sub_state */
+typedef enum cl_connection_sub_state_type {
 
-/* when CL_COM_OPENING */
-#define CL_COM_OPEN_INIT      1
-#define CL_COM_OPEN_CONNECT   2
-#define CL_COM_OPEN_CONNECTED 3
+   /* when CL_COM_OPENING */
+   CL_COM_OPEN_INIT = 1,
+   CL_COM_OPEN_CONNECT,
+   CL_COM_OPEN_CONNECTED,
 
+   /* when CL_COM_CONNECTING */
+   CL_COM_READ_INIT,
+   CL_COM_READ_GMSH,
+   CL_COM_READ_CM,
+   CL_COM_READ_INIT_CRM,
+   CL_COM_READ_SEND_CRM,
+   CL_COM_SEND_INIT,
+   CL_COM_SEND_CM,
+   CL_COM_SEND_READ_GMSH,
+   CL_COM_SEND_READ_CRM,
 
-/* when CL_COM_CONNECTING */
-#define CL_COM_READ_INIT      1
-#define CL_COM_READ_GMSH      2
-#define CL_COM_READ_CM        3
-#define CL_COM_READ_INIT_CRM  4
-#define CL_COM_READ_SEND_CRM  5
-#define CL_COM_SEND_INIT      6
-#define CL_COM_SEND_CM        7
-#define CL_COM_SEND_READ_GMSH 8
-#define CL_COM_SEND_READ_CRM  9
+   /* when CL_COM_CONNECTED */
+   CL_COM_WORK,
+   CL_COM_RECEIVED_CCM,
+   CL_COM_SENDING_CCM,
+   CL_COM_WAIT_FOR_CCRM,
+   CL_COM_SENDING_CCRM,
+   CL_COM_CCRM_SENT,
+   CL_COM_DONE,
+   CL_COM_DONE_FLUSHED
 
-/* when CL_COM_CONNECTED */
-#define CL_COM_WORK            1
-#define CL_COM_RECEIVED_CCM    2
-#define CL_COM_SENDING_CCM     3
-#define CL_COM_WAIT_FOR_CCRM   5
-#define CL_COM_SENDING_CCRM    6
-#define CL_COM_CCRM_SENT       7
-#define CL_COM_DONE            8
-#define CL_COM_DONE_FLUSHED    9
-
-/*#define CL_COM_IDLE  1
-#define CL_COM_READ  2
-#define CL_COM_WRITE 3 */
+} cl_connection_sub_state_type;
 
 
 
-
-
-
-/*  the struct timeval is defined as follows:  
- *
- *  struct timeval {
- *	    time_t        tv_sec;      seconds 
- *	    suseconds_t   tv_usec;     and microseconds 
- *  };       */
 
 typedef enum cl_message_state_type {
    CL_MS_UNDEFINED = 1,
@@ -181,9 +182,9 @@ typedef struct cl_com_handle_statistic_type {
 typedef struct cl_com_connection_type cl_com_connection_t;
 
 typedef struct cl_com_handle {
-   int framework;                   /* framework type CL_CT_TCP, CL_CT_JXTA */
-   int data_flow_type;              /* data_flow type CL_COM_STREAM, CL_COM_MESSAGE */
-   int service_provider;            /* if true this component will provide a service for clients (server port) */
+   cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
+   cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */
+   cl_bool_t                 service_provider; /* if true this component will provide a service for clients (server port) */
 
    /* connect_port OR service_port is always 0 !!! - CR */
    int connect_port;                /* used port number to connect to other service */
@@ -309,33 +310,39 @@ typedef struct cl_com_con_statistic_type {
 
 struct cl_com_connection_type {
 
-   cl_error_func_t    error_func;   /* if not NULL this function is called on errors */
-   cl_com_endpoint_t* remote;   /* dst on local host in CM */
-   cl_com_endpoint_t* local;    /* src on local host in CM */
-   cl_com_endpoint_t* sender;   /* for routing */
-   cl_com_endpoint_t* receiver; /* for routing  ( rdata ) */
+   cl_error_func_t       error_func;   /* if not NULL this function is called on errors */
 
-   unsigned long    last_send_message_id;
-   unsigned long    last_received_message_id;
-   cl_raw_list_t*   received_message_list;
-   
-   cl_raw_list_t*   send_message_list;
-   cl_com_handle_t* handler;           /* this points to the handler of the connection */
-   int           ccm_received;
-   int           ccm_sent;
-   int           ccrm_sent;
-   int           ccrm_received;
-   int           framework_type;          /* CL_CT_TCP, ... */
-   int           connection_type;         /* CL_COM_RECEIVE, CL_COM_SEND or CL_COM_SEND_RECEIVE  */
-   int           service_handler_flag;    /* CL_COM_SERVICE_HANDLER or CL_COM_CONNECTION or CL_COM_SERVICE_UNDEFINED*/
-   int           data_write_flag;         /* CL_COM_DATA_READY or CL_COM_DATA_NOT_READY */ 
-   int           fd_ready_for_write;      /* set by cl_com_open_connection_request_handler() when data_write_flag is CL_COM_DATA_READY 
-                                             and the write is possible (values are CL_COM_DATA_READY or CL_COM_DATA_NOT_READY) */
-   int           data_read_flag;          /* CL_COM_DATA_READY or CL_COM_DATA_NOT_READY */
-   int           connection_state;        /* CL_COM_DISCONNECTED,CL_COM_CLOSING ,CL_COM_CONNECTED ,CL_COM_CONNECTING */
-   int           connection_sub_state;    /* depends on connection_state */
-   int           was_accepted;            /* is set when this is a client connection (from accept() ) */
-   int           was_opened;              /* is set when this connection was opened (with open connection) by connect() */ 
+   cl_com_endpoint_t*    remote;   /* dst on local host in CM */
+   cl_com_endpoint_t*    local;    /* src on local host in CM */
+   cl_com_endpoint_t*    sender;   /* for routing */
+   cl_com_endpoint_t*    receiver; /* for routing  ( rdata ) */
+
+   unsigned long         last_send_message_id;
+   unsigned long         last_received_message_id;
+
+   cl_raw_list_t*        received_message_list;
+   cl_raw_list_t*        send_message_list;
+
+   cl_com_handle_t*      handler;           /* this points to the handler of the connection */
+
+   int                   ccm_received;
+   int                   ccm_sent;
+   int                   ccrm_sent;
+   int                   ccrm_received;
+
+   cl_framework_t        framework_type;          /* CL_CT_TCP, ... */
+   cl_connection_t       connection_type;         /* CL_COM_RECEIVE, CL_COM_SEND or CL_COM_SEND_RECEIVE  */
+   cl_service_handler_t  service_handler_flag;    /* CL_COM_SERVICE_HANDLER or CL_COM_CONNECTION or CL_COM_SERVICE_UNDEFINED*/
+   cl_data_ready_flag_t  data_write_flag;         /* CL_COM_DATA_READY or CL_COM_DATA_NOT_READY */ 
+   cl_data_ready_flag_t  fd_ready_for_write;      /* set by cl_com_open_connection_request_handler() when data_write_flag is CL_COM_DATA_READY 
+                                                     and the write is possible (values are CL_COM_DATA_READY or CL_COM_DATA_NOT_READY) */
+   cl_data_ready_flag_t  data_read_flag;          /* CL_COM_DATA_READY or CL_COM_DATA_NOT_READY */
+
+   cl_connection_state_t         connection_state;        /* CL_COM_DISCONNECTED,CL_COM_CLOSING ,CL_COM_CONNECTED ,CL_COM_CONNECTING */
+   cl_connection_sub_state_type  connection_sub_state;    /* depends on connection_state */
+
+   cl_bool_t     was_accepted;            /* is set when this is a client connection (from accept() ) */
+   cl_bool_t     was_opened;              /* is set when this connection was opened (with open connection) by connect() */ 
    char*         client_host_name;        /* this is the resolved client host name */
    cl_xml_connection_status_t crm_state;  /* state of connection response message (if server) */
    char*         crm_state_error;         /* error text if crm_state is CL_CRM_CS_DENIED or larger */

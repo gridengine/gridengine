@@ -518,36 +518,36 @@ const char *sge_htable_statistics(htable ht, dstring *buffer)
 ******************************************************************************/
 const void *dup_func_u_long32(const void *key) 
 {
-   u_long32 *dup = NULL;
+   u_long32 *dup_key = NULL;
    u_long32 *cast = (u_long32 *)key;
 
-   if((dup = (u_long32 *)malloc(sizeof(u_long32))) != NULL) {
-      *dup = *cast;
+   if((dup_key = (u_long32 *)malloc(sizeof(u_long32))) != NULL) {
+      *dup_key = *cast;
    }
 
-   return dup;
+   return dup_key;
 }
 
 const void *dup_func_long(const void *key)
 {
-   long *dup  = NULL;
+   long *dup_key  = NULL;
    long *cast = (long*)key;
 
-   if((dup = (long*) malloc(sizeof(long))) != NULL) {
-      *dup = *cast;
+   if((dup_key = (long*) malloc(sizeof(long))) != NULL) {
+      *dup_key = *cast;
    }
-   return dup;
+   return dup_key;
 }
 
 const void *dup_func_pointer(const void *key)
 {
-   char **dup  = NULL;
+   char **dup_key  = NULL;
    char **cast = (char **)key;
 
-   if((dup = (char **) malloc(sizeof(char *))) != NULL) {
-      *dup = *cast;
+   if((dup_key = (char **) malloc(sizeof(char *))) != NULL) {
+      *dup_key = *cast;
    }
-   return dup;
+   return dup_key;
 }
 
 const void *dup_func_string(const void *key)

@@ -411,9 +411,9 @@ const char* cl_com_get_mih_mat_string(cl_xml_ack_type_t mat);
 
 
 /* endpoint helper functions */
-cl_com_endpoint_t* cl_com_create_endpoint(const char* host, const char* name, unsigned long id);  /* CR check */
+cl_com_endpoint_t* cl_com_create_endpoint(const char* comp_host, const char* comp_name, unsigned long comp_id);
 cl_com_endpoint_t* cl_com_dup_endpoint(cl_com_endpoint_t* endpoint);
-int  cl_com_free_endpoint(cl_com_endpoint_t** endpoint);                                          /* CR check */
+int  cl_com_free_endpoint(cl_com_endpoint_t** endpoint);
 
 
 

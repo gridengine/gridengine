@@ -119,7 +119,7 @@ int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* mess
          elem = NULL;
          break;
       }
-      elem = cl_message_list_get_next_elem(list_p, elem);
+      elem = cl_message_list_get_next_elem(elem);
    } 
 
    if (lock_list != 0) {
@@ -150,7 +150,7 @@ cl_message_list_elem_t* cl_message_list_get_least_elem(cl_raw_list_t* list_p) { 
    return NULL;
 }
 
-cl_message_list_elem_t* cl_message_list_get_next_elem(cl_raw_list_t* list_p, cl_message_list_elem_t* elem) {  /* CR check */
+cl_message_list_elem_t* cl_message_list_get_next_elem(cl_message_list_elem_t* elem) {  /* CR check */
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -164,7 +164,7 @@ cl_message_list_elem_t* cl_message_list_get_next_elem(cl_raw_list_t* list_p, cl_
 }
 
 
-cl_message_list_elem_t* cl_message_list_get_last_elem(cl_raw_list_t* list_p, cl_message_list_elem_t* elem) {  /* CR check */
+cl_message_list_elem_t* cl_message_list_get_last_elem(cl_message_list_elem_t* elem) {  /* CR check */
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
 

@@ -172,7 +172,7 @@ cl_application_error_list_elem_t* cl_application_error_list_get_least_elem(cl_ra
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_application_error_list_get_next_elem()"
-cl_application_error_list_elem_t* cl_application_error_list_get_next_elem(cl_raw_list_t* list_p, cl_application_error_list_elem_t* elem) {
+cl_application_error_list_elem_t* cl_application_error_list_get_next_elem(cl_application_error_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -190,7 +190,7 @@ cl_application_error_list_elem_t* cl_application_error_list_get_next_elem(cl_raw
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_application_error_list_get_last_elem()"
-cl_application_error_list_elem_t* cl_application_error_list_get_last_elem(cl_raw_list_t* list_p, cl_application_error_list_elem_t* elem) {
+cl_application_error_list_elem_t* cl_application_error_list_get_last_elem(cl_application_error_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
    if (elem != NULL) {

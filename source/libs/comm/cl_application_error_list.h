@@ -54,8 +54,8 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, int cl_error, co
 /* thread functions that will not lock the list */
 cl_application_error_list_elem_t* cl_application_error_list_get_first_elem(cl_raw_list_t* list_p);
 cl_application_error_list_elem_t* cl_application_error_list_get_least_elem(cl_raw_list_t* list_p);
-cl_application_error_list_elem_t* cl_application_error_list_get_next_elem(cl_raw_list_t* list_p, cl_application_error_list_elem_t* elem);
-cl_application_error_list_elem_t* cl_application_error_list_get_last_elem(cl_raw_list_t* list_p, cl_application_error_list_elem_t* elem);
+cl_application_error_list_elem_t* cl_application_error_list_get_next_elem(cl_application_error_list_elem_t* elem);
+cl_application_error_list_elem_t* cl_application_error_list_get_last_elem(cl_application_error_list_elem_t* elem);
 
 #endif /* __CL_APPLICATION_ERROR_LIST_H */
 

@@ -159,7 +159,7 @@ int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_l
          elem = NULL;
          break;
       }
-      elem = cl_string_list_get_next_elem(list_p, elem);
+      elem = cl_string_list_get_next_elem(elem);
    } 
 
    if (lock_list != 0) {
@@ -188,7 +188,7 @@ cl_string_list_elem_t* cl_string_list_get_least_elem(cl_raw_list_t* list_p) {
    return NULL;
 }
 
-cl_string_list_elem_t* cl_string_list_get_next_elem(cl_raw_list_t* list_p, cl_string_list_elem_t* elem) {
+cl_string_list_elem_t* cl_string_list_get_next_elem(cl_string_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -202,7 +202,7 @@ cl_string_list_elem_t* cl_string_list_get_next_elem(cl_raw_list_t* list_p, cl_st
 }
 
 
-cl_string_list_elem_t* cl_string_list_get_last_elem(cl_raw_list_t* list_p, cl_string_list_elem_t* elem) {
+cl_string_list_elem_t* cl_string_list_get_last_elem(cl_string_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
 

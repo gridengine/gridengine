@@ -68,9 +68,12 @@ int sig
 
 unsigned long my_application_status(char** info_message) {
    if ( info_message != NULL ) {
-      *info_message = strdup("not specified (state 1)");
+      (*info_message) = strdup("not specified (state 1)");
    }
-   if (received_qping++ > 10) {
+#if 0
+   received_qping++;
+#endif
+   if (received_qping > 10) {
       do_shutdown = 1;
    }
    return (unsigned long)1;
@@ -102,13 +105,22 @@ extern int main(int argc, char** argv)
 
 
   printf("commlib setup ...\n");
+  /* this is for compiler warning on irix65 */
+  if (pipe_signal) {
+     printf("pipe\n");
+  }
+  if (hup_signal) {
+     printf("hup\n");
+  };
+
   cl_com_setup_commlib(CL_ONE_THREAD, atoi(argv[1]),   NULL );
 
   cl_com_set_alias_file("./alias_file");
 
   cl_com_set_status_func(my_application_status); 
 
-  handle=cl_com_create_handle(NULL, CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, "server", 1, 2, 0 );
+
+  handle=cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE, 0, "server", 1, 2, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);
@@ -131,7 +143,7 @@ extern int main(int argc, char** argv)
   cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS );
 
 
-  cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, 0 );
+  cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, CL_FALSE );
 
 
   while(do_shutdown != 1) {
@@ -202,7 +214,6 @@ extern int main(int argc, char** argv)
            cl_commlib_close_connection(handle, sender->comp_host,sender->comp_name,sender->comp_id, CL_FALSE );
            
         } else {
-           int ret_val = CL_RETVAL_OK;
            ret_val = cl_commlib_send_message(handle, 
                                 sender->comp_host, 
                                 sender->comp_name, 
@@ -235,7 +246,7 @@ extern int main(int argc, char** argv)
      printf("found handle\n");
   }
 
-  while ( cl_commlib_shutdown_handle(handle, 1) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+  while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      message = NULL;
      cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
 

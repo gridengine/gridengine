@@ -132,7 +132,7 @@ main(int argc, char** argv)
             elem->service_port,
             elem->is_static,
             elem->last_used );
-     elem = cl_endpoint_list_get_next_elem(endpoint_list,elem);
+     elem = cl_endpoint_list_get_next_elem(elem);
   }
   cl_raw_list_unlock(endpoint_list);
 
@@ -154,7 +154,7 @@ main(int argc, char** argv)
             elem->service_port,
             elem->is_static,
             elem->last_used );
-        elem = cl_endpoint_list_get_next_elem(endpoint_list,elem);
+        elem = cl_endpoint_list_get_next_elem(elem);
      }
      cl_raw_list_unlock(endpoint_list);
 

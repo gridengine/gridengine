@@ -81,20 +81,20 @@ main(int argc, char** argv)
   elem = cl_host_alias_list_get_first_elem(alias_list);
   while (elem) {
      printf("resolved host: \"%s\" has alias name \"%s\"\n", elem->local_resolved_hostname,elem->alias_name);
-     elem = cl_host_alias_list_get_next_elem(alias_list,elem);
+     elem = cl_host_alias_list_get_next_elem(elem);
   }
 
   printf("and the other way ...\n");
   elem = cl_host_alias_list_get_least_elem(alias_list);
   while (elem) {
      printf("resolved host: \"%s\" has alias name \"%s\"\n", elem->local_resolved_hostname,elem->alias_name);
-     elem = cl_host_alias_list_get_last_elem(alias_list,elem);
+     elem = cl_host_alias_list_get_last_elem(elem);
   }
   cl_raw_list_unlock(alias_list);
 
   printf("removing alias 2 ... ");
   elem = cl_host_alias_list_get_first_elem(alias_list);
-  elem = cl_host_alias_list_get_next_elem(alias_list,elem);
+  elem = cl_host_alias_list_get_next_elem(elem);
   ret_val = cl_host_alias_list_remove_host(alias_list,elem,1);
   printf("%s\n", cl_get_error_text(ret_val));
 
@@ -104,7 +104,7 @@ main(int argc, char** argv)
   elem = cl_host_alias_list_get_first_elem(alias_list);
   while (elem) {
      printf("resolved host: \"%s\" has alias name \"%s\"\n", elem->local_resolved_hostname,elem->alias_name);
-     elem = cl_host_alias_list_get_next_elem(alias_list,elem);
+     elem = cl_host_alias_list_get_next_elem(elem);
   }
   cl_raw_list_unlock(alias_list);
 

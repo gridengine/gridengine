@@ -44,7 +44,7 @@
 static int cl_thread_list_add_thread(cl_raw_list_t* list_p, cl_thread_settings_t* thread_config);  /* CR check */
 static int cl_thread_list_del_thread(cl_raw_list_t* list_p, cl_thread_settings_t* thread_config);  /* CR check */
 static cl_thread_list_elem_t* cl_thread_list_get_first_elem(cl_raw_list_t* list_p);  /* CR check */
-static cl_thread_list_elem_t* cl_thread_list_get_next_elem(cl_raw_list_t* list_p, cl_thread_list_elem_t* elem);  /* CR check */
+static cl_thread_list_elem_t* cl_thread_list_get_next_elem(cl_thread_list_elem_t* elem);  /* CR check */
 #if 0
 static cl_thread_list_elem_t* cl_thread_list_get_last_elem(cl_raw_list_t* list_p, cl_thread_list_elem_t* elem);
 #endif
@@ -91,7 +91,7 @@ static int cl_thread_list_del_thread(cl_raw_list_t* list_p, cl_thread_settings_t
    /* search for element */
    elem = cl_thread_list_get_first_elem(list_p);
    while (elem != NULL && elem->thread_config != thread_config) {
-      elem = cl_thread_list_get_next_elem(list_p, elem);
+      elem = cl_thread_list_get_next_elem(elem);
    }
  
    /* remove elem from list and delete elem */
@@ -303,7 +303,7 @@ cl_thread_settings_t* cl_thread_list_get_thread_by_id(cl_raw_list_t* list_p, int
    cl_thread_list_elem_t* elem = NULL;
    cl_thread_settings_t* thread_config = NULL;
 
-   for (elem = cl_thread_list_get_first_elem(list_p); elem != NULL ; elem = cl_thread_list_get_next_elem(list_p,elem)) {
+   for (elem = cl_thread_list_get_first_elem(list_p); elem != NULL ; elem = cl_thread_list_get_next_elem(elem)) {
       if(elem->thread_config->thread_id == thread_id) {
          thread_config = elem->thread_config;
          return thread_config;
@@ -320,7 +320,7 @@ cl_thread_settings_t* cl_thread_list_get_thread_by_self(cl_raw_list_t* list_p,pt
    cl_thread_list_elem_t* elem = NULL;
    cl_thread_settings_t* thread_config = NULL;
 
-   for (elem = cl_thread_list_get_first_elem(list_p); elem != NULL ; elem = cl_thread_list_get_next_elem(list_p,elem)) {
+   for (elem = cl_thread_list_get_first_elem(list_p); elem != NULL ; elem = cl_thread_list_get_next_elem(elem)) {
       if( pthread_equal(*(elem->thread_config->thread_pointer), *thread) == 0) {
          thread_config = elem->thread_config;
          return thread_config;
@@ -341,7 +341,7 @@ cl_thread_settings_t* cl_thread_list_get_thread_by_name(cl_raw_list_t* list_p, c
       return NULL;
    }
 
-   for (elem = cl_thread_list_get_first_elem(list_p); elem != NULL ; elem = cl_thread_list_get_next_elem(list_p,elem)) {
+   for (elem = cl_thread_list_get_first_elem(list_p); elem != NULL ; elem = cl_thread_list_get_next_elem(elem)) {
       if( strcmp(elem->thread_config->thread_name,thread_name) == 0) {
          thread_config = elem->thread_config;
          return thread_config;
@@ -384,7 +384,7 @@ static cl_thread_list_elem_t* cl_thread_list_get_first_elem(cl_raw_list_t* list_
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_thread_list_get_next_elem()"
-static cl_thread_list_elem_t* cl_thread_list_get_next_elem(cl_raw_list_t* list_p, cl_thread_list_elem_t* elem) {  /* CR check */
+static cl_thread_list_elem_t* cl_thread_list_get_next_elem(cl_thread_list_elem_t* elem) {  /* CR check */
    cl_raw_list_elem_t* next_raw_elem = NULL;
    cl_raw_list_elem_t* raw_elem = NULL;
 

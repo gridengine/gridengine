@@ -64,8 +64,8 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
 /* thread functions that will not lock the list */
 cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list_p);   /* CR check */
 cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list_p);
-cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_raw_list_t* list_p, cl_connection_list_elem_t* elem); /* CR check */
-cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_raw_list_t* list_p, cl_connection_list_elem_t* elem); /* CR check */
+cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_connection_list_elem_t* elem); /* CR check */
+cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_connection_list_elem_t* elem); /* CR check */
 
 
 #endif /* __CL_CONNECTION_LIST_H */

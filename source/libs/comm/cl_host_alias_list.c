@@ -203,7 +203,7 @@ int cl_host_alias_list_remove_host(cl_raw_list_t* list_p, cl_host_alias_list_ele
          elem = NULL;
          break;
       }
-      elem = cl_host_alias_list_get_next_elem(list_p, elem);
+      elem = cl_host_alias_list_get_next_elem(elem);
    }
 
    if (lock_list != 0) {
@@ -249,7 +249,7 @@ int cl_host_alias_list_get_local_resolved_name(cl_raw_list_t* list_p, char* alia
          }
          return CL_RETVAL_OK;
       }
-      elem = cl_host_alias_list_get_next_elem(list_p, elem);
+      elem = cl_host_alias_list_get_next_elem(elem);
    }
    
    if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
@@ -292,7 +292,7 @@ int cl_host_alias_list_get_alias_name(cl_raw_list_t* list_p, char* local_resolve
          }
          return CL_RETVAL_OK;
       }
-      elem = cl_host_alias_list_get_next_elem(list_p, elem);
+      elem = cl_host_alias_list_get_next_elem(elem);
    }
    
    if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
@@ -331,7 +331,7 @@ cl_host_alias_list_elem_t* cl_host_alias_list_get_least_elem(cl_raw_list_t* list
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_alias_list_get_next_elem()"
-cl_host_alias_list_elem_t* cl_host_alias_list_get_next_elem(cl_raw_list_t* list_p, cl_host_alias_list_elem_t* elem) {
+cl_host_alias_list_elem_t* cl_host_alias_list_get_next_elem(cl_host_alias_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
    if (elem != NULL) {
@@ -349,7 +349,7 @@ cl_host_alias_list_elem_t* cl_host_alias_list_get_next_elem(cl_raw_list_t* list_
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_alias_list_get_last_elem()"
-cl_host_alias_list_elem_t* cl_host_alias_list_get_last_elem(cl_raw_list_t* list_p, cl_host_alias_list_elem_t* elem) {
+cl_host_alias_list_elem_t* cl_host_alias_list_get_last_elem(cl_host_alias_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
    if (elem != NULL) {

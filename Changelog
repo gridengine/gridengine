@@ -1,3 +1,6 @@
+RH-2004-08-16-0: Bugfix:     Typos in qconf(1) and qhost(1) fixed
+                 Changed:    qconf(1) and qhost(1)
+
 AA-2004-08-12-0: Bugfix:     - qmon_help.ad help corrections
                              - sge_centry_qconf.c missing parentheses break build
                              - qmon_calendar.c NONE strings were missing for added calendars

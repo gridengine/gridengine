@@ -1,3 +1,7 @@
+EB-2002-11-25-1  Bugfix:    qstat -f output broken for pe jobs on same queue
+                 IZ:        #430
+                 Review:    CR
+
 EB-2002-11-25-0  Bugfix:    qsh -q hostname is not working
                  IZ:        #429
                  Review:    JG

@@ -65,10 +65,9 @@
 #define TAG_FOUND_IT      0x02
 #define TAG_SELECT_IT     0x04
 
-int 
-sge_print_queue(lListElem *queue, lList *exechost_list, lList *complex_list, 
-                u_long32 full_listing, lList *resources, u_long32 explain_bits, 
-                u_long32 queue_states);
+
+int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
+                    u_long32 full_listing, lList *qresource_list, u_long32 explain_bits);
 
 void 
 sge_print_jobs_queue(lListElem *qep, lList *job_list, const lList *pe_list, 

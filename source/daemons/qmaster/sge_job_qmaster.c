@@ -2924,9 +2924,7 @@ static bool contains_dependency_cycles(const lListElem * new_job, u_long32 job_n
 *  FUNCTION
 *     These checks are done for the attribute JB_job_name of 'job':
 *     #1 reject job name if it starts with a digit
-*     #2 reject job name if the same name is already used by another job 
-*        of the same user and if this is the referenced as predecessor 
-*        in a -hold_jid list.
+*     #2 reject job name if they contain a '|' or "$"
 *     A detailed problem description is added to the answer list.
 *
 *  INPUTS

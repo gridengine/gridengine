@@ -1,3 +1,15 @@
+SG-2004-01-08-2: Bugfix:    The scheduler did not get new queue instances,
+                            when the system was started without any queue.
+                 Changed:   scheduler                            
+
+SG-2004-01-08-1: Bugfix:    qsub -N error message reports the rules for
+                            job names
+                 Changed:   qsub                            
+
+SG-2004-01-08-0: Enhancem.: second part of SG-2003-01-07-1
+                 Changed:   qstat, qselect
+                 Review:    pending
+
 JG-2004-01-08-0: Enhancem.: Use Berkeley DB RPC server in case spooling to a 
                             local filesystem is not possible (e.g. if the 
                             sge_shadowd shall be used), adapted installation

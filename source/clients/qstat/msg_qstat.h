@@ -53,7 +53,7 @@
 #define MSG_QSTAT_USAGE_HIDEEMPTYQUEUES    _MESSAGE(19018, _("hide empty queues\n"))
 #define MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE    _MESSAGE(19019, _("select only queues with one of these parallel environments\n"))
 #define MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE    _MESSAGE(19020, _("print information on given queue\n"))
-#define MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL  _MESSAGE(19021, _("prints queues for the given state\n"))
+#define MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL  _MESSAGE(19021, _("selects queues, which are in the given state(s)\n"))
 #define MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB    _MESSAGE(19022, _("show requested resources of job(s)\n"))
 #define MSG_QSTAT_USAGE_SHOWPENDINGRUNNINGSUSPENDESZOMBIEJOBS    _MESSAGE(19023, _("show pending, running, suspended, zombie jobs,\n"))
 #define MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD    _MESSAGE(19024, _("jobs with a user/operator/system hold, \n"))

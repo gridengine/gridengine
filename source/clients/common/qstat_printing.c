@@ -85,11 +85,8 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
 
 static char hashes[] = "##############################################################################################################";
 
-int 
-sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
-                u_long32 full_listing, lList *qresource_list, 
-                u_long32 explain_bits, u_long32 queue_states) 
-{
+int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
+                    u_long32 full_listing, lList *qresource_list, u_long32 explain_bits) {
    char to_print[80];
    char arch_string[80];
    double load_avg;
@@ -133,15 +130,6 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                             exechost_list, centry_list, suspend_alarm_reason, 
                             MAX_STRING_SIZE - 1, "suspend");
    }
-
-
-   
-   if (!qinstance_has_state(q, queue_states)) {
-      DEXIT;
-      return 0;
-   }
-
-   
 
    if (first_time) {
       first_time = 0;

@@ -58,11 +58,7 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "cqueue_update_master_list");
    name = lGetString(event, ET_strkey);
    list = object_type_get_master_list(SGE_TYPE_CQUEUE); 
-#if 1
    list_descr = lGetListDescr(lGetList(event, ET_new_version));
-#else
-   list_descr = lGetListDescr(*list);
-#endif
    cqueue = cqueue_list_locate(*list, name);
 
    if ((action == SGE_EMA_MOD || action == SGE_EMA_ADD) 
@@ -106,15 +102,17 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
    name = lGetString(event, ET_strkey);
    hostname = lGetString(event, ET_strkey2);
 
-   cqueue = cqueue_list_locate(
-                        *(object_type_get_master_list(SGE_TYPE_CQUEUE)), name);
+   cqueue = cqueue_list_locate( *(object_type_get_master_list(SGE_TYPE_CQUEUE)), name);
+                        
    if (cqueue != NULL) {
       dstring key_buffer = DSTRING_INIT;
       lList *list = lGetList(cqueue, CQ_qinstances);
-      lDescr *list_descr = QU_Type;
+      const lDescr *list_descr = lGetListDescr(lGetList(event, ET_new_version));
+      
       lListElem *qinstance = qinstance_list_locate(list, hostname, NULL);
       const char *key = NULL;
-
+      bool is_list = (list != NULL);
+      
       sge_dstring_sprintf(&key_buffer, SFN"@"SFN, name, hostname);
       key = sge_dstring_get_string(&key_buffer);
 
@@ -141,6 +139,10 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       ret &= (sge_mirror_update_master_list(&list, list_descr, qinstance, key,
                              action, event) == SGE_EM_OK) ? true : false;
       sge_dstring_free(&key_buffer);
+      if (!is_list) {
+         lSetList(cqueue, CQ_qinstances, list);
+      }
+printf("new elements: %d\n", lGetNumberOfElem(list));      
    } else {
       ERROR((SGE_EVENT, MSG_CQUEUE_CANTFINDFORUPDATEIN_SS, name, SGE_FUNC));
       ret = false;

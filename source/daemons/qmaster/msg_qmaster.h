@@ -402,7 +402,7 @@
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _MESSAGE(33310, _("denied: can't change consumable resource request "SFQ" of running job\n"))
 #define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U      _MESSAGE(33311, _("denied: job \""U32CFormat"\" may not be it's own jobnet predecessor\n"))
 #define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S              _MESSAGE(33312, _("denied: job "SFQ" not found\n"))
-#define MSG_JOB_MOD_NOJOBNAME_SS                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name for "SFN"\n"))
+#define MSG_JOB_MOD_NOJOBNAME_SS                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name for "SFN"('|', '|','.' are not allowed and the job cannot start with a digit)\n"))
 #define MSG_SGETEXT_NEEDONEELEMENT_SS                 _MESSAGE(33317, _("denied: request format error: need at least one element in sublist "SFQ" in "SFN"()\n"))
 #define MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U           _MESSAGE(33318, _("job "U32CFormat" can't modify running jobs\n") ) 
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN"\n"))

@@ -347,19 +347,40 @@ char **argv
       }
    }
 
-   /* only show queues in the requested state */
-/*   
-   if (queue_states != U_LONG32_MAX) {
-      for_each(cqueue, queue_list){
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         for_each(qep, qinstance_list) { 
-            if (!qinstance_has_state(qep, queue_states)) {
-               lSetUlong(qep, QU_tag, 0);
-            }   
+   {
+      bool has_value_from_object; 
+      double load_avg;
+      char *load_avg_str;
+
+      /* make it possible to display any load value in qstat output */
+      if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
+         load_avg_str = LOAD_ATTR_LOAD_AVG;
+
+      /* only show queues in the requested state */
+      if (queue_states != U_LONG32_MAX) {
+         for_each(cqueue, queue_list){
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            for_each(qep, qinstance_list) { 
+
+               /* compute the load and suspend alarm */
+               sge_get_double_qattr(&load_avg, load_avg_str, qep, exechost_list, centry_list, &has_value_from_object);
+               if (sge_load_alarm(NULL, qep, lGetList(qep, QU_load_thresholds), exechost_list, centry_list, NULL)) {
+                  qinstance_state_set_alarm(qep, true);
+               }
+               if (sge_load_alarm(NULL, qep, lGetList(qep, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
+                  qinstance_state_set_suspend_alarm(qep, true);
+               }
+
+            
+               if (!qinstance_has_state(qep, queue_states)) {
+                  lSetUlong(qep, QU_tag, 0);
+               }   
+            }
          }
       }
+   
    }
-*/
+   
    /* unseclect all queues not selected by a -U (if exist) */
    if (lGetNumberOfElem(queue_user_list)>0) {
       if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list))<0) {
@@ -437,8 +458,7 @@ char **argv
          lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
          for_each(qep, qinstance_list) {
-            if (((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) &&
-                ( qinstance_has_state(qep, queue_states))){
+            if ((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) {
                dstring qinstance_name = DSTRING_INIT;
 
                qinstance_get_name(qep, &qinstance_name);
@@ -679,7 +699,7 @@ char **argv
             }
             else {
                if (sge_print_queue(qep, exechost_list, centry_list, 
-                               full_listing, qresource_list, explain_bits, queue_states)) {
+                               full_listing, qresource_list, explain_bits)) {
                   print_jobs_of_queue = 1;
                }   
             }
@@ -1915,8 +1935,6 @@ lList **ppljid
 
       if (parse_string(ppcmdline, "-qs", &alp, &argstr)) {
          *queue_states = qinstance_state_from_string(argstr, &alp);
-         (*pfull) |= QSTAT_DISPLAY_FULL;
-         full = 0;
          FREE(argstr);
          continue;
       }
@@ -2005,7 +2023,7 @@ char *what
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
       fprintf(fp, "        [-pe pe_list]                   %s",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
       fprintf(fp, "        [-q destin_id_list]             %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
-      fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]              %s",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
+      fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]   %s",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
       if (!qselect_mode) 
          fprintf(fp, "        [-r]                            %s",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
       if (!qselect_mode) {

@@ -11,6 +11,8 @@ EB-2004-03-19-0  Bugfix:    Cleanup for the next main release
                  Issues:    122, 892
                  Changed:   all, qconf.5 
 
+AS-2004-03-10-0: CVS        Created V60_beta1_OS_TAG   
+----------------------------------------------------
 
 SG-2004-03-18-0: Bugfix:    - "qdel 0" is not allowed.
                             - "qdel 45-54" results in an error and does

@@ -1257,8 +1257,10 @@ DTRACE;
          data->initial_state = 0; 
       if (lGetString(qep, QU_shell_start_mode)) {
          if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "unix_behavior"))
-            data->shell_start_mode = 2; 
+            data->shell_start_mode = 3; 
          else if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "script_from_stdin"))
+            data->shell_start_mode = 2; 
+         else if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "posix_compliant"))
             data->shell_start_mode = 1; 
          else 
             data->shell_start_mode = 0; 
@@ -1459,10 +1461,12 @@ lListElem *qep
    lSetString(qep, QU_terminate_method, data->terminate_method);
 
    if (data->shell_start_mode == 0)
-      lSetString(qep, QU_shell_start_mode, "posix_compliant");
+      lSetString(qep, QU_shell_start_mode, "NONE");
    else if (data->shell_start_mode == 1)
-      lSetString(qep, QU_shell_start_mode, "script_from_stdin");
+      lSetString(qep, QU_shell_start_mode, "posix_compliant");
    else if (data->shell_start_mode == 2)
+      lSetString(qep, QU_shell_start_mode, "script_from_stdin");
+   else if (data->shell_start_mode == 3)
       lSetString(qep, QU_shell_start_mode, "unix_behavior");
    
    /**************************/

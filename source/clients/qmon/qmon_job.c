@@ -1685,10 +1685,11 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonJobScheddInfo");
    
    jl = qmonJobBuildSelectedList(job_pending_jobs, info_descr, STR);
+/* lWriteListTo(jl, stdout);    */
    
    qmonBrowserOpen(w, NULL, NULL);
-   if (jl ? (show_info_for_jobs(jl, NULL, NULL, &sb) == 0) :  
-            (show_info_for_job(NULL, NULL, &sb) == 0) && sb.s) {
+   if ((jl ? (show_info_for_jobs(jl, NULL, NULL, &sb) == 0) :  
+            (show_info_for_job(NULL, NULL, &sb) == 0)) && sb.s) {
       qmonBrowserShow(sb.s);
       free(sb.s);
    }

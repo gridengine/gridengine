@@ -464,8 +464,9 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 void updateClusterList(void)
 {
-   lList *cl;
-   XmString *selectedItems;
+   lList *cl = NULL;
+   lListElem *ep = NULL;
+   XmString *selectedItems = NULL;
    Cardinal selectedItemCount;
    Cardinal itemCount;
    XmString xglobal;
@@ -473,8 +474,9 @@ void updateClusterList(void)
    DENTER(GUI_LAYER, "updateClusterList");
 
    cl = qmonMirrorList(SGE_CONFIG_LIST);
-   lPSortList(cl, "%I+", CONF_hname);
    UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_hname);
+   XmListMoveItemToPos(cluster_host_list, "global", 1);
+
    XtVaGetValues( cluster_host_list,
                   XmNselectedItems, &selectedItems,
                   XmNselectedItemCount, &selectedItemCount,
@@ -941,10 +943,25 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 static void qmonClusterLayoutSetSensitive(Boolean mode)
 {
+   Widget cluster_row, cluster_col;
+
    DENTER(GUI_LAYER, "qmonClusterLayoutSetSensitive");
 
+   XtVaGetValues( cluster_qmaster_spool_dir,
+                  XmtNlayoutIn, &cluster_row,
+                  NULL);
+   XtVaGetValues( cluster_row,
+                  XmtNlayoutIn, &cluster_col,
+                  NULL);
+printf("cluster_row: %s\n", XtName(cluster_row));                  
+printf("cluster_col: %s\n", XtName(cluster_col));                  
 
    XtSetSensitive(cluster_qmaster_spool_dir, False);
+   XtSetSensitive(cluster_row, False);
+   XtVaSetValues(cluster_row,
+                 XmtNlayoutSensitive, False,
+                 NULL);
+
    XtSetSensitive(cluster_execd_spool_dir, False);
    XtSetSensitive(cluster_ignore_fqdn, False);
    XtSetSensitive(cluster_default_domain, False);

@@ -358,15 +358,15 @@ int flags
    }
 
 
-#if 0
+#if 1
    /*
    ** -q
    ** exec-string is suppressed because uni_print_list can't do this
    ** is not in the manual anyway
    */
    if ((lp = lGetList(job, JB_hard_queue_list))) {
-      intprt_type fields[] = { LT_str0, LT_str1 /* LT_str2 is exec_str */ , 0 };
-      char *delis[] = {"@", ",", NULL};
+      intprt_type fields[] = { QR_name, 0 };
+      const char *delis[] = {"@", ",", NULL};
 
       ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -382,8 +382,8 @@ int flags
       lSetInt(ep_opt, SPA_argval_lIntT, 1); /* means hard */
    }
    if ((lp = lGetList(job, JB_soft_queue_list))) {
-      intprt_type fields[] = { LT_str0, LT_str1 /* LT_str2 is exec_str */ , 0 };
-      char *delis[] = {"@", ",", NULL};
+      intprt_type fields[] = { QR_name, 0 };
+      const char *delis[] = {"@", ",", NULL};
 
       ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
@@ -400,27 +400,6 @@ int flags
    }
 #endif
    
-
-   /*
-   ** -qs_args
-   */
-   if ((lp = lGetList(job, JB_qs_args))) {
-      intprt_type fields[] = {STR, 0};
-      const char *delis[] = {" ", NULL};
-
-      ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
-         FLG_NO_DELIS_STRINGS);
-      if (ret) {
-         DPRINTF(("Error %d formatting qs_args list\n", ret));
-         sprintf(str, MSG_LIST_ERRORFORMATINGQSARGSLIST);
-         sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
-         return answer;
-      }
-      strcat(str, " -qs_end");
-
-      ep_opt = sge_add_arg(pcmdline, qs_args_OPT, lListT, "-qs_args", NULL);
-      lSetList(ep_opt, SPA_argval_lListT, lCopyList("qs_args", lp));
-   }
 
    /*
    ** -r

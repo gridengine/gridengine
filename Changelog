@@ -1,3 +1,14 @@
+AA-2002-03-18-1  Bugfix:    - STN_type field is set to display sharetree nodes
+                            correctly
+                            - Clear Usage
+                            - shellstart mode fix in qmon
+                            - logo update /off_home/codine/sun-copyright
+                            - why crash fix
+                            - interactive mode fix
+                            - global host first
+                            - project itemlist sorting
+
+
 AA-2002-03-18-0  Bugfix:    sge_ca script, check /dev/random 1st
 
 AH-2002-03-15-4  Bugfix:    Ensure after execd installation the host needs to be 

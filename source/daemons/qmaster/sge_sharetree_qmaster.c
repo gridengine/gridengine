@@ -244,6 +244,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
    if ((childs=lGetList(node, STN_children))) {
 
       /* not a leaf node */
+      lSetUlong(node, STN_type, STT_PROJECT);
 
       /* check if this is a project node */
       if ((pep=sge_locate_user_prj(name, project_list))) {
@@ -322,6 +323,11 @@ lList **found  /* tmp list that contains one entry for each found u/p */
    } else {
 
       /* a leaf node */
+
+      /* check if this is a project node */
+      if (sge_locate_user_prj(name, project_list)) {
+         lSetUlong(node, STN_type, STT_PROJECT);
+      }   
 
       if (project) {
 

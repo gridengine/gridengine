@@ -1867,7 +1867,7 @@ int save
    if (!reduced_job) {
       lSetString(jep, JB_directive_prefix, data->directive_prefix);
    
-      if (!save) {
+      if (!save && (submit_mode_data.sub_mode != SUBMIT_QSH)) {
          /* Job Script/Name */
          lSetString(jep, JB_script_file, data->job_script);
          job_script = str_from_file(data->job_script, &len);

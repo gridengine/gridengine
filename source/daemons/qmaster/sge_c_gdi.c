@@ -174,6 +174,7 @@ int id
       { 0x100000F1, "5.3beta1 without hashing" },
       { 0x100000F2, "5.3beta1" },
       { 0x100000F3, "5.3beta2" },
+      { 0x100000F4, "5.3" },
       { 0,          NULL   }
    };
 

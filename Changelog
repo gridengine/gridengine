@@ -1,3 +1,6 @@
+AH-2002-03-27-0  Enhancm.:  Increased GRM_GDI_VERSION to ensure 5.3 components 
+                            cleanly refuse interoperating with 5.3 beta2 components
+
 AS-2002-03-27-0  Install:   cleanup install details in for "distinst"
 
 JG-2002-03-27-0  Testsuite: large_cluster test:

@@ -466,7 +466,7 @@ proc cleanup_system { } {
    set queue_list [get_queue_list]
    foreach elem $queue_list {
       puts $CHECK_OUTPUT "removing queue $elem."
-      del_queue $elem 
+      del_queue $elem "" 1 1
    }
 
    # add new testsuite queues
@@ -725,7 +725,7 @@ proc setup_conf {} {
        set old  $old_config($param)
        set new  $new_config($param)
 
-       if { [ string compare $old $new ] != 0 } {
+       if { [ string compare -nocase $old $new ] != 0 } {
           if { [ string compare $param "load_report_time" ] == 0 } { continue }
           if { [ string compare $param "loglevel" ] == 0 } { continue }
           if { [ string compare $param "execd_params" ] == 0 } { continue }

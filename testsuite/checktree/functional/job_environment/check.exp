@@ -193,7 +193,7 @@ proc job_environment_amount {} {
 
    set known_variables "SGE_ROOT"
    lappend known_variables "SGE_CELL"
-   lappend known_variables "COMMD_PORT"
+#   lappend known_variables "COMMD_PORT"
 #   lappend known_variables "COMMD_HOST"
    lappend known_variables "SGE_O_HOME"
    lappend known_variables "SGE_O_HOST"

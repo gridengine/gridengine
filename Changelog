@@ -1,3 +1,6 @@
+JG-2004-02-04-4: Testsuite: Fixed system_tests/clients/qmod/general, del_queue, 
+                            cleanup of queue functions.
+
 SG-2004-03-04-1: Bugfix:    the update list event has to be delivered allways.
                             In case, that all elements got removed due to 
                             filtering, the event was not sent. This is changed.

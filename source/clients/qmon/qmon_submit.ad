@@ -75,7 +75,7 @@ Qmon*submit_layout.layout: \
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*submit_folder*fontList:          $dialog_font
 
-Qmon*submit_message*columns:         15
+Qmon*submit_message*columns:         20
 
 Qmon*submit_folder*defaultSpacing:   2
 Qmon*submit_folder*marginWidth:   0

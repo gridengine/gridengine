@@ -1,3 +1,8 @@
+SG-2004-03-12-2: Bugfix:    execd died, when a load sensor was restarted.
+                 Issue:     835
+                 Changed:   execd
+                 Review:    AS
+
 AH-2004-03-12-1: Bugfix:    fix access to free'd memory that caused
                             schedd fp-exception under tru64
                  Review:    AS

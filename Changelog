@@ -1,3 +1,7 @@
+CR-2002-03-21-4  Bugfix:    scheduler generates high CPU load for 1-2 minutes
+                            when sge_commd is killed.
+                 Issue:     #197
+
 EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
 
 CR-2002-03-21-3  Testsuite: - used wrong path in path_alias test

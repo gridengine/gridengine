@@ -67,9 +67,11 @@
 #include "sge_hostname.h"
 #include "sge_manop.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_range.h"
 #include "sge_todo.h"
 #include "sge_centry.h"
+#include "sge_calendar.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -488,7 +490,7 @@ char *host,
 int isoperator,
 int isowner 
 ) {
-   u_long32 state = 0, old_state = 0;
+   u_long32 old_state = 0;
 
    DENTER(TOP_LAYER, "qmod_queue_clear");
 
@@ -499,16 +501,15 @@ int isowner
       return -1;
    }
 
-   if ( !VALID(QERROR, lGetUlong(qep, QU_state))) {
+   if (!qinstance_state_is_error(qep)) {
       INFO((SGE_EVENT, MSG_QUEUE_NOERRORSTATEQ_SS, user, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
-   old_state = state = lGetUlong(qep, QU_state);
-   CLEARBIT(QERROR, state);
-   lSetUlong(qep, QU_state, state);
+   old_state = lGetUlong(qep, QU_state);
+   qinstance_state_set_error(qep, false);
 
    sge_change_queue_version(qep, 0, 0);
 
@@ -544,7 +545,7 @@ char *host,
 int isoperator,
 int isowner 
 ) {
-   u_long32 state = 0, old_state = 0;
+   u_long32 old_state = 0;
 
    DENTER(TOP_LAYER, "qmod_queue_enable");
 
@@ -555,16 +556,15 @@ int isowner
       return -1;
    }
 
-   if (!VALID(QDISABLED, lGetUlong(qep, QU_state))) {
+   if (!qinstance_state_is_manual_disabled(qep)) {
       INFO((SGE_EVENT, MSG_QUEUE_ALREADYENABLED_SS, user, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
-   old_state = state = lGetUlong(qep, QU_state);
-   CLEARBIT(QDISABLED, state);
-   lSetUlong(qep, QU_state, state);
+   old_state = lGetUlong(qep, QU_state);
+   qinstance_state_set_manual_disabled(qep, false);
 
    sge_change_queue_version(qep, 0, 0);
 
@@ -601,7 +601,7 @@ char *host,
 int isoperator,
 int isowner 
 ) {
-   u_long32 state = 0, old_state = 0;
+   u_long32 old_state = 0;
 
    DENTER(TOP_LAYER, "qmod_queue_disable");
 
@@ -612,16 +612,15 @@ int isowner
       return -1;
    }
 
-   if (VALID(QDISABLED, lGetUlong(qep, QU_state))) {
+   if (qinstance_state_is_manual_disabled(qep)) {
       INFO((SGE_EVENT, MSG_QUEUE_ALREADYDISABLED_SS, user, lGetString(qep, QU_qname)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
    }
 
-   old_state = state = lGetUlong(qep, QU_state);
-   SETBIT(QDISABLED, state);
-   lSetUlong(qep, QU_state, state);
+   old_state = lGetUlong(qep, QU_state);
+   qinstance_state_set_manual_disabled(qep, true);
 
    sge_change_queue_version(qep, 0, 0);
 
@@ -686,11 +685,11 @@ char *host,
 int isoperator,
 int isowner 
 ) {
-   u_long32 state = 0, old_state = 0;
+   u_long32 old_state = 0;
 
    DENTER(TOP_LAYER, "qmod_queue_suspend");
 
-   if (VALID(QSUSPENDED, lGetUlong(qep, QU_state))) {
+   if (qinstance_state_is_manual_suspended(qep)) {
       if (force) {
          if (sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOFORCESUSPENDQ_SS, user, lGetString(qep, QU_qname)));
@@ -704,9 +703,8 @@ int isowner
       }
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
 
-      old_state = state = lGetUlong(qep, QU_state);
-      SETBIT(QSUSPENDED, state);
-      lSetUlong(qep, QU_state, state);
+      old_state = lGetUlong(qep, QU_state);
+      qinstance_state_set_manual_suspended(qep, true);
 
       sge_change_queue_version(qep, 0, 0);
    }
@@ -721,15 +719,14 @@ int isowner
             answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          }
 
-         old_state = state = lGetUlong(qep, QU_state);
-         SETBIT(QSUSPENDED, state);
-         lSetUlong(qep, QU_state, state);
+         old_state = lGetUlong(qep, QU_state);
+         qinstance_state_set_manual_suspended(qep, true);
 
          sge_change_queue_version(qep, 0, 0);
       }
       else {
-         if ( !VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state)) &&
-              !VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state)) &&
+         if (!qinstance_state_is_susp_on_sub(qep) &&
+             !qinstance_state_is_cal_suspended(qep) &&
               sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOSUSPENDQ_SS, user, lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
@@ -738,10 +735,8 @@ int isowner
             INFO((SGE_EVENT, MSG_QUEUE_SUSPENDQ_SSS, lGetString(qep, QU_qname), user, host));
             answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
             
-            old_state = state = lGetUlong(qep, QU_state);
-            SETBIT(QSUSPENDED, state);
-            lSetUlong(qep, QU_state, state);
-
+            old_state = lGetUlong(qep, QU_state);
+            qinstance_state_set_manual_suspended(qep, true);
             sge_change_queue_version(qep, 0, 0);
          }
       }
@@ -781,17 +776,17 @@ char *host,
 int isoperator,
 int isowner 
 ) {
-   u_long32 state = 0, old_state = 0;
+   u_long32 old_state = 0;
 
    DENTER(TOP_LAYER, "qmod_queue_unsuspend");
 
-   if (!VALID(QSUSPENDED, lGetUlong(qep, QU_state))) {
+   if (!qinstance_state_is_manual_suspended(qep)) {
       if (force) {
-         if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
+         if (qinstance_state_is_susp_on_sub(qep)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOS_SS, user, 
                lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
-         } else if (VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state))) {
+         } else if (qinstance_state_is_cal_suspended(qep)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOC_SS, user, 
                lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);      
@@ -806,11 +801,11 @@ int isowner
          }
       } 
       else {
-         if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
+         if (qinstance_state_is_susp_on_sub(qep)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOS_SS, user, 
                lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
-         } else if (VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state))) {
+         } else if (qinstance_state_is_cal_suspended(qep)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSP4SOC_SS, user, 
                lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
@@ -820,10 +815,9 @@ int isowner
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
       }
-      
-      old_state = state = lGetUlong(qep, QU_state);
-      CLEARBIT(QSUSPENDED, state);   /* JIC */
-      lSetUlong(qep, QU_state, state);
+     
+      old_state = lGetUlong(qep, QU_state);
+      qinstance_state_set_manual_suspended(qep, false); 
 
       sge_change_queue_version(qep, 0, 0);
    } 
@@ -838,16 +832,15 @@ int isowner
             answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
          }
 
-         old_state = state = lGetUlong(qep, QU_state);
-         CLEARBIT(QSUSPENDED, state);
-         lSetUlong(qep, QU_state, state);
+         old_state = lGetUlong(qep, QU_state);
+         qinstance_state_set_manual_suspended(qep, false);
 
          sge_change_queue_version(qep, 0, 0);
       }
       else {
-         if ( !VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state)) &&
-              !VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state)) &&
-            sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL)) {
+         if (!qinstance_state_is_susp_on_sub(qep) &&
+             !qinstance_state_is_cal_suspended(qep) &&
+             sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL)) {
             WARNING((SGE_EVENT, MSG_QUEUE_NOUNSUSPQ_SS, user, lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          }
@@ -855,9 +848,8 @@ int isowner
             INFO((SGE_EVENT, MSG_QUEUE_UNSUSPENDQ_SSS, user, host, lGetString(qep, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
 
-            old_state = state = lGetUlong(qep, QU_state);
-            CLEARBIT(QSUSPENDED, state);
-            lSetUlong(qep, QU_state, state);
+            old_state = lGetUlong(qep, QU_state);
+            qinstance_state_set_manual_suspended(qep, false);
 
             sge_change_queue_version(qep, 0, 0);
          }
@@ -1314,7 +1306,7 @@ lListElem *jatep
    now = sge_get_gmt();
 
    /* don't try to signal unheard queues */
-   if ((lGetUlong(qep, QU_state) & QUNKNOWN)==0) {
+   if (!qinstance_state_is_unknown(qep)) {
       const char *hnm, *pnm;
 
       pnm = prognames[EXECD]; 
@@ -1501,66 +1493,53 @@ lListElem *jatep
    return;
 }
 
-char *cal_state2str(u_long32 state);
-char *cal_state2str(
-u_long32 state 
-) {
-   if ((state & QCAL_SUSPENDED))
-      return "SUSPENDED";
-   if ((state & QCAL_DISABLED))
-      return "DISABLED";
-   return "ENABLED";
-}
-
-void signal_on_calendar(
-lListElem *qep,
-u_long32 old_state,
-u_long32 new_state 
-) {
-   const char *qname = lGetString(qep, QU_qname);
+bool
+qinstance_signal_on_calendar(lListElem *this_elem, const lListElem *calendar)
+{
+   bool ret = true;
 
    DENTER(TOP_LAYER, "signal_on_calendar");
+   if (this_elem != NULL && calendar != NULL) {
+      time_t time;
+      u_long32 cal_order = calendar_get_current_state_and_end(calendar, &time);
+      bool old_cal_disabled = qinstance_state_is_cal_disabled(this_elem);
+      bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
+      bool new_cal_disabled = (cal_order == QCAL_DISABLED);
+      bool new_cal_suspended = (cal_order == QCAL_SUSPENDED);
+      bool state_changed = false;
 
-   if (old_state != new_state) {
-
-      DPRINTF(("%s: %s -> %s\n", qname, cal_state2str(old_state), 
-         cal_state2str(new_state)));
-
-      if (old_state == QCAL_DISABLED) {
-         INFO((SGE_EVENT, MSG_QUEUE_ENABLEQCAL_S, qname)); 
+      if (old_cal_disabled != new_cal_disabled) {
+         qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
+         state_changed = true;
       }
+      if (old_cal_suspended != new_cal_suspended) {
+         const char *name = lGetString(this_elem, QU_qname);
 
-      if (old_state == QCAL_SUSPENDED) {
-         if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
-            INFO((SGE_EVENT, MSG_QUEUE_SOSNOUNSUSPCAL_S, qname));
-         } else if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
-            INFO((SGE_EVENT, MSG_QUEUE_AMDSNOUNSUSPCAL_S, qname));
+         qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
+         if (new_cal_suspended) {
+            if (qinstance_state_is_susp_on_sub(this_elem)) {
+               INFO((SGE_EVENT, MSG_QINSTANCE_NOUSSOS_S, name));
+            } else if (qinstance_state_is_manual_suspended(this_elem)) {
+               INFO((SGE_EVENT, MSG_QINSTANCE_NOUSADM_S, name));
+            } else {
+               sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
+            }
          } else {
-            INFO((SGE_EVENT, MSG_QUEUE_UNSUSPENDQCAL_S, qname)); 
-            sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL);
+            if (qinstance_state_is_susp_on_sub(this_elem)) {
+               INFO((SGE_EVENT, MSG_QINSTANCE_NOSSOS_S, name));
+            } else if (qinstance_state_is_manual_suspended(this_elem)) {
+               INFO((SGE_EVENT, MSG_QINSTANCE_NOSADM_S, name));
+            } else {
+               sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
+            }
          }
+         state_changed = true;
       }
-
-      if (new_state == QCAL_SUSPENDED) {
-         if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
-            INFO((SGE_EVENT, MSG_QUEUE_NOSUSP4SOS_S, qname));
-         } else if (VALID(QSUSPENDED_ON_SUBORDINATE, lGetUlong(qep, QU_state))) {
-            INFO((SGE_EVENT, MSG_QUEUE_NOSUSP4ADMS_S, qname));
-         } else {
-            INFO((SGE_EVENT, MSG_QUEUE_SUSPENDQCAL_S, qname)); 
-            sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL);
-         }
+      if (state_changed) {
+         sge_add_queue_event(sgeE_QUEUE_MOD, this_elem);
       }
-
-      if (new_state == QCAL_DISABLED) {
-         INFO((SGE_EVENT, MSG_QUEUE_DISABLEQCAL_S, qname));
-      }
-
-      lSetUlong(qep, QU_state, 
-         (lGetUlong(qep, QU_state) & ~(QCAL_SUSPENDED|QCAL_DISABLED))|new_state);
-      sge_add_queue_event(sgeE_QUEUE_MOD, qep);
    }
-
    DEXIT;
-   return;
+   return ret;
 }
+

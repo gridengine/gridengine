@@ -81,6 +81,7 @@
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 
 /*-------------------------------------------------------------------------*/
 
@@ -1545,7 +1546,7 @@ lListElem *qep
    if (!qep || !data || !data->qname || !data->qhostname)
       goto error;
 
-   lSetUlong(qep, QU_state, QUNKNOWN);
+   qinstance_state_set_unknown(qep, true);
    
    /**************************/
    /* general config         */

@@ -1603,10 +1603,8 @@ lList **disabled         /* QU_Type */
    }
 
    /* split queues */
-   where = lWhere("%T(!(%I m= %u) && !(%I m= %u))", 
-      lGetListDescr(*queue_list), 
-         QU_state, QDISABLED,
-         QU_state, QCAL_DISABLED);
+   where = lWhere("%T(!(%I m= %u) && !(%I m= %u))", lGetListDescr(*queue_list), 
+                  QU_state, QDISABLED, QU_state, QCAL_DISABLED);
    ret = lSplit(queue_list, disabled, "full queues", where);
    lFreeWhere(where);
 

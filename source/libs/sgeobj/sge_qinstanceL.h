@@ -123,7 +123,24 @@ enum {
    QI_load_thresholds,
    QI_suspend_thresholds,
 
-   QI_subordinate_list
+   QI_subordinate_list,
+
+/* EB: TODO: Add internal attributes */
+
+   QI_queue_number,
+   QI_state,
+   QI_tagged,
+   QI_tagged4schedule,
+   QI_cache_version,
+   QI_pending_signal,
+   QI_pending_signal_delivery_time,
+   QI_version,
+   QI_suspended_on_subordinate,
+   QI_last_suspend_threshold_ckeck,
+   QI_job_cnt,
+   QI_pending_job_cnt,
+   QI_soft_violation,
+   QI_host_seq_no,
 };
 
 SLISTDEF(QI_Type, QInstance)
@@ -192,7 +209,21 @@ SLISTDEF(QI_Type, QInstance)
    SGE_LIST(QI_subordinate_list, SO_Type, CULL_SPOOL | CULL_CONFIGURE)
 
 /* EB: TODO: Add internal attributes */
-   
+
+   SGE_ULONG(QI_queue_number, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
+   SGE_ULONG(QI_state, CULL_SPOOL)
+   SGE_ULONG(QI_tagged, CULL_DEFAULT)
+   SGE_ULONG(QI_tagged4schedule, CULL_DEFAULT)
+   SGE_ULONG(QI_cache_version, CULL_DEFAULT)
+   SGE_ULONG(QI_pending_signal, CULL_SPOOL)
+   SGE_ULONG(QI_pending_signal_delivery_time, CULL_SPOOL)
+   SGE_ULONG(QI_version, CULL_SPOOL)
+   SGE_ULONG(QI_suspended_on_subordinate, CULL_DEFAULT)
+   SGE_ULONG(QI_last_suspend_threshold_ckeck, CULL_DEFAULT)
+   SGE_ULONG(QI_job_cnt, CULL_DEFAULT)
+   SGE_ULONG(QI_pending_job_cnt, CULL_DEFAULT)
+   SGE_ULONG(QI_soft_violation, CULL_DEFAULT)
+   SGE_ULONG(QI_host_seq_no, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(QIN)
@@ -259,6 +290,23 @@ NAMEDEF(QIN)
    NAME("QI_suspend_thresholds") 
 
    NAME("QI_subordinate_list") 
+
+/* EB: TODO: Add internal attributes */
+
+   NAME("QI_queue_number")
+   NAME("QI_state")
+   NAME("QI_tagged")
+   NAME("QI_tagged4schedule")
+   NAME("QI_cache_version")
+   NAME("QI_pending_signal")
+   NAME("QI_pending_signal_delivery_time")
+   NAME("QI_version")
+   NAME("QI_suspended_on_subordinate")
+   NAME("QI_last_suspend_threshold_ckeck")
+   NAME("QI_job_cnt")
+   NAME("QI_pending_job_cnt")
+   NAME("QI_soft_violation")
+   NAME("QI_host_seq_no")
 NAMEEND
 
 #define QIS sizeof(QIN)/sizeof(char*)

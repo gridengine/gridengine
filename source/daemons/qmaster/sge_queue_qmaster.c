@@ -66,6 +66,7 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
@@ -131,10 +132,7 @@ static void queue_clear_unknown(lListElem *queue)
 
    for_each (ep, lGetList(hep, EH_load_list)) {
       if (!sge_is_static_load_value(lGetString(ep, HL_name))) {
-         u_long32 state = lGetUlong(queue, QU_state);
-
-         CLEARBIT(QUNKNOWN, state);
-         lSetUlong(queue, QU_state, state);
+         qinstance_state_set_unknown(queue, false);
          DPRINTF(("QUEUE %s CLEAR UNKNOWN STATE\n", queue_name));
          DEXIT;
          return;
@@ -220,10 +218,9 @@ int queue_set_initial_state(lListElem *queue, char *rhost)
 
    if (is != NULL && strcmp(is, "default")) {
       int enable = !strcmp(is, "enabled");
-      u_long32 state = lGetUlong(queue, QU_state);
 
-      if ((enable && (state & QDISABLED)) ||
-          (!enable && !(state & QDISABLED))) {
+      if ((enable && qinstance_state_is_manual_disabled(queue)) ||
+          (!enable && !qinstance_state_is_manual_disabled(queue))) {
          const char *queue_name = lGetString(queue, QU_qname);
 
          if (!rhost) {
@@ -243,11 +240,10 @@ int queue_set_initial_state(lListElem *queue, char *rhost)
          }
 
          if (enable) {
-            CLEARBIT(QDISABLED, state);
+            qinstance_state_set_manual_disabled(queue, false);
          } else {
-            SETBIT(QDISABLED, state);
+            qinstance_state_set_manual_disabled(queue, true);
          }
-         lSetUlong(queue, QU_state, state);
          changed = 1;
       }
    }
@@ -569,9 +565,16 @@ int sub_command
       if ((oc && nc && !strcmp(nc, oc)) || (!oc && !nc)) {
          DPRINTF(("no changes with queue calendar\n"));
       } else {
-         /* change state */
-         lSetUlong(new_queue, QU_state, act_cal_state(new_cal, NULL)| 
-            (lGetUlong(new_queue, QU_state) & ~(QCAL_SUSPENDED|QCAL_DISABLED)));
+         u_long32 cal_state = 0;
+
+         qinstance_state_set_cal_disabled(new_queue, false);
+         qinstance_state_set_cal_suspended(new_queue, false);
+         cal_state = calendar_get_current_state_and_end(new_cal, NULL);
+         if (cal_state == QCAL_SUSPENDED) {
+            qinstance_state_set_cal_suspended(new_queue, true);
+         } else if (cal_state == QCAL_DISABLED) {
+            qinstance_state_set_cal_disabled(new_queue, true);
+         }
       }
    }
    attr_mod_zerostr(qep, new_queue, QU_calendar, "calendar");
@@ -691,7 +694,7 @@ int sub_command
    
    if (add) {
       /* initialization of internal fields */
-      lSetUlong(new_queue, QU_state, lGetUlong(new_queue, QU_state)|QUNKNOWN);
+      qinstance_state_set_unknown(new_queue, true);
       lSetUlong(new_queue, QU_queue_number, queue_get_queue_number());
    }
 
@@ -735,8 +738,7 @@ int sub_command
              *old_queue;
    lList *unsuspend = NULL,
          *suspend = NULL;
-   u_long32 old_cal_state, new_cal_state;
-   int old_slots_used = 0;
+   u_long32 old_cal_state;
    int disable_susp_thresholds = 0; 
 
    DENTER(TOP_LAYER, "sge_gdi_add_modify_queue");
@@ -871,8 +873,6 @@ int sub_command
 
    /* chain out the old one */
    if (!add) {
-      old_cal_state = lGetUlong(old_queue, QU_state) & (QCAL_SUSPENDED|QCAL_DISABLED);
-      old_slots_used = qslots_used(old_queue);
       sge_del_queue(qname);
    } else {
       old_cal_state = 0;
@@ -949,10 +949,6 @@ int sub_command
       */
       count_suspended_on_subordinate(new_queue);
    }
-
-   /* send signals (on calendar) if needed */
-   new_cal_state = lGetUlong(new_queue, QU_state) & (QCAL_SUSPENDED|QCAL_DISABLED);
-   signal_on_calendar(new_queue, old_cal_state, new_cal_state);
 
    if (add) {
       if (!host_list_locate(Master_Exechost_List, 
@@ -1227,23 +1223,18 @@ void queue_list_set_unknown_state_to(lList *queue_list,
       next_queue = lFirst(queue_list);
    }
    while ((queue = next_queue)) {
-      u_long32 state;
-
       if (hostname != NULL) {
          next_queue = lGetElemHostNext(queue_list, QU_qhostname,
                                        hostname, &iterator);
       } else {
          next_queue = lNext(queue);
       }
-      state = lGetUlong(queue, QU_state);
-      if ((ISSET(state, QUNKNOWN) > 0) != (new_state > 0)) {
+      if ((qinstance_state_is_unknown(queue)) != (new_state > 0)) {
          if (new_state) {
-            SETBIT(QUNKNOWN, state);
+            qinstance_state_set_unknown(queue, true);
          } else {
-            CLEARBIT(QUNKNOWN, state);
+            qinstance_state_set_unknown(queue, false);
          }
-         lSetUlong(queue, QU_state, state);
-
          if (send_events) {
             sge_add_queue_event(sgeE_QUEUE_MOD, queue);
          }

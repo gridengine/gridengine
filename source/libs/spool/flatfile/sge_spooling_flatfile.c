@@ -1532,11 +1532,9 @@ spool_flatfile_default_verify_func(lList **answer_list,
             }
 
             if (ret) {
-               u_long32 state = lGetUlong(object, QU_state);
-               SETBIT(QUNKNOWN, state);
-               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
-               lSetUlong(object, QU_state, state);
-
+               qinstance_state_set_unknown(object, true);
+               qinstance_state_set_disabled(object, false);
+               qinstance_state_set_cal_suspended(object, false);               
                set_qslots_used(object, 0);
                
                if (host_list_locate(Master_Exechost_List, 
@@ -1576,11 +1574,9 @@ spool_flatfile_default_verify_func(lList **answer_list,
             }
 
             if (ret) {
-               u_long32 state = lGetUlong(object, QU_state);
-               SETBIT(QUNKNOWN, state);
-               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
-               lSetUlong(object, QU_state, state);
-
+               qinstance_state_set_unknown(object, true);
+               qinstance_state_set_cal_disabled(object, false);
+               qinstance_state_set_cal_suspended(object, false);
                set_qslots_used(object, 0);
                
                if (host_list_locate(Master_Exechost_List, 

@@ -67,6 +67,7 @@
 #include "sge_queue.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
@@ -474,7 +475,8 @@ int sge_read_cal_list_from_disk()
                break;
             }
 
-            if (parse_year(&alp, ep) || parse_week(&alp, ep)) {
+            if (!calendar_parse_year(ep, &alp) || 
+                !calendar_parse_week(ep, &alp)) {
                if (!(aep = lFirst(alp)) || !(s = lGetString(aep, AN_text)))
                   s = MSG_UNKNOWNREASON;
                ERROR((SGE_EVENT,MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS, 
@@ -591,7 +593,6 @@ int sge_read_queue_list_from_disk()
    lList *alp = NULL, *direntries;
    lListElem *qep, *direntry;
    int config_tag = 0;
-   u_long32 state;
 
    DENTER(TOP_LAYER, "sge_read_queue_list_from_disk");
 
@@ -669,11 +670,10 @@ int sge_read_queue_list_from_disk()
                }
 
                queue_list_add_queue(qep);
-               state = lGetUlong(qep, QU_state);
-               SETBIT(QUNKNOWN, state);
-               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
-               lSetUlong(qep, QU_state, state);
 
+               qinstance_state_set_unknown(qep, true);
+               qinstance_state_set_cal_disabled(qep, false);
+               qinstance_state_set_cal_suspended(qep, false);
                set_qslots_used(qep, 0);
                
                if (!(exec_host = host_list_locate(Master_Exechost_List, 
@@ -799,10 +799,9 @@ int sge_read_cqueue_list_from_disk(void)
 
 #if 0 /* EB: TODO: APIBASE */
 
-               state = lGetUlong(qep, QU_state);
-               SETBIT(QUNKNOWN, state);
-               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
-               lSetUlong(qep, QU_state, state);
+               qinstance_state_set_unknown(qep, true);
+               qinstance_state_set_cal_disabled(qep, false);
+               qinstance_state_set_cal_suspended(qep, false);
 
                set_qslots_used(qep, 0);
                

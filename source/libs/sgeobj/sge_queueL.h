@@ -54,13 +54,13 @@ enum {
 #define QALARM                               0x00000001
 #define QSUSPEND_ALARM                       0x00000002
 #define QDISABLED                            0x00000004
-#define QENABLED                             0x00000008
-#define QRUNNING                             0x00000080
+#define QENABLED                             0x00000008 /* EB: ? */
+#define QRUNNING                             0x00000080 /* EB: ? */
 #define QSUSPENDED                           0x00000100
 #define QUNKNOWN                             0x00000400
 #define QERROR                               0x00004000
 #define QSUSPENDED_ON_SUBORDINATE            0x00008000
-#define QCLEAN                               0x00010000
+#define QCLEAN                               0x00010000 /* EB: */
 #define QCAL_DISABLED                        0x00020000
 #define QCAL_SUSPENDED                       0x00040000
 #define QRESCHEDULED                         0x00080000 /* No queue state */

@@ -84,6 +84,7 @@
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_cqueue.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
@@ -113,7 +114,6 @@ int sge_setup_qmaster()
    int ret;
    lListElem *lep = NULL;
    char err_str[1024];
-   u_long32 state;
    extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
@@ -374,9 +374,7 @@ int sge_setup_qmaster()
          
    /* clear suspend on subordinate flag in QU_state */ 
    for_each(tmpqep, Master_Queue_List) {
-      state = lGetUlong(tmpqep, QU_state);
-      CLEARBIT(QSUSPENDED_ON_SUBORDINATE, state);
-      lSetUlong(tmpqep, QU_state, state);
+      qinstance_state_set_susp_on_sub(tmpqep, false);
    }
 
    /* recompute suspend on subordinate caching fields */

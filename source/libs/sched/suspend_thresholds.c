@@ -38,6 +38,7 @@
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_orderL.h"
 #include "sge_time.h"
 #include "sge_select_queue.h"
@@ -191,22 +192,20 @@ lList **orderlist
 }
    
 
-static int select4suspension(
-lList *job_list,
-lListElem *qep,
-lListElem **jepp,
-lListElem **ja_taskp 
-) {
-   u_long32 jstate, qstate;
+static int 
+select4suspension(lList *job_list, lListElem *qep, lListElem **jepp, 
+                  lListElem **ja_taskp) 
+{
+   u_long32 jstate;
    lListElem *jep, *jshortest = NULL, *shortest = NULL, *ja_task;
    const char *qnm;
 
    DENTER(TOP_LAYER, "select4suspension");
 
    qnm = lGetString(qep, QU_qname);
-   qstate = lGetUlong(qep, QU_state);
-   if ((qstate & (QSUSPENDED|QCAL_SUSPENDED)) 
-      || (qstate & QSUSPENDED_ON_SUBORDINATE)) {
+   if (qinstance_state_is_manual_suspended(qep) ||
+       qinstance_state_is_susp_on_sub(qep) ||
+       qinstance_state_is_cal_suspended(qep)) {
       DEXIT;
       return -1;
    }

@@ -64,6 +64,7 @@
 #include "sge_spool.h"
 #include "sge_hostname.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_report_execd.h"
@@ -97,7 +98,7 @@ lListElem *jatep
    lListElem *qep, *queueep;
    const char *err_str;
    const char *qname; 
-   u_long32 jobid, state, jataskid;
+   u_long32 jobid, jataskid;
    lListElem *hep;
    int enhanced_product_mode;
 
@@ -260,9 +261,7 @@ lListElem *jatep
       */
       if (general_failure && general_failure!=GFSTATE_JOB) {  
          /* general error -> this queue cant run any job */
-         state = lGetUlong(queueep, QU_state);
-         SETBIT(QERROR, state);
-         lSetUlong(queueep, QU_state, state);
+         qinstance_state_set_error(queueep, true);
          spool_queueep = true;
          ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, 
                 lGetString(queueep, QU_qname), u32c(jobid)));    
@@ -286,10 +285,7 @@ lListElem *jatep
             while((qep = next_qep) != NULL) {
                next_qep = lGetElemHostNext(Master_Queue_List, QU_qhostname,
                                            host, &iterator);
-               state = lGetUlong(qep, QU_state);
-               CLEARBIT(QRUNNING,state);
-               SETBIT(QERROR, state);
-               lSetUlong(qep, QU_state, state);
+               qinstance_state_set_error(qep, true);
 
                ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOBHOST_SUS, 
                       lGetString(qep, QU_qname), u32c(jobid), host));    

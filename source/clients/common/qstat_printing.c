@@ -64,6 +64,7 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_pe.h"
 #include "sge_ulong.h"
 
@@ -85,10 +86,8 @@ int
 sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
                 u_long32 full_listing, lList *qresource_list) 
 {
-   char state_string[8];
    char to_print[80];
    char arch_string[80];
-   u_long32 state;
    double load_avg;
    static int first_time = 1;
    int sge_ext;
@@ -165,18 +164,22 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       sprintf(to_print, "-NA- ");
    printf("%-9.9s ", to_print);   
 
-   state = lGetUlong(q, QU_state);
    if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL)) {
-      state |= QALARM;
+      qinstance_state_set_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, load_alarm_reason, MAX_STRING_SIZE - 1, "load");
    }
    if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL)) {
-     state |= QSUSPEND_ALARM;
+      qinstance_state_set_suspend_alarm(q, true);
      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, suspend_alarm_reason, MAX_STRING_SIZE - 1, "suspend");
    }
 
-   queue_get_state_string(state_string, state);
-   printf("%s", state_string); 
+   {
+      dstring state_string = DSTRING_INIT;
+
+      qinstance_state_append_to_dstring(q, &state_string);
+      printf("%s", sge_dstring_get_string(&state_string)); 
+      sge_dstring_free(&state_string);
+   }
    printf("\n");
 
    if((full_listing & QSTAT_DISPLAY_ALARMREASON)) {
@@ -447,7 +450,6 @@ char *indent
    lListElem *jlep;
    lListElem *jatep;
    lListElem *gdilep;
-   u_long32 qstate;
    u_long32 job_tag;
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
@@ -457,7 +459,6 @@ char *indent
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
 
    qnm = lGetString(qep, QU_qname);
-   qstate = lGetUlong(qep, QU_state);
 
    for_each(jlep, job_list) {
       int master, i;
@@ -470,7 +471,9 @@ char *indent
             if(!strcmp(lGetString(gdilep, JG_qname) , lGetString(qep, QU_qname))) {
                int slot_adjust = 0;
 
-               if (qstate&(QSUSPENDED|QSUSPENDED_ON_SUBORDINATE|QCAL_SUSPENDED)) {
+               if (qinstance_state_is_manual_suspended(qep) ||
+                   qinstance_state_is_susp_on_sub(qep) ||
+                   qinstance_state_is_cal_suspended(qep)) {
                   u_long32 jstate;
 
                   jstate = lGetUlong(jatep, JAT_state);

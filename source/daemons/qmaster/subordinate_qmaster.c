@@ -46,6 +46,7 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 #include "sge_job.h"
 
 /* ------------------------------------------------
@@ -121,7 +122,6 @@ lListElem *qep,
 int rebuild_cache 
 ) {
    int ret = 0;
-   u_long32 state;
 
    DENTER(TOP_LAYER, "sos");
 
@@ -133,13 +133,12 @@ int rebuild_cache
       
       DPRINTF(("QUEUE %s: suspend on subordinate\n", lGetString(qep, QU_qname)));
       /* send a signal if it is not already suspended by admin or calendar */
-      if ((lGetUlong(qep, QU_state) & (QSUSPENDED|QCAL_SUSPENDED))==0 && !rebuild_cache) {
+      if (!qinstance_state_is_manual_suspended(qep) &&
+          !qinstance_state_is_cal_suspended(qep) && !rebuild_cache) {
          ret |= sge_signal_queue(SGE_SIGSTOP, qep, NULL, NULL);
       }
 
-      state = lGetUlong(qep, QU_state);
-      SETBIT(QSUSPENDED_ON_SUBORDINATE, state); 
-      lSetUlong(qep, QU_state, state);
+      qinstance_state_set_susp_on_sub(qep, true);
 
       /* this info is not spooled */
       sge_add_event(NULL, 0, sgeE_QUEUE_SUSPEND_ON_SUB, 0, 0, 
@@ -229,7 +228,6 @@ lListElem *qep,
 int rebuild_cache 
 ) {
    int ret = 0;
-   u_long32 state;
 
    DENTER(TOP_LAYER, "usos");
 
@@ -241,12 +239,12 @@ int rebuild_cache
 
       DPRINTF(("QUEUE %s: unsuspend on subordinate\n", lGetString(qep, QU_qname)));
       /* send a signal if it is not still suspended by admin or calendar */
-      if ((lGetUlong(qep, QU_state) & (QSUSPENDED|QCAL_SUSPENDED))==0 && !rebuild_cache) {
+      if ((qinstance_state_is_manual_suspended(qep) ||
+           qinstance_state_is_cal_suspended(qep)) && 
+          !rebuild_cache) {
          ret |= sge_signal_queue(SGE_SIGCONT, qep, NULL, NULL);
       }
-      state = lGetUlong(qep, QU_state);
-      CLEARBIT(QSUSPENDED_ON_SUBORDINATE, state); 
-      lSetUlong(qep, QU_state, state);
+      qinstance_state_set_susp_on_sub(qep, false);
 
       /* this info is not spooled */
       sge_add_event(NULL, 0, sgeE_QUEUE_UNSUSPEND_ON_SUB, 0, 0, 

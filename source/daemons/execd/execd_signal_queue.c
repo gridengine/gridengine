@@ -60,6 +60,7 @@
 #include "admin_mail.h"
 #include "get_path.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
 
@@ -133,8 +134,7 @@ int answer_error;
                      /* if the queue gets suspended and the job is already suspended
                         we do not deliver a signal */
                      if (signal == SGE_SIGSTOP) {
-                        lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) | 
-                              QSUSPENDED);
+                        qinstance_state_set_manual_suspended(master_q, true);
                         if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
                            if (lGetUlong(jep, JB_checkpoint_attr)& CHECKPOINT_SUSPEND) {
                               INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, u32c(lGetUlong(jep, JB_job_number))));
@@ -144,12 +144,11 @@ int answer_error;
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
                         }   
-                     } 
-                     else {
+                     } else {
                         /* if the signal is a unsuspend and the job is suspended
                            we do not deliver a signal */
                         if (signal == SGE_SIGCONT) {
-                           lSetUlong(master_q, QU_state, lGetUlong(master_q, QU_state) & ~QSUSPENDED);
+                           qinstance_state_set_manual_suspended(master_q, false);
                            if (!VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
                               if ( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
                                  sge_send_suspend_mail(signal,master_q ,jep, jatep); 
@@ -656,7 +655,7 @@ u_long32 signal
          and we unsuspend the job. 
          The Job should stay sleeping */
 
-      if (!(lGetUlong(master_q, QU_state) & QSUSPENDED)) {
+      if (!qinstance_state_is_manual_suspended(master_q)) {
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
          if ((!getridofjob) && (suspend_change == 1) ) {
             send_mail = 1;
@@ -690,7 +689,7 @@ u_long32 signal
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
          if ( (!getridofjob) && (suspend_change == 1) ) {
             mq_state = lGetUlong(master_q, QU_state);
-            if ( (!(mq_state & QSUSPENDED)) ) {
+            if (!qinstance_state_is_manual_suspended(master_q)) {
                send_mail = 2;
             }
          }

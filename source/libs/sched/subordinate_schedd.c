@@ -37,6 +37,7 @@
 #include "sgermon.h"
 #include "sge_queue.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 
 /* -----------------------------------------------
 
@@ -104,7 +105,7 @@ qlist: complete queue list for recursivly suspension of other queues
 int sos_schedd(const char *qname, lList *qlist) 
 {
    lListElem *q;
-   u_long32 sos, state;
+   u_long32 sos;
    int ret = 0;
 
    DENTER(TOP_LAYER, "sos_schedd");
@@ -129,9 +130,7 @@ int sos_schedd(const char *qname, lList *qlist)
    if (sos==1) {
       DPRINTF(("QUEUE %s GETS SUSPENDED ON SUBORDINATE\n", qname));
       /* state transition */
-      state = lGetUlong(q, QU_state);
-      state |= QSUSPENDED_ON_SUBORDINATE;
-      lSetUlong(q, QU_state, state);
+      qinstance_state_set_susp_on_sub(q, true);
    }
 
    DEXIT;

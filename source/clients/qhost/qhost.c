@@ -69,6 +69,7 @@
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_ulong.h"
 #include "sge_queue.h"
 #include "sge_centry.h"
@@ -359,8 +360,6 @@ u_long32 show
 ) {
    lList *load_thresholds, *suspend_thresholds;
    lListElem *qep;
-   char state_string[20];
-   u_long32 state;
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
@@ -398,15 +397,21 @@ u_long32 show
             /*
             ** state of queue
             */
-            state = lGetUlong(qep, QU_state);
             load_thresholds = lGetList(qep, QU_load_thresholds);
             suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
-            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL))
-               state |= QALARM; 
-            if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL))
-               state |= QSUSPEND_ALARM; 
-            queue_get_state_string(state_string, state);
-            printf("%s", state_string);
+            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL)) {
+               qinstance_state_set_alarm(qep, true);
+            }
+            if (sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL)) {
+               qinstance_state_set_suspend_alarm(qep, true);
+            }
+            {
+               dstring state_string = DSTRING_INIT;
+
+               qinstance_state_append_to_dstring(qep, &state_string);
+               printf("%s", sge_dstring_get_string(&state_string));
+               sge_dstring_free(&state_string);
+            }
             
             /*
             ** newline

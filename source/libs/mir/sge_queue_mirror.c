@@ -35,6 +35,7 @@
 #include "sge_log.h"
 
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 
 #include "msg_mirlib.h"
 
@@ -79,10 +80,8 @@ queue_update_master_list(sge_object_type type, sge_event_action action,
    lList **list;
    lDescr *list_descr;
    lListElem *queue;
-   int     key_nm;
-
+   int key_nm;
    const char *key;
-
 
    DENTER(TOP_LAYER, "queue_update_master_list");
 
@@ -99,8 +98,6 @@ queue_update_master_list(sge_object_type type, sge_event_action action,
 
       if (type == sgeE_QUEUE_SUSPEND_ON_SUB || 
           type == sgeE_QUEUE_UNSUSPEND_ON_SUB) {
-         u_long32 state;
-
          if (queue == NULL) {
             ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS, key, 
                    SGE_FUNC));
@@ -108,14 +105,11 @@ queue_update_master_list(sge_object_type type, sge_event_action action,
             return false;
          }
 
-         state = lGetUlong(queue, QU_state);
-
          if (type == sgeE_QUEUE_SUSPEND_ON_SUB) {
-            state |= QSUSPENDED_ON_SUBORDINATE;      /* set this bit */
+            qinstance_state_set_susp_on_sub(queue, true);
          } else {
-            state &= ~QSUSPENDED_ON_SUBORDINATE;     /* reset this bit */
+            qinstance_state_set_susp_on_sub(queue, false);
          }
-         lSetUlong(queue, QU_state, state);
 
          DEXIT;
          return true;

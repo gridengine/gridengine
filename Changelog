@@ -1,3 +1,8 @@
+EB-2003-10-11-0: Enhancem.: Started with STAT_SUM CQ-WP
+                            - Moved code which changes QI states into new module
+                            - Added dynamic QI attributes
+                            - Changed spooling code for QI
+
 JG-2003-10-10-0: Enhancem.: Moved product mode to bootstrap file.
                  Bugfix:    Fixed the build (new solarisx86 compiler is more
                             critical).

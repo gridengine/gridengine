@@ -71,6 +71,7 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_userprj.h"
@@ -649,8 +650,7 @@ lList *lp
          }
 
          /* if non static load values arrived, this indicates that 
-         ** host is not unknown - unset QUNKNOWN bit for all queues
-         ** on this host 
+         ** host is not unknown 
          */
          if (added_non_static) {
             lListElem *qep;
@@ -723,8 +723,7 @@ lList *lp
    }
 
    /* if non static load values arrived, this indicates that 
-   ** host is not unknown - unset QUNKNOWN bit for all queues
-   ** on this host 
+   ** host is not unknown 
    */
    if (added_non_static) {
       const char* tmp_hostname;
@@ -860,9 +859,7 @@ u_long32 now
  
          qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, host, &iterator);
          while (qep != NULL) {
-            u_long32 state = lGetUlong(qep, QU_state);
-            SETBIT(QUNKNOWN, state);
-            lSetUlong(qep, QU_state, state);
+            qinstance_state_set_unknown(qep, true);
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
             DPRINTF(("%s: trashed all (%d) non-static load values -> unknown\n", 
                      lGetString(qep, QU_qname), 

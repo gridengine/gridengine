@@ -541,13 +541,9 @@
 #define MSG_EVE_RESENTSIGNALQ_S       _MESSAGE(33437, _("got resend signal timer event for unknown queue "SFN"\n"))
 #define MSG_COM_NOUPDATEQSTATE_IS     _MESSAGE(33438, _("can't update remote queue state (%d) on queue "SFQ))
 #define MSG_QUEUE_ENABLEQCAL_S        _MESSAGE(33439, _("enable queue "SFQ" on calendar\n"))
-#define MSG_QUEUE_SOSNOUNSUSPCAL_S    _MESSAGE(33440, _("suspension on subordinate prevents unsuspension according to calendar for queue "SFQ"\n"))
-#define MSG_QUEUE_AMDSNOUNSUSPCAL_S   _MESSAGE(33441, _("administrator suspension prevents unsuspension according to calendar for queue "SFQ"\n"))
 #define MSG_QUEUE_SUSPENDQCAL_S       _MESSAGE(33442, _("suspend queue "SFQ" on calendar\n"))
 #define MSG_QUEUE_DISABLEQCAL_S       _MESSAGE(33443, _("disable queue "SFQ" on calendar\n"))
 #define MSG_QUEUE_UNSUSPENDQCAL_S     _MESSAGE(33444, _("unsuspend queue "SFQ" on calendar\n"))
-#define MSG_QUEUE_NOSUSP4SOS_S        _MESSAGE(33445, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
-#define MSG_QUEUE_NOSUSP4ADMS_S       _MESSAGE(33446, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
 #define MSG_QUEUE_ADDENABLED_S        _MESSAGE(33447, _("adding queue "SFQ" it gets enabled according to initial_state\n"))
 #define MSG_QUEUE_ADDDISABLED_S       _MESSAGE(33448, _("adding queue "SFQ" it gets disabled according to initial_state\n"))
 #define MSG_QUEUE_EXECDRESTARTENABLEQ_SS    _MESSAGE(33449, _("execd restart at "SFQ" enables queue "SFQ" according to initial_state\n"))
@@ -783,14 +779,20 @@
 
 #define MSG_JOB_MASTERTASKFAILED_S       _MESSAGE(33686, _("master task of job "SFN" failed - killing job\n"))
 
-#define MSG_CQUEUE_NAMENOTGUILTY_S        _MESSAGE(33687, _("cluster queue name "SFQ" is not guilty\n"))
-#define MSG_CQUEUE_NONAMECHANGE           _MESSAGE(33688, _("unable to change cluster queue name\n"))
-#define MSG_CQUEUE_ERRORWRITESPOOLFILE_S  _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
+#define MSG_CQUEUE_NAMENOTGUILTY_S       _MESSAGE(33687, _("cluster queue name "SFQ" is not guilty\n"))
+#define MSG_CQUEUE_NONAMECHANGE          _MESSAGE(33688, _("unable to change cluster queue name\n"))
+#define MSG_CQUEUE_ERRORWRITESPOOLFILE_S _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
 
-#define MSG_HGROUP_CYCLEINDEF_SS          _MESSAGE(33690, _("Hostgroup "SFQ" in specification of "SFQ" would create a cycle\n"))
-#define MSG_HGROUP_REFINHGOUP_SS          _MESSAGE(33691, _("denied: following hostgroups still reference "SFQ": "SFN"\n"))
-#define MSG_HGROUP_REFINCUSER_SS          _MESSAGE(33692, _("denied: following user mapping entries still reference "SFQ": "SFN"\n"))
-#define MSG_HGROUP_REFINCQUEUE_SS         _MESSAGE(33693, _("denied: following cluster queues still reference "SFQ": "SFN"\n"))
+#define MSG_HGROUP_CYCLEINDEF_SS        _MESSAGE(33690, _("Hostgroup "SFQ" in specification of "SFQ" would create a cycle\n"))
+#define MSG_HGROUP_REFINHGOUP_SS        _MESSAGE(33691, _("denied: following hostgroups still reference "SFQ": "SFN"\n"))
+#define MSG_HGROUP_REFINCUSER_SS        _MESSAGE(33692, _("denied: following user mapping entries still reference "SFQ": "SFN"\n"))
+#define MSG_HGROUP_REFINCQUEUE_SS       _MESSAGE(33693, _("denied: following cluster queues still reference "SFQ": "SFN"\n"))
+
+#define MSG_QINSTANCE_NOSSOS_S          _MESSAGE(33694, _("Subordinate suspension prevents unsuspension due to calendar for queue "SFQ"\n"))
+#define MSG_QINSTANCE_NOSADM_S          _MESSAGE(33695, _("Administrator suspension prevents unsuspension due to calendar for queue "SFQ"\n"))
+#define MSG_QINSTANCE_NOUSSOS_S         _MESSAGE(33696, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
+#define MSG_QINSTANCE_NOUSADM_S         _MESSAGE(33697, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
+
 
 #endif /* __MSG_QMASTER_H */
 

@@ -37,6 +37,7 @@
 #include "sge_ja_task.h"
 #include "sge_any_request.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge_orderL.h"
@@ -338,8 +339,7 @@ lList **topp  /* ticket orders ptr ptr */
             return -1;
          }  
             
-         /* handle QERROR */
-         if (VALID(QERROR, lGetUlong(qep, QU_state))) {
+         if (qinstance_state_is_error(qep)) {
             ERROR((SGE_EVENT, MSG_JOB_QMARKEDERROR_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
@@ -347,7 +347,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -1;
          }  
-         if (VALID(QCAL_SUSPENDED, lGetUlong(qep, QU_state))) {
+         if (qinstance_state_is_cal_suspended(qep)) {
             ERROR((SGE_EVENT, MSG_JOB_QSUSPCAL_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);
@@ -355,7 +355,7 @@ lList **topp  /* ticket orders ptr ptr */
             DEXIT;
             return -1;
          }  
-         if (VALID(QCAL_DISABLED, lGetUlong(qep, QU_state))) {
+         if (qinstance_state_is_cal_disabled(qep)) {
             ERROR((SGE_EVENT, MSG_JOB_QDISABLECAL_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(gdil);

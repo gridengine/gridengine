@@ -72,6 +72,8 @@
 #include "qmon_jobcustom.h"
 #include "sge_feature.h"
 #include "sge_queue.h"
+#include "sge_qinstance.h"
+#include "sge_qinstance_state.h"
 #include "sge_host.h"
 #include "sge_complex_schedd.h"
 #include "slots_used.h"
@@ -988,9 +990,6 @@ lListElem *qep
    str = lGetString(qep, QU_h_rss);
    sprintf(info, WIDTH"%s\n", info, "Hard Resident Set Size:", str ? str : "");
 
-   sprintf(info, WIDTH"%s\n", info, "Enable Migration:", 
-                     lGetUlong(qep, QU_enable_migr) ? "True" : "False");
-
    str = lGetString(qep, QU_min_cpu_interval);
    sprintf(info, WIDTH"%s\n", info, "Min Cpu Interval:", str ? str : "");
 
@@ -1101,10 +1100,9 @@ XtPointer cld, cad;
    XRectangle rect;
    char buf[BUFSIZ];
    char hostname[128];
-   char qstates[128];
    const char *qname = NULL, *qhostname = NULL;
    unsigned long job_slots = 0, job_slots_used = 0;
-   unsigned long qstate = 0, alarm_set = 0, suspend_threshold_alarm = 0;
+   unsigned long alarm_set = 0, suspend_threshold_alarm = 0;
    int i; 
    GC draw_gc;
    lList *ehl = NULL;
@@ -1153,16 +1151,14 @@ XtPointer cld, cad;
          qhostname = lGetHost(q, QU_qhostname);
          job_slots = lGetUlong(q, QU_job_slots);
          job_slots_used = qslots_used(q);
-         qstate = lGetUlong(q, QU_state); 
-         queue_get_state_string(qstates, qstate);
          if ( sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), ehl, cl, NULL))
             alarm_set = 1;
          if (sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), ehl, cl, NULL))
             suspend_threshold_alarm = 1;
 
 
-         DPRINTF(("<<Queue: %s/%s/%d/%d/%x/%s>>\n", qname, qhostname,
-                     job_slots_used, job_slots, qstate, 
+         DPRINTF(("<<Queue: %s/%s/%d/%d/%s>>\n", qname, qhostname,
+                     job_slots_used, job_slots, 
                      qB->qI->arch ? qB->qI->arch : "*NA*" ));
       } 
       else {
@@ -1245,7 +1241,7 @@ XtPointer cld, cad;
       x = bw + sbw; 
       y = height - 2 * bw - sbh;
       
-      if (!(qstate & QUNKNOWN)) {
+      if (!qinstance_state_is_unknown(q)) {
 
          for (i=0; i<7; i++) {
             XDrawRectangle(XtDisplay(w), XtWindow(w), qb_gc, 
@@ -1254,13 +1250,13 @@ XtPointer cld, cad;
          }
 
          /* jobs are running */
-         if (job_slots_used /* && !suspend_threshold_alarm && !(qstate & QSUSPENDED) && !(qstate & QSUSPENDED_ON_SUBORDINATE) */)
+         if (job_slots_used)
             XFillRectangle(XtDisplay(w), XtWindow(w), running_gc,
                               x + 1, y + 1,
                               sbw - 1, sbh - 1); 
 
          /* queue suspended */
-         if (qstate & QSUSPENDED_ON_SUBORDINATE)
+         if (qinstance_state_is_susp_on_sub(q))
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
                               x + 1 * sbw + 1, y + 1,
                               sbw - 2, (sbh/2 + sbh % 2)); 
@@ -1272,13 +1268,13 @@ XtPointer cld, cad;
                               sbw - 2, (sbh/2 + sbh % 2 - 1));
          }
          /* queue suspended */
-         if ((qstate & QSUSPENDED) ) 
+         if (qinstance_state_is_manual_suspended(q)) 
             XFillRectangle(XtDisplay(w), XtWindow(w), suspend_gc,
                               x + 1 * sbw + 1, y + 1,
                               sbw - 1, sbh - 1); 
 
          /* queue disabled */
-         if (qstate & QDISABLED)
+         if (qinstance_state_is_manual_disabled(q))
             XFillRectangle(XtDisplay(w), XtWindow(w), disable_gc,
                               x + 2 * sbw + 1, y + 1,
                               sbw - 1, sbh - 1); 
@@ -1287,17 +1283,17 @@ XtPointer cld, cad;
                               x + 3 * sbw + 1, y + 1,
                               sbw - 1, sbh - 1); 
 
-         if (qstate & QERROR)
+         if (qinstance_state_is_error(q))
             XFillRectangle(XtDisplay(w), XtWindow(w), error_gc,
                               x + 4 * sbw + 1, y + 1,
                               sbw - 1, sbh - 1); 
 
-         if (qstate & QCAL_SUSPENDED)
+         if (qinstance_state_is_cal_suspended(q))
             XFillRectangle(XtDisplay(w), XtWindow(w), calsuspend_gc,
                               x + 5 * sbw + 1, y + 1,
                               sbw - 1, sbh - 1); 
 
-         if (qstate & QCAL_DISABLED)
+         if (qinstance_state_is_cal_disabled(q))
             XFillRectangle(XtDisplay(w), XtWindow(w), caldisable_gc,
                               x + 6 * sbw + 1, y + 1,
                               sbw - 2, sbh - 1); 
@@ -1308,7 +1304,7 @@ XtPointer cld, cad;
       x = rect.x + (rect.width - sw)/2;
       y = height - sh - 2 * sbh - bw;
       
-      if (qstate & QUNKNOWN)
+      if (qinstance_state_is_unknown(q))
          draw_gc = error_gc;
       else
          draw_gc = qb_gc;

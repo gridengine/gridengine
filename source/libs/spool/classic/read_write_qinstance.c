@@ -106,6 +106,38 @@ int parsing_type
       ret = (!set_conf_string(alpp, clpp, fields, "hostname", ep, QI_hostname)) ? -1 : 0;
    }
 
+   /* --------- QU_state */
+   if (!set_conf_ulong(alpp, clpp, fields, "state", ep, QI_state)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_pending_signal */
+   if (!set_conf_ulong(alpp, clpp, fields, "pending_signal",
+            ep, QI_pending_signal)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_pending_signal_delivery_time */
+   if (!set_conf_ulong(alpp, clpp, fields, "pending_signal_del", ep,
+            QI_pending_signal_delivery_time)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_version */
+   if (!set_conf_ulong(alpp, clpp, fields, "version", ep, QI_version)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_queue_number */
+   if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QI_queue_number)) {
+      DEXIT;
+      return -1;
+   }
+
    DEXIT;
    return ret;
 }
@@ -365,6 +397,16 @@ write_qinstance(int spool, int how, const lListElem *ep, FILE *fp1)
       /*
        * Spool only non-CQ attributes
        */
+      FPRINTF((fp, "state              %d\n", 
+               (int)lGetUlong(ep, QI_state)));
+      FPRINTF((fp, "pending_signal     %d\n",
+               (int)lGetUlong(ep, QI_pending_signal)));
+      FPRINTF((fp, "pending_signal_del %d\n",
+               (int)lGetUlong(ep, QI_pending_signal_delivery_time)));
+      FPRINTF((fp, "version            %d\n",
+               (int)lGetUlong(ep, QI_version)));
+      FPRINTF((fp, "queue_number       %d\n",
+               (int)lGetUlong(ep, QI_queue_number)));
    }
    if (how == 0) {
       FPRINTF((fp, "\n"));

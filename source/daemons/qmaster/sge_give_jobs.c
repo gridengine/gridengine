@@ -91,6 +91,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
@@ -506,7 +507,7 @@ const char *queue
          return;
       }
 
-      if ((lGetUlong(mqep, QU_state) & QUNKNOWN)) {
+      if (qinstance_state_is_unknown(mqep)) {
          trigger_job_resend(now, hep, jobid, jataskid);
          return; /* try later again */
       }

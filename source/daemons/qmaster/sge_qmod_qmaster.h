@@ -43,8 +43,9 @@ void rebuild_signal_events(void);
 void sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 int sge_signal_queue(int how, lListElem *qep, lListElem *jep, lListElem *jatep);
-void signal_on_calendar(lListElem *qep, u_long32 old_state, u_long32 new_state);
 
+bool
+qinstance_signal_on_calendar(lListElem *this_elem, const lListElem *calendar);
 
 #endif /* __SGE_QMOD_QMASTER_H */
 

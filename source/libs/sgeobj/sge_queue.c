@@ -45,6 +45,7 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_todo.h"
@@ -61,7 +62,8 @@
 
 lList *Master_Queue_List = NULL;
 
-static bool queue_has_type(const lListElem *this_elem, u_long32 type);
+static bool 
+queue_has_type(const lListElem *this_elem, u_long32 type);
 
 static bool queue_has_type(const lListElem *this_elem, u_long32 type) 
 {
@@ -78,27 +80,6 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op)
    int count = 0;
 
    DENTER(TOP_LAYER, "queue_or_job_get_states");
-
-   if (nm==QU_qname) {
-      if (VALID(QALARM, op))
-         str[count++] = ALARM_SYM;
-      if (VALID(QSUSPEND_ALARM, op))
-         str[count++] = SUSPEND_ALARM_SYM;
-      if (VALID(QCAL_SUSPENDED, op))
-         str[count++] = SUSPENDED_ON_CALENDAR_SYM;
-      if (VALID(QCAL_DISABLED, op))
-         str[count++] = DISABLED_ON_CALENDAR_SYM;
-      if (VALID(QDISABLED, op))
-         str[count++] = DISABLED_SYM;
-      if (!VALID(!QDISABLED, op))
-         str[count++] = ENABLED_SYM;
-      if (VALID(QUNKNOWN, op))
-         str[count++] = UNKNOWN_SYM;
-      if (VALID(QERROR, op))
-         str[count++] = ERROR_SYM;
-      if (VALID(QSUSPENDED_ON_SUBORDINATE, op))
-         str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
-   }
 
    if (nm==JB_job_number) {
       if (VALID(JDELETED, op))
@@ -208,9 +189,9 @@ bool queue_list_suspends_ja_task(lList *queue_list, lList *granted_queue_list)
       queue = queue_list_locate(queue_list, queue_name);
       queue_state = lGetUlong(queue, QU_state);
 
-      if ((queue_state & QSUSPENDED) ||
-          (queue_state & QSUSPENDED_ON_SUBORDINATE) ||
-          (queue_state & QCAL_SUSPENDED)) {
+      if (qinstance_state_is_manual_suspended(queue) ||
+          qinstance_state_is_susp_on_sub(queue) ||
+          qinstance_state_is_cal_suspended(queue)) {
          DEXIT;
          return true;
       }
@@ -836,3 +817,33 @@ queue_is_centry_a_complex_value(const lListElem *this_elem,
    DEXIT;
    return ret;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

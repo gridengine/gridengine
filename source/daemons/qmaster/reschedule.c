@@ -60,6 +60,7 @@
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
+#include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
 
 #include "sge_persistence_qmaster.h"
@@ -163,9 +164,7 @@ void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 timeout,
    qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, hostname, &iterator); 
 
    while (qep != NULL) {
-      u_long32 state;
-      state = lGetUlong(qep, QU_state);
-      if (!VALID(QUNKNOWN, state)) {
+      if (!qinstance_state_is_unknown(qep)) {
         DEXIT;
         goto Error;
       } 

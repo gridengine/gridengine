@@ -50,6 +50,7 @@
 #include "japiP.h"
 #include "rmon_monitoring_level.h"
 #include "sgermon.h"
+#include "sge_profiling.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -579,6 +580,8 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "qsub");
 
+   sge_prof_setup();
+
    if (argc == 1) 
       usage();
    
@@ -593,6 +596,7 @@ int main(int argc, char *argv[])
       char drm_name[DRMAA_DRM_SYSTEM_BUFFER];
       if (drmaa_get_DRM_system(drm_name, 255, diag, sizeof(diag)-1)!=DRMAA_ERRNO_SUCCESS) {
          fprintf(stderr, "drmaa_get_DRM_system() failed: %s\n", diag);
+         sge_prof_cleanup();
          return 1;
       }
       printf("Connected to DRM system \"%s\"\n", drm_name);
@@ -670,6 +674,7 @@ int main(int argc, char *argv[])
       }
    } 
 
+   sge_prof_cleanup();
    return failed;
 }
 

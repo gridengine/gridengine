@@ -1,3 +1,7 @@
+JG-2004-10-20-0: Bugfix:    fixed qsh and test_drmaa (sge_prof_setup) 
+                 Changed:   qsh test_drmaa
+                 Review:    SG
+
 SG-2004-10-20-0: Bugfix:    - sge_share_mon crashed on startup
                  Changed:   sge_share_mon
                  Review:    MD
@@ -11,10 +15,10 @@ AH-2004-10-19-0: Doc:       Enhanced qstat(1) man page about qstat -j option
                  Bugtraq:   6181171
                  Review:    AD
 
+JG-2004-10-19-1: Bugfix:    fixed broken build on alinux
+
 JG-2004-10-19-0: Testsuite: Enhanced ssh support: Which ssh client to use is now 
                             configured in the host configuration.
-
-JG-2004-10-19-1: Bugfix:    fixed broken build on alinux
 
 EB-2004-10-19-0: Bugfix:    fix of EB-2004-09-15-0: qstat will show
                             extended information for -pri -ext -urg

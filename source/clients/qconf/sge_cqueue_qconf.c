@@ -38,6 +38,7 @@
 
 #include "sge_answer.h"
 #include "sge_cqueue.h"
+#include "sge_hgroup.h"
 #include "sge_cqueue_qconf.h"
 #include "parse_qconf.h"
 #include "spool/classic/read_write_cqueue.h"
@@ -91,6 +92,75 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
          answer_list_replace(answer_list, &gdi_answer_list);
       }
    } 
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_hgrp_get_via_gdi(lList **answer_list, lList **hgrp_list, 
+                        lList **cq_list, 
+                        bool fetch_all_hgrp, bool fetch_all_qi, 
+                        bool fetch_all_nqi)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "cqueue_hgrp_get_via_gdi");
+   if (hgrp_list != NULL && cq_list != NULL) {
+      state_gdi_multi state = STATE_GDI_MULTI_INIT;
+      lList *multi_answer_list = NULL;
+      int hgrp_id = 0; 
+      int cq_id = 0;
+
+      if (ret && fetch_all_hgrp) { 
+         lEnumeration *what = lWhat("%T(ALL)", HGRP_Type);
+        
+         hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
+                                 SGE_GDI_GET, NULL, NULL, what, NULL, &state);
+         what = lFreeWhat(what);
+      }  
+      if (ret) {
+         lEnumeration *what; 
+         
+         what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
+         cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+                               SGE_GDI_GET, NULL, NULL, what,
+                               &multi_answer_list, &state);
+         what = lFreeWhat(what);
+      }
+      if (ret && fetch_all_hgrp) {
+         lList *local_answer_list = NULL;
+         
+         local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
+                      SGE_HGROUP_LIST, hgrp_id, multi_answer_list, hgrp_list);
+         if (local_answer_list != NULL) {
+            lListElem *answer = lFirst(local_answer_list);
+
+            if (lGetUlong(answer, AN_status) != STATUS_OK) {
+               lDechainElem(local_answer_list, answer);
+               answer_list_add_elem(answer_list, answer);
+               ret = false;
+            }
+         } 
+         lFreeList(local_answer_list);
+      }  
+      if (ret) {
+         lList *local_answer_list = NULL;
+         
+         local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
+                      SGE_CQUEUE_LIST, cq_id, multi_answer_list, cq_list);
+         if (local_answer_list != NULL) {
+            lListElem *answer = lFirst(local_answer_list);
+
+            if (lGetUlong(answer, AN_status) != STATUS_OK) {
+               lDechainElem(local_answer_list, answer);
+               answer_list_add_elem(answer_list, answer);
+               ret = false;
+            }
+         } 
+         lFreeList(local_answer_list);
+      }
+      lFreeList(multi_answer_list);
+   }
    DEXIT;
    return ret;
 }

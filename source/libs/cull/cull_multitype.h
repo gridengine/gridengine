@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+#define for_each_attr(ATTR, LDP) for (ATTR = LDP->nm; ATTR != NoName; LDP++, ATTR = LDP->nm)
+
 const char *multitypes[13];
 
 typedef int (*lCmpFunction)(lListElem *, lListElem *, int);

@@ -703,6 +703,24 @@ answer_list_add(lList **answer_list, const char *text,
    return ret;
 }
 
+bool answer_list_add_elem(lList **answer_list, lListElem *answer)
+{
+   int ret = false;
+
+   DENTER(ANSWER_LAYER, "answer_list_add_elem");
+   if (answer_list != NULL) {
+      if (*answer_list == NULL) {
+         *answer_list = lCreateList("", AN_Type);
+      }
+      if (*answer_list != NULL) {
+         lAppendElem(*answer_list, answer);
+         ret = true;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
 /****** sgeobj/answer/answer_list_replace() ***********************************
 *  NAME
 *     answer_list_replace() -- repalce a answer list 

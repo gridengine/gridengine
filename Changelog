@@ -1,3 +1,5 @@
+EB-2003-09-15-0: Enhancem.: Base implementation for qconf -sq switch for CQ's
+
 AA-2003-09-11-0: Bugfix:    fixed sge_ca scripts, conf files, added some
                             additional cl switches for extending, printing and
                             verifying certs

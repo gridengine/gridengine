@@ -49,6 +49,9 @@ extern lList *Master_CQueue_List;
 
 extern list_attribute_struct cqueue_attribute_array[];
 
+lEnumeration *
+enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi);
+
 bool
 cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
                   bool *has_hostname, bool *has_domain);

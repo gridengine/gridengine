@@ -45,6 +45,7 @@
 #include "sge_options.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_dstring.h"
 #include "sge_string.h"
 #include "sge_eventL.h"
 #include "sge_identL.h"
@@ -4101,10 +4102,15 @@ DPRINTF(("ep: %s %s\n",
                spp++;
                if (strncmp("-", *spp, 1)) {
                   lString2List(*spp, &arglp, QR_Type, QR_name, ", ");
+               }
+            }
 
 lWriteListTo(arglp, stderr);
 {
    lListElem *qref;
+   bool fetch_all_hgrp = false;
+   bool fetch_all_qi = false;
+   bool fetch_all_nqi = false;
 
    for_each(qref, arglp) {
       dstring cqueue_name = DSTRING_INIT;
@@ -4115,12 +4121,38 @@ lWriteListTo(arglp, stderr);
       cqueue_name_split(name, &cqueue_name, &host_domain, 
                         &has_hostname, &has_domain);
 
+      fetch_all_hgrp = fetch_all_hgrp || has_domain;
+      fetch_all_qi = fetch_all_qi || (has_domain || has_hostname);
+      fetch_all_nqi = fetch_all_nqi || (!has_domain && !has_hostname);
+     
       fprintf(stderr, "%s\n", sge_dstring_get_string(&cqueue_name));
-      fprintf(stderr, "%s\n", sge_dstring_get_string(&host_domain));
+      if (has_domain || has_hostname) 
+         fprintf(stderr, "%s\n", sge_dstring_get_string(&host_domain));
       
       sge_dstring_free(&cqueue_name);
       sge_dstring_free(&host_domain);
    }
+
+   {
+      lList *hgrp_list = NULL;
+      lList *cq_list = NULL;
+      lList *answer_list = NULL;
+      bool local_ret;
+
+      local_ret = cqueue_hgrp_get_via_gdi(&answer_list, &hgrp_list, &cq_list,
+                                          fetch_all_hgrp, fetch_all_qi, 
+                                          fetch_all_nqi);
+      if (local_ret) {
+         lWriteListTo(cq_list, stderr);
+         lWriteListTo(hgrp_list, stderr);
+      } else {
+         show_gdi_request_answer(answer_list);
+      }
+   }
+
+   
+   fprintf(stderr, "%d %d %d\n", (int) fetch_all_hgrp, (int) fetch_all_qi,
+           (int) fetch_all_nqi);
 }
 
 #if 0
@@ -4147,10 +4179,8 @@ lWriteListTo(arglp, stderr);
 
                      printf("\n");
                   }
-#endif
                   arglp = lFreeList(arglp);
-               }
-            }
+#endif
          } 
          spp++;
          continue;

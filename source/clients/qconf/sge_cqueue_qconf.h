@@ -35,6 +35,10 @@
 
 lListElem *cqueue_get_via_gdi(lList **answer_list, const char *cqueue);
 
+bool
+cqueue_hgrp_get_via_gdi(lList **answer_list, lList **hgrp_list, lList **cq_list, 
+                        bool fetch_all_hgrp, bool fetch_all_qi, bool fetch_all_nqi);
+
 bool cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                                u_long32 gdi_command);
 

@@ -129,7 +129,8 @@ list_attribute_struct cqueue_attribute_array[] = {
 lList *Master_CQueue_List = NULL;
 
 bool
-cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain, 
+cqueue_name_split(const char *name, 
+                  dstring *cqueue_name, dstring *host_domain, 
                   bool *has_hostname, bool *has_domain)
 {
    bool ret = true;
@@ -137,29 +138,65 @@ cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
    DENTER(CQUEUE_LAYER, "cqueue_name_split");
    if (name != NULL && cqueue_name != NULL && 
        host_domain != NULL && has_hostname != NULL && has_domain != NULL) {
-      const char *first = strchr(name, '@');
+      int part = 0;
+      const char *tmp_string;
 
-      if (first != NULL) {
-         sge_dstring_sprintf(cqueue_name, "%s", name);
-         first++;
-         if (*first == '@') {
-            *has_hostname = false;
+      while (*name != '\0') {
+         if (part == 1) {
+            part = 2;
+         } else if (part == 0 && *name == '@') {
+            part = 1;
+         }
+         if (part == 0) {
+            sge_dstring_sprintf_append(cqueue_name, "%c", name[0]);
+         } else if (part == 2) {
+            sge_dstring_sprintf_append(host_domain, "%c", name[0]);
+         }
+         name++;
+      } 
+      tmp_string = sge_dstring_get_string(host_domain);
+      *has_hostname = false;
+      *has_domain = false;
+      if (tmp_string != NULL) {
+         if (tmp_string[0] == '@') {
             *has_domain = true;
-         } else if (*first == '\0') {
-            *has_hostname = false;
-            *has_domain = false;
          } else {
             *has_hostname = true;
-            *has_domain = false;
          }
-         sge_dstring_sprintf(host_domain, "%s", first);
+      } 
+   }
+   DEXIT;
+   return ret;
+}
 
-         fprintf(stderr, "%s\n", name);
-         fprintf(stderr, "%s\n", first);
-      } else {
-         sge_dstring_sprintf(cqueue_name, "%s", name);
+lEnumeration *
+enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
+{
+   lEnumeration *ret;
+   dstring format_string = DSTRING_INIT;
+   lDescr *descr = CQ_Type;
+   int name_array[100];
+   int names = -1;
+   int attr;
+
+   DENTER(CQUEUE_LAYER, "enumeration_create_reduced_cq");
+   for_each_attr(attr, descr) {
+      if (names == -1) {
+         sge_dstring_sprintf(&format_string, "%s", "%T(");
+      }
+      if ((attr == CQ_name) ||
+          (fetch_all_qi && attr == CQ_qinstances) ||
+          (fetch_all_nqi && attr != CQ_qinstances)) {
+         names++;
+         name_array[names] = attr;
+         sge_dstring_sprintf_append(&format_string, "%s", "%I");
+         fprintf(stderr, "%s\n", lNm2Str(attr));
       }
    }
+   sge_dstring_sprintf_append(&format_string, "%s", ")");
+   ret = _lWhat(sge_dstring_get_string(&format_string), CQ_Type, name_array, ++names);
+   sge_dstring_free(&format_string);
+   
    DEXIT;
    return ret;
 }

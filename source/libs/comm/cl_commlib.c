@@ -45,11 +45,13 @@
 #include "cl_message_list.h"
 #include "cl_host_list.h"
 #include "cl_endpoint_list.h"
+#include "cl_application_error_list.h"
 #include "cl_host_alias_list.h"
 #include "cl_communication.h"
 #include "cl_tcp_framework.h"
 #include "cl_util.h"
 
+static int cl_commlib_check_callback_functions(void);
 static int cl_commlib_check_connection_count(cl_com_handle_t* handle);
 static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list);
 
@@ -124,11 +126,19 @@ static cl_raw_list_t* cl_com_endpoint_list = NULL;
 /* cl_com_thread_list
  * ================
  *
- * Each entry in this list is a cached cl_get_hostbyname() 
-   or cl_gethostbyaddr() call */
+ * Each entry is a thread from cl_thread.c module
+ */
 static pthread_mutex_t cl_com_thread_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-static cl_raw_list_t* cl_com_thread_list = NULL;
+static cl_raw_list_t*  cl_com_thread_list = NULL;
 
+/* cl_com_application_error_list
+ * =============================
+ *
+ * Each entry is an error which has to provided to the application 
+ *
+ */
+static pthread_mutex_t cl_com_application_error_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_raw_list_t*  cl_com_application_error_list = NULL;
 
 
 
@@ -219,6 +229,97 @@ int cl_com_set_error_func(cl_error_func_t error_func) {
    return CL_RETVAL_OK;
 }
 
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_push_application_error()"
+int cl_commlib_push_application_error(int cl_error, const char* cl_info_text) {
+   const char* cl_info = cl_info_text;
+   int retval = CL_RETVAL_OK; 
+
+   if (cl_info == NULL) {
+      cl_info = "not available";
+      retval = CL_RETVAL_PARAMS;
+   }
+
+   pthread_mutex_lock(&cl_com_error_mutex);
+   if (cl_com_error_status_func != NULL) {
+      CL_LOG_STR(CL_LOG_ERROR,"add application error id: ", cl_get_error_text(cl_error));
+      CL_LOG_STR(CL_LOG_ERROR,"add application error: ", cl_info );
+      cl_application_error_list_push_error(cl_com_application_error_list, cl_error, cl_info, 1);
+   } else {
+      retval = CL_RETVAL_UNKNOWN;
+      CL_LOG(CL_LOG_ERROR,"no application error function set" );
+      CL_LOG_STR(CL_LOG_ERROR,"ignore application error id: ", cl_get_error_text(cl_error));
+      CL_LOG_STR(CL_LOG_ERROR,"ignore application error: ", cl_info );
+   }
+   pthread_mutex_unlock(&cl_com_error_mutex);
+   return retval;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_check_callback_functions()"
+static int cl_commlib_check_callback_functions(void) {
+   /* 
+    * This function will call application callback functions in context
+    * of application. This happens when application is calling 
+    * cl_commlib_send_message(), cl_commlib_receive_message() and
+    * cl_com_cleanup_commlib(), because
+    * this is the only chance to be in the application context (thread).
+    *
+    */
+    cl_thread_settings_t* actual_thread = NULL;
+    cl_bool_t is_commlib_thread = CL_FALSE;
+
+    switch(cl_com_create_threads) {
+       case CL_NO_THREAD:
+          break;
+       default:
+          actual_thread = cl_thread_get_thread_config();
+          if (actual_thread != NULL) {
+             if (actual_thread->thread_pointer != NULL) {
+                is_commlib_thread = CL_TRUE;
+                CL_LOG(CL_LOG_WARNING,"this is a commlib thread");
+             }
+          }
+          break;
+    }
+
+    
+    CL_LOG(CL_LOG_WARNING,"checking for errors in application error list");
+  
+    /* check if caller is application (thread) */
+    if ( is_commlib_thread == CL_FALSE ) {
+       /* here we are in application context, we can call trigger functions */
+       cl_application_error_list_elem_t* elem = NULL;
+       cl_raw_list_lock(cl_com_application_error_list);
+       while( (elem = cl_application_error_list_get_first_elem(cl_com_application_error_list)) != NULL ) {
+          cl_raw_list_remove_elem(cl_com_application_error_list, elem->raw_elem);
+
+          /* now trigger application error func */
+          pthread_mutex_lock(&cl_com_error_mutex);
+          if (cl_com_error_status_func != NULL) {
+             CL_LOG(CL_LOG_WARNING,"triggering application error function");
+             cl_com_error_status_func(elem->cl_error,elem->cl_info);
+          }
+          pthread_mutex_unlock(&cl_com_error_mutex);
+
+          free(elem->cl_info);
+          free(elem);
+          elem = NULL;
+       }
+       cl_raw_list_unlock(cl_com_application_error_list);
+    }
+    
+
+    return CL_RETVAL_OK;
+}
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -241,6 +342,20 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
    }
    pthread_mutex_unlock(&cl_com_log_list_mutex);
    cl_log_list_set_log_level(cl_com_log_list, debug_level );
+
+
+   /* setup global application error list */
+   pthread_mutex_lock(&cl_com_application_error_list_mutex);
+   if (cl_com_application_error_list == NULL) {
+      ret_val = cl_application_error_list_setup(&cl_com_application_error_list, "application errors");
+      if (cl_com_application_error_list == NULL) {
+         pthread_mutex_unlock(&cl_com_application_error_list_mutex);
+         cl_com_cleanup_commlib();
+         return ret_val;
+      } 
+   }
+   pthread_mutex_unlock(&cl_com_application_error_list_mutex);
+
 
 
    /* setup global cl_com_handle_list */
@@ -311,6 +426,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
    pthread_mutex_unlock(&cl_com_thread_list_mutex);
  
    CL_LOG(CL_LOG_INFO,"ngc library setup done");
+   cl_commlib_check_callback_functions();
    return CL_RETVAL_OK;
 }
 
@@ -325,6 +441,9 @@ int cl_com_cleanup_commlib(void) {
    cl_handle_list_elem_t* elem = NULL;
 
    CL_LOG(CL_LOG_INFO,"cleanup commlib ...");
+
+   cl_commlib_check_callback_functions(); /* flush all callbacks to application */
+
 
    /* lock handle list mutex */   
    pthread_mutex_lock(&cl_com_handle_list_mutex);
@@ -386,11 +505,17 @@ int cl_com_cleanup_commlib(void) {
    cl_host_list_cleanup(&cl_com_host_list);
    pthread_mutex_unlock(&cl_com_host_list_mutex);
 
+   CL_LOG(CL_LOG_INFO,"cleanup application error list ...");
+   pthread_mutex_lock(&cl_com_application_error_list_mutex);
+   cl_application_error_list_cleanup(&cl_com_application_error_list);
+   pthread_mutex_unlock(&cl_com_application_error_list_mutex);
+
    CL_LOG(CL_LOG_INFO,"cleanup log list ...");
    /* cleanup global cl_com_log_list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
    cl_log_list_cleanup(&cl_com_log_list);
    pthread_mutex_unlock(&cl_com_log_list_mutex);
+
    return CL_RETVAL_OK;
 }
 
@@ -445,6 +570,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int dat
    char help_buffer[80];
    char* local_hostname = NULL;
    cl_handle_list_elem_t* elem = NULL;
+
+   cl_commlib_check_callback_functions();
 
    if (cl_com_handle_list  == NULL) {
       CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
@@ -955,6 +1082,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
    int ret_val;
 
 
+   cl_commlib_check_callback_functions();
+
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -1029,6 +1158,11 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                      /* delete messages */
                      cl_com_message_t* message = NULL;
                      cl_com_endpoint_t* sender = NULL;
+                     /*
+                      * cl_commlib_receive_message() can be called inside of cl_commlib_shutdown_handle()
+                      * because cl_commlib_shutdown_handle() is called from application context.
+                      *
+                      */
                      cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
                      if (message != NULL) {
                         CL_LOG(CL_LOG_WARNING,"deleting message");
@@ -1786,8 +1920,13 @@ int cl_com_get_connect_port(cl_com_handle_t* handle, int* port) {
    if (handle == NULL || port == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   *port = handle->connect_port;
-   return CL_RETVAL_UNKNOWN;
+
+   if ( handle->connect_port > 0 ) { 
+      *port = handle->connect_port;
+      return CL_RETVAL_OK;
+   } else {
+      return CL_RETVAL_UNKNOWN;
+   }
 }
 
 
@@ -1848,6 +1987,7 @@ int cl_commlib_trigger(cl_com_handle_t* handle) {
 
    int ret_val;
 
+   cl_commlib_check_callback_functions();
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -2843,52 +2983,52 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, int lock_list
    }
    
 
-   snprintf(help,255,"           %.3f", handle_time_range);
+   snprintf(help,256,"           %.3f", handle_time_range);
    CL_LOG_STR(CL_LOG_INFO,"time_range:",help);
 
-   snprintf(help,255,"  %.3f", con_per_second );
+   snprintf(help,256,"  %.3f", con_per_second );
    CL_LOG_STR(CL_LOG_INFO,"new connections/sec:",help);
 
-   snprintf(help,255,"           %.3f", send_pay_load);
+   snprintf(help,256,"           %.3f", send_pay_load);
    CL_LOG_STR(CL_LOG_INFO,"sent ratio:",help);  
-   snprintf(help,255,"          %.3f", kbits_sent);    
+   snprintf(help,256,"          %.3f", kbits_sent);    
    CL_LOG_STR(CL_LOG_INFO,"sent kbit/s:",help);  
-   snprintf(help,255,"     %.3f", real_kbits_sent);    
+   snprintf(help,256,"     %.3f", real_kbits_sent);    
    CL_LOG_STR(CL_LOG_INFO,"real sent kbit/s:",help);
 
 
-   snprintf(help,255,"        %.3f", receive_pay_load);
+   snprintf(help,256,"        %.3f", receive_pay_load);
    CL_LOG_STR(CL_LOG_INFO,"receive ratio:",help);  
-   snprintf(help,255,"      %.3f", kbits_received);   
+   snprintf(help,256,"      %.3f", kbits_received);   
    CL_LOG_STR(CL_LOG_INFO,"received kbit/s:",help);
-   snprintf(help,255," %.3f", real_kbits_received);   
+   snprintf(help,256," %.3f", real_kbits_received);   
    CL_LOG_STR(CL_LOG_INFO,"real received kbit/s:",help);
 
 
-   snprintf(help,255,"           %.3f" , (double) handle->statistic->bytes_sent / 1024.0);  
+   snprintf(help,256,"           %.3f" , (double) handle->statistic->bytes_sent / 1024.0);  
    CL_LOG_STR(CL_LOG_INFO,"sent kbyte:",help);   
-   snprintf(help,255,"      %.3f" , (double) handle->statistic->real_bytes_sent / 1024.0);  
+   snprintf(help,256,"      %.3f" , (double) handle->statistic->real_bytes_sent / 1024.0);  
    CL_LOG_STR(CL_LOG_INFO,"real sent kbyte:",help);   
  
 
  
-   snprintf(help,255,"       %.3f" , (double)handle->statistic->bytes_received / 1024.0);   
+   snprintf(help,256,"       %.3f" , (double)handle->statistic->bytes_received / 1024.0);   
    CL_LOG_STR(CL_LOG_INFO,"received kbyte:",help);
-   snprintf(help,255,"  %.3f" , (double)handle->statistic->real_bytes_received / 1024.0);   
+   snprintf(help,256,"  %.3f" , (double)handle->statistic->real_bytes_received / 1024.0);   
    CL_LOG_STR(CL_LOG_INFO,"real received kbyte:",help);
 
 
 
-   snprintf(help,255," %ld" , handle->statistic->unsend_message_count);
+   snprintf(help,256," %ld" , handle->statistic->unsend_message_count);
    CL_LOG_STR(CL_LOG_INFO,"unsend_message_count:",help);
 
-   snprintf(help,255," %ld" , handle->statistic->unread_message_count);
+   snprintf(help,256," %ld" , handle->statistic->unread_message_count);
    CL_LOG_STR(CL_LOG_INFO,"unread_message_count:",help);
 
-   snprintf(help,255,"     %ld" , handle->statistic->nr_of_connections);
+   snprintf(help,256,"     %ld" , handle->statistic->nr_of_connections);
    CL_LOG_STR(CL_LOG_INFO,"open connections:",help);
 
-   snprintf(help,255,"    %ld" , handle->statistic->application_status);
+   snprintf(help,256,"    %ld" , handle->statistic->application_status);
    CL_LOG_STR(CL_LOG_INFO,"application state:",help);
 
 
@@ -3068,7 +3208,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           if (connection->data_buffer_size < (gmsh_message_size + 1) ) {
              return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
           }
-          sprintf((char*)connection->data_write_buffer, CL_GMSH_MESSAGE , mih_message_size);
+          snprintf((char*)connection->data_write_buffer, connection->data_buffer_size, CL_GMSH_MESSAGE , mih_message_size);
 
 
           gettimeofday(&now,NULL);
@@ -3297,6 +3437,9 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
    int message_sent = 0;
    struct timeval now;
    int leave_reason = CL_RETVAL_OK;
+
+   cl_commlib_check_callback_functions();
+
 
    if (message == NULL) {
       return CL_RETVAL_PARAMS;
@@ -3883,6 +4026,9 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    int return_value = CL_RETVAL_OK;
    char* unique_hostname = NULL;
 
+
+   cl_commlib_check_callback_functions();
+
    if ( handle == NULL) {
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
@@ -4037,6 +4183,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
    int shutdown_received = 0;
    struct timeval now;
+
+   cl_commlib_check_callback_functions();
 
    /* check endpoint parameters: un_resolved_hostname , componenet_name and componenet_id */
    if ( un_resolved_hostname == NULL || component_name == NULL || component_id == 0 ) {
@@ -4257,6 +4405,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       CL_LOG(CL_LOG_WARNING,"connection is down! Try to reopen ...");
    }
    
+
+   /* here a new connection setup is done */
    CL_LOG(CL_LOG_INFO,"open new connection"); 
      
    ret_val = cl_com_setup_connection(handle, &new_con);
@@ -4278,8 +4428,12 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    remote_endpoint   = cl_com_create_endpoint(receiver.comp_host, component_name , component_id);
    receiver_endpoint = cl_com_create_endpoint(receiver.comp_host, component_name , component_id);
       
-
-   ret_val = cl_com_open_connection(new_con, handle->open_connection_timeout, remote_endpoint,local_endpoint, receiver_endpoint, sender_endpoint);
+   ret_val = cl_com_open_connection(new_con, 
+                                    handle->open_connection_timeout,
+                                    remote_endpoint,
+                                    local_endpoint,
+                                    receiver_endpoint,
+                                    sender_endpoint);
 
    cl_com_free_endpoint(&remote_endpoint);
    cl_com_free_endpoint(&local_endpoint);
@@ -4394,6 +4548,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    cl_connection_list_elem_t* elem = NULL;
    cl_com_connection_t* connection = NULL;
 
+   cl_commlib_check_callback_functions();
 
    if ( handle == NULL) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_HANDLE_NOT_FOUND));
@@ -4574,7 +4729,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
 
    cl_com_message_t*     message = NULL;
 
-
+   cl_commlib_check_callback_functions();
 
    if ( handle == NULL || status == NULL) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_HANDLE_NOT_FOUND));
@@ -4655,7 +4810,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       /* if message is not added, the connection was not found -> try to open it */
       if (message_added != 1) {
          retry_send++;  
-         return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id );
+         return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id);
          if (return_value != CL_RETVAL_OK) {
             free(unique_hostname);
             CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
@@ -4672,6 +4827,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
 
 
    if (message_added == 1) {
+      
       switch(cl_com_create_threads) {
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -4783,6 +4939,8 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
    char* unique_hostname = NULL;
    int retry_send = 1;
 
+   cl_commlib_check_callback_functions();
+
 
    /* check acknowledge method */
    if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || size == 0 ) {
@@ -4861,13 +5019,13 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
 
             CL_LOG_STR(CL_LOG_DEBUG,"sending to:", connection->receiver->comp_host); 
             if (copy_data == 1) {
-               help_data = (cl_byte_t*) malloc(sizeof(cl_byte_t)*size);
+               help_data = (cl_byte_t*) malloc((sizeof(cl_byte_t)*size));
                if (help_data == NULL) {
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
                   return CL_RETVAL_MALLOC;
                }
-               memcpy(help_data, data,sizeof(cl_byte_t)*size );
+               memcpy(help_data, data, (sizeof(cl_byte_t)*size) );
                return_value = cl_com_setup_message(&message, connection, help_data, size,ack_type,response_mid,tag);
             } else {
                return_value = cl_com_setup_message(&message, connection, data, size, ack_type,response_mid,tag);
@@ -5755,7 +5913,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
          free(resolved_host);
          return CL_RETVAL_UNKNOWN;
       }
-      snprintf(hostout, MAXHOSTLEN, resolved_host );
+      snprintf(hostout, MAXHOSTLEN, "%s", resolved_host );
       free(resolved_host);
    }
    return ret_val;

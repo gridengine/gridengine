@@ -123,6 +123,7 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
    }
    memset(com_private, 0, sizeof(cl_com_tcp_private_t));
 
+   (*connection)->crm_state_error = NULL;
    (*connection)->error_func = NULL;
    (*connection)->com_private = com_private;
    (*connection)->ccm_received = 0;
@@ -1050,6 +1051,10 @@ int cl_com_close_connection(cl_com_connection_t** connection) {   /* CR check */
       free( (*connection)->client_host_name);
       (*connection)->client_host_name = NULL;
 
+
+      free( (*connection)->crm_state_error);
+      (*connection)->crm_state_error = NULL;
+
       free( (*connection)->statistic );
       (*connection)->statistic = NULL;
 
@@ -1578,6 +1583,14 @@ int cl_com_compare_hosts( char* host1, char* host2) {
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_push_application_error()"
+int cl_com_push_application_error(int cl_error, const char* cl_info) {
+   return cl_commlib_push_application_error(cl_error,cl_info);      
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_cached_gethostbyname()"
 int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, struct in_addr *copy_addr ,struct hostent **he_copy, int* system_error_value ) {
    cl_host_list_elem_t*    elem = NULL;
@@ -1590,7 +1603,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    int ret_val = CL_RETVAL_OK;
    char* alias_name = NULL;
 
-   
+ 
    hostlist = cl_com_get_host_list();
    if (unresolved_host == NULL || unique_hostname == NULL) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_PARAMS));
@@ -1808,7 +1821,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
    char alias_file_buffer[LINE_MAX*4];
    int max_line = LINE_MAX*4;
    char* alias_delemiters="\n\t ,;";
-   char printbuf[2*MAXHOSTLEN];
+   char printbuf[ (2*MAXHOSTLEN) + 100 ];
 
    if (hostlist == NULL) {
       return CL_RETVAL_PARAMS;    

@@ -170,14 +170,16 @@ const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
 int cl_log_list_set_log_level(cl_raw_list_t* list_p, int new_log_level) {  /* CR check */
    cl_log_list_data_t* ldata = NULL;
    int log_level = 0;
+   char* env_sge_commlib_debug = NULL;
    if (list_p == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
    /* check for environment variable SGE_NGC_DEBUG */
    log_level = new_log_level;
-   if (getenv("SGE_COMMLIB_DEBUG") != NULL) {
-      log_level = (int) cl_util_get_ulong_value(getenv("SGE_COMMLIB_DEBUG"));
+   env_sge_commlib_debug = getenv("SGE_COMMLIB_DEBUG");
+   if (env_sge_commlib_debug != NULL) {
+      log_level = (int) cl_util_get_ulong_value(env_sge_commlib_debug);
    }
 
    if (log_level < CL_LOG_OFF || log_level > CL_LOG_DEBUG) {
@@ -291,6 +293,8 @@ static cl_log_list_elem_t* cl_log_list_get_last_elem(cl_raw_list_t* list_p, cl_l
 #define __CL_FUNCTION__ "cl_log_list_setup()"
 int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int creator_id, cl_log_list_flush_method_t flush_type, cl_log_func_t flush_func  ) {
    int ret_val;
+   char* env_sge_commlib_debug = NULL;
+
    cl_log_list_data_t* ldata = NULL;
    cl_thread_settings_t* creator_settings = NULL;
 
@@ -351,8 +355,9 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
    }
 
    /* check for environment variable SGE_COMMLIB_DEBUG */
-   if ( getenv("SGE_COMMLIB_DEBUG") != NULL) {
-      ldata->current_log_level = (int) cl_util_get_ulong_value(getenv("SGE_COMMLIB_DEBUG"));
+   env_sge_commlib_debug=getenv("SGE_COMMLIB_DEBUG");
+   if ( env_sge_commlib_debug != NULL) {
+      ldata->current_log_level = (int) cl_util_get_ulong_value(env_sge_commlib_debug);
    }
 
    CL_LOG(CL_LOG_INFO,"cl_log_list_setup() complete");
@@ -574,7 +579,7 @@ int cl_log_list_log_int(int log_type,int line, const char* function_name,const c
    int ret_val;
    char my_int_buffer[512];
 
-   sprintf(my_int_buffer, "%d", param);
+   snprintf(my_int_buffer, 512, "%d", param);
    ret_val = cl_log_list_log( log_type, line,  function_name, module_name,  log_text,  my_int_buffer);
    return ret_val;
 }

@@ -68,6 +68,8 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* endpoint_list);
 struct in_addr*   cl_com_copy_in_addr(struct in_addr *in_addr);
 cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent);
 
+int cl_com_push_application_error(int cl_error, const char* cl_info);
+
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_host_list_refresh(cl_raw_list_t* host_list);
 int cl_com_cached_gethostbyname( char *host, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);

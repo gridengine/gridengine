@@ -1103,7 +1103,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          } else {
             INFO((SGE_EVENT, "error closing old connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
          }
-         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1 );
+         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("opened new connection to qmaster\n"));
          } else {

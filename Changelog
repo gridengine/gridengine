@@ -1,3 +1,10 @@
+CR-2004-09-23-0: Bugfix:    more precise error messages for communication 
+                            errors
+                 Review:    JG
+                 Issue:     1275
+                 Bugtraq:   5097732
+                 Changed:   commlib, gdilib
+
 CR-2004-09-22-0: Cleanup:   - removed unused messages
                             - qmaster will now respond faster to qconf -km
                             - added some comments to the source code

@@ -57,7 +57,10 @@ static pthread_mutex_t check_alive_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
 
 /* setup a communication error callback */
-static void general_communication_error(int cl_err);
+static pthread_mutex_t general_communication_error_mutex = PTHREAD_MUTEX_INITIALIZER;
+static void general_communication_error(int cl_err, const char* error_message);
+static int   last_general_communication_error = CL_RETVAL_OK;
+static char* last_general_communication_error_string = NULL;
 static int gdi_general_communication_error = CL_RETVAL_OK;
 
 
@@ -208,29 +211,73 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 *     general_communication_error() -- callback for communication errors
 *
 *  SYNOPSIS
-*     static void general_communication_error(int cl_error) 
+*     static void general_communication_error(int cl_error, 
+*                                             const char* error_message) 
 *
 *  FUNCTION
 *     This function is used by cl_com_set_error_func() to set the default
 *     application error function for communication errors. On important 
 *     communication errors the communication lib will call this function
-*     with a corresponding error number.
+*     with a corresponding error number (within application context).
+*
 *     This function should never block. Treat it as a kind of signal handler.
+*    
+*     The error_message parameter is freed by the commlib.
 *
 *  INPUTS
-*     int cl_error - commlib error number
+*     int cl_error              - commlib error number
+*     const char* error_message - additional error text message
 *
 *  NOTES
 *     MT-NOTE: general_communication_error() is not MT safe 
 *     (static variable "gdi_general_communication_error" is used)
+*     TODO: Implement an error pop/push stack.
+*
 *
 *  SEE ALSO
 *     sge_any_request/sge_get_communication_error()
 *******************************************************************************/
-static void general_communication_error(int cl_error) {
-   DENTER(COMMD_LAYER, "general_communication_error");
-   DPRINTF((MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(cl_error)));
+static void general_communication_error(int cl_error, const char* error_message) {
+   DENTER(TOP_LAYER, "general_communication_error");
+   bool do_log = false;
+
+   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
+   do_log = false;
+   /* don't log the same error twice */
+   if ( cl_error != last_general_communication_error ) {
+      do_log = true;
+   } else {
+      /* check if there is a difference in error_message text */
+      if ( last_general_communication_error_string != NULL && error_message == NULL ) {
+         do_log = true;
+      }
+      if ( last_general_communication_error_string == NULL && error_message != NULL ) {
+         do_log = true;
+      }
+      if ( last_general_communication_error_string != NULL && error_message != NULL ) {
+         /* check the string itself */
+         if (strcmp(last_general_communication_error_string, error_message) != 0 ) {
+            do_log = true;
+         }
+      }
+   }
+
+   if ( do_log == true ) {
+      /* This will log the reported error */
+      if (error_message != NULL) {
+         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS ,cl_get_error_text(cl_error), error_message));
+      } else {
+         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S ,cl_get_error_text(cl_error)));
+      }
+      last_general_communication_error_string = sge_strdup(last_general_communication_error_string, error_message);
+      last_general_communication_error = cl_error;
+   }
+
    gdi_general_communication_error = cl_error;
+
+   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
    DEXIT;
 }
 
@@ -251,18 +298,28 @@ static void general_communication_error(int cl_error) {
 *  NOTES
 *     MT-NOTE: sge_get_communication_error() is not MT safe ( returns just 
 *     an static defined integer) but can be called by more threads without 
-*     problem.
+*     problem. But it is possible to loose some errors when the commlib is
+*     calling general_communication_error(), because this would overwrite the
+*     last error.
+*
+*     TODO: Implement an error pop/push stack.
 *
 *  SEE ALSO
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
 int sge_get_communication_error(void) {
-   int com_error = gdi_general_communication_error;
-   DENTER(COMMD_LAYER, "sge_get_communication_error");
+   int com_error = CL_RETVAL_OK;
+
+   DENTER(TOP_LAYER, "sge_get_communication_error");
+   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
+   com_error = gdi_general_communication_error;
    if ( gdi_general_communication_error != CL_RETVAL_OK) {
-      WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(com_error)));
       gdi_general_communication_error = CL_RETVAL_OK;
    }
+
+   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+
    DEXIT;
    return com_error;
 }

@@ -148,7 +148,8 @@
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
-#define MSG_GDI_GENERAL_COM_ERROR_S   _MESSAGE(43294, _("general communication error: "SFN"\n"))
+#define MSG_GDI_GENERAL_COM_ERROR_SS   _MESSAGE(43294, _("commlib error: "SFN" ("SFN")\n"))
+#define MSG_GDI_GENERAL_COM_ERROR_S    _MESSAGE(43292, _("commlib error: "SFN"\n"))
 
 #define MSG_GDI_MULTI_THREADED_STARTUP       _MESSAGE(43295, _("starting up multi thread communication\n"))
 #define MSG_GDI_SINGLE_THREADED_STARTUP      _MESSAGE(43296, _("starting up communication without threads\n"))

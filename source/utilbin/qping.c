@@ -57,7 +57,16 @@ static void sighandler_ping(int sig) {
    do_shutdown = 1;
 }
 
-void usage(void)
+static void qping_general_communication_error(int cl_err,const char* error_message) {
+   if (error_message != NULL) {
+      fprintf(stderr,"%s: %s\n", cl_get_error_text(cl_err), error_message);
+   } else {
+      fprintf(stderr,"error: %s\n", cl_get_error_text(cl_err));
+   }
+}
+
+
+static void usage(void)
 {
   fprintf(stderr, "Version: %s\n", GDI_VERSION);
   fprintf(stderr, "%s qping [-help] [-i <interval>] [-info] [-f] [-noalias] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
@@ -181,12 +190,17 @@ int main(int argc, char *argv[]) {
    }
 
    
-
    retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
       exit(1);
    }
+
+   retval = cl_com_set_error_func(qping_general_communication_error);
+   if (retval != CL_RETVAL_OK) {
+      fprintf(stderr,"%s\n",cl_get_error_text(retval));
+   }
+
 
    /* set alias file */
    if ( !option_noalias ) {
@@ -223,8 +237,8 @@ int main(int argc, char *argv[]) {
       cl_com_SIRM_t* status = NULL;
       retval = cl_commlib_get_endpoint_status(handle, resolved_comp_host , comp_name, comp_id, &status);
       if (retval != CL_RETVAL_OK) {
-         printf("endpoint %s/%s/%d at port %d: %s\n", 
-                resolved_comp_host, comp_name, comp_id, comp_port, 
+         printf("endpoint %s/%s/"U32CFormat" at port %d: %s\n", 
+                resolved_comp_host, comp_name, u32c(comp_id), comp_port, 
                 cl_get_error_text(retval) );  
          exit_value = 1;
       } else {

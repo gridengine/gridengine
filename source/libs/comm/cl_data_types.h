@@ -337,6 +337,7 @@ struct cl_com_connection_type {
    int           was_opened;              /* is set when this connection was opened (with open connection) by connect() */ 
    char*         client_host_name;        /* this is the resolved client host name */
    cl_xml_connection_status_t crm_state;  /* state of connection response message (if server) */
+   char*         crm_state_error;         /* error text if crm_state is CL_CRM_CS_DENIED or larger */
    
    /* dataflow */
    cl_xml_connection_type_t      data_flow_type;       /* CL_CM_CT_STREAM or CL_CM_CT_MESSAGE */   

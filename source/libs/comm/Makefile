@@ -55,6 +55,7 @@ COMMLIB_SRC = \
          cl_host_alias_list.c \
          cl_endpoint_list.c \
          cl_handle_list.c \
+         cl_application_error_list.c \
          cl_commlib.c
 
 COMMLIB_OBJS = $(COMMLIB_SRC:.c=.o)
@@ -104,7 +105,7 @@ commlib_clean: commlistslib_clean
 commlib_depend: commlistslib_depend
 		$(DEPEND) -f$(COMMLIB_DIR)/commlib_dependencies $(COMMLIB_DIR)/*.c
 
-commlib_messages: commlistslib_messages
+commlib_messages: commlistslib_messages commlib_messages
 	@echo Creating $@
 	@for i in `ls $(COMMLIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -146,6 +147,8 @@ cl_host_alias_list.o: $(COMMLIB_DIR)/cl_host_alias_list.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_host_alias_list.c
 cl_handle_list.o: $(COMMLIB_DIR)/cl_handle_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_handle_list.c
+cl_application_error_list.o: $(COMMLIB_DIR)/cl_application_error_list.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_application_error_list.c
 cl_commlib.o: $(COMMLIB_DIR)/cl_commlib.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_commlib.c
 

@@ -269,6 +269,7 @@ void *my_message_thread(void *t_conf) {
          } else {
             /* no event client, just return message to sender */
             char data[30000];
+            memset(data, 0, 30000);
             sprintf(data,"gdi response");
 #if 0
             printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
@@ -285,7 +286,7 @@ void *my_message_thread(void *t_conf) {
             cl_com_free_message(&message);
             cl_com_free_endpoint(&sender);
          }
-      } 
+      }
    }
 
    /* at least set exit state */
@@ -336,7 +337,9 @@ void *my_event_thread(void *t_conf) {
             cl_com_endpoint_t* client = event_client_array[i];
             if ( client != NULL) {
                char help[10000];
+               memset(help, 0, 10000);
    
+
                if (first == 0) {
                   event_nr++;
                   first = 1;

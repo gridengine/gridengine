@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/usermap/UME_Type **************************************************
+/****** sgeobj/usermap/UME_Type ***********************************************
 *  NAME
 *     UME_Type -- CULL user mapping entry element
 *
@@ -59,13 +59,13 @@ extern "C" {
 /* *INDENT-OFF* */  
 
 enum {
-   UME_cluster_user = UME_LOWERBOUND,        /* username in sge/sge system */
-   UME_mapping_list          /* user specific mapping list */
+   UME_cluster_user = UME_LOWERBOUND,       
+   UME_mapping_list          
 };
 
 LISTDEF(UME_Type)
    SGE_STRING(UME_cluster_user, CULL_DEFAULT)
-   SGE_LIST(UME_mapping_list, UM_Type, CULL_DEFAULT) /* UM_Type - list */
+   SGE_LIST(UME_mapping_list, UM_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(UMEN)
@@ -77,7 +77,7 @@ NAMEEND
 
 /* *INDENT-ON* */   
 
-/****** gdi/usermap/UM_Type ***************************************************
+/****** sgeobj/usermap/UM_Type ************************************************
 *  NAME
 *     UM_Type -- CULL user mapping element 
 *
@@ -93,13 +93,13 @@ NAMEEND
 /* *INDENT-OFF* */  
 
 enum {
-   UM_mapped_user = UM_LOWERBOUND,   /* username @foreignhost */
-   UM_host_list                      /* list of hosts */
+   UM_mapped_user = UM_LOWERBOUND,   
+   UM_host_list                    
 };
 
 LISTDEF(UM_Type)
    SGE_STRING(UM_mapped_user, CULL_DEFAULT)
-   SGE_LIST(UM_host_list, ST_Type, CULL_DEFAULT)            /* ST_Type - List */
+   SGE_LIST(UM_host_list, ST_Type, CULL_DEFAULT)    
 LISTEND 
 
 NAMEDEF(UMN)

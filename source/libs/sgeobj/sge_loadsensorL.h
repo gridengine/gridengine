@@ -42,7 +42,7 @@ extern "C" {
 
 /* *INDENT-OFF* */ 
 
-/****** gdi/loadsensor/--LS_Type **********************************************
+/****** sgeobj/loadsensor/--LS_Type *******************************************
 *  NAME
 *     LS_Type - CULL load sensor element
 *     

@@ -50,7 +50,7 @@
 
 lList *Master_Pe_List = NULL;
 
-/****** gdi/pe/pe_is_matching() ***********************************************
+/****** sgeobj/pe/pe_is_matching() ********************************************
 *  NAME
 *     pe_is_matching() -- Does Pe name match the wildcard? 
 *
@@ -73,7 +73,7 @@ int pe_is_matching(const lListElem *pe, const char *wildcard)
    return !fnmatch(wildcard, lGetString(pe, PE_name), 0);
 }
 
-/****** gdi/pe/pe_list_find_matching() ****************************************
+/****** sgeobj/pe/pe_list_find_matching() *************************************
 *  NAME
 *     pe_list_find_matching() -- Find a PE matching a wildcard expression 
 *
@@ -103,7 +103,7 @@ lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard)
    return ret;
 }
 
-/****** gdi/pe/pe_list_locate() ***********************************************
+/****** sgeobj/pe/pe_list_locate() ********************************************
 *  NAME
 *     pe_list_locate() -- Locate a certain PE 
 *
@@ -119,13 +119,13 @@ lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard)
 *
 *  RESULT
 *     lListElem* - PE_Type object or NULL
-*******************************************************************************/
+******************************************************************************/
 lListElem *pe_list_locate(lList *pe_list, const char *pe_name) 
 {
    return lGetElemStr(pe_list, PE_name, pe_name);
 }
 
-/****** gdi/pe/pe_is_referenced() **********************************************
+/****** sgeobj/pe/pe_is_referenced() ******************************************
 *  NAME
 *     pe_is_referenced() -- Is a given PE referenced in other objects? 
 *

@@ -47,7 +47,7 @@
 
 lList *Master_Complex_List = NULL;
 
-/****** gdi/complex/sge_fill_requests() ***************************************
+/****** sgeobj/complex/sge_fill_requests() ************************************
 *  NAME
 *     sge_fill_requests() -- fills and checks list of complex entries 
 *
@@ -136,7 +136,7 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
    return 0;
 }
 
-/****** gdi/complex/fill_and_check_attribute() ********************************
+/****** sgeobj/complex/fill_and_check_attribute() ****************************
 *  NAME
 *     fill_and_check_attribute() -- fill and check the attribute 
 *
@@ -165,7 +165,7 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
 *        0 on success
 *       -1 on error
 *        an error message will be written into SGE_EVENT
-*******************************************************************************/
+******************************************************************************/
 int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
                              int allow_neg_consumable) 
 {
@@ -251,7 +251,7 @@ int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
    return 0;
 }
 
-/****** gdi/complex/complex_list_init_double_attr() ****************************
+/****** sgeobj/complex/complex_list_init_double_attr() ************************
 *  NAME
 *     complex_list_init_double_attr() -- initialize double from string 
 *
@@ -263,7 +263,7 @@ int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
 *
 *  INPUTS
 *     lList *cl - complex list 
-*******************************************************************************/
+******************************************************************************/
 void complex_list_init_double_attr(lList *cl) 
 {
    lListElem *cle, *cattr;
@@ -280,7 +280,7 @@ void complex_list_init_double_attr(lList *cl)
    }
 }
 
-/****** gdi/complex/complex_list_locate_attr() *********************************
+/****** sgeobj/complex/complex_list_locate_attr() *****************************
 *  NAME
 *     complex_list_locate_attr() -- find a attribute in the complex list 
 *
@@ -319,7 +319,30 @@ lListElem* complex_list_locate_attr(lList *complex_list, const char* name)
    return ret;
 }
 
-/* complex_list: CX_Type */
+/****** sgeobj/complex/complex_list_verify() **********************************
+*  NAME
+*     complex_list_verify() -- test is a given complex list is correct
+*
+*  SYNOPSIS
+*     int 
+*     complex_list_verify(lList *complex_list, lList **alpp, 
+*                         const char *obj_name, const char *qname) 
+*
+*  FUNCTION
+*     Test is a given complex list is correct. 
+*
+*  INPUTS
+*     lList *complex_list  - CX_Type list 
+*     lList **alpp         - AN_Type list 
+*     const char *obj_name - Object name used in error messages 
+*     const char *qname    - Queue name used in error messages 
+*
+*  RESULT
+*     int - error state
+*        STATUS_OK - 'complex_list' is correct
+*        STATUS_EUNKNOWN - error in 'complex_list'.
+*                          reason might be found in 'alpp' 
+*******************************************************************************/
 int complex_list_verify(lList *complex_list, lList **alpp,
                         const char *obj_name, const char *qname) 
 {

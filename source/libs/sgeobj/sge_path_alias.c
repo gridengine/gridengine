@@ -50,7 +50,7 @@
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 
-/****** gdi/path_alias/-PathAlias *********************************************
+/****** sgeobj/path_alias/-PathAlias *******************************************
 *  NAME
 *     PathAlias - Path aliasing mechanism for SGE/EE
 *
@@ -83,20 +83,20 @@
 *          the path alias matches the executing host.
 *
 *  SEE ALSO
-*     gdi/path_alias/path_alias_read_from_file()
-*     gdi/path_alias/path_alias_list_initialize()
-*     gdi/path_alias/path_alias_list_get_path()
+*     sgeobj/path_alias/path_alias_read_from_file()
+*     sgeobj/path_alias/path_alias_list_initialize()
+*     sgeobj/path_alias/path_alias_list_get_path()
 ******************************************************************************/
 
 static int path_alias_read_from_file(lList **path_alias_list, lList **alpp, 
                                      char *file_name);
 
-/****** gdi/path_alias/path_alias_read_from_file() ****************************
+/****** sgeobj/path_alias/path_alias_read_from_file() *************************
 *  NAME
 *     path_alias_read_from_file() -- read file content to list
 *
 *  SYNOPSIS
-*     #include <gdi/sge_path_alias.h>
+*     #include <sgeobj/sge_path_alias.h>
 *  
 *     static int path_alias_read_from_file(lList **path_alias_list, 
 *                                          lList **alpp, 
@@ -127,7 +127,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 *     static int - error state
 *        -1 - Error
 *         0 - OK 
-*******************************************************************************/
+******************************************************************************/
 static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
                                      char *file_name)
 {
@@ -232,13 +232,11 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
    return ret;
 }
 
-/****** gdi/path_alias/path_alias_list_initialize() ***************************
+/****** sgeobj/path_alias/path_alias_list_initialize() ************************
 *  NAME
 *     path_alias_list_initialize() -- initialize path_alias_list 
 *
 *  SYNOPSIS
-*     #include <gdi/sge_path_alias.h>
-*  
 *     int path_alias_list_initialize(lList **path_alias_list, 
 *                                    lList **alpp, 
 *                                    const char *user, 
@@ -333,13 +331,11 @@ int path_alias_list_initialize(lList **path_alias_list,
    return 0;
 }
 
-/****** gdi/path_alias/path_alias_list_get_path() *****************************
+/****** sgeobj/path_alias/path_alias_list_get_path() **************************
 *  NAME
 *     path_alias_list_get_path() -- map path according alias table 
 *
 *  SYNOPSIS
-*     #include <gdi/sge_path_alias.h>
-*  
 *     int path_alias_list_get_path(const lList *path_aliases, 
 *                                  lList **alpp, 
 *                                  const char *inpath, 

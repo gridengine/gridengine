@@ -237,7 +237,7 @@ int sge_chdir_exit(const char *path, int exit_on_error)
    return 0;
 }           
 
-/****** sge/unistd/sge_chdir() ************************************************
+/****** uti/unistd/sge_chdir() ************************************************
 *  NAME
 *     sge_chdir() --  Replacement for chdir()
 *

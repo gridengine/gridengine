@@ -983,7 +983,7 @@ sge_conf_type *conf
    return;
 }
 
-/****** gdi/conf/policy_hierarchy_enum2char() *********************************
+/****** sgeobj/conf/policy_hierarchy_enum2char() ******************************
 *  NAME
 *     policy_hierarchy_enum2char() -- Return policy char for a value 
 *
@@ -1005,7 +1005,7 @@ char policy_hierarchy_enum2char(policy_type_t value)
    return policy_hierarchy_chars[value - 1];
 }
  
-/****** gdi/conf/policy_hierarchy_char2enum() *********************************
+/****** sgeobj/conf/policy_hierarchy_char2enum() ******************************
 *  NAME
 *     policy_hierarchy_char2enum() -- Return value for a policy char
 *
@@ -1036,7 +1036,7 @@ policy_type_t policy_hierarchy_char2enum(char character)
    return ret;
 }
 
-/****** gdi/conf/policy_hierarchy_verify_value() ******************************
+/****** sgeobj/conf/policy_hierarchy_verify_value() ***************************
 *  NAME
 *     policy_hierarchy_verify_value() -- verify a policy string 
 *
@@ -1098,7 +1098,7 @@ int policy_hierarchy_verify_value(const char* value)
    return ret;
 }
 
-/****** gdi/conf/policy_hierarchy_fill_array() ********************************
+/****** sgeobj/conf/policy_hierarchy_fill_array() *****************************
 *  NAME
 *     policy_hierarchy_fill_array() -- fill the policy array 
 *
@@ -1185,7 +1185,7 @@ void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char *value)
    DEXIT;
 }
 
-/****** gdi/conf/policy_hierarchy_print_array() *******************************
+/****** sgeobj/conf/policy_hierarchy_print_array() ****************************
 *  NAME
 *     policy_hierarchy_print_array() -- print hierarchy array 
 *

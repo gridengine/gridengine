@@ -37,7 +37,7 @@
 #include "sge_jobL.h"
 #include "sge_messageL.h"
 
-/****** gdi/job/jb_now ********************************************************
+/****** sgeobj/job/jb_now *****************************************************
 *  NAME
 *     jb_now -- macros to handle flag JB_type 
 *

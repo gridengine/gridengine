@@ -351,7 +351,7 @@ void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
  
 }   
 
-/****** sge_set_def_sig_mask/sge_unblock_all_signals() **************************
+/****** uti/signal/sge_unblock_all_signals() **********************************
 *  NAME
 *     sge_unblock_all_signals()
 *

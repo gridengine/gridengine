@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/var/--VA_Type *****************************************************
+/****** sgeobj/var/--VA_Type **************************************************
 *  NAME
 *     VA_Type - CULL variable element
 *

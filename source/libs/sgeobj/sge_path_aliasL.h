@@ -42,7 +42,7 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
-/****** gdi/path_alias/--PA_Type **********************************************
+/****** sgeobj/path_alias/--PA_Type *******************************************
 *  NAME 
 *     RN_Type - CULL path alias element
 *

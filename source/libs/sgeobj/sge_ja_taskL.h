@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/ja_task/--JAT_Type ************************************************
+/****** sgeobj/ja_task/--JAT_Type *********************************************
 *  NAME
 *     JAT_Type - CULL array task 
 *

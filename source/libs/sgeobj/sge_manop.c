@@ -38,7 +38,7 @@
 lList *Master_Manager_List = NULL;
 lList *Master_Operator_List = NULL;
 
-/****** gdi/manop/manop_is_manager() *******************************************
+/****** sgeobj/manop/manop_is_manager() ***************************************
 *  NAME
 *     manop_is_manager() -- is a certain user manager?
 *
@@ -60,7 +60,7 @@ lList *Master_Operator_List = NULL;
 *
 *  SEE ALSO
 *     gdi/manop/manop_is_operator()
-*******************************************************************************/
+******************************************************************************/
 int manop_is_manager(const char *user_name) 
 {
    DENTER(TOP_LAYER, "manop_is_manager");
@@ -80,7 +80,7 @@ int manop_is_manager(const char *user_name)
 
 }
 
-/****** gdi/manop/manop_is_operator() ******************************************
+/****** sgeobj/manop/manop_is_operator() **************************************
 *  NAME
 *     manop_is_operator() -- is a certain user operator?
 *
@@ -103,7 +103,7 @@ int manop_is_manager(const char *user_name)
 *
 *  SEE ALSO
 *     gdi/manop/manop_is_manager()
-*******************************************************************************/
+******************************************************************************/
 int manop_is_operator(const char *user_name) {
 
    DENTER(TOP_LAYER, "manop_is_operator");

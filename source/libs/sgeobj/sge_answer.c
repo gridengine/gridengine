@@ -43,7 +43,7 @@
 
 #include "msg_sgeobjlib.h"
 
-/****** gdi/answer/-AnswerList ************************************************
+/****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
 *     AnswerList - Object used to return errors/warning/infos
 *
@@ -77,20 +77,20 @@
 *        }
 *
 *  SEE ALSO
-*     gdi/answer/answer_has_quality() 
-*     gdi/answer/answer_is_recoverable() 
-*     gdi/answer/answer_exit_if_not_recoverable() 
-*     gdi/answer/answer_get_quality_text() 
-*     gdi/answer/answer_get_status() 
-*     gdi/answer/answer_print_text() 
-*     gdi/answer/answer_list_add() 
-*     gdi/answer/answer_list_add_sprintf() 
-*     gdi/answer/answer_list_has_quality() 
-*     gdi/answer/answer_list_has_error() 
-*     gdi/answer/answer_list_on_error_print_or_exit() 
+*     sgeobj/answer/answer_has_quality() 
+*     sgeobj/answer/answer_is_recoverable() 
+*     sgeobj/answer/answer_exit_if_not_recoverable() 
+*     sgeobj/answer/answer_get_quality_text() 
+*     sgeobj/answer/answer_get_status() 
+*     sgeobj/answer/answer_print_text() 
+*     sgeobj/answer/answer_list_add() 
+*     sgeobj/answer/answer_list_add_sprintf() 
+*     sgeobj/answer/answer_list_has_quality() 
+*     sgeobj/answer/answer_list_has_error() 
+*     sgeobj/answer/answer_list_on_error_print_or_exit() 
 ******************************************************************************/
 
-/****** gdi/answer/answer_has_quality() ***************************************
+/****** sgeobj/answer/answer_has_quality() ************************************
 *  NAME
 *     answer_has_quality() -- Check for certain answer quality 
 *
@@ -113,7 +113,7 @@ int answer_has_quality(const lListElem *answer, answer_quality_t quality)
    return (lGetUlong(answer, AN_quality) ==  quality) ? 1 : 0;
 }
 
-/****** gdi/answer/answer_is_recoverable() ************************************
+/****** sgeobj/answer/answer_is_recoverable() *********************************
 *  NAME
 *     answer_is_recoverable() -- Check for recoverable error 
 *
@@ -134,7 +134,7 @@ int answer_has_quality(const lListElem *answer, answer_quality_t quality)
 *
 *  RESULT
 *     int - true or false
-*******************************************************************************/
+******************************************************************************/
 int answer_is_recoverable(const lListElem *answer)
 {
    int ret = 1;
@@ -159,7 +159,7 @@ int answer_is_recoverable(const lListElem *answer)
    return ret;
 }
 
-/****** gdi/answer/answer_exit_if_not_recoverable() ***************************
+/****** sgeobj/answer/answer_exit_if_not_recoverable() ************************
 *  NAME
 *     answer_exit_if_not_recoverable() -- Exit on certain errors 
 *
@@ -177,7 +177,7 @@ int answer_is_recoverable(const lListElem *answer)
 *
 *  NOTES
 *     This function may never return. 
-*******************************************************************************/
+******************************************************************************/
 void answer_exit_if_not_recoverable(const lListElem *answer)
 {
    DENTER(GDI_LAYER, "answer_exit_if_not_recoverable");
@@ -190,7 +190,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
    }
 }
 
-/****** gdi/answer/answer_get_quality_text() **********************************
+/****** sgeobj/answer/answer_get_quality_text() *******************************
 *  NAME
 *     answer_get_quality_text() -- Get quality text 
 *
@@ -205,7 +205,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 *
 *  RESULT
 *     const char* - String
-*******************************************************************************/
+******************************************************************************/
 const char *answer_get_quality_text(const lListElem *answer) 
 {
    const char *quality_text[] = {
@@ -221,7 +221,7 @@ const char *answer_get_quality_text(const lListElem *answer)
    return quality_text[quality];
 }
 
-/****** gdi/answer/answer_get_status() ****************************************
+/****** sgeobj/answer/answer_get_status() *************************************
 *  NAME
 *     answer_get_status() -- Return the error status.
 *
@@ -236,13 +236,13 @@ const char *answer_get_quality_text(const lListElem *answer)
 *
 *  RESULT
 *     u_long32 - error status
-*******************************************************************************/
+******************************************************************************/
 u_long32 answer_get_status(const lListElem *answer) 
 {
    return lGetUlong(answer, AN_status);
 }
 
-/****** gdi/answer/answer_print_text() ****************************************
+/****** sgeobj/answer/answer_print_text() *************************************
 *  NAME
 *     answer_print_text() -- Prints error text 
 *
@@ -261,7 +261,7 @@ u_long32 answer_get_status(const lListElem *answer)
 *     FILE *stream            - Output stream 
 *     const char *prefix      - Introductional message
 *     const char *prefix      - Final message
-*******************************************************************************/
+******************************************************************************/
 void answer_print_text(const lListElem *answer, 
                        FILE *stream, 
                        const char *prefix,
@@ -280,7 +280,7 @@ void answer_print_text(const lListElem *answer,
    }
 }
 
-/****** gdi/answer/answer_list_add_sprintf() ***********************************
+/****** sgeobj/answer/answer_list_add_sprintf() *******************************
 *  NAME
 *     answer_list_add_sprintf() -- Format add an answer to an answer list
 *
@@ -312,8 +312,8 @@ void answer_print_text(const lListElem *answer,
 *     bool - true on success, else false
 *
 *  SEE ALSO
-*     gdi/answer/answer_list_add()
-*******************************************************************************/
+*     sgeobj/answer/answer_list_add()
+******************************************************************************/
 bool 
 answer_list_add_sprintf(lList **answer_list, u_long32 status, 
                         answer_quality_t quality, const char *fmt, ...)
@@ -341,7 +341,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
    return ret;
 }
 
-/****** gdi/answer/answer_list_has_quality() **********************************
+/****** sgeobj/answer/answer_list_has_quality() *******************************
 *  NAME
 *     answer_list_has_quality() -- Contains list  
 *
@@ -359,7 +359,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 *
 *  RESULT
 *     int - true or false
-*******************************************************************************/
+******************************************************************************/
 int answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 {
    int ret = 0;
@@ -377,7 +377,7 @@ int answer_list_has_quality(lList **answer_list, answer_quality_t quality)
    return ret;
 }
 
-/****** gdi/answer/answer_list_has_error() ************************************
+/****** sgeobj/answer/answer_list_has_error() *********************************
 *  NAME
 *     answer_list_has_error() -- Is an "error " in the list 
 *
@@ -393,7 +393,7 @@ int answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 *
 *  RESULT
 *     int - true or false
-*******************************************************************************/
+******************************************************************************/
 int answer_list_has_error(lList **answer_list)
 {
    int ret;
@@ -404,7 +404,7 @@ int answer_list_has_error(lList **answer_list)
    return ret;
 }               
 
-/****** gdi/answer/answer_list_on_error_print_or_exit() ***********************
+/****** sgeobj/answer/answer_list_on_error_print_or_exit() ********************
 *  NAME
 *     answer_list_on_error_print_or_exit() -- Print and/or exit 
 *
@@ -431,7 +431,7 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
    }
 }
 
-/****** gdi/answer/answer_list_print_err_warn() *******************************
+/****** sgeobj/answer/answer_list_print_err_warn() ****************************
 *  NAME
 *     answer_list_print_err_warn() -- Print and/or exit 
 *
@@ -485,9 +485,9 @@ int answer_list_print_err_warn(lList **answer_list,
    return (int)status;
 }
 
-/****** gdi/answer/answer_list_handle_request_answer_list() ********************
+/****** sgeobj/answer/answer_list_handle_request_answer_list() ****************
 *  NAME
-*     answer_list_handle_request_answer_list() -- handle result of a gdi request
+*     answer_list_handle_request_answer_list() -- handle res. of request
 *
 *  SYNOPSIS
 *     int answer_list_handle_request_answer_list(lList **answer_list, 
@@ -506,7 +506,7 @@ int answer_list_print_err_warn(lList **answer_list,
 *
 *  RESULT
 *     int - first error or warning status code or STATUS_OK
-*******************************************************************************/
+******************************************************************************/
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
    lListElem *answer;
    int first_error = STATUS_OK;
@@ -531,7 +531,7 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
    return first_error;
 }
 
-/****** gdi/answer/answer_list_add() ******************************************
+/****** sgeobj/answer/answer_list_add() ***************************************
 *  NAME
 *     answer_list_add() -- Add an answer to an answer list
 *
@@ -563,8 +563,8 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
 *        false - error occured
 *
 *  SEE ALSO
-*     gdi/answer/answer_list_add_sprintf()
-*******************************************************************************/
+*     sgeobj/answer/answer_list_add_sprintf()
+******************************************************************************/
 bool
 answer_list_add(lList **answer_list, const char *text,
                 u_long32 status, answer_quality_t quality)

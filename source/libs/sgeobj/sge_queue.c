@@ -144,7 +144,7 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op)
    return;
 }
 
-/****** gdi/queue/queue_get_state_string() ************************************
+/****** sgeobj/queue/queue_get_state_string() *********************************
 *  NAME
 *     queue_get_state_string() -- write queue state flags into a string 
 *
@@ -164,7 +164,7 @@ void queue_get_state_string(char *str, u_long32 op)
    queue_or_job_get_states(QU_qname, str, op);
 }
 
-/****** gdi/queue/queue_list_locate() ******************************************
+/****** sgeobj/queue/queue_list_locate() **************************************
 *  NAME
 *     queue_list_locate() -- locate queue given by name 
 *
@@ -181,13 +181,13 @@ void queue_get_state_string(char *str, u_long32 op)
 *
 *  RESULT
 *     lListElem* - pointer to a QU_Type element or NULL
-*******************************************************************************/
+******************************************************************************/
 lListElem *queue_list_locate(lList *queue_list, const char *queue_name) 
 {
    return lGetElemStr(queue_list, QU_qname, queue_name);
 }
 
-/****** gdi/queue/queue_list_set_tag() *****************************************
+/****** sgeobj/queue/queue_list_set_tag() *************************************
 *  NAME
 *     queue_list_set_tag() -- change the QU_tagged of (all) queues 
 *
@@ -208,7 +208,7 @@ lListElem *queue_list_locate(lList *queue_list, const char *queue_name)
 *
 *  RESULT
 *     void - None
-*******************************************************************************/
+******************************************************************************/
 void queue_list_set_tag(lList *queue_list,
                         queue_tag_t flags,
                         u_long32 tag_value)
@@ -227,7 +227,7 @@ void queue_list_set_tag(lList *queue_list,
    }
 }
 
-/****** gdi/queue/queue_list_clear_tags() *************************************
+/****** sgeobj/queue/queue_list_clear_tags() **********************************
 *  NAME
 *     queue_list_clear_tags() -- clear the QU_tagged field
 *
@@ -242,13 +242,13 @@ void queue_list_set_tag(lList *queue_list,
 *
 *  RESULT
 *     void - None
-*******************************************************************************/
+******************************************************************************/
 void queue_list_clear_tags(lList *queue_list)
 {
    queue_list_set_tag(queue_list, QUEUE_TAG_DEFAULT, 0);
 } 
 
-/****** gdi/queue/queue_reference_list_validate() ******************************
+/****** sgeobj/queue/queue_reference_list_validate() **************************
 *  NAME
 *     queue_reference_list_validate() -- verify a queue reference list
 *
@@ -272,7 +272,7 @@ void queue_list_clear_tags(lList *queue_list)
 *  RESULT
 *     int - STATUS_OK, if everything is OK, else another status code,
 *           see libs/gdi/sge_answer.h
-*******************************************************************************/
+******************************************************************************/
 int 
 queue_reference_list_validate(lList **alpp, lList *qr_list, 
                               const char *attr_name, const char *obj_descr, 
@@ -310,7 +310,7 @@ queue_reference_list_validate(lList **alpp, lList *qr_list,
    return STATUS_OK;
 }
 
-/****** gdi/queue/queue_list_add_queue() ***************************************
+/****** sgeobj/queue/queue_list_add_queue() ***********************************
 *  NAME
 *     queue_list_add_queue() -- add a new queue to the queue masterlist
 *
@@ -331,7 +331,7 @@ queue_reference_list_validate(lList **alpp, lList *qr_list,
 *     Appending the queue and quick sorting the queue list would probably
 *     be much faster in systems with many queues.
 *
-*******************************************************************************/
+******************************************************************************/
 int queue_list_add_queue(lListElem *queue) 
 {
    static lSortOrder *so = NULL;
@@ -360,7 +360,7 @@ int queue_list_add_queue(lListElem *queue)
    return TRUE;
 }
 
-/****** gdi/queue/queue_check_owner() ******************************************
+/****** sgeobj/queue/queue_check_owner() **************************************
 *  NAME
 *     queue_check_owner() -- check if a user is queue owner
 *
@@ -378,7 +378,7 @@ int queue_list_add_queue(lListElem *queue)
 *  RESULT
 *     int - TRUE, if the user is owner, else FALSE
 *
-*******************************************************************************/
+******************************************************************************/
 int queue_check_owner(const lListElem *queue, const char *user_name)
 {
    lListElem *ep;
@@ -413,7 +413,7 @@ int queue_check_owner(const lListElem *queue, const char *user_name)
    return FALSE;
 }
 
-/****** gdi/queue/queue_get_type_string() **************************************
+/****** sgeobj/queue/queue_get_type_string() **********************************
 *  NAME
 *     queue_get_type_string() -- get readable type definition
 *
@@ -433,7 +433,7 @@ int queue_check_owner(const lListElem *queue, const char *user_name)
 *     const char* - resulting string
 *
 *  SEE ALSO
-*     gdi/queue/queue_set_type_string()
+*     sgeobj/queue/queue_set_type_string()
 *******************************************************************************/
 const char *
 queue_get_type_string(const lListElem *queue, lList **answer_list, 
@@ -468,7 +468,7 @@ queue_get_type_string(const lListElem *queue, lList **answer_list,
    return ret;
 }
 
-/****** gdi/queue/queue_set_type_string() **************************************
+/****** sgeobj/queue/queue_set_type_string() **********************************
 *  NAME
 *     queue_set_type_string() -- set queue type from string representation
 *
@@ -492,8 +492,8 @@ queue_get_type_string(const lListElem *queue, lList **answer_list,
 *            false on error, error message will be in answer_list
 *
 *  SEE ALSO
-*     gdi/queue/queue_get_type_string()
-*******************************************************************************/
+*     sgeobj/queue/queue_get_type_string()
+******************************************************************************/
 bool 
 queue_set_type_string(lListElem *queue, lList **answer_list, const char *value)
 {

@@ -42,7 +42,7 @@ extern "C" {
 
 #define RANGE_INFINITY (9999999)
 
-/****** gdi/range/--RN_Type ***************************************************
+/****** sgeobj/range/--RN_Type ************************************************
 *  NAME
 *     RN_Type -- CULL range element
 *

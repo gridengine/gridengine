@@ -43,7 +43,7 @@
 
 #define REPORT_LAYER TOP_LAYER
 
-/****** gdi/report/job_report_print_usage() ***********************************
+/****** sgeobj/report/job_report_print_usage() *******************************
 *  NAME
 *     job_report_print_usage() -- Print usage contained in job report 
 *
@@ -58,7 +58,7 @@
 *  INPUTS
 *     const lListElem *job_report - JR_Type element 
 *     FILE *fp                    - file stream or NULL 
-*******************************************************************************/
+******************************************************************************/
 void job_report_print_usage(const lListElem *job_report, FILE *fp) 
 {
    lListElem *uep;
@@ -84,7 +84,7 @@ void job_report_print_usage(const lListElem *job_report, FILE *fp)
    return;
 }
 
-/****** gdi/report/job_report_init_from_job() **********************************
+/****** sgeobj/report/job_report_init_from_job() *****************************
 *  NAME
 *     job_report_init_from_job() -- initialize job report 
 *
@@ -103,7 +103,7 @@ void job_report_print_usage(const lListElem *job_report, FILE *fp)
 *     const lListElem *job     - JB_Type object
 *     const lListElem *ja_task - JAT_Type object 
 *     const lListElem *pe_task - PET_Type object 
-*******************************************************************************/
+******************************************************************************/
 void job_report_init_from_job(lListElem *job_report, 
                               const lListElem *job, 
                               const lListElem *ja_task, 

@@ -149,7 +149,7 @@ enum {
 #define CONTEXT_IOR "IOR"
 #define CONTEXT_PARENT "PARENT"
 
-/****** gdi/job/--JB_Type *****************************************************
+/****** sgeobj/job/--JB_Type **************************************************
 *  NAME
 *     JB_Type - CULL job element 
 *

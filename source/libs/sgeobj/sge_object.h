@@ -36,19 +36,19 @@
 
 #include "sge_dstring.h"
 
-
-/****** gdi/object/--GDI-Object-Handling ***************************************
+/****** sgeobj/object/--Object-Handling ***************************************
 *
 *  NAME
-*     GDI Object Handling -- utilities for gdi object access
+*     Object Handling -- utilities for gdi object access
 *
 *  FUNCTION
-*     This module provides utility functions for accessing GDI(CULL) objects,
-*     e.g. getting a string representation for fields, setting field contents 
-*     from string representation etc.
+*     This module provides utility functions for accessing CULL 
+*     objects, e.g. getting a string representation for fields, 
+*     setting field contents from string representation etc.
 *
 *  NOTES
-*     Functions like attr_mod_double from gdi_utility should also be moved here.
+*     Functions like attr_mod_double from gdi_utility should also 
+*     be moved here.
 *
 *  SEE ALSO
 *     gdi/object/object_has_type()
@@ -58,8 +58,7 @@
 *     gdi/object/object_get_name_prefix()
 *     gdi/object/object_get_field_contents()
 *     gdi/object/object_set_field_contents()
-****************************************************************************
-*/
+******************************************************************************/
 
 #define NULL_OUT_NONE(ep, nm) \
    if (lGetString(ep, nm) != NULL && \

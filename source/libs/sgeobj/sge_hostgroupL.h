@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/sge/GRP_LOWERBOUND **********************************
+/****** sgeobj/sge/GRP_LOWERBOUND **********************************
 *
 *  NAME
 *     GRP_LOWERBOUND -- Group List 

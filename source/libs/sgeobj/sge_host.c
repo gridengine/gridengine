@@ -78,7 +78,7 @@ lListElem *host_list_locate(lList *host_list, const char *hostname)
    return ret;
 }
 
-/****** gdi/host/host_is_referenced() ******************************************
+/****** sgeobj/host/host_is_referenced() **************************************
 *  NAME
 *     host_is_referenced() -- Is a given host referenced in other objects? 
 *
@@ -135,7 +135,7 @@ int host_is_referenced(const lListElem *host,
    return ret;
 }
 
-/****** gdi/host/host_get_load_value() *****************************************
+/****** sgeobj/host/host_get_load_value() *************************************
 *  NAME
 *     host_get_load_value() -- return a load value of an exec host
 *

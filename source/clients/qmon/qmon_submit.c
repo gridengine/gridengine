@@ -1004,8 +1004,8 @@ int submode
       /*
       ** set sensitivity of deadline field
       */
-      if (is_deadline_user(uti_state_get_user_name(), 
-               qmonMirrorList(SGE_USERSET_LIST))) {
+      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+               uti_state_get_user_name())) {
          if (sensitive) {      
             XtSetSensitive(submit_deadline, sensitive2);
             XtSetSensitive(submit_deadlinePB, sensitive2);
@@ -1444,8 +1444,8 @@ XtPointer cld, cad;
             return;
          }
 
-         if (is_deadline_user(uti_state_get_user_name(), 
-               qmonMirrorList(SGE_USERSET_LIST))) 
+         if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+               uti_state_get_user_name())) 
             nm_set((int*)qalter_fields, JB_deadline);
       }
 

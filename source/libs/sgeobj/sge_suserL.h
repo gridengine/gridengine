@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdi/suser/SU_Type *****************************************************
+/****** sgeobj/suser/SU_Type **************************************************
 *  NAME
 *     SU_Type - CULL submit users element
 *

@@ -33,8 +33,7 @@
 #include "cull.h"
 #include "sge_usage.h"
 
-
-/****** gdi/usage/usage_list_get_ulong_usage() *********************************
+/****** sgeobj/usage/usage_list_get_ulong_usage() *****************************
 *  NAME
 *     usage_list_get_ulong_usage() -- return ulong usage value
 *
@@ -59,7 +58,9 @@
 *  SEE ALSO
 *     gdi/usage/usage_list_get_double_usage()
 *******************************************************************************/
-u_long32 usage_list_get_ulong_usage (lList *usage_list, const char *name, u_long32 def)
+u_long32 usage_list_get_ulong_usage (lList *usage_list, 
+                                     const char *name, 
+                                     u_long32 def)
 {
    lListElem *ep = lGetElemStr(usage_list, UA_name, name);
    if(ep != NULL) {
@@ -69,7 +70,7 @@ u_long32 usage_list_get_ulong_usage (lList *usage_list, const char *name, u_long
    }
 }
 
-/****** gdi/usage/usage_list_get_double_usage() *********************************
+/****** sgeobj/usage/usage_list_get_double_usage() ****************************
 *  NAME
 *     usage_list_get_double_usage() -- return double usage value
 *
@@ -94,7 +95,8 @@ u_long32 usage_list_get_ulong_usage (lList *usage_list, const char *name, u_long
 *  SEE ALSO
 *     gdi/usage/usage_list_get_ulong_usage()
 *******************************************************************************/
-double   usage_list_get_double_usage(lList *usage_list, const char *name, double def)
+double usage_list_get_double_usage(lList *usage_list, const char *name, 
+                                   double def)
 {
    lListElem *ep = lGetElemStr(usage_list, UA_name, name);
    if(ep != NULL) {

@@ -68,7 +68,7 @@ lList *Master_Job_List = NULL;
 lList *Master_Zombie_List = NULL;
 lList *Master_Job_Schedd_Info_List = NULL;
 
-/****** gdi/job/job_get_ja_task_template_pending() ****************************
+/****** sgeobj/job/job_get_ja_task_template_pending() *************************
 *  NAME
 *     job_get_ja_task_template_pending() -- create a ja task template 
 *
@@ -92,9 +92,9 @@ lList *Master_Job_Schedd_Info_List = NULL;
 *     lListElem* - template task (JAT_Type)
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_task_template_pending()
-*     gdi/job/job_get_ja_task_template_hold()
-*     gdi/job/job_get_ja_task_template()
+*     sgeobj/job/job_get_ja_task_template_pending()
+*     sgeobj/job/job_get_ja_task_template_hold()
+*     sgeobj/job/job_get_ja_task_template()
 *******************************************************************************/
 lListElem *job_get_ja_task_template_pending(const lListElem *job,
                                             u_long32 ja_task_id)
@@ -116,7 +116,7 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    return template_task;
 }
 
-/****** gdi/job/job_get_ja_task_template_hold() *******************************
+/****** sgeobj/job/job_get_ja_task_template_hold() ****************************
 *  NAME
 *     job_get_ja_task_template_hold() -- create a ja task template 
 *
@@ -144,9 +144,9 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
 *     lListElem* - template task (JAT_Type)
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_task_template_pending()
-*     gdi/job/job_get_ja_task_hold_state()
-*     gdi/job/job_get_ja_task_template()
+*     sgeobj/job/job_get_ja_task_template_pending()
+*     sgeobj/job/job_get_ja_task_hold_state()
+*     sgeobj/job/job_get_ja_task_template()
 *******************************************************************************/
 lListElem *job_get_ja_task_template_hold(const lListElem *job,
                                          u_long32 ja_task_id, 
@@ -171,7 +171,7 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
    DEXIT;
    return template_task;                                                        }
 
-/****** gdi/job/job_is_zombie_job() *******************************************
+/****** sgeobj/job/job_is_zombie_job() ****************************************
 *  NAME
 *     job_is_zombie_job() -- Is 'job' a zombie job 
 *
@@ -192,7 +192,7 @@ int job_is_zombie_job(const lListElem *job)
    return (lGetList(job, JB_ja_z_ids) != NULL);
 }
 
-/****** gdi/job/job_get_ja_task_template() ************************************
+/****** sgeobj/job/job_get_ja_task_template() *********************************
 *  NAME
 *     job_get_ja_task_template() -- create a ja task template 
 *
@@ -212,10 +212,10 @@ int job_is_zombie_job(const lListElem *job)
 *     lListElem* - template task (JAT_Type)
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_task_template_pending()
-*     gdi/job/job_get_ja_task_template_hold()
-*     gdi/job/job_get_ja_task_hold_state()
-*     gdi/job/job_get_ja_task_template()
+*     sgeobj/job/job_get_ja_task_template_pending()
+*     sgeobj/job/job_get_ja_task_template_hold()
+*     sgeobj/job/job_get_ja_task_hold_state()
+*     sgeobj/job/job_get_ja_task_template()
 *******************************************************************************/
 lListElem *job_get_ja_task_template(const lListElem *job,
                                     u_long32 ja_task_id)
@@ -225,7 +225,7 @@ lListElem *job_get_ja_task_template(const lListElem *job,
    return job_get_ja_task_template_hold(job, ja_task_id, hold_state);
 }
 
-/****** gdi/job/job_get_ja_task_hold_state() **********************************
+/****** sgeobj/job/job_get_ja_task_hold_state() *******************************
 *  NAME
 *     job_get_ja_task_hold_state() -- Hold state of unenrolled task
 *
@@ -263,7 +263,7 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
    return ret;
 }
 
-/****** gdi/job/job_create_hold_id_lists() ************************************
+/****** sgeobj/job/job_create_hold_id_lists() *********************************
 *  NAME
 *     job_create_hold_id_lists() -- Lists for hold combinations
 *
@@ -286,7 +286,7 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 *     u_long32 hold_state[8] - Array for hold state combinations 
 *
 *  SEE ALSO
-*     gdi/job/job_destroy_hold_id_lists() 
+*     sgeobj/job/job_destroy_hold_id_lists() 
 *******************************************************************************/
 void job_create_hold_id_lists(const lListElem *job, lList *id_list[8], 
                               u_long32 hold_state[8]) 
@@ -356,7 +356,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    DEXIT;
 }
 
-/****** gdi/job/job_destroy_hold_id_lists() ***********************************
+/****** sgeobj/job/job_destroy_hold_id_lists() ********************************
 *  NAME
 *     job_destroy_hold_id_lists() -- destroy hold combination lists
 *
@@ -373,8 +373,8 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
 *     lList *id_list[8]    - array of RN_Type lists
 *
 *  SEE ALSO
-*     gdi/job/job_create_hold_id_lists 
-*******************************************************************************/
+*     sgeobj/job/job_create_hold_id_lists 
+******************************************************************************/
 void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]) 
 {
    int i;
@@ -386,7 +386,7 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
    DEXIT;
 }
 
-/****** gdi/job/job_is_enrolled() *********************************************
+/****** sgeobj/job/job_is_enrolled() ******************************************
 *  NAME
 *     job_is_enrolled() -- Is a certain array task enrolled 
 *
@@ -404,7 +404,7 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 *
 *  RESULT
 *     int - 0 or 1
-*******************************************************************************/
+******************************************************************************/
 int job_is_enrolled(const lListElem *job, u_long32 task_number)
 {
    int ret = 1;
@@ -420,7 +420,7 @@ int job_is_enrolled(const lListElem *job, u_long32 task_number)
    return ret;
 }
 
-/****** gdi/job/job_is_ja_task_defined() ***************************************
+/****** sgeobj/job/job_is_ja_task_defined() ***********************************
 *  NAME
 *     job_is_ja_task_defined() -- was this task submitted 
 *
@@ -440,7 +440,7 @@ int job_is_enrolled(const lListElem *job, u_long32 task_number)
 *
 *  RESULT
 *     int - 0 or 1
-*******************************************************************************/
+******************************************************************************/
 int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
 {
    lList *range_list = lGetList(job, JB_ja_structure);
@@ -448,7 +448,7 @@ int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number)
    return range_list_is_id_within(range_list, ja_task_number);
 }
 
-/****** gdi/job/job_get_ja_tasks() ********************************************
+/****** sgeobj/job/job_get_ja_tasks() *****************************************
 *  NAME
 *     job_get_ja_tasks() -- returns number of array tasks 
 *
@@ -465,11 +465,11 @@ int job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number)
 *     u_long32 - number of tasks 
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_tasks() 
-*     gdi/job/job_get_enrolled_ja_tasks() 
-*     gdi/job/job_get_not_enrolled_ja_tasks() 
-*     gdi/job/job_get_submit_ja_tasks() 
-*******************************************************************************/
+*     sgeobj/job/job_get_ja_tasks() 
+*     sgeobj/job/job_get_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_not_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_submit_ja_tasks() 
+******************************************************************************/
 u_long32 job_get_ja_tasks(const lListElem *job) 
 {  
    u_long32 ret = 0;
@@ -481,7 +481,7 @@ u_long32 job_get_ja_tasks(const lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_get_not_enrolled_ja_tasks() *******************************
+/****** sgeobj/job/job_get_not_enrolled_ja_tasks() ****************************
 *  NAME
 *     job_get_not_enrolled_ja_tasks() -- num. of unenrolled tasks 
 *
@@ -499,11 +499,11 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 *     u_long32 - number of tasks 
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_tasks() 
-*     gdi/job/job_get_enrolled_ja_tasks() 
-*     gdi/job/job_get_not_enrolled_ja_tasks() 
-*     gdi/job/job_get_submit_ja_tasks() 
-*******************************************************************************/
+*     sgeobj/job/job_get_ja_tasks() 
+*     sgeobj/job/job_get_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_not_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_submit_ja_tasks() 
+******************************************************************************/
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
 {
    const int attributes = 4;
@@ -520,7 +520,7 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_get_enrolled_ja_tasks() ***********************************
+/****** sgeobj/job/job_get_enrolled_ja_tasks() ********************************
 *  NAME
 *     job_get_enrolled_ja_tasks() -- num. of enrolled array tasks 
 *
@@ -538,17 +538,17 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
 *     u_long32 - number of tasks 
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_tasks() 
-*     gdi/job/job_get_enrolled_ja_tasks() 
-*     gdi/job/job_get_not_enrolled_ja_tasks() 
-*     gdi/job/job_get_submit_ja_tasks() 
-*******************************************************************************/
+*     sgeobj/job/job_get_ja_tasks() 
+*     sgeobj/job/job_get_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_not_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_submit_ja_tasks() 
+******************************************************************************/
 u_long32 job_get_enrolled_ja_tasks(const lListElem *job) 
 {
    return lGetNumberOfElem(lGetList(job, JB_ja_tasks));
 }
 
-/****** gdi/job/job_get_submit_ja_tasks() *************************************
+/****** sgeobj/job/job_get_submit_ja_tasks() **********************************
 *  NAME
 *     job_get_submit_ja_tasks() -- array size during job submittion 
 *
@@ -566,10 +566,10 @@ u_long32 job_get_enrolled_ja_tasks(const lListElem *job)
 *     u_long32 - number of tasks
 *
 *  SEE ALSO
-*     gdi/job/job_get_ja_tasks() 
-*     gdi/job/job_get_enrolled_ja_tasks() 
-*     gdi/job/job_get_not_enrolled_ja_tasks() 
-*     gdi/job/job_get_submit_ja_tasks() 
+*     sgeobj/job/job_get_ja_tasks() 
+*     sgeobj/job/job_get_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_not_enrolled_ja_tasks() 
+*     sgeobj/job/job_get_submit_ja_tasks() 
 ******************************************************************************/
 u_long32 job_get_submit_ja_tasks(const lListElem *job)
 {
@@ -579,7 +579,7 @@ u_long32 job_get_submit_ja_tasks(const lListElem *job)
    return ((end - start) / step + 1); 
 }
  
-/****** gdi/job/job_enroll() **************************************************
+/****** sgeobj/job/job_enroll() ***********************************************
 *  NAME
 *     job_enroll() -- enrolls a array task into the JB_ja_tasks lists 
 *
@@ -599,8 +599,8 @@ u_long32 job_get_submit_ja_tasks(const lListElem *job)
 *  RESULT
 *     lListElem * - the ja_task
 *
-*******************************************************************************/
-lListElem *job_enroll(lListElem *job, lList **answer_list, 
+******************************************************************************/
+lListElem *job_enroll(lListElem *job, lList **answer_list,
                       u_long32 ja_task_number)
 {
    lListElem *ja_task = NULL;
@@ -628,7 +628,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
    return ja_task;
 }  
 
-/****** gdi/job/job_has_tasks() ***********************************************
+/****** sgeobj/job/job_has_tasks() ********************************************
 *  NAME
 *     job_has_tasks() -- Returns true if there exist unenrolled tasks 
 *
@@ -644,7 +644,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 *
 *  RESULT
 *     int - 0 or 1
-*******************************************************************************/
+******************************************************************************/
 int job_has_tasks(lListElem *job) 
 {
    int ret = 0;
@@ -662,7 +662,7 @@ int job_has_tasks(lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_delete_not_enrolled_ja_task() *****************************
+/****** sgeobj/job/job_delete_not_enrolled_ja_task() **************************
 *  NAME
 *     job_delete_not_enrolled_ja_task() -- remove unenrolled task 
 *
@@ -680,8 +680,8 @@ int job_has_tasks(lListElem *job)
 *     u_long32 ja_task_number - Task to be removed 
 *
 *  SEE ALSO
-*     gdi/job/job_add_as_zombie()
-*******************************************************************************/
+*     sgeobj/job/job_add_as_zombie()
+******************************************************************************/
 void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list, 
                                      u_long32 ja_task_number) 
 {
@@ -697,7 +697,7 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
    DEXIT;
 } 
 
-/****** gdi/job/job_add_as_zombie() *******************************************
+/****** sgeobj/job/job_add_as_zombie() ****************************************
 *  NAME
 *     job_add_as_zombie() -- add task into zombie id list 
 *
@@ -714,8 +714,8 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
 *     u_long32 ja_task_id  - Task id to be inserted
 *
 *  SEE ALSO
-*     gdi/job/job_delete_not_enrolled_ja_task()
-*******************************************************************************/
+*     sgeobj/job/job_delete_not_enrolled_ja_task()
+******************************************************************************/
 void job_add_as_zombie(lListElem *zombie, lList **answer_list, 
                        u_long32 ja_task_id) 
 {
@@ -729,7 +729,7 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
    DEXIT;
 }
 
-/****** gdi/job/job_has_job_pending_tasks() ***********************************
+/****** sgeobj/job/job_has_job_pending_tasks() ********************************
 *  NAME
 *     job_has_job_pending_tasks() -- Has the job unenrolled tasks? 
 *
@@ -758,7 +758,7 @@ int job_has_job_pending_tasks(lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_set_hold_state() ******************************************
+/****** sgeobj/job/job_set_hold_state() ***************************************
 *  NAME
 *     job_set_hold_state() -- Changes the hold state of a task.
 *
@@ -775,7 +775,7 @@ int job_has_job_pending_tasks(lListElem *job)
 *     lList **answer_list     - AN_Type 
 *     u_long32 ja_task_id     - Array task id 
 *     u_long32 new_hold_state - hold state (see MINUS_H_TGT_*)
-*******************************************************************************/
+******************************************************************************/
 void job_set_hold_state(lListElem *job, lList **answer_list, 
                         u_long32 ja_task_id,
                         u_long32 new_hold_state)
@@ -828,7 +828,7 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
    DEXIT;
 }
 
-/****** gdi/job/job_get_hold_state() ******************************************
+/****** sgeobj/job/job_get_hold_state() ***************************************
 *  NAME
 *     job_get_hold_state() -- Returns the hold state of a task
 *
@@ -844,7 +844,7 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
 *
 *  RESULT
 *     u_long32 - hold state (see MINUS_H_TGT_*)
-*******************************************************************************/
+******************************************************************************/
 u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
 {
    u_long32 ret = 0;
@@ -876,7 +876,7 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
    return ret;
 }
 
-/****** gdi/job/job_search_task() *********************************************
+/****** sgeobj/job/job_search_task() ******************************************
 *  NAME
 *     job_search_task() -- Search an array task
 *
@@ -900,7 +900,7 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
 *  NOTES
 *     In case of errors, the function should return a message in a
 *     given answer_list (answer_list != NULL).
-*******************************************************************************/
+******************************************************************************/
 lListElem *job_search_task(const lListElem *job, lList **answer_list,
                            u_long32 ja_task_id)
 {
@@ -914,7 +914,7 @@ lListElem *job_search_task(const lListElem *job, lList **answer_list,
    return ja_task;
 }
 
-/****** gdi/job/job_create_task() *********************************************
+/****** sgeobj/job/job_create_task() ******************************************
 *  NAME
 *     job_create_task() -- Create an array task
 *
@@ -940,7 +940,7 @@ lListElem *job_search_task(const lListElem *job, lList **answer_list,
 *  NOTES
 *     In case of errors, the function should return a message in a
 *     given answer_list (answer_list != NULL).
-*******************************************************************************/
+******************************************************************************/
 lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task_id)
 {
    lListElem *ja_task = NULL; 
@@ -957,7 +957,7 @@ lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task
    return ja_task;
 }
 
-/****** gdi/job/job_get_shell_start_mode() ************************************
+/****** sgeobj/job/job_get_shell_start_mode() *********************************
 *  NAME
 *     job_get_shell_start_mode() -- get shell start mode for 'job' 
 *
@@ -998,7 +998,7 @@ const char *job_get_shell_start_mode(const lListElem *job,
    return ret;
 }
 
-/****** gdi/job/job_list_add_job() ********************************************
+/****** sgeobj/job/job_list_add_job() *****************************************
 *  NAME
 *     job_list_add_job() -- Creates a joblist and adds an job into it 
 *
@@ -1028,7 +1028,7 @@ const char *job_get_shell_start_mode(const lListElem *job,
 *           1 => invalid parameter
 *          -1 => check failed: element already exists
 *           0 => OK
-*******************************************************************************/
+******************************************************************************/
 int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
                      int check) {
    DENTER(TOP_LAYER, "job_list_add_job");
@@ -1062,7 +1062,7 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    return 0;
 }     
 
-/****** gdi/job/job_is_array() ************************************************
+/****** sgeobj/job/job_is_array() *********************************************
 *  NAME
 *     job_is_array() -- Is "job" an array job or not? 
 *
@@ -1081,8 +1081,8 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 *           0 -> non array job
 *
 *  SEE ALSO
-*     gdi/job/job_is_parallel()
-*     gdi/job/job_is_tight_parallel()
+*     sgeobj/job/job_is_parallel()
+*     sgeobj/job/job_is_tight_parallel()
 ******************************************************************************/
 int job_is_array(const lListElem *job)
 {
@@ -1091,7 +1091,7 @@ int job_is_array(const lListElem *job)
    return JOB_TYPE_IS_ARRAY(job_type);
 }  
 
-/****** gdi/job/job_is_parallel() *********************************************
+/****** sgeobj/job/job_is_parallel() ******************************************
 *  NAME
 *     job_is_parallel() -- Is "job" a parallel job? 
 *
@@ -1110,15 +1110,15 @@ int job_is_array(const lListElem *job)
 *           0 -> non-parallel job
 *
 *  SEE ALSO
-*     gdi/job/job_is_array() 
-*     gdi/job/job_is_tight_parallel()
-*******************************************************************************/
+*     sgeobj/job/job_is_array() 
+*     sgeobj/job/job_is_tight_parallel()
+******************************************************************************/
 int job_is_parallel(const lListElem *job)
 {
    return (lGetString(job, JB_pe) != NULL);
 } 
 
-/****** gdi/job/job_is_tight_parallel() ***************************************
+/****** sgeobj/job/job_is_tight_parallel() ************************************
 *  NAME
 *     job_is_tight_parallel() -- Is "job" a tightly integrated par. job?
 *
@@ -1139,10 +1139,10 @@ int job_is_parallel(const lListElem *job)
 *           0 -> other type
 *
 *  SEE ALSO
-*     gdi/job/job_is_array()
-*     gdi/job/job_is_parallel()
-*     gdi/job/job_might_be_tight_parallel()
-*******************************************************************************/
+*     sgeobj/job/job_is_array()
+*     sgeobj/job/job_is_parallel()
+*     sgeobj/job/job_might_be_tight_parallel()
+******************************************************************************/
 int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 {
    int ret = 0;
@@ -1170,7 +1170,7 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
    return ret;
 }
 
-/****** gdi/job/job_might_be_tight_parallel() *********************************
+/****** sgeobj/job/job_might_be_tight_parallel() ******************************
 *  NAME
 *     job_might_be_tight_parallel() -- Possibly a tightly integrated job? 
 *
@@ -1193,10 +1193,10 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *           0 -> non-parallel or not tightly integrated
 *
 *  SEE ALSO
-*     gdi/job/job_is_array()
-*     gdi/job/job_is_parallel()
-*     gdi/job/job_is_tight_parallel()
-*     gdi/job/job_might_be_tight_parallel()
+*     sgeobj/job/job_is_array()
+*     sgeobj/job/job_is_parallel()
+*     sgeobj/job/job_is_tight_parallel()
+*     sgeobj/job/job_might_be_tight_parallel()
 ******************************************************************************/
 int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
 {
@@ -1229,7 +1229,7 @@ int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
    return ret;
 }
 
-/****** gdi/job/job_get_submit_task_ids() *************************************
+/****** sgeobj/job/job_get_submit_task_ids() **********************************
 *  NAME
 *     job_get_submit_task_ids() -- Submit time task specification 
 *
@@ -1267,7 +1267,7 @@ void job_get_submit_task_ids(const lListElem *job, u_long32 *start,
    }
 }      
 
-/****** gdi/job/job_set_submit_task_ids() *************************************
+/****** sgeobj/job/job_set_submit_task_ids() **********************************
 *  NAME
 *     job_set_submit_task_ids() -- store the initial range ids in "job"
 *
@@ -1321,7 +1321,7 @@ int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
    return ret;
 }          
 
-/****** gdi/job/job_get_smallest_unenrolled_task_id() *************************
+/****** sgeobj/job/job_get_smallest_unenrolled_task_id() **********************
 *  NAME
 *     job_get_smallest_unenrolled_task_id() -- get smallest id 
 *
@@ -1367,7 +1367,7 @@ u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_get_smallest_enrolled_task_id() ***************************
+/****** sgeobj/job/job_get_smallest_enrolled_task_id() ************************
 *  NAME
 *     job_get_smallest_enrolled_task_id() -- find smallest enrolled tid 
 *
@@ -1411,7 +1411,7 @@ u_long32 job_get_smallest_enrolled_task_id(const lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_get_biggest_unenrolled_task_id() **************************
+/****** sgeobj/job/job_get_biggest_unenrolled_task_id() ***********************
 *  NAME
 *     job_get_biggest_unenrolled_task_id() -- find biggest unenrolled id 
 *
@@ -1457,7 +1457,7 @@ u_long32 job_get_biggest_unenrolled_task_id(const lListElem *job)
    return ret;
 }
 
-/****** gdi/job/job_get_biggest_enrolled_task_id() ****************************
+/****** sgeobj/job/job_get_biggest_enrolled_task_id() *************************
 *  NAME
 *     job_get_biggest_enrolled_task_id() -- find biggest enrolled tid 
 *
@@ -1501,7 +1501,7 @@ u_long32 job_get_biggest_enrolled_task_id(const lListElem *job)
    return ret;
 }
  
-/****** gdi/job/job_list_register_new_job() ***********************************
+/****** sgeobj/job/job_list_register_new_job() ********************************
 *  NAME
 *     job_list_register_new_job() -- try to register a new job
 *
@@ -1529,7 +1529,7 @@ u_long32 job_get_biggest_enrolled_task_id(const lListElem *job)
 *           0 => otherwise
 *
 *  SEE ALSO
-*     gdi/suser/suser_register_new_job()
+*     sgeobj/suser/suser_register_new_job()
 ******************************************************************************/
 int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
                               int force_registration)
@@ -1548,7 +1548,7 @@ int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
 }                
 
 
-/****** gdi/job/job_initialize_id_lists() *************************************
+/****** sgeobj/job/job_initialize_id_lists() **********************************
 *  NAME
 *     job_initialize_id_lists() -- initialize task id range lists 
 *
@@ -1569,8 +1569,8 @@ int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
 *     void - none 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type
-*******************************************************************************/
+*     sgeobj/range/RN_Type
+******************************************************************************/
 void job_initialize_id_lists(lListElem *job, lList **answer_list)
 {
    lList *n_h_list = NULL;    /* RN_Type */
@@ -1589,7 +1589,7 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
    DEXIT;
 }
 
-/****** gdi/job/job_initialize_env() ******************************************
+/****** sgeobj/job/job_initialize_env() ***************************************
 *  NAME
 *     job_initialize_env() -- initialize environment (partially) 
 *
@@ -1622,7 +1622,7 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
 *     lListElem *job               - JB_Type element 
 *     lList **answer_list          - AN_Type list pointer 
 *     const lList* path_alias_list - PA_Type list 
-*******************************************************************************/
+******************************************************************************/
 void job_initialize_env(lListElem *job, lList **answer_list, 
                         const lList* path_alias_list)
 {
@@ -1673,7 +1673,7 @@ error:
    DEXIT;
 }
 
-/****** gdi/job/job_get_env_string() ******************************************
+/****** sgeobj/job/job_get_env_string() ***************************************
 *  NAME
 *     job_get_env_string() -- get value of certain job env variable 
 *
@@ -1697,8 +1697,8 @@ error:
 *     const char* - value of "variable"
 *
 *  SEE ALSO
-*     gdi/job/job_initialize_env()
-*     gdi/job/job_set_env_string() 
+*     sgeobj/job/job_initialize_env()
+*     sgeobj/job/job_set_env_string() 
 ******************************************************************************/
 const char *job_get_env_string(const lListElem *job, const char *variable)
 {
@@ -1710,7 +1710,7 @@ const char *job_get_env_string(const lListElem *job, const char *variable)
    return ret;
 }
 
-/****** gdi/job/job_set_env_string() ******************************************
+/****** sgeobj/job/job_set_env_string() ***************************************
 *  NAME
 *     job_set_env_string() -- set value of certain job env variable 
 *
@@ -1733,8 +1733,8 @@ const char *job_get_env_string(const lListElem *job, const char *variable)
 *     const char* value    - new value 
 *
 *  SEE ALSO
-*     gdi/job/job_initialize_env()
-*     gdi/job/job_get_env_string()
+*     sgeobj/job/job_initialize_env()
+*     sgeobj/job/job_get_env_string()
 ******************************************************************************/
 void job_set_env_string(lListElem *job, const char* variable, const char* value)
 {
@@ -1747,7 +1747,7 @@ void job_set_env_string(lListElem *job, const char* variable, const char* value)
    DEXIT; 
 }
 
-/****** gdi/job/job_check_correct_id_sublists() *******************************
+/****** sgeobj/job/job_check_correct_id_sublists() ****************************
 *  NAME
 *     job_check_correct_id_sublists() -- test JB_ja_* sublists 
 *
@@ -1768,7 +1768,7 @@ void job_set_env_string(lListElem *job, const char* variable, const char* value)
 *
 *  RESULT
 *     void - none
-*******************************************************************************/
+******************************************************************************/
 void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 {
    DENTER(TOP_LAYER, "job_check_correct_id_sublists");
@@ -1841,7 +1841,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
    DEXIT; 
 }
 
-/****** gdi/job/job_get_id_string() *******************************************
+/****** sgeobj/job/job_get_id_string() ****************************************
 *  NAME
 *     job_get_id_string() -- get an id string for a job/jatask/petask
 *
@@ -1863,7 +1863,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 *  RESULT
 *     const char* - pointer to a static buffer. It is valid until the next
 *                   call of the function.
-*******************************************************************************/
+******************************************************************************/
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
                               const char *pe_task_id)
 {
@@ -1891,7 +1891,7 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
    return sge_dstring_get_string(&id);
 }
 
-/****** gdi/job/job_is_pe_referenced() ****************************************
+/****** sgeobj/job/job_is_pe_referenced() *************************************
 *  NAME
 *     job_is_pe_referenced() -- Does job reference the given PE? 
 *
@@ -1910,7 +1910,7 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
 *
 *  RESULT
 *     int - true (1) or false (0) 
-*******************************************************************************/
+******************************************************************************/
 int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
 {
    const char *ref_pe_name = lGetString(job, JB_pe);
@@ -1924,7 +1924,7 @@ int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
    return ret;
 }
 
-/****** gdi/job/job_is_ckpt_referenced() **************************************
+/****** sgeobj/job/job_is_ckpt_referenced() ***********************************
 *  NAME
 *     job_is_ckpt_referenced() -- Does job reference the given CKPT? 
 *
@@ -1942,7 +1942,7 @@ int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
 *
 *  RESULT
 *     int - true (1) or false (0) 
-*******************************************************************************/
+******************************************************************************/
 int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 {
    const char *ckpt_name = lGetString(ckpt, CK_name);
@@ -1957,7 +1957,7 @@ int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
    return ret;
 }
 
-/****** gdi/job/job_get_state_string() ****************************************
+/****** sgeobj/job/job_get_state_string() *************************************
 *  NAME
 *     job_get_state_string() -- write job state flags into a string 
 *
@@ -1977,7 +1977,7 @@ void job_get_state_string(char *str, u_long32 op)
    queue_or_job_get_states(JB_job_number, str, op);
 }
 
-/****** gdi/job/job_list_locate() *********************************************
+/****** sgeobj/job/job_list_locate() ******************************************
 *  NAME
 *     job_list_locate() -- find job in a list 
 *
@@ -2006,7 +2006,7 @@ lListElem *job_list_locate(lList *job_list, u_long32 job_id)
    return job;
 }
 
-/****** gdi/job/job_add_parent_id_to_context() ********************************
+/****** sgeobj/job/job_add_parent_id_to_context() *****************************
 *  NAME
 *     job_add_parent_id_to_context() -- add parent jobid to job context  
 *
@@ -2024,7 +2024,7 @@ lListElem *job_list_locate(lList *job_list, u_long32 job_id)
 *
 *  RESULT
 *     void - None
-*******************************************************************************/
+******************************************************************************/
 void job_add_parent_id_to_context(lListElem *job) 
 {
    lListElem *context_parent = NULL;   /* VA_Type */
@@ -2039,7 +2039,7 @@ void job_add_parent_id_to_context(lListElem *job)
    }
 }
 
-/****** gdi/job/job_check_qsh_display() ****************************************
+/****** sgeobj/job/job_check_qsh_display() ************************************
 *  NAME
 *     job_check_qsh_display() -- check DISPLAY variable for qsh jobs 
 *
@@ -2071,8 +2071,7 @@ void job_add_parent_id_to_context(lListElem *job)
 *     To fully hide the data representation of the DISPLAY settings, 
 *     functions job_set_qsh_display and job_get_qsh_display would
 *     be usefull.
-*
-*******************************************************************************/
+******************************************************************************/
 int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_warning)
 {
    const lListElem *display_ep;
@@ -2126,7 +2125,7 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_
    return STATUS_OK;
 }
 
-/****** gdi/job/job_check_owner() **********************************************
+/****** sgeobj/job/job_check_owner() ******************************************
 *  NAME
 *     job_check_owner() -- check the owner of a job
 *
@@ -2145,8 +2144,7 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list, int output_
 *     int - -1, if the job cannot be found
 *            0, if the user is the job owner
 *            1, if the user is not the job owner
-*
-*******************************************************************************/
+******************************************************************************/
 int job_check_owner(const char *user_name, u_long32 job_id) 
 {
    lListElem *job;
@@ -2178,7 +2176,7 @@ int job_check_owner(const char *user_name, u_long32 job_id)
    return 0;
 }
 
-/****** gdi/job/job_get_key() **************************************************
+/****** sgeobj/job/job_get_key() **********************************************
 *  NAME
 *     job_get_key() -- create a unique key 
 *
@@ -2202,8 +2200,8 @@ int job_check_owner(const char *user_name, u_long32 job_id)
 *                   function.
 *
 *  SEE ALSO
-*     gdi/job/job_parse_key()
-*******************************************************************************/
+*     sgeobj/job/job_parse_key()
+******************************************************************************/
 const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
                         const char *pe_task_id)
 {
@@ -2214,7 +2212,7 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
    return sge_dstring_get_string(&key);
 }
 
-/****** gdi/job/job_parse_key() ************************************************
+/****** sgeobj/job/job_parse_key() ********************************************
 *  NAME
 *     job_parse_key() -- parse a key generated by job_get_key()
 *
@@ -2238,8 +2236,8 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
 *     The pe_task_id is only valid until the passed key is deleted!
 *
 *  SEE ALSO
-*     gdi/job/job_get_key()
-*******************************************************************************/
+*     sgeobj/job/job_get_key()
+******************************************************************************/
 int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
                   char **pe_task_id)
 {
@@ -2254,7 +2252,7 @@ int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
    return TRUE;
 }
 
-/****** gdi/job/job_has_valid_account_string() ********************************
+/****** sgeobj/job/job_has_valid_account_string() *****************************
 *  NAME
 *     job_has_valid_account_string() -- is job account string valid 
 *
@@ -2272,10 +2270,10 @@ int job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
 *
 *  RESULT
 *     bool - true if account string is valid 
-*******************************************************************************/
+******************************************************************************/
 bool job_has_valid_account_string(const lListElem *job, lList **answer_list)
 {
-   int ret = true;
+   bool ret = true;
 
    if (strchr(lGetString(job, JB_account), ':')) {
       answer_list_add(answer_list, MSG_COLONNOTALLOWED, STATUS_EUNKNOWN, 

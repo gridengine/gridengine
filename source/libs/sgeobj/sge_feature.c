@@ -132,7 +132,7 @@ static feature_names_t featureset_list[] = {
 static int already_read_from_file = 0;
 lList *Master_FeatureSet_List = NULL;
 
-/****** gdi/feature/feature_initialize() **************************************
+/****** sgeobj/feature/feature_initialize() ***********************************
 *  NAME
 *     feature_initialize() -- initialize this module 
 *
@@ -175,7 +175,7 @@ void feature_initialize(void)
    }
 }                 
 
-/****** gdi/feature/feature_initialize_from_file() ****************************
+/****** sgeobj/feature/feature_initialize_from_file() *************************
 *  NAME
 *     feature_initialize_from_file() -- tag one featureset as active 
 *
@@ -235,7 +235,7 @@ int feature_initialize_from_file(const char *filename)
    return ret;
 }
 
-/****** gdi/feature/feature_initialize_from_string() **************************
+/****** sgeobj/feature/feature_initialize_from_string() ***********************
 *  NAME
 *     feature_initialize_from_string() -- tag one featureset as active 
 *
@@ -273,7 +273,7 @@ int feature_initialize_from_string(const char *mode)
    return ret;
 }
 
-/****** gdi/feature/feature_activate() ****************************************
+/****** sgeobj/feature/feature_activate() *************************************
 *  NAME
 *     feature_activate() -- switches the active featureset 
 *
@@ -318,7 +318,7 @@ void feature_activate(featureset_id_t id)
    DEXIT;
 }
  
-/****** gdi/feature/feature_is_active() ***************************************
+/****** sgeobj/feature/feature_is_active() ************************************
 *  NAME
 *     feature_is_active() -- is featureset active? 
 *
@@ -350,7 +350,7 @@ int feature_is_active(featureset_id_t id)
    return ret;
 }
 
-/****** gdi/feature/feature_get_active_featureset_id() ************************
+/****** sgeobj/feature/feature_get_active_featureset_id() *********************
 *  NAME
 *     feature_get_active_featureset_id() -- current active featureset 
 *
@@ -379,7 +379,7 @@ featureset_id_t feature_get_active_featureset_id(void)
    return ret;  
 }
 
-/****** gdi/feature/feature_get_featureset_name() *****************************
+/****** sgeobj/feature/feature_get_featureset_name() **************************
 *  NAME
 *     feature_get_featureset_name() -- return the product mode string
 *
@@ -411,7 +411,7 @@ const char *feature_get_featureset_name(featureset_id_t id)
    return ret; 
 }
 
-/****** gdi/feature/feature_get_featureset_id() *******************************
+/****** sgeobj/feature/feature_get_featureset_id() ****************************
 *  NAME
 *     feature_get_featureset_id() -- Value for a featureset string 
 *
@@ -449,7 +449,7 @@ featureset_id_t feature_get_featureset_id(const char *name)
    return ret;
 }
 
-/****** gdi/feature/feature_is_enabled() **************************************
+/****** sgeobj/feature/feature_is_enabled() ***********************************
 *  NAME
 *     feature_is_enabled() -- 0/1 whether the feature is enabled 
 *
@@ -485,7 +485,7 @@ int feature_is_enabled(feature_id_t id)
    return ret;
 }  
  
-/****** gdi/feature/feature_get_name() ****************************************
+/****** sgeobj/feature/feature_get_name() *************************************
 *  NAME
 *     feature_get_name() -- returns the feature as string 
 *
@@ -519,7 +519,7 @@ const char *feature_get_name(feature_id_t id)
    return ret; 
 }
  
-/****** gdi/feature/feature_get_id() ******************************************
+/****** sgeobj/feature/feature_get_id() ***************************************
 *  NAME
 *     feature_get_id() -- translates a feature string into the constant 
 *
@@ -551,7 +551,7 @@ feature_id_t feature_get_id(const char *name)
    return ret;
 }
 
-/****** gdi/feature/feature_get_product_name() *******************************
+/****** sgeobj/feature/feature_get_product_name() *****************************
 *  NAME
 *     feature_get_product_name() -- get product name string
 *

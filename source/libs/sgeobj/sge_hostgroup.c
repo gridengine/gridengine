@@ -57,7 +57,7 @@ lList *Master_Host_Group_List = NULL;
 
 static int sge_verify_group_entry(lList** alpp, lList* hostGroupList, lListElem* hostGroupElem, const char* extraSubgroupCheck , int ignoreSupergroupLinks);
 
-/****** gdi/hostgroup/sge_verify_host_group_entry() ***************************
+/****** sgeobj/hostgroup/sge_verify_host_group_entry() ***************************
 *  NAME
 *     sge_verify_host_group_entry() -- check hostgroup elements 
 *
@@ -156,7 +156,7 @@ const char *filename
    return FALSE;
 }
 
-/****** gdi/hostgroup/sge_add_group_elem() *************************************
+/****** sgeobj/hostgroup/sge_add_group_elem() *************************************
 *  NAME
 *     sge_add_group_elem() -- create and add new group element 
 *
@@ -347,7 +347,7 @@ int ignoreSupergroupLinks
    return FALSE;
 }
 
-/****** gdi/hostgroup/sge_add_subgroup2group() *********************************
+/****** sgeobj/hostgroup/sge_add_subgroup2group() *********************************
 *  NAME
 *     sge_add_subgroup2group() -- add sub group name to GRP_subgroup_list 
 *
@@ -462,7 +462,7 @@ int sge_add_subgroup2group(lList **alpp, lList *groupList,
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_del_subgroup_from_group() ****************************
+/****** sgeobj/hostgroup/sge_del_subgroup_from_group() ****************************
 *  NAME
 *     sge_del_subgroup_from_group() -- delete sub group name  
 *
@@ -531,7 +531,7 @@ int sge_del_subgroup_from_group(lList *groupList, lListElem *groupElem,
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_add_supergroup2group() ******************************
+/****** sgeobj/hostgroup/sge_add_supergroup2group() ******************************
 *  NAME
 *     sge_add_supergroup2group() -- set super group name in GRP_supergroup 
 *
@@ -623,7 +623,7 @@ int sge_add_supergroup2group(lList *groupList, lListElem *groupElem,
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_is_group_supergroup() *******************************
+/****** sgeobj/hostgroup/sge_is_group_supergroup() *******************************
 *
 *  NAME
 *     sge_is_group_supergroup() -- check if group is supergroup  
@@ -657,7 +657,7 @@ int sge_is_group_supergroup(lListElem *groupElem, const char *groupName)
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_is_group_subgroup() *********************************
+/****** sgeobj/hostgroup/sge_is_group_subgroup() *********************************
 *
 *  NAME
 *     sge_is_group_subgroup() -- check if group is subgroup  
@@ -790,7 +790,7 @@ int sge_is_group_subgroup(lList *hostGroupList, lListElem *groupElem,
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_add_member2group() ***********************************
+/****** sgeobj/hostgroup/sge_add_member2group() ***********************************
 *  NAME
 *     sge_add_member2group() -- add new member entry to group element 
 *
@@ -835,7 +835,7 @@ int sge_add_member2group(lListElem *groupElem, const char *memberName)
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_is_group() ******************************************
+/****** sgeobj/hostgroup/sge_is_group() ******************************************
 *  NAME
 *     sge_is_group() -- check any element 
 *
@@ -883,7 +883,7 @@ int sge_is_group(lList *groupList, const char *groupName)
   return FALSE;
 }
 
-/****** gdi/hostgroup/sge_get_group_elem() *************************************
+/****** sgeobj/hostgroup/sge_get_group_elem() *************************************
 *  NAME
 *     sge_get_group_elem() -- get lListElem pointer for given groupname 
 *
@@ -935,7 +935,7 @@ lListElem* sge_get_group_elem(lList *groupList, const char *groupName)
   return NULL;
 }
 
-/****** gdi/hostgroup/sge_is_member_in_group() ********************************
+/****** sgeobj/hostgroup/sge_is_member_in_group() ********************************
 *  NAME
 *     sge_is_member_in_group() -- check if member is in list of group 
 *

@@ -43,7 +43,7 @@
 
 #include "msg_sgeobjlib.h"
 
-/****** gdi/pe_task/pe_task_sum_past_usage() *******************************
+/****** sgeobj/pe_task/pe_task_sum_past_usage() *******************************
 *  NAME
 *     pe_task_sum_past_usage() -- sum up pe tasks past usage
 *
@@ -71,11 +71,12 @@
 *               in Grid Engine.
 *
 *  SEE ALSO
-*     gdi/pe_task/pe_task_sum_past_usage_all()
-*     gdi/pe_task/pe_task_sum_past_usage_list()
+*     sgeobj/pe_task/pe_task_sum_past_usage_all()
+*     sgeobj/pe_task/pe_task_sum_past_usage_list()
 *
 *******************************************************************************/
-lListElem *pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
+lListElem *
+pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
 {
    lList *container_usage;
    const lList *pe_task_usage;
@@ -132,7 +133,7 @@ lListElem *pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task
    return container;
 }
 
-/****** gdi/pe_task/pe_task_sum_past_usage_all() *******************************
+/****** sgeobj/pe_task/pe_task_sum_past_usage_all() ***************************
 *  NAME
 *     pe_task_sum_past_usage_all() -- sum up all pe tasks past usage
 *
@@ -152,8 +153,8 @@ lListElem *pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task
 *     lListElem* - the container object
 *
 *  SEE ALSO
-*     gdi/pe_task/pe_task_sum_past_usage()
-*     gdi/pe_task/pe_task_sum_past_usage_list()
+*     sgeobj/pe_task/pe_task_sum_past_usage()
+*     sgeobj/pe_task/pe_task_sum_past_usage_list()
 *******************************************************************************/
 lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
 {
@@ -181,7 +182,7 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
    return container;
 }
 
-/****** gdi/pe_task/pe_task_sum_past_usage_list() *******************************
+/****** sgeobj/pe_task/pe_task_sum_past_usage_list() **************************
 *  NAME
 *     pe_task_sum_past_usage_list() -- sum up pe tasks past usage
 *
@@ -202,10 +203,11 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
 *     lListElem* - the container object
 *
 *  SEE ALSO
-*     gdi/pe_task/pe_task_sum_past_usage()
-*     gdi/pe_task/pe_task_sum_past_usage_all()
-*******************************************************************************/
-lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
+*     sgeobj/pe_task/pe_task_sum_past_usage()
+*     sgeobj/pe_task/pe_task_sum_past_usage_all()
+******************************************************************************/
+lListElem *
+pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
 {
    lListElem *container;
 

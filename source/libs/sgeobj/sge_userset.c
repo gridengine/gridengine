@@ -41,21 +41,30 @@
 
 #include "msg_sgeobjlib.h"
 
-
 lList *Master_Userset_List = NULL;
 
-/*****************************************************************
- is_deadline_user
-
- ask whether a given user is allowed to sumbit deadline jobs.
- *****************************************************************/
-int is_deadline_user(
-const char *username,   /* user we ask for */
-lList *lp               /* userset list to scan for deadline users */
-) {
+/****** sgeobj/userset/userset_is_deadline_user() ******************************
+*  NAME
+*     userset_is_deadline_user() -- Ask if user may sumbit deadline jobs. 
+*
+*  SYNOPSIS
+*     bool userset_is_deadline_user(lList *lp, const char *username) 
+*
+*  FUNCTION
+*     Ask whether a given user is allowed to sumbit deadline jobs. 
+*
+*  INPUTS
+*     lList *lp            - US_Type 
+*     const char *username - user name
+*
+*  RESULT
+*     bool - result 
+*******************************************************************************/
+bool userset_is_deadline_user(lList *lp, const char *username)
+{
    lListElem *deadline_users;
 
-   DENTER(TOP_LAYER, "is_deadline_user");
+   DENTER(TOP_LAYER, "userset_is_deadline_user");
 
    deadline_users = lGetElemStr(lp, US_name, DEADLINE_USERS);
 
@@ -69,23 +78,40 @@ lList *lp               /* userset list to scan for deadline users */
    return 0;
 }
 
+/****** sgeobj/userset/userset_list_locate() **********************************
+*  NAME
+*     userset_list_locate() -- Find user in list 
+*
+*  SYNOPSIS
+*     lListElem* userset_list_locate(lList *lp, const char *name) 
+*
+*  FUNCTION
+*     Find user in list. 
+*
+*  INPUTS
+*     lList *lp        - US_Type list 
+*     const char *name - name 
+*
+*  RESULT
+*     lListElem* - NULL or element pointer
+*******************************************************************************/
 lListElem *userset_list_locate(lList *lp, const char *name) 
 {
-   lListElem *ep;
+   lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "userset_list_locate");
 
-   for_each(ep, lp)
+   for_each(ep, lp) {
       if (!strcasecmp(name, lGetString(ep, US_name))) {
-         DEXIT;
-         return ep;
+         break; 
       }
+   }
 
    DEXIT;
-   return NULL;
+   return ep;
 }
 
-/****** gdi/userset/userset_list_validate_acl_list() ***************************
+/****** sgeobj/userset/userset_list_validate_acl_list() ***********************
 *  NAME
 *     userset_list_validate_acl_list() -- validate an acl list 
 *
@@ -103,21 +129,20 @@ lListElem *userset_list_locate(lList *lp, const char *name)
 *     lList **alpp          - answer list pointer
 *     lList *acl_list       - the acl list to check
 *     const char *attr_name - the attribute name in the referencing object
+*                             (e.g. "user_lists")
 *     const char *obj_descr - the descriptor of the referencing object
+*                             (e.g. "queue")
 *     const char *obj_name  - the name of the referencing object
+*                             (e.g. "fangorn.q")
 *
 *  RESULT
-*     int - STATUS_OK, if everything is OK, else another status code,
-*           see libs/gdi/sge_answer.h
-*
+*     int - STATUS_OK, if everything is OK
 *******************************************************************************/
-int userset_list_validate_acl_list(
-lList **alpp,
-lList *acl_list,
-const char *attr_name, /* e.g. "user_lists" */
-const char *obj_descr, /* e.g. "queue"      */
-const char *obj_name   /* e.g. "fangorn.q"  */
-) {
+int 
+userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
+                               const char *attr_name, const char *obj_descr, 
+                               const char *obj_name) 
+{
    lListElem *usp;
 
    DENTER(TOP_LAYER, "userset_list_validate_acl_list");
@@ -136,7 +161,7 @@ const char *obj_name   /* e.g. "fangorn.q"  */
    return STATUS_OK;
 }
 
-/****** gdi/userset/userset_validate_entries() *******************************
+/****** sgeobj/userset/userset_validate_entries() *******************************
 *  NAME
 *     userset_validate_entries() -- verify entries of a user set
 *
@@ -154,9 +179,7 @@ const char *obj_name   /* e.g. "fangorn.q"  */
 *     int start_up       - are we in the qmaster startup phase?
 *
 *  RESULT
-*     int - STATUS_OK, if everything is OK, else another status code,
-*           see libs/gdi/sge_answer.h
-*
+*     int - STATUS_OK, if everything is OK
 *******************************************************************************/
 int userset_validate_entries(lListElem *userset, lList **alpp, int start_up)
 {

@@ -521,7 +521,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          If it is a deadline job the user has to be a deadline user
       */
       if (lGetUlong(jep, JB_deadline)) {
-         if (!is_deadline_user(ruser, Master_Userset_List)) {
+         if (!userset_is_deadline_user(Master_Userset_List, ruser)) {
             ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;

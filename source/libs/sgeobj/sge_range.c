@@ -194,7 +194,7 @@ lList **rl
    return;
 }
 
-/****** gdi/range/range_correct_end() *****************************************
+/****** sgeobj/range/range_correct_end() **************************************
 *  NAME
 *     range_correct_end() -- correct end of a range element 
 *
@@ -216,7 +216,7 @@ lList **rl
 *     1-6:2 (1,3,5) will be modified to 1-5:2 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 void range_correct_end(lListElem *range) 
 {
@@ -239,7 +239,7 @@ void range_correct_end(lListElem *range)
    }
 }
 
-/****** gdi/range/range_is_overlapping() ***************************************
+/****** sgeobj/range/range_is_overlapping() ***********************************
 *  NAME
 *     range_is_overlapping() -- Do two ranges interleave? 
 *
@@ -264,7 +264,7 @@ void range_correct_end(lListElem *range)
 *     1-5:3    6-10:4      => 0
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2)
@@ -284,7 +284,7 @@ static int range_is_overlapping(const lListElem *range1,
    return ret;
 }
 
-/****** gdi/range/range_list_initialize() *************************************
+/****** sgeobj/range/range_list_initialize() **********************************
 *  NAME
 *     range_list_initialize() -- (Re)initialize a range list 
 *
@@ -305,7 +305,7 @@ static int range_is_overlapping(const lListElem *range1,
 *     *answer_list may contain error messages 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 void range_list_initialize(lList **range_list, lList **answer_list) 
 {
@@ -335,7 +335,7 @@ void range_list_initialize(lList **range_list, lList **answer_list)
    }
 }
 
-/****** gdi/range/range_list_get_number_of_ids() ******************************
+/****** sgeobj/range/range_list_get_number_of_ids() ***************************
 *  NAME
 *     range_list_get_number_of_ids() -- Determines the number of ids 
 *
@@ -356,7 +356,7 @@ void range_list_initialize(lList **range_list, lList **answer_list)
 *     1-5:2, 7-10:3, 20-23:1 (1, 3, 5, 7, 10, 20, 21, 22, 23) => 9
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 u_long32 range_list_get_number_of_ids(const lList *range_list)
 {
@@ -369,7 +369,7 @@ u_long32 range_list_get_number_of_ids(const lList *range_list)
    return ret;
 }
 
-/****** gdi/range/range_get_number_of_ids() ************************************
+/****** sgeobj/range/range_get_number_of_ids() ********************************
 *  NAME
 *     range_get_number_of_ids() -- Number of ids within a range
 *
@@ -389,7 +389,7 @@ u_long32 range_list_get_number_of_ids(const lList *range_list)
 *     1-5:2 (1, 3, 5)   => 3
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 u_long32 range_get_number_of_ids(const lListElem *range) 
 {
@@ -399,7 +399,7 @@ u_long32 range_get_number_of_ids(const lListElem *range)
    return 1 + (end - start) / step;
 }
 
-/****** gdi/range/range_list_print_to_string() *********************************
+/****** sgeobj/range/range_list_print_to_string() *****************************
 *  NAME
 *     range_list_print_to_string() -- Print range list into the string 
 *
@@ -419,7 +419,7 @@ u_long32 range_get_number_of_ids(const lListElem *range)
 *     string will be modified
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 void range_list_print_to_string(const lList *range_list, 
                                 dstring *string,
@@ -440,7 +440,7 @@ void range_list_print_to_string(const lList *range_list,
    } 
 }
 
-/****** gdi/range/range_list_get_first_id() ***********************************
+/****** sgeobj/range/range_list_get_first_id() ********************************
 *  NAME
 *     range_list_get_first_id() -- First id contained in the list
 *
@@ -462,8 +462,8 @@ void range_list_print_to_string(const lList *range_list,
 *     u_long32 - First id or 0
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*     gdi/range/range_list_get_last_id()
+*     sgeobj/range/RN_Type 
+*     sgeobj/range/range_list_get_last_id()
 ******************************************************************************/
 u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list) 
 {
@@ -484,7 +484,7 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
    return start;
 }
 
-/****** gdi/range/range_list_get_last_id() ************************************
+/****** sgeobj/range/range_list_get_last_id() *********************************
 *  NAME
 *     range_list_get_last_id() -- Returns last id contained in the list
 *
@@ -506,8 +506,8 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
 *     u_long32 - Last id or 0
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*     gdi/range/range_list_get_first_id()
+*     sgeobj/range/RN_Type 
+*     sgeobj/range/range_list_get_first_id()
 ******************************************************************************/
 u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list) 
 {
@@ -528,7 +528,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
    return end;
 }
 
-/****** gdi/range/range_sort_uniq_compress() **********************************
+/****** sgeobj/range/range_sort_uniq_compress() *******************************
 *  NAME
 *     range_sort_uniq_compress() -- makes range lists fit as a fiddle 
 *
@@ -554,7 +554,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 *     12-12:7,1-7:1,3-5:2,14-16:2   => 1-7:1,12-16:2
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 ******************************************************************************/
 void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 {
@@ -616,7 +616,7 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
    DEXIT;
 }
 
-/****** gdi/range/range_list_compress() ***************************************
+/****** sgeobj/range/range_list_compress() ************************************
 *  NAME
 *     range_list_compress() -- Joins sequenced ranges within a list 
 *
@@ -641,7 +641,7 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
 *     1-3:1,4-5:1,6-8:2,8-10:2   => 1-5:1,6-10:2 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 ******************************************************************************/
 void range_list_compress(lList *range_list) 
 {
@@ -696,7 +696,7 @@ void range_list_compress(lList *range_list)
    DEXIT;
 }
 
-/****** gdi/range/range_list_is_id_within() ***********************************
+/****** sgeobj/range/range_list_is_id_within() ********************************
 *  NAME
 *     range_list_is_id_within() -- Is id contained in range list? 
 *
@@ -715,7 +715,7 @@ void range_list_compress(lList *range_list)
 *     int - 0 or 1 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 *******************************************************************************/
 int range_list_is_id_within(const lList *range_list, u_long32 id) 
 {
@@ -731,7 +731,7 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
    return ret;
 }
 
-/****** gdi/range/range_list_containes_id_less_than() *************************
+/****** sgeobj/range/range_list_containes_id_less_than() **********************
 *  NAME
 *     range_list_containes_id_less_than() -- is one id less than the given id
 *
@@ -763,7 +763,7 @@ int range_list_containes_id_less_than(const lList *range_list, u_long32 id)
    return ret;
 }
 
-/****** gdi/range/range_list_is_empty() ***************************************
+/****** sgeobj/range/range_list_is_empty() ************************************
 *  NAME
 *     range_list_is_empty() -- check if id lists containes ids 
 *
@@ -780,14 +780,14 @@ int range_list_containes_id_less_than(const lList *range_list, u_long32 id)
 *     int - 0 or 1 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type
-*******************************************************************************/
+*     sgeobj/range/RN_Type
+******************************************************************************/
 int range_list_is_empty(const lList *range_list)
 {
    return (range_list_get_number_of_ids(range_list) == 0);
 }
 
-/****** gdi/range/range_containes_id_less_than() ******************************
+/****** sgeobj/range/range_containes_id_less_than() ***************************
 *  NAME
 *     range_containes_id_less_than() -- at least one id less than given id 
 *
@@ -803,7 +803,7 @@ int range_list_is_empty(const lList *range_list)
 *
 *  RESULT
 *     int - 0 or 1 
-*******************************************************************************/
+******************************************************************************/
 int range_containes_id_less_than(const lListElem *range, u_long32 id)
 {
    int ret = 0;
@@ -819,7 +819,7 @@ int range_containes_id_less_than(const lListElem *range, u_long32 id)
    return ret;
 }
 
-/****** gdi/range/range_is_id_within() *****************************************
+/****** sgeobj/range/range_is_id_within() *************************************
 *  NAME
 *     range_is_id_within() -- Is id contained in range? 
 *
@@ -837,8 +837,8 @@ int range_containes_id_less_than(const lListElem *range, u_long32 id)
 *     int - 0 or 1 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 int range_is_id_within(const lListElem *range, u_long32 id) 
 {
    int ret = 0;
@@ -854,7 +854,7 @@ int range_is_id_within(const lListElem *range, u_long32 id)
    return ret;
 }
 
-/****** gdi/range/range_list_remove_id() **************************************
+/****** sgeobj/range/range_list_remove_id() ***********************************
 *  NAME
 *     range_list_remove_id() -- remove an id from a range list 
 *
@@ -874,8 +874,8 @@ int range_is_id_within(const lListElem *range, u_long32 id)
 *     range_list and answer_list may be modified 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id) 
 {
    lListElem *range = NULL;
@@ -920,7 +920,7 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
    }
 }
 
-/****** gdi/range/range_list_move_first_n_ids() ********************************
+/****** sgeobj/range/range_list_move_first_n_ids() ****************************
 *  NAME
 *     range_list_move_first_n_ids() -- split a range list 
 *
@@ -944,8 +944,8 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
 *     range_list, range_list2, answer_list may be modified 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
                                  lList **range_list2, u_long32 n) 
 {
@@ -977,7 +977,7 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
    DEXIT;
 }
 
-/****** gdi/range/range_list_insert_id() ***************************************
+/****** sgeobj/range/range_list_insert_id() ***********************************
 *  NAME
 *     range_list_insert_id() -- insert an id into a range list 
 *
@@ -1002,10 +1002,10 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *     range_list and answer_list may be modified 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*     gdi/range/range_list_compress()
-*     gdi/range/range_sort_uniq_compress()
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+*     sgeobj/range/range_list_compress()
+*     sgeobj/range/range_sort_uniq_compress()
+******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
    lListElem *range, *prev_range, *next_range;
@@ -1121,7 +1121,7 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
    DEXIT;
 }
 
-/****** gdi/range/range_get_all_ids() *****************************************
+/****** sgeobj/range/range_get_all_ids() **************************************
 *  NAME
 *     range_get_all_ids() -- reads 'start', 'end' and 'step' 
 *
@@ -1139,8 +1139,8 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 *     u_long32 *step         - step size 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
                        u_long32 *step)
 {
@@ -1151,7 +1151,7 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
    }
 }
 
-/****** gdi/range/range_set_all_ids() *****************************************
+/****** sgeobj/range/range_set_all_ids() **************************************
 *  NAME
 *     range_set_all_ids() -- writes 'start', 'end' and 'step' 
 *
@@ -1172,8 +1172,8 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
 *     Step values will be nomalized. (e.g. 1-1:3 => 1-1:1)
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
                        u_long32 step)
 {
@@ -1188,7 +1188,7 @@ void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
    }
 }     
 
-/****** gdi/range/range_list_calculate_union_set() *****************************
+/****** sgeobj/range/range_list_calculate_union_set() *************************
 *  NAME
 *     range_list_calculate_union_set() -- Union set of two range lists 
 *
@@ -1213,8 +1213,8 @@ void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
 *     range_list and answer_list may be modified 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_list_calculate_union_set(lList **range_list, 
                                     lList **answer_list,
                                     const lList *range_list1,
@@ -1258,7 +1258,7 @@ error:
                   STATUS_ERROR1, ANSWER_QUALITY_ERROR);
 }
 
-/****** gdi/range/range_list_calculate_difference_set() ***********************
+/****** sgeobj/range/range_list_calculate_difference_set() ********************
 *  NAME
 *     range_list_calculate_difference_set() -- Difference set list 
 *
@@ -1279,8 +1279,8 @@ error:
 *     const lList *range_list2 - second source RN_Type list 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_list_calculate_difference_set(lList **range_list, 
                                          lList **answer_list,
                                          const lList *range_list1, 
@@ -1326,7 +1326,7 @@ error:
    DEXIT;
 }
 
-/****** gdi/range/range_list_calculate_intersection_set() *********************
+/****** sgeobj/range/range_list_calculate_intersection_set() ******************
 *  NAME
 *     range_list_calculate_intersection_set() -- Intersection set 
 *
@@ -1347,8 +1347,8 @@ error:
 *     const lList *range_list2 - second source RN_Type list 
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
-*******************************************************************************/
+*     sgeobj/range/RN_Type 
+******************************************************************************/
 void range_list_calculate_intersection_set(lList **range_list, 
                                            lList **answer_list,
                                            const lList *range_list1, 
@@ -1391,7 +1391,7 @@ error:
                   STATUS_ERROR1, ANSWER_QUALITY_ERROR);
 }
 
-/****** gdi/range/add_taskrange_str() *****************************************
+/****** sgeobj/range/add_taskrange_str() **************************************
 *  NAME
 *     add_taskrange_str() -- Appends a range to a dynamic string 
 *
@@ -1412,7 +1412,7 @@ error:
 *     int ignore_step            - ignore step for output
 *
 *  SEE ALSO
-*     gdi/range/RN_Type 
+*     sgeobj/range/RN_Type 
 ******************************************************************************/
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, 
                               dstring *dyn_taskrange_str, int ignore_step) 

@@ -50,7 +50,7 @@
 #include "msg_sgeobjlib.h"
 
 
-/****** gdi/object/object_has_type() *******************************************
+/****** sgeobj/object/object_has_type() ***************************************
 *  NAME
 *     object_has_type() -- has an object a certain type?
 *
@@ -76,7 +76,7 @@
 *     object types.
 *
 *  SEE ALSO
-*     gdi/object/object_get_primary_key()
+*     sgeobj/object/object_get_primary_key()
 *******************************************************************************/
 bool 
 object_has_type(const lListElem *object, const lDescr *descr) 
@@ -97,7 +97,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
    return ret;
 } 
 
-/****** gdi/object/object_get_type() *******************************************
+/****** sgeobj/object/object_get_type() ***************************************
 *  NAME
 *     object_get_type() -- return type (descriptor) for object
 *
@@ -153,7 +153,7 @@ object_get_type(const lListElem *object)
    return ret;
 }
 
-/****** gdi/object/object_get_subtype() ****************************************
+/****** sgeobj/object/object_get_subtype() ************************************
 *  NAME
 *     object_get_subtype() -- get type of a sublist
 *
@@ -212,7 +212,7 @@ object_get_subtype(int nm)
    return ret;
 }
 
-/****** gdi/object/object_get_primary_key() ************************************
+/****** sgeobj/object/object_get_primary_key() ********************************
 *  NAME
 *     object_get_primary_key() -- get primary key for object type
 *
@@ -273,7 +273,7 @@ object_get_primary_key(const lDescr *descr)
    return ret;
 }
  
-/****** gdi/object/object_get_name_prefix() ************************************
+/****** sgeobj/object/object_get_name_prefix() ********************************
 *  NAME
 *     object_get_name_prefix() -- get prefix of cull attribute name
 *
@@ -302,7 +302,7 @@ object_get_primary_key(const lDescr *descr)
 *     For types not handled in object_get_primary_key, NULL will be returned.
 *
 *  SEE ALSO
-*     gdi/object/object_get_primary_key()
+*     sgeobj/object/object_get_primary_key()
 *******************************************************************************/
 const char * 
 object_get_name_prefix(const lDescr *descr, dstring *buffer)
@@ -331,7 +331,7 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
    return NULL;
 }
 
-/****** gdi/object/object_get_field_contents() *********************************
+/****** sgeobj/object/object_get_field_contents() *****************************
 *  NAME
 *     object_get_field_contents() -- get object field contents as string
 *
@@ -360,8 +360,8 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *     For sublists, subobjects and references NULL is returned.
 *
 *  SEE ALSO
-*     gdi/object/--GDI-Object-Handling
-*     gdi/object/object_set_field_contents()
+*     sgeobj/object/--GDI-Object-Handling
+*     sgeobj/object/object_set_field_contents()
 *******************************************************************************/
 const char * 
 object_get_field_contents(const lListElem *object, lList **answer_list, 
@@ -464,7 +464,7 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
    return result;
 }
 
-/****** gdi/object/object_set_field_contents() *********************************
+/****** sgeobj/object/object_set_field_contents() *****************************
 *  NAME
 *     object_set_field_contents() -- set object attribute contents from string
 *
@@ -491,9 +491,9 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
 *     Sublists, subobjects and references cannot be set with this function.
 *
 *  SEE ALSO
-*     gdi/object/--GDI-Object-Handling
-*     gdi/object/object_get_field_contents()
-*******************************************************************************/
+*     sgeobj/object/--GDI-Object-Handling
+*     sgeobj/object/object_get_field_contents()
+******************************************************************************/
 bool 
 object_set_field_contents(lListElem *object, lList **answer_list, const int nm, 
                           const char *value)
@@ -653,7 +653,7 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
    return ret;
 }
 
-/****** gdi/object/object_delete_range_id() ************************************
+/****** sgeobj/object/object_delete_range_id() ********************************
 *  NAME
 *     object_delete_range_id() -- deletes a certain id from an objects range_list
 *

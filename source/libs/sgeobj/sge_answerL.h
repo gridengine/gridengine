@@ -42,7 +42,7 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
-/****** gdi/answer/--AN_Type **************************************************
+/****** sgeobj/answer/--AN_Type ***********************************************
 *  NAME
 *     AN_Type - CULL answer element
 *

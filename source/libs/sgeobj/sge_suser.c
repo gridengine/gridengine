@@ -43,7 +43,7 @@
 
 #include "msg_qmaster.h"
 
-/****** gdi/suser/Master_SUser_List *******************************************
+/****** sgeobj/suser/Master_SUser_List ****************************************
 *  NAME
 *     Master_SUser_List -- list of submit users 
 *
@@ -58,11 +58,11 @@
 *     enters/leaves the SGE/SGEEE system
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
+*     sgeobj/suser/SU_Type
 ******************************************************************************/
 lList *Master_SUser_List;
 
-/****** gdi/suser/suser_list_add() ********************************************
+/****** sgeobj/suser/suser_list_add() *****************************************
 *  NAME
 *     suser_list_add() -- Add a new entry (uniq) entry into a list 
 *
@@ -85,8 +85,8 @@ lList *Master_SUser_List;
 *     lListElem* - SU_Type element or NULL
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 ******************************************************************************/
 lListElem *suser_list_add(lList **suser_list, lList **answer_list,
                           const char *suser_name)
@@ -102,7 +102,7 @@ lListElem *suser_list_add(lList **suser_list, lList **answer_list,
    return ret;
 }
 
-/****** gdi/suser/suser_list_find() *******************************************
+/****** sgeobj/suser/suser_list_find() ****************************************
 *  NAME
 *     suser_list_find() -- find a user entry in a list 
 *
@@ -122,8 +122,8 @@ lListElem *suser_list_add(lList **suser_list, lList **answer_list,
 *     lListElem* - SU_Type element pointer or NULL
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 ******************************************************************************/
 lListElem *suser_list_find(lList *suser_list, const char *suser_name)
 {
@@ -135,7 +135,7 @@ lListElem *suser_list_find(lList *suser_list, const char *suser_name)
    return ret;
 }
 
-/****** gdi/suser/suser_increase_job_counter() ********************************
+/****** sgeobj/suser/suser_increase_job_counter() *****************************
 *  NAME
 *     suser_increase_job_counter() -- increase the users job counter 
 *
@@ -152,8 +152,8 @@ lListElem *suser_list_find(lList *suser_list, const char *suser_name)
 *     void - NONE
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 ******************************************************************************/
 void suser_increase_job_counter(lListElem *suser)
 {
@@ -164,7 +164,7 @@ void suser_increase_job_counter(lListElem *suser)
    }
 }
 
-/****** gdi/suser/suser_decrease_job_counter() ********************************
+/****** sgeobj/suser/suser_decrease_job_counter() *****************************
 *  NAME
 *     suser_decrease_job_counter() -- decrease the users job counter 
 *
@@ -181,8 +181,8 @@ void suser_increase_job_counter(lListElem *suser)
 *     void - NONE
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 ******************************************************************************/
 void suser_decrease_job_counter(lListElem *suser)
 {
@@ -202,7 +202,7 @@ void suser_decrease_job_counter(lListElem *suser)
    DEXIT;
 }
 
-/****** gdi/suser/suser_get_job_counter() *************************************
+/****** sgeobj/suser/suser_get_job_counter() **********************************
 *  NAME
 *     suser_get_job_counter() -- return the users job counter 
 *
@@ -219,8 +219,8 @@ void suser_decrease_job_counter(lListElem *suser)
 *     u_long32 - number of jobs 
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 ******************************************************************************/
 u_long32 suser_get_job_counter(lListElem *suser)
 {
@@ -232,7 +232,7 @@ u_long32 suser_get_job_counter(lListElem *suser)
    return ret;
 }
 
-/****** gdi/suser/suser_register_new_job() ************************************
+/****** sgeobj/suser/suser_register_new_job() *********************************
 *  NAME
 *     suser_register_new_job() -- try to register a new job 
 *
@@ -262,8 +262,8 @@ u_long32 suser_get_job_counter(lListElem *suser)
 *           0 => otherwise
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 *     qmaster/job/job_list_register_new_job()
 ******************************************************************************/
 int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
@@ -289,7 +289,7 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
    return ret;
 }
 
-/****** gdi/suser/suser_unregister_job() **************************************
+/****** sgeobj/suser/suser_unregister_job() ***********************************
 *  NAME
 *     suser_unregister_job() -- unregister a job 
 *
@@ -306,8 +306,8 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
 *     void - NONE
 *
 *  SEE ALSO
-*     gdi/suser/SU_Type
-*     gdi/suser/Master_SUser_List  
+*     sgeobj/suser/SU_Type
+*     sgeobj/suser/Master_SUser_List  
 ******************************************************************************/
 void suser_unregister_job(const lListElem *job)
 {

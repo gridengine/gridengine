@@ -101,7 +101,7 @@ NAMEEND
 
 #define SOS sizeof(SON)/sizeof(char*)
 
-/****** gdi/queue/--QU_Type ***************************************************
+/****** sgeobj/queue/--QU_Type ************************************************
 *  NAME
 *     QU_Type - CULL queue element
 *

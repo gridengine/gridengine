@@ -39,7 +39,7 @@
 lList *Master_Project_List = NULL;
 lList *Master_User_List = NULL;
 
-/****** gdi/userprj/userprj_list_locate() *************************************
+/****** sgeobj/userprj/userprj_list_locate() **********************************
 *  NAME
 *     userprj_list_locate() -- Find a user/project in a list 
 *
@@ -57,7 +57,7 @@ lList *Master_User_List = NULL;
 *
 *  RESULT
 *     lListElem* - pointer to user or project element
-*******************************************************************************/
+******************************************************************************/
 lListElem *userprj_list_locate(lList *userprj_list, 
                                const char *uerprj_name) 
 {

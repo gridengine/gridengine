@@ -532,7 +532,7 @@ u_long32 flags
 /* We do not have the userset_list here for the moment.
    So rely on the master deny if we are not a deadline user.
 
-         if (!is_deadline_user(uti_state_get_user_name(), userset_list)) {
+         if (!userset_is_deadline_user(userset_list, uti_state_get_user_name())) {
             sprintf(str, "%s you are not a deadline user\n", uti_state_get_user_name());
             answer_list_add(&answer, str, STATUS_DENIED, ANSWER_QUALITY_ERROR);
             DEXIT;

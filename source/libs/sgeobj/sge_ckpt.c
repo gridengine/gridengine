@@ -51,7 +51,7 @@
 
 lList *Master_Ckpt_List = NULL;
 
-/****** gdi/ckpt/ckpt_is_referenced() *****************************************
+/****** sgeobj/ckpt/ckpt_is_referenced() **************************************
 *  NAME
 *     ckpt_is_referenced() -- Is a given CKPT referenced in other objects? 
 *
@@ -92,7 +92,7 @@ int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
    return ret;
 }
 
-/****** gdi/ckpt/ckpt_list_locate() *******************************************
+/****** sgeobj/ckpt/ckpt_list_locate() ***************************************
 *  NAME
 *     ckpt_list_locate -- find a ckpt object in a list 
 *
@@ -115,5 +115,3 @@ lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name)
 {
    return lGetElemStr(ckpt_list, CK_name, ckpt_name);
 }
-
-

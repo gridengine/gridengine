@@ -135,7 +135,12 @@ lListElem *petep
    if (petep == NULL) {
       master_q = lFirst(lGetList(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_queue));
    } else {
-      master_q = lFirst(lGetList(lFirst(lGetList(petep, PET_granted_destin_identifier_list)), JG_queue));
+      lListElem *pe_queue = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
+      master_q = lFirst(lGetList(lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list),
+                                             JG_qname,
+                                             lGetString(pe_queue, JG_qname)),
+                        JG_queue));
+      
    }
 
    DEXIT;
@@ -182,6 +187,7 @@ long last_addgrpid
    return (0);
 }
 
+/* JG: TODO: this code does not work! It does not respect pe tasks which also consume addrgpids! */
 static int addgrpid_already_in_use(
 long add_grp_id 
 ) {
@@ -234,6 +240,7 @@ char *err_str
    const char *cp;
    char *shell;
    const char *cwd = NULL;
+   const lList *path_aliases = NULL;
    lList *cplx;
    char dce_wrapper_cmd[128];
 
@@ -484,20 +491,21 @@ char *err_str
    /* 1.) try to read cwd from pe task */
    if(petep != NULL) {
       cwd = lGetString(petep, PET_cwd);
+      path_aliases = lGetList(petep, PET_path_aliases);
    } 
 
    /* 2.) try to read cwd from job */
    if(cwd == NULL) {
       cwd = lGetString(jep, JB_cwd);
+      path_aliases = lGetList(jep, JB_path_aliases);
    }
 
    /* 3.) if pe task or job set cwd: do path mapping */
    if(cwd != NULL) {
       static char cwd_out[SGE_PATH_MAX];
      
-      /* JG: TODO: Petask must have its own path mapping. */         
       /* path aliasing only for cwd flag set */
-      path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
+      path_alias_list_get_path(path_aliases, NULL,
                                cwd, me.qualified_hostname, cwd_out, 
                                SGE_PATH_MAX);
       cwd = cwd_out;
@@ -565,14 +573,14 @@ char *err_str
       }
    }
 
-   /* JG: TODO: do we need REQNAME and REQUEST? */
+   /* JG: TODO (ENV): do we need REQNAME and REQUEST? */
    var_list_set_string(&environmentList, "REQUEST", petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name));
    var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
    var_list_set_string(&environmentList, "QUEUE", lGetString(master_q, QU_qname));
-   /* JB: TODO: shouldn't we better have a SGE_JOB_ID? */
+   /* JB: TODO (ENV): shouldn't we better have a SGE_JOB_ID? */
    var_list_set_u32(&environmentList, "JOB_ID", lGetUlong(jep, JB_job_number));
   
-   /* JG: TODO: shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
+   /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
    if (job_is_array(jep)) {
       var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", lGetUlong(jatep, JAT_task_number));
    } else {
@@ -603,7 +611,7 @@ char *err_str
    ** interactive and login jobs have no script file
    */
    if(petep != NULL) {
-      /* JG: TODO: passing information if it is an interactive job and which type, should not be
+      /* JG: TODO (255): passing information if it is an interactive job and which type, should not be
        *           be done in scriptfile - find a better solution, e.g. a config variable 
        */
       strcpy(script_file, "QRSH");
@@ -866,9 +874,8 @@ char *err_str
       lListElem *pep = NULL;
       /* no pe start/stop for petasks */
       if(petep == NULL) {
-         pep = lFirst(lGetList(jep, JB_pe_object));
+         pep = lFirst(lGetList(jatep, JAT_pe_object));
       }
-      /* JG: TODO: shouldn't pe_object be part of jatep? */
       fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, dir, PE_HOSTFILE);
       fprintf(fp, "pe_start=%s\n",  pep != NULL && lGetString(pep, PE_start_proc_args)?
                                        lGetString(pep, PE_start_proc_args):"none");
@@ -991,9 +998,12 @@ char *err_str
       lListElem *se;
 
       int nargs=1;
-      
+     
+      /* for pe tasks we have no args - the daemon (rshd etc.) to start
+       * comes from the cluster configuration 
+       */
       if(petep != NULL) {
-         args = lGetList(petep, PET_args);
+         args = NULL;
       } else {
          args = lGetList(jep, JB_job_args);
       }
@@ -1094,9 +1104,8 @@ char *err_str
          jb_now = lGetUlong(jep, JB_now); 
       }
      
-      /* JG: TODO: replace by pe_task_id */
       if(petep != NULL) {
-         fprintf(fp, "qrsh_task_id=%s\n", lGetString(petep, PET_id));
+         fprintf(fp, "pe_task_id=%s\n", lGetString(petep, PET_id));
       }   
 
       if(JB_NOW_IS_QLOGIN(jb_now) || JB_NOW_IS_QRSH(jb_now) 
@@ -1166,7 +1175,7 @@ char *err_str
    /*
    ** interactive jobs dont need to access script file
    */
-   /* JG: TODO: find better way to identify interactive jobs */
+   /* JG: TODO (255): find better way to identify interactive jobs */
    if (!lGetString(jep, JB_job_source) && petep == NULL && lGetString(jep, JB_script_file)) {
       if (SGE_STAT(script_file, &buf)) {
          sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
@@ -1249,37 +1258,34 @@ char *err_str
    }
 
    /* send mail to users if requested */
-   /* JG: TODO: Is this also done for pe tasks?
-    *           If yes, is this wanted?
-    *           If yes, it should contain the petaskid
-    *           make a function send_job_start_mail()
-    */
-   mail_users = lGetList(jep, JB_mail_list);
-   mail_options = lGetUlong(jep, JB_mail_options);
-   strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
-   if (VALID(MAIL_AT_BEGINNING, mail_options)) {
-      if (job_is_array(jep)) {
-         sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(lGetUlong(jep, JB_job_number)),
-                 u32c(lGetUlong(jatep, JAT_task_number)), lGetString(jep, JB_job_name));
-         sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
-             u32c(lGetUlong(jep, JB_job_number)),
-             u32c(lGetUlong(jatep, JAT_task_number)),
-             lGetString(jep, JB_job_name),
-             lGetString(jep, JB_owner), 
-             lGetString(master_q, QU_qname),
-             lGetHost(master_q, QU_qhostname), sge_mail_start);
-      } 
-      else {
-         sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(lGetUlong(jep, JB_job_number)),
-            lGetString(jep, JB_job_name));
-         sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,
-             u32c(lGetUlong(jep, JB_job_number)),
-             lGetString(jep, JB_job_name),
-             lGetString(jep, JB_owner),
-             lGetString(master_q, QU_qname),
-             lGetHost(master_q, QU_qhostname), sge_mail_start);
+   if(petep == NULL) {
+      mail_users = lGetList(jep, JB_mail_list);
+      mail_options = lGetUlong(jep, JB_mail_options);
+      strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time)));
+      if (VALID(MAIL_AT_BEGINNING, mail_options)) {
+         if (job_is_array(jep)) {
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(lGetUlong(jep, JB_job_number)),
+                    u32c(lGetUlong(jatep, JAT_task_number)), lGetString(jep, JB_job_name));
+            sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
+                u32c(lGetUlong(jep, JB_job_number)),
+                u32c(lGetUlong(jatep, JAT_task_number)),
+                lGetString(jep, JB_job_name),
+                lGetString(jep, JB_owner), 
+                lGetString(master_q, QU_qname),
+                lGetHost(master_q, QU_qhostname), sge_mail_start);
+         } 
+         else {
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(lGetUlong(jep, JB_job_number)),
+               lGetString(jep, JB_job_name));
+            sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,
+                u32c(lGetUlong(jep, JB_job_number)),
+                lGetString(jep, JB_job_name),
+                lGetString(jep, JB_owner),
+                lGetString(master_q, QU_qname),
+                lGetHost(master_q, QU_qhostname), sge_mail_start);
+         }
+         cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job start");
       }
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job start");
    }
 
    /* Change to jobs directory. Father changes back to cwd. We do this to
@@ -1299,12 +1305,12 @@ char *err_str
 
    if (i != 0) { /* parent */
       if(petep == NULL) {
+         /* nothing to be done for petasks: We do not signal single petasks, but always the whole jatask */
          lSetUlong(jep, JB_hard_wallclock_gmt, 0); /* in case we are restarting! */
          lSetUlong(jatep, JAT_pending_signal, 0);
          lSetUlong(jatep, JAT_pending_signal_delivery_time, 0);
-      } else {
-         /* JG: TODO: what to do for petask? */
-      }
+      } 
+
       if (chdir(execd_spool_dir))       /* go back */
          /* if this happens (dont know how) we have a real problem */
          ERROR((SGE_EVENT, MSG_FILE_CHDIR_SS, execd_spool_dir, strerror(errno))); 

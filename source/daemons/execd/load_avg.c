@@ -718,11 +718,12 @@ lList **job_usage_list
 
    temp_job_usage_list = lCreateList("JobResUsageList", JB_Type);
 
+   /* We only have to loop over jobs and ja tasks.
+    * It probably does not make sense to report a reserved usage
+    * on the pe task level.
+    */
    for_each (jep, Master_Job_List) {
       jobid = lGetUlong(jep, JB_job_number);
-      /* JG: TODO: did it ever work? pe tasks are not contained directly in the Master_Job_List,
-       *           but are in the array tasks task list.
-       */
       new_job = lCreateElem(JB_Type);
       new_ja_task_list = lCreateList("jat_list", JAT_Type);
       lSetUlong(new_job, JB_job_number, jobid);

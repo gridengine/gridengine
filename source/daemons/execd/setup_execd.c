@@ -64,7 +64,7 @@
 #include "sge_io.h"
 #include "sge_os.h"
 
-extern char execd_spool_dir[];
+extern char execd_spool_dir[SGE_PATH_MAX];
 extern lList *execd_config_list;
 extern lList *jr_list;
 extern lList *Master_Job_List;

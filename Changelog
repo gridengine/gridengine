@@ -1,3 +1,15 @@
+JG-2002-05-21-0: Cleanup:   Moved job_report related commodity functions to 
+                            libs/gdi.
+                            Common code to create paths.
+                            Sum up usage of finished pe tasks in a container 
+                            pe task and remove them from the ja tasks pe task 
+                            list (merge of JG-2002-03-20-0 from 
+                            V53_beta2_BRANCH).
+                            Other minor changes in the handling of pe tasks.
+                 Doc:       Documentation of the pe task and pe task 
+                            request types.
+                 Issues:    201, 254
+
 EB-2002-05-21-1: Cleanup:   Added missing ADOC comments in utilib
 
 EB-2002-05-21-0: Enhancem.: Prevent master from accepting jobs without 

@@ -487,7 +487,7 @@ int sge_process_all_events(lList *event_list)
 {
    static u_long32 user_sort = 0;
    lList *data_list, **lpp;
-   lListElem *event, *ep, *ja_task = NULL;
+   lListElem *event, *ep = NULL, *ja_task = NULL;
    u_long32 number, type, intkey, intkey2;
    const char *strkey;
    int ret;
@@ -807,7 +807,6 @@ int sge_process_all_events(lList *event_list)
                JAT_granted_destin_identifier_list,
                JAT_usage_list,
                JAT_scaled_usage_list,
-               JAT_task_list,
                JAT_previous_usage_list,
                NoName
             };
@@ -893,6 +892,101 @@ int sge_process_all_events(lList *event_list)
             }     
          }
          break;
+
+      case sgeE_PETASK_ADD:
+         {
+            lListElem *job, *ja_task, *pe_task;
+            lList *task_list;
+   
+            /* check if event contains any objects */
+            if (n <= 0) {
+               ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDPETASKXGOTNONEWPETASK_IUUS,
+                      (int) number, u32c(intkey), u32c(intkey2), strkey));
+               DEXIT;
+               goto Error;
+            }
+           
+            /* search job */
+            job = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            if (job == NULL) {
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORADDINGPETASK_U, 
+                      u32c(intkey)));
+               DEXIT;
+               goto Error;
+            }
+
+            /* search ja task */
+            /* JG: TODO (256): use lGetElemUlong  */
+            for_each(ja_task, lGetList(job, JB_ja_tasks)) {
+               if (lGetUlong(ja_task, JAT_task_number) == intkey2)
+                  break;
+            }
+
+            if (ja_task == NULL) {
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKXFORADDINGPETASK_UU, 
+                      u32c(intkey), u32c(intkey2)));
+               DEXIT;
+               goto Error;
+            }
+
+            /* if pe task list not yet existed, create it,
+             * else check if the new pe task is already there
+             */
+            task_list = lGetList(ja_task, JAT_task_list);
+            if(task_list == NULL) {
+               task_list = lCreateList("pe tasks", PET_Type);
+               lSetList(ja_task, JAT_task_list, task_list);
+            } else {
+               pe_task = lGetElemStr(task_list, PET_id, strkey);
+               if (pe_task != NULL) {
+                  DPRINTF(("Had to add pe task %s to job/jatask "U32CFormat"."U32CFormat", but it's already here\n",
+                           strkey, u32c(intkey), u32c(intkey2)));
+                  DEXIT;
+                  goto Error;
+               }
+            }
+
+            /* copy pe task to ja tasks pe task list */
+            pe_task = lDechainElem(new_version, lFirst(new_version)); 
+            lAppendElem(task_list, pe_task);
+         }
+         break;
+
+      case sgeE_PETASK_DEL:
+         {
+            lListElem *job, *ja_task;
+            lList *task_list;
+   
+            /* search job */
+            job = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            if (job == NULL) {
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORDELETINGPETASK_U, 
+                      u32c(intkey)));
+               DEXIT;
+               goto Error;
+            }
+
+            /* search ja task */
+            /* JG: TODO (256): use lGetElemUlong  */
+            for_each(ja_task, lGetList(job, JB_ja_tasks)) {
+               if (lGetUlong(ja_task, JAT_task_number) == intkey2)
+                  break;
+            }
+
+            if (ja_task == NULL) {
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKXFORDELETINGPETASK_UU, 
+                      u32c(intkey), u32c(intkey2)));
+               DEXIT;
+               goto Error;
+            }
+            
+            task_list = lGetList(ja_task, JAT_task_list);
+            if(task_list != NULL) {
+               lDelElemStr(&task_list, PET_id, strkey);
+            }
+         }   
+         break;
+         
       case sgeE_JOB_LIST:
          lXchgList(event, ET_new_version, &(lists.job_list));
          rebuild_categories = 1;
@@ -929,61 +1023,61 @@ int sge_process_all_events(lList *event_list)
       case sgeE_JOB_USAGE:
          {
             u_long32 was_running;
-            lListElem *jep, *ja_task;
+            lListElem *job, *ja_task, *pe_task = NULL;
 
-            jep = ep = lGetElemUlong(lists.job_list, JB_job_number, intkey);
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U,
+            job = lGetElemUlong(lists.job_list, JB_job_number, intkey);
+            if (job == NULL) {
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U, 
                       u32c(intkey)));
                DEXIT;
                goto Error;
             }
-            /* JG: TODO: use lGetElemUlong  */
-            for_each(ja_task, lGetList(ep, JB_ja_tasks)) {
+
+            /* JG: TODO (256): use lGetElemUlong  */
+            for_each(ja_task, lGetList(job, JB_ja_tasks)) {
                if (lGetUlong(ja_task, JAT_task_number) == intkey2)
                   break;
             }
-            if (!ja_task) {
-               DPRINTF(("Did not find ja task %d in job %d\n", intkey2, intkey));
+
+            if (ja_task == NULL) {
+               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKXFORUPDATINGUSAGE_UU, 
+                      u32c(intkey), u32c(intkey2)));
                DEXIT;
                goto Error;
             }
 
-	         if (strkey) { /* must be a task usage */
-               lListElem *ja_task;
-               
-               /* JG: TODO: use lGetElemStr. And we already have the jatask! */
-               for_each (ja_task, lGetList(jep, JB_ja_tasks)) {
-		            if (!(ep=lGetSubStr(ja_task, PET_id, strkey, JAT_task_list)))
-                     /* JG: TODO: Do we really want to store all petasks in scheduler?
-                      *           It can be thousands, as task ids are no longer recycled!
-                      *           Do we need them at all?
-                      */
-                     ep = lAddSubStr(ja_task, PET_id, strkey, JAT_task_list, PET_Type);
+	         if (strkey != NULL) { /* must be a pe task usage */
+               pe_task = lGetSubStr(ja_task, PET_id, strkey, JAT_task_list);
+		         if (pe_task == NULL) {
+                  ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKXFORUPDATINGUSAGE_UUS, 
+                         u32c(intkey), u32c(intkey2), strkey));
+                  DEXIT;
+                  goto Error;
                }
             }	    
 
 
             /* exchange old and new usage list */
-            /* JG: TODO: I doubt this works correctly for petasks! 
-             *           Their usage would have to be added to the jatask usage or
-             *           summed up in a container for all petasks.
-             */
             {
                lList *tmp = NULL;
 
                lXchgList(event, ET_new_version, &tmp);
-               lXchgList(ja_task, JAT_scaled_usage_list, &tmp);
+               if(pe_task != NULL) {
+                  lXchgList(pe_task, PET_scaled_usage, &tmp);
+               } else {
+                  lXchgList(ja_task, JAT_scaled_usage_list, &tmp);
+               }
                lXchgList(event, ET_new_version, &tmp);
             }
+
             was_running = running_status(lGetUlong(ja_task, JAT_status));
             /* decrease # of running jobs for this user */
-            if (type == sgeE_JOB_FINAL_USAGE && was_running && !strkey) {
+            if (type == sgeE_JOB_FINAL_USAGE && was_running && pe_task == NULL) {
                if (!sge_mode && user_sort)
-                  at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
+                  at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
             }
 
-            if (type == sgeE_JOB_FINAL_USAGE && !strkey)
+            if (type == sgeE_JOB_FINAL_USAGE && pe_task == NULL)
                lSetUlong(ja_task, JAT_status, JFINISHED);
          }
          break;

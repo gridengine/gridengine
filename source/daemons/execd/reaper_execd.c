@@ -51,7 +51,7 @@
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
 #include "sge_pe_taskL.h"
-#include "sge_job_reportL.h"
+#include "sge_job_report.h"
 #include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usageL.h"
@@ -72,7 +72,6 @@
 #include "sge_load_sensor.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
-#include "job_report.h"
 #include "sge_prog.h"
 #include "sge_conf.h"
 #include "sge_qexec.h"
@@ -81,6 +80,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_conf.h"
 #include "setup_path.h"
+#include "get_path.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
@@ -96,7 +96,7 @@
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
-static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, lListElem *jr);
+static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *pe_task_id, lListElem *jr);
 #endif
 
 static int clean_up_job(lListElem *jr, int failed, int signal, int is_array);
@@ -186,7 +186,6 @@ void sge_reap_children_execd()
          continue;
       }
   
-      /* JG: TODO: make a function search_task_by_pid(list, pid, jep, jatep, petep) */
       /* search whether it was a job or one of its tasks */
       for_each(jep, Master_Job_List) {
          int Break = 0;
@@ -305,20 +304,16 @@ RETURNS
    1 got only zero usage from ptf
 
 */
-/* JG: TODO: to be consistent, we should always pass job_id, ja_task_id and pe_task_id */
 static void unregister_from_ptf(
 u_long32 job_id,
 u_long32 ja_task_id,
+const char *pe_task_id,
 lListElem *jr 
 ) {
-/*    lListElem *job, *ja_task; */
-   const char *pe_task_id;
    lList* usage = NULL;
    int ptf_error;
 
    DENTER(TOP_LAYER, "unregister_from_ptf");
-
-   pe_task_id = lGetString(jr, JR_pe_task_id_str);
 
    if ((ptf_error=ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage))) {
       ERROR((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
@@ -375,7 +370,7 @@ int is_array
       pe_task_id_str?pe_task_id_str:"master"));
 
 #ifdef COMPILE_DC
-   unregister_from_ptf(jobid, jataskid, jr);
+   unregister_from_ptf(jobid, jataskid, pe_task_id_str, jr);
 #else
    lDelSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage);
    lDelSubStr(jr, UA_name, USAGE_ATTR_MEM, JR_usage);
@@ -746,7 +741,7 @@ int is_array
 
    /* Check whether a message about tasks exit has to be sent.
       We need job data to know whether an ack about exit status was requested */
-   /* JG: TODO: This message will never be read by anybody. 
+   /* JG: TODO (257): This message will never be read by anybody. 
     *           We should store the host and port of qrsh -inherit in PET_source
     *           and send data there, or, perhaps better, always use comlib for 
     *           communication of qrsh with other components instead of qrsh socket.
@@ -803,8 +798,9 @@ int is_array
 
 /* ------------------------- */
 void remove_acked_job_exit(
-u_long32 jobid,
-u_long32 jataskid,
+u_long32 job_id,
+u_long32 ja_task_id,
+const char *pe_task_id,
 lListElem *jr 
 ) {
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
@@ -819,8 +815,8 @@ lListElem *jr
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
 
-   if (jataskid == 0) {
-      ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(jobid)));
+   if (ja_task_id == 0) {
+      ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(job_id)));
       DEXIT;
       return;
    }
@@ -829,13 +825,13 @@ lListElem *jr
 
    /* try to find this job in our job list */ 
 
-   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
    while(jep != NULL) {
-      jatep = job_search_task(jep, NULL, jataskid, 0);
+      jatep = job_search_task(jep, NULL, ja_task_id, 0);
       if(jatep != NULL) {
          break;
       }
-      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
    }
 
    if (jep && jatep) {
@@ -851,7 +847,7 @@ lListElem *jr
 
          if (!petep) {
             ERROR((SGE_EVENT, MSG_JOB_XYHASNOTASKZ_UUS, 
-                   u32c(jobid), u32c(jataskid), pe_task_id_str));
+                   u32c(job_id), u32c(ja_task_id), pe_task_id_str));
             del_job_report(jr);
             DEXIT;
             return;
@@ -867,7 +863,7 @@ lListElem *jr
       } else { 
          master_q = responsible_queue(jep, jatep, NULL);
       }   
-      job_log(jobid, jataskid, MSG_SHEPHERD_GOTACKFORJOBEXIT);
+      job_log(job_id, ja_task_id, MSG_SHEPHERD_GOTACKFORJOBEXIT);
      
       /* use mail list of job instead of tasks one */
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
@@ -880,7 +876,7 @@ lListElem *jr
 #ifdef KERBEROS
       /* destroy credentials cache of job */
       if (!pe_task_id_str)
-         krb_destroy_forwarded_tgt(jobid);
+         krb_destroy_forwarded_tgt(job_id);
 #endif
       /*
       ** Execute command to delete the client's DCE or Kerberos credentials.
@@ -889,10 +885,10 @@ lListElem *jr
          delete_credentials(jep);
 
       /* remove job/task active dir */
-      /* JG: TODO: As petaskids are no longer recycled, their active dir should be deleted */
-      if (!keep_active && !getenv("SGE_KEEP_ACTIVE") && !pe_task_id_str) {
-         sprintf(jobdir, "%s/"u32"."u32"", ACTIVE_DIR, lGetUlong(jep, JB_job_number),
-            jataskid);
+      if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+         sge_get_active_job_file_path(jobdir, SGE_PATH_MAX,
+                                      job_id, ja_task_id, pe_task_id,
+                                      NULL);
          DPRINTF(("removing active dir: %s\n", jobdir));
          if (sge_rmdir(jobdir, err_str)) {
             ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
@@ -908,12 +904,12 @@ lListElem *jr
          sge_switch2start_user();
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
             lGetString(jep, JB_owner), lGetUlong(jep, JB_job_number), 
-            jataskid, lGetString(master_q, QU_qname));
+            ja_task_id, lGetString(master_q, QU_qname));
          sge_switch2admin_user();
       }
 
       if (!pe_task_id_str) {
-         job_remove_spool_file(jobid, jataskid, SPOOL_WITHIN_EXECD);
+         job_remove_spool_file(job_id, ja_task_id, SPOOL_WITHIN_EXECD);
 
          if (lGetString(jep, JB_exec_file)) {
             int task_number = 0;
@@ -921,10 +917,10 @@ lListElem *jr
 
             /* it is possible to remove the exec_file if
                less than one task of a job is running */
-            tmp_job = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+            tmp_job = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
             while(tmp_job != NULL) {
                task_number++;
-               tmp_job = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+               tmp_job = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
             }
             
             if (task_number <= 1) {
@@ -953,20 +949,20 @@ lListElem *jr
       /* clean up active jobs entry */
       if (!pe_task_id_str) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
-                u32c(jobid),  u32c(jataskid), (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
-         job_log(jobid, jataskid, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT);
+                u32c(job_id),  u32c(ja_task_id), (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
+         job_log(job_id, ja_task_id, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT);
 
       /*
       ** security hook
       */
 #ifdef KERBEROS
-         krb_destroy_forwarded_tgt(jobid);
+         krb_destroy_forwarded_tgt(job_id);
 #endif
 
-         sprintf(jobdir, "%s/"u32"."u32"", ACTIVE_DIR, jobid, jataskid);
+         sprintf(jobdir, "%s/"u32"."u32"", ACTIVE_DIR, job_id, ja_task_id);
          if (SGE_STAT(jobdir, &statbuf)) {
             ERROR((SGE_EVENT, MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU, 
-                  jobdir, u32c(jobid)));
+                  jobdir, u32c(job_id)));
          } else {
             /*** read config file written by exec_job ***/ 
             sprintf(fname, "%s/config", jobdir);
@@ -998,15 +994,15 @@ lListElem *jr
                  (!(qname = get_conf_val("queue"))) || 
              (!(job_owner = get_conf_val("job_owner")))) {
                ERROR((SGE_EVENT, MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU, 
-                     u32c(jobid), u32c(jataskid)));
+                     u32c(job_id), u32c(ja_task_id)));
             } else {
                DPRINTF(("removing queue_tmpdir %s\n", tmpdir));
-               sge_remove_tmpdir(tmpdir, job_owner, jobid, jataskid, qname);
+               sge_remove_tmpdir(tmpdir, job_owner, job_id, ja_task_id, qname);
             }
          }
 
          /* job */
-         job_remove_spool_file(jobid, jataskid, SPOOL_WITHIN_EXECD); 
+         job_remove_spool_file(job_id, ja_task_id, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
          if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
@@ -1018,7 +1014,7 @@ lListElem *jr
          }
       }
       del_job_report(jr);
-      cleanup_job_report(jobid, jataskid);
+      cleanup_job_report(job_id, ja_task_id);
    }
 
    DEXIT;
@@ -1101,7 +1097,6 @@ int failed
    lSetUlong(jr, JR_general_failure, general);
    lSetString(jr, JR_err_str, error_string);
   
-   /* JG: TODO: shouldn't job_log also get the petaskid? */
    job_log(jobid, jataskid, (failed==SSTATE_FAILURE_BEFORE_JOB)?
       MSG_SHEPHERD_REPORINGJOBSTARTFAILURETOQMASTER:
       MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER);

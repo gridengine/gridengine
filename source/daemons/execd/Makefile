@@ -61,7 +61,6 @@ EXECD_ADD_SRC =  usage.c \
                  sge_options.c \
               admin_mail.c \
               config_file.c \
-              job_report.c \
               mail.c \
               read_object.c \
               read_write_job.c \

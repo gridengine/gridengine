@@ -39,7 +39,6 @@ DAEMONS_COMMON_SRC = admin_mail.c \
                     config_file.c \
                     err_trace.c \
                     job_log.c \
-                    job_report.c \
                     lock.c \
                     mail.c \
                     qlogin_starter.c \
@@ -98,9 +97,6 @@ err_trace.o:	$(DAEMONS_COMMON_DIR)/err_trace.c
 
 job_log.o   : $(DAEMONS_COMMON_DIR)/job_log.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/job_log.c
-
-job_report.o   : $(DAEMONS_COMMON_DIR)/job_report.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/job_report.c
 
 lock.o: 	$(DAEMONS_COMMON_DIR)/lock.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/lock.c

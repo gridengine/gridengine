@@ -34,11 +34,10 @@
 
 #include "cull.h"
 #include "sge_jobL.h"
-#include "sge_job_reportL.h"
+#include "sge_job_report.h"
 #include "sge_usageL.h"
 #include "sge_gdi_intern.h"
 #include "job_report_execd.h"
-#include "job_report.h"
 #include "reaper_execd.h"
 #include "sge_signal.h"
 #include "execd_signal_queue.h"
@@ -122,7 +121,7 @@ const char *petaskid
 
    DENTER(TOP_LAYER, "get_job_report");
 
-   /* JG: TODO: Could be optimized by using lGetElemUlong for jobid */
+   /* JG: TODO (256): Could be optimized by using lGetElemUlong for jobid */
    for_each (jr, jr_list) {
       s = lGetString(jr, JR_pe_task_id_str);
 
@@ -288,7 +287,7 @@ int answer_error
                     jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
-               remove_acked_job_exit(jobid, jataskid, jr);
+               remove_acked_job_exit(jobid, jataskid, pe_task_id_str, jr);
             } 
             else {
                DPRINTF(("acknowledged job "u32"."u32" not found\n", jobid, jataskid));
@@ -321,7 +320,7 @@ int answer_error
                if (signal_job(jobid, jataskid, signo)) {
                   lListElem *jr;
                   jr = get_job_report(jobid, jataskid, NULL);
-                  remove_acked_job_exit(jobid, jataskid, jr);
+                  remove_acked_job_exit(jobid, jataskid, NULL, jr);
                   job_unknown(jobid, jataskid, NULL);
                }
             }

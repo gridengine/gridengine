@@ -40,7 +40,7 @@
 #include "sge_hostL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_pe_task.h"
 #include "sge_usageL.h"
 #include "sge_queueL.h"
 #include "sge_ckptL.h"
@@ -205,7 +205,7 @@ lListElem *hep
          }
 
          /* start with 1 as first consecutive taskid at each node */
-         lSetUlong(jep, JB_next_pe_task_id, 1);
+         lSetUlong(jatep, JAT_next_pe_task_id, 1);
 
          if (send_job(lGetHost(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
             ret = -1;   
@@ -219,7 +219,7 @@ lListElem *hep
 
    if (!sent_slaves) {
       /* wait till all slaves are acked */
-      lSetUlong(jep, JB_next_pe_task_id, 0);
+      lSetUlong(jatep, JAT_next_pe_task_id, 1);
       ret = send_job(rhost, target, jep, jatep, pe, hep, 1);
    }
 
@@ -807,27 +807,35 @@ sge_commit_flags_t commit_flags
          }
       }
 
-      /* add sub-task usage to previous job usage */
-      /* JG: TODO: really sum up pe tasks usage into the ja task?
-                   does code actually work?
-                   usage is _not_ summed up in ja task!
-       */            
-      for_each(petask, lGetList(jatep, JAT_task_list)) {
-         lListElem *dst, *src;
-         lList *usage;
+      /* sum up the usage of all pe tasks not yet deleted (e.g. tasks from 
+       * exec host in unknown state). Then remove all pe tasks except the 
+       * past usage container 
+       */
+      { 
+         lList *pe_task_list = lGetList(jatep, JAT_task_list);
 
-         for_each(src, lGetList(petask, PET_scaled_usage)) {
-            if ((dst=lGetSubStr(jatep, UA_name, lGetString(src, UA_name), JAT_previous_usage_list))) {
-               lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
-            } else {                                                                       
-               if (!(usage = lGetList(jatep, JAT_previous_usage_list))) {           
-                  usage = lCreateList("usage", UA_Type);                                 
-                  lSetList(jatep, JAT_previous_usage_list, usage);                            
-               }                                                                         
-               lAppendElem(usage, lCopyElem(src));                                      
+         if(pe_task_list != NULL) {
+            lListElem *pe_task, *container, *existing_container;
+
+            /* JG: TODO: Move event client server code to libgdi, then sending events 
+             *           can be done in usage functions 
+             */
+            existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
+            container = pe_task_sum_past_usage_all(pe_task_list);
+            if(existing_container == NULL) {
+               sge_add_event(NULL, sgeE_PETASK_ADD, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, container);
+            } else {
+               sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
+                                  lGetList(container, PET_scaled_usage));
+            }
+
+            for_each(pe_task, pe_task_list) {
+               if(pe_task != container) {
+                  lRemoveElem(pe_task_list, pe_task);
+               }
             }
          }
-      }
+      }   
 
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);

@@ -52,5 +52,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
                  const char *job_name, u_long32 job_number, 
                  u_long32 task_number, int type, char *path);
 
+const char *sge_get_active_job_file_path(char *buffer, int size, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename);
+
 #endif /* __GET_PATH_H */
 

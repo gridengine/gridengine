@@ -41,6 +41,7 @@
 #include "get_path.h"
 #include "sge_uidgid.h"
 #include "sge_prog.h"
+#include "sge_dstring.h"
 #include "msg_execd.h"
 
 static const char* expand_path(const char *path_in, u_long32 job_id, 
@@ -210,4 +211,83 @@ const char *user
 
    DEXIT;
    return 1;
+}
+
+/****** execd/fileio/sge_get_active_job_file_path() ********************************
+*  NAME
+*     sge_get_active_job_file_path() -- Create paths in active_jobs dir
+*
+*  SYNOPSIS
+*     const char* sge_get_active_job_file_path(char *buffer, int size, 
+*        u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, 
+*        const char *filename) 
+*
+*  FUNCTION
+*     Creates paths in the execd's active_jobs directory.
+*     Both directory and file paths can be created.
+*     The result is placed in a buffer provided by the caller,
+*     if this buffer is too small, an error is generated.
+*
+*  INPUTS
+*     char *buffer           - buffer to hold the generated path
+*     int size               - size of the buffer 
+*     u_long32 job_id        - job id 
+*     u_long32 ja_task_id    - array task id
+*     const char *pe_task_id - optional pe task id
+*     const char *filename   - optional file name
+*
+*  RESULT
+*     const char* - pointer to the string buffer on success, else NULL
+*
+*  EXAMPLE
+*     To create the relative path to a jobs/tasks environment file, the 
+*     following call would be used:
+*
+*     char buffer[SGE_PATH_MAX]
+*     sge_get_active_job_file_path(buffer, SGE_PATH_MAX, 
+*                                  job_id, ja_task_id, pe_task_id,
+*                                  "environment");
+*     
+*
+*  NOTES
+*     JG: TODO: The function might be converted to or might use a more 
+*     general path creating function (utilib).
+*
+*  SEE ALSO
+*     
+*******************************************************************************/
+const char *sge_get_active_job_file_path(char *buffer, int size, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename) 
+{
+   dstring path = DSTRING_INIT;
+   char id_buffer[30];
+
+   DENTER(TOP_LAYER, "sge_get_active_job_file_path");
+
+   sge_dstring_append(&path, ACTIVE_DIR);
+
+   sprintf(id_buffer, "/"u32"."u32, job_id, ja_task_id);
+   sge_dstring_append(&path, id_buffer);
+
+   if(pe_task_id != NULL) {
+      sge_dstring_append(&path, "/");
+      sge_dstring_append(&path, pe_task_id);
+   }
+
+   if(filename != NULL) {
+      sge_dstring_append(&path, "/");
+      sge_dstring_append(&path, filename);
+   }
+
+   if(sge_dstring_strlen(&path) + 1 > size) {
+      *buffer = 0;
+      ERROR((SGE_EVENT, MSG_BUFFEROFSIZETOOSMALLFOR_DS, size, sge_dstring_get_string(&path)));
+      DEXIT;
+      return NULL;
+   }
+
+   strcpy(buffer, sge_dstring_get_string(&path));
+   DPRINTF(("sge_get_active_job_file_path: %s\n", buffer));
+
+   DEXIT;
+   return buffer;
 }

@@ -42,7 +42,9 @@
 /* #define TRACE_INCOMING_USAGE */
 
 /* if the scaled usage list does not yet exist, it is created and returned */
-/* JG: TODO: why is it in libsched? It is only used by qmaster. */
+/* JG: TODO: why is it in libsched? It is only used by qmaster. 
+ *           it might be moved to a module handling usage objects in libs/gdi
+ */
 lList *scale_usage(
 lList *scaling,     /* HS_Type */
 lList *prev_usage,  /* HS_Type */

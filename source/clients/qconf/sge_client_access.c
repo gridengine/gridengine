@@ -56,12 +56,14 @@ lList *new_answers
 
    if (alpp) { /* append all answers to existing list */
       lAddList(*alpp, new_answers); 
-   }
-   else { /* write errors to stderr */
-      for_each (answer, new_answers) 
+   } else { /* write errors to stderr */
+      for_each (answer, new_answers) {
          answer_exit_if_not_recoverable(answer);
-         if (answer_get_status(answer) != STATUS_OK) 
+         if (answer_get_status(answer) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(answer, AN_text));
+         }   
+      }
+
       lFreeList(new_answers);
    }
 

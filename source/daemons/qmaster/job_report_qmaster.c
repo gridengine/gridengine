@@ -38,16 +38,15 @@
 #include "sge_peL.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
-#include "sge_pe_taskL.h"
+#include "sge_pe_task.h"
 #include "sge_hostL.h"
 #include "sge_usageL.h"
 #include "sge_reportL.h"
-#include "sge_job_reportL.h"
+#include "sge_job_report.h"
 #include "sge_sched.h"
 #include "sge_prog.h"
 #include "execution_states.h"
 #include "sge_feature.h"
-#include "job_report.h"
 #include "job_report_qmaster.h"
 #include "job_exit.h"
 #include "sge_signal.h"
@@ -270,7 +269,6 @@ sge_pack_buffer *pb
                         if ((ep=lAddSubHost(petask, JG_qhostname, rhost, PET_granted_destin_identifier_list, JG_Type))) {
                            lSetString(ep, JG_qname, queue_name);
                         }   
-                        /* JG: TODO: Does this spool the whole job? Each time a new petask is started? */
                         job_write_spool_file(jep, 0, SPOOL_DEFAULT);
                     }
 
@@ -286,14 +284,12 @@ sge_pack_buffer *pb
                                 lGetList(petask, PET_scaled_usage));
 
                               /* notify scheduler of task usage event */
-                              /* JG: TODO: we should introduce new events for pe tasks */
-                    if (feature_is_enabled(FEATURE_SGEEE)) {
-                         if (new_task)
-                             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-                         else
-                             sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, pe_task_id_str,
-                                                lGetList(petask, PET_scaled_usage));
-                    }
+                    if (new_task) {
+                       sge_add_event(NULL, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
+                    } else {
+                       sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, pe_task_id_str,
+                                          lGetList(petask, PET_scaled_usage));
+                    }                            
 
                   } else {
                      lListElem *jg;
@@ -477,34 +473,39 @@ sge_pack_buffer *pb
                   if (lGetUlong(petask, PET_status)==JRUNNING ||
                       lGetUlong(petask, PET_status)==JTRANSFERING) {
                      u_long32 failed;
-                     const char *err_str;
-                     char failed_msg[256];
 
                      failed = lGetUlong(jr, JR_failed);
 
                      DPRINTF(("--- petask "u32"."u32"/%s -> final usage\n", 
                         jobid, jataskid, pe_task_id_str));
                      lSetUlong(petask, PET_status, JFINISHED);
-                     err_str = lGetString(jr, JR_err_str);
-                     sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
-
-                     /* JG: TODO: find better solution than misuse the tasks environment */
-                     {
-                        lList *new_environment;
-                        lList *environment = lGetList(petask, PET_environment);
-                        new_environment = environment;
-                        
-                        var_list_set_string(&new_environment, VAR_PREFIX "O_MAIL", failed_msg);
-                        if(environment == NULL) {
-                           lSetList(petask, PET_environment, new_environment);
-                        }
-                     }
 
                      sge_log_dusage(jr, jep, jatep);
 
-                     /* JG: TODO: Write Spoolfile for every petask? */
-                     job_write_spool_file(jep, 0, SPOOL_DEFAULT);
+                     /* add tasks (scaled) usage to past usage container */
+                     {
+                        lListElem *container = lGetSubStr(jatep, PET_id, PE_TASK_PAST_USAGE_CONTAINER, JAT_task_list);
+                        /* JG: TODO: Move event client server code to libgdi, then sending events 
+                         *           can be done in usage functions 
+                         */
+                        if(container == NULL) {
+                           container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
+                           sge_add_event(NULL, sgeE_PETASK_ADD, 
+                                         jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                         container);
+                        } else {
+                           pe_task_sum_past_usage(container, petask);
+                           sge_add_list_event(NULL, sgeE_JOB_USAGE, 
+                                              jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
+                                              lGetList(container, PET_scaled_usage));
+                        }
+                     }
 
+                     /* remove pe task from job/jatask */
+                     lRemoveElem(lGetList(jatep, JAT_task_list), petask);
+                     sge_add_event(NULL, sgeE_PETASK_DEL, jobid, jataskid, pe_task_id_str, NULL);
+                     
+                     job_write_spool_file(jep, 0, SPOOL_DEFAULT);
 
                      /* get rid of this job in case a task died from XCPU/XFSZ or 
                         exited with a core dump */
@@ -544,9 +545,6 @@ sge_pack_buffer *pb
                      }
                   }
 
-                  /* notify scheduler of task state change */
-                  if (feature_is_enabled(FEATURE_SGEEE))
-                     sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
 
                } else {
                   lListElem *jg;

@@ -31,7 +31,7 @@
 /*___INFO__MARK_END__*/                                   
 
 #include "sgermon.h"
-#include "sge_log.c"
+#include "sge_log.h"
 #include "def.h"   
 #include "cull_list.h"
 #include "sge_jobL.h"
@@ -48,9 +48,13 @@
 #include "sge_path_alias.h"
 #include "sge_var.h"
 #include "sge_answer.h"
+#include "sge_prog.h"
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
+
+#include <string.h>
+#include <unistd.h>
 
 /****** gdi/job_jatask/job_get_ja_task_template_pending() *********************
 *  NAME
@@ -1506,7 +1510,6 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
 *        <VAR_PREFIX>O_HOME
 *        <VAR_PREFIX>O_LOGNAME
 *        <VAR_PREFIX>O_PATH
-*        <VAR_PREFIX>O_MAIL
 *        <VAR_PREFIX>O_SHELL
 *        <VAR_PREFIX>O_TZ
 *        <VAR_PREFIX>O_HOST
@@ -1533,7 +1536,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
    {   
       int i = -1;
       const char* env_name[] = {"HOME", "LOGNAME", "PATH", 
-                                "MAIL", "SHELL", "TZ", NULL};
+                                "SHELL", "TZ", NULL};
 
       while (env_name[++i] != 0) {
          const char *env_value = sge_getenv(env_name[i]);

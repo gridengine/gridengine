@@ -410,6 +410,9 @@ NAMEEND
 *        sgeE_JATASK_DEL                  event delete array job task
 *        sgeE_JATASK_MOD                  event modify array job task
 *     
+*        sgeE_PETASK_ADD,                 event add a new pe task
+*        sgeE_PETASK_DEL,                 event delete a pe task
+*
 *        sgeE_JOB_LIST                    send job list at registration
 *        sgeE_JOB_ADD                     event job add (new job)
 *        sgeE_JOB_DEL                     event job delete
@@ -535,6 +538,9 @@ typedef enum {
 
    sgeE_JATASK_DEL,                 /* + event delete array job task */
    sgeE_JATASK_MOD,                 /* + event modify array job task */
+
+   sgeE_PETASK_ADD,                 /*   event add a new pe task */
+   sgeE_PETASK_DEL,                 /*   event delete a pe task */
 
    sgeE_JOB_LIST,                   /* + send job list at registration */
    sgeE_JOB_ADD,                    /* + event job add (new job) */

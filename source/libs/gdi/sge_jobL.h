@@ -319,9 +319,6 @@ enum {
 *     SGE_LIST(JB_master_hard_queue_list)  
 *        Master queue list (QR_Type). ("qsub -masterq queue_list")
 *
-*     SGE_LIST(JB_pe_object)   
-*        PE object (PE_Type).
-*
 *     Security related data
 *     =====================
 *
@@ -386,9 +383,6 @@ I        ("qsub -t tid_range")
 *
 *     SGE_LIST(JB_user_list)               
 *        List of usernames (qsub/qalter -u username_list). ---> qsub -u does not exist. Not part of a job, but only userd for qalter request as where condition. Could most probably be passed via lCondition.
-*
-*     SGE_XULONG(JB_next_pe_task_id)         
-*        Used locally in execd to store next pe task id for this job on this execd.
 *
 *     SGE_LIST(JB_job_identifier_list) ---> condition for qalter? Then it should better be passed via condition. 
 *        (ID_Type)
@@ -500,7 +494,6 @@ enum {
    JB_pe,
    JB_pe_range,
    JB_master_hard_queue_list,
-   JB_pe_object,
   
    JB_tgt,
    JB_cred,
@@ -519,7 +512,6 @@ enum {
    JB_category,
 
    JB_user_list, 
-   JB_next_pe_task_id,    
    JB_job_identifier_list,
    JB_job_source,
    JB_verify_suitable_queues,
@@ -598,7 +590,6 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_XSTRING(JB_pe)              
    SGE_TLIST(JB_pe_range, RN_Type)     
    SGE_LIST(JB_master_hard_queue_list)  
-   SGE_OBJECT(JB_pe_object, PE_Type)   
 
    SGE_XSTRING(JB_tgt)      
    SGE_XSTRING(JB_cred)   
@@ -617,7 +608,6 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_REF(JB_category)    
 
    SGE_LIST(JB_user_list)  
-   SGE_XULONG(JB_next_pe_task_id) 
    SGE_LIST(JB_job_identifier_list)    
    SGE_XSTRING(JB_job_source)
    SGE_XULONG(JB_verify_suitable_queues)
@@ -736,7 +726,6 @@ NAMEDEF(JBN)
    NAME("JB_pe")
    NAME("JB_pe_range")
    NAME("JB_master_hard_queue_list")
-   NAME("JB_pe_object")
    
    NAME("JB_tgt")
    NAME("JB_cred")
@@ -755,7 +744,6 @@ NAMEDEF(JBN)
    NAME("JB_category")
    
    NAME("JB_user_list")
-   NAME("JB_next_pe_task_id")
    NAME("JB_job_identifier_list")
    NAME("JB_job_source")
    NAME("JB_verify_suitable_queues")

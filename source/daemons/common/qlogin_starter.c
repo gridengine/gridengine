@@ -208,9 +208,9 @@ void write_exit_code_to_qrsh(int exit_code)
          exit_code = 1;
          
          tmpdir = getenv("TMPDIR");
-         taskid = search_conf_val("qrsh_task_id");
+         taskid = search_conf_val("pe_task_id");
          SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh - TMPDIR = "
-            "%s, qrsh_task_id = %s", tmpdir ? tmpdir : "0", 
+            "%s, pe_task_id = %s", tmpdir ? tmpdir : "0", 
             taskid ? taskid : "0"));
          if(tmpdir) {
             if(taskid) {
@@ -272,10 +272,11 @@ int get_exit_code_of_qrsh_starter(void)
 
       /* ### */
 
+      /* JG: TODO: do we need qrsh_tmpdir? Isn't it the same as tmpdir? */
       tmpdir = search_conf_val("qrsh_tmpdir");
-      taskid = search_conf_val("qrsh_task_id");
+      taskid = search_conf_val("pe_task_id");
       SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter - TMPDIR = %s,"
-         " qrsh_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
+         " pe_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
       if(tmpdir) {
          if(taskid) {
             sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);

@@ -69,7 +69,7 @@
 #define MSG_QSH_LINEFEED _("\n")
 #define MSG_QSH_UNKNOWNJOBSTATUS_X _("unknown job status " x32 "\n")
 #define MSG_QSH_SENDINGTASKTO_S _("Starting server daemon at host \"%s\"\n")
-#define MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_U _("Server daemon successfully started with task id " U32CFormat "\n")
+#define MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S _("Server daemon successfully started with task id "SFQ"\n")
 #define MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S _("cleaning up after abnormal exit of %s\n")
 #define MSG_QSH_READINGEXITCODEFROMSHEPHERD  _("reading exit code from shepherd ... ")
 

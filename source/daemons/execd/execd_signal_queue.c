@@ -181,7 +181,7 @@ int answer_error;
    if (!found && jobid) {
       lListElem *jr;
       jr = get_job_report(jobid, jataskid, NULL);
-      remove_acked_job_exit(jobid, jataskid, jr);
+      remove_acked_job_exit(jobid, jataskid, NULL, jr);
       job_unknown(jobid, jataskid, qname);
    }
 

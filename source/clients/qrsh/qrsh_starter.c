@@ -343,7 +343,7 @@ static int write_pid_file(pid_t pid)
       return 0;
    }
 
-   task_id_str = get_conf_val("qrsh_task_id");
+   task_id_str = get_conf_val("pe_task_id");
 
    if(task_id_str != NULL) {
       sprintf(pid_file_name, "%s/pid.%s", tmpdir, task_id_str);
@@ -727,7 +727,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
       return EXIT_FAILURE;
    }
   
-   taskid = get_conf_val("qrsh_task_id");
+   taskid = get_conf_val("pe_task_id");
    
    if(taskid != NULL) {
       sprintf(fileName, "%s/qrsh_exit_code.%s", tmpdir, taskid);

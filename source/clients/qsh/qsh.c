@@ -1598,23 +1598,23 @@ char **argv
    */
    if(existing_job) {
       int msgsock   = -1;
-      sge_tid_t tid = -1;
-      const char *cwd = NULL;
+      sge_tid_t tid;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 /*       set_commlib_param(CL_P_ID, 0, NULL, NULL); */
    
-      cwd = lGetString(job, JB_cwd);
+      tid = sge_qexecve(host, NULL, 
+                        lGetString(job, JB_cwd), 
+                        lGetList(job, JB_env_list),
+                        lGetList(job, JB_path_aliases)); 
 
-      tid = sge_qexecve(host, NULL, cwd, lGetList(job, JB_env_list)); 
-
-      if(tid <= 0) {
+      if(tid == NULL) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,
             qexec_last_err() ? qexec_last_err() : "unknown"));
          SGE_EXIT(EXIT_FAILURE);
       }
 
-      VERBOSE_LOG((stderr, MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_U, u32c(tid))); 
+      VERBOSE_LOG((stderr, MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S, tid)); 
 
       if((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
          ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));

@@ -226,7 +226,13 @@
 #define MSG_JOB_CANTFINDJOBXTOMODIFYTASKY_UU          _("can't find job "U32CFormat" to modify task "U32CFormat"")
 #define MSG_JOB_CANTFINDJOBARRAYTASKXYTOMODIFY_UU     _("can't find job-array task "U32CFormat"."U32CFormat" to modify")
 #define MSG_JOB_CANTFINDJOBARRAYTASKXTODELETE_U       _("can't find job-array task "U32CFormat" to delete")
-#define MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U        _("can't find job \"" U32CFormat "\" for updating usage")
+#define MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U        _("can't find job "U32CFormat" for updating usage")
+#define MSG_JOB_CANTFINDJOBXFORADDINGPETASK_U         _("can't find job "U32CFormat" for adding a pe task")
+#define MSG_JOB_CANTFINDJOBXFORDELETINGPETASK_U       _("can't find job "U32CFormat" for deleting a pe task")
+#define MSG_JOB_CANTFINDJATASKXFORUPDATINGUSAGE_UU    _("can't find job-array task "U32CFormat"."U32CFormat" for updating usage")
+#define MSG_JOB_CANTFINDJATASKXFORADDINGPETASK_UU     _("can't find job-array task "U32CFormat"."U32CFormat" for adding a pe task")
+#define MSG_JOB_CANTFINDJATASKXFORDELETINGPETASK_UU   _("can't find job-array task "U32CFormat"."U32CFormat" for adding a pe task")
+#define MSG_JOB_CANTFINDPETASKXFORUPDATINGUSAGE_UUS   _("can't find pe task "U32CFormat"."U32CFormat":"SFN" for updating usage")
 #define MSG_QUEUE_CANTFINDQUEUEXTODELETE_S            _("can't find queue \"%s\" to delete")
 #define MSG_QUEUE_CANTFINDQUEUEXTOMODIFY_S            _("can't find queue \"%s\" to modify")
 #define MSG_COMPLEX_CANTFINDCOMPLEXXTODELETE_S        _("can't find complex \"%s\" to delete")
@@ -260,6 +266,7 @@
 #define MSG_EVENT_XEVENTMODUSERORPROJXGOTNONEWONE_ISS _("%d. EVENT MOD %s %s - got no new one")
 #define MSG_EVENT_XEVENTADDEXECHOSTXGOTNONEWEXECHOST_IS     _("%d. EVENT ADD EXECHOST %s - got no new EXECHOST")
 #define MSG_EVENT_XEVENTMODEXECHOSTXGOTNONEWEXECHOST_IS     _("%d. EVENT MOD EXECHOST %s - got no new EXECHOST")
+#define MSG_EVENT_XEVENTADDPETASKXGOTNONEWPETASK_IUUS           _("%d. EVENT ADD PETASK "U32CFormat"."U32CFormat":"SFN" - got no new pe task\n")
 #define MSG_EVENT_XEVENTADDPEXGOTNONEWPE_IS                 _("%d. EVENT ADD PE %s - got no new PE")
 #define MSG_EVENT_XEVENTMODPEXGOTNONEWPE_IS                 _("%d. EVENT MOD PE %s - got no new PE")
 #define MSG_EVENT_XEVENTADDCKPTXGOTNONEWCKPTINT_IS          _("%d. EVENT ADD CKPT %s - got no new CKPT interface")
@@ -408,8 +415,10 @@
 #define MSG_EVENT_CKPTLISTXELEMENTS_II             _("%d. EVENT CKPT LIST %d Elements\n")
 #define MSG_EVENT_DELJATASK_UUU                    _(U32CFormat". EVENT DEL JATASK "U32CFormat"."U32CFormat"\n")
 #define MSG_EVENT_MODJATASK_UUU                    _(U32CFormat". EVENT MOD JATASK "U32CFormat"."U32CFormat"\n")
+#define MSG_EVENT_ADDPETASK_UUUS                   _(U32CFormat". EVENT ADD PETASK "U32CFormat"."U32CFormat" task "SFN"\n")
+#define MSG_EVENT_DELPETASK_UUUS                   _(U32CFormat". EVENT DEL PETASK "U32CFormat"."U32CFormat" task "SFN"\n")
+#define MSG_EVENT_MODPETASK_UUUS                   _(U32CFormat". EVENT MOD PETASK "U32CFormat"."U32CFormat" task "SFN"\n")
 #define MSG_EVENT_NOTKNOWN_I                       _("%d. EVENT ????????\n")
-
 
 /* 
 ** schedd/sge.c

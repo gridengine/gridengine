@@ -1,6 +1,6 @@
 
-#ifndef __SGE_PETASKL_H
-#define __SGE_PETASKL_H
+#ifndef __SGE_PE_TASKL_H
+#define __SGE_PE_TASKL_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -42,41 +42,75 @@ extern "C" {
 
 /****** gdi/job_jatask/PET_Type ************************************************
 *  NAME
-*     PET_Type - CULL job element 
+*     PET_Type - CULL pe task element 
 *
 *  ELEMENTS
-*     Job identification and dependencies
-*     ===================================
+*     Job identification
+*     ==================
+*     SGE_KSTRINGHU(PET_id)
+*        The pe task id. It is unique per job.
 *
+*     SGE_STRING(PET_name)
+*        Optional name of a pe task. Not yet completely implemented, but
+*        it could be used to pass information to be shown by qstat.
+*   
+*     Runtime control information
+*     ===================
+*     SGE_ULONG(PET_status)
+*        Status of the pe job, see defines in libs/gdi/sge_jobL.h.
 *
-*     JG: TODO: what about all the sge_o_* variables? If they were moved to the
-*               environment, we would have no problems.
-*     JG: TODO: do we need something similar to JB_path_aliases here?
+*     SGE_LIST(PET_granted_destin_identifier_list)
+*        Granted destination identifier list. Will contain one
+*        entry specifying the queue the pe task runns in.
+*
+*     SGE_ULONG(PET_pid)
+*        Pid of a running pe task (process group id).
+*
+*     SGE_STRING(PET_osjobid)
+*        os jobid  of a running pe task.
+*
+*     Usage information
+*     =================
+*     SGE_LIST(PET_usage)
+*     SGE_LIST(PET_scaled_usage)
+*     SGE_LIST(PET_previous_usage)
+*
+*     Time information
+*     ================
+*     SGE_ULONG(PET_submission_time)
+*     SGE_ULONG(PET_start_time)
+*     SGE_ULONG(PET_end_time)
+*
+*     Submission information
+*     ======================
+*     SGE_STRING(PET_cwd)
+*        Current working directory of the pe task. If not set, the cwd from 
+*        the ja task is inherited.
+*
+*     SGE_LIST(PET_path_aliases)
+*        Path alias list for the pe task.
+*
+*     SGE_LIST(PET_environment)
+*        Environment variables exported to the pe task.
+*        They will overwrite inherited variables from the ja task.
+*
+*     Communication information
+*     =========================
+*     SGE_STRING(PET_source)
 *
 *  FUNCTION
-*     PET_Type elements make only sense in conjunction with JAT_Type
-*     elements.  One element of each type is necessary to hold all
-*     data for the execution of one job. One PET_Type element and
-*     x JAT_Type elements are needed to execute an array job with
-*     x tasks.
+*     PET_Type objects are used to store information about tasks of
+*     tightly integrated parallel jobs (started with qrsh -inherit).
+*     
+*     Parallel tasks are sub objects of array tasks (even for non array jobs
+*     one pseudo array task is created).
 *
-*              -----------       1:x        ------------
-*              | JB_Type |<---------------->| JAT_Type |
-*              -----------                  ------------
-*
-*     The relation between these two elements is defined in the
-*     'JB_ja_tasks' sublist of a 'JB_Type' element. This list will
-*     contain all belonging JAT_Type elements.
-*
-*     The 'JAT_Type' CULL element containes all attributes in which
-*     one array task may differ from another array task of the
-*     same array job. The 'JB_Type' element defines all attributes
-*     wich are equivalent for all tasks of an array job.
-*     A job and an array job with one task are equivalent
-*     concerning their data structures. Both consist of one 'JB_Type'
-*     and one 'JAT_Type' element.
+*         +---------+   1:x   +----------+   1:x   +----------+
+*         | JB_Type |<------->| JAT_Type |<------->| PET_Type |
+*         +---------+         +----------+         +----------+
 *
 *  SEE ALSO
+*     gdi/job_jatask/JB_Type
 *     gdi/job_jatask/JAT_Type                             
 ******************************************************************************/
 enum {
@@ -85,7 +119,7 @@ enum {
 
    PET_status,
 
-   PET_granted_destin_identifier_list, /* JG: TODO: maybe only the qname is enough */
+   PET_granted_destin_identifier_list,
 
    PET_pid,
    PET_osjobid,
@@ -98,8 +132,8 @@ enum {
    PET_end_time,
 
    PET_cwd,
+   PET_path_aliases,
    PET_environment,
-   PET_args, /* JG: TODO: really used? */
 
    PET_source
 };
@@ -123,8 +157,8 @@ ILISTDEF(PET_Type, Job, SGE_JOB_LIST)
    SGE_ULONG(PET_end_time)
 
    SGE_STRING(PET_cwd)
+   SGE_LIST(PET_path_aliases)
    SGE_LIST(PET_environment)
-   SGE_LIST(PET_args)
 
    SGE_STRING(PET_source)
 LISTEND
@@ -148,8 +182,8 @@ NAMEDEF(PETN)
    NAME("PET_end_time")
    
    NAME("PET_cwd")
+   NAME("PET_path_aliases")
    NAME("PET_environment")
-   NAME("PET_args")
 
    NAME("PET_source")
 NAMEEND
@@ -157,12 +191,47 @@ NAMEEND
 
 #define PETS sizeof(PETN)/sizeof(char*)
 
+/****** gdi/job_jatask/PETR_Type ************************************************
+*  NAME
+*     PET_Type - CULL pe task request element 
+*
+*  ELEMENTS
+*     Job identification
+*     ==================
+*     SGE_ULONG(PETR_jobid)
+*
+*     SGE_ULONG(PETR_jataskid)
+*
+*     Submission information
+*     ======================
+*     SGE_STRING(PETR_queuename)
+*
+*     SGE_STRING(PETR_owner)
+*
+*     SGE_STRING(PETR_cwd)
+*
+*     SGE_LIST(PETR_path_aliases)
+*
+*     SGE_LIST(PETR_environment)
+*
+*     Time information
+*     ================
+*     SGE_ULONG(PETR_submission_time)
+*
+*  FUNCTION
+*     Objects of PETR_Type are used to request the start of a task in a 
+*     tightly integrated parallel job.
+*     
+*  SEE ALSO
+*     gdi/job_jatask/PET_Type
+******************************************************************************/
 enum {
    PETR_jobid = PETR_LOWERBOUND,
    PETR_jataskid,
    PETR_queuename,
    PETR_owner,
    PETR_cwd,
+   PETR_path_aliases,
    PETR_environment,
    PETR_submission_time
 };
@@ -173,6 +242,7 @@ ILISTDEF(PETR_Type, Job, SGE_JOB_LIST)
    SGE_STRING(PETR_queuename)
    SGE_STRING(PETR_owner)
    SGE_STRING(PETR_cwd)
+   SGE_LIST(PETR_path_aliases)
    SGE_LIST(PETR_environment)
    SGE_ULONG(PETR_submission_time)
 LISTEND
@@ -184,6 +254,7 @@ NAMEDEF(PETRN)
    NAME("PETR_queuename")
    NAME("PETR_owner")
    NAME("PETR_cwd")
+   NAME("PETR_path_aliases")
    NAME("PETR_environment")
    NAME("PETR_submission_time")
 NAMEEND
@@ -194,5 +265,5 @@ NAMEEND
 }
 #endif
 
-#endif /* __SGE_PETASKL_H */
+#endif /* __SGE_PE_TASKL_H */
 

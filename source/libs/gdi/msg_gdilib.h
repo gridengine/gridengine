@@ -160,7 +160,7 @@
 #define MSG_GDI_TASKEXISTS_S                             _("task %s already exists")
 #define MSG_GDI_SETUPGDILIBFAILED                        _("failed setting up gdi library")
 #define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _("failed sending task to execd@%s: %s"                  )
-#define MSG_GDI_TASKNOTEXIST_I                           _("task %d does not exist")
+#define MSG_GDI_TASKNOTEXIST_S                           _("task "SFQ" does not exist")
 #define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _("rcv_from_exec(): failed enrolling to local sge commd: %s")
 #define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _("failed receiving message from execd: %s %d")
 #define MSG_GDI_TASKNOTFOUND_S                           _("cannot find task with taskid \"%s\"\n")

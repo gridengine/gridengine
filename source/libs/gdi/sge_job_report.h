@@ -1,5 +1,5 @@
-#ifndef _JOB_REPORT_H_
-#define _JOB_REPORT_H_
+#ifndef _SGE_JOB_REPORT_H_
+#define _SGE_JOB_REPORT_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_job_reportL.h"
+
 void print_usage(FILE *fp, lListElem *jr);
 int init_from_job(lListElem *jr, lListElem *jep, lListElem *jatep, lListElem *petep);
 
-#endif /* _JOB_REPORT_H_ */
+#endif /* _SGE_JOB_REPORT_H_ */

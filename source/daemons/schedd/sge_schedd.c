@@ -689,6 +689,9 @@ static void sge_subscribe_schedd(void)
    ec_subscribe_flush(sgeE_JATASK_DEL, flush_finish_sec);
    ec_subscribe_flush(sgeE_JATASK_MOD, flush_finish_sec);
 
+   ec_subscribe(sgeE_PETASK_ADD);
+   ec_subscribe(sgeE_PETASK_DEL);
+
    ec_subscribe(sgeE_JOB_LIST);
    ec_subscribe_flush(sgeE_JOB_ADD, flush_submit_sec);
    ec_subscribe_flush(sgeE_JOB_DEL, flush_finish_sec);
@@ -697,7 +700,7 @@ static void sge_subscribe_schedd(void)
    ec_subscribe_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
    ec_subscribe(sgeE_JOB_USAGE);
 
-   ec_subscribe_flush(sgeE_NEW_SHARETREE, 0); /* !!!! why is it flushed? */
+   ec_subscribe_flush(sgeE_NEW_SHARETREE, 0); /* JG: TODO: why is it flushed? */
 
    ec_subscribe(sgeE_PROJECT_LIST);
    ec_subscribe(sgeE_PROJECT_DEL);

@@ -70,6 +70,7 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sge_varL.h"
+#include "get_path.h"
 
 extern volatile int jobs_to_start;
 extern lList *Master_Job_List;
@@ -127,12 +128,9 @@ int answer_error;
          return 0;
       }
 
-      /* JG: TODO: This code never worked correctly.
-       *           If qmaster would send multiple jatasks with one request,
-       *           handle_job would try to append job multiple times to
-       *           the Master_Job_List!
-       */
-      for_each(ja_task, lGetList(job, JB_ja_tasks)) {
+      /* we expect one jatask to start per request */
+      ja_task = lFirst(lGetList(job, JB_ja_tasks));
+      if(ja_task != NULL) {
          DPRINTF(("new job %ld.%ld\n", 
             (long) lGetUlong(job, JB_job_number),
             (long) lGetUlong(ja_task, JAT_task_number)));
@@ -320,8 +318,8 @@ int slave
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
       cull_unpack_elem(pb, &pelem, NULL); /* pelem will be freed with jelem */
-      lSetList(jelem, JB_pe_object, lCreateList("pe list", PE_Type));
-      lAppendElem(lGetList(jelem, JB_pe_object), pelem);
+      lSetList(jatep, JAT_pe_object, lCreateList("pe list", PE_Type));
+      lAppendElem(lGetList(jatep, JAT_pe_object), pelem);
 
       if (lGetUlong(pelem, PE_control_slaves)) {
          if (!lGetUlong(pelem, PE_job_is_first_task)) {
@@ -493,16 +491,10 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
                                                     lListElem *petep,
                                                     const char *queuename)
 {
-   char cwd[SGE_PATH_MAX + 1];
    lListElem *petask;
    
    DENTER(TOP_LAYER, "job_get_queue_with_task_about_to_exit");
    
-   if(getcwd(cwd, SGE_PATH_MAX) == NULL) {
-      DEXIT;
-      return NULL;
-   }   
-
    for_each(petask, lGetList(jatep, JAT_task_list)) {
       lListElem *pe_task_queue = lFirst(lGetList(petask, PET_granted_destin_identifier_list));
       if(pe_task_queue != NULL) {
@@ -510,7 +502,7 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
          if(queuename != NULL && strcmp(queuename, lGetString(pe_task_queue, JG_qname)) != 0) {
             continue;
          } else {
-            char shepherd_about_to_exit[SGE_PATH_MAX + 1];
+            char shepherd_about_to_exit[SGE_PATH_MAX];
             SGE_STRUCT_STAT stat_buffer;
             u_long32 jobid;
             u_long32 jataskid;
@@ -518,11 +510,11 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
            
             jobid = lGetUlong(jep, JB_job_number);
             jataskid = lGetUlong(jatep, JAT_task_number);
-            petaskid = lGetString(petep, PET_id);
-            /* JG: TODO: use path creating function from utilib */
-            sprintf(shepherd_about_to_exit, "%s/active_jobs/" u32 "." u32 "/%s/shepherd_about_to_exit", 
-                    cwd, jobid, jataskid, petaskid);
-
+            petaskid = lGetString(petask, PET_id);
+            
+            sge_get_active_job_file_path(shepherd_about_to_exit, SGE_PATH_MAX, 
+                                         jobid, jataskid, petaskid,
+                                         "shepherd_about_to_exit");
             DPRINTF(("checking for file %s\n", shepherd_about_to_exit));
 
             if(SGE_STAT(shepherd_about_to_exit, &stat_buffer) == 0) {
@@ -650,8 +642,7 @@ int *synchron
    }
 
    /* do not accept the task if job is not parallel or 'control_slaves' is not active */
-   /* JG: TODO: pe_object has to be in jatask! */
-   if (!(pe=lFirst(lGetList(jep, JB_pe_object))) || !lGetUlong(pe, PE_control_slaves)) {
+   if (!(pe=lFirst(lGetList(jatep, JAT_pe_object))) || !lGetUlong(pe, PE_control_slaves)) {
       ERROR((SGE_EVENT, MSG_JOB_TASKNOSUITABLEJOB_U, u32c(jobid)));
       goto Error;
    }
@@ -663,19 +654,21 @@ int *synchron
    }
 
    /* generate unique task id by combining consecutive number 1-max(u_long32) */
-   tid = MAX(1, lGetUlong(jep, JB_next_pe_task_id));
+   tid = MAX(1, lGetUlong(jatep, JAT_next_pe_task_id));
    sprintf(new_task_id, "%d.%s", tid, me.unqualified_hostname);
    DPRINTF(("using pe_task_id_str %s for job "u32"."u32"\n", new_task_id, jobid, jataskid));
    lSetString(petep, PET_id, new_task_id);
 
    /* set taskid for next task to be started */
-   lSetUlong(jep, JB_next_pe_task_id, tid+1);
+   lSetUlong(jatep, JAT_next_pe_task_id, tid+1);
 
    lSetString(petep, PET_name, "petask");
    lSetUlong(petep, PET_submission_time, lGetUlong(petrep, PETR_submission_time));
    lSetString(petep, PET_cwd, lGetString(petrep, PETR_cwd));
    lSetList(petep, PET_environment, 
             lCopyList("petask environment", lGetList(petrep, PETR_environment)));
+   lSetList(petep, PET_path_aliases, 
+            lCopyList("petask path_aliases", lGetList(petrep, PETR_path_aliases)));
 
    requested_queue = lGetString(petrep, PETR_queuename);
 
@@ -733,8 +726,8 @@ DTRACE;
    /* put task into task_list of slave/master job */ 
    /* send ack to sender of task */
    if (tid) {
-      DPRINTF(("sending tid %d\n", tid)); 
-      packint(apb, tid);
+      DPRINTF(("sending tid %s\n", new_task_id)); 
+      packstr(apb, new_task_id);
       *synchron = 0;
    }
 
@@ -743,11 +736,9 @@ DTRACE;
 
 Error:
    /* send nack to sender of task */
-   /* if (tid) { */
       DPRINTF(("sending nack\n")); 
-      packint(apb, 0);    
+      packstr(apb, "none");    
       *synchron = 0;
-   /* } */
    DEXIT;
    return -1;
 }

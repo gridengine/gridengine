@@ -728,7 +728,7 @@ lListElem *petep
     **/
    
    /* open addgrpid file */
-   /* JG: TODO: better use function to retrieve paths, see utilib */
+   /* JG: TODO (254): better use function to retrieve paths, see utilib */
    if (petep != NULL) { 
       task_id_str = lGetString(petep, PET_id);
       sprintf(addgrpid_path, ACTIVE_DIR"/"u32"."u32"/%s/"ADDGRPID, jobid, jataskid, 

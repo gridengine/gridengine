@@ -33,6 +33,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_boundaries.h"
+#include "cull.h"
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -136,6 +139,12 @@ extern "C" {
 *
 *     SGE_LIST(JAT_previous_usage_list)
 *
+*     SGE_LIST(JAT_pe_object)
+*        PE object granted to this task (PE_Type), only used in execd
+*
+*     SGE_ULONG(JAT_next_pe_task_id)         
+*        Used locally in execd to store next pe task id for this jatask on this execd.
+*
 *  FUNCTION
 *     JAT_Type elements make only sense in conjunction with JB_Type 
 *     elements.  One element of each type is necessary to hold all 
@@ -202,7 +211,10 @@ enum {
    JAT_suitable,
    JAT_task_list,
 
-   JAT_previous_usage_list
+   JAT_previous_usage_list,
+
+   JAT_pe_object,
+   JAT_next_pe_task_id
 };
 
 SLISTDEF(JAT_Type, Task)
@@ -240,6 +252,9 @@ SLISTDEF(JAT_Type, Task)
    SGE_XLIST(JAT_task_list, JB_Type)
 
    SGE_LIST(JAT_previous_usage_list)
+
+   SGE_OBJECT(JAT_pe_object, PE_Type)   
+   SGE_ULONG(JAT_next_pe_task_id)
 LISTEND 
 
 NAMEDEF(JATN)
@@ -273,6 +288,9 @@ NAMEDEF(JATN)
    NAME("JAT_task_list")
    NAME("JAT_previous_usage_list")
    NAME("JAT_reference")
+
+   NAME("JAT_pe_object")
+   NAME("JAT_next_pe_task_id")
 NAMEEND
 
 /* *INDENT-ON* */

@@ -361,13 +361,8 @@ int indent
 
    if (tstatus==JFINISHED) {
       ep=lGetElemStr(usage_list, UA_name, "exit_status");
-      if(pe_task == NULL) {
-         str = "";
-      } else {
-         str = var_list_get_string(lGetList(pe_task, PET_environment), VAR_PREFIX "O_MAIL");
-      }
 
-      printf("%-4d %s", ep ? (int)lGetDouble(ep, UA_value) : 0, str);
+      printf("%-4d", ep ? (int)lGetDouble(ep, UA_value) : 0);
    }
 
    putchar('\n');

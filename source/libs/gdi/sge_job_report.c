@@ -30,21 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* JG: TODO: This file seems to handle jobreport related stuff.
- *           It should be moved to libs/gdi.
- */
-
 #include <stdio.h>
 
 #include "sgermon.h"
 #include "cull.h"
 #include "sge_usageL.h"
-#include "sge_job_reportL.h"
+#include "sge_job_report.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
 #include "sge_pe_taskL.h"
-
-#include "job_report.h"
 
 void print_usage(
 FILE *fp,

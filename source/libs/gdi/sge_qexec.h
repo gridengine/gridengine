@@ -36,8 +36,8 @@
 extern "C" {
 #endif
 
-typedef int sge_tid_t;
-
+typedef char *sge_tid_t;
+#if 0
 /* put these values into task environment list 'envlp' in order 
    to overwrite default behaviour */ 
 #define OVERWRITE_TASK_ID_NAME   "TASK_ID"
@@ -53,10 +53,11 @@ typedef int sge_tid_t;
 #define QIFEXITED(status)   (0)
 #define QIFSIGNALED(status) (0)
 #define QTERMSIG(status)    (0)
+#endif
+sge_tid_t sge_qexecve(const char *hostname, const char *queuename, const char *cwd, 
+                      const lList *environment, const lList *path_aliases);
 
-sge_tid_t sge_qexecve(const char *hostname, const char *queuename, const char *cwd, const lList *envlp);
-
-sge_tid_t sge_qwaittid(sge_tid_t tid, int *status, int options);
+int sge_qwaittid(sge_tid_t tid, int *status, int options);
 
 const char *qexec_last_err(void);
 

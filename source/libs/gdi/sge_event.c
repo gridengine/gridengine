@@ -177,6 +177,20 @@ const lListElem *event
       break;
 
    /* -------------------- */
+   case sgeE_PETASK_ADD:
+      sprintf(buffer, MSG_EVENT_ADDPETASK_UUUS, u32c(number), u32c(intkey), u32c(intkey2), strkey);
+      break;
+   case sgeE_PETASK_DEL:
+      sprintf(buffer, MSG_EVENT_DELPETASK_UUUS, u32c(number), u32c(intkey), u32c(intkey2), strkey);
+      break;
+#if 0      
+   /* JG: we'll have it soon ;-) */
+   case sgeE_PETASK_MOD:
+      sprintf(buffer, MSG_EVENT_MODPETASK_UUUS, u32c(number), u32c(intkey), u32c(intkey2), strkey);
+      break;
+#endif
+
+   /* -------------------- */
    case sgeE_JOB_LIST:
       sprintf(buffer, MSG_EVENT_JOBLISTXELEMENTS_II, (int)number, n);
       break;

@@ -172,6 +172,7 @@
 */
 #define MSG_EXECD_INVALIDUSERNAME_S   _("invalid user name \"%s\"\n")
 #define MSG_EXECD_NOHOMEDIR_S         _("missing home directory for user \"%s\"\n")
+#define MSG_BUFFEROFSIZETOOSMALLFOR_DS _("buffer of size %d is too small for path "SFN"...\n")
 
 
 /*

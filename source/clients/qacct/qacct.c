@@ -34,6 +34,7 @@
 #include <sys/types.h>
 #include <grp.h>
 #include <time.h>
+#include <fnmatch.h>
 
 #include "sge_unistd.h"
 #include "sge.h"
@@ -514,20 +515,7 @@ char **argv
 
      DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
      strcpy(acctfile, acct_file);
-     prepare_enroll(prognames[QACCT], 0, NULL);
-     if (!sge_get_master(1)) {
-        SGE_EXIT(1);
-     }
-     DPRINTF(("checking if qmaster is alive ...\n"));
-#ifdef ENABLE_NGC
-     if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) 
-#else
-     if (check_isalive(sge_get_master(0))) 
-#endif
-     {
-        ERROR((SGE_EVENT, MSG_HISTORY_QMASTERISNOTALIVE ));
-        SGE_EXIT(1);
-     }
+     
      sge_setup_sig_handlers(QACCT);
      is_path_setup = 1;
    }
@@ -574,69 +562,104 @@ char **argv
    DPRINTF((" begin_time: %s", ctime(&begin_time)));
    DPRINTF((" end_time:   %s", ctime(&end_time)));
 
-   /*
-   ** parsing complex flags and initialising complex list
-   */
-   if (complexflag || queueref_list) {
-      bool found_something;
-      complex_options = centry_list_parse_from_string(NULL, complexes, true);
-      if (!complex_options) {
+   {
+      dstring cqueue_name = DSTRING_INIT;
+      dstring host_or_hgroup = DSTRING_INIT;      
+      lListElem *qref_pattern = NULL;
+      const char *name = NULL;
+      bool has_hostname = false;
+      bool has_domain = true;
+
+      for_each(qref_pattern, queueref_list) {
+         name = lGetString(qref_pattern, QR_name); 
+         cqueue_name_split(name,  &cqueue_name, &host_or_hgroup,
+                           &has_hostname, &has_domain);
+         if (has_domain)
+            break;
+      }
+      
+      /* the user did not specify a queue domain, therefor we need no information
+         from the qmaster, but we have to work on the user input and generate the
+         same data structure, that we would have gotten with the qmaster functions*/
+      if (!has_domain) {
+         for_each(qref_pattern, queueref_list) {
+            dstring qi_name = DSTRING_INIT;
+            char *tmp_str = NULL;
+            name = lGetString(qref_pattern, QR_name); 
+           
+            sge_dstring_sprintf(&qi_name, "%s", name); 
+           
+            if ((tmp_str = strchr(name, '@')) == NULL){
+               sge_dstring_append(&qi_name, "@*");
+            }
+            else if(*(tmp_str+1) == '\0'){
+               sge_dstring_append(&qi_name, "*");
+            }
+            
+            lAddElemStr(&queue_name_list, QR_name, sge_dstring_get_string(&qi_name), QR_Type);
+
+            sge_dstring_free(&qi_name);
+         }   
+      }
+      if ( complexflag || (queueref_list && has_domain)) {
          /*
-         ** problem: still to tell some more to the user
+         ** parsing complex flags and initialising complex list
          */
-         show_the_way(stderr);
-      }
-      /* lDumpList(stdout, complex_options, 0); */
-      if (!is_path_setup) {
-         prepare_enroll(prognames[QACCT], 0, NULL);
-         if (!sge_get_master(1)) {
-            SGE_EXIT(1);
+         bool found_something;
+         complex_options = centry_list_parse_from_string(NULL, complexes, true);
+         if (!complex_options) {
+            /*
+            ** problem: still to tell some more to the user
+            */
+            show_the_way(stderr);
          }
-         DPRINTF(("checking if qmaster is alive ...\n"));
-#ifdef ENABLE_NGC
-         if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) 
-#else
-         if (check_isalive(sge_get_master(0))) 
-#endif
-         {
-            ERROR((SGE_EVENT, "qmaster is not alive"));
-            SGE_EXIT(1);
+         /* lDumpList(stdout, complex_options, 0); */
+         if (!is_path_setup) {
+            prepare_enroll(prognames[QACCT], 0, NULL);
+            if (!sge_get_master(1)) {
+               SGE_EXIT(1);
+            }
+            DPRINTF(("checking if qmaster is alive ...\n"));
+   #ifdef ENABLE_NGC
+            if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) 
+   #else
+            if (check_isalive(sge_get_master(0))) 
+   #endif
+            {
+               ERROR((SGE_EVENT, "qmaster is not alive"));
+               SGE_EXIT(1);
+            }
+            sge_setup_sig_handlers(QACCT);
+            is_path_setup = 1;
          }
-         sge_setup_sig_handlers(QACCT);
-         is_path_setup = 1;
-      }
-      if (queueref_list){ 
-         get_qacct_lists(NULL, &queue_list, NULL, &hgrp_list);
-         qref_list_resolve(queueref_list, NULL, &queue_name_list, 
-                        &found_something, queue_list, hgrp_list, true, true);
+         if (queueref_list && has_domain){ 
+            get_qacct_lists(NULL, &queue_list, NULL, &hgrp_list);
+            qref_list_resolve(queueref_list, NULL, &queue_name_list, 
+                           &found_something, queue_list, hgrp_list, true, true);
+            if (!found_something) {
+               fprintf(stderr, MSG_QINSTANCE_NOQUEUES);
+               SGE_EXIT(1);
+            }
+         }  
+         if (complexflag) {
+            get_qacct_lists(&centry_list, &queue_list, &exechost_list, NULL);
+         }   
+         
+      /* debug output) */
+      #if 0 
+            DPRINTF(("complex entrys:\n"));
+            lWriteList(centry_list);
+            DPRINTF(("queue instances:\n"));
+            lWriteList(queue_list);
+            DPRINTF(("exec hosts:\n"));
+            lWriteList(exechost_list);
+            DPRINTF(("host groups\n"));
+            lWriteList(hgrp_list);
+      #endif
 
-         if (!found_something) {
-            fprintf(stderr, MSG_QINSTANCE_NOQUEUES);
-            SGE_EXIT(1);
-         }
-      }  
-      else if (complexflag) {
-         get_qacct_lists(&centry_list, &queue_list, &exechost_list, NULL);
-      }   
-      else {
-         ERROR((SGE_EVENT, "qacct feature not implemented"));
-         SGE_EXIT(1); 
-      }
-/* debug output) */
-#if 0
-      DPRINTF(("complex entrys:\n"));
-      lWriteList(centry_list);
-      DPRINTF(("queue instances:\n"));
-      lWriteList(queue_list);
-      DPRINTF(("exec hosts:\n"));
-      lWriteList(exechost_list);
-      DPRINTF(("cluster queues:\n"));
-      lWriteList(cqueue_list);
-      DPRINTF(("host groups\n"));
-      lWriteList(hgrp_list);
-#endif
+      } /* endif complexflag */
 
-   } /* endif complexflag */
+   }
 
    fp = fopen(acctfile,"r");
    if (fp == NULL) {
@@ -705,17 +728,21 @@ char **argv
             continue;
       }
       if (queue_name_list){
-         char qi[256];
+         dstring qi = DSTRING_INIT;
          lListElem *elem;
          bool found = false;
-         sprintf(qi, "%s@%s", dusage.qname, dusage.hostname);
 
+         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname );
+ 
          for_each(elem, queue_name_list) {
-            if (!sge_strnullcmp(qi, lGetString(elem, QR_name))){
+            if (fnmatch(lGetString(elem, QR_name), sge_dstring_get_string(&qi), 0) == 0) {
                found = true;
                break;
             }
          }
+
+         sge_dstring_free(&qi);
+         
          if (!found){
             continue;
          }  
@@ -1031,12 +1058,6 @@ char **argv
       lListElem *ep = NULL;
       int dashcnt = 0;
       char title_array[500];
-
-#ifndef NO_SGE_COMPILE_DEBUG
-      if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
-         lWriteListTo(sorted_list, stdout);
-      }
-#endif
 
       if (host[0] || hostflag) {
          print_full(column_sizes.host , MSG_HISTORY_HOST);

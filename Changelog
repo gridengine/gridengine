@@ -1,4 +1,10 @@
-EB-2004-02-03-0: Bugfix.    - It was possible to delete host groups which were
+SG-2004-02-03-1: Bugfix:    qacct only worked on queues and queue instances,
+                            which are currently in the system. Removed ones
+                            were not accessable. This is changed.
+                 Changed:   qacct
+                 Review:    EB
+
+EB-2004-02-03-0: Bugfix:    - It was possible to delete host groups which were
                               referenced in cluster queue objects.
                             - Due to fix AD-2004-02-03-0 tight integration for
                               parallel jobs works correcly now.

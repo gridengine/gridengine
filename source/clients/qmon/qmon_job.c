@@ -739,7 +739,7 @@ void updateJobList(void)
             tow++;                                                            
          }
          rtasks = lFreeList(rtasks);
-         row++;
+         row += tow;
       }
       /*
       ** pending jobs

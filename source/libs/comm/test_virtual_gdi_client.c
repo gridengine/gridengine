@@ -77,10 +77,8 @@ int sig
 #define __CL_FUNCTION__ "main()"
 extern int main(int argc, char** argv)
 {
-  cl_thread_settings_t* thread_p = NULL;
-  cl_thread_settings_t* dummy_thread_p = NULL;
   struct sigaction sa;
-  int i,first_message_sent = 0;
+  int i;
 
 
   if (argc != 4) {
@@ -123,6 +121,7 @@ extern int main(int argc, char** argv)
 #if 0
   while(do_shutdown == 0) {
 #endif
+  { 
      int                retval  = 0;
      cl_com_message_t*  message = NULL;
      cl_com_endpoint_t* sender  = NULL;
@@ -148,9 +147,7 @@ extern int main(int argc, char** argv)
         printf("do trigger\n");
      } 
      printf("status: %s\n",cl_get_error_text(retval));
-#if 0
   }
-#endif
       
 
   printf("shutdown commlib ...\n");

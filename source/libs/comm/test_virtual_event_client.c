@@ -77,8 +77,6 @@ int sig
 #define __CL_FUNCTION__ "main()"
 extern int main(int argc, char** argv)
 {
-  cl_thread_settings_t* thread_p = NULL;
-  cl_thread_settings_t* dummy_thread_p = NULL;
   struct sigaction sa;
   int i,first_message_sent = 0;
 

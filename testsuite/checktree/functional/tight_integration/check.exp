@@ -162,7 +162,9 @@ proc tight_integration_check_messages { mode1 mode2 } {
          append error_text "tight integration check produced execd error messages at $execd:\n"
          for { set i [expr ( $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode1) + 1 ) ] } { $i <= $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2) } { incr i 1 } { 
             puts $CHECK_OUTPUT $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2,$i)
-            append error_text "$TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2,$i)\n"
+            set mstart [string last "|" $TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2,$i)]
+            incr mstart 1 
+            append error_text [string range "$TIGHT_INTEGRATION_ERROR_MESSAGES($execd,$mode2,$i)\n" $mstart end]
          }
       }
       if { $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) != $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2) } {
@@ -171,7 +173,9 @@ proc tight_integration_check_messages { mode1 mode2 } {
 
          for { set i [expr ( $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode1) + 1 ) ] } { $i <= $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2) } { incr i 1 } {
              puts $CHECK_OUTPUT $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)
-             append error_text "$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)\n"
+             set mstart [string last "|" $TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)]
+             incr mstart 1 
+             append error_text [string range "$TIGHT_INTEGRATION_WARNING_MESSAGES($execd,$mode2,$i)\n" $mstart end]
          }
       }
    }

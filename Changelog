@@ -1,6 +1,8 @@
-MD-2004-08-20-0  Bugfix:    merged bugfix from FCS_Branch
-                 Review:    AS
-                 Changed:   inst_sge, inst_common.sh, rc_templates
+CR-2004-08-23-0  Testsuite:  Fixed mail report error in tight_integration_test
+
+MD-2004-08-20-0  Bugfix:     merged bugfix from FCS_Branch
+                 Review:     AS
+                 Changed:    inst_sge, inst_common.sh, rc_templates
 
 CR-2004-08-20-0: Testsuite:  enhancement: tight integration test checks 
                              execd messages files for errors

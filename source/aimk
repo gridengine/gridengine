@@ -310,7 +310,7 @@ usage:
    echo "-javadoc          -> create JavaDoc for Java sources such as DRMAA Java binding"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
-   echo "-mankv		      -> generate man pages checked out with '-kv' flag"
+   echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"
@@ -1772,9 +1772,8 @@ if ( "$CORE" == 1 ) then
    # spooledit is only available if berkeleydb is available.
    # if we build with spooling method classic, touch spooledit
    if ( $SPOOLING_METHOD == classic ) then
-      touch libspoolb.a spooledit.o
-      sleep 1
-      touch spooledit
+      touch -t 202012312358 libspoolb.a spooledit.o
+      touch -t 202012312359 spooledit
    endif
 
    # we must map the symbolic spooling lib names the target filenames,

@@ -102,11 +102,12 @@ int daemonize_schedd(void);
 sched_func_struct sched_funcs[] =
 {
    {"default",      "Default scheduler",   subscribe_default_scheduler, event_handler_default_scheduler, (void *)scheduler },
+   
 #ifdef SCHEDULER_SAMPLES
    {"ext_mysched",  "sample #1 scheduler", subscribe_default_scheduler, event_handler_default_scheduler, (void *)my_scheduler },
    {"ext_mysched2", "sample #2 scheduler", subscribe_my_scheduler,      event_handler_my_scheduler,      (void *)scheduler },
 #endif
-   {NULL, NULL, NULL, NULL}
+   {NULL, NULL, NULL, NULL} 
 };
 
 
@@ -569,36 +570,34 @@ int sge_before_dispatch(void)
    /* hostname resolving scheme in global config could have changed
       get it and use it if we got a notification about a new global config */
    if (new_global_config) {
-   
       lListElem *global = NULL, *local = NULL;
 
-      if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0)
+      if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0) {
          merge_configuration(global, local, &conf, NULL);
+      }   
       lFreeElem(global);
       lFreeElem(local);
       new_global_config = 0;
+   }
+   
+   if (sconf_is_new_config()) {
+      int interval = sconf_get_flush_finish_sec();
+      bool flush = interval> 0;
+      if (interval== 0)
+         interval= -1;
+      if(ec_get_flush(sgeE_JOB_DEL) != interval) {
+         ec_set_flush(sgeE_JOB_DEL,flush, interval);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
+         ec_set_flush(sgeE_JATASK_MOD, flush, interval);
+         ec_set_flush(sgeE_JATASK_DEL, flush, interval);
+      }
 
-      /* flushing information might have changed */
-      /* SG: TODO: is this still needed? */
-      {
-         int interval = sconf_get_flush_finish_sec();
-         bool flush = interval> 0;
-         if (interval== 0)
-            interval= -1;
-         if(ec_get_flush(sgeE_JOB_DEL) != interval) {
-            ec_set_flush(sgeE_JOB_DEL,flush, interval);
-            ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
-            ec_set_flush(sgeE_JATASK_MOD, flush, interval);
-            ec_set_flush(sgeE_JATASK_DEL, flush, interval);
-         }
-
-         interval= sconf_get_flush_submit_sec();
-         flush = interval> 0;
-         if (interval== 0)
-            interval= -1;
-         if(ec_get_flush(sgeE_JOB_ADD) != interval) {
-            ec_set_flush(sgeE_JOB_ADD, flush, interval);
-         }
+      interval= sconf_get_flush_submit_sec();
+      flush = interval> 0;
+      if (interval== 0)
+         interval= -1;
+      if(ec_get_flush(sgeE_JOB_ADD) != interval) {
+         ec_set_flush(sgeE_JOB_ADD, flush, interval);
       }
       ec_commit();
    }

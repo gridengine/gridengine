@@ -44,6 +44,7 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_schedd_conf.h"
+#include "sge_ctL.h"
 
 static void schedd_mes_find_others(lList *job_list, int category);
 
@@ -94,8 +95,11 @@ static void schedd_mes_find_others(lList *job_list,
             jid_cat_list = schedd_mes_get_same_category_jids(jid_category,
                                                              job_list,
                                                              ignore_category);
-            category = jid_cat_list;
+            category = jid_category;
             create_new_jid_cat_list = 0;
+         }
+         else {
+            create_new_jid_cat_list = 1;
          }
 
          /*
@@ -107,7 +111,6 @@ static void schedd_mes_find_others(lList *job_list,
                      lCopyList("", jid_cat_list));
          } else {
             lSetList(message_elem, MES_job_number_list, jid_cat_list);
-            create_new_jid_cat_list = 1;
          }
       }
    }
@@ -220,20 +223,36 @@ void schedd_mes_release(void)
 *     If "ignore_category" is 1 than the job category will be ignored.
 *     This means thal all ids of "job_list" will be added to all 
 *     messages contained in "tmp_sme". 
+*     
+*     If no category is passed in and ignore_category is false, the messages
+*     are only generated for the current job, meaning, they are just copied.
 *
 *  INPUTS
-*     lList *job_list - JB_Type list 
+*     lList *job_list     - JB_Type list 
+*     int ignore_category - if set to true, the messages with be generated for all jobs
+*                           in the list
+*     lRef jid_category   - if not NULL, the function uses the category to ensure, that
+*                           every message is only added per category once.
 *******************************************************************************/
-void schedd_mes_commit(lList *job_list, int ignore_category)
-{
+void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) {
+
    if (sme && tmp_sme) {
       lList *sme_mes_list = NULL;
       lList *tmp_sme_list = NULL;
+      
+      if (jid_category != NULL) {
+         if (lGetBool(jid_category, CT_messages_added) ) {
+            return;
+         }
+         lSetBool(jid_category, CT_messages_added, true);
+      }
 
       /*
        * Try to find other jobs which apply also for created message
        */
-      schedd_mes_find_others(job_list, ignore_category);
+      if (jid_category != NULL || ignore_category == 1) {
+         schedd_mes_find_others(job_list, ignore_category);
+      }
 
       /*
        * Tranfer all messages from tmp_sme to sme
@@ -276,6 +295,10 @@ void schedd_mes_rollback(void)
 *  FUNCTION
 *     Returns message structure which containes all messages.
 *
+*  INPUTS
+*     int *global_mes_count - out: returns nr of global messages
+*     int *job_mes_count    - out: returns nr of job messages
+*
 *  NOTES
 *     The calling function is responsible to free the returned
 *     message structure if it is not needed anymore.
@@ -283,13 +306,13 @@ void schedd_mes_rollback(void)
 *  RESULT
 *     lListElem* - SME_Type element
 *******************************************************************************/
-lListElem *schedd_mes_obtain_package(void)
+lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count)
 {
    lListElem *ret;
    u_long32 schedd_job_info = sconf_get_schedd_job_info();
 
    DENTER(TOP_LAYER, "schedd_mes_obtain_package");
-#ifndef WIN32NATIVE
+
    if (schedd_job_info == SCHEDD_JOB_INFO_FALSE) {
       /*
        * Temporaryly we enable schedd_job_info to add one
@@ -305,13 +328,17 @@ lListElem *schedd_mes_obtain_package(void)
       schedd_mes_add_global(SCHEDD_INFO_NOMESSAGE);
    }
 
+   if (global_mes_count != NULL) {
+      *global_mes_count = lGetNumberOfElem(lGetList(sme, SME_global_message_list));
+   }
+
+   if (job_mes_count != NULL) {
+      *job_mes_count = lGetNumberOfElem(lGetList(sme, SME_message_list));
+   }
+
    ret = sme; /* calling function is responsible to free messages! */
    sme = NULL; 
    tmp_sme = lFreeElem(tmp_sme);
-
-#else
-   ret = NULL;
-#endif
 
    DEXIT;
    return ret; 

@@ -666,7 +666,6 @@ void cleanup_default_scheduler(void)
 bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
                                          lListElem *event, void *clientdata){
    sconf_print_config();
-   new_global_config = 1; 
    return true;
 }
 

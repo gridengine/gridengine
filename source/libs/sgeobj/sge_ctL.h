@@ -58,6 +58,7 @@ enum {
    CT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
    CT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
    CT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
+   CT_messages_added,        /* if true, the scheduler info messages have been added for this category */
    CT_resource_contribution, /* SGEEE: resource request dependent contribution on urgency 
                                        this value is common with all jobs of a category */
    CT_rc_valid               /* SGEEE: indicates whether cached CT_resource_contribution is valid */
@@ -71,6 +72,7 @@ ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_LIST(CT_ignore_hosts, CTI_Type, CULL_DEFAULT)
    SGE_LIST(CT_queue_violations, CTQV_Type, CULL_DEFAULT)
    SGE_LIST(CT_job_messages, MES_Type, CULL_DEFAULT)
+   SGE_BOOL(CT_messages_added, CULL_DEFAULT)
    SGE_DOUBLE(CT_resource_contribution, CULL_DEFAULT)
    SGE_BOOL(CT_rc_valid, CULL_DEFAULT)
 LISTEND 
@@ -83,6 +85,7 @@ NAMEDEF(CTN)
    NAME("CT_ignore_hosts")
    NAME("CT_queue_violations")
    NAME("CT_job_messages")
+   NAME("CT_messages_added")
    NAME("CT_resource_contribution")
    NAME("CT_rc_valid")
 NAMEEND

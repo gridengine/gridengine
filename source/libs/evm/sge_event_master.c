@@ -507,8 +507,8 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
          client side. We delete the old event client. */ 
       if ((ep = eventclient_list_locate_by_adress(
             host, commproc, commproc_id))) {
-         ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSI, name, host, 
-            commproc, commproc_id));         
+         ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
+            commproc, u32c(commproc_id)));         
 
          /* delete old event client entry */
          lRemoveElem(EV_Clients, ep);
@@ -523,8 +523,8 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
       if ((ep=eventclient_list_locate(id))) {
          /* we already have this special client */
-         ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSI, name, host, 
-             commproc, commproc_id));         
+         ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
+                commproc, u32c(commproc_id)));         
 
          /* delete old event client entry */
          lRemoveElem(EV_Clients, ep);

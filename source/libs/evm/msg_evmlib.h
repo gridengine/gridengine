@@ -40,7 +40,7 @@
 */
 #define MSG_EVE_REINITEVENTCLIENT_S   _MESSAGE(66000, _("reinitialization of "SFQ"\n"))
 #define MSG_EVE_UNKNOWNEVCLIENT_US    _MESSAGE(66001, _("no event client known with id "U32CFormat" to %s\n"))
-#define MSG_EVE_CLIENTREREGISTERED_SSSI _MESSAGE(66002, _("event client "SFQ" (%s/%s/%d) reregistered - it will need a total update\n"))
+#define MSG_EVE_CLIENTREREGISTERED_SSSU _MESSAGE(66002, _("event client "SFQ" (%s/%s/"U32CFormat") reregistered - it will need a total update\n"))
 #define MSG_EVE_REG_SUU               _MESSAGE(66003, _(SFQ" registers as event client with id "U32CFormat" event delivery interval "U32CFormat"\n"))
 #define MSG_EVE_UNREG_SU              _MESSAGE(66004, _("event client "SFQ" with id "U32CFormat" deregistered"))
 #define MSG_EVE_EVENTCLIENT           _MESSAGE(66005, _("event client"))

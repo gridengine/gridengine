@@ -331,8 +331,6 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                               subsub_key, mod_elem, sub_command, 
                               attribute_name_str, object_name_str, 0);
             } else {
-               lList *list = lGetPosList(reduced_elem, pos);
-  
                object_replace_any_type(org_elem, sublist_value_name, mod_elem);
             }
          }

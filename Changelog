@@ -1,3 +1,7 @@
+CR-2003-01-13-0  Enhancem.  new qevent client. This event client is written
+                            for the testsuite to get job start and job end
+                            events.
+
 CR-2003-01-08-0  Testsuite: Using "ts_def_con" user for deleting spool 
                  Bugfix:    spool directory with start_remote_tcl_prog() in 
                             install_core_system test.

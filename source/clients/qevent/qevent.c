@@ -33,7 +33,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
@@ -43,44 +42,78 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
+
 #include "msg_clients_common.h"
-#include "sge_c_event.h"
+
+#include "sge_mirror.h"
 #include "sge_event.h"
 
-extern char **environ;
 
-int main(int argc, char *argv[]);
+u_long Global_jobs_running = 0;
 
-static void dump_eventlist(lList *event_list)
+int print_event(sge_event_type type, sge_event_action action, 
+                lListElem *event, void *clientdata)
 {
-   lListElem *event;
-   for_each(event, event_list) {
-      fprintf(stdout, event_text(event));
-#if 1 /* EB: debug */
-      lWriteElemTo(event, stdout); 
-#endif
-      switch(lGetUlong(event, ET_type)) {
-         case sgeE_SHUTDOWN:
-            shut_me_down = 1;
-            break;
-         case sgeE_QMASTER_GOES_DOWN:
-            sleep(8);
-            ec_mark4registration();
-            break;
-         default:
-            break;
-      }
+   int pos;
+
+   DPRINTF(("%s\n", event_text(event)));
+   /* create a callback error to test error handling */
+   if(type == SGE_EMT_GLOBAL_CONFIG) {
+      return FALSE;
    }
+   
+   return TRUE;
 }
 
-/************************************************************************/
-int main(int argc, char **argv)
+int print_jatask_event(sge_event_type type, sge_event_action action, 
+                lListElem *event, void *clientdata)
+{
+   int pos;
+
+   DPRINTF(("%s\n", event_text(event)));
+/*    fprintf(stdout,"%s\n",event_text(event)); */
+   if ((pos=lGetPosViaElem(event, ET_type))>=0) {
+      u_long32 type = lGetUlong(event, ET_type);
+      if (type == sgeE_JATASK_MOD) { 
+         lList *jat = lGetList(event,ET_new_version);
+         u_long job_id  = lGetUlong(event, ET_intkey);
+         u_long task_id = lGetUlong(event, ET_intkey2);
+         lListElem *ep = lFirst(jat);
+         u_long job_status = lGetUlong(ep, JAT_status);
+         int task_running = (job_status==JRUNNING || job_status==JTRANSFERING);
+         if (task_running) {
+            fprintf(stdout,"START (%ld.%ld)\n", job_id ,task_id);
+            fflush(stdout);  
+            Global_jobs_running++;
+         }
+/*         lWriteElemTo(event, stdout); 
+         fflush(stdout); */
+      }
+      if (type == sgeE_JOB_FINAL_USAGE) { 
+         lList *jat = lGetList(event,ET_new_version);
+         u_long job_id = lGetUlong(event, ET_intkey);
+         u_long task_id = lGetUlong(event, ET_intkey2);
+         /* lWriteElemTo(event, stdout); */
+         fprintf(stdout,"FINISH (%ld.%ld)\n", job_id, task_id);
+         Global_jobs_running--;
+         fflush(stdout);  
+      }
+
+   }
+   /* create a callback error to test error handling */
+   if(type == SGE_EMT_GLOBAL_CONFIG) {
+      return FALSE;
+   }
+   
+   return TRUE;
+}
+
+
+int main(int argc, char *argv[])
 {
    int cl_err = 0;
-   int ret;
-   u_long32 last_heared = 0;
 
-   DENTER_MAIN(TOP_LAYER, "qevent");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
    if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
@@ -94,66 +127,22 @@ int main(int argc, char **argv)
       SGE_EXIT(1);
    }   
 
-   ec_prepare_registration(EV_ID_ANY, "qevent");
+   sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
+   sge_mirror_subscribe(SGE_EMT_JOB, print_jatask_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_JATASK ,print_jatask_event, NULL, NULL);
    
-#ifndef TEST   
-   ec_subscribe_all();
-#endif
-
+   ec_set_flush(sgeE_JATASK_MOD,0);
+   ec_set_flush(sgeE_JOB_FINAL_USAGE,0);
+/*   sge_mirror_subscribe(SGE_EMT_ALL, print_event, NULL, NULL); */
+   
    while(!shut_me_down) {
-      u_long32 now = sge_get_gmt();
-      
-      lList *event_list = NULL;
-      ret = ec_get(&event_list);
-
-      if(ret == 0) {
-         last_heared = now;
-      } else {
-         if(last_heared != 0 && (now > last_heared + ec_get_edtime() * 10)) {
-            WARNING((SGE_EVENT, "qmaster alive timeout expired\n"));
-            ec_mark4registration();
-         }
-      }
-      
-      if(event_list != NULL) {
-         dump_eventlist(event_list);
-         lFreeList(event_list);
-      }
-
-#ifdef TEST
-      {
-         static int event = sgeE_ALL_EVENTS + 1;
-         static int subscribe = 1;
-         if(subscribe) {
-            if(event < sgeE_EVENTSIZE) {
-               ec_subscribe(event++);
-            } else {
-               subscribe = 0;
-               event--;
-            }
-         } else {
-            if(event > sgeE_ALL_EVENTS) {
-               ec_unsubscribe(event--);
-            } else {
-               subscribe = 1;
-               event++;
-            }   
-         }
-      }
-
-      {
-         if(ec_get_edtime() == DEFAULT_EVENT_DELIVERY_INTERVAL) {
-            ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL * 2);
-         } else {
-            ec_set_edtime(DEFAULT_EVENT_DELIVERY_INTERVAL);
-         }
-      }
-#endif
-      
+      sge_mirror_process_events();
+      fprintf(stdout,"Running: %ld\n",Global_jobs_running);
+      fflush(stdout);  
    }
 
-   ec_deregister();
+   sge_mirror_shutdown();
 
-   SGE_EXIT(0);
-   return 0;
+   DEXIT;
+   return EXIT_SUCCESS;
 }

@@ -1868,10 +1868,10 @@ char *prefix
    }
 
    {
+      lList *env_list = lGetList(jep, JB_env_list);
       lList *prefix_vars = NULL;
 
-      var_list_split_prefix_vars(lGetList(jep, JB_env_list),
-                                 &prefix_vars, VAR_PREFIX);
+      var_list_split_prefix_vars(&env_list, &prefix_vars, VAR_PREFIX);
       data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
       lAddList(lGetList(jep, JB_env_list), prefix_vars);
    }
@@ -2229,10 +2229,10 @@ int save
   
    DPRINTF(("JB_env_list %p\n", data->env_list));
    { 
+      lList *env_vars = lGetList(jep, JB_env_list);
       lList *prefix_vars = NULL;
    
-      var_list_split_prefix_vars(lGetList(jep, JB_env_list),
-                                 &prefix_vars, VAR_PREFIX);
+      var_list_split_prefix_vars(&env_vars, &prefix_vars, VAR_PREFIX);
       lSetList(jep, JB_env_list, lCopyList("env_list", data->env_list));
       lAddList(lGetList(jep, JB_env_list), prefix_vars);
    }

@@ -1,3 +1,7 @@
+JG-2004-09-15-0: Bugfix:    Fixed a bug in event master.
+                 Changed:   qmaster
+                 Review:    SG
+
 DT-2004-09-15-0: Bugfix:    o Fixed drmaa_synchronize() problem
                  Changed:   JAPI
                  Review:    SG

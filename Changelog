@@ -1,3 +1,9 @@
+EB-2003-03-25-0  Bugfix:    Multiple job script writes cause ETXTBSY
+                            (Text File Busy) Errors
+                 Changed:   sge_execd
+                 Review:    AH
+                 Issue:     #504
+
 AH-2003-03-25-1  Bugfix:    GEEE: allow qalter -p for running jobs
                  Isssue:    #502
                  Bugtraq:   #4824104

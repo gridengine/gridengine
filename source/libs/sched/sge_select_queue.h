@@ -47,13 +47,13 @@ int sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lL
  * is there a load alarm on this queue
  * 
  */
-int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, const lList *load_adjustments);
+int sge_load_alarm(char *reason, lListElem *queue, lList *threshold, const lList *exechost_list, const lList *complex_list, const lList *load_adjustments);
 
 /* 
  * get reason for alarm state on queue
  * 
  */
-char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, char  *reason, int reason_size, const char *type); 
+char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exechost_list, const lList *complex_list, char  *reason, int reason_size, const char *type); 
 
 /* 
  * split queue list into unloaded and overloaded
@@ -111,7 +111,7 @@ int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
  * which string value has the following attribute
  * 
  */
-int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, lList *exechost_list, lList *complex_list);
+int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, const lList *exechost_list, const lList *complex_list);
 
 /* 
  *

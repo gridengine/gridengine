@@ -1280,7 +1280,7 @@ static int resource_cmp(u_long32 relop, double req, double src_dl)
 
 int 
 sge_load_alarm(char *reason, lListElem *qep, lList *threshold, 
-               lList *exechost_list, lList *centry_list, 
+               const lList *exechost_list, const lList *centry_list, 
                const lList *load_adjustments) 
 {
    lListElem *hep, *global_hep, *tep;
@@ -1391,7 +1391,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
 */
 
 char *sge_load_alarm_reason(lListElem *qep, lList *threshold, 
-                            lList *exechost_list, lList *centry_list, 
+                            const lList *exechost_list, const lList *centry_list, 
                             char *reason, int reason_size, 
                             const char *threshold_type) 
 {
@@ -2848,8 +2848,8 @@ char *dst,
 int dst_len,
 char *attrname,
 lListElem *q,
-lList *exechost_list,
-lList *centry_list 
+const lList *exechost_list,
+const lList *centry_list 
 ) {
    lListElem *ep;
 /*   lList *attributes = NULL;*/

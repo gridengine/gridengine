@@ -50,6 +50,7 @@ CULLLIB_SRC 	= cull_list.c \
                 cull_tree.c \
                 cull_file.c \
                 cull_state.c \
+                cull_xml.c \
                 pack.c
 
 CULLLIB_OBJS = $(CULLLIB_SRC:.c=.o)
@@ -134,7 +135,10 @@ cull_file.o:   $(CULLLIB_DIR)/cull_file.c
 
 cull_state.o:   $(CULLLIB_DIR)/cull_state.c
 	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_state.c
-
+   
+cull_xml.o:   $(CULLLIB_DIR)/cull_xml.c
+	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_xml.c
+   
 pack.o:		$(CULLLIB_DIR)/pack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/pack.c
 

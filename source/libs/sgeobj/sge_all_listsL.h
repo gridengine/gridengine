@@ -90,6 +90,7 @@
 #include "sge_qinstanceL.h"
 #include "sge_qref.h"
 #include "cull_packL.h"
+#include "cull_xmlL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -231,6 +232,11 @@ extern "C" {
       {ULNG_LOWERBOUND, ULNGS, ULNGN},          /* ???? info-messages ??? */
       {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
       {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
+      {XMLA_LOWERBOUND, XMLAS, XMLAN},
+      {XMLS_LOWERBOUND, XMLSS, XMLSN},
+      {XMLH_LOWERBOUND, XMLHS, XMLHN},
+      {XMLE_LOWERBOUND, XMLES, XMLEN},             
+
       {0, 0, NULL}
    };
 

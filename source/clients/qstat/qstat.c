@@ -79,6 +79,8 @@
 #include "sge_cqueue.h"
 #include "sge_cqueue_qstat.h"
 #include "sge_qref.h"
+#include "qstat_xml.h"
+#include "cull/cull_xml.h"
 
 #include "sge_mt_init.h"
 
@@ -107,11 +109,11 @@ sge_parse_qstat(lList **ppcmdline, lList **pplresource, lList **pplqresource,
                 lList **pplqueueref, lList **ppluser, lList **pplqueue_user, 
                 lList **pplpe, u_long32 *pfull, u_long32 *explain_bits, 
                 u_long32 *pempty, char **hostname, u_long32 *job_info, 
-                u_long32 *group_opt, u_long32 *queue_states, lList **ppljid);
+                u_long32 *group_opt, u_long32 *queue_states, lList **ppljid, u_long32 *isXML);
 
 static int qstat_usage(FILE *fp, char *what);
-static int qstat_show_job(lList *jid);
-static int qstat_show_job_info(void);
+static int qstat_show_job(lList *jid, u_long32 isXML);
+static int qstat_show_job_info(u_long32 isXML);
 
 lList *centry_list;
 lList *exechost_list = NULL;
@@ -155,6 +157,8 @@ char **argv
    int nqueues;
    char *hostname = NULL;
    bool first_time = true;
+   u_long32 isXML = false;
+   lList *XML_out = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -173,7 +177,7 @@ char **argv
    sge_setup_sig_handlers(QSTAT);
 
    alp = sge_parse_cmdline_qstat(argv, environ, &pcmdline);
-  
+ 
    if(alp) {
       /*
       ** high level parsing error! sow answer list
@@ -200,8 +204,7 @@ char **argv
       &job_info,        /* -j ..                         */
       &group_opt,       /* -g ..                         */
       &queue_states,    /* -qs ...                       */
-      &jid_list);       /* .. jid_list                   */
-
+      &jid_list, &isXML);       /* .. jid_list                   */
 
    if(alp) {
       /*
@@ -227,9 +230,9 @@ char **argv
       int ret = 0;
 
       if(lGetNumberOfElem(jid_list)) {
-         ret = qstat_show_job(jid_list);
+         ret = qstat_show_job(jid_list, isXML);
       } else {
-         ret = qstat_show_job_info();
+         ret = qstat_show_job_info(isXML);
       }
       DEXIT;
       SGE_EXIT(ret);
@@ -622,70 +625,124 @@ char **argv
                                      &temp_disabled,
                                      &manual_intervention);
             
-            if (first_time) {
-               printf("%-36.36s %7s "
-                      "%6s %6s %6s %6s %6s ",
-                      "CLUSTER QUEUE", "LOAD", 
-                      "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
-               if (show_states) {
-                  printf("%5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s", 
-                         "s", "A", "S", "C", "u", "a", "d", "D", "c", "o", "E");
-               }
-               printf("\n");
-               printf("--------------------");
-               printf("--------------------");
-               printf("--------------------");
-               printf("-------------------");
-               if (show_states) {
-                  printf("--------------------");
-                  printf("--------------------");
-                  printf("--------------------");
-                  printf("------");
-               }
-               printf("\n");
-               first_time = false;
-            }
-            printf("%-36.36s ", lGetString(cqueue, CQ_name));
-            if (is_load_available) {
-               printf("%7.2f ", load);
-            } else {
-               printf("%7s ", "-NA-");
-            }
-            printf("%6d ", (int)used);
-            printf("%6d ", (int)available);
-            printf("%6d ", (int)total);
-            printf("%6d ", (int)temp_disabled);
-            printf("%6d ", (int)manual_intervention);
-            if (show_states) {
-               printf("%5d ", (int)suspend_manual);
-               printf("%5d ", (int)suspend_threshold);
-               printf("%5d ", (int)suspend_on_subordinate);
-               printf("%5d ", (int)suspend_calendar);
-               printf("%5d ", (int)unknown);
-               printf("%5d ", (int)load_alarm);
-               printf("%5d ", (int)disabled_manual);
-               printf("%5d ", (int)disabled_calendar);
-               printf("%5d ", (int)ambiguous);
-               printf("%5d ", (int)orphaned);
-               printf("%5d ", (int)error);
-            }
-            printf("\n");
-         }
-      } 
-   } else {
-      for_each(qep, queue_list) {
-         int print_jobs_of_queue = 0;
-         /* here we have the queue */
+            if (!isXML) {
+               if (first_time) {
+                  printf("%-36.36s %7s "
+                         "%6s %6s %6s %6s %6s ",
+                         "CLUSTER QUEUE", "LOAD", 
+                         "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
+                  if (show_states) {
+                     printf("%5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s", 
+                            "s", "A", "S", "C", "u", "a", "d", "D", "c", "o", "E");
+                  }
+                  printf("\n");
 
+                  printf("--------------------");
+                  printf("--------------------");
+                  printf("--------------------");
+                  printf("-------------------");
+                  if (show_states) {
+                     printf("--------------------");
+                     printf("--------------------");
+                     printf("--------------------");
+                     printf("------");
+                  }
+                  printf("\n");
+                  first_time = false;
+               }
+               printf("%-36.36s ", lGetString(cqueue, CQ_name));
+               if (is_load_available) {
+                  printf("%7.2f ", load);
+               } else {
+                  printf("%7s ", "-NA-");
+               }
+               printf("%6d ", (int)used);
+               printf("%6d ", (int)available);
+               printf("%6d ", (int)total);
+               printf("%6d ", (int)temp_disabled);
+               printf("%6d ", (int)manual_intervention);
+               if (show_states) {
+                  printf("%5d ", (int)suspend_manual);
+                  printf("%5d ", (int)suspend_threshold);
+                  printf("%5d ", (int)suspend_on_subordinate);
+                  printf("%5d ", (int)suspend_calendar);
+                  printf("%5d ", (int)unknown);
+                  printf("%5d ", (int)load_alarm);
+                  printf("%5d ", (int)disabled_manual);
+                  printf("%5d ", (int)disabled_calendar);
+                  printf("%5d ", (int)ambiguous);
+                  printf("%5d ", (int)orphaned);
+                  printf("%5d ", (int)error);
+               }
+               printf("\n");
+            }
+            else {
+               lListElem *elem = NULL;
+               lList *attributeList = NULL;
+
+               elem = lCreateElem(XMLE_Type);
+               attributeList = lCreateList("attributes", XMLE_Type);
+               lSetList(elem, XMLE_List, attributeList);
+             
+               xml_append_Attr_S(attributeList, "name", lGetString(cqueue, CQ_name));
+               if (is_load_available) {
+                  xml_append_Attr_D(attributeList, "load", load);
+               }
+               xml_append_Attr_I(attributeList, "used", (int)used);
+               xml_append_Attr_I(attributeList, "available", (int)available);
+               xml_append_Attr_I(attributeList, "total", (int)total);
+               xml_append_Attr_I(attributeList, "temp_disabled", (int)temp_disabled);
+               xml_append_Attr_I(attributeList, "manual_intervention", (int)manual_intervention);
+               if (show_states) {
+                  xml_append_Attr_I(attributeList, "suspend_manual", (int)suspend_manual);
+                  xml_append_Attr_I(attributeList, "suspend_threshold", (int)suspend_threshold);
+                  xml_append_Attr_I(attributeList, "suspend_on_subordinate", (int)suspend_on_subordinate);
+                  xml_append_Attr_I(attributeList, "suspend_calendar", (int)suspend_calendar);
+                  xml_append_Attr_I(attributeList, "unknown", (int)unknown);
+                  xml_append_Attr_I(attributeList, "load_alarm", (int)load_alarm);
+                  xml_append_Attr_I(attributeList, "disabled_manual", (int)disabled_manual);
+                  xml_append_Attr_I(attributeList, "disabled_calendar", (int)disabled_calendar);
+                  xml_append_Attr_I(attributeList, "ambiguous", (int)ambiguous);
+                  xml_append_Attr_I(attributeList, "orphaned", (int)orphaned);
+                  xml_append_Attr_I(attributeList, "error", (int)error);
+               }
+               if (elem) {
+                  if (XML_out == NULL){
+                     XML_out = lCreateList("cluster-queue-summary", XMLE_Type);
+                  }
+                  lAppendElem(XML_out, elem); 
+               } 
+            }
+         }
+
+      } 
+
+   } else {
+
+      for_each(qep, queue_list) {
+         lList *xml_job_list = NULL; 
+         lListElem *elem = NULL;
+         /* here we have the queue */
          if (lGetUlong(qep, QU_tag) & TAG_SHOW_IT) {
             if ((full_listing & QSTAT_DISPLAY_NOEMPTYQ) && !qinstance_slots_used(qep)) {
                continue;
             }
             else {
-               if (sge_print_queue(qep, exechost_list, centry_list, 
-                               full_listing, qresource_list, explain_bits)) {
-                  print_jobs_of_queue = 1;
-               }   
+               if (isXML) {
+                  if ((elem = xml_print_queue(qep, exechost_list, centry_list,
+                                  full_listing, qresource_list, explain_bits)) != NULL) {
+
+                     if (XML_out == NULL){
+                        XML_out = lCreateList("Queue-List", XMLE_Type);
+                     }
+                     
+                     lAppendElem(XML_out, elem); 
+                  }
+               }
+               else{
+                  sge_print_queue(qep, exechost_list, centry_list,
+                                  full_listing, qresource_list, explain_bits);
+               }
             }
 
          }
@@ -693,14 +750,46 @@ char **argv
          if (shut_me_down) {
             SGE_EXIT(1);
          }
-
-         sge_print_jobs_queue(qep, job_list, pe_list, user_list,
+         if (isXML){
+            xml_print_jobs_queue(qep, job_list, pe_list, user_list,
                               exechost_list, centry_list,
-                              print_jobs_of_queue, full_listing, "", group_opt);
+                              1, full_listing, group_opt, elem?(&xml_job_list):(&XML_out));
+
+            if (elem && xml_job_list){
+               lSetList(elem, XMLE_List, xml_job_list);
+            }
+         }
+         else {
+            sge_print_jobs_queue(qep, job_list, pe_list, user_list,
+                              exechost_list, centry_list,
+                              1, full_listing, "", group_opt);
+         }
+      }
+      if (XML_out != NULL) {
+         lListElem *xmlElem = lCreateElem(XMLE_Type);
+         lListElem *attrElem = lCreateElem(XMLA_Type);
+         lList *tempXML = lCreateList("queue_info", XMLE_Type);
+         
+         lSetString(attrElem, XMLA_Name, "queue_info");
+         lSetObject(xmlElem, XMLE_Element, attrElem);
+         lSetBool(xmlElem, XMLE_Print, true);
+         lSetList(xmlElem, XMLE_List, XML_out);
+         lAppendElem(tempXML, xmlElem);
+         XML_out = tempXML;
+
+         /*
+         lListElem *xml_elem = NULL;
+         
+         xml_elem = xml_getHead("queue_info", XML_out, NULL);
+         XML_out = NULL;   
+         lWriteElemXMLTo(xml_elem, stdout);
+     
+         xml_elem = lFreeElem(xml_elem);
+         */
       }
    }
 
-   /* 
+   /*
     *
     * step 3.5: remove all jobs that we found till now 
     *           sort other jobs for printing them in order
@@ -709,7 +798,7 @@ char **argv
    DTRACE;
    jep = lFirst(job_list);
    while (jep) {
-      lList *task_list; 
+      lList *task_list;
       lListElem *jatep, *tmp_jatep;
 
       tmp = lNext(jep);
@@ -735,46 +824,77 @@ char **argv
    }
 
    if ((group_opt & GROUP_CQ_SUMMARY) == 0) {
-      /* 
-       *
-       * step 4: iterate over jobs that are pending;
-       *         tag them with TAG_FOUND_IT
-       *
-       *         print the jobs that run in these queues 
-       *
-       */
-      sge_print_jobs_pending(job_list, pe_list, user_list, exechost_list, 
-                             centry_list, so, full_listing, group_opt);
+      if (isXML) {
+         lList *tempXML = NULL;
+         xml_qstat_jobs(job_list, zombie_list, pe_list, user_list, exechost_list, centry_list, so,
+                        full_listing, group_opt, &tempXML /*&XML_out*/); 
+         if (tempXML != NULL) {
+            lListElem *xmlElem = lCreateElem(XMLE_Type);
+            lListElem *attrElem = lCreateElem(XMLA_Type);
+            
+            lSetString(attrElem, XMLA_Name, "job_info");
+            lSetObject(xmlElem, XMLE_Element, attrElem);
+            lSetBool(xmlElem, XMLE_Print, true);
+            lSetList(xmlElem, XMLE_List, tempXML);
+            if (XML_out == NULL){
+               XML_out = lCreateList("job_info", XMLE_Type);
+            }
+            lAppendElem(XML_out, xmlElem);
+         }
+      }
+      else {
+         /* 
+          *
+          * step 4: iterate over jobs that are pending;
+          *         tag them with TAG_FOUND_IT
+          *
+          *         print the jobs that run in these queues 
+          *
+          */
+         sge_print_jobs_pending(job_list, pe_list, user_list, exechost_list,
+                                centry_list, so, full_listing, group_opt);
 
-      /* 
-       *
-       * step 5:  in case of SGE look for finished jobs and view them as 
-       *          finished  a non SGE-qstat will show them as error jobs
-       *
-       */
-      sge_print_jobs_finished(job_list, pe_list, user_list, exechost_list,
+         /* 
+          *
+          * step 5:  in case of SGE look for finished jobs and view them as
+          *          finished  a non SGE-qstat will show them as error jobs
+          *
+          */
+         sge_print_jobs_finished(job_list, pe_list, user_list, exechost_list,
+                                 centry_list, full_listing, group_opt);
+
+         /*
+          *
+          * step 6:  look for jobs not found. This should not happen, cause each
+          *          job is running in a queue, or pending. But if there is
+          *          s.th. wrong we have
+          *          to ensure to print this job just to give hints whats wrong
+          *
+          */
+         sge_print_jobs_error(job_list, pe_list, user_list, exechost_list,
                               centry_list, full_listing, group_opt);
 
-      /* 
-       *
-       * step 6:  look for jobs not found. This should not happen, cause each 
-       *          job is running in a queue, or pending. But if there is 
-       *          s.th. wrong we have 
-       *          to ensure to print this job just to give hints whats wrong
-       *
-       */
-      sge_print_jobs_error(job_list, pe_list, user_list, exechost_list, 
-                           centry_list, full_listing, group_opt);
-
-      /* 
-       *
-       * step 7:  print recently finished jobs ('zombies') 
-       *
-       */
-      sge_print_jobs_zombie(zombie_list, pe_list, user_list, exechost_list,
-                            centry_list,  full_listing, group_opt);
+         /*
+          *
+          * step 7:  print recently finished jobs ('zombies')
+          *
+          */
+         sge_print_jobs_zombie(zombie_list, pe_list, user_list, exechost_list,
+                               centry_list,  full_listing, group_opt);
+      }
    }
 
+   if (XML_out != NULL) {
+      lListElem *xml_elem = NULL;
+    
+      xml_elem = xml_getHead("job_info", XML_out, NULL);
+      XML_out = NULL;   
+      lWriteElemXMLTo(xml_elem, stdout);
+  
+      xml_elem = lFreeElem(xml_elem);
+    
+   }
+   
    lFreeList(zombie_list);
    lFreeList(job_list);
    lFreeList(queue_list);
@@ -815,19 +935,19 @@ u_long32 show
    lListElem *ep = NULL;
    lList *conf_l = NULL;
    lList *mal = NULL;
-   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0; 
+   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0;
    int ce_id, eh_id, sc_id, gc_id, hgrp_id = 0;
    int show_zombies = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "get_all_lists");
-  
+
    q_all = lWhat("%T(ALL)", CQ_Type);
-   q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
+   q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
                         NULL, NULL, q_all, NULL, &state);
    q_all = lFreeWhat(q_all);
    qw = lFreeWhere(qw);
-   
+ 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
@@ -837,8 +957,8 @@ u_long32 show
       show_zombies = 1;
 
    /* 
-   ** jobs 
-   */ 
+   ** jobs
+   */
    if (job_l) {
       for_each(ep, user_list) {
          nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
@@ -853,14 +973,14 @@ u_long32 show
       }
       if (show & QSTAT_DISPLAY_FINISHED) {
          show |= ~QSTAT_DISPLAY_PENDING;
-      }  
+      }
       if (!(show & QSTAT_DISPLAY_RUNNING)) {
 
          DPRINTF(("==> No running/transiting jobs\n"));
 
          nw = lWhere("%T(%I->%T(!(%I m= %u || %I m= %u))",
                      JB_Type, JB_ja_tasks, JAT_Type,
-                     JAT_status, JRUNNING, JAT_status, JTRANSFERING); 
+                     JAT_status, JRUNNING, JAT_status, JTRANSFERING);
 
          if (!jw)
             jw = nw;
@@ -906,7 +1026,7 @@ u_long32 show
 
                      JB_soft_queue_list,
                      JB_master_hard_queue_list,
-                     JB_ja_structure, 
+                     JB_ja_structure,
                      JB_ja_tasks,
                      JB_ja_n_h_ids,
 
@@ -924,7 +1044,7 @@ u_long32 show
 
                      JB_wtcontr);
 
-      j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
+      j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
                            NULL, jw, j_all, NULL, &state);
       j_all = lFreeWhat(j_all);
       jw = lFreeWhere(jw);
@@ -936,8 +1056,8 @@ u_long32 show
    }
 
    /* 
-   ** job zombies 
-   */ 
+   ** job zombies
+   */
    if (zombie_l && show_zombies) {
       for_each(ep, user_list) {
          nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
@@ -946,8 +1066,8 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_1 ")", JB_Type, 
-                     JB_job_number, 
+      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_1 ")", JB_Type,
+                     JB_job_number,
                      JB_owner,
                      JB_group,
                      JB_type,
@@ -972,7 +1092,7 @@ u_long32 show
                      JB_ja_n_h_ids,
                      JB_ja_u_h_ids,
                      JB_ja_o_h_ids,
-                     JB_ja_s_h_ids, 
+                     JB_ja_s_h_ids,
                      JB_ja_z_ids,
                      JB_ja_template,
                      JB_ja_tasks,
@@ -1012,7 +1132,7 @@ u_long32 show
    */
    where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    eh_all = lWhat("%T(ALL)", EH_Type);
-   eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
+   eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                         NULL, where, eh_all, NULL, &state);
    eh_all = lFreeWhat(eh_all);
    where = lFreeWhere(where);
@@ -1038,12 +1158,12 @@ u_long32 show
       }
    }
 
-   /* 
+  /* 
    ** ckpt list 
    */ 
    if (ckpt_l) {
       ckpt_all = lWhat("%T(%I)", CK_Type, CK_name);
-      ckpt_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET, 
+      ckpt_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET,
                            NULL, NULL, ckpt_all, NULL, &state);
       ckpt_all = lFreeWhat(ckpt_all);
 
@@ -1452,7 +1572,7 @@ lList *acl_list
    global_xacl = lGetList(ehep, EH_xacl);
 
    config_acl  = conf.user_lists;
-   config_xacl = conf.xuser_lists; 
+   config_xacl = conf.xuser_lists;
 
    for_each(cqueue, cqueue_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -1464,11 +1584,11 @@ lList *acl_list
          /* get exec host list element for current queue 
             and its access lists */
          host_name = lGetHost(qep, QU_qhostname);
-         ehep = host_list_locate(exechost_list, host_name); 
+         ehep = host_list_locate(exechost_list, host_name);
          if (ehep != NULL) {
             h_acl  = lGetList(ehep, EH_acl);
             h_xacl = lGetList(ehep, EH_xacl);
-         } 
+         }
 
          for_each (qu, queue_user_list) {
             int q_access = 0;
@@ -1556,7 +1676,7 @@ char **sp;
 char **rp;
 stringT str;
 lList *alp = NULL;
- 
+
    DENTER(TOP_LAYER, "sge_parse_cmdline_qstat");
 
    if (!strcmp(sge_basename(*argv++, '/'), "qselect"))
@@ -1567,7 +1687,7 @@ lList *alp = NULL;
       /* -help */
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
          continue;
- 
+
       /* -f option */
       if (!qselect_mode && (rp = parse_noopt(sp, "-f", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -1584,6 +1704,11 @@ lList *alp = NULL;
          /* -urg option */
          if ((rp = parse_noopt(sp, "-urg", NULL, ppcmdline, &alp)) != sp)
             continue;
+
+         /* -xml option */
+         if ((rp = parse_noopt(sp, "-xml", NULL, ppcmdline, &alp)) != sp)
+            continue;
+
       }
 
       /* -g */
@@ -1605,11 +1730,11 @@ lList *alp = NULL;
       /* -s [p|r|s|h|...] option */
       if (!qselect_mode && (rp = parse_until_next_opt(sp, "-s", NULL, ppcmdline, &alp)) != sp)
          continue;
-         
+
       /* -qs [.{a|c|d|o|..] option */
       if ((rp = parse_until_next_opt(sp, "-qs", NULL, ppcmdline, &alp)) != sp)
          continue;
-         
+      
       /* -explain [c|a|A...] option */
       if (!qselect_mode && (rp = parse_until_next_opt(sp, "-explain", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -1686,7 +1811,8 @@ char **hostname,
 u_long32 *job_info,
 u_long32 *group_opt,
 u_long32 *queue_states,
-lList **ppljid 
+lList **ppljid, 
+u_long32 *isXML
 ) {
    stringT str;
    lList *alp = NULL;
@@ -1716,6 +1842,10 @@ lList **ppljid
          continue;
       }
 
+      if (parse_flag(ppcmdline, "-xml", &alp, isXML)){
+         continue;
+      }
+      
       /*
       ** Two additional flags only if MORE_INFO is set:
       ** -dj   dump jobs:  displays full global_job_list 
@@ -2004,7 +2134,7 @@ char *what
       }
       fprintf(fp, "        [-help]                         %s",MSG_QSTAT_USAGE_PRINTTHISHELP);
       if (!qselect_mode) 
-      if (!qselect_mode) 
+      if (!qselect_mode)
          fprintf(fp, "        [-j job_identifier_list ]                  %s",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
       fprintf(fp, "        [-l resource_list]              %s",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
       if (!qselect_mode) 
@@ -2026,6 +2156,9 @@ char *what
          fprintf(fp, "        [-u user_list]                  %s",MSG_QSTAT_USAGE_VIEWONLYJOBSOFTHISUSER);
       fprintf(fp, "        [-U user_list]                  %s",MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS);
 
+      if (!qselect_mode)
+         fprintf(fp, "        [-xml]                          %s", MSG_QSTAT_XML_OUTPUT );
+      
       if (getenv("MORE_INFO")) {
          fprintf(fp, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);
          fprintf(fp, "        [-dj]                           %s",MSG_QSTAT_USAGE_DUMPCOMPLETEJOBLISTTOSTDOUT);
@@ -2059,7 +2192,8 @@ char *what
 ** returns 0 on success, non-zero on failure
 */
 static int qstat_show_job(
-lList *jid_list 
+lList *jid_list,
+u_long32 isXML
 ) {
    lListElem *j_elem = 0;
    lList* jlp = NULL;
@@ -2079,13 +2213,16 @@ lList *jid_list
    what = lWhat("%T(ALL)", SME_Type);
    alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(what);
-   for_each(aep, alp) {
-      if (lGetUlong(aep, AN_status) != STATUS_OK) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         schedd_info = false;
+
+   if (!isXML){
+      for_each(aep, alp) {
+         if (lGetUlong(aep, AN_status) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            schedd_info = false;
+         }
       }
+      lFreeList(alp);
    }
-   lFreeList(alp);
 
    /* build 'where' for all jobs */
    where = NULL;
@@ -2111,6 +2248,17 @@ lList *jid_list
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(where);
    lFreeWhat(what);
+
+   if (isXML){
+      xml_qstat_show_job(&jlp, &ilp,  &alp, &jid_list);
+   
+      lFreeList(jlp);
+      lFreeList(alp);
+      lFreeList(jid_list);
+      DEXIT;
+      return 0;
+   }
+
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
@@ -2131,9 +2279,9 @@ lList *jid_list
 
       for_each(elem1, jlp) {
          char buffer[256];
-            
+ 
          sprintf(buffer, U32CFormat, u32c(lGetUlong(elem1, JB_job_number)));   
-         elem2 = lGetElemStr(jid_list, ST_name, buffer);       
+         elem2 = lGetElemStr(jid_list, ST_name, buffer);     
          
          if (elem2) {
             lDechainElem(jid_list, elem2);
@@ -2152,7 +2300,6 @@ lList *jid_list
       DEXIT;
       SGE_EXIT(1);
    }
-
 
    /* print scheduler job information and global scheduler info */
    for_each (j_elem, jlp) {
@@ -2204,7 +2351,7 @@ lList *jid_list
    return 0;
 }
 
-static int qstat_show_job_info()
+static int qstat_show_job_info(u_long32 isXML)
 {
    lList *ilp = NULL, *mlp = NULL;
    lListElem* aep = NULL;
@@ -2228,61 +2375,65 @@ static int qstat_show_job_info()
    what = lWhat("%T(ALL)", SME_Type);
    alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(what);
-   for_each(aep, alp) {
-      if (lGetUlong(aep, AN_status) != STATUS_OK) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
-         schedd_info = false;
-      }
+   if (isXML){
+      xml_qstat_show_job_info(&ilp, &alp);
    }
-   lFreeList(alp);
-   if (!schedd_info) {
-      DEXIT;
-      return 1;
-   }
-
-   sme = lFirst(ilp);
-   if (sme) {
-      /* print global schduling info */
-      first_run = 1;
-      for_each (mes, lGetList(sme, SME_global_message_list)) {
-         if (first_run) {
-            printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
-            first_run = 0;
+   else {
+      for_each(aep, alp) {
+         if (lGetUlong(aep, AN_status) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            schedd_info = false;
          }
-         else
-            printf("%s", "                            ");
-         printf("%s\n", lGetString(mes, MES_message));
       }
-      if (!first_run)
-         printf("\n");
+      lFreeList(alp);
+      if (!schedd_info) {
+         DEXIT;
+         return 1;
+      }
 
-      first_run = 1;
+      sme = lFirst(ilp);
+      if (sme) {
+         /* print global schduling info */
+         first_run = 1;
+         for_each (mes, lGetList(sme, SME_global_message_list)) {
+            if (first_run) {
+               printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
+               first_run = 0;
+            }
+            else
+               printf("%s", "                            ");
+            printf("%s\n", lGetString(mes, MES_message));
+         }
+         if (!first_run)
+            printf("\n");
 
-      mlp = lGetList(sme, SME_message_list);
-      lPSortList (mlp, "I+", MES_message_number);
+         first_run = 1;
 
-      /* 
-       * Remove all jids which have more than one entry for a MES_message_number
-       * After this step the MES_messages are not correct anymore
-       * We do not need this messages for the summary output
-       */
-      {
-         lListElem *flt_msg, *flt_nxt_msg;
-         lList *new_list;
-         lListElem *ref_msg, *ref_jid;
+         mlp = lGetList(sme, SME_message_list);
+         lPSortList (mlp, "I+", MES_message_number);
 
-         new_list = lCreateList("filtered message list", MES_Type);
+         /* 
+          * Remove all jids which have more than one entry for a MES_message_number
+          * After this step the MES_messages are not correct anymore
+          * We do not need this messages for the summary output
+          */
+         {
+            lListElem *flt_msg, *flt_nxt_msg;
+            lList *new_list;
+            lListElem *ref_msg, *ref_jid;
 
-         flt_nxt_msg = lFirst(mlp);
-         while ((flt_msg = flt_nxt_msg)) {
-            lListElem *flt_jid, * flt_nxt_jid;
-            int found_msg, found_jid;
+            new_list = lCreateList("filtered message list", MES_Type);
 
-            flt_nxt_msg = lNext(flt_msg);
-            found_msg = 0;
-            for_each(ref_msg, new_list) {
-               if (lGetUlong(ref_msg, MES_message_number) == 
-                   lGetUlong(flt_msg, MES_message_number)) {
+            flt_nxt_msg = lFirst(mlp);
+            while ((flt_msg = flt_nxt_msg)) {
+               lListElem *flt_jid, * flt_nxt_jid;
+               int found_msg, found_jid;
+
+               flt_nxt_msg = lNext(flt_msg);
+               found_msg = 0;
+               for_each(ref_msg, new_list) {
+                  if (lGetUlong(ref_msg, MES_message_number) == 
+                      lGetUlong(flt_msg, MES_message_number)) {
                  
                   flt_nxt_jid = lFirst(lGetList(flt_msg, MES_job_number_list));
                   while ((flt_jid = flt_nxt_jid)) {
@@ -2330,51 +2481,53 @@ static int qstat_show_job_info()
                if (last_mid == mid && last_jid == jid)
                   skip = 1;
                else if (last_mid != mid)
+                     header = 1;
+               }
+               else {
+                  initialized = 1;
                   header = 1;
             }
-            else {
-               initialized = 1;
-               header = 1;
-            }
 
-            if (strlen(text) >= MAX_LINE_LEN || ids_per_line >= MAX_IDS_PER_LINE || header) {
-               printf("%s", text);
-               text[0] = 0;
-               ids_per_line = 0;
-               first_row = 0;
-            }
+               if (strlen(text) >= MAX_LINE_LEN || ids_per_line >= MAX_IDS_PER_LINE || header) {
+                  printf("%s", text);
+                  text[0] = 0;
+                  ids_per_line = 0;
+                  first_row = 0;
+               }
 
-            if (header) {
-               if (!first_run)
-                  printf("\n\n");
-               else
-                  first_run = 0;
-               printf("%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
-               first_row = 1;
-            }
-
-            if (!skip) {
-               if (ids_per_line == 0)
-                  if (first_row)
-                     strcat(text, "\t");
+               if (header) {
+                  if (!first_run)
+                     printf("\n\n");
                   else
-                     strcat(text, ",\n\t");
-               else
-                  strcat(text, ",\t");
-               sprintf(ltext, u32, jid);
-               strcat(text, ltext);
-               ids_per_line++;
-            }
+                     first_run = 0;
+                  printf("%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
+                  first_row = 1;
+               }
 
-            last_jid = jid;
-            last_mid = mid;
+               if (!skip) {
+                  if (ids_per_line == 0)
+                     if (first_row)
+                        strcat(text, "\t");
+                     else
+                        strcat(text, ",\n\t");
+                  else
+                     strcat(text, ",\t");
+                  sprintf(ltext, u32, jid);
+                  strcat(text, ltext);
+                  ids_per_line++;
+               }
+
+               last_jid = jid;
+               last_mid = mid;
+            }
          }
+         if (text[0] != 0)
+            printf("%s\n", text);
       }
-      if (text[0] != 0)
-         printf("%s\n", text);
    }
 
    lFreeList(ilp);
+   
    DEXIT;
    return 0;
 }

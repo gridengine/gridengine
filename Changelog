@@ -1,3 +1,11 @@
+SG-2004-01-27-0: Enhancem.: - added a XML print facility for CULL lists.
+                            - extended qstat to print XML
+                            - comments, qstat man page update, and qstat
+                              schema files are still missing.
+                 Issue:     634             
+                 Changed:   qstat
+                 Review:    JG
+
 CR-2004-01-27-2: Enhancem.: - modified default communication timeouts
                             - added comments
 

@@ -64,14 +64,14 @@ static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 static int string_cmp(u_long32 type, u_long32 relop, const char *request,
                       const char *offer);
 
-static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, lListElem *queue, lList *centry_list,
+static lList *get_attribute_list_by_names(const lListElem *global, const lListElem *host, const lListElem *queue, const lList *centry_list,
                                         const char** attrnames, int max_names);
 
 static void build_name_filter(const char **filter, lList *list, int t_name, int *pos);
 
 static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value, int t_dominant );
 
-static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, lList *centry_list);
+static lList *get_attribute_list(const lListElem *global, const lListElem *host, const lListElem *queue, const lList *centry_list);
 
 static int max_resources = QS_STATE_FULL;
 
@@ -173,7 +173,7 @@ u_long32 mask
 *******************************************************************************/
 lListElem* 
 get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, 
-              lList *load_attr, const lList *centry_list, lListElem *queue, 
+              lList *load_attr, const lList *centry_list, const lListElem *queue, 
               u_long32 layer, double lc_factor, char *reason, int reason_size) {
    lListElem *actual_el=NULL;
    lListElem *load_el=NULL;
@@ -382,17 +382,15 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
 *     and returns a full CE structure, if the attribut is set in the queue. Otherwise it returns NULL.
 *
 *  INPUTS
-*     lListElem *queue     - queue from which the attribute is extracted 
-*     lList *centry_list   - list of all attributesin the system
-*     const char *attrname - name of the attribute.
+*     lListElem *queue_elem - 
+*     lListElm  *queue      -
+*     const char *attrname  - name of the attribute.
 *  RESULT
-*     static lListelem* - a valid attribute structure or NULL
+*     bool -  
 *
-*  NOTES
-*     ??? 
 *
 *******************************************************************************/
-bool get_queue_resource(lListElem *queue_elem, lListElem *queue, const char *attrname){
+bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const char *attrname){
    double dval=0.0;
    const char *value=NULL;
    char as_str[100];
@@ -687,8 +685,8 @@ lList *centry_list
 int queue_complexes2scheduler(
 lList **new_centry_list,
 lListElem *queue,
-lList *exechost_list,
-lList *centry_list 
+const lList *exechost_list,
+const lList *centry_list 
 ) {
    DENTER(TOP_LAYER, "queue_complexes2scheduler");
 
@@ -729,8 +727,9 @@ lList *centry_list
 *     static lList* - a CULL list of elements or NULL
 *
 *******************************************************************************/
-static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, lListElem *queue, lList *centry_list,
-                                        const char** attrnames, int max_names){
+static lList *get_attribute_list_by_names(const lListElem *global, const lListElem *host, 
+                                          const lListElem *queue, const lList *centry_list,
+                                          const char** attrnames, int max_names){
    lListElem *attr;
    lList * list = NULL;
    int i;
@@ -770,7 +769,7 @@ static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, lL
 *     static lList* - list of attributes or NULL, if no attributes exist.
 *
 *******************************************************************************/
-static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, lList *centry_list){
+static lList *get_attribute_list(const lListElem *global, const lListElem *host, const lListElem *queue, const lList *centry_list){
    int pos = 0;
    const char **filter=NULL; 
    lList *list=NULL;
@@ -1245,7 +1244,7 @@ int force_existence
 *
 *******************************************************************************/
 lListElem *
-get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, 
+get_attribute_by_name(const lListElem* global, const lListElem *host, const lListElem *queue, 
                       const char* attrname, const lList *centry_list, 
                       char * reason, int reason_size){
    lListElem *global_el=NULL;

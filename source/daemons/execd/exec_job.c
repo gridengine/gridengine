@@ -471,7 +471,7 @@ static const char *get_sharedlib_path_name(void) {
    return "LIBPATH";
 #elif defined(HP10) || defined(HP11)
    return "SHLIB_PATH";
-#elif defined(ALPHA) || defined(IRIX6) || defined(IRIX65) || defined(LINUX) || defined(SOLARIS) || defined(FREEBSD)
+#elif defined(ALPHA) || defined(IRIX6) || defined(IRIX65) || defined(LINUX) || defined(SOLARIS) || defined(FREEBSD) || defined(NETBSD)
    return "LD_LIBRARY_PATH";
 #elif defined(DARWIN)
    return "DYLD_LIBRARY_PATH";

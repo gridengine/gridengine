@@ -89,6 +89,11 @@
 #   include <sys/sysctl.h>
 #endif
 
+#if defined(NETBSD)
+#   include <sys/param.h>
+#   include <sys/sysctl.h>
+#endif
+
 #ifdef NPROCS_TEST
 #   include <stdio.h>
 #   include <unistd.h>
@@ -259,6 +264,18 @@ int sge_nprocs()
    }
 #endif
 
+#if defined(NETBSD)
+   int mib[2];
+   size_t nprocs_len;
+
+   nprocs_len = sizeof(nprocs);
+   mib[0]     = CTL_HW;
+   mib[1]     = HW_NCPU;
+
+   if (sysctl(mib, sizeof(mib)/sizeof(int), &nprocs, &nprocs_len, NULL, 0) == -1) {
+     nprocs = -1;
+   }
+#endif
 
    if (nprocs <= 0) {
       nprocs = 1;

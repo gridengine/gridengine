@@ -1,3 +1,6 @@
+CR-2003-06-05-0: Testsuite: fixed bug in throughput test for old scheduler
+                            time info messages without system and user time
+
 JG-2003-06-05-0: Enhancem.: The function returning the CULL object type of 
                             sublists now is generated from the CULL SGE_LIST 
                             definitions.

@@ -945,10 +945,12 @@ proc run_throughput_test {} {
                       return -1
                    }
                    set schedd_time [ lindex $schedd_string 2 ]   ;# this is wall clock time
-                   set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
-                   set schedd_time_length [string length $schedd_time]
-                   incr schedd_time_length -3
-                   set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
+                   if { [string match "*orders*" [lindex $schedd_string 9]] == 0 } {
+                      set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
+                      set schedd_time_length [string length $schedd_time]
+                      incr schedd_time_length -3
+                      set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
+                   }
 
                    
                    for { set s_index 0 } { $s_index < [llength $schedd_string] } { incr s_index 1 } {

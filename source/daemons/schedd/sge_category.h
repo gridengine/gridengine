@@ -49,6 +49,8 @@ void sge_reject_category(lRef cat);
 bool sge_is_job_category_rejected_(lRef cat);
 int sge_is_job_category_rejected(lListElem *job);
 int sge_reset_job_category(void);
+bool sge_is_job_category_message_added(lRef cat);
+void sge_set_job_category_message_added( lRef cat );
 
 void sge_print_categories(void);
 

@@ -1,3 +1,5 @@
+AH-2002-01-08-0: Cleanup:   Removed old and unused starter code in shepherd
+
 JG-2002-01-07-1: Testsuite: handle_vi_edit sometimes "worked too fast" 
                             (modified file had same timestamp as original).
                             Added a sleep of one second.
@@ -97,6 +99,7 @@ EB-2001-12-17-0: Feature:   Compatibility mode (sge_request, SGE_*)
 
 AH-2001-12-14-0: Bugfix:    SGE's hostaliasing can prevent qmaster restart
                  Issue:     #95
+                 Bugtraq:   #4616534
 
 AA-2001-12-14-1: Bugfix:    got a X protocol error, fixed -> AA-2001-12-14-0:
 

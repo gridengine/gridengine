@@ -329,7 +329,7 @@ static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
    if (scriptfile) {
       if (SGE_STAT(scriptfile, &st)) {
          if (!strcmp(name, "extern")) {
-            ERROR((SGE_EVENT, MSG_LS_NOMODTIME_SS, scriptfile,
+            WARNING((SGE_EVENT, MSG_LS_NOMODTIME_SS, scriptfile,
                    strerror(errno)));
          }
          DEXIT;
@@ -968,7 +968,7 @@ int sge_ls_get(lList **lpp)
          if (ls_command && SGE_STAT(ls_command, &st)) {
             if (!strcmp(GNU_LOADSENSOR_NAME, ls_name) ||
                 !strcmp(IDLE_LOADSENSOR_NAME, ls_name)) {
-               ERROR((SGE_EVENT, MSG_LS_NOMODTIME_SS, ls_command,
+               WARNING((SGE_EVENT, MSG_LS_NOMODTIME_SS, ls_command,
                       strerror(errno)));
             }
             continue;

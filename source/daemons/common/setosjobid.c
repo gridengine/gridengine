@@ -120,7 +120,7 @@ dispset2_t attr
 
 #endif 
 
-void setosjobid(starter_t *starter, pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
+void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
 {
    FILE *fp=NULL;
    char err_str[2*SGE_PATH_MAX+128];
@@ -145,7 +145,6 @@ void setosjobid(starter_t *starter, pid_t sid, gid_t *add_grp_id_ptr, struct pas
    {
       char osjobid[100];
 
-      if (!starter) 
          if (!(fp = fopen("osjobid", "w")))
             shepherd_error("can't open \"osjobid\" file");
 
@@ -341,14 +340,10 @@ void setosjobid(starter_t *starter, pid_t sid, gid_t *add_grp_id_ptr, struct pas
       else /* not running as super user --> we want a default os-jobid */
          sprintf(osjobid, "0");
       
-      if (starter)
-         sge_setenv("OSJOBID", osjobid);
-      else {
-         if(fprintf(fp, "%s\n", osjobid) < 0)
-            shepherd_trace("error writing osjobid file");
-            
-         fclose(fp); /* Close os-jobid file */   
-      }
+      if(fprintf(fp, "%s\n", osjobid) < 0)
+         shepherd_trace("error writing osjobid file");
+         
+      fclose(fp); /* Close os-jobid file */   
    }
 #  endif
    return;

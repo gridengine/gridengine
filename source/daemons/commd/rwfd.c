@@ -887,8 +887,8 @@ int commdport
    if (commp || !strcasecmp(get_mainname(localhost), get_mainname(mp->to.host))) {
       /* deliver direct */
       if (commp && commp->w_fd != -1) {
-         DEBUG((SGE_EVENT, "receiver commproc is waiting for message (w_fd=%d, w_name=%s, w_id=%d, w_host=%s, w_tag=%d)",
-               commp->w_fd, commp->w_name, commp->w_id,
+         DEBUG((SGE_EVENT, "receiver commproc is waiting for message (mid=%d, w_fd=%d, w_name=%s, w_id=%d, w_host=%s, w_tag=%d)",
+               (int)mp->mid, commp->w_fd, commp->w_name, commp->w_id,
                commp->w_host ? commp->w_host->mainname : "any",
                commp->w_tag));
       }

@@ -100,7 +100,6 @@ extern char shepherd_job_dir[];
  It is also used to start the external starter command .. 
  ************************************************************************/
 void son(
-starter_t *starter,
 char *childname,
 char *script_file,
 int truncate_stderr_out 
@@ -129,27 +128,8 @@ int truncate_stderr_out
    gid_t gid;
    char *tmp_str;
    char *starter_method;
-   
-   if (starter) {
-      close(starter->pipefds[0][1]); 
-      close(starter->pipefds[1][0]);
-      close(starter->pipefds[2][0]);
-      close(0);
-      close(1);
-      close(2);
-      dup(starter->pipefds[0][0]);
-      dup(starter->pipefds[1][1]);
-      dup(starter->pipefds[2][1]);
-   }
 
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
-
-#if 0
-   if (getenv("_MARK1"))
-      goto MARK1;
-   if (getenv("_MARK2"))
-      goto MARK2;
-#endif
 
    /* From here only the son --------------------------------------*/
    if (!script_file)
@@ -272,7 +252,7 @@ int truncate_stderr_out
    if (!strcmp(childname, "job")) {
       char *write_osjob_id = get_conf_val("write_osjob_id");
       if(write_osjob_id != NULL && atoi(write_osjob_id) != 0) {
-         setosjobid(starter, newpgrp, &add_grp_id, pw);
+         setosjobid(newpgrp, &add_grp_id, pw);
       }   
    }
    
@@ -331,7 +311,7 @@ int truncate_stderr_out
    
    {
       int fdmax = sysconf(_SC_OPEN_MAX);
-      for (i = starter?3:0; i < fdmax; i++)
+      for (i = 0; i < fdmax; i++)
          close(i);
    }
    foreground = 0;
@@ -415,35 +395,27 @@ int truncate_stderr_out
    if (is_interactive || is_qlogin)
       shell_start_mode = "unix_behaviour";
 
-   if (!starter) {
-      in = 0;
-      if (!strcasecmp(shell_start_mode, "script_from_stdin")) {
-         in = open(script_file, O_RDONLY);
-         if (in == -1) {
-            sprintf(err_str,  "error: can't open %s script file \"%s\": %s", 
-                  childname, script_file, strerror(errno));
-            shepherd_error(err_str);
-         }
-      } 
-      else {
-         /* need to open a file as fd0 */
-         in = open("/dev/null", O_RDONLY); 
-
-         if (in == -1) {
-            shepherd_state = SSTATE_OPEN_OUTPUT;
-            shepherd_error("error: can't open /dev/null as dummy input file");
-         }
+   in = 0;
+   if (!strcasecmp(shell_start_mode, "script_from_stdin")) {
+      in = open(script_file, O_RDONLY);
+      if (in == -1) {
+         sprintf(err_str,  "error: can't open %s script file \"%s\": %s", 
+               childname, script_file, strerror(errno));
+         shepherd_error(err_str);
       }
+   } 
+   else {
+      /* need to open a file as fd0 */
+      in = open("/dev/null", O_RDONLY); 
 
-      if (in != 0)
-         shepherd_error("error: fd for in is not 0");
+      if (in == -1) {
+         shepherd_state = SSTATE_OPEN_OUTPUT;
+         shepherd_error("error: can't open /dev/null as dummy input file");
+      }
    }
 
-   if (starter) {
-      /* forward information necessary to do the 
-         missing part somehow to our starter */
-      goto DO_EXEC;
-   }
+   if (in != 0)
+      shepherd_error("error: fd for in is not 0");
 
    if(!qlogin_starter) {
       /* -cwd or from pw->pw_dir */
@@ -454,46 +426,44 @@ int truncate_stderr_out
       }
    }
 
-   if (!starter) {
-      /* open stdout - not for interactive jobs */
-      if (!is_interactive && !is_qlogin) {
-         if (truncate_stderr_out)
-            out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
+   /* open stdout - not for interactive jobs */
+   if (!is_interactive && !is_qlogin) {
+      if (truncate_stderr_out)
+         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
+      else
+         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      if (out==-1) {
+         sprintf(err_str, "error: can't open output file \"%s\": %s", 
+                 stdout_path, strerror(errno));
+         shepherd_state = SSTATE_OPEN_OUTPUT;
+         shepherd_error(err_str);
+      }
+      if (out!=1)
+         shepherd_error("error: fd out is not 1");
+
+      /* open stderr */
+      if (merge_stderr) {
+         shepherd_trace("using stdout as stderr");
+         dup2(1, 2);
+      }
+      else {
+         if (truncate_stderr_out) 
+            err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
          else
-            out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-         if (out==-1) {
+            err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+         if (err == -1) {
             sprintf(err_str, "error: can't open output file \"%s\": %s", 
-                    stdout_path, strerror(errno));
+                    stderr_path, strerror(errno));
             shepherd_state = SSTATE_OPEN_OUTPUT;
             shepherd_error(err_str);
          }
-         if (out!=1)
-            shepherd_error("error: fd out is not 1");
 
-         /* open stderr */
-         if (merge_stderr) {
-            shepherd_trace("using stdout as stderr");
-            dup2(1, 2);
+#ifndef __INSURE__
+         if (err!=2) {
+            shepherd_trace("unexpected fd");
+            shepherd_error("error: fd err is not 2");
          }
-         else {
-            if (truncate_stderr_out) 
-               err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
-            else
-               err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-            if (err == -1) {
-               sprintf(err_str, "error: can't open output file \"%s\": %s", 
-                       stderr_path, strerror(errno));
-               shepherd_state = SSTATE_OPEN_OUTPUT;
-               shepherd_error(err_str);
-            }
-
-   #ifndef __INSURE__
-            if (err!=2) {
-               shepherd_trace("unexpected fd");
-               shepherd_error("error: fd err is not 2");
-            }
-   #endif
-         }
+#endif
       }
    }
 
@@ -501,7 +471,7 @@ int truncate_stderr_out
     * Use starter_method if it is supplied
     */
 
-   if (!starter && !is_interactive && !is_qlogin && !qlogin_starter &&
+   if (!is_interactive && !is_qlogin && !qlogin_starter &&
        !strcmp(childname, "job") &&
        (starter_method = get_conf_val("starter_method")) &&
        strcasecmp(starter_method, "none")) {
@@ -620,8 +590,7 @@ int truncate_stderr_out
       }
    }
 
-DO_EXEC:
-   start_command(starter, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title);
+   start_command(shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title);
    return;
 }
 
@@ -767,7 +736,6 @@ static char **read_job_args(char **preargs, int extra_args)
  * set signal mask that shpher can handle signals from execd
  *--------------------------------------------------------------------*/
 void start_command(
-starter_t *starter,
 char *shell_path,
 char *script_file,
 char *argv0,
@@ -785,11 +753,7 @@ char *str_title
    char **pre_args_ptr;
    char err_str[2048];
 
-   if (starter) {
-      pre_args[0] = starter->cmd;
-      pre_args_ptr = &pre_args[1];
-   } else 
-      pre_args_ptr = &pre_args[0];
+   pre_args_ptr = &pre_args[0];
 
    /*
    ** prepare job arguments
@@ -867,7 +831,7 @@ char *str_title
    } else {
       /* build trace string */
       pc = err_str;
-      sprintf(pc, "execvp(%s,", starter?(starter->cmd):((pre_args_ptr[0] == argv0) ? shell_path : script_file));
+      sprintf(pc, "execvp(%s,", (pre_args_ptr[0] == argv0) ? shell_path : script_file);
       pc += strlen(pc);
       for (pstr = args; pstr && *pstr; pstr++) {
       
@@ -886,7 +850,7 @@ char *str_title
       sprintf(pc, ")");
       shepherd_trace(err_str);
 
-      execvp(starter?(starter->cmd):((pre_args_ptr[0] == argv0) ? shell_path : script_file), args);
+      execvp((pre_args_ptr[0] == argv0) ? shell_path : script_file, args);
 
       /* Aaaah - execvp() failed */
       {

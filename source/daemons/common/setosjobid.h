@@ -35,8 +35,7 @@
 #include <pwd.h>
 
 #include "basis_types.h"
-#include "starter.h" 
 
-void setosjobid(starter_t *starter, pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw);
+void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw);
 
 #endif /* __SETOSJOBID_H */

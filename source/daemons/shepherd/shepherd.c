@@ -176,7 +176,7 @@ int main(int argc, char **argv);
 static int start_child(char *childname, char *script_file, pid_t *pidp, int timeout, int ckpt_type);
 static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, pid_t ctrl_pid[3]);
 static int check_ckpttype(void);
-static int wait_my_child(starter_t *, int pid, int ckpt_pid, int ckpt_type, struct rusage *rusage, int timeout, int ckpt_interval, char *childname);
+static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, struct rusage *rusage, int timeout, int ckpt_interval, char *childname);
 static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
 static void set_ckpt_restart_command(char *, int, char *, int);
 static void handle_job_pid(int, int, int *);
@@ -839,9 +839,6 @@ pid_t *pidp,
 int timeout,
 int ckpt_type 
 ) {
-   starter_t *starter = NULL;
-   char *s;
-
    /* don't know what behaviour is expected by customers */
    static int truncate_stderr_out = 0;
    static int truncate_pe_stderr_out = 0;
@@ -877,18 +874,6 @@ int ckpt_type
       ckpt_type = 0;
 
 
-   /* for job use starter if configured */
-   if (!strcmp(childname, "job")) {
-      s = search_conf_val("starter"); 
-      if (s && !strcasecmp("none", s))
-         s = NULL;
-      if (s) {
-         starter = (starter_t*)malloc(sizeof(starter_t));
-         memset(starter, 0, sizeof(starter_t));
-         starter->cmd = s;
-      }
-   }
-
    if ((ckpt_type & CKPT_REST_KERNEL) && !strcmp(childname, "job")) {
       set_ckpt_restart_command(childname, ckpt_type,
                                rest_command, sizeof(rest_command) -1);
@@ -918,44 +903,14 @@ int ckpt_type
       pid = start_async_command("restart", rest_command);
    }
    else {
-      if (starter) {
-         int i;
-         /* open pipes - close on failure */
-         for (i=0; i<3; i++)
-            if (pipe(starter->pipefds[i])) {
-               while (--i >= 0) {
-                  close(starter->pipefds[i][0]);
-                  close(starter->pipefds[i][1]);
-               }
-               return -1;
-            }
-      }
 
       pid = fork();
-      if (pid==0) {
-         son(starter, childname, script_file, *truncate_flag);
-      }
+      if (pid==0)
+         son(childname, script_file, *truncate_flag);
    }
    if (pid == -1) {
-      if (starter) {
-         int i;
-         for (i=0; i<3; i++) {
-            close(starter->pipefds[i][0]);
-            close(starter->pipefds[i][1]);
-         }
-      }
       sprintf(err_str, "can't fork \"%s\"", childname);
       shepherd_error(err_str);
-   }
-
-   if (starter) {
-      starter->fp_in  = fdopen(starter->pipefds[0][1], "a");
-      starter->fp_out = fdopen(starter->pipefds[1][0], "r");
-      starter->fp_err = fdopen(starter->pipefds[2][0], "r");
-      close(starter->pipefds[0][0]);
-      close(starter->pipefds[1][1]);
-      close(starter->pipefds[2][1]);
-/*       fcntl(fileno(starter->fp_out), F_SETFL, O_NONBLOCK); */
    }
 
    sprintf(err_str, "forked \"%s\" with pid %d", childname, pid);
@@ -1003,7 +958,7 @@ int ckpt_type
    shepherd_trace(err_str);
       
    /* Wait until child finishes ----------------------------------------*/         
-   status = wait_my_child(starter, pid, ckpt_pid, ckpt_type, 
+   status = wait_my_child(pid, ckpt_pid, ckpt_type, 
                           &rusage, timeout, ckpt_interval, childname);
    alarm(0);
 
@@ -1106,7 +1061,7 @@ int ckpt_type
       return exit_status;
    }
 
-   if (!starter && !strcmp("job", childname)) {
+   if (!strcmp("job", childname)) {
       if (search_conf_val("rsh_daemon") != NULL) {
          exit_status = get_exit_code_of_qrsh_starter();
       }  
@@ -2134,7 +2089,6 @@ static int check_ckpttype()
 
 /*------------------------------------------------------------------------*/
 static int wait_my_child(
-starter_t *starter,
 int pid,                   /* pid of job */
 int ckpt_pid,              /* pid of restarted job or same as pid */
 int ckpt_type,             /* type of checkpointing */
@@ -2152,16 +2106,6 @@ char *childname            /* "job", "pe_start", ...     */
    int postponed_signal = 0;
    pid_t ctrl_pid[3];
 
-   /* these usage values are interfaced */
-   struct {
-      char *start_time;
-      char *end_time;
-      char *ru_wallclock;
-      char *ru_utime;
-      char *ru_stime;
-      char *exit_status;
-   } i_ru;
-
 #if defined(HP10) || defined(HP11)
    struct rusage rusage_hp10;
 #endif
@@ -2177,9 +2121,6 @@ char *childname            /* "job", "pe_start", ...     */
    job_status = 0;
    for (i=0; i<3; i++)
       ctrl_pid[i] = -999;
-
-   if (starter)
-      memset(&i_ru, 0, sizeof(i_ru));
 
    rest_ckpt_interval = ckpt_interval;
 
@@ -2203,60 +2144,6 @@ char *childname            /* "job", "pe_start", ...     */
    do {
       if (ckpt_interval && rest_ckpt_interval)
          alarm(rest_ckpt_interval);
-
-      if (starter) {
-         fd_set fds;
-         int ret;
-
-         int fd = fileno(starter->fp_out);
-
-         FD_ZERO(&fds);
-         FD_SET(fd, &fds);
-
-         while ((ret=select(fd+1, &fds, NULL, NULL, NULL))>0 ) {
-            char starter_out[10000]; char *name, *value;
-         
-            /* read from starter output to get ... */
-            if (!fgets(starter_out, sizeof(starter_out)-1, starter->fp_out)) {
-               if (!feof(starter->fp_out)) 
-                  continue;
-               else 
-                  break;
-            }
-
-            name = strtok(starter_out, "=");
-            value = strtok(NULL, "\n");
-
-            sprintf(err_str, "%s = %s", 
-                  name?name:"<null>", 
-                  value?value:"<null>");
-            shepherd_trace(err_str);
-
-            /* ... osjobid to be used */
-            if (!strcmp(name, "osjobid")) {
-               /* this can be the job ID of a foreign queueing system */
-               if (!(fp = fopen("osjobid", "w")))
-                  shepherd_error("can't open \"osjobid\" file");
-               fprintf(fp, "%s\n", value);
-               fclose(fp);
-            } else if (!strcmp(name, "state")) {
-               /* ... not implemented ... */ 
-            } else if (!strcmp(name, "exit_status")) {
-               i_ru.exit_status = strdup(value);
-            } else if (!strcmp(name, "signal")) {
-
-            } else if (!strcmp(name, "start_time"))
-               i_ru.start_time = strdup(value);
-            else if (!strcmp(name, "end_time"))
-               i_ru.end_time = strdup(value);
-            else if (!strcmp(name, "ru_wallclock"))
-               i_ru.ru_wallclock = strdup(value);
-            else if (!strcmp(name, "ru_utime"))
-               i_ru.ru_utime = strdup(value);
-            else if (!strcmp(name, "ru_stime"))
-               i_ru.ru_stime = strdup(value);
-         }
-      }
 
 #if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX) || defined(NECSX4) || defined(NECSX5)
       npid = waitpid(-1, &status, 0);
@@ -2404,45 +2291,18 @@ char *childname            /* "job", "pe_start", ...     */
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0));
 
-   if (starter) {
-      memset(rusage, 0, sizeof(struct rusage));
-     
-      /******* write usage to file "usage" ************/
-      fp = fopen("usage", "w");
-      if (!fp) {
-         sprintf(err_str, "error: can't open \"usage\" file: %s", 
-            strerror(errno));
-         shepherd_error(err_str);
-      } 
-      
-      shepherd_trace("writing interfaced usage to \"usage\" file");
-
-      fprintf(fp, "exit_status=%s\n", i_ru.exit_status);
-
-#define WRITE_IRU(fp, name, value) \
-      if (value) fprintf(fp, name "=%s\n", value)
-
-      WRITE_IRU(fp, "start_time", i_ru.start_time);
-      WRITE_IRU(fp, "end_time", i_ru.end_time);
-      WRITE_IRU(fp, "ru_wallclock", i_ru.ru_wallclock);
-      WRITE_IRU(fp, "ru_utime", i_ru.ru_utime);
-      WRITE_IRU(fp, "ru_stime", i_ru.ru_stime);
-
-      fclose(fp);
-   } else {
 #if defined(HPUX) || defined(CRAY)
-      times(&t2);
+   times(&t2);
 
-      rusage->ru_utime.tv_sec  = (t2.tms_cutime - t1.tms_cutime) / sysconf(_SC_CLK_TCK);
-      rusage->ru_stime.tv_sec  = (t2.tms_cstime - t1.tms_cstime) / sysconf(_SC_CLK_TCK);
-      
+   rusage->ru_utime.tv_sec  = (t2.tms_cutime - t1.tms_cutime) / sysconf(_SC_CLK_TCK);
+   rusage->ru_stime.tv_sec  = (t2.tms_cstime - t1.tms_cstime) / sysconf(_SC_CLK_TCK);
+   
 #endif  /* HPUX || CRAY */
 
 #if defined(HP10) || defined(HP11)
-      rusage->ru_utime.tv_sec = rusage_hp10.ru_utime.tv_sec;
-      rusage->ru_stime.tv_sec = rusage_hp10.ru_stime.tv_sec;
+   rusage->ru_utime.tv_sec = rusage_hp10.ru_utime.tv_sec;
+   rusage->ru_stime.tv_sec = rusage_hp10.ru_stime.tv_sec;
 #endif   
-   }
 
    return job_status;
 }
@@ -2652,7 +2512,7 @@ static int start_async_command(char *descr, char *cmd)
       }   
 
       sge_set_def_sig_mask(0, NULL);
-      start_command(NULL, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
+      start_command(get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
       return 0;   
    }
 

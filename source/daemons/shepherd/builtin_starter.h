@@ -32,11 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* starter */
-#include "starter.h"
 
-void son(starter_t *starter, char *, char *, int);
+void son(char *, char *, int);
 int set_environment(void);
-void start_command(starter_t *starter, char *, char *, char *, char *, int, int, int, int, char *);
+void start_command(char *, char *, char *, char *, int, int, int, int, char *);
 
 #endif /* __BUILTIN_STARTER_H */

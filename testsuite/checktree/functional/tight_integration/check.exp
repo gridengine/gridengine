@@ -206,12 +206,15 @@ proc tight_integration_setup  {} {
    set pe(allocation_rule)    "\$round_robin"
    set pe(control_slaves)     TRUE
    set pe(job_is_first_task)  FALSE
-
    add_pe pe
-   set queue_conf(pe_list) tight
+
+   # create a queue
    set queue_conf(load_thresholds) "np_load_avg=11"
    set queue_conf(slots) 10 
-   add_queue tight.q @allhosts queue_conf
+   add_queue tight.q "@allhosts" queue_conf
+
+   # assign queue with pe
+   assign_queues_with_pe_object tight.q "" tight
 
    tight_integration_parse_execd_messages startup
 
@@ -238,9 +241,9 @@ proc tight_integration_cleanup  {} {
 
    tight_integration_check_messages startup cleanup
    
-
-   del_queue tight.q "" 0 1
+   unassign_queues_with_pe_object tight
    del_pe tight
+   del_queue tight.q "" 0 1
 
    set_error 0 "ok"
 }

@@ -307,15 +307,18 @@ if { $minor_level != 2 } {
       }
       "4" {
          # enable queues after half of the jobs have been submitted
-         # do no qstat's
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
          set throughput_subdir        "mixed_requests"
          set do_requests              1
       }
       "5" {
+         # we have problems attatching pe to queue in 5.3 systems
+         # (too long line for the pe's queue_list)
+         if { $ts_config(gridengine_version) == 53 } {
+            return -1
+         }
          # enable queues after half of the jobs have been submitted
-         # do no qstat's
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
          set throughput_subdir        "mixed_requests_parallel"
@@ -325,7 +328,6 @@ if { $minor_level != 2 } {
       }
       "6" {
          # enable queues after half of the jobs have been submitted
-         # do no qstat's
          set array_size $level_array_size
          set job_count                [expr $job_count / $array_size]
          set end_job_count            $job_count

@@ -682,7 +682,11 @@ void qevent_testsuite_mode(void)
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
    where = lFreeWhere(where);
    what = lFreeWhat(what);
-   
+ 
+   /* we want a 5 second event delivery interval */
+   ec_set_edtime(5);
+
+   /* and have our events flushed immediately */
    ec_set_flush(sgeE_JATASK_MOD, true, 0);
    ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
    ec_set_flush(sgeE_JOB_ADD, true, 0);

@@ -295,6 +295,11 @@ u_long32 flags
          !strcmp(name, "qmaster_params") || 
          !strcmp(name, "execd_params") || 
          !strcmp(name, "schedd_params") ||
+         !strcmp(name, "qlogin_command") ||
+         !strcmp(name, "rlogin_command") ||
+         !strcmp(name, "rsh_command") ||
+         !strcmp(name, "qlogin_daemon") ||
+         !strcmp(name, "rlogin_daemon") ||
          !strcmp(name, "rsh_daemon")) {
          if (!(value = strtok(NULL, "\t\n"))) {
             /* return line if value is empty */

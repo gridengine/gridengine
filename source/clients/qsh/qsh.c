@@ -748,11 +748,15 @@ static int start_client_program(const char *client_name,
          }
       }
    } else {
-      char* args[11]; 
+      char* args[20]; 
       int i = 0;
       char shellpath[SGE_PATH_MAX];
+      char *command = strdup(client_name); /* needn't be freed, as we exec */
 
-      args[i++] = (char *)client_name;
+      args[i++] = strtok(command, " ");
+      while((args[i] = strtok(NULL, " ")) != NULL) {
+         i++;
+      }
 
       if(is_rsh || is_rlogin) {
          sge_set_def_sig_mask(0, NULL);

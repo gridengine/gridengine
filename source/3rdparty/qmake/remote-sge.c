@@ -2263,13 +2263,16 @@ static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump
    *signal_ptr    = 0;
    *coredump_ptr  = 0;
 
+   /* suppress misleading error messages */
+   errno = 0;
+
    /* get info about dead children */
    child_pid = waitpid(-1, &status, block ? 0 : WNOHANG);
 
    /* waitpid failed? */
    if(child_pid <= 0) {
       if(be_verbose) {
-         fprintf(stderr, "waiting for child failed: %s\n", strerror(errno));
+         fprintf(stderr, "waiting for child failed: %s\n", errno == 0 ? "timeout" : strerror(errno));
       }   
       return child_pid;
    }

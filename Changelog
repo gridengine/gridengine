@@ -1,3 +1,7 @@
+JG-2002-04-22-1: Enhancem.  Improved verbose output in qmake.
+                            Start tasks on localhost also per qrsh - slower,
+                            but tasks are identifiable in accounting.
+
 JG-2002-04-22-0: Bugfix:    If more then 1 task of a parallel job was started
                             in a queue, retrieving exit code of a task and
                             signaling a task was unreliable as the TASK_ID

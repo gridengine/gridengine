@@ -1,3 +1,6 @@
+CR-2005-04-06-3: Testsuite: fixed testsuite test bugs/issuezilla/1096 for
+                            BDB RPC spooling 
+
 CR-2005-04-06-2: Testsuite: fixed testsuite test bugs/issuezilla/1334
 
 CR-2005-04-06-1: Testsuite: rlogin timeout problem in open_remote_spawn_process()

@@ -81,11 +81,7 @@ proc init_level {} {
 
 
 proc issue_1096_shutdown_master {} {
-   global ts_config
-
-   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
-   after 5000
-
+   shutdown_core_system
    set_error 0 "ok"
 }
 proc issue_1096_run  {} {
@@ -108,7 +104,7 @@ proc issue_1096_run  {} {
       puts $CHECK_OUTPUT "host $act_host: qmaster binary: \"$qmaster_binary\""
       set envlist(SGE_QMASTER_PORT) $ts_config(reserved_port)
       set envlist(SGE_TEST_SOCKET_BIND) "1"
-      set output [start_remote_prog $act_host "root" $qmaster_binary "" prg_exit_state 60 0 "envlist" 1 0 1]
+      set output [start_remote_prog $act_host "root" $qmaster_binary "\nsleep 2" prg_exit_state 60 0 "envlist" 1 0 1]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "exit state: $prg_exit_state"
 
@@ -139,8 +135,7 @@ proc issue_1096_run  {} {
 
 
 proc issue_1096_cleanup {} {
-   global ts_config 
-   startup_qmaster
+   startup_core_system
    set_error 0 "ok"
 }
 

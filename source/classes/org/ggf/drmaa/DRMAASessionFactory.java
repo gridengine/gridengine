@@ -39,7 +39,7 @@ import java.io.*;
 import java.util.Properties;
 
 /** This class is used to retrieve a DRMAASession object tailored to the
- * DRM in use.  The factory will use the com.sun.grid.drmaa.DRMAASessionFactory
+ * DRM in use.  The factory will use the org.ggf.drmaa.DRMAASessionFactory
  * property to discover the DRM-specific DRMAASession implementation class.<BR>
  * An example DRMAA interaction would be:<BR>
  * <P><CODE>
@@ -75,7 +75,7 @@ public abstract class DRMAASessionFactory {
 	/** The name of the property used to find the DRMAASession implementation
 	 * class name.
 	 */	
-	private static final String SESSION_PROPERTY = "com.sun.grid.drmaa.DRMAASessionFactory";
+	private static final String SESSION_PROPERTY = "org.ggf.drmaa.DRMAASessionFactory";
 	
 	/** Creates a new instance of DRMAASessionFactory */
 	protected DRMAASessionFactory () {

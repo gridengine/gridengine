@@ -386,8 +386,18 @@ enum {
    ST_BACKFILL_FINISH_ORDER,
       /* ensure three jobs finish in the order foreseen for backfilling */
             
-   ST_WILD_PARALLEL
+   ST_WILD_PARALLEL,
       /* ensure 7 jobs finish in the order foreseen for wildcard parallel jobs */
+   
+   ST_UNSUPPORTED_ATTR,
+      /* - drmaa_init() is called
+         - drmaa_set_attribute() is called for an invalid attribute
+         - then drmaa_exit() is called */
+   
+   ST_UNSUPPORTED_VATTR
+      /* - drmaa_init() is called
+         - drmaa_set_vector_attribute() is called for an invalid attribute
+         - then drmaa_exit() is called */
 };
 
 const struct test_name2number_map {
@@ -463,6 +473,8 @@ const struct test_name2number_map {
    { "ST_RESERVATION_FINISH_ORDER",              ST_RESERVATION_FINISH_ORDER,                4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_BACKFILL_FINISH_ORDER",                 ST_BACKFILL_FINISH_ORDER,                   4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_WILD_PARALLEL",                         ST_WILD_PARALLEL,                           4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
+   { "ST_UNSUPPORTED_ATTR",                      ST_UNSUPPORTED_ATTR,                        0, "" },
+   { "ST_UNSUPPORTED_VATTR",                     ST_UNSUPPORTED_VATTR,                       0, "" },
 
    { NULL,                                       0 }
 };
@@ -2406,7 +2418,9 @@ static int test(int *argc, char **argv[], int parse_args)
           */
          
          for (i=0; i<255; i++) {
-            int stat, exit_status, exited;
+            int stat = 0;
+            int exit_status = 0;
+            int exited = 0;
 
             do {
                drmaa_errno = drmaa_wait(all_jobids[i], jobid, sizeof(jobid)-1, 
@@ -4121,6 +4135,42 @@ static int test(int *argc, char **argv[], int parse_args)
       }
       break;
 
+   case ST_UNSUPPORTED_ATTR:
+   case ST_UNSUPPORTED_VATTR:
+      {
+         drmaa_job_template_t *jt = NULL;
+         const char *values[2];
+         
+         values[0] = "blah";
+         values[1] = NULL;
+         
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         
+         /* submit a working job from a local directory to the execution host */
+         drmaa_allocate_job_template(&jt, NULL, 0);
+         
+         if (test_case == ST_UNSUPPORTED_ATTR) {
+            drmaa_errno = drmaa_set_attribute(jt, "blah", "blah", diagnosis, sizeof(diagnosis)-1);
+         }
+         else {
+            drmaa_errno = drmaa_set_vector_attribute(jt, "blah", (const char**)values, diagnosis, sizeof(diagnosis)-1);
+         }
+
+         if (drmaa_errno != DRMAA_ERRNO_INVALID_ARGUMENT) {
+            fprintf(stderr, "drmaa_set_attribute()/drmaa_set_vector_attribute() allowed invalid attribute\n");
+            return 1;
+         }             
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
    default:
       break;
    }
@@ -4198,10 +4248,19 @@ static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int 
       ret = drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
    }
 
+#if 0
+   if (!as_bulk_job) {
+      ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID", NULL, 0);
+   }
+   else {
+      ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB.$JOB_ID."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+   }
+#else
    if (ret == DRMAA_ERRNO_SUCCESS) {
       /* no output please */
       ret = drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
    }
+#endif
 
    if (ret == DRMAA_ERRNO_SUCCESS) {   
       return jt;

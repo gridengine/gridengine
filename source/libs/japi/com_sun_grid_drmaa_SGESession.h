@@ -44,6 +44,22 @@ extern "C" {
 #define com_sun_grid_drmaa_SGESession_FAILED 64L
 /*
  * Class:     com_sun_grid_drmaa_SGESession
+ * Method:    nativeControl
+ * Signature: (Ljava/lang/String;I)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeControl
+  (JNIEnv *, jobject, jstring, jint);
+
+/*
+ * Class:     com_sun_grid_drmaa_SGESession
+ * Method:    nativeExit
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeExit
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_sun_grid_drmaa_SGESession
  * Method:    nativeGetContact
  * Signature: ()Ljava/lang/String;
  */
@@ -117,50 +133,42 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_drmaa_SGESession_nativeAllocateJobTempl
 /*
  * Class:     com_sun_grid_drmaa_SGESession
  * Method:    nativeSetAttributeValue
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeSetAttributeValue
-  (JNIEnv *, jobject, jstring, jstring);
+  (JNIEnv *, jobject, jint, jstring, jstring);
 
 /*
  * Class:     com_sun_grid_drmaa_SGESession
  * Method:    nativeSetAttributeValues
- * Signature: (Ljava/lang/String;[Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;[Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeSetAttributeValues
-  (JNIEnv *, jobject, jstring, jobjectArray);
-
-/*
- * Class:     com_sun_grid_drmaa_SGESession
- * Method:    nativeGetSignalName
- * Signature: (I)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetSignalName
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jint, jstring, jobjectArray);
 
 /*
  * Class:     com_sun_grid_drmaa_SGESession
  * Method:    nativeGetAttributeNames
- * Signature: ()[Ljava/lang/String;
+ * Signature: (I)[Ljava/lang/String;
  */
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttributeNames
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     com_sun_grid_drmaa_SGESession
  * Method:    nativeGetAttribute
- * Signature: (Ljava/lang/String;)[Ljava/lang/String;
+ * Signature: (ILjava/lang/String;)[Ljava/lang/String;
  */
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeGetAttribute
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jint, jstring);
 
 /*
  * Class:     com_sun_grid_drmaa_SGESession
  * Method:    nativeDeleteJobTemplate
- * Signature: (Lorg/ggf/drmaa/JobTemplate;)V
+ * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SGESession_nativeDeleteJobTemplate
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

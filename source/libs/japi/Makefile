@@ -34,17 +34,22 @@
 #___INFO__MARK_END__
 
 JAPILIB_DIR   = $(SDIR)/libs/japi
+CLASSES_DIR   = $(SDIR)/classes
 
-JAPILIB 	     = libjapi$(LIBEXT)
+JAPILIB 	    = libjapi$(LIBEXT)
 JAPILIB_SRC   = japi.c
 JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB      = libdrmaa$(SHAREDEXT)
-DRMAALIB_SRC  = drmaa.c 
+DRMAALIB_SRC  = drmaa.c
 DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCLIB_OBJS) \
                 $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
                 $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
-                $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS) 
+                $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
+
+JDRMAALIB     = $(DRMAALIB)
+JDRMAALIB_SRC = com_sun_grid_drmaa_SGESession.c
+JDRMAALIB_OBJS = $(JDRMAALIB_SRC:.c=.o) $(DRMAALIB_OBJS)
 
 JAPI_ALL      = japilib drmaalib test_drmaa example
 
@@ -100,6 +105,15 @@ libdrmaa$(SHAREDEXT): $(DRMAALIB_OBJS)
 include $(JAPILIB_DIR)/japi_dependencies
 
 ###############################################################################
+# rules to build DRMAA Java binding
+###############################################################################
+jdrmaa: $(JDRMAALIB_OBJS) $(DRMAALIB) $(DRMAALIB_OBJS)
+	@rm $(DRMAALIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT) $(JDRMAALIB_OBJS) $(DRMAALIB_OBJS) $(SLIBS) $(LIBS) -lc
+	$(JAVA_HOME)/bin/javac -classpath $(CLASSES_DIR) -d $(CLASSES_DIR) $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java
+	@cd $(CLASSES_DIR); $(JAVA_HOME)/bin/jar cvf $(SOURCE)/$(COMPILE_ARCH)/drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class; cd $(SOURCE)/$(COMPILE_ARCH)
+
+###############################################################################
 # rules to build object codes
 ###############################################################################
 drmaa.o: $(JAPILIB_DIR)/drmaa.c
@@ -107,6 +121,9 @@ drmaa.o: $(JAPILIB_DIR)/drmaa.c
 
 japi.o: $(JAPILIB_DIR)/japi.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
+
+com_sun_grid_drmaa_SGESession.o: $(JAPILIB_DIR)/com_sun_grid_drmaa_SGESession.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/com_sun_grid_drmaa_SGESession.c
 
 #---------------------------------------------------------------------
 

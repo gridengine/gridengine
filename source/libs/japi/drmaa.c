@@ -2549,16 +2549,20 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    } else {
       const char *path = NULL;
 
+/* I've decided that rather than working magic behind the scenes, I will do this
+ * as simply as possible and just document the expected behavior. */
+#if 0
       /* BUGFIX: #658
        * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
        * If another option level disables binary mode, I have to remove this
        * option.  This means that "-b n" trumps both the default "-b y" and the
        * default "-shell n".
-       * Technically, this is no necessary since -shell is ignored if -b y is
+       * Technically, this is not necessary since -shell is ignored if -b y is
        * not set, but if -b n is set, and then overridden with -b y, I don't
        * want the -shell n to still be hanging around. */
       ep = lGetElemStr(opts_default, SPA_switch, "-shell");
       lRemoveElem(opts_default, ep);
+#endif
 
       /* If the scriptfile is to be parsed for options, we have to set the
        * cwd.  In DRMAA, the script path is assumed to be relative to the
@@ -3143,7 +3147,7 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
 *     lList **opts_scriptfile        - list with options from the script file
 *     lList **opts_job_cat           - list with options from the job category
 *     lList **opts_native            - list with options from the native spec
-*     lList **opts_drmaa             - list with options fro the DRMAA attributes
+*     lList **opts_drmaa             - list with options from the DRMAA attributes
 *
 *  NOTES
 *     MT-NOTE: merge_drmaa_options() is MT safe

@@ -375,12 +375,13 @@ set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
 set CFLAGS           = "-D$TARGET_BITS -DQCONF_FLATFILE $INP_CFLAGS"
-set CORE_INCLUDE     = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set CORE_INCLUDE     = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I. -I$JAVA_HOME/include"
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
+set JDRMAA           = ""
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -631,6 +632,9 @@ while ($#argv >= 1 && $?found)
    case  "-intl"
       set WITH_GETTEXT = 1
       breaksw
+   case  "-jdrmaa"
+      set JDRMAA = 1
+      breaksw
    case "-kerberos":
       set KRB        = 1
       set KRBTARGETS = ""
@@ -831,6 +835,14 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
+if ( $JDRMAA ) then
+   # Make sure we can find the Java header files
+   if ( "$JAVA_HOME" == "" ) then
+      echo "Please set JAVA_HOME"
+      exit
+   endif
+endif
+
 set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
 
 #---------------------------------------------------------------------------
@@ -886,6 +898,7 @@ case AIX51:
 
    # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
+   set JAVA_ARCH = "aix"
    breaksw
 
 case ALPHA5:
@@ -927,6 +940,7 @@ case ALPHA5:
    set XLFLAGS  = "-taso $XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lSM -lICE -lPW -ldnet_stub"
    set LIBS     = "-lpset -lmach $LIBS"
+   set JAVA_ARCH = "alpha"
    breaksw
 
 case DARWIN:
@@ -1010,6 +1024,7 @@ case DARWIN:
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
+   set JAVA_ARCH = "alpha"
    unset REL
    breaksw
 
@@ -1038,6 +1053,7 @@ case FREEBSD_*:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = " -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    set RM	= "rm -f"
+   set JAVA_ARCH = ""
    breaksw 
 
 case IRIX65:
@@ -1071,6 +1087,7 @@ case IRIX65:
    set SHAREDLD = ld
    set SHARED_CFLAGS = "-KPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
+   set JAVA_ARCH = "irix"
    breaksw
 
 case HP11:
@@ -1130,6 +1147,7 @@ case HP1164:
    set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
 
    set SHAREDEXT = ".sl"
+   set JAVA_ARCH = "hp-ux"
    breaksw
 case ALINUX:
 case LINUX86:
@@ -1220,6 +1238,7 @@ case LINUXIA64:
       set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
       set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    endif
+   set JAVA_ARCH = "linux"
    breaksw
 case NECSX4:
 #
@@ -1243,6 +1262,7 @@ case NECSX4:
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1
    endif
+   set JAVA_ARCH = ""
    breaksw
 
 case NECSX5:
@@ -1270,6 +1290,7 @@ case NECSX5:
       exit 1
    endif
    set DLLIB = ""
+   set JAVA_ARCH = ""
    breaksw
 
 case SLINUX:
@@ -1305,6 +1326,7 @@ case SLINUX:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    set NOERR_CFLAG = "-Wno-error"
+   set JAVA_ARCH = "linux"
    breaksw
 
 case SOLARIS:
@@ -1401,6 +1423,7 @@ case SOLARIS86:
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
    set RANLIB   = "echo"
+   set JAVA_ARCH = "solaris"
    breaksw
 
 case UNICOS*:
@@ -1440,11 +1463,16 @@ case UNICOS*:
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1
    endif
+   set JAVA_ARCH = ""
    breaksw
 default:
    echo "ERROR: Architecture $BUILDARCH not supported by aimk"
    exit 1
 endsw
+
+if ("$JAVA_ARCH" != "") then
+   set CFLAGS = "$CFLAGS -I${JAVA_HOME}/include/${JAVA_ARCH}"
+endif
 
 set MAKEOPT = "$MAKEOPT $PARALLEL"
 
@@ -1676,38 +1704,6 @@ if ( "$CORE" == 1 ) then
       touch 12121212 libdrmaa.so example test_drmaa
    endif
 
-   # spooledit is only available if berkeleydb is available.
-   # if we build with spooling method classic, touch spooledit
-   if ($SPOOLING_METHOD == classic) then
-      touch libspoolb.a spooledit.o
-      sleep 1
-      touch spooledit
-   endif
-
-   # we must map the symbolic spooling lib names the target filenames,
-   # otherwise make will always relink qmaster, spoolinit ...
-   set new_deps = ""
-   foreach dep ( $SPOOLING_DEPS )
-      switch ( $dep )
-         case spoolloaderlib:
-            set new_deps = "$new_deps libspoolloader$LIBEXT"
-            breaksw
-         case spooldlib:
-            set new_deps = "$new_deps libspoold$LIBEXT"
-            breaksw
-         case spoolblib:
-            set new_deps = "$new_deps libspoolb$SPOOLLIBEXT"
-            breaksw
-         case spoolclib:
-            set new_deps = "$new_deps libspoolc$SPOOLLIBEXT"
-            breaksw
-         case spoollib:
-            set new_deps = "$new_deps libspool$LIBEXT"
-            breaksw
-      endsw
-   end
-   set SPOOLING_DEPS = "$new_deps"
-
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
@@ -1739,6 +1735,40 @@ if ( "$CORE" == 1 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
+   endif
+
+   if ( $JDRMAA ) then
+      $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
+            "LD_WRAPPER=$LD_WRAPPER" \
+            "CFLAGS=$CFLAGS $CORE_INCLUDE" \
+            "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+            "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
+            "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+            "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
+            "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
+            "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
+            "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
+            "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
+            "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
+            "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
+            "NOERR_PROTO=$NOERR_PROTO" \
+            "NOERR_CFLAG=$NOERR_CFLAG" \
+            "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
+            "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
+            "INTERACTTARGETS=$INTERACTTARGETS" \
+            "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
+            "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
+            "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
+            "SPOOLLIBEXT=$SPOOLLIBEXT" \
+            "DLLIB=$DLLIB" \
+            "MEMCFLAG=$MEMCFLAG" \
+            "CORE_INCLUDE=$CORE_INCLUDE" \
+            "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
+            jdrmaa
+      if ( $status != 0 ) then
+         echo not done
+         exit 1
+      endif
    endif
 
    cd $SOURCE

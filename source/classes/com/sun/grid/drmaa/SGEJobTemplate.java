@@ -228,7 +228,7 @@ public class SGEJobTemplate extends JobTemplate {
    }
    
    public void setOutputPath (String outputPath) throws DRMAAException {
-      this.setAttribute (INPUT_PATH, outputPath);
+      this.setAttribute (OUTPUT_PATH, outputPath);
    }
    
    public String getOututPath () {
@@ -245,17 +245,17 @@ public class SGEJobTemplate extends JobTemplate {
    
    public void setJoinFiles (boolean join) throws DRMAAException {
       if (join) {
-         this.setAttribute (JOIN_FILES, "1");
+         this.setAttribute (JOIN_FILES, "y");
       }
       else {
-         this.setAttribute (JOIN_FILES, "0");
+         this.setAttribute (JOIN_FILES, "n");
       }
    }
    
    public boolean getJoinFiles () {
       String block = (String)this.getAttribute (JOIN_FILES).get (0);
       
-      if (block.equals ("1")) {
+      if (block.equalsIgnoreCase ("y")) {
          return true;
       }
       else {

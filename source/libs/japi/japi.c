@@ -341,6 +341,7 @@ static int japi_gdi_control_error2japi_error(lListElem *aep, dstring *diag, int 
 static int japi_clean_up_jobs (int flag, dstring *diag);
 static int japi_read_dynamic_attributes(dstring *diag);
 static int do_gdi_delete (lList **id_list, int action, dstring *diag);
+static int japi_stop_event_client (void);
 
 
 static void japi_use_library_signals(void)
@@ -407,9 +408,6 @@ int japi_init_mt(dstring *diag)
    cl_com_handle_t* handle = NULL;
    int gdi_errno;
    
-   /* never print errors to console always return them only in diag */
-   log_state_set_log_gui(0);
-
    bootstrap_mt_init();
    feature_mt_init();
 
@@ -1039,10 +1037,13 @@ int japi_exit(bool close_session, int flag, dstring *diag)
          JAPI_UNLOCK_EC_STATE();
 
 /* This call appears to be causing several problems. */
-#if 1
+#if 0
          /* This call will cause the event client thread to return immediately
           * from ec_get(), which is the only place it could be blocked. */
          cl_com_ignore_timeouts(CL_TRUE);
+/* So we try doing it the old fashioned way... */
+#else
+         japi_stop_event_client ();
 #endif
 
          DPRINTF (("Waiting for event client to terminate.\n"));
@@ -1113,8 +1114,11 @@ int japi_exit(bool close_session, int flag, dstring *diag)
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
+/* As long as we're killing the EC the old fashioned way, this isn't needed. */
+#if 0
    /* Restore timeouts in case japi_init() gets called again. */
    cl_com_ignore_timeouts(CL_FALSE);
+#endif
    
    /* We have to wait to free the job list until any waiting or syncing threads
     * have exited.  Otherwise, they may think their jobs exited badly. */
@@ -4363,7 +4367,7 @@ static void *japi_implementation_thread(void *p)
                   lList *jat = lGetList(event, ET_new_version);
                   lListElem *ep = lFirst(jat);
                   u_long job_status = lGetUlong(ep, JAT_status);
-                  int task_running = (job_status==JRUNNING ||
+                  bool task_running = (job_status==JRUNNING ||
                                       job_status==JTRANSFERING);
 
                   if (task_running) {
@@ -4467,7 +4471,7 @@ static void *japi_implementation_thread(void *p)
          disconnected = true;
       }
    } /* while */
-   
+
    /* Unregister event client */
    DPRINTF(("unregistering from qmaster ...\n"));
    if (ec_deregister()==FALSE) {
@@ -4826,4 +4830,40 @@ static int do_gdi_delete (lList **id_list, int action, dstring *diag)
 
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
+}
+
+/****** JAPI/japi_stop_event_client() ******************************************
+*  NAME
+*     japi_stop_event_client() -- stops the event client
+*
+*  SYNOPSIS
+*     int japi_stop_event_client(void) 
+*
+*  FUNCTION
+*     Uses the Event Master interface to send a SHUTDOWN event to the event
+*     client.
+*
+*  RESULT
+*     int - 0 = OK, 1 = Error
+*
+*  NOTES
+*     MT-NOTES: japi_stop_event_client() is MT safe (assumptions)
+*******************************************************************************/
+static int japi_stop_event_client (void)
+{
+   lList *alp = NULL;
+   lList *id_list = NULL;
+   char id_string[25];
+
+   DENTER(TOP_LAYER, "stop_event_client");
+
+   DPRINTF (("Requesting that GDI kill our event client.\n"));
+   snprintf(id_string, sizeof(id_string)-1, u32, japi_ec_id);
+   lAddElemStr(&id_list, ID_str, id_string, ID_Type);
+   alp = gdi_kill(id_list, uti_state_get_default_cell(), 0, EVENTCLIENT_KILL);
+   id_list = lFreeList(id_list);
+   alp = lFreeList(alp);
+   
+   DEXIT;
+   return 0;
 }

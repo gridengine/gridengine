@@ -1,35 +1,35 @@
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 import java.util.*;
 
-import com.sun.grid.drmaa.*;
+import org.ggf.drmaa.*;
 
 public class DRMAAExample {
 	private static int NBULKS = 3;
@@ -38,10 +38,10 @@ public class DRMAAExample {
 	
 	public static void main (String[] args) throws Exception {
 		String jobPath = args[0];
-      
+		
 		DRMAASessionFactory factory = DRMAASessionFactory.getFactory ();
-      
-      session = factory.getSession ();
+		
+		session = factory.getSession ();
 		session.init (null);
 		
 		JobTemplate jt = createJobTemplate (jobPath, 5, true);
@@ -75,8 +75,8 @@ public class DRMAAExample {
 			}
 		}
 		
-      jt.delete ();
-      
+		jt.delete ();
+		
 		/* submit some sequential jobs */
 		jt = createJobTemplate (jobPath, 5, false);
 		
@@ -101,8 +101,8 @@ public class DRMAAExample {
 			allJobIds.add (jobId);
 		}
 		
-      jt.delete ();
-      
+		jt.delete ();
+		
 		/* synchronize with all jobs */
 		session.synchronize (allJobIds, DRMAASession.TIMEOUT_WAIT_FOREVER, false);
 		System.out.println ("synchronized with all jobs");
@@ -112,7 +112,7 @@ public class DRMAAExample {
 		
 		while (i.hasNext ()) {
 			JobInfo status = null;
-         jobId = (String)i.next ();
+			jobId = (String)i.next ();
 			
 			status = session.wait (jobId, DRMAASession.TIMEOUT_WAIT_FOREVER);
 			
@@ -135,16 +135,16 @@ public class DRMAAExample {
 	private static JobTemplate createJobTemplate (String jobPath, int seconds, boolean isBulkJob) throws DRMAAException {
 		JobTemplate jt = session.createJobTemplate ();
 		
-		jt.setAttribute (JobTemplate.WORKING_DIRECTORY, "$drmaa_hd_pd$");
-		jt.setAttribute (JobTemplate.REMOTE_COMMAND, jobPath);
-		jt.setAttribute (JobTemplate.INPUT_PARAMETERS, Arrays.asList (new String[] {Integer.toString (seconds)}));
-		jt.setAttribute (JobTemplate.JOIN_FILES, "y");
+		jt.setWorkingDirectory ("$drmaa_hd_ph$");
+		jt.setRemoteCommand (jobPath);
+		jt.setInputParameters (new String[] {Integer.toString (seconds)});
+		jt.setJoinFiles (true);
 		
 		if (!isBulkJob) {
-			jt.setAttribute (JobTemplate.OUTPUT_PATH, "$drmaa_hd_pd$/DRMAA_JOB");
+			jt.setOutputPath (":$drmaa_hd_ph$/DRMAA_JOB");
 		}
 		else {
-			jt.setAttribute (JobTemplate.OUTPUT_PATH, "$drmaa_hd_pd$/DRMAA_JOB$drmaa_incr_ph$");
+			jt.setOutputPath (":$drmaa_hd_ph$/DRMAA_JOB$drmaa_incr_ph$");
 		}
 		
 		return jt;

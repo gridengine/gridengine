@@ -1,3 +1,12 @@
+DT-2004-04-07-1: Bugfix:    o Added test to test_drmaa for invalid attributes
+                            o Did cleanup related to 966
+                            o Added Java DRMAA binding to aimk and distinst
+                            - use aimk -jdrmaa to include the Java binding in
+                              libdrmaa.so and to build drmaa.jar
+                            - distinst ignores drmaa.jar if it can't find it
+                 Changed:   DRMAA, qsub, JAPI, aimk, distinst
+                 Issue:     966
+
 DT-2004-04-07-0: Bugfix:    o Removed duplicate qconf error messages
                             o Fixed build on MacOS X
                             o Fixed qsub bug introduced in DT-2004-04-06-0

@@ -4133,6 +4133,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
        -i $sp_id -- "Unknown option" {
           set return_value -13
        }
+       -i $sp_id -- "non-ambiguous jobnet predecessor" {
+          set return_value -14
+       }
+       -i $sp_id -- "using job name \"*\" for this job violates reference unambiguousness" {
+          set return_value -15
+       }
      }
  
      # close spawned process 
@@ -4158,6 +4164,10 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           "-11" { add_proc_error "submit_job" $return_value "not allowed to submit jobs - error" }
           "-12" { add_proc_error "submit_job" $return_value "no acces to project - error" }
           "-13" { add_proc_error "submit_job" $return_value "Unkown option - error" }
+          "-14" { add_proc_error "submit_job" $return_value "non-ambiguous jobnet predecessor - error" }
+          "-15" { add_proc_error "submit_job" $return_value "job violates reference unambiguousness - error" }
+
+
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -4917,6 +4927,9 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
   }
 
   puts $CHECK_OUTPUT "Waiting for start of job $jobid ($jobname)"
+  if { $do_errorcheck != 1 } {
+     puts $CHECK_OUTPUT "error check is switched off"
+  }
    
   set time [timestamp]
   while {1} {
@@ -5303,7 +5316,7 @@ proc get_version_info {} {
       } else {
          set product_mode_file [ open "$CHECK_PRODUCT_ROOT/default/common/product_mode" "r" ]
          gets $product_mode_file line
-         if { $CHECK_PRODUCT_FEATURE == "secure" } {
+         if { $CHECK_PRODUCT_FEATURE == "csp" } {
              if { [ string first "csp" $line ] < 0 } {
                  puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
                  puts $CHECK_OUTPUT "testsuite setup error - stop"

@@ -1,3 +1,5 @@
+CR-2002-02-26-1: Testsuite: changes from maintrunc merged
+
 CR-2002-02-26-0: Feature:   qmaster installation script will now check if
                             sge_qmaster binary is compiled with aimk -secure
                             when -csp option is used, otherwise installation

@@ -24,7 +24,7 @@ This directory contains the following files and directories:
 
    README           this file 
    README.atm       desribes how to run MPI jobs over ATM
-   sunhpc/          integration package with Sun HPC ClusterTools(TM)
+   SunHPCT5/        integration package with Sun HPC ClusterTools 5
    startmpi.sh      startup script for MPI
    stopmpi.sh       shutdown script for MPI
    mpi.template     a MPI PE template configuration for Grid Engine
@@ -39,32 +39,30 @@ of Parallel Environments" for a general introduction to the Parallel
 Environment Interface of Grid Engine.
 
 
-2) Integration packages between Grid Engine and Sun HPC ClusterTools(TM)
+2) Integration package between Grid Engine and Sun HPC ClusterTools(TM)
 ------------------------------------------------------------------------
 
    In the directory
 
-      sunhpc/loose-inegration
+      SunHPCT5/
 
-   you find a package to create a loose integration between Sun HPC
-   ClusterTools (Versions 3.1 & 4.0) and Grid Engine (including Enterprise
-   Edition).
+   you find a package to create a tight integration between Sun HPC
+   ClusterTools (HPCT) 5 and Grid Engine.
 
-   In the directory
-
-      sunhpc/loose-inegration/accounting
-
-   you find a README and sample scripts to create a workaround to get
-   accounting information for Sun MPI jobs.
+   The setup to integrate HPCT und Grid Engine is explained in detail in
+   "Sun HPC ClusterTools 5 Software Administrator's Guide" (Part No. 
+   817-0083-10). This information in this directory provides additional
+   information which should be read in conjunction with the HPCT manual.
 
 
 3) mpi.template
 ---------------
 
    Use this template as a starting point when establishing a parallel
-   environment for MPI without tight integration. You need to replace
+   environment (PE) for MPI without tight integration. You need to replace
    <a_list_of_parallel_queues>, <the_number_of_slots> and <your_sge_root>
-   with the appropriate information.
+   with the appropriate information. The PE then must be added to all queues
+   in the "pe_list" line where it should be made available.
 
    Grid Engine offers an additional interface which allows a tighter
    integration with public domain MPI (MPICH). Tighter integration means
@@ -82,8 +80,9 @@ Environment Interface of Grid Engine.
 
    Use this template as a starting point when establishing a parallel
    environment for MPICH with tight integration. You need to replace
-   <a_list_of_parallel_queues>, <the_number_of_slots> and <your_sge_root>
-   with the appropriate information.
+   <the_number_of_slots> and <your_sge_root> with the appropriate
+   information. The PE then must be added to all queues in the "pe_list"
+   line where it should be made available.
 
    Here is a list of problems for which tight integration provides solutions
 
@@ -153,10 +152,10 @@ Environment Interface of Grid Engine.
 This following copyright statement applies to this file only. It does not
 imply that this statement covers other files of a Grid Engine distribution.
 See the directory '<sge_root>/3rdparty' for a summary of other copyrights of
-this Grid Engine distribution.
+the Grid Engine distribution.
 
 The Contents of this file are made available subject to the terms of the Sun
-Industry Standards Source License Version 1.2  
+Industry Standards Source License Version 1.2
 
 Sun Microsystems Inc., March, 2001
 

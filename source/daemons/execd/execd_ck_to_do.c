@@ -93,6 +93,7 @@ static int reprioritization_enabled = 0;
 extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
+extern lUlong sge_execd_report_seqno;
 
 static bool 
 sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
@@ -583,14 +584,13 @@ int answer_error
    /* do timeout calculation */
    now = sge_get_gmt();
    if ( flush_jr || next_report <= now) {
-      extern int report_seqno;
       if (next_report <= now) {
          next_report = now + conf.load_report_time;
       }
 
       /* wrap around */
-      if (++report_seqno == 10000) {
-         report_seqno = 0;
+      if (++sge_execd_report_seqno == 10000) {
+         sge_execd_report_seqno = 0;
       }
 
       /* send all reports */

@@ -92,7 +92,7 @@ report_source execd_report_sources[] = {
    { 0, NULL }
 };
 
-int report_seqno = 0;
+lUlong sge_execd_report_seqno = 0;
 
 extern lList *jr_list;
 
@@ -113,7 +113,7 @@ execd_add_load_report(lList *report_list, u_long32 now, u_long32 *next_send)
       report = lCreateElem(REP_Type);
       lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
       lSetUlong(report, REP_version, GRM_GDI_VERSION);
-      lSetUlong(report, REP_seqno, report_seqno);
+      lSetUlong(report, REP_seqno, sge_execd_report_seqno);
       lSetHost(report, REP_host, uti_state_get_qualified_hostname());
       lSetList(report, REP_list, sge_build_load_report());
       lAppendElem(report_list, report);
@@ -139,7 +139,7 @@ execd_add_conf_report(lList *report_list, u_long32 now, u_long32 *next_send)
       report = lCreateElem(REP_Type);
       lSetUlong(report, REP_type, NUM_REP_REPORT_CONF);
       lSetUlong(report, REP_version, GRM_GDI_VERSION);
-      lSetUlong(report, REP_seqno, report_seqno);
+      lSetUlong(report, REP_seqno, sge_execd_report_seqno);
       lSetHost(report, REP_host, uti_state_get_qualified_hostname());
       lSetList(report, REP_list, 
          lCopyList("execd config list copy", Execd_Config_List));
@@ -163,7 +163,7 @@ execd_add_license_report(lList *report_list, u_long32 now, u_long32 *next_send)
       report = lCreateElem(REP_Type);
       lSetUlong(report, REP_type, NUM_REP_REPORT_PROCESSORS);
       lSetUlong(report, REP_version, GRM_GDI_VERSION);
-      lSetUlong(report, REP_seqno, report_seqno);
+      lSetUlong(report, REP_seqno, sge_execd_report_seqno);
       lSetHost(report, REP_host, uti_state_get_qualified_hostname());
       {
          lList *lp_lic;
@@ -221,7 +221,7 @@ execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send)
       job_report = lCreateElem(REP_Type);
       lSetUlong(job_report, REP_type, NUM_REP_REPORT_JOB);
       lSetUlong(job_report, REP_version, GRM_GDI_VERSION);
-      lSetUlong(job_report, REP_seqno, report_seqno);
+      lSetUlong(job_report, REP_seqno, sge_execd_report_seqno);
       lSetHost(job_report, REP_host, uti_state_get_qualified_hostname());
 
       /* create job report list */

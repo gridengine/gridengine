@@ -739,5 +739,10 @@
 #define MSG_QMASTER_APPL_STATE_TIMEOUT_ERROR     _MESSAGE(33909, _("thread timeout error"))
 #define MSG_QMASTER_APPL_STATE_CFCFCFCFS         _MESSAGE(33910, _("EDT: %c (%.2f) | TET: %c (%.2f) | MT: %c (%.2f) | SIGT: %c (%.2f) | %s"))
 
+#define MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS _MESSAGE(33911, _("received old load report ("U32CFormat"< "U32CFormat") from exec host "SFQ"\n"))
+#define MSG_QMASTER_RECEIVED_EMPTY_LOAD_REPORT_S _MESSAGE(33912, _("received empty load from exec host "SFQ"\n"))
+
+
+
 #endif
 

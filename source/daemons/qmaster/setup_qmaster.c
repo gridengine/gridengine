@@ -954,8 +954,15 @@ static int setup_qmaster(void)
    /* calendar */
    {
       lListElem *cep;
+
       for_each (cep, Master_Calendar_List) 
+      {
+         calendar_parse_year(cep, &answer_list);
+         calendar_parse_week(cep, &answer_list);
+         answer_list_output(&answer_list);
+
          calendar_update_queue_states(cep, NULL, NULL);
+      }
    }
 
    /* rebuild signal resend events */

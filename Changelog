@@ -1,3 +1,9 @@
+AD-2004-07-20-0: Bugfix:    jobs on hold due to -a time cause qmaster/schedd get out of sync
+                 Issue:     1111
+                 Bugtraq:   5071502
+                 Changed:   qmaster
+                 Review:    SG
+
 SG-2004-07-20-0: Bugfix:    jobs on hold due to -a time cause qmaster/schedd get out of sync
                  Issue:     1154
                  Bugtraq:   5074788

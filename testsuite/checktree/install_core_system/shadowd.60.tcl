@@ -203,6 +203,7 @@ proc install_shadowd {} {
       set SHADOW_INFO                  [translate $shadow_host 0 1 0 [sge_macro DISTINST_SHADOW_INFO] ]
       set SHADOW_ROOT                  [translate $shadow_host 0 1 0 [sge_macro DISTINST_SHADOW_ROOT] "*" ]
       set SHADOW_CELL                  [translate $shadow_host 0 1 0 [sge_macro DISTINST_SHADOW_CELL] ]
+      set HOSTNAME_KNOWN_AT_MASTER     [translate $shadow_host 0 1 0 [sge_macro DISTINST_HOSTNAME_KNOWN_AT_MASTER] ]
 
       cd "$ts_config(product_root)"
 
@@ -278,6 +279,17 @@ proc install_shadowd {} {
                send -i $sp_id $input
                continue;
             } 
+
+            -i $sp_id $HOSTNAME_KNOWN_AT_MASTER { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "\n"
+               continue;
+            }
 
             -i $sp_id $MESSAGES_LOGGING {
                puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"

@@ -1,3 +1,12 @@
+SG-2004-04-22-2: Bugfix:   - fixed memory leak in berkeleydb spooling for jobs
+                           - fixed memory leak in qsub 
+                 Changed:  qmaster, qsub
+                 Review:   AS, DT
+
+SG-2004-04-22-1: Bugfix:   fixed memory leak cluster queue modification
+                 Changed:  qmaster
+                 Review:   DT, EB
+
 HP-2004-04-22-0: Enhancem.: Added Docu for delegated file staging
 
 JG-2004-04-22-1: Bugfix:    qmake output warning "cannot determine architecture"

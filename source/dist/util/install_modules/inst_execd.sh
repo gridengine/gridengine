@@ -359,17 +359,17 @@ AddLocalConfiguration_With_Qconf()
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
 
-   TMPL=/tmp/${HOST}
+   mkdir /tmp/$$
+   TMPL=/tmp/$$/${HOST}
    rm -f $TMPL
    if [ -f $TMPL ]; then
       $INFOTEXT "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
       $INFOTEXT -log "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
    else
-      $INFOTEXT "\nCreating local configuration for host >%s<" $HOST
       $INFOTEXT -log "\nCreating local configuration for host >%s<" $HOST
-      PrintLocalConf 0 > /tmp/$HOST
-      ExecuteAsAdmin $SGE_BIN/qconf -Aconf /tmp/$HOST
-      rm -f /tmp/$HOST
+      PrintLocalConf 0 > $TMPL
+      ExecuteAsAdmin $SGE_BIN/qconf -Aconf $TMPL
+      rm -rf /tmp/$$
       $INFOTEXT "Local configuration for host >%s< created." $HOST
       $INFOTEXT -log "Local configuration for host >%s< created." $HOST
    fi
@@ -383,7 +383,7 @@ AddLocalConfiguration_With_Qconf()
 StartExecd()
 {
    $INFOTEXT -u "\nGrid Engine execution daemon startup"
-   $INFOTEXT "\nStarting execution daemon daemon. Please wait ..."
+   $INFOTEXT "\nStarting execution daemon. Please wait ..."
    $SGE_STARTUP_FILE 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR

@@ -695,11 +695,12 @@ AddLocalConfiguration()
 #      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
 #      PrintLocalConf 1 >> $LCONFDIR/$HOST
 #      SetPerm $LCONFDIR/$HOST
-      TMPH=/tmp/$HOST
+      mkdir /tmp/$$
+      TMPH=/tmp/$$/$HOST
       rm -f $TMPH
       PrintLocalConf 1 > $TMPH
       ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
-      rm -f $TMPH
+      rm -rf /tmp/$$
    fi
 }
 

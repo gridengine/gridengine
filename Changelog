@@ -1,3 +1,8 @@
+SG-2003-12-08-0: Bugfix:    Storing a job template in qmon set -hold_jid to
+                            the wrong value (always 0)
+                 Review:    AA
+                 Changed:   qmon
+
 SG-2003-12-05-0: Bugfix:    Finished the implementation of SG-2003-12-03-2. It was
                             only partly finished and not activated till now.
                  Changed:   qmaster, scheduler                            

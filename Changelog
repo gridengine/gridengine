@@ -1,3 +1,15 @@
+MD-2005-03-04-0: Bugfix:    - Port free/used check returns a wrong result in 
+                              some cases (1385)
+                            - execd uninstall doesn't remove all objects (1208)
+                            - backup/restore for classic and rpc server spooling
+                              not supported! (1244)
+                            - restore procedure does not really ensure qmaster 
+                              is down (1242)
+                 Issue:     1208, 1242, 1244, 1385
+                 Changed:   inst_sge, install_modules, getservbyname
+                 Bugtraq:   6203984, 6231589
+                 Review:    RD
+
 JG-2005-03-03-0: Testsuite: Make more tests use the setup/cleanup framework.
                  Issue:     888
 

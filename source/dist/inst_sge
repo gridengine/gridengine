@@ -500,9 +500,6 @@ if [ $EXECD = "uninstall" ]; then
       MoveLog
    fi
    
-   $INFOTEXT "If you have local execution host spool directories,\n" \
-             "please remove them by hand!\n\n"
-
    if [ $QMASTER != "uninstall" ]; then 
       exit 0
    fi

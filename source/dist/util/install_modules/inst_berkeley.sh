@@ -47,10 +47,10 @@ SpoolingQueryChange()
                 "\nIf you want to use the SGE shadowd, you have to use the " \
                 "\nRPC Client/Server mechanism.\n"
                 SPOOLING_SERVER=`hostname`
-      $INFOTEXT "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
+   $INFOTEXT -n "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
                 SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
-      $INFOTEXT "\nEnter the database directory\n" \
+   $INFOTEXT -n "\nEnter the database directory\n" \
                 "or hit <RETURN> to use default [%s] >> " "$SGE_ROOT/$SGE_CELL/$SPOOLING_DIR"
                 SPOOLING_DIR=`Enter $SGE_ROOT/$SGE_CELL/$SPOOLING_DIR`
    else

@@ -94,6 +94,7 @@
 */ 
 #define MSG_COMMAND_USAGE_GETSERVBYNAME      _MESSAGE(57026, _("get number of a tcp service\n"))
 #define MSG_SYSTEM_SERVICENOTFOUND_S         _MESSAGE(57027, _("service "SFN" not found\n"))
+#define MSG_SYSTEM_PORTNOTINUSE_S            _MESSAGE(57038, _("port "SFN" not in use\n"))
 
 
 /* 

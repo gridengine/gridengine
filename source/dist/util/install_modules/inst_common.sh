@@ -410,9 +410,56 @@ GetConfigFromFile()
   fi
   IFS="   
 "
+   #CheckConfigFile
 }
 
 
+
+#--------------------------------------------------------------------------
+# Checking the configuration file, if valid (autoinstall mode)
+#
+CheckConfigFile()
+{
+   if [ -d $SGE_ROOT ]; then
+      chars=`echo $SGE_QMASTER_PORT | wc -c`
+      chars=`expr $chars - 1`
+      digits=`expr $SGE_QMASTER_PORT : "[0-9][0-9]*"`
+      if [ "$chars" != "$digits" ]; then
+         $INFOTEXT -log "Invalid input. SGE_QMASTER_PORT must be a number."
+         exit 1
+      else
+         chars=`echo $SGE_EXECD_PORT | wc -c`
+         chars=`expr $chars - 1`
+         digits=`expr $SGE_EXECD_PORT : "[0-9][0-9]*"`
+         if [ "$chars" != "$digits" ]; then
+            $INFOTEXT -log "Invalid input. SGE_EXECD_PORT must be a number."
+            exit 1
+         else
+            if [ -d $SGE_ROOT/$SGE_CELL ]; then
+               $INFOTEXT -log "The SGE_CELL directory already exists.\nPlease delete it," \
+                              "if it's not in use, or choose any other SGE_CELL name!"
+               exit 1
+            else
+               if [ -z $QMASTER_SPOOL_DIR ]; then
+                  $INFOTEXT -log "Please enter a qmaster spool directory!"
+                  exit 1
+               else
+                  if [ -z $EXECD_SPOOL_DIR ]; then
+                     $INFOTEXT -log "Please enter a execd spoold directory!"
+                     exit 1
+                  else
+                     : 
+                  fi
+               fi
+            fi
+         fi
+      fi
+   else
+      $INFOTEXT -log "The SGE_ROOT directory does not exist!"
+      exit 1
+   fi
+
+}
 #--------------------------------------------------------------------------
 #
 WelcomeTheUser()
@@ -1141,10 +1188,14 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H_%M_%S'`
-   BUP_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
-   BUP_SPOOL_FILE_LIST_TMP="jobseqnum"
+   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb" 
+   BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
+   BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
+   BUP_CLASSIC_DIR_LIST_TMP="local_conf" 
+   BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
    BUP_COMMON_FILE_LIST=""
    BUP_SPOOL_FILE_LIST=""
+   BUP_SPOOL_DIR_LIST=""
 
 
    $INFOTEXT -u "SGE Configuration Backup"
@@ -1160,42 +1211,12 @@ BackupConfig()
                    SGE_CELL=`Enter default`
                 fi
 
-   db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
-   master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   $INFOTEXT -log "SGE_ROOT: %s" $SGE_ROOT
+   $INFOTEXT -log "SGE_CELL: %s" $SGE_CELL
 
-   loop_stop=false
-   while [ $loop_stop = "false" ]; do
-      $INFOTEXT -n "\nWhere do you want to save the backupfiles? \nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup
+   BackupCheckBootStrapFile
+   SetBackupDir
 
-                   if [ $AUTO != "true" ]; then
-                      backup_dir=`Enter $SGE_ROOT/$SGE_CELL/backup`
-                      if [ -d $backup_dir ]; then
-                         $INFOTEXT -n "\n The directory [%s] \nalready exists!\n" $backup_dir
-                         $INFOTEXT  -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to overwrite the existing backup directory? (y/n) [n] >>"
-                         if [ $? = 0 ]; then
-                            RMBUP="rm -fR"
-                            ExecuteAsAdmin $RMBUP $backup_dir
-                            MKDIR="mkdir -p"
-                            ExecuteAsAdmin $MKDIR $backup_dir
-                            loop_stop=true
-                         else
-                            loop_stop=false
-                         fi
-                      else
-                         MKDIR="mkdir -p"
-                         ExecuteAsAdmin $MKDIR $backup_dir
-                         loop_stop=true
-                      fi
-                   else
-                      MYTEMP=`echo $BACKUP_DIR | sed 's/\/$//'`
-                      BACKUP_DIR=$MYTEMP
-                      backup_dir="$BACKUP_DIR"_"$DATE"
-                      MKDIR="mkdir -p"
-                      ExecuteAsAdmin $MKDIR $backup_dir
-                      loop_stop=true
-                   fi
-   done
 
    $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nIf you are using different tar versions (gnu tar/ solaris tar), this option\n" \
                                                      "can make some trouble. In some cases the tar packages may be corrupt.\n" \
@@ -1207,75 +1228,9 @@ BackupConfig()
    else
       TAR=$TAR
    fi
- 
-   $INFOTEXT -n "\n... starting with backup\n"    
 
-   DUMPIT="$SGE_UTILBIN/db_dump -f"
-   ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
-
-   CPF="cp -f"
-
-   for f in $BUP_COMMON_FILE_LIST_TMP; do
-      if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
-         BUP_COMMON_FILE_LIST="$BUP_COMMON_FILE_LIST $f"
-         ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
-      fi
-   done
-
-   for f in $BUP_SPOOL_FILE_LIST_TMP; do
-      if [ -f $master_spool/$f ]; then
-         BUP_SPOOL_FILE_LIST="$BUP_SPOOL_FILE_LIST $f"
-         ExecuteAsAdmin $CPF $master_spool/$f $backup_dir
-      fi
-   done
-
-   if [ $TAR = "true" ]; then
-      if [ $AUTO != "true" ]; then
-         $INFOTEXT -n "\nPlease enter a filename for your backupfile. Default: [backup.tar] >>"
-         bup_file=`Enter backup.tar`
-      else
-         bup_file=$BACKUP_FILE
-      fi
-      cd $backup_dir
-
-      TAR=`which tar`
-      if [ $? -eq 0 ]; then
-         TAR=$TAR" -cvf"
-         ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-
-         ZIP=`which gzip`
-         if [ $? -eq 0 ]; then
-            ExecuteAsAdmin $ZIP $bup_file 
-         else
-            ZIP=`which compress`
-            if [ $? -ep 0 ]; then
-               ExecuteAsAdmin $ZIP $bup_file
-            else
-               $INFOTEXT -n "Neither gzip, nor compress could be found!\n Can't compress your tar file!"
-            fi 
-         fi
-       else
-         $INFOTEXT -n "tar could not be found! No tar archive can be created!\n You will find your backup files" \
-                      "in: \n$backup_dir\n" 
-       fi   
-
-      cd $SGE_ROOT
-      $INFOTEXT -n "\n... backup completed"
-      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz[Z]"
-
-      cd $backup_dir     
-      RMF="rm -f" 
-      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-
-      cd $SGE_ROOT
-
-      if [ $AUTO = "true" ]; then
-         MV="mv"
-         ExecuteAsAdmin $MV /tmp/$LOGSNAME $backup_dir
-      fi 
-
-      exit 0
-   fi
+   DoBackup 
+   CreateTarArchive
 
    $INFOTEXT -n "\n... backup completed"
    $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir
@@ -1295,18 +1250,21 @@ BackupConfig()
 RestoreConfig()
 {
    DATE=`date '+%H_%M_%S'`
-   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb" 
    BUP_SPOOL_FILE_LIST="jobseqnum"
+   BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
+   BUP_CLASSIC_DIR_LIST="local_conf" 
+   BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
 
    MKDIR="mkdir -p"
    CP="cp -f"
+   CPR="cp -fR"
 
    $INFOTEXT -u "SGE Configuration Restore"
    $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \
                 "previously.\n\n"
 
-   $INFOTEXT -wait -n "Make sure that your sge_qmaster is not running during restore!\n" \
-                      "Hit, <ENTER> to continue!"
+   $INFOTEXT -wait -n "Hit, <ENTER> to continue!" 
    $CLEAR
                 SGE_ROOT=`pwd`
    $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. \nDefault: [%s]" $SGE_ROOT
@@ -1317,76 +1275,65 @@ RestoreConfig()
 
    $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar.gz[Z] format? (y/n) [y] "
 
-
+   
    if [ $? = 0 ]; then
-      loop_stop=false
-      while [ $loop_stop = "false" ]; do
-         $INFOTEXT -n "\nPlease enter the full path and name of your backup file." \
-                      "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup/backup.tar.gz
-         bup_file=`Enter $SGE_ROOT/$SGE_CELL/backup/backup.tar.gz`
-         
-         if [ -f $bup_file ]; then
-            loop_stop="true"
+      ExtractBackup
+
+      cd $SGE_ROOT
+      RestoreCheckBootStrapFile "/tmp/bup_tmp_$DATE/"
+
+      if [ "$spooling_method" = "berkeleydb" ]; then
+         if [ $is_rpc = 0 ]; then
+            $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
+            $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >>"
+            db_home=`Enter $db_home`
+         fi
+
+         #reinitializing berkeley db
+         if [ -d $db_home ]; then
+            for f in `ls $db_home`; do
+                  ExecuteAsAdmin rm $db_home/$f
+            done
          else
-            $INFOTEXT -n "\n%s does not exist!\n" $bup_file
-            loop_stop="false"
+            ExecuteAsAdmin $MKDIR $db_home
          fi
-      done
-      Makedir /tmp/bup_tmp_$DATE
-      $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
-      cp $bup_file /tmp/bup_tmp_$DATE
-      cd /tmp/bup_tmp_$DATE/
-     
-      echo $bup_file | grep "tar.gz"
-      if [ $? -eq 0 ]; then
-         ZIP_TYPE="gz"
-      else
-         echo $bup_file | grep "tar.Z"
-         if [ $? -eq 0 ]; then
-            ZIP_TYPE="Z"
-         fi
-      fi
+         DB_LOAD="$SGE_UTILBIN/db_load -f" 
+         ExecuteAsAdmin $DB_LOAD /tmp/bup_tmp_$DATE/*.dump -h $db_home sge
 
-      if [ $ZIP_TYPE = "gz" ]; then
-         ZIP="gzip"
-      elif [ $ZIP_TYPE = "Z" ]; then
-         ZIP="uncompress"
-      fi
-      
-      TAR="tar"
-      ZIP=`which $ZIP`
-      if [ $? -eq 0 ]; then
-         TAR=`which $TAR`
-         if [ $? -eq 0 ]; then
-            TAR=$TAR" -xvf"
-            ExecuteAsAdmin $ZIP -d /tmp/bup_tmp_$DATE/*.$ZIP_TYPE 
-            ExecuteAsAdmin $TAR /tmp/bup_tmp_$DATE/*.tar
+            if [ -d $SGE_ROOT/$SGE_CELL ]; then
+               if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
+                  :
+               else
+                  ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+               fi
+            else
+               ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL
+               ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+            fi
+
+         for f in $BUP_COMMON_FILE_LIST; do
+            if [ -f /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
+         done
+
+         if [ -d $master_spool ]; then
+            if [ -d $master_spool/job_scipts ]; then
+               :
+            else
+               ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+            fi
          else
-            $INFOTEXT -n "tar could not be found! Can't extract the backup file\n"
+            ExecuteAsAdmin $MKDIR $master_spool
+            ExecuteAsAdmin $MKDIR $master_spool/job_scripts
          fi
-      else
-         $INFOTEXT -n "gzip/uncompress could not be found! Can't extract the backup file\n"
-         exit 1
-      fi
-      cd $SGE_ROOT 
-      db_home=`cat /tmp/bup_tmp_$DATE/bootstrap | grep "spooling_params" | awk '{ print $2 }'`  
-      ADMINUSER=`cat /tmp/bup_tmp_$DATE/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-      master_spool=`cat /tmp/bup_tmp_$DATE/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
 
-      $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
-      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >>"
-      db_home=`Enter $db_home`
-
-      #reinitializing berkeley db
-      if [ -d $db_home ]; then
-         for f in `ls $db_home`; do
-               ExecuteAsAdmin rm $db_home/$f
+         for f in $BUP_SPOOL_FILE_LIST; do
+            if [ -f /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $master_spool
+            fi
          done
       else
-         ExecuteAsAdmin $MKDIR $db_home
-      fi
-      DB_LOAD="$SGE_UTILBIN/db_load -f" 
-      ExecuteAsAdmin $DB_LOAD /tmp/bup_tmp_$DATE/*.dump -h $db_home sge
 
          if [ -d $SGE_ROOT/$SGE_CELL ]; then
             if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
@@ -1399,28 +1346,43 @@ RestoreConfig()
             ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
          fi
 
-      for f in $BUP_COMMON_FILE_LIST; do
-         if [ -f /tmp/bup_tmp_$DATE/$f ]; then
-            ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
-         fi
-      done
+         for f in $BUP_CLASSIC_COMMON_FILE_LIST; do
+            if [ -f /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
+         done
 
-      if [ -d $master_spool ]; then
-         if [ -d $master_spool/job_scipts ]; then
-            :
+         master_spool_tmp=`echo $master_spool | cut -d";" -f2`
+         if [ -d $master_spool_tmp ]; then
+            if [ -d $master_spool_tmp/job_scipts ]; then
+               :
+            else
+               ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
+            fi
          else
-            ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+            ExecuteAsAdmin $MKDIR $master_spool_tmp
+            ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
          fi
-      else
-         ExecuteAsAdmin $MKDIR $master_spool
-         ExecuteAsAdmin $MKDIR $master_spool/job_scripts
-      fi
 
-      for f in $BUP_SPOOL_FILE_LIST; do
-         if [ -f /tmp/bup_tmp_$DATE/$f ]; then
-            ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $master_spool
-         fi
-      done     
+         for f in $BUP_CLASSIC_SPOOL_FILE_LIST; do
+            if [ -f /tmp/bup_tmp_$DATE/$f -o -d /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $master_spool_tmp
+            fi
+         done
+
+         for f in $BUP_CLASSIC_DIR_LIST; do
+            if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common
+            fi
+         done
+
+         for f in $BUP_CLASSIC_COMMON_FILE_LIST; do
+            if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common
+            fi
+         done
+ 
+      fi
 
       $INFOTEXT -n "\nYour configuration has been restored\n"
       rm -fR /tmp/bup_tmp_$DATE
@@ -1428,8 +1390,8 @@ RestoreConfig()
       loop_stop=false
       while [ $loop_stop = "false" ]; do
          $INFOTEXT -n "\nPlease enter the full path to your backup files." \
-                      "\nDefault: [%s]" $SGE_ROOT/$SGE_CELL/backup
-         bup_file=`Enter $SGE_ROOT/$SGE_CELL/backup`
+                      "\nDefault: [%s]" $SGE_ROOT/backup
+         bup_file=`Enter $SGE_ROOT/backup`
 
          if [ -d $bup_file ]; then
             loop_stop="true"
@@ -1439,35 +1401,61 @@ RestoreConfig()
          fi
       done
 
-      if [ -f $bup_file/bootstrap ]; then
-         db_home=`cat $bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
-         ADMINUSER=`cat $bup_file/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-         master_spool=`cat $bup_file/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
-      else
-         $INFOTEXT "The boostrap file could not be found, please check to path to\n" \
-                   "your backup file. If this is correct, the backup was not made or \n" \
-                   "not complete!\n\n Exiting restore procedure"
-         exit 1
-      fi
-   
-      $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
-      $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >> "
-      db_home=`Enter $db_home`
+      RestoreCheckBootStrapFile $bup_file
+  
+      if [ "$spooling_method" = "berkeleydb" ]; then 
+         if [ "$is_rpc" = 0 ]; then
+            $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
+            $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >> "
+            db_home=`Enter $db_home`
+         fi
 
-      #reinitializing berkeley db
-      if [ -d $db_home ]; then
-         for f in `ls $db_home`; do
-               ExecuteAsAdmin rm $db_home/$f
+         #reinitializing berkeley db
+         if [ -d $db_home ]; then
+            for f in `ls $db_home`; do
+                  ExecuteAsAdmin rm $db_home/$f
+            done
+         else
+            ExecuteAsAdmin $MKDIR $db_home
+         fi
+
+         DB_LOAD="$SGE_UTILBIN/db_load -f" 
+         ExecuteAsAdmin $DB_LOAD $bup_file/*.dump -h $db_home sge
+
+            if [ -d $SGE_ROOT/$SGE_CELL ]; then
+               if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
+                  :
+               else
+                  ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+               fi
+            else
+               ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL
+               ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+            fi
+
+         for f in $BUP_COMMON_FILE_LIST; do
+            if [ -f $bup_file/$f ]; then
+               ExecuteAsAdmin $CP $bup_file/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
          done
+
+         if [ -d $master_spool ]; then
+            if [ -d $master_spool/job_scipts ]; then
+               :
+            else
+               ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+            fi
+         else
+            ExecuteAsAdmin $MKDIR $master_spool
+            ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+         fi
+
+         for f in $BUP_SPOOL_FILE_LIST; do
+            if [ -f $bup_file/$f ]; then
+               ExecuteAsAdmin $CP $bup_file/$f $master_spool
+            fi
+         done      
       else
-         ExecuteAsAdmin $MKDIR $db_home
-      fi
-
-      #ExecuteAsAdmin touch $db_home/sge
-
-      DB_LOAD="$SGE_UTILBIN/db_load -f" 
-      ExecuteAsAdmin $DB_LOAD $bup_file/*.dump -h $db_home sge
-#      $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge 
 
          if [ -d $SGE_ROOT/$SGE_CELL ]; then
             if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
@@ -1480,29 +1468,43 @@ RestoreConfig()
             ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
          fi
 
-      for f in $BUP_COMMON_FILE_LIST; do
-         if [ -f $bup_file/$f ]; then
-            ExecuteAsAdmin $CP $bup_file/$f $SGE_ROOT/$SGE_CELL/common/
-         fi
-      done
+         for f in $BUP_CLASSIC_COMMON_FILE_LIST; do
+            if [ -f $bup_file/$f ]; then
+               ExecuteAsAdmin $CP $bup_file/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
+         done
 
-      if [ -d $master_spool ]; then
-         if [ -d $master_spool/job_scipts ]; then
-            :
+         master_spool_tmp=`echo $master_spool | cut -d";" -f2`
+         if [ -d $master_spool_tmp ]; then
+            if [ -d $master_spool_tmp/job_scipts ]; then
+               :
+            else
+               ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
+            fi
          else
-            ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+            ExecuteAsAdmin $MKDIR $master_spool_tmp
+            ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
          fi
-      else
-         ExecuteAsAdmin $MKDIR $master_spool
-         ExecuteAsAdmin $MKDIR $master_spool/job_scripts
+
+         for f in $BUP_CLASSIC_SPOOL_FILE_LIST; do
+            if [ -f $bup_file/$f -o -d $bup_file/$f ]; then
+               ExecuteAsAdmin $CPR $bup_file/$f $master_spool_tmp
+            fi
+         done
+
+         for f in $BUP_CLASSIC_DIR_LIST; do
+            if [ -d $bup_file/$f ]; then
+               ExecuteAsAdmin $CPR $bup_file/$f $SGE_ROOT/$SGE_CELL/common
+            fi
+         done
+
+         for f in $BUP_CLASSIC_COMMON_FILE_LIST; do
+            if [ -f $bup_file/$f ]; then
+               ExecuteAsAdmin $CP $bup_file/$f $SGE_ROOT/$SGE_CELL/common
+            fi
+         done
+
       fi
-
-      for f in $BUP_SPOOL_FILE_LIST; do
-         if [ -f $bup_file/$f ]; then
-            ExecuteAsAdmin $CP $bup_file/$f $master_spool
-         fi
-      done      
-
       $INFOTEXT -n "\nYour configuration has been restored\n"
    fi
 }
@@ -1632,4 +1634,336 @@ CheckMasterHost()
    fi
 
 
+}
+
+BackupCheckBootStrapFile()
+{
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
+      db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+      master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+
+      if [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
+         $INFOTEXT -n "\nSpooling Method: %s detected!\n" $spooling_method
+         is_rpc=0
+      else
+         is_rpc=1
+         BDB_SERVER=`echo $db_home | cut -d":" -f1`
+         BDB_BASEDIR=`echo $db_home | cut -d":" -f2`
+
+         if [ -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
+            BDB_HOME=`cat $SGE_ROOT/$SGE_CELL/common/sgebdb | grep $BDB_BASEDIR | grep BDBHOMES | cut -d" " -f2 | sed -e s/\"//`
+         else
+            $INFOTEXT -n "Your Berkeley DB home directory could not be detected!\n"
+            $INFOTEXT -n "Please enter your Berkeley DB home directory >>" BDB_HOME=`Enter `
+         fi
+
+         $INFOTEXT -n "\nThe following settings could be detected.\n"
+         $INFOTEXT -n "Spooling Method: Berkeley DB RPC Server spooling.\n"
+         $INFOTEXT -n "Berkeley DB Server host: %s\n" $BDB_SERVER   
+         $INFOTEXT -n "Berkeley DB home directory: %s\n\n" $BDB_HOME
+
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Are all settings right? (y/n) [y] >>"
+         if [ $? = 1 ]; then
+            $INFOTEXT -n "Please enter your Berkeley DB Server host. >>" 
+            BDB_SERVER=`Enter`
+            $INFOTEXT -n "Please enter your Berkeley DB home directory. >>" 
+            BDB_HOME=`Enter`
+         fi
+      
+         if [ `hostname` != "$BDB_SERVER" ]; then
+            $INFOTEXT -n "You're not on the BDB Server host.\nPlease start the backup on the Server host again!\n"
+            $INFOTEXT -n "Exiting backup!\n"
+            exit 1
+         fi
+      db_home=$BDB_HOME
+      fi
+   else
+      $INFOTEXT -n "bootstrap file could not be found in:\n %s !\n" $SGE_ROOT/$SGE_CELL/common
+      $INFOTEXT -n "please check your installation! Exiting backup!\n"
+
+      $INFOTEXT -log "bootstrap file could not be found in:\n %s !\n" $SGE_ROOT/$SGE_CELL/common
+      $INFOTEXT -log "please check your installation! Exiting backup!\n"
+
+      exit 1
+   fi
+}
+
+
+SetBackupDir()
+{
+   $CLEAR
+   loop_stop=false
+   while [ $loop_stop = "false" ]; do
+      $INFOTEXT -n "\nWhere do you want to save the backupfiles? \nDefault: [%s]" $SGE_ROOT/backup
+
+                   if [ $AUTO != "true" ]; then
+                      backup_dir=`Enter $SGE_ROOT/backup`
+                      if [ -d $backup_dir ]; then
+                         $INFOTEXT -n "\n The directory [%s] \nalready exists!\n" $backup_dir
+                         $INFOTEXT  -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to overwrite the existing backup directory? (y/n) [n] >>"
+                         if [ $? = 0 ]; then
+                            RMBUP="rm -fR"
+                            ExecuteAsAdmin $RMBUP $backup_dir
+                            MKDIR="mkdir -p"
+                            ExecuteAsAdmin $MKDIR $backup_dir
+                            loop_stop=true
+                         else
+                            loop_stop=false
+                         fi
+                      else
+                         MKDIR="mkdir -p"
+                         ExecuteAsAdmin $MKDIR $backup_dir
+                         loop_stop=true
+                      fi
+                   else
+                      MYTEMP=`echo $BACKUP_DIR | sed 's/\/$//'`
+                      BACKUP_DIR=$MYTEMP
+                      backup_dir="$BACKUP_DIR"_"$DATE"
+                      MKDIR="mkdir -p"
+                      ExecuteAsAdmin $MKDIR $backup_dir
+                      loop_stop=true
+                   fi
+   done
+}
+
+
+CreateTarArchive()
+{
+   if [ $TAR = "true" ]; then
+      if [ $AUTO != "true" ]; then
+         $INFOTEXT -n "\nPlease enter a filename for your backupfile. Default: [backup.tar] >>"
+         bup_file=`Enter backup.tar`
+      else
+         bup_file=$BACKUP_FILE
+      fi
+      cd $backup_dir
+
+      TAR=`which tar`
+      if [ $? -eq 0 ]; then
+         TAR=$TAR" -cvf"
+         if [ "$spooling_method" = "berkeleydb" ]; then
+            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+         else
+            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+         fi          
+
+         ZIP=`which gzip`
+         if [ $? -eq 0 ]; then
+            ExecuteAsAdmin $ZIP $bup_file 
+         else
+            ZIP=`which compress`
+            if [ $? -ep 0 ]; then
+               ExecuteAsAdmin $ZIP $bup_file
+            else
+               $INFOTEXT -n "Neither gzip, nor compress could be found!\n Can't compress your tar file!"
+            fi 
+         fi
+       else
+         $INFOTEXT -n "tar could not be found! No tar archive can be created!\n You will find your backup files" \
+                      "in: \n$backup_dir\n" 
+       fi   
+
+      cd $SGE_ROOT
+         $INFOTEXT -n "\n... backup completed"
+      $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz[Z]"
+
+      cd $backup_dir     
+      RMF="rm -fR" 
+      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+
+      cd $SGE_ROOT
+
+      if [ $AUTO = "true" ]; then
+         MV="mv"
+         ExecuteAsAdmin $MV /tmp/$LOGSNAME $backup_dir
+      fi 
+
+      exit 0
+   fi
+}
+
+
+DoBackup()
+{
+   $INFOTEXT -n "\n... starting with backup\n"    
+
+   CPF="cp -f"
+   CPFR="cp -fR"
+
+   if [ "$spooling_method" = "berkeleydb" ]; then
+      DUMPIT="$SGE_UTILBIN/db_dump -f"
+      ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
+
+      for f in $BUP_BDB_COMMON_FILE_LIST_TMP; do
+         if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+            BUP_COMMON_FILE_LIST="$BUP_COMMON_FILE_LIST $f"
+            ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         fi
+      done
+
+      for f in $BUP_BDB_SPOOL_FILE_LIST_TMP; do
+         if [ -f $master_spool/$f ]; then
+            BUP_SPOOL_FILE_LIST="$BUP_SPOOL_FILE_LIST $f"
+            ExecuteAsAdmin $CPF $master_spool/$f $backup_dir
+         fi
+      done
+   else
+      for f in $BUP_CLASSIC_COMMON_FILE_LIST_TMP; do
+         if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+            BUP_COMMON_FILE_LIST="$BUP_COMMON_FILE_LIST $f"
+            ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         fi
+      done
+
+      master_spool_tmp=`echo $master_spool | cut -d";" -f2`
+      for f in $BUP_CLASSIC_SPOOL_FILE_LIST_TMP; do
+         if [ -f $master_spool_tmp/$f -o -d $master_spool_tmp/$f ]; then
+            BUP_SPOOL_FILE_LIST="$BUP_SPOOL_FILE_LIST $f"
+            ExecuteAsAdmin $CPFR $master_spool_tmp/$f $backup_dir
+         fi
+      done
+
+      for f in $BUP_CLASSIC_DIR_LIST_TMP; do
+         if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
+            BUP_CLASSIC_DIR_LIST="$BUP_CLASSIC_DIR_LIST $f"
+            ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         fi
+      done
+   fi
+}
+
+ExtractBackup()
+{
+      loop_stop=false
+      while [ $loop_stop = "false" ]; do
+         $INFOTEXT -n "\nPlease enter the full path and name of your backup file." \
+                      "\nDefault: [%s]" $SGE_ROOT/backup/backup.tar.gz
+         bup_file=`Enter $SGE_ROOT/backup/backup.tar.gz`
+         
+         if [ -f $bup_file ]; then
+            loop_stop="true"
+         else
+            $INFOTEXT -n "\n%s does not exist!\n" $bup_file
+            loop_stop="false"
+         fi
+      done
+      Makedir /tmp/bup_tmp_$DATE
+      $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
+      cp $bup_file /tmp/bup_tmp_$DATE
+      cd /tmp/bup_tmp_$DATE/
+     
+      echo $bup_file | grep "tar.gz"
+      if [ $? -eq 0 ]; then
+         ZIP_TYPE="gz"
+      else
+         echo $bup_file | grep "tar.Z"
+         if [ $? -eq 0 ]; then
+            ZIP_TYPE="Z"
+         fi
+      fi
+
+      if [ $ZIP_TYPE = "gz" ]; then
+         ZIP="gzip"
+      elif [ $ZIP_TYPE = "Z" ]; then
+         ZIP="uncompress"
+      fi
+      
+      TAR="tar"
+      ZIP=`which $ZIP`
+      if [ $? -eq 0 ]; then
+         TAR=`which $TAR`
+         if [ $? -eq 0 ]; then
+            TAR=$TAR" -xvf"
+            ExecuteAsAdmin $ZIP -d /tmp/bup_tmp_$DATE/*.$ZIP_TYPE 
+            ExecuteAsAdmin $TAR /tmp/bup_tmp_$DATE/*.tar
+         else
+            $INFOTEXT -n "tar could not be found! Can't extract the backup file\n"
+         fi
+      else
+         $INFOTEXT -n "gzip/uncompress could not be found! Can't extract the backup file\n"
+         exit 1
+      fi
+}
+
+
+RestoreCheckBootStrapFile()
+{
+   BACKUP_DIR=$1
+
+   if [ -f $BACKUP_DIR/bootstrap ]; then
+      spooling_method=`cat $BACKUP_DIR/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
+      db_home=`cat $BACKUP_DIR/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+      master_spool=`cat $BACKUP_DIR/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+      ADMINUSER=`cat $BACKUP_DIR/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+
+      MASTER_PORT=`cat $BACKUP_DIR/sgemaster | grep "SGE_QMASTER_PORT=" | head -1 | awk '{ print $1 }' | cut -d"=" -f2 | cut -d";" -f1` 
+
+      ACT_QMASTER=`cat $BACKUP_DIR/act_qmaster`
+
+      $SGE_BIN/qping -info $ACT_QMASTER $MASTER_PORT qmaster 1 > /dev/null 2>&1
+      ret=$?
+
+      while [ $ret = 0 ]; do 
+         $INFOTEXT -n "\nFound a running qmaster on your masterhost: %s\nPlease, check this and " \
+                      "make sure, that the daemon is down during the restore!\n\n" $ACT_QMASTER
+         $INFOTEXT -n -wait "Shutdown qmaster and hit, <ENTER> to continue, or <CTRL-C> to stop\n" \
+                            "the restore procedure!\n"
+         $CLEAR
+         $SGE_BIN/qping -info $ACT_QMASTER $MASTER_PORT qmaster 1 > /dev/null 2>&1
+         ret=$?
+      done
+
+      if [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
+         $INFOTEXT -n "\nSpooling Method: %s detected!\n" $spooling_method
+         is_rpc=0
+      else
+         is_rpc=1
+         BDB_SERVER=`echo $db_home | cut -d":" -f1`
+         BDB_BASEDIR=`echo $db_home | cut -d":" -f2`
+
+         if [ -f $BACKUP_DIR/sgebdb ]; then
+            BDB_HOME=`cat $BACKUP_DIR/sgebdb | grep $BDB_BASEDIR | grep BDBHOMES | cut -d" " -f2 | sed -e s/\"//`
+         else
+            $INFOTEXT -n "Your Berkeley DB home directory could not be detected!\n"
+            $INFOTEXT -n "Please enter your Berkeley DB home directory >>"
+            BDB_HOME=`Enter `
+         fi
+
+         $INFOTEXT -n "\nThe following settings could be detected.\n"
+         $INFOTEXT -n "Spooling Method: Berkeley DB RPC Server spooling.\n"
+         $INFOTEXT -n "Berkeley DB Server host: %s\n" $BDB_SERVER   
+         $INFOTEXT -n "Berkeley DB home directory: %s\n\n" $BDB_HOME
+
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Are all settings right? (y/n) [y] >>"
+         if [ $? = 1 ]; then
+            $INFOTEXT -n "Please enter your Berkeley DB Server host. >>" 
+            BDB_SERVER=`Enter`
+            $INFOTEXT -n "Please enter your Berkeley DB home directory. >>" 
+            BDB_HOME=`Enter`
+         fi
+      
+         if [ `hostname` != "$BDB_SERVER" ]; then
+            $INFOTEXT -n "You're not on the BDB Server host.\nPlease start the backup on the Server host again!\n"
+            $INFOTEXT -n "Exiting backup!\n"
+            exit 1
+         fi
+         db_home=$BDB_HOME
+         if [ `ps -efa | grep berkeley | grep -v "grep" | wc -l` = 1 ]; then
+            $INFOTEXT -n "The restore procedure detected a running Berkeley DB\n" \
+                         "service on this machine! Please stop this service first and\n" \
+                         "and continue with restore or do a restart of the Berkeley DB after restore!\n" 
+            $INFOTEXT -wait -auto $AUTO "Hit, <ENTER> to continue!"
+         fi
+      fi
+   else
+      $INFOTEXT -n "bootstrap file could not be found in:\n %s !\n" $BACKUP_DIR
+      $INFOTEXT -n "please check your installation! Exiting backup!\n"
+
+      $INFOTEXT -log "bootstrap file could not be found in:\n %s !\n" $BACKUP_DIR
+      $INFOTEXT -log "please check your installation! Exiting backup!\n"
+
+      exit 1
+   fi
 }

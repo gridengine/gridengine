@@ -125,7 +125,7 @@ GetCell()
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
                   is_done="true"
                else
-                  $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
+                  $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL/common
                   ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL/common
                   is_done="true"
                fi
@@ -469,11 +469,15 @@ SetSpoolingOptionsDynamic()
          SPOOLING_METHOD="berkeleydb"
       fi
    else
-      $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
-                   "during runtime (dynamically). So you can choose between Berkeley DB \n" \
-                   "spooling and Classic spooling method."
-      $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
-      SPOOLING_METHOD=`Enter berkeleydb`
+      if [ "$BERKELEY" = "install" ]; then
+         SPOOLING_METHOD="berkeleydb"
+      else
+         $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
+                      "during runtime (dynamically). So you can choose between Berkeley DB \n" \
+                      "spooling and Classic spooling method."
+         $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
+         SPOOLING_METHOD=`Enter berkeleydb`
+      fi
    fi
 
    $CLEAR
@@ -633,6 +637,7 @@ AddBootstrap()
    TOUCH=touch
    $INFOTEXT "Dumping bootstrapping information"
    $INFOTEXT -log "Dumping bootstrapping information"
+   ExecuteAsAdmin rm -f $COMMONDIR/bootstrap
    ExecuteAsAdmin $TOUCH $COMMONDIR/bootstrap
    ExecuteAsAdmin chmod 666 $COMMONDIR/bootstrap
    PrintBootstrap >> $COMMONDIR/bootstrap
@@ -1371,7 +1376,8 @@ GetQmasterPort()
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
                   #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  cat /etc/services | grep -v "^#" | grep ${INP}
+                  #cat /etc/services | grep -v "^#" | grep ${INP}
+                  $SGE_UTILBIN/getservbyname -check ${INP} > /dev/null 2>&1
 
                   if [ $? = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
@@ -1531,7 +1537,8 @@ GetExecdPort()
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
                   #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  cat /etc/services | grep -v "^#" | grep ${INP}
+                  #cat /etc/services | grep -v "^#" | grep ${INP}
+                  $SGE_UTILBIN/getservbyname -check ${INP} > /dev/null 2>&1
                   if [ $? = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else

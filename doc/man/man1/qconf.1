@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/02/20 13:02:56 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/03/01 16:28:47 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2004/02/20 13:02:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2004/03/01 16:28:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -45,6 +45,16 @@ host management, complex management and user management.
 .I Qconf
 also allows you to examine the current queue configuration
 for existing queues.
+.PP
+.I Qconf
+allows the use of the blackslash, '\', character at the end of a line to
+indicate that the next line is a continuation of the current line.  When
+displaying settings, such as the output of one of the -s* options,
+.I qconf
+will break up long lines (lines greater than 80 characters) into smaller lines
+using backslash line continuation where possible.  Lines will only be broken up
+at commas or whitespace.  This feature can be disabled by setting the
+SGE_SINGLE_LINE environment variable.
 .\"
 .\"
 .SH OPTIONS
@@ -1180,12 +1190,23 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
+.\"
+.IP "\fBQS_NAME_Sxx_EXECD_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_execd 8
+is expected to listen for communication requests.
+Most installations will use a services map entry instead
+to define that port.
+.\"
+.IP "\fBSGE_SINGLE_LINE\fP" 1.5i
+If set, indicates that long lines should not be broken up using backslashes.
+This setting is useful for scripts which expect one entry per line.
 .\"
 .\"
 .SH RESTRICTIONS

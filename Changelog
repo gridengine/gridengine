@@ -1,3 +1,7 @@
+DT-2004-03-01-0  Enhancem.: o Updated qconf man pages for backslash line
+                              continuation.
+                            o Created script to fix lFree* assignment errors.
+
 AS-2004-03-01-0  Enhancem.: updated build README's
 
 AH-2004-01-03-0  Bugfix:    Fix qstat bug with PEs using agv in urgency slots

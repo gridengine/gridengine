@@ -70,7 +70,7 @@ proc sge_macro { macro_name } {
       "DISTINST_FINISHED_ADDING_HOSTS" { set value "Finished adding hosts. Hit <RETURN> to continue >> " }
       "DISTINST_FILENAME_FOR_HOSTLIST" { set value "\nPlease enter the file name which contains the host list: " }
       "DISTINST_CREATE_NEW_CONFIGURATION" { set value "Do you want to create a new configuration (y/n) \[y\] >> " }
-      "DISTINST_INSTALL_SCRIPT" { set value "\nWe can install the startup script that\nGrid Engine is started at machine boot (y/n) \[y\] >> " }
+      "DISTINST_INSTALL_SCRIPT" { set value "\nWe can install the startup script that will\nstart %s at machine boot (y/n) \[y\] >> " }
       "DISTINST_ANSWER_YES" { set value "y" }
       "DISTINST_ANSWER_NO" { set value "n" }
       "DISTINST_ENTER_DEFAULT_DOMAIN" { set value "\nPlease enter your default domain >> " }

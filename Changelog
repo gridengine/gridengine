@@ -1,9 +1,13 @@
+MD-2004-03-17-3  Bugfix:    merged fixes from beta branch to maintrunc
+                            adapted testsuite to changed message parts
+                 Changed:   inst_sge, testsuite
+
 CR-2004-03-17-1  Bugfix:    fixed performance problem in communication library 
                             in multithreaded mode.
                  Changed:   commlib
                  Review:    SG
 
-MD-2004-03-17-1  Bugfix:    fixed broken fs check on not solaris and linux
+MD-2004-03-17-2  Bugfix:    fixed broken fs check on not solaris and linux
                             archs
                  Changed:   inst_sge, distinst
                  Issue:     846

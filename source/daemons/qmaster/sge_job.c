@@ -1838,19 +1838,19 @@ int is_task_enrolled
       switch (op_code) {
          case MINUS_H_CMD_SUB:
             new_hold = old_hold & ~target;
-            DPRINTF(("MINUS_H_CMD_SUB = "u32"\n", new_hold));
+/*             DPRINTF(("MINUS_H_CMD_SUB = "u32"\n", new_hold)); */
             break;
          case MINUS_H_CMD_ADD:
             new_hold = old_hold | target;
-            DPRINTF(("MINUS_H_CMD_ADD = "u32"\n", new_hold));
+/*             DPRINTF(("MINUS_H_CMD_ADD = "u32"\n", new_hold)); */
             break;
          case MINUS_H_CMD_SET:
             new_hold = target;
-            DPRINTF(("MINUS_H_CMD_SET = "u32"\n", new_hold));
+/*             DPRINTF(("MINUS_H_CMD_SET = "u32"\n", new_hold)); */
             break;
          default:
             new_hold = old_hold;
-            DPRINTF(("MINUS_H_CMD_[default] = "u32"\n", new_hold));
+/*             DPRINTF(("MINUS_H_CMD_[default] = "u32"\n", new_hold)); */
             break;
       }
 

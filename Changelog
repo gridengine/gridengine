@@ -1,3 +1,5 @@
+AH-2002-03-04-0: Bugfix:    A set of fixes on initiative from Patrik Koch
+
 EB-2002-03-04-1: Bugfix:    'qalter -h xxx' caused core if task of array
                             did not exist.
                  Issue:     171

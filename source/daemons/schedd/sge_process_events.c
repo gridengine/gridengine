@@ -478,7 +478,7 @@ void cleanup_default_scheduler(void)
 *     Process all events tha
 *
 *  INPUTS
-*     lList *event_list - EV_Type 
+*     lList *event_list - ET_Type 
 *
 *  RESULT
 *    0 ok trigger scheduling
@@ -658,7 +658,6 @@ int sge_process_all_events(lList *event_list)
                sge_add_job_category(ep, lists.acl_list);
                if (!sge_mode)
                   at_register_job_array(ep);
-               sge_add_job_category(ep, lists.acl_list);
 
                job_get_submit_task_ids(ep, &start, &end, &step);
                if (job_is_array(ep)) {

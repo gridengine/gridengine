@@ -84,7 +84,7 @@ extern int scheduled_complex_jobs;
 
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
-{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist, 
                          lList **splitted_job_list[]);

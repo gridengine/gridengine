@@ -10,10 +10,10 @@
 <h1>
 <a NAME="General client implementation"></a>General client implementation</h1>
 
-<p><br><img SRC="GDI_RequestFlow.jpg" height=383 width=575 align=BOTTOM>
+<p><br><img SRC="GDI_request_flow.gif" height=383 width=575 align=BOTTOM>
 <br>&nbsp;
 <p>All Grid Engine client applications look very similar, because they
-are using the GDI interface <font color="#000000">(see&nbsp;</font> <a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/libs/gdi/gdi.html">gdi.html</a><font color="#000000">)</font>to
+are using the GDI interface <font color="#000000">(see&nbsp;</font> <a href="../libs/gdi/gdi.html">gdi.html</a><font color="#000000">)</font>to
 send<font color="#000000"> requests </font>to the qmaster daemon. This
 is a typical client/server interface, where the qmaster is the server.
 Each client can use the function sge_gdi() to send<font color="#000000">
@@ -47,7 +47,7 @@ queue(list) )</li>
 </ol>
 </blockquote>
 For further details on the GDI please refer to <font color="#000000">(see
-</font><a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/libs/gdi/gdi.html">gdi.html</a><font color="#000000">
+</font><a href="../libs/gdi/gdi.html">gdi.html</a><font color="#000000">
 ) and The GDI section (section 3) in the Grid Engine reference manual.</font>
 <p>The qmaster handles the client requests through the GDI interface in
 the qmaster function sge_c_gdi() which is implemented in the file gridengine/source/daemons/qmaster/sge_c_gdi.c.
@@ -72,19 +72,19 @@ the qmaster.
 special - clients</h1>
 
 <h2>
-<a NAME="qrsh"></a><font size=+1><a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/clients/qrsh/qrsh.html#qrsh_dokument">qrsh
+<a NAME="qrsh"></a><font size=+1><a href="qrsh/qrsh.html#qrsh_dokument">qrsh
 and qlogin</a> - Grid Engine rsh and login integration</font></h2>
 
 <h2>
-<a NAME="qmake"></a><font size=+1><a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/3rdparty/qmake/qmake.html">qmake</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a NAME="qmake"></a><font size=+1><a href="../3rdparty/qmake/qmake.html">qmake</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 - Grid Engine parallel make integration</font></h2>
 
 <h2>
-<a NAME="qsh"></a><font size=+1><a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/clients/qsh/qsh.html">qsh</a>
-- Grid Engine sh integration</font></h2>
+<a NAME="qsh"></a><font size=+1><a href="qsh/qsh.html">qsh</a> - Grid Engine
+sh integration</font></h2>
 
 <h2>
-<a NAME="qtcsh"></a><font size=+1><a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/3rdparty/qtcsh/qtcsh.html">qtcsh</a>
+<a NAME="qtcsh"></a><font size=+1><a href="../3rdparty/qtcsh/qtcsh.html">qtcsh</a>
 - Grid Engine tcsh integration</font></h2>
 
 <h2>
@@ -542,8 +542,8 @@ read the manual page "sge_request" for more information.
 <h2>
 <a NAME="cull list"></a><font size=+1>cull list</font></h2>
 All Grid Engine internal data (jobs, queues, hosts, etc.) are stored in
-so called <a href="/cod_home/cr114091/CollabNet_OpenSource/gridengine/source/libs/cull/cull.html">cull</a>
-(Common Usable List Library) list.
+so called <a href="../libs/cull/cull.html">cull</a> (Common Usable List
+Library) list.
 <p>The cull defines different list and data types. Each list entry can
 be accessed by name or position. Also sublists are allowed. Here are some
 defined list specifiers:

@@ -328,7 +328,7 @@ char **argv
          DPRINTF(("matching queue %s with qstat -l\n", lGetString(qep, QU_qname)));
          ce = NULL;
 
-         if (empty_qs)
+         if (empty_qs) /* bug !! this is always 0 */
             set_qs_state(QS_STATE_EMPTY);
          queue_complexes2scheduler(&ce, qep, exechost_list, complex_list, 0);
          ccl[0] = lGetList(lGetElemHost(exechost_list, EH_name, "global"), EH_consumable_config_list);

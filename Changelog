@@ -1,3 +1,5 @@
+AS-2004-03-01-0  Enhancem.: updated build README's
+
 AH-2004-01-03-0  Bugfix:    Fix qstat bug with PEs using agv in urgency slots
                  Issue:     710
 

@@ -45,6 +45,7 @@
 #include "sge_qinstance.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
+#include "sge_qref.h"
 #include "sge_cqueue_qconf.h"
 #include "parse_qconf.h"
 #include "spool/classic/read_write_cqueue.h"

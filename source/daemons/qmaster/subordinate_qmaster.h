@@ -32,10 +32,29 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+bool
+cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
+                                  const lList *gdil);
+
+bool
+cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
+                                bool suspend, const lList *resolved_so_list,
+                                bool do_recompute_caches);
+
+bool
+qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
+                           bool rebuild_cache);
+
+bool
+qinstance_find_suspended_subordinates(const lListElem *this_elem,
+                                      lList **answer_list,
+                                      lList **resolved_so_list);
+
+bool
+qinstance_initialize_sos_attr(lListElem *this_elem);
 
 
-int sos_using_gdil(lList *gdil, u_long32 jobid);
-int usos_using_gdil(lList *gdil, u_long32 jobid);
+
 
 int count_suspended_on_subordinate(lListElem *queueep); 
 
@@ -46,8 +65,15 @@ int check_subordinate_list(lList **alpp, const char *qname, const char *host,
 
 int copy_suspended(lList **sol_out, lList *sol_in, int unused, int total, int suspended_on_subordinate);
 
-int suspend_all(lList *sl, int recompute_cache); 
-int unsuspend_all(lList *sl, int recompute_cache); 
+bool 
+suspend_all(lList *sl, bool recompute_cache); 
+
+bool 
+unsuspend_all(lList *sl, bool recompute_cache); 
+
+bool
+qinstance_x_on_subordinate(lListElem *this_elem, bool do_suspend,
+                           bool rebuild_cache);
 
 #endif /* __SUBORDINATE_QMASTER_H */
 

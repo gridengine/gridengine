@@ -1,3 +1,14 @@
+DT-2004-02-26-0: Bugfix:    o qsub doesn't hang anymore.
+                            o JAPI no longer uses signals to stop the event
+                              client thread.
+                            o japi_exit() no longer blocks when another is
+                              already in japi_exit().
+                            o Fixed various JAPI bugs.
+                            o Simplified qsub's logic.
+                 Changed:   qsub, JAPI, comm lib (minor)
+                 Issue:     683
+                 Review:    pending
+
 SG-2004-02-26-1: Bugfix:    qmaster was not able to read in the scheduler
                             configuration in classic spooling mode.
                  Issue:     717

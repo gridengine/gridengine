@@ -2676,6 +2676,11 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
       CL_LOG(CL_LOG_INFO,"message filtering not supported");
    }
    do {
+      /* If the handle was shutdown, give up. */
+      if (handle == NULL) {
+         break;
+      }
+      
       cl_raw_list_lock(handle->connection_list);
       elem = cl_connection_list_get_first_elem(handle->connection_list);     
       if (elem == NULL) {

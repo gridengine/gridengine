@@ -44,10 +44,9 @@
 #include "sge_job_refL.h"
 #include "sge_krbL.h"
 #include "sge_orderL.h"
-#include "sge_paL.h"
+#include "sge_path_aliasL.h"
 #include "sge_peL.h"
 #include "sge_ptfL.h"
-#include "sge_qsiL.h"
 #include "sge_reportL.h"
 #include "sge_requestL.h"
 #include "sge_schedd_conf.h"
@@ -163,8 +162,6 @@ extern "C" {
                                          * storing jobs old usage */
       {KRB_LOWERBOUND, KRBS, KRBN},     /* Kerberos connection list */
       {PA_LOWERBOUND, PAS, PAN},        /* Path alias list */
-      {CS_LOWERBOUND, CSS, CSN},        /* obsolete - reuse me */
-      {CO_LOWERBOUND, COS, CON},        /* obsolete - reuse me */
       {JRE_LOWERBOUND, JRES, JREN},     /* job reference */
       {ID_LOWERBOUND, IDS, IDN},        /* id struct used for qmod requests */
       {MA_LOWERBOUND, MAS, MAN},        /* ma struct used for multi gdi

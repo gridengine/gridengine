@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_path_alias.h"
+
 #define PATH_ALIAS_COMMON_FILE    "common/sge_aliases"
 #define PATH_ALIAS_HOME_FILE      ".sge_aliases"
 

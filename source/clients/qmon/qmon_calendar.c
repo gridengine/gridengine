@@ -48,6 +48,7 @@
 #include "sge_gdi.h"
 #include "sge_dstring.h"
 #include "sge_answer.h"
+#include "sge_calendar.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -230,7 +231,7 @@ XtPointer cld, cad;
       return;
    }
 
-   ep = lGetElemStr(qmonMirrorList(SGE_CALENDAR_LIST), CAL_name, calname);
+   ep = calendar_list_locate(qmonMirrorList(SGE_CALENDAR_LIST), calname);
 
    XtFree((char*) calname);
 
@@ -357,7 +358,7 @@ XtPointer cld, cad;
       XtVaSetValues( cal_name_w,
                      XmNeditable, False,
                      NULL);
-      calp = lGetElemStr(qmonMirrorList(SGE_CALENDAR_LIST), CAL_name, calstr);
+      calp = calendar_list_locate(qmonMirrorList(SGE_CALENDAR_LIST), calstr);
       XtFree((char*)calstr);
       if (calp) {
          add_mode = 0;

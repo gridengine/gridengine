@@ -289,16 +289,8 @@ enum NameSpaceBoundaries {
    PA_LOWERBOUND = KRB_UPPERBOUND + 1,
    PA_UPPERBOUND = PA_LOWERBOUND + 1*BASIC_UNIT - 1,
 
-   /* obsolete - reuse me */
-   CS_LOWERBOUND = PA_UPPERBOUND + 1,
-   CS_UPPERBOUND = CS_LOWERBOUND + 1*BASIC_UNIT - 1,
-
-   /* obsolete - reuse me */
-   CO_LOWERBOUND = CS_UPPERBOUND + 1,
-   CO_UPPERBOUND = CO_LOWERBOUND + 1*BASIC_UNIT - 1,
-
    /* job reference */
-   JRE_LOWERBOUND = CO_UPPERBOUND + 1,
+   JRE_LOWERBOUND = PA_UPPERBOUND + 1,
    JRE_UPPERBOUND = JRE_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* id struct used for qmod request */

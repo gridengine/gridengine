@@ -63,17 +63,17 @@
 /* 
 ** rmon/src/rmon_conf.c 
 */
-#define MSG_RMON_CANNOTOPENXFORCONFIGDATAEXIT_S "error: cannot open %s for configuration data. Exit.\n"
-#define MSG_RMON_ERRORINXLINEYCHARACTERZ_SII    "Error in %s, Line %d, Character %d.\n"
-#define MSG_RMON_UNKNOWNCONFIGURATIONTYPEX_S    "Unknown configuration type %s.\n"
-#define MSG_RMON_CANTFINDRMONDHOSTNAMEINXEXIT_S "Can't find RMOND_HOST_NAME in %s. Exit.\n"
-#define MSG_RMON_HOSTNAMEXCOULDNOTBERESOLVED_S  "hostname: %s could not be resolved\n"
+#define MSG_RMON_CANNOTOPENXFORCONFIGDATAEXIT_S "error: cannot open "SFN" for configuration data. Exit.\n"
+#define MSG_RMON_ERRORINXLINEYCHARACTERZ_SII    "Error in "SFN", Line %d, Character %d.\n"
+#define MSG_RMON_UNKNOWNCONFIGURATIONTYPEX_S    "Unknown configuration type "SFN".\n"
+#define MSG_RMON_CANTFINDRMONDHOSTNAMEINXEXIT_S "Can't find RMOND_HOST_NAME in "SFN". Exit.\n"
+#define MSG_RMON_HOSTNAMEXCOULDNOTBERESOLVED_S  "hostname: "SFN" could not be resolved\n"
 
 
 /* 
 ** rmon/src/rmon_connect.c 
 */
-#define MSG_RMON_XBADSERVICE_S                  "%s: Bad service?\n"
+#define MSG_RMON_XBADSERVICE_S                  ""SFN": Bad service?\n"
 
 /* 
 ** rmon/src/rmon_daemon.c 
@@ -136,14 +136,14 @@
 #define MSG_RMON_DEBUGLAZERSAREINCONSISTENT     "mpush_layer: debug layers are inconsistent\n"
 #define MSG_RMON_TRIEDTOSETTOLARGELAYER         "mpush_layer: tried to set too large layer\n"
 #define MSG_RMON_TRIEDTOPOPHIGHESTLAYER         "mpop_layer: tried to pop highest layer\n"
-#define MSG_RMON_MKSTDNAMEUNABLETOGETMYHOSTNAME_S  "mkstdname: unable to get my hostname: %s\n"
+#define MSG_RMON_MKSTDNAMEUNABLETOGETMYHOSTNAME_S  "mkstdname: unable to get my hostname: "SFN"\n"
 #define MSG_RMON_MKSTDNAMESTRINGTOOLONG         "mkstdname: string too long\n"
 #define MSG_RMON_ILLEGALDBUGLEVELFORMAT         "illegal debug level format\n"
-#define MSG_RMON_UNABLETOOPENXFORWRITING_S      "unable to open %s for writing\n"
-#define MSG_RMON_ERRNOXY_DS                     "    ERRNO: %d, %s\n"
+#define MSG_RMON_UNABLETOOPENXFORWRITING_S      "unable to open "SFN" for writing\n"
+#define MSG_RMON_ERRNOXY_DS                     "    ERRNO: %d, "SFN"\n"
 #define MSG_RMON_XERRORINASHAREDMEMOPERATION_I  "(%d) Error in a Shared Memory Operation !\n"
 #define MSG_RMON_XERRORINASEMAPHOREOPERATION_I  "(%d) Error in a Semaphore Operation !\n"
-#define MSG_RMON_FILEXLINEY_SI                  "    File: %s, Line: %d\n"
+#define MSG_RMON_FILEXLINEY_SI                  "    File: "SFN", Line: %d\n"
 
 
 /* 
@@ -217,7 +217,7 @@
 #define MSG_RMON_PROGNAMESTATUSRMONJOB          "PROGRAMNAME                    STATUS RMON JOB\n"
 #define MSG_RMON_NOSUCHSPY                      "no such spy\n"
 #define MSG_RMON_COMBINEDLEVELS                 "combined level(s): "
-#define MSG_RMON_PROGNAME_S                     "programname: %s\n"
+#define MSG_RMON_PROGNAME_S                     "programname: "SFN"\n"
 #define MSG_RMON_LEVEL                          "level: "
 #define MSG_RMON_CANTGIVEINFOTOSPYANDRMONBOTH   "Can't give infos to both spy and rmon at the same time !\n"
 #define MSG_RMON_MSTAT_USAGE                    "usage:  mstat [-r rmond-host] {-n [rmon-number] | -s [programname] }\n"
@@ -242,9 +242,9 @@
 /* 
 ** rmon/src/rmon_restart.c
 */
-#define MSG_RMON_CANTOPENXFORCONFIGDATA_S       "error: cannot open %s for configuration data.\n"
-#define MSG_RMON_FORMATERRORINXLINYCANNOTREADINAD_SI  "Format error in %s, line %d, cannot read inet_addr\n"
-#define MSG_RMON_FORMATERRORINXLINEY_SI         "Format error in %s, line %d\n"
+#define MSG_RMON_CANTOPENXFORCONFIGDATA_S       "error: cannot open "SFN" for configuration data.\n"
+#define MSG_RMON_FORMATERRORINXLINYCANNOTREADINAD_SI  "Format error in "SFN", line %d, cannot read inet_addr\n"
+#define MSG_RMON_FORMATERRORINXLINEY_SI         "Format error in "SFN", line %d\n"
 
 
 
@@ -261,9 +261,9 @@
 /* 
 ** rmon/src/rmon_rmonid.c
 */
-#define MSG_RMON_XISNOTTHERMONDHOST_S           "\n%s is not the rmond-Host !\n"
-#define MSG_RMON_RMONDHOSTISX_S                 "rmond-Host is %s\n"
-#define MSG_RMON_ACCEPTERRORX_S                 "accept error: %s"
+#define MSG_RMON_XISNOTTHERMONDHOST_S           "\n"SFN" is not the rmond-Host !\n"
+#define MSG_RMON_RMONDHOSTISX_S                 "rmond-Host is "SFN"\n"
+#define MSG_RMON_ACCEPTERRORX_S                 "accept error: "SFN""
 #define MSG_RMON_ERRORREADINGREQUEST            "error reading request"
 #define MSG_RMON_SHUTERDOWNUNABLETOSYSCONFSCOPENMAX   "shut_er_down: unable to sysconf(_SC_OPEN_MAX)"
 
@@ -271,9 +271,9 @@
 /* 
 ** rmon/src/rmon_s_c_exit.c
 */
-#define MSG_RMON_CANTLOADRESTARTFILEX_S         "can't load restart file: %s\n"
+#define MSG_RMON_CANTLOADRESTARTFILEX_S         "can't load restart file: "SFN"\n"
 #define MSG_RMON_SPYALREADYDELETEDFROMSPYLIST   "Spy was already deleted from Spy-List (restart file)!\n"
-#define MSG_RMON_CANTSAVERESTARTFILEX_S         "can't save restart file: %s\n"
+#define MSG_RMON_CANTSAVERESTARTFILEX_S         "can't save restart file: "SFN"\n"
 
 /* 
 ** rmon/src/rmon_s_c_mconf.c
@@ -312,16 +312,16 @@
 #define MSG_RMON_SEM1GRTBIGCOUNT                "sem[1] > BIGCOUNT\n"
 #define MSG_RMON_CANTUNLOCK                     "can't unlock\n"
 #define MSG_RMON_CANTHAVVALUEIS0                "can't have value == 0\n"
-#define MSG_RMON_RMONSEMOPIDXPIDYERRORZ_IIS     "rmon_sem_op(id = %d, pid = %d) error: %s\n"
+#define MSG_RMON_RMONSEMOPIDXPIDYERRORZ_IIS     "rmon_sem_op(id = %d, pid = %d) error: "SFN"\n"
 
 /* 
 ** rmon/src/rmon_server.c
 */
 #define MSG_RMON_SOCKETCREATIONERROR               "socket creation error\n"
-#define MSG_RMON_SOCKETOPERATIONFAILUREX_S         "socket operation failure: %s\n"
+#define MSG_RMON_SOCKETOPERATIONFAILUREX_S         "socket operation failure: "SFN"\n"
 #define MSG_RMON_BINDERRORPORTXISALREADYINUSE_D    "Bind error: Port "U32CFormat" is already in use !\n"
 #define MSG_RMON_BINDERROR                         "Bind error !\n"
-#define MSG_RMON_LISTENFAILURE_S                   "listen failure: %s\n"
+#define MSG_RMON_LISTENFAILURE_S                   "listen failure: "SFN"\n"
 
 
 /* 
@@ -333,24 +333,24 @@
 /* 
 ** rmon/src/rmon_spy.c
 */
-#define MSG_RMON_UNABLETOGETMYHOSTNAMEX_S       "unable to get my hostname: %s\n"
-#define MSG_RMON_UNABLETORESOLVEMYHOSTNAMEXY_SS "unable to resolve my hostname %s: %s\n"
-#define MSG_RMON_CANTOPENPIPESX_S               "cannot open pipes: %s\n"
-#define MSG_RMON_FCNTLFAILURE_S                 "fcntl() fails: %s\n"
-#define MSG_RMON_SHMGETFAILED_S                 "shmget() failed: %s\n"
-#define MSG_RMON_SHMATFAILED_S                  "shmat() failed: %s\n"
+#define MSG_RMON_UNABLETOGETMYHOSTNAMEX_S       "unable to get my hostname: "SFN"\n"
+#define MSG_RMON_UNABLETORESOLVEMYHOSTNAMEXY_SS "unable to resolve my hostname "SFN": "SFN"\n"
+#define MSG_RMON_CANTOPENPIPESX_S               "cannot open pipes: "SFN"\n"
+#define MSG_RMON_FCNTLFAILURE_S                 "fcntl() fails: "SFN"\n"
+#define MSG_RMON_SHMGETFAILED_S                 "shmget() failed: "SFN"\n"
+#define MSG_RMON_SHMATFAILED_S                  "shmat() failed: "SFN"\n"
 #define MSG_RMON_NEEDMORESEMAPHORES             "Need more semaphores\n"
-#define MSG_RMON_RMONSEMCREATEFAILED_S          "rmon_sem_create() failed: %s\n"
-#define MSG_RMON_CANTPUTENV_S                   "cannot putenv: %s\n"
+#define MSG_RMON_RMONSEMCREATEFAILED_S          "rmon_sem_create() failed: "SFN"\n"
+#define MSG_RMON_CANTPUTENV_S                   "cannot putenv: "SFN"\n"
 #define MSG_RMON_UNABLETOSYSCONFSCOPENMAX       "unable to sysconf(_SC_OPEN_MAX)"
 #define MSG_RMON_RMONSEMCREATEFAILED            "rmon_sem_create() failed\n"
 #define MSG_RMON_CANTRMONSEMWAIT1               "Can't rmon_sem_wait(1)\n"
 #define MSG_RMON_CANTRMONSEMSIGNAL1             "Can't rmon_sem_signal(1)\n"
 #define MSG_RMON_CANTRMONSEMSIGNAL2             "Can't rmon_sem_signal(2)\n"
 #define MSG_RMON_CANTRMONSEMCLOSE1              "Can't rmon_sem_close(1)\n"
-#define MSG_RMON_CANTEXECUTEPROGXY_SS           "cannot execute the program %s: %s\n."
-#define MSG_RMON_ERRORINSHMDT_S                 "ERROR in shmdt(): %s\n"
-#define MSG_RMON_ERRORINSHMCTL_S                "ERROR in shmctl(): %s\n"
+#define MSG_RMON_CANTEXECUTEPROGXY_SS           "cannot execute the program "SFN": "SFN"\n."
+#define MSG_RMON_ERRORINSHMDT_S                 "ERROR in shmdt(): "SFN"\n"
+#define MSG_RMON_ERRORINSHMCTL_S                "ERROR in shmctl(): "SFN"\n"
 #define MSG_RMON_SPY_USAGE                      "Usage: spy [-r rmond-host] programname [parameters]\n"
 
 

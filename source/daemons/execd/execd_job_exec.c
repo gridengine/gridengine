@@ -65,7 +65,6 @@
 #include "sge_security.h"
 #include "msg_common.h"
 #include "msg_execd.h"
-#include "msg_gdilib.h"
 #include "sge_job_jatask.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"

@@ -37,31 +37,31 @@
 ** commd/ack.c
 */ 
 #define MSG_RESETMESSAGE_READ_POS_0                   _("read_ack read()==-1")
-#define MSG_RESETMESSAGE_READ_POS_0_S                 _("read_ack read()==-1 errno=%s")
+#define MSG_RESETMESSAGE_READ_POS_0_S                 _("read_ack read()==-1 errno="SFN"")
 #define MSG_RESETMESSAGE_READ_I                       _("read ackchar=%d")
 
 /* 
 ** commd/commd.c
 */ 
 #define MSG_COMMD_POINTERNULL                         _("(null)")
-#define MSG_COMMD_STATHOSTALIASFILEFAILED_SS          _("can't stat host alias file \"%s\": %s")
-#define MSG_COMMD_OPENFILEFORMESSAGELOGFAILED_SS      _("can't open file \"%s\" for message logging: %s")
+#define MSG_COMMD_STATHOSTALIASFILEFAILED_SS          _("can't stat host alias file "SFQ": "SFN"")
+#define MSG_COMMD_OPENFILEFORMESSAGELOGFAILED_SS      _("can't open file "SFQ" for message logging: "SFN"")
 #define MSG_NET_USINGPORT_I                           _("using port \"%d\"\n")
-#define MSG_NET_USINGSERVICE_S                        _("using service \"%s\"\n")
-#define MSG_NET_OPENSTREAMSOCKETFAILED_S              _("can't open stream socket: %s")
-#define MSG_NET_RESOLVESERVICEFAILED_SS               _("can't resolve service \"%s\": %s")
-#define MSG_NET_BINDPORTFAILED_IS                     _("can't bind port \"%d\": %s")
+#define MSG_NET_USINGSERVICE_S                        _("using service "SFQ"\n")
+#define MSG_NET_OPENSTREAMSOCKETFAILED_S              _("can't open stream socket: "SFN"")
+#define MSG_NET_RESOLVESERVICEFAILED_SS               _("can't resolve service "SFQ": "SFN"")
+#define MSG_NET_BINDPORTFAILED_IS                     _("can't bind port \"%d\": "SFN"")
 #define MSG_NET_BOUNDTOPORT_I                         _("bound to port %d\n")
 #define MSG_COMMD_SHUTDOWNDUECONTROLMESSAGE           _("shutdown due to control message")
-#define MSG_NET_SELECTSOCKFDFAILED_ABORT_SI           _("select error: %s sockfd(%d) - aborting")
-#define MSG_NET_SELECTREADFAILEDMESSAGEFOLLOWS_SI     _("select error: %s read(%d) - corresponding message follows")
-#define MSG_NET_SELECTREADFAILEDCOMMPROCFOLLOWS_SI    _("select error: %s read(%d) - corresponding commproc follows")
-#define MSG_NET_SELECTREADFAILEDNOTCOMPLETE_SI        _("select error: %s read(%d) - not completly enrolled")
-#define MSG_NET_SELECTREADFAILEDNOCORSPDOBJECT_SI     _("select error: %s read(%d) - no corresponding object")
-#define MSG_NET_SELECTWRITEFAILEDMESSAGEFOLLOWS_SI    _("select error: %s write(%d) - corresponding message follows")
-#define MSG_NET_SELECTWRITEFAILEDNOCORSPDOBJECT_SI    _("select error: %s write(%d) - no corresponding object")
+#define MSG_NET_SELECTSOCKFDFAILED_ABORT_SI           _("select error: "SFN" sockfd(%d) - aborting")
+#define MSG_NET_SELECTREADFAILEDMESSAGEFOLLOWS_SI     _("select error: "SFN" read(%d) - corresponding message follows")
+#define MSG_NET_SELECTREADFAILEDCOMMPROCFOLLOWS_SI    _("select error: "SFN" read(%d) - corresponding commproc follows")
+#define MSG_NET_SELECTREADFAILEDNOTCOMPLETE_SI        _("select error: "SFN" read(%d) - not completly enrolled")
+#define MSG_NET_SELECTREADFAILEDNOCORSPDOBJECT_SI     _("select error: "SFN" read(%d) - no corresponding object")
+#define MSG_NET_SELECTWRITEFAILEDMESSAGEFOLLOWS_SI    _("select error: "SFN" write(%d) - corresponding message follows")
+#define MSG_NET_SELECTWRITEFAILEDNOCORSPDOBJECT_SI    _("select error: "SFN" write(%d) - no corresponding object")
 #define MSG_NET_SELECTIGNCOMMPROCRCVANDEOF_I          _("select error: ignoring commproc using fd %d because the fd is ready to receive AND ready to send an EOF")
-#define MSG_NET_SELECTERROR_SSS                       _("select error: %s (%s) (%s)")
+#define MSG_NET_SELECTERROR_SSS                       _("select error: "SFN" ("SFN") ("SFN")")
 #define MSG_USAGE                                     _("usage:")
 #define MSG_COMMD_s_OPT_USAGE                         _("use this service for connections from other commds")
 #define MSG_COMMD_p_OPT_USAGE                         _("use this port for connections from other commds")
@@ -96,7 +96,7 @@
 #define MSG_COMMDCNTL_NOCTRLOPERATIONSPECIFIED        _("no control operation specified\n")
 #define MSG_COMMDCNTL_SETCOMMLIBPARAM1RETURNED_II     _("set_commlib_param(CL_P_COMMDPORT, %d) returns %d\n")
 #define MSG_COMMDCNTL_SETCOMMLIBPARAM2RETURNED_II     _("set_commlib_param(CL_P_RESERVED_PORT, %d) returns %d\n")
-#define MSG_CNTL_ERROR_S                              _("error: %s\n")
+#define MSG_CNTL_ERROR_S                              _("error: "SFN"\n")
 
 
 
@@ -138,7 +138,7 @@
 #define MSG_COMMLIB_NACK_CONFLICT         _("COMMPROC ALREADY REGISTERED")
 #define MSG_COMMLIB_UNKNOWN_ERROR         _("UNKNOWN ERROR")
 #define MSG_COMMLIB_LOST_CONNECTION       _("lost connection\n")
-#define MSG_COMMLIB_BITFLIPPER_FS         _("-----------> bitflipper %f: %s\n")
+#define MSG_COMMLIB_BITFLIPPER_FS         _("-----------> bitflipper %f: "SFN"\n")
 
 
 
@@ -147,32 +147,32 @@
 /* 
 ** commd/commlib_last_heard.c
 */ 
-#define MSG_COMMLIB_LAST_HEARD_USIS       _(U32CFormat" = last_heard_from(commproc=%s, id=%d, host=%s)\n")
-#define MSG_COMMLIB_SET_LAST_HEARD_ISIU   _("%d = set_last_heard_from(commproc=%s, id=%d, host=%s, time="U32CFormat")\n")
-#define MSG_COMMLIB_DROPPING_SISUU         _("dropping (commproc=%s, id=%d, host=%s, time="U32CFormat") now = "U32CFormat"\n")
-#define MSG_COMMLIB_RESET_LAST_HEARD_SISU _("reset_last_heard drops (commproc=%s, id=%d, host=%s, time="U32CFormat")\n")
+#define MSG_COMMLIB_LAST_HEARD_USIS       _(U32CFormat" = last_heard_from(commproc="SFN", id=%d, host="SFN")\n")
+#define MSG_COMMLIB_SET_LAST_HEARD_ISIU   _("%d = set_last_heard_from(commproc="SFN", id=%d, host="SFN", time="U32CFormat")\n")
+#define MSG_COMMLIB_DROPPING_SISUU         _("dropping (commproc="SFN", id=%d, host="SFN", time="U32CFormat") now = "U32CFormat"\n")
+#define MSG_COMMLIB_RESET_LAST_HEARD_SISU _("reset_last_heard drops (commproc="SFN", id=%d, host="SFN", time="U32CFormat")\n")
 
 /* 
 ** commd/commproc.c
 */ 
-#define MSG_COMMPROC_NAMEANDID_SI                 _("name=%s id=%d\n")
-#define MSG_COMMPROC_HOST_S                       _("host=%s\n")
+#define MSG_COMMPROC_NAMEANDID_SI                 _("name="SFN" id=%d\n")
+#define MSG_COMMPROC_HOST_S                       _("host="SFN"\n")
 #define MSG_COMMPROC_USING_FD_I                   _("using fd=%d\n")
 #define MSG_COMMPROC_WAITING_ON_FD_I              _("waiting on fd=%d\n")
-#define MSG_COMMPROC_WAITING_FOR_COMPONENT_ID_SI  _("waiting for component %s with id %d\n")
+#define MSG_COMMPROC_WAITING_FOR_COMPONENT_ID_SI  _("waiting for component "SFN" with id %d\n")
 #define MSG_COMMPROC_ANY                          _("any")
 #define MSG_COMMPROC_NONE                         _("none")
-#define MSG_COMMPROC_ON_HOST_S                    _("on host %s\n")
-#define MSG_COMMPROC_INACTIVEFOR_SIU              _("commproc %s:%d was inactive for "U32CFormat" seconds" )
+#define MSG_COMMPROC_ON_HOST_S                    _("on host "SFN"\n")
+#define MSG_COMMPROC_INACTIVEFOR_SIU              _("commproc "SFN":%d was inactive for "U32CFormat" seconds" )
 
 /* 
 ** commd/process_received_message.c
 */ 
 #define MSG_PROC_RECEIVED_MESS_OUTOFCOMMPROCIDS    _("out of commproc ids")
-#define MSG_PROC_RECEIVED_MESS_RECEIVEQUERYMESSFROMUNOWNHOST_S    _("receive query: asking for a message from an unknown host: %s"   )
-#define MSG_PROC_RECEIVED_MESS_ALLREADYINRECEIVECLOSEFD_ISISI           _("commproc already in receive - closing old fd (w_fd=%d, w_name=%s, w_id=%d, w_host=%s, w_tag=%d)" )
-#define MSG_PROC_RECEIVED_MESS_UNKNOWNRECEIVERHOST_S              _("send message: unknown receiver host >%s<"  )
-#define MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S                _("send message: unknown sender host %s")
+#define MSG_PROC_RECEIVED_MESS_RECEIVEQUERYMESSFROMUNOWNHOST_S    _("receive query: asking for a message from an unknown host: "SFN""   )
+#define MSG_PROC_RECEIVED_MESS_ALLREADYINRECEIVECLOSEFD_ISISI           _("commproc already in receive - closing old fd (w_fd=%d, w_name="SFN", w_id=%d, w_host="SFN", w_tag=%d)" )
+#define MSG_PROC_RECEIVED_MESS_UNKNOWNRECEIVERHOST_S              _("send message: unknown receiver host >"SFN"<"  )
+#define MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S                _("send message: unknown sender host "SFN"")
 
 
 /* 
@@ -184,13 +184,13 @@
 /* 
 ** commd/rwfd.c
 */ 
-#define MSG_RWFD_CONNECTINGFAILED_SSISSIS                   _("connecting %s:%s:%d->%s:%s:%d failed: %s")
+#define MSG_RWFD_CONNECTINGFAILED_SSISSIS                   _("connecting "SFN":"SFN":%d->"SFN":"SFN":%d failed: "SFN"")
 #define MSG_RWFD_NOCOMMPROCWAITINGONFD_I                    _("no commproc waiting on fd %d")
-#define MSG_RWFD_DELETECOMMPROCBROKENCONNECTIONFILE_S       _("delete commproc %s: broken connection while waiting for message ack")
-#define MSG_RWFD_BIGXSENDSMESSAGEYBYTESTOZ_USSIIUSSI        _("BIG(SGE_MSG_LOG_SIZE="U32CFormat"): (%s/%s/%d) sends message(tag=%d) "U32CFormat" bytes to (%s/%s/%d)")
+#define MSG_RWFD_DELETECOMMPROCBROKENCONNECTIONFILE_S       _("delete commproc "SFN": broken connection while waiting for message ack")
+#define MSG_RWFD_BIGXSENDSMESSAGEYBYTESTOZ_USSIIUSSI        _("BIG(SGE_MSG_LOG_SIZE="U32CFormat"): ("SFN"/"SFN"/%d) sends message(tag=%d) "U32CFormat" bytes to ("SFN"/"SFN"/%d)")
 #define MSG_RESETMESSAGE_WRITE_MESSAGE_WRITE_0       _("write_message write()==0")
-#define MSG_RESETMESSAGE_WRITE_MESSAGE_WRITE_NEG_1_S _("write_message write()==-1: %s")
-#define MSG_NET_ACCEPTFAILED_S                              _("accept failed: %s")
+#define MSG_RESETMESSAGE_WRITE_MESSAGE_WRITE_NEG_1_S _("write_message write()==-1: "SFN"")
+#define MSG_NET_ACCEPTFAILED_S                              _("accept failed: "SFN"")
 #define MSG_NET_OPENSTREAMSOCKETFAILED                      _("can't open stream socket")
 #define MSG_NET_ERRORCONNECTINGTOHOST                       _("error connecting to host ")
 #define MSG_RWFD_DELIVERMESSAGEFAILEDBUTALIVE               _("can't deliver message (target host alive, but cant contact commd)")
@@ -207,7 +207,7 @@
 #define MSG_TSTRCV_S_OPT_USAGE         _("secure mode (use reserved ports)\n")
 #define MSG_TSTRCV_r_OPT_USAGE         _("repeat whole stuff includsive enrolling\n")
 #define MSG_TSTRCV_cfd_OPT_USAGE       _("close file descriptors between messages\n")
-#define MSG_ERROR_S                    _("error: %s\n")
+#define MSG_ERROR_S                    _("error: "SFN"\n")
 
 
 /* 
@@ -225,6 +225,6 @@
 #define MSG_MEMORY_MALLOCSIZEFAILED_D     _("error can't malloc for buffer size "U32CFormat"\n")
 #define MSG_TSTSND_ENROLLED               _("enrolled\n")
 #define MSG_TSTSND_NOTENROLLED            _("not enrolled\n")
-#define MSG_NET_UNIQUEHOSTNAMEIS_S        _("unique hostname = \"%s\"\n")
+#define MSG_NET_UNIQUEHOSTNAMEIS_S        _("unique hostname = "SFQ"\n")
 
 #endif /* __MSG_COMMD_H */

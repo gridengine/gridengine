@@ -48,5 +48,11 @@
 #define MSG_GDI_DELFROMACL_SS         _("deleted user \"%s\" from access list \"%s\"\n")
 #define MSG_HOST_NEEDAHOSTNAMEORALL            _("Need a hostname or the keyword \"all\"\n")
 
+/*
+** misc
+*/
+#define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _("no option argument provided to "SFQ"")
+
+
 #endif /* __MSG_QCONF_H */
 

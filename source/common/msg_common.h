@@ -119,11 +119,8 @@
 /*
 ** parse.c
 */
-#define MSG_PARSE_XISNOTAVALIDOPTION_S      _("\"%s\" is not a valid option\n")
-#define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _("no option argument provided to \"%s\"")
 #define MSG_SMALLNULL                       _("(null)")
 #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _("ERROR! %s option must have argument\n")
-#define MSG_JOB_XISINVALIDJOBTASKID_S       _("ERROR! %s is a invalid job-task identifier\n")
 
 
 /*

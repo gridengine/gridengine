@@ -63,7 +63,6 @@
 #endif
 #include "msg_utilib.h"
 #include "msg_gdilib.h"
-#include "msg_common.h"
 
 static int sge_send_receive_gdi_request(int *commlib_error,
                                         char *rhost, 

@@ -45,7 +45,6 @@
 #include "gdi_utility_qmaster.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
-#include "msg_qmaster.h"
 #include "sge_feature.h"         
 #include "msg_gdilib.h"
 #include "version.h"

@@ -39,30 +39,29 @@
 /*
 ** sge_security.c
 */
-#define MSG_QSH_GET_CREDSTDERR_S _("get_cred stderr: %s")
+#define MSG_QSH_GET_CREDSTDERR_S _("get_cred stderr: "SFN"")
 #define MSG_QSH_QSUBFAILED    _("qsub failed\n")
-#define MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S    _("can't start command \"%s\" to get token - qsub failed\n")
-#define MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S    _("can't start command \"%s\" to get credentials - qsub failed\n")
+#define MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S    _("can't start command "SFQ" to get token - qsub failed\n")
+#define MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S    _("can't start command "SFQ" to get credentials - qsub failed\n")
 #define MSG_QSH_CANTGETCREDENTIALS    _("warning: could not get credentials\n")
-#define MSG_SEC_NOCRED_USSI           _("could not get credentials for job " U32CFormat " for execution host %s - command \"%s\" failed with return code %d\n")
-#define MSG_SEC_STARTDELCREDCMD_SU    _("can't start command \"%s\" for job " U32CFormat " to delete credentials\n")
+#define MSG_SEC_NOCRED_USSI           _("could not get credentials for job " U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d\n")
+#define MSG_SEC_STARTDELCREDCMD_SU    _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n")
 #define MSG_SEC_NOAUTH_U              _("job "U32CFormat" rejected because authentication failed\n")
-#define MSG_SEC_NOSTORECRED_USI       _("could not store credentials for job " U32CFormat" - command \"%s\" failed with return code %d\n")
-#define MSG_SEC_NOSTORECREDNOBIN_US   _("could not store client credentials for job " U32CFormat" - %s binary does not exist\n")
-#define MSG_SEC_DELCREDSTDERR_S       _("delete_cred stderr: %s")
-#define MSG_SEC_DELCREDRETCODE_USI    _("could not delete credentials for job " U32CFormat" - command \"%s\" failed with return code %d\n")
-#define MSG_SEC_DELCREDNOBIN_US       _("could not delete credentials for job "U32CFormat" - %s binary does not exist\n")
+#define MSG_SEC_NOSTORECRED_USI       _("could not store credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n")
+#define MSG_SEC_NOSTORECREDNOBIN_US   _("could not store client credentials for job " U32CFormat" - "SFN" binary does not exist\n")
+#define MSG_SEC_DELCREDSTDERR_S       _("delete_cred stderr: "SFN"")
+#define MSG_SEC_DELCREDRETCODE_USI    _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n")
+#define MSG_SEC_DELCREDNOBIN_US       _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n")
 #define MSG_SEC_KRBAUTHFAILURE        _("job "U32CFormat" rejected because authentication failed\n")
-#define MSG_SEC_KRBAUTHFAILUREONHOST  _("job "U32CFormat" rejected because authentication failed on host %s\n")
-#define MSG_SEC_PUTCREDSTDERR_S       _("put_cred stderr: %s")
-#define MSG_SEC_NOSTARTCMD4GETCRED_SU _("can't start command \"%s\" for job " U32CFormat " to get credentials\n")
-#define MSG_SEC_NOCREDNOBIN_US        _("could not get client credentials for job " U32CFormat" - %s binary does not exist\n")
-#define MSG_SEC_KRB_CRED_SSSI         _("denied: request for user \"%s\" does not match Kerberos credentials for connection <%s,%s,%d>\n")         
-#define MSG_SEC_CRED_SSSI         _("denied: request for user \"%s\" does not match credentials for connection <%s,%s,%d>\n")         
-#define MSG_SEC_KRBDECRYPTTGT_US      _("could not decrypt TGT for job " U32CFormat "- %s\n")
-#define MSG_SEC_KRBENCRYPTTGT_SSIS    _("could not encrypt TGT for client <%s,%s,%d> - %s\n")
-#define MSG_SEC_KRBENCRYPTTGTUSER_SUS _("could not encrypt TGT for user %s, job "U32CFormat" - %s")
-#define MSG_SEC_NOUID_SU              _("could not get user ID for %s, job "U32CFormat"\n")
+#define MSG_SEC_KRBAUTHFAILUREONHOST  _("job "U32CFormat" rejected because authentication failed on host "SFN"\n")
+#define MSG_SEC_PUTCREDSTDERR_S       _("put_cred stderr: "SFN"")
+#define MSG_SEC_NOSTARTCMD4GETCRED_SU _("can't start command "SFQ" for job " U32CFormat " to get credentials\n")
+#define MSG_SEC_NOCREDNOBIN_US        _("could not get client credentials for job " U32CFormat" - "SFN" binary does not exist\n")
+#define MSG_SEC_KRB_CRED_SSSI         _("denied: request for user "SFQ" does not match Kerberos credentials for connection <"SFN","SFN",%d>\n")         
+#define MSG_SEC_KRBDECRYPTTGT_US      _("could not decrypt TGT for job " U32CFormat "- "SFN"\n")
+#define MSG_SEC_KRBENCRYPTTGT_SSIS    _("could not encrypt TGT for client <"SFN","SFN",%d> - "SFN"\n")
+#define MSG_SEC_KRBENCRYPTTGTUSER_SUS _("could not encrypt TGT for user "SFN", job "U32CFormat" - "SFN"")
+#define MSG_SEC_NOUID_SU              _("could not get user ID for "SFN", job "U32CFormat"\n")
 
 
 /*
@@ -71,7 +70,7 @@
 #define MSG_PARSE_NOALLOCREQRES       _("unable to alloc space for requested resources\n")
 #define MSG_PARSE_NOALLOCATTRLIST     _("unable to alloc space for attrib. list\n")
 #define MSG_PARSE_NOALLOCRESELEM      _("unable to alloc space for resource element\n")
-#define MSG_PARSE_NOVALIDSLOTRANGE_S  _("\"%s\" must be a valid slot range\n")
+#define MSG_PARSE_NOVALIDSLOTRANGE_S  _(""SFQ" must be a valid slot range\n")
 #define MSG_PARSE_NOALLOCATTRELEM     _("unable to alloc space for attrib. element\n")
 
 
@@ -91,10 +90,10 @@
 /*
 ** parse.c
 */
-#define MSG_PARSE_XISNOTAVALIDOPTION_S      _("\"%s\" is not a valid option\n")
-#define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _("no option argument provided to \"%s\"")
-#define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _("ERROR! %s option must have argument\n")
-#define MSG_JOB_XISINVALIDJOBTASKID_S       _("ERROR! %s is a invalid job-task identifier\n")
+/* #define MSG_PARSE_XISNOTAVALIDOPTION_S      _(""SFQ" is not a valid option\n") */
+/* #define MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S  _("no option argument provided to "SFQ"") */
+/* #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _("ERROR! "SFN" option must have argument\n") */
+#define MSG_JOB_XISINVALIDJOBTASKID_S       _("ERROR! "SFN" is a invalid job-task identifier\n")
 
 
 
@@ -113,39 +112,39 @@
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _("failed initialize security data\n")
 #define MSG_GDI_INITKERBEROSSECURITYDATAFAILED        _("failed initialize Kerberos security data\n")
-#define MSG_GDI_ENROLLTOCOMMDFAILED_S                 _("can't enroll to commd: %s\n")
+#define MSG_GDI_ENROLLTOCOMMDFAILED_S                 _("can't enroll to commd: "SFN"\n")
 #define MSG_GDI_COMMDUP                               _("commd is up")
-#define MSG_GDI_COMMDDOWN_S                           _("commd is down: %s")
+#define MSG_GDI_COMMDDOWN_S                           _("commd is down: "SFN"")
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _("parameter rhost = NULL for sge_send_any_request()")
-#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _("can't send %ssynchronous message to commproc (%s:%d) on host \"%s\": %s")
+#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"")
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _("parameter rhost = NULL for sge_get_any_request()")
-#define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _("can't receive message from commproc (%s:%d) on host \"%s\": %s")
+#define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN"")
 
 /* 
 ** gdilib/exec_wrapper.c
 */ 
-#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _("reading config file: specifier \"%s\" given twice for \"%s\"\n")
+#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _("reading config file: specifier "SFQ" given twice for "SFQ"\n")
 
 
 /* 
 ** gdilib/sge_parse_num_par.c
 */ 
 #define MSG_GDI_VALUETHATCANBESETTOINF                  _("value that can be set to infinity")
-#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _("reading config file: specifier \"%s\" given twice for \"%s\"\n")
-#define MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS            _("reading conf file: unknown specifier \"%s\" for %s\n")
-#define MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S        _("reading conf file: empty enumeration for \"%s\"\n " )
+#define MSG_GDI_READCONFIGFILESPECGIVENTWICE_SS         _("reading config file: specifier "SFQ" given twice for "SFQ"\n")
+#define MSG_GDI_READCONFIGFILEUNKNOWNSPEC_SS            _("reading conf file: unknown specifier "SFQ" for "SFN"\n")
+#define MSG_GDI_READCONFIGFILEEMPTYENUMERATION_S        _("reading conf file: empty enumeration for "SFQ"\n " )
 
 
 /* 
 ** gdilib/sge_parse_num_val.c
 */ 
 #define MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS             _("Error! Unrecognized value-trailer '%20s' near '%20s'\nI expected multipliers k, K, m and M.\nThe value string is probably badly formed!\n" )
-#define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _("Error! Unexpected end of numerical value near %s.\nExpected one of ',', '/' or '\\0'. Got '%c'\n" )
+#define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _("Error! Unexpected end of numerical value near "SFN".\nExpected one of ',', '/' or '\\0'. Got '%c'\n" )
 #define MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS         _("Error! numerical value near %20s for hour exceeded.\n'%20s' is no valid time specifier!\n")
 #define MSG_GDI_NUMERICALVALUEINVALID_SS                _("Error! numerical value near %20s invalid.\n'%20s' is no valid time specifier!\n" )
 #define MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS       _("Error! numerical value near %20s for minute exceeded.\n'%20s' is no valid time specifier!\n")
 #define MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS         _("Error! numerical value near %20s invalid.\n>%20s< contains no valid decimal or fixed float number\n")
-#define MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS      _("Error! numerical value near %s invalid.\n'%s' contains no valid hex or octal number\n")
+#define MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS      _("Error! numerical value near "SFN" invalid.\n'"SFN"' contains no valid hex or octal number\n")
 
 
 
@@ -153,18 +152,18 @@
 ** gdilib/sge_qexec.c
 */
 #define MSG_GDI_INVALIDPARAMETER_SS                      _("invalid paramter to "SFQ": "SFQ)
-#define MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS          _("failed resolving uid %d to username: %s")
+#define MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS          _("failed resolving uid %d to username: "SFN"")
 #define MSG_GDI_MISSINGINENVIRONMENT_S                   _("missing "SFQ" in environment")
 #define MSG_GDI_STRINGISINVALID_SS                       _("string "SFQ" in env var "SFQ" is not a valid job/taskid")
-#define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _("proposed task id %s \"%s\" is invalid")
-#define MSG_GDI_TASKEXISTS_S                             _("task %s already exists")
+#define MSG_GDI_PROPOSEDTASKIDINVALID_SS                 _("proposed task id "SFN" "SFQ" is invalid")
+#define MSG_GDI_TASKEXISTS_S                             _("task "SFN" already exists")
 #define MSG_GDI_SETUPGDILIBFAILED                        _("failed setting up gdi library")
-#define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _("failed sending task to execd@%s: %s"                  )
+#define MSG_GDI_SENDTASKTOEXECDFAILED_SS                 _("failed sending task to execd@"SFN": "SFN""                  )
 #define MSG_GDI_TASKNOTEXIST_S                           _("task "SFQ" does not exist")
-#define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _("rcv_from_exec(): failed enrolling to local sge commd: %s")
-#define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _("failed receiving message from execd: %s %d")
-#define MSG_GDI_TASKNOTFOUND_S                           _("cannot find task with taskid \"%s\"\n")
-#define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _("cannot find task without taskid - should become task \"%s\"")
+#define MSG_GDI_RCVFROMEXECLOCALCOMMDFAILED_S            _("rcv_from_exec(): failed enrolling to local sge commd: "SFN"")
+#define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _("failed receiving message from execd: "SFN" %d")
+#define MSG_GDI_TASKNOTFOUND_S                           _("cannot find task with taskid "SFQ"\n")
+#define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _("cannot find task without taskid - should become task "SFQ"")
 
 
 
@@ -179,21 +178,21 @@
 /* 
 ** gdilib/config.c
 */
-#define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _("no argument given in config option: %s\n")
-#define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _("missing configuration attribute \"%s\"")
-#define MSG_GDI_CONFIGADDLISTFAILED_S                    _("can't add \"%s\" to list")
-#define MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS              _("value for attribute %s \"%s\" is not an integer\n")
-#define MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS               _("value for attribute %s \"%s\" is not a double\n")
-#define MSG_GDI_CONFIGARGUMENTNOTTIME_SS                 _("value for attribute %s \"%s\" is not time\n")
-#define MSG_GDI_CONFIGARGUMENTNOMEMORY_SS                _("value for attribute %s \"%s\" is not memory\n")
+#define MSG_GDI_CONFIGNOARGUMENTGIVEN_S                  _("no argument given in config option: "SFN"\n")
+#define MSG_GDI_CONFIGMISSINGARGUMENT_S                  _("missing configuration attribute "SFQ"")
+#define MSG_GDI_CONFIGADDLISTFAILED_S                    _("can't add "SFQ" to list")
+#define MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS              _("value for attribute "SFN" "SFQ" is not an integer\n")
+#define MSG_GDI_CONFIGARGUMENTNOTDOUBLE_SS               _("value for attribute "SFN" "SFQ" is not a double\n")
+#define MSG_GDI_CONFIGARGUMENTNOTTIME_SS                 _("value for attribute "SFN" "SFQ" is not time\n")
+#define MSG_GDI_CONFIGARGUMENTNOMEMORY_SS                _("value for attribute "SFN" "SFQ" is not memory\n")
 #define MSG_GDI_CONFIGINVALIDQUEUESPECIFIED              _("reading conf file: invalid queue type specified\n")
-#define MSG_GDI_CONFIGREADFILEERRORNEAR_SS               _("reading conf file: %s error near \"%s\"\n")
+#define MSG_GDI_CONFIGREADFILEERRORNEAR_SS               _("reading conf file: "SFN" error near "SFQ"\n")
 
 /* 
 ** gdilib/sge_range.c
 */
-#define MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S          _("Numerical value invalid!\nThe initial portion of string \"%s\" contains no decimal number\n")
-#define MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS      _("Range specifier \"%s\" has unknown trailer \"%s\"\n")
+#define MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S          _("Numerical value invalid!\nThe initial portion of string "SFQ" contains no decimal number\n")
+#define MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS      _("Range specifier "SFQ" has unknown trailer "SFQ"\n")
 #define MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED        _("unexpected range following \"UNDEFINED\"\n")
 #define MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE        _("unexpected \"UNDEFINED\" following range\n")
 
@@ -201,7 +200,7 @@
 /* 
 ** gdilib/sge_feature.c
 */
-#define MSG_GDI_PRODUCTMODENOTSETFORFILE_S               _("can't read \"%s\" - product mode not set.")
+#define MSG_GDI_PRODUCTMODENOTSETFORFILE_S               _("can't read "SFQ" - product mode not set.")
 #define MSG_GDI_INVALIDPRODUCTMODESTRING_S               _("invalid product mode string "SFQ"\n")
 #define MSG_GDI_CORRUPTPRODMODFILE_S                     _("product mode file "SFQ" is incorrect\n")
 #define MSG_GDI_SWITCHFROMTO_SS                          _("switching from "SFQ" to "SFQ" feature set\n")
@@ -210,37 +209,37 @@
 ** gdilib/qm_name.c
 */
 #define MSG_GDI_NULLPOINTERPASSED                        _("NULL pointer passed to \"master_host\" or \"master_file\"")
-#define MSG_GDI_OPENMASTERFILEFAILED_S                   _("can't open \"%s\" for reading qmaster hostname")
-#define MSG_GDI_READMASTERHOSTNAMEFAILED_S               _("can't read qmaster hostname in \"%s\"")
-#define MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S            _("qmaster hostname in \"%s\" has zero length")
-#define MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI            _("qmaster hostname in \"%s\" exceeds %d characters\n")
-#define MSG_GDI_OPENWRITEMASTERHOSTNAMEFAILED_SS         _("can't open \"%s\" for writing qmaster hostname: %s")
-#define MSG_GDI_WRITEMASTERHOSTNAMEFAILED_S              _("can't write qmaster hostname into \"%s\"")
-#define MSG_GDI_FOPEN_FAILED                             _("fopen("SFQ") failed: %s\n")
+#define MSG_GDI_OPENMASTERFILEFAILED_S                   _("can't open "SFQ" for reading qmaster hostname")
+#define MSG_GDI_READMASTERHOSTNAMEFAILED_S               _("can't read qmaster hostname in "SFQ"")
+#define MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S            _("qmaster hostname in "SFQ" has zero length")
+#define MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI            _("qmaster hostname in "SFQ" exceeds %d characters\n")
+#define MSG_GDI_OPENWRITEMASTERHOSTNAMEFAILED_SS         _("can't open "SFQ" for writing qmaster hostname: "SFN"")
+#define MSG_GDI_WRITEMASTERHOSTNAMEFAILED_S              _("can't write qmaster hostname into "SFQ"")
+#define MSG_GDI_FOPEN_FAILED                             _("fopen("SFQ") failed: "SFN"\n")
 
 
 /* 
 ** gdilib/resolve.c
 */
-#define MSG_GDI_READMASTERNAMEFAILED_S                   _("unable to read qmaster name: %s")
+#define MSG_GDI_READMASTERNAMEFAILED_S                   _("unable to read qmaster name: "SFN"")
 
 
 
 /* 
 ** gdilib/setup.c
 */
-#define MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S             _("can't read \"%s\" - host compare policy not set.")
-#define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _("%s is not a valid SGE_COMPRESSION_LEVEL\n")
+#define MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S             _("can't read "SFQ" - host compare policy not set.")
+#define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _(""SFN" is not a valid SGE_COMPRESSION_LEVEL\n")
 #define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _("Setting compression level to "U32CFormat"\n")
-#define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _("%s is not a valid SGE_COMPRESSION_THRESHOLD\n")
+#define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _(""SFN" is not a valid SGE_COMPRESSION_THRESHOLD\n")
 #define MSG_GDI_SETCOMPRESSIONTHRESHOLD_D                _("Setting compression threshold to "U32CFormat"\n")
 
 
 /* 
 ** gdilib/setup_path.c
 */
-#define MSG_GDI_SGEROOTNOTADIRECTORY_S                   _("$SGE_ROOT=%s is not a directory\n")
-#define MSG_GDI_DIRECTORYNOTEXIST_S                      _("directory doesn't exist: %s\n")
+#define MSG_GDI_SGEROOTNOTADIRECTORY_S                   _("$SGE_ROOT="SFN" is not a directory\n")
+#define MSG_GDI_DIRECTORYNOTEXIST_S                      _("directory doesn't exist: "SFN"\n")
 #define MSG_SGETEXT_NOSGECELL_S                _("cell directory "SFQ" doesn't exist\n")
 
 
@@ -903,7 +902,7 @@
 /* 
 ** gdilib/utility.c
 */
-#define MSG_GDI_STRING_STRINGTOINTFAILED_S               _("unable to convert string \"%s\" to integer\n")
+#define MSG_GDI_STRING_STRINGTOINTFAILED_S               _("unable to convert string "SFQ" to integer\n")
 
 
 /* 
@@ -915,8 +914,8 @@
 #define MSG_GDI_NEEDUSERNAMEINENVIRONMENT                _("need USERNAME in environment\n")
 #define MSG_GDI_NEEDGIDINENVIRONMENT                     _("need GID in environment\n")
 #define MSG_GDI_NEEDGROUPNAMEINENVIRONMENT               _("need GROUPNAME in environment\n")
-#define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _("failed to getpwuid(%d): %s\n")
-#define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _("failed to getgrgid(%d): %s\n")
+#define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _("failed to getpwuid(%d): "SFN"\n")
+#define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _("failed to getgrgid(%d): "SFN"\n")
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _("failed sending gdi request\n")
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _("failed receiving gdi request\n")
 #define MSG_GDI_SIGNALED                                 _("signaled\n")

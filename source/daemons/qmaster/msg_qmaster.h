@@ -874,5 +874,10 @@
 #define MSG_UMAP_REMOVEDXFROMMAPENTRYYFORCLUSERUSERZ_SSS      _("removed '%s' from mapping entry '%s' for cluster user '%s'\n")
 #define MSG_UMAP_HOSTNAMEXNOTRESOLVEDY_SS          _("hostname '%s' not resolved: %s\n")
 
+/*
+** misc
+*/
+#define MSG_SEC_CRED_SSSI         _("denied: request for user "SFQ" does not match credentials for connection <"SFN","SFN",%d>\n")         
+
 #endif /* __MSG_QMASTER_H */
 

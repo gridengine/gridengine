@@ -990,8 +990,6 @@ NAMEEND
 
 */
 
-#define TASK_ID_RANGE_SIZE 1000
-
 enum {
    JG_qname = JG_LOWERBOUND,
    JG_qversion,
@@ -1020,11 +1018,7 @@ SLISTDEF( JG_Type, GrantedQueue )
                                  * case of pe's with sge controlled slaves */
    SGE_LIST(JG_complex)         /* CX_Type - complex list for this queue 
                                  * used to transfer these values to execd */
-   SGE_XULONG(JG_task_id_range) /* first task id to be used by execd when  
-                                 * searching for free task id's in case
-                                 * of pe's with sge controlled slaves 
-                                 * the valid range is from JG_task_id to 
-                                 * JG_task_id + TASK_ID_RANGE_SIZE -1 */
+   SGE_XULONG(JG_task_id_range) /* unused - please recycle */
    SGE_RDOUBLE(JG_ticket)    /* SGEEE tickets assigned to slots              */
    SGE_RDOUBLE(JG_oticket)   /* SGEEE override tickets assigned to slots     */
    SGE_RDOUBLE(JG_fticket)   /* SGEEE functional tickets assigned to slots   */

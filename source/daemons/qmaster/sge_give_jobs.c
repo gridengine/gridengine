@@ -204,9 +204,8 @@ lListElem *hep
             break;
          }
 
-         /* put JG_task_id_range into JB_task_id_range */
-         lSetUlong(jep, JB_task_id_range, lGetUlong(gdil_ep, JG_task_id_range));
-
+         /* start with 1 as first consecutive taskid at each node */
+         lSetUlong(jep, JB_task_id_range, 1);
 
          if (send_job(lGetHost(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
             ret = -1;   

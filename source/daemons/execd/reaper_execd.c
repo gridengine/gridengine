@@ -858,7 +858,7 @@ lListElem *jr
             return;
          }
 
-         if(lGetUlong(lFirst(lGetList(tep, JB_ja_tasks)), JAT_status) != JEXITING) {
+         if (lGetUlong(jr, JR_state)!=JEXITING) {
             WARNING((SGE_EVENT, MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S, pe_task_id_str));
             DEXIT;
             return;
@@ -1361,8 +1361,12 @@ int npids
    }
    
    if (fscanf(fp, pid_t_fmt, &pid) != 1) {
-      ERROR((SGE_EVENT, MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS,
-             fname, dir));
+      /* most probably a newly started job
+         shepherd usually just had not enough time for writing the pid file 
+         if these warnings do appear frequently one might consider having
+         execd (and thus the shepherds) do local spooling instead of via NFS */
+      WARNING((SGE_EVENT, MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS,
+                  fname, dir));
       fclose(fp);
       DEXIT;
       return;

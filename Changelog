@@ -1,3 +1,11 @@
+AH-2002-03-15-1: Bugfix:    Changed scheme used for creation of id used for
+                            qrsh -inherit sub-tasks to fix accounting
+                            data leak with
+                            multiple runs of a par. application within a
+                            job. Also
+                            write id into accounting file.
+                 Bugtraq:   #4447392
+
 EB-2002-03-13-0: Bugfix:    handling of faulty migrate script
                             - improved logging
                             - shepherd internal state will be reset.
@@ -1260,6 +1268,8 @@ EB-2001-11-05-0: Bugfix: Ckpt jobs and jobs exiting with exit state 99
 AH-2001-11-05-0: Fixes with qstat -pe <pe_name> and qselect -pe <pe_name>
                  - 'all' keyword in PE's queue_list was not honoured
                  - non-parallel queues were selected
+                 Bugtraq: #4584673
+
 
 JG-2001-11-02-1: qstat -j aborted when writing usage of pe tasks
 

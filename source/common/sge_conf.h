@@ -84,6 +84,38 @@ typedef struct confel sge_conf_type;
 
 typedef int (*tDaemonizeFunc)(void);
 
+typedef enum {
+   FIRST_POLICY_VALUE,
+   INVALID_POLICY = FIRST_POLICY_VALUE,
+
+   OVERRIDE_POLICY,
+   FUNCTIONAL_POLICY,
+   SHARE_TREE_POLICY,
+   DEADLINE_POLICY,
+
+   LAST_POLICY_VALUE,
+   POLICY_VALUES = (LAST_POLICY_VALUE - FIRST_POLICY_VALUE)
+} policy_type_t;
+
+ 
+typedef struct {
+   policy_type_t policy;
+   int dependent;
+} policy_hierarchy_t;  
+
+extern const char *const policy_hierarchy_chars; 
+extern char policy_hierarchy_string[5];
+
+char policy_hierarchy_enum2char(policy_type_t value);
+
+policy_type_t policy_hierarchy_char2enum(char character);
+
+int policy_hierarchy_verify_value(const char* value);
+
+void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value);
+
+void policy_hierarchy_print_array(policy_hierarchy_t array[]);
+
 extern sge_conf_type conf;
 
 extern int use_qidle;

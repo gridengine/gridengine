@@ -64,8 +64,9 @@
 #include "sge_string.h"
 #include "sge_dirent.h"
 
-
 #define SGE_BIN "bin"
+
+const char *const policy_hierarchy_chars = "OFSD";
 
 extern u_long32 logginglevel;
 extern u_long32 loggingfacility;
@@ -154,10 +155,16 @@ int set_cod_environment = 0;
 int set_grd_environment = 0;
 
 /* 
- *  Set if admin explicitly deactivated SGEEE PTF component 
- *  initual job priorities remain in effect also in SGEEE
+ * Set if admin explicitly deactivated SGEEE PTF component 
+ * initual job priorities remain in effect also in SGEEE
  */
 int deactivate_ptf = 0;
+
+/*
+ * Activate policy hierarchy in case of SGEEE if not NULL
+ * and not "NONE"
+ */
+char policy_hierarchy_string[5] = "";
 
 /*
  * notify_kill_default and notify_susp_default
@@ -471,12 +478,8 @@ tConfEntry conf[]
  * Merge global and local configuration and set lpConfig list
  * set conf struct from lpConfig
  *----------------------------------------------------------*/
-int merge_configuration(
-lListElem *global,
-lListElem *local,
-sge_conf_type *pconf,
-lList **lpp 
-) {
+int merge_configuration(lListElem *global, lListElem *local,
+                        sge_conf_type *pconf, lList **lpp) {
    lList *cl;
    lListElem *elem, *ep2;
    lList *mlist = NULL;
@@ -607,6 +610,7 @@ lList **lpp
       set_cod_environment = 0;
       set_grd_environment = 0; 
       deactivate_ptf = 0; 
+      policy_hierarchy_string[0] = '\0';
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "USE_QIDLE")) {
@@ -789,6 +793,23 @@ lList **lpp
                free(sv1);
          } else if (!strncasecmp(s, "PROFILE=1", sizeof("PROFILE=1")-1)) {
             profile_schedd = 1;
+         } else if (!strncasecmp(s, "POLICY_HIERARCHY=", 
+                                 sizeof("POLICY_HIERARCHY=")-1)) {
+            const char *value_string;
+
+            value_string = &s[sizeof("POLICY_HIERARCHY=")-1];
+            if (value_string) {
+               policy_hierarchy_t hierarchy[POLICY_VALUES];
+
+               if (policy_hierarchy_verify_value(value_string)) {
+                  WARNING((SGE_EVENT, MSG_GDI_INVALIDPOLICYSTRING)); 
+                  strcpy(policy_hierarchy_string, "");
+               } else {
+                  strcpy(policy_hierarchy_string, value_string);
+               }
+               policy_hierarchy_fill_array(hierarchy, policy_hierarchy_string);
+               policy_hierarchy_print_array(hierarchy);
+            } 
          }
       }
    }
@@ -1210,3 +1231,113 @@ lList **conf_list
    DEXIT;
    return 0;
 }
+
+char policy_hierarchy_enum2char(policy_type_t value) 
+{
+   return policy_hierarchy_chars[value - 1];
+}
+ 
+policy_type_t policy_hierarchy_char2enum(char character)
+{
+   const char *pointer;
+   policy_type_t ret;
+   
+   pointer = strchr(policy_hierarchy_chars, character);
+   if (pointer != NULL) {
+      ret = (pointer - policy_hierarchy_chars) + 1;
+   } else {
+      ret = INVALID_POLICY;
+   }
+   return ret;
+}
+
+int policy_hierarchy_verify_value(const char* value) 
+{
+   int ret = 0;
+
+   DENTER(TOP_LAYER, "policy_hierarchy_verify_value");
+
+   if (value != NULL) {
+      if (strcmp(value, "") && strcasecmp(value, "NONE")) {
+         int is_contained[POLICY_VALUES]; 
+         int i;
+
+         for (i = 0; i < POLICY_VALUES; i++) {
+            is_contained[i] = 0;
+         }
+
+         for (i = 0; i < strlen(value); i++) {
+            char c = value[i];
+            int index = policy_hierarchy_char2enum(c);
+
+            if (is_contained[index]) {
+               DPRINTF(("character \'%c\' is contained at least twice\n", c));
+               ret = 1;
+               break;
+            } 
+
+            is_contained[index] = 1;
+
+            if (is_contained[INVALID_POLICY]) {
+               DPRINTF(("Invalid character \'%c\'\n", c));
+               ret = 2;
+               break;
+            }
+         }
+      }
+   } else {
+      ret = 3;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value)
+{
+   int is_contained[POLICY_VALUES];
+   int index = 0;
+   int i;
+
+   DENTER(TOP_LAYER, "policy_hierarchy_fill_array");
+
+   for (i = 0; i < POLICY_VALUES; i++) {
+      is_contained[i] = 0;
+   }     
+   if (value != NULL && strcmp(value, "") && strcasecmp(value, "NONE")) {
+      for (i = 0; i < strlen(value); i++) {
+         char c = value[i];
+         int enum_value = policy_hierarchy_char2enum(c); 
+
+         is_contained[enum_value] = 1;
+         array[index].policy = enum_value;
+         array[index].dependent = 1;
+         index++;
+      }
+   }
+   for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
+      if (!is_contained[i])  {
+         array[index].policy = i;
+         array[index].dependent = 0;
+         index++;
+      }
+   }
+
+   DEXIT;
+}
+
+void policy_hierarchy_print_array(policy_hierarchy_t array[])
+{
+   int i;
+
+   DENTER(TOP_LAYER, "policy_hierarchy_print_array");
+   
+   for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
+      char character = policy_hierarchy_enum2char(array[i-1].policy);
+      
+      DPRINTF(("policy: %c; dependent: %d\n", character, array[i-1].dependent));
+   }   
+
+   DEXIT;
+}
+

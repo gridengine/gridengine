@@ -2934,25 +2934,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    if (queued_jobs && !classic_sgeee_scheduling) {
       lList *sorted_job_node_list;
       double sum_of_pending_deadline_tickets;
-      typedef enum {
-         SHARE_TREE_POLICY=1,
-         FUNCTIONAL_POLICY=2,
-         OVERRIDE_POLICY=3,
-         DEADLINE_POLICY=4
-      } policy_type_t;
-      typedef struct {
-         policy_type_t policy;
-         int dependent;
-      } policy_hierarchy_t;
-      policy_hierarchy_t hierarchy[4] = {
-          {OVERRIDE_POLICY, 0},
-          {FUNCTIONAL_POLICY, 0},
-          {SHARE_TREE_POLICY, 0},
-          {DEADLINE_POLICY, 0}
-      };
+      policy_hierarchy_t hierarchy[4];
       int policy_ndx;
 
-      for(policy_ndx=0; policy_ndx<sizeof(hierarchy)/sizeof(policy_hierarchy_t); policy_ndx++) {
+      policy_hierarchy_fill_array(hierarchy, policy_hierarchy_string);
+      policy_hierarchy_print_array(hierarchy);  
+
+      for(policy_ndx = 0; 
+          policy_ndx < sizeof(hierarchy) / sizeof(policy_hierarchy_t); 
+          policy_ndx++) {
 
          switch(hierarchy[policy_ndx].policy) {
 
@@ -3208,6 +3198,8 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
             break;
 
+         default:
+            break;
          }
       }
 

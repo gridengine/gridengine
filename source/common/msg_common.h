@@ -419,6 +419,7 @@
 #define MSG_GDI_USING_SS              _("using \"%s\" for %s\n")
 #define MSG_GDI_NOCONFIGFROMMASTER    _("could not get configuration from qmaster - using defaults\n")
 #define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n")
+#define MSG_GDI_INVALIDPOLICYSTRING   _("Invalid policy hierachy string. Disabling policy hierachy.\n")
 
 
 #endif /* __MSG_COMMON_H */

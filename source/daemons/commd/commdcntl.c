@@ -40,6 +40,8 @@
 #include "sge_gdi.h"
 #include "sge_language.h"
 #include "sge_feature.h"
+#include "sge_mt_init.h"
+
 
 void usage(void);
 int main(int argc, char **argv);
@@ -80,6 +82,8 @@ char **argv
    char *profile_operation = NULL;
    int commdport = 0;
    
+   sge_mt_init();
+
    /* 
    ** determine service, (will set CL_P_RESERVED_PORT from product mode file)
    */

@@ -1,3 +1,6 @@
+AD-2003-10-28-2: Bugfix.:   MT initialization for 'commdcntl' was incomplete.
+                 Changed:   commdcntl
+
 AD-2003-10-28-1: Bugfix.:   MT initialization of bootstrap code was missing.
                  Changed:   japi
 

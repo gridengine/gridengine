@@ -1,3 +1,11 @@
+JG-2004-01-27-1: Bugfix:    Fixed aimk LFLAGS for HP11.
+                            Do not recommend use of --enable-posixmutexes for 
+                            the build of Berkeley DB.
+                            Do not use f(un)lockfile on DARWIN6 in flatfile 
+                            spooling.
+                 Review:    SG
+                            
+
 JG-2004-01-27-0: Bugfix:    Fixed aimk LFLAGS for HP1164.
                             Fixed a number of build problems for tru64.
                  Review:    EB

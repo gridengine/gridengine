@@ -33,7 +33,7 @@
 /* system */
 #include <stdio.h>
 
-#if defined(ALPHA) || defined(DARWIN)
+#if defined(ALPHA)
    extern void flockfile(FILE *);
    extern void funlockfile(FILE *);
 #endif
@@ -653,7 +653,7 @@ spool_flatfile_open_file(lList **answer_list,
             return NULL;
          }
 
-#ifndef AIX42
+#if !defined(AIX42) && !defined(DARWIN6)
          flockfile(file);
 #endif
          fflush(file);
@@ -671,7 +671,7 @@ spool_flatfile_open_file(lList **answer_list,
             return NULL;
          }
 
-#ifndef AIX42
+#if !defined(AIX42) && !defined(DARWIN6)
          flockfile(file);
 #endif
          fflush(file);
@@ -764,7 +764,7 @@ spool_flatfile_close_file(lList **answer_list, FILE *file, const char *filepath,
 {
    if (destination == SP_DEST_STDOUT || destination == SP_DEST_STDERR) {
       fflush(file);
-#ifndef AIX42
+#if !defined(AIX42) && !defined(DARWIN6)
       funlockfile(file);
 #endif
       return true;

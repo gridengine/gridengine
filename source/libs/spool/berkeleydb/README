@@ -31,7 +31,7 @@ cd <builddir>
 <source-dir>/dist/configure <options>
 where <options> are
 --enable-rpc (required, build the RPC server)
---enable-posixmutexes (recommended, as Grid Engine uses posix threading and mutexes)
+
 For a list of other options (e.g. --prefix) call
 <source-dir>/dist/configure --help.
 

@@ -235,7 +235,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
    /* setup global host list */
    pthread_mutex_lock(&cl_com_host_list_mutex);
    if (cl_com_host_list == NULL) {
-      ret_val = cl_host_list_setup(&cl_com_host_list, "global_host_cache", CL_SHORT, NULL /*sge_get_alias_path()*/ , NULL, 0 , 0, 0 );
+      ret_val = cl_host_list_setup(&cl_com_host_list, "global_host_cache", CL_SHORT, NULL , NULL, 0 , 0, 0 );
       if (cl_com_host_list == NULL) {
          pthread_mutex_unlock(&cl_com_host_list_mutex);
          cl_com_cleanup_commlib();

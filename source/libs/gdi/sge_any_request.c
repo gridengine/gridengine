@@ -44,7 +44,9 @@
 #include "sge_feature.h"
 #include "sge_security.h"
 #include "sge_unistd.h"
+#include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_bootstrap.h"
 #include "msg_gdilib.h"
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
@@ -199,17 +201,17 @@ int sge_get_communication_error(void) {
  * NOTES
  *    MT-NOTE: prepare_enroll() is MT safe
  *-----------------------------------------------------------------------*/
-#ifdef ENABLE_NGC
 void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 {
    int ret_val;
    u_long32 me_who;
    cl_com_handle_t* handle = NULL;
+   cl_host_resolve_method_t resolve_method = CL_SHORT;
+   const char* default_domain = NULL;
 
 
    DENTER(TOP_LAYER, "prepare_enroll");
 
-   /* TODO: setup security for NGC */
    if (sge_security_initialize(name)) {
       CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
       SGE_EXIT(1);
@@ -228,47 +230,41 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
    }
-   cl_com_set_alias_file(sge_get_alias_path());
-   cl_com_set_error_func(general_communication_error);
-
-   /*
-   set_commlib_param(CL_P_COMMDSERVICE, 0, SGE_COMMD_SERVICE, NULL);
-   set_commlib_param(CL_P_NAME, 0, name, NULL);
-   set_commlib_param(CL_P_ID, id, NULL, NULL);
-   set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
-   */
-
-   /* TODO: check this timeout values */
-   if (uti_state_get_mewho() == QCONF) {
-      INFO((SGE_EVENT, "TODO: set timeouts for syncron rcv/snd of qconf client to 3600 !\n"));
-      /*
-      set_commlib_param(CL_P_TIMEOUT_SRCV, 3600, NULL, NULL);
-      set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
-      */
+ 
+   /* set alias file */
+   ret_val = cl_com_set_alias_file(sge_get_alias_path());
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_set_alias_file(): %s\n",cl_get_error_text(ret_val)));
    }
 
-   /* TODO: implement reserved port security */
+   /* set hostname resolve (compare) method */
+   if (bootstrap_get_ignore_fqdn() == false) {
+      resolve_method = CL_LONG;
+   } 
+   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
+      default_domain = bootstrap_get_default_domain();
+   }
+   ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
+
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_set_resolve_method(): %s\n",cl_get_error_text(ret_val)));
+   }
+
+
+   ret_val = cl_com_set_error_func(general_communication_error);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_set_error_func(): %s\n",cl_get_error_text(ret_val)));
+   }
+
+
+   /* reserved port security not supported anymore */
    if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
       CRITICAL((SGE_EVENT, "reserved port security not implemented\n"));
-      /*
-      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
-      */
+      SGE_EXIT(1);
    }
    
    me_who = uti_state_get_mewho();
 
-   /* TODO: we don't need to get the qmaster name at this point (check this)*/
-   if (!(me_who == QMASTER || me_who == EXECD 
-      || me_who == SCHEDD  || me_who == COMMDCNTL)) {
-      const char *masterhost; 
-
-      if ((masterhost = sge_get_master(0))) {
-      /*
-         set_commlib_param(CL_P_COMMDHOST, 0, masterhost, NULL);
-      */
-      }  
-   }
-   
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
@@ -306,44 +302,6 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    } 
    DEXIT;
 }
-#else
-void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
-{
-   DENTER(BASIS_LAYER, "prepare_enroll");
-
-   if (uti_state_get_mewho() != COMMDCNTL) { 
-      if (sge_security_initialize(name)) {
-         CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED));
-         SGE_EXIT(1);
-      }
-   }
-   
-   set_commlib_param(CL_P_COMMDSERVICE, 0, SGE_COMMD_SERVICE, NULL);
-   set_commlib_param(CL_P_NAME, 0, name, NULL);
-   set_commlib_param(CL_P_ID, id, NULL, NULL);
-   set_commlib_param(CL_P_PRIO_LIST, 0, NULL, tag_priority_list);
-
-   if (uti_state_get_mewho() == QCONF) {
-      set_commlib_param(CL_P_TIMEOUT_SRCV, 3600, NULL, NULL);
-      set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
-   }
-
-   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD 
-      || uti_state_get_mewho() == SCHEDD || uti_state_get_mewho() == COMMDCNTL)) {
-      const char *masterhost; 
-
-      if ((masterhost = sge_get_master(0))) {
-         set_commlib_param(CL_P_COMMDHOST, 0, masterhost, NULL);
-      }  
-   }
-
-   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
-      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
-   }
-
-   DEXIT;
-}
-#endif
 
 /*----------------------------------------------------------
  * sge_log_commd_state_transition

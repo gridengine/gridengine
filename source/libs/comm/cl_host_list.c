@@ -73,7 +73,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    ldata->host_alias_file      = NULL;
 
    if (local_domain_name == NULL && method == CL_LONG) {
-      CL_LOG(CL_LOG_WARNING,"can't compare long hosts without domain name");
+      CL_LOG(CL_LOG_WARNING,"can't compare short host names without default domain when method is CL_LONG");
    }
 
 

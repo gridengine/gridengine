@@ -1,3 +1,7 @@
+CR-2004-02-27-1: Bugfix:    - ignore_fqdn and default_domain parameters wasn't
+                              used in communication lib.
+                 Changed:   commlib
+
 AS-2004-02-27    Bugfix:    corrected wrong exit status from tests"
                  Changed:   aimk
 

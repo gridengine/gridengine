@@ -3316,6 +3316,70 @@ int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t met
    return retval;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_resolve_method()"
+int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domain_name) {
+   cl_raw_list_t* host_list = NULL;
+   cl_host_list_data_t* host_list_data = NULL;
+
+   if (local_domain_name == NULL && method == CL_LONG) {
+      CL_LOG(CL_LOG_WARNING,"can't compare short host names without default domain when method is CL_LONG");
+   }
+   host_list = cl_com_get_host_list();
+   if (host_list == NULL) {
+      CL_LOG(CL_LOG_WARNING,"communication library setup error");
+      return CL_RETVAL_PARAMS;
+   }
+   cl_raw_list_lock(host_list);
+   host_list_data = cl_host_list_get_data(host_list);
+   if (host_list_data == NULL) {
+      CL_LOG(CL_LOG_ERROR,"communication library setup error for hostlist");
+      cl_raw_list_unlock(host_list);
+      return CL_RETVAL_RESOLVING_SETUP_ERROR;
+   }
+
+   if (local_domain_name != NULL) {
+      char* new_domain = strdup(local_domain_name);
+      if (new_domain == NULL) {
+         cl_raw_list_unlock(host_list);
+         return CL_RETVAL_MALLOC;
+      }
+      /* free old local domain */
+      if (host_list_data->local_domain_name != NULL) {
+         free(host_list_data->local_domain_name);
+      }
+      host_list_data->local_domain_name = new_domain;
+   } else {
+      /* free old local domain */
+      if (host_list_data->local_domain_name != NULL) {
+         free(host_list_data->local_domain_name);
+      }
+      host_list_data->local_domain_name = NULL;
+   }
+
+   if (host_list_data->local_domain_name != NULL) {
+      CL_LOG_STR(CL_LOG_INFO,"using local domain name:", host_list_data->local_domain_name);
+   } else {
+      CL_LOG(CL_LOG_INFO,"no local domain specified");
+   }
+
+   host_list_data->resolve_method = method;
+   switch(host_list_data->resolve_method) {
+      case CL_SHORT:
+         CL_LOG(CL_LOG_WARNING,"using short hostname for host compare operations");
+         break;
+      case CL_LONG:
+         CL_LOG(CL_LOG_WARNING,"using long hostname for host compare operations");
+         break;
+      default:
+         CL_LOG(CL_LOG_WARNING,"undefined resolving method");
+         break;
+   }
+   cl_raw_list_unlock(host_list);
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

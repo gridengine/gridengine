@@ -168,6 +168,7 @@ int cl_com_cached_gethostbyname( char *host, char **unique_hostname, struct in_a
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy);
 int cl_com_compare_hosts(char* host1, char* host2);
 int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t method, char* domain);
+int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domain_name);
 
 int cl_com_free_hostent(cl_com_hostent_t **hostent_p);                    /* CR check */
 int cl_com_free_hostspec(cl_com_host_spec_t **hostspec);

@@ -69,6 +69,12 @@
        or  the quotient of the 'weight_deadline' value from sched_conf(5) and 
        the free time in seconds until deadline initiation time.
 
+       The urgency policy provides a multitude of means for different resource 
+       dependent prioritization schemes. Amongst them are general preference for 
+       parallel jobs to implement "largest jobs first" filling or preference for 
+       jobs that request particular resources in order to keep expensive licenses 
+       utilized.
+
      c) 6.0 Changes with the ticket policy 
 
         The ticket policy represents the three sub-policies functional
@@ -153,10 +159,11 @@
           the equal share user sort will be in effect
       --> for jobs with the same -p priority that differ regarding their requested
           resources the urgency policy will be in effect whereas the equal share user 
-          sort will not be determining
+          sort will not be determining 
       --> for jobs with different -p priority the priority determines which one is
           dispatched first and other policies will not be determining
 
+      
 3. Changes with command line interface and configuration file formats
 
 

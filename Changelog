@@ -1,3 +1,10 @@
+CR-2002-03-18-0: Testsuite: - qdel check:
+                              1) clear all error states on test cleanup
+                              2) leave test loop on job submission error
+                            - new version numbers: SGEEE_5.3beta2_2 and
+                                                   SGE_5.3beta2_2
+ 
+
 AA-2002-03-18-1  Bugfix:    - STN_type field is set to display sharetree nodes
                             correctly
                             - Clear Usage

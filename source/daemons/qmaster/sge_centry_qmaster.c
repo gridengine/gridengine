@@ -256,6 +256,42 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 
 /* ------------------------------------------------------------ */
 
+/****** sge_centry_qmaster/centry_success() ************************************
+*  NAME
+*     centry_success() -- ??? 
+*
+*  SYNOPSIS
+*     int centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t 
+*     *object) 
+*
+*  FUNCTION
+*
+*
+*  INPUTS
+*     lListElem *ep        - ??? 
+*     lListElem *old_ep    - ??? 
+*     gdi_object_t *object - ??? 
+*
+*  RESULT
+*     int - 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: centry_success() is not MT safe 
+*
+*  BUGS
+*     This function is the cause for huge overhead with processing complex 
+*     entry change requests: Each change with complex configuration causes 
+*     debitations for ALL resources be re-done with all hosts and queues 
+*     based on per job resource requests. There should be a chance to notably 
+*     lower resource consumption doing this only for those complexes where 
+*     changes actually occurred (AH).
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 int 
 centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
 {

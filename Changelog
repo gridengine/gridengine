@@ -1,3 +1,6 @@
+JG-2002-04-05-2: Doc:       Updated HTML documentation for the event client
+                            interface generated from adoc comments.
+
 CR-2002-04-05-1: Testsuite: - reinserted rsh test on testsuite setup
                               configuration
                             - merged large_cluster test from 

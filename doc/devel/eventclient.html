@@ -1,128 +1,746 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on December, 14  2001 by texi2html 1.65 -->
-<!-- 
-Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
-            Karl Berry  <karl@freefriends.org>
-            Olaf Bachmann <obachman@mathematik.uni-kl.de>
-            and many others.
-Maintained by: Olaf Bachmann <obachman@mathematik.uni-kl.de>
-Send bugs and suggestions to <texi2html@mathematik.uni-kl.de>
- 
--->
 <HEAD>
-<TITLE>Untitled Document: </TITLE>
+<!-- Created by texi2html 1.56k from ../../source/eventclient.texi on 5 April 2002 -->
 
-<META NAME="description" CONTENT="Untitled Document: ">
-<META NAME="keywords" CONTENT="Untitled Document: ">
-<META NAME="resource-type" CONTENT="document">
-<META NAME="distribution" CONTENT="global">
-<META NAME="Generator" CONTENT="texi2html 1.65">
-
+<TITLE>Autodocs for Grid Engine Event Client Interface</TITLE>
 </HEAD>
-
-<BODY LANG="en" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
-
-<A NAME="SEC1"></A>
-<BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="eventclient.html#SEC1">1. Eventclient</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="eventclient.html#SEC2">1.1 --Introduction</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="eventclient.html#SEC3">1.2 Client</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="eventclient.html#SEC22">1.3 Server</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-</TABLE>
-
-<br>
-<TABLE BORDER=0 CELLSPACING=0>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="eventclient.html#SEC44">Function Index</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-</TABLE></BLOCKQUOTE>
+<BODY>
+<H1>Grid Engine Event Client Interface</H1>
+<H2>Documentation taken from source code</H2>
+<H2>Edition 1.0 for Version pre6.0 (Maintrunk)</H2>
+<H2>@today</H2>
+<ADDRESS>The Grid Engine Team</ADDRESS>
 <P>
+<P><HR><P>
+<H1>Table of Contents</H1>
+<UL>
+<LI><A NAME="TOC1" HREF="eventclient.html#SEC1">Eventclient</A>
+<UL>
+<LI><A NAME="TOC2" HREF="eventclient.html#SEC2">--EV_Type</A>
+<LI><A NAME="TOC3" HREF="eventclient.html#SEC3">--Introduction</A>
+<LI><A NAME="TOC4" HREF="eventclient.html#SEC4">-Busy-state</A>
+<LI><A NAME="TOC5" HREF="eventclient.html#SEC5">-Events</A>
+<LI><A NAME="TOC6" HREF="eventclient.html#SEC6">-Flushing</A>
+<LI><A NAME="TOC7" HREF="eventclient.html#SEC7">-ID-numbers</A>
+<LI><A NAME="TOC8" HREF="eventclient.html#SEC8">-Subscription</A>
+<LI><A NAME="TOC9" HREF="eventclient.html#SEC9">Client</A>
+<UL>
+<LI><A NAME="TOC10" HREF="eventclient.html#SEC10">--Introduction</A>
+<LI><A NAME="TOC11" HREF="eventclient.html#SEC11">-Global_Variables</A>
+<LI><A NAME="TOC12" HREF="eventclient.html#SEC12">ck_event_number</A>
+<LI><A NAME="TOC13" HREF="eventclient.html#SEC13">ec_commit</A>
+<LI><A NAME="TOC14" HREF="eventclient.html#SEC14">ec_config_changed</A>
+<LI><A NAME="TOC15" HREF="eventclient.html#SEC15">ec_deregister</A>
+<LI><A NAME="TOC16" HREF="eventclient.html#SEC16">ec_get</A>
+<LI><A NAME="TOC17" HREF="eventclient.html#SEC17">ec_get_busy_handling</A>
+<LI><A NAME="TOC18" HREF="eventclient.html#SEC18">ec_get_clientdata</A>
+<LI><A NAME="TOC19" HREF="eventclient.html#SEC19">ec_get_edtime</A>
+<LI><A NAME="TOC20" HREF="eventclient.html#SEC20">ec_get_flush</A>
+<LI><A NAME="TOC21" HREF="eventclient.html#SEC21">ec_mark4registration</A>
+<LI><A NAME="TOC22" HREF="eventclient.html#SEC22">ec_need_new_registration</A>
+<LI><A NAME="TOC23" HREF="eventclient.html#SEC23">ec_prepare_registration</A>
+<LI><A NAME="TOC24" HREF="eventclient.html#SEC24">ec_register</A>
+<LI><A NAME="TOC25" HREF="eventclient.html#SEC25">ec_set_busy_handling</A>
+<LI><A NAME="TOC26" HREF="eventclient.html#SEC26">ec_set_clientdata</A>
+<LI><A NAME="TOC27" HREF="eventclient.html#SEC27">ec_set_edtime</A>
+<LI><A NAME="TOC28" HREF="eventclient.html#SEC28">ec_set_flush</A>
+<LI><A NAME="TOC29" HREF="eventclient.html#SEC29">ec_subscribe</A>
+<LI><A NAME="TOC30" HREF="eventclient.html#SEC30">ec_subscribe_all</A>
+<LI><A NAME="TOC31" HREF="eventclient.html#SEC31">ec_subscribe_flush</A>
+<LI><A NAME="TOC32" HREF="eventclient.html#SEC32">ec_unset_flush</A>
+<LI><A NAME="TOC33" HREF="eventclient.html#SEC33">ec_unsubscribe</A>
+<LI><A NAME="TOC34" HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>
+<LI><A NAME="TOC35" HREF="eventclient.html#SEC35">get_event_list</A>
+</UL>
+<LI><A NAME="TOC36" HREF="eventclient.html#SEC36">Server</A>
+<UL>
+<LI><A NAME="TOC37" HREF="eventclient.html#SEC37">--Introduction</A>
+<LI><A NAME="TOC38" HREF="eventclient.html#SEC38">-Defines</A>
+<LI><A NAME="TOC39" HREF="eventclient.html#SEC39">-Global_Variables</A>
+<LI><A NAME="TOC40" HREF="eventclient.html#SEC40">check_send_new_subscribed_list</A>
+<LI><A NAME="TOC41" HREF="eventclient.html#SEC41">ck_4_deliver_events</A>
+<LI><A NAME="TOC42" HREF="eventclient.html#SEC42">reinit_schedd</A>
+<LI><A NAME="TOC43" HREF="eventclient.html#SEC43">set_event_client_busy</A>
+<LI><A NAME="TOC44" HREF="eventclient.html#SEC44">sge_ack_event</A>
+<LI><A NAME="TOC45" HREF="eventclient.html#SEC45">sge_add_event</A>
+<LI><A NAME="TOC46" HREF="eventclient.html#SEC46">sge_add_event_client</A>
+<LI><A NAME="TOC47" HREF="eventclient.html#SEC47">sge_add_list_event</A>
+<LI><A NAME="TOC48" HREF="eventclient.html#SEC48">sge_event_client_exit</A>
+<LI><A NAME="TOC49" HREF="eventclient.html#SEC49">sge_eventclient_subscribed</A>
+<LI><A NAME="TOC50" HREF="eventclient.html#SEC50">sge_flush_events</A>
+<LI><A NAME="TOC51" HREF="eventclient.html#SEC51">sge_gdi_kill_eventclient</A>
+<LI><A NAME="TOC52" HREF="eventclient.html#SEC52">sge_gdi_tsm</A>
+<LI><A NAME="TOC53" HREF="eventclient.html#SEC53">sge_get_next_event_number</A>
+<LI><A NAME="TOC54" HREF="eventclient.html#SEC54">sge_locate_scheduler</A>
+<LI><A NAME="TOC55" HREF="eventclient.html#SEC55">sge_mod_event_client</A>
+<LI><A NAME="TOC56" HREF="eventclient.html#SEC56">sge_next_flush</A>
+<LI><A NAME="TOC57" HREF="eventclient.html#SEC57">sge_total_update_event</A>
+<LI><A NAME="TOC58" HREF="eventclient.html#SEC58">total_update</A>
+</UL>
+<LI><A NAME="TOC59" HREF="eventclient.html#SEC59">event_text</A>
+</UL>
+<LI><A NAME="TOC60" HREF="eventclient.html#SEC60">Function Index</A>
+</UL>
+<P><HR><P>
 
-<A NAME="Eventclient"></A>
-<H1> 1. Eventclient </H1>
-<!--docid::SEC1::-->
 <P>
+Copyright (C) The Grid Engine Team
 
-<A NAME="Eventclient --Introduction"></A>
-<HR SIZE="6">
-<A NAME="SEC2"></A>
-<H2> 1.1 --Introduction </H2>
-<!--docid::SEC2::-->
+
+
+
+<H1><A NAME="SEC1" HREF="eventclient.html#TOC1">Eventclient</A></H1>
+
+
+
+<H2><A NAME="SEC2" HREF="eventclient.html#TOC2">--EV_Type</A></H2>
+
 <P>
+<A NAME="IDX1"></A>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Evenclient -- The Grid Engine Event Client Interface
-</FONT></pre></td></tr></table></P><P>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The Grid Engine Event Client Interface provides a means to connect
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+EV_Type -- event client object
+</PRE>
+
+
+<DT><B>ELEMENTS</B>
+<DD>
+
+<PRE>
+SGE_ULONG(EV_id)
+   event client id (see Eventclient/-ID-numbers)
+
+SGE_STRING(EV_name)
+   event client name (any string characterizing the client)
+
+SGE_HOST(EV_host)
+   host on which the event client resides
+
+SGE_STRING(EV_commproc)
+   addressing information
+
+SGE_ULONG(EV_commid)
+   unique id of the event client in commd
+
+SGE_ULONG(EV_uid)
+   user id under which the event client is running
+
+SGE_ULONG(EV_d_time)
+   event delivery time (interval used by qmaster to deliver events)
+
+SGE_STRING(EV_subscription)
+   information about subscription and flushing
+   (see Eventclient/-Subscription and Eventclient/-Flushing)
+
+SGE_ULONG(EV_busy_handling)
+   information about handling of busy states
+   (see Eventclient/-Busy-state)
+
+SGE_ULONG(EV_last_heard_from)
+   time when qmaster heard from the event client for the last time
+
+SGE_ULONG(EV_last_send_time)
+   time of the last delivery of events
+
+SGE_ULONG(EV_next_send_time)
+   next time scheduled for the delivery of events
+
+SGE_ULONG(EV_next_number)
+   next sequential number for events (each event gets a unique number)
+
+SGE_ULONG(EV_busy)
+   is the event client busy? (0 = false, 1 = true)
+   no events will be delivered to a busy client
+
+SGE_LIST(EV_events)
+   list of events - they will be spooled until the event client
+   acknowledges receipt
+
+SGE_ULONG(EV_clientdata)
+   a 32bit ulong for use by the event client or special handling
+   for certain event clients
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client creates and initializes such an object and passes
+it to qmaster for registration.
+Qmaster will fill some of the fields (e.g. the EV_id) and send
+the object back to the event client on successful registration.
+Whenever the event client wants to change some configuration
+parameters, it changes the object and sends it to qmaster
+with a modification request.
+
+Qmaster uses the object internally to track sequential numbers,
+delivery times, timeouts etc.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC3">--Introduction</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC7">-ID-numbers</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC8">-Subscription</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC6">-Flushing</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
+</UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC3" HREF="eventclient.html#TOC3">--Introduction</A></H2>
+
+<P>
+<A NAME="IDX2"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Evenclient -- The Grid Engine Event Client Interface
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+The Grid Engine Event Client Interface provides a means to connect
 to the Grid Engine qmaster and receive information about objects
 (actual object properties and changes).
 It provides a subscribe/unsubscribe mechanism allowing fine grained
-selection of objects per object types and event types (e.g. add,
-modify, delete).
-</FONT></pre></td></tr></table></P><P>
+selection of objects per object types (e.g. jobs, queues, hosts)
+and event types (e.g. add, modify, delete).
+Flushing triggered by individual events can be set.
+Policies can be set how to handle busy event clients.
+It should have much less impact on qmaster performance than polling
+the same data in regular intervals.
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The current implementation is a generalized form of the event client
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The current implementation is a generalized form of the event client
 interface that already existed in Codine/GRD.
-It still contains code handling scheduler specific behavior, like
-the flushing of certain events.
-A further cleanup and generalization step should be done.
-The code should also be extracted from qmaster, scheduler and libsched
-directories and could form a new event client library.
-</FONT></pre></td></tr></table></P><P>
+Further cleanup steps might be usefull.
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC4">1.2.1 --Introduction</A>.
+
+section <A HREF="eventclient.html#SEC2">--EV_Type</A>.
 <LI>
-<A HREF="eventclient.html#SEC23">1.3.1 --Introduction</A>.
+
+section <A HREF="eventclient.html#SEC8">-Subscription</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC6">-Flushing</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC10">--Introduction</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC37">--Introduction</A>.
 </UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC4" HREF="eventclient.html#TOC4">-Busy-state</A></H2>
+
 <P>
+<A NAME="IDX3"></A>
 
-<A NAME="Eventclient Client"></A>
-<HR SIZE="6">
-<A NAME="SEC3"></A>
-<H2> 1.2 Client </H2>
-<!--docid::SEC3::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Busy-state -- Handling of busy event clients
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client may have time periods where it is busy doing some
+processing and can not accept new events.
+
+In this case, qmaster should not send out new events but spool them,
+as otherwise timeouts would occur waiting for acknowledges.
+
+Therefore an event client can set a policy that describes how busy
+states are set and unset.
+
+Which policy to use is set with the ev_set_busy_handling() function
+call. The policy can be changed dynamically at runtime.
+
+The following policies are implemented at present:
+   EV_BUSY_NO_HANDLING    - busy state is not handled automatically
+                            by the event client interface
+   EV_BUSY_UNTIL_ACK      - when delivering events qmaster will set
+                            the eventclient to busy and will unset
+                            the busy state when the event client
+                            acknowledges receipt of the events.
+   EV_BUSY_UNTIL_RELEASED - when delivering events qmaster will set
+                            the eventclient to busy.
+                            It will stay in the busy state until it
+                            is explicitly released either by special
+                            handling of the client in qmaster
+                            (scheduler), or by a message (not yet
+                            implemented)
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+A special GDI message (or piggypack to the ACK message) still has to be
+implemented to allow setting of the busy state from the client.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC25">ec_set_busy_handling</A>.
+</UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC5" HREF="eventclient.html#TOC5">-Events</A></H2>
+
 <P>
+<A NAME="IDX4"></A>
 
-<A NAME="Eventclient Client --Introduction"></A>
-<HR SIZE="6">
-<A NAME="SEC4"></A>
-<H3> 1.2.1 --Introduction </H3>
-<!--docid::SEC4::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Events -- events available from qmaster
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+The following events can be raised in qmaster and be subscribed
+by an event client:
+
+   sgeE_ALL_EVENTS
+
+   sgeE_ADMINHOST_LIST              send admin host list at registration
+   sgeE_ADMINHOST_ADD               event add admin host
+   sgeE_ADMINHOST_DEL               event delete admin host
+   sgeE_ADMINHOST_MOD               event modify admin host
+
+   sgeE_CALENDAR_LIST               send calendar list at registration
+   sgeE_CALENDAR_ADD                event add calendar
+   sgeE_CALENDAR_DEL                event delete calendar
+   sgeE_CALENDAR_MOD                event modify calendar
+
+   sgeE_CKPT_LIST                   send ckpt list at registration
+   sgeE_CKPT_ADD                    event add ckpt
+   sgeE_CKPT_DEL                    event delete ckpt
+   sgeE_CKPT_MOD                    event modify ckpt
+
+   sgeE_COMPLEX_LIST                send complex list at registration
+   sgeE_COMPLEX_ADD                 event add complex
+   sgeE_COMPLEX_DEL                 event delete complex
+   sgeE_COMPLEX_MOD                 event modify complex
+
+   sgeE_CONFIG_LIST                 send config list at registration
+   sgeE_CONFIG_ADD                  event add config
+   sgeE_CONFIG_DEL                  event delete config
+   sgeE_CONFIG_MOD                  event modify config
+
+   sgeE_EXECHOST_LIST               send exec host list at registration
+   sgeE_EXECHOST_ADD                event add exec host
+   sgeE_EXECHOST_DEL                event delete exec host
+   sgeE_EXECHOST_MOD                event modify exec host
+
+   sgeE_GLOBAL_CONFIG               global config changed, replace by sgeE_CONFIG_MOD
+
+   sgeE_JATASK_DEL                  event delete array job task
+   sgeE_JATASK_MOD                  event modify array job task
+
+   sgeE_JOB_LIST                    send job list at registration
+   sgeE_JOB_ADD                     event job add (new job)
+   sgeE_JOB_DEL                     event job delete
+   sgeE_JOB_MOD                     event job modify
+   sgeE_JOB_MOD_SCHED_PRIORITY      event job modify priority
+   sgeE_JOB_USAGE                   event job online usage
+   sgeE_JOB_FINAL_USAGE             event job final usage report after job end
+
+   sgeE_JOB_SCHEDD_INFO_LIST        send job schedd info list at registration
+   sgeE_JOB_SCHEDD_INFO_ADD         event jobs schedd info added
+   sgeE_JOB_SCHEDD_INFO_DEL         event jobs schedd info deleted
+   sgeE_JOB_SCHEDD_INFO_MOD         event jobs schedd info modified
+
+   sgeE_MANAGER_LIST                send manager list at registration
+   sgeE_MANAGER_ADD                 event add manager
+   sgeE_MANAGER_DEL                 event delete manager
+   sgeE_MANAGER_MOD                 event modify manager
+
+   sgeE_OPERATOR_LIST               send operator list at registration
+   sgeE_OPERATOR_ADD                event add operator
+   sgeE_OPERATOR_DEL                event delete operator
+   sgeE_OPERATOR_MOD                event modify operator
+
+   sgeE_NEW_SHARETREE               replace possibly existing share tree
+
+   sgeE_PE_LIST                     send pe list at registration
+   sgeE_PE_ADD                      event pe add
+   sgeE_PE_DEL                      event pe delete
+   sgeE_PE_MOD                      event pe modify
+
+   sgeE_PROJECT_LIST                send project list at registration
+   sgeE_PROJECT_ADD                 event project add
+   sgeE_PROJECT_DEL                 event project delete
+   sgeE_PROJECT_MOD                 event project modify
+
+   sgeE_QMASTER_GOES_DOWN           qmaster notifies all event clients, before
+                                    it exits
+
+   sgeE_QUEUE_LIST                  send queue list at registration
+   sgeE_QUEUE_ADD                   event queue add
+   sgeE_QUEUE_DEL                   event queue delete
+   sgeE_QUEUE_MOD                   event queue modify
+   sgeE_QUEUE_SUSPEND_ON_SUB        queue is suspended by subordinate mechanism
+   sgeE_QUEUE_UNSUSPEND_ON_SUB      queue is unsuspended by subordinate mechanism
+
+   sgeE_SCHED_CONF                  replace existing (sge) scheduler configuration
+
+   sgeE_SCHEDDMONITOR               trigger scheduling run
+
+   sgeE_SHUTDOWN                    request shutdown of an event client
+
+   sgeE_SUBMITHOST_LIST             send submit host list at registration
+   sgeE_SUBMITHOST_ADD              event add submit host
+   sgeE_SUBMITHOST_DEL              event delete submit host
+   sgeE_SUBMITHOST_MOD              event modify submit host
+
+   sgeE_USER_LIST                   send user list at registration
+   sgeE_USER_ADD                    event user add
+   sgeE_USER_DEL                    event user delete
+   sgeE_USER_MOD                    event user modify
+
+   sgeE_USERSET_LIST                send userset list at registration
+   sgeE_USERSET_ADD                 event userset add
+   sgeE_USERSET_DEL                 event userset delete
+   sgeE_USERSET_MOD                 event userset modify
+
+If user mapping is enabled (compile time option), the following
+additional events can be subscribed:
+
+   sgeE_USERMAPPING_ENTRY_LIST      send list of user mappings
+   sgeE_USERMAPPING_ENTRY_ADD       a new user mapping was added
+   sgeE_USERMAPPING_ENTRY_DEL       a user mapping was deleted
+   sgeE_USERMAPPING_ENTRY_MOD       a user mapping entry was changed
+
+   sgeE_HOST_GROUP_LIST             send list of host groups
+   sgeE_HOST_GROUP_ADD              a host group was added
+   sgeE_HOST_GROUP_DEL              a host group was deleted
+   sgeE_HOST_GROUP_MOD              a host group was changed
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+This list of events will increase as further event situations
+are identified and interfaced.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC8">-Subscription</A>.
+</UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC6" HREF="eventclient.html#TOC6">-Flushing</A></H2>
+
 <P>
+<A NAME="IDX5"></A>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Event Client Interface -- Client Functionality
-</FONT></pre></td></tr></table></P><P>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_prepare_registration(u_long32 id, const char *name);
-int ec_register(void);
-int ec_deregister(void);
+<DL COMPACT>
 
-int ec_subscribe(int event);
-int ec_subscribe_all(void);
+<DT><B>NAME</B>
+<DD>
 
-int ec_unsubscribe(int event);
-int ec_unsubscribe_all(void);
+<PRE>
+Flushing -- Configuration of event flushing
+</PRE>
 
-int ec_set_edtime(int intval);
-int ec_get_edtime(void);
 
-int ec_commit(void);
+<DT><B>FUNCTION</B>
+<DD>
 
-int ec_get(lList **);
+<PRE>
+In the standard configuration, qmaster will deliver events
+in certain intervals to event clients.
+These intervals can be configured using the ec_set_edtime()
+function call.
 
-void ec_mark4registration(void);
-int ec_need_new_registration(void);
-</FONT></pre></td></tr></table></P><P>
+In certain cases, an event client will want to be immediately
+notified, if certain events occur. A scheduler for example
+could be notified immediately, if resources in a cluster become
+available to allow instant refilling of the cluster.
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The client side of the event client interface provides functions
+The event client interface allows to configure flushing
+for each individual event id.
+
+Flushing can either be switched off (default) for an event, or
+a delivery time can be configured.
+If a delivery time is configured, events for the event client
+will be delivered by qmaster at latest after this delivery time.
+A delivery time of 0 means instant delivery.
+
+Flushing can be changed dynamically at runtime through the
+ec_set_flush/ec_unset_flush functions.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC32">ec_unset_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+</UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC7" HREF="eventclient.html#TOC7">-ID-numbers</A></H2>
+
+<P>
+<A NAME="IDX6"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ID-numbers -- id numbers for registration
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include &#60;sge_eventL.h&#62;
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Each event client registered at qmaster has a unique client id.
+The request for registering at qmaster contains either a concrete
+id the client wants to occupy, or it asks the qmaster to assign
+an id.
+The client sets the id to use at registration with the
+ec_prepare_registration function call.
+
+The following id's can be used:
+   EV_ID_ANY    - qmaster will assign a unique id
+   EV_ID_SCHEDD - register at qmaster as scheduler
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+As long as an event client does not expect any special handling
+within qmaster, it should let qmaster assign an id.
+
+If a client expects special handling, a new id in the range
+[2;10] has to be created and the special handling has to be
+implemented in qmaster (probably in sge_m_event.c).
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC23">ec_prepare_registration</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC46">sge_add_event_client</A>.
+</UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC8" HREF="eventclient.html#TOC8">-Subscription</A></H2>
+
+<P>
+<A NAME="IDX7"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Subscription -- Subscription interface for event clients
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client is notified, if certain event conditions are
+raised in qmaster.
+
+Which events an event client is interested in can be set through
+the subscription interface.
+
+Events have a unique event identification that classifies them,
+e.g. "a job has been submitted" or "a queue has been disabled".
+
+Delivery of events can be switched on/off for each event id
+individually.
+
+Subscription can be changed dynamically at runtime through the
+ec_subscribe/ec_unsubscribe functions.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC5">-Events</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+</UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC9" HREF="eventclient.html#TOC9">Client</A></H2>
+
+
+
+<H3><A NAME="SEC10" HREF="eventclient.html#TOC10">--Introduction</A></H3>
+
+<P>
+<A NAME="IDX8"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Event Client Interface -- Client Functionality
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+The client side of the event client interface provides functions
 to register and deregister (before registering, you have to call
 ec_prepare_registration to set an id and client name).
 
@@ -131,74 +749,178 @@ The subscribe / unsubscribe mechanism allows to select the data
 
 It is possible to set the interval in which qmaster will send
 new events to an event client.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>EXAMPLE</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>clients/qevent/qevent.c can serve as a simple example.
+
+<DT><B>EXAMPLE</B>
+<DD>
+
+<PRE>
+clients/qevent/qevent.c can serve as a simple example.
 The scheduler (daemons/schedd/sge_schedd.c) is also implemented
 as event client and uses all mechanisms of the event client
 interface.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC2">1.1 --Introduction</A>.
+
+section <A HREF="eventclient.html#SEC3">--Introduction</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC23">ec_prepare_registration</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC24">ec_register</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC15">ec_deregister</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC20">ec_get_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC32">ec_unset_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC19">ec_get_edtime</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC25">ec_set_busy_handling</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC17">ec_get_busy_handling</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC26">ec_set_clientdata</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC18">ec_get_clientdata</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC21">ec_mark4registration</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC22">ec_need_new_registration</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC11" HREF="eventclient.html#TOC11">-Global_Variables</A></H3>
+
 <P>
+<A NAME="IDX9"></A>
 
-<A NAME="Eventclient Client -Global_Variables"></A>
-<HR SIZE="6">
-<A NAME="SEC5"></A>
-<H3> 1.2.2 -Global_Variables </H3>
-<!--docid::SEC5::-->
-<P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Global_Variables -- global variables in the client
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static int config_changed = 0;
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Global_Variables -- global variables in the client
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+static int config_changed = 0;
 static int need_register  = 1;
 static lListElem *ec      = NULL;
 static u_long32 ec_reg_id = 0;
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>config_changed - the configuration changed (subscription or event interval)
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+config_changed - the configuration changed (subscription or event interval)
 need_register  - the client is not registered at the server
 ec             - event client object holding configuration data
 ec_reg_id      - the id used to register at the qmaster
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>These global variables should be part of the event client object.
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+These global variables should be part of the event client object.
 The only remaining global variable would be a list of event client objects,
 allowing one client to connect to multiple event client servers.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<A NAME="Eventclient Client ck_event_number"></A>
-<HR SIZE="6">
-<A NAME="SEC6"></A>
-<H3> 1.2.3 ck_event_number </H3>
-<!--docid::SEC6::-->
+
+</DL>
+
+
+<H3><A NAME="SEC12" HREF="eventclient.html#TOC12">ck_event_number</A></H3>
+
 <P>
+<A NAME="IDX10"></A>
 
-<A NAME="IDX1"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ck_event_number() -- test event numbers
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for,
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ck_event_number() -- test event numbers
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for,
                                 u_long32 *wrong_number)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Tests list of events if it contains right numbered events.
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Tests list of events if it contains right numbered events.
 
 Events with numbers lower than expected get trashed.
 
@@ -211,160 +933,243 @@ On success *waiting_for will contain the next number we wait for.
 
 On failure *waiting_for gets not changed and if wrong_number is not
 NULL *wrong_number contains the wrong number we got.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList *lp              - event list to check
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lList *lp              - event list to check
 u_long32 *waiting_for  - next number to wait for
 u_long32 *wrong_number - event number that causes a failure
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static u_long32 - 0 on success, else -1
-</FONT></pre></td></tr></table></P><P>
 
-<A NAME="Eventclient Client ec_commit"></A>
-<HR SIZE="6">
-<A NAME="SEC7"></A>
-<H3> 1.2.4 ec_commit </H3>
-<!--docid::SEC7::-->
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+static u_long32 - 0 on success, else -1
+</PRE>
+
+
+</DL>
+
+
+<H3><A NAME="SEC13" HREF="eventclient.html#TOC13">ec_commit</A></H3>
+
 <P>
+<A NAME="IDX11"></A>
 
-<A NAME="IDX2"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_commit() -- commit configuration changes
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_commit(void)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Configuration changes (subscription and/or event delivery time) will be
+<PRE>
+ec_commit() -- commit configuration changes
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_commit(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Configuration changes (subscription and/or event delivery time) will be
 sent to the event server.
 The function should be called after (multiple) configuration changes
 have been made.
 If it is not explicitly called by the event client program, the next
 call of ec_get will commit configuration changes before looking for new
 events.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1 on success, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC8">1.2.5 ec_config_changed</A>.
+
+section <A HREF="eventclient.html#SEC14">ec_config_changed</A>.
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC14" HREF="eventclient.html#TOC14">ec_config_changed</A></H3>
+
 <P>
+<A NAME="IDX12"></A>
 
-<A NAME="Eventclient Client ec_config_changed"></A>
-<HR SIZE="6">
-<A NAME="SEC8"></A>
-<H3> 1.2.5 ec_config_changed </H3>
-<!--docid::SEC8::-->
-<P>
 
-<A NAME="IDX3"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_config_changed() -- has the configuration changed?
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static void ec_config_changed(void)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_config_changed() -- tell system the config has changed
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Checkes whether the configuration has changes.
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+static void ec_config_changed(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Checkes whether the configuration has changes.
 Configuration changes can either be changes in the subscription
 or change of the event delivery interval.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static void - 1, if the config has been changed, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC17">1.2.14 ec_subscribe</A>.
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC18">1.2.15 ec_subscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC19">1.2.16 ec_unsubscribe</A>.
+
+section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC20">1.2.17 ec_unsubscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC16">1.2.13 ec_set_edtime</A>.
+
+section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC15" HREF="eventclient.html#TOC15">ec_deregister</A></H3>
+
 <P>
+<A NAME="IDX13"></A>
 
-<A NAME="Eventclient Client ec_deregister"></A>
-<HR SIZE="6">
-<A NAME="SEC9"></A>
-<H3> 1.2.6 ec_deregister </H3>
-<!--docid::SEC9::-->
-<P>
 
-<A NAME="IDX4"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_deregister() -- deregister from the event server
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_deregister(void)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_deregister() -- deregister from the event server
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Deregister from the event server (usually the qmaster).
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_deregister(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Deregister from the event server (usually the qmaster).
 This function should be called when an event client exits.
 
 If an event client does not deregister, qmaster will spool events for this
 client until it times out (it did not acknowledge events sent by qmaster).
 After the timeout, it will be deleted.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1, if the deregistration succeeded, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1, if the deregistration succeeded, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC15">1.2.12 ec_register</A>.
+
+section <A HREF="eventclient.html#SEC24">ec_register</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC16" HREF="eventclient.html#TOC16">ec_get</A></H3>
+
 <P>
+<A NAME="IDX14"></A>
 
-<A NAME="Eventclient Client ec_get"></A>
-<HR SIZE="6">
-<A NAME="SEC10"></A>
-<H3> 1.2.7 ec_get </H3>
-<!--docid::SEC10::-->
-<P>
 
-<A NAME="IDX5"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_get() -- look for new events
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_get(lList **event_list)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_get() -- look for new events
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_get looks for new events.
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_get(lList **event_list)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+ec_get looks for new events.
 If new events have arrived, they are passed back to the caller in the
 parameter event_list.
 
@@ -374,587 +1179,1542 @@ the registration will be done before looking for events.
 If the configuration changed since the last call of ec_get and has
 not been committed, ec_commit will be called before looking for
 events.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList **event_list - pointer to an event list to hold arriving events
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 0, if events or an empty event list was received, or
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lList **event_list - pointer to an event list to hold arriving events
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 0, if events or an empty event list was received, or
          if no data was received within a certain time period
      &#60;0 (commlib error code), if an error occured
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The event_list has to be freed by the calling function.
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The event_list has to be freed by the calling function.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC15">1.2.12 ec_register</A>.
+
+section <A HREF="eventclient.html#SEC24">ec_register</A>.
 <LI>
-<A HREF="eventclient.html#SEC7">1.2.4 ec_commit</A>.
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC17" HREF="eventclient.html#TOC17">ec_get_busy_handling</A></H3>
+
 <P>
+<A NAME="IDX15"></A>
 
-<A NAME="Eventclient Client ec_get_edtime"></A>
-<HR SIZE="6">
-<A NAME="SEC11"></A>
-<H3> 1.2.8 ec_get_edtime </H3>
-<!--docid::SEC11::-->
-<P>
 
-<A NAME="IDX6"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_get_edtime() -- get the current event delivery interval
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_get_edtime(void)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_get_busy_handling() -- get configured busy handling policy
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Get the interval qmaster will use to send events to the client.
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - the interval in seconds
-</FONT></pre></td></tr></table></P><P>
+<DT><B>SYNOPSIS</B>
+<DD>
 
-<B>SEE ALSO</B>
+<PRE>
+#include "sge_c_event.h"
+
+int ec_get_busy_handling(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Returns the policy currently configured.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - the current policy
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC16">1.2.13 ec_set_edtime</A>.
+
+section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC18" HREF="eventclient.html#TOC18">ec_get_clientdata</A></H3>
+
 <P>
+<A NAME="IDX16"></A>
 
-<A NAME="Eventclient Client ec_mark4registration"></A>
-<HR SIZE="6">
-<A NAME="SEC12"></A>
-<H3> 1.2.9 ec_mark4registration </H3>
-<!--docid::SEC12::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_get_clientdata() -- get the clientdata value
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+u_long32 ec_get_clientdata()
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Get the current value of the clientdata for the event client.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+u_long32 - current value
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC18">ec_get_clientdata</A>.
+<LI>
+
+See <TT>`Eventclient/EV_Type'</TT>
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC19" HREF="eventclient.html#TOC19">ec_get_edtime</A></H3>
+
 <P>
+<A NAME="IDX17"></A>
 
-<A NAME="IDX7"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_mark4registration() -- new registration is required
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void ec_mark4registration(void)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Tells the event client mechanism, that the connection to the server
+<PRE>
+ec_get_edtime() -- get the current event delivery interval
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_get_edtime(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Get the interval qmaster will use to send events to the client.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - the interval in seconds
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC27">ec_set_edtime</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC20" HREF="eventclient.html#TOC20">ec_get_flush</A></H3>
+
+<P>
+<A NAME="IDX18"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_get_flush() -- get flushing information for an event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_get_flush(int event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client can request flushing of events from qmaster for any
+number of the events subscribed.
+This function returns the flushing information for an individual event.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int event - the event id to query
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - EV_NO_FLUSH(-1) or the number of seconds used for flushing
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC6">-Flushing</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC21" HREF="eventclient.html#TOC21">ec_mark4registration</A></H3>
+
+<P>
+<A NAME="IDX19"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_mark4registration() -- new registration is required
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+void ec_mark4registration(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Tells the event client mechanism, that the connection to the server
 is broken and it has to reregister.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Should be no external interface. The event client mechanism should itself
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Should be no external interface. The event client mechanism should itself
 detect such situations and react accordingly.
-Should not reference a global variable from scheduler (new_global_config)!
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC13">1.2.10 ec_need_new_registration</A>.
+
+section <A HREF="eventclient.html#SEC22">ec_need_new_registration</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC22" HREF="eventclient.html#TOC22">ec_need_new_registration</A></H3>
+
 <P>
+<A NAME="IDX20"></A>
 
-<A NAME="Eventclient Client ec_need_new_registration"></A>
-<HR SIZE="6">
-<A NAME="SEC13"></A>
-<H3> 1.2.10 ec_need_new_registration </H3>
-<!--docid::SEC13::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_need_new_registration() -- is a reregistration neccessary?
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_need_new_registration(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Function to check, if a new registration at the server is neccessary.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1, if the client has to (re)register, else 0
+</PRE>
+
+
+</DL>
+
+
+<H3><A NAME="SEC23" HREF="eventclient.html#TOC23">ec_prepare_registration</A></H3>
+
 <P>
+<A NAME="IDX21"></A>
 
-<A NAME="IDX8"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_need_new_registration() -- is a reregistration neccessary
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_need_new_registration(void)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Function to check, if a new registration at the server is neccessary.
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_prepare_registration() -- prepare registration at server
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1, if the client has to (re)register, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<A NAME="Eventclient Client ec_prepare_registration"></A>
-<HR SIZE="6">
-<A NAME="SEC14"></A>
-<H3> 1.2.11 ec_prepare_registration </H3>
-<!--docid::SEC14::-->
-<P>
+<DT><B>SYNOPSIS</B>
+<DD>
 
-<A NAME="IDX9"></A>
-</P><P>
+<PRE>
+#include "sge_c_event.h"
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_prepare_registration() -- prepare registration at server
-</FONT></pre></td></tr></table></P><P>
+int ec_prepare_registration(u_long32 id, const char *name)
+</PRE>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_prepare_registration(u_long32 id, const char *name)
-</FONT></pre></td></tr></table></P><P>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Initializes necessary data structures and sets the data needed for
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Initializes necessary data structures and sets the data needed for
 registration at an event server.
 The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN are subscribed.
 
-For valid id's see ....
+For valid id's see Eventclient/-ID-numbers.
+
 The name is informational data that will be included in messages
 (errors, warnings, infos) and will be shown in the command line tool
 qconf -sec.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>u_long32 id      - id used to register
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+u_long32 id      - id used to register
 const char *name - name of the event client
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1,if the function succeeded, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1,if the function succeeded, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-See `<TT>qconf</TT>'
+
+section <A HREF="eventclient.html#SEC2">--EV_Type</A>.
 <LI>
-See `<TT>manpage</TT>'
+
+section <A HREF="eventclient.html#SEC7">-ID-numbers</A>.
 <LI>
-See `<TT>list</TT>'
+
+section <A HREF="eventclient.html#SEC8">-Subscription</A>.
 <LI>
-See `<TT>of</TT>'
+
+See <TT>`qconf'</TT>
 <LI>
-See `<TT>events</TT>'
+
+See <TT>`manpage'</TT>
 <LI>
-See `<TT>list</TT>'
+
+See <TT>`list'</TT>
 <LI>
-See `<TT>of</TT>'
+
+See <TT>`of'</TT>
 <LI>
-See `<TT>ids</TT>'
+
+See <TT>`events'</TT>
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC24" HREF="eventclient.html#TOC24">ec_register</A></H3>
+
 <P>
+<A NAME="IDX22"></A>
 
-<A NAME="Eventclient Client ec_register"></A>
-<HR SIZE="6">
-<A NAME="SEC15"></A>
-<H3> 1.2.12 ec_register </H3>
-<!--docid::SEC15::-->
-<P>
 
-<A NAME="IDX10"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_register() -- register at the event server
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_register(void)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_register() -- register at the event server
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Registers the event client at the event server (usually the qmaster).
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_register(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Registers the event client at the event server (usually the qmaster).
 This function can be called explicitly in the event client at startup
 or when the connection to qmaster is down.
 
 It will be called implicitly by ec_get, whenever it detects the neccessity
 to (re)register the client.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1, if the registration succeeded, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1, if the registration succeeded, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC9">1.2.6 ec_deregister</A>.
+
+section <A HREF="eventclient.html#SEC15">ec_deregister</A>.
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC25" HREF="eventclient.html#TOC25">ec_set_busy_handling</A></H3>
+
 <P>
+<A NAME="IDX23"></A>
 
-<A NAME="Eventclient Client ec_set_edtime"></A>
-<HR SIZE="6">
-<A NAME="SEC16"></A>
-<H3> 1.2.13 ec_set_edtime </H3>
-<!--docid::SEC16::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_set_edtime() -- set the event client busy handling
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_set_busy_handling(int handling)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+The event client interface has a mechanism to handle situations in which
+an event client is busy and will not accept any new events.
+The policy to use can be configured using this function.
+For valid policies see ...
+This parameter can be changed during runtime and will take effect
+after a call to ec_commit or ec_get.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int handling - the policy to use
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1, if the value was changed, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC17">ec_get_busy_handling</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC4">-Busy-state</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC26" HREF="eventclient.html#TOC26">ec_set_clientdata</A></H3>
+
 <P>
+<A NAME="IDX24"></A>
 
-<A NAME="IDX11"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_set_edtime() -- set the event delivery interval
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_set_edtime(int interval)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Set the interval qmaster will use to send events to the client.
+<PRE>
+ec_set_clientdata() -- set the clientdata value
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+void ec_set_clientdata(u_long32 data)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client (the event client object) has a field EV_clientdata.
+It is of datatype u_long32 and can be used by the event client for
+any purpose.
+
+The sge scheduler uses it to store the last order from scheduler processed
+by qmaster.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+u_long32 data - the clientdata to set
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC18">ec_get_clientdata</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC2">--EV_Type</A>.
+<LI>
+
+See <TT>`documentation'</TT>
+<LI>
+
+See <TT>`of'</TT>
+<LI>
+
+See <TT>`scheduler'</TT>
+<LI>
+
+See <TT>`-'</TT>
+<LI>
+
+See <TT>`qmaster'</TT>
+<LI>
+
+See <TT>`mechanisms'</TT>
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC27" HREF="eventclient.html#TOC27">ec_set_edtime</A></H3>
+
+<P>
+<A NAME="IDX25"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_set_edtime() -- set the event delivery interval
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_set_edtime(int interval)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Set the interval qmaster will use to send events to the client.
 Any number &#62; 0 is a valid interval in seconds.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int interval - interval [s]
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1, if the value was changed, else 0
-</FONT></pre></td></tr></table></P><P>
+<DT><B>INPUTS</B>
+<DD>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The maximum interval should be limited. A too big interval makes
+<PRE>
+int interval - interval [s]
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1, if the value was changed, else 0
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The maximum interval should be limited. A too big interval makes
 qmaster spool lots of events and consume a lot of memory.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC11">1.2.8 ec_get_edtime</A>.
+
+section <A HREF="eventclient.html#SEC19">ec_get_edtime</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC28" HREF="eventclient.html#TOC28">ec_set_flush</A></H3>
+
 <P>
+<A NAME="IDX26"></A>
 
-<A NAME="Eventclient Client ec_subscribe"></A>
-<HR SIZE="6">
-<A NAME="SEC17"></A>
-<H3> 1.2.14 ec_subscribe </H3>
-<!--docid::SEC17::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_set_flush() -- set flushing information for an event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_set_flush(int event, int flush)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client can request flushing of events from qmaster for any
+number of the events subscribed.
+This function sets the flushing information for an individual event.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int event - id of the event to configure
+int flush - the number of seconds between creation of
+            the event and flushing of the messages.
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC6">-Flushing</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC20">ec_get_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC32">ec_unset_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC29" HREF="eventclient.html#TOC29">ec_subscribe</A></H3>
+
 <P>
+<A NAME="IDX27"></A>
 
-<A NAME="IDX12"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_subscribe() -- Subscribe an event
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_subscribe(int event)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Subscribe a certain event.
-See ... for a list of all events.
+<PRE>
+ec_subscribe() -- Subscribe an event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_subscribe(int event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Subscribe a certain event.
+See Eventclient/-Events for a list of all events.
 The subscription will be in effect after calling ec_commit or ec_get.
 It is possible / sensible to subscribe all events wanted and then call
 ec_commit.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int event - the event number
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1 on success, else 0
-</FONT></pre></td></tr></table></P><P>
+<DT><B>INPUTS</B>
+<DD>
 
-<B>SEE ALSO</B>
+<PRE>
+int event - the event number
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC18">1.2.15 ec_subscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC5">-Events</A>.
 <LI>
-<A HREF="eventclient.html#SEC19">1.2.16 ec_unsubscribe</A>.
+
+section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC20">1.2.17 ec_unsubscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC7">1.2.4 ec_commit</A>.
+
+section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC30" HREF="eventclient.html#TOC30">ec_subscribe_all</A></H3>
+
 <P>
+<A NAME="IDX28"></A>
 
-<A NAME="Eventclient Client ec_subscribe_all"></A>
-<HR SIZE="6">
-<A NAME="SEC18"></A>
-<H3> 1.2.15 ec_subscribe_all </H3>
-<!--docid::SEC18::-->
-<P>
 
-<A NAME="IDX13"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_subscribe_all() -- subscribe all events
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_subscribe_all(void)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_subscribe_all() -- subscribe all events
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Subscribe all possible event.
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_subscribe_all(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Subscribe all possible event.
 The subscription will be in effect after calling ec_commit or ec_get.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1 on success, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Subscribing all events can cause a lot of traffic and may decrease performance
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Subscribing all events can cause a lot of traffic and may decrease performance
 of qmaster.
 Only subscribe all events, if you really need them.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC17">1.2.14 ec_subscribe</A>.
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC19">1.2.16 ec_unsubscribe</A>.
+
+section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC20">1.2.17 ec_unsubscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC7">1.2.4 ec_commit</A>.
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC31" HREF="eventclient.html#TOC31">ec_subscribe_flush</A></H3>
+
 <P>
+<A NAME="IDX29"></A>
 
-<A NAME="Eventclient Client ec_unsubscribe"></A>
-<HR SIZE="6">
-<A NAME="SEC19"></A>
-<H3> 1.2.16 ec_unsubscribe </H3>
-<!--docid::SEC19::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_subscribe_flush() -- subscribe an event and set flushing
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_subscribe_flush(int event, int flush)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Subscribes and event and configures flushing for this event.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int event - id of the event to subscribe and flush
+int flush - number of seconds between event creation and flushing of events
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC8">-Subscription</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC6">-Flushing</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC32" HREF="eventclient.html#TOC32">ec_unset_flush</A></H3>
+
 <P>
+<A NAME="IDX30"></A>
 
-<A NAME="IDX14"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_unsubscribe() -- unsubscribe an event
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_unsubscribe(int event)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Unsubscribe a certain event.
+<PRE>
+ec_unset_flush() -- unset flushing information
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_unset_flush(int event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Switch of flushing of an individual event.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int event - if of the event to configure
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
+<UL>
+<LI>
+
+section <A HREF="eventclient.html#SEC6">-Flushing</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC28">ec_set_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC20">ec_get_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC31">ec_subscribe_flush</A>.
+</UL>
+
+</DL>
+
+
+<H3><A NAME="SEC33" HREF="eventclient.html#TOC33">ec_unsubscribe</A></H3>
+
+<P>
+<A NAME="IDX31"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+ec_unsubscribe() -- unsubscribe an event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_unsubscribe(int event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Unsubscribe a certain event.
 See ... for a list of all events.
 The change will be in effect after calling ec_commit or ec_get.
 It is possible / sensible to unsubscribe all events
 no longer needed and then call ec_commit.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int event - the event to unsubscribe
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1 on success, else 0
-</FONT></pre></td></tr></table></P><P>
+<DT><B>INPUTS</B>
+<DD>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN cannot
+<PRE>
+int event - the event to unsubscribe
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN cannot
 be unsubscribed. ec_unsubscribe will output an error message if
 you try to unsubscribe sgeE_QMASTER_GOES_DOWN or sgeE_SHUTDOWN
 and return 0.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC17">1.2.14 ec_subscribe</A>.
+
+section <A HREF="eventclient.html#SEC5">-Events</A>.
 <LI>
-<A HREF="eventclient.html#SEC18">1.2.15 ec_subscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC20">1.2.17 ec_unsubscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC7">1.2.4 ec_commit</A>.
+
+section <A HREF="eventclient.html#SEC34">ec_unsubscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC34" HREF="eventclient.html#TOC34">ec_unsubscribe_all</A></H3>
+
 <P>
+<A NAME="IDX32"></A>
 
-<A NAME="Eventclient Client ec_unsubscribe_all"></A>
-<HR SIZE="6">
-<A NAME="SEC20"></A>
-<H3> 1.2.17 ec_unsubscribe_all </H3>
-<!--docid::SEC20::-->
-<P>
 
-<A NAME="IDX15"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ec_unsubscribe_all() -- unsubscribe all events
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int ec_unsubscribe_all(void)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ec_unsubscribe_all() -- unsubscribe all events
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Unsubscribe all possible event.
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_c_event.h"
+
+int ec_unsubscribe_all(void)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Unsubscribe all possible event.
 The change will be in effect after calling ec_commit or ec_get.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 1 on success, else 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN will not be
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 1 on success, else 0
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN will not be
 unsubscribed.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC17">1.2.14 ec_subscribe</A>.
+
+section <A HREF="eventclient.html#SEC29">ec_subscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC18">1.2.15 ec_subscribe_all</A>.
+
+section <A HREF="eventclient.html#SEC30">ec_subscribe_all</A>.
 <LI>
-<A HREF="eventclient.html#SEC19">1.2.16 ec_unsubscribe</A>.
+
+section <A HREF="eventclient.html#SEC33">ec_unsubscribe</A>.
 <LI>
-<A HREF="eventclient.html#SEC7">1.2.4 ec_commit</A>.
+
+section <A HREF="eventclient.html#SEC13">ec_commit</A>.
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC35" HREF="eventclient.html#TOC35">get_event_list</A></H3>
+
 <P>
+<A NAME="IDX33"></A>
 
-<A NAME="Eventclient Client get_event_list"></A>
-<HR SIZE="6">
-<A NAME="SEC21"></A>
-<H3> 1.2.18 get_event_list </H3>
-<!--docid::SEC21::-->
-<P>
 
-<A NAME="IDX16"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>get_event_list() -- get event list via gdi call
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static int get_event_list(int sync, lList **report_list)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+get_event_list() -- get event list via gdi call
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Tries to retrieve the event list.
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+static int get_event_list(int sync, lList **report_list)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Tries to retrieve the event list.
 Returns the incoming data and the commlib status/error code.
 This function is used by ec_get.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sync            - synchronous transfer
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int sync            - synchronous transfer
 lList **report_list - pointer to returned list
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static int - commlib status/error code
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+static int - commlib status/error code
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC10">1.2.7 ec_get</A>.
+
+section <A HREF="eventclient.html#SEC16">ec_get</A>.
 </UL>
+
+</DL>
+
+
+
+<H2><A NAME="SEC36" HREF="eventclient.html#TOC36">Server</A></H2>
+
+
+
+<H3><A NAME="SEC37" HREF="eventclient.html#TOC37">--Introduction</A></H3>
+
 <P>
+<A NAME="IDX34"></A>
 
-<A NAME="Eventclient Server"></A>
-<HR SIZE="6">
-<A NAME="SEC22"></A>
-<H2> 1.3 Server </H2>
-<!--docid::SEC22::-->
-<P>
 
-<A NAME="Eventclient Server --Introduction"></A>
-<HR SIZE="6">
-<A NAME="SEC23"></A>
-<H3> 1.3.1 --Introduction </H3>
-<!--docid::SEC23::-->
-<P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Event Client Interface -- Server Functionality
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The server module of the event client interface is used to integrate
+<PRE>
+Event Client Interface -- Server Functionality
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+The server module of the event client interface is used to integrate
 the capability to server event clients into server daemons.
 
 It is used in the Grid Engine qmaster but should be capable to handle
 any event client server integration.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The module still contains code specific to one event client, the scheduler.
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The module still contains code specific to one event client, the scheduler.
 A further cleanup step should be done as suggested in
 Eventclient/--Introduction
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC2">1.1 --Introduction</A>.
+
+section <A HREF="eventclient.html#SEC3">--Introduction</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC42">reinit_schedd</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC46">sge_add_event_client</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC55">sge_mod_event_client</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC48">sge_event_client_exit</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC51">sge_gdi_kill_eventclient</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC49">sge_eventclient_subscribed</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC44">sge_ack_event</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC41">ck_4_deliver_events</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC50">sge_flush_events</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC56">sge_next_flush</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC47">sge_add_list_event</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC45">sge_add_event</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC53">sge_get_next_event_number</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC52">sge_gdi_tsm</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC54">sge_locate_scheduler</A>.
+<LI>
+
+section <A HREF="eventclient.html#SEC43">set_event_client_busy</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC38" HREF="eventclient.html#TOC38">-Defines</A></H3>
+
 <P>
+<A NAME="IDX35"></A>
 
-<A NAME="Eventclient Server -Defines"></A>
-<HR SIZE="6">
-<A NAME="SEC24"></A>
-<H3> 1.3.2 -Defines </H3>
-<!--docid::SEC24::-->
-<P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Defines -- Constants used in the module
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>#define FLUSH_INTERVAL 15
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+Defines -- Constants used in the module
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#define FLUSH_INTERVAL 15
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>FLUSH_INTERVAL is the default event delivery interval, if the client
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+FLUSH_INTERVAL is the default event delivery interval, if the client
 would not set a correct interval.
 
 EVENT_ACK_MIN/MAX_TIMEOUT is the minimum/maximum timeout value for an event
 client sending the acknowledge for the delivery of events.
 The real timeout value depends on the event delivery interval for the
 event client (10 * event delivery interval).
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<A NAME="Eventclient Server -Global_Variables"></A>
-<HR SIZE="6">
-<A NAME="SEC25"></A>
-<H3> 1.3.3 -Global_Variables </H3>
-<!--docid::SEC25::-->
+
+</DL>
+
+
+<H3><A NAME="SEC39" HREF="eventclient.html#TOC39">-Global_Variables</A></H3>
+
 <P>
+<A NAME="IDX36"></A>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_flush_events() -- ???
-</FONT></pre></td></tr></table></P><P>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>extern lList *Master_Adminhost_List;
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+-Global_Variables() -- global Variables
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+extern lList *Master_Adminhost_List;
 extern lList *Master_Calendar_List;
 extern lList *Master_Ckpt_List;
 extern lList *Master_Complex_List;
@@ -973,1113 +2733,1342 @@ extern lList *Master_Submithost_List;
 extern lList *Master_User_List;
 extern lList *Master_Userset_List;
 
-static int schedule_interval = FLUSH_INTERVAL;
-
-int last_seq_no = -1;
-int scheduler_busy = 0;
-
 lList *EV_Clients = NULL;
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The extern lList's reference all object lists that can be used
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+The extern lList's reference all object lists that can be used
 in a Grid Engine event client interface.
 
-schedule_interval, last_seq_no and scheduler_busy are used
-for scheduler specific handling.
-
 EV_Clients is a list of all event clients to the event server.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The scheduler specific handling (schedule_interval, last_seq_no and
-scheduler_busy) should be eliminated. The mechanisms implemented with
-these variables should be generally available for all event clients.#
-The same applies to the global variables flush_finish_sec and
-flush_submit_sec used in sge_flush_events.
-</FONT></pre></td></tr></table></P><P>
 
-<A NAME="Eventclient Server check_send_new_subscribed_list"></A>
-<HR SIZE="6">
-<A NAME="SEC26"></A>
-<H3> 1.3.4 check_send_new_subscribed_list </H3>
-<!--docid::SEC26::-->
+</DL>
+
+
+<H3><A NAME="SEC40" HREF="eventclient.html#TOC40">check_send_new_subscribed_list</A></H3>
+
 <P>
+<A NAME="IDX37"></A>
 
-<A NAME="IDX17"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>check_send_new_subscribed_list() -- check suscription for new list events
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static void check_send_new_subscribed_list(const char *old_subscription,
-const char *new_subscription, lListElem *event_client, int event)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Checks, if sgeE*_LIST events have been added to the subscription of a
+<PRE>
+check_send_new_subscribed_list() -- check suscription for new list events
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+static void check_send_new_subscribed_list(const char *old_subscription,
+                                           const char *new_subscription,
+                                           lListElem *event_client,
+                                           int event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Checks, if sgeE*_LIST events have been added to the subscription of a
 certain event client. If yes, send these lists to the event client.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char *old_subscription - former subscription
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+const char *old_subscription - former subscription
 const char *new_subscription - new subscription
 lListElem *event_client      - the event client object
 int event                    - the event to check
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC42">1.3.20 sge_total_update_event</A>.
+
+section <A HREF="eventclient.html#SEC57">sge_total_update_event</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC41" HREF="eventclient.html#TOC41">ck_4_deliver_events</A></H3>
+
 <P>
+<A NAME="IDX38"></A>
 
-<A NAME="Eventclient Server ck_4_deliver_events"></A>
-<HR SIZE="6">
-<A NAME="SEC27"></A>
-<H3> 1.3.5 ck_4_deliver_events </H3>
-<!--docid::SEC27::-->
-<P>
 
-<A NAME="IDX18"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ck_4_deliver_events() -- deliver events if necessary
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void ck_4_deliver_events(u_long32 now)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+ck_4_deliver_events() -- deliver events if necessary
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Checks delivery time of each event client - if it has been reached, deliver
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void ck_4_deliver_events(u_long32 now)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Checks delivery time of each event client - if it has been reached, deliver
 all events for that client.
 
 In addition, timed out event clients are removed. An event client times out,
 if it doesn't acknowledge events within 10 * EV_ed_time
 (respecting EVENT_ACK_MIN_TIMEOUT and EVENT_ACK_MAX_TIMEOUT).
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>u_long32 now - actual timestamp
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+u_long32 now - actual timestamp
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC25">1.3.3 -Global_Variables</A>.
+
+section <A HREF="eventclient.html#SEC39">-Global_Variables</A>.
 <LI>
-<A HREF="eventclient.html#SEC29">1.3.7 sge_ack_event</A>.
+
+section <A HREF="eventclient.html#SEC44">sge_ack_event</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC42" HREF="eventclient.html#TOC42">reinit_schedd</A></H3>
+
 <P>
+<A NAME="IDX39"></A>
 
-<A NAME="Eventclient Server reinit_schedd"></A>
-<HR SIZE="6">
-<A NAME="SEC28"></A>
-<H3> 1.3.6 reinit_schedd </H3>
-<!--docid::SEC28::-->
-<P>
 
-<A NAME="IDX19"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>reinit_schedd() -- do a total update for the scheduler
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void reinit_schedd()
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+reinit_schedd() -- do a total update for the scheduler
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Does a total update (send all lists) to the scheduler and output
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void reinit_schedd()
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Does a total update (send all lists) to the scheduler and output
 an error message.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>This function should not be part of the core event client interface, it
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+This function should not be part of the core event client interface, it
 should perhaps be a commodity function or in qmaster itself.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC43">1.3.21 total_update</A>.
+
+section <A HREF="eventclient.html#SEC58">total_update</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC43" HREF="eventclient.html#TOC43">set_event_client_busy</A></H3>
+
 <P>
+<A NAME="IDX40"></A>
 
-<A NAME="Eventclient Server sge_ack_event"></A>
-<HR SIZE="6">
-<A NAME="SEC29"></A>
-<H3> 1.3.7 sge_ack_event </H3>
-<!--docid::SEC29::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+set_event_client_busy() -- set the busy state of event clients
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void set_event_client_busy(lListElem *event_client, int busy)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Sets the busy state of one or all event clients.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *event_client - the event client to modify - NULL to modify all
+int busy                - busy state - 0 = not busy, 1 = busy
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The busy state should better be a boolean if it this datatype was available
+in the cull library.
+</PRE>
+
+
+</DL>
+
+
+<H3><A NAME="SEC44" HREF="eventclient.html#TOC44">sge_ack_event</A></H3>
+
 <P>
+<A NAME="IDX41"></A>
 
-<A NAME="IDX20"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_ack_event() -- process acknowledge to event delivery
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sge_ack_event(lListElem *event_client, u_long32 event_number)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>After the server sent events to an event client, it has to acknowledge
+<PRE>
+sge_ack_event() -- process acknowledge to event delivery
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+int sge_ack_event(lListElem *event_client, u_long32 event_number)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+After the server sent events to an event client, it has to acknowledge
 their receipt.
 Acknowledged events are deleted from the list of events to deliver, otherwise
 they will be resent after the next event delivery interval.
-</FONT></pre></td></tr></table></P><P>
+If the handling of a busy state of the event client is enabled and set to
+EV_BUSY_UNTIL_ACK, the event client will be set to "not busy".
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event_client - event client sending acknowledge
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *event_client - event client sending acknowledge
 u_long32 event_number   - serial number of the last event to acknowledge
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - always 0
-</FONT></pre></td></tr></table></P><P>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returncode makes no sense anymore. Either improve error handling or
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - always 0
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Returncode makes no sense anymore. Either improve error handling or
 make function return void.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC38">1.3.16 sge_get_next_event_number</A>.
+
+section <A HREF="eventclient.html#SEC53">sge_get_next_event_number</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC45" HREF="eventclient.html#TOC45">sge_add_event</A></H3>
+
 <P>
+<A NAME="IDX42"></A>
 
-<A NAME="Eventclient Server sge_add_event"></A>
-<HR SIZE="6">
-<A NAME="SEC30"></A>
-<H3> 1.3.8 sge_add_event </H3>
-<!--docid::SEC30::-->
-<P>
 
-<A NAME="IDX21"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_add_event() -- add an object as event
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void sge_add_event(lListElem *event_client, u_long32 type, u_long32
+<PRE>
+sge_add_event() -- add an object as event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void sge_add_event(lListElem *event_client, u_long32 type, u_long32
 intkey, u_long32 intkey2, const char *strkey, lListElem *element)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Adds an object to the list of events to deliver. Called, if an event occurs to
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Adds an object to the list of events to deliver. Called, if an event occurs to
 that object, e.g. it was added to Grid Engine, modified or deleted.
 
 Internally, a list with that single object is created and passed to
 sge_add_list_event().
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event_client - the event client to receive the event, if NULL,
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *event_client - the event client to receive the event, if NULL,
                           all event clients will receive the event
 u_long32 type           - the event id
 u_long32 intkey         - additional data
 u_long32 intkey2        - additional data
 const char *strkey      - additional data
 lListElem *element      - the object to deliver as event
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Do we need the additional data fields?
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Do we need the additional data fields?
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC32">1.3.10 sge_add_list_event</A>.
+
+section <A HREF="eventclient.html#SEC47">sge_add_list_event</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC46" HREF="eventclient.html#TOC46">sge_add_event_client</A></H3>
+
 <P>
+<A NAME="IDX43"></A>
 
-<A NAME="Eventclient Server sge_add_event_client"></A>
-<HR SIZE="6">
-<A NAME="SEC31"></A>
-<H3> 1.3.9 sge_add_event_client </H3>
-<!--docid::SEC31::-->
-<P>
 
-<A NAME="IDX22"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_add_event_client() -- register a new event client
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp,
+<PRE>
+sge_add_event_client() -- register a new event client
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp,
 char *ruser, char *rhost)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Registeres a new event client.
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Registeres a new event client.
 If it requested a dynamic id, a new id is created and assigned.
 If the registration succees, the event client is sent all data
 (sgeE*_LIST events) according to its subscription.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *clio - the event client object used as registration data
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *clio - the event client object used as registration data
 lList **alpp    - answer list pointer for answer to event client
 lList **eclpp   - list pointer to return new event client object
 char *ruser     - user that tries to register an event client
 char *rhost     - host on which the event client runs
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - AN_status value. STATUS_OK on success, else error code
-</FONT></pre></td></tr></table></P><P>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Special handling for scheduler should be generalized in some way.
-</FONT></pre></td></tr></table></P><P>
+<DT><B>RESULT</B>
+<DD>
 
-<B>SEE ALSO</B>
+<PRE>
+int - AN_status value. STATUS_OK on success, else error code
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Special handling for scheduler should be generalized in some way.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC40">1.3.18 sge_mod_event_client</A>.
+
+section <A HREF="eventclient.html#SEC55">sge_mod_event_client</A>.
 <LI>
-<A HREF="eventclient.html#SEC36">1.3.14 sge_gdi_kill_eventclient</A>.
+
+section <A HREF="eventclient.html#SEC51">sge_gdi_kill_eventclient</A>.
 <LI>
-<A HREF="eventclient.html#SEC43">1.3.21 total_update</A>.
+
+section <A HREF="eventclient.html#SEC58">total_update</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC47" HREF="eventclient.html#TOC47">sge_add_list_event</A></H3>
+
 <P>
+<A NAME="IDX44"></A>
 
-<A NAME="Eventclient Server sge_add_list_event"></A>
-<HR SIZE="6">
-<A NAME="SEC32"></A>
-<H3> 1.3.10 sge_add_list_event </H3>
-<!--docid::SEC32::-->
-<P>
 
-<A NAME="IDX23"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_add_list_event() -- add a list as event
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void sge_add_list_event(lListElem *event_client, u_long32 type, u_long32
+<PRE>
+sge_add_list_event() -- add a list as event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void sge_add_list_event(lListElem *event_client, u_long32 type, u_long32
 intkey, u_long32 intkey2, const char *strkey, lList *list)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Adds a list of objects to the list of events to deliver, e.g. the sgeE*_LIST
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Adds a list of objects to the list of events to deliver, e.g. the sgeE*_LIST
 events.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event_client - the event client to receive the event, if NULL,
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *event_client - the event client to receive the event, if NULL,
                           all event clients will receive the event
 u_long32 type           - the event id
 u_long32 intkey         - additional data
 u_long32 intkey2        - additional data
 const char *strkey      - additional data
 lList *list             - the list to deliver as event
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Do we need the additional data fields?
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Do we need the additional data fields?
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC30">1.3.8 sge_add_event</A>.
+
+section <A HREF="eventclient.html#SEC45">sge_add_event</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC48" HREF="eventclient.html#TOC48">sge_event_client_exit</A></H3>
+
 <P>
+<A NAME="IDX45"></A>
 
-<A NAME="Eventclient Server sge_event_client_exit"></A>
-<HR SIZE="6">
-<A NAME="SEC33"></A>
-<H3> 1.3.11 sge_event_client_exit </H3>
-<!--docid::SEC33::-->
-<P>
 
-<A NAME="IDX24"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_client_exit() -- event client deregisters
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void sge_event_client_exit(const char *host, const char *commproc,
-sge_pack_buffer *pb)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+sge_event_client_exit() -- event client deregisters
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Deregistration of an event client.
-The event client tells qmaster that it will wants to deregister - usually before
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void sge_event_client_exit(const char *host, const char *commproc,
+                           sge_pack_buffer *pb)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Deregistration of an event client.
+The event client tells qmaster that it wants to deregister - usually before
 it exits.
 The event client is removed from the list of all event clients.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char *host     - host that sent the exit message
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+const char *host     - host that sent the exit message
 const char *commproc - commproc of the sender
 sge_pack_buffer *pb  - packbuffer containing information about event client
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<A NAME="Eventclient Server sge_eventclient_subscribed"></A>
-<HR SIZE="6">
-<A NAME="SEC34"></A>
-<H3> 1.3.12 sge_eventclient_subscribed </H3>
-<!--docid::SEC34::-->
+
+</DL>
+
+
+<H3><A NAME="SEC49" HREF="eventclient.html#TOC49">sge_eventclient_subscribed</A></H3>
+
 <P>
+<A NAME="IDX46"></A>
 
-<A NAME="IDX25"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_eventclient_subscribed() -- has event client subscribed a certain event?
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sge_eventclient_subscribed(const lListElem *event_client, int event)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Checks if the given event client has a certain event subscribed.
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+sge_eventclient_subscribed() -- has event client subscribed a certain event?
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const lListElem *event_client - event client to check
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+int sge_eventclient_subscribed(const lListElem *event_client, int event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Checks if the given event client has a certain event subscribed.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+const lListElem *event_client - event client to check
 int event                     - event to check
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - 0 = not subscribed, 1 = subscribed
-</FONT></pre></td></tr></table></P><P>
 
-<A NAME="Eventclient Server sge_flush_events"></A>
-<HR SIZE="6">
-<A NAME="SEC35"></A>
-<H3> 1.3.13 sge_flush_events </H3>
-<!--docid::SEC35::-->
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - 0 = not subscribed, 1 = subscribed
+</PRE>
+
+
+</DL>
+
+
+<H3><A NAME="SEC50" HREF="eventclient.html#TOC50">sge_flush_events</A></H3>
+
 <P>
+<A NAME="IDX47"></A>
 
-<A NAME="IDX26"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_flush_events() -- set the flushing time for events
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void sge_flush_events(lListElem *event_client, int cmd)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Sets the timestamp for the next flush of events for all or a specific
+<PRE>
+sge_flush_events() -- set the flushing time for events
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void sge_flush_events(lListElem *event_client, int interval)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Sets the timestamp for the next flush of events for all or a specific
 event client.
 When events will be next sent to an event client is stored in its
 event client object in the variable EV_next_send_time.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event_client - the event client for which to define flushing,
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *event_client - the event client for which to define flushing,
                           or NULL (flush all event clients)
-int cmd                 - how to flush:
-                          FLUSH_EVENTS_SET: flush immediately; send events
-                          when the server triggers the next sending
-                          FLUSH_EVENTS_JOB_FINISHED: flush after the
-                          interval defined in flush_finish_sec
-                          FLUSH_EVENTS_JOB_SUBMITTED: flush after the
-                          interval defined in flush_submit_sec
-</FONT></pre></td></tr></table></P><P>
+int interval            - time in seconds until next flush
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The global variables flush_finish_sec and flush_submit_sec should be
-eliminated and replaced by a more general mechanism, where each event
-client can define individually, which event will trigger which flushing
-behaviour.
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC27">1.3.5 ck_4_deliver_events</A>.
+
+section <A HREF="eventclient.html#SEC41">ck_4_deliver_events</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC51" HREF="eventclient.html#TOC51">sge_gdi_kill_eventclient</A></H3>
+
 <P>
+<A NAME="IDX48"></A>
 
-<A NAME="Eventclient Server sge_gdi_kill_eventclient"></A>
-<HR SIZE="6">
-<A NAME="SEC36"></A>
-<H3> 1.3.14 sge_gdi_kill_eventclient </H3>
-<!--docid::SEC36::-->
-<P>
 
-<A NAME="IDX27"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_gdi_kill_eventclient() -- kill an event client
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request,
+<PRE>
+sge_gdi_kill_eventclient() -- kill an event client
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request,
 sge_gdi_request *answer)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Kills one or all dynamic event clients.
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Kills one or all dynamic event clients.
 If a certain event client id is contained in the request, an event client
 with that id is killed.
 If the requested id is EC_ID_ANY (0), all event clients with dynamic ids
 are killed.
 Killing an event client is done by sending it the special event
 sgeE_SHUTDOWN and flushing immediately.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char *host         - host that sent the kill request
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+const char *host         - host that sent the kill request
 sge_gdi_request *request - request containing the event client id
 sge_gdi_request *answer  - answer structure to return an answer to the
                            client issuing the kill command (usually qconf)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>SEE ALSO</B>
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-See `<TT>qconf</TT>'
+
+See <TT>`qconf'</TT>
 <LI>
-See `<TT>-kec</TT>'
+
+See <TT>`-kec'</TT>
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC52" HREF="eventclient.html#TOC52">sge_gdi_tsm</A></H3>
+
 <P>
+<A NAME="IDX49"></A>
 
-<A NAME="Eventclient Server sge_gdi_tsm"></A>
-<HR SIZE="6">
-<A NAME="SEC37"></A>
-<H3> 1.3.15 sge_gdi_tsm </H3>
-<!--docid::SEC37::-->
-<P>
 
-<A NAME="IDX28"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_gdi_tsm() -- trigger scheduling
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request
+<PRE>
+sge_gdi_tsm() -- trigger scheduling
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request
 *answer)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Triggers a scheduling run for the scheduler as special event client.
-</FONT></pre></td></tr></table></P><P>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>char *host               - host that triggered scheduling
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Triggers a scheduling run for the scheduler as special event client.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+char *host               - host that triggered scheduling
 sge_gdi_request *request - request structure
 sge_gdi_request *answer  - answer structure to return to client
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>This function should not be part of the core event client interface.
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+This function should not be part of the core event client interface.
+Or it should be possible to trigger any event client.
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-See `<TT>qconf</TT>'
+
+See <TT>`qconf'</TT>
 <LI>
-See `<TT>-tsm</TT>'
+
+See <TT>`-tsm'</TT>
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC53" HREF="eventclient.html#TOC53">sge_get_next_event_number</A></H3>
+
 <P>
+<A NAME="IDX50"></A>
 
-<A NAME="Eventclient Server sge_get_next_event_number"></A>
-<HR SIZE="6">
-<A NAME="SEC38"></A>
-<H3> 1.3.16 sge_get_next_event_number </H3>
-<!--docid::SEC38::-->
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+sge_get_next_event_number() -- next event number for an event client
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+u_long32 sge_get_next_event_number(u_long32 client_id)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Retrieves the next serial event number for an event client.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+u_long32 client_id - id of the event client
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+u_long32 - serial number for next event to deliver
+</PRE>
+
+
+</DL>
+
+
+<H3><A NAME="SEC54" HREF="eventclient.html#TOC54">sge_locate_scheduler</A></H3>
+
 <P>
+<A NAME="IDX51"></A>
 
-<A NAME="IDX29"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_get_next_event_number() -- next event number for an event client
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>u_long32 sge_get_next_event_number(u_long32 client_id)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Retrieves the next serial event number for an event client.
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+sge_locate_scheduler() -- search for the scheduler
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>u_long32 client_id - id of the event client
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>u_long32 - serial number for next event to deliver
-</FONT></pre></td></tr></table></P><P>
+<DT><B>SYNOPSIS</B>
+<DD>
 
-<A NAME="Eventclient Server sge_locate_scheduler"></A>
-<HR SIZE="6">
-<A NAME="SEC39"></A>
-<H3> 1.3.17 sge_locate_scheduler </H3>
-<!--docid::SEC39::-->
-<P>
+<PRE>
+#include "sge_m_event.h"
 
-<A NAME="IDX30"></A>
-</P><P>
+lListElem* sge_locate_scheduler()
+</PRE>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_locate_scheduler() -- search for the scheduler
-</FONT></pre></td></tr></table></P><P>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem* sge_locate_scheduler()
-</FONT></pre></td></tr></table></P><P>
+<DT><B>FUNCTION</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Searches an event client of type scheduler (EV_ID_SCHEDD).
+<PRE>
+Searches an event client of type scheduler (EV_ID_SCHEDD).
 Returns a pointer to the scheduler event client object or
 NULL, if no scheduler is registered as event client.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem* - scheduler event client object or NULL.
-</FONT></pre></td></tr></table></P><P>
 
-<B>NOTES</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Should not be part of the core event client interface.
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+lListElem* - scheduler event client object or NULL.
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+Should not be part of the core event client interface.
 Might be provided in a more general form (for any special event client)
 as commodity function.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<A NAME="Eventclient Server sge_mod_event_client"></A>
-<HR SIZE="6">
-<A NAME="SEC40"></A>
-<H3> 1.3.18 sge_mod_event_client </H3>
-<!--docid::SEC40::-->
+
+</DL>
+
+
+<H3><A NAME="SEC55" HREF="eventclient.html#TOC55">sge_mod_event_client</A></H3>
+
 <P>
+<A NAME="IDX52"></A>
 
-<A NAME="IDX31"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mod_event_client() -- modify event client
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp,
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+sge_mod_event_client() -- modify event client
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp,
 char *ruser, char *rhost)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>An event client object is modified.
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+An event client object is modified.
 It is possible to modify the event delivery time and
 the subscription.
 If the subscription is changed, and new sgeE*_LIST events are subscribed,
 these lists are sent to the event client.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *clio - object containing the data to change
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *clio - object containing the data to change
 lList **alpp    - answer list pointer
 lList **eclpp   - list pointer to return changed object
 char *ruser     - user that triggered the modify action
 char *rhost     - host that triggered the modify action
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - AN_status code. STATUS_OK on success, else error code
-</FONT></pre></td></tr></table></P><P>
 
-<B>SEE ALSO</B>
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - AN_status code. STATUS_OK on success, else error code
+</PRE>
+
+
+<DT><B>SEE ALSO</B>
+<DD>
+
 <UL>
 <LI>
-<A HREF="eventclient.html#SEC26">1.3.4 check_send_new_subscribed_list</A>.
+
+section <A HREF="eventclient.html#SEC40">check_send_new_subscribed_list</A>.
 </UL>
+
+</DL>
+
+
+<H3><A NAME="SEC56" HREF="eventclient.html#TOC56">sge_next_flush</A></H3>
+
 <P>
+<A NAME="IDX53"></A>
 
-<A NAME="Eventclient Server sge_next_flush"></A>
-<HR SIZE="6">
-<A NAME="SEC41"></A>
-<H3> 1.3.19 sge_next_flush </H3>
-<!--docid::SEC41::-->
-<P>
 
-<A NAME="IDX32"></A>
-</P><P>
+<DL COMPACT>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_next_flush() -- when will be the next flush of events?
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sge_next_flush(int now)
-</FONT></pre></td></tr></table></P><P>
+<PRE>
+sge_next_flush() -- when will be the next flush of events?
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returns the timestamp of the next required flush to any event client
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+#include "sge_m_event.h"
+
+int sge_next_flush(int now)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Returns the timestamp of the next required flush to any event client
 (the minimum of EV_next_send_time for all event clients).
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int now - actual timestamp
-</FONT></pre></td></tr></table></P><P>
 
-<B>RESULT</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - the timestamp of the next flush or
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+int now - actual timestamp
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+int - the timestamp of the next flush or
       0, if no event client is connected and up.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<A NAME="Eventclient Server sge_total_update_event"></A>
-<HR SIZE="6">
-<A NAME="SEC42"></A>
-<H3> 1.3.20 sge_total_update_event </H3>
-<!--docid::SEC42::-->
+
+</DL>
+
+
+<H3><A NAME="SEC57" HREF="eventclient.html#TOC57">sge_total_update_event</A></H3>
+
 <P>
+<A NAME="IDX54"></A>
 
-<A NAME="IDX33"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_total_update_event() -- create a total update event
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static void sge_total_update_event(lListElem *event_client, u_long32
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+sge_total_update_event() -- create a total update event
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+static void sge_total_update_event(lListElem *event_client, u_long32
 type)
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Creates an event delivering a certain list of objects for an event client.
-</FONT></pre></td></tr></table></P><P>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event_client - event client to receive the list
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Creates an event delivering a certain list of objects for an event client.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+lListElem *event_client - event client to receive the list
 u_long32 type           - event describing the list to update
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<A NAME="Eventclient Server total_update"></A>
-<HR SIZE="6">
-<A NAME="SEC43"></A>
-<H3> 1.3.21 total_update </H3>
-<!--docid::SEC43::-->
+
+</DL>
+
+
+<H3><A NAME="SEC58" HREF="eventclient.html#TOC58">total_update</A></H3>
+
 <P>
+<A NAME="IDX55"></A>
 
-<A NAME="IDX34"></A>
-</P><P>
 
-<B>NAME</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>total_update() -- send all data to eventclient
-</FONT></pre></td></tr></table></P><P>
+<DL COMPACT>
 
-<B>SYNOPSIS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>static void total_update(lListElem *event_client)
-</FONT></pre></td></tr></table></P><P>
+<DT><B>NAME</B>
+<DD>
 
-<B>FUNCTION</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Sends all complete lists it subscribed to an eventclient.
+<PRE>
+total_update() -- send all data to eventclient
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+static void total_update(lListElem *event_client)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Sends all complete lists it subscribed to an eventclient.
 If the event client receives a complete list instead of single events,
 it should completely update it's database.
-</FONT></pre></td></tr></table></P><P>
+</PRE>
 
-<B>INPUTS</B>
-<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event_client - the event client to update
-</FONT></pre></td></tr></table></P><P>
 
-<A NAME="Function Index"></A>
-<HR SIZE="6">
-<A NAME="SEC44"></A>
-<H1> Function Index </H1>
-<!--docid::SEC44::-->
-<table><tr><th valign=top>Jump to: &nbsp; </th><td><A HREF="eventclient.html#fn_C" style="text-decoration:none"><b>C</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_E" style="text-decoration:none"><b>E</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_G" style="text-decoration:none"><b>G</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_R" style="text-decoration:none"><b>R</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_S" style="text-decoration:none"><b>S</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_T" style="text-decoration:none"><b>T</b></A>
- &nbsp; 
-</td></tr></table><br><P></P>
-<TABLE border=0>
-<TR><TD></TD><TH ALIGN=LEFT>Index Entry</TH><TH ALIGN=LEFT> Section</TH></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-<TR><TH><A NAME="fn_C"></A>C</TH><TD></TD><TD></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX17"><CODE>check_send_new_subscribed_list</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC26">1.3.4 check_send_new_subscribed_list</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX18"><CODE>ck_4_deliver_events</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC27">1.3.5 ck_4_deliver_events</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX1"><CODE>ck_event_number</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC6">1.2.3 ck_event_number</A></TD></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-<TR><TH><A NAME="fn_E"></A>E</TH><TD></TD><TD></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX2"><CODE>ec_commit</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC7">1.2.4 ec_commit</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX3"><CODE>ec_config_changed</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC8">1.2.5 ec_config_changed</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX4"><CODE>ec_deregister</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC9">1.2.6 ec_deregister</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX5"><CODE>ec_get</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC10">1.2.7 ec_get</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX6"><CODE>ec_get_edtime</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC11">1.2.8 ec_get_edtime</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX7"><CODE>ec_mark4registration</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC12">1.2.9 ec_mark4registration</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX8"><CODE>ec_need_new_registration</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC13">1.2.10 ec_need_new_registration</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX9"><CODE>ec_prepare_registration</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC14">1.2.11 ec_prepare_registration</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX10"><CODE>ec_register</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC15">1.2.12 ec_register</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX11"><CODE>ec_set_edtime</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC16">1.2.13 ec_set_edtime</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX12"><CODE>ec_subscribe</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC17">1.2.14 ec_subscribe</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX13"><CODE>ec_subscribe_all</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC18">1.2.15 ec_subscribe_all</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX14"><CODE>ec_unsubscribe</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC19">1.2.16 ec_unsubscribe</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX15"><CODE>ec_unsubscribe_all</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC20">1.2.17 ec_unsubscribe_all</A></TD></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-<TR><TH><A NAME="fn_G"></A>G</TH><TD></TD><TD></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX16"><CODE>get_event_list</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC21">1.2.18 get_event_list</A></TD></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-<TR><TH><A NAME="fn_R"></A>R</TH><TD></TD><TD></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX19"><CODE>reinit_schedd</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC28">1.3.6 reinit_schedd</A></TD></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-<TR><TH><A NAME="fn_S"></A>S</TH><TD></TD><TD></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX20"><CODE>sge_ack_event</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC29">1.3.7 sge_ack_event</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX21"><CODE>sge_add_event</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC30">1.3.8 sge_add_event</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX22"><CODE>sge_add_event_client</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC31">1.3.9 sge_add_event_client</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX23"><CODE>sge_add_list_event</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC32">1.3.10 sge_add_list_event</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX24"><CODE>sge_event_client_exit</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC33">1.3.11 sge_event_client_exit</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX25"><CODE>sge_eventclient_subscribed</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC34">1.3.12 sge_eventclient_subscribed</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX26"><CODE>sge_flush_events</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC35">1.3.13 sge_flush_events</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX27"><CODE>sge_gdi_kill_eventclient</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC36">1.3.14 sge_gdi_kill_eventclient</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX28"><CODE>sge_gdi_tsm</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC37">1.3.15 sge_gdi_tsm</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX29"><CODE>sge_get_next_event_number</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC38">1.3.16 sge_get_next_event_number</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX30"><CODE>sge_locate_scheduler</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC39">1.3.17 sge_locate_scheduler</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX31"><CODE>sge_mod_event_client</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC40">1.3.18 sge_mod_event_client</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX32"><CODE>sge_next_flush</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC41">1.3.19 sge_next_flush</A></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX33"><CODE>sge_total_update_event</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC42">1.3.20 sge_total_update_event</A></TD></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-<TR><TH><A NAME="fn_T"></A>T</TH><TD></TD><TD></TD></TR>
-<TR><TD></TD><TD valign=top><A HREF="eventclient.html#IDX34"><CODE>total_update</CODE></A></TD><TD valign=top><A HREF="eventclient.html#SEC43">1.3.21 total_update</A></TD></TR>
-<TR><TD COLSPAN=3> <HR></TD></TR>
-</TABLE><P></P><table><tr><th valign=top>Jump to: &nbsp; </th><td><A HREF="eventclient.html#fn_C" style="text-decoration:none"><b>C</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_E" style="text-decoration:none"><b>E</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_G" style="text-decoration:none"><b>G</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_R" style="text-decoration:none"><b>R</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_S" style="text-decoration:none"><b>S</b></A>
- &nbsp; 
-<A HREF="eventclient.html#fn_T" style="text-decoration:none"><b>T</b></A>
- &nbsp; 
-</td></tr></table><br><P>
+<DT><B>INPUTS</B>
+<DD>
 
-<HR SIZE="6">
-<A NAME="SEC_Contents"></A>
-<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC1">Top</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC_Contents">Contents</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC44">Index</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC_About"> ? </A>]</TD>
-</TR></TABLE>
-<H1>Table of Contents</H1>
-<BLOCKQUOTE>
-<A NAME="TOC1" HREF="eventclient.html#SEC1">1. Eventclient</A>
-<BR>
-<BLOCKQUOTE>
-<A NAME="TOC2" HREF="eventclient.html#SEC2">1.1 --Introduction</A>
-<BR>
-<A NAME="TOC3" HREF="eventclient.html#SEC3">1.2 Client</A>
-<BR>
-<BLOCKQUOTE>
-<A NAME="TOC4" HREF="eventclient.html#SEC4">1.2.1 --Introduction</A>
-<BR>
-<A NAME="TOC5" HREF="eventclient.html#SEC5">1.2.2 -Global_Variables</A>
-<BR>
-<A NAME="TOC6" HREF="eventclient.html#SEC6">1.2.3 ck_event_number</A>
-<BR>
-<A NAME="TOC7" HREF="eventclient.html#SEC7">1.2.4 ec_commit</A>
-<BR>
-<A NAME="TOC8" HREF="eventclient.html#SEC8">1.2.5 ec_config_changed</A>
-<BR>
-<A NAME="TOC9" HREF="eventclient.html#SEC9">1.2.6 ec_deregister</A>
-<BR>
-<A NAME="TOC10" HREF="eventclient.html#SEC10">1.2.7 ec_get</A>
-<BR>
-<A NAME="TOC11" HREF="eventclient.html#SEC11">1.2.8 ec_get_edtime</A>
-<BR>
-<A NAME="TOC12" HREF="eventclient.html#SEC12">1.2.9 ec_mark4registration</A>
-<BR>
-<A NAME="TOC13" HREF="eventclient.html#SEC13">1.2.10 ec_need_new_registration</A>
-<BR>
-<A NAME="TOC14" HREF="eventclient.html#SEC14">1.2.11 ec_prepare_registration</A>
-<BR>
-<A NAME="TOC15" HREF="eventclient.html#SEC15">1.2.12 ec_register</A>
-<BR>
-<A NAME="TOC16" HREF="eventclient.html#SEC16">1.2.13 ec_set_edtime</A>
-<BR>
-<A NAME="TOC17" HREF="eventclient.html#SEC17">1.2.14 ec_subscribe</A>
-<BR>
-<A NAME="TOC18" HREF="eventclient.html#SEC18">1.2.15 ec_subscribe_all</A>
-<BR>
-<A NAME="TOC19" HREF="eventclient.html#SEC19">1.2.16 ec_unsubscribe</A>
-<BR>
-<A NAME="TOC20" HREF="eventclient.html#SEC20">1.2.17 ec_unsubscribe_all</A>
-<BR>
-<A NAME="TOC21" HREF="eventclient.html#SEC21">1.2.18 get_event_list</A>
-<BR>
-</BLOCKQUOTE>
-<A NAME="TOC22" HREF="eventclient.html#SEC22">1.3 Server</A>
-<BR>
-<BLOCKQUOTE>
-<A NAME="TOC23" HREF="eventclient.html#SEC23">1.3.1 --Introduction</A>
-<BR>
-<A NAME="TOC24" HREF="eventclient.html#SEC24">1.3.2 -Defines</A>
-<BR>
-<A NAME="TOC25" HREF="eventclient.html#SEC25">1.3.3 -Global_Variables</A>
-<BR>
-<A NAME="TOC26" HREF="eventclient.html#SEC26">1.3.4 check_send_new_subscribed_list</A>
-<BR>
-<A NAME="TOC27" HREF="eventclient.html#SEC27">1.3.5 ck_4_deliver_events</A>
-<BR>
-<A NAME="TOC28" HREF="eventclient.html#SEC28">1.3.6 reinit_schedd</A>
-<BR>
-<A NAME="TOC29" HREF="eventclient.html#SEC29">1.3.7 sge_ack_event</A>
-<BR>
-<A NAME="TOC30" HREF="eventclient.html#SEC30">1.3.8 sge_add_event</A>
-<BR>
-<A NAME="TOC31" HREF="eventclient.html#SEC31">1.3.9 sge_add_event_client</A>
-<BR>
-<A NAME="TOC32" HREF="eventclient.html#SEC32">1.3.10 sge_add_list_event</A>
-<BR>
-<A NAME="TOC33" HREF="eventclient.html#SEC33">1.3.11 sge_event_client_exit</A>
-<BR>
-<A NAME="TOC34" HREF="eventclient.html#SEC34">1.3.12 sge_eventclient_subscribed</A>
-<BR>
-<A NAME="TOC35" HREF="eventclient.html#SEC35">1.3.13 sge_flush_events</A>
-<BR>
-<A NAME="TOC36" HREF="eventclient.html#SEC36">1.3.14 sge_gdi_kill_eventclient</A>
-<BR>
-<A NAME="TOC37" HREF="eventclient.html#SEC37">1.3.15 sge_gdi_tsm</A>
-<BR>
-<A NAME="TOC38" HREF="eventclient.html#SEC38">1.3.16 sge_get_next_event_number</A>
-<BR>
-<A NAME="TOC39" HREF="eventclient.html#SEC39">1.3.17 sge_locate_scheduler</A>
-<BR>
-<A NAME="TOC40" HREF="eventclient.html#SEC40">1.3.18 sge_mod_event_client</A>
-<BR>
-<A NAME="TOC41" HREF="eventclient.html#SEC41">1.3.19 sge_next_flush</A>
-<BR>
-<A NAME="TOC42" HREF="eventclient.html#SEC42">1.3.20 sge_total_update_event</A>
-<BR>
-<A NAME="TOC43" HREF="eventclient.html#SEC43">1.3.21 total_update</A>
-<BR>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<A NAME="TOC44" HREF="eventclient.html#SEC44">Function Index</A>
-<BR>
-</BLOCKQUOTE>
-<HR SIZE=1>
-<A NAME="SEC_OVERVIEW"></A>
-<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC1">Top</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC_Contents">Contents</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC44">Index</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC_About"> ? </A>]</TD>
-</TR></TABLE>
-<H1>Short Table of Contents</H1>
-<BLOCKQUOTE>
-<A NAME="TOC1" HREF="eventclient.html#SEC1">1. Eventclient</A>
-<BR>
-<A NAME="TOC44" HREF="eventclient.html#SEC44">Function Index</A>
-<BR>
+<PRE>
+lListElem *event_client - the event client to update
+</PRE>
 
-</BLOCKQUOTE>
-<HR SIZE=1>
-<A NAME="SEC_About"></A>
-<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC1">Top</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC_Contents">Contents</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC44">Index</A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="eventclient.html#SEC_About"> ? </A>]</TD>
-</TR></TABLE>
-<H1>About this document</H1>
-This document was generated 
-using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
-"><I>texi2html</I></A>
-<P></P>  
-The buttons in the navigation panels have the following meaning:
-<P></P>
-<table border = "1">
-<TR>
-<TH> Button </TH>
-<TH> Name </TH>
-<TH> Go to </TH>
-<TH> From 1.2.3 go to</TH>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [ &lt; ] </TD>
-<TD ALIGN="CENTER">
-Back
-</TD>
-<TD>
-previous section in reading order
-</TD>
-<TD>
-1.2.2
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [ &gt; ] </TD>
-<TD ALIGN="CENTER">
-Forward
-</TD>
-<TD>
-next section in reading order
-</TD>
-<TD>
-1.2.4
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [ &lt;&lt; ] </TD>
-<TD ALIGN="CENTER">
-FastBack
-</TD>
-<TD>
-previous or up-and-previous section 
-</TD>
-<TD>
-1.1
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [ Up ] </TD>
-<TD ALIGN="CENTER">
-Up
-</TD>
-<TD>
-up section
-</TD>
-<TD>
-1.2
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [ &gt;&gt; ] </TD>
-<TD ALIGN="CENTER">
-FastForward
-</TD>
-<TD>
-next or up-and-next section
-</TD>
-<TD>
-1.3
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [Top] </TD>
-<TD ALIGN="CENTER">
-Top
-</TD>
-<TD>
-cover (top) of document
-</TD>
-<TD>
- &nbsp; 
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [Contents] </TD>
-<TD ALIGN="CENTER">
-Contents
-</TD>
-<TD>
-table of contents
-</TD>
-<TD>
- &nbsp; 
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [Index] </TD>
-<TD ALIGN="CENTER">
-Index
-</TD>
-<TD>
-concept index
-</TD>
-<TD>
- &nbsp; 
-</TD>
-</TR>
-<TR>
-<TD ALIGN="CENTER">
- [ ? ] </TD>
-<TD ALIGN="CENTER">
-About
-</TD>
-<TD>
-this page
-</TD>
-<TD>
- &nbsp; 
-</TD>
-</TR>
-</TABLE>
-<P></P>
-where the <STRONG> Example </STRONG> assumes that the current position 
-is at <STRONG> Subsubsection One-Two-Three </STRONG> of a document of 
-the following structure:
-<UL>
-<LI> 1. Section One  </LI>
-<UL>
-<LI>1.1 Subsection One-One</LI>
-<UL>
-<LI> ... </LI>
-</UL>
-<LI>1.2 Subsection One-Two</LI>
-<UL>
-<LI>1.2.1 Subsubsection One-Two-One
-</LI><LI>1.2.2 Subsubsection One-Two-Two
-</LI><LI>1.2.3 Subsubsection One-Two-Three &nbsp; &nbsp; <STRONG>
-&lt;== Current Position </STRONG>
-</LI><LI>1.2.4 Subsubsection One-Two-Four
-</LI></UL>
-<LI>1.3 Subsection One-Three</LI>
-<UL>
-<LI> ... </LI>
-</UL>
-<LI>1.4 Subsection One-Four</LI>
-</UL>
-</UL>
 
-<HR SIZE=1>
-<BR>  
-<FONT SIZE="-1">
-This document was generated
-by <I>Joachim Gabler</I> on <I>December, 14  2001</I>
-using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
-"><I>texi2html</I></A>
-</FONT>
+</DL>
 
+
+
+<H2><A NAME="SEC59" HREF="eventclient.html#TOC59">event_text</A></H2>
+
+<P>
+<A NAME="IDX56"></A>
+
+
+<DL COMPACT>
+
+<DT><B>NAME</B>
+<DD>
+
+<PRE>
+event_text() -- deliver event description
+</PRE>
+
+
+<DT><B>SYNOPSIS</B>
+<DD>
+
+<PRE>
+const char* event_text(const lListElem *event)
+</PRE>
+
+
+<DT><B>FUNCTION</B>
+<DD>
+
+<PRE>
+Deliveres a short description of an event object.
+</PRE>
+
+
+<DT><B>INPUTS</B>
+<DD>
+
+<PRE>
+const lListElem *event - the event to describe
+</PRE>
+
+
+<DT><B>RESULT</B>
+<DD>
+
+<PRE>
+const char* - pointer to the descriptive string.
+</PRE>
+
+
+<DT><B>NOTES</B>
+<DD>
+
+<PRE>
+The result points to a static buffer. Subsequent calls to event_text
+will overwrite previous results.
+</PRE>
+
+
+</DL>
+
+
+<H1><A NAME="SEC60" HREF="eventclient.html#TOC60">Function Index</A></H1>
+<P>
+Jump to:
+<A HREF="#findex_-">-</A>
+-
+<A HREF="#findex_c">c</A>
+-
+<A HREF="#findex_e">e</A>
+-
+<A HREF="#findex_g">g</A>
+-
+<A HREF="#findex_r">r</A>
+-
+<A HREF="#findex_s">s</A>
+-
+<A HREF="#findex_t">t</A>
+<P>
+<H2><A NAME="findex_-">-</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX1">--EV_Type</A>
+<LI><A HREF="eventclient.html#IDX2">--Introduction</A>, <A HREF="eventclient.html#IDX8">--Introduction</A>, <A HREF="eventclient.html#IDX34">--Introduction</A>
+<LI><A HREF="eventclient.html#IDX3">-Busy-state</A>
+<LI><A HREF="eventclient.html#IDX35">-Defines</A>
+<LI><A HREF="eventclient.html#IDX4">-Events</A>
+<LI><A HREF="eventclient.html#IDX5">-Flushing</A>
+<LI><A HREF="eventclient.html#IDX9">-Global_Variables</A>, <A HREF="eventclient.html#IDX36">-Global_Variables</A>
+<LI><A HREF="eventclient.html#IDX6">-ID-numbers</A>
+<LI><A HREF="eventclient.html#IDX7">-Subscription</A>
+</DIR>
+<H2><A NAME="findex_c">c</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX37">check_send_new_subscribed_list</A>
+<LI><A HREF="eventclient.html#IDX38">ck_4_deliver_events</A>
+<LI><A HREF="eventclient.html#IDX10">ck_event_number</A>
+</DIR>
+<H2><A NAME="findex_e">e</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX11">ec_commit</A>
+<LI><A HREF="eventclient.html#IDX12">ec_config_changed</A>
+<LI><A HREF="eventclient.html#IDX13">ec_deregister</A>
+<LI><A HREF="eventclient.html#IDX14">ec_get</A>
+<LI><A HREF="eventclient.html#IDX15">ec_get_busy_handling</A>
+<LI><A HREF="eventclient.html#IDX16">ec_get_clientdata</A>
+<LI><A HREF="eventclient.html#IDX17">ec_get_edtime</A>
+<LI><A HREF="eventclient.html#IDX18">ec_get_flush</A>
+<LI><A HREF="eventclient.html#IDX19">ec_mark4registration</A>
+<LI><A HREF="eventclient.html#IDX20">ec_need_new_registration</A>
+<LI><A HREF="eventclient.html#IDX21">ec_prepare_registration</A>
+<LI><A HREF="eventclient.html#IDX22">ec_register</A>
+<LI><A HREF="eventclient.html#IDX23">ec_set_busy_handling</A>
+<LI><A HREF="eventclient.html#IDX24">ec_set_clientdata</A>
+<LI><A HREF="eventclient.html#IDX25">ec_set_edtime</A>
+<LI><A HREF="eventclient.html#IDX26">ec_set_flush</A>
+<LI><A HREF="eventclient.html#IDX27">ec_subscribe</A>
+<LI><A HREF="eventclient.html#IDX28">ec_subscribe_all</A>
+<LI><A HREF="eventclient.html#IDX29">ec_subscribe_flush</A>
+<LI><A HREF="eventclient.html#IDX30">ec_unset_flush</A>
+<LI><A HREF="eventclient.html#IDX31">ec_unsubscribe</A>
+<LI><A HREF="eventclient.html#IDX32">ec_unsubscribe_all</A>
+<LI><A HREF="eventclient.html#IDX56">event_text</A>
+</DIR>
+<H2><A NAME="findex_g">g</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX33">get_event_list</A>
+</DIR>
+<H2><A NAME="findex_r">r</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX39">reinit_schedd</A>
+</DIR>
+<H2><A NAME="findex_s">s</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX40">set_event_client_busy</A>
+<LI><A HREF="eventclient.html#IDX41">sge_ack_event</A>
+<LI><A HREF="eventclient.html#IDX42">sge_add_event</A>
+<LI><A HREF="eventclient.html#IDX43">sge_add_event_client</A>
+<LI><A HREF="eventclient.html#IDX44">sge_add_list_event</A>
+<LI><A HREF="eventclient.html#IDX45">sge_event_client_exit</A>
+<LI><A HREF="eventclient.html#IDX46">sge_eventclient_subscribed</A>
+<LI><A HREF="eventclient.html#IDX47">sge_flush_events</A>
+<LI><A HREF="eventclient.html#IDX48">sge_gdi_kill_eventclient</A>
+<LI><A HREF="eventclient.html#IDX49">sge_gdi_tsm</A>
+<LI><A HREF="eventclient.html#IDX50">sge_get_next_event_number</A>
+<LI><A HREF="eventclient.html#IDX51">sge_locate_scheduler</A>
+<LI><A HREF="eventclient.html#IDX52">sge_mod_event_client</A>
+<LI><A HREF="eventclient.html#IDX53">sge_next_flush</A>
+<LI><A HREF="eventclient.html#IDX54">sge_total_update_event</A>
+</DIR>
+<H2><A NAME="findex_t">t</A></H2>
+<DIR>
+<LI><A HREF="eventclient.html#IDX55">total_update</A>
+</DIR>
+
+
+<P><HR><P>
+This document was generated on 5 April 2002 using
+<A HREF="http://wwwinfo.cern.ch/dis/texi2html/">texi2html</A>&nbsp;1.56k.
 </BODY>
 </HTML>

@@ -466,6 +466,11 @@ if [ $localinst = false ]; then
    fi
 
    DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
+
+   if [ -f $DEST_SGE_ROOT/LOCKED ]; then
+      echo "Sorry, file \"$DEST_SGE_ROOT/LOCKED\" exits. Installation failed."
+      exit 1
+   fi
    mkdir -p $DEST_SGE_ROOT
 fi
 

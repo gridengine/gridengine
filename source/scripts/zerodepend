@@ -72,7 +72,6 @@ files=" \
        libs/comm/commlib_dependencies  \
        libs/comm/lists/commlistslib_dependencies \
        libs/lck/lck_dependencies  \
-       libs/wingrid/wingrid_dependencies \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
        security/sec/sec_dependencies \
@@ -82,5 +81,11 @@ files=" \
        3rdparty/fnmatch/fnmatch_dependencies
 "
 echo deleting and truncating: $files
+
 rm -f $files
 touch $files
+
+if [ -d libs/wingrid ]; then
+   rm -f libs/wingrid/wingrid_dependencies
+   touch libs/wingrid/wingrid_dependencies
+fi

@@ -1,4 +1,6 @@
-HP-2004-08-26-0  Enhancem.:  Added 'stubs' for Interix (Windows) Version
+HP-2004-08-26-1  Bugfix:    Fixed scripts/zerodepend for No-Windows version 
+
+HP-2004-08-26-0  Enhancem.: Added 'stubs' for Interix (Windows) Version
 
 SG-2004-08-26-0: Bugfix:    hard resource requests ignored in parallel jobs
                  Review:    AH

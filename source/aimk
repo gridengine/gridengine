@@ -677,7 +677,7 @@ case AIX43:
    endif
 
    if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = "../scripts/ldAix"
+      set SHAREDLD = "$SOURCE/scripts/ldAix"
       set SHARED_CFLAGS = ""
       set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
    endif
@@ -1120,7 +1120,7 @@ case SOLARIS86:
 
    if ( $BUILDARCH == SOLARIS86 ) then
 #      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
-      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO -errtags=yes" 
+      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 
@@ -1530,8 +1530,6 @@ endif
 if ( "$QTCSH" == 1) then
    echo _____3_r_d_p_a_r_t_y__Q_T_C_S_H______
 
-   cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
-
    # with shared libs: qtcsh requires finding libsge.so during build
    # for AIX, we have to pass special options to make
    set SGE_COPTS = ""
@@ -1551,6 +1549,8 @@ if ( "$QTCSH" == 1) then
 
       setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}:${ZLIBBASE}/${COMPILE_ARCH}
    endif
+
+   cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=-lsge $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \

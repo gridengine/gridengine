@@ -1,3 +1,9 @@
+MD-2004-07-20-0: Bugfix:    variable syntax :  equal sign support
+                 Issue:     1118
+                 Bugtraq:   5075398
+                 Review:    JG
+                 Changed:   qsub, qrsh, qsh
+
 MD-2004-07-19-0: Bugfix:    sched_conf(5) reprioritize_interval should default to 0
                  Issue:     1139
                  Bugtraq:   5075451

@@ -826,7 +826,7 @@ proc setup_execd_conf {} {
      }
 
      if {! [info exists tmp_config]} {
-        puts $CHECK_OUTPUT "couldn't get conf - skipping $host"
+        add_proc_error "setup_execd_conf" -1 "couldn't get conf - skipping $host"
         continue
      }
      

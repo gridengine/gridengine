@@ -2967,13 +2967,13 @@ proc check_option_t {} {
 #     ???/???
 #*******************************
 proc check_option_v {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST 
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_HOST CHECK_ARCH 
    global job_output_dir actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-v DISPLAY"
+   set option "-v DISPLAY,test_var1=hello=world,test_var2=hello=my=friend"
    set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
@@ -2985,6 +2985,13 @@ proc check_option_v {} {
    }
 
    set time [ expr ( [timestamp] + 300  ) ] 
+
+   set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-j" "$result"} qstat_out]
+
+   if { [string match *DISPLAY,test_var1=hello=world,test_var2=hello=my=friend* $qstat_out] == 0 } {
+      set_error -1 "-v option failed, equal sign within variable values not supported"
+      return
+   }
 
    while { [timestamp] < $time }  {
       sleep 1

@@ -76,7 +76,7 @@ EB-2002-08-29-0  Bugfix:    msg size used in tight PE integr. job start sync.
                             protocol should be smaller
                  Issue:     #213
                  Bugtraq:   #4658706
-                 Review:    ===> STILL NEEDS TO BE DONE
+                 Review:    AH 
 
                             THE FIX IS INCORPORATED INTO THE SOURCE CODE
                             BUT IT WILL ONLY BE ACTIVE IF THE SOURCE CODE
@@ -95,7 +95,7 @@ EB-2002-08-28-0  Bugfix:    protocol doing termin. on failure for tightly
                             integr. par. job could be leaner
                  Issue:     #214
                  Bugtraq:   #4658716
-                 Review:    ===> STILL NEEDS TO BE DONE 
+                 Review:    AH 
 
                             THE FIX IS INCORPORATED INTO THE SOURCE CODE
                             BUT IT WILL ONLY BE ACTIVE IF THE SOURCE CODE

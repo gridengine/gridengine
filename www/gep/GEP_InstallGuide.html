@@ -1,23 +1,23 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-    
+        
   <meta http-equiv="Content-Type"
  content="text/html; charset=iso-8859-1">
-    
+        
   <meta http-equiv="CONTENT-TYPE"
  content="text/html; charset=iso-8859-1">
-    
+        
   <meta name="GENERATOR"
  content="Mozilla/4.77 [en]C-CCK-MCD   (Win98; U) [Netscape]">
-    
+        
   <meta name="AUTHOR" content="Andrew Boulus">
-    
+        
   <meta name="CREATED" content="20010605;21544200">
-    
+        
   <meta name="CHANGED" content="20020624;16324800">
   <title>Grid Engine Portal Installation Guide</title>
-     
+            
   <style>
 
 	<!--
@@ -41,1187 +41,1308 @@
 	</style>
 </head>
   <body>
-  
-<center> 
+    
+<center>  
 <h1> Grid Engine Portal</h1>
-</center>
-  
-<center> 
+ </center>
+    
+<center>  
 <h1> Installation Guide</h1>
-</center>
-  
+ </center>
+    
 <center><a href="mailto:dan.fraser@sun.com">Andre.Alefeld@sun.com</a> <br>
-<a href="mailto:dan.fraser@sun.com">Dan.Fraser@sun.com</a> <br>
-<a href="mailto:ron.selva@sun.com">Ron.Selva@sun.com</a></center>
-  
+ <a href="mailto:dan.fraser@sun.com">Dan.Fraser@sun.com</a> <br>
+ <a href="mailto:ron.selva@sun.com">Ron.Selva@sun.com</a></center>
+    
 <p><br>
- </p>
-<h1> Table of Contents</h1>
-  
-<div id="Table of Contents1"> 
-<div style="margin-bottom: 0in;"><a
- href="#Introduction%20&amp;%20Technical%20Acknowledgments">Introduction &amp;
-Technical Acknowledgments</a> 
-<p><a href="#Solution%20Components%20Detail">Solution Components Detail</a> 
-</p>
-<blockquote><a href="#Compute%20Engine">Compute Engine</a> <br>
-  <a href="#Java%20Servlet">Java Servlet</a> <br>
-  <a href="#Portal%20Environment">Portal Environment</a> <br>
-  <a href="#Multi-%20Domain%20Environment">Multi- Domain Environment</a></blockquote>
- </div>
-  
-<div style="margin-bottom: 0in;"><a href="#Installation%20Procedure">Installation 
-Procedure</a> 
-<blockquote><a href="#Installation%20Procedure%20Summary">Installation Procedure
-Summary</a> <br>
-  <a href="#Step%201:%20Grid%20Engine">Step 1: Sun ONE Grid Engine</a> <br>
-  <a href="#Step%202:%20iPlanet%20Portal%20Server">Step 2: Sun ONE Portal 
-Server</a> <br>
-  <a
- href="#Step%203:%20Install%20the%20SGP%20integration%20%28Glue%29%20package.">Step 
-3: Grid Engine Portal Integration Package</a> <br>
-  <a href="#Step%204:%20Configure%20iPlanet%20Portal%20Server.">Step 4: Configuring
-Sun ONE Portal Server</a> <br>
-  <a href="#Step%205:%20Using%20Grid%20Portal">Step 5: Using Grid Engine Portal</a> 
-  <br>
-  <a href="#Step%206:%20Register%20New%20Applications%20with%20SGP">Step 6:
-Registering New Applications with Grid Engine Portal</a></blockquote>
- </div>
- <a href="#A%20Tip%20for%20Developers">A Tip for Developers</a> 
-<p><a href="#Appendix%20B%20-%20Screen%20shots">Appendix A: Screenshots</a></p>
-</div>
-  <br>
-&nbsp; 
-<h1> <a name="Introduction &amp; Technical Acknowledgments"></a>Introduction
-&amp; Technical Acknowledgments</h1>
-  
-<div style="margin-bottom: 0in;">The Grid Engine Portal solution enables organizations
-to provide flexible, secure and managed access to High Performance Computing
-resources. The solution is designed to be implemented in a variety of environments,
-from University and Research Institutes to Commercial organizations making
-use of HPC technologies for aerospace, automotive, manufacturing and other
-compute intensive applications. The solution enables these resources to be
-harnessed and taken to the Internet in a secure, accountable manner. We would
-like to especially thank those who made significant technical contributions
-to the Grid Engine Portal:</div>
-  
-<div style="margin-bottom: 0in;">&nbsp; <br>
-Fr&eacute;d&eacute;ric Parient&eacute; for his vision and foundational implementation
-of the Grid Engine Portal servlet source code. 
-<p>David Bunker for the practical implementation of Sun ONE Portal Server 
-with the Grid Engine Portal code and significant documentation contributions. 
-</p>
-<p>Eric Sharakan for adding &amp; documenting (single-sign-on) X-window support
-to Grid Engine Portal.</p>
-</div>
-  
-<h1> <a name="Solution Components Detail"></a>Solution Components Detail</h1>
-  
-<h2 class="western"> <a name="Compute Engine"></a>Compute Engine</h2>
- The Compute Engine layer is essentially Sun ONE Grid Engine. Sun ONE Grid 
-Engine is a distributed resource management solution from Sun Microsystems 
-which controls the submission and distribution of jobs to execution hosts 
-and the administration, management and auditing of these jobs to and from 
-processing queues. Sun ONE Grid Engine can be integrated with other applications 
-used in the processing of compute intensive problems. 
-<h2 class="western"> <a name="Java Servlet"></a>Java Servlet</h2>
-  
-<div style="margin-bottom: 0in;">The Java Servlets used in this solution have
-been created by Sun Microsystems to provide an interface between Sun ONE
-Grid Engine and the Sun ONE Portal Server. The Java Servlets used in this
-guide are <b>SunTCP</b> and <b>AdminTCP</b> and are provided with legal conditions
-as detailed in the source code. These applications interact with Sun ONE
-Grid Engine's functions and Sun ONE Portal Server's APIs to produce Content
-Provider windows for the portal environment.</div>
-  
-<h2 class="western"> <a name="Portal Environment"></a>Portal Environment</h2>
- The Portal Environment is implemented using the Sun ONE Portal Server. Sun
-ONE Portal Server provides the capabilities of personalization, customization, 
-security and aggregation to a Java enabled web browser. Sun ONE Portal Server
-can be deployed in a multi-domain scenario, utilizing varying authentication 
-methods and role functions within each domain. 
-<h2 class="western"> <a name="Multi- Domain Environment"></a>Multi- Domain
-Environment</h2>
- The Multi-Domain Environment enables organizations to provision specific 
-content, manage multiple authentication and security structures and create 
-a personalized and customizable user experience with consistent look and feel
-within the domains. Within domains user roles are implemented allowing varying
-security levels and responsibilities to be assigned to users within the portal
-environment. In this solution these roles are used to differentiate between
-administrators, support personnel and end users. The administrative controls
-allowed within a domain provide a level of delegated administration to users
-of the solution. The Sun ONE Portal Server, it's domains and the roles and
-users within the domain can be customized at all levels, allowing organizations
-to provision content and services at a certain level and have those functions
-"inherited" by lower level categories. For example an application could be
-provisioned at the portal server level and this application could then be
-made available to all domains, roles and users within the portal environment. 
-<h1 style="margin-bottom: 0in;"> <a name="Installation Procedure"></a>Installation
-Procedure</h1>
-  
-<h2 class="western"> <a name="Installation Procedure Summary"></a>Installation
-Procedure Summary</h2>
- We will assume that the computer hardware, base operating system (including 
-latest patches) and network configuration has been completed. 
-<p>Step 1: Install Sun ONE Grid Engine (and Sun ClusterTools w/ Loose Integration 
-for MPI support). </p>
-<p>Step 2: Install Sun ONE Portal Server. </p>
-<p>Step 3: Install the Grid Engine Portal Integration Package. </p>
-<p>Step 4: Adjust the configuration of Sun ONE Portal Server. </p>
-<p>Step 5: Test the Grid Engine Portal </p>
-<p>Step 6: Register new applications with Grid Engine Portal <br>
-&nbsp; </p>
-<h2 class="western"> <a name="Step 1: Grid Engine"></a>Step 1: Sun ONE Grid
-Engine</h2>
- Download Sun ONE Grid Engine (version 5.3p2 or later)&nbsp; from <a
- href="http://www.sun.com/gridware">http://www.sun.com/gridware.</a>  
-<p
- style="font-variant: normal; font-style: normal; text-decoration: none;">Follow 
-the installation instructions. The default queues and the default cell will
-work fine.  </p>
-<p
- style="font-variant: normal; font-style: normal; text-decoration: none;">If 
-MPI jobs will be run through the portal, download and install the latest version
-of the HPC ClusterTools software at&nbsp; <a
- href="http://supportforum.sun.com/clustertools">http://supportforum.sun.com/clustertools</a>. 
- </p>
-<p
- style="font-variant: normal; font-style: normal; text-decoration: none;">Create 
-a Loose Integration for HPC ClusterTools and Grid Engine. The Loose Integration 
-package is a part of the Sun ONE Grid Engine download (version 5.3 or later) 
-and may be found under the directory <b>HPC_GE_Integration</b>. Follow the
-directions in the <b>README</b> file. </p>
-<h2 class="western"> <a name="Step 2: iPlanet Portal Server"></a>Step 2:
-Sun ONE Portal Server</h2>
-  
-<div style="margin-bottom: 0in;">First, download Sun ONE Portal Server, Secure
-Remote Access 6.0 from <a href="http://www.iplanet.com/">http://www.sun.com/software</a>. 
-Select <b>Internet &amp; Identity Management </b>on this web page and then<b> 
-Sun ONE Portal Server: Secure Remote Access 6.0 </b>in the Portal Servers 
-section.&nbsp; The download file is currently named <b>ps-sra-6.0-us.sparc-sun-solaris8.tar.gz</b>.&nbsp; 
-Once this file is downloaded, unzip and untar it into the installation directory.&nbsp;
-Log in as <b>root</b>, change directories to the installation directory and
-then execute the <b>pssetup</b> installation script. 
-<p>Please note that this version of the portal server software has the following
-hardware and software requirements: </p>
-<p>&nbsp;&nbsp;&nbsp; Hardware <br>
-&nbsp;&nbsp;&nbsp; 1 450 MHz UltraSparc II cpu or better <br>
-&nbsp;&nbsp;&nbsp; 512 MB of Random Access Memory (RAM) <br>
-&nbsp;&nbsp;&nbsp; 1 GB of swap space <br>
-&nbsp;&nbsp;&nbsp; 1 GB of disk space </p>
-<p>&nbsp;&nbsp;&nbsp; Software <br>
-&nbsp;&nbsp;&nbsp; A user distribution of either the Solaris 8 or Solaris 
-9 operating system. </p>
-<p>&nbsp;&nbsp;&nbsp; Solaris 8 requires the following patches: <br>
-&nbsp;&nbsp;&nbsp; 109326-03 (or later) <br>
-&nbsp;&nbsp;&nbsp; 108434-03 (or later) <br>
-&nbsp;&nbsp;&nbsp; 108827-15 (or later) </p>
-<p>Since the exact questions that are asked when installing Sun ONE Portal 
-Server vary with the type and version of installation, the following is only
-a general guide. During the installation of the various components, certain
-questions are asked repetitively.&nbsp; Most demo users can take all the
-defaults except for hostname, sub-domain name, domain name, IP address, organization
-name and passphrase.&nbsp; Before starting the installation process, check
-to ensure that none of the ports that you will specify is being actively
-used by another software component.&nbsp; You can do this by executing the
-command: <b>netstat -na | grep port#</b>.&nbsp; If a port is already being
-used, select another one in its place. </p>
-<p>For the purposes of this installation guide, it will be assumed that all
-of the Sun ONE Portal Server components will be installed on a server with
-a fully qualified name of <b>mercury.sun.com</b>, having an IP address of&nbsp;
-<b>129.146.60.220</b>. </p>
-<p>What follows is a description of how to install the Directory Server, the
-Portal Server and the Gateway components of Sun ONE Portal Server individually.&nbsp; 
-It is also possible (and perhaps simpler) to install all of these components 
-at once by selecting option 4 in the installation script. </p>
-<p>Using the <b>pssetup</b> script, first accept the licensing agreement by
-answering <b>yes</b> to the <b>Do you accept?</b> question. Then install the
-Directory Server (option 5).&nbsp; The script may list the default settings
-that it will use.&nbsp; Review these parameters and determine whether they
-are appropriate for this installation.&nbsp; If any of them need to be specifically
-defined, then answer <b>no</b> to the <b>Use these settings?</b> question.&nbsp;
-Following is an example dialog that will follow if you answer <b>no </b>or
-if a list of default settings was not proposed by the Portal Server installation
-script: </p>
-<p><tt>&nbsp; What is the Directory Server base directory?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/usr/ldap</tt> <br>
-<tt>&nbsp; What is the hostname of this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-mercury</tt> <br>
-<tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-.</tt> <br>
-<tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-sun.com</tt> <br>
-<tt>&nbsp; What port should be used to access the Directory Server?&nbsp;&nbsp; 
-389</tt> <br>
-<tt>&nbsp; What is the Directory Server Administration port?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-8900</tt> <br>
-<tt>&nbsp; What is the root suffix of the directory tree?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-o=isp</tt> <br>
-<tt>&nbsp; What is the directory manager?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-cn=Directory Manager</tt> <br>
-<tt>&nbsp; What is the organization name?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-GridEnginePortal</tt> <br>
-<tt>&nbsp; What is the passphrase for this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-********</tt> <br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Again?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-********</tt> </p>
-<p>The settings you just supplied will then be listed.&nbsp; Answer <b>yes</b> 
-to <b>Use these settings?</b>.&nbsp; The Directory Server will then be installed. 
-</p>
-<p>Now you can install the Portal Server (option 4 in the <b>pssetup</b> script).&nbsp;
-Once again, check the default settings that may be listed by the script and
-decide whether to accept them or to specify new settings.&nbsp; If you answer
-<b>no</b> to the <b>Use these settings?</b> question, or if no settings were
-proposed by the script, the following example dialog will occur.&nbsp; Note
-that for the question on JDK below, the recommended version of JDK is 1.31.1_04.&nbsp;
-Using other versions may result in instability or lowered performance.&nbsp;
-The dialog for this portion of the installation is as follows: </p>
-<p><tt>&nbsp; Do you want to use an existing JDK?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-n</tt> <br>
-<tt>&nbsp; What is the installation base directory?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/opt</tt> <br>
-<tt>&nbsp; What is the hostname of this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-mercury</tt> <br>
-<tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-.</tt> <br>
-<tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-sun.com</tt> <br>
-<tt>&nbsp; What is the ip address of mercury.sun.com?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-129.146.60.220</tt> <br>
-<tt>&nbsp; Run SSL on mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-n</tt> <br>
-<tt>&nbsp; What port should be used to access the Portal Server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-80</tt> <br>
-<tt>&nbsp; What is the organization name?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-GridEnginePortal</tt> <br>
-<tt>&nbsp; Use an existing Directory Server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> <br>
-<tt>&nbsp; Use the local Directory Server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> <br>
-<tt>&nbsp; What is the Directory Server administration port?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-8900</tt> <br>
-<tt>&nbsp; What is the Directory Server base directory on mercury?&nbsp;&nbsp;&nbsp; 
-/usr/ldap</tt> <br>
-<tt>&nbsp; What is the root suffix of the directory tree?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-o=isp</tt> <br>
-<tt>&nbsp; What is the directory manager?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-cn=Directory Manager</tt> <br>
-<tt>&nbsp; What is the Web Server administrator?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-admin</tt> <br>
-<tt>&nbsp; What is the Web Server Administration port?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-8088</tt> <br>
-<tt>&nbsp; What is the passphrase for this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-********</tt> <br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Again?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-********</tt> <br>
-<tt>&nbsp; What is the deployment URI?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/portal</tt> <br>
-<tt>&nbsp; Install the sample portal?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> <br>
-<tt>&nbsp; What is the hostname of the gateway?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-mercury</tt> <br>
-<tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-.</tt> <br>
-<tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-sun.com</tt> <br>
-<tt>&nbsp; What is the ip address of mercury.sun.com?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-129.146.60.220</tt> <br>
-<tt>&nbsp; Will gateway be running SSL?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> <br>
-<tt>&nbsp; What port will gateway listen on?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-443</tt> <br>
-<tt>&nbsp; Will the gateway be using a web proxy?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-n</tt> <br>
-<tt>&nbsp; What is the name of the gateway profile?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-default</tt> </p>
-<p>The settings you just supplied will then be listed.&nbsp; Answer <b>yes</b> 
-to <b>Use these settings?</b>.&nbsp; If you answered no to the question regarding
-JDK, a new JDK will then be installed.&nbsp; Then the Identity Server, the
-Portal Server and Secure Remote Access support&nbsp; will be installed.&nbsp;
-This process can take 25 to 30 minutes. </p>
-<p>Now, the Gateway can be installed (option 1 in the <b>pssetup</b> script).&nbsp; 
-Once again, check the default settings that may be listed by the script and
-decide whether to accept them or to specify new settings.&nbsp; If you answer
-<b>no</b> to the <b>Use these settings?</b> question, or if no settings were
-proposed by the script, the following example dialog will occur: </p>
-<p>&nbsp;&nbsp;&nbsp; <tt>What is the gateway base directory?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/opt</tt> <br>
-<tt>&nbsp; What is the hostname of the gateway?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-mercury</tt> <br>
-<tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-.</tt> <br>
-<tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-sun.com</tt> <br>
-<tt>&nbsp; What is the ip address of mercury.sun.com?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-129.146.60.220</tt> <br>
-<tt>&nbsp; Will gateway be running SSL?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> <br>
-<tt>&nbsp; What port will gateway listen on?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-443</tt> <br>
-<tt>&nbsp; What is the name of this gateway profile?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-default</tt> <br>
-<tt>&nbsp; Do you want to create a self-signed certificate?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> <br>
-<tt>&nbsp; What is the name of your organization?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-ORGNAME</tt> <br>
-<tt>&nbsp; What is the name of your division?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-DIVNAME</tt> <br>
-<tt>&nbsp; What is the name of your city or locality?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-CITYNAME</tt> <br>
-<tt>&nbsp; What is the name of your state or province?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-STATENAME</tt> <br>
-<tt>&nbsp; What is the two-letter country code?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-US</tt> <br>
-<tt>&nbsp; What is the password for Certificate Database?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-********</tt> <br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Again?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ********</tt> <br>
-<tt>&nbsp; What is the deployment URI?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/portal</tt> <br>
-<tt>&nbsp; Start the gateway after installation?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-y</tt> </p>
-<p>The settings you just supplied will then be listed.&nbsp; Answer <b>yes</b> 
-to <b>Use these settings?</b>.&nbsp; Once the installation has completed, 
-you can exit from the <b>pssetup</b> script. </p>
-<p>You should check the installation log file for any errors that might have
-occurred.&nbsp; This can be done by viewing the <b>setup.log</b> file in
-the directory:&nbsp; <b>/var/sadm/install/logs/pssetup-&lt;pid&gt;</b>, where
-<b>&lt;pid&gt;</b> is the process id under which the <b>pssetup</b> command
-was executed.&nbsp; If any errors occurred, reconcile them before continuing.&nbsp;
-You can also check the <b>setup.log</b> file in both <b>/usr/ldap/setup</b> 
-and <b>/opt/SUNWam/servers/setup</b> for installation errors. </p>
-<p>If, for any reason, you want to de-install Sun ONE Portal Server, follow 
-this procedure: </p>
-<p>1. Stop the portal server and gateway by executing: <b>/etc/init.d/amserver 
-stop</b> and <b>/etc/init.d/gateway stop</b>. </p>
-<p>2. Execute <b>pssetup</b> and de-install all components. </p>
-<p>3. Exit <b>pssetup</b>. </p>
-<p>4. Ensure that the following directories have been removed (assuming that
-/opt is the base directory): <br>
-<b>&nbsp;&nbsp;&nbsp; /opt/SUNWam</b>, <b>/opt/SUNWps</b>, <b>/etc/opt/SUNWam</b>, 
-<b>/etc/opt/SUNWps</b>, <b>/var/opt/SUNWam</b>, <br>
-&nbsp;&nbsp;&nbsp; <b>/var/opt/SUNWps</b>. </p>
-<p>5. Ensure that all ports that were being used are no longer active, using:
-<b>netstat -na | grep port#</b>. </p>
-<p>(Experience has shown that the LDAP port (389) is often still active.&nbsp; 
-If this is the case, first ensure that <br>
-the <b>/usr/ldap</b> directory has been removed.&nbsp; Then execute: <b>ps 
--eaf | grep slapd</b> to find any processes that <br>
-may be waiting for connection to port 389.&nbsp; Kill any such processes.) 
-</p>
-<p>You can then re-install Sun ONE Portal Server following the steps outlined 
-previously. <br>
-&nbsp;</p>
-</div>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">Once 
-all components are installed you can test for a successful installation by
-typing: 
-<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-http://hostname.sub-domain.domain:port/amconsole</tt></b> </p>
-<p>or, for the example being used in this document: </p>
-<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-http://mercury.sun.com:80/amconsole</tt></b></p>
-</div>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">&nbsp; 
-<br>
-You will be prompted to enter a UserID and password.&nbsp; For the UserID,
-supply <b>amadmin</b>.&nbsp; For the password, supply the passphrase that
-was specified during the installation process.&nbsp; Then click on the <b>Submit</b>
-button.&nbsp; The Directory Server Access Management Edition (DSAME) console
-screen will appear.&nbsp; DSAME is also known as the Sun One Identity Server.
-The DSAME console is divided into three sections:&nbsp; the Location pane,
-the Navigation pane and the Data pane.&nbsp; The Location pane runs along
-the top of the console, the Navigation pane is the left portion of the console
-and the Data pane is the right portion of the console.&nbsp; Additional information
-regarding the layout and options available with the console can be found
-in the Sun ONE Portal Server Administrator's Guide. 
-<p>&nbsp;If there is an error, try restarting Sun ONE Portal Server by typing: 
-</p>
-<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/etc/init.d/amserver start</tt></b></p>
-</div>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">&nbsp; 
-<br>
-Then try opening the page again. If there is still an error, make sure the
-proxies are turned off in the Browser, and try again. If there is still no
-success, refer to the Sun ONE Portal Server documentation. 
-<p>Sun ONE Portal Server allows for a variety of authentication methods, including
-LDAP, Unix, Safeword, RADIUS, etc.&nbsp; For the purposes of this installation
-guide, Unix authentication is all that is required.&nbsp; To configure Sun
-ONE Portal Server for Unix authentication, perform the following steps from
-the DSAME console window: </p>
-<p>1. From the Navigation pane, click on the organization name (<b>GridEnginePortal</b>). 
-</p>
-<p>2. In the pull-down menu of the Navigation pane on the ensuing screen, 
-select <b>Services</b>. </p>
-<p>3. The Navigation pane now contains a list of DSAME Configuration Authentication 
-options, including Core, LDAP and Membership.&nbsp; Click on the arrow to
-the right of <b>Core</b>. </p>
-<p>4. The Data pane will be refreshed to show an Authentication menu with 
-a list of authentication methods.&nbsp; Select only <b>Unix</b> from this 
-list (de-select any others that had been previously selected). </p>
-<p>5. Still in the Data pane, just below the Authentication menu, check the
-box entitled <b>Dynamic User Profile Creation</b>. </p>
-<p>6. Scroll back to the top of the Data pane and click <b>Save</b>. </p>
-<p>7. Click on <b>logout</b> at the top right of the overall console window. 
-</p>
-<p>8. From a terminal window, logged in as root, restart the portal server 
-and gateway via: <b>/etc/init.d/amserver start </b>and<b> /etc/init.d/gateway 
-start.</b> </p>
-<p>You should now be able to login to the portal server via the gateway as
-follows: </p>
-<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-https://mercury.sun.com</tt></b> </p>
-<p>Normal users will access the portal server and Grid Engine Portal using 
-the gateway. </p>
-<p>For the purposes of this guide, it will be assumed that you have logged 
-in successfully using two different user ids: <b>gepuser</b> (typical user) 
-and <b>gepadm</b> (administrative user).&nbsp; This will be important when 
-<b>Roles</b> are assigned later in this document. </p>
-<h2 class="Western"> <a
- name="Step 3: Install the SGP integration (Glue) package."></a>Step 3: Grid
-Engine Portal Integration Package.</h2>
- </div>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">The 
-following files will need to be downloaded before you start the Grid Engine 
-Portal installation process.&nbsp; For the purposes of this installation guide,
-it will be assumed that all of these files will be downoaded into the <b>/tmp</b>
-directory. 
-<p>First, download the Grid Engine Portal&nbsp; installation package <a
- href="http://gridengine.sunsource.net/project/gridengine-download/gep/geportal.tar.gz">here</a>.&nbsp; 
-The download file is named <b>geportal.tar.gz</b>.&nbsp; As an alternative, 
-authorized users of the Grid Engine Open Source Project can login to <b>CVS</b> 
-and checkout the latest files in <b>gridengine/gep/glue</b>. Further hints can be found below.&nbsp; 
-From this directory, the <b>geportal.tar.gz</b> file can be generated as follows: 
-</p>
-<p>
- <b><tt>make distclean</tt></b> <br>
- <b><tt>make dist</tt></b> 
-</p>
-<p>Next, after carefully reading the license conditions, download the
-O'Reilly Servlet package - <b>cos-27May2002.zip</b> - (or later version) at
-<a href="http://www.servlets.com/cos">http://www.servlets.com/cos</a>.</p>
-</div>
-  
-<div style="margin-bottom: 0in;">&nbsp; <br>
-Finally, download the VNC shareware software at <a
- href="http://www.realvnc.com">http://www.realvnc.com</a>.&nbsp; Go to the
-download page at this site and select <b>version 3.3.5</b>.&nbsp; Then select
-the <b>Solaris 2.5 (SPARC)</b> package option and proceed to download, choosing
-the gzipped tar file <b>vnc-3.3.5-sparc_solaris_2.5.tar.gz</b>.&nbsp; Return
-to the original download page and select <b>older versions and other platforms</b>.&nbsp;
-From the ensuing page, under <b>Other packages</b>, select <b>Java sources
-(30K)</b> and proceed to download, choosing the gzipped tar file <b>vnc-3.3.3r2_javasrc.tgz</b>. 
-<p>Now you are ready to install Grid Engine Portal.&nbsp; The Grid Engine 
-Portal distribution comes with an <b>install.defaults</b> file that contains 
-values for several parameters that are needed for the Grid Engine Portal installation.&nbsp;
-The parameter values in this file should be changed (by editing the file)
-to reflect the actual values for the current installation or the values can
-be changed during the question and answer dialog that occurs during the installation
-process.&nbsp; The parameters defined in the file are (the values inside
-the parentheses reflect the values suggested in this installation guide): 
-</p>
-<p><b>IPS</b> - the Sun ONE Portal Server root directory (/opt) <br>
-<b>IPS_DOMAIN</b> - the Grid Engine Portal domain (GridEnginePortal) <br>
-<b>IWS_HOST_INSTANCE</b> - the Sun ONE Web Server host instance (https-mercury.sun.com) 
-<br>
-<b>IWS_HOST_VS</b> - the Sun ONE Web Server host virtual server (https-mercury.sun.com) 
-<br>
-<b>VNC_ROOT</b> - the VNC root directory (/export/GridEnginePortal/vnc-3.3.5_sparc_solaris_2.5) 
-<br>
-<b>APP_HOME</b> - the home directory for Grid Engine Portal applications (/export/GridEnginePortal/apps) 
-</p>
-<p>Following is an example installation session.</p>
-</div>
-  <br>
-<table border="1" cellspacing="3" cellpadding="4" width="100%">
- <caption>&nbsp; <br>
-  </caption><tbody>
+  </p>
  
+<h1> Table of Contents</h1>
+    
+<div id="Table of Contents1">  
+<div style="margin-bottom: 0in;"><a
+ href="#Introduction%20&amp;%20Technical%20Acknowledgments">Introduction &amp; 
+Technical Acknowledgments</a>  
+<p><a href="#Solution%20Components%20Detail">Solution Components Detail</a>
+ </p>
+ 
+<blockquote><a href="#Compute%20Engine">Compute Engine</a> <br>
+   <a href="#Java%20Servlet">Java Servlet</a> <br>
+   <a href="#Portal%20Environment">Portal Environment</a> <br>
+   <a href="#Multi-%20Domain%20Environment">Multi- Domain Environment</a></blockquote>
+  </div>
+    
+<div style="margin-bottom: 0in;"><a href="#Installation%20Procedure">Installation
+ Procedure</a>  
+<blockquote><a href="#Installation%20Procedure%20Summary">Installation Procedure 
+Summary</a> <br>
+   <a href="#Step%201:%20Grid%20Engine">Step 1: Sun ONE Grid Engine</a> <br>
+   <a href="#Step%202:%20iPlanet%20Portal%20Server">Step 2: Sun ONE Portal
+ Server</a> <br>
+   <a
+ href="#Step%203:%20Install%20the%20SGP%20integration%20%28Glue%29%20package.">Step
+ 3: Grid Engine Portal Integration Package</a> <br>
+   <a href="#Step%204:%20Configure%20iPlanet%20Portal%20Server.">Step 4:
+Configuring Sun ONE Portal Server</a> <br>
+   <a href="#Step%205:%20Using%20Grid%20Portal">Step 5: Using Grid Engine
+Portal</a>    <br>
+   <a href="#Step%206:%20Register%20New%20Applications%20with%20SGP">Step
+6: Registering New Applications with Grid Engine Portal</a></blockquote>
+  </div>
+  <a href="#A%20Tip%20for%20Developers">A Tip for Developers</a>  
+<p><a href="#Appendix%20B%20-%20Screen%20shots">Appendix A: Screenshots</a></p>
+ </div>
+   <br>
+ &nbsp;  
+<h1> <a name="Introduction &amp; Technical Acknowledgments"></a>Introduction &amp;
+Technical Acknowledgments</h1>
+    
+<div style="margin-bottom: 0in;">The Grid Engine Portal solution enables
+organizations to provide flexible, secure and managed access to High Performance
+Computing resources. The solution is designed to be implemented in a variety
+of environments, from University and Research Institutes to Commercial organizations
+making use of HPC technologies for aerospace, automotive, manufacturing and
+other compute intensive applications. The solution enables these resources
+to be harnessed and taken to the Internet in a secure, accountable manner.
+We would like to especially thank those who made significant technical contributions 
+to the Grid Engine Portal:</div>
+    
+<div style="margin-bottom: 0in;">&nbsp; <br>
+ Fr&eacute;d&eacute;ric Parient&eacute; for his vision and foundational implementation 
+of the Grid Engine Portal servlet source code.  
+<p>David Bunker for the practical implementation of Sun ONE Portal Server
+ with the Grid Engine Portal code and significant documentation contributions.
+ </p>
+ 
+<p>Eric Sharakan for adding &amp; documenting (single-sign-on) X-window support 
+to Grid Engine Portal.</p>
+ </div>
+    
+<h1> <a name="Solution Components Detail"></a>Solution Components Detail</h1>
+    
+<h2 class="western"> <a name="Compute Engine"></a>Compute Engine</h2>
+  The Compute Engine layer is essentially Sun ONE Grid Engine. Sun ONE Grid
+ Engine is a distributed resource management solution from Sun Microsystems
+ which controls the submission and distribution of jobs to execution hosts
+ and the administration, management and auditing of these jobs to and from
+ processing queues. Sun ONE Grid Engine can be integrated with other applications
+ used in the processing of compute intensive problems.  
+<h2 class="western"> <a name="Java Servlet"></a>Java Servlet</h2>
+    
+<div style="margin-bottom: 0in;">The Java Servlets used in this solution
+have been created by Sun Microsystems to provide an interface between Sun
+ONE Grid Engine and the Sun ONE Portal Server. The Java Servlets used in
+this guide are <b>SunTCP</b> and <b>AdminTCP</b> and are provided with legal
+conditions as detailed in the source code. These applications interact with
+Sun ONE Grid Engine's functions and Sun ONE Portal Server's APIs to produce
+Content Provider windows for the portal environment.</div>
+    
+<h2 class="western"> <a name="Portal Environment"></a>Portal Environment</h2>
+  The Portal Environment is implemented using the Sun ONE Portal Server.
+Sun ONE Portal Server provides the capabilities of personalization, customization,
+ security and aggregation to a Java enabled web browser. Sun ONE Portal Server 
+can be deployed in a multi-domain scenario, utilizing varying authentication
+ methods and role functions within each domain.  
+<h2 class="western"> <a name="Multi- Domain Environment"></a>Multi- Domain 
+Environment</h2>
+  The Multi-Domain Environment enables organizations to provision specific
+ content, manage multiple authentication and security structures and create
+ a personalized and customizable user experience with consistent look and
+feel within the domains. Within domains user roles are implemented allowing
+varying security levels and responsibilities to be assigned to users within
+the portal environment. In this solution these roles are used to differentiate
+between administrators, support personnel and end users. The administrative
+controls allowed within a domain provide a level of delegated administration
+to users of the solution. The Sun ONE Portal Server, it's domains and the
+roles and users within the domain can be customized at all levels, allowing
+organizations to provision content and services at a certain level and have
+those functions "inherited" by lower level categories. For example an application
+could be provisioned at the portal server level and this application could
+then be made available to all domains, roles and users within the portal
+environment.  
+<h1 style="margin-bottom: 0in;"> <a name="Installation Procedure"></a>Installation 
+Procedure</h1>
+    
+<h2 class="western"> <a name="Installation Procedure Summary"></a>Installation 
+Procedure Summary</h2>
+  We will assume that the computer hardware, base operating system (including
+ latest patches) and network configuration has been completed.  
+<p>Step 1: Install Sun ONE Grid Engine (and Sun ClusterTools w/ Loose Integration
+ for MPI support). </p>
+ 
+<p>Step 2: Install Sun ONE Portal Server. </p>
+ 
+<p>Step 3: Install the Grid Engine Portal Integration Package. </p>
+ 
+<p>Step 4: Adjust the configuration of Sun ONE Portal Server. </p>
+ 
+<p>Step 5: Test the Grid Engine Portal </p>
+ 
+<p>Step 6: Register new applications with Grid Engine Portal <br>
+ &nbsp; </p>
+ 
+<h2 class="western"> <a name="Step 1: Grid Engine"></a>Step 1: Sun ONE Grid 
+Engine</h2>
+  Download Sun ONE Grid Engine (version 5.3p2 or later)&nbsp; from <a
+ href="http://www.sun.com/gridware">http://www.sun.com/gridware.</a>   
+<p
+ style="font-variant: normal; font-style: normal; text-decoration: none;">Follow
+ the installation instructions. The default queues and the default cell will 
+work fine.  </p>
+ 
+<p
+ style="font-variant: normal; font-style: normal; text-decoration: none;">If
+ MPI jobs will be run through the portal, download and install the latest
+version of the HPC ClusterTools software at&nbsp; <a
+ href="http://supportforum.sun.com/clustertools">http://supportforum.sun.com/clustertools</a>.
+  </p>
+ 
+<p
+ style="font-variant: normal; font-style: normal; text-decoration: none;">Create
+ a Loose Integration for HPC ClusterTools and Grid Engine. The Loose Integration
+ package is a part of the Sun ONE Grid Engine download (version 5.3 or later)
+ and may be found under the directory <b>HPC_GE_Integration</b>. Follow the 
+directions in the <b>README</b> file. </p>
+ 
+<h2 class="western"> <a name="Step 2: iPlanet Portal Server"></a>Step 2: Sun
+ONE Portal Server</h2>
+    
+<div style="margin-bottom: 0in;">First, download Sun ONE Portal Server, Secure 
+Remote Access 6.0 from <a href="http://www.iplanet.com/">http://www.sun.com/software</a>.
+ Select <b>Internet &amp; Identity Management </b>on this web page and then<b>
+ Sun ONE Portal Server: Secure Remote Access 6.0 </b>in the Portal Servers
+ section.&nbsp; The download file is currently named <b>ps-sra-6.0-us.sparc-sun-solaris8.tar.gz</b>.&nbsp;
+ Once this file is downloaded, unzip and untar it into the installation directory.&nbsp; 
+Log in as <b>root</b>, change directories to the installation directory and 
+then execute the <b>pssetup</b> installation script.  
+<p>Please note that this version of the portal server software has the following 
+hardware and software requirements: </p>
+ 
+<p>&nbsp;&nbsp;&nbsp; Hardware <br>
+ &nbsp;&nbsp;&nbsp; 1 450 MHz UltraSparc II cpu or better <br>
+ &nbsp;&nbsp;&nbsp; 512 MB of Random Access Memory (RAM) <br>
+ &nbsp;&nbsp;&nbsp; 1 GB of swap space <br>
+ &nbsp;&nbsp;&nbsp; 1 GB of disk space </p>
+ 
+<p>&nbsp;&nbsp;&nbsp; Software <br>
+ &nbsp;&nbsp;&nbsp; A user distribution of either the Solaris 8 or Solaris
+ 9 operating system. </p>
+ 
+<p>&nbsp;&nbsp;&nbsp; Solaris 8 requires the following patches: <br>
+ &nbsp;&nbsp;&nbsp; 109326-03 (or later) <br>
+ &nbsp;&nbsp;&nbsp; 108434-03 (or later) <br>
+ &nbsp;&nbsp;&nbsp; 108827-15 (or later) </p>
+ 
+<p>Since the exact questions that are asked when installing Sun ONE Portal
+ Server vary with the type and version of installation, the following is
+only a general guide. During the installation of the various components,
+certain questions are asked repetitively.&nbsp; Most demo users can take
+all the defaults except for hostname, sub-domain name, domain name, IP address,
+organization name and passphrase.&nbsp; Before starting the installation
+process, check to ensure that none of the ports that you will specify is
+being actively used by another software component.&nbsp; You can do this
+by executing the command: <b>netstat -na | grep port#</b>.&nbsp; If a port
+is already being used, select another one in its place. </p>
+ 
+<p>For the purposes of this installation guide, it will be assumed that all 
+of the Sun ONE Portal Server components will be installed on a server with 
+a fully qualified name of <b>mercury.sun.com</b>, having an IP address of&nbsp; 
+<b>129.146.60.220</b>. </p>
+ 
+<p>What follows is a description of how to install the Directory Server,
+the Portal Server and the Gateway components of Sun ONE Portal Server individually.&nbsp;
+ It is also possible (and perhaps simpler) to install all of these components
+ at once by selecting option 4 in the installation script. </p>
+ 
+<p>Using the <b>pssetup</b> script, first accept the licensing agreement
+by answering <b>yes</b> to the <b>Do you accept?</b> question. Then install
+the Directory Server (option 5).&nbsp; The script may list the default settings 
+that it will use.&nbsp; Review these parameters and determine whether they 
+are appropriate for this installation.&nbsp; If any of them need to be specifically 
+defined, then answer <b>no</b> to the <b>Use these settings?</b> question.&nbsp; 
+Following is an example dialog that will follow if you answer <b>no </b>or 
+if a list of default settings was not proposed by the Portal Server installation 
+script: </p>
+ 
+<p><tt>&nbsp; What is the Directory Server base directory?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /usr/ldap</tt> <br>
+ <tt>&nbsp; What is the hostname of this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ mercury</tt> <br>
+ <tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ .</tt> <br>
+ <tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ sun.com</tt> <br>
+ <tt>&nbsp; What port should be used to access the Directory Server?&nbsp;&nbsp;
+ 389</tt> <br>
+ <tt>&nbsp; What is the Directory Server Administration port?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 8900</tt> <br>
+ <tt>&nbsp; What is the root suffix of the directory tree?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ o=isp</tt> <br>
+ <tt>&nbsp; What is the directory manager?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ cn=Directory Manager</tt> <br>
+ <tt>&nbsp; What is the organization name?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ GridEnginePortal</tt> <br>
+ <tt>&nbsp; What is the passphrase for this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ********</tt> <br>
+ <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Again?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ********</tt> </p>
+ 
+<p>The settings you just supplied will then be listed.&nbsp; Answer <b>yes</b>
+ to <b>Use these settings?</b>.&nbsp; The Directory Server will then be installed.
+ </p>
+ 
+<p>Now you can install the Portal Server (option 4 in the <b>pssetup</b>
+script).&nbsp; Once again, check the default settings that may be listed
+by the script and decide whether to accept them or to specify new settings.&nbsp;
+If you answer <b>no</b> to the <b>Use these settings?</b> question, or if
+no settings were proposed by the script, the following example dialog will
+occur.&nbsp; Note that for the question on JDK below, the recommended version
+of JDK is 1.31.1_04.&nbsp; Using other versions may result in instability
+or lowered performance.&nbsp; The dialog for this portion of the installation
+is as follows: </p>
+ 
+<p><tt>&nbsp; Do you want to use an existing JDK?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ n</tt> <br>
+ <tt>&nbsp; What is the installation base directory?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /opt</tt> <br>
+ <tt>&nbsp; What is the hostname of this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ mercury</tt> <br>
+ <tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ .</tt> <br>
+ <tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ sun.com</tt> <br>
+ <tt>&nbsp; What is the ip address of mercury.sun.com?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 129.146.60.220</tt> <br>
+ <tt>&nbsp; Run SSL on mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ n</tt> <br>
+ <tt>&nbsp; What port should be used to access the Portal Server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 80</tt> <br>
+ <tt>&nbsp; What is the organization name?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ GridEnginePortal</tt> <br>
+ <tt>&nbsp; Use an existing Directory Server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> <br>
+ <tt>&nbsp; Use the local Directory Server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> <br>
+ <tt>&nbsp; What is the Directory Server administration port?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 8900</tt> <br>
+ <tt>&nbsp; What is the Directory Server base directory on mercury?&nbsp;&nbsp;&nbsp;
+ /usr/ldap</tt> <br>
+ <tt>&nbsp; What is the root suffix of the directory tree?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ o=isp</tt> <br>
+ <tt>&nbsp; What is the directory manager?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ cn=Directory Manager</tt> <br>
+ <tt>&nbsp; What is the Web Server administrator?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ admin</tt> <br>
+ <tt>&nbsp; What is the Web Server Administration port?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 8088</tt> <br>
+ <tt>&nbsp; What is the passphrase for this server?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ********</tt> <br>
+ <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Again?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ********</tt> <br>
+ <tt>&nbsp; What is the deployment URI?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /portal</tt> <br>
+ <tt>&nbsp; Install the sample portal?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> <br>
+ <tt>&nbsp; What is the hostname of the gateway?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ mercury</tt> <br>
+ <tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ .</tt> <br>
+ <tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ sun.com</tt> <br>
+ <tt>&nbsp; What is the ip address of mercury.sun.com?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 129.146.60.220</tt> <br>
+ <tt>&nbsp; Will gateway be running SSL?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> <br>
+ <tt>&nbsp; What port will gateway listen on?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 443</tt> <br>
+ <tt>&nbsp; Will the gateway be using a web proxy?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ n</tt> <br>
+ <tt>&nbsp; What is the name of the gateway profile?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ default</tt> </p>
+ 
+<p>The settings you just supplied will then be listed.&nbsp; Answer <b>yes</b>
+ to <b>Use these settings?</b>.&nbsp; If you answered no to the question
+regarding JDK, a new JDK will then be installed.&nbsp; Then the Identity
+Server, the Portal Server and Secure Remote Access support&nbsp; will be
+installed.&nbsp; This process can take 25 to 30 minutes. </p>
+ 
+<p>Now, the Gateway can be installed (option 1 in the <b>pssetup</b> script).&nbsp;
+ Once again, check the default settings that may be listed by the script
+and decide whether to accept them or to specify new settings.&nbsp; If you
+answer <b>no</b> to the <b>Use these settings?</b> question, or if no settings
+were proposed by the script, the following example dialog will occur: </p>
+ 
+<p>&nbsp;&nbsp;&nbsp; <tt>What is the gateway base directory?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /opt</tt> <br>
+ <tt>&nbsp; What is the hostname of the gateway?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ mercury</tt> <br>
+ <tt>&nbsp; What is the sub-domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ .</tt> <br>
+ <tt>&nbsp; What is the domain name for mercury?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ sun.com</tt> <br>
+ <tt>&nbsp; What is the ip address of mercury.sun.com?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 129.146.60.220</tt> <br>
+ <tt>&nbsp; Will gateway be running SSL?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> <br>
+ <tt>&nbsp; What port will gateway listen on?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ 443</tt> <br>
+ <tt>&nbsp; What is the name of this gateway profile?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ default</tt> <br>
+ <tt>&nbsp; Do you want to create a self-signed certificate?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> <br>
+ <tt>&nbsp; What is the name of your organization?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ORGNAME</tt> <br>
+ <tt>&nbsp; What is the name of your division?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ DIVNAME</tt> <br>
+ <tt>&nbsp; What is the name of your city or locality?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ CITYNAME</tt> <br>
+ <tt>&nbsp; What is the name of your state or province?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ STATENAME</tt> <br>
+ <tt>&nbsp; What is the two-letter country code?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ US</tt> <br>
+ <tt>&nbsp; What is the password for Certificate Database?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ ********</tt> <br>
+ <tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Again?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ********</tt> <br>
+ <tt>&nbsp; What is the deployment URI?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /portal</tt> <br>
+ <tt>&nbsp; Start the gateway after installation?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ y</tt> </p>
+ 
+<p>The settings you just supplied will then be listed.&nbsp; Answer <b>yes</b>
+ to <b>Use these settings?</b>.&nbsp; Once the installation has completed,
+ you can exit from the <b>pssetup</b> script. </p>
+ 
+<p>You should check the installation log file for any errors that might have 
+occurred.&nbsp; This can be done by viewing the <b>setup.log</b> file in the
+directory:&nbsp; <b>/var/sadm/install/logs/pssetup-&lt;pid&gt;</b>, where 
+<b>&lt;pid&gt;</b> is the process id under which the <b>pssetup</b> command 
+was executed.&nbsp; If any errors occurred, reconcile them before continuing.&nbsp; 
+You can also check the <b>setup.log</b> file in both <b>/usr/ldap/setup</b>
+ and <b>/opt/SUNWam/servers/setup</b> for installation errors. </p>
+ 
+<p>If, for any reason, you want to de-install Sun ONE Portal Server, follow
+ this procedure: </p>
+ 
+<p>1. Stop the portal server and gateway by executing: <b>/etc/init.d/amserver
+ stop</b> and <b>/etc/init.d/gateway stop</b>. </p>
+ 
+<p>2. Execute <b>pssetup</b> and de-install all components. </p>
+ 
+<p>3. Exit <b>pssetup</b>. </p>
+ 
+<p>4. Ensure that the following directories have been removed (assuming that 
+/opt is the base directory): <br>
+ <b>&nbsp;&nbsp;&nbsp; /opt/SUNWam</b>, <b>/opt/SUNWps</b>, <b>/etc/opt/SUNWam</b>,
+ <b>/etc/opt/SUNWps</b>, <b>/var/opt/SUNWam</b>, <br>
+ &nbsp;&nbsp;&nbsp; <b>/var/opt/SUNWps</b>. </p>
+ 
+<p>5. Ensure that all ports that were being used are no longer active, using: 
+<b>netstat -na | grep port#</b>. </p>
+ 
+<p>(Experience has shown that the LDAP port (389) is often still active.&nbsp;
+ If this is the case, first ensure that <br>
+ the <b>/usr/ldap</b> directory has been removed.&nbsp; Then execute: <b>ps
+ -eaf | grep slapd</b> to find any processes that <br>
+ may be waiting for connection to port 389.&nbsp; Kill any such processes.)
+ </p>
+ 
+<p>You can then re-install Sun ONE Portal Server following the steps outlined
+ previously. <br>
+ &nbsp;</p>
+ </div>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">Once
+ all components are installed you can test for a successful installation
+by typing:  
+<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ http://hostname.sub-domain.domain:port/amconsole</tt></b> </p>
+ 
+<p>or, for the example being used in this document: </p>
+ 
+<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ http://mercury.sun.com:80/amconsole</tt></b></p>
+ </div>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">&nbsp;
+ <br>
+ You will be prompted to enter a UserID and password.&nbsp; For the UserID, 
+supply <b>amadmin</b>.&nbsp; For the password, supply the passphrase that 
+was specified during the installation process.&nbsp; Then click on the <b>Submit</b> 
+button.&nbsp; The Directory Server Access Management Edition (DSAME) console 
+screen will appear.&nbsp; DSAME is also known as the Sun One Identity Server. 
+The DSAME console is divided into three sections:&nbsp; the Location pane, 
+the Navigation pane and the Data pane.&nbsp; The Location pane runs along 
+the top of the console, the Navigation pane is the left portion of the console 
+and the Data pane is the right portion of the console.&nbsp; Additional information 
+regarding the layout and options available with the console can be found in
+the Sun ONE Portal Server Administrator's Guide.  
+<p>&nbsp;If there is an error, try restarting Sun ONE Portal Server by typing:
+ </p>
+ 
+<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /etc/init.d/amserver start</tt></b></p>
+ </div>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">&nbsp;
+ <br>
+ Then try opening the page again. If there is still an error, make sure the 
+proxies are turned off in the Browser, and try again. If there is still no 
+success, refer to the Sun ONE Portal Server documentation.  
+<p>Sun ONE Portal Server allows for a variety of authentication methods,
+including LDAP, Unix, Safeword, RADIUS, etc.&nbsp; For the purposes of this
+installation guide, Unix authentication is all that is required.&nbsp; To
+configure Sun ONE Portal Server for Unix authentication, perform the following
+steps from the DSAME console window: </p>
+ 
+<p>1. From the Navigation pane, click on the organization name (<b>GridEnginePortal</b>).
+ </p>
+ 
+<p>2. In the pull-down menu of the Navigation pane on the ensuing screen,
+ select <b>Services</b>. </p>
+ 
+<p>3. The Navigation pane now contains a list of DSAME Configuration Authentication
+ options, including Core, LDAP and Membership.&nbsp; Click on the arrow to 
+the right of <b>Core</b>. </p>
+ 
+<p>4. The Data pane will be refreshed to show an Authentication menu with
+ a list of authentication methods.&nbsp; Select only <b>Unix</b> from this
+ list (de-select any others that had been previously selected). </p>
+ 
+<p>5. Still in the Data pane, just below the Authentication menu, check the 
+box entitled <b>Dynamic User Profile Creation</b>. </p>
+ 
+<p>6. Scroll back to the top of the Data pane and click <b>Save</b>. </p>
+ 
+<p>7. Click on <b>logout</b> at the top right of the overall console window.
+ </p>
+ 
+<p>8. From a terminal window, logged in as root, restart the portal server
+ and gateway via: <b>/etc/init.d/amserver start </b>and<b> /etc/init.d/gateway
+ start.</b> </p>
+ 
+<p>You should now be able to login to the portal server via the gateway as 
+follows: </p>
+ 
+<p><b><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ https://mercury.sun.com</tt></b> </p>
+ 
+<p>Normal users will access the portal server and Grid Engine Portal using
+ the gateway. </p>
+ 
+<p>For the purposes of this guide, it will be assumed that you have logged
+ in successfully using two different user ids: <b>gepuser</b> (typical user)
+ and <b>gepadm</b> (administrative user).&nbsp; This will be important when
+ <b>Roles</b> are assigned later in this document. </p>
+ 
+<h2 class="Western"> <a
+ name="Step 3: Install the SGP integration (Glue) package."></a>Step 3: Grid 
+Engine Portal Integration Package.</h2>
+  </div>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">The
+ following files will need to be downloaded before you start the Grid Engine
+ Portal installation process.&nbsp; For the purposes of this installation
+guide, it will be assumed that all of these files will be downoaded into
+the <b>/tmp</b> directory.  
+<p>First, download the Grid Engine Portal&nbsp; installation package <a
+ href="http://gridengine.sunsource.net/project/gridengine-download/gep/geportal.tar.gz">here</a>.&nbsp;
+ The download file is named <b>geportal.tar.gz</b>.&nbsp; As an alternative,
+ authorized users of the Grid Engine Open Source Project can login to <b>CVS</b>
+ and checkout the latest files in <b>gridengine/gep/glue</b>. Further hints
+can be found below.&nbsp;  From this directory, the <b>geportal.tar.gz</b>
+file can be generated as follows:  </p>
+ 
+<p>  <b><tt>make distclean</tt></b> <br>
+  <b><tt>make dist</tt></b>  </p>
+ 
+<p>Next, after carefully reading the license conditions, download the O'Reilly
+Servlet package - <b>cos-27May2002.zip</b> - (or later version) at <a
+ href="http://www.servlets.com/cos">http://www.servlets.com/cos</a>.</p>
+ </div>
+    
+<div style="margin-bottom: 0in;">&nbsp; <br>
+ Finally, download the VNC shareware software at <a
+ href="http://www.realvnc.com">http://www.realvnc.com</a>.&nbsp; Go to the 
+download page at this site and select <b>version 3.3.5</b>.&nbsp; Then select 
+the <b>Solaris 2.5 (SPARC)</b> package option and proceed to download, choosing 
+the gzipped tar file <b>vnc-3.3.5-sparc_solaris_2.5.tar.gz</b>.&nbsp; Return 
+to the original download page and select <b>older versions and other platforms</b>.&nbsp; 
+From the ensuing page, under <b>Other packages</b>, select <b>Java sources 
+(30K)</b> and proceed to download, choosing the gzipped tar file <b>vnc-3.3.3r2_javasrc.tgz</b>.
+ 
+<p>Now you are ready to install Grid Engine Portal.&nbsp; The Grid Engine
+ Portal distribution comes with an <b>install.defaults</b> file that contains
+ values for several parameters that are needed for the Grid Engine Portal
+installation.&nbsp; The parameter values in this file should be changed (by
+editing the file) to reflect the actual values for the current installation
+or the values can be changed during the question and answer dialog that occurs
+during the installation process.&nbsp; The parameters defined in the file
+are (the values inside the parentheses reflect the values suggested in this
+installation guide):  </p>
+ 
+<p><b>IPS</b> - the Sun ONE Portal Server root directory (/opt) <br>
+ <b>IPS_DOMAIN</b> - the Grid Engine Portal domain (GridEnginePortal) <br>
+ <b>IWS_HOST_INSTANCE</b> - the Sun ONE Web Server host instance (https-mercury.sun.com)
+ <br>
+ <b>IWS_HOST_VS</b> - the Sun ONE Web Server host virtual server (https-mercury.sun.com)
+ <br>
+ <b>VNC_ROOT</b> - the VNC root directory (/export/GridEnginePortal/vnc-3.3.5_sparc_solaris_2.5)
+ <br>
+ <b>APP_HOME</b> - the home directory for Grid Engine Portal applications
+(/export/GridEnginePortal/apps)  </p>
+ 
+<p>Following is an example installation session.</p>
+ </div>
+   <br>
+ 
+<table border="1" cellspacing="3" cellpadding="4" width="100%">
+  <caption>&nbsp; <br>
+   </caption><tbody>
+     
   </tbody>  <tbody>
-    <tr>
- <td valign="top" width="100%"> 
+     <tr>
+  <td valign="top" width="100%">        
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><font
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><font
  color="#ff0000">Become root and create the SGP_ROOT installation directory.</font></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
- color="#000000"># mkdir -p /export/GridEnginePortal&nbsp;</font></tt> 
-      <p><font color="#ff0000">Note: /export/GridEnginePortal must be an
-NFS shared file system across all Sun ONE Grid Engine nodes.</font> <br>
-&nbsp;</p>
-      </div>
-  
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
+ color="#000000"># mkdir -p /export/GridEnginePortal&nbsp;</font></tt>  
+     
+      <p><font color="#ff0000">Note: /export/GridEnginePortal must be an NFS
+shared file system across all Sun ONE Grid Engine nodes.</font> <br>
+ &nbsp;</p>
+       </div>
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
  color="#000000"># chmod 755 /export/GridEnginePortal</font></tt></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
  color="#000000"># SGE_ROOT=&lt;where Sun ONE Grid Engine has been installed&gt;</font></tt></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
- color="#000000"># SGE_CELL=&lt;Sun ONE Grid Engine sge_cell if not default
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
+ color="#000000"># SGE_CELL=&lt;Sun ONE Grid Engine sge_cell if not default 
 cell&gt;</font></tt></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
  color="#000000"># COMMD_PORT=&lt;Sun ONE Grid Engine commd port&gt;</font></tt></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
  color="#000000"># export SGE_ROOT SGE_CELL COMMD_PORT</font></tt></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
  color="#000000"># cd /export/GridEnginePortal</font></tt></div>
-  
+          
       <div
- style="background: rgb(230,230,230) none repeat scroll 0% 50%; color: rgb(0,0,0);"><tt><font
- color="#000000"># gzip -dc /tmp/geportal.tar.gz | tar xvf -</font></tt> 
+ style="background: rgb(230,230,230) none repeat scroll 50% 0%; color: rgb(0,0,0);"><tt><font
+ color="#000000"># gzip -dc /tmp/geportal.tar.gz | tar xvf -</font></tt>
+       
       <p><font color="#ff0000">A utility known as </font><b><font
- color="#000000">infotext</font></b><font color="#ff0000"> is required by
+ color="#000000">infotext</font></b><font color="#ff0000"> is required by 
 the Grid Engine Portal installation script.&nbsp; The</font><b><font
- color="#000000"> infotext </font></b><font color="#ff0000">binaries are
-supplied with Sun ONE Grid Engine 5.3p2.&nbsp; If you are installing Grid
-Engine Portal on a system that has an earlier release of Sun ONE Grid Engine,
-the </font><b><font color="#000000">infotext</font></b><font
- color="#ff0000"> binaries may not be included and the Grid Engine Portal
-installation will fail.&nbsp; Check the </font><b><font color="#000000">SGE_ROOT/utilbin 
-      </font></b><font color="#ff0000">directory for the presence of the
-      </font><b><font color="#000000">infotext</font></b><font
- color="#ff0000"> binaries in both the </font><b><font color="#000000">solaris</font></b><font
+ color="#000000"> infotext </font></b><font color="#ff0000">binaries are supplied
+with Sun ONE Grid Engine 5.3p2.&nbsp; If you are installing Grid Engine Portal
+on a system that has an earlier release of Sun ONE Grid Engine, the </font><b><font
+ color="#000000">infotext</font></b><font color="#ff0000"> binaries may not
+be included and the Grid Engine Portal installation will fail.&nbsp; Check
+the </font><b><font color="#000000">SGE_ROOT/utilbin        </font></b><font
+ color="#ff0000">directory for the presence of the       </font><b><font
+ color="#000000">infotext</font></b><font color="#ff0000"> binaries in both
+the </font><b><font color="#000000">solaris</font></b><font
  color="#ff0000"> and </font><b><font color="#000000">solaris64</font></b><font
- color="#ff0000"> subdirectories. If they are not there, please install them
+ color="#ff0000"> subdirectories. If they are not there, please install them 
 before attempting to install Grid Engine Portal.</font> </p>
+       
       <p><tt><font color="#000000"># cd /tmp</font></tt> <br>
-      <tt><font color="#000000"># unzip cos-27May2002.zip lib/cos.jar</font></tt> 
-      <br>
-      <tt><font color="#000000"># cd /export/GridEnginePortal</font></tt> 
-      <br>
-      <tt><font color="#000000"># gzip -dc /tmp/vnc-3.3.5-sparc_solaris_2.5.tar.gz 
-| tar xvf -</font></tt> <br>
-      <tt><font color="#000000"># cd vnc-3.3.5-sparc_solaris_2.5</font></tt> 
-      <br>
-      <tt><font color="#000000"># gzip -dc /tmp/vnc-3.3.3r2_javasrc.tgz | 
-tar xvf -</font></tt> <br>
-      <tt><font color="#000000"># cd ..</font></tt> <br>
-      <tt><font color="#000000"># vnc_patches/applyVncPatches</font></tt> 
-      </p>
-      <p><font color="#ff0000">Note: You will be asked by the install script 
-below to supply&nbsp; the following parameters:</font> </p>
+       <tt><font color="#000000"># unzip cos-27May2002.zip lib/cos.jar</font></tt>
+       <br>
+       <tt><font color="#000000"># cd /export/GridEnginePortal</font></tt>
+       <br>
+       <tt><font color="#000000"># gzip -dc /tmp/vnc-3.3.5-sparc_solaris_2.5.tar.gz
+ | tar xvf -</font></tt> <br>
+       <tt><font color="#000000"># cd vnc-3.3.5-sparc_solaris_2.5</font></tt>
+       <br>
+       <tt><font color="#000000"># gzip -dc /tmp/vnc-3.3.3r2_javasrc.tgz
+|  tar xvf -</font></tt> <br>
+       <tt><font color="#000000"># cd ..</font></tt> <br>
+       <tt><font color="#000000"># vnc_patches/applyVncPatches</font></tt>
+       </p>
+       
+      <p><font color="#ff0000">Note: You will be asked by the install script
+ below to supply&nbsp; the following parameters:</font> </p>
+       
       <p><font color="#ff0000">O'Reilly servlet path - use </font><b><font
- color="#000000">/tmp/lib/cos.jar</font></b><font color="#ff0000"> assuming
+ color="#000000">/tmp/lib/cos.jar</font></b><font color="#ff0000"> assuming 
 you followed the exact steps above</font> </p>
+       
       <p><font color="#ff0000">Vnc root directory - use </font><b><font
  color="#000000">/export/GridEnginePortal/vnc-3.3.5-sparc_solaris_2.5</font></b><font
  color="#ff0000"> assuming you followed the exact steps above</font> </p>
-      <p><font color="#ff0000">Grid Engine Portal domain - for consistency
-with the nomenclature in this guide, use </font><b><font color="#000000">GridEnginePortal</font></b> 
-      </p>
-      <p><tt><font color="#000000">You can adapt the necessary parameters
-for your setup also in the file install.defaults instead of entering the
-information one by one.</font></tt> </p>
+       
+      <p><font color="#ff0000">Grid Engine Portal domain - for consistency 
+with the nomenclature in this guide, use </font><b><font color="#000000">GridEnginePortal</font></b>
+       </p>
+       
+      <p><tt><font color="#000000">You can adapt the necessary parameters 
+for your setup also in the file install.defaults instead of entering the information
+one by one.</font></tt> </p>
+       
       <p><tt><font color="#000000"># ./install -gp</font></tt> <br>
-      <tt><font color="#000000">Installing Grid Portal servlets</font></tt> 
+       <tt><font color="#000000">Installing Grid Portal servlets</font></tt>
+       <br>
+       <tt><font color="#000000">-------------------------------</font></tt>
+       <br>
+       <tt><font color="#000000">We will ask for</font></tt> <br>
+       <tt><font color="#000000">- the O'Reilly servlet location</font></tt>
+       <br>
+       <tt><font color="#000000">- the SunONE Portal Server root directory</font></tt>
+       <br>
+       <tt><font color="#000000">- the Vnc root directory (optional)</font></tt>
+       <br>
+       <tt><font color="#000000">- the Grid Engine Portal domain</font></tt>
+       <br>
+       <tt><font color="#000000">- the S1WS host instance</font></tt> <br>
+       <tt><font color="#000000">- the S1WS host virtual server</font></tt>
+       </p>
+       
+      <p><tt><font color="#000000">The Grid Engine Portal is using the O'Reilly
+ servlet cos.jar</font></tt> <br>
+       <tt><font color="#000000">The version we used for testing is available
+ as</font></tt> <br>
+       <tt><font color="#000000">http://www.servlets.com/cos/cos-27May2002.zip</font></tt>
+       <br>
+       <tt><font color="#000000">Please read the license conditions carefully
+ and download</font></tt> <br>
+       <tt><font color="#000000">this file. Then proceed by unzipping it,
+e.g. like this</font></tt> <br>
+       <tt><font color="#000000">% cd /tmp</font></tt> <br>
+       <tt><font color="#000000">% unzip cos-27May2002.zip lib/cos.jar</font></tt>
+       <br>
+       <tt><font color="#000000">This path must be entered here, e.g. /tmp/lib/cos.jar</font></tt>
+       </p>
+       
+      <p><tt><font color="#000000">The following default installation information
+ is available</font></tt> <br>
+       <tt><font color="#000000">O'Reilly servlet:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /cod_home/andre/OPENSOURCE/gridengine-private/gp/lib/cos.jar</font></tt>
       <br>
-      <tt><font color="#000000">-------------------------------</font></tt> 
-      <br>
-      <tt><font color="#000000">We will ask for</font></tt> <br>
-      <tt><font color="#000000">- the O'Reilly servlet location</font></tt> 
-      <br>
-      <tt><font color="#000000">- the SunONE Portal Server root directory</font></tt> 
-      <br>
-      <tt><font color="#000000">- the Vnc root directory (optional)</font></tt> 
-      <br>
-      <tt><font color="#000000">- the Grid Engine Portal domain</font></tt> 
-      <br>
-      <tt><font color="#000000">- the S1WS host instance</font></tt> <br>
-      <tt><font color="#000000">- the S1WS host virtual server</font></tt> 
-      </p>
-      <p><tt><font color="#000000">The Grid Engine Portal is using the O'Reilly 
-servlet cos.jar</font></tt> <br>
-      <tt><font color="#000000">The version we used for testing is available 
-as</font></tt> <br>
-      <tt><font color="#000000">http://www.servlets.com/cos/cos-27May2002.zip</font></tt> 
-      <br>
-      <tt><font color="#000000">Please read the license conditions carefully 
-and download</font></tt> <br>
-      <tt><font color="#000000">this file. Then proceed by unzipping it, e.g.
-like this</font></tt> <br>
-      <tt><font color="#000000">% cd /tmp</font></tt> <br>
-      <tt><font color="#000000">% unzip cos-27May2002.zip lib/cos.jar</font></tt> 
-      <br>
-      <tt><font color="#000000">This path must be entered here, e.g. /tmp/lib/cos.jar</font></tt> 
-      </p>
-      <p><tt><font color="#000000">The following default installation information 
-is available</font></tt> <br>
-      <tt><font color="#000000">O'Reilly servlet:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/cod_home/andre/OPENSOURCE/gridengine-private/gp/lib/cos.jar</font></tt> <br>
-      <tt><font color="#000000">Grid Engine Portal root:&nbsp;&nbsp;&nbsp;&nbsp; 
-/export/GridEnginePortal</font></tt> <br>
-      <tt><font color="#000000">Application home:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/gridware/Tools/GridPortal/apps</font></tt> <br>
-      <tt><font color="#000000">S1PS install dir:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/opt</font></tt> <br>
-      <tt><font color="#000000">Grid Engine Portal domain:&nbsp;&nbsp; Germany.Sun.COM</font></tt> 
-      <br>
-      <tt><font color="#000000">S1WS host instance:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-https-es-ergb01-01.Germany.Sun.COM</font></tt> <br>
-      <tt><font color="#000000">S1WS host vs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-https-es-ergb01-01.Germany.Sun.COM</font></tt> <br>
-      <tt><font color="#000000">VNC root directory:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/gridware/Tools/GridPortal/vnc-3.3.5-sparc_solaris_2.5</font></tt> </p>
-      <p><tt><font color="#000000">Do you want to use these parameters (y/n) 
-[y]&gt;&gt; n</font></tt> </p>
-      <p><tt><font color="#000000">Please enter the O'Reilly servlet path
+       <tt><font color="#000000">Grid Engine Portal root:&nbsp;&nbsp;&nbsp;&nbsp;
+ /export/GridEnginePortal</font></tt> <br>
+       <tt><font color="#000000">Application home:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /gridware/Tools/GridPortal/apps</font></tt> <br>
+       <tt><font color="#000000">S1PS install dir:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /opt</font></tt> <br>
+       <tt><font color="#000000">Grid Engine Portal domain:&nbsp;&nbsp; Germany.Sun.COM</font></tt>
+       <br>
+       <tt><font color="#000000">S1WS host instance:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ https-es-ergb01-01.Germany.Sun.COM</font></tt> <br>
+       <tt><font color="#000000">S1WS host vs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ https-es-ergb01-01.Germany.Sun.COM</font></tt> <br>
+       <tt><font color="#000000">VNC root directory:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /gridware/Tools/GridPortal/vnc-3.3.5-sparc_solaris_2.5</font></tt> </p>
+       
+      <p><tt><font color="#000000">Do you want to use these parameters (y/n)
+ [y]&gt;&gt; n</font></tt> </p>
+       
+      <p><tt><font color="#000000">Please enter the O'Reilly servlet path 
 &gt;&gt; /tmp/lib/cos.jar</font></tt> <br>
-      <tt><font color="#000000">Please enter the Application home path &gt;&gt; 
-/export/GridEnginePortal/apps</font></tt> <br>
-      <tt><font color="#000000">Please enter the S1PS install directory ( 
-/opt ) &gt;&gt; /opt</font></tt> <br>
-      <tt><font color="#000000">Please enter the Grid Engine Portal domain 
-( sun.com ) &gt;&gt; GridEnginePortal</font></tt> <br>
-      <tt><font color="#000000">Please enter the S1WS host instance ( https-mercury.sun.com 
-) &gt;&gt; https-mercury.sun.com</font></tt> <br>
-      <tt><font color="#000000">Please enter the S1WS virtual server ( https-mercury.sun.com 
-) &gt;&gt; https-mercury.sun.com</font></tt> <br>
-      <tt><font color="#000000">Do you want to use VNC (y/n) [n]&gt;&gt;
+       <tt><font color="#000000">Please enter the Application home path &gt;&gt;
+ /export/GridEnginePortal/apps</font></tt> <br>
+       <tt><font color="#000000">Please enter the S1PS install directory
+(  /opt ) &gt;&gt; /opt</font></tt> <br>
+       <tt><font color="#000000">Please enter the Grid Engine Portal domain
+ ( sun.com ) &gt;&gt; GridEnginePortal</font></tt> <br>
+       <tt><font color="#000000">Please enter the S1WS host instance ( https-mercury.sun.com
+ ) &gt;&gt; https-mercury.sun.com</font></tt> <br>
+       <tt><font color="#000000">Please enter the S1WS virtual server ( https-mercury.sun.com
+ ) &gt;&gt; https-mercury.sun.com</font></tt> <br>
+       <tt><font color="#000000">Do you want to use VNC (y/n) [n]&gt;&gt; 
 y</font></tt> </p>
-      <p><tt><font color="#000000">Please enter the VNC root directory &gt;&gt;
+       
+      <p><tt><font color="#000000">Please enter the VNC root directory &gt;&gt; 
 /export/GridEnginePortal/vnc-3.3.5-sparc_solaris_2.5</font></tt> </p>
-      <p><tt><font color="#000000">You entered the following installation
+       
+      <p><tt><font color="#000000">You entered the following installation 
 information</font></tt> <br>
-      <tt><font color="#000000">O'Reilly servlet:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/tmp/lib/cos.jar</font></tt> <br>
-      <tt><font color="#000000">Grid Portal root:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/export/GridEnginePortal</font></tt> <br>
-      <tt><font color="#000000">Application home:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/export/GridEnginePortal/apps</font></tt> <br>
-      <tt><font color="#000000">S1PS install dir:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-/opt</font></tt> <br>
-      <tt><font color="#000000">Grid Portal domain:&nbsp;&nbsp;&nbsp; GridEnginePortal</font></tt> 
-      <br>
-      <tt><font color="#000000">S1WS host instance:&nbsp;&nbsp;&nbsp; https-mercury.sun.com</font></tt> 
-      <br>
-      <tt><font color="#000000">S1WS host vs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-https-mercury.sun.com</font></tt> <br>
-      <tt><font color="#000000">VNC root directory:&nbsp;&nbsp;&nbsp; /export/GridEnginePortal/vnc-3.3.5-sparc_solaris_2.5</font></tt> 
-      </p>
-      <p><tt><font color="#000000">Do you want to use these parameters (y/n) 
-[y]&gt;&gt; y</font></tt> </p>
-      <p><tt><font color="#000000">The Grid Portal servlets will now be installed.</font></tt> 
-      <br>
-      <tt><font color="#000000">Do you want to proceed (y/n) [y]&gt;&gt;
+       <tt><font color="#000000">O'Reilly servlet:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /tmp/lib/cos.jar</font></tt> <br>
+       <tt><font color="#000000">Grid Portal root:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /export/GridEnginePortal</font></tt> <br>
+       <tt><font color="#000000">Application home:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /export/GridEnginePortal/apps</font></tt> <br>
+       <tt><font color="#000000">S1PS install dir:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ /opt</font></tt> <br>
+       <tt><font color="#000000">Grid Portal domain:&nbsp;&nbsp;&nbsp; GridEnginePortal</font></tt>
+       <br>
+       <tt><font color="#000000">S1WS host instance:&nbsp;&nbsp;&nbsp; https-mercury.sun.com</font></tt>
+       <br>
+       <tt><font color="#000000">S1WS host vs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ https-mercury.sun.com</font></tt> <br>
+       <tt><font color="#000000">VNC root directory:&nbsp;&nbsp;&nbsp; /export/GridEnginePortal/vnc-3.3.5-sparc_solaris_2.5</font></tt>
+       </p>
+       
+      <p><tt><font color="#000000">Do you want to use these parameters (y/n)
+ [y]&gt;&gt; y</font></tt> </p>
+       
+      <p><tt><font color="#000000">The Grid Portal servlets will now be installed.</font></tt>
+       <br>
+       <tt><font color="#000000">Do you want to proceed (y/n) [y]&gt;&gt; 
 y</font></tt> </p>
-      <p><tt><font color="#000000">Do you want to edit the deployment descriptor 
-(y/n) [n]&gt;&gt; n</font></tt> </p>
+       
+      <p><tt><font color="#000000">Do you want to edit the deployment descriptor
+ (y/n) [n]&gt;&gt; n</font></tt> </p>
+       
       <p><tt><font color="#000000">added manifest</font></tt> <br>
-      <tt><font color="#000000">adding: WEB-INF/(in = 0) (out= 0)(stored 0%)</font></tt> 
-      <br>
-      <tt><font color="#000000">adding: WEB-INF/lib/(in = 0) (out= 0)(stored 
-0%)</font></tt> <br>
-      <tt><font color="#000000">adding: WEB-INF/lib/gep.jar(in = 30881) (out= 
-30249)(deflated 2%)</font></tt> <br>
-      <tt><font color="#000000">adding: WEB-INF/lib/cos.jar(in = 48585) (out= 
-43739)(deflated 9%)</font></tt> <br>
-      <tt><font color="#000000">adding: WEB-INF/web.xml.template(in = 3089) 
-(out= 461)(deflated 85%)</font></tt> <br>
-      <tt><font color="#000000">adding: WEB-INF/web.xml(in = 3166) (out= 464)(deflated
-85%)</font></tt> <br>
-      <tt><font color="#000000">Deleting web application</font></tt> <br>
-      <tt><font color="#000000">Loading&nbsp; new configuration</font></tt> 
-      <br>
-      <tt><font color="#000000">Invalid URI specified with -u option.</font></tt> 
-      <br>
-      <tt><font color="#000000">The directory /export/GridEnginePortal/deploy 
-does not exist. Creating it.</font></tt> <br>
-      <tt><font color="#000000">Deploying&nbsp; web application</font></tt> 
-      <br>
-      <tt><font color="#000000">Loading&nbsp; new configuration</font></tt> 
-      <br>
-      <tt><font color="#000000">Web application deploy successful</font></tt> 
-      <br>
-      <tt><font color="#000000">Do you want to install the GEPTableContainer 
-(y/n) [n]&gt;&gt; y</font></tt> </p>
-      <p><tt><font color="#000000">Please enter the amAdmin password &gt;&gt;&nbsp;</font></tt> 
-      <br>
-      <tt><font color="#000000">Adding the channels. This may take some seconds.&nbsp; 
-SUCCESS!</font></tt> </p>
-      <p><tt><font color="#000000">Follow the instructions in the installation 
-guide to add roles and to make the GEPTableContainer available.</font></tt> 
-      <br>
-      <tt><font color="#000000">The installation is now complete.</font></tt> 
-      <br>
-&nbsp;</p>
-      </div>
- </td>
- </tr>
- 
-  </tbody>
+       <tt><font color="#000000">adding: WEB-INF/(in = 0) (out= 0)(stored
+0%)</font></tt>        <br>
+       <tt><font color="#000000">adding: WEB-INF/lib/(in = 0) (out= 0)(stored
+ 0%)</font></tt> <br>
+       <tt><font color="#000000">adding: WEB-INF/lib/gep.jar(in = 30881)
+(out=  30249)(deflated 2%)</font></tt> <br>
+       <tt><font color="#000000">adding: WEB-INF/lib/cos.jar(in = 48585)
+(out=  43739)(deflated 9%)</font></tt> <br>
+       <tt><font color="#000000">adding: WEB-INF/web.xml.template(in = 3089)
+ (out= 461)(deflated 85%)</font></tt> <br>
+       <tt><font color="#000000">adding: WEB-INF/web.xml(in = 3166) (out=
+464)(deflated 85%)</font></tt> <br>
+       <tt><font color="#000000">Deleting web application</font></tt> <br>
+       <tt><font color="#000000">Loading&nbsp; new configuration</font></tt>
+       <br>
+       <tt><font color="#000000">Invalid URI specified with -u option.</font></tt>
+       <br>
+       <tt><font color="#000000">The directory /export/GridEnginePortal/deploy
+ does not exist. Creating it.</font></tt> <br>
+       <tt><font color="#000000">Deploying&nbsp; web application</font></tt>
+       <br>
+       <tt><font color="#000000">Loading&nbsp; new configuration</font></tt>
+       <br>
+       <tt><font color="#000000">Web application deploy successful</font></tt>
+       <br>
+       <tt><font color="#000000">Do you want to install the GEPTableContainer
+ (y/n) [n]&gt;&gt; y</font></tt> </p>
+       
+      <p><tt><font color="#000000">Please enter the amAdmin password &gt;&gt;&nbsp;</font></tt>
+       <br>
+       <tt><font color="#000000">Adding the channels. This may take some
+seconds.&nbsp;  SUCCESS!</font></tt> </p>
+       
+      <p><tt><font color="#000000">Follow the instructions in the installation
+ guide to add roles and to make the GEPTableContainer available.</font></tt>
+       <br>
+       <tt><font color="#000000">The installation is now complete.</font></tt>
+       <br>
+ &nbsp;</p>
+       </div>
+  </td>
+  </tr>
+     
+  </tbody> 
 </table>
-   
-<p style="margin-bottom: 0in;">Every user that utilizes VNC for X-Windows 
-applications must change his/her environment settings. VNC is called from 
-the servlet with a <br>
-&nbsp; </p>
-<div style="margin-bottom: 0in;"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <tt>su - &lt;user&gt; -c vncserver</tt></b></div>
-  
+     
+<p style="margin-bottom: 0in;">Every user that utilizes VNC for X-Windows
+ applications must change his/her environment settings. VNC is called from
+ the servlet with a <br>
+ &nbsp; </p>
+ 
+<div style="margin-bottom: 0in;"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <tt>su - &lt;user&gt; -c vncserver</tt></b></div>
+    
 <div style="margin-bottom: 0in;">&nbsp; <br>
-command and inherits the environment of the user.&nbsp; Add the following 
-to the user's environment (.cshrc or .profile or similar):</div>
-  
+ command and inherits the environment of the user.&nbsp; Add the following
+ to the user's environment (.cshrc or .profile or similar):</div>
+    
 <div style="margin-bottom: 0in;">&nbsp; <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>setenv SGP_ROOT /export/GridEnginePortal</tt></b> <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>setenv VNC_ROOT $SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5</tt></b> <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-or <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>export SGP_ROOT=/export/GridEnginePortal</tt></b> <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>export VNC_ROOT=$SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5</tt></b> 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>setenv SGP_ROOT /export/GridEnginePortal</tt></b> <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>setenv VNC_ROOT $SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5</tt></b> <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ or <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>export SGP_ROOT=/export/GridEnginePortal</tt></b> <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>export VNC_ROOT=$SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5</tt></b>  
 <p>Finally, set the <b>PATH</b> variable as follows: </p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b>SGP_PATH=/export/GridEnginePortal</b></tt> <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>PATH=$PATH:$SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5:/usr/openwin/bin</tt></b> 
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>export PATH SGP_PATH</tt></b> </p>
-<p>[For debugging purposes, the output logs from the VNC software are stored 
-in this user's directory under the hidden directory ".vnc".] </p>
+ 
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b>SGP_PATH=/export/GridEnginePortal</b></tt> <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>PATH=$PATH:$SGP_ROOT/vnc-3.3.5-sparc_solaris_2.5:/usr/openwin/bin</tt></b>
+ <br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>export PATH SGP_PATH</tt></b> </p>
+ 
+<p>[For debugging purposes, the output logs from the VNC software are stored
+ in this user's directory under the hidden directory ".vnc".] </p>
+ 
 <p>Test the <b>gethomedir </b>script : </p>
-<p><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <tt># $SGP_ROOT/bin/gethomedir $SGP_ROOT <i>username</i></tt></b> </p>
+ 
+<p><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <tt># $SGP_ROOT/bin/gethomedir $SGP_ROOT <i>username</i></tt></b> </p>
+ 
 <p>This should return the following output: </p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
- <b><tt>/export/GridEnginePortal/workspace/username</tt></b></p>
-</div>
-  
-<h2 class="western"> <a name="Step 4: Configure iPlanet Portal Server."></a>Step
-4: Configuring Sun ONE Portal Server</h2>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">&nbsp; 
-<br>
-The additional container channel <b>GEPTableContainer</b> is added to the
-organization <b>GridEnginePortal </b>Display Profile by the installation script. 
-<p>To make the Grid Engine Portal channels available to the user the following 
-steps have to be performed. &nbsp;See also the Screenshots in the appendix.<br>
-&nbsp; </p>
-<h4> Create the <b>GEPUserRole</b></h4>
-  
-<ol>
- <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b>
-as described earlier.</li>
-  <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation 
-(left) pane.</li>
-  <li> Select <b>Roles</b> in the pull-down menu that appears in the ensuing
-Navigation&nbsp; pane.</li>
-  <li> Click <b>New</b>, and on the Data (right) pane, <b>Create Role</b>
-appears. Enter the name <b>GEPUserRole</b>, enter a description and leave
-the rest untouched. Finally, press <b>Create</b>, and in the Navigation (left)
-pane, the new role appears.</li>
-  <li> Click on the link for the new role; choose <b>Users</b> in the <b>GEPUserRole</b> 
-panel and click <b>Add.</b>&nbsp; In the Data (right) pane a <b>Search</b> 
-form appears. Press <b>Search </b>at the bottom right of the Data pane<b> 
-    </b>and add the user that will access Grid Engine Portal user channels 
-by checking the box to the left of one of the <b>default</b> users. Then press
-    <b>Submit</b>. . The selected user is added in the Navigation (left) panel.
-Make sure that you have selected the correct <b>default</b> user - you want
-to have created a user role for <b>gepuser</b>.&nbsp; You can see the user
-name that was assigned by clicking on the right arrow next to <b>default</b>
-and then checking the Data (right) pane, which will display the user name.
-If you chose the wrong <b>default</b> user, you will see the <b>gepadm</b>
-user name displayed instead of the <b>gepuser</b> name. If this happens,
-    <b>Remove</b> the user and start again. (See the SunONE Portal Server
-documentation for additional information how to add users to roles and to
-setup users for the default organization)</li>
-  <li> Click the arrow next to the <b>default</b> user in the Navigation
-(left) pane and enable <b>Netlet</b> in the Data (right) pane by checking
-the box next to <b>Netlet</b> under <b>Services</b> (if you plan to use <b>Xvnc)</b>. 
-    <b>Save</b> your settings.</li>
-  <li> In the <b>GEPUserRole</b> Navigation pane, choose <b>Services</b>
-and click on the arrow next to <b>Portal Server Configuration -&gt; Desktop</b>.
-Continue on the right (Data pane) to add the GEPTableContainer to the default
-Desktop Container.</li>
-  <li> In the Data (right) pane, select <b>Channel and Container Management
-    </b>in the<b> Dynamic </b>section.</li>
-  <li> Select <b>JSPTabContainer</b> in the <b>Container Channels</b> list
-in the Data pane.</li>
-  <li> In the <b>Channel Management</b> section of the Data pane, select
-    <b>GEPTableContainer</b> in the <b>Existing Channels</b> list.</li>
-  <li> In the Data pane, click <b>Add</b> to place <b>GEPTableContainer&nbsp;</b> 
-in the <b>Available And Visible</b> list.</li>
-  <li> Click <b>Save</b> in the <b>Channel Management</b> section of the
-Data pane and then <b>logout</b> in the upper right corner of the overall
-display.</li>
  
-</ol>
-  
-<h4> Create the <b>GEPAdminRole</b></h4>
-  
-<blockquote>To create the <b>GEPAdminRole</b> repeat the steps above by replacing
-  <b>GEPUserRole </b>with<b> GEPAdminRole </b>in the description.&nbsp; The
-  <b>GEPAdminRole</b> should be assigned to user <b>gepadm</b>.</blockquote>
-  
-<h4> Customize the channels that are displayed for <b>GEPUserRole</b>:</h4>
-  
-<ol>
- <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b>
-as described earlier.</li>
-  <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation 
-(left) pane.</li>
-  <li> Select <b>Roles</b> in the pull-down menu that appears in the ensuing
-Navigation&nbsp; pane.</li>
-  <li> Click <b>GEPUserRole.</b></li>
-  <li> In the <b>GEPUserRole</b> panel choose <b>Services</b> and click on
-the arrow next to <b>Portal Server Configuration -&gt; Desktop</b>.</li>
-  <br>
-Continue in the Data (right) pane to add the <b>GEPTableContainer</b> to
-the default <b>Desktop Container</b>. <li> In the Data (right) pane, select
-    <b>Channel and Container Management </b>in the<b> Dynamic </b>section.</li>
-  <li> Select <b>GEPTableContainer</b> in the <b>Container Channels</b> list
-in the Data pane.</li>
-  <li> Check the *Admin* channels and <b>Delete</b> them from the list of
-channels and then <b>logout</b> from the console.</li>
- 
-</ol>
- Now, when a user logs in via the gateway (<b>https://mercury.sun.com</b>), 
-a new Tab will appear at the top of the portal display page entitled <b>GEPTableContainer.&nbsp; 
-</b>By clicking on this Tab, the portal display will be refreshed to show 
-all of the Grid Engine Portal channels (Job List, Application List, Project 
-List, etc).&nbsp; The name of the Tab can be changed to something more reasonable
-and understandable by performing this procedure: 
-<ol>
- <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b>
-as described earlier.</li>
-  <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation 
-(left) pane.</li>
-  <li> Select <b>Services</b> in the pull-down menu that appears in the ensuing 
-Navigaion&nbsp; pane.</li>
-  <li> After the Navigation pane has been refreshed, click on the right arrow 
-next to <b>Desktop </b>under<b> Portal Server Configuration</b>.</li>
-  <li> In the Data (right) pane, select <b>Channel and Container Management
-    </b>in the<b> Dynamic </b>section.</li>
-  <li> Click on <b>Edit</b> to the right of <b>JSPTabContainer</b> under
-the <b>Container Channels</b> list of the Data pane.</li>
-  <li> Click on <b>Edit</b> to the right of <b>TabProperties</b> in the <b>Properties</b> 
-section of the Data pane.</li>
-  <li> In the Data pane, click <b>Add </b>in the<b> Properties </b>section,
-choose <b>Collection</b> from the <b>Type</b> pull-down menu and enter <b>GEPTableContainer</b> 
-in the <b>Name</b> box.&nbsp; Then click <b>Add</b>.</li>
-  <li> Click <b>Edit</b> to the right of <b>GEPTableContainer</b> in the
-    <b>Properties</b> section of the Data pane.</li>
-  <li> Click <b>Add </b>under <b>Properties</b> in the Data pane and then
-type in the following entries (after finishing each entry, click <b>Add </b>at 
-the bottom of the section, then click<b> Add </b>under<b> Properties </b>to 
-go to the next entry).</li>
-  <br>
-  <tt>Type: string&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Value: Grid Engine Portal</tt> <br>
-  <tt>Type: boolean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: removable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Value: true</tt> <br>
-  <tt>Type: boolean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: renamable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Value: true</tt> <br>
-  <tt>Type: boolean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: predefined&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Value: true</tt> <br>
-  <tt>Type: string&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: desc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-Value: Grid Engine Portal Tab</tt> <li> Click<b> Save</b> under <b>Properties</b>
-in the Data pane.</li>
-  <li> Click <b>Save</b> at the top of the Data pane.</li>
-  <li> Click <b>logout</b> at the top right corner of the portal page.</li>
- 
-</ol>
- Now when a user logs in to the gateway, the <b>Grid Engine Portal</b> Tab 
-will appear. The user can also change the name to one of his own choosing 
-by selecting <b>Tab</b> at the top of the display. 
-<h4> Setup Netlets</h4>
-  
-<ol>
- <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b>
-as described earlier.</li>
-  <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation 
-(left) pane.</li>
-  <li> Select <b>Services</b> in the pull-down menu that appears in the ensuing 
-Navigation&nbsp; pane.</li>
-  <li> Click the arrow under <b>SRAP Configuration -&gt; Netlet</b>.</li>
-  <li> In the Data (right) pane, press <b>Add </b>under the<b> Dynamic </b>section.</li>
-  <li> For <b>Rule Name</b> enter: <b>Xvnc:1</b></li>
-  <br>
-For <b>Encryption Algotithms</b> select <b>Other</b>. <br>
-For <b>URL</b> enter: <b>/portal.vnc</b> <br>
-For <b>Download Applet</b> check the box and enter: <b>5801:mercury.sun.com:5801</b> 
-  <br>
-For <b>Extend Session</b> check the box <br>
-For <b>Port - Host - Port </b>remove any entry that is already in the list,
-then for <b>Client Port</b>, enter <b>5901</b>, for <b>Target Host(s)</b>, 
-enter<b> mercury.sun.com</b> and for <b>Target Port(s)</b>, enter <b>5901</b>.&nbsp; 
-Then click <b>Add to List</b>. <li> Press <b>Save</b> to save these settings</li>
-  <li> Repeat the steps 1 to 7 by replacing 5801 with 580n and 5901 with
-590n, where n is 2, 3, ...n, and then <b>logout</b> as before.</li>
-  <br>
-&nbsp; 
-  <p>&nbsp; </p>
-  <p><font color="#ff0000">To use netlets the user profile must have access 
-to Netlets.</font></p>
-</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b><tt>/export/GridEnginePortal/workspace/username</tt></b></p>
  </div>
-  
-<h2 class="western"> <a name="Step 5: Using Grid Portal"></a>Step 5: Using
+    
+<h2 class="western"> <a name="Step 4: Configure iPlanet Portal Server."></a>Step 
+4: Configuring Sun ONE Portal Server</h2>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">&nbsp;
+ <br>
+ The additional container channel <b>GEPTableContainer</b> is added to the 
+organization <b>GridEnginePortal </b>Display Profile by the installation
+script.  
+<p>To make the Grid Engine Portal channels available to the user the following
+ steps have to be performed. &nbsp;See also the Screenshots in the appendix.<br>
+ &nbsp; </p>
+ 
+<h4> Create the <b>GEPUserRole</b></h4>
+    
+<ol>
+  <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b> 
+as described earlier.</li>
+   <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation
+ (left) pane.</li>
+   <li> Select <b>Roles</b> in the pull-down menu that appears in the ensuing 
+Navigation&nbsp; pane.</li>
+   <li> Click <b>New</b>, and on the Data (right) pane, <b>Create Role</b> 
+appears. Enter the name <b>GEPUserRole</b>, enter a description and leave 
+the rest untouched. Finally, press <b>Create</b>, and in the Navigation (left) 
+pane, the new role appears.</li>
+   <li> Click on the link for the new role; choose <b>Users</b> in the <b>GEPUserRole</b>
+ panel and click <b>Add.</b>&nbsp; In the Data (right) pane a <b>Search</b>
+ form appears. Press <b>Search </b>at the bottom right of the Data pane<b>
+     </b>and add the user that will access Grid Engine Portal user channels
+ by checking the box to the left of one of the <b>default</b> users. Then
+press     <b>Submit</b>. . The selected user is added in the Navigation (left)
+panel. Make sure that you have selected the correct <b>default</b> user -
+you want to have created a user role for <b>gepuser</b>.&nbsp; You can see
+the user name that was assigned by clicking on the right arrow next to <b>default</b> 
+and then checking the Data (right) pane, which will display the user name. 
+If you chose the wrong <b>default</b> user, you will see the <b>gepadm</b> 
+user name displayed instead of the <b>gepuser</b> name. If this happens, 
+   <b>Remove</b> the user and start again. (See the SunONE Portal Server documentation
+for additional information how to add users to roles and to setup users for
+the default organization)</li>
+   <li> Click the arrow next to the <b>default</b> user in the Navigation 
+(left) pane and enable <b>Netlet</b> in the Data (right) pane by checking 
+the box next to <b>Netlet</b> under <b>Services</b> (if you plan to use <b>Xvnc)</b>.
+     <b>Save</b> your settings.</li>
+   <li> In the <b>GEPUserRole</b> Navigation pane, choose <b>Services</b> 
+and click on the arrow next to <b>Portal Server Configuration -&gt; Desktop</b>. 
+Continue on the right (Data pane) to add the GEPTableContainer to the default 
+Desktop Container. If there is no template available already you might have<br>
+to press <b>Create</b> in the right pane.<br>
+  </li>
+   <li> In the Data (right) pane, select <b>Channel and Container Management 
+    </b>in the<b> Dynamic </b>section.</li>
+   <li> Select <b>JSPTabContainer</b> in the <b>Container Channels</b> list 
+in the Data pane.</li>
+   <li> In the <b>Channel Management</b> section of the Data pane, select 
+    <b>GEPTableContainer</b> in the <b>Existing Channels</b> list.</li>
+   <li> In the Data pane, click <b>Add</b> to place <b>GEPTableContainer&nbsp;</b>
+ in the <b>Available And Visible</b> list.</li>
+   <li> Click <b>Save</b> in the <b>Channel Management</b> section of the 
+Data pane and then <b>logout</b> in the upper right corner of the overall 
+display.</li>
+   
+</ol>
+    
+<h4> Create the <b>GEPAdminRole</b></h4>
+    
+<blockquote>To create the <b>GEPAdminRole</b> repeat the steps above by replacing 
+  <b>GEPUserRole </b>with<b> GEPAdminRole </b>in the description.&nbsp; The 
+  <b>GEPAdminRole</b> should be assigned to user <b>gepadm</b>.</blockquote>
+    
+<h4> Customize the channels that are displayed for <b>GEPUserRole</b>:</h4>
+    
+<ol>
+  <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b> 
+as described earlier.</li>
+   <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation
+ (left) pane.</li>
+   <li> Select <b>Roles</b> in the pull-down menu that appears in the ensuing 
+Navigation&nbsp; pane.</li>
+   <li> Click <b>GEPUserRole.</b></li>
+   <li> In the <b>GEPUserRole</b> panel choose <b>Services</b> and click
+on the arrow next to <b>Portal Server Configuration -&gt; Desktop</b>.</li>
+   <br>
+ Continue in the Data (right) pane to add the <b>GEPTableContainer</b> to 
+the default <b>Desktop Container</b>. <li> In the Data (right) pane, select 
+    <b>Channel and Container Management </b>in the<b> Dynamic </b>section.</li>
+   <li> Select <b>GEPTableContainer</b> in the <b>Container Channels</b>
+list in the Data pane.</li>
+   <li> Check the *Admin* channels and <b>Delete</b> them from the list of 
+channels and then <b>logout</b> from the console.</li>
+   
+</ol>
+  Now, when a user logs in via the gateway (<b>https://mercury.sun.com</b>),
+ a new Tab will appear at the top of the portal display page entitled <b>GEPTableContainer.&nbsp;
+ </b>By clicking on this Tab, the portal display will be refreshed to show
+ all of the Grid Engine Portal channels (Job List, Application List, Project
+ List, etc).&nbsp; The name of the Tab can be changed to something more reasonable 
+and understandable by performing this procedure:  
+<ol>
+  <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b> 
+as described earlier.</li>
+   <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation
+ (left) pane.</li>
+   <li> Select <b>Services</b> in the pull-down menu that appears in the
+ensuing  Navigaion&nbsp; pane.</li>
+   <li> After the Navigation pane has been refreshed, click on the right
+arrow  next to <b>Desktop </b>under<b> Portal Server Configuration</b>.</li>
+   <li> In the Data (right) pane, select <b>Channel and Container Management 
+    </b>in the<b> Dynamic </b>section.</li>
+   <li> Click on <b>Edit</b> to the right of <b>JSPTabContainer</b> under 
+the <b>Container Channels</b> list of the Data pane.</li>
+   <li> Click on <b>Edit</b> to the right of <b>TabProperties</b> in the
+    <b>Properties</b>  section of the Data pane.</li>
+   <li> In the Data pane, click <b>Add </b>in the<b> Properties </b>section, 
+choose <b>Collection</b> from the <b>Type</b> pull-down menu and enter <b>GEPTableContainer</b>
+ in the <b>Name</b> box.&nbsp; Then click <b>Add</b>.</li>
+   <li> Click <b>Edit</b> to the right of <b>GEPTableContainer</b> in the 
+    <b>Properties</b> section of the Data pane.</li>
+   <li> Click <b>Add </b>under <b>Properties</b> in the Data pane and then 
+type in the following entries (after finishing each entry, click <b>Add </b>at
+ the bottom of the section, then click<b> Add </b>under<b> Properties </b>to
+ go to the next entry).</li>
+   <br>
+   <tt>Type: string&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Value: Grid Engine Portal</tt> <br>
+   <tt>Type: boolean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: removable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Value: true</tt> <br>
+   <tt>Type: boolean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: renamable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Value: true</tt> <br>
+   <tt>Type: boolean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: predefined&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Value: true</tt> <br>
+   <tt>Type: string&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Name: desc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ Value: Grid Engine Portal Tab</tt> <li> Click<b> Save</b> under <b>Properties</b> 
+in the Data pane.</li>
+   <li> Click <b>Save</b> at the top of the Data pane.</li>
+   <li> Click <b>logout</b> at the top right corner of the portal page.</li>
+   
+</ol>
+  Now when a user logs in to the gateway, the <b>Grid Engine Portal</b> Tab
+ will appear. The user can also change the name to one of his own choosing
+ by selecting <b>Tab</b> at the top of the display.  
+<h4> Setup Netlets</h4>
+    
+<ol>
+  <li> Login as <b>amadmin</b> to<b> http://mercury.sun.com:80/amconsole</b> 
+as described earlier.</li>
+   <li> Select the organization name (<b>GridEnginePortal</b>) in the Navigation
+ (left) pane.</li>
+   <li> Select <b>Services</b> in the pull-down menu that appears in the
+ensuing  Navigation&nbsp; pane.</li>
+   <li> Click the arrow under <b>SRAP Configuration -&gt; Netlet</b>.</li>
+   <li> In the Data (right) pane, press <b>Add </b>under the<b> Dynamic </b>section.</li>
+   <li> For <b>Rule Name</b> enter: <b>Xvnc:1</b></li>
+   <br>
+ For <b>Encryption Algotithms</b> select <b>Other</b>. <br>
+ For <b>URL</b> enter: <b>/portal.vnc</b> <br>
+ For <b>Download Applet</b> check the box and enter: <b>5801:mercury.sun.com:5801</b>
+   <br>
+ For <b>Extend Session</b> check the box <br>
+ For <b>Port - Host - Port </b>remove any entry that is already in the list, 
+then for <b>Client Port</b>, enter <b>5901</b>, for <b>Target Host(s)</b>,
+ enter<b> mercury.sun.com</b> and for <b>Target Port(s)</b>, enter <b>5901</b>.&nbsp;
+ Then click <b>Add to List</b>. <li> Press <b>Save</b> to save these settings</li>
+   <li> Repeat the steps 1 to 7 by replacing 5801 with 580n and 5901 with 
+590n, where n is 2, 3, ...n, and then <b>logout</b> as before.</li>
+   <br>
+ &nbsp;    
+  <p>&nbsp; </p>
+   
+  <p><font color="#ff0000">To use netlets the user profile must have access
+ to Netlets.</font></p>
+ 
+</ol>
+  </div>
+    
+<h2 class="western"> <a name="Step 5: Using Grid Portal"></a>Step 5: Using 
 Grid Engine Portal</h2>
- Access Sun ONE Portal Server via the link <b>https://mercury.sun.com/</b>. 
-When you login, a small <b>Netlet</b> window will pop up. This window hosts 
-the netlet applet, which is required for tunneling the Xvnc protocol through 
-the portal. Heed the warning in the window about not closing it. You will 
-also find a netlet channel on your desktop, with a note saying <b>No netlet</b> 
-<b>targets configured </b>(unless you have configured other, non Xvnc netlet 
-targets). This comment is not entirely accurate; targets are configured for
-Xvnc, but they do not show up in the Netlet channel. Do not remove this channel
-from your desktop. Also, the Netlet window does not dismiss itself when you
-logout. You must manually dismiss it, or netlet functions will not work the
-next time you login. 
-<p>In the portal server, the <b>Project List</b>, <b>Job List</b>, and <b>Application 
-List</b> channels should be visible. If logged in as root or as an administrative 
-user there will be <b>Admin Application List</b> and <b>Job Control</b> channels.
-(If these channels display errors, check for incorrect paths and make sure
-Grid Engine is accessible from the portal. Also it is sometimes helpful to
-view the source behind the channels, which can be accomplished by right clicking
-on the mouse and selecting the <b>View Source </b>option.) </p>
-<p>Users can select which channels they wish to have visible by checking on
-the <b>Content</b> switch. The order in which channels are displayed can
+  Access Sun ONE Portal Server via the link <b>https://mercury.sun.com/</b>.
+ When you login, a small <b>Netlet</b> window will pop up. This window hosts
+ the netlet applet, which is required for tunneling the Xvnc protocol through
+ the portal. Heed the warning in the window about not closing it. You will
+ also find a netlet channel on your desktop, with a note saying <b>No netlet</b>
+ <b>targets configured </b>(unless you have configured other, non Xvnc netlet
+ targets). This comment is not entirely accurate; targets are configured
+for Xvnc, but they do not show up in the Netlet channel. Do not remove this
+channel from your desktop. Also, the Netlet window does not dismiss itself
+when you logout. You must manually dismiss it, or netlet functions will not
+work the next time you login.  
+<p>In the portal server, the <b>Project List</b>, <b>Job List</b>, and <b>Application
+ List</b> channels should be visible. If logged in as root or as an administrative
+ user there will be <b>Admin Application List</b> and <b>Job Control</b>
+channels. (If these channels display errors, check for incorrect paths and
+make sure Grid Engine is accessible from the portal. Also it is sometimes
+helpful to view the source behind the channels, which can be accomplished
+by right clicking on the mouse and selecting the <b>View Source </b>option.)
+</p>
+ 
+<p>Users can select which channels they wish to have visible by checking
+on the <b>Content</b> switch. The order in which channels are displayed can 
 be set by the <b>Layout</b> switch. </p>
-<p>The <b>Job List</b> channel should contain the message <b>You have no running
-jobs</b>. This message shows that contact with Sun ONE Grid Engine has been
-established (<b>qstat</b> has executed successfully). (A Java error in this
-window could indicate a problem communicating with Sun ONE Grid Engine. Go
-back and verify that Sun ONE Grid Engine and Sun ONE Portal Server were installed
-correctly. Try logging in directly as the user, executing the Sun ONE Grid
-Engine settings script (<b>settings.sh</b>), and running <b>qstat</b>. </p>
-<p>The <b>Project List</b> contains a list of projects for the current user.
-Projects are stored in the <b>suntcp</b> subdirectory of the <b>/export/GridEnginePortal/workspace/username</b> 
-directory. A list of projects is kept in the file <b>.suntcp-list</b> in the
-user's home directory. An example file might look like: </p>
+ 
+<p>The <b>Job List</b> channel should contain the message <b>You have no
+running jobs</b>. This message shows that contact with Sun ONE Grid Engine
+has been established (<b>qstat</b> has executed successfully). (A Java error
+in this window could indicate a problem communicating with Sun ONE Grid Engine.
+Go back and verify that Sun ONE Grid Engine and Sun ONE Portal Server were
+installed correctly. Try logging in directly as the user, executing the Sun
+ONE Grid Engine settings script (<b>settings.sh</b>), and running <b>qstat</b>.
+</p>
+ 
+<p>The <b>Project List</b> contains a list of projects for the current user. 
+Projects are stored in the <b>suntcp</b> subdirectory of the <b>/export/GridEnginePortal/workspace/username</b>
+ directory. A list of projects is kept in the file <b>.suntcp-list</b> in
+the user's home directory. An example file might look like: </p>
+ 
 <p>Fasta_project Fasta Genome <br>
-Blast_project Blast Genome <br>
-Qmon_project qmon <br>
-P1002129493410 New Project name </p>
-<p>where the first entry on each line corresponds to a specific directory 
-that was created by Grid Engine Portal in the user's workspace and the second
-string (separated by a tab) corresponds to the name of the project that is
-used in the <b>Project List</b> channel. If there are no Projects, then you
+ Blast_project Blast Genome <br>
+ Qmon_project qmon <br>
+ P1002129493410 New Project name </p>
+ 
+<p>where the first entry on each line corresponds to a specific directory
+ that was created by Grid Engine Portal in the user's workspace and the second 
+string (separated by a tab) corresponds to the name of the project that is 
+used in the <b>Project List</b> channel. If there are no Projects, then you 
 can add a project by clicking on the <b>Create new project</b> link. <font
  color="#ff0000">(Note:&nbsp; Use of any other character than a<b> </b></font><b><font
- color="#000000">Tab </font></b><font color="#ff0000">to delineate the entries
-will result in a variety of strange errors.&nbsp; If you edit these files
-by hand, be sure that your editor is not inserting multiple spaces in place
+ color="#000000">Tab </font></b><font color="#ff0000">to delineate the entries 
+will result in a variety of strange errors.&nbsp; If you edit these files 
+by hand, be sure that your editor is not inserting multiple spaces in place 
 of tabs.)</font> </p>
-<p>Finally the <b>Application List </b>channel should contain a list of applications
-that was installed in the Application directory <b>(/export/GridEnginePortal/apps) 
-</b>during the installation process.&nbsp; If there are no applications,
-make sure the application files were installed correctly in the applications
+ 
+<p>Finally the <b>Application List </b>channel should contain a list of applications 
+that was installed in the Application directory <b>(/export/GridEnginePortal/apps)
+ </b>during the installation process.&nbsp; If there are no applications, 
+make sure the application files were installed correctly in the applications 
 directory. </p>
-<p><font color="#ff0000">Before attempting to run any jobs, ensure that the
-permissions are set correctly for the <b>/export/GridEnginePortal/apps</b> 
-directory</font> <br>
-<font color="#ff0000">by executing the command: <b>chmod +r /export/GridEnginePortal/apps/*/*</b>.</font> 
-</p>
-<p>Now you are ready to run a job. Click the <b>Submit new job</b> link in
-the <b>Job List </b>channel. Select the Fasta Genome project. Use the default
-values for Algorithm, and Query file. Select the first database in the list.
-Click submit. (If this project is not available, create a project for the
-Sleeper Demo application. Then submit this job. The input argument is simply
-the number of seconds you want the processor to sleep). When the screen refreshes,
-the job should appear. Click on the job for detailed information from Sun
-ONE Grid Engine. Make sure the job is executing. If it is waiting for a queue,
+ 
+<p><font color="#ff0000">Before attempting to run any jobs, ensure that the 
+permissions are set correctly for the <b>/export/GridEnginePortal/apps</b>
+ directory</font> <br>
+ <font color="#ff0000">by executing the command: <b>chmod +r /export/GridEnginePortal/apps/*/*</b>.</font>
+ </p>
+ 
+<p>Now you are ready to run a job. Click the <b>Submit new job</b> link in 
+the <b>Job List </b>channel. Select the Fasta Genome project. Use the default 
+values for Algorithm, and Query file. Select the first database in the list. 
+Click submit. (If this project is not available, create a project for the 
+Sleeper Demo application. Then submit this job. The input argument is simply 
+the number of seconds you want the processor to sleep). When the screen refreshes, 
+the job should appear. Click on the job for detailed information from Sun 
+ONE Grid Engine. Make sure the job is executing. If it is waiting for a queue, 
 for example, Sun ONE Grid Engine may not be properly configured. </p>
-<p>If an error is detected, you can attempt to debug it by executing the job
-by hand. First, you will need to go to the <b>/export/GridEnginePortal/workspace/username/suntcp</b> 
-directory of the user that logged into the portal. This directory should contain
-a list of projects. Look at the <b>.suntcp-list</b> file to determine which
-project directory you just used, then go to the appropriate project directory. 
+ 
+<p>If an error is detected, you can attempt to debug it by executing the
+job by hand. First, you will need to go to the <b>/export/GridEnginePortal/workspace/username/suntcp</b>
+ directory of the user that logged into the portal. This directory should
+contain a list of projects. Look at the <b>.suntcp-list</b> file to determine
+which project directory you just used, then go to the appropriate project
+directory.  </p>
+ 
+<p>Two files that should be in this directory are<b> .suntcp-su</b> and <b>.suntcp-qsub</b>.
+ The Grid Engine Portal executes the <b>.suntcp-su</b> script, which in turn 
+executes the <b>.suntcp-qsub</b> script. Try executing these by hand. Any 
+errors detected should indicate possible errors in the Sun ONE Grid Engine, 
+Sun ONE Portal Server or Grid Engine Portal setup. Common errors include incorrect
+permission settings on the application or queue problems with Sun ONE Grid
+Engine. </p>
+ 
+<p>Next try submitting a job that uses an X-windows interface. Go to the
+<b>Qmon</b>  subdirectory of the applications directory. Create a <b>qmon</b>
+project if there is not already one. Then submit this project as a new job.
 </p>
-<p>Two files that should be in this directory are<b> .suntcp-su</b> and <b>.suntcp-qsub</b>. 
-The Grid Engine Portal executes the <b>.suntcp-su</b> script, which in turn
-executes the <b>.suntcp-qsub</b> script. Try executing these by hand. Any
-errors detected should indicate possible errors in the Sun ONE Grid Engine,
-Sun ONE Portal Server or Grid Engine Portal setup. Common errors include
-incorrect permission settings on the application or queue problems with Sun
-ONE Grid Engine. </p>
-<p>Next try submitting a job that uses an X-windows interface. Go to the <b>Qmon</b> 
-subdirectory of the applications directory. Create a <b>qmon</b> project if
-there is not already one. Then submit this project as a new job. </p>
-<p>[Note: The Sun ONE Portal Server netlet which tunnels the X11 Grid Engine 
-Portal connection between client and server is sensitive to your browser's 
-proxy settings. In addition, it cannot understand so-called PAC (proxy auto-config)
-files (yet). This means the netlet will use whatever settings are under your
-Netscape <b>Manual ProxyConfiguration</b> settings, even if you're configured
-to use the <b>Automatic Configuration</b>. So either make sure the settings
-under the Manual configuration are reasonable, or select <b>Direct connection
-to the</b> <b>internet</b>, whichever is appropriate for your configuration.] 
-</p>
-<p>When submitting a job that utilizes X11, the first time you do so after 
-logging in, a new X server is launched for you, and an applet window is displayed
-in your browser. This applet is essentially your X display. Your job should
-appear in this window shortly. You can leave this window open for the duration
-of your portal session, and any new applications utilizing X will appear
-in this window. </p>
-<p>Alternatively, you can explicitly start the X session by clicking the <b>Launch 
-Xvnc server</b> bookmark, which you'll find in the Bookmarks channel of your
-desktop. Once the X session has begun, other jobs launched which utilize X
-will use the existing session. </p>
-<p>There is absolutely no X state kept on the applet side. If the applet crashes,
-or you inadvertently close the window, you can restart the applet one of
-two ways: via the <b>Launch Xvnc server</b> bookmark in your Bookmarks channel,
-or by attempting to launch another X-based application. Either way, Grid
-Engine Portal notices you already have a session active, and provides you
-a link to just restart the viewer applet. Click that link, and you should
+ 
+<p>[Note: The Sun ONE Portal Server netlet which tunnels the X11 Grid Engine
+ Portal connection between client and server is sensitive to your browser's
+ proxy settings. In addition, it cannot understand so-called PAC (proxy auto-config) 
+files (yet). This means the netlet will use whatever settings are under your 
+Netscape <b>Manual ProxyConfiguration</b> settings, even if you're configured 
+to use the <b>Automatic Configuration</b>. So either make sure the settings 
+under the Manual configuration are reasonable, or select <b>Direct connection 
+to the</b> <b>internet</b>, whichever is appropriate for your configuration.]
+ </p>
+ 
+<p>When submitting a job that utilizes X11, the first time you do so after
+ logging in, a new X server is launched for you, and an applet window is
+displayed in your browser. This applet is essentially your X display. Your
+job should appear in this window shortly. You can leave this window open
+for the duration of your portal session, and any new applications utilizing
+X will appear in this window. </p>
+ 
+<p>Alternatively, you can explicitly start the X session by clicking the
+<b>Launch  Xvnc server</b> bookmark, which you'll find in the Bookmarks channel
+of your desktop. Once the X session has begun, other jobs launched which
+utilize X will use the existing session. </p>
+ 
+<p>There is absolutely no X state kept on the applet side. If the applet
+crashes, or you inadvertently close the window, you can restart the applet
+one of two ways: via the <b>Launch Xvnc server</b> bookmark in your Bookmarks
+channel, or by attempting to launch another X-based application. Either way,
+Grid Engine Portal notices you already have a session active, and provides
+you a link to just restart the viewer applet. Click that link, and you should 
 find the X display exactly as you left it. </p>
-<p>The X session automatically terminates when you logout of the portal. In
-addition, a <b>Kill Xvnc server</b> bookmark is provided for you if you want
-to do so manually. While killing the Xvnc server seems to kill any jobs running
-under it, it is not recommended to rely on this behavior. It's better to
-make sure your X-based jobs are no longer running before killing the X session
-explicitly or logging out. </p>
+ 
+<p>The X session automatically terminates when you logout of the portal.
+In addition, a <b>Kill Xvnc server</b> bookmark is provided for you if you
+want to do so manually. While killing the Xvnc server seems to kill any jobs
+running under it, it is not recommended to rely on this behavior. It's better
+to make sure your X-based jobs are no longer running before killing the X
+session explicitly or logging out. </p>
+ 
 <h2 class="western"> <a
- name="Step 6: Register New Applications with SGP"></a>Step 6: Registering 
-New Applications with Grid Engine Portal</h2>
-  
-<div class="western">Registering applications with Grid Engine Portal involves 
-editing two files and (if desired) creating a form. (Note: Use only characters 
-a-z 0-9, space, tab, and underscore in the Grid Engine Portal files. Characters 
-such as quotation marks or apostrophes can cause errors.) 
-<p>Edit the <b>.suntcp-list</b> file in the applications directory specified 
-above. This file contains lines, each with two entries of the form <b><i>directory</i> 
-(tab) <i>Application Description</i></b>. Add a new line with the directory 
-that the application will execute from, then a <b>tab</b> character, then 
-a description that will show up in the Portal. Create the directory and place
-the executable there. The executable can be a script, a link, or an actual
-binary. Make sure any relevant data files are accessible from this directory.
-<font color="#ff0000">(Note: Use of any other character than a </font><b><font
- color="#000000">Tab </font></b><font color="#ff0000">to delineate the entries
-will result in a variety of strange errors.&nbsp; If you edit thse files
-by hand, make sure that your editor is not inserting multiple spaces in place
-of Tabs.)</font> <br>
-&nbsp;</p>
-</div>
- Create a <b>.suntcp-app</b> file in the directory just created. For examples, 
-look at the equivalent file in other application directories. This file contains
-the following lines: 
-<p>Line 1- An application description (version etc.) <br>
-Line 2- The name of the executable <br>
-Line 3- yes/mpi/no Whether or not the application runs SMP/MPI/ or Sequential 
-<br>
-Line 4- yes/no Whether the application uses an X-windows interface <br>
-Line 5- yes/no Whether the application uses a form <br>
-Line 6- List of users who have access to the application (optional) </p>
-<p><font color="#ff0000">(Note: If no user access list is being defined, Line
-6 must be a blank line.)</font> </p>
-<p>Line 7- Additional lines can be inserted directly into the script that 
-is submitted to Sun ONE Grid Engine. Useful examples can be Sun ONE Grid Engine
-commands (e.g.<b> #$ -q qname</b>) or environment variables (e.g. <b>export 
-Option=2</b>). Place each command on a separate line. </p>
-<p>Create an HTML/JavaScript form if Line 5 contains <b>yes</b>. This file 
-must be named <b>.suntcp-form</b>. Example forms for use as templates can 
-be found in the existing application directories. Forms are responsible for
-creating the execution line arguments. (Technical note: the<b> form.elements[0]</b> 
-element is reserved to make sure the form returns to the proper location. 
-Do not modify the lines of code that use this element. Begin modifying the
-[1] element.) </p>
-<h1> <a name="A Tip for Developers"></a>A Tip for Developers</h1>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">The 
-source code for the Grid Engine Portal can be retrieved via CVS from the
-Grid Engine open source site.<br>
-<br>
-This involves the following steps:<br>
-<ul>
-  <li>Register as a sunsource.net member</li>
-  <li>Join the Grid Engine project as Observer</li>
-  <li>Setup the cvs environment for Grid Engine <br>
-with ssh tunneling (inside SWAN a SOCKS enabled ssh version has to be used)<br>
- % ssh -f -x -L 2401:localhost:2401 tunnel@cvs.gridengine.sunsource.net echo
-hallo<br>
- &nbsp; &nbsp; &nbsp;password: tunnel<br>
- % setenv &nbsp;CVSROOT &nbsp;:pserver:&lt;yourusername from registration&gt;@localhost:/cvs<br>
-     <br>
-   without ssh tunneling<br>
-% setenv &nbsp;CVSROOT &nbsp;:pserver:&lt;yourusername from registration&gt;@cvs.gridengine.sunsource.net:/cvs<br>
-    <br>
-this applies to both versions<br>
-% cvs login &nbsp; &nbsp; enter &nbsp;&lt;yourusername from registration&gt;
-as username and your corresponding web password<br>
-% cvs co gridengine/gep &nbsp; &nbsp; &nbsp; &nbsp;if you only need the Grid
-Engine Portal sources<br>
-% cvs co gridengine &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if you
-want to get the complete Grid Engine source distribution<br>
-    <br>
-additional information explaining the concepts and command of cvs can be
-found under <a href="http://www.cvshome.org">www.cvshome.org</a>&nbsp;</li>
-  <li>To build the distribution package it might be necessary to adjust the
-paths in gridengine/gep/glue/Makefile to your site<br>
-% make distclean &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; removes everything<br>
-% make &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; rebuilds any changed classes<br>
-% make dist &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp; &nbsp; &nbsp;creates a new installable geportal.tar.gz package</li>
-  <li>The same steps apply for the iPS3 version in the corresponding iPS3
-subdirectory<br>
-    <br>
-  </li>
-</ul>
-</div>
-  
-<div
- style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;"> 
-<h1> <a name="Appendix B - Screen shots"></a>Appendix A - Screen shots</h1>
+ name="Step 6: Register New Applications with SGP"></a>Step 6: Registering
+ New Applications with Grid Engine Portal</h2>
+    
+<div class="western">Registering applications with Grid Engine Portal involves
+ editing two files and (if desired) creating a form. (Note: Use only characters
+ a-z 0-9, space, tab, and underscore in the Grid Engine Portal files. Characters
+ such as quotation marks or apostrophes can cause errors.)  
+<p>Edit the <b>.suntcp-list</b> file in the applications directory specified
+ above. This file contains lines, each with two entries of the form <b><i>directory</i>
+ (tab) <i>Application Description</i></b>. Add a new line with the directory
+ that the application will execute from, then a <b>tab</b> character, then
+ a description that will show up in the Portal. Create the directory and
+place the executable there. The executable can be a script, a link, or an
+actual binary. Make sure any relevant data files are accessible from this
+directory. <font color="#ff0000">(Note: Use of any other character than a
+</font><b><font color="#000000">Tab </font></b><font color="#ff0000">to delineate
+the entries will result in a variety of strange errors.&nbsp; If you edit
+thse files by hand, make sure that your editor is not inserting multiple
+spaces in place of Tabs.)</font> <br>
+ &nbsp;</p>
  </div>
-  <br>
-Admin login, make sure you are using the complete hostnames you entered during
-the portal server installation.<br>
-<br>
-&nbsp; <img src="ps6_admin_login.jpg" alt="Portal login" width="884"
+  Create a <b>.suntcp-app</b> file in the directory just created. For examples,
+ look at the equivalent file in other application directories. This file
+contains the following lines:  
+<p>Line 1- An application description (version etc.) <br>
+ Line 2- The name of the executable <br>
+ Line 3- yes/mpi/no Whether or not the application runs SMP/MPI/ or Sequential
+ <br>
+ Line 4- yes/no Whether the application uses an X-windows interface <br>
+ Line 5- yes/no Whether the application uses a form <br>
+ Line 6- List of users who have access to the application (optional) </p>
+ 
+<p><font color="#ff0000">(Note: If no user access list is being defined,
+Line 6 must be a blank line.)</font> </p>
+ 
+<p>Line 7- Additional lines can be inserted directly into the script that
+ is submitted to Sun ONE Grid Engine. Useful examples can be Sun ONE Grid
+Engine commands (e.g.<b> #$ -q qname</b>) or environment variables (e.g.
+<b>export  Option=2</b>). Place each command on a separate line. </p>
+ 
+<p>Create an HTML/JavaScript form if Line 5 contains <b>yes</b>. This file
+ must be named <b>.suntcp-form</b>. Example forms for use as templates can
+ be found in the existing application directories. Forms are responsible
+for creating the execution line arguments. (Technical note: the<b> form.elements[0]</b>
+ element is reserved to make sure the form returns to the proper location.
+ Do not modify the lines of code that use this element. Begin modifying the 
+[1] element.) </p>
+ 
+<h1> <a name="A Tip for Developers"></a>A Tip for Developers</h1>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">The
+ source code for the Grid Engine Portal can be retrieved via CVS from the 
+Grid Engine open source site.<br>
+ <br>
+ This involves the following steps:<br>
+ 
+<ul>
+   <li>Register as a sunsource.net member</li>
+   <li>Join the Grid Engine project as Observer</li>
+   <li>Setup the cvs environment for Grid Engine <br>
+ with ssh tunneling (inside SWAN a SOCKS enabled ssh version has to be used)<br>
+  % ssh -f -x -L 2401:localhost:2401 tunnel@cvs.gridengine.sunsource.net
+echo hallo<br>
+  &nbsp; &nbsp; &nbsp;password: tunnel<br>
+  % setenv &nbsp;CVSROOT &nbsp;:pserver:&lt;yourusername from registration&gt;@localhost:/cvs<br>
+      <br>
+    without ssh tunneling<br>
+ % setenv &nbsp;CVSROOT &nbsp;:pserver:&lt;yourusername from registration&gt;@cvs.gridengine.sunsource.net:/cvs<br>
+     <br>
+ this applies to both versions<br>
+ % cvs login &nbsp; &nbsp; enter &nbsp;&lt;yourusername from registration&gt; 
+as username and your corresponding web password<br>
+ % cvs co gridengine/gep &nbsp; &nbsp; &nbsp; &nbsp;if you only need the
+Grid Engine Portal sources<br>
+ % cvs co gridengine &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+you want to get the complete Grid Engine source distribution<br>
+     <br>
+ additional information explaining the concepts and command of cvs can be 
+found under <a href="http://www.cvshome.org">www.cvshome.org</a>&nbsp;</li>
+   <li>To build the distribution package it might be necessary to adjust
+the paths in gridengine/gep/glue/Makefile to your site<br>
+ % make distclean &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; removes everything<br>
+ % make &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; rebuilds any changed classes<br>
+ % make dist &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp;creates a new installable geportal.tar.gz package</li>
+   <li>The same steps apply for the iPS3 version in the corresponding iPS3 
+subdirectory<br>
+     <br>
+   </li>
+ 
+</ul>
+ </div>
+    
+<div
+ style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">
+ 
+<h1> <a name="Appendix B - Screen shots"></a>Appendix A - Screen shots</h1>
+  </div>
+   <br>
+ Admin login, make sure you are using the complete hostnames you entered
+during the portal server installation.<br>
+ <br>
+ &nbsp; <img src="ps6_admin_login.jpg" alt="Portal login" width="884"
  height="658">
-<br>
-&nbsp; <br>
-<br>
-<br>
-Enable Unix login in the portal server. <br>
-<br>
-<br>
-<img src="ps6_admin_auth.jpg" alt="Portal Admin Auth" width="992"
+ <br>
+ &nbsp; <br>
+ <br>
+ <br>
+ Enable Unix login in the portal server. <br>
+ <br>
+ <br>
+ <img src="ps6_admin_auth.jpg" alt="Portal Admin Auth" width="992"
  height="847">
-<br>
-<br>
-<br>
-Enabling netlet support for the user<br>
-<br>
-<img src="ps6_admin_user.jpg" alt="Portal admin user" width="992"
+ <br>
+ <br>
+ <br>
+ Enabling netlet support for the user<br>
+ <br>
+ <img src="ps6_admin_user.jpg" alt="Portal admin user" width="992"
  height="1020">
-<br>
-<br>
-<br>
-Entering the netlet rules for VNC<br>
-<img src="ps6_admin_netlet.jpg" alt="Portal admin netlet" width="992"
+ <br>
+ <br>
+ <br>
+ Entering the netlet rules for VNC<br>
+ <img src="ps6_admin_netlet.jpg" alt="Portal admin netlet" width="992"
  height="1020">
-<br>
-<br>
-<br>
+ <br>
+ <br>
+ <br>
+ <br>
 </body>
 </html>

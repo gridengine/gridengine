@@ -706,7 +706,7 @@ static Widget qmonCreateExecHostAsk(
 Widget parent 
 ) {
    Widget eh_ok, eh_cancel, eh_load_scaling, eh_usage_scaling, 
-          eh_rcf, complexes_ccl;
+          complexes_ccl;
    Widget access_add, access_remove, access_dialog;
    Widget reporting_variables_add, reporting_variables_remove;
    Widget project_add, project_remove, project_dialog, eh_project;
@@ -721,7 +721,6 @@ Widget parent
                            "eh_name", &eh_name_w,
                            "eh_load_scaling", &eh_load_scaling,
                            "eh_usage_scaling", &eh_usage_scaling,
-                           "eh_rcf", &eh_rcf,
                            "complexes_ccl", &complexes_ccl,
                            /* access_config */
                            "access_list", &access_list,
@@ -751,7 +750,6 @@ Widget parent
    */
    if (!feature_is_enabled(FEATURE_SGEEE)) {
       XtUnmanageChild(eh_usage_scaling);
-      XtUnmanageChild(eh_rcf);
       XtUnmanageChild(eh_project);
       XmTabDeleteFolder(eh_folder, eh_project);
    }
@@ -861,7 +859,6 @@ XtPointer cld, cad;
          xehname = XmtCreateXmString(ehname);
          XmListSelectItem(exechost_list, xehname, True);
          XmStringFree(xehname);
-         updateQueueListCB(w, NULL, NULL);
       } else {
          qmonExecHostSetAsk(ehname);
       }   

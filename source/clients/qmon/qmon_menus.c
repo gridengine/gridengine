@@ -98,8 +98,6 @@ static XmtMenuItem task_menu_items[] = {
    {XmtMenuItemPushButton, "@{Job Control}", 'J', "Alt<Key>J", "Alt+J",
          qmonJobPopup, NULL },
    {XmtMenuItemPushButton, "@{Queue Control}", 'Q', "Alt<Key>Q", "Alt+Q",
-         qmonQueuePopup, NULL},
-   {XmtMenuItemPushButton, "@{Cluster Queue Control}", 'C', "Alt<Key>C", "Alt+C",
          qmonCQPopup, NULL},
    {XmtMenuItemPushButton, "@{Job Submit}", 'S', "Alt<Key>S", "Alt+S",
          qmonSubmitPopup, NULL},
@@ -137,7 +135,7 @@ static XmtMenuItem task_menu_items[] = {
 #ifdef QMON_DEBUG
 static XmtMenuItem mirror_menu_items[] = {
    {XmtMenuItemPushButton, "Queue", 'Q', "Alt<Key>J", "Alt+J",
-         qmonShowMirrorList, (XtPointer) SGE_QUEUE_LIST},
+         qmonShowMirrorList, (XtPointer) SGE_CQUEUE_LIST},
    {XmtMenuItemPushButton, "Job", 'S', "Alt<Key>S", "Alt+S",
          qmonShowMirrorList, (XtPointer) SGE_JOB_LIST},
    {XmtMenuItemPushButton, "Exechost", 'Q', "Alt<Key>Q", "Alt+Q",
@@ -201,8 +199,7 @@ typedef struct _tCallbacksUsed {
 
 static tCallbacksUsed callback_array[] = {
    { qmonJobPopup, NULL, "@{@fBJob Control}" },
-   { qmonQueuePopup, NULL, "@{@fBQueue Control}" },
-   { qmonCQPopup, NULL, "@{@fBCluster Queue Control}" },
+   { qmonCQPopup, NULL, "@{@fBQueue Control}" },
    { qmonSubmitPopup, NULL, "@{@fBJob Submission}" },
    { qmonPopupCplxConfig, NULL, "@{@fBComplexes Configuration}" },
    { qmonPopupHostConfig, NULL, "@{@fBHost Configuration}" },
@@ -252,7 +249,6 @@ Widget parent
    int i;
    static String button_name[] = { 
       "JOB_CONTROL", 
-      "QUEUE_CONTROL",
       "QUEUE_CONTROL",
       "SUBMIT_JOB",
       "COMPLEX_CONFIG",

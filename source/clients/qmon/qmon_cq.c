@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
-#include <math.h>
+#include <ctype.h>
 
 #include <Xm/ToggleB.h>
 #include <Xmt/Xmt.h>
@@ -41,6 +41,7 @@
 #include <Xmt/Dialogs.h>
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
+#include <Xmt/Procedures.h>
 
 #include "ListTree.h"
 #include "Matrix.h"
@@ -61,9 +62,12 @@
 #include "qmon_widgets.h"
 #include "qmon_manop.h"
 #include "qmon_project.h"
+#include "qmon_ticket.h"
+#include "qmon_qcustom.h"
 #include "qmon_globals.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
+#include "sge_dstring.h"
 #include "sge_support.h"
 #include "sge_answer.h"
 #include "sge_cqueue.h"
@@ -72,12 +76,28 @@
 #include "sge_select_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "load_correction.h"
+#include "sge_complex_schedd.h"
 
 static Widget qmon_cq = 0;
 static Widget cq_tree = 0;
 static Widget cq_message = 0;
 static Widget cluster_queue_settings = 0;
 static Widget qinstance_settings = 0;
+static Widget cq_add = 0;
+static Widget cq_mod = 0;
+static Widget cq_delete = 0;
+static Widget cq_load = 0;
+static Widget cq_suspend = 0;
+static Widget cq_resume = 0;
+static Widget cq_disable = 0;
+static Widget cq_enable = 0;
+static Widget cq_reschedule = 0;
+static Widget cq_sick = 0;
+static Widget cq_clear_error = 0;
+static Widget cq_force = 0;
+static Widget cq_explain_states = 0;
+static Widget cq_explain = 0;
 
 static Boolean dirty = False;
 static Widget current_matrix = 0;
@@ -85,18 +105,10 @@ static Widget current_matrix = 0;
 
 /*-------------------------------------------------------------------------*/
 static void qmonCQPopdown(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCQUpdate(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCQHighlight(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCQMenu(Widget w, XtPointer cld, XtPointer cad);
 static Widget qmonCQCreate(Widget shell);
-static void qmonCQActivate(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCQFindNode(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCQFindNextNode(Widget w, XtPointer cld, XtPointer cad);
-
-static ListTreeItem* CullToTree(Widget tree, ListTreeItem *parent, lList *shac);
 static void qmonQinstanceHandleEnterLeave(Widget w, XtPointer cld, XEvent *ev, Boolean *ctd);
 static void qmonCQHandleEnterLeave(Widget w, XtPointer cld, XEvent *ev, Boolean *ctd);
-static String qmonQinstanceShowBrowserInfo(lListElem *qep);
+static void qmonQinstanceShowBrowserInfo(dstring *info, lListElem *qep);
 static String qmonCQShowBrowserInfo(lListElem *qep);
 static void qmonCQDelete(Widget matrix, XtPointer cld, XtPointer cad);
 static void qmonCQChangeState(Widget w, XtPointer cld, XtPointer cad);
@@ -104,7 +116,20 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQUpdateCQMatrix(void);
 static void qmonCQUpdateQIMatrix(void);
 static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQinstanceSetLoad(Widget matrix, const char *qiname);
+static void qmonQinstanceShowLoad(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad);
 /* static void qmonCQSetValues(ListTreeItem *item); */
+
+#if 0
+static void qmonCQHighlight(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCQMenu(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCQActivate(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCQFindNode(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCQFindNextNode(Widget w, XtPointer cld, XtPointer cad);
+static ListTreeItem* CullToTree(Widget tree, ListTreeItem *parent, lList *shac);
+static void qmonCQUpdateTree(void);
+#endif
 
 #if 0
 static ListTreeItem* cq_add_aulng(Widget tree, ListTreeItem *parent, 
@@ -172,11 +197,10 @@ XtPointer cld, cad;
    } 
    
    /*
-   ** set the cluster queue tree
+   ** fill the displayed dialogues
    */
-   qmonCQUpdate(qmon_cq, (XtPointer)cq_tree, NULL);
+   qmonCQUpdate(qmon_cq, NULL, NULL);
 
-   qmonCQUpdateCQMatrix();
    
    xmui_manage(qmon_cq);
 
@@ -206,15 +230,15 @@ XtPointer cld, cad;
 static Widget qmonCQCreate(
 Widget parent 
 ) {
-   Widget cq_layout, cq_close, cq_update, cq_add, cq_mod, cq_delete,
-          cq_suspend, cq_resume, cq_disable, cq_enable, cq_reschedule,
-          cq_clear_error, cq_main_link, cq_next, cq_find, cq_cqfolder;
+   Widget cq_layout, cq_close, cq_update, cq_main_link, 
+          cq_tickets, cq_customize, cq_cqfolder;
 
    DENTER(GUI_LAYER, "qmonCQCreate");
 
    cq_layout = XmtBuildQueryDialog( parent, "qmon_cq",
                            NULL, 0,
                            "cq_close", &cq_close,
+                           "cq_force", &cq_force,
                            "cq_update", &cq_update,
                            "cq_add", &cq_add,
                            "cq_mod", &cq_mod,
@@ -225,36 +249,42 @@ Widget parent
                            "cq_enable", &cq_enable,
                            "cq_reschedule", &cq_reschedule,
                            "cq_clear_error", &cq_clear_error,
+                           "cq_load", &cq_load,
+                           "cq_sick", &cq_sick,
                            "cq_tree", &cq_tree,
-                           "cq_find", &cq_find,
-                           "cq_next", &cq_next,
+                           "cq_customize", &cq_customize,
+                           "cq_tickets", &cq_tickets,
                            "cq_main_link", &cq_main_link,
                            "cq_message", &cq_message,
                            "cluster_queue_settings", &cluster_queue_settings,
                            "qinstance_settings", &qinstance_settings,
                            "cq_cqfolder", &cq_cqfolder,
+                           "cq_explain", &cq_explain,
+                           "cq_explain_states", &cq_explain_states,
                            NULL);
    
    current_matrix = cluster_queue_settings;
 
+   /*
+   ** callbacks
+   */
    XtAddCallback(cq_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
    XtAddCallback(cq_close, XmNactivateCallback, 
                      qmonCQPopdown, NULL);
    XtAddCallback(cq_update, XmNactivateCallback, 
-                     qmonCQUpdate, (XtPointer)cq_tree);
-   XtAddCallback(cq_find, XmNactivateCallback, 
-                     qmonCQFindNode, (XtPointer)cq_tree);
-   XtAddCallback(cq_next, XmNactivateCallback, 
-                     qmonCQFindNextNode, (XtPointer)cq_tree);
+                     qmonCQUpdate, NULL);
+   XtAddCallback(cq_tickets, XmNactivateCallback, 
+                     qmonPopupTicketOverview, NULL);
 
-
+#if 0
    XtAddCallback(cq_tree, XtNactivateCallback, 
                      qmonCQActivate, NULL);
    XtAddCallback(cq_tree, XtNhighlightCallback, 
                      qmonCQHighlight, NULL);
    XtAddCallback(cq_tree, XtNmenuCallback, 
                      qmonCQMenu, NULL);
+#endif                     
 
    XtAddCallback(cq_add, XmNactivateCallback, 
                      qmonQCPopup, NULL);
@@ -275,9 +305,20 @@ Widget parent
                      qmonCQChangeState, (XtPointer)QI_DO_RESCHEDULE);
    XtAddCallback(cq_clear_error, XmNactivateCallback, 
                      qmonCQChangeState, (XtPointer)QI_DO_CLEARERROR);
+   XtAddCallback(cq_load, XmNactivateCallback, 
+                     qmonQinstanceShowLoad, NULL);
+   XtAddCallback(cq_sick, XmNactivateCallback, 
+                     qmonCQSick, NULL);
+
 
    XtAddCallback(cq_cqfolder, XmNvalueChangedCallback, 
                      qmonCQFolderChange, NULL);
+
+   XtAddCallback(qinstance_settings, XmNdefaultActionCallback, 
+                     qmonQinstanceShowLoad, NULL);
+
+   XtAddCallback(cq_customize, XmNactivateCallback, 
+                     qmonPopupQCU, NULL); 
 
    XtAddEventHandler(qinstance_settings, PointerMotionMask, 
                      False, qmonQinstanceHandleEnterLeave,
@@ -295,6 +336,24 @@ Widget parent
 }
 
 
+
+/*-------------------------------------------------------------------------*/
+void qmonCQUpdate( Widget w, XtPointer cld, XtPointer cad) 
+{
+   DENTER(GUI_LAYER, "qmonCQUpdate");
+
+   if (!qmon_cq) {
+      DEXIT;
+      return;
+   }
+
+   qmonCQUpdateCQMatrix();
+/*    qmonCQUpdateTree(); */
+
+   DEXIT;
+}
+
+#if 0
 static char search_for[256] = "";
 static ListTreeMultiReturnStruct *matches;
 
@@ -388,65 +447,6 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static void qmonCQUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   Widget tree = (Widget) cld;
-   lList *cluster_queue_tree = NULL;
-   ListTreeItem *old_root = NULL;
-   ListTreeItem *root_node = NULL;
-   lList *alp = NULL;
-
-   DENTER(GUI_LAYER, "qmonCQUpdate");
-
-   XmtDisplayBusyCursor(w);
-   
-   /*
-   ** set and get several lists
-   */
-   qmonMirrorMultiAnswer(CQUEUE_T,  &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
-
-   cluster_queue_tree = qmonMirrorList(SGE_CQUEUE_LIST);
-
-   ListTreeRefreshOff(tree);
-   /*
-   ** unchain the old tree, what about the old user_data struct ????
-   */
-   old_root = ListTreeFirstItem(tree);
-   ListTreeUnchainItem(tree, old_root);
-      
-   root_node = ListTreeAddBranch(tree, NULL, "/");
-   CullToTree(tree, root_node, cluster_queue_tree);
-
-   /*
-   ** open the new tree according to old tree or to
-   ** a defined level
-   */
-   if (old_root) {
-      ListTreeOpenLikeTree(tree, root_node, old_root);
-      ListTreeDelete(tree, old_root);
-   }
-   else
-      ListTreeOpenToLevel(tree, NULL, 1);
-   
-/*    ListTreeHighlightItem(tree, root_node, True); */
-   ListTreeRefreshOn(tree);
-/*    ListTreeMakeItemVisible(tree, root_node); */
-
-   XmtDisplayDefaultCursor(w);
-
-   DEXIT;
-}
-
 /*-------------------------------------------------------------------------*/
 static void qmonCQHighlight(w, cld, cad)
 Widget w;
@@ -510,7 +510,6 @@ XtPointer cld, cad;
 {
    ListTreeActivateStruct *ret = (ListTreeActivateStruct*)cad;
    int count;
-   char buf[BUFSIZ];
 
    DENTER(GUI_LAYER, "qmonCQActivate");
 
@@ -523,6 +522,7 @@ XtPointer cld, cad;
       }
    }
 }
+
 
 
 /*-------------------------------------------------------------------------*/
@@ -702,6 +702,60 @@ lList *cql
    DEXIT;
    return ret; 
 }
+
+/*-------------------------------------------------------------------------*/
+static void qmonCQUpdateTree(void)
+{
+   Widget tree = cq_tree;
+   lList *cluster_queue_tree = NULL;
+   ListTreeItem *old_root = NULL;
+   ListTreeItem *root_node = NULL;
+   lList *alp = NULL;
+
+   DENTER(GUI_LAYER, "qmonCQUpdateTree");
+
+   /*
+   ** set and get several lists
+   */
+   qmonMirrorMultiAnswer(CQUEUE_T,  &alp);
+   if (alp) {
+      qmonMessageBox(AppShell, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
+   cluster_queue_tree = qmonMirrorList(SGE_CQUEUE_LIST);
+
+   ListTreeRefreshOff(tree);
+   /*
+   ** unchain the old tree, what about the old user_data struct ????
+   */
+   old_root = ListTreeFirstItem(tree);
+   ListTreeUnchainItem(tree, old_root);
+      
+   root_node = ListTreeAddBranch(tree, NULL, "/");
+   CullToTree(tree, root_node, cluster_queue_tree);
+
+   /*
+   ** open the new tree according to old tree or to
+   ** a defined level
+   */
+   if (old_root) {
+      ListTreeOpenLikeTree(tree, root_node, old_root);
+      ListTreeDelete(tree, old_root);
+   }
+   else
+      ListTreeOpenToLevel(tree, NULL, 1);
+   
+/*    ListTreeHighlightItem(tree, root_node, True); */
+   ListTreeRefreshOn(tree);
+/*    ListTreeMakeItemVisible(tree, root_node); */
+
+   DEXIT;
+}
+
+#endif
 
 #if 0
 /*-------------------------------------------------------------------------*/
@@ -1018,9 +1072,6 @@ Boolean *ctd
    static int prev_row = -1;
    int row, col;
    String str;
-   lListElem *qp;
-   String queue_info;
-   
    DENTER(GUI_LAYER, "qmonQinstanceHandleEnterLeave");
    
    switch (ev->type) {
@@ -1037,14 +1088,18 @@ Boolean *ctd
                   /* locate the quue */
                   str = XbaeMatrixGetCell(w, row, 0);
                   if (str && *str != '\0') {
-                     qp = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), str);
+                     lListElem *qp;
+                     dstring queue_info = DSTRING_INIT;
+                     qp = cqueue_list_locate_qinstance(
+                                 qmonMirrorList(SGE_CQUEUE_LIST), str);
                      if (qp) {
                         sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
                         qmonBrowserShow(line);
-                        queue_info = qmonQinstanceShowBrowserInfo(qp);      
-                        qmonBrowserShow(queue_info);
+                        qmonQinstanceShowBrowserInfo(&queue_info, qp);      
+                        qmonBrowserShow(sge_dstring_get_string(&queue_info));
                         qmonBrowserShow(line);
                      }
+                     sge_dstring_free(&queue_info);
                   }
                }
             }
@@ -1055,107 +1110,99 @@ Boolean *ctd
 }
 
 /*-------------------------------------------------------------------------*/
-static String qmonQinstanceShowBrowserInfo(
+static void qmonQinstanceShowBrowserInfo(
+dstring *info,
 lListElem *qep 
 ) {
 
-   static char info[60000];
    lListElem *ep;
-   int qtype;
    const char *str, *str2;
-#define WIDTH  "%s%-30.30s"
 
    DENTER(GUI_LAYER, "qmonQinstanceShowBrowserInfo");
 
-   sprintf(info, WIDTH"%s\n", "\n","Queue:", lGetString(qep, QU_full_name));
-
-   qtype = lGetUlong(qep, QU_qtype);
+   sge_dstring_sprintf(info, "%-30.30s%s\n", "Queue:", lGetString(qep, QU_full_name));
 
    {
       dstring type_buffer = DSTRING_INIT;
 
       qinstance_print_qtype_to_dstring(qep, &type_buffer, false);
-      sprintf(info, WIDTH"%s\n", info, "Type:", 
+      sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Type:", 
               sge_dstring_get_string(&type_buffer));
       sge_dstring_free(&type_buffer);
    }
-   sprintf(info, WIDTH"%d\n", info, "Sequence Nr:", 
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Sequence Nr:", 
                            (int)lGetUlong(qep, QU_seq_no));
 
    str = lGetString(qep, QU_tmpdir);
-   sprintf(info, WIDTH"%s\n", info, "tmpdir:", str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "tmpdir:", str ? str : ""); 
    str = lGetString(qep, QU_shell);
-   sprintf(info, WIDTH"%s\n", info, "Shell:", str ? str : ""); 
-   sprintf(info, WIDTH"%d\n", info, "Job Slots:", 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Shell:", str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Job Slots:", 
                      (int)lGetUlong(qep, QU_job_slots));
-   sprintf(info, WIDTH"%d\n", info, "Job Slots Used:", qinstance_slots_used(qep));
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Job Slots Used:", qinstance_slots_used(qep));
    str = lGetString(qep, QU_priority);
-   sprintf(info, WIDTH"%s\n", info, "Priority:", str?str:"");
-   sprintf(info, WIDTH"", info, "Load Thresholds:");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Priority:", str?str:"");
+   sge_dstring_sprintf_append(info, "%-30.30s", "Load Thresholds:");
    for_each(ep, lGetList(qep, QU_load_thresholds)) {
       str = lGetString(ep, CE_name);
       str2 = lGetString(ep, CE_stringval);
-      sprintf(info, "%s%s = %s ", info, str?str:"", str2?str2:"");
+      sge_dstring_sprintf_append(info, "%s = %s ", str?str:"", str2?str2:"");
    }
-   sprintf(info, "%s\n", info); 
+   sge_dstring_sprintf_append(info, "\n"); 
 
-   sprintf(info, WIDTH"%s\n", info, "Rerun Job:", 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Rerun Job:", 
                      lGetBool(qep, QU_rerun) ? "True" : "False");
 
    str = lGetString(qep, QU_notify);
-   sprintf(info, WIDTH"%s\n", info, "Notify Job Interval:",  str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Notify Job Interval:",  str ? str : ""); 
 
    str = lGetString(qep, QU_processors);
-   sprintf(info, WIDTH"%s\n", info, "Processors:", str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Processors:", str ? str : ""); 
 
    str = lGetString(qep, QU_s_rt);
-   sprintf(info, WIDTH"%s\n", info, "Soft Real Time:", str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Real Time:", str ? str : ""); 
    str = lGetString(qep, QU_h_rt);
-   sprintf(info, WIDTH"%s\n", info, "Hard Real Time:", str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Real Time:", str ? str : ""); 
    str = lGetString(qep, QU_s_cpu);
-   sprintf(info, WIDTH"%s\n", info, "Soft Cpu:", str ? str : ""); 
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Cpu:", str ? str : ""); 
    str = lGetString(qep, QU_h_cpu);
-   sprintf(info, WIDTH"%s\n", info, "Hard Cpu:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Cpu:", str ? str : "");
    str = lGetString(qep, QU_s_fsize);
-   sprintf(info, WIDTH"%s\n", info, "Soft File Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft File Size:", str ? str : "");
    str = lGetString(qep, QU_h_fsize);
-   sprintf(info, WIDTH"%s\n", info, "Hard File Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard File Size:", str ? str : "");
    str = lGetString(qep, QU_s_data);
-   sprintf(info, WIDTH"%s\n", info, "Soft Data Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Data Size:", str ? str : "");
    str = lGetString(qep, QU_h_data);
-   sprintf(info, WIDTH"%s\n", info, "Hard Data Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Data Size:", str ? str : "");
    str = lGetString(qep, QU_s_stack);
-   sprintf(info, WIDTH"%s\n", info, "Soft Stack Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Stack Size:", str ? str : "");
    str = lGetString(qep, QU_h_stack);
-   sprintf(info, WIDTH"%s\n", info, "Hard Stack Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Stack Size:", str ? str : "");
    str = lGetString(qep, QU_s_core);
-   sprintf(info, WIDTH"%s\n", info, "Soft Core Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Core Size:", str ? str : "");
    str = lGetString(qep, QU_h_core);
-   sprintf(info, WIDTH"%s\n", info, "Hard Core Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Core Size:", str ? str : "");
    str = lGetString(qep, QU_s_rss);
-   sprintf(info, WIDTH"%s\n", info, "Soft Resident Set Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Resident Set Size:", str ? str : "");
    str = lGetString(qep, QU_h_rss);
-   sprintf(info, WIDTH"%s\n", info, "Hard Resident Set Size:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Resident Set Size:", str ? str : "");
 
    str = lGetString(qep, QU_min_cpu_interval);
-   sprintf(info, WIDTH"%s\n", info, "Min Cpu Interval:", str ? str : "");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Min Cpu Interval:", str ? str : "");
 
-   sprintf(info, WIDTH"", info, "Access List:");
+   sge_dstring_sprintf_append(info, "%-30.30s", "Access List:");
    for_each(ep, lGetList(qep, QU_acl)) {
-      sprintf(info, "%s%s ", info, lGetString(ep, US_name));
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, US_name));
    }
-   sprintf(info, "%s\n", info); 
-   sprintf(info, WIDTH"", info, "No Access List:");
+   sge_dstring_sprintf_append(info, "\n"); 
+   sge_dstring_sprintf_append(info, "%-30.30s", "No Access List:");
    for_each(ep, lGetList(qep, QU_xacl)) {
-      sprintf(info, "%s%s ", info, lGetString(ep, US_name));
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, US_name));
    }
-   sprintf(info, "%s\n", info); 
+   sge_dstring_sprintf_append(info, "\n"); 
 
-   DPRINTF(("info is %d long\n", strlen(info)));
-   
-#undef WIDTH
    DEXIT;
-   return info;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1170,7 +1217,7 @@ Boolean *ctd
    Window root, child;
    unsigned int keys_buttons;
    */
-   char line[BUFSIZ];
+   static char line[] = "+++++++++++++++++++++++++++++++++++++++++++\n";
    static int prev_row = -1;
    int row, col;
    String str;
@@ -1195,8 +1242,6 @@ Boolean *ctd
                   if (str && *str != '\0') {
                      qp = cqueue_list_locate(qmonMirrorList(SGE_CQUEUE_LIST), str);
                      if (qp) {
-                        sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
-                        qmonBrowserShow(line);
                         queue_info = qmonCQShowBrowserInfo(qp);      
                         qmonBrowserShow(queue_info);
                         qmonBrowserShow(line);
@@ -1230,6 +1275,56 @@ lListElem *qep
    return info;
 }
 
+
+/*-------------------------------------------------------------------------*/
+static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
+{
+   int rows = 0;
+   int nr_selected_rows;
+   int i;
+   char *str = NULL;
+   lList *alp = NULL;
+   Widget matrix = cluster_queue_settings;
+   
+   DENTER(GUI_LAYER, "qmonCQModify");
+
+   /* 
+   ** loop over selected entries and delete them
+   */
+   rows = XbaeMatrixNumRows(matrix);
+   /*
+   ** number of selected rows
+   */
+   nr_selected_rows = XbaeMatrixGetNumSelected(matrix)/XbaeMatrixNumColumns(matrix);
+   
+   if (nr_selected_rows == 1) {
+      for (i=0; i<rows; i++) {
+         /* is this row selected */ 
+         if (XbaeMatrixIsRowSelected(matrix, i)) {
+            str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
+            if ( str && *str != '\0' ) { 
+               DPRINTF(("CQ to modify: %s\n", str));
+               qmonQCPopup(matrix, (XtPointer)str, NULL); 
+            }
+         }
+      }
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /*
+      ** update the matrix
+      */
+      qmonCQUpdateCQMatrix();
+   } else {
+      if (nr_selected_rows > 1) {
+         qmonMessageShow(w, True, "@{Select only one queue !}");
+      } else {
+         qmonMessageShow(w, True, "@{To modify a queue select this queue !}");
+      }
+   }
+
+
+   DEXIT;
+}
 /*-------------------------------------------------------------------------*/
 static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad) 
 {
@@ -1271,7 +1366,9 @@ static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad)
       /*
       ** update the matrix
       */
+      XbaeMatrixDeselectAll(cluster_queue_settings);
       qmonCQUpdateCQMatrix();
+/*       qmonCQUpdateTree(); */
    }
 
 
@@ -1347,9 +1444,37 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
    if (!strcmp(XtName(cbs->tab_child), "clusterqueue_layout")) {
       current_matrix = cluster_queue_settings;
       qmonCQUpdateCQMatrix();
+      XtSetSensitive(cq_add, True);
+      XtSetSensitive(cq_mod, True);
+      XtSetSensitive(cq_delete, True);
+      XtSetSensitive(cq_sick, True);
+      XtSetSensitive(cq_force, True);
+      XtSetSensitive(cq_suspend, True);
+      XtSetSensitive(cq_resume, True);
+      XtSetSensitive(cq_disable, True);
+      XtSetSensitive(cq_enable, True);
+      XtSetSensitive(cq_clear_error, True);
+      XtSetSensitive(cq_reschedule, True);
+      XtSetSensitive(cq_load, False);
+      XtSetSensitive(cq_explain_states, False);
+      XtSetSensitive(cq_explain, False);
    } else { 
       current_matrix = qinstance_settings;
       qmonCQUpdateQIMatrix();
+      XtSetSensitive(cq_add, False);
+      XtSetSensitive(cq_mod, False);
+      XtSetSensitive(cq_delete, False);
+      XtSetSensitive(cq_sick, False);
+      XtSetSensitive(cq_force, True);
+      XtSetSensitive(cq_suspend, True);
+      XtSetSensitive(cq_resume, True);
+      XtSetSensitive(cq_disable, True);
+      XtSetSensitive(cq_enable, True);
+      XtSetSensitive(cq_reschedule, True);
+      XtSetSensitive(cq_clear_error, True);
+      XtSetSensitive(cq_load, True);
+      XtSetSensitive(cq_explain_states, True);
+      XtSetSensitive(cq_explain, True);
    }   
 
    DEXIT;
@@ -1387,6 +1512,9 @@ static void qmonCQUpdateCQMatrix(void)
    XtVaSetValues(cluster_queue_settings, XmNcells, NULL, NULL);
 
    row = 0;
+/*    TODO                                            */    
+/*    is correct_capacities needed here ???           */    
+/*    correct_capacities(ehl, cl); */
    for_each (cq, ql) {
       double load = 0.0;
       u_long32 used, total;
@@ -1486,14 +1614,17 @@ static void qmonCQUpdateQIMatrix(void)
       char to_print[80];
       char arch_string[80];
       double load_avg;
-      char *load_avg_str;
+      char *load_avg_str = NULL;
       char load_alarm_reason[MAX_STRING_SIZE];
       char suspend_alarm_reason[MAX_STRING_SIZE];
       bool is_load_value;
       bool has_value_from_object; 
 
+      if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
+         load_avg_str = LOAD_ATTR_LOAD_AVG;
+
       for_each(qp, lGetList(cq, CQ_qinstances)) {
-         /* compute the load and check for alarm states */
+        /* compute the load and check for alarm states */
          is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, qp, ehl, cl, 
                                                 &has_value_from_object);
          if (sge_load_alarm(NULL, qp, lGetList(qp, QU_load_thresholds), ehl, cl, NULL)) {
@@ -1561,20 +1692,16 @@ static void qmonCQUpdateQIMatrix(void)
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
+static void qmonQinstanceShowLoad(Widget w, XtPointer cld, XtPointer cad) 
 {
-   int rows = 0;
-   int nr_selected_rows;
-   int i;
-   char *str = NULL;
-   lList *alp = NULL;
-   Widget matrix = cluster_queue_settings;
+   static Widget lmon=0;
+   static Widget lmon_matrix=0;
+   Widget matrix = qinstance_settings;
+   const char *qiname = NULL;
+   int rows, nr_selected_rows, i;
    
-   DENTER(GUI_LAYER, "qmonCQModify");
+   DENTER(GUI_LAYER, "qmonQinstanceShowLoad");
 
-   /* 
-   ** loop over selected entries and delete them
-   */
    rows = XbaeMatrixNumRows(matrix);
    /*
    ** number of selected rows
@@ -1585,29 +1712,158 @@ static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
       for (i=0; i<rows; i++) {
          /* is this row selected */ 
          if (XbaeMatrixIsRowSelected(matrix, i)) {
-            str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
-            if ( str && *str != '\0' ) { 
-               DPRINTF(("CQ to modify: %s\n", str));
-               qmonQCPopup(matrix, (XtPointer)str, NULL); 
-            }
+            qiname = XbaeMatrixGetCell(matrix, i, 0);
+            break;
          }
       }
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      /*
-      ** update the matrix
-      */
-      qmonCQUpdateCQMatrix();
+      if (qiname && qiname[0] != '\0') {
+         if (!lmon)
+            lmon = XmtBuildQueryDialog(matrix, "lmon_shell", 
+                                             NULL, 0,
+                                             "lmon_matrix", &lmon_matrix,
+                                             NULL);
+
+         qmonCQUpdate(w, NULL, NULL);
+         XtManageChild(lmon);
+         qmonQinstanceSetLoad(lmon_matrix, qiname);
+
+         XtAddEventHandler(XtParent(lmon), StructureNotifyMask, False, 
+                              SetMinShellSize, (XtPointer) SHELL_WIDTH);
+         XtAddEventHandler(XtParent(lmon), StructureNotifyMask, False, 
+                              SetMaxShellSize, (XtPointer) SHELL_WIDTH);
+      }
    } else {
       if (nr_selected_rows > 1) {
-         qmonMessageShow(w, True, "@{Select only one queue !}");
+         qmonMessageShow(w, True, "@{Select only one queue instance !}");
       } else {
-         qmonMessageShow(w, True, "@{To modify a queue select this queue !}");
+         qmonMessageShow(w, True, "@{To show the load select one queue instance!}");
       }
    }
-
 
    DEXIT;
 }
 
+/*-------------------------------------------------------------------------*/
+static void qmonQinstanceSetLoad(Widget matrix, const char *qiname) 
+{
+   static char info[10000];
+   lListElem *ep;
+   lListElem *qep;
+   lList *ncl = NULL;
+   lList *ehl = NULL;
+   lList *cl = NULL; 
+   lList *ql = NULL; 
+   StringConst new_row[3];
+   int rows;
+   float fval;
+   XmString xstr;
+
+   DENTER(GUI_LAYER, "qmonQueueSetLoad");
+
+   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+
+   qep = cqueue_list_locate_qinstance(ql, qiname);
+/*    TODO                                            */    
+/*    is correct_capacities needed here ???           */    
+/*    correct_capacities(ehl, cl);                    */
+   queue_complexes2scheduler(&ncl, qep, ehl, cl);
+
+   sprintf(info, "%s %s", XmtLocalize(matrix, "Attributes for queue", "Attributes for queue"), lGetString(qep, QU_qname));
+
+   xstr = XmtCreateXmString(info);
+   XtVaSetValues(XtParent(matrix), XmNdialogTitle, xstr, NULL);
+   XmStringFree(xstr);
+
+   rows = XbaeMatrixNumRows(matrix);
+   XbaeMatrixDeleteRows(matrix, 0, rows);
+
+   rows = 0;
+   for_each_rev (ep, ncl) {
+      int n;
+      u_long32 type;
+      char unit;
+      StringConst name;
+      StringConst slot_limit;
+      StringConst job_limit;
+      if (!(name = lGetString(ep, CE_name))) 
+         continue;
+      /* don't view value entry from complex */
+      slot_limit = (lGetUlong(ep, CE_dominant)&DOMINANT_TYPE_VALUE)?
+                        NULL:lGetString(ep, CE_stringval);
+      type = lGetUlong(ep, CE_valtype);
+      if (slot_limit && (type == TYPE_MEM || type == TYPE_DOUBLE) &&
+         (n=sscanf(slot_limit, "%f%c", &fval, &unit))>=1) {
+         sprintf(info, "%8.3f%c", fval, (n>1) ? unit : '\0');
+         lSetString(ep, CE_stringval, info);
+         slot_limit = lGetString(ep, CE_stringval);
+      }
+      if (slot_limit)
+         while (*slot_limit && isspace(*slot_limit))
+            slot_limit++;
+
+      job_limit = lGetString(ep, CE_pj_stringval);
+      type = lGetUlong(ep, CE_valtype);
+      if (job_limit && (type == TYPE_MEM || type == TYPE_DOUBLE) &&
+         (n = sscanf(job_limit, "%f%c", &fval, &unit))>=1) {
+         sprintf(info, "%8.3f%c", fval, (n>1) ? unit : '\0');
+         lSetString(ep, CE_pj_stringval, info);
+         job_limit = lGetString(ep, CE_pj_stringval);
+      }
+
+      if (job_limit)
+         while (*job_limit && isspace(*job_limit))
+            job_limit++;
+
+      new_row[0] = name; 
+      new_row[1] = slot_limit ? slot_limit : "";
+      new_row[2] = job_limit ? job_limit : ""; 
+      /* FIX_CONST_GUI */
+      XbaeMatrixAddRows(matrix, 0, (String*) new_row, NULL, NULL, 1); 
+
+      rows++;
+   }
+
+   ncl = lFreeList(ncl);
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad) 
+{
+   int i;
+   int rows;
+   lList *alp = NULL;
+   const char *str;
+   lList *hgl = NULL;
+   lListElem *qp = NULL;
+   Widget matrix = cluster_queue_settings;
+
+   DENTER(GUI_LAYER, "qmonCQSick");
+
+   rows = XbaeMatrixNumRows(matrix);
+   if (XbaeMatrixGetNumSelected(matrix) > 0) {
+      dstring ds = DSTRING_INIT;
+      for (i=0; i<rows; i++) {
+         /* is this row selected */ 
+         if (XbaeMatrixIsRowSelected(matrix, i)) {
+            str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
+            if ( str && *str != '\0' ) { 
+               qp = cqueue_list_locate(qmonMirrorList(SGE_CQUEUE_LIST), str);
+               cqueue_sick(qp, &alp, hgl, &ds);
+            }
+         }
+      }
+      if (sge_dstring_get_string(&ds) && 
+            qmonBrowserObjectEnabled(BROWSE_QUEUE_SICK)) 
+         qmonBrowserShow(sge_dstring_get_string(&ds));
+      sge_dstring_free(&ds);
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+   }
+
+   DEXIT;
+}
 

@@ -88,10 +88,14 @@ Qmon*tov_layout.layout: \
          } \
          Shadowed Out Col { \
             Shadowed Out Even Equal Row { \
-               Caption tl "@{Weight Urgency Policy}" \
+               Col { \
+                  Centered Color "blue" "@{@fBWeight Urgency Policy}" \
                   weight_urgency \
-               Caption tl "@{Weight Ticket Policy}" \
+               } \
+               Col { \
+                  Centered Color "blue" "@{@fBWeight Ticket Policy}" \
                   weight_ticket \
+               } \
             } \
             Shadowed Out Col { \
                Centered Color "blue" "@{@fBTicket Policy}" \

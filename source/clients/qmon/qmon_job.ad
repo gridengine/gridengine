@@ -97,7 +97,7 @@ Qmon*job_main_layout*job_reschedule.labelString: @{Reschedule}
 Qmon*job_main_layout*job_unsuspend.labelString: @{Resume}
 Qmon*job_main_layout*job_update.labelString:    @{Refresh}
 Qmon*job_main_layout*job_delete.labelString:    @{Delete}
-Qmon*job_main_layout*job_select_all.labelString:    @{Select All Pending}
+Qmon*job_main_layout*job_select_all.labelString: @{Select All}
 Qmon*job_main_layout*job_customize.labelString: @{Customize}
 Qmon*job_main_layout*job_qalter.labelString:    @{Qalter}
 Qmon*job_main_layout*job_priority.labelString:  @{Priority}

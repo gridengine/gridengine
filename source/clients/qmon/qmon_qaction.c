@@ -37,6 +37,7 @@
 
 #include <Xm/Xm.h>
 #include <Xm/List.h>
+#include <Xm/ToggleB.h>
 
 #include <Xmt/Xmt.h>
 #include <Xmt/Hash.h>
@@ -48,6 +49,7 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
+#include <Xmt/Symbols.h>
 
 
 /*----------------------------------------------------------------------------*/
@@ -70,8 +72,10 @@
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "qmon_manop.h"
-#include "qmon_queue.h"
+#include "qmon_cq.h"
 #include "qmon_cplx.h"
+#include "qmon_pe.h"
+#include "qmon_ckpt.h"
 #include "qmon_globals.h"
 #include "qmon_project.h"
 #include "AskForTime.h"
@@ -219,7 +223,6 @@ enum {
    QC_MODIFY,
    QC_DELETE
 };
-
 
 /*---- queue configuration -----*/
 XtResource cq_resources[] = {
@@ -635,39 +638,33 @@ XtResource cq_resources[] = {
 static Widget qmonQCCreate(Widget parent);
 static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCResetAll(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCAction(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCToggleAction(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessToggle(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCAccessRemove(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCPEAdd(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCPERemove(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCCkptAdd(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCCkptRemove(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCProjectToggle(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCProjectAdd(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCProjectRemove(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCOwnerAdd(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCCheckHost(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCCheckName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCCalendar(Widget w, XtPointer cld, XtPointer cad);
 
 static void qmonQCTime(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCLimitInput(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCLimitNoEdit(Widget w, XtPointer cld, XtPointer cad); 
-static void qmonQCLimitCheck(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCAskForPE(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
-static Boolean check_qname(char *name);
 static void qmonInitQCEntry(tQCEntry *data);
 static void qmonQCSetData(tQCEntry *data, StringConst qname, StringConst href);
-static Boolean qmonCullToQC(lListElem *qep, tQCEntry *data, int how);
-static Boolean qmonQCToCull(tQCEntry *data, lListElem *qep);
 
 static void qmonQCAdd(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCModify(Widget w, XtPointer cld, XtPointer cad);
-static void qmonQCDelete(Widget w, XtPointer cld, XtPointer cad);
 
 static void updateQCA(void);
 static void updateQCP(void);
+static void updateQCPE(void);
+static void updateQCCkpt(void);
 
 static Boolean qmonCullToCQ(lListElem *qep, tQCEntry *data, const char *href);
 static Boolean qmonCQToCull(tQCEntry *data, lListElem *qep, const char *href);
@@ -676,6 +673,7 @@ static void qmonCQAddHref(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQDeleteHref(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQAddHost(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQHrefSelect(Widget w, XtPointer cld, XtPointer cad);
+static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
 static Widget cq_dialog = 0;
@@ -704,17 +702,25 @@ static Widget project_toggle = 0;
 static Widget owner_list = 0;
 static Widget owner_new = 0;
 static Widget ckpt_reference_list = 0;
+static Widget ckpt_list = 0;
 static Widget pe_reference_list = 0;
+static Widget pe_list = 0;
+static Widget access_allow_tw, access_deny_tw, ckpt_reference_list_tw,
+          min_cpu_interval_tw, consumable_config_list_tw, subordinate_list_tw,
+          calendar_tw, initial_state_tw, job_slots_tw, notify_tw, priority_tw,
+          processors_tw, qtype_tw, rerun_tw, seq_no_tw, shell_start_mode_tw,
+          shell_tw, tmpdir_tw, h_core_tw, h_cpu_tw, h_data_tw, h_fsize_tw,
+          h_rss_tw, h_rt_tw, h_stack_tw, h_vmem_tw, s_core_tw, s_cpu_tw,
+          s_data_tw, s_fsize_tw, s_rss_tw, s_rt_tw, s_stack_tw, s_vmem_tw,
+          load_thresholds_tw, suspend_interval_tw, suspend_nsuspend_tw,
+          suspend_thresholds_tw, epilog_tw, prolog_tw, resume_method_tw,
+          starter_method_tw, suspend_method_tw, terminate_method_tw,
+          owner_list_tw, pe_reference_list_tw, project_allow_tw,
+          project_deny_tw;
 
 static int dialog_mode = QC_ADD;
 static int dont_close = 0;
 
-static tAction actions[] = {
-   { "Add", qmonQCAdd },
-   { "Modify", qmonQCAdd /* qmonQCModify */ },
-   { "Delete", qmonQCDelete }
-};
-   
 /*
 **  hold the tQCEntry data
 */
@@ -860,14 +866,9 @@ XtPointer cld, cad;
       XmUpdateDisplay(cq_dialog);
 
       /*
-      ** restart polling of lists
-      */ 
-/*       qmonStartPolling(AppContext); */
-
-      /*
-      ** force update, we need this workaround for updating the Q Control
+      ** force update
       */
-      updateQueueListCB(w, NULL, NULL);
+      qmonCQUpdate(w, NULL, NULL);
 
    }
    
@@ -893,7 +894,8 @@ Widget parent
    Widget access_add, access_remove, access_dialog;
    Widget project_add, project_remove, project_dialog, project_config;
    Widget owner_add, owner_remove;
-   Widget pe_reference_listPB, ckpt_reference_listPB;
+   Widget pe_add, pe_remove, pe_dialog;
+   Widget ckpt_add, ckpt_remove, ckpt_dialog;
 
    DENTER(TOP_LAYER, "qmonQCCreate");
 
@@ -931,10 +933,16 @@ Widget parent
                               /* checkpoint_config */
                               "min_cpu_intervalPB", &min_cpu_intervalPB,
                               "min_cpu_interval", &min_cpu_interval,
-                              "ckpt_reference_listPB", &ckpt_reference_listPB,
+                              "ckpt_list", &ckpt_list,
+                              "ckpt_add", &ckpt_add,
+                              "ckpt_remove", &ckpt_remove,
+                              "ckpt_dialog", &ckpt_dialog,
                               "ckpt_reference_list", &ckpt_reference_list,
                               /* pe config */
-                              "pe_reference_listPB", &pe_reference_listPB,
+                              "pe_list", &pe_list,
+                              "pe_add", &pe_add,
+                              "pe_remove", &pe_remove,
+                              "pe_dialog", &pe_dialog,
                               "pe_reference_list", &pe_reference_list,
                               /* load_threshold_config */
                               "load_thresholds", &load_thresholds,
@@ -975,6 +983,55 @@ Widget parent
                               "owner_add", &owner_add,
                               "owner_remove", &owner_remove,
                               "owner_list", &owner_list,
+                              /* toggles */
+                              "access_allow_tw", &access_allow_tw,
+                              "access_deny_tw", &access_deny_tw,
+                              "ckpt_reference_list_tw", &ckpt_reference_list_tw,
+                              "min_cpu_interval_tw", &min_cpu_interval_tw,
+                              "consumable_config_list_tw", &consumable_config_list_tw,
+                              "subordinate_list_tw", &subordinate_list_tw,
+                              "calendar_tw", &calendar_tw,
+                              "initial_state_tw", &initial_state_tw,
+                              "job_slots_tw", &job_slots_tw,
+                              "notify_tw", &notify_tw,
+                              "priority_tw", &priority_tw,
+                              "processors_tw", &processors_tw,
+                              "qtype_tw", &qtype_tw,
+                              "rerun_tw", &rerun_tw,
+                              "seq_no_tw", &seq_no_tw,
+                              "shell_start_mode_tw", &shell_start_mode_tw,
+                              "shell_tw", &shell_tw,
+                              "tmpdir_tw", &tmpdir_tw,
+                              "h_core_tw", &h_core_tw,
+                              "h_cpu_tw", &h_cpu_tw,
+                              "h_data_tw", &h_data_tw,
+                              "h_fsize_tw", &h_fsize_tw,
+                              "h_rss_tw", &h_rss_tw,
+                              "h_rt_tw", &h_rt_tw,
+                              "h_stack_tw", &h_stack_tw,
+                              "h_vmem_tw", &h_vmem_tw,
+                              "s_core_tw", &s_core_tw,
+                              "s_cpu_tw", &s_cpu_tw,
+                              "s_data_tw", &s_data_tw,
+                              "s_fsize_tw", &s_fsize_tw,
+                              "s_rss_tw", &s_rss_tw,
+                              "s_rt_tw", &s_rt_tw,
+                              "s_stack_tw", &s_stack_tw,
+                              "s_vmem_tw", &s_vmem_tw,
+                              "load_thresholds_tw", &load_thresholds_tw,
+                              "suspend_interval_tw", &suspend_interval_tw,
+                              "suspend_nsuspend_tw", &suspend_nsuspend_tw,
+                              "suspend_thresholds_tw", &suspend_thresholds_tw,
+                              "epilog_tw", &epilog_tw,
+                              "prolog_tw", &prolog_tw,
+                              "resume_method_tw", &resume_method_tw,
+                              "starter_method_tw", &starter_method_tw,
+                              "suspend_method_tw", &suspend_method_tw,
+                              "terminate_method_tw", &terminate_method_tw,
+                              "owner_list_tw", &owner_list_tw,
+                              "pe_reference_list_tw", &pe_reference_list_tw,
+                              "project_allow_tw", &project_allow_tw,
+                              "project_deny_tw", &project_deny_tw,
                               NULL); 
 
 
@@ -988,7 +1045,7 @@ Widget parent
    XtAddCallback(cq_main_link, XmNactivateCallback, 
                   qmonMainControlRaise, NULL); 
    XtAddCallback(cq_apply, XmNactivateCallback, 
-                  qmonQCAction, NULL); 
+                  qmonQCAdd, NULL); 
    XtAddCallback(cq_clone, XmNactivateCallback, 
                   qmonQCClone, NULL); 
    XtAddCallback(cq_update, XmNactivateCallback, 
@@ -1060,15 +1117,22 @@ Widget parent
    */
    XtAddCallback(min_cpu_intervalPB, XmNactivateCallback,
                   qmonQCTime, (XtPointer) min_cpu_interval); 
-   XtAddCallback(ckpt_reference_listPB, XmNactivateCallback,
-                  qmonQCAskForCkpt, NULL); 
+   XtAddCallback(ckpt_add, XmNactivateCallback, 
+                     qmonQCCkptAdd, NULL);
+   XtAddCallback(ckpt_remove, XmNactivateCallback, 
+                     qmonQCCkptRemove, NULL);
+   XtAddCallback(ckpt_dialog, XmNactivateCallback, 
+                     qmonPopupCkptConfig, NULL);
 
    /*
    ** PE
    */
-   XtAddCallback(pe_reference_listPB, XmNactivateCallback,
-                  qmonQCAskForPE, NULL); 
-
+   XtAddCallback(pe_add, XmNactivateCallback, 
+                     qmonQCPEAdd, NULL);
+   XtAddCallback(pe_remove, XmNactivateCallback, 
+                     qmonQCPERemove, NULL);
+   XtAddCallback(pe_dialog, XmNactivateCallback, 
+                     qmonPopupPEConfig, NULL);
 
    /*
    ** Complexes & Consumables
@@ -1147,6 +1211,14 @@ Widget parent
    XtAddCallback(owner_new, XmNinputCallback, 
                      qmonQCOwnerAdd, NULL);
                               
+   
+   /*
+   ** register callback procedures
+   */
+   XmtVaRegisterCallbackProcedures(
+         "ToggleSensitive", qmonQCToggleTW, XtRWidget,
+         NULL);
+
 
 
 #if 0
@@ -1176,9 +1248,10 @@ Widget w;
 XtPointer cld, cad; 
 {
    lList *alp = NULL;
+
    DENTER(GUI_LAYER, "qmonQCUpdate");
    
-   qmonMirrorMultiAnswer(USERSET_T | PROJECT_T, &alp);
+   qmonMirrorMultiAnswer(USERSET_T | PROJECT_T | PE_T | CKPT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -1187,27 +1260,12 @@ XtPointer cld, cad;
    }
    updateQCA();
    updateQCP();
+   updateQCPE();
+   updateQCCkpt();
 
    DEXIT;
 }
 
-
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCAction(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
-{
-   
-   DENTER(GUI_LAYER, "qmonQCAction");
-   
-   actions[dialog_mode].callback(w, NULL, NULL);
-
-   if (!dont_close)
-      qmonQCPopdown(w, NULL, NULL);
-
-   DEXIT;
-}
 
 
 /*-------------------------------------------------------------------------*/
@@ -1266,6 +1324,7 @@ XtPointer cld, cad;
    StringConst *strs = NULL;
    static char buf[BUFSIZ];
    lList *alp = NULL;
+   XmString xmhost = NULL;
    
    DENTER(GUI_LAYER, "qmonQCClone");
    
@@ -1296,9 +1355,12 @@ XtPointer cld, cad;
                         False, buf, BUFSIZ, NULL); 
       
       if (status) {
-         XmtDialogGetDialogValues(cq_dialog, &current_entry);
          qmonQCSetData(&current_entry, buf, HOSTREF_DEFAULT);
          XmtDialogSetDialogValues(cq_dialog, &current_entry);
+
+         xmhost = XmStringCreateLocalized((char *) HOSTREF_DEFAULT);
+         XmListSelectItem(cq_href_select_list_w, xmhost, True);
+         XmStringFree(xmhost);
       }
       /*
       ** don't free referenced strings, they are in the queue list
@@ -1312,7 +1374,7 @@ XtPointer cld, cad;
 }
 
 
-
+#if 0
 /*-------------------------------------------------------------------------*/
 static void qmonQCCheckHost(w, cld, cad)
 Widget w;
@@ -1359,7 +1421,7 @@ XtPointer cld, cad;
 
    DEXIT;
 }
-
+#endif
 /*-------------------------------------------------------------------------*/
 static void qmonQCCheckName(w, cld, cad)
 Widget w;
@@ -1402,7 +1464,7 @@ XtPointer cld, cad;
    qmonMessageBox(w, alp, 0);
    
    if ( lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK ) {
-      updateQueueList();
+      qmonCQUpdate(w, NULL, NULL);
       dont_close = 0;
       /*
       ** reset dialog 
@@ -1414,116 +1476,12 @@ XtPointer cld, cad;
    }   
    alp = lFreeList(alp);
 
+   if (!dont_close)
+      qmonQCPopdown(w, NULL, NULL);
+
    DEXIT;
 }
       
-/*-------------------------------------------------------------------------*/
-static void qmonQCModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-#if 0
-   lListElem *moq = NULL; 
-   lList *lp = NULL;
-   lList *alp = NULL;
-   lEnumeration *what;
-   
-   DENTER(TOP_LAYER, "qmonQCModify");
-
-   what = lWhat("%T(ALL)", QU_Type);
-
-   if (!(lp = lCreateList("MQ", QU_Type))) {
-      fprintf(stderr, "lCreateList failed\n");
-      DEXIT;
-      return;
-   }
-
-   XmtDialogGetDialogValues(cq_dialog, &current_entry);
-
-   if (current_entry.qname) {
-      /* EB: TODO: */
-      moq = lCopyElem(cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST),  
-                                        current_entry.qname));
-   }
-
-   if (moq) {
-      qmonQCToCull(&current_entry, moq);
-      lAppendElem(lp, moq);
-
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
-         printf("___Changed Queue________________________\n");
-         lWriteListTo(lp, stdout);
-         printf("________________________________________\n");
-      }
-     
-      /* EB: TODO: */ 
-      alp = qmonModList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST),
-                           QU_qname, &lp, NULL, what);
-
-      qmonMessageBox(w, alp, 0);
-      
-      if ( lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK ) {
-/*          updateQCQ(); */
-         updateQueueList();
-         dont_close = 0;
-      }
-      else {
-         dont_close = 1;
-      }   
-   }
-
-   lFreeWhat(what);
-   lp = lFreeList(lp);
-   alp = lFreeList(alp);
-   DEXIT;
-#endif   
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonQCDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-
-#if 0
-  
-   lList *lp = NULL;
-   lList *alp = NULL;
-   static lEnumeration *what = NULL;
-   Boolean status, answer;
-   
-   DENTER(TOP_LAYER, "qmonQCDelete");
-
-   if (!what)
-      what = lWhat("%T(ALL)", QU_Type);
-   
-   lp = XmStringToCull(cq_queue_list, QU_Type, QU_qname, SELECTED_ITEMS);
-
-   if (lp && (lGetNumberOfElem(lp) > 0)) {
-      status = XmtAskForBoolean(w, "xmtBooleanDialog", 
-                     "@{queue.askdel.Do you really want to\ndelete the selected queues ?}", 
-                     "@{Delete}", "@{Cancel}", NULL, XmtNoButton, XmDIALOG_WARNING, 
-                     False, &answer, NULL);
-         
-      if (answer) { 
-         /* EB: TODO: */
-         alp = qmonDelList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST),
-                                 QU_qname, &lp, NULL, what);
-
-         qmonMessageBox(w, alp, 0);
-
-         alp = lFreeList(alp);
-      } 
-      lp = lFreeList(lp);
-/*       updateQCQ(); */
-      updateQueueList();
-   }
-
-   DEXIT;
-#endif
-}
-
-
 /*-------------------------------------------------------------------------*/
 static void qmonQCSetData(
 tQCEntry *data,
@@ -1571,6 +1529,7 @@ StringConst href
 
 }   
    
+#if 0
 /*-------------------------------------------------------------------------*/
 static Boolean check_qname(
 char *name 
@@ -1585,7 +1544,7 @@ char *name
    DEXIT;
    return True;
 }
-
+#endif
 
 /*-------------------------------------------------------------------------*/
 static void qmonInitQCEntry(
@@ -1598,451 +1557,6 @@ tQCEntry *data
    DEXIT;
 
 }
-
-/*-------------------------------------------------------------------------*/
-static Boolean qmonCullToQC(
-lListElem *qep,
-tQCEntry *data,
-int how 
-) {
-#if 0
-   StringConst qhostname;
-   lListElem *ep = NULL;
-   int i;
-   const char *str;
-   static lCondition *where = NULL;
-   static lEnumeration *what = NULL;
-   static char *hard_variable[] = {
-      "Wallclock Time (sec)", 
-      "CPU Time (sec)", 
-      "File Size (Byte)", 
-      "Data Size (Byte)", 
-      "Stack Size (Byte)", 
-      "Corefile Size (Byte)", 
-      "Resident Set Size (Byte)",
-      "Virtual Memory (Byte)"
-   };
-   static char *soft_variable[] = {
-      "Wallclock Time (sec)", 
-      "CPU Time (sec)", 
-      "File Size (Byte)", 
-      "Data Size (Byte)", 
-      "Stack Size (Byte)", 
-      "Corefile Size (Byte)", 
-      "Resident Set Size (Byte)",
-      "Virtual Memory (Byte)"
-   }; 
-   static int hard_value[] = {
-      QU_h_rt, QU_h_cpu, QU_h_fsize, QU_h_data, QU_h_stack, QU_h_core, 
-      QU_h_rss, QU_h_vmem
-   };
-   static int soft_value[] = {
-      QU_s_rt, QU_s_cpu, QU_s_fsize, QU_s_data, QU_s_stack, QU_s_core, 
-      QU_s_rss, QU_s_vmem 
-   };
-   
-
-   DENTER(GUI_LAYER, "qmonCullToQC");
-   
-   if (!qep || !data) 
-      goto error;
-
-DTRACE;
-   /*********************/
-   /* general config    */
-   /*********************/
-   
-   if (how == QC_ALL || how == QC_GENERAL || how == QC_ALMOST) {
-      if (how == QC_ALL) {
-         strncpy(data->qname, lGetString(qep, QU_qname), 
-                  XmtSizeOf(tQCEntry, qname));
-
-         qmonMirrorMulti(EXECHOST_T);
-         qhostname = (StringConst)lGetHost(qep, QU_qhostname); 
-         strncpy(data->qhostname, qhostname,  XmtSizeOf(tQCEntry, qhostname));
-      }
-
-      data->qtype       = lGetUlong(qep, QU_qtype);
-      strncpy(data->processors, lGetString(qep, QU_processors),  
-               XmtSizeOf(tQCEntry, processors));
-      if ((str = (const char *)lGetString(qep, QU_priority)))
-         data->priority = atoi(str);
-      else
-         data->priority = 0;
-      data->job_slots   = lGetUlong(qep, QU_job_slots);
-      data->rerun       = lGetBool(qep, QU_rerun);
-      data->seq_no      = lGetUlong(qep, QU_seq_no);
-
-      strncpy(data->tmpdir, lGetString(qep, QU_tmpdir) ? 
-               lGetString(qep, QU_tmpdir) : "",  
-               XmtSizeOf(tQCEntry, tmpdir));
-      
-      strncpy(data->calendar, lGetString(qep, QU_calendar) ? 
-                lGetString(qep, QU_calendar) : "",  
-                XmtSizeOf(tQCEntry, calendar)); 
-      
-      strncpy(data->shell, lGetString(qep, QU_shell),  
-               XmtSizeOf(tQCEntry, shell));
-      
-      strncpy(data->notify, lGetString(qep, QU_notify),  
-               XmtSizeOf(tQCEntry, notify));
-
-      if (!strcasecmp(lGetString(qep, QU_initial_state), "disabled"))
-         data->initial_state = 2; 
-      else if (!strcasecmp(lGetString(qep, QU_initial_state), "enabled"))
-         data->initial_state = 1; 
-      else 
-         data->initial_state = 0; 
-      if (lGetString(qep, QU_shell_start_mode)) {
-         if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "unix_behavior"))
-            data->shell_start_mode = 3; 
-         else if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "script_from_stdin"))
-            data->shell_start_mode = 2; 
-         else if (!strcasecmp(lGetString(qep, QU_shell_start_mode), "posix_compliant"))
-            data->shell_start_mode = 1; 
-         else 
-            data->shell_start_mode = 0; 
-      }
-      data->prolog = (StringConst)lGetString(qep, QU_prolog);
-      data->epilog = (StringConst)lGetString(qep, QU_epilog);
-      data->starter_method = (StringConst)lGetString(qep, QU_starter_method);
-      data->suspend_method = (StringConst)lGetString(qep, QU_suspend_method);
-      data->resume_method = (StringConst)lGetString(qep, QU_resume_method);
-      data->terminate_method = (StringConst)lGetString(qep, QU_terminate_method);
-   }         
-
-DTRACE;
-   /*********************/
-   /* checkpoint config */
-   /*********************/
-   
-   if (how == QC_ALL || how == QC_CHECKPOINT || how == QC_ALMOST) {
-      strncpy(data->min_cpu_interval, lGetString(qep, QU_min_cpu_interval),  
-               XmtSizeOf(tQCEntry, min_cpu_interval));
-   }
-   if (how == QC_ALL || how == QC_CHECKPOINT || how == QC_ALMOST) {
-      data->ckpt_list = lFreeList(data->ckpt_list);
-      data->ckpt_list = lCopyList("ckpt_list", lGetList(qep, QU_ckpt_list));
-   }
-DTRACE;
-
-   /*********************/
-   /* pe config         */
-   /*********************/
-   
-   if (how == QC_ALL || how == QC_PE || how == QC_ALMOST) {
-      data->pe_list = lFreeList(data->pe_list);
-      data->pe_list = lCopyList("pe_list", lGetList(qep, QU_pe_list));
-
-   }
-DTRACE;
-
-   /*********************/
-   /* limit config      */
-   /*********************/
-   if (how == QC_ALL || how == QC_LIMIT || how == QC_ALMOST) {
-      /* we convert the limits to a VA_Type list */
-      data->limits_hard = lFreeList(data->limits_hard);
-      data->limits_soft = lFreeList(data->limits_soft);
-
-      data->limits_hard = lCreateElemList("Queue Limits", VA_Type, 
-                                             XtNumber(hard_variable));
-      data->limits_soft = lCreateElemList("Queue Limits", VA_Type, 
-                                             XtNumber(soft_variable));
-       
-      for (i=0, ep=lFirst(data->limits_hard); i<XtNumber(hard_variable) && 
-               data->limits_hard; i++, ep=lNext(ep)) {
-         lSetString(ep, VA_variable, hard_variable[i]);
-         str = (const char *)lGetString(qep, hard_value[i]);
-         lSetString(ep, VA_value, str?str:"");
-      }
-      for (i=0, ep=lFirst(data->limits_soft); i<XtNumber(soft_variable) && 
-               data->limits_soft; i++, ep=lNext(ep)) {
-         lSetString(ep, VA_variable, soft_variable[i]);
-         str = (const char *)lGetString(qep, soft_value[i]);
-         lSetString(ep, VA_value, str?str:"");
-      }
-   }
-   
-DTRACE;
-   /**************************/
-   /* load threshold config */
-   /**************************/
-   if (how == QC_ALL || how == QC_LOADTHRESHOLD || how == QC_ALMOST) {
-      data->load_thresholds = lFreeList(data->load_thresholds);
-      data->load_thresholds = lCopyList("load_thresholds", 
-                                  lGetList(qep, QU_load_thresholds));
-
-   }
-
-   /**************************/
-   /* suspend threshold config */
-   /**************************/
-   if (how == QC_ALL || how == QC_SUSPENDTHRESHOLD || how == QC_ALMOST) {
-      const char *susp_interval;
-      data->suspend_thresholds = lFreeList(data->suspend_thresholds);
-      data->suspend_thresholds = lCopyList("suspend_thresholds", 
-                                  lGetList(qep, QU_suspend_thresholds));
-      susp_interval = (StringConst)lGetString(qep, QU_suspend_interval);
-      strncpy(data->suspend_interval, susp_interval ? susp_interval : "",  
-               XmtSizeOf(tQCEntry, suspend_interval));
-      data->nsuspend = lGetUlong(qep, QU_nsuspend);
-   }
-
-
-DTRACE;
-   /**************************/
-   /* complexes config       */
-   /**************************/
-   if (how == QC_ALL || how == QC_COMPLEXES || how == QC_ALMOST) {
-      if (!where) {
-         where = lWhere("%T(%I != %s)", CE_Type, CE_name, "slots");
-         what = lWhat("%T(ALL)", CE_Type);
-      }
-      data->consumable_config_list = lFreeList(data->consumable_config_list);
-      data->consumable_config_list = lSelect("consumable_config_list", 
-                                      lGetList(qep, QU_consumable_config_list),
-                                      where, what);
-   }
-
-
-DTRACE;
-   /**************************/
-   /* subordinates config    */
-   /**************************/
-   if (how == QC_ALL || how == QC_SUBORDINATES || how == QC_ALMOST) {
-      data->subordinates = lFreeList(data->subordinates);
-      data->subordinates = lCopyList("subordinates", 
-                                 lGetList(qep, QU_subordinate_list));
-   }
-   
-DTRACE;
-   /**************************/
-   /* access config       */
-   /**************************/
-   if (how == QC_ALL || how == QC_USERSET || how == QC_ALMOST) {
-      data->acl = lFreeList(data->acl);
-      data->xacl = lFreeList(data->xacl);
-      data->acl = lCopyList("acl", lGetList(qep, QU_acl));
-      data->xacl = lCopyList("xacl", lGetList(qep, QU_xacl));
-   }
-
-   /**************************/
-   /* project config       */
-   /**************************/
-   if (how == QC_ALL || how == QC_PROJECT || how == QC_ALMOST) {
-      data->prj = lFreeList(data->prj);
-      data->xprj = lFreeList(data->xprj);
-      data->prj = lCopyList("prj", lGetList(qep, QU_projects));
-      data->xprj = lCopyList("xprj", lGetList(qep, QU_xprojects));
-   }
-
-
-DTRACE;
-   /**************************/
-   /* owner config           */
-   /**************************/
-   if (how == QC_ALL || how == QC_OWNER || how == QC_ALMOST) {
-/* lWriteListTo(data->owner_list, stdout); */
-      data->owner_list = lFreeList(data->owner_list);
-      data->owner_list = lCopyList("owner_list", lGetList(qep, QU_owner_list));
-   }
-
-   DEXIT;
-   return True;
-
-   error:
-      fprintf(stderr, "qmonCullToQC failure\n");
-      DEXIT;
-#endif      
-      return False;
-}   
-
-   
-   
-/*-------------------------------------------------------------------------*/
-static Boolean qmonQCToCull(
-tQCEntry *data,
-lListElem *qep 
-) {
-#if 0
-   lListElem *ep = NULL;
-   char buf[BUFSIZ];
-   
-   DENTER(GUI_LAYER, "qmonQCToCull");
-
-   if (!qep || !data || !data->qname || !data->qhostname)
-      goto error;
-
-   qinstance_state_set_unknown(qep, true);
-   
-   /**************************/
-   /* general config         */
-   /**************************/
-   lSetString(qep, QU_qname, qmon_trim(data->qname));
-
-   lSetHost(qep, QU_qhostname, data->qhostname);
-   /* get the unqualified hostname */
-
-   lSetUlong(qep, QU_qtype, data->qtype);
-   lSetString(qep, QU_processors, data->processors);
-   sprintf(buf, "%d", data->priority);
-   lSetString(qep, QU_priority, buf);
-   lSetUlong(qep, QU_job_slots, data->job_slots);
-   /* initialize QU_job_slots_used */
-   qinstance_set_slots_used(qep, 0);
-   lSetBool(qep, QU_rerun, data->rerun);
-   lSetUlong(qep, QU_seq_no, data->seq_no);
-
-   lSetString(qep, QU_tmpdir, data->tmpdir);
-   lSetString(qep, QU_calendar, data->calendar);
-   lSetString(qep, QU_shell, data->shell);
-   lSetString(qep, QU_notify, data->notify);
-
-   if (data->initial_state == 0)
-      lSetString(qep, QU_initial_state, "default");
-   else if (data->initial_state == 1)
-      lSetString(qep, QU_initial_state, "enabled");
-   else if (data->initial_state == 2)
-      lSetString(qep, QU_initial_state, "disabled");
-   
-   lSetString(qep, QU_prolog, data->prolog);
-   lSetString(qep, QU_epilog, data->epilog);
-   lSetString(qep, QU_starter_method, data->starter_method);
-   lSetString(qep, QU_suspend_method, data->suspend_method);
-   lSetString(qep, QU_resume_method, data->resume_method);
-   lSetString(qep, QU_terminate_method, data->terminate_method);
-
-   if (data->shell_start_mode == 0)
-      lSetString(qep, QU_shell_start_mode, "NONE");
-   else if (data->shell_start_mode == 1)
-      lSetString(qep, QU_shell_start_mode, "posix_compliant");
-   else if (data->shell_start_mode == 2)
-      lSetString(qep, QU_shell_start_mode, "script_from_stdin");
-   else if (data->shell_start_mode == 3)
-      lSetString(qep, QU_shell_start_mode, "unix_behavior");
-   
-   /**************************/
-   /* checkpoint config      */
-   /**************************/
-   lSetString(qep, QU_min_cpu_interval, data->min_cpu_interval);
-   lSetList(qep, QU_ckpt_list, data->ckpt_list);
-   data->ckpt_list = NULL;
-
-   /**************************/
-   /* pe config              */
-   /**************************/
-   lSetList(qep, QU_pe_list, data->pe_list);
-   data->pe_list = NULL;
-
-
-   /**************************/
-   /* limit config           */
-   /**************************/
-   /* This is a bit dangerous cause it depends on the order */
-   ep = lFirst(data->limits_hard);
-   lSetString(qep, QU_h_rt, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_cpu, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_fsize, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_data, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_stack, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_core, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_rss, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_h_vmem, lGetString(ep, VA_value));
-
-   ep = lFirst(data->limits_soft);
-   lSetString(qep, QU_s_rt, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_cpu, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_fsize, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_data, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_stack, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_core, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_rss, lGetString(ep, VA_value));
-   ep = lNext(ep);
-   lSetString(qep, QU_s_vmem, lGetString(ep, VA_value));
-
-   /**************************/
-   /* load threshold config  */
-   /**************************/
-   /*
-    * check the new list against the old list here
-    */
-   lSetList(qep, QU_load_thresholds, data->load_thresholds);
-   data->load_thresholds = NULL;
-
-   /**************************/
-   /* suspend threshold config  */
-   /**************************/
-   /*
-    * check the new list against the old list here
-    */
-   lSetList(qep, QU_suspend_thresholds, data->suspend_thresholds);
-   data->suspend_thresholds = NULL;
-   lSetString(qep, QU_suspend_interval, data->suspend_interval);
-   lSetUlong(qep, QU_nsuspend, data->nsuspend);
-
-   /*******************************/
-   /* attached complex attributes */
-   /*******************************/
-   lSetList(qep, QU_consumable_config_list, data->consumable_config_list);
-   data->consumable_config_list = NULL;
-
-   /****************************/
-   /* attached subordinates    */
-   /****************************/
-   lSetList(qep, QU_subordinate_list, data->subordinates);
-   data->subordinates = NULL;
-
-
-   /****************************/
-   /* access lists             */
-   /****************************/
-   lSetList(qep, QU_acl, data->acl);
-   data->acl = NULL;
-   lSetList(qep, QU_xacl, data->xacl);
-   data->xacl = NULL;
-
-   /****************************/
-   /* project access           */
-   /****************************/
-   lSetList(qep, QU_projects, data->prj);
-   data->prj = NULL;
-   lSetList(qep, QU_xprojects, data->xprj);
-   data->xprj = NULL;
-
-   /****************************/
-   /* owner list               */
-   /****************************/
-   lSetList(qep, QU_owner_list, data->owner_list);
-   data->owner_list = NULL;
-
-/*    lWriteElemTo(qep, stdout); */
-   
-   DEXIT;
-   return True;
-
-   error:
-      fprintf(stderr, "qmonQCToCull failure\n");
-      DEXIT;
-#endif      
-      return False;
-
-}
-
-
 
 /*-------------------------------------------------------------------------*/
 static void qmonQCResetAll(w, cld, cad)
@@ -2071,79 +1585,102 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* C H E C K P O I N T    P A G E                                          */
 /*-------------------------------------------------------------------------*/
-
-static void qmonQCAskForCkpt(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCCkptAdd(Widget w, XtPointer cld, XtPointer cad)
 {
-   lList *cl_out = NULL;
-   lList *cl_in = NULL;
-   int status;
-   lList *alp = NULL;
-
-   DENTER(GUI_LAYER, "qmonQCAskForCkpt");
+   XmString *selectedItems;
+   Cardinal selectedItemCount, i;
+   String text;
    
-   qmonMirrorMultiAnswer(CKPT_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
+   DENTER(GUI_LAYER, "qmonQCCkptAdd");
 
-   cl_in = qmonMirrorList(SGE_CKPT_LIST);
-   cl_out = XmStringToCull(ckpt_reference_list, ST_Type, ST_name, ALL_ITEMS);
-
-   status = XmtAskForItems(w, NULL, NULL, "@{Select Checkpoint Object}", 
-                  cl_in, CK_name, "@{@fBAvailable Checkpoint Objects}", 
-                  &cl_out, ST_Type, ST_name, "@{@fBChosen Checkpoint Objects}",
+   XtVaGetValues( ckpt_list,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
                   NULL);
 
-   if (status) {
-      UpdateXmListFromCull(ckpt_reference_list, XmFONTLIST_DEFAULT_TAG, cl_out,
-                              ST_name);
+   if (selectedItemCount) {
+      XmtLayoutDisableLayout(cq_dialog);
+
+      for (i=0; i<selectedItemCount; i++) {
+         if (!XmStringGetLtoR(selectedItems[i], XmFONTLIST_DEFAULT_TAG, &text))
+            continue;
+         XmListAddItemUniqueSorted(ckpt_reference_list, text);
+         XtFree(text); 
+      }
+      XmtLayoutEnableLayout(cq_dialog);
    }
-   cl_out = lFreeList(cl_out);
 
    DEXIT;
 }
 
 /*-------------------------------------------------------------------------*/
+static void qmonQCCkptRemove(Widget w, XtPointer cld, XtPointer cad)
+{
+   XmString *selectedItems;
+   Cardinal selectedItemCount;
+   
+   DENTER(GUI_LAYER, "qmonQCCkptRemove");
+
+   XtVaGetValues( ckpt_reference_list,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
+                  NULL);
+
+   if (selectedItemCount)
+      XmListDeleteItems(ckpt_reference_list, selectedItems, selectedItemCount); 
+
+   DEXIT;
+}
+
+
+/*-------------------------------------------------------------------------*/
 /* P E   P A G E                                                           */
 /*-------------------------------------------------------------------------*/
 
-static void qmonQCAskForPE(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+/*-------------------------------------------------------------------------*/
+static void qmonQCPEAdd(Widget w, XtPointer cld, XtPointer cad)
 {
-   lList *pel_out = NULL;
-   lList *pel_in = NULL;
-   int status;
-   lList *alp = NULL;
-
-   DENTER(GUI_LAYER, "qmonQCAskForPE");
+   XmString *selectedItems;
+   Cardinal selectedItemCount, i;
+   String text;
    
-   qmonMirrorMultiAnswer(PE_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
+   DENTER(GUI_LAYER, "qmonQCPEAdd");
 
-   pel_in = qmonMirrorList(SGE_PE_LIST);
-   pel_out = XmStringToCull(pe_reference_list, ST_Type, ST_name, ALL_ITEMS);
-
-   status = XmtAskForItems(w, NULL, NULL, "@{Select PE Object}", 
-                  pel_in, PE_name, "@{@fBAvailable PE Objects}", 
-                  &pel_out, ST_Type, ST_name, "@{@fBChosen PE Objects}",
+   XtVaGetValues( pe_list,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
                   NULL);
 
-   if (status) {
-      UpdateXmListFromCull(pe_reference_list, XmFONTLIST_DEFAULT_TAG, pel_out,
-                              ST_name);
+   if (selectedItemCount) {
+      XmtLayoutDisableLayout(cq_dialog);
+
+      for (i=0; i<selectedItemCount; i++) {
+         if (!XmStringGetLtoR(selectedItems[i], XmFONTLIST_DEFAULT_TAG, &text))
+            continue;
+         XmListAddItemUniqueSorted(pe_reference_list, text);
+         XtFree(text); 
+      }
+      XmtLayoutEnableLayout(cq_dialog);
    }
-   pel_out = lFreeList(pel_out);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonQCPERemove(Widget w, XtPointer cld, XtPointer cad)
+{
+   XmString *selectedItems;
+   Cardinal selectedItemCount;
+   
+   DENTER(GUI_LAYER, "qmonQCPERemove");
+
+   XtVaGetValues( pe_reference_list,
+                  XmNselectedItems, &selectedItems,
+                  XmNselectedItemCount, &selectedItemCount,
+                  NULL);
+
+   if (selectedItemCount)
+      XmListDeleteItems(pe_reference_list, selectedItems, selectedItemCount); 
 
    DEXIT;
 }
@@ -2225,6 +1762,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* L I M I T    P A G E                                                    */
 /*-------------------------------------------------------------------------*/
+#if 0
 static void qmonQCLimitNoEdit(w, cld, cad)
 Widget w;
 XtPointer cld, cad; 
@@ -2273,7 +1811,6 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-
 /*-------------------------------------------------------------------------*/
 static void qmonQCLimitInput(w, cld, cad)
 Widget w;
@@ -2321,6 +1858,7 @@ XtPointer cld, cad;
    DEXIT;
 }
 
+#endif
 
 
 
@@ -2665,6 +2203,44 @@ static void updateQCP(void)
    XmtLayoutDisableLayout(cq_dialog);
    lPSortList(pl, "%I+", UP_name);
    UpdateXmListFromCull(project_list, XmFONTLIST_DEFAULT_TAG, pl, UP_name);
+   XmtLayoutEnableLayout(cq_dialog);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void updateQCPE(void)
+{
+   lList *pl;
+   
+   DENTER(GUI_LAYER, "updateQCPE");
+   
+   /* What about sorting */
+   pl = qmonMirrorList(SGE_PE_LIST);
+   
+   /* disable/enable redisplay while updating */
+   XmtLayoutDisableLayout(cq_dialog);
+   lPSortList(pl, "%I+", PE_name);
+   UpdateXmListFromCull(pe_list, XmFONTLIST_DEFAULT_TAG, pl, PE_name);
+   XmtLayoutEnableLayout(cq_dialog);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void updateQCCkpt(void)
+{
+   lList *pl;
+   
+   DENTER(GUI_LAYER, "updateQCCkpt");
+   
+   /* What about sorting */
+   pl = qmonMirrorList(SGE_CKPT_LIST);
+   
+   /* disable/enable redisplay while updating */
+   XmtLayoutDisableLayout(cq_dialog);
+   lPSortList(pl, "%I+", CK_name);
+   UpdateXmListFromCull(ckpt_list, XmFONTLIST_DEFAULT_TAG, pl, CK_name);
    XmtLayoutEnableLayout(cq_dialog);
 
    DEXIT;
@@ -3112,5 +2688,280 @@ static void qmonCQHrefSelect(Widget w, XtPointer cld, XtPointer cad)
    old_href = href;
 
    DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
+{
+   Widget target;
+   Boolean set = XmToggleButtonGetState(w);
+   
+   if (w == seq_no_tw) {
+      target = XmtNameToWidget(w, "^seq_no"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == processors_tw) {
+      target = XmtNameToWidget(w, "^processors"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == tmpdir_tw) {
+      target = XmtNameToWidget(w, "^tmpdir"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == shell_tw) {
+      target = XmtNameToWidget(w, "^shell"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == calendar_tw) {
+      target = XmtNameToWidget(w, "^calendar"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^calendarPB"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == notify_tw) {
+      target = XmtNameToWidget(w, "^notify"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^notifyPB"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == priority_tw) {
+      target = XmtNameToWidget(w, "^priority"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == job_slots_tw) {
+      target = XmtNameToWidget(w, "^job_slots"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == shell_start_mode_tw) {
+      target = XmtNameToWidget(w, "^shell_start_mode"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == initial_state_tw) {
+      target = XmtNameToWidget(w, "^initial_state"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == rerun_tw) {
+      target = XmtNameToWidget(w, "^rerun"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == qtype_tw) {
+      target = XmtNameToWidget(w, "^qtype"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == prolog_tw) {
+      target = XmtNameToWidget(w, "^prolog"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == epilog_tw) {
+      target = XmtNameToWidget(w, "^epilog"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == starter_method_tw) {
+      target = XmtNameToWidget(w, "^starter_method"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == suspend_method_tw) {
+      target = XmtNameToWidget(w, "^suspend_method"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == resume_method_tw) {
+      target = XmtNameToWidget(w, "^resume_method"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == terminate_method_tw) {
+      target = XmtNameToWidget(w, "^terminate_method"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == ckpt_reference_list_tw) {
+      target = XmtNameToWidget(w, "^ckpt_reference_listSW"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^ckpt_listSW"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^ckpt_add"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^ckpt_remove"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^ckpt_dialog"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == min_cpu_interval_tw) {
+      target = XmtNameToWidget(w, "^min_cpu_interval"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^min_cpu_intervalPB"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == pe_reference_list_tw) {
+      target = XmtNameToWidget(w, "^pe_reference_listSW"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^pe_listSW"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^pe_add"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^pe_remove"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^pe_dialog"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == load_thresholds_tw) {
+      target = XmtNameToWidget(w, "^load_thresholds"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == suspend_thresholds_tw) {
+      target = XmtNameToWidget(w, "^suspend_thresholds"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == suspend_interval_tw) {
+      target = XmtNameToWidget(w, "^suspend_interval"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^suspend_intervalPB"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == suspend_nsuspend_tw) {
+      target = XmtNameToWidget(w, "^suspend_nsuspend"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_rt_tw ) {
+      target = XmtNameToWidget(w, "^h_rt"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_cpu_tw ) {
+      target = XmtNameToWidget(w, "^h_cpu"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_fsize_tw ) {
+      target = XmtNameToWidget(w, "^h_fsize"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_data_tw ) {
+      target = XmtNameToWidget(w, "^h_data"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_stack_tw ) {
+      target = XmtNameToWidget(w, "^h_stack"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_core_tw ) {
+      target = XmtNameToWidget(w, "^h_core"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_rss_tw ) {
+      target = XmtNameToWidget(w, "^h_rss"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == h_vmem_tw ) {
+      target = XmtNameToWidget(w, "^h_vmem"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_rt_tw ) {
+      target = XmtNameToWidget(w, "^s_rt"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_cpu_tw ) {
+      target = XmtNameToWidget(w, "^s_cpu"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_fsize_tw ) {
+      target = XmtNameToWidget(w, "^s_fsize"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_data_tw ) {
+      target = XmtNameToWidget(w, "^s_data"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_stack_tw ) {
+      target = XmtNameToWidget(w, "^s_stack"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_core_tw ) {
+      target = XmtNameToWidget(w, "^s_core"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_rss_tw ) {
+      target = XmtNameToWidget(w, "^s_rss"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == s_vmem_tw ) {
+      target = XmtNameToWidget(w, "^s_vmem"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == consumable_config_list_tw ) {
+      target = XmtNameToWidget(w, "^complexes_ccl"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == subordinate_list_tw ) {
+      target = XmtNameToWidget(w, "^subordinates_attached"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == access_allow_tw ) {
+      target = XmtNameToWidget(w, "^access_allowSW"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == access_deny_tw ) {
+      target = XmtNameToWidget(w, "^access_denySW"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == project_allow_tw ) {
+      target = XmtNameToWidget(w, "^project_allowSW"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == project_deny_tw ) {
+      target = XmtNameToWidget(w, "^project_denySW"); 
+      XtSetSensitive(target, set);
+   }   
+
+   if (w == owner_list_tw ) {
+      target = XmtNameToWidget(w, "^owner_listSW"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^owner_new"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^owner_remove"); 
+      XtSetSensitive(target, set);
+   }   
 }
 

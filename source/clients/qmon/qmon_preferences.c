@@ -62,7 +62,21 @@ static lList* write_pref(char *filename, lListElem *ep);
 /*
 ** the qmon preferences are kept here
 */
-lListElem *qmon_preferences = NULL;
+static lListElem *qmon_preferences = NULL;
+
+
+lListElem *qmonGetPreferences(void)
+{
+
+   DENTER(TOP_LAYER, "qmonGetPreferences");
+
+   if (!qmon_preferences)
+      qmon_preferences = lCreateElem(PREF_Type);
+
+   DEXIT;
+   return qmon_preferences;
+}   
+
 
 void qmonReadPreferences(void)
 {
@@ -171,6 +185,34 @@ int parsing_type
       return -1;
    }
    
+   /* --------- PREF_queue_filter_pe */
+   if (!set_conf_list(alpp, clpp, fields, "queue_filter_pe", ep, 
+                      PREF_queue_filter_pe, ST_Type, ST_name)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- PREF_queue_filter_user */
+   if (!set_conf_list(alpp, clpp, fields, "queue_filter_user", ep, 
+                      PREF_queue_filter_user, ST_Type, ST_name)) {
+      DEXIT;
+      return -1;
+   }
+   
+   /* --------- PREF_queue_filter_q */
+   if (!set_conf_list(alpp, clpp, fields, "queue_filter_q", ep, 
+                      PREF_queue_filter_q, ST_Type, ST_name)) {
+      DEXIT;
+      return -1;
+   }
+   
+   /* --------- PREF_queue_filter_state */
+   if (!set_conf_string(alpp, clpp, fields, "queue_filter_state", ep, 
+                 PREF_queue_filter_state)) {
+      DEXIT;
+      return -1;
+   }
+
    DEXIT;
    return 0;
 }
@@ -255,6 +297,10 @@ lListElem *ep
    else
       fprintf(fp, "NONE\n");
 
+   /* --------- PREF_job_filter_compact */
+   fprintf(fp, "job_filter_compact     %s\n", 
+           lGetBool(ep, PREF_job_filter_compact) ?  "TRUE" : "FALSE");
+
    /* --------- PREF_queue_filter_resources */
    fprintf(fp, "queue_filter_resources ");
    sep = lFirst(lGetList(ep, PREF_queue_filter_resources));
@@ -271,9 +317,53 @@ lListElem *ep
    else
       fprintf(fp, "NONE\n");
 
-   /* --------- PREF_job_filter_compact */
-   fprintf(fp, "job_filter_compact     %s\n", 
-           lGetBool(ep, PREF_job_filter_compact) ?  "TRUE" : "FALSE");
+   /* --------- PREF_queue_filter_pe */
+   fprintf(fp, "queue_filter_pe        ");
+   sep = lFirst(lGetList(ep, PREF_queue_filter_pe));
+   if (sep) {
+      do {
+         fprintf(fp, "%s", lGetString(sep, ST_name));
+         sep = lNext(sep);
+         if (sep) 
+            fprintf(fp, " ");
+      } while (sep);
+      fprintf(fp, "\n");
+   }
+   else
+      fprintf(fp, "NONE\n");
+
+   /* --------- PREF_queue_filter_user */
+   fprintf(fp, "queue_filter_user      ");
+   sep = lFirst(lGetList(ep, PREF_queue_filter_user));
+   if (sep) {
+      do {
+         fprintf(fp, "%s", lGetString(sep, ST_name));
+         sep = lNext(sep);
+         if (sep) 
+            fprintf(fp, " ");
+      } while (sep);
+      fprintf(fp, "\n");
+   }
+   else
+      fprintf(fp, "NONE\n");
+
+   /* --------- PREF_queue_filter_q */
+   fprintf(fp, "queue_filter_q         ");
+   sep = lFirst(lGetList(ep, PREF_queue_filter_q));
+   if (sep) {
+      do {
+         fprintf(fp, "%s", lGetString(sep, ST_name));
+         sep = lNext(sep);
+         if (sep) 
+            fprintf(fp, " ");
+      } while (sep);
+      fprintf(fp, "\n");
+   }
+   else
+      fprintf(fp, "NONE\n");
+
+   /* --------- PREF_queue_filter_state */
+   fprintf(fp, "queue_filter_state     %s\n", lGetString(ep, PREF_queue_filter_state)? lGetString(ep, PREF_queue_filter_state) : "NONE");
 
    if (fp != stdout)
       fclose(fp);

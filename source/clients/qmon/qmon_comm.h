@@ -89,7 +89,11 @@ int qmonMirrorMultiAnswer(u_long32 selector, lList**answerp);
 void qmonShowMirrorList(Widget w, XtPointer cld, XtPointer cad);
 
 lList* qmonDelList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
+
+#if 0
 lList* qmonDelJobList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
+#endif
+
 lList* qmonModList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
 lList* qmonAddList(int type, lList **local, int nm, lList **lpp, lCondition *where, lEnumeration *what); 
 lList* qmonChangeStateList(int type, lList *lp, int force, int action);

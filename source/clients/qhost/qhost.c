@@ -217,7 +217,9 @@ char **argv
    }
 
    /* scale load values and adjust consumable capacities */
-   correct_capacities(ehl, cl);
+/*    TODO                                            */
+/*    is correct_capacities needed here ???           */
+/*    correct_capacities(ehl, cl);                    */
 
    /* SGE_GLOBAL_NAME should be printed at first */
    lPSortList(ehl, "%I+", EH_name);

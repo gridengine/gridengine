@@ -90,7 +90,6 @@ Qmon*sconf_general.xmtChildren: \
                   sconf_load_formula = load_formula; \
    XmtChooser     sconf_queue_sort_method = queue_sort_method; \
    XmtChooser     sconf_job_info; \
-   XmToggleButton sconf_user_sort = user_sort; \
    Spinbox        sconf_flush_submit_secs = flush_submit_secs, \
                   sconf_flush_finish_secs = flush_finish_secs; \
    XmPushButton   sconf_schedule_intervalPB, sconf_reprioritize_intervalPB;
@@ -120,7 +119,6 @@ Qmon*sconf_general.layout: \
             Fixed Centered sconf_queue_sort_method \
             <> \
          } \
-         Fixed Centered sconf_user_sort \
          Caption tl "@{@fBJob Scheduling Information}" Row { \
             Fixed Centered sconf_job_info \
             Centered sconf_job_range \

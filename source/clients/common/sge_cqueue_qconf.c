@@ -602,18 +602,22 @@ cqueue_list_sick(lList **answer_list)
    local_ret = cqueue_hgroup_get_all_via_gdi(answer_list, 
                                              &hgroup_list, &cqueue_list);
    if (local_ret) {
+      dstring ds = DSTRING_INIT;
       lListElem *cqueue = NULL;
 
       for_each(cqueue, cqueue_list) {
-         cqueue_sick(cqueue, answer_list, hgroup_list);
+         cqueue_sick(cqueue, answer_list, hgroup_list, &ds);
       }
+      if (sge_dstring_get_string(&ds)) 
+         printf(sge_dstring_get_string(&ds));
+      sge_dstring_free(&ds);
    }
    DEXIT;
    return ret;
 }
 
 bool
-cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list)
+cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, dstring *ds)
 {
    bool ret = true;
 
@@ -685,10 +689,8 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list)
 
 
                      if (lGetNumberOfElem(add_hosts)) {
-                        printf("default value of "SFQ" is overwritten for "
-                                "hostgroup "SFQ" in queue "SFQ". Not all "
-                                "hosts of "SFQ" are contained in the hostlist "
-                                "specification of queue "SFQ".\n",
+                        sge_dstring_sprintf_append(ds, 
+                                MSG_CQUEUE_DEFOVERWRITTEN_SSSSS,
                                 cqueue_attribute_array[index].name,
                                 name, cqueue_name, name, cqueue_name);
                      }
@@ -704,10 +706,10 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list)
                    *    make sure the host is contained in resolved list 
                    */ 
                   if (!href_list_has_member(used_hosts, name)) {
-                     printf("unused setting for attribute "SFQ
-                            " and host "SFQ" in queue "SFQ".\n",
-                            cqueue_attribute_array[index].name,
-                            name, cqueue_name);
+                     sge_dstring_sprintf_append(ds, 
+                                MSG_CQUEUE_UNUSEDATTRSETTING_SS,
+                                cqueue_attribute_array[index].name,
+                                name, cqueue_name);
                   }
                }
             }

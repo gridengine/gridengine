@@ -69,13 +69,16 @@
 #define MSG_HGROUP_NOTEXIST_S         _MESSAGE(1028, _("Host group "SFQ" does not exist\n"))
 #define MSG_HGROUP_FILEINCORRECT_S    _MESSAGE(1029, _("Host group file "SFQ" is not correct\n"))
 
-#define MSG_CQUEUE_DOESNOTEXIST_S     _MESSAGE(5014, _("Cluster queue entry "SFQ" does not exist\n"))
-#define MSG_CQUEUE_FILENOTCORRECT_S   _MESSAGE(5015, _("Cluster queue file "SFQ" is not correct\n"))
-#define MSG_CQUEUE_NOQMATCHING_S      _MESSAGE(5016, _("No cluster queue or queue instance matches the phrase "SFQ"\n"))
-
 #define MSG_QSTAT_HELP_WCCQ           _MESSAGE(1030, _("wildcard expression matching a cluster queue"))
 #define MSG_QSTAT_HELP_WCHOST         _MESSAGE(1031, _("wildcard expression matching a host"))
 #define MSG_QSTAT_HELP_WCHG           _MESSAGE(1032, _("wildcard expression matching a hostgroup"))
+
+
+#define MSG_CQUEUE_DOESNOTEXIST_S     _MESSAGE(1033, _("Cluster queue entry "SFQ" does not exist\n"))
+#define MSG_CQUEUE_FILENOTCORRECT_S   _MESSAGE(1034, _("Cluster queue file "SFQ" is not correct\n"))
+#define MSG_CQUEUE_NOQMATCHING_S      _MESSAGE(1035, _("No cluster queue or queue instance matches the phrase "SFQ"\n"))
+#define MSG_CQUEUE_DEFOVERWRITTEN_SSSSS  _MESSAGE(1036, _("default value of "SFQ" is overwritten for hostgroup "SFQ" in queue "SFQ". Not all hosts of "SFQ" are contained in the hostlist specification of queue "SFQ".\n"))
+#define MSG_CQUEUE_UNUSEDATTRSETTING_SS  _MESSAGE(1037, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ".\n"))
 
 
 #endif /* __MSG_CLIENTS_COMMON_H */

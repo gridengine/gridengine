@@ -323,6 +323,7 @@ lList **answerp
       return -1;
 }
 
+#if 0
 /*-------------------------------------------------------------------------*/
 lList* qmonDelJobList(
 int type,
@@ -497,6 +498,7 @@ printf("Number of jobs (%d): %d\n", do_again, lGetNumberOfElem(*lpp));
    return alp; 
 
 }
+#endif
 
 
 /*-------------------------------------------------------------------------*/

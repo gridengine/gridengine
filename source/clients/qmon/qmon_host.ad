@@ -373,19 +373,13 @@ Qmon*eh_ask_layout*eh_folder.xmtChildren: \
 
 Qmon*eh_ask_layout*eh_folder.eh_scaling.tabLabel: @{@fBScaling}
 Qmon*eh_ask_layout*eh_folder.eh_scaling.xmtChildren: \
-   InputField     eh_rcf = resource_capability_factor; \
    Matrix_2xN     eh_load_scaling = scaling_list; \
    Matrix_2xN     eh_usage_scaling = usage_scaling_list;
 
 Qmon*eh_ask_layout*eh_folder.eh_scaling.layout: \
    Row { \
       Caption tl "@{@fBLoad Scaling}" eh_load_scaling \
-      Col { \
-         Caption tl "@{@fBUsage Scaling}" eh_usage_scaling \
-         # \
-         Fixed Caption tl "@{@fBResource Capability Factor}" eh_rcf \
-         <> \
-      } \
+      Caption tl "@{@fBUsage Scaling}" eh_usage_scaling \
       <> \
    }
 

@@ -590,6 +590,8 @@ char **argv
     *         print these jobs if necessary
     *
     */
+/*    TODO                                            */    
+/*    is correct_capacities needed here ???           */    
    correct_capacities(exechost_list, centry_list);
    if ((group_opt & GROUP_CQ_SUMMARY) != 0) {
       for_each (cqueue, queue_list) {

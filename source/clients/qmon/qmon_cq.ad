@@ -48,13 +48,14 @@ Qmon*qmon_cq.cq.XmText.marginWidth:   2
 
 Qmon*qmon_cq.cq.xmtChildren: \
    XmPushButton      cq_main_link; \
-   ListTree          cq_tree; \
    Folder            cq_cqfolder; \
    XmtMsgLine        cq_message; \
    XmToggleButton    cq_force; \
+   XmtChooser        cq_explain_states; \
    XmPushButton      cq_add, cq_mod, cq_delete, cq_close, cq_update, cq_help, \
-                     cq_find, cq_next, cq_suspend, cq_resume, \
-                     cq_disable, cq_enable, cq_reschedule, cq_clear_error;
+                     cq_suspend, cq_resume, cq_tickets, cq_customize, cq_load,\
+                     cq_disable, cq_enable, cq_reschedule, cq_clear_error, \
+                     cq_sick, cq_explain;
 
 Qmon*qmon_cq.cq.layout: \
    Fixed Shadowed Out 4 2 LREvenSpaced Row cq_title { \
@@ -63,22 +64,21 @@ Qmon*qmon_cq.cq.layout: \
    } \
    # \
    Row cq_main_row { \
-      Shadowed Out Stretchable 2.5 in % 6 in cq_tree \
       Shadowed Out 4 2 Centered cq_cqfolder \
       Fixed Shadowed Out Col cq_button_box { \
          Fixed cq_update \
-         Fixed cq_add \
-         Fixed cq_mod \
-         Fixed cq_delete \
+         Fixed cq_tickets \
+         Fixed cq_customize \
          Fixed cq_close \
          Fixed cq_help \
          # \
-         = \
-         #\
-         Fixed cq_find \
-         Fixed cq_next \
          # \
-         = \
+         Shadowed Out Col { \
+            Fixed cq_add \
+            Fixed cq_mod \
+            Fixed cq_delete \
+            Fixed cq_sick \
+         } \
          #\
          Shadowed Out Col { \
             Fixed cq_force \
@@ -88,6 +88,10 @@ Qmon*qmon_cq.cq.layout: \
             Fixed cq_enable \
             Fixed cq_reschedule \
             Fixed cq_clear_error \
+            Fixed cq_load \
+            ## \
+            Fixed cq_explain_states \
+            Fixed cq_explain \
          } \
          <>\
          Fixed cq_message \
@@ -113,10 +117,21 @@ Qmon*qmon_cq.cq.cq_disable.labelString:      @{Disable}
 Qmon*qmon_cq.cq.cq_enable.labelString:       @{Enable}
 Qmon*qmon_cq.cq.cq_reschedule.labelString:   @{Reschedule}
 Qmon*qmon_cq.cq.cq_clear_error.labelString:  @{Clear Error}
-Qmon*qmon_cq.cq.cq_find.labelString:         @{Find}
-Qmon*qmon_cq.cq.cq_next.labelString:         @{Find Next}
+Qmon*qmon_cq.cq.cq_load.labelString:         @{Load}
+Qmon*qmon_cq.cq.cq_sick.labelString:         @{Queue Sick ?}
+Qmon*qmon_cq.cq.cq_customize.labelString:    @{Customize}
+Qmon*qmon_cq.cq.cq_explain.labelString:      @{Explain}
+Qmon*qmon_cq.cq.cq_tickets.labelString:      @{Tickets}
 Qmon*qmon_cq.cq.cq_close.labelString:        @{Done}
 Qmon*qmon_cq.cq.cq_help.labelString:         @{Help}
+
+Qmon*qmon_cq.cq.cq_explain_states.chooserType:  ChooserCheckBox
+Qmon*qmon_cq.cq.cq_explain_states.orientation:  HORIZONTAL
+Qmon*qmon_cq.cq.cq_explain_states.strings: \
+   "@{c}", \
+   "@{a}", \
+   "@{A}", \
+   "@{E}"
 
 
 Qmon*qmon_cq.cq.cq_help.activateCallback:   XmtHelpDisplayContextHelp(self);
@@ -127,6 +142,8 @@ Qmon*qmon_cq.cq.cq_cqfolder.resizeChildren:  True
 Qmon*qmon_cq.cq.cq_cqfolder.xmtChildren: \
    XmtLayout   clusterqueue_layout, \
                qinstance_layout;
+               
+!!               clustertree_layout;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! clusterqueue_layout
@@ -154,8 +171,9 @@ Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.translati
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
          Ctrl<Btn2Down>:   ResizeColumns()
+
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.clip.translations: #override\n\
-         Shift<Btn1Down>:  SelectCell(end)\n\
+         Shift<Btn1Down>: SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
          Ctrl<Btn2Down>:   ResizeColumns()
@@ -187,22 +205,37 @@ Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.columnLabels: @{
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.gridType:     GRID_CELL_SHADOW
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.cellShadowType: SHADOW_IN
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.cellShadowThickness: 1
-Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.translations: #override\n\
-         Shift<Btn1Down>:  SelectCell(end)\n\
-         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
-         <Btn1Down>:       SelectCell(begin)\n\
-         Ctrl<Btn2Down>:   ResizeColumns()
-Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.clip.translations: #override\n\
+
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.translations: \
+#override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
          Ctrl<Btn2Down>:   ResizeColumns()
 
-Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.xmtChildren: unmanaged XmtPopupMenu del_menu;
-Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.menuPost: <Btn3Down>
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.clip.translations: \
+#override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()
 
-Qmon**del_menu.items: \
+!Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.xmtChildren: unmanaged XmtPopupMenu del_menu;
+!Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.menuPost: <Btn3Down>
+
+!Qmon**del_menu.items: \
    Title "@{@fBOperations}"; \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*qinstance_settings);
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! clustertree_layout
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!Qmon*qmon_cq.cq.cq_cqfolder.clustertree_layout.tabLabel: @{@fBCluster Queue Tree}
+!!Qmon*qmon_cq.cq.cq_cqfolder.clustertree_layout.xmtChildren: \
+!!   ListTree          cq_tree;
+
+!!Qmon*qmon_cq.cq.cq_cqfolder.clustertree_layout.layout: \
+!!   Shadowed Out Stretchable 2.5 in % 6 in cq_tree
 

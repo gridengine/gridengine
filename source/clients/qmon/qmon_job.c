@@ -101,6 +101,7 @@ typedef struct _tAskHoldInfo {
 static Widget qmon_job = 0;
 static Widget job_running_jobs = 0;
 static Widget job_pending_jobs = 0;
+static Widget current_matrix = 0;
 static Widget job_zombie_jobs = 0;
 static Widget job_customize = 0;
 static Widget job_schedd_info = 0;
@@ -238,6 +239,7 @@ XtPointer cld, cad;
    updateJobList();
 
    /* set default cursor */
+   XmtDiscardButtonEvents(w);
    XmtDisplayDefaultCursor(w);
 }
 
@@ -875,13 +877,18 @@ lList **local
    int i;
    int rows;
    lList *jl = NULL;
+   lList *sl = NULL;
    lListElem *jep = NULL;
    lList *alp = NULL;
    char *str;
    int force;
+   static lList *user_list = NULL;
 
    DENTER(GUI_LAYER, "qmonDeleteJobForMatrix");
 
+   if (!user_list) {
+      lAddElemStr(&user_list, ST_name, "*", ST_Type);
+   }   
    force = XmToggleButtonGetState(force_toggle);
 
    /* 
@@ -901,21 +908,46 @@ lList **local
                return False;
             }
             lSetUlong(jep, ID_force, force);
+            lSetList(jep, ID_user_list, lCopyList("", user_list));
          }
       }
    }
 
    if (jl) {
-      alp = qmonDelJobList(SGE_JOB_LIST, local, 
-                        ID_str, &jl, NULL, NULL);
+      /*
+      ** FIXME number of jobs that shall be deleted in one sweep
+      */
+      int job_max = 100;
+      int num_jobs = lGetNumberOfElem(jl);
+      int count = 0;
 
-      qmonMessageBox(w, alp, 0);
+      while (num_jobs) {
+         int j=0;
+         lListElem *ep, *next;
+         count++;
+         for (ep = lFirst(jl); ep; ep = next, j++) {
+            next=ep->next;
+            if (!sl) {
+               sl = lCreateList("sl", ID_Type);
+            }   
+            ep = lDechainElem(jl, ep);
+            lAppendElem(sl, ep);
+            if (j==job_max) {
+               break;
+            }   
+         }
+         num_jobs = lGetNumberOfElem(jl);
+         alp = qmonDelList(SGE_JOB_LIST, local, 
+                           ID_str, &sl, NULL, NULL);
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+         sl = lFreeList(sl);
+      }
 
       updateJobList();
       XbaeMatrixDeselectAll(matrix);
 
       jl = lFreeList(jl);
-      alp = lFreeList(alp);
    } 
 #if 0   
    else {
@@ -935,14 +967,13 @@ Widget w,
 XtPointer cld,
 XtPointer cad 
 ) {
-   Boolean status;
    
    DENTER(GUI_LAYER, "qmonSelectAllJobCB");
 
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   XbaeMatrixSelectAll(job_pending_jobs);
+   XbaeMatrixSelectAll(current_matrix);
 
    /* set normal cursor */
    XmtDisplayDefaultCursor(w);
@@ -1707,12 +1738,14 @@ XtPointer cld, cad;
 
    if (!strcmp(XtName(cbs->tab_child), "job_pending")) {
       XtSetSensitive(job_schedd_info, True);
+      current_matrix=job_pending_jobs;
    }
    else {
       XtSetSensitive(job_schedd_info, False);
    }
    if (!strcmp(XtName(cbs->tab_child), "job_running")) {
       XtSetSensitive(job_reschedule, True);
+      current_matrix=job_running_jobs;
    }
    else {
       XtSetSensitive(job_reschedule, False);
@@ -1726,6 +1759,8 @@ XtPointer cld, cad;
       XtSetSensitive(job_qalter, False);
       XtSetSensitive(job_error, False);
       XtSetSensitive(job_priority, False);
+      XtSetSensitive(job_select_all, False);
+      current_matrix=job_zombie_jobs;
    }
    else {
       XtSetSensitive(force_toggle, True);
@@ -1736,6 +1771,7 @@ XtPointer cld, cad;
       XtSetSensitive(job_qalter, True);
       XtSetSensitive(job_error, True);
       XtSetSensitive(job_priority, True);
+      XtSetSensitive(job_select_all, True);
    }
 
    DEXIT;

@@ -1,3 +1,6 @@
+                 eview:    Pending
+                 Changed:   qmon, qstat, qconf, qhost
+
 JG-2004-02-04-3: Testsuite: Fixed system_tests/clients/qrsh and functions
                             enabling and disabling queues.
 

@@ -165,7 +165,7 @@ XtPointer cld, cad;
       /*
       ** create queue customize dialog
       */
-      qmonCreateQCU(qmon_queue, NULL);
+/*       qmonCreateQCU(qmon_queue, NULL); */
 
       /* 
       ** set the close button callback 

@@ -35,9 +35,7 @@
 #include "qmon_proto.h"
 
 void qmonCQPopup(Widget w, XtPointer cld, XtPointer cad);
-
-
-
+void qmonCQUpdate(Widget w, XtPointer cld, XtPointer cad);
 
 #endif /* __QMON_CQ_H */
 

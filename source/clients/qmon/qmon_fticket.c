@@ -51,7 +51,7 @@
 #include "qmon_widgets.h"
 #include "qmon_manop.h"
 #include "qmon_job.h"
-#include "qmon_queue.h"
+#include "qmon_cq.h"
 #include "qmon_globals.h"
 #include "qmon_init.h"
 #include "qmon_project.h"
@@ -257,7 +257,7 @@ XtPointer cad
          break;
 
       case SGE_CQUEUE_LIST:
-         qmonQueuePopup(w, NULL, NULL); 
+         qmonCQPopup(w, NULL, NULL); 
          break;
    }
   
@@ -273,7 +273,6 @@ XtPointer cld, cad;
    lList *alp = NULL;
    lListElem *sep = NULL;
    lEnumeration *what = NULL;
-   lCondition *where = NULL;
 
    DENTER(GUI_LAYER, "qmonFTOkay");
 
@@ -285,17 +284,6 @@ XtPointer cld, cad;
       return;
    }
    lp = qmonMirrorList(fticket_info.list_type);
-
-   /*
-   ** filter queues
-   */
-   if (fticket_info.list_type == SGE_CQUEUE_LIST) {
-      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
-      what = lWhat("%T(ALL)", QU_Type);
-      lp = lSelect("Queues without template", lp, where, what);
-      where = lFreeWhere(where);
-      what = lFreeWhat(what);
-   } 
 
    if (qmonFOTMatrixToCull(fticket_matrix, lp, fticket_info.field0, 
                         fticket_info.field1)) {
@@ -765,10 +753,10 @@ XtPointer cad
 
 #if 0
       case FOT_JOBCLASS:
-         fticket_info.field0 = QU_qname;
-         fticket_info.field1 = QU_fshare;
+         fticket_info.field0 = CQ_name;
+         fticket_info.field1 = CQ_fshare;
          fticket_info.list_type = SGE_CQUEUE_LIST;
-         fticket_info.dp = QU_Type;
+         fticket_info.dp = CQ_Type;
          break;
 #endif
    }
@@ -816,18 +804,10 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
-   if (fticket_info.list_type == SGE_CQUEUE_LIST) {
-      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
-      what = lWhat("%T(ALL)", QU_Type);
-      lp = lSelect("Queues without template", lp, where, what);
-      lFreeWhere(where);
-      lFreeWhat(what);
-   } 
    lPSortList(lp, "%I+", fticket_info.field0);
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
-   if (fticket_info.list_type == SGE_USERSET_LIST || 
-         fticket_info.list_type == SGE_CQUEUE_LIST)
+   if (fticket_info.list_type == SGE_USERSET_LIST)
       lp = lFreeList(lp);
 
    /*
@@ -902,18 +882,10 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
-   if (oticket_info.list_type == SGE_CQUEUE_LIST) {
-      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
-      what = lWhat("%T(ALL)", QU_Type);
-      lp = lSelect("Queues without template", lp, where, what);
-      where = lFreeWhere(where);
-      what = lFreeWhat(what);
-   } 
    lPSortList(lp, "%I+", oticket_info.field0);
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
-   if (oticket_info.list_type == SGE_USERSET_LIST || 
-         oticket_info.list_type == SGE_CQUEUE_LIST)
+   if (oticket_info.list_type == SGE_USERSET_LIST)
       lp = lFreeList(lp);
 
    DEXIT;
@@ -928,7 +900,6 @@ XtPointer cld, cad;
    lList *lp = NULL;
    lList *alp = NULL;
    lEnumeration *what = NULL;
-   lCondition *where = NULL;
 
    DENTER(GUI_LAYER, "qmonOTOkay");
 
@@ -940,16 +911,6 @@ XtPointer cld, cad;
       return;
    }
    lp = qmonMirrorList(oticket_info.list_type);
-   /*
-   ** filter queues
-   */
-   if (oticket_info.list_type == SGE_CQUEUE_LIST) {
-      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
-      what = lWhat("%T(ALL)", QU_Type);
-      lp = lSelect("Queues without template", lp, where, what);
-      lFreeWhere(where);
-      lFreeWhat(what);
-   } 
 
    if (qmonFOTMatrixToCull(oticket_matrix, lp, oticket_info.field0, 
          oticket_info.field1)){
@@ -1086,10 +1047,10 @@ XtPointer cad
 
 #if 0
       case FOT_JOBCLASS:
-         oticket_info.field0 = QU_qname;
-         oticket_info.field1 = QU_oticket;
+         oticket_info.field0 = CQ_name;
+         oticket_info.field1 = CQ_oticket;
          oticket_info.list_type = SGE_CQUEUE_LIST;
-         oticket_info.dp = QU_Type;
+         oticket_info.dp = CQ_Type;
          break;
 #endif
 

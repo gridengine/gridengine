@@ -74,6 +74,6 @@ bool
 cqueue_list_sick(lList **answer_list);
 
 bool
-cqueue_sick(lListElem *cqueue, lList **answer_list, lList *hgroup_list);
+cqueue_sick(lListElem *cqueue, lList **answer_list, lList *hgroup_list, dstring *ds);
 
 #endif /* __SGE_CQUEUE_QCONF */

@@ -56,38 +56,101 @@ Qmon*qcu.qcu_cancel.labelString:          @{Cancel}
 Qmon*qcu.qcu_save.labelString:            @{Save}
 
 Qmon*qcu.qcu_folder.xmtChildren: \
-   XmtLayout   qfilter;
+   XmtLayout   r_filter, \
+               pe_filter, \
+               misc_filter;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! Resource List Dialog to select queues with -l 
+!! Dialog to select queues with -l 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qfilter.tabLabel:  @{@fBFilter Queues}
-Qmon*qfilter.xmtChildren:  \
-   Iconlist          qfilter_ar, qfilter_sr; \
-   XmPushButton      qfilter_clear;
+Qmon*r_filter.tabLabel:  @{@fBResource Filter}
+Qmon*r_filter.xmtChildren:  \
+   Iconlist          r_filter_ar, r_filter_sr; \
+   XmPushButton      r_filter_clear;
 
-Qmon*qfilter.layout: \
+Qmon*r_filter.layout: \
    Row { \
       Col { \
-         Row { \
-            Col { \
-               Caption tl "@{@fBFilter Resources}" 30 em qfilter_sr \
-               Fixed Centered qfilter_clear \
-            } \
-            # \
-            Caption tl "@{@fBAvailable Resources}" 30 em qfilter_ar \
-         } \
+         Caption tl "@{@fBFilter Resources}" 30 em r_filter_sr \
+         Fixed Centered r_filter_clear \
       } \
+      # \
+      Caption tl "@{@fBAvailable Resources}" 30 em r_filter_ar \
    }
 
-Qmon*qfilter_clear.labelString:            @{Clear}
+Qmon*r_filter_clear.labelString:            @{Clear}
 
-Qmon*qfilter_help.activateCallback:   XmtHelpDisplayContextHelp(self);
+Qmon*r_filter_ar*iconWidth:         16
+Qmon*r_filter_ar*iconHeight:        16
+Qmon*r_filter_ar*highlightOnEnter:  False
 
-Qmon*qfilter_ar*iconWidth:         16
-Qmon*qfilter_ar*iconHeight:        16
-Qmon*qfilter_ar*highlightOnEnter:  False
+Qmon*r_filter_sr*iconWidth:         16
+Qmon*r_filter_sr*iconHeight:        16
+Qmon*r_filter_sr*highlightOnEnter:  False
 
-Qmon*qfilter_sr*iconWidth:         16
-Qmon*qfilter_sr*iconHeight:        16
-Qmon*qfilter_sr*highlightOnEnter:  False
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Dialog to select queues with -pe 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*pe_filter.tabLabel:  @{@fBPE Filter}
+Qmon*pe_filter.xmtChildren:  \
+   StringList        pe_filter_ap, pe_filter_sp; \
+   XmPushButton      pe_add, pe_remove;
+
+Qmon*pe_filter.layout: \
+   Row { \
+      Caption tl "@{@fBAvailable PEs}" 30 em pe_filter_ap \
+      Fixed Col { \
+         <> \
+         Fixed Centered pe_add \
+         Fixed Centered pe_remove \
+         <> \
+      } \
+      Caption tl "@{@fBSelected PEs}" 30 em pe_filter_sp \
+   }
+
+
+Qmon*pe_filter.pe_add.labelType:          PIXMAP
+Qmon*pe_filter.pe_add.labelPixmap:        rightarrow
+Qmon*pe_filter.pe_remove.labelType:       PIXMAP
+Qmon*pe_filter.pe_remove.labelPixmap:     leftarrow
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Dialog to select queues with wildcards, user access, queue state 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*misc_filter.tabLabel:  @{@fBMisc Filters}
+Qmon*misc_filter.xmtChildren:  \
+   XmtInputField     misc_filter_user; \
+   XmtInputField     misc_filter_q; \
+   StringList        misc_filter_user_sp; \
+   StringList        misc_filter_q_sp; \
+   XmtChooser        misc_filter_state;
+
+Qmon*misc_filter.layout: \
+   Col { \
+      Caption tl "@{@fBFilter by User}" Col { \
+         Fixed misc_filter_user \
+         misc_filter_user_sp \
+      } \
+      Caption tl "@{@fBFilter by Queue Pattern}" Col { \
+         Fixed misc_filter_q \
+         misc_filter_q_sp \
+      } \
+      Caption tl "@{@fBFilter by Queue State}" misc_filter_state \
+   }
+
+
+Qmon*misc_filter.misc_filter_state.chooserType:   CheckBox
+Qmon*misc_filter.misc_filter_state.orientation:   HORIZONTAL
+Qmon*misc_filter.misc_filter_state.strings: \
+   "@{a}", \
+   "@{c}", \
+   "@{d}", \
+   "@{o}", \
+   "@{s}", \
+   "@{u}", \
+   "@{A}", \
+   "@{C}", \
+   "@{D}", \
+   "@{E}", \
+   "@{S}"
+

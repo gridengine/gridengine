@@ -72,7 +72,7 @@ QMON_3RD  = $(SDIR)/3rdparty/qmon/$(COMPILE_ARCH)
 QMON_TARGETS = qmon
 
 QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
-            qmon_queue.c qmon_signal.c qmon_timer.c qmon_comm.c \
+             qmon_signal.c qmon_timer.c qmon_comm.c \
             qmon_start.c qmon_browser.c qmon_jobcustom.c qmon_qaction.c \
             qmon_widgets.c qmon_appres.c qmon_init.c qmon_request.c \
             qmon_cplx.c qmon_host.c qmon_manop.c qmon_about.c \
@@ -90,7 +90,6 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_jobcustom.ad \
             $(QMON_DIR)/qmon_manop.ad \
             $(QMON_DIR)/qmon_qaction.ad \
-            $(QMON_DIR)/qmon_queue.ad \
             $(QMON_DIR)/qmon_request.ad \
             $(QMON_DIR)/qmon_submit.ad \
             $(QMON_DIR)/qmon_cluster.ad \
@@ -203,9 +202,6 @@ qmon_timer.o:     $(QMON_DIR)/qmon_timer.c
 
 qmon_comm.o:      $(QMON_DIR)/qmon_comm.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_comm.c
-
-qmon_queue.o:     $(QMON_DIR)/qmon_queue.c
-	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_queue.c
 
 qmon_start.o:   $(QMON_DIR)/qmon_start.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_start.c

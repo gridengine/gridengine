@@ -1428,19 +1428,16 @@ XtPointer cld, cad;
    
    okCB(w, NULL, NULL);
 
-   if (!qmon_preferences)
-      qmon_preferences = lCreateElem(PREF_Type);
-
-   lSetList(qmon_preferences, PREF_job_filter_resources, 
+   lSetList(qmonGetPreferences(), PREF_job_filter_resources, 
                      lCopyList("", jobfilter_resources));
-   lSetList(qmon_preferences, PREF_job_filter_owners, 
+   lSetList(qmonGetPreferences(), PREF_job_filter_owners, 
                      lCopyList("", jobfilter_owners));
-   lSetBool(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
+   lSetBool(qmonGetPreferences(), PREF_job_filter_compact, jobfilter_compact);
    for (j=FIRST_FIELD; j<XtNumber(job_items); j++) {           
       if (job_items[j].show)
          lAddElemStr(&lp, ST_name, job_items[j].name, ST_Type); 
    }
-   lSetList(qmon_preferences, PREF_job_filter_fields, lp);
+   lSetList(qmonGetPreferences(), PREF_job_filter_fields, lp);
 
    alp = qmonWritePreferences();
 
@@ -1751,17 +1748,17 @@ XtPointer cld
    /*
    ** reference to preferences
    */
-   if (qmon_preferences) {
+   if (qmonGetPreferences()) {
       lListElem *field;
       lListElem *ep;
       tJobField *job_item = NULL;
 
-      jobfilter_resources = lCopyList("", lGetList(qmon_preferences, 
+      jobfilter_resources = lCopyList("", lGetList(qmonGetPreferences(), 
                                           PREF_job_filter_resources));
-      jobfilter_owners = lCopyList("", lGetList(qmon_preferences, 
+      jobfilter_owners = lCopyList("", lGetList(qmonGetPreferences(), 
                                           PREF_job_filter_owners));
-      jobfilter_compact = lGetBool(qmon_preferences, PREF_job_filter_compact);
-      jobfilter_fields = lCopyList("", lGetList(qmon_preferences,
+      jobfilter_compact = lGetBool(qmonGetPreferences(), PREF_job_filter_compact);
+      jobfilter_fields = lCopyList("", lGetList(qmonGetPreferences(),
                                           PREF_job_filter_fields));
 
 /* lWriteListTo(jobfilter_resources, stdout); */

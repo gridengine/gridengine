@@ -364,7 +364,6 @@ Qmon*xmtMessageDialog*foreground:           $warning_color
 #include "../clients/qmon/qmon_qaction.ad"
 #include "../clients/qmon/qmon_submit.ad"
 #include "../clients/qmon/qmon_job.ad"
-#include "../clients/qmon/qmon_queue.ad"
 #include "../clients/qmon/qmon_browser.ad"
 #include "../clients/qmon/qmon_host.ad"
 #include "../clients/qmon/qmon_manop.ad"

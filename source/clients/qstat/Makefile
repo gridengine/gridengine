@@ -63,7 +63,7 @@ QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
 # global rules: all, clean, depend, messages
 ###############################################################################
 qstat_clean:
-	$(RM) $(QSTAT_TARGETS) $(QSTAT_OBJS)
+	$(RM) $(QSTAT_TARGETS) $(QSTAT_OBJS) $(QSTAT_ADD_OBJS)
 
 qstat_depend:
 	$(DEPEND) -f$(QSTAT_DIR)/qstat_dependencies $(QSTAT_DIR)/*.c

@@ -56,6 +56,7 @@
 #include "qmon_init.h"
 #include "sge_job.h"
 #include "gdi_tsm.h"
+#include "gdi_qmod.h"
 
 #define for_each2(ep1, lp1, ep2, lp2) \
    for (ep1=lFirst(lp1), ep2=lFirst(lp2); ep1 && ep2;\

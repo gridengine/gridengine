@@ -205,6 +205,6 @@ void sge_status_end_turn(void);
 
 void sge_silent_set(int i);
 
-int sge_silent_get(); 
+int sge_silent_get(void); 
 
 #endif /* _SGE_FILE_PATH_H_ */

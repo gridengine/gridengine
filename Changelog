@@ -1,3 +1,8 @@
+CR-2003-09-04-0: Bugfix:    infotext ignores parameters for HP10, HP11 systems
+                 Changed:   infotext
+                 Issue:     597
+                 Review:    AS
+
 SG-2003-08-27-0: Bugfix:    The scheduler handled strings in a hard and hard 
                             with a soft request differently, when it was defined 
                             in a host and overwritten in a queue.

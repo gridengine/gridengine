@@ -64,7 +64,7 @@ static void  sge_infotext_welcome(void);
 static void  sge_infotext_raw(char* format_string);
 static void  sge_infotext_usage(void);
 static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP11) || defined(HP10) || __GNUC__ == 3
 static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
 #endif
 static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
@@ -138,7 +138,7 @@ static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
 }
 
 
-char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
+static char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
    int h;
    char app_text[2];
 
@@ -167,7 +167,7 @@ char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
    return (char*) sge_dstring_get_string(buffer);
 }
 
-const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options) {
+static const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options) {
    int i;
  
    sge_dstring_copy_string(dash_buf,"");
@@ -183,7 +183,7 @@ const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* opt
 
 
 
-char* sge_infotext_get_next_word(dstring* buf, char* text) {
+static char* sge_infotext_get_next_word(dstring* buf, char* text) {
    char* p1;
    char* buffer;
    int i,b,not_last,nr_spaces;
@@ -241,7 +241,7 @@ char* sge_infotext_get_next_word(dstring* buf, char* text) {
    return p1;
 }
 
-void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options, char* text) {
+static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options, char* text) {
    char* column_var = NULL;
    int max_column = 79;
    char* tp = NULL;
@@ -378,7 +378,7 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
 }
 
 
-void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line_arg) {
+static void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, dstring* line_arg) {
    int i;
    FILE* output;
    int line_length;
@@ -442,7 +442,7 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
 }
 
 
-char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
+static char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
     char* h1 = NULL;
     char* h2 = NULL;
     char buf[10];
@@ -501,7 +501,7 @@ char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
-char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
+static char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
     char* h1 = NULL;
     char buf[10];
 
@@ -536,7 +536,7 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
 }
 
 
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP11) || defined(HP10) || __GNUC__ == 3
 static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
@@ -576,7 +576,7 @@ static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what
 }
 #endif
 
-int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
+static int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
    char* p1 = NULL;
    char* buf = NULL;
    int nr = 0;
@@ -593,7 +593,7 @@ int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
  
 
 
-void sge_infotext_welcome(void) {
+static void sge_infotext_welcome(void) {
 
    char* user = NULL;
    user = getenv("USER");
@@ -608,7 +608,7 @@ void sge_infotext_welcome(void) {
 
 }
 
-void sge_infotext_raw(char* format_string) {
+static void sge_infotext_raw(char* format_string) {
    const char* buffer = NULL;
    dstring tmp_buf = DSTRING_INIT;
 
@@ -618,7 +618,7 @@ void sge_infotext_raw(char* format_string) {
 }
 
 
-void sge_infotext_usage(void) {
+static void sge_infotext_usage(void) {
    printf("Version: %s\n", GDI_VERSION);
    printf("usage:\n");
    printf("infotext -help    : show help\n");
@@ -654,10 +654,7 @@ void sge_infotext_usage(void) {
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
-int main(
-int argc,
-char **argv 
-) {
+int main( int argc, char* argv[] ) {
    int no_options = 0;
    int ret_val = 0;
    int show_help = 0;
@@ -707,7 +704,6 @@ char **argv
 
    for(i=1; i< argc; i++) {
       char* arg = argv[i];
-
       if (arg[0] == '-' && arg_start == 0 && no_options == 0) {
          int o_start = 0;
          char* option = NULL;
@@ -1039,7 +1035,7 @@ char **argv
    DPRINTF(("pass 4\n"));
    {
       if (real_args > 0) {
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP11) || defined(HP10) || __GNUC__ == 3
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
          sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));

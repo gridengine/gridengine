@@ -1,3 +1,10 @@
+CR-2004-05-06-0: Enhancem.: added new test binaries to setup a communication
+                            test: 
+                               test_virtual_event_client, 
+                               test_virtual_gdi_client and
+                               test_virtual_qmaster
+                 
+
 AA-2004-05-06-0: Bugfix:    qtcsh shows strange error messages on AIX 43/51
                  Issue:     849
                  Changed:   qtcsh

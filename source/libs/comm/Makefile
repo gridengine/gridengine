@@ -67,6 +67,9 @@ COMMLIB_TEST_SRC = \
          test_cl_hostalias_list.c \
          test_cl_endpoint_list.c \
          test_multithread_io.c  \
+         test_virtual_qmaster.c \
+         test_virtual_event_client.c \
+         test_virtual_gdi_client.c \
          test_status_info.c
 
 COMMLIB_TEST_OBJS = $(COMMLIB_TEST_SRC:.c=.o)
@@ -79,7 +82,8 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
-     test_server_connection test_cl_endpoint_list
+     test_server_connection test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
+     test_virtual_gdi_client
 
 depend: commlib_depend commlistslib_depend
 
@@ -93,7 +97,8 @@ commlib_clean: commlistslib_clean
 		$(RM) $(COMMLIB_OBJS) $(COMMLIB_TEST_OBJS) libcomm.a libcomm$(SHAREDEXT) \
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
       test_cl_hostalias_list test_multithread_io test_status_info test_server_connection \
-      test_cl_endpoint_list
+      test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
+      test_virtual_gdi_client
 
 commlib_depend: commlistslib_depend
 		$(DEPEND) -f$(COMMLIB_DIR)/commlib_dependencies $(COMMLIB_DIR)/*.c
@@ -159,6 +164,12 @@ test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(UT
 	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
 test_multithread_io: test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_multithread_io $(LFLAGS) test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_virtual_qmaster: test_virtual_qmaster.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_virtual_qmaster $(LFLAGS) test_virtual_qmaster.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_virtual_event_client: test_virtual_event_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_virtual_event_client $(LFLAGS) test_virtual_event_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_virtual_gdi_client: test_virtual_gdi_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_virtual_gdi_client $(LFLAGS) test_virtual_gdi_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 
@@ -179,5 +190,11 @@ test_cl_hostalias_list.o: $(COMMLIB_DIR)/test_cl_hostalias_list.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_hostalias_list.c
 test_multithread_io.o: $(COMMLIB_DIR)/test_multithread_io.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_multithread_io.c
+test_virtual_qmaster.o: $(COMMLIB_DIR)/test_virtual_qmaster.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_virtual_qmaster.c
+test_virtual_event_client.o: $(COMMLIB_DIR)/test_virtual_event_client.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_virtual_event_client.c
+test_virtual_gdi_client.o: $(COMMLIB_DIR)/test_virtual_gdi_client.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_virtual_gdi_client.c
 test_status_info.o: $(COMMLIB_DIR)/test_status_info.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_status_info.c

@@ -45,10 +45,11 @@
 extern "C" {
 #endif
 
-/* v5.0: 0x10000000 */
-/* v5.1: 0x10000001 */
-/* v5.2: 0x10000002 */
-#define GRM_GDI_VERSION 0x10000003
+/* v5.0:   0x10000000 */
+/* v5.1:   0x10000001 */
+/* v5.2:   0x10000002 */
+/* v5.2.3: 0x10000003 */
+#define GRM_GDI_VERSION 0x100000F0
 
 
 /* sge_gdi_request.c */

@@ -673,6 +673,7 @@ lList *report_list
    u_long32 rep_type;
    lListElem *report;
    int ret = 0, this_seqno, last_seqno;
+   u_long32 rversion;
 
    DENTER(TOP_LAYER, "sge_c_report");
 
@@ -692,6 +693,13 @@ lList *report_list
    /* need exec host for all types of reports */
    if (!(hep = sge_locate_host(rhost, SGE_EXECHOST_LIST))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
+      DEXIT;
+      return;
+   }
+
+   /* do not process load reports from old execution daemons */
+   rversion = lGetUlong(lFirst(report_list), REP_version);
+   if (verify_request_version(NULL, rversion, rhost, commproc, id)) {
       DEXIT;
       return;
    }
@@ -719,13 +727,7 @@ lList *report_list
 
    for_each(report, report_list) {
 
-      u_long32 rversion = lGetUlong(report, REP_version);
       rep_type = lGetUlong(report, REP_type);
-
-      if (verify_request_version(NULL, rversion, rhost, commproc, id)) {
-         DEXIT;
-         return;
-      }
 
       switch (rep_type) {
       case NUM_REP_REPORT_LOAD:

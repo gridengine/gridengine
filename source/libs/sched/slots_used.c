@@ -81,16 +81,3 @@ int slots
    return;
 }
 
-void slots2config_list(
-lListElem *qep 
-) {
-   lListElem *ep;
-   char s[100];   
-
-   if (!(ep = lGetSubStr(qep, CE_name, "slots", QU_consumable_config_list)))
-      ep = lAddSubStr(qep, CE_name, "slots", QU_consumable_config_list, CE_Type);
-   sprintf(s, "%d", (int)lGetUlong(qep, QU_job_slots));
-   lSetString(ep, CE_stringval, s);
-   lSetDouble(ep, CE_doubleval, (double)lGetUlong(qep, QU_job_slots));
-}
-

@@ -859,11 +859,16 @@ int sub_command
    }
                
    /* write on file */
-   if (sge_change_queue_version(new_queue, add, 1) ||
+   if (sge_change_queue_version(new_queue, add, 1) 
+
+#if 0 /* EB: TODO: send QI mod event */
+      ||
       /* event has already been sent in sge_change_queue_version */
       !sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
                        0, 0, lGetString(new_queue, QU_qname), NULL, NULL,
-                       new_queue, NULL, NULL, false, true)) {
+                       new_queue, NULL, NULL, false, true)
+#endif
+      ) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_QUEUE, qname));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -890,6 +895,7 @@ int sub_command
       NOW ALL CRITICAL THINGS ARE DONE 
       ------------------------------------------------------------ */
 
+   /* EB: TODO: add to cqueue */
 
    /* ------------------------------------------------------------
       (0) handle job_slots as a consumble attribute of queue
@@ -996,9 +1002,11 @@ int sub_command
     *           been cleared since first spooling.
     *           Perhaps simply spool later?
     */
+#if 0 /* EB: TODO: send QI mod event */
    sge_event_spool(alpp, 0, sgeE_QUEUE_MOD,
                    0, 0, lGetString(new_queue, QU_qname), NULL, NULL,
                    new_queue, NULL, NULL, true, false);
+#endif
 
    INFO((SGE_EVENT, add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
       MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, qname, MSG_OBJ_QUEUE));
@@ -1102,9 +1110,11 @@ char *rhost
       return STATUS_EEXIST;
    }
 
+#if 0 /* EB: TODO: send QI event */
    sge_event_spool(alpp, 0, sgeE_QUEUE_DEL, 
                    0, 0, qname, NULL, NULL,
                    NULL, NULL, NULL, true, true);
+#endif
 
    unsuspend_all(sos_list_before, 0);
    lFreeList(sos_list_before); 
@@ -1138,7 +1148,9 @@ int write_history
 
    lSetUlong(qep, QU_version, add ? 0 : lGetUlong(qep, QU_version) + 1);
 
+#if 0 /* EB: TODO: send QI mod event */
    sge_add_queue_event(add?sgeE_QUEUE_ADD:sgeE_QUEUE_MOD, qep);
+#endif
 
    DEXIT;
    return 0;
@@ -1235,7 +1247,9 @@ void queue_list_set_unknown_state_to(lList *queue_list,
             qinstance_state_set_unknown(queue, false);
          }
          if (send_events) {
+#if 0 /* EB: TODO: send QI mod event */
             sge_add_queue_event(sgeE_QUEUE_MOD, queue);
+#endif
          }
       }
    }

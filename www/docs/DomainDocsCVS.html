@@ -1,0 +1,99 @@
+<TABLE BORDER="0" CELLSPACING="1" CELLPADDING="3" BORDER="0" WIDTH="100%">
+  <TR>
+    <TD class="Header" nowrap>Source code version control: CVS</TD>  
+  </TR>
+</TABLE>
+
+<TABLE BORDER="0" CELLSPACING="2" CELLPADDING="2" BORDER="0" width="100%">
+  <TR>
+    <TD class="PlainText">
+      <P>
+  <dl>
+        <dt><A HREF="#aboutcvs">About CVS</A></dt>
+        <dd><A HREF="DomainDocsCVS_cvsprimer.html">A version control primer (basic concepts)</A>
+        <dt><A HREF="#accesscvs">Accessing a project's CVS repository</A></dt>
+        <dd><A HREF="DomainDocsCVS_cvs_how-to.html">CVS How-Two command-line example</a><br> 
+        <dd><A HREF="DomainDocsSourceBrowse.html">Source code browsing</A></dd>
+        <dt><A HREF="#morecvsdoc">Further CVS documentation</A></dt>
+  </dl>
+
+      <P><span class="InputHeader"><A NAME="aboutcvs">About CVS</A></span>
+
+      <P>The Concurrent Versions System (CVS) is a version control system for keeping track of all modifications to project
+source code files. CVS is widely used in both open source and proprietary software development projects, and is generally
+considered to be the best freely available, full-featured version control tool. Two special features make CVS particularly
+suited to collaborative development across the Internet: 
+
+<OL>
+<LI>The use of file merging rather than locking. File locking prohibits other developers from accessing a file when someone
+else has checked it out. CVS allows a multiple check-outs of a single file, and then combines all the changes.
+<P>
+<LI>Remote access to source code file repositories. Developers can obtain and modify project files from virtually anywhere.
+</OL>
+
+     <P>CVS is a client-server system. The CVS repository is maintained on a web server; clients run on users' machines and
+connect to the server via the Internet. Clients are available for nearly all platforms including: UNIX, Windows, Macintosh,
+and any Java-based platform.
+
+     <P>
+      <span class="InputHeader">CVS allows you to:</span>
+      <UL>
+        <LI>Check out source files and directories</LI>
+        <LI>View differences between versions</LI>
+        <LI>View change log comments</LI>
+        <LI>Commit changes made in your local copy of the source files to the main source code repository</LI>
+        <LI>Do many other tasks; see links below</LI>
+      </UL>
+
+      <P><span class="InputHeader"><A NAME="accesscvs">Accessing your project's CVS repository</A></span>
+
+      <P>For instructions on using CVS for a specific project: 
+     <OL>
+       <LI>From your Project Home page, click on Source Code in the project menu
+       <LI>Choose whether to download source code archives, browse the CVS repository, or to  of how to checkout CVS
+project/module files, which includes the location of your project's repository (CVSROOT).
+       </OL>  
+
+     <BLOCKQUOTE>
+      <P>For command-line access to the CVS source code repository, use the following CVSROOT: <P>
+
+      The proper CVSROOT is then: <p>
+     <b>:pserver:USERNAME@cvsPROJECT_NAME.jxta.org:/cvs</b></p>
+
+
+       <P>Read the "source/CVS" page for each project and/or component to learn how the source code is organized into CVS
+modules. For example, to get the source code for a module ("MODULE_NAME") in your project ("PROJECT_NAME"), you should
+checkout "MODULE_NAME/PROJECT_NAME". This is the top-level module containing the entire source code tree for that
+particular module. Other modules may contain the documentation and web site files associated with this module.
+         </BLOCKQUOTE>
+
+    <span class="InputHeader"><A NAME="morecvsdoc">Further CVS Documentation</A> </span>    
+     <UL>
+      <LI><A href="http://www.gnu.org/manual/cvs/index.html" target=_new>CVS Manual</A></LI>
+      <LI><A href="http://www.cyclic.com/" target=_new>CVS Home Page at Cyclic</A></LI>
+      <LI><A href="http://www.loria.fr/~molli/cvs-index.html" target=_new>Pascal Molli's CVS page</A></LI>
+      <LI><A href="http://dmoz.org/Computers/Software/Configuration_Management/Tools/CVS/" target=_new>CVS Page on
+Dmoz</A></LI>
+     </UL>
+
+     <span class="InputHeader">CVS Clients</span>
+     <UL>
+     <LI><A HREF="http://www.cvshome.org/downloads.html" target="_new">Command line clients for many systems</A></LI>
+      <LI><A HREF="http://www.wincvs.org/" target="_new">WinCVS: a Windows CVS client</A></LI>
+      <LI><A HREF="http://www.jcvs.org/" target="_new">jCVS: a Java CVS client</A></LI>
+      <LI><A HREF="http://cervisia.sourceforge.net" target="_new">Cervisia: a KDE CVS Client</A></LI>
+     </UL>
+
+     <span class="InputHeader">CVS Books</span>
+     <UL>
+      <LI><A HREF="http://www.amazon.com/exec/obidos/ISBN=0132408546/cyclicsoftwareA/"  target="_new">Practical Software
+Configuration Management</A> </LI>
+
+      <LI><A HREF="http://cvsbook.red-bean.com/" target="_new">Open Source Development with CVS (many chapters free
+online)</A></LI>
+     </UL>
+
+    </TD>
+  </TR>
+</TABLE>
+

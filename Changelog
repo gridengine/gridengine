@@ -1,3 +1,9 @@
+SG-2004-12-14-0: Enhancem.: - missed two files in SG-2004-12-13-0
+			    - ported infotext
+			    - fixed a output problem in the install
+	         Changed:   infotext, install, master		
+                 Review:    CR
+
 DT-2004-12-14-5: Enhancem.: o DRMAA-J_05 branch is now fully merged
                  Changed:   docs, DRMAA
 

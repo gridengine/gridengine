@@ -211,6 +211,14 @@ SunOS)
       ;;
    i86*)
       ARCH=sol-x86
+      case $osrelease in
+      5.[7891]*)
+         if [ `isainfo -b` = 64 ]; then
+            ARCH=sol-amd64
+         else
+            ARCH=sol-x86
+         fi
+      esac
       ;;
    *)
       case $osrelease in

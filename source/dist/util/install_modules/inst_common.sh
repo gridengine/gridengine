@@ -300,8 +300,8 @@ THIRD_PARTY_FILES=openssl
       "qconf           qmod            qsh             sge_execd\n" \
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
-      "qhost           qrls            qtcsh           sge_shadowd\n\n" \
-      "qping" \
+      "qhost           qrls            qtcsh           sge_shadowd\n" \
+      "qping\n\n" \
       "The binaries in >%s< are:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \
@@ -316,8 +316,8 @@ THIRD_PARTY_FILES=openssl
       "qconf           qmod            qsh             sge_execd\n" \
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
-      "qhost           qrls            qtcsh           sge_shadowd\n\n" \
-      "qping" \
+      "qhost           qrls            qtcsh           sge_shadowd\n" \
+      "qping\n\n" \
       "The binaries in >%s< are:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \

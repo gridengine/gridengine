@@ -34,6 +34,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #ifndef WIN32NATIVE
 #	include <unistd.h>
 #endif

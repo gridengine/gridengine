@@ -4506,7 +4506,8 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #     submit_job -- submit a job with qsub
 #
 #  SYNOPSIS
-#     submit_job { args {do_error_check 1} {submit_timeout 30} } 
+#     submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} 
+#                  {user ""} { cd_dir ""} { show_args 1 }  }
 #
 #  FUNCTION
 #     This procedure will submit a job.
@@ -4519,6 +4520,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #     {host ""}           - host on which to execute qsub (default $CHECK_HOST)
 #     {user ""}           - user who shall submit job (default $CHECK_USER)
 #     {cd_dir ""}         - optional: do cd to given directory first
+#     { show_args 1 }     - optional: show job arguments
 #
 #  RESULT
 #     This procedure returns:
@@ -4550,7 +4552,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #     sge_procedures/delete_job()
 #     check/add_proc_error()
 #*******************************
-proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} } {
+proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} { show_args 1 } } {
   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
   global open_spawn_buffer CHECK_DEBUG_LEVEL
 
@@ -4594,7 +4596,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
 
   append USAGE " qsub"
 
-  puts $CHECK_OUTPUT "job submit args:\n$args"
+  if { $show_args == 1 } {
+     puts $CHECK_OUTPUT "job submit args:\n$args"
+  }
   # spawn process
   set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
   if { $cd_dir != "" } {

@@ -202,12 +202,11 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
       } else {
         set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
       }
-    
+      sleep 1
       # break loop when file is not existing ( when timestamp has increased )  
       if { [ file isfile $file_name] != 1 } {
          break
       }
-      sleep 1
    }
 
 
@@ -670,7 +669,7 @@ proc save_file { filename array_name } {
 #  EXAMPLE
 #     read_file myfile.txt data
 #     set nr_of_lines $data(0)
-#     for { set i 0 } { $i != nr_of_lines } { incr i 1 } {
+#     for { set i 1 } { $i <= $nr_of_lines } { incr i 1 } {
 #        puts $data($i)
 #     }
 #

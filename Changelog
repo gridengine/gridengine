@@ -7,6 +7,7 @@ CR-2002-06-17-1: Bugfix:    Don't produce infotext error message "Binary not
 
 AA-2002-06-14-0: FIX:       Job dependency display in qmon
                  Issue:     #275 affects only qmon
+                 Bugtraq:   #4706929
 
 CR-2002-06-13-5: Testsuite: testing issue #140 also for pending jobs
                  Enhancem.: 

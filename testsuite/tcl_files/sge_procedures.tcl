@@ -5895,6 +5895,9 @@ proc shutdown_all_shadowd { hostname } {
       puts $CHECK_OUTPUT $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
          puts $CHECK_OUTPUT "Killing process [ set ps_info(pid,$elem) ] ..."
+         if { [ have_root_passwd ] == -1 } {
+            set_root_passwd 
+         }
          if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
              start_remote_prog "$hostname" "root" "kill" "$ps_info(pid,$elem)"
          } else {

@@ -1,3 +1,8 @@
+CR-2004-07-26-0: Testsuite: fixed shutdown of shadowd problem
+                            (testsuite does not shutdown shadowd)
+                 Issue:     1166 
+                 Review:    JG
+
 RH-2004-07-26-2: Bugfix:    definition of wc_cqueue added to man page.              
                  Issue:     1103
                  Bugtraq:   Not defined

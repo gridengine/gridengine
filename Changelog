@@ -189,6 +189,7 @@ CR-2004-07-06-0: Bugfix:    qmaster clients may not reconnect after qmaster
                             outage
                  Changed:   communication library (commlib)
                  Issue:     1126
+                 Bugtraq:   5076491
                  Review:    JG
 
 JG-2004-07-05-1: QA:        Update of review form and help text.

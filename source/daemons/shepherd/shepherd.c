@@ -930,19 +930,27 @@ int ckpt_type
    /* make us the owner of the error/trace/exit_status file again */
    err_trace_chown_files(geteuid());
 
-   if (!strcmp("job", childname) && ckpt_type) {
-      if (signalled_ckpt_job) {
-         if (!checkpointed_file_exists())
-            create_checkpointed_file(0);
-      } else {
-         if (ckpt_type & CKPT_KERNEL) { 
-            start_clean_command(clean_command); 
-         }
+   if (ckpt_type) {
+      /* 
+       * empty file is a hint to reschedule that job. If we already have a
+       * checkpoint in the arena there is a dummy string in the file
+       */
+      if (!checkpointed_file_exists()) {
+         create_checkpointed_file(0);
       }
-   } 
+   }
 
    if (WIFSIGNALED(status)) {
       shepherd_trace_sprintf("%s exited due to signal", childname);
+
+      if (ckpt_type && !signalled_ckpt_job) {
+         unlink("checkpointed");
+         shepherd_trace_sprintf("%s exited due to signal but not due to checkpoint", childname);
+         if (ckpt_type & CKPT_KERNEL) {
+            shepherd_trace_sprintf("starting ckpt clean command");
+            start_clean_command(clean_command);
+         }
+      }
 
       child_signal = WTERMSIG(status);
 #ifdef WCOREDUMP
@@ -967,6 +975,15 @@ int ckpt_type
       wait_status = SGE_SET_WSIGNAL(wait_status, sge_map_signal(child_signal));
    } else {
       shepherd_trace_sprintf("%s exited not due to signal", childname);
+
+      if (!signalled_ckpt_job && ckpt_type) {
+         shepherd_trace_sprintf("checkpointing job exited normally");
+         unlink("checkpointed");
+         if (ckpt_type & CKPT_KERNEL) {
+            shepherd_trace_sprintf("starting ckpt clean command");
+            start_clean_command(clean_command);
+         }
+      }
 
       if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);

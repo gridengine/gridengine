@@ -1,3 +1,12 @@
+EB-2003-06-17-0: Bugfix:    Checkpointed job was migrated on bad exit status
+                            Restarted kernel/app level checkpointing jobs
+                            where rescheduled forever
+                            Now jobs also exiting with exit status > 128
+                            won't be rescheduled
+                 Issue:     174
+                 Review:    AS
+                 Changed:   sge_shepherd
+
 SG-2003-06-16-2: Testsuite: Added a test for issue #544 under bugs/issuezilla
 
 SG-2003-06-16-1: Testsuite: Added a test for issue #540 under bugs/issuezilla

@@ -469,7 +469,7 @@ proc cluster_perf_do_perform_test {} {
              puts $CHECK_OUTPUT "waiting for job $w1 (last job is: $last_job_id)"
              set while_start_time [timestamp]
              set stop 0
-             while { ([file isfile $CHECK_PROTOCOL_DIR/$w1 ] != 1) && (stop != 1)} {
+             while { [file isfile $CHECK_PROTOCOL_DIR/$w1] != 1 && $stop != 1 } {
                 puts -nonewline $CHECK_OUTPUT "."
                 flush $CHECK_OUTPUT
                 sleep 2

@@ -1912,6 +1912,14 @@ endif
 if ( "$QMAKE" == 1) then
    echo _________3_r_d_p_a_r_t_y__Q_M_A_K_E_______
 
+   if ( ! -d $SOURCE/3rdparty/qmake/$COMPILE_ARCH || \
+	! -r $SOURCE/3rdparty/qmake/$COMPILE_ARCH/Makefile ) then
+      mkdir -p $SOURCE/3rdparty/qmake/$COMPILE_ARCH
+      cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
+      env REMOTE=sge CFLAGS="${CFLAGS}" SGE_ARCH=$buildarch \
+       ../configure --with-grd=${COMPILE_ARCH} --srcdir=..
+   endif
+
    cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
@@ -1950,6 +1958,14 @@ if ( "$QTCSH" == 1) then
 
    if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"
+   endif
+
+   if ( ! -d $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH || \
+	! -r $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH/Makefile ) then
+      mkdir -p $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
+      cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
+      env REMOTE=sge CFLAGS="${CFLAGS}" SGE_ARCH=$buildarch \
+       ../configure --with-grd=${COMPILE_ARCH} --srcdir=..
    endif
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH

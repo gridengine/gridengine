@@ -1,3 +1,10 @@
+BD-2004-05-19-5: Enhamcem:  - If 3rdparty/{qmake,qtcsh}/COMPILE_ARCH
+                              does not exist, create it using
+                              configure.  This should be vastly
+                              more maintainable then the current
+                              checked in copies, but will not
+                              interfere with them.
+
 BD-2004-05-19-4: Enhamcem:  - Add three new variables to aimk.site and
                               use them in aimk and Makefiles to allow
 			      Berkeley DB's headers and libraries to

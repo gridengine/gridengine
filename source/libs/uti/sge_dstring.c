@@ -126,9 +126,27 @@ char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
    return sge_dstring_append(sb, buf);
 }
 
-char* sge_dstring_copy_string(dstring *sb, char* str) 
+/****** uti/dstring/sge_dstring_copy_string() *********************************
+*  NAME
+*     sge_dstring_copy_string() -- copy string into dstring 
+*
+*  SYNOPSIS
+*     char* sge_dstring_copy_string(dstring *sb, char* str) 
+*
+*  FUNCTION
+*     Copy string into dstring 
+*
+*  INPUTS
+*     dstring *sb - destination dstring 
+*     char* str   - source string 
+*
+*  RESULT
+*     char* - result string 
+*******************************************************************************/
+char *sge_dstring_copy_string(dstring *sb, char *str) 
 {
-   char* ret = NULL;
+   char *ret = NULL;
+
    DENTER(TOP_LAYER, "sge_dstring_copy_string");
    if (sb != NULL && sb->s != NULL) {
       sb->s[0] = 0;
@@ -142,10 +160,28 @@ char* sge_dstring_copy_string(dstring *sb, char* str)
    return ret;
 }
 
-char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2) 
+/****** uti/dstring/sge_dstring_copy_dstring() ********************************
+*  NAME
+*     sge_dstring_copy_dstring() -- strcpy() for dstrings's 
+*
+*  SYNOPSIS
+*     char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2) 
+*
+*  FUNCTION
+*     strcpy() for dstrings's 
+*
+*  INPUTS
+*     dstring *sb1 - destination dstring
+*     dstring *sb2 - source dstring 
+*
+*  RESULT
+*     char* - result string buffer 
+*******************************************************************************/
+char *sge_dstring_copy_dstring(dstring *sb1, dstring *sb2) 
 {
-   char* ret = NULL;
+   char *ret = NULL;
    DENTER(TOP_LAYER, "sge_dstring_copy_dstring");
+
    if (sb1 != NULL && sb1->s != NULL) {
       sb1->s[0] = 0;
    }  
@@ -157,7 +193,6 @@ char* sge_dstring_copy_dstring(dstring *sb1, dstring *sb2)
    DEXIT;
    return ret;
 }
-
 
 /****** uti/dstring/sge_dstring_free() ****************************************
 *  NAME
@@ -205,9 +240,24 @@ const char *sge_dstring_get_string(const dstring *string)
 }
 
 
+/****** uti/dstring/sge_dstring_strlen() **************************************
+*  NAME
+*     sge_dstring_strlen() -- strlen() for dstring's 
+*
+*  SYNOPSIS
+*     size_t sge_dstring_strlen(const dstring *string) 
+*
+*  FUNCTION
+*     strlen() for dstring's 
+*
+*  INPUTS
+*     const dstring *string - pointer to dynamic string 
+*
+*  RESULT
+*     size_t - string length
+*******************************************************************************/
 size_t sge_dstring_strlen(const dstring *string)
 {
-   
    size_t len = 0;
 
    DENTER(TOP_LAYER,"sge_dstring_strlen");
@@ -217,9 +267,6 @@ size_t sge_dstring_strlen(const dstring *string)
    DEXIT;
    return len;
 }
-
-
-
 
 #if 0 /* EB: debug */
 int main(void)

@@ -1,3 +1,9 @@
+DT-2004-04-22-1: Bugfix:    o Minor bugs fixes to event master
+                            o Added DRMAA test case to test suite
+                            o Fixed qconf bug about whitespace after the queue
+                              name with -mq
+                 Changed:   EVM, GDI, test suite, qconf
+
 AD-2004-04-22-0: Bugfix:    Changing the log level did only affect the thread
                             which did trigger the change.
                  Changed:   uti
@@ -40,7 +46,7 @@ DT-2004-04-21-0: Enhancem.: o Streamlined event master locking
 MD-2004-04-21-2: Bugfix:    removed confusing text!
                  Changed:   rc-template
 
-JG-2004-04-22-0: Enhancem.: distinst: Copy Berkeley DB backup/restore utilities
+JG-2004-04-21-0: Enhancem.: distinst: Copy Berkeley DB backup/restore utilities
                             to utilbin.
                             Output diagnosis messages for Berkeley DB spooling
                             in log_level log_debug.

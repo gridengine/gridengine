@@ -389,5 +389,9 @@ public abstract class DRMAASession {
 		public int getMinor () {
 			return minor;
 		}
+		
+		public String toString () {
+			return Integer.toString (major) + "." + Integer.toString (minor);
+		}
 	}
 }

@@ -111,18 +111,27 @@ FORMAT
           the scheduler.
 
      task_number
-          Job array task index number.
+          Array job task index number.
 
-     cpu  The cpu time usage in seconds. Only supported  in  case
-          of a Grid Engine Enterprise Edition system.
+     cpu  The cpu time usage in seconds.
 
-     mem  The integral memory usage in Gbytes seconds. Only  sup-
-          ported in case of a Grid Engine Enterprise Edition sys-
-          tem.
+     mem  The integral memory usage in Gbytes seconds.
 
      io   The amount of data transferred in  input/output  opera-
-          tions.   Only supported in case of a Grid Engine Enter-
-          prise Edition system.
+          tions.
+
+     category
+          A string specifying the job category.
+
+     iow  The io wait time in seconds.
+
+     pe_taskid
+          If this identifier is set the task was part of a paral-
+          lel  job  and was passed to Grid Engine Enterprise Edi-
+          tion via the qrsh -inherit interface.
+
+     maxvmem
+          The maximum vmem size in bytes.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>,
@@ -131,15 +140,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
 
 
 

@@ -153,7 +153,7 @@ OPTIONS
           format.  Requires root or manager privilege.
 
      -Mqattr fname q_name,...      &lt;<I>modify</I> <I>queue</I> <I>attributes</I>&gt;
-          DEPRECATED: Use -Mattr!
+          DEPRECATED: Use -Rattr!
           Allows changing of selected queue configuration  attri-
           butes  in multiple queues with a single command. In all
           queues contained in the comma separated queue name list
@@ -188,12 +188,13 @@ OPTIONS
           Allows adding specifications to a single  configuration
           list  attribute in multiple instances of an object with
           a single command. Currently supported objects  are  the
-          queue  and  the  host  configuration being specified as
-          <I>queue</I> or <I>exechost</I> in obj_spec. The queue load_thesholds
-          parameter  is  an example of a list attribute. With the
-          -aattr option, entries can  be  added  to  such  lists,
-          while  they  can  be deleted with -dattr, modified with
-          -mattr, and replaced with -rattr.
+          queue,  the  host,  the  parallel  environment  and the
+          checkpointing interface configuration  being  specified
+          as <I>queue</I> , <I>exechost</I> , <I>pe</I> or <I>ckpt</I> in obj_spec. The queue
+          load_thesholds parameter is an example of a list attri-
+          bute.  With  the -aattr option, entries can be added to
+          such lists, while they  can  be  deleted  with  -dattr,
+          modified with -mattr, and replaced with -rattr.
           The name of the configuration attribute to be  enhanced
           is  specified  with  attr_name  followed  by  val  as a
           <I>name</I>=<I>value</I> pair. The comma  separated  list  of  object
@@ -368,6 +369,15 @@ OPTIONS
           User  lists  are  used  for queue usage authentication.
           Requires root/manager/operator privileges.
 
+     -Auser fname                  &lt;<I>add</I> <I>user</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Add the user defined in fname to the Grid Engine Enter-
+          prise  Edition cluster. The format of the user specifi-
+          cation is  described  in  <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root  or
+          manager privileges.
+
      -auser                        &lt;<I>add</I> <I>user</I>&gt;
           This option is only supported in case of a Grid  Engine
           Enterprise Edition system. It is not available for Grid
@@ -379,6 +389,13 @@ OPTIONS
           after  changing  the  entry  and  exiting  the  editor.
           Requires root or manager privileges.
 
+     -clearusage                   &lt;<I>clear</I> <I>sharetree</I> <I>usage</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Clears all user and project usage from  the  sharetree.
+          All usage will be initialized back to zero.
+
      -cq queue_name,...            &lt;<I>clean</I> <I>queue</I>&gt;
           Cleans queue from jobs which haven't been reaped.  Pri-
           marily      a      development      tool.      Requires
@@ -389,12 +406,13 @@ OPTIONS
           Allows deleting specifications in a  single  configura-
           tion  list attribute in multiple instances of an object
           with a single command. Currently supported objects  are
-          the queue and the host configuration being specified as
-          <I>queue</I> or <I>host</I> in  obj_spec.  The  queue  load_thesholds
-          parameter  is  an example of a list attribute. With the
-          -dattr option, entries can be deleted from such  lists,
-          while  they  can  be  added  with -aattr, modified with
-          -mattr, and replaced with -rattr.
+          the  queue,  the host, the parallel environment and the
+          checkpointing interface configuration  being  specified
+          as <I>queue</I> , <I>exechost</I> , <I>pe</I> or <I>ckpt</I> in obj_spec. The queue
+          load_thesholds parameter is an example of a list attri-
+          bute.  With  the  -dattr option, entries can be deleted
+          from such lists, while they can be added  with  -aattr,
+          modified with -mattr, and replaced with -rattr.
           The name of the configuration attribute to be  modified
           is  specified  with  attr_name followed by val defining
           the name of the attribute list entry to be deleted. The
@@ -497,31 +515,39 @@ OPTIONS
      -help
           Prints a listing of all options.
 
-     -k{m|s|e[j] [host,...]}       &lt;<I>shutdown</I> <I>Grid</I> <I>Engine</I>&gt;
+     -k{m|s|e[j] {host,...|all}}   &lt;<I>shutdown</I> <I>Grid</I> <I>Engine</I>&gt;
           Used to shutdown Grid Engine components (daemons).   In
           the form -km <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is forced to terminate in a
           controlled fashion. In the  same  way  the  -ks  switch
-          causes  termination  of <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  Shutdown of all
-          running <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> processes currently registered  is
+          causes  termination of <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  Shutdown of run-
+          ning <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  processes  currently  registered  is
           initiated  by  the  -ke  option.  If  -kej is specified
           instead, all jobs running on the  execution  hosts  are
           aborted  prior  to  termination  of  the  corresponding
-          <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  The optional comma separated  host  list
-          specifies  the  execution  hosts to be addressed by the
-          -ke and -kej option.
+          <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  The comma separated host list  specifies
+          the execution hosts to be addressed by the -ke and -kej
+          option. If the keyword all is specified  instead  of  a
+          host list, all running <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> processes are shut-
+          down.
           Requires root or manager privileges.
+
+     -kec {id,...|all}             &lt;<I>kill</I> <I>event</I> <I>client</I>&gt;
+          Used  to   shutdown   event   clients   registered   at
+          <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   The comma separated event client list
+          specifies the event clients to be addressed by the -kec
+          option.   If the keyword all is specified instead of an
+          event client list, all  running  event  clients  except
+          special  clients like the <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B> are terminated.
+          Requires root or manager privilege.
 
      -mattr obj_spec attr_name val obj_instance,...
                                  &lt;<I>modify</I> <I>object</I> <I>attributes</I>&gt;
           Allows changing a  single  configuration  attribute  in
           multiple  instances of an object with a single command.
-          Currently supported objects are the queue and the  host
-          configuration  being  specified  as  <I>queue</I>  or  <I>host</I> in
-          obj_spec.
-          Note, that "-mattr queue attr_name val q_name, ..."  is
-          equivalent  to "-mqattr attr_name val q_name,..."  (see
-          below). The latter is available for  backward  compati-
-          bility.
+          Currently supported objects are the  queue,  the  host,
+          the  parallel  environment and the checkpointing inter-
+          face configuration being specified as <I>queue</I> ,  <I>exechost</I>
+          , <I>pe</I> or <I>ckpt</I> in obj_spec.
           The name of the configuration attribute to be  modified
           is  specified  with  attr_name followed by the value to
           which the attribute is going to be set. If  the  attri-
@@ -616,7 +642,7 @@ OPTIONS
           manager privilege.
 
      -mqattr attr_name q_name,...  &lt;<I>modify</I> <I>queue</I> <I>attributes</I>&gt;
-          DEPRECATED: Use -mattr!
+          DEPRECATED: Use -rattr!
           Allows changing of a single queue configuration  attri-
           bute  in  multiple queues with a single command. In all
           queues contained in the comma separated queue name list
@@ -669,13 +695,19 @@ OPTIONS
                                  &lt;<I>replace</I> <I>object</I> <I>attributes</I>&gt;
           Allows replacing a single configuration list  attribute
           in  multiple  instances of an object with a single com-
-          mand. Currently supported objects are the queue and the
-          host configuration being specified as <I>queue</I> or <I>exechost</I>
-          in obj_spec. The queue load_thesholds parameter  is  an
-          example  of  a  list attribute. With the -rattr option,
-          such lists can be replaced, while entries can be  added
-          to  them with -aattr, deleted with -dattr, and modified
-          with -mattr.
+          mand. Currently supported objects are  the  queue,  the
+          host,  the  parallel  environment and the checkpointing
+          interface configuration being specified  as  queue  and
+          the  host configuration being specified as <I>queue</I> , <I>exe-</I>
+          <I>chost</I>  ,  <I>pe</I>   or   <I>ckpt</I>   in   obj_spec.   The   queue
+          load_thesholds parameter is an example of a list attri-
+          bute.  With  the  -rattr  option,  such  lists  can  be
+          replaced,  while  entries  can  be  added  to them with
+          -aattr, deleted with -dattr, and modified with -mattr.
+          Note, that "-rattr queue attr_name val q_name, ..."  is
+          equivalent  to "-mqattr attr_name val q_name,..."  (see
+          below). The latter is available for  backward  compati-
+          bility.
           The name of the configuration attribute to be  modified
           is  specified  with  attr_name followed by val defining
           the new setting of the attribute. The  comma  separated
@@ -686,6 +718,15 @@ OPTIONS
           the  load_values  attribute  cannot  be  modified  (see
           <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
           Requires root or manager privilege.
+
+     -Muser fname                  &lt;<I>modify</I> <I>user</I>&gt;
+          This option is only supported in case of a Grid  Engine
+          Enterprise Edition system. It is not available for Grid
+          Engine systems.
+          Modify the user defined in fname  in  the  Grid  Engine
+          Enterprise  Edition  cluster.  The  format  of the user
+          specification is described in <B><A HREF="../htmlman5/user.html">user(5)</A></B>.   Requires  root
+          or manager privileges.
 
      -muser user                   &lt;<I>modify</I> <I>user</I>&gt;
           This option is only supported in case of a Grid  Engine
@@ -739,6 +780,9 @@ OPTIONS
 
      -sel                          &lt;<I>show</I> <I>execution</I> <I>hosts</I>&gt;
           Displays the Grid Engine execution host list.
+
+     -secl                         &lt;<I>show</I> <I>event</I> <I>clients</I>&gt;
+          Displays the Grid Engine event client list.
 
      -sep                          &lt;<I>show</I> <I>licensed</I> <I>processors</I>&gt;
           Displays a list  of  number  of  processors  which  are
@@ -843,6 +887,7 @@ OPTIONS
           <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  -F  option (see description of Full Format in
           section OUTPUT FORMATS of the <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> manual page.
 
+
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
                     standard configuration files.
@@ -893,53 +938,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 </PRE>

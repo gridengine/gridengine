@@ -24,8 +24,25 @@ DESCRIPTION
      The syntax of <I>qmake</I> makefiles corresponds to  <I>gmake</I>  and  is
      described in the "GNU Make Manual".
 
+     A typical qmake call will use the  Grid  Engine  commandline
+     options -cwd to have a scheduled make started in the current
+     working directory on the execution host, -v PATH if the Grid
+     Engine environment is not setup in the users .cshrc or .pro-
+     file shell resource file and request  slots  in  a  parallel
+     environment (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> ).
+
+     If no resource request (Grid Engine commandline  option  -l)
+     is  specified,  qmake will use the environment variable ARCH
+     to request the same architecture for task execution  as  has
+     the submit host.  If ARCH is set, the architecture specified
+     in ARCH  will  be  requested  by  inserting  the  option  -l
+     arch=$ARCH  into  the  commandline  options.  If ARCH is not
+     set, the make tasks can be executed on any available  archi-
+     tecture.   As  this  is  critical for typical make (compile)
+     jobs, a warning will be output.
+
 EXAMPLES
-          qmake -pe compiling 1-10 --
+          qmake -cwd -v PATH -pe compiling 1-10 --
 
      will request between 1 and 10 slots in parallel  environment
      "compiling" on the same architecture as the submit host. The
@@ -33,12 +50,11 @@ EXAMPLES
      ling  shell. It will execute as many parallel tasks as slots
      have been granted by Grid Engine.
 
-          qmake -- -j 4
+          qmake -cwd -v PATH -- -j 4
 
      will request between 1 and 4 slots in  parallel  environment
      "make" on the same architecture as the submit host.
-
-          qmake -l arch=solaris -pe make 3
+          qmake -cwd -v PATH -l arch=solaris -pe make 3
 
      will request 3 parallel <I>make</I> tasks to be executed  on  hosts
      of  architecture "solaris". The submit may be done on a host
@@ -51,10 +67,10 @@ EXAMPLES
 
      can be submitted by
 
-          qsub -pe make 1-10 [furter sge options] &lt;script&gt;
+          qsub -cwd -v PATH -pe make 1-10 [furter sge options] &lt;script&gt;
 
-     <I>Qmake</I>  will  inherit  the  resources  granted  for  the  job
-     sumbitted above under parallel environment "make".
+     <I>Qmake</I> will inherit the resources granted for the job sumbit-
+     ted above under parallel environment "make".
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -77,6 +93,12 @@ ENVIRONMENTAL VARIABLES
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
+
+     ARCH           The architecture of the submit host. If  this
+                    variable  is  set  in the submission environ-
+                    ment, qmake will request the given  architec-
+                    ture   for  job  execution  (see  DESCRIPTION
+                    above).
 
      COMMD_PORT     If set,  specifies  the  tcp  port  on  which
                     <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
@@ -123,8 +145,8 @@ KNOWN PROBLEMS
                ar ru libx.a x.o
 
 SEE ALSO
-     <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> as well as <B><A HREF="../htmlman1/make.html">make(1)</A></B> (GNU make manpage) and <I>The</I>  <I>GNU</I>
-     <I>Make</I> <I>Manual</I> in &lt;sge_root&gt;/3rd_party/qmake.
+     <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> , <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> as well as <B><A HREF="../htmlman1/make.html">make(1)</A></B> (GNU make  manpage)
+     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;sge_root&gt;/3rd_party/qmake.
 
 COPYRIGHT
      <I>Qmake</I> contains portions of Gnu Make (<I>gmake</I>),  which  is  the
@@ -133,28 +155,6 @@ COPYRIGHT
      See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
      &lt;sge_root&gt;/3rd_party/qmake for a statement of further rights
      and permissions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

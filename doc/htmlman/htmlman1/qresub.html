@@ -18,7 +18,7 @@ NAME
      qresub -  submit a copy of an existing Grid Engine job.
 
 SYNTAX
-     qsub [ options ] [ scriptfile | - [ script_args ]]
+     qsub [ options ] [ scriptfile | -- [ script_args ]]
 
      qsh [ options ] [ -- xterm_args ]
 
@@ -104,7 +104,7 @@ DESCRIPTION
 
      <I>Qalter</I> can be used to change the attributes of pending jobs.
      Once a job is executing, changes are no longer possible. For
-     job arrays, for which a part of the tasks can be pending and
+     array jobs, for which a part of the tasks can be pending and
      another  part  can  be  running  (see  the -t option below),
      modifications with <I>qalter</I> only  affect  the  pending  tasks.
      <I>Qalter</I>  can change most of the characteristics of a job (see
@@ -215,11 +215,11 @@ OPTIONS
           Identifies the account to which the  resource  consump-
           tion  of  the job should be charged. The account_string
           may be any arbitrary ASCII alphanumeric string but  may
-          contain  no blank or separator characters. The underbar
-          '_' is considered a non-separator. In  the  absence  of
-          this  parameter  Grid  Engine  will  place  the default
-          account string "sge" in the accounting  record  of  the
-          job.
+          contain  no  blank,  colon or separator characters. The
+          underbar '_' is  considered  a  non-separator.  In  the
+          absence  of  this  parameter Grid Engine will place the
+          default account string "sge" in the  accounting  record
+          of the job.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
@@ -263,7 +263,7 @@ OPTIONS
           tial default status prior to applying any modifications
           (if any) appearing in this specific command.
 
-     -cwd Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
+     -cwd Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute the job from  the  current  working  directory.
           This  switch  will activate Grid Engine's path aliasing
@@ -315,7 +315,12 @@ OPTIONS
           Available for <I>qsh</I> only.
 
           Directs <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> to use display_specifier in  order  to
-          contact the X server.
+          contact  the  X  server.   The display_specifier has to
+          contain the hostname part of  the  display  name  (e.g.
+          myhost:1). Local display names (e.g. :0) cannot be used
+          in grid environments.  Values  set  with  the  -display
+          option  overwrite settings from the submission environ-
+          ment and from -v commandline options.
 
      -dl date_time
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I>  only.
@@ -333,7 +338,7 @@ OPTIONS
           This option is applicable for users allowed  to  submit
           deadline jobs only.
 
-     -e [hostname:]path,...
+     -e [[hostname]:]path,...
           Available for <I>qsub</I> and <I>qalter</I> only.
 
           Defines or redefines the path  used  for  the  standard
@@ -346,11 +351,12 @@ OPTIONS
           directory  path  otherwise. If hostname is present, the
           standard  error  stream  will  be  placed   under   the
           corresponding location if the job runs on the specified
-          host.
+          host. If a pathname with a ":" should  be  specifed,  a
+          leading ":" has to be added to the pathname.
 
           By default the file name for  standard  error  has  the
           form  <I>job</I>_<I>name</I>.e<I>job</I>_<I>id</I> and <I>job</I>_<I>name</I>.e<I>job</I>_<I>id</I>.task_id for
-          job array tasks (see -t option below).
+          array job tasks (see -t option below).
 
           If path is a directory, the standard  error  stream  of
           the job will be put in this directory under the default
@@ -360,12 +366,12 @@ OPTIONS
           standard  error  stream path name. The following pseudo
           environment variables are supported currently:
 
-          $HOME          home directory on execution machine
-          $USER          user ID of job owner
-          $JOB_ID        current job ID
-          $JOB_NAME      current job name (see -N option)
-          $HOSTNAME      name of the execution host
-          $SGE_TASK_ID   job array task index number
+          $HOME       home directory on execution machine
+          $USER       user ID of job owner
+          $JOB_ID     current job ID
+          $JOB_NAME   current job name (see -N option)
+          $HOSTNAME   name of the execution host
+          $TASK_ID    array job task index number
 
           Alternatively to $HOME the tilde sign "~" can  be  used
           as common in <B><A HREF="../htmlman1/csh.html">csh(1)</A></B> or <B><A HREF="../htmlman1/ksh.html">ksh(1)</A></B>.  Note, that the "~" sign
@@ -373,6 +379,9 @@ OPTIONS
           "~&lt;user&gt;"  expands  to  the  home  directory of &lt;user&gt;.
           Using another user  ID  than  that  of  the  job  owner
           requires corresponding permissions, of course.
+
+          See <B><A HREF="../htmlman1/sge_pe.html">sge_pe(1)</A></B> how the use of  the  -o/-e  submit  flags
+          affect the name and location of the PE output files.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -431,7 +440,7 @@ OPTIONS
           An alternate means to assign hold is  provided  by  the
           <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B> facility.
 
-          If the job is a job array (see the  -t  option  below),
+          If the job is a array job (see the  -t  option  below),
           all  tasks  specified  via  -t  are  affected by the -h
           operation simultaneously.
 
@@ -442,13 +451,16 @@ OPTIONS
      -help
           Prints  a listing of all options.
 
-     -hold_jid job_id,...
+     -hold_jid [job_id|job_name],...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Defines or redefines the job  dependency  list  of  the
-          submitted  job.  The  submitted job is not eligible for
+          submitted job. A reference by job name is only accepted
+          if the referenced job is owend by the same user as  the
+          refering  job.  The  submitted  job is not eligible for
           execution  unless  all  jobs  referenced  in  the  coma
-          separated job id list have completed successfully.
+          separated  job  id  and/or job name list have completed
+          successfully.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -528,7 +540,8 @@ OPTIONS
 
           `b'     Mail is sent at the beginning of the job.
           `e'     Mail is sent at the end of the job.
-          `a'     Mail is sent when the job is aborted.
+          `a'     Mail is sent when the job is aborted or
+                  rescheduled.
           `s'     Mail is sent when the job is suspended.
           `n'     No mail is sent.
 
@@ -610,7 +623,7 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           The name of the job. The name can be any printable  set
-          of characters.
+          of characters, starting with an alphabetic character.
           If the -N option is not present Grid Engine assigns the
           name  of  the job script to the job after any directory
           pathname has been removed from the script-name. If  the
@@ -622,6 +635,28 @@ OPTIONS
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
 
+     -noshell
+          Available only for <I>qrsh</I> with a commandline.
+
+          Do not start the commandline given to <I>qrsh</I> in  a  users
+          login shell but execute it without the wrapping shell.
+
+          The option can be used to speed up  execution  as  some
+          overhead  like the shell startup and sourcing the shell
+          resource files is avoided.
+
+          The option can only be used, if no shell specific  com-
+          mandline  parsing  is required. If the commandline con-
+          tains shell syntax like environment variable  substitu-
+          tion  or  (back)  quoting, a shell must be started.  In
+          this case either do not  use  the  -noshell  option  or
+          include the shell call in the commandline.
+
+          Example:
+          qrsh echo '$HOSTNAME'
+          Alternative call with the -noshell option
+          qrsh -noshell /bin/tcsh -f -c 'echo $HOSTNAME'
+
      -nostdin
           Available only for <I>qrsh</I>.
 
@@ -631,7 +666,7 @@ OPTIONS
           using  <I>qrsh</I>,  e.g.  in  a <B><A HREF="../htmlman1/make.html">make(1)</A></B> process - it would be
           undefined, which process would get the input.
 
-     -o [hostname:]path,...
+     -o [[hostname]:]path,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           The path used for the standard  output  stream  of  the
@@ -640,7 +675,7 @@ OPTIONS
 
           By default the file name for standard  output  has  the
           form  <I>job</I>_<I>name</I>.o<I>job</I>_<I>id</I> and <I>job</I>_<I>name</I>.o<I>job</I>_<I>id</I>.task_id for
-          job array tasks (see -t option below).
+          array job tasks (see -t option below).
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -748,20 +783,9 @@ OPTIONS
           ties of a resource request  and  will  be  merged  with
           requirements  derived  from  the  -l  option  described
           above.
-
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
-
-     -qs_args ... -qs_end
-          Available for <I>qsub</I> and <I>qalter</I> only. Deprecated  in  the
-          current version.
-
-          Valid with the Queuing System  Interface  (QSI)  option
-          only.  Please ask your system administrator.
-          The options between -qs_args  and  -qs_end  braces  are
-          passed  from  Grid  Engine  to a foreign queuing system
-          which interfaced via the Grid Engine QSI facility.
 
      -r y|n
           Available for <I>qsub</I> and <I>qalter</I> only.
@@ -777,55 +801,6 @@ OPTIONS
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
-
-     -t n[-m[:s]]
-          Available for <I>qsub</I> and <I>qalter</I> only.
-
-          Submits a so called <I>Job</I> <I>Array</I>, i.e. an array of identi-
-          cal  tasks being only differentiated by an index number
-          and being treated by Grid Engine almost like  a  series
-          of jobs. The option argument to -t specifies the number
-          of job array tasks and the index number which  will  be
-          associated  with  the  tasks. The index numbers will be
-          exported to the job tasks via the environment  variable
-          SGE_TASK_ID.
-
-          The task id range specified in the option argument  may
-          be a single number, a simple range of the form n-m or a
-          range with a step size. Hence, the task id range speci-
-          fied  by  2-10:2 would result in the task id indexes 2,
-          4, 6, 8, and 10, i.e. in a total of 5  tasks  identical
-          tasks  with  the  environment variable SGE_TASK_ID con-
-          taining one of the 5 index numbers each.
-
-          All job array tasks inherit the same resource  requests
-          and  attribute  definitions as specified in the <I>qsub</I> or
-          <I>qalter</I> command line, except  for  the  -t  option.  The
-          tasks  are scheduled independently and, provided enough
-          resources, concurrently very much like  separate  jobs.
-          However,  a  job  array  or  a sub-array thereof can be
-          accessed  as  a  total  by  commands  like  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>  or
-          <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.    See  the  corresponding  manual  pages  for
-          further detail.
-
-          Job arrays are commonly used to execute the  same  type
-          of operation on varying input data sets correlated with
-          the task index number. The number of  tasks  in  a  job
-          array is unlimited.
-
-          STDOUT and STDERR of job array tasks  will  be  written
-          into different files with the default location
-
-          &lt;jobname&gt;.['e'|'o']&lt;job_id&gt;'.'&lt;task_id&gt;
-
-          In order to change this default, the -e and -o  options
-          (see  above)  can  be  used  together  with  the pseudo
-          environment variables $HOME, $USER, $JOB_ID, $JOB_NAME,
-          $HOSTNAME, and $SGE_TASK_ID.
-
-          Note, that you can use the output redirection to divert
-          the  output  of  all  tasks into the same file, but the
-          result of this is undefined.
 
      -sc variable[=value],...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
@@ -862,8 +837,8 @@ OPTIONS
           "essential". The -hard and -soft options in effect  act
           as "toggles" during the scan.
 
-     -S [host:]pathname,...
-          Available for <I>qsub</I>, <I>qsh</I>, <I>qlogin</I> and <I>qalter</I>.
+     -S [[hostname]:]pathname,...
+          Available for <I>qsub</I>, <I>qsh</I> and <I>qalter</I>.
 
           Specifies the interpreting shell for the job. Only  one
           pathname  component  without  a host specifier is valid
@@ -887,131 +862,192 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-     -u username,... | -uall
-          Available for <I>qalter</I> only. Changes  are  only  made  on
-          those  jobs  which were submitted by users specified in
-          the list of usernames.  For managers it is possible  to
-          use  the qalter -uall command to modify all jobs of all
-          users.
-
-          If you use the -u or -uall switch it is  not  permitted
-          to specify an additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
-
-     -v variable[=value],...
-          Available for  <I>qsub</I>,  <I>qsh</I>,  <I>qrsh</I>,  <I>qlogin</I>,  <I>qalter</I>  and
-          <I>qresub</I>.
-
-          Defines or redefines the environment  variables  to  be
-          exported  to  the execution context of the job.  If the
-          -v option is present Grid Engine will add the  environ-
-          ment  variables defined as arguments to the switch and,
-          optionally, values of specified variables, to the  exe-
-          cution context of the job.
-
-          <I>Qalter</I> allows changing this option even while  the  job
-          executes. The modified parameter will only be in effect
-          after a restart or migration of the job, however.
-
-     -verbose
-          Available only for <I>qrsh</I> and <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>.
-
-          Unlike <I>qsh</I> and <I>qlogin</I>, <I>qrsh</I> does not output any  infor-
-          mational  messages  while establishing the session com-
-          pliant with the standard <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html">rlogin(1)</A></B>  system
-          calls.   If the option -verbose is set, <I>qrsh</I> behaves as
-          verbose as the <I>qsh</I>  and  <I>qlogin</I>  commands  and  outputs
-          informations  about  the  process  of  establishing the
-          <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> or <B><A HREF="../htmlman1/rlogin.html">rlogin(1)</A></B> session.
-
-     -verify
-          Available for  <I>qsub</I>,  <I>qsh</I>,  <I>qrsh</I>,  <I>qlogin</I>,  <I>qalter</I>  and
-          <I>qresub</I>.
-
-          Does not submit a job but prints information on the job
-          as  being  represented  by the current command-line and
-          all pertinent external influences.
-
-     -V   Available for  <I>qsub</I>,  <I>qsh</I>,  <I>qrsh</I>,  <I>qlogin</I>,  <I>qalter</I>  and
-          <I>qresub</I>.
-
-          Specifies that all environment variables active  within
-          the <I>qsub</I> utility be exported to the context of the job.
-
-     -w e|w|n|v
-          Available for  <I>qsub</I>,  <I>qsh</I>,  <I>qrsh</I>,  <I>qlogin</I>,  <I>qalter</I>  and
-          <I>qresub</I>.
-
-          Specifies a validation level applied to the job  to  be
-          submitted  (<I>qsub</I>,  <I>qlogin</I>,  and  <I>qsh</I>)  or the specified
-          queued job (<I>qalter</I>).  The information  displayed  indi-
-          cates  whether the job possibly can be scheduled assum-
-          ing an  empty  system  with  no  other  jobs.  Resource
-          requests exceeding the configured maximal thresholds or
-          requesting unavailable resource attributes are possible
-          causes for jobs to fail this validation.
-
-          The specifiers e, w, n and v define the following vali-
-          dation modes:
-
-          `e'  error - jobs with invalid requests will be
-               rejected; the default for <I>qrsh</I>, <I>qsh</I>
-               and <I>qlogin</I>.
-          `w'  warning - only a warning will be displayed
-               for invalid requests.
-          `n'  none - switches off validation; the default for
-               <I>qsub</I> and <I>qalter</I>.
-          `v'  verify - does not submit the job but prints
-               extensive validation report.
-
-          Note, that the necessary checks are performance consum-
-          ing and hence the checking is switched off by default.
-
-          Note also, that the reasons for job requirements  being
-          invalid with respect to resource availability of queues
-          are displayed in the "-w v" case using  the  format  as
-          described  for  the <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> -F option (see description
-          of  Full  Format  in  section  OUTPUT  FORMATS  of  the
-          <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> manual page.
-
-     job/task_id_list
-          Specified by the following form:
-
-              <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][,<I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>],...]
-
-          If present, the <I>task</I>_<I>range</I> restricts the effect of  the
-          operation to the job array task range specified as suf-
-          fix to the job id (see the -t  option  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  for
-          further details on job arrays).
-
-          The task range specifier has the  form  n[-m[:s]].  The
-          range  may  be a single number, a  simple range  of the
-          form n-m or a range with a step size.
-
-          Instead of job/task_id_list it is possible to  use  the
-          keyword 'all' to modify all jobs of the current user.
-
-     scriptfile
-          Available for <I>qsub</I> only.
-
-          The job's scriptfile.  If not present or if the operand
-          is  the  single-character  string  '-',  <I>qsub</I> reads the
-          script from standard input.
-
-     script_args
+     -t n[-m[:s]]
           Available for <I>qsub</I> and <I>qalter</I> only.
 
-          Arguments to the  job.  Not  valid  if  the  script  is
-          entered from standard input.
+          Submits a so called <I>Array</I> <I>Job</I>, i.e. an array of identi-
+          cal  tasks being only differentiated by an index number
+          and being treated by Grid Engine almost like  a  series
+          of jobs. The option argument to -t specifies the number
+          of array job tasks and the index number which  will  be
+          associated  with  the  tasks. The index numbers will be
+          exported to the job tasks via the environment  variable
+          SGE_TASK_ID.
 
-          <I>Qalter</I> allows changing this option even while  the  job
-          executes. The modified parameter will only be in effect
-          after a restart or migration of the job, however.
+          Following restrictions apply to the values n and m:
 
-     xterm_args
-          Available for <I>qsh</I> only.
+               1 &lt;= n &lt;= MIN(2^31-1, max_aj_tasks)
+               1 &lt;= m &lt;= MIN(2^31-1, max_aj_tasks)
+               n &lt;= m
 
-          Arguments to the <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> executable, as defined in the
-          configuration.  For details, refer to <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
+          The task id range specified in the option argument  may
+          be a single number, a simple range of the form n-m or a
+          range with a step size. Hence, the task id range speci-
+          fied  by  2-10:2 would result in the task id indexes 2,
+          4, 6, 8, and 10, i.e. in a total of 5  tasks  identical
+          tasks  with  the  environment variable SGE_TASK_ID con-
+          taining one of the 5 index numbers each.
+          All array job tasks inherit the same resource  requests
+          and  attribute  definitions as specified in the <I>qsub</I> or
+          <I>qalter</I> command line, except  for  the  -t  option.  The
+          tasks  are scheduled independently and, provided enough
+          resources, concurrently very much like  separate  jobs.
+          However,  a  array  job  or  a sub-array thereof can be
+          accessed  as  a  total  by  commands  like  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>  or
+          <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.    See  the  corresponding  manual  pages  for
+          further detail.
+
+          Array jobs are commonly used to execute the  same  type
+          of operation on varying input data sets correlated with
+          the task index number. The number of tasks in  a  array
+          job is unlimited.
+
+          STDOUT and STDERR of array job tasks  will  be  written
+          into different files with the default location
+
+          &lt;jobname&gt;.['e'|'o']&lt;job_id&gt;'.'&lt;task_id&gt;
+
+          In order to change this default, the -e and -o  options
+          (see  above)  can  be  used  together  with  the pseudo
+          environment variables $HOME, $USER, $JOB_ID, $JOB_NAME,
+          $HOSTNAME, and $SGE_TASK_ID.
+
+          Note, that you can use the output redirection to divert
+          the  output  of  all  tasks into the same file, but the
+          result of this is undefined.
+
+          -u username,... | -uall
+               Available for <I>qalter</I> only. Changes are  only  made
+               on those jobs which were submitted by users speci-
+               fied in the list of usernames.  For managers it is
+               possible to use the qalter -uall command to modify
+               all jobs of all users.
+
+               If you use the -u or -uall switch it is  not  per-
+               mitted to specify an additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
+
+          -v variable[=value],...
+               Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qalter</I> and <I>qresub</I>.
+
+               Defines or redefines the environment variables  to
+               be  exported  to the execution context of the job.
+               If the -v option is present Grid Engine  will  add
+               the  environment variables defined as arguments to
+               the switch and, optionally,  values  of  specified
+               variables, to the execution context of the job.
+
+               <I>Qalter</I> allows changing this option even while  the
+               job  executes. The modified parameter will only be
+               in effect after a restart or migration of the job,
+               however.
+
+          -verbose
+               Available only for <I>qrsh</I> and <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>.
+
+               Unlike <I>qsh</I> and <I>qlogin</I>, <I>qrsh</I> does  not  output  any
+               informational messages while establishing the ses-
+               sion compliant with the standard <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>  and  <I>rlo-</I>
+               <B><A HREF="../htmlman1/gin.html">gin(1)</A></B>  system  calls.   If the option -verbose is
+               set, <I>qrsh</I> behaves as verbose as the <I>qsh</I> and <I>qlogin</I>
+               commands  and  outputs informations about the pro-
+               cess of establishing the <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> or <B><A HREF="../htmlman1/rlogin.html">rlogin(1)</A></B>  ses-
+               sion.
+
+          -verify
+               Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I>, <I>qalter</I>  and
+               <I>qresub</I>.
+
+               Does not submit a job but  prints  information  on
+               the  job  as  being  represented  by  the  current
+               command-line and  all  pertinent  external  influ-
+               ences.
+
+          -V   Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qalter</I> and <I>qresub</I>.
+
+               Specifies that all  environment  variables  active
+               within the <I>qsub</I> utility be exported to the context
+               of the job.
+
+          -w e|w|n|v
+               Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I>, <I>qalter</I>  and
+               <I>qresub</I>.
+
+               Specifies a validation level applied to the job to
+               be submitted (<I>qsub</I>, <I>qlogin</I>, and <I>qsh</I>) or the speci-
+               fied  queued  job   (<I>qalter</I>).    The   information
+               displayed  indicates  whether the job possibly can
+               be scheduled assuming  an  empty  system  with  no
+               other  jobs.  Resource requests exceeding the con-
+               figured maximal thresholds or requesting  unavail-
+               able  resource  attributes are possible causes for
+               jobs to fail this validation.
+
+               The specifiers e, w, n and v define the  following
+               validation modes:
+
+               `e'  error - jobs with invalid requests will be
+                    rejected; the default for <I>qrsh</I>, <I>qsh</I>
+                    and <I>qlogin</I>.
+               `w'  warning - only a warning will be displayed
+                    for invalid requests.
+               `n'  none - switches off validation; the default for
+                    <I>qsub</I> and <I>qalter</I>.
+               `v'  verify - does not submit the job but prints
+                    extensive validation report.
+
+               Note, that the necessary  checks  are  performance
+               consuming  and  hence the checking is switched off
+               by default.
+
+               Note also, that the reasons for  job  requirements
+               being  invalid with respect to resource availabil-
+               ity of queues are displayed in  the  "-w  v"  case
+               using  the format as described for the <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> -F
+               option (see description of Full Format in  section
+               OUTPUT FORMATS of the <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> manual page.
+
+          job/task_id_list
+               Specified by the following form:
+
+                   <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][,<I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>],...]
+
+               If present, the <I>task</I>_<I>range</I> restricts the effect of
+               the  operation  to the array job task range speci-
+               fied as suffix to the job id (see the -t option to
+               <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for further details on array jobs).
+
+               The task range specifier has the  form  n[-m[:s]].
+               The  range may be a single number, a  simple range
+               of the form n-m or a range with a step size.
+
+               Instead of job/task_id_list it is possible to  use
+               the  keyword  'all'  to  modify  all  jobs  of the
+               current user.
+
+          scriptfile
+               Available for <I>qsub</I> only.
+
+               The job's scriptfile.  If not present  or  if  the
+               operand  is  the single-character string '-', <I>qsub</I>
+               reads the script from standard input.
+
+          script_args
+               Available for <I>qsub</I> and <I>qalter</I> only.
+
+               Arguments to the job. Not valid if the  script  is
+               entered from standard input.
+
+               <I>Qalter</I> allows changing this option even while  the
+               job  executes. The modified parameter will only be
+               in effect after a restart or migration of the job,
+               however.
+
+          xterm_args
+               Available for <I>qsh</I> only.
+
+               Arguments to the <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> executable,  as  defined
+               in  the  configuration.   For  details,  refer  to
+               <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -1042,17 +1078,22 @@ ENVIRONMENTAL VARIABLES
                     use  a  services  map entry instead to define
                     that port.
 
-     COMMD_HOST     If set,  specifies  the  host  on  which  the
-                    particular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to be used for Grid
+     COMMD_HOST     If set, specifies the host on which the  par-
+                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
                     Engine communication of the <I>qsub</I>, <I>qsh</I>, <I>qlogin</I>
                     or  <I>qalter</I>  client  resides.  Per default the
                     local host is used.
 
+     DISPLAY        For <I>qsh</I> jobs the DISPLAY has to be  specified
+                    at job submission.  If the DISPLAY is not set
+                    by using the -display or the -v  switch,  the
+                    contents  of the DISPLAY environment variable
+                    are used as default.
+
      In addition to those environment variables specified  to  be
      exported  to the job via the -v or the -V option (see above)
-     <I>qsub</I>, <I>qsh</I>, and <I>qlogin</I> add the following variables  with  the
-     indicated values to the variable list:
-
+     <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, and <I>qlogin</I> add the following variables with
+     the indicated values to the variable list:
 
      SGE_O_HOME     the home directory of the submitting client.
 
@@ -1073,6 +1114,9 @@ ENVIRONMENTAL VARIABLES
 
      SGE_O_WORKDIR  the absolute  path  of  the  current  working
                     directory of the submitting client.
+
+     For tasks of a tightly integrated parallel  job,  submitting
+     client is the command submitting the task (qrsh -inherit).
 
      Furthermore, Grid Engine sets additional variables into  the
      job's environment, as listed below.
@@ -1114,12 +1158,12 @@ ENVIRONMENTAL VARIABLES
                     not open for read or write access to  regular
                     users.
 
-     SGE_TASK_ID    The index number of  the  current  job  array
+     SGE_TASK_ID    The index number of  the  current  array  job
                     task (see -t option above). This is an unique
-                    number in each job array and can be  used  to
+                    number in each array job and can be  used  to
                     reference  different  input data records, for
-                    example. This environment variable is not set
-                    for non-array jobs.
+                    example. This environment variable is set  to
+                    "undefined" for non-array jobs.
 
      ENVIRONMENT    The ENVIRONMENT variable is set to  BATCH  to
                     identify that the job is being executed under
@@ -1208,7 +1252,6 @@ RESTRICTIONS
 
      Insert the following test before any commands that  are  not
      pertinent to batch jobs in your .login:
-
           if ( $?JOB_NAME) then
                echo "Grid Engine spooled job"
                exit 0
@@ -1216,6 +1259,17 @@ RESTRICTIONS
 
      Don't forget to set your shell's search path in  your  shell
      start-up before this code.
+
+EXIT STATUS
+     The following exit values are returned:
+
+     0    Operation was executed successfully.
+
+     25   It was not possible to register a new job according  to
+          the configured <I>max</I>_<I>u</I>_<I>jobs</I> or <I>max</I>_<I>jobs</I> limit. Additional
+          information may be found in <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>
+
+     &gt;0   Error occured.
 
 EXAMPLES
      The following is the simplest form of a Grid  Engine  script
@@ -1250,7 +1304,6 @@ EXAMPLES
      # If I run on dec_x put stderr in /tmp/foo, if I
      # run on sun_y, put stderr in /usr/me/foo
      #$ -e dec_x:/tmp/foo,sun_y:/usr/me/foo
-
      # Send mail to these users
      #$ -M santa@heaven,claus@heaven
 
@@ -1303,7 +1356,6 @@ COPYRIGHT
      <I>See</I> <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> as well  as  the  information  provided  in
      &lt;sge_root&gt;/3rd_party/qrsh   and  &lt;sge_root&gt;/3rd_party/qlogin
      for a statement of further rights and permissions.
-
 
 
 

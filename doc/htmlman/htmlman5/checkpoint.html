@@ -77,8 +77,10 @@ FORMAT
           script is invoked in case of a restart instead.
 
   queue_list
-     A comma separated list of  queues  to  which  parallel  jobs
-     belonging to this parallel environment have access to.
+     A comma separated list of queues to which checkpointing jobs
+     belonging  to  this  checkpoint  environment have access to.
+     Alternatively the keyword "all" can be used to  give  access
+     to all queues across the cluster
 
   ckpt_command
      A command-line type command string to be  executed  by  Grid
@@ -103,10 +105,11 @@ FORMAT
      A file system location to which checkpoints  of  potentially
      considerable size should be stored.
 
+
   queue_list
      Contains a comma or blank  separated  list  of  queue  names
-     which   are   eligible   for  a  job  if  the  checkpointing
-     environment was specified at the submission of the job.
+     which  are  eligible for a job if the checkpointing environ-
+     ment was specified at the submission of the job.
 
   ckpt_signal
      A Unix signal to be sent to a job by Grid Engine to initiate
@@ -118,8 +121,8 @@ FORMAT
   when
      The points of time when checkpoints are expected to be  gen-
      erated.  Valid values for this parameter are composed by the
-     letters <I>s</I>, <I>m</I> and <I>x</I> and any combinations thereof without  any
-     separating  character  in  between.  The  same  letters  are
+     letters <I>s</I>, <I>m</I>, <I>x</I> and <I>r</I> and any combinations  thereof  without
+     any  separating  character  in between. The same letters are
      allowed for the -<I>c</I> option of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> command which  will
      overwrite the definitions in the used checkpointing environ-
      ment.  The meaning of the letters is defined as follows:
@@ -135,6 +138,12 @@ FORMAT
      <I>x</I>    A job is checkpointed, aborted and if possible migrated
           as  soon as the job gets suspended (manually as well as
           automatically).
+
+     <I>r</I>    A job will be rescheduled (not checkpointed)  when  the
+          host  on which the job currently runs went into unknown
+          state and the  time  interval  <I>reschedule</I>_<I>unknown</I>  (see
+          <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>) defined in the global/local cluster confi-
+          guration will be exceeded.
 
 RESTRICTIONS
      Note, that the functionality of any checkpointing, migration
@@ -157,6 +166,50 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </PRE>
 <HR>

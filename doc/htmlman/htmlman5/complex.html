@@ -34,11 +34,8 @@ DESCRIPTION
 
           qname
           hostname
-          priority
           notify
           calendar
-          max_migr_time
-          max_no_migr
           min_cpu_interval
           tmpdir
           seq_no
@@ -54,7 +51,6 @@ DESCRIPTION
           h_core
           s_rss
           h_rss
-
      The queue complex can be extended if further attributes  are
      intended  to  be available for each queue. The queue complex
      defines the characteristics (such as the data type)  of  the
@@ -210,12 +206,12 @@ FORMAT
      <B>o</B>  With STRING all strings are allowed and <B><A HREF="../htmlman3/strcmp.html">strcmp(3)</A></B> is used
         for comparisons.
 
-     <B>o</B>  CSTRING  is  like  STRING  except  comparisons  are  case
-        insensitive.
+     <B>o</B>  CSTRING is like STRING except comparisons are case insen-
+        sitive.
 
+     <B>o</B>  HOST is like CSTRING but  the  string  must  be  a  valid
+        hostname.
 
-     <B>o</B>  HOST is like CSTRING but the string must be a valid host-
-        name.
 
   value
      The value field is a pre-defined value setting for an attri-
@@ -314,7 +310,6 @@ FORMAT
      attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> override this default
      value.
 
-
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>,
      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
@@ -323,6 +318,11 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
 
 
 

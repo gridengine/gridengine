@@ -35,7 +35,9 @@ FORMAT
 
   queue_list
      A comma separated list of  queues  to  which  parallel  jobs
-     belonging to this parallel environment have access to.
+     belonging  to  this  parallel  environment  have  access to.
+     Alternatively the keyword "all" can be used to  give  access
+     to all queues across the cluster.
 
   slots
      The number of parallel processes being  allowed  to  run  in
@@ -74,7 +76,21 @@ FORMAT
      with <I>REQNAME</I> being the name  of  the  job  as  displayed  by
      <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  and  <I>JID</I>  being  the  job's identification number.
      Likewise,  the  standard  error  output  is  redirected   to
-     <I>REQNAME</I>.pe<I>JID</I>
+     <I>REQNAME</I>.pe<I>JID</I>.
+
+     If the location of the stdout and  stderr  output  has  been
+     redirected  with the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -o/-e flags the following rules
+     apply for the name of the  output  files  of  the  -PE  pro-
+     cedures:
+
+     If the basename of the stdout/stderr file  is  a  directory,
+     the  PE output files are created with their default names in
+     that directory.
+
+     If the  basename of the stdout/stderr file is a plain  file,
+     the  PE output files are joined with the stdout/stderr files
+     of the job.
+
      The following special variables being  expanded  at  runtime
      can  be  used  (besides  any  other strings which have to be
      interpreted by the start and stop procedures) to  constitute
@@ -141,9 +157,9 @@ FORMAT
      parallel environment is built for shared memory applications
      only, all parallel processes have to be assigned to a single
      machine, no matter how much suitable machines are available.
-     If, however, the parallel environment  follows  the  distri-
-     buted  memory  paradigm,  an  even distribution of processes
-     among machines may be favorable.
+     If,  however,   the   parallel   environment   follows   the
+     distributed   memory   paradigm,  an  even  distribution  of
+     processes among machines may be favorable.
      The current version of the scheduler  only  understands  the
      following allocation rules:
 
@@ -194,7 +210,6 @@ FORMAT
      is required closely coupling the  parallel  environment  and
      Grid  Engine.  The documentation accompanying such PE inter-
      faces will recommend the setting for job_is_first_task.
-
      The job_is_first_task parameter can be set to TRUE or FALSE.
      A  value  of  TRUE indicates that the Grid Engine job script
      already contains one of the tasks of the  parallel  applica-
@@ -220,21 +235,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

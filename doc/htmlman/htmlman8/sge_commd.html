@@ -39,10 +39,13 @@ OPTIONS
      -a aliasfile
           A file containing Grid Engine host aliases used by  the
           <I>sge</I>_<I>commd</I>  to  resolve Grid Engine unique hostnames for
-          all hosts in the cluster. The hostname  resolving  ser-
-          vice of <I>sge</I>_<I>commd</I> is also used by all other Grid Engine
-          components.  The file format and the implication of its
-          usage are described in <B><A HREF="../htmlman5/sge_h_aliases.html">sge_h_aliases(5)</A></B>.
+          all hosts in the cluster. Overrides the  usage  of  the
+          default         host_aliases         file         under
+          &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>host</I>_<I>aliases</I>.   The   hostname
+          resolving  service  of  <I>sge</I>_<I>commd</I>  is  also used by all
+          other Grid Engine components.  The file format and  the
+          implication    of    its   usage   are   described   in
+          <B><A HREF="../htmlman5/sge_h_aliases.html">sge_h_aliases(5)</A></B>.
 
      -dhr The hostname resolving  C-library  functions  (such  as
           <B><A HREF="../htmlman3/gethostent.html">gethostent(3)</A></B>,  <B><A HREF="../htmlman3/gethostbyname.html">gethostbyname(3)</A></B>  and <B><A HREF="../htmlman3/gethostbyaddr.html">gethostbyaddr(3)</A></B>)
@@ -78,6 +81,9 @@ OPTIONS
           must  be  present, otherwise the tracing output is dis-
           carded. At present,  255  is  the  only  valid  logging
           level.
+
+     -ml fname
+          Enables message logging to file.
 
      -nd  Do not daemonize. If started with -nd, <I>sge</I>_<I>commd</I>  main-
           tains  its  connection  to the controlling terminal and
@@ -124,12 +130,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
 
 
 

@@ -15,10 +15,54 @@ DESCRIPTION
      mat description. New access lists can be created and  exist-
      ing can be modified via the -au and -du options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
+     Grid Engine Enterprise Edition  departments  are  a  special
+     form  of  access  list  and  allow in addition assignment of
+     functional shares and override tickets.
+
 FORMAT
-     Each user or UNIX user group appears in a single lines. Only
-     symbolic names are allowed. A group is differentiated from a
-     user name by prefixing the group name with a '@' sign.
+     The following list of <I>access</I>_<I>list</I> parameters  specifies  the
+     <I>access</I>_<I>list</I> content:
+
+  name
+     The name of the access list.
+
+  type
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The type of the acess list, currently  one  of <I>ACL</I>, or  <I>DEPT</I>
+     or a  combination of both in a comma separated list. Depend-
+     ing on this parameter the access list can be used as  access
+     list only or as a department.
+
+  oticket
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The amount of override tickets  currently  assigned  to  the
+     department.
+
+  fshare
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The current functional share of the department.
+
+  entries
+     The entries parameter contains the comma separated  list  of
+     those  UNIX  users  or UNIX user groups that are assigned to
+     the access  list  or  the  Grid  Engine  Enterprise  Edition
+     department.  Only  symbolic  names  are allowed.  A group is
+     differentiated from a user name by prefixing the group  name
+     with a '@' sign. Pure access lists allows enlisting any user
+     or group in any access list.
+
+     With Grid Engine Enterprise Edition departments each user or
+     group  enlisted  may  be enlisted in only one department, to
+     ensure a unique assignment of jobs to departments.  To  jobs
+     whose  users  do  not  match with any of the users or groups
+     enlisted under entries the <I>defaultdepartment</I> is assigned, if
+     existing.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
@@ -26,6 +70,14 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
 
 
 

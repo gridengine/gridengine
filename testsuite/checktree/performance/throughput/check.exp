@@ -38,10 +38,22 @@ global check_init_level_procedure check_category
 set check_init_level_procedure "init_level"
 set check_category            "PERFORMANCE VERIFIED"
 set check_name                "throughput"
-set check_description(0)      "Functional test"
-set check_description(1)      "Functional test with sharetree (only sgeee)"
-set check_description(100)    "test"
-set check_description(101)    "with sharetree (only sgeee)"
+set check_description(0)      "Functional test, submit 100 jobs with enabled queues"
+set check_description(1)      "Functional test, submit 100 jobs with disabled queues"
+set check_description(2)      "Functional test, submit 50 of 100 jobs with disabled queues"
+set check_description(3)      "Functional test with sharetree, 100 jobs"
+set check_description(100)    "submit 3000 jobs with enabled queues"
+set check_description(101)    "submit 3000 jobs with disabled queues"
+set check_description(102)    "submit 1500 of 3000 jobs with disabled queues"
+set check_description(103)    "with sharetree, 3000 jobs"
+set check_description(200)    "submit 30000 jobs with enabled queues"
+set check_description(201)    "submit 30000 jobs with disabled queues"
+set check_description(202)    "submit 15000 of 30000 jobs with disabled queues"
+set check_description(203)    "with sharetree, 30000 jobs"
+set check_description(300)    "submit 300000 jobs with enabled queues"
+set check_description(301)    "submit 300000 jobs with disabled queues"
+set check_description(302)    "submit 150000 of 300000 jobs with disabled queues"
+set check_description(303)    "with sharetree, 300000 jobs"
 
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 
@@ -51,14 +63,13 @@ lappend check_functions       "run_throughput_test"
 lappend check_functions       "cleanup_queues"
 #set check_functions          "compare_dump_data_file"
 
-set check_highest_level       101
+set check_highest_level       303
 
 global nr_queues  nr_slots
 global queue_list
 global host_list
 global enable_queues_job_count 
 global end_job_count
-global event_client_bin
 global global_job_run_time
 global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
 global throughput_subdir
@@ -66,79 +77,108 @@ global throughput_sharetree
 
 set queue_list ""
 set host_list ""
-set event_client_bin ""
 set throughput_subdir ""
 
 proc init_level {} {
-    global CHECK_ACT_LEVEL CHECK_PRODUCT_TYPE
-    global end_job_count                      ;# number of jobs
-    global enable_queues_job_count             ;# after with job, enable queues
-    global nr_queues                            ;# nr of queues on each host
-    global nr_slots                            ;# nr of slots on each queue
-    global global_job_run_time                  ;# job sleep parameter
-    global FLUSH_SUBMIT_SEC                    ;# -1 or 0,1,2,3 ...
-    global FLUSH_FINISH_SEC                    ;# -1 or 0,1,2,3 ...
-    global run_throughput_test_SCHEDULE_INTERVAL             ;# 00:00:30 ...
-    global throughput_subdir             ;# subdirectory in protocols/throughput/
-    global throughput_sharetree
-
+   global ts_config
+   global CHECK_ACT_LEVEL CHECK_PRODUCT_TYPE
+   global end_job_count                      ;# number of jobs
+   global enable_queues_job_count             ;# after with job, enable queues
+   global nr_queues                            ;# nr of queues on each host
+   global nr_slots                            ;# nr of slots on each queue
+   global global_job_run_time                  ;# job sleep parameter
+   global FLUSH_SUBMIT_SEC                    ;# -1 or 0,1,2,3 ...
+   global FLUSH_FINISH_SEC                    ;# -1 or 0,1,2,3 ...
+   global run_throughput_test_SCHEDULE_INTERVAL             ;# 00:00:30 ...
+   global throughput_subdir             ;# subdirectory in protocols/throughput/
+   global throughput_sharetree
+   global host_list
 
     # paramters for all tests
-    set run_throughput_test_SCHEDULE_INTERVAL        00:00:15
-    set global_job_run_time      5            ;# job sleep parameter
-    set nr_queues                10            ;# nr of queues on each host
-    set nr_slots                 5           ;# nr of slots on each queue
-    set enable_queues_job_count  0         ;# after witch job, enable queues
+   set run_throughput_test_SCHEDULE_INTERVAL        00:00:15
+   set global_job_run_time      5            ;# job sleep parameter
+   set nr_queues                10            ;# nr of queues on each host
+   set nr_slots                 5           ;# nr of slots on each queue
+   set enable_queues_job_count  0         ;# after witch job, enable queues
+   set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
+   set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
 
-    # TODO setup levels 
-  switch -- $CHECK_ACT_LEVEL {
-     "0"  { 
-        set end_job_count            100         ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
-        set throughput_sharetree     0
-        set throughput_subdir        "functional"
-        return 0
-     }
-     "1"  { 
-        set end_job_count            100         ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1           ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1           ;# -1 or 0,1,2,3 ...
-        set throughput_sharetree     1
-        set throughput_subdir        "functional_sharetree"
-        if { $CHECK_PRODUCT_TYPE == "sge" } {
-           return -1
-        } 
-        return 0  
-     }
-     "100"  { 
-        set end_job_count            3000          ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  1500         ;# after witch job, enable queues
-        set throughput_sharetree     0
-        set throughput_subdir        "functional"
-        return 0  
-     }
-     "101"  { 
-        set end_job_count            3000         ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1           ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1           ;# -1 or 0,1,2,3 ...
-        set enable_queues_job_count  1500         ;# after witch job, enable queues
+   # host_list for all levels
+   set host_list {}
+   foreach host $ts_config(execd_hosts) {
+      if { [string compare $host $ts_config(master_host)] != 0 } { 
+         lappend host_list $host
+      }
+   }
 
-        set throughput_sharetree     1
-        set throughput_subdir        "functional_sharetree"
-        if { $CHECK_PRODUCT_TYPE == "sge" } {
-           return -1
-        } 
-        return 0  
-     }
-  }
-  return -1
+   # setup levels
+   set major_level [expr $CHECK_ACT_LEVEL / 100]
+   set minor_level [expr $CHECK_ACT_LEVEL % 100]
+  
+   switch -- $major_level {
+      "0" {
+         set job_count 90
+      }
+      "1" {
+         set job_count 3000
+      }
+      "2" {
+         set job_count 30000
+      }
+      "3" {
+         set job_count 300000
+      }
+      default {
+         return -1
+      }
+   }
+
+   switch -- $minor_level {
+      "0" {
+         # enable queues after all jobs have been submitted
+         set end_job_count            $job_count
+         set enable_queues_job_count  $job_count
+         set throughput_sharetree     0
+         set throughput_subdir        "disabled"
+         return 0
+      }
+      "1" {
+         # have queues enabled during whole submit process
+         set end_job_count            $job_count
+         set enable_queues_job_count  0
+         set throughput_sharetree     0
+         set throughput_subdir        "enabled"
+         return 0
+      }
+      "2" {
+         # enable queues after half of the jobs have been submitted
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set throughput_sharetree     0
+         set throughput_subdir        "mixed"
+         return 0
+      }
+      "3" {
+         # test with sharetree, enable queues after all jobs have been submitted
+         if { $CHECK_PRODUCT_TYPE == "sge" } {
+            return -1
+         } 
+         set end_job_count            $job_count
+         set enable_queues_job_count  $job_count
+         set throughput_sharetree     1
+         set throughput_subdir        "sharetree"
+         return 0
+      }
+      default {
+         return -1
+      }
+   }
+
+   return -1
 }
 
 proc throughput_set_share_tree {} {
-
+   global ts_config
    global CHECK_HOST CHECK_OUTPUT
 
    set s_tree ""  
@@ -176,13 +216,11 @@ proc throughput_set_share_tree {} {
 }
 
 proc throughput_setup_sharetree {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_HOST ts_config
+   global CHECK_HOST
 
    puts $CHECK_OUTPUT "setup sharetree ..."
-
-   
-
 
    puts $CHECK_OUTPUT "   adding projects ..."
    set prj_setup(name) "project1"
@@ -194,8 +232,7 @@ proc throughput_setup_sharetree {} {
    set prj_setup(name) "project3"
    add_prj prj_setup
 
-   # setup sharetree
-   
+   # vi commands
    set vi_commands "i" 
    set s_tree [throughput_set_share_tree]
    foreach elem $s_tree {
@@ -203,8 +240,8 @@ proc throughput_setup_sharetree {} {
    } 
    lappend vi_commands [format "%c" 27]
    lappend  vi_commands "dddddddddddd"
-   
-
+  
+   # delete a possibly existing sharetree
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
    } result ] 
@@ -212,11 +249,13 @@ proc throughput_setup_sharetree {} {
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
 
+   # create new sharetree
    set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astree" $vi_commands $CHANGED_SHARETREE $CAN_T_READ ]  
    if { $result != 0 } {
       add_proc_error "throughput_setup_sharetree" -1 "could not add sharetree (error: $result)"
    }
 
+   # setup policy weighting for sharetree
    get_schedd_config my_config 
 
    if { $ts_config(gridengine_version) == 53 } {
@@ -230,14 +269,17 @@ proc throughput_setup_sharetree {} {
    set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
    set my_config(job_load_adjustments) "none"
    set_schedd_config my_config
-
 }
 proc throughput_cleanup_sharetree {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
 
    puts $CHECK_OUTPUT "cleanup sharetree ..."
+
+   # reset scheduler config
    reset_schedd_config
 
+   # delete sharetree
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
    } result ]
@@ -245,47 +287,34 @@ proc throughput_cleanup_sharetree {} {
    puts "qconf -dstree result: $result"
    puts "qconf -dstree exit value: $catch_return "
 
-
+   # remove projects
    puts $CHECK_OUTPUT "   removing projects ..."
    del_prj "project1"
    del_prj "project2"
    del_prj "project3"
-
-
 }
 
 proc setup_queues {} {
    global ts_config
-   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
-   global CHECK_HOST event_client_bin CHECK_SOURCE_DIR
+   global CHECK_OUTPUT
+   global CHECK_HOST CHECK_SOURCE_DIR
    global nr_queues queue_list host_list  nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    global throughput_sharetree
 
-
-   if { [llength $CHECK_CORE_EXECD] <= 1 } {
+   if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
 
-   # start event client (if compiled)
-   set up_arch [resolve_build_arch $CHECK_HOST]
-   set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
-   if { [file isfile $event_client_bin] != 1 } {
-      set_error -3 "could not open event client binary: $event_client_bin"
-      return -3
-   }
-   puts $CHECK_OUTPUT "using event client: $event_client_bin"
-
-   
-
-   # setup scheduler configuration
+   # setup global configuration
    if { [info exists stored_configuration] } {
       unset stored_configuration
    }
    get_config stored_configuration
-      set myconfig(loglevel)         "log_warning"
+   set myconfig(loglevel)         "log_warning"
 
+   # setup scheduler configuration
    set my_schedd_params "PROFILE=1"
 
    if { $ts_config(gridengine_version) == 53 } {
@@ -311,9 +340,8 @@ proc setup_queues {} {
       }
       set my_schedd_config(load_adjustment_decay_time) "0:0:0"
       set my_schedd_config(job_load_adjustments) "none"
-#      set my_schedd_config(report_pjob_tickets) "false"
    } 
-   
+  
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
    if { [string compare "none" $stored_configuration(execd_params)] != 0 } {
       append my_execd_params ",$stored_configuration(execd_params)"
@@ -323,23 +351,18 @@ proc setup_queues {} {
    set_config myconfig
  
    # disable all default queues and create host_list:
-   set host_list ""
-   foreach host $CHECK_CORE_EXECD {
-      disable_queue [get_queue_instance "all.q" $host]
-      if { [string compare $host $CHECK_CORE_MASTER] == 0 } { 
-         continue;
-      }
-      lappend host_list $host
+   set queue_list {}
+   foreach host $ts_config(execd_hosts) {
+      lappend queue_list [get_queue_instance "all.q" $host]
    }
+   disable_queue $queue_list
 
    set max_u_jobs_parameter [expr ( [llength $host_list] * $nr_queues  * $nr_slots )]
-
    set my_schedd_config(schedule_interval)    "$run_throughput_test_SCHEDULE_INTERVAL"
    set my_schedd_config(job_load_adjustments) "none"
    set my_schedd_config(schedd_job_info)      "false"
    set my_schedd_config(maxujobs)             $max_u_jobs_parameter 
    set_schedd_config my_schedd_config
-
 
    # now setup submit queues for hosts in host_list:
    # set queue_list:
@@ -366,8 +389,7 @@ proc setup_queues {} {
    set change_array(qtype) INTERACTIVE
    add_queue interactive "@allhosts" change_array 1
    
-   # show queue list:
-   puts $CHECK_OUTPUT "using [llength $queue_list] queues to submit jobs"
+   puts $CHECK_OUTPUT "using [llength $host_list] hosts to submit jobs"
 
    if { $throughput_sharetree == 1 } {
       throughput_setup_sharetree
@@ -377,34 +399,28 @@ proc setup_queues {} {
 }
 
 proc cleanup_queues {} {
-   global CHECK_CORE_EXECD  CHECK_OUTPUT
-   global host_list queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
+   global ts_config
+   global CHECK_OUTPUT
+   global host_list queue_list CHECK_ARCH  CHECK_PRODUCT_ROOT
    global stored_configuration throughput_sharetree nr_queues
 
-   if { [llength $CHECK_CORE_EXECD] <= 1 } {
+   if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
 
-   if { [file isfile $event_client_bin] != 1 } {
-      set_error -3 "could not open event client binary: $event_client_bin"
-      return -3
-   }
-
-   
+   # delete all jobs
    set catch_result [delete_all_jobs]
-
 
    # after this we can cleanup the system (no jobs registered at qmaster)
    wait_for_end_of_all_jobs 120
 
-
+   # remove sharetree
    if { $throughput_sharetree == 1 } {
       throughput_cleanup_sharetree
    }
 
-
-   # reset scheduler configurations
+   # reset configurations
    reset_schedd_config
    set_config stored_configuration
 
@@ -415,16 +431,19 @@ proc cleanup_queues {} {
    }
 
    puts $CHECK_OUTPUT "enabling default queues"
-   foreach host $CHECK_CORE_EXECD {
-      puts $CHECK_OUTPUT $host
-      enable_queue [get_queue_instance "all.q" $host]
+   set queue_list {}
+   foreach host $ts_config(execd_hosts) {
+      lappend queue_list [get_queue_instance "all.q" $host]
    }
+   enable_queue $queue_list
 
    del_queue interactive "@allhosts" 0 1
    
    set_error 0 "ok"
 }
+
 proc get_event_client_time { string  } {
+   global ts_config
    set ecl_time_start [string first "(" $string]
    incr ecl_time_start 1
    set ecl_time_end [string first ")" $string]
@@ -442,37 +461,30 @@ proc get_event_client_time { string  } {
 }
 
 proc run_throughput_test {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
-   global enable_queues_job_count CHECK_SOURCE_DIR CHECK_CORE_EXECD
-   global end_job_count host_list event_client_bin CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global throughput_sharetree ts_config
+   global enable_queues_job_count CHECK_SOURCE_DIR 
+   global end_job_count host_list CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global throughput_sharetree
+   global global_job_run_time
 
-   if { [llength $CHECK_CORE_EXECD] <= 1 } {
+   if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
 
+   # prepare results array
+   clean_current_system_status results_list result job_data schedd_data
+
+   # evaluate path to qevent binary
+   set up_arch [resolve_build_arch $CHECK_HOST]
+   set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
       return -3
    }
-
-
-
-   # translate jobs submit output string
-
-   #   old MSG_JOB_SUBMITJOB_USS, new MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS
-   if { $ts_config(gridengine_version) == 60 } {
-      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-   } else {
-      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-   }
-   set COULD_NOT_SUBMIT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER]]
-
-#   puts $CHECK_OUTPUT "JOB_SUBMITTED=\"{$JOB_SUBMITTED}\""
+   puts $CHECK_OUTPUT "using event client: $event_client_bin"
 
    # start event client (if compiled) 
    set event_client_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con2" $event_client_bin ""]
@@ -505,7 +517,7 @@ proc run_throughput_test {} {
             set is_old_version 0
             break;
          }
-       }
+      }
    }
 
    if { $is_old_version == 0 } {
@@ -517,131 +529,114 @@ proc run_throughput_test {} {
    }
 
    # open scheduler messages file
+   puts $CHECK_OUTPUT "opening scheduler messages file (tail)"
    set schedd_messages_file [check_schedd_messages 2]
    set schedd_messages_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con" "tail" "-f $schedd_messages_file"]
    set schedd_messages_id [lindex $schedd_messages_sid 1]
 
    # disable queues if enable_queues_job_count is set
-   set are_enabled 1
    if { $enable_queues_job_count > 0 } {
-      foreach queue $queue_list {
-         disable_queue $queue
-         set are_enabled 0
-      }
+      set are_enabled 0
+      puts $CHECK_OUTPUT "disabling all queues"
+      disable_queue $queue_list
+   } else {
+      set are_enabled 1
    }
    
-   # prepare results array
-   clean_current_system_status results_list result job_data schedd_data
-
    # prepare job arguments 
-   set my_job "\$SGE_ROOT/examples/jobs/sleeper.sh"
+   set my_job "$ts_config(product_root)/examples/jobs/sleeper.sh"
 
    # open shell on each execd host, used for submitting jobs
    set spawn_list ""
    set remote_spawn_list ""
-   
 
-   set tries 0
-   set con_error 1
-   while { $tries < 3 && $con_error > 0} {
-      set con_error 0
-      foreach host $host_list {
-         puts $CHECK_OUTPUT "start remote call on host $host"
-         set output [start_remote_prog $host $CHECK_USER "id" ""]
-         puts $CHECK_OUTPUT $output
-         if { $prg_exit_state != 0 } {
-            incr con_error 1
-         }
-      }
-      incr tries 1
-   }
-
-   if { $con_error != 0 } {
-      set_error -1 "could not enable connection to host $host"
-      return -1
-   }
-
-   # connections are buffered, so the connection are already open !!!
+   # start submitter (expect script)
    foreach host $host_list {
-      puts $CHECK_OUTPUT "open connection to host $host"
-      set id [ open_remote_spawn_process $host $CHECK_USER "/bin/sh" "" ]
+      set expect_bin [get_binary_path $host "expect"]
+      puts $CHECK_OUTPUT "starting submitter process on host $host"
+      set id [ open_remote_spawn_process $host $CHECK_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/submitter.tcl $ts_config(product_root) $host" ]
       lappend spawn_list [ lindex $id 1 ]
       lappend remote_spawn_list $id
    }
    
-   # wait for _start_mark_ response from each execd host, used for submitting jobs
    set timeout 60
-   set ok 0
-   set next_submit_list ""
-   set sent_jobs 0
-   set sent_job_ids ""
-   set schedd_nr 0
-   set ids_received 0
-   set ids_spawn_list ""
-   set active_spawn_ids ""
+   set error 0
+   set num_submitters 0
+   set next_submitter_list {}
 
    set my_timeout [ expr ( [timestamp] + 300 ) ]
-   while { $ok != [llength $host_list] || $ids_received != [llength $host_list] } {
-      
-      foreach elem $active_spawn_ids {
-         puts $CHECK_OUTPUT "sending id request to spawn id $elem"
-         send -i $elem "id\n"
-      }
+   set submit_options "-o /dev/null -j y"
+   set submit_script "$ts_config(product_root)/examples/jobs/sleeper.sh $global_job_run_time"
 
-      expect {
+   # wait for startup message from each submitter, used for submitting jobs
+   # then set options
+   # then set script file
+   # if everything succeeded, accept this submitter
+   log_user 0
+   while { $num_submitters < [llength $host_list] } {
+      expect_user {
          -i $spawn_list full_buffer {
+            set error 1
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (1)"
          }
          -i $spawn_list timeout {
-            set_error -1 "timeout while waiting for remote shell"
-            return -1
+            set error 1
+            add_proc_error "run_throughput_test" -1 "timeout while waiting for remote shell"
          }
          -i $spawn_list eof {
             set spawn_id $expect_out(spawn_id)
             set host_nr [lsearch $spawn_list $spawn_id]
             set host_name [lindex $host_list $host_nr]
+            set error 1
             add_proc_error "run_throughput_test" -1 "got eof from host $host_name\n$expect_out(0,string)"
          }
-         -i $spawn_list "_start_mark_:(0)" {
+         -i $spawn_list -- "*\n" {
             set spawn_id $expect_out(spawn_id)
             set host_nr [lsearch $spawn_list $spawn_id]
             set host_name [lindex $host_list $host_nr]
-            incr ok 1
-            lappend active_spawn_ids $spawn_id
-            puts $CHECK_OUTPUT "testing spawn id $spawn_id"
-            # here the host is added to the next submit list
-            lappend next_submit_list $host_name
-         }
-         -i $spawn_list "uid=*$CHECK_USER" {
-            set spawn_id $expect_out(spawn_id)
-            puts $CHECK_OUTPUT "got id from spawn id: $spawn_id"
-            if { [lsearch $ids_spawn_list $spawn_id] < 0 } {
-               lappend  ids_spawn_list $spawn_id
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               puts $CHECK_OUTPUT $line
+               switch -glob -- $line {
+                  "SUBMITTER*" {
+                     puts $CHECK_OUTPUT "submitter started on host $host_name"
+                     puts $CHECK_OUTPUT "setting options for submitter on host $host_name: $submit_options"
+                     send -i $spawn_id "OPTIONS $submit_options\n"
+                  }
+                  "OPTIONS OK*" {
+                     puts $CHECK_OUTPUT "setting submit script for submitter on host $host_name: $submit_script"
+                     send -i $spawn_id "SCRIPT $submit_script\n"
+                  }
+                  "SCRIPT OK*" {
+                     incr num_submitters 1
+                     lappend next_submitter_list $host_name
+                     puts $CHECK_OUTPUT "submitter ready to submit on host $host_name"
+                  }
+                  "ERROR:*" {
+                     set error 1
+                     add_proc_error "run_throughput_test" -1 "got error from host $host_name: $line"
+                  }
+               }
             }
-            set help [lsearch $active_spawn_ids $spawn_id]
-            if { $help >= 0 } {
-               puts $CHECK_OUTPUT "found spawn id on pos $help"
-               set active_spawn_ids [lreplace $active_spawn_ids $help $help]
-            }
          }
-       }
-       if {  [timestamp] > $my_timeout  } {
+      }
+
+      # Wait a maximum time for all submitters to respond.
+      # After this time, give up.
+      # In case of errors, give up.
+      if { $error || [timestamp] > $my_timeout  } {
           foreach elem $remote_spawn_list {
              close_spawn_process $elem
           }
-          set_error -1 "timeout - could not enable all host connections"
+          set_error -1 "could not enable all host connections"
           return -1
        }
-       set ids_received [llength $ids_spawn_list]
-       sleep 1
    }
 
-   sleep 5
    # variables set not in main loop for speed reasons
    set event_and_msg_id_list $event_client_id
    lappend event_and_msg_id_list $schedd_messages_id
-   set timeout 120
-
 
    # job list where job start event was faster than submit
    set job_buffer_data_index 0
@@ -650,329 +645,258 @@ proc run_throughput_test {} {
    set resend_buffer ""
    set last_job_id 0
 
-   set max_submit_output_lines 40
    set current_output_line 0
 
-   set my_submitted_jobs 0
-   set max_jobs_per_loop [llength $host_list]
    foreach host $host_list {
       set host_submit_count($host) 0
    }
 
+   set sent_jobs 0
+   set schedd_nr 0
+   set resend_list {}
+
+   set timeout 120
+
    # here the throughput test starts
-   while { $result(jobs_done) < $end_job_count } {
-#       puts $CHECK_OUTPUT "submitted jobs: $my_submitted_jobs (of $max_jobs_per_loop)"
-       # submit jobs (via expect chanels)
-       if { $sent_jobs < $end_job_count && $my_submitted_jobs < $max_jobs_per_loop } {
-           if { [llength $resend_buffer] == 0 } {
-              # get first host in next_submit_list hand submit job on that host
-              set sub_host   [lindex $next_submit_list 0 ]       
-              set host_index [lsearch $host_list $sub_host]
-              if { $host_index >= 0 && $host_submit_count($sub_host) == 0 } {
-                 set spawn_id [lindex $spawn_list $host_index]
-                 set next_submit_list [lrange $next_submit_list 1 end]
+   set error 0
+   log_user 0
+   while { ! $error && $result(jobs_done) < $end_job_count } {
+      # submit jobs as long as we have submitters ready and jobs to send
+      while { [llength $next_submitter_list] > 0 && \
+              ([llength $resend_list] > 0 || $sent_jobs < $end_job_count) } {
+         # get first host in next_submitter_list and submit job on that host
+         set sub_host   [lindex $next_submitter_list 0 ]       
+         set next_submitter_list [lrange $next_submitter_list 1 end]
 
-                 if { $throughput_sharetree == 1 } {
-                    set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
-                    set my_job_command "qsub -o /dev/null -e /dev/null -P project${numb} $my_job $result(job_run_time)"
-                    #set job_data($sent_jobs,project) $numb
-                 } else { 
-                    set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
-                 }
-#                 puts $CHECK_OUTPUT $my_job_command
-                 send -i $spawn_id "$my_job_command ; echo \"_:>${my_job_command}<:_>>\"\$?\"<<\"\n"
-                 incr my_submitted_jobs 1
-                 set job_data($sent_jobs,state) "submit"
-   #              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
-                 set job_data($sent_jobs,job_id) "-"
-                 set job_data($sent_jobs,submit_start_time) [timestamp]
-                 set job_data($sent_jobs,submit_end_time) 0
-                 set job_data($sent_jobs,run_start_time) 0
-                 set job_data($sent_jobs,run_end_time) 0
-                 incr sent_jobs 1
-                 set host_submit_count($sub_host) 1
-#                 puts $CHECK_OUTPUT "submitted job from host $sub_host, expect id: $spawn_id"
-              }
-           } else {
-              # resend job
-              set resend_spawn_id [lindex $resend_buffer 0]
-              set resend_command [lindex $resend_buffer 1 ]
+         set host_index [lsearch $host_list $sub_host]
 
-              puts $CHECK_OUTPUT "resending of command to spawn id $resend_spawn_id ..."
-              puts $CHECK_OUTPUT $resend_command
-             
-              send -i $resend_spawn_id "$resend_command ; echo \"_:>${resend_command}<:_>>\"\$?\"<<\"\n"
-              set resend_buffer [lreplace $resend_buffer 0 1]
-           }
-       } else {
-           # maybe we lost a job ??? through expect ??? or due to an error ???
-           if { $result(jobs_done) !=  $end_job_count } {
+         # if we have an invalid submit host, skip it
+         if { $host_index < 0 } {
+            continue
+         }
 
-           }
-       }
-       # enable queues when $enable_queues_job_count is reached
-       if { $are_enabled != 1 } {
-          if { $result(jobs_submitted) >= $enable_queues_job_count } {
-             set are_enabled 1
-             foreach queue $queue_list {
-                enable_queue $queue
-             }
-          }
-       }
+         # build submit command     
+         # if we don't have to resend an old job, send new job
+         if { [llength $resend_list] > 0 } {
+            set next_submit_command [lindex $resend_list 0]
+            set resend_list [lrange $resend_list 1 end]
+            # submit command has form <send_id> <command>, parse it
+            set send_id [lindex $next_submit_command 0]
+            set next_submit_command [lindex $next_submit_command 1 end]
+         } else {
+            if { $throughput_sharetree == 1 } {
+               set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
+               set next_submit_command "SUBMIT 1 -P project${numb}"
+            } else { 
+               set next_submit_command "SUBMIT 1"
+            }
+            set send_id $sent_jobs
+            incr sent_jobs
+         }
 
-       # wait for job submit success for all execd hosts and event client reports
-       expect {
+         # remember submit command; in case of errors, we have to resend it
+         set sent_commands($sub_host) "$send_id $next_submit_command"
+
+         # send submit command
+         set spawn_id [lindex $spawn_list $host_index]
+         send -i $spawn_id "$next_submit_command\n"
+
+         # store info about sent job
+         set job_data($send_id,state) "submit"
+         set job_data($send_id,job_id) "-"
+         set job_data($send_id,submit_start_time) [timestamp]
+         set job_data($send_id,submit_end_time) 0
+         set job_data($send_id,run_start_time) 0
+         set job_data($send_id,run_end_time) 0
+
+         # some statistics
+         incr host_submit_count($sub_host)
+      }
+
+      # wait for job submit success for all execd hosts and event client reports
+      # in case of errors, we stop the test
+      expect_user {
          -i $spawn_list full_buffer {
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (2)"
-            return -1
+            set error 1
          }
          -i $spawn_list timeout {
             puts $CHECK_OUTPUT "---->>>>>>>>> got timeout while waiting for submitted jobs"
             add_proc_error "run_throughput_test" -1 "got timeout while waiting for submitted jobs"
-            # not all jobs are submitted ????
-            return -1
+            set error 1
          }
          -i $spawn_list eof {
             set spawn_id $expect_out(spawn_id)
             set host_nr [lsearch $spawn_list $spawn_id]
             set host_name [lindex $host_list $host_nr]
             add_proc_error "run_throughput_test" -1 "$host_name EOF : $expect_out(buffer)"
+            set error 1
          }
-         #  -i $spawn_list -- "$JOB_SUBMITTED\r\n"
-         -i $spawn_list -- "*\r\n" {
+        -i $spawn_list "*\n" {
+            set spawn_id $expect_out(spawn_id)
+            set host_nr [lsearch $spawn_list $spawn_id]
+            set host_name [lindex $host_list $host_nr]
             set output $expect_out(0,string) 
             set output [ split $output "\n" ]
-            foreach help $output {
-               set line [string trim $help]
-#               puts $CHECK_OUTPUT $line
-               set output_lines($current_output_line) "$line"
-               if { $current_output_line < $max_submit_output_lines } {
-                  incr current_output_line 1
-               } else {
-                  for {set ln 0 } { $ln < $max_submit_output_lines } { incr ln 1 } {
-                     set output_lines($ln) $output_lines([expr ( $ln + 1 )])
-                  }
-                  set  output_lines($max_submit_output_lines) ""
-               }
-               # removing additional characters before string
-               set match_start [lindex $JOB_SUBMITTED 0]
-               set match_pos [string first $match_start $line]
-               if { $match_pos >= 1 } {
-                  set line [ string range $line $match_pos end ] 
-               }
-               if { [ string match $JOB_SUBMITTED $line ] } {
-#                  puts $CHECK_OUTPUT "line : >$line<"
-#                  puts $CHECK_OUTPUT "match: >$JOB_SUBMITTED<"
-                  set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
-                  if { $result(jobs_submitted) < 50 } {
-                     # test evtl. L10N errors only the first 50 jobs
-                     set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-                     if { $job_id_pos > $job_name_pos } {
-                         add_proc_error "run_throughput_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
-                     }
-                  }
-                  incr job_id_pos -1
-                  set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
-                  set job_id_prefix_length [ string length $job_id_prefix]
-                  set outtext $line 
-                  set id_pos [ string first $job_id_prefix $outtext]
-                  incr id_pos $job_id_prefix_length
-                  set submitjob_jobid [string range $outtext $id_pos end]
-                  set space_pos [ string first " " $submitjob_jobid ]
-                  set submitjob_jobid [string range $submitjob_jobid 0 $space_pos ]
-                  set submitjob_jobid [string trim $submitjob_jobid]
-                  
-                  set last_job_id $submitjob_jobid
+            foreach line $output {
+               set line [string trim $line]
+               #puts $CHECK_OUTPUT $line
+               switch -glob -- $line {
+                  "SUBMIT OK*" {
+                     # get submission data
+                     set submitjob_jobid [lindex $line 2]
+                     set submitjob_time  [lindex $line 3]
+                     set submitjob_start [lindex $line 4]
+                     set submitjob_end   [lindex $line 5]
 
-                  set job_data($result(jobs_submitted),job_id) $submitjob_jobid
-#                  puts $CHECK_OUTPUT "job $submitjob_jobid submitted"    
-                  set job_data($submitjob_jobid) $result(jobs_submitted)   ;# pointer from job id to submit id
-                  set job_data($result(jobs_submitted),state) "pending" 
-                  set job_data($result(jobs_submitted),submit_end_time) [timestamp] 
+                     # clear remembered submit command
+                     unset sent_commands($host_name)
 
+                     # store submission data
 
-                  # do the rest
-                  set spawn_id $expect_out(spawn_id)
-                  set host_nr 0
-                  set host_nr [lsearch $spawn_list $spawn_id]
-                  set host_name [lindex $host_list $host_nr]
-                  incr result(jobs_submitted) 1
-                  # here a job is definitely submitted
-                  lappend next_submit_list $host_name
-                  lappend sent_job_ids $submitjob_jobid
-
-                  # show for buffered job starts
-                  while { $job_buffer_data_index > 0 } {
-                     set buf_time  [lindex $job_buffer_data 0]
-                     set buf_state [lindex $job_buffer_data 1]
-                     set buf_jobid [lindex $job_buffer_data 2]
-
-                     set sub_id [get_submit_id_from_job_id job_data $buf_jobid]
-                     if { $sub_id >= 0 } {
-                         set job_data($sub_id,run_start_time) $buf_time
-                         set job_data($sub_id,state) $buf_state
-                         set tmp_list [lrange $job_buffer_data 3 end]
-                         set job_buffer_data $tmp_list
-                         incr result(jobs_running) 1
-                         incr job_buffer_data_index -1
-#                         puts $CHECK_OUTPUT "removed job $buf_jobid from buffer"
+                     # get index of this job in the job_data array
+                     # there are cases, where the JOB_ADD event will be received before
+                     # the SUBMIT OK. In this case, the job already has an index and has
+                     # already been counted as submitted.
+                     if { [info exists job_data($submitjob_jobid)] } {
+                        set job_index $job_data($submitjob_jobid)
                      } else {
-                         # job submit message not available till now
-                         break
+                        set job_index $result(jobs_submitted)
+                        incr result(jobs_submitted)
+
+                        set last_job_id $submitjob_jobid
+
+                        # doubly linked data job_id <-> job_index
+                        set job_data(job_index,job_id) $submitjob_jobid
+                        set job_data($submitjob_jobid) $job_index
+
+                        set job_data($job_index,state) "pending"
                      }
+
+                     set job_data($job_index,submit_time) $submitjob_time
+                     set job_data($job_index,submit_start_time) $submitjob_start
+                     set job_data($job_index,submit_end_time) $submitjob_end
+
+
+                     # this host now can take the next submit command
+                     lappend next_submitter_list $host_name
                   }
-
-               } else {
-                  if { [string length $line] > 0 } {
-                      
-                     if { [ string match "*>>*<<*" $line] } {
-                         # exit state of last submit
-                         set exit_state_start [string first ">>" $line]
-                         incr exit_state_start 2
-                         set exit_state_end [string first "<<" $line]
-                         incr exit_state_end -1
-                         set exit_state [string range $line $exit_state_start $exit_state_end]
-                         if { [string first "?" $exit_state] < 0 } {
-                            if { $exit_state != 0 } {
-                               puts $CHECK_OUTPUT "exit_state: >$exit_state<\nline: $line"
-                               set command_start [string first "_:>" $line]
-                               incr command_start 3
-                               set command_end [string first "<:_" $line]
-                               incr command_end -1
-                               set command_string [string range $line $command_start $command_end]
-                               lappend resend_buffer "$expect_out(spawn_id)"
-                               lappend resend_buffer "$command_string"
-   
-                               set proc_error_help_buffer ""
-                               for {set ln 0 } { $ln <= $max_submit_output_lines } { incr ln 1 } {
-                                  if { [info exists output_lines($ln) ] } {
-                                     append proc_error_help_buffer "$output_lines($ln)\n"
-                                  }
-                               }
-
-
-                               add_proc_error "run_throughput_test" -3 "submit exit state is $exit_state, expect id: $expect_out(spawn_id), sent jobs: $sent_jobs\n$proc_error_help_buffer"
-
-                               
-                               incr max_errors -1
-                               if { $max_errors < 0 } {
-                                  add_proc_error "run_throughput_test" -1 "to much submit errors - break"
-                                  foreach elem $remote_spawn_list {
-                                     close_spawn_process $elem
-                                  }
-                                  close_spawn_process $event_client_sid
-                                  close_spawn_process $schedd_messages_sid
-                                  set_error -1 "error"
-                                  return -1
-                               }
-                            }
-                            set thost_nr [lsearch $spawn_list $expect_out(spawn_id)]
-                            set thost_name [lindex $host_list $thost_nr]
-                            set host_submit_count($thost_name) 0
-                            incr my_submitted_jobs -1
-                         }
+                  "SUBMIT FAILED*" {
+                     # schedule submit for resending
+                     if { [info exists sent_commands($host_name)] } {
+                        lappend resend_list $sent_commands($host_name)
                      }
+                     puts $CHECK_OUTPUT "submission on host $host_name failed"
+                  }
+                  default {
+                     # puts $CHECK_OUTPUT "unexpected output (submitter): |$line|"
                   }
                }
             }
          }
 
          # here we expect event client
-         -i $event_and_msg_id_list -- full_buffer {
+         -i $event_and_msg_id_list full_buffer {
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
-            return -1
+            set error 1
          }
          -i $event_and_msg_id_list eof {
             add_proc_error "run_throughput_test" "-1" "unexpected EOF"
+            set error 1
          }
-         -i $event_and_msg_id_list -- "_exit_status_" {
+         -i $event_and_msg_id_list "_exit_status_" {
             add_proc_error "run_throughput_test" "-1" "unexpected _exit_status_"
+            set error 1
          }
-         -i $event_and_msg_id_list -- "*\n" {
-             set output $expect_out(0,string) 
-             set output [ split $output "\n" ]
-             foreach line $output {
-                set help [string trim $line]
+         -i $event_and_msg_id_list "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set line [string trim $line]
+               #puts $CHECK_OUTPUT $line
 
+               switch -glob -- $line {
+                  "JOB_ADD*" {
+                     # evaluate job_id
+                     set job_s_pos [string first "(" $line]
+                     incr job_s_pos 1
+                     set job_e_pos [string first ")" $line]
+                     incr job_e_pos -1
 
-                if { [string match "JOB_ADD (*)" $help] } {
-                   # job is done remove job from sent_job_ids list
-                   set job_s_pos [string first "(" $help]
-                   incr job_s_pos 1
-                   set job_e_pos [string first ")" $help]
-                   incr job_e_pos -1
+                     set event_data [string range $line $job_s_pos $job_e_pos]
+                     set event_data [split $event_data ":"]
+                     set job_id [lindex $event_data 0] 
+                     set help_pos [string first "." $job_id]
+                     incr help_pos -1
+                     set job_id [string range $job_id 0 $help_pos]
 
-                   set event_data [string range $help $job_s_pos $job_e_pos]
-                   set event_data [split $event_data ":"]
-                   set job_id [lindex $event_data 0] 
-                   set project_name [lindex $event_data 2]
+                     # evaluate project_name
+                     set project_name [lindex $event_data 2]
+                     set help_pos [string first "=" $project_name]
+                     incr help_pos 1
+                     set project_name [string range $project_name $help_pos end]
 
-                   set help_pos [string first "." $job_id]
-                   incr help_pos -1
-                   set job_id [string range $job_id 0 $help_pos]
+                     # get index of this job in the job_data array
+                     # there are cases, where the JOB_ADD event will be received before
+                     # the SUBMIT OK. In this case, assign the job an index and count it
+                     # as submitted.
+                     set sub_id [get_submit_id_from_job_id job_data $job_id]
+                     if { $sub_id < 0 } {
+                        set sub_id $result(jobs_submitted)
+                        incr result(jobs_submitted)
 
-                   set help_pos [string first "=" $project_name]
-                   incr help_pos 1
-                   set project_name [string range $project_name $help_pos end]
-                   set job_id_project_list($job_id) [ string index $project_name 7]
-                }
+                        set last_job_id $job_id
 
+                        # doubly linked data job_id <-> job_index
+                        set job_data(sub_id,job_id) $job_id
+                        set job_data($job_id) $sub_id
 
-                if { [string match "JOB_FINISH (*)" $help] } {
-                   # job is done remove job from sent_job_ids list
-                   set job_s_pos [string first "(" $help]
-                   incr job_s_pos 1
-                   set job_e_pos [string first "." $help]
-                   incr job_e_pos -1
-                   set job_id [string range $help $job_s_pos $job_e_pos]
-#                   puts $CHECK_OUTPUT "Job $job_id finished"
-                   set pos [lsearch $sent_job_ids $job_id]
-                   if { $pos >= 0 } {
-                      incr result(jobs_done) 1
-                      set sent_job_ids [lreplace $sent_job_ids $pos $pos]
-                      incr result(jobs_running) -1
+                        set job_data($sub_id,state) "pending"
+                     }
 
-                      set id_position [lsearch $result(job_ids_running) $job_id]
-                      set new_running_job_ids_list [lreplace $result(job_ids_running) $id_position $id_position ]
-                      set result(job_ids_running) $new_running_job_ids_list
-                   
-                      set sub_id [get_submit_id_from_job_id job_data $job_id]
-                      if { $sub_id >= 0 } {
-                         set job_data($sub_id,run_end_time) [get_event_client_time $help] ;#[timestamp]
-                         set job_data($sub_id,state) "done"
-                         set job_data($sub_id,project) $job_id_project_list($job_id)
-                      }
-                   }
-                }
-                if { [string match "JOB_START (*)" $help] } {
-                   # job is done remove job from sent_job_ids list
-                   set job_s_pos [string first "(" $help]
-                   incr job_s_pos 1
-                   set job_e_pos [string first "." $help]
-                   incr job_e_pos -1
-                   set job_id [string range $help $job_s_pos $job_e_pos]
-#                   puts $CHECK_OUTPUT "Job $job_id started"
-                   incr result(jobs_running) 1
-                   lappend result(job_ids_running) $job_id
+                     # store project (only number)
+                     set job_data($sub_id,project) [string index $project_name 7]
+                  }
 
-                   set sub_id [get_submit_id_from_job_id job_data $job_id]
-                   if { $sub_id >= 0 } {
-                      set job_data($sub_id,run_start_time) [get_event_client_time $help] ;#[timestamp]
-                      set job_data($sub_id,state) "running"
-                   } else {
-                      # puts $CHECK_OUTPUT "assuming job submit before start!"
-                      # add the job start to job_buffer_data (when submit command
-                      # returns, the job data is actualized)
-                      lappend job_buffer_data [get_event_client_time $help] ;# [timestamp]
-                      lappend job_buffer_data "running"
-                      lappend job_buffer_data $job_id
-                      incr job_buffer_data_index 1
-                      incr result(jobs_running) -1
-                   }
-                }
-                if { [string match "*scheduled in*" $help] } {
+                  "JOB_START*" {
+                     # evaluate job_id
+                     set job_s_pos [string first "(" $line]
+                     incr job_s_pos 1
+                     set job_e_pos [string first "." $line]
+                     incr job_e_pos -1
+                     set job_id [string range $line $job_s_pos $job_e_pos]
+
+                     incr result(jobs_running)
+
+                     set sub_id [get_submit_id_from_job_id job_data $job_id]
+                     if { $sub_id >= 0 } {
+                        set job_data($sub_id,run_start_time) [get_event_client_time $line]
+                        set job_data($sub_id,state) "running"
+                     }
+                  }
+
+                  "JOB_FINISH*" {
+                     # evaluate job_id
+                     set job_s_pos [string first "(" $line]
+                     incr job_s_pos 1
+                     set job_e_pos [string first "." $line]
+                     incr job_e_pos -1
+                     set job_id [string range $line $job_s_pos $job_e_pos]
+
+                     # store data
+                     incr result(jobs_done) 1
+                     incr result(jobs_running) -1
+
+                     set sub_id [get_submit_id_from_job_id job_data $job_id]
+                     if { $sub_id >= 0 } {
+                        set job_data($sub_id,run_end_time) [get_event_client_time $line]
+                        set job_data($sub_id,state) "done"
+                     }
+                  }
+
+                  "*scheduled in*" {
+
 #  Mon Dec 16 15:01:05 2002|schedd|es-ergb01-01|I|scheduled in 0.000 s: 0 fast, 0 complex, 0 orders, 4 H, 4 Q, 13 QA, 0 J, 2 C, 1 ACL, 1 PE, 1 CONF, 0 U, 1 D, 1 PRJ, 0 ST, 1 CKPT, 0 RU
-
 
 #new                                                  0      1   2    3   4   5 6 7     8  9
 #  Wed Feb 12 10:53:06 2003|schedd|es-ergb01-01|I|scheduled in 0.010 (u 0.010 + s 0.000 = 0.010): 0 fast, 0 complex, 0 orders, 5 H, 30 Q, 34 QA, 0 J(qw), 0 J(r), 0 J(x), 2 C, 1 ACL, 1 PE, 1 CONF, 0 U, 1 D, 1 PRJ, 0 ST, 1 CKPT, 0 RU
@@ -980,97 +904,118 @@ proc run_throughput_test {} {
 # newest
 #  Mon Jul 21 15:29:35 2003|schedd|es-ergb01-01|I|PROF: scheduled in 0.000 (u 0.000 + s 0.000 = 0.000): 0 fast, 0 complex, 0 orders, 4 H, 0 Q, 3 QA, 0 J(qw), 0 J(r), 0 J(s), 0 J(h), 0 J(e), 0 J(x), 0 J(all), 3 C, 1 ACL, 1 PE, 1 CONF, 0 U, 0 D, 0 PRJ, 0 ST, 1 CKPT, 0 RU
 
+                     set st_pos [string first "|I|" $line ]
+                     incr st_pos 3
+                     set schedd_string [ string range $line $st_pos end ]
+                     if { [ string compare "PROF:" [lindex $schedd_string 0]] == 0 } {
+                        set schedd_string [ string range $schedd_string 6 end ]
+                     }
 
-                   set st_pos [string first "|I|" $help ]
-                   incr st_pos 3
-                   set schedd_string [ string range $help $st_pos end ]
-#                   puts $CHECK_OUTPUT $schedd_string
-                   if { [ string compare "PROF:" [lindex $schedd_string 0]] == 0 } {
-                      set schedd_string [ string range $schedd_string 6 end ]
-#                      puts $CHECK_OUTPUT "new schedd string: \n$schedd_string"
-                   }
+                     if { [ string compare "in" [lindex $schedd_string 1 ]] != 0 } {
+                        foreach elem $remote_spawn_list {
+                           close_spawn_process $elem
+                        }
+                        close_spawn_process $event_client_sid
+                        close_spawn_process $schedd_messages_sid
+                        set_error -1 "format error for orders (1)"
+                        return -1
+                     }
+                     set schedd_time [ lindex $schedd_string 2 ]   ;# this is wall clock time
+                     if { [string match "*orders*" [lindex $schedd_string 9]] == 0 } {
+                        set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
+                        set schedd_time_length [string length $schedd_time]
+                        incr schedd_time_length -3
+                        set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
+                     }
 
-                   if { [ string compare "in" [lindex $schedd_string 1 ]] != 0 } {
-                      foreach elem $remote_spawn_list {
-                         close_spawn_process $elem
-                      }
-                      close_spawn_process $event_client_sid
-                      close_spawn_process $schedd_messages_sid
-                      set_error -1 "format error for orders (1)"
-                      return -1
-                   }
-                   set schedd_time [ lindex $schedd_string 2 ]   ;# this is wall clock time
-                   if { [string match "*orders*" [lindex $schedd_string 9]] == 0 } {
-                      set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
-                      set schedd_time_length [string length $schedd_time]
-                      incr schedd_time_length -3
-                      set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
-                   }
-
-                   
-                   for { set s_index 0 } { $s_index < [llength $schedd_string] } { incr s_index 1 } {
-                      if { [string compare [lindex $schedd_string $s_index] "orders," ] == 0  } {
-                         break
-                      }
-                   }
-                   
-                   if { [ string compare "orders," [lindex $schedd_string $s_index ]] != 0 } {
-                      foreach elem $remote_spawn_list {
-                         close_spawn_process $elem
-                      }
-                      close_spawn_process $event_client_sid
-                      close_spawn_process $schedd_messages_sid
-                      set_error -1 "format error for orders (2)"
-                      return -1
-                   }
-                   incr s_index -1
-                   set orders_value [ lindex $schedd_string $s_index ]
-#                   puts $CHECK_OUTPUT "schedd_time: $schedd_time"
-#                   puts $CHECK_OUTPUT "orders: $orders_value"
-                   set schedd_data($schedd_nr,system_time)   [timestamp] 
-                   set schedd_data($schedd_nr,schedd_time)   $schedd_time
-                   set schedd_data($schedd_nr,schedd_orders) $orders_value
-                   set schedd_data($schedd_nr,data_line)     $schedd_string
-                   set schedd_data(count) $schedd_nr
-                   incr schedd_nr 1
-                }
-             }
+                      
+                     for { set s_index 0 } { $s_index < [llength $schedd_string] } { incr s_index 1 } {
+                        if { [string compare [lindex $schedd_string $s_index] "orders," ] == 0  } {
+                           break
+                        }
+                     }
+                      
+                     if { [ string compare "orders," [lindex $schedd_string $s_index ]] != 0 } {
+                        foreach elem $remote_spawn_list {
+                           close_spawn_process $elem
+                        }
+                        close_spawn_process $event_client_sid
+                        close_spawn_process $schedd_messages_sid
+                        set_error -1 "format error for orders (2)"
+                        return -1
+                     }
+                     incr s_index -1
+                     set orders_value [ lindex $schedd_string $s_index ]
+                     set schedd_data($schedd_nr,system_time)   [timestamp] 
+                     set schedd_data($schedd_nr,schedd_time)   $schedd_time
+                     set schedd_data($schedd_nr,schedd_orders) $orders_value
+                     set schedd_data(count) $schedd_nr
+                     incr schedd_nr 1
+                     continue
+                  }
+                  default {
+                     # puts $CHECK_OUTPUT "unexpected output (qevent/tail): |$line|"
+                  }
+               }
+            }
          }
-       }
+      }
 
-       # update system status
-       # we have one slot per queue !
-       set jobs_running $result(jobs_running)
-       set jobs_run_pend         [ expr ( $result(jobs_submitted) - $result(jobs_done)    ) ]
-       set result(jobs_pending)  [ expr ( $jobs_run_pend          - $jobs_running ) ]
-       set result(free_slots)    [ expr ( $result(total_slots)    - $jobs_running ) ]
-       
-       set time_now [timestamp]
-       if { $result(test_run_time) != $time_now } {
-           show_current_system_status result job_data schedd_data
-           flush $CHECK_OUTPUT
-       }
-       set result(test_run_time) $time_now
-       save_current_system_status results_list result
+      # update system status
+      # we have one slot per queue !
+      set jobs_running $result(jobs_running)
+      set jobs_run_pend         [ expr ( $result(jobs_submitted) - $result(jobs_done)    ) ]
+      set result(jobs_pending)  [ expr ( $jobs_run_pend          - $jobs_running ) ]
+      set result(free_slots)    [ expr ( $result(total_slots)    - $jobs_running ) ]
+      set result(queues_enabled) $are_enabled
+      
+      # tasks to be done once a minute
+      set time_now [timestamp]
+      if { $result(test_run_time) != $time_now } {
+         show_current_system_status result job_data schedd_data
+         flush $CHECK_OUTPUT
+
+         # enable queues when $enable_queues_job_count is reached
+         if { ! $are_enabled && $result(jobs_submitted) >= $enable_queues_job_count } {
+            set are_enabled 1
+            enable_queue $queue_list
+            catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+            puts $CHECK_OUTPUT $catch_result
+         }
+
+      }
+      set result(test_run_time) $time_now
+      save_current_system_status results_list result
    } 
+   log_user 1
 
-   create_reports results_list job_data schedd_data
+   # make submitters quit
+   foreach elem $remote_spawn_list {
+      send -i [lindex $elem 1] "QUIT\n"
+   }
+   after 1000
 
-   # close all open connections and event client
+   # close connections to submitters
    foreach elem $remote_spawn_list {
       close_spawn_process $elem
    }
+
+   # close qevent and tail to schedd messages file
    close_spawn_process $event_client_sid
    close_spawn_process $schedd_messages_sid
 
-   set catch_result [delete_all_jobs]
-
-   puts $CHECK_OUTPUT "qdel -uall\n$catch_result"
+   # cleanup jobs
+   delete_all_jobs
    wait_for_jobend $last_job_id leeper 60 0 1
+
+   # create reports
+   create_reports results_list job_data schedd_data
+
    set_error 0 "ok"
 }
 
 proc get_submit_id_from_job_id { job_array_name job_id } {
+   global ts_config
    global CHECK_OUTPUT
    upvar $job_array_name jobs
    
@@ -1083,6 +1028,7 @@ proc get_submit_id_from_job_id { job_array_name job_id } {
 }
 
 proc save_current_system_status { results_array array_name } {
+   global ts_config
    global CHECK_OUTPUT
 
    upvar $array_name data
@@ -1097,7 +1043,7 @@ proc save_current_system_status { results_array array_name } {
 }
 
 proc compare_dump_directory { dir } {
-
+   global ts_config
    global CHECK_OUTPUT
 
    set files [get_file_names $dir "saved_run*"]
@@ -1194,7 +1140,7 @@ proc compare_dump_directory { dir } {
 
 # directory of file1 is used to save results
 proc compare_dump_data_file { file1 file2 } {
-
+   global ts_config
    global CHECK_OUTPUT 
 
    if { [file isfile $file1] != 1 } {
@@ -1897,7 +1843,7 @@ proc compare_dump_data_file { file1 file2 } {
 }
 
 proc analyse_dump_data_file { file { force 0 } } {
-
+   global ts_config
    global CHECK_OUTPUT
    global throughput_sharetree
    
@@ -2431,6 +2377,8 @@ proc analyse_dump_data_file { file { force 0 } } {
 
 
 proc calculate_schedd_run_xy_rows { results_array_name row_array_name test_start start_numb } {
+   global ts_config
+   
    upvar $results_array_name schedd
    upvar $row_array_name xy_rows
 
@@ -2470,6 +2418,8 @@ proc calculate_schedd_run_xy_rows { results_array_name row_array_name test_start
    
 }
 proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start start_numb} {
+   global ts_config
+
    upvar $results_array_name jobs
    upvar $row_array_name xy_rows
 
@@ -2506,7 +2456,8 @@ proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start
           set normalized_submit_end_time [ expr ( $jobs($job,submit_end_time) - $test_start ) ]
           set normalized_run_end_time    [ expr ( $jobs($job,run_end_time)    - $test_start ) ]
 
-          set submit_time [ expr ( $jobs($job,submit_end_time) - $jobs($job,submit_start_time) ) ]
+          #set submit_time [ expr ( $jobs($job,submit_end_time) - $jobs($job,submit_start_time) ) ]
+          set submit_time [expr $jobs($job,submit_time) / 1000.0]
           set run_time    [ expr ( $jobs($job,run_end_time)    - $jobs($job,run_start_time)    ) ]                    
 
           #   x->time y->submit_time
@@ -2543,6 +2494,8 @@ proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start
 
 
 proc calculate_project_run_xy_rows { results_array_name job_array_name row_array_name start_numb } {
+   global ts_config
+
    global CHECK_OUTPUT
    upvar $results_array_name results
    upvar $job_array_name jobs
@@ -2628,7 +2581,7 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
              set p2_p [ expr ( $jobs_p2 / $one_percent ) ]
              set p3_p [ expr ( $jobs_p3 / $one_percent ) ]
 
-             puts $CHECK_OUTPUT $elem
+             #puts $CHECK_OUTPUT $elem
              # project 1
              set xy_rows($pos1,$job,x) $elem
              set xy_rows($pos1,$job,y) $p1_p
@@ -2640,7 +2593,7 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
              set xy_rows($pos3,$job,y) $p3_p
              incr job 1
           }
-          puts $CHECK_OUTPUT "all_jobs=$all_jobs, [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
+          #puts $CHECK_OUTPUT "all_jobs=$all_jobs, [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
           if { [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ] != $all_jobs } {
              add_proc_error "calculate_project_run_xy_rows" -1 "error job count all_jobs=$all_jobs, not [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
           }
@@ -2648,7 +2601,6 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
 # ---          for { set i 0 } { $i <= $last } { incr i 1 } {
 # ---             set x_time        [ expr ( $results($i,test_run_time) - $test_start) ]  ;# test run time in seconds
 # ---            
-# ---             set running_job_ids $results($i,job_ids_running)
 # ---             set jobs_p1 0
 # ---             set jobs_p2 0
 # ---             set jobs_p3 0
@@ -2696,6 +2648,8 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
 
 
 proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb } {
+   global ts_config
+
    upvar $results_array_name results
    upvar $row_array_name xy_rows
 
@@ -2770,8 +2724,10 @@ proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb }
 }
 
 proc create_reports { results_array job_array_name schedd_array_name} {
+   global ts_config
+   global ts_host_config
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
-   global CHECK_CORE_EXECD CHECK_HOST CHECK_USER
+   global CHECK_HOST CHECK_USER
    global end_job_count                 ;# number of jobs
    global enable_queues_job_count         ;# after with job, enable queues
    global nr_queues                       ;# nr of queues on each host
@@ -2780,17 +2736,16 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    global FLUSH_SUBMIT_SEC              ;# -1 or 0,1,2,3 ...
    global FLUSH_FINISH_SEC             ;# -1 or 0,1,2,3 ...
    global run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
-   global ts_host_config
 
    upvar $job_array_name jobs
    upvar $results_array results
    upvar $schedd_array_name schedd
 
-   set nr_of_execd_hosts [llength $CHECK_CORE_EXECD]
+   set nr_of_execd_hosts [llength $ts_config(execd_hosts)]
    incr nr_of_execd_hosts -1
 
    set have_local_spool_dir 0
-   foreach elem $CHECK_CORE_EXECD {
+   foreach elem $ts_config(execd_hosts) {
       set spool_dir ""
       if { [info exists ts_host_config($elem,spooldir)] } {
          set spool_dir $ts_host_config($elem,spooldir)
@@ -2834,7 +2789,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
 
 
    # execd configuration for each host
-   set host_list $CHECK_CORE_EXECD
+   set host_list $ts_config(execd_hosts)
    lappend host_list "global"
    set h_list_array(host_list) $host_list
    spool_array_to_file $prot_output_file "execd list" h_list_array
@@ -2913,6 +2868,8 @@ proc create_reports { results_array job_array_name schedd_array_name} {
 }
 
 proc calculate_average_cluster_times { results_array cluster_results_array { dump_file "" } } {
+   global ts_config
+
    global CHECK_OUTPUT enable_queues_job_count
    global FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    upvar $results_array cluster
@@ -2930,12 +2887,10 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
    set result(flush_finish_sec) $FLUSH_FINISH_SEC
    set result(schedule_interval) $run_throughput_test_SCHEDULE_INTERVAL
 
-   
-
    if { $cluster(count) > 0 } {
-      set result(avg_slots_free) $cluster(0,total_slots)  ;# avg_slots_free
-      set result(total_slots) $cluster(0,total_slots)     ;# total_slots
-      set result(jobs_sleep_time) $cluster(0,job_run_time) ;#
+      set result(avg_slots_free)    $cluster(0,total_slots)  ;# avg_slots_free
+      set result(total_slots)       $cluster(0,total_slots)     ;# total_slots
+      set result(jobs_sleep_time)   $cluster(0,job_run_time) ;#
    } else {
       set result(avg_slots_free) 0
       set result(total_slots) 0
@@ -2947,7 +2902,6 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
       
       puts $dump_file "nr|jobs_done|jobs_running|jobs_pending|jobs_submitted|total_slots|free_slots|job_run_time|test_run_time"
    }
-
    
    set last $cluster(count)
    incr last -1
@@ -2958,32 +2912,34 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
 
    # pass 1
    set highest_submit_count 0
-   set last_time 0
-   set second 0
-   set sum_free_slots 0
+   set samples 0
+   set sum_free_slots [expr double(0)]
    for { set i 0 } { $i <= $last } { incr i 1 } {
       if { $cluster($i,jobs_submitted) > $highest_submit_count } {
          set highest_submit_count $cluster($i,jobs_submitted)
+      
       }
-      if { $cluster($i,test_run_time) > $last_time } {
-         incr second 1
-         set last_time $cluster($i,test_run_time)
-         set free_slots $cluster($i,free_slots)
-         incr sum_free_slots $free_slots
+      # utilization (free jobs) will only be taken into account while
+      # - queues are enabled
+      # - there are pending jobs
+      if { $cluster($i,queues_enabled) == 1 && $cluster($i,jobs_pending) > 0 } {
+         set sum_free_slots [expr $sum_free_slots + double($cluster($i,free_slots))]
+         incr samples
+         # puts $CHECK_OUTPUT "$samples\t$sum_free_slots"
       }
       # spool data to file
       if { $dump_file != "" } {
          set line "$i|$cluster($i,jobs_done)|$cluster($i,jobs_running)|$cluster($i,jobs_pending)|$cluster($i,jobs_submitted)|$cluster($i,total_slots)|$cluster($i,free_slots)|$cluster($i,job_run_time)|$cluster($i,test_run_time)"
          puts $dump_file $line
       }
-
    }
+
    if { $dump_file != "" } {
       close $dump_file
    }
 
-   if { $second > 0 } {
-      set result(avg_slots_free) [ expr ( $sum_free_slots.00 / $second  ) ]
+   if { $samples > 0 } {
+      set result(avg_slots_free) [ expr $sum_free_slots / double($samples) ]
    }
 
    # pass 2
@@ -3002,10 +2958,9 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
       set result(jobs_per_second) [ expr ( $result(total_jobs_done).00 / $result(total_run_time) ) ]
    }
 
-   set one_p [ expr ( $result(total_slots).00 / 100  ) ]
-   if { $one_p > 0 } {
-      set result(utilization) [ expr ( ( 100.00 - ($result(avg_slots_free)+ 0.00) / $one_p )) ]
-   }
+   set result(utilization) [ expr 100.0 * (double($result(total_slots)) - $result(avg_slots_free)) / double($result(total_slots)) ]
+   puts $CHECK_OUTPUT "total_slots    = $result(total_slots)"
+   puts $CHECK_OUTPUT "avg_slots_free = $result(avg_slots_free)"
 
 
 #   puts $CHECK_OUTPUT ""
@@ -3026,12 +2981,14 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
 }
 
 proc calculate_average_job_times { job_array_name job_results_array { dump_file "" }} {
+   global ts_config
+
    global CHECK_OUTPUT
    upvar $job_array_name jobs
    upvar $job_results_array result
    
-   set submit_sum 0
-   set run_sum 0
+   set submit_sum [expr double(0)]
+   set run_sum [expr double(0)]
    set submit_job_count  0
    set run_job_count 0
    set job 0
@@ -3044,7 +3001,8 @@ proc calculate_average_job_times { job_array_name job_results_array { dump_file 
       set run_time 0
       if { $jobs($job,submit_end_time) > 0 && $jobs($job,submit_start_time) > 0 } {
          incr submit_job_count 1
-         set submit_time [ expr ( $jobs($job,submit_end_time) - $jobs($job,submit_start_time) ) ]
+         #set submit_time [ expr ( $jobs($job,submit_end_time) - $jobs($job,submit_start_time) ) ]
+         set submit_time [expr double($jobs($job,submit_time)) / 1000.0]
       }
       if { $jobs($job,run_end_time) > 0 && $jobs($job,run_start_time) > 0 } {
          incr run_job_count 1
@@ -3054,8 +3012,8 @@ proc calculate_average_job_times { job_array_name job_results_array { dump_file 
       set job_id $jobs($job,job_id)
 
       # add job times
-      incr submit_sum $submit_time
-      incr run_sum $run_time
+      set submit_sum [expr $submit_sum + $submit_time]
+      set run_sum [expr $run_sum + double($run_time)]
 
       # spool data to file
       if { $dump_file != "" } {
@@ -3074,15 +3032,17 @@ proc calculate_average_job_times { job_array_name job_results_array { dump_file 
    set result(jobs_submit) $submit_job_count
    set result(jobs_run)    $run_job_count
    if { $submit_job_count > 0 } {
-      set result(avg_submit) [ expr (  ( ${submit_sum}.00 ) / $submit_job_count ) ]
+      set result(avg_submit) [ expr ${submit_sum} / double($submit_job_count) ]
    }
    if { $run_job_count > 0 } {
-      set result(avg_run)    [ expr (  ( ${run_sum}.00 )   / $run_job_count ) ]
+      set result(avg_run)    [ expr ${run_sum} / double($run_job_count) ]
    }
 }
 
 
 proc calculate_average_schedd_times { schedd_array_name schedd_results_array { dump_file "" }} {
+   global ts_config
+
    global CHECK_OUTPUT
    upvar $schedd_array_name schedd_array
    upvar $schedd_results_array result
@@ -3091,7 +3051,7 @@ proc calculate_average_schedd_times { schedd_array_name schedd_results_array { d
    set schedd_time_sum 0
    if { $dump_file != "" } {
       set dump_file [open $dump_file w]
-      puts $dump_file "nr|system_time|schedd_time|schedd_orders|data_line"
+      puts $dump_file "nr|system_time|schedd_time|schedd_orders"
    }
 
    while { [info exists schedd_array($schedd,schedd_time) ] } {
@@ -3101,7 +3061,7 @@ proc calculate_average_schedd_times { schedd_array_name schedd_results_array { d
       set schedd_time_sum [ expr ( $schedd_time_sum + $schedd_id_run_time ) ]
 
       if { $dump_file != "" } {
-         set line "$schedd|$schedd_array($schedd,system_time)|$schedd_array($schedd,schedd_time)|$schedd_array($schedd,schedd_orders)|$schedd_array($schedd,data_line)"
+         set line "$schedd|$schedd_array($schedd,system_time)|$schedd_array($schedd,schedd_time)|$schedd_array($schedd,schedd_orders)"
          puts $dump_file $line
       }
 
@@ -3123,18 +3083,25 @@ proc calculate_average_schedd_times { schedd_array_name schedd_results_array { d
 
 
 proc show_current_system_status { array_name job_array_name schedd_array_name } {
+   global ts_config
+
    global CHECK_OUTPUT
 
    upvar $array_name data
    upvar $job_array_name jobs
    upvar $schedd_array_name schedd
 
-   # we have one slot per queue !
+   # string for queue status
+   if { $data(queues_enabled) == 1 } {
+      set queue_status "enabled"
+   } else {
+      set queue_status "disabled"
+   }
 
    clear_screen
+   puts $CHECK_OUTPUT "queue status     : $queue_status"
    puts $CHECK_OUTPUT "jobs_done        : $data(jobs_done)" 
    puts $CHECK_OUTPUT "jobs_running     : $data(jobs_running)"
-#   puts $CHECK_OUTPUT "job ids running  : $data(job_ids_running)"
    puts $CHECK_OUTPUT "jobs_pending     : $data(jobs_pending)"
    puts $CHECK_OUTPUT "jobs_submitted   : $data(jobs_submitted)"
    puts $CHECK_OUTPUT "total slots      : $data(total_slots)"
@@ -3152,7 +3119,8 @@ proc show_current_system_status { array_name job_array_name schedd_array_name } 
 }
 
 proc clean_current_system_status { results_array array_name job_array_name schedd_array_name } {
-   
+   global ts_config
+
    global queue_list global_job_run_time nr_slots
    upvar $results_array results
    upvar $array_name data
@@ -3162,7 +3130,6 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    set data(jobs_done) 0
    set data(jobs_pending) 0
    set data(jobs_running) 0
-   set data(job_ids_running) ""
    set data(jobs_submitted) 0
    set data(total_slots) [ expr ( [llength $queue_list] * $nr_slots ) ]
    set data(free_slots)  $data(total_slots)
@@ -3176,12 +3143,11 @@ proc clean_current_system_status { results_array array_name job_array_name sched
       unset results
    }
    if { [ info exists schedd] } {
-      unset results
+      unset schedd
    }
    set schedd(0,system_time) 0
    set schedd(0,schedd_time) 0
    set schedd(0,schedd_orders) 0
-   set schedd(0,data_line) ""
    
    set schedd(count) 0
    set results(count) 0

@@ -243,8 +243,10 @@ proc kill_running_system {} {
    
          catch { exec "cp" "$ts_config(product_root)/$ts_config(cell).$moved/common/host_aliases" "$ts_config(product_root)/$ts_config(cell)/common/host_aliases"  } result
          puts $result
-   
-         delete_directory "$ts_config(product_root)/$ts_config(cell).$moved"
+  
+         if { [file exists "$ts_config(product_root)/$ts_config(cell).$moved"] } {
+            delete_directory "$ts_config(product_root)/$ts_config(cell).$moved"
+         }
    }
 }
 

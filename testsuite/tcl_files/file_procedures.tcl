@@ -281,8 +281,6 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
    }
 
    set command_file [get_tmp_file_name]
-   set cmd_file [open $command_file w]
-
 
    foreach row $row_index {
       if { $rows($row,show) == 0 } {
@@ -1488,7 +1486,7 @@ proc create_shell_script { scriptfile
 
    set script "no_script"
    set catch_return [ catch {
-       set script [ open "$scriptfile" "w" ]
+       set script [ open "$scriptfile" "w" "0755" ]
    } ]
    if { $catch_return != 0 } {
       add_proc_error "create_shell_script" "-2" "could not open file $scriptfile for writing"
@@ -1577,10 +1575,10 @@ proc create_shell_script { scriptfile
          sleep 1
       }
    }
-   catch { exec "touch" "$scriptfile" } result
+#   catch { exec "touch" "$scriptfile" } result
 #   puts $CHECK_OUTPUT "touch result: $result"
   
-   catch { exec "chmod" "0755" "$scriptfile" } result
+#   catch { exec "chmod" "0755" "$scriptfile" } result
 #   puts $CHECK_OUTPUT "chmod result: $result"
 
 
@@ -1595,7 +1593,6 @@ proc create_shell_script { scriptfile
       if { $CHECK_DEBUG_LEVEL == 2 } {
          wait_for_enter
       }
-
    }
 }
 

@@ -648,7 +648,7 @@ proc disable_queue { queuelist } {
   while { $queue_nr != $nr_of_queues } {
      log_user 0
      set queues ""
-     set i 10  ;# maximum 10 queues at one time
+     set i 100  ;# maximum 100 queues at one time (= 2000 byte commandline with avg(len(qname)) = 20
      while { $i > 0 } {
         if { $queue_nr < $nr_of_queues } {
            append queues " $queue_name($queue_nr)"
@@ -741,7 +741,7 @@ proc enable_queue { queuelist } {
   while { $queue_nr != $nr_of_queues } {
      log_user 0
      set queues ""
-     set i 10  ;# maximum 10 queues at one time
+     set i 100  ;# maximum 100 queues at one time (= 2000 byte commandline with avg(len(qname)) = 20
      while { $i > 0 } {
         if { $queue_nr < $nr_of_queues } {
            append queues " $queue_name($queue_nr)"

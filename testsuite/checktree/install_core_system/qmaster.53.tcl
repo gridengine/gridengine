@@ -642,3 +642,9 @@ proc install_qmaster {} {
   }
 }
 
+proc install_shadowd {} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "no shadowd installation for 5.3 system yet"
+   set_error "0" "install_shadowd - not yet implemented"
+}

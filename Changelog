@@ -37,7 +37,7 @@ EB-2002-09-19-0  Bugfix:    prevent deletion of still referenced objects
                             - PE objects
                             - CKPT objects
                  IZ:        #302 
-                 Bugtraq:   
+                 Bugtraq:   #4753668
                  Changed:   sge_qmaster
 
 SD-2002-09-19-0  Bugfix:    Fixed restart_command for checkpoint jobs
@@ -46,7 +46,7 @@ SD-2002-09-19-0  Bugfix:    Fixed restart_command for checkpoint jobs
 
 EB-2002-09-18-0  Bugfix:    qconf gets commd timeout
                  IZ:        #308
-                 Bugtraq:   
+                 Bugtraq:   #4753669 
                  Review:    AH
                  Changed:   qconf
 

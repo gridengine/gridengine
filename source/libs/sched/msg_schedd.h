@@ -497,8 +497,8 @@
 #define MSG_WEIGHTFACTNONUMB_S         _MESSAGE(47375, _("\"load_formula\" uses "SFQ" as weighting factor (only numbers are allowed)\n"))
 #define MSG_MULTIPLEWEIGHTFACT         _MESSAGE(47376, _("\"load_formula\" may not use multiple weighting factors\n"))
 #define MSG_LOADFORMHASTOSTART         _MESSAGE(47377, _("\"load_formula\" has to start with a load value or consumable resource\n"))
-#define MSG_SUBORDPOLICYCONFLICT_UUSS  _MESSAGE(47378, _("Jobs "u32" & "u32" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
-#define MSG_QMASTERMOVEDEXITING_SS     _MESSAGE(47378, _("qmaster moved from "SFQ" to "SFQ": exiting\n"))
+#define MSG_SUBORDPOLICYCONFLICT_UUSS  _MESSAGE(47378, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_QMASTERMOVEDEXITING_SS     _MESSAGE(47379, _("qmaster moved from "SFQ" to "SFQ": exiting\n"))
 
 
 #endif /* __MSG_SCHEDD_H */

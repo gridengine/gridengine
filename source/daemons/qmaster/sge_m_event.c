@@ -76,7 +76,7 @@ extern lList *Master_Userset_List;
 
 static void total_update(lListElem *event_client);
 
-static void sge_total_update_event(lListElem *event_client, u_long32 type, lList *lp);
+static void sge_total_update_event(lListElem *event_client, u_long32 type);
 
 static void sge_add_event_( lListElem *event_client, u_long32 type, 
                      u_long32 intkey, u_long32 intkey2, const char *strkey, 
@@ -88,7 +88,9 @@ static int sge_add_list_event_(lListElem *event_client,
                                lList *list, int need_copy_elem);
 
 static void sge_flush_events_(lListElem *event_client, int cmd, int now);
-void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, sge_gdi_request *answer);
+void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, uid_t uid, sge_gdi_request *answer);
+static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
+                                           lListElem *event_client, int event);
 
 #define FLUSH_INTERVAL 15
 
@@ -238,31 +240,31 @@ lListElem *event_client
 ) {
    DENTER(TOP_LAYER, "total_update");
 
-   sge_total_update_event(event_client, sgeE_ADMINHOST_LIST,      Master_Adminhost_List);
-   sge_total_update_event(event_client, sgeE_CALENDAR_LIST,       Master_Calendar_List);
-   sge_total_update_event(event_client, sgeE_CKPT_LIST,           Master_Ckpt_List);
-   sge_total_update_event(event_client, sgeE_COMPLEX_LIST,        Master_Complex_List);
-   sge_total_update_event(event_client, sgeE_CONFIG_LIST,         Master_Config_List);
-   sge_total_update_event(event_client, sgeE_EXECHOST_LIST,       Master_Exechost_List);
-   sge_total_update_event(event_client, sgeE_JOB_LIST,            Master_Job_List);
-   sge_total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST,Master_Job_Schedd_Info_List);
-   sge_total_update_event(event_client, sgeE_MANAGER_LIST,        Master_Manager_List);
-   sge_total_update_event(event_client, sgeE_OPERATOR_LIST,       Master_Operator_List);
-   sge_total_update_event(event_client, sgeE_PE_LIST,             Master_Pe_List);
-   sge_total_update_event(event_client, sgeE_QUEUE_LIST,          Master_Queue_List);
-   sge_total_update_event(event_client, sgeE_SCHED_CONF,          Master_Sched_Config_List);
-   sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST,     Master_Submithost_List);
-   sge_total_update_event(event_client, sgeE_USERSET_LIST,        Master_Userset_List);
+   sge_total_update_event(event_client, sgeE_ADMINHOST_LIST);
+   sge_total_update_event(event_client, sgeE_CALENDAR_LIST);
+   sge_total_update_event(event_client, sgeE_CKPT_LIST);
+   sge_total_update_event(event_client, sgeE_COMPLEX_LIST);
+   sge_total_update_event(event_client, sgeE_CONFIG_LIST);
+   sge_total_update_event(event_client, sgeE_EXECHOST_LIST);
+   sge_total_update_event(event_client, sgeE_JOB_LIST);
+   sge_total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST);
+   sge_total_update_event(event_client, sgeE_MANAGER_LIST);
+   sge_total_update_event(event_client, sgeE_OPERATOR_LIST);
+   sge_total_update_event(event_client, sgeE_PE_LIST);
+   sge_total_update_event(event_client, sgeE_QUEUE_LIST);
+   sge_total_update_event(event_client, sgeE_SCHED_CONF);
+   sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST);
+   sge_total_update_event(event_client, sgeE_USERSET_LIST);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      sge_total_update_event(event_client, sgeE_NEW_SHARETREE,       Master_Sharetree_List);
-      sge_total_update_event(event_client, sgeE_PROJECT_LIST,        Master_Project_List);
-      sge_total_update_event(event_client, sgeE_USER_LIST,           Master_User_List);
+      sge_total_update_event(event_client, sgeE_NEW_SHARETREE);
+      sge_total_update_event(event_client, sgeE_PROJECT_LIST);
+      sge_total_update_event(event_client, sgeE_USER_LIST);
    }
 
 #ifndef __SGE_NO_USERMAPPING__
-   sge_total_update_event(event_client, sgeE_HOST_GROUP_LIST,        Master_Host_Group_List);
-   sge_total_update_event(event_client, sgeE_USERMAPPING_ENTRY_LIST, Master_Usermapping_Entry_List);
+   sge_total_update_event(event_client, sgeE_HOST_GROUP_LIST);
+   sge_total_update_event(event_client, sgeE_USERMAPPING_ENTRY_LIST);
 #endif
 
    DEXIT;
@@ -392,6 +394,7 @@ char *rhost
    u_long32 id;
    u_long32 ev_d_time;
    const char *subscription;
+   const char *old_subscription;
 
    DENTER(TOP_LAYER,"sge_mod_event_client");
 
@@ -428,8 +431,31 @@ char *rhost
       lSetUlong(event_client, EV_d_time, ev_d_time);
    }
 
-   if(strcmp(subscription, lGetString(event_client, EV_subscription)) != 0) {
+   old_subscription = lGetString(event_client, EV_subscription);
+   if(strcmp(subscription, old_subscription) != 0) {
       lSetString(event_client, EV_subscription, subscription);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_ADMINHOST_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_CALENDAR_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_CKPT_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_COMPLEX_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_CONFIG_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_EXECHOST_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_JOB_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_JOB_SCHEDD_INFO_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_MANAGER_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_OPERATOR_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_NEW_SHARETREE);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_PE_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_PROJECT_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_QUEUE_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_SUBMITHOST_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_USER_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_USERSET_LIST);
+      
+#ifndef __SGE_NO_USERMAPPING__
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_HOST_GROUP_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, event_client, sgeE_USERMAPPING_ENTRY_LIST);
+#endif      
    }
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
@@ -448,6 +474,16 @@ char *rhost
    DEXIT; 
    return STATUS_OK;
 }
+
+static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
+                                    lListElem *event_client, int event)
+{
+   if(new_subscription[event] == '1' && old_subscription[event] == '0') {
+      sge_total_update_event(event_client, event);
+   }   
+}
+
+
 
 void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb)
 {
@@ -1012,15 +1048,81 @@ int need_copy_list  /* to reduce overhead */
 
 static void sge_total_update_event(
 lListElem *event_client,
-u_long32 type,
-lList *lp 
+u_long32 type
 ) {
    u_long32 i;
    lListElem *event;
+   lList *lp = NULL;
 
    DENTER(TOP_LAYER, "sge_total_update_event");
 
    if(sge_eventclient_subscribed(event_client, type)) {
+      switch(type) {
+         case sgeE_ADMINHOST_LIST:
+            lp = Master_Adminhost_List;
+            break;
+         case sgeE_CALENDAR_LIST:
+            lp = Master_Calendar_List;
+            break;
+         case sgeE_CKPT_LIST:
+            lp = Master_Ckpt_List;
+            break;
+         case sgeE_COMPLEX_LIST:
+            lp = Master_Complex_List;
+            break;
+         case sgeE_CONFIG_LIST:
+            lp = Master_Config_List;
+            break;
+         case sgeE_EXECHOST_LIST:
+            lp = Master_Exechost_List;
+            break;
+         case sgeE_JOB_LIST:
+            lp = Master_Job_List;
+            break;
+         case sgeE_JOB_SCHEDD_INFO_LIST:
+            lp = Master_Job_Schedd_Info_List;
+            break;
+         case sgeE_MANAGER_LIST:
+            lp = Master_Manager_List;
+            break;
+         case sgeE_NEW_SHARETREE:
+            lp = Master_Sharetree_List;
+            break;
+         case sgeE_OPERATOR_LIST:
+            lp = Master_Operator_List;
+            break;
+         case sgeE_PE_LIST:
+            lp = Master_Pe_List;
+            break;
+         case sgeE_PROJECT_LIST:
+            lp = Master_Project_List;
+            break;
+         case sgeE_QUEUE_LIST:
+            lp = Master_Queue_List;
+            break;
+         case sgeE_SCHED_CONF:
+            lp = Master_Sched_Config_List;
+            break;
+         case sgeE_SUBMITHOST_LIST:
+            lp = Master_Submithost_List;
+            break;
+         case sgeE_USER_LIST:
+            lp = Master_User_List;
+            break;
+         case sgeE_USERSET_LIST:
+            lp = Master_Userset_List;
+            break;
+
+#ifndef __SGE_NO_USERMAPPING__
+         case sgeE_HOST_GROUP_LIST:
+            lp = Master_Host_Group_List;
+            break;
+         case sgeE_USERMAPPING_ENTRY_LIST:
+            lp = Master_Usermapping_Entry_List;
+            break;
+#endif
+      }
+
       event = lCreateElem(ET_Type); 
 
       /* fill in event number and increment EV_next_number of event recipient */
@@ -1078,13 +1180,6 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gd
       return;
    }
 
-   if (sge_manager(user)) {
-      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
-      DEXIT;
-      return;
-   }
-
    for_each(idep, request->lp) {
       int id;
       const char *idstr = lGetString(idep, ID_str);
@@ -1105,7 +1200,7 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gd
          /* kill all event clients except schedd */
          for_each(event_client, EV_Clients) {
             if(lGetUlong(event_client, EV_id) >= EV_ID_FIRST_DYNAMIC) {
-               sge_gdi_kill_eventclient_(event_client, host, user, answer);
+               sge_gdi_kill_eventclient_(event_client, host, user, uid, answer);
             }
          }
       } else {
@@ -1119,14 +1214,23 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gd
             sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EEXIST, 0);
             continue;
          }
-         sge_gdi_kill_eventclient_(event_client, host, user, answer);
+         sge_gdi_kill_eventclient_(event_client, host, user, uid, answer);
       }
    }
 }
    
-void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, sge_gdi_request *answer) 
+void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, uid_t uid, sge_gdi_request *answer) 
 {
    DENTER(GDI_LAYER, "sge_gdi_kill_eventclient_");
+
+   /* must be either manager or owner of the event client */
+   if (sge_manager(user) && uid != lGetUlong(event_client, EV_uid)) {
+      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
+      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      DEXIT;
+      return;
+   }
+
    /* add a sgeE_SHUTDOWN event */
    sge_add_event(event_client, sgeE_SHUTDOWN, 0, 0, NULL, NULL);
    sge_flush_events(event_client, FLUSH_EVENTS_SET);

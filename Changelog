@@ -1,3 +1,11 @@
+JG-2001-11-30-1: Enhancem.: Event client mechanism:
+                            - any user may start an event client from an admin
+                              or submit host
+                            - changing event client parameters (subscription or
+                              event delivery interval) does not take immediate
+                              effect, but a number of changes can be made 
+                              effective by a single qmaster communication.
+
 JG-2001-11-30-0: Cleanup:   made a number of function parameters const
 
 CR-2001-11-30-1: Bugfix:    qrsh error with empty job parameters

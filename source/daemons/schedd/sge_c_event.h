@@ -45,14 +45,16 @@ int ec_subscribe_all(void);
 int ec_unsubscribe(int event);
 int ec_unsubscribe_all(void);
 
+int ec_set_edtime(int intval);
+int ec_get_edtime(void);
+
+int ec_commit(void);
+
 int ec_get(lList **);
 
 void ec_mark4registration(void);
 int ec_need_new_registration(void);
 
-
-int ec_set_edtime(int intval);
-int ec_get_edtime(void);
 
 
 #endif /* __SGE_C_EVENT_H */

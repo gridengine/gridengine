@@ -1182,7 +1182,6 @@ char *user
    case SGE_COMPLEX_LIST:
    case SGE_OPERATOR_LIST:
    case SGE_MANAGER_LIST:
-   case SGE_EVENT_LIST:
    case SGE_PE_LIST:
    case SGE_CONFIG_LIST:
    case SGE_SC_LIST:
@@ -1227,6 +1226,13 @@ char *user
       */
       break;
 
+   case SGE_EVENT_LIST:
+      /* 
+         an event client can be started by any user - it can only
+         read objects like SGE_GDI_GET
+         delete requires more info - is done in sge_gdi_kill_eventclient
+      */  
+      break;
    default:
       sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
       sge_add_answer(alpp, SGE_EVENT, STATUS_ENOIMP, 0);
@@ -1253,7 +1259,6 @@ lListElem *ep
    switch (target) {
 
    case SGE_ORDER_LIST:
-   case SGE_EVENT_LIST:
    case SGE_ADMINHOST_LIST:
    case SGE_OPERATOR_LIST:
    case SGE_MANAGER_LIST:
@@ -1320,6 +1325,19 @@ lListElem *ep
       }
       break;
 
+   case SGE_EVENT_LIST:
+      /* to start an event client or if an event client
+         performs modify requests on itself
+         it must be on a submit or an admin host 
+       */
+      if ( (!sge_locate_host(host, SGE_SUBMITHOST_LIST)) 
+        && (!sge_locate_host(host, SGE_ADMINHOST_LIST))) {
+        ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+        sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+        DEXIT;
+        return 1;
+      }
+      break;
    default:
       sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
       sge_add_answer(alpp, SGE_EVENT, STATUS_ENOIMP, 0);

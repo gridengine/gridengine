@@ -52,11 +52,14 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "msg_schedd.h"
+#include "sge_exit.h"
 
 
 static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number);
 static int get_event_list(int sync, lList **lp);
-static int ec_config_changed(void);
+static void ec_config_changed(void);
+
+static int config_changed = 0;
 
 /*---------------------------------------- 
  *  this flag is used to control 
@@ -176,8 +179,9 @@ int ec_get_edtime(void) {
  *---------------------------------------------------------*/
 int ec_register(void)
 {
-   int success;
+   int success = 0;
    lList *lp, *alp;
+   lListElem *aep;
 
    DENTER(TOP_LAYER, "ec_register");
 
@@ -218,8 +222,11 @@ int ec_register(void)
     *  - if this event client is already enrolled at qmaster
     */
    alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp, NULL, NULL);
-  
-   success = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
+ 
+   aep = lFirst(alp);
+ 
+   success = (lGetUlong(aep, AN_status)==STATUS_OK);   
+
    if (success) { 
       lListElem *new_ec;
       u_long32 new_id = 0;
@@ -234,9 +241,21 @@ int ec_register(void)
          DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
          lFreeList(lp); 
          lFreeList(alp);
+
+         config_changed = 0;
+         
          DEXIT;
          return 1;
       }
+   } else {
+      if (lGetUlong(aep, AN_quality) == NUM_AN_ERROR) {
+         ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
+         lFreeList(lp);
+         lFreeList(alp);
+         DEXIT;
+         SGE_EXIT(1);
+         return 0;
+      }   
    }
 
    lFreeList(lp); 
@@ -317,10 +336,12 @@ int ec_subscribe(int event)
       subscription[event] = '1';
    }
 
-   lSetString(ec, EV_subscription, subscription);
-   free(subscription);
+   if(strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+      lSetString(ec, EV_subscription, subscription);
+      ec_config_changed();
+   }
 
-   ec_config_changed();
+   free(subscription);
 
    DEXIT;
    return 1;
@@ -375,10 +396,12 @@ int ec_unsubscribe(int event)
       }
    }
 
-   lSetString(ec, EV_subscription, subscription);
+   if(strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+      lSetString(ec, EV_subscription, subscription);
+      ec_config_changed();
+   }
+   
    free(subscription);
-
-   ec_config_changed();
 
    DEXIT;
    return 1;
@@ -389,12 +412,17 @@ int ec_unsubscribe_all(void)
    return ec_unsubscribe(sgeE_ALL_EVENTS);
 }
 
-int ec_config_changed(void) 
+void ec_config_changed(void) 
+{
+   config_changed = 1;
+}
+
+int ec_commit(void) 
 {
    int success;
    lList *lp, *alp;
 
-   DENTER(TOP_LAYER, "ec_config_changed");
+   DENTER(TOP_LAYER, "ec_commit");
 
    /* not yet initialized? Cannot send modification to qmaster! */
    if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
@@ -406,6 +434,12 @@ int ec_config_changed(void)
    /* not (yet) registered? Cannot send modification to qmaster! */
    if(ec_need_new_registration()) {
       DPRINTF((MSG_EVENT_NOTREGISTERED));
+      DEXIT;
+      return 0;
+   }
+
+   if(!config_changed) {
+      DPRINTF(("no changes to commit\n"));
       DEXIT;
       return 0;
    }
@@ -424,6 +458,7 @@ int ec_config_changed(void)
    lFreeList(alp);
    
    if (success) {
+      config_changed = 0;
       DPRINTF(("CHANGE CONFIGURATION SUCCEEDED\n"));
       DEXIT;
       return 1;
@@ -467,7 +502,11 @@ lList **event_list
       else
          need_register = 0;
    }
-         
+      
+   if(config_changed) {
+      ec_commit();
+   }
+      
    /* receive_message blocks in the first loop */
    for (sync = 1; !(ret = get_event_list(sync, &report_list)); sync = 0) {
       

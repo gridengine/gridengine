@@ -1,3 +1,7 @@
+JG-2002-01-08-0: Enhancem.: Made "with I18N" default for solaris, solaris64
+                            and glinux architectures.
+                            Fixed broken build with I18N.
+
 AH-2002-01-08-0: Cleanup:   Removed old and unused starter code in shepherd
 
 JG-2002-01-07-1: Testsuite: handle_vi_edit sometimes "worked too fast" 

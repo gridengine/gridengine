@@ -166,13 +166,14 @@ usage:
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
-   echo "-mankv		   -> generate man pages checked out with '-kv' flag"
+   echo "-mankv		      -> generate man pages checked out with '-kv' flag"
    echo "-pr-geee          -> generate man pages for 'Grid Engine Enterprise Edition'"
    echo "-pr-sge           -> generate man pages for 'Sun Grid Engine'"
    echo "-pr-sgeee         -> generate man pages for 'Sun Grid Engine, Enterprise Edition'"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-n32              -> irix: generate n32 objects"
    echo "-no-core          -> don't compile the core system"
+   echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
    echo "-no-qmake         -> don't compile qmake"
    echo "-no-qmon          -> don't compile qmon 3rdparty libs and qmon client"
@@ -311,7 +312,17 @@ set PERLGUI_CLEAN = ""
 # end PERLGUI
 
 # Compile with gettext and libintl
-set WITH_GETTEXT = 0
+# we have platform dependent defaults
+switch ($BUILDARCH) 
+   case LINUX6:
+   case SOLARIS:
+   case SOLARIS64:
+      set WITH_GETTEXT = 1
+      breaksw
+   default:
+      set WITH_GETTEXT = 0
+      breaksw
+endsw      
 # end Compile with gettext and libintl
 
 # Compile with usermapping feature
@@ -518,6 +529,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-core":
       set CORE = 0
+      breaksw
+   case  "-no-intl"
+      set WITH_GETTEXT = 0
       breaksw
    case "-no-mk":
       set nomk
@@ -1200,9 +1214,6 @@ case SOLARIS86:
    set LOADAVGLIBS = "-lkvm -lkstat"
 #   set PARALLEL = "-j 1"
 #   set MAKE=gmake
-   if ( $BUILDARCH == SOLARIS86 ) then
-      set WITH_GETTEXT = 0
-   endif
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
@@ -1395,12 +1406,12 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-#      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" ) then
-#         set LIBINTL = ""
-#      else
+      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" ) then
+         set LIBINTL = ""
+      else
          set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
          set LIBINTL = "-lintl -lnlsut"
-#      endif
+      endif
    endif
    set LIBS = "$LIBINTL $LIBS"
    set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ -I$GETTEXTBASE/$BUILDARCH/include"

@@ -37,6 +37,7 @@
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
+#include "sge_arch.h"
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 
@@ -151,10 +152,10 @@ char *localeDir
 
   /* no directory given, using default one */
   if (locDir == NULL) {
-     const char *sge_root = sge_get_root_dir();
+     const char *sge_root = sge_get_root_dir(0);
      char* root = NULL;
      
-     if (sge_root != NULL)) {
+     if (sge_root != NULL) {
          root = strdup(sge_root);
      } 
      

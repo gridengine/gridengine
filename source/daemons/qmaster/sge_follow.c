@@ -922,7 +922,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             Follow_Control.last_update = now;
          }   
 
-         if (now >= (Follow_Control.last_update + 120)) {
+         if (now >= (Follow_Control.last_update + spool_time)) {
             is_spool = true; 
             Follow_Control.last_update = now;
          }

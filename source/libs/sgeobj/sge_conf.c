@@ -65,6 +65,7 @@
 #include "msg_sgeobjlib.h"
 
 #define SGE_BIN "bin"
+#define STREESPOOLTIMEDEF 240
 
 extern u_long32 loggingfacility;
 
@@ -110,6 +111,13 @@ bool simulate_hosts = false;
  */
 
 int scheduler_timeout = 0;
+
+/**
+ * This value specifies the minimum time for spooling the sharetree usage.
+ * It is used and evaluated in the sge_follow module. The users and
+ * projects are spooled, when the qmaster goes down.
+ */
+int spool_time = STREESPOOLTIMEDEF;
 
 /* 
  * Reserved usage flags
@@ -501,6 +509,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       do_authentication = true;
       compression_level = 0;
       compression_threshold = 10 * 1024;
+      spool_time = STREESPOOLTIMEDEF;
       use_qidle = false;
       disable_reschedule = false;   
       simulate_hosts = false;
@@ -526,6 +535,13 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          }
          if (parse_bool_param(s, "PROF_TEVENT", &prof_tevent_thrd)) {
+            continue;
+         }
+         if (parse_int_param(s, "STREE_SPOOL_INTERVAL", &spool_time, TYPE_TIM)) {
+            if (spool_time<= 0) {
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
+               spool_time = STREESPOOLTIMEDEF;
+            }
             continue;
          }
          if (parse_bool_param(s, "FORBID_APPERROR", &forbid_apperror)) {

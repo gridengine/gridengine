@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/02 16:57:09 $     Revision: $Revision: 1.36 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/12 15:09:09 $     Revision: $Revision: 1.37 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/02 16:57:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/12 15:09:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -984,7 +984,13 @@ Enables the profiling for qmaster event deliver thread.
 Enables the profiling for qmaster timed event thread.
 (e.g. PROF_TEVENT=true)
 .PP
-
+.IP "\fISTREE_SPOOL_INTERVAL\fP"
+Sets the time interval for spooling the sharetree usage. The
+default is set to 00:04:00. The setting accepts colon-separated
+string or seconds. There is no setting to turn the sharetree spooling
+off. 
+(e.g. STREE_SPOOL_INTERVAL=00:02:00)
+.PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP

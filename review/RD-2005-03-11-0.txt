@@ -6,7 +6,14 @@ Date: 2005-03-11
 
 1 Identification
 
-RD-2005-03-11-0: Bugfix:   Spooledit fails during database upgradeA
+RD-2005-03-16-0: Bugfix:   Spooledit fails during database upgrade
+                           RD-2005-03-11-0 had problems with string
+                           which includes quotations. 
+                 Issue:    1425
+                 Bugtraq:  6239394
+                 Review:   JG
+
+RD-2005-03-11-0: Bugfix:   Spooledit fails during database upgrade
                  Issue:    1425
                  Bugtraq:  6239394
                  Review:   JG

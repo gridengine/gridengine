@@ -46,6 +46,7 @@
 #include "cull_lerrnoP.h"
 #include "basis_types.h"
 #include "sge_dstring.h"
+#include "sge_string.h"
 
 #define READ_LINE_LENGHT 255
 
@@ -265,6 +266,7 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
    lListElem *tep;
    char space[256];
    const char *str;
+   dstring dstr = DSTRING_INIT;
 
    DENTER(CULL_LAYER, "lDumpElemFp");
 
@@ -285,6 +287,7 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
 
    ret = fprintf(fp, "%s{ \n", space);
    for (i = 0, ret = 0; ep->descr[i].nm != NoName && ret != EOF; i++) {
+      char *tok = NULL;
 
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
@@ -297,8 +300,18 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
          break;
       case lStringT:
          str = lGetPosString(ep, i);
+         /* quote " inside str */
+         if ((tok = sge_strtok(str, "\"")) != NULL) {
+            sge_dstring_append(&dstr, tok);
+            while ((tok=sge_strtok(NULL, "\"")) != NULL) {
+               sge_dstring_append(&dstr, "\\\"");
+               sge_dstring_append(&dstr, tok);
+            }
+         }
+         str = sge_dstring_get_string(&dstr);
          ret = fprintf(fp, "%s/* %-20.20s */ \"%s\"\n",
                   space, lNm2Str(ep->descr[i].nm), str != NULL ? str : "");
+         sge_dstring_clear(&dstr);
          break;
       case lHostT:
          str = lGetPosHost(ep, i);
@@ -353,6 +366,7 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
          break;
       }
    }
+   sge_dstring_free(&dstr);
 
    ret = fprintf(fp, "%s}\n", space);
 
@@ -1111,6 +1125,9 @@ static int fGetString(FILE *fp, lString *tp)
       return -1;
    }
    for (i = 0; s[i] != '\0' && s[i] != '"'; i++) {
+      if (s[i] == '\\') {
+         i++;
+      }
       sge_dstring_append_char(&sp, s[i]);
    }
    if (s[i] != '"') {

@@ -1,3 +1,6 @@
+CR-2003-07-21-0: Testsuite: modified scheduler and throughput test to support
+                            new profiling output from scheduler.
+
 EB-2003-07-21-1: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
                             * After removing slots and np_load_avg attribute
                               it was not possible to add the attributes again

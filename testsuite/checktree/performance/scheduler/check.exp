@@ -280,16 +280,24 @@ proc scheduler_measurement { repeat_count job_count } {
                   set st_pos [string first "|I|" $line ]
                   incr st_pos 3
                   set schedd_string [ string range $line $st_pos end ]
+
+                  if { [ string compare "PROF:" [lindex $schedd_string 0]] == 0 } {
+                      set schedd_string [ string range $schedd_string 6 end ]
+                  }
+
+
                   if { [ string compare "in" [lindex $schedd_string 1 ]] != 0 } {
                       close_spawn_process $schedd_messages_sid
                       set_error -1 "format error for orders (1)"
                       return -1
                    }
                    set schedd_time [ lindex $schedd_string 2 ]  ;# this is wall clock time 
-                   set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
-                   set schedd_time_length [string length $schedd_time]
-                   incr schedd_time_length -3
-                   set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
+                   if { [string match "*orders*" [lindex $schedd_string 9]] == 0 } {
+                      set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
+                      set schedd_time_length [string length $schedd_time]
+                      incr schedd_time_length -3
+                      set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
+                   }
                    for { set s_index 0 } { $s_index < [llength $schedd_string] } { incr s_index 1 } {
                       if { [string compare [lindex $schedd_string $s_index] "orders," ] == 0  } {
                          break
@@ -326,6 +334,7 @@ proc scheduler_measurement { repeat_count job_count } {
          } 
 
          scheduler_setup_test_conditions $job_count
+         puts $CHECK_OUTPUT "sleeping ..."
          sleep 5
          catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
          set wait_for_schedd_nr $schedd_nr
@@ -622,7 +631,8 @@ proc scheduler_setup_test_conditions { nr_of_jobs } {
    if { $my_timeout < [timestamp] } {
       add_proc_error "scheduler_setup_test_conditions" -1 "timeout error(2)"
    }
-   sleep 60 ;# let qmaster time to send jobs to scheduler
+   puts $CHECK_OUTPUT "sleeping ..."
+   sleep 5 ;# let qmaster time to send jobs to scheduler
 }
 
 proc scheduler_cleanup {} {

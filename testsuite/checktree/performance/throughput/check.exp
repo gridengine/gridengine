@@ -931,10 +931,20 @@ proc run_throughput_test {} {
 
 #new                                                  0      1   2    3   4   5 6 7     8  9
 #  Wed Feb 12 10:53:06 2003|schedd|es-ergb01-01|I|scheduled in 0.010 (u 0.010 + s 0.000 = 0.010): 0 fast, 0 complex, 0 orders, 5 H, 30 Q, 34 QA, 0 J(qw), 0 J(r), 0 J(x), 2 C, 1 ACL, 1 PE, 1 CONF, 0 U, 1 D, 1 PRJ, 0 ST, 1 CKPT, 0 RU
+
+# newest
+#  Mon Jul 21 15:29:35 2003|schedd|es-ergb01-01|I|PROF: scheduled in 0.000 (u 0.000 + s 0.000 = 0.000): 0 fast, 0 complex, 0 orders, 4 H, 0 Q, 3 QA, 0 J(qw), 0 J(r), 0 J(s), 0 J(h), 0 J(e), 0 J(x), 0 J(all), 3 C, 1 ACL, 1 PE, 1 CONF, 0 U, 0 D, 0 PRJ, 0 ST, 1 CKPT, 0 RU
+
+
                    set st_pos [string first "|I|" $help ]
                    incr st_pos 3
                    set schedd_string [ string range $help $st_pos end ]
 #                   puts $CHECK_OUTPUT $schedd_string
+                   if { [ string compare "PROF:" [lindex $schedd_string 0]] == 0 } {
+                      set schedd_string [ string range $schedd_string 6 end ]
+#                      puts $CHECK_OUTPUT "new schedd string: \n$schedd_string"
+                   }
+
                    if { [ string compare "in" [lindex $schedd_string 1 ]] != 0 } {
                       foreach elem $remote_spawn_list {
                          close_spawn_process $elem

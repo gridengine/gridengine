@@ -323,8 +323,8 @@
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "U32CFormat" was rejected cause there is no job_name in the request\n"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "U32CFormat" was rejected cause it can't be written: "SFN"\n"))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "U32CFormat" was rejected cause it couldn't be written\n"))
+#define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "U32CFormat" dependency change would generate a dependency cycle with job "U32CFormat"\n"))
 #define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "u32" dependency change would generate a dependency cycle with job "u32"\n"))
-
 #define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33234, _("your job "U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33235, _("your job-array "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_LOG_NEWJOB                _MESSAGE(33236, _("new job"))

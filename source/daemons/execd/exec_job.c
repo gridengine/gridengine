@@ -187,24 +187,26 @@ long last_addgrpid
    return (0);
 }
 
-/* JG: TODO: this code does not work! It does not respect pe tasks which also consume addrgpids! */
-static int addgrpid_already_in_use(
-long add_grp_id 
-) {
-   lListElem *jep, *jatep;
-   long jep_addgrpid;
+static int addgrpid_already_in_use(long add_grp_id) 
+{
+   lListElem *job, *ja_task, *pe_task;
    
-   for_each(jep, Master_Job_List) {
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         if (jep && jatep && lGetString(jatep, JAT_osjobid) != (char*) NULL) {
-            jep_addgrpid = atol(lGetString(jatep, JAT_osjobid));
-            
-            if (add_grp_id == jep_addgrpid)
-               return (1);
-         } 
+   for_each(job, Master_Job_List) {
+      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
+         const char *id = lGetString(ja_task, JAT_osjobid);
+         if (id != NULL && atol(id) == add_grp_id) {
+            return 1;
+         }
+
+         for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+            id = lGetString(pe_task, PET_osjobid);
+            if(id != NULL && atol(id) == add_grp_id) {
+               return 1;
+            }
+         }
       }
    }
-   return (0);
+   return 0;
 }
 #endif
 #endif

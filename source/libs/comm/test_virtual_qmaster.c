@@ -62,6 +62,14 @@ cl_com_endpoint_t* event_client_array[10];
 void *my_message_thread(void *t_conf);
 void *my_event_thread(void *t_conf);
 
+
+unsigned long my_application_status(char** info_message) {
+   if ( info_message != NULL ) {
+      *info_message = strdup("not specified (state 1)");
+   }
+   return (unsigned long)1;
+}
+
 void sighandler_client(
 int sig 
 ) {
@@ -123,6 +131,8 @@ extern int main(int argc, char** argv)
 
   printf("startup commlib ...\n");
   cl_com_setup_commlib(CL_ONE_THREAD ,atoi(argv[1]), NULL );
+  cl_com_set_status_func(my_application_status); 
+
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, atoi(argv[2]) , "virtual_master", 1 , 1,0 );

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/08/25 12:16:11 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/10/14 08:07:49 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2004/08/25 12:16:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2004/10/14 08:07:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -90,12 +90,146 @@ This is the number of actual connected clients to this daemon. This also implies
 current qping connection.
 
 \fIstatus:\fP
-The status value of the daemon.
-Currently the status is always 0.
+The status value of the daemon. This value depends on the application which reply to
+the qping request.
+If the application does not provide any information the status is 99999.
+Here are the possible status information values for the xxQS_NAMExx daemons:
+
+.in+3
+qmaster:
+
+.in+3
+\fI0\fP
+There is no unusal timing situation.
+.in-3
+
+.in+3
+\fI1\fP
+One or more threads has reached warning timeout. This may happen when 
+at least one thread does not increment his time stamp for a not usual long
+time. A possible reason for this is a high workload for this thread.
+.in-3
+    
+.in+3
+\fI2\fP
+One or more threads has reached error timeout. This may happen when 
+at least one thread has not incremented his time stamp for longer than
+10 minutes.
+.in-3
+
+.in+3
+\fI3\fP
+The time measurement is not initialized.
+.in-3
+
+execd:
+
+.in+3
+\fI0\fP
+There is no unusal timing situation.
+.in-3
+
+.in+3
+\fI1\fP
+Dispatcher has reached warning timeout. This may happen when 
+the dispatcher does not increment his time stamp for a unusual long
+time. A possible reason for this is a high workload.
+.in-3
+    
+.in+3
+\fI2\fP
+Dispatcher has reached error timeout. This may happen when 
+the dispatcher has not incremented his time stamp for longer than
+10 minutes.
+.in-3
+
+.in+3
+\fI3\fP
+The time measurement is not initialized.
+.in-3
+.in-3
+
 
 \fIinfo:\fP
-Status message of the daemon.
-Currently the status messages is always "ok".
+Status message of the daemon. This value depends on the application which reply to
+the qping request.
+If the application does not provide any information the info message is "not available".
+Here are the possible status information values for the xxQS_NAMExx daemons:
+
+.in+3
+
+qmaster:
+
+.in+3
+The info message contains information for each qmaster thread followed by a thread
+state and time information:
+
+.in+3
+THREAD_NAME: THREAD_STATE (THREAD_TIME)
+.in-3 
+
+.in+3
+THREAD_NAME:
+.in+3
+.nf
+EDT:  Event Delivery Thread
+TET:  Timed Event Thread
+MT:   Message Thread
+SIGT: SIGnal Thread
+.fi
+.in-3
+
+THREAD_STATE:
+.in+3
+.nf
+R: Running
+W: Warning
+E: Error
+.fi
+.in-3
+
+THREAD_TIME:
+.in+3
+.nf
+Time since last timestamp updating.
+.fi
+.in-3
+.in-3
+
+After the dispatcher information follows an additonal information string which describes the
+complete application status.
+.in-3
+
+execd:
+
+.in+3
+The info message contains information for the execd job dispatcher:
+.in+3
+dispatcher: STATE (TIME)
+.in-3
+
+STATE:
+.in+3
+.nf
+R: Running
+W: Warning
+E: Error
+.fi
+.in-3
+
+TIME:
+.in+3
+.nf
+Time since last timestamp updating.
+.fi
+.in-3
+.in-3
+
+After the thread information follows an additonal information string which describes the
+application status.
+
+.in-3
+.in-3
 
 .SS "\fB\-help\fP"
 Prints a list of all options.

@@ -279,8 +279,8 @@ host *uti_state_get_localhost(void)
 *     return value must be released by function caller (don't forget the 
 *     char** array lists inside of struct hostent)
 *
-*     If possible (libngc linked) use getuniquehostname() or 
-*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libngc.
+*     If possible (libcomm linked) use getuniquehostname() or 
+*     cl_com_cached_gethostbyname() or cl_com_gethostname() from commlib.
 *
 *     This will return an sge aliased hostname.
 *
@@ -330,8 +330,8 @@ const char *name
 *     return value must be released by function caller (don't forget the 
 *     char* array lists inside of struct hostent)
 *
-*     If possible (libngc linked) use getuniquehostname() or 
-*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libngc.
+*     If possible (libcomm linked) use getuniquehostname() or 
+*     cl_com_cached_gethostbyname() or cl_com_gethostname() from libcomm.
 *
 *     This will return an sge aliased hostname.
 *
@@ -601,8 +601,8 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
 *     return value must be released by function caller (don't forget the 
 *     char** array lists inside of struct hostent)
 *
-*     If possible (libngc linked) use  cl_com_cached_gethostbyaddr() 
-*     from libngc. This will return an sge aliased hostname.
+*     If possible (libcomm linked) use  cl_com_cached_gethostbyaddr() 
+*     from libcomm. This will return an sge aliased hostname.
 *
 *
 *  NOTES

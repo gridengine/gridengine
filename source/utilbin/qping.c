@@ -54,6 +54,7 @@ static void sighandler_ping(int sig) {
       hup_signal = 1;
       return;
    }
+   cl_com_ignore_timeouts(CL_TRUE);
    do_shutdown = 1;
 }
 

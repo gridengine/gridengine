@@ -734,6 +734,10 @@
 #define MSG_QMASTER_MAX_EVC_LIMIT_U              _MESSAGE(33905, _("qmaster will accept max. "U32CFormat" dynamic event clients\n"))
 #define MSG_QMASTER_COMMUNICATION_ERRORS  _MESSAGE(33906, _("abort qmaster startup due to communication errors\n"))
 
+#define MSG_QMASTER_APPL_STATE_OK                _MESSAGE(33907, _("ok"))
+#define MSG_QMASTER_APPL_STATE_TIMEOUT_WARNING   _MESSAGE(33908, _("thread timeout warning"))
+#define MSG_QMASTER_APPL_STATE_TIMEOUT_ERROR     _MESSAGE(33909, _("thread timeout error"))
+#define MSG_QMASTER_APPL_STATE_CFCFCFCFS         _MESSAGE(33910, _("EDT: %c (%.2f) | TET: %c (%.2f) | MT: %c (%.2f) | SIGT: %c (%.2f) | %s"))
 
 #endif
 

@@ -248,6 +248,8 @@ lList **conf_list
    lListElem *global = NULL;
    lListElem *local = NULL;
    int sleep_counter = 0;
+   cl_com_handle_t* handle = NULL;
+   int ret_val;
    int ret;
    time_t now, last;
 
@@ -274,11 +276,29 @@ lList **conf_list
          } else {
             WARNING((SGE_EVENT, MSG_CONF_NOCONFSLEEP));
          }
-         sleep(5);
+         handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+         ret_val = cl_commlib_trigger(handle);
+         switch(ret_val) {
+            case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_OK:
+               break;
+            default:
+               sleep(1);
+               break;
+         }
          sleep_counter++;
       } else {
          DTRACE;
-         sleep(60);
+         handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+         ret_val = cl_commlib_trigger(handle);
+         switch(ret_val) {
+            case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_OK:
+               break;
+            default:
+               sleep(1);
+               break;
+         }
          now = (time_t) sge_get_gmt();
          if (last > now)
             last=now;

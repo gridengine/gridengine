@@ -411,7 +411,7 @@ static pthread_t              Event_Thread;
 
 static void       event_master_once_init(void);
 static void       init_send_events(void); 
-static void*      send_thread(void*);
+static void*      event_deliver_thread(void*);
 static bool       should_exit(void);
 static int        get_number_of_subscriptions(u_long32 event_type);
 static void       send_events(lListElem *report, lList *report_list);
@@ -2058,7 +2058,7 @@ static void event_master_once_init(void)
 
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-   pthread_create(&Event_Thread, &attr, send_thread, NULL);
+   pthread_create(&Event_Thread, &attr, event_deliver_thread, NULL);
 
 /* init the event subscription counter */
    {
@@ -2121,12 +2121,12 @@ static void init_send_events(void)
    return;
 } /* init_send_events() */
 
-/****** evm/sge_event_master/send_thread() *************************************
+/****** evm/sge_event_master/event_deliver_thread() *************************************
 *  NAME
-*     send_thread() -- send events due 
+*     event_deliver_thread() -- send events due 
 *
 *  SYNOPSIS
-*     static void* send_thread(void *anArg) 
+*     static void* event_deliver_thread(void *anArg) 
 *
 *  FUNCTION
 *     Event send thread. Do common thread initialization. Send events until
@@ -2142,17 +2142,17 @@ static void init_send_events(void)
 *     ??? 
 *
 *  NOTES
-*     MT-NOTE: send_thread() is a thread function. Do NOT use this function
+*     MT-NOTE: event_deliver_thread() is a thread function. Do NOT use this function
 *     MT-NOTE: in any other way!
 *
 *******************************************************************************/
-static void* send_thread(void *anArg)
+static void* event_deliver_thread(void *anArg)
 {
    lListElem *report = NULL; 
    lList *report_list = NULL;
    struct timespec ts;
 
-   DENTER(TOP_LAYER, "send_thread");
+   DENTER(TOP_LAYER, "event_deliver_thread");
 
    sge_qmaster_thread_init(true);
 
@@ -2164,7 +2164,7 @@ static void* send_thread(void *anArg)
 
    while (!should_exit()) {
       /* update thread alive time */
-      sge_update_thread_alive_time(SGE_MASTER_SEND_THREAD);
+      sge_update_thread_alive_time(SGE_MASTER_EVENT_DELIVER_THREAD);
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       /*
        * did a new event arrive which has a flush time of 0 seconds?
@@ -2234,7 +2234,7 @@ static void* send_thread(void *anArg)
    
    DEXIT;
    return NULL;
-} /* send_thread() */
+}
 
 /****** evm/sge_event_master/should_exit() *************************************
 *  NAME

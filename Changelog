@@ -1,3 +1,15 @@
+CR-2004-10-13-0: Enhancem.: - implemented application status callback 
+                              function for execd.
+                            - qping man page update
+                            - CR-2004-10-07-1 (final Part III)
+                            - additional code cleanup
+                            - faster execd reconnect to qmaster when
+                              qmaster was restarted
+                 Review:    AA
+                 Changed:   qmaster execd utilib commlib gdilib
+                 Issue:     1294
+                 Bugtraq:   6176115
+
 JG-2004-10-14-0: Bugfix:    Fixed broken build.
 
 EB-2004-10-13-0: Enhancem.: qstat requests only necessary jobs (qstat -s -u)

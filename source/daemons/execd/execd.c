@@ -75,6 +75,7 @@
 #include "sge_job.h"
 #include "sge_mt_init.h"
 #include "sge_uidgid.h"
+#include "sge_profiling.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -122,6 +123,106 @@ dispatch_entry execd_dispatcher_table[] = {
 
 int main(int argc, char *argv[]);
 
+/****** execd/sge_execd_application_status() ***********************************
+*  NAME
+*     sge_execd_application_status() -- commlib status callback function
+*
+*  SYNOPSIS
+*     unsigned long sge_execd_application_status(char** info_message) 
+*
+*  FUNCTION
+*      This is the implementation of the commlib application status callback
+*      function. This function is called from the commlib when a connected
+*      client wants to get a SIRM (Status Information Response Message).
+*      The standard client for this action is the qping command.
+*
+*      The callback function is set with cl_com_set_status_func() after
+*      commlib initalization.
+*
+*      The function is called by a commlib function which may not run in the
+*      context of the execd application. This means no execd specific
+*      functions should be called (e.g. locking of global variables).
+*
+*      status 0:  no errors
+*      status 1:  dispatcher has reached warning timeout
+*      status 2:  dispatcher has reached error timeout
+*      status 3:  dispatcher alive timeout struct not initalized
+*
+*  INPUTS
+*     char** info_message - pointer to an char* inside commlib.
+*                           info message must be malloced, commlib will
+*                           free this memory. 
+*  RESULT
+*     unsigned long status - status of application
+*
+*  NOTES
+*     This function is MT save
+*******************************************************************************/
+unsigned long sge_execd_application_status(char** info_message) {
+   char buffer[1024];
+   unsigned long status = 0;
+   const char* status_message = NULL;
+   double last_execd_main_time          = 0.0;
+   sge_thread_alive_times_t* thread_times       = NULL;
+
+   struct timeval now;
+
+   status_message = MSG_EXECD_APPL_STATE_OK;
+   sge_lock_alive_time_mutex();
+   gettimeofday(&now,NULL);
+   
+   thread_times = sge_get_thread_alive_times();
+   if ( thread_times != NULL ) {
+      int warning_count = 0;
+      int error_count = 0;
+      double time1;
+      double time2;
+      time1 = now.tv_sec + (now.tv_usec / 1000000.0);
+
+      time2 = thread_times->execd_main.timestamp.tv_sec + (thread_times->execd_main.timestamp.tv_usec / 1000000.0);
+      last_execd_main_time          = time1 - time2;
+
+      /* always set running state */
+      thread_times->execd_main.state   = 'R';
+
+      /* check for warning */
+      if ( thread_times->execd_main.warning_timeout > 0 ) {
+         if ( last_execd_main_time > thread_times->execd_main.warning_timeout ) {
+            thread_times->execd_main.state = 'W';
+            warning_count++;
+         }
+      }
+
+      /* check for error */
+      if ( thread_times->execd_main.error_timeout > 0 ) {
+         if ( last_execd_main_time > thread_times->execd_main.error_timeout ) {
+            thread_times->execd_main.state = 'E';
+            error_count++;
+         }
+      }
+
+      if ( error_count > 0 ) {
+         status = 2;
+         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_ERROR;
+      } else if ( warning_count > 0 ) {
+         status = 1; 
+         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_WARNING;
+      }
+
+      snprintf(buffer, 1024, MSG_EXECD_APPL_STATE_CFS,
+                    thread_times->execd_main.state,
+                    last_execd_main_time,
+                    status_message);
+      if (info_message != NULL && *info_message == NULL) {
+         *info_message = strdup(buffer);
+      }
+   } else {
+      status = 3;
+   }
+   sge_unlock_alive_time_mutex();
+   return status;
+}
+
 /*-------------------------------------------------------------------------*/
 int main(
 int argc,
@@ -131,6 +232,7 @@ char **argv
    char err_str[1024];
    int max_enroll_tries;
    int my_pid;
+   int ret_val;
    static char tmp_err_file_name[SGE_PATH_MAX];
 
    DENTER_MAIN(TOP_LAYER, "execd");
@@ -189,6 +291,16 @@ char **argv
         /* sleep when prepare_enroll() failed */
         sleep(1);
       }
+   }
+
+   /*
+    * now the commlib up and running. Set execd application status function 
+    * ( commlib callback function for qping status information response 
+    *   messages (SIRM) )
+    */
+   ret_val = cl_com_set_status_func(sge_execd_application_status);
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
    /* daemonizes if qmaster is unreachable */   
@@ -348,6 +460,7 @@ static void execd_register()
           *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
           */
          for (i = 0; i< 10 ; i++) {
+            int ret_val;
             
             handle = cl_com_get_handle((char*)prognames[EXECD],1);
             if ( handle == NULL) {
@@ -356,19 +469,31 @@ static void execd_register()
                handle = cl_com_get_handle((char*)prognames[EXECD],1);
             }
 
-            if ( cl_commlib_trigger(handle) != CL_RETVAL_OK) {
-               DPRINTF(("cl_commlib_trigger reported an error - sleeping 1 s"));
-               sleep(1);
+            ret_val = cl_commlib_trigger(handle);
+            switch(ret_val) {
+               case CL_RETVAL_SELECT_TIMEOUT:
+               case CL_RETVAL_OK:
+                  break;
+               default:
+                  DPRINTF(("cl_commlib_trigger reported an error - sleeping 1 s"));
+                  sleep(1);
+                  break;
             }
 
             commlib_error = sge_get_communication_error();
             if ( commlib_error != CL_RETVAL_OK && commlib_error != last_commlib_error ) {
+               u_long32 handle_local_comp_id = 0;
+               u_long32 handle_service_port = 0;
                last_commlib_error = commlib_error;
+               if (handle != NULL) {
+                  handle_local_comp_id = handle->local->comp_id;
+                  handle_service_port = handle->service_port;
+               }
                ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                  uti_state_get_qualified_hostname(),
                                  (char*) prognames[uti_state_get_mewho()],
-                                 u32c(handle->local->comp_id), 
-                                 u32c(handle->service_port),
+                                 u32c(handle_local_comp_id), 
+                                 u32c(handle_service_port),
                                  cl_get_error_text(commlib_error)));
             }
          }

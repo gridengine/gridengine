@@ -2424,7 +2424,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 
    int max_fd = -1;
    int server_fd = -1;
-   int retval = CL_RETVAL_OK;
+   int retval = CL_RETVAL_UNKNOWN;
    int do_read_select = 0;
    int do_write_select = 0;
    int my_errno = 0;

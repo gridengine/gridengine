@@ -46,6 +46,7 @@
 #include "sge_hostname.h"
 #include "sge_security.h"
 #include "sig_handlers.h"
+#include "sge_profiling.h"
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -181,6 +182,7 @@ int dispatch( dispatch_entry*   table,
       if (i != CL_RETVAL_OK) {
          cl_commlib_trigger(cl_com_get_handle( "execd" ,1));
       }
+      sge_update_thread_alive_time(SGE_EXECD_MAIN);
 
       switch (i) {
       case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */

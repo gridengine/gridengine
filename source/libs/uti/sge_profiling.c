@@ -150,8 +150,9 @@ typedef struct {
 } sge_thread_info_t;
 
 /* This is for thread alive timeout measurement */
-static pthread_mutex_t thread_times_mutex = PTHREAD_MUTEX_INITIALIZER;
-static sge_thread_alive_times_t thread_times;
+static pthread_mutex_t           thread_times_mutex = PTHREAD_MUTEX_INITIALIZER;
+static sge_thread_alive_times_t  thread_times;     /* this struct is initalized in sge_update_thread_alive_time() */
+static bool                      thread_times_init_done = false;
 
 static void           prof_info_init(prof_level level, pthread_t thread_id);
 
@@ -1842,10 +1843,13 @@ void sge_unlock_alive_time_mutex(void) {
 *     sge_thread_alive_times_t* - pointer to global thread_times structure
 *
 *  NOTES
-*     MT-NOTE: sge_get_thread_alive_times() is MT safe
+*     MT-NOTE: sge_get_thread_alive_times() is MT safe (if locked)
 *******************************************************************************/
 sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
-   return &thread_times;
+   if (thread_times_init_done == true) {
+      return &thread_times;
+   } 
+   return NULL;
 }
 
 
@@ -1860,8 +1864,8 @@ sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
 *     This function must be called to update the last timestamp information
 *     for the specified thread.
 *
-*     Actual thread identifier are SGE_MASTER_SEND_THREAD, 
-*     SGE_MASTER_DELIVER_EVENT_THREAD, SGE_MASTER_MESSAGE_THREAD and
+*     Actual thread identifier are SGE_MASTER_EVENT_DELIVER_THREAD, 
+*     SGE_MASTER_TIMED_EVENT_THREAD, SGE_MASTER_MESSAGE_THREAD and
 *     SGE_MASTER_SIGNAL_THREAD.
 *
 *  INPUTS
@@ -1873,18 +1877,47 @@ sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
 void sge_update_thread_alive_time(sge_thread_name_t thread) {
    DENTER(TOP_LAYER, "sge_update_thread_alive_time");
    pthread_mutex_lock(&thread_times_mutex);  
+   if ( thread_times_init_done == false ) {
+      /* init sge_thread_alive_times_t struct */
+      memset(&thread_times, 0, sizeof(sge_thread_alive_times_t));
+
+      thread_times.event_deliver_thread.warning_timeout = 10;
+      thread_times.timed_event_thread.warning_timeout   = 30;
+      thread_times.message_thread.warning_timeout       = 10; 
+      thread_times.signal_thread.warning_timeout        = 0;  /* no timeout for this thread */
+      thread_times.execd_main.warning_timeout           = 10;
+      
+
+      thread_times.event_deliver_thread.error_timeout   = 600;
+      thread_times.timed_event_thread.error_timeout     = 600;
+      thread_times.message_thread.error_timeout         = 600;
+      thread_times.signal_thread.error_timeout          = 0;  /* no timeout for this thread */
+      thread_times.execd_main.error_timeout             = 600;
+      
+
+      gettimeofday(&(thread_times.event_deliver_thread.timestamp),NULL);
+      gettimeofday(&(thread_times.timed_event_thread.timestamp),NULL);
+      gettimeofday(&(thread_times.message_thread.timestamp),NULL);
+      gettimeofday(&(thread_times.signal_thread.timestamp),NULL);
+      gettimeofday(&(thread_times.execd_main.timestamp),NULL);
+
+      thread_times_init_done = true;
+   }
    switch(thread) {
-      case SGE_MASTER_SEND_THREAD:
-         gettimeofday(&(thread_times.send_thread),NULL);
+      case SGE_MASTER_EVENT_DELIVER_THREAD:
+         gettimeofday(&(thread_times.event_deliver_thread.timestamp),NULL);
          break;
-      case SGE_MASTER_DELIVER_EVENT_THREAD:
-         gettimeofday(&(thread_times.deliver_event_thread),NULL);
+      case SGE_MASTER_TIMED_EVENT_THREAD:
+         gettimeofday(&(thread_times.timed_event_thread.timestamp),NULL);
          break;
       case SGE_MASTER_MESSAGE_THREAD:
-         gettimeofday(&(thread_times.message_thread),NULL);
+         gettimeofday(&(thread_times.message_thread.timestamp),NULL);
          break;
       case SGE_MASTER_SIGNAL_THREAD:
-         gettimeofday(&(thread_times.signal_thread),NULL);
+         gettimeofday(&(thread_times.signal_thread.timestamp),NULL);
+         break;
+      case SGE_EXECD_MAIN:
+         gettimeofday(&(thread_times.execd_main.timestamp),NULL);
          break;
    }
    pthread_mutex_unlock(&thread_times_mutex);  

@@ -50,7 +50,6 @@
  * Thread specific data is initialized in the spooling startup function.
  */
 struct bdb_info {
-   /* JG: TODO: we need this mutex to serialize reconnect actions! */
    pthread_mutex_t   mtx;                 /* lock access to this object */
    pthread_key_t     key;                 /* for thread specific data */
   
@@ -93,5 +92,11 @@ bdb_set_txn(struct bdb_info *info, DB_TXN *txn);
 
 const char *
 bdb_get_dbname(struct bdb_info *info, dstring *buffer);
+
+void
+bdb_lock_info(struct bdb_info *info);
+
+void
+bdb_unlock_info(struct bdb_info *info);
 
 #endif /* __SGE_BDB_TYPES_H */    

@@ -615,38 +615,51 @@ int
 hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object) 
 {
    bool tmp_ret = true;
+   bool dbret;
    const char *name = lGetHost(this_elem, HGRP_name);
    lList *cqueue_list = lGetList(this_elem, HGRP_cqueue_list);
    lListElem *cqueue = NULL;
    dstring key_dstring = DSTRING_INIT;
+   lList *spool_answer_list = NULL;
 
    DENTER(TOP_LAYER, "hgroup_spool");
 
-   for_each (cqueue, cqueue_list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-      const char *cqname = lGetString(cqueue, CQ_name);
+   /* start a transaction for spooling of all affected objects */
+   dbret = spool_transaction(&spool_answer_list, spool_get_default_context(),
+                             STC_begin);
+   answer_list_output(&spool_answer_list);
+   if (!dbret) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_OPENTRANSACTION_FAILED);
+      tmp_ret = false;
+   }
+  
+   if (tmp_ret) {
+      for_each (cqueue, cqueue_list) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
+         const char *cqname = lGetString(cqueue, CQ_name);
 
-      for_each(qinstance, qinstance_list) {
-         u_long32 tag = lGetUlong(qinstance, QU_tag);
+         for_each(qinstance, qinstance_list) {
+            u_long32 tag = lGetUlong(qinstance, QU_tag);
 
-         if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
-            lList *spool_answer_list = NULL;
-            bool dbret;
-            const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
-                                             cqname,
-                                             lGetHost(qinstance, QU_qhostname));
-            dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                                       qinstance, key, SGE_TYPE_QINSTANCE);
-            answer_list_output(&spool_answer_list);
+            if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
+               const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
+                                                cqname,
+                                                lGetHost(qinstance, QU_qhostname));
+               dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
+                                          qinstance, key, SGE_TYPE_QINSTANCE);
+               answer_list_output(&spool_answer_list);
 
-            if (!dbret) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_PERSISTENCE_WRITE_FAILED_S,
-                                       key);
-               tmp_ret = false;
-               break;
+               if (!dbret) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_PERSISTENCE_WRITE_FAILED_S,
+                                          key);
+                  tmp_ret = false;
+                  break;
+               }
             }
          }
       }
@@ -655,9 +668,6 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
    sge_dstring_free(&key_dstring);
 
    if (tmp_ret) {
-      lList *spool_answer_list = NULL;
-      bool dbret;
-
       dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
                                  this_elem, name, SGE_TYPE_HGROUP);
       answer_list_output(&spool_answer_list);
@@ -670,9 +680,22 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
       }
    }
 
+   /* commit or rollback database transaction */
+   dbret = spool_transaction(&spool_answer_list, spool_get_default_context(),
+                             tmp_ret ? STC_commit : STC_rollback);
+   answer_list_output(&spool_answer_list);
+   if (!dbret) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_CLOSINGTRANSACTION_FAILED);
+      tmp_ret = false;
+   }
+ 
+   /* commit or rollback hostgroup action */
    if (!tmp_ret) {
       hgroup_rollback(this_elem);
    }
+
    DEXIT;
    return tmp_ret ? 0 : 1;
 }

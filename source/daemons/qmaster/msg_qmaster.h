@@ -705,10 +705,22 @@
 #define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges\n"))
 #define MSG_COM_NOSCHEDDREGMASTER _MESSAGE(33816, _("no scheduler registered at qmaster\n"))
 #define MSG_COM_SCHEDMON_SS       _MESSAGE(33817, _(SFN"@"SFN" triggers scheduler monitoring\n"))
-#define MSG_PERSISTENCE_WRITE_FAILED_S    _MESSAGE(33820, _("error writing object "SFQ" to spooling database\n"))
-#define MSG_PERSISTENCE_DELETE_FAILED_S   _MESSAGE(33821, _("error deleting object "SFQ" from spooling database\n"))
-#define MSG_JOB_CHANGEJOBSHARE            _MESSAGE(33822, _("change job share"))
-#define MSG_JOB_PRIOSET_SSUU              _MESSAGE(33823, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
+
+/*
+ * sge_persistence_qmaster.c
+ */
+
+#define MSG_PERSISTENCE_WRITE_FAILED_S _MESSAGE(33820, _("error writing object "SFQ" to spooling database\n"))
+#define MSG_PERSISTENCE_DELETE_FAILED_S _MESSAGE(33821, _("error deleting object "SFQ" from spooling database\n"))
+#define MSG_PERSISTENCE_OPENTRANSACTION_FAILED _MESSAGE(33822, _("error starting a transaction in the spooling database\n"))
+#define MSG_PERSISTENCE_CLOSINGTRANSACTION_FAILED _MESSAGE(33823, _("error closing a transaction in the spooling database\n"))
+
+
+/*
+ * other
+ */
+#define MSG_JOB_CHANGEJOBSHARE            _MESSAGE(33900, _("change job share"))
+#define MSG_JOB_PRIOSET_SSUU              _MESSAGE(33901, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
 
 
 #endif

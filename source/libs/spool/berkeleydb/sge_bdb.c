@@ -178,6 +178,17 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
    }
 
    if (ret) {
+      /* we have to lock the info structure, as multiple threads might try
+       * to open the env in parallel.
+       */
+      bdb_lock_info(info);
+
+      /* check, if env has been initialized in the meantime */
+      env = bdb_get_env(info);
+   }
+
+   /* continue only, if env isn't initialized yet */
+   if (ret && env == NULL) {
       int flags = 0;
 
       if (server != NULL) {
@@ -194,64 +205,119 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
                                  db_strerror(dbret));
          ret = false;
       }
-   }
 
-   /* do deadlock detection internally (only in case of local spooling) */
-   if (ret && server == NULL) {
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = env->set_lk_detect(env, DB_LOCK_DEFAULT);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      if (dbret != 0) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S,
-                                 db_strerror(dbret));
-         ret = false;
-      } 
-   }
+      /* do deadlock detection internally (only in case of local spooling) */
+      if (ret && server == NULL) {
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = env->set_lk_detect(env, DB_LOCK_DEFAULT);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S,
+                                    db_strerror(dbret));
+            ret = false;
+         } 
+      }
 
-   /* if we use a RPC server, set it in the DB_ENV */
-   if (ret && server != NULL) {
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = env->set_rpc_server(env, NULL, server, 0, 0, 0);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      if (dbret != 0) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTESETRPCSERVER_S,
-                                 db_strerror(dbret));
-         ret = false;
-      } 
-   }
+      /* if we use a RPC server, set it in the DB_ENV */
+      if (ret && server != NULL) {
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = env->set_rpc_server(env, NULL, server, 0, 0, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_COULDNTESETRPCSERVER_S,
+                                    db_strerror(dbret));
+            ret = false;
+         } 
+      }
 
-   /* open the environment */
-   if (ret) {
-      int flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | 
-                  DB_INIT_TXN | DB_RECOVER;
-
+      /* the lock parameters only can be set, if we have local spooling.
+       * RPC server: use DB_CONFIG file.
+       */
       if (server == NULL) {
-         flags |= DB_THREAD;
+         /* worst case scenario: n lockers, all changing m objects in 
+          * parallel 
+          */
+         int lockers = 10;
+         int objects = 10000;
+         int locks = lockers * 2 * objects;
+
+         /* set locking params: max lockers */
+         if (ret) {
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbret = env->set_lk_max_lockers(env, lockers);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_COULDNTSETLOCKERS_S,
+                                       db_strerror(dbret));
+               ret = false;
+            } 
+         }
+         /* set locking params: max objects */
+         if (ret) {
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbret = env->set_lk_max_objects(env, objects);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_COULDNTSETOBJECTS_S,
+                                       db_strerror(dbret));
+               ret = false;
+            } 
+         }
+         /* set locking params: max locks */
+         if (ret) {
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbret = env->set_lk_max_locks(env, locks);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_COULDNTSETLOCKS_S,
+                                       db_strerror(dbret));
+               ret = false;
+            } 
+         }
       }
 
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = env->open(env, path, flags,
-                        S_IRUSR | S_IWUSR);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      if (dbret != 0){
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSS,
-                                 server == NULL ? "local spooling" : server, 
-                                 path, db_strerror(dbret));
-         ret = false;
-         env = NULL;
-         /* JG: TODO: shouldn't we somehow free the env handle? */
-      }
-      
-      bdb_set_env(info, env);
+      /* open the environment */
+      if (ret) {
+         int flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | 
+                     DB_INIT_TXN | DB_RECOVER;
 
-/*       dbret = env->set_flags(env, DB_DIRECT_DB | DB_DIRECT_LOG, 1); */
+         if (server == NULL) {
+            flags |= DB_THREAD;
+         }
+
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = env->open(env, path, flags,
+                           S_IRUSR | S_IWUSR);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0){
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_COULDNTOPENENVIRONMENT_SSS,
+                                    server == NULL ? "local spooling" : server, 
+                                    path, db_strerror(dbret));
+            ret = false;
+            env = NULL;
+            /* JG: TODO: shouldn't we somehow free the env handle? */
+         }
+         
+         bdb_set_env(info, env);
+
+   /*       dbret = env->set_flags(env, DB_DIRECT_DB | DB_DIRECT_LOG, 1); */
+      }
    }
+
+   /* now unlock the info structure */
+   bdb_unlock_info(info);
 
    DEXIT;
    return ret;
@@ -270,6 +336,11 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
 
    DENTER(TOP_LAYER, "spool_berkeleydb_open_database");
 
+   /* we have to lock info, as multiple threads might try to (re)open
+    * the database connection in parallel 
+    */
+   bdb_lock_info(info);
+    
    env = bdb_get_env(info);
 
    if (env == NULL) {
@@ -283,18 +354,31 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
                               dbname);
       sge_dstring_free(&dbname_dstring);
       ret = false;
-   } else {
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      dbret = db_create(&db, env, 0);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      if (dbret != 0) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_COULDNTCREATEDBHANDLE_S,
-                                 db_strerror(dbret));
-         ret = false;
-         db = NULL;
-      } else {
+   }
+
+   /* check db - another thread could have opened it in the meantime */
+   if (ret) {
+      db = bdb_get_db(info);
+   }
+
+   if (ret && db == NULL) {
+      /* create a database handle */
+      if (ret) {
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = db_create(&db, env, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (dbret != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_COULDNTCREATEDBHANDLE_S,
+                                    db_strerror(dbret));
+            ret = false;
+            db = NULL;
+         }
+      }
+
+      /* open database handle */
+      if (ret) {
          int flags = 0;
          int mode  = 0;
 
@@ -327,9 +411,14 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
          }
       }
 
-      bdb_set_db(info, db);
-      DPRINTF(("opened database connection, env = %p, db = %p\n", env, db));
+      /* if everything is ok - set the database handle */
+      if (ret) {
+         bdb_set_db(info, db);
+         DPRINTF(("opened database connection, env = %p, db = %p\n", env, db));
+      }
    }
+
+   bdb_unlock_info(info);
 
    DEXIT;
    return ret;

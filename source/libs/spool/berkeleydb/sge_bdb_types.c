@@ -37,9 +37,10 @@
 /* common */
 #include "basis_types.h"
 
-/* rmon */
-#include "sgermon.h"
-#include "sge_log.h"
+/* libs */
+#include "rmon/sgermon.h"
+#include "uti/sge_log.h"
+#include "lck/sge_mtutil.h"
 
 /* local */
 #include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
@@ -101,7 +102,7 @@ bdb_create(const char *server, const char *path)
    int ret;
    struct bdb_info *info = (struct bdb_info *) malloc(sizeof(struct bdb_info));
 
-/*    pthread_mutex_init(&(info->mtx), NULL); */
+   pthread_mutex_init(&(info->mtx), NULL);
    ret = pthread_key_create(&(info->key), bdb_destroy_connection);
    if (ret != 0) {
       fprintf(stderr, "can't initialize key for thread local storage: %s\n", strerror(ret));
@@ -468,5 +469,21 @@ bdb_get_dbname(struct bdb_info *info, dstring *buffer)
    }
 
    return ret;
+}
+
+void
+bdb_lock_info(struct bdb_info *info)
+{
+   DENTER(TOP_LAYER, "bdb_lock_info");
+   sge_mutex_lock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));
+   DEXIT;
+}
+
+void
+bdb_unlock_info(struct bdb_info *info)
+{
+   DENTER(TOP_LAYER, "bdb_unlock_info");
+   sge_mutex_unlock("bdb mutex", SGE_FUNC, __LINE__, &(info->mtx));
+   DEXIT;
 }
 

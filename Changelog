@@ -1,3 +1,9 @@
+JG_2004-02-16-1: Bugfix:    Serialize (re)open actions of Berkeley DB by 
+                            multiple threads.  
+                 Enhancem.: Do spooling of hostgroups (comprising spooling of 
+                            multiple queue instances) within a transaction.
+                 Review:    AD, EB
+
 DT-2004-02-16-0: Bugfix:    Fixed various qconf bugs.  \ line continuation is
                             temporarily broken.
                  Changed:   qconf

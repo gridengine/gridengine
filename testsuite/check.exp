@@ -143,6 +143,9 @@ set CHECK_MAIL_OUTPUT_FILE "all_test_mails.txt"
 global check_use_installed_system   ;# used only for install_core_system test (noinst parameter)
 set check_use_installed_system 0    ;# set to 1 when installed system parameter is set
 
+global check_do_not_use_spool_config_entries
+set check_do_not_use_spool_config_entries 0
+
 global check_reinit_on_tcl_error
 set check_reinit_on_tcl_error 0
 
@@ -7241,6 +7244,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "quiet                 no output on setup"
       puts ""
+      puts "no_local_spool        ignore local spool directories from host configuration file"
+      puts ""
       puts "mfile FILE            write all mails into file FILE (when mail is enabled)"
       puts ""
       puts "html_dir              write testsuite html files into that directory"
@@ -7268,6 +7273,10 @@ for { set i 0 } { $i < $argc } { incr i } {
       exit 1
    }
    
+   if { ( [string compare [lindex $argv $i] "--no_local_spool"] == 0 ) || ([string compare [lindex $argv $i] "no_local_spool"] == 0) } {
+      set check_do_not_use_spool_config_entries 1
+      continue
+   }
 
    if { ( [string compare [lindex $argv $i] "--re_init"] == 0 ) || ([string compare [lindex $argv $i] "re_init"] == 0) } {
       set check_use_installed_system 1

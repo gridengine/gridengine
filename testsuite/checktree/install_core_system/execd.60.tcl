@@ -325,7 +325,7 @@ proc install_execd {} {
 
                if { $INST_VERSION >= "4" } {
                   if { $LOCAL_ALREADY_CHECKED == 0 } {
-                     set LOCAL_ALREADY_CHECK 1
+                     set LOCAL_ALREADY_CHECKED 1
                      puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
                      if {$do_log_output == 1} {
                           puts "press RETURN"

@@ -1,3 +1,7 @@
+CR-2005-03-18-0: Testsuite: - new command line parameter:
+                              no_local_spool: don't use local spool directories
+                            - fixed bug in install_core_system
+
 MD-2005-03-17-4: Enhancm:  Request for start-up script additions / 
                            Use LSB installation procedure for rc scripts when available
                            - minor bugfixes

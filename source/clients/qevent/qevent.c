@@ -407,27 +407,16 @@ int main(int argc, char **argv)
    /* dump pid to file */
    qevent_dump_pid_file();
 
+
+
    /* setup event client */
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QEVENT]))) {
-      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
-      sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(1);
-   }
-   sge_setup_sig_handlers(QEVENT);
+   cl_err = sge_gdi_setup(prognames[QEVENT]);
    
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, me.qualified_hostname, cl_errstr(ret)));
-      sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(1);
-   }   
-
-
    /* parse command line */
    enabled_options.error_message = &errors;
    qevent_parse_command_line(argc, argv, &enabled_options);
-
-
+ 
    /* check if help option is set */
    if (enabled_options.help_option) {
       qevent_show_usage();
@@ -444,8 +433,20 @@ int main(int argc, char **argv)
       SGE_EXIT(1);
    }
 
+   /* setup event client */
+   if (cl_err) {
+      ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+      sge_dstring_free(enabled_options.error_message);
+      SGE_EXIT(1);
+   }
+   sge_setup_sig_handlers(QEVENT);
+   
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_SS, me.qualified_hostname, cl_errstr(ret)));
+      sge_dstring_free(enabled_options.error_message);
+      SGE_EXIT(1);
+   }   
 
-  
    /* ok, start over ... */
 
    /* check for testsuite option */

@@ -1,4 +1,9 @@
 EB-2003-12-22-1: Bugfix:    fixed bug
+                            * installation script should use "queue"
+                              object specifier for -?attr options of qconf
+                 Review:    MD
+
+EB-2003-12-22-1: Bugfix:    fixed bug
                             * memory leak in sge_qmaster during modification
                               of CQs comlex_values 
                  Review:    CR

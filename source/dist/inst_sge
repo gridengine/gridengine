@@ -1741,7 +1741,7 @@ AddQueue()
 
    if [ $? = 0 ]; then
       $V5BIN/qconf -aattr hostgroup hostlist $exechost @allhosts
-      $V5BIN/qconf -aattr cqueue slots "[$exechost=$slots]" all.q
+      $V5BIN/qconf -aattr queue slots "[$exechost=$slots]" all.q
       $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
       $CLEAR
    fi

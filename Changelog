@@ -1,3 +1,9 @@
+JG-2003-03-26-0  Bugfix:    Reject tightly integrated array jobs.
+                 Changed:   sge_qmaster, qsh
+                 Review:    EB
+                 Issue:     485
+                 Bugtraq:   4813965
+
 EB-2003-03-25-0  Bugfix:    Multiple job script writes cause ETXTBSY 
                             (Text File Busy) Errors
                  Changed:   sge_execd

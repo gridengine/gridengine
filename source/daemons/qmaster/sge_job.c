@@ -407,7 +407,25 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                return STATUS_EUNKNOWN;
             }
          }
-      } 
+      }
+      /* reject tightly integrated parallel array jobs 
+       * in case of wildcard pe specification, check all possible 
+       * pe's and reject job if any of them implements tight integration.
+       */
+      if (is_array(jep)) {
+         lListElem *pep;
+
+         for_each (pep, Master_Pe_List) {
+            if (fnmatch(pe_name, lGetString(pep, PE_name), 0) == 0) {
+               if (lGetUlong(pep, PE_control_slaves) != 0) {
+                  ERROR((SGE_EVENT, MSG_QMASTER_TIGHTLYINTEGRATEDARRAYJOB));
+                  sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+                  DEXIT;
+                  return STATUS_EUNKNOWN;
+               }
+            }
+         }
+      }
    }
 
    ckpt_err = 0;

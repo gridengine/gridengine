@@ -156,6 +156,45 @@ const char *s;
       return -1;
    }
 
+   /* for compatibility we need to check SGE_, GRD_ and COD_TASK_ID */
+   {
+      int i;
+      int found = 0;
+      u_long32 jataskid;
+      const char *variables[] = {
+         "SGE_TASK_ID",
+         "GRD_TASK_ID",
+         "COD_TASK_ID"
+      };
+
+      for (i = 0; i < 3; i++) {
+         if ((s=getenv(variables[i])) != NULL) {
+            found = 1;
+            if (strcmp(s, "undefined") == 0) {
+               jataskid = 1;
+            } else {
+               if (sscanf(s, u32, &jataskid) != 1) {
+                  sprintf(lasterror, MSG_JOB_XISINVALIDJOBTASKID_S, s);
+                  DEXIT;
+                  return -1;
+               }
+            }
+         }
+      }
+
+      if (!found) {
+         sprintf(lasterror, MSG_GDI_TASKIDNOTSET);
+         DEXIT;
+         return -1;
+      }
+
+      if (jataskid != 1) {
+         sprintf(lasterror, MSG_GDI_CANNOTSTARTPETASKINARRAYTASK);
+         DEXIT;
+         return -1;
+      }
+   }
+
    /* ---- build up job structure (see gdilib/sge_jobL.h) */
    jep = lCreateElem(JB_Type);
 

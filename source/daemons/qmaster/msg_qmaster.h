@@ -865,4 +865,9 @@
 #define MSG_CKPTREFINJOB_SU                          _MESSAGE(33699, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
 #define MSG_PEREFINJOB_SU                            _MESSAGE(33700, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
 
+/* 
+ * qmaster/sge_job.c
+ */
+#define MSG_QMASTER_TIGHTLYINTEGRATEDARRAYJOB   _MESSAGE(33701, _("Cannot submit tightly integrated parallel array job. Please use loose integration or non array jobs.\n"))
+
 #endif /* __MSG_QMASTER_H */

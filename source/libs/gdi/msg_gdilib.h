@@ -912,6 +912,11 @@
 */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43345, _("startup silently"))
 
+/* 
+** gdilib/sge_qexec.c new messages
+*/ 
+#define MSG_GDI_TASKIDNOTSET          _MESSAGE(43346, _("[SGE|GRD|COD]_TASK_ID not set in environment\n"))
+#define MSG_GDI_CANNOTSTARTPETASKINARRAYTASK _MESSAGE(43347, _("cannot start a tightly integrated parallel task in an array task with array task id != 1\n"))
 
 #endif /* __MSG_GDILIB_H */
 

@@ -333,7 +333,8 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
    
    {
       struct hostent_data he_data;
-      
+     
+      memset(&he_data, 0, sizeof(he_data));
       he = (struct hostent *)malloc (sizeof (struct hostent));
       if (gethostbyname_r (name, he, &he_data) < 0) {
          /* If this function fails, free he so that we can test if it's NULL
@@ -599,7 +600,8 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
    
    {
       struct hostent_data he_data;
-      
+     
+      memset(&he_data, 0, sizeof(he_data));
       he = (struct hostent *)malloc (sizeof (struct hostent));
       if (gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
          /* If this function fails, free he so that we can test if it's NULL

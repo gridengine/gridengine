@@ -1,3 +1,7 @@
+AH-2004-03-11-1: Enhancem.: Fix sge_gethostbyname()/sge_gethostbyaddr() under 
+                            tru64. Minor cleanup in new commlib.
+                 Review:    AD
+
 AH-2004-03-11-0: Enhancem.: Allow inst_berkeley.sh to continue even without 
                             test regarding local file system for berkley db
                             directory.

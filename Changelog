@@ -1,3 +1,8 @@
+EB-2003-12-22-1: Bugfix:    fixed bug
+                            * memory leak in sge_qmaster during modification
+                              of CQs comlex_values 
+                 Review:    CR
+
 EB-2003-12-22-0: Bugfix:    fixed bug
                             * memory access error in libs/uti/sge_hostname.c
                  Review:    CR

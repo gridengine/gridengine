@@ -58,7 +58,7 @@ struct te_event {
    u_long32    seq_no;      /* event sequence number              */
 };
 
-#define EVENT_FRMT(x) SGE_FUNC, x->type, x->when, x->mode, x->str_key 
+#define EVENT_FRMT(x) SGE_FUNC, x->type, x->when, x->mode, x->str_key?x->str_key:MSG_SMALLNULL
 
 typedef struct {
    pthread_mutex_t mutex;      /* used for mutual exclusion                         */
@@ -216,7 +216,7 @@ te_event_t te_new_event(time_t aTime, te_type_t aType, te_mode_t aMode, u_long32
    ev->mode = aMode;
    ev->ulong_key_1 = aKey1;
    ev->ulong_key_2 = aKey2;
-   ev->str_key = ((aStrKey != NULL) && (strlen(aStrKey) > 0)) ? strdup(aStrKey) : strdup(MSG_SMALLNULL);
+   ev->str_key = (aStrKey != NULL) ? strdup(aStrKey) : NULL;
    ev->seq_no = 0;
 
    DEXIT;
@@ -328,8 +328,8 @@ void te_add_event(te_event_t anEvent)
 
    lInsertSorted(Event_Control.sort_order, le, Event_Control.list);
 
-   DPRINTF(("%s: (t:"u32" w:"u32" m:"u32" s:%s)\n", SGE_FUNC, lGetUlong(le, TE_type),
-      lGetUlong(le, TE_when), lGetUlong(le, TE_mode), lGetString(le, TE_sval)));
+   DPRINTF(("%s: (t:"u32" w:"u32" m:"u32" s:%s)\n", SGE_FUNC, anEvent->type,
+      when, anEvent->mode, anEvent->str_key?anEvent->str_key:MSG_SMALLNULL));
    
    if ((Event_Control.next == 0) || (when < Event_Control.next))
    {
@@ -385,13 +385,13 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
 {
    int res, n = 0;
    lCondition *cond = NULL;
-   char* strKey = (aStrKey != NULL) ? strdup(aStrKey) : strdup(MSG_SMALLNULL);
+   char* strKey = (aStrKey != NULL) ? strdup(aStrKey) : NULL;
 
    DENTER(TOP_LAYER, "te_delete_event");
 
    pthread_once(&Timed_Event_Once, timed_event_once_init);
 
-   DPRINTF(("%s: (t:"u32" u1:"u32" u2:"u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey));
+   DPRINTF(("%s: (t:"u32" u1:"u32" u2:"u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey?strKey:MSG_SMALLNULL));
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
@@ -408,9 +408,15 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
       return 0;  
    }
 
-   cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u || %I != %s)", TE_Type,
-      TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2, TE_sval, strKey);
-
+   if (strKey != NULL) {
+      cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u || %I != %s)", TE_Type,
+         TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2, TE_sval, strKey);
+   }
+   else {
+      cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u)", TE_Type,
+         TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2);
+   
+   }
    Event_Control.list = lSelectDestroy(Event_Control.list, cond);
 
    if (NULL == Event_Control.list)
@@ -688,7 +694,7 @@ const char* te_get_alphanumeric_key(te_event_t anEvent)
 
    SGE_ASSERT(NULL != anEvent);
 
-   res = (anEvent->str_key != NULL) ? strdup(anEvent->str_key) : strdup(MSG_SMALLNULL);
+   res = (anEvent->str_key != NULL) ? strdup(anEvent->str_key) : NULL;
 
    DEXIT;
    return res;
@@ -979,7 +985,7 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
    ev->seq_no      = lGetUlong(aListElem, TE_seqno);
 
    str = lGetString(aListElem, TE_sval);
-   ev->str_key = ((str != NULL) ? strdup(str) : strdup(MSG_SMALLNULL));
+   ev->str_key = ((str != NULL) ? strdup(str) : NULL);
 
    DEXIT;
    return ev;

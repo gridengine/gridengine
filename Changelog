@@ -1,3 +1,8 @@
+SG-2004-04-09-1: Bugfix:    - added the event handler for reschedule jobs
+                            - fixed the TYPE_SIGNAL_RESEND_EVENT event
+                 Review:    CR
+                 Changed:   qmaster
+
 SG-2004-04-08-0: Bugfix:    - timed event handler: TYPE_SIGNAL_RESEND_EVENT
                               was missing
                             - some jobs stayed in the system in delete status.

@@ -74,6 +74,7 @@
 #include "sge_any_request.h"
 #include "sge.h"
 #include "sge_qmod_qmaster.h"
+#include "reschedule.h"
 
 
 /*
@@ -640,6 +641,8 @@ static void start_periodic_tasks(void)
    te_register_event_handler(sge_calendar_event_handler, TYPE_CALENDAR_EVENT);
 
    te_register_event_handler(resend_signal_event, TYPE_SIGNAL_RESEND_EVENT);
+
+   te_register_event_handler(reschedule_unknown_event, TYPE_RESCHEDULE_UNKNOWN_EVENT);
 
    te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT);
    ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");

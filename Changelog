@@ -1,3 +1,8 @@
+EB-2002-06-11-0: Bugfix:    qstat shows waiting jobs of other PEs
+                 Issue:     #284
+                 Bugtraq:   #4699665
+                 Changed:   qstat
+
 CR-2002-06-11-0: Testsuite: compile_source(): add install errors to html page when
                             install host is not in compile hosts
 

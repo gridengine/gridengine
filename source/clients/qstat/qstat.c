@@ -443,6 +443,12 @@ char **argv
                lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable) & ~TAG_SHOW_IT);
             }
          }
+         if (!show_job) {
+            lSetList(jep, JB_ja_n_h_ids, NULL);
+            lSetList(jep, JB_ja_u_h_ids, NULL);
+            lSetList(jep, JB_ja_o_h_ids, NULL);
+            lSetList(jep, JB_ja_s_h_ids, NULL);
+         }
       }
       set_qs_state(QS_STATE_FULL);
    }
@@ -784,13 +790,6 @@ u_long32 show
    ** pe list 
    */ 
    if (pe_l) {   
-      for_each(ep, peref_list) {
-         nw = lWhere("%T(%I p= %s)", PE_Type, PE_name, lGetString(ep, STR));
-         if (!pw)
-            pw = nw;
-         else
-            pw = lOrWhere(pw, nw);
-      }
       pe_all = lWhat("%T(%I%I%I%I)", PE_Type, PE_name, PE_queue_list, PE_job_is_first_task, PE_control_slaves);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL);
@@ -1065,7 +1064,7 @@ lList *hql
 */
 static int select_by_pe_list(
 lList *queue_list,
-lList *peref_list,
+lList *peref_list,   /* STR_Type */
 lList *pe_list 
 ) {
    int nqueues = 0;
@@ -1074,14 +1073,23 @@ lList *pe_list
 
    DENTER(TOP_LAYER, "select_by_pe_list");
 
-   /* iterate through peref_list and build up a new pe_list 
-    *  containing only those pe's referenced in peref_list 
-    *
-    * we transfer only pe's matching the pattern, so
-    * there is no need to look at this list again
-    */
-   pe_selected = pe_list;
+  /*
+   * iterate through peref_list and build up a new pe_list
+   * containing only those pe's referenced in peref_list
+   */
+   for_each(pe, peref_list) {
+      lListElem *ref_pe;   /* PE_Type */
+      lListElem *copy_pe;  /* PE_Type */
 
+      ref_pe = lGetElemStr(pe_list, PE_name, lGetString(pe, STR));
+      copy_pe = lCopyElem(ref_pe);
+      if (pe_selected == NULL) {
+         const lDescr *descriptor = lGetElemDescr(ref_pe);
+
+         pe_selected = lCreateList("", descriptor);
+      }
+      lAppendElem(pe_selected, copy_pe);
+   }
    if (lGetNumberOfElem(pe_selected)==0) {
       fprintf(stderr, MSG_PE_NOSUCHPARALLELENVIRONMENT);
       return -1;
@@ -1110,6 +1118,9 @@ lList *pe_list
          nqueues++;
    }
 
+   if (pe_selected != NULL) {
+      lFreeList(pe_selected);
+   }
    DEXIT;
    return nqueues;
 }

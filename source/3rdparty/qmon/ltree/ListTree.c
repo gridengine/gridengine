@@ -2432,7 +2432,6 @@ Boolean *found;
 
       y += height + (int) w->list.VSpacing;
       if ((item->firstchild) && (item->open)) {
-         ++(*counter);
          y = SearchPosition(w, item->firstchild, y, counter, finditem, found);
          if (*found)
             return y;

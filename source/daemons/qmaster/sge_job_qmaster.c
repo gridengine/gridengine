@@ -1071,7 +1071,7 @@ int sub_command
 
                temp_start = ((enrolled_start - r_start) / step) * step + r_start;
                
-               if (temp_start < unenrolled_start) {
+               if (temp_start < enrolled_start) {
                   enrolled_start = temp_start + step;
                }
                else {

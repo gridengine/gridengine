@@ -66,7 +66,6 @@
 #include "jb_now.h"
 #include "sge_range.h"
 #include "job.h"
-#include "job.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -113,6 +112,7 @@ lListElem **pjob
    lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
+   char error_string[1024 + 1];
 
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
@@ -428,11 +428,9 @@ lListElem **pjob
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
-      char str[1024];
-
       lRemoveElem(cmdline, ep);
-      sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
+      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
       DEXIT;
       return answer;
    }
@@ -633,17 +631,15 @@ lListElem **pjob
    }
    
    for_each(ep, cmdline) {
-      char str[1024];
-
-      sprintf(str, MSG_ANSWER_UNKOWNOPTIONX_S, 
+      sprintf(error_string, MSG_ANSWER_UNKOWNOPTIONX_S, 
          lGetString(ep, SPA_switch));
       cp = lGetString(ep, SPA_switch_arg);
       if (cp) {
-         strcat(str, " ");
-         strcat(str, cp);
+         strcat(error_string, " ");
+         strcat(error_string, cp);
       }
-      strcat(str, "\n");
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      strcat(error_string, "\n");
+      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
    } 
 
    cp = lGetString(*pjob, JB_script_file);
@@ -759,6 +755,7 @@ u_long32 flags
    lList *lp_new_opts = NULL;
    char buffer[MAX_STRING_SIZE];
    char *s;
+   char error_string[1024 + 1];
 
 
    DENTER(TOP_LAYER, "parse_script_file");
@@ -773,10 +770,8 @@ u_long32 flags
    if (script_file && strcmp(script_file, "-")) {
       /* are we able to access this file? */
       if ((fp = fopen(script_file, "r")) == NULL) {
-         char str[1024 + 1];
-
-         sprintf(str, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-         sge_add_answer(&answer, str, STATUS_EDISK, 0);
+         sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
+         sge_add_answer(&answer, error_string, STATUS_EDISK, 0);
          DEXIT;
          return answer;
       }
@@ -787,10 +782,8 @@ u_long32 flags
       filestrptr = str_from_file(script_file, &script_len);
 
       if (!filestrptr) {
-         char str[1024 + 1];
-
-         sprintf(str, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-         sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+         sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
+         sge_add_answer(&answer, error_string, STATUS_EUNKNOWN, 0);
          DEXIT;
          return answer;
       }
@@ -824,12 +817,13 @@ u_long32 flags
    s = filestrptr;
    while(*s != 0) {
       int length = 0;
-      char *parameters;
+      char *parameters = NULL;
       char *d = buffer;
 
       /* copy MAX_STRING_SIZE bytes maximum */
       while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
          *d++ = *s++;
+         length++;
       }
 
       /* terminate target string */

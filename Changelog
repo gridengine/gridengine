@@ -1,3 +1,14 @@
+CR-2001-10-09-0: (parse_job_cull.c)
+                 - Issue #67 (long lines in sge_request files causes bus error
+                             in qsub)
+                 - removed some local char str[1024] definitions and replaced
+                   it with error_string buffer one function level above
+                 (rmon_macros.c) 
+                 - using vnsprintf() system call as default (instead of vsprintf)
+                   This should prevent a buffer overflow error
+                     
+                 
+
 JG-2001-10-09-0: Added statistics for our hashtable implementation that gives
                  following info:
                   - size of hashtable and number of elements stored

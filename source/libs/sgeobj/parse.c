@@ -29,7 +29,9 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 
 #include "sgermon.h"

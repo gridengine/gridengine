@@ -1,3 +1,9 @@
+SG-2004-03-04-0: Bugfix:    was to quick checking in the qstat -xml fixes. When
+                            an element has no attribute it would print "(NULL)"
+                            instead of nothing.
+                 Changed:   qstat
+                 Review:    pending
+
 DT-2004-03-04-0: Bugfix:    o Reenabled GUI logging in qconf in order to have
                               flatfile spooling error messages printed.
                  Changed:   qconf

@@ -761,7 +761,7 @@ int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
 *     lList *config_attr        - list of user defined attributes 
 *     lList *actual_attr        - usage of all consumables (RUE_Type)
 *     lList *centry_list        - system wide attribute config. list (CE_Type)
-*     lListElem *queue          - current queue or null on host level
+*     lListElem *queue          - current queue or NULL on global/host level
 *     int allow_non_requestable - allow none requestabales? 
 *     char *reason              - error message
 *     int reason_size           - max error message size
@@ -810,14 +810,19 @@ static int rc_time_by_slots(lList *requested, lList *load_attr, lList *config_at
    }
 
    /* match number of free slots */
-   if (slots != -1 && queue) {
+   if (slots != -1) {
       tmp_start = *start_time;
       ret = ri_time_by_slots(implicit_slots_request, load_attr, config_attr, actual_attr, centry_list, queue,  
                        reason, allow_non_requestable, slots, layer, lc_factor, &tmp_start, duration, object_name);
+
+      /* we don't care if slots are not specified, except at queue level */
+      if (ret == 2 && tag != QUEUE_TAG)
+         ret = 0;
       if (ret != 0) {
          DEXIT;
          return ret;
       }
+
       if (*start_time == DISPATCH_TIME_QUEUE_END) {
          DPRINTF(("%s: \"slot\" request delays start time from "U32CFormat
            " to "U32CFormat"\n", object_name, latest_time, MAX(latest_time, tmp_start)));

@@ -116,7 +116,7 @@
 */
 #define SGE_INFOTEXT_TESTSTRING_S "Welcome, %s\nhave a nice day!\n"
 #define SGE_INFOTEXT_UNDERLINE  "-"
-/* #define SGE_INFOTEXT_TESTSTRING_S_L10N _message(57035, _(SGE_INFOTEXT_TESTSTRING_S)) __TS Removed automatically from testsuite!! TS__*/
+#define SGE_INFOTEXT_TESTSTRING_S_L10N _MESSAGE(57035, _(SGE_INFOTEXT_TESTSTRING_S))
 /* #define SGE_INFOTEXT_UNDERLINE_L10N    _message(57036, _(SGE_INFOTEXT_UNDERLINE)) __TS Removed automatically from testsuite!! TS__*/
 #define SGE_INFOTEXT_ONLY_ALLOWED_SS _MESSAGE(57037, _("\nThere are only two answers allowed: "SFQ" or "SFQ"!\n\n"))
 

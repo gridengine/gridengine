@@ -1,3 +1,15 @@
+CR-2002-12-03-0  L10N:      a) When SGE qmaster was started with the global 
+                 Bugfix:    variable SGE_ENABLE_MSG_ID=2 (used for L10N debuging 
+                            to enable message id's on every l10ned message) and 
+                            the host complex was modified the saved complex 
+                            configuration file is corrupted ( it contains a 
+                            message id [xxxxx] ).  After a shutdown the qmaster 
+                            can't read the complex configuration file.
+
+                            b) re-un-commented one message macro not used in 
+                            source code, but in testsuite. 
+                            (SGE_INFOTEXT_TESTSTRING_S_L10N)
+
 CR-2002-11-28-0  Cleanup:   un-commented message macros not used in source code
                  L10N:
 

@@ -586,7 +586,7 @@ lList **alpp
    }
 
    
-   FPRINTF((fp, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
+   FPRINTF((fp, "#"SFN"",MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {
       FCLOSE(fp);

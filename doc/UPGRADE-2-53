@@ -14,6 +14,7 @@ Content
 
 1) Introduction
    1.1) Estimated time for the upgrade procedure
+   1.2) Upgrading from SGE(EE) 5.3beta2
 2) Installation changes
    2.1) Name of daemons and commands
    2.2) Daemon startup scripts
@@ -41,8 +42,8 @@ Content
    10.3) Run the update script
 11) Installing the new startup script locally an all execution hosts
 12) Restart SGE
-13) Copyright
-
+13) Upgrading from SGE(EE) 5.3beta2 
+14) Copyright
 
 1) Introduction
 ---------------
@@ -57,6 +58,7 @@ Content
       GRD 5.1.x
       Sun Grid Engine 5.2.x
       Grid Engine 5.3beta1
+      *Grid Engine 5.3beta2  (see special notes in 1.2))
 
    to this version of Grid Engine 5.3 (SGE 5.3) or Grid Engine Enterprise
    Edition 5.3 (SGEEE 5.3). You cannot "downgrade" from GRD to SGE 5.3.
@@ -98,6 +100,16 @@ Content
    The upgrade procedure will be easier to carry out if you have access to
    user root (rsh or ssh) without providing a password to all your execution
    hosts (this does not necessarily need to be from your qmaster machine).
+
+   1.2 Upgrading from SGE 5.3beta2
+   -------------------------------
+
+   If you are upgrading from SGE(EE) 5.3beta2 to SGE(EE) 5.3 and you are not
+   changing the product mode from SGE --> SGEEE, you basically only need to
+   change the binaries. See 13) for detailed directions.
+
+   If you wish to upgrade from SGE 5.3beta2 to SGEEE 5.3 plaese follow the
+   directions below.
 
 
 2) Installation changes compared to previous versions
@@ -632,9 +644,9 @@ Content
          exec_hosts/
          schedd/
 
-   A copy of your changed files and directories will be saved as
+   A copy of your changed files and directories will be saved in 
 
-       *-<version>
+      <sge_root>/<cell>/common/<YYYYmmdd-hh:mm:ss>
 
 
 11) Installing the new startup script locally an all execution hosts
@@ -709,7 +721,56 @@ Content
       # cd $SGE_ROOT
       # util/sgeremoterun -all $SGE_ROOT/$COD_CELL/common/rcsge -execd
 
-13) Copyright
+13) Upgrading from SGE(EE) 5.3beta2
+-----------------------------------
+
+   An upgrade from SGE(EE) 5.3 beta2 to SGE(EE) 5.3 is possible by changing
+   the binaries only.
+
+   There may be pending jobs in the system.
+
+   There also may be (most types) of running jobs in the system when special
+   care for the 'sge_shepherd' binary is taken. However it is not supported
+   to have any running jobs of the following types in the system:
+
+          - qmake
+          - qrsh 
+          - qtcsh
+          - qlogin
+          - tightly integrated parallel jobs
+ 
+   Upgrade
+   -------
+
+   1) Make a backup of your old binaries, distribution and configuration
+   2) shutdown your cluster, make sure there are also no more running
+      sge_commd's:
+
+           # qconf -ke all -ks -km
+             (wait one minute)
+
+           On qmaster host:
+           # $SGE_ROOT/util/shutdown_commd.sh -all
+
+      Verify that no SGE daemons are running. Do NOT kill the sge_shepherd's
+      if there are running jobs.
+
+   3) Rename with the "mv" command your shepherd binaries. DO NOT COPY the
+      binary!
+
+          # cd $SGE_ROOT/bin
+          # mv <arch>/sge_shepherd <arch>/sge_shepherd.sge53b2
+          
+   4) Unpack the distribution
+
+   5) Set the file permissions with
+
+         $SGE_ROOT/util/setfileperm.sh
+
+   6) Restart SGE(EE) 5.3 on your qmaster host and your execution hosts
+      (see 12 above).
+
+14) Copyright
 -------------
 ___INFO__MARK_BEGIN__
    This following copyright statement applies to this file only. It does not
@@ -717,7 +778,7 @@ ___INFO__MARK_BEGIN__
    distribution. See the directory '<sge_root>/3rdparty' for a summary of
    other copyrights of this Grid Engine distribution.
 
-   The Contents of this file are made available subject to the terms of
+   The Contents of this file are made available subject to the terms of   
    the Sun Industry Standards Source License Version 1.2
  
    Sun Microsystems Inc., March, 2001

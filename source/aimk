@@ -2113,3 +2113,7 @@ if ( "$ADOC" == 1) then
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
 
    echo "Creating documentation for libs: libdrmaa.texi"
+endif
+
+echo done.
+exit 0

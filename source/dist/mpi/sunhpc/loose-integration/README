@@ -1,0 +1,685 @@
+     Loose Integration Between Grid Engine and Sun HPC ClusterTools(TM)
+     ------------------------------------------------------------------
+
+Content
+-------
+
+1. Introduction
+2. Integration Procedure
+3. Technical Details for Loose Integration
+   3.1. Exclusive Complex and Queues for Sun HPC ClusterTools
+   3.2. Retrieval of the CRE Job Id
+   3.3. Start scripts
+   3.4. Stop scripts
+   3.5. Suspend/Resume/Terminate methods
+   3.6. MPRUN script
+   3.7. PRISM script
+   3.8. Grid Engine batch script
+   3.9. ClusterTools User Access
+4. How to Add/Modify Grid Engine Objects
+   4.1. Exclusive complex object
+   4.2 Queue objects
+   4.3. PE object
+   4.4. User Access List (ACL) object
+5. Limitations in the Current Loose Integration
+6. Test for the Loose Integration
+   6.1. Batch script for HPC ClusterTools
+   6.2. Interactive command for HPC ClusterTools
+   6.3. Prism debugging job
+Appendix A: Step by Step Loose Integration
+      Step 1: Create appropriate scripts for the loose integration
+   A.1. MPRUN: a wrapper for the mprun command of HPC ClusterTools
+   A.2. PRISM: a wrapper for the prism command of HPC ClusterTools
+   A.3. startsunmpi.sh: a script to prepare a rank map file for HPC ClusterTools
+   A.4. stopsunmpi.sh: a script to be executed at the end of MPI jobs
+   A.5. suspend_sunmpi.sh: a script to suspend MPI jobs
+   A.6. resume_sunmpi.sh: a script to resume a suspended MPI job
+   A.7. terminate_sunmpi.sh: a script to terminate MPI jobs
+      Step 2: Create an exclusive complex for HPC ClusterTools
+      Step 3: Create exclusive queues for Sun HPC ClusterTools
+      Step 4: Create a parallel environment for HPC ClusterTools
+Copyright
+
+
+1. Introduction
+---------------
+
+This package is to create a loose integration between Sun HPC ClusterTools
+(Versions 3.1 & 4.0) and Grid Engine (including Enterprise Edition) 5.3. 
+The package is provided to users as an unsupported tool and should be seen
+as an advanced starting point for a site specific customization. The package
+intends to help Sun HPC ClusterTools and Grid Engine users so that they can
+set up the loose integration with a little effort. However, it should be
+noted that the package is provided on "as is" basis and may not work with
+all of Grid Engine functions. Users should be aware of the limitation of
+this loose integration, which will be noted later in this note. Furthermore,
+the package assumes that users are familiar with Sun HPC ClusterTools and
+Grid Engine. Users should refer to the corresponding documentation for more
+information about each product.
+
+The package contains the following files:
+
+   README (this file)
+   HPC_GE_Integration.sh
+   startsunmpi.sh
+   stopsunmpi.sh
+   suspend_sunmpi.sh
+   resume_sunmpi.sh
+   terminate_sunmpi.sh
+   MPRUN
+   PRISM
+   batch.sunmpi.template
+   sunmpi.pe.template
+
+The integration script (HPC_GE_Integration.sh) assumes that both Sun HPC
+ClusterTools (Versions 3.1 & 4.0) and Grid Engine (including Enterprise
+Edition) 5.3 are installed in advance before executing the script. The
+script will create a Parallel Environment (PE) with the "fill-up" resource
+allocation scheme. The PE is required for Grid Engine to submit a parallel
+job such as an MPI job. The script also does other modifications relevant to
+the PE environment setup in order to use Sun HPC ClusterTools software with
+Grid Engine. The start and stop scripts (startsunmpi.sh and stopsunmpi.sh)
+are used to prepare a proper start-up environment for Sun HPC ClusterTools
+and to finish a Sun MPI job properly. The suspend, resume and terminate
+scripts (suspend_sunmpi.sh, resume_sunmpi.sh and terminate_sunmpi.sh) are
+used to suspend/resume/terminate an MPI job. The MPRUN script is an mprun
+wrapper to save the process Id of an mprun process into a temporary file.
+This pid is used by the suspend and terminate scripts to get Cluster Runtime
+Environment (CRE) job Id of an MPI job. A similar wrapper called PRISM is
+also provided to start the prism debugger. The PRISM wrapper is useful for a
+debugging job via Grid Engine environment. The batch.sunmpi.template is a
+template for a batch job script. The sunmpi.pe.template is a template for
+the parallel environment object.
+
+
+2. Integration Procedure
+------------------------
+
+The integration between Grid Engine and Sun HPC ClusterTools can be done by
+either executing the integration script or manually configuring appropriate
+configuration files using qconf command or qmon graphical user interface.
+
+The integration script, HPC_GE_Integration.sh, will create a loose
+integration between Grid Engine and Sun HPC ClusterTools. This integration
+script uses Grid Engine and HPC ClusterTools commands, qconf and mpinfo. So
+appropriate environment setting for Grid Engine and HPC ClusterTools must be
+done in order to access the commands before executing the integration
+script.
+
+In addition, administrator for Grid Engine should execute the integration
+script to avoid any permission problem.  The script will ask a few questions
+to find out the installation information. Administrator should answer all
+the questions correctly according to a site-specific installation
+information. The following information will be asked by the integration
+script.
+
+	Grid Engine installation root directory
+	Grid Engine cluster (cell) name
+	Parallel Environment (PE) name
+	Exclusive complex and its shortcut name for Sun HPC ClusterTools
+	List of execution hosts running Sun HPC ClusterTools
+	List of exclusive queues for execution hosts running Sun HPC 
+        ClusterTools
+	Sun HPC ClusterTools user group name and its members	
+	Parallel Environment (PE) slots (available number of CPUs)
+
+Since the integration script uses qconf command interface, there is no need
+to restart Grid Engine daemons after completing the loose integration.
+
+If a manual setup is preferred instead of running the integration script,
+one can use the appendix as a guildeline for the step-by-step procedure for
+the loose integration between Grid Engine and Sun HPC ClusterTools.
+
+If there are more than one queue defined for an execution host as a result
+of adding the exclusive CRE queue, then, those queues for an execution host
+should be synchronized by defining slots as consumable to the appropriate
+execution host objects. The loose integration script provides an automated
+procedure to customize execution hosts for queue synchronization. Also this
+can be done by using "qconf -me <hostname>" command. Then, replace NONE on
+the line defining "complex_values" with "slots=<available_CPUs>". Without
+this synchronization, both queues will accept any batch or interactive job
+submitted to the queues until it reached its own limit. Therefore, this will
+eventually overload the particular execution host.
+
+
+3. Technical Details for Loose Integration
+------------------------------------------
+
+3.1. Exclusive Complex and Queues for Sun HPC ClusterTools
+----------------------------------------------------------
+
+The integration script will set up an exclusive environment for MPI jobs
+using Sun HPC ClusterTools while keeping the existing Grid Engine
+installation unaffected. In order to create such an exclusive environment
+for MPI jobs, the integration script creates exclusive queues defined as
+<hostname>.cre for each execution host running HPC ClusterTools. By doing
+so, it will not change any existing queues for the current Grid Engine
+installation. However, since the loose integration is performed while the
+Grid Engine is running, the CRE-only queues may be scheduled by the Grid
+Engine scheduler for non-MPI jobs as soon as they are created. So a new
+complex, which is a named container for a set of attributes in Grid Engine,
+is added to the Grid Engine configuration and attached to the CRE queues in
+order to prevent non-MPI jobs slipping undesirably into the CRE queues. In
+this case, the new complex called cre_exclusive by default, is defined as
+shown below:
+
+#name  shortcut  type  value  relop  requestable  consumable  default
+#--------------------------------------------------------------------
+cre    cre       BOOL  true   ==     FORCED       NO          false
+
+The cre_exclusive complex is attached to each CRE queues by referring to it
+in the 'complex_list' and by setting the value in the 'complex_values' of
+the appropriate object. For the exclusive CRE queues, the following lines
+are defined:
+
+  complex_list         cre
+  complex_values       cre=true
+
+in each CRE queue. With this configuration, Grid Engine jobs will not get
+dispatched to the CRE queues if they do not request this 'cre' attribute
+explicitly, e.g.
+
+	 qsub -l cre -pe hpc 4 script.sh 
+
+Like other submission options, the '-l cre' can be put in the Grid Engine
+job script to ensure the job is not submitted without this request.
+
+
+3.2. Retrieval of the CRE Job Id
+--------------------------------
+
+The most important issue in this loose integration is how to get the CRE job
+Id of an MPI job. Both suspend and terminate methods defined by the loose
+integration use the mpkill command of Sun HPC ClusterTools to propagate
+signals to MPI jobs and the mpkill command requires the CRE job Id as an
+input. The current implementation to retrieve the CRE job Id involves a few
+steps. The first step is to get the process Id of an mprun process which is
+the command starting an MPI job. This is done by an mprun wrapper called
+MPRUN, which is distributed with the loose integration package. The mprun
+process Id is saved to a temporary file, mprun_pid, located at $TMPDIR.
+Then, using this process Id, the core file of the mprun process is saved to
+the same $TMPDIR. Finally, the adb utility is used to search for the CRE job
+Id of the corresponding MPI job. The extracting process of the CRE job Id is
+done by both suspend and terminate scripts.
+
+
+3.3. Start scripts
+------------------
+
+The start script for Sun MPI jobs is named as "startsunmpi.sh". It needs two 
+argument input, $pe_hostfile and "/opt/SUNWhpc/bin". The first argument, 
+$pe_hostfile, is a file automatically generated by Grid Engine. This file 
+contains a list of host names and number of processes to be used for a
+particular MPI job. The location of $pe_hostfile is dynamically determined
+by Grid Engine based on its job execution. The second argument is the path
+for Sun HPC ClusterTools binaries. The start script will check the path to
+find out if Sun HPC ClusterTools is available. The start script will parse
+$pe_hostfile and generate a rank map file called machines. This rank map file 
+will be used by "mprun" with "-Mf" option or "-m" option depending on 
+ClusterTools' version and be placed at $TMPDIR directory. During the run 
+time, Grid Engine creates $TMPDIR for each batch job on the master execution 
+host which is an execution host launching the batch script. The absolute path 
+for $TMPDIR is determined by Grid Engine based on the batch job Id. After the 
+loose integration, the start script will be located at $SG_ROOT/mpi/sunhpc/
+loose-integration directory, where $SGE_ROOT is an absolute path for the root 
+directory for Grid Engine installation.
+
+
+3.4. Stop scripts
+-----------------
+
+The stop script for Sun MPI jobs is named as "stopsunmpi.sh". It will read a
+file called $TMPDIR/ptree.list and kill all the processes listed in that
+file. The $TMPDIR/ptree.list file is generated by a script defined by the
+"terminate_method" of each CRE queue assigned to a PE. The stop script will
+be located where the start script is.
+
+
+3.5. Suspend/Resume/Terminate methods
+-------------------------------------
+
+The loose integration script also defines suspend, resume and terminate
+methods in the exclusive CRE queues listed in the PE configured during the
+integration process. Both suspend and terminate scripts (suspend_sunmpi.sh
+and terminate_sunmpi.sh) are designed to pick up the CRE Job Id of an MPI
+job from the mprun core image by using adb utility. It should be noted that
+the CRE Job Id is different than the batch Job Id. After picking up the CRE
+Job Id, both suspend and terminate scripts uses "mpkill" command to either
+suspend or kill a Sun MPI job. Furthermore, the terminate script will
+generate a list of all the processes related to a given MPI job and save it
+to a file called $TMPDIR/ptree.list. This file will be used later to clean
+up any zombie processes once the MPI job terminated. Both scripts will be
+located at $SGE_ROOT/mpi/sunhpc/loose-integration directory. A resume method
+(resume_sunmpi.sh) is provided to be counter part of the suspend method. The
+resume method uses the CRE Job Id saved at the $TMPDIR/cre_job_id by the
+suspend method.
+
+
+3.6. MPRUN script
+-----------------
+
+The MPRUN script is a wrapper for the mprun command. It saves the process Id
+of an mprun process into a file, mprun_pid, at a temporary directory,
+$TMPDIR. The mprun process Id will be used to obtain a CRE job Id by suspend
+and terminate scripts for suspension and termination of an MPI job. If a
+user does not use the wrapper to start an MPI application, the current loose
+integration does not get a CRE job Id. Hence, Grid Engine command such as
+qmod or qdel will not be able to control any MPI jobs. Also the MPRUN
+wrapper sets the CRE environment variable, MPRUN_FLAGS using "-Mf" option or
+"-m" option depending on ClusterTools' version with the rank map file,
+$TMPDIR/machines so that users do not need to define the rank map file in 
+their job submissions.
+
+3.7. PRISM script
+-----------------
+
+The PRISM script is a wrapper for the prism command. It sets the CRE
+environment variable, MPRUN_FLAGS similar to the MPRUN wrapper so that users
+do not need to define the rank map file in their job submissions. This also
+make sure that the prism dubugger uses the resources allocated by the Grid
+Engine.
+
+
+3.8. Grid Engine batch script
+-----------------------------
+
+The loose integration package distributes an example Grid Engine batch
+script called "batch.sunmpi.template". The file will be located at
+$SGE_ROOT/mpi/sunhpc/loose-integration directory.  It should be noted that
+an mprun wrapper, MPRUN, is used instead of "mprun" command. This is
+necessary to set up a loose integration between Grid Engine and HPC
+ClusterTools so that an MPI job can be controlled by Grid Engine commands
+such as qmod and qdel.  Users should customize it according to their Grid
+Engine installation before using it.
+
+For some commercial MPI applications, they use the mprun command within
+their start-up scripts. In this case, users may not be able to modify their
+scripts to replace the mprun command with the MPRUN wrapper. One quick
+workaround is to use the environment variable, PATH, to overload the mprun
+command as shown below:
+
+	cd $SGE_ROOT/mpi/sunhpc/loose-integration
+	ln -s MPRUN mprun
+	Place <SGE_ROOT>/mpi/sunhpc/loose-integration path at the head of $PATH
+
+In this way, when the script  executes the mprun command, it will pick up
+the MPRUN wrapper from $SGE_ROOT/mpi/sunhpc/loose-integration instead of the
+actual mprun command.
+
+
+3.9. ClusterTools User Access
+-----------------------------
+
+In order to use resources controlled by Grid Engine, administrator can set a
+proper user access list (ACL) with its users. The integration script will
+check the ACL lists and will ask whether to create an ACL or to skip this
+process.
+
+
+4. How to Add/Modify Grid Engine Objects
+----------------------------------------
+
+There are a number of Grid Engine objects such as complex, queue, PE, and so
+on, to be added/modified for the loose integration between Grid Engine and
+HPC ClusterTools. The following shows how to add or modify Grid Engine
+objects for the loose integration.
+
+
+4.1. Exclusive complex object
+-----------------------------
+
+The "qconf -scl" will list all complex definition objects in the Grid Engine
+system. The exclusive complex for HPC ClusterTools is named as
+"cre_exclusive" by default. Administrator may change the default name during
+the integration setup. The contents of the exclusive complex can be viewed
+using the "qconf -sc cre_exclusive" command. The command to create a complex
+is "qconf -Ac <complex_name> <complex_def_file>". Also one can use "qconf
+-ac <complex_name>" to add a complex or "qconf -mc <complex_name>" to modify
+an existing complex interactively.
+
+
+4.2 Queue objects
+-----------------
+
+The "qconf -sql" will list all queue objects in the Grid Engine system. The
+exclusive CRE queues associated with execution hosts running Sun HPC
+ClusterTools are named as <hostname>.cre by default. The command, "qconf -sq
+<queue_name>", will show the contents of the specified queue. The
+integration script creates exclusive queues for Sun HPC ClusterTools using
+the command, "qconf -Aq <queue_def_file>". The following lines are the
+modified lines relevant to loose integration with Sun HPC ClusterTools.
+
+	qname               <hostname>.cre
+	qtype                BATCH INTERACTIVE PARALLEL 
+	suspend_method       $SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh 
+	terminate_method     $SGE_ROOT/mpi/sunhpc/loose-integration/terminate_sunmpi.sh
+	complex_list         cre_exclusive
+	complex_values       cre=true
+
+where $SGE_ROOT represents an absolute path for the Grid Engine
+installation.
+
+
+4.3. PE object
+--------------
+
+The "qconf -spl" will show PE objects defined in the Grid Engine system. If
+the administrator uses the default name to create a PE file for the loose
+integration, there will be a PE object called "hpc". The contents can be
+viewed using "qconf -sp <pe_name>" command. The loose integration package
+also includes a PE template as an example for the loose integration. A PE
+object can be created interactively by using the command, "qconf -ap
+<pe_name>".
+
+
+4.4. User Access List (ACL) object
+----------------------------------
+
+All the available list of ACL objects can be obtained using the "qconf -sul"
+command. A new ACL object for HPC ClusterTools, called as HPCusers by
+default, is created by the loose integration script. Administrator can
+choose to use one from the existing ACL lists as well. The following shows
+the format of the ACL.
+
+	name       HPCusers
+	entries    user1,user2,user3,...
+
+The contents of an ACL can be viewed by using "qconf -su <acl_name>".  Also, 
+the interactive command to create an ACL is "qconf -au <user1,user2,...> 
+<acl_name>".
+ 
+ 
+
+5. Limitations in the Current Loose Integration
+-----------------------------------------------
+
+- The suspend, resume and terminate scripts use the CRE Job Id of an MPI job. 
+Currently these scripts pick up the Job Id by using adb utility with the
+core file of an mprun process. The MPRUN wrapper should be used instead of
+"mprun" command to store the process Id of an mprun process to a temporary
+file so that both suspend and terminate scripts can use it. Without the Job
+Id, since those scripts will not work properly, Grid Engine commands for
+signalling an MPI job will not actually signal the MPI job. Therefore, it
+breaks the loose integration.
+
+- The "mprun" command should use a rank map file (-Mf or -m option depending
+on ClusterTools' version) generated by Grid Engine. In this way, the MPI job
+will be executed on resources allocated by Grid Engine. In some commercial
+applications, mprun uses an explicit rank map file defined by its own
+resource allocation scheme. Then, there may be a conflict between resources
+allocated by Grid Engine and the application. However, as long as there is
+enough resource available, the application will run and Grid Engine will
+report bogus information about resource usage.
+
+- The Grid Engine accounting information for an MPI job does not have 
+much useful information except the wall-clock time. Also CPU time, memory
+and IO usage information are not available with Sun Grid Engine.
+
+- The resource control with Grid Engine works only with the wall-clock time.
+
+- When an interactive job is started via a PE, if an MPI job is not started 
+yet, then suspend, resume, and terminate methods will not work because there
+is no CRE job Id.
+
+- When the prism wrapper, PRISM, is used, suspend, resume, and terminate
+methods will not work because those methods can not handle the fact that
+Prism debugging job creates three distinct CRE Job Ids yet.
+ 
+
+6. Test for the Loose Integration
+---------------------------------
+
+A user can submit an MPI job using either the interactive command (qrsh) or
+the batch command (qsub) with a batch script. The following script is an
+example batch script. A user can customize this file according to a
+site-specific loose integration configuration and user information.
+
+6.1. Batch script for HPC ClusterTools
+--------------------------------------
+
+The script
+
+   batch.sunmpi.template
+
+in this directory contains a template for a Grid Engine batch job.
+
+
+6.2. Interactive command for HPC ClusterTools
+---------------------------------------------
+
+% qrsh <option list> -l <cre_exclusive_complex> \
+  -pe <pe_name> <num_of_cpus> MPRUN -np <num_of_cpus>  \
+  <mpi_executable>
+
+Users can add more Grid Engine options to the option list such as those
+shown in the batch example.
+
+
+6.3. Prism debugging job
+------------------------
+
+% setenv DISPLAY `hostname`:0
+% setenv PATH ${PATH}:/opt/SUNWhpc/bin
+% qrsh  -V -l cre -pe hpc 4 PRISM -np 4 ./monte
+
+
+7. Other Useful Information:
+
+The official web site for Sun HPC ClusterTools, http://www.sun.com/hpc/ has
+the latest product information in addition to many useful links.
+
+
+Appendix A: Step by Step Loose Integration
+------------------------------------------
+
+The loose integration between Grid Engine and HPC ClusterTools can be done
+by creating a parallel environment, exclusive complex and queues for HPC
+ClusterTools, and appropriate suspend/terminate methods for the exclusive
+queues associated with execution hosts running HPC ClusterTools.  By
+creating an exclusive environment for HPC ClusterTools, the existing Grid
+Engine installation will not be disturbed by this loose integration and vice
+versa.  The following will show a step-by-step procedure for the loose
+integration as a guideline.
+
+
+Step 1: Create appropriate scripts for the loose integration
+------------------------------------------------------------
+
+The following scripts are essential to create the loose integration between
+Sun Grid Engine and HPC ClusterTools. The current loose integration is
+accomplished through Grid Engine interface and HPC ClusterTools commands,
+mpinfo, mpps, and mpkill. The startsunmpi.sh is the most important script to
+run an MPI job of HPC ClusterTools on Grid Engine system. The other scripts,
+MPRUN, suspend_sunmpi.sh, terminate_sunmpi.sh, stopsunmpi.sh, are used to
+provide robust support for control of an MPI job through the Grid Engine
+commands. Create the following files and place them in $SGE_ROOT/mpi/sunhpc/
+loose-integration directory, where $SGE_ROOT is an absolute path for the
+Grid Engine installation directory.
+
+
+A.1. MPRUN: a wrapper for the mprun command of HPC ClusterTools
+---------------------------------------------------------------
+
+The script
+
+   MPRUN
+
+in this directory contains a wrapper for the mprun command of HPC
+ClusterTools.
+
+
+A.2. PRISM: a wrapper for the prism command of HPC ClusterTools
+---------------------------------------------------------------
+
+The script
+
+   PRISM
+
+in this directory contains a wrapper for the prism command of HPC
+ClusterTools.
+
+
+A.3. startsunmpi.sh: a script to prepare a rank map file for HPC ClusterTools
+-----------------------------------------------------------------------------
+
+The script
+
+   startsunmpi.sh
+
+in this directory is a template script to prepare a rank map file.
+
+
+A.4. stopsunmpi.sh: a script to be executed at the end of MPI jobs
+------------------------------------------------------------------
+
+The script
+
+   stopsunmpi.sh
+
+in this directory is executed at the end of MPI jobs.
+
+
+A.5. suspend_sunmpi.sh: a script to suspend MPI jobs 
+----------------------------------------------------
+
+The script
+
+   suspend_sunmpi.sh
+
+in this directory suspends MPI jobs.
+
+
+A.6. resume_sunmpi.sh: a script to resume a suspended MPI job
+-------------------------------------------------------------
+
+The script
+
+   resume_sunmpi.sh
+
+in this directory unsuspends MPI jobs. It uses the CRE Job Id saved by
+suspend_sunmpi.sh script.
+
+
+A.7. terminate_sunmpi.sh: a script to terminate MPI jobs
+--------------------------------------------------------
+
+The script
+
+   terminate_sunmpi.sh
+
+kin this directory kills MPI jobs. It will save all the process Ids spawned
+by an MPI jobs.
+
+
+Step 2: Create an exclusive complex for HPC ClusterTools
+--------------------------------------------------------
+
+In order to create a complex, which is a named container for a set of
+attributes in Grid Engine, one can use "qconf -Ac" command or "qmon"
+graphical user interface (GUI). The qconf command needs an input file
+containing all the attributes for the exclusive complex. The following
+complex definition is suggested for an exclusive complex for HPC
+ClusterTools.
+
+#name  shortcut  type  value  relop  requestable  consumable  default
+#--------------------------------------------------------------------
+cre    cre       BOOL  true   ==     FORCED       NO          false
+
+Once this file is saved and named as "def_complex", we can create an
+exclusive complex by issuing "qconf -Ac cre_exclusive def_complex". Here, it
+is assumed that the exclusive complex is named as "cre_exclusive". If the
+graphical user interface, qmon, is used, one can add a complex by clicking
+the following buttons, "complex_configuration" -> "Add" -> (type attributes)
+-> "Save" -> "Ok".
+
+
+Step 3: Create exclusive queues for Sun HPC ClusterTools
+--------------------------------------------------------
+
+The exclusive queues for Sun HPC ClusterTools can be created either using
+"qconf -Aq" with a queue definition file or using "qconf -aq" to retrieve
+the default queue and modifying it accordingly, in addition to using the GUI
+"qmon". It is recommended to create an exclusive queue for each execution
+host running Sun HPC ClusterTools and name each exclusive queue as
+<hostname>.cre. For example, one can create hodori.cre for an execution host
+hodori. One needs to set the following lines of the queue attributes to make
+it exclusive for Sun HPC ClusterTools.
+
+qname <hostname>.cre
+qtype BATCH  INTERACTIVE  PARALLEL
+suspend_method $SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh
+resume_method $SGE_ROOT/mpi/sunhpc/loose-integration/resume_sunmpi.sh
+terminate_method $SGE_ROOT/mpi/sunhpc/loose-integration/terminate_sunmpi.sh
+complex_list cre_exclusive
+complex_values cre=true
+
+With the GUI qmon, select "Queue Control" button and click "Add" button to
+set up the above information.
+
+
+Step 4: Create a parallel environment for HPC ClusterTools
+----------------------------------------------------------
+
+In order to run an MPI job, the Grid Engine system requires a parallel
+environment (PE). The following template file shows an example of a PE for
+Sun HPC ClusterTools .
+
+pe_name       <hpc>
+queue_list    <list_of_exclusive_cre_queues>
+slots         <number_of_cpus_available>
+user_lists       <user_access_lists>
+xuser_lists      NONE
+start_proc_args  $SGE_ROOT/mpi/sunhpc/loose-integration/startsunmpi.sh $pe_hostfile /opt/SUNWhpc/bin
+stop_proc_args   $SGE_ROOT/mpi/sunhpc/loose-integration/stopsunmpi.sh
+allocation_rule  $fill_up
+control_slaves    FALSE
+job_is_first_task FALSE
+
+All the fields surrounded by <> and $SGE_ROOT variable should be customized
+or modified according to a site-specific information to create a PE. One can
+interactively create a PE by using "qconf -ap <pe_name>" command to open an
+edit window and filling out attributes following the above template. Also,
+the GUI qmon can be used to create a parallel environment.  Select "Parallel
+Environment Configuration" from the qmon main control window and click "Add"
+button to bring up a window to fill up the above information.
+
+The Grid Engine administrator can either create an exclusive user access
+list (ACL) for Sun HPC ClusterTools or use an existing ACL for the parallel
+environment setup. In order to create an ACL, the administrator can choose
+one command among "qconf -Au", "qconf -au", and "qmon".
+
+
+Copyright
+---------
+
+This following copyright statement applies to this file only. It does not
+imply that this statement covers other files of a Grid Engine distribution.
+See the directory '<sge_root>/3rdparty' for a summary of other copyrights of
+this Grid Engine distribution.
+
+The Contents of this file are made available subject to the terms of the Sun
+Industry Standards Source License Version 1.2
+
+Sun Microsystems Inc., March, 2001
+
+Sun Industry Standards Source License Version 1.2
+=================================================
+
+The contents of this file are subject to the Sun Industry Standards Source
+License Version 1.2 (the "License"); You may not use this file except in
+compliance with the License. You may obtain a copy of the License at
+http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+
+Software provided under this License is provided on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+
+See the License for the specific provisions governing your rights and
+obligations concerning the Software.
+
+The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+
+Copyright: 2002 by Sun Microsystems, Inc.
+
+All Rights Reserved.

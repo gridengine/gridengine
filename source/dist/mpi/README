@@ -1,66 +1,67 @@
-                              MPI 
-                              ---
-              Parallel Environment for Grid Engine
+                                 MPI 
+                                 ---
+                 Grid Engine Parallel Support for MPI
+                 ------------------------------------
 
-___INFO__MARK_BEGIN__
--------------------------------------------------------------------------
-  The Contents of this file are made available subject to the terms of
-  the Sun Industry Standards Source License Version 1.2
- 
-  Sun Microsystems Inc., March, 2001
- 
- 
-  Sun Industry Standards Source License Version 1.2
-  ================================================= 
-  The contents of this file are subject to the Sun Industry Standards
-  Source License Version 1.2 (the "License"); You may not use this file
-  except in compliance with the License. You may obtain a copy of the
-  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- 
-  Software provided under this License is provided on an "AS IS" basis,
-  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
-  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
-  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
-  See the License for the specific provisions governing your rights and
-  obligations concerning the Software.
- 
-  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- 
-  Copyright: 2001 by Sun Microsystems, Inc.
- 
-  All Rights Reserved.
--------------------------------------------------------------------------
-___INFO__MARK_END__
+Content
+-------
+
+1) Content of this directory hierarchy
+2) Integration package between Grid Engine and Sun HPC ClusterTools(TM)
+3) mpi.template 
+4) mpich.template
+5) startmpi.sh
+6) stopmpi.sh
+7) 'mpi.sh' job example
+8) 'cpi' wrapper for MPICH
+9) Copyright
 
 
-This directory contains the following files:
+1) Content of this directory hierarchy
+--------------------------------------
 
-              README         - this file 
-   1.         startmpi.sh    - the startup script for MPI
-   2.         stopmpi.sh     - the shutdown script for MPI
-   3.         mpi.template   - a MPI PE template configuration for Grid Engine
-   4.         mpich.template - a MPICH PE template configuration for Grid Engine
-                               (tight integration)
-   5.         mpi.sh         - a sample MPI job
-   6.         mpi_cpi.sh     - another MPI job
+This directory contains the following files and directories:
 
-Refer to the "Installation and Administration Guide" Chapter "Support
+   README           this file 
+   README.atm       desribes how to run MPI jobs over ATM
+   sunhpc/          integration package with Sun HPC ClusterTools(TM)
+   startmpi.sh      startup script for MPI
+   stopmpi.sh       shutdown script for MPI
+   mpi.template     a MPI PE template configuration for Grid Engine
+   mpich.template   a MPICH PE template configuration for Grid Engine
+                    (tight integration)
+   mpi.sh           a sample MPI job
+   mpi_cpi.sh       another MPI job
+   hostname         a wrapper for the hostname command (see README.atm)
+
+Please refer to the "Installation and Administration Guide" Chapter "Support
 of Parallel Environments" for a general introduction to the Parallel
-Environment Interface of Grid Engine
+Environment Interface of Grid Engine.
 
-1. The starter script 'startmpi.sh' needs some command line arguments, to 
-   be configured by use of either qmon or qconf. The first one is the path
-   to the "$pe_hostfile" that gets transformed by startmpi.sh into a
-   MPI machine file. On successful completion startmpi.sh creates a
-   machine file in $TMPDIR/machines to be passed to "mpirun" at job
-   start.
 
-   $TMPDIR is a temporary directory created and removed by the Grid Engine
-   execution daemon.
+2) Integration packages between Grid Engine and Sun HPC ClusterTools(TM)
+------------------------------------------------------------------------
 
-2. The stopper 'stopmpi.sh' just removes $TMPDIR/machines.  
+   In the directory
 
-3. Use this template as a starting point when establishing a parallel
+      sunhpc/loose-inegration
+
+   you find a package to create a loose integration between Sun HPC
+   ClusterTools (Versions 3.1 & 4.0) and Grid Engine (including Enterprise
+   Edition).
+
+   In the directory
+
+      sunhpc/loose-inegration/accounting
+
+   you find a README and sample scripts to create a workaround to get
+   accounting information for Sun MPI jobs.
+
+
+3) mpi.template
+---------------
+
+   Use this template as a starting point when establishing a parallel
    environment for MPI without tight integration. You need to replace
    <a_list_of_parallel_queues>, <the_number_of_slots> and <your_sge_root>
    with the appropriate information.
@@ -75,24 +76,54 @@ Environment Interface of Grid Engine
    - all tasks are started with the appropriate nice value which was
      configured as 'priority' in the queues configuration
 
-4. Use this template as a starting point when establishing a parallel
+
+4) mpich.template
+-----------------
+
+   Use this template as a starting point when establishing a parallel
    environment for MPICH with tight integration. You need to replace
    <a_list_of_parallel_queues>, <the_number_of_slots> and <your_sge_root>
    with the appropriate information.
 
    Here is a list of problems for which tight integration provides solutions
+
    - resource limits are enforced also for tasks at slave hosts
    - resource consumption at slave hosts can be accounted
    - no need to write a customized terminate method to ensure
      that whole job is finished on qdel
  
    Here is a list of problems which are not solved by the tight integration
+
    - can't trigger job finish if application finishes partially
 
    There are two samples included. You should use these samples to verify
    that your integration of Grid Engine with MPI/MPICH works correctly.
 
-5. The first job example 'mpi.sh' starts the 'life' program from the mpich
+
+5) startmpi.sh
+--------------
+
+   The starter script 'startmpi.sh' needs some command line arguments, to 
+   be configured by use of either qmon or qconf. The first one is the path
+   to the "$pe_hostfile" that gets transformed by startmpi.sh into a
+   MPI machine file. On successful completion startmpi.sh creates a
+   machine file in $TMPDIR/machines to be passed to "mpirun" at job
+   start.
+
+   $TMPDIR is a temporary directory created and removed by the Grid Engine
+   execution daemon.
+
+
+6) stopmpi.sh
+-------------
+
+   The stopper 'stopmpi.sh' just removes $TMPDIR/machines.  
+
+
+7) 'mpi.sh' job example
+-----------------------
+
+   The first job example 'mpi.sh' starts the 'life' program from the mpich
    distribution using mpirun. Since this program needs the problem dimension
    to be entered interactively, necessary parameters get piped into 'life'.
 
@@ -107,6 +138,46 @@ Environment Interface of Grid Engine
       -machinefile $TMPDIR/machines
 
    as the second argument.  
-   
-6. The second example is a wrapper to start 'cpi' from the mpich
+  
+
+8) 'cpi' wrapper for MPICH
+--------------------------
+
+   The second example is a wrapper to start 'cpi' from the mpich
    distribution.
+
+
+9) Copyright
+------------
+
+This following copyright statement applies to this file only. It does not
+imply that this statement covers other files of a Grid Engine distribution.
+See the directory '<sge_root>/3rdparty' for a summary of other copyrights of
+this Grid Engine distribution.
+
+The Contents of this file are made available subject to the terms of the Sun
+Industry Standards Source License Version 1.2  
+
+Sun Microsystems Inc., March, 2001
+
+Sun Industry Standards Source License Version 1.2
+=================================================
+
+The contents of this file are subject to the Sun Industry Standards Source
+License Version 1.2 (the "License"); You may not use this file except in
+compliance with the License. You may obtain a copy of the License at
+http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+
+Software provided under this License is provided on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,   
+WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+
+See the License for the specific provisions governing your rights and
+obligations concerning the Software.
+
+The Initial Developer of the Original Code is: Sun Microsystems, Inc.   
+
+Copyright: 2001 by Sun Microsystems, Inc.
+
+All Rights Reserved.

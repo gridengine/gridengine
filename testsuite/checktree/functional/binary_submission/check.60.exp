@@ -51,7 +51,7 @@ set check_init_level_procedure "binary_submission_init_level"
 
 # define test's name and run level descriptions
 set check_name            "binary_submission"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   0
 set check_description(0)  "test qsub/qrsh -b y|n functionality"
 
@@ -455,6 +455,8 @@ proc binary_submission_check {} {
       #
       # Check whether the job was executed successfully
       #
+      # wait for accounting to be flushed
+      after 10000
       if { $account == 0 } {
          was_job_running $job_id
       }

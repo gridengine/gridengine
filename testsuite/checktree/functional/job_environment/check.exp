@@ -52,7 +52,7 @@ set check_init_level_procedure "job_environment_init_level"
 
 # define test's name and run level descriptions
 set check_name            "job_environment"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   0
 set check_description(0)  "test job environment variables"
 
@@ -86,9 +86,11 @@ proc job_environment_init_level {} {
 
 
 proc job_environment_setup  {} {
-   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_HOST
+   global queue
 
    puts $CHECK_OUTPUT "setup ..."
+   set queue [get_queue_instance "all.q" $CHECK_HOST]
 
    set_error 0 "ok"
 }
@@ -101,56 +103,80 @@ proc job_environment_parse_env_test_output { file array } {
       unset job_env_array
    }
 
-   wait_for_remote_file $CHECK_HOST $CHECK_USER $file
-   set o_file [ open "$file" "r" ]
-   
-   set variable_names_list ""
-   while { [gets $o_file line] >= 0 } {
-      set pos [ string first "=" $line ]
-      incr pos -1
-      set variable [ string range $line 0 $pos ]
-      incr pos 2
-      set value [ string range $line $pos end ]
-      debug_puts "variable=\"$variable\", value=\"$value\""
-      set job_env_array($variable) $value
-      lappend variable_names_list $variable
-   }
+   if {[wait_for_remote_file $CHECK_HOST $CHECK_USER $file] == 0} {
+      set o_file [ open "$file" "r" ]
+      
+      set variable_names_list ""
+      while { [gets $o_file line] >= 0 } {
+         set pos [ string first "=" $line ]
+         incr pos -1
+         set variable [ string range $line 0 $pos ]
+         incr pos 2
+         set value [ string range $line $pos end ]
+         debug_puts "variable=\"$variable\", value=\"$value\""
+         set job_env_array($variable) $value
+         lappend variable_names_list $variable
+      }
 
-   set job_env_array(index) $variable_names_list
-   close $o_file
-   file delete $file
+      set job_env_array(index) $variable_names_list
+      close $o_file
+      file delete $file
+   }
 }
 
 proc job_environment_qsub_job { jobname array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_HOST CHECK_SCRIPT_FILE_DIR
+   global queue
    upvar $array job_env_array
-   set job_id [ submit_job "$arguments -q $CHECK_HOST.q $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
-   wait_for_jobstart $job_id $jobname 60 1 1
-   wait_for_jobend $job_id $jobname 60
-   job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
+
+   set ret 1
+   set job_id [ submit_job "$arguments -q $queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
+
+   if { $job_id <= 0 } {
+      set ret 0
+   }
+
+   if {$ret && [wait_for_jobstart $job_id $jobname 60 1 1] != 0} {
+      set ret 0
+      delete_all_jobs
+   }
+
+   if {$ret && [wait_for_jobend $job_id $jobname 60] != 0} {
+      set ret 0
+      delete_all_jobs
+   }
+
+   if {$ret} {
+      job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
+   }
+
+   return $ret
 }
 
 proc job_environment_qresub_job { jobname array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_SCRIPT_FILE_DIR
    global CHECK_OUTPUT
+   global queue
 
    upvar $array job_env_array
-   set job_id [ submit_job "$arguments -q $CHECK_HOST.q -h $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
+   set job_id [ submit_job "$arguments -q $queue -h $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
    
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qresub" "$job_id" } result
    puts $CHECK_OUTPUT $result
-   delete_job $job_id
-   incr job_id 1
-   wait_for_jobstart $job_id $jobname 60 1 1
-   wait_for_jobend $job_id $jobname 60
+   set new_job_id [expr $job_id + 1]
+   wait_for_jobstart $new_job_id $jobname 60 1 1
+   wait_for_jobend $new_job_id $jobname 60
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
+   delete_job $job_id
 }
 
 proc job_environment_qalter_job { jobname array qsub_args qalter_args } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_SCRIPT_FILE_DIR
    global CHECK_OUTPUT
+   global queue
+
    upvar $array job_env_array
-   set job_id [ submit_job "$qsub_args -q $CHECK_HOST.q -h $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
+   set job_id [ submit_job "$qsub_args -q $queue -h $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter" $qalter_args $job_id } result
    puts $CHECK_OUTPUT $result
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls" $job_id } result
@@ -163,10 +189,11 @@ proc job_environment_qalter_job { jobname array qsub_args qalter_args } {
 proc job_environment_qrsh_job { array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
+   global queue
 
    upvar $array job_env_array
    
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh" "$arguments -q $CHECK_HOST.q" $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR } result
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh" "$arguments -q $queue" $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR } result
    puts $CHECK_OUTPUT $result
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
 }
@@ -174,12 +201,13 @@ proc job_environment_qrsh_job { array arguments } {
 proc job_environment_qsh_job { array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
+   global queue
 
    upvar $array job_env_array
 
    set script_name "$CHECK_PROTOCOL_DIR/temp_script.sh"
    create_shell_script $script_name $CHECK_HOST "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $CHECK_HOST.q -S $script_name"]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $queue -S $script_name"]
    puts $CHECK_OUTPUT $output
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
    file delete $CHECK_PROTOCOL_DIR/temp_script.sh
@@ -237,16 +265,17 @@ proc job_environment_amount {} {
 
    puts $CHECK_OUTPUT "checking number of environment variables ..."
 
-   job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null -ckpt testcheckpointobject -pe mytestpe 2"
- 
-   foreach var $known_variables {
-      if { [info exists job_env($var)] } {
-         set value $job_env($var)
-         if { [string length $value] == 0 } {
-            add_proc_error "job_environment_amount" "-1" "$var is set to \"$value\""
+   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null -ckpt testcheckpointobject -pe mytestpe 2"]} {
+    
+      foreach var $known_variables {
+         if { [info exists job_env($var)] } {
+            set value $job_env($var)
+            if { [string length $value] == 0 } {
+               add_proc_error "job_environment_amount" "-1" "$var is set to \"$value\""
+            }
+         } else {
+            add_proc_error "job_environment_amount" "-1" "environment variable $var is not set"
          }
-      } else {
-         add_proc_error "job_environment_amount" "-1" "environment variable $var is not set"
       }
    }
 
@@ -286,23 +315,18 @@ proc job_environment_JOB_NAME {} {
    global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR
    
    puts $CHECK_OUTPUT "\nqsub ..."
-   job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"
-#   foreach env $job_env(index) {
-#      puts $CHECK_OUTPUT "$env=\"$job_env($env)\""
-#   }
-   job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
-   job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
-   job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
+   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
+      job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
+      job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
+      job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
+   }
 
    puts $CHECK_OUTPUT "\nqsub -N ..."
-   job_environment_qsub_job "newnam" job_env "-o /dev/null -e /dev/null -N newnam"
-#   foreach env $job_env(index) {
-#      puts $CHECK_OUTPUT "$env=\"$job_env($env)\""
-#   }
-   job_environment_check_env_value "JOB_NAME" "newnam" $job_env(JOB_NAME)
-   job_environment_check_env_value "REQNAME" "newnam" $job_env(REQNAME)
-   job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
-   
+   if {[job_environment_qsub_job "newnam" job_env "-o /dev/null -e /dev/null -N newnam"]} {
+      job_environment_check_env_value "JOB_NAME" "newnam" $job_env(JOB_NAME)
+      job_environment_check_env_value "REQNAME" "newnam" $job_env(REQNAME)
+      job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
+   }
 
    puts $CHECK_OUTPUT "\nqresub ..."
    job_environment_qresub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"

@@ -1,3 +1,8 @@
+JG-2004-02-16-2: Testsuite: Checked and/or fixed following testsuite tests:
+                            functional/binary_submission
+                            functional/job_environment
+                            system_tests/clients/qalter
+
 JG_2004-02-16-1: Bugfix:    Serialize (re)open actions of Berkeley DB by 
                             multiple threads.  
                  Enhancem.: Do spooling of hostgroups (comprising spooling of 

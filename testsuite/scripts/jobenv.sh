@@ -42,4 +42,5 @@ fi
 
 #echo "JOB_NAME $JOB_NAME" > $1/job_env.out
 env > $1/job_env.out
+sleep 5
 exit 0

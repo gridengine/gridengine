@@ -238,6 +238,34 @@ void job_move_first_pending_to_running(lListElem **pending_job,
    DEXIT;
 }
 
+/****** sched/sge_job_schedd/user_list_init_jc() ******************************
+*  NAME
+*     user_list_init_jc() -- inc. the # of jobs a user has running 
+*
+*  SYNOPSIS
+*     void user_list_init_jc(lList **user_list, 
+*                            const lList *running_list) 
+*
+*  FUNCTION
+*     Initialize "user_list" and JC_jobs attribute for each user according
+*     to the list of running jobs.
+*
+*  INPUTS
+*     lList **user_list          - JC_Type list 
+*     const lList *running_list - JB_Type list 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void user_list_init_jc(lList **user_list, const lList *running_list)
+{
+   lListElem *job;   /* JB_Type */
+
+   for_each(job, running_list) {
+      sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
+   } 
+}
+
 /****** sched/sge_job_schedd/job_lists_split_with_reference_to_max_running() **
 *  NAME
 *     job_lists_split_with_reference_to_max_running() 
@@ -260,10 +288,15 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 *     lList **user_list     - User list of Type JC_Type 
 *     int max_jobs_per_user - "max_u_jobs" 
 *
+*  NOTE
+*     JC_jobs of the user elements contained in "user_list" has to be 
+*     initialized properly before this function might be called.
+*
 *  SEE ALSO
 *     sched/sge_job_schedd/SPLIT_-Constants
 *     sched/sge_job_schedd/trash_splitted_jobs()
 *     sched/sge_job_schedd/split_jobs()     
+*     sched/sge_job_schedd/user_list_init_jc()
 *******************************************************************************/
 void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                                    lList **user_list,
@@ -272,9 +305,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
    if (max_jobs_per_user != 0 && 
        job_lists[SPLIT_PENDING] != NULL && *(job_lists[SPLIT_PENDING]) != NULL &&
-       job_lists[SPLIT_RUNNING] != NULL && *(job_lists[SPLIT_RUNNING]) != NULL && 
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
-      lListElem *job = NULL;                           
       lListElem *user = NULL;
 
 #ifndef CULL_NO_HASH
@@ -292,12 +323,6 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
          }
       }
 #endif      
-
-      /* inc. the # of jobs a user is running */
-      for_each(job, *(job_lists[SPLIT_RUNNING])) {
-         sge_inc_jc(user_list, lGetString(job, JB_owner), 
-                    job_get_ja_tasks(job));
-      }
 
       for_each(user, *user_list) {
          u_long32 jobs_for_user = lGetUlong(user, JC_jobs);

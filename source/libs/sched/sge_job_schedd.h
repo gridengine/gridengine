@@ -196,5 +196,7 @@ void trash_splitted_jobs(lList **job_list[]);
 
 void job_lists_print(lList **job_list[]);
 
+void user_list_init_jc(lList **user_list, const lList *running_list);
+
 #endif /* __SGE_JOB_SCHEDD_H */
 

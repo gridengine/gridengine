@@ -1,4 +1,5 @@
-SG-2003-07-03-0: Bugfix:    max jobs allowed per user
+SG-2003-07-03-0: Bugfix:    max_u_jobs could count too many jobs
+
                             The sge_add_job had multiple exits after the max_u_job
                             counter was increased. This was fixed. 
                             For some reason, this feature was disabled in the maintrunk.

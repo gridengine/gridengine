@@ -4718,7 +4718,7 @@ proc get_run_level_name { level } {
 proc clear_screen {} {
  
   set clear_sequence [ format "%c%c%c%c%c%c%c" 0x1b 0x5b 0x48 0x1b 0x5b 0x32 0x4a 0x00 ]
-  puts $clear_sequence
+  puts -nonewline $clear_sequence
 }
 
 #                                                             max. column:     |
@@ -4762,8 +4762,7 @@ proc print_menu_header {} {
   get_version_info
   puts "===============================================================================" 
 
-  puts " system version    :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version])"
-  puts " product feature   :  $CHECK_PRODUCT_FEATURE"
+  puts " system version    :  $CHECK_PRODUCT_VERSION_NUMBER ([resolve_version]) / feature: $CHECK_PRODUCT_FEATURE"
   puts " current dir       :  [ format_output "                      " 55 $CHECK_ACT_PATH ]"
 
   set dirs [ get_dir_names $CHECK_ACT_PATH ]
@@ -4797,7 +4796,6 @@ proc print_menu_header {} {
         set possible_levels "$possible_levels $a_level"
      } 
   } 
-  puts "===============================================================================" 
   puts " max. runlevel     : $possible_levels"  
 
   set selected_levels ""
@@ -4813,13 +4811,13 @@ proc print_menu_header {} {
   foreach elem $test_text {
      puts $elem
   }
+#  puts "===============================================================================" 
+#  set blank "  "
+#  if { $test_count > 9 } {
+#     set blank " "
+#  }  
+#  puts "${blank}$test_count test(s) available in current subdirs"
   puts "===============================================================================" 
-  set blank "  "
-  if { $test_count > 9 } {
-     set blank " "
-  }  
-  puts "${blank}$test_count test(s) available in current subdirs"
-  puts "===============================================================================\n" 
   return $files
 }
 
@@ -5050,19 +5048,75 @@ proc compile_source {} {
    append mail_body "\n"
 
    puts $CHECK_OUTPUT "now waiting for end of compile ..." 
-   set timeout -1
+   set timeout 300
    set done_count 0
    set compile_bad {}
    log_user 0
 
    set original_spawn_list $spawn_list  
- 
+   set show_info 1
    while { [llength $spawn_list] > 0   } {
       if {[info exists spawn_id]} {
             unset spawn_id
       }
+#      puts $CHECK_OUTPUT "open spawn ids: $spawn_list"
+      if { $show_info == 1 } {
+         puts $CHECK_OUTPUT "============================================"
+         puts $CHECK_OUTPUT "open compile connections: "
+         foreach id $spawn_list {
+            set host_nr 0
+            set host_index 0
+            foreach el $original_spawn_list {
+               if { [string compare $el $id] == 0 } {
+                    set host_index $host_nr
+               }
+               incr host_nr 1
+            }
+            puts -nonewline $CHECK_OUTPUT "[lindex $host_list $host_index] "
+         }
+         puts $CHECK_OUTPUT "\n============================================"
+         set show_info 0
+      }
+
       expect {
          -i $spawn_list full_buffer {
+         }
+         -i $spawn_list timeout {
+              set spawn_id [lindex $spawn_list 0]   ;# declare first connection as fault
+              set host_index 0
+              set host_nr 0
+              foreach el $original_spawn_list {
+                 if { [string compare $el $spawn_id] == 0 } {
+                    set host_index $host_nr
+                 }
+                 incr host_nr 1
+              }
+              lappend compile_bad [lindex $host_list $host_index]
+              puts $CHECK_OUTPUT "got timeout for host \"[lindex $host_list $host_index]\""
+              catch {wait -i $spawn_id} output
+              catch {close -i $spawn_id} output
+              set index [lsearch -exact $spawn_list $spawn_id]
+              set spawn_list [lreplace $spawn_list $index $index]
+              set show_info 1
+         }
+         -i $spawn_list eof {
+              set spawn_id $expect_out(spawn_id)
+              set host_index 0
+              set host_nr 0
+              foreach el $original_spawn_list {
+                 if { [string compare $el $spawn_id] == 0 } {
+                    set host_index $host_nr
+                 }
+                 incr host_nr 1
+              }
+              lappend compile_bad [lindex $host_list $host_index]
+              puts $CHECK_OUTPUT $expect_out(0,string)
+              catch {wait -i $spawn_id} output
+              catch {close -i $spawn_id} output
+              set index [lsearch -exact $spawn_list $spawn_id]
+              set spawn_list [lreplace $spawn_list $index $index]
+              set show_info 1
+
          }
          -i $spawn_list "remotecompile * aimk compile error" {
               set spawn_id $expect_out(spawn_id)
@@ -5080,6 +5134,8 @@ proc compile_source {} {
               catch {close -i $spawn_id} output
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
+              set show_info 1
+
          }
          -i $spawn_list "remotecompile * aimk no errors" {
               set spawn_id $expect_out(spawn_id)
@@ -5088,6 +5144,7 @@ proc compile_source {} {
               catch {close -i $spawn_id} output
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
+              set show_info 1
          }
          -i $spawn_list "*\n" {
               set spawn_id $expect_out(spawn_id)

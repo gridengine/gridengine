@@ -1,3 +1,5 @@
+CR-2002-02-15-0: Testsuite: - compile option: handle eof and response timeout 
+
 CR-2002-02-14-0: Testsuite: - Bugfix: error on updating defaults file version
                             - is_job_running() now first will get the current
                               job state and then evtl. make a sleep ( timming )  

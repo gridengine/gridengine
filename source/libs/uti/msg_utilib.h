@@ -170,7 +170,6 @@
 ** utilib/sge_uidgid.c
 */ 
 #define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49059, _("getpwuid("U32CFormat") failed: "SFN"\n"))
-#define MSG_SYSTEM_GETGRGIDFAILED_US               _MESSAGE(49060, _("getgrgid("U32CFormat") failed: "SFN"\n"))
 #define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _MESSAGE(49061, _("tried to change uid/gid without being root"))
 #define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _MESSAGE(49062, _("gid of user "SFN" ("U32CFormat") less than minimum allowed in conf (%d)"))
 #define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _MESSAGE(49063, _("uid of user "SFN" ("U32CFormat") less than minimum allowed in conf (%d)"))

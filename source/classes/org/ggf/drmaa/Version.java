@@ -42,7 +42,7 @@ package org.ggf.drmaa;
  * @author  dan.templeton@sun.com
  * @since 0.5
  */
-public class Version implements java.io.Serializable {
+public class Version implements java.io.Serializable, Cloneable {
    /** The major version number */
    private int major;
    /** The minor version number */
@@ -112,6 +112,12 @@ public class Version implements java.io.Serializable {
     * @return a copy of this object.
     */
    public Object clone () {
-      return new Version (major, minor);
+      try {
+         return super.clone ();
+      }
+      catch (CloneNotSupportedException e) {
+         // this shouldn't happen, since we are Cloneable
+         throw new InternalError ();
+      }
    }
 }

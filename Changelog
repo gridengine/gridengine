@@ -1,3 +1,11 @@
+DT-2004-12-28-0: Bugfix:    o Added missing files from previous checkins
+                            o Fixed bugs in DRMAA-J test suite
+                            o Fixed packaging for DrmaaExample and TestDrmaa
+                            o Fixed DRMAA-J cloning issue
+                            - Still need to test new clone() methods
+                 Changed:   DRMAA
+                 Issue:     1404
+
 CR-2004-12-23-0: Bugfix:    qmaster running out of file descriptors
                             - Part II of CR-2004-12-03-2
                               (added additional file desriptor soft 
@@ -22,6 +30,9 @@ MD-2004-12-22-0: Bugfix:    uninstall of exec host doesn't work
                  Bugtraq:   6211725
                  Changed:   inst_sge
                  Review:    HP
+
+DT-2004-12-22-2: Bugfix:    o Made -no-java the default
+                 Changed:   aimk
 
 JG-2004-12-22-0: Testsuite: Accept new hosts as known hosts when ssh is used as 
                             login mechanism.

@@ -83,8 +83,7 @@ public class PartialTimestampFormat extends Format {
     * @return a copy of this object
     */   
    public Object clone () {
-      /* There is no state to copy, so just create a new one. */
-      return new PartialTimestampFormat ();
+      return super.clone ();
    }
    
    /** <p>Translates the PartialTimestamp into a DRMAA specified time string and appends

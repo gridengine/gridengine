@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="all" name="drmaa">
+   <target name="init">
+      <property location="../CLASSES" name="classes.dir"/>
+      <property location="." name="src.dir"/>
+      <property location="../../doc/javadocs" name="javadoc.dir"/>
+      <property name="project.name" value="${ant.project.name}"/>
+      <property location="../CLASSES/${project.name}.jar" name="jar"/>
+      <property location="../CLASSES/${project.name}-test.jar" name="test.jar"/>
+   </target>
+
+   <target depends="init" name="compile">
+      <!-- Both srcdir and destdir should be package roots. -->
+      <mkdir dir="${classes.dir}"/>
+      <javac debug="true" deprecation="true" destdir="${classes.dir}">
+         <src path="${src.dir}/"/>
+         <include name="**/drmaa/**/*.java"/>
+         <include name="*.java"/>
+         <classpath><pathelement location="${junit}"/></classpath>
+      </javac>
+   </target>
+
+   <target depends="init,compile" name="jar">
+      <jar compress="true" jarfile="${jar}">
+         <fileset dir="${classes.dir}">
+            <include name="**/drmaa**/*.class"/>
+            <exclude name="**/*Test.class"/>
+            <exclude name="**/*Suite.class"/>
+            <exclude name="**/howto/**"/>
+         </fileset>
+         <fileset dir="${src.dir}">
+            <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
+         </fileset>
+      </jar>
+   </target>
+
+   <target depends="init,compile" name="test">
+      <jar compress="true" jarfile="${test.jar}">
+         <fileset dir="${classes.dir}">
+            <exclude name="*.jar"/>
+            <exclude name="**/howto/**"/>
+         </fileset>
+         <fileset dir="${src.dir}">
+            <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
+         </fileset>
+      </jar>
+   </target>
+
+   <target depends="init,jar,test" description="Build everything." name="all"/>
+
+   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc">
+      <mkdir dir="${javadoc.dir}"/>
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html">
+          <fileset dir="${src.dir}">
+             <include name="**/drmaa/**/*.java"/>
+             <exclude name="**/*Test.java"/>
+             <exclude name="**/*Suite.java"/>
+             <exclude name="**/howto/**"/>
+          </fileset>
+      </javadoc>
+   </target>
+
+   <target depends="init" description="Clean Javadoc tool docs." name="javadoc.clean">
+      <delete>
+         <fileset dir="${javadoc.dir}" excludes="**/CVS"/>
+      </delete>
+   </target>
+   
+   <target depends="init,javadoc.clean" description="Clean all build products." name="clean">
+      <delete>
+         <fileset dir="${javadoc.dir}" excludes="**/CVS"/>
+      </delete>
+      <delete dir="${classes.dir}"/>
+      <delete file="${jar}"/>
+      <delete file="${test.jar}"/>
+   </target>
+
+</project>

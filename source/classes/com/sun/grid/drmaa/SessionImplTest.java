@@ -110,13 +110,13 @@ public class SessionImplTest extends TestCase {
       System.out.println ("testGetDrmSystem");
       
       
-      assertTrue (session.getDrmSystem ().equals ("SGE 6.0u2") ||
-                  session.getDrmSystem ().equals ("N1GE 6.0u2"));
+      assertTrue (session.getDrmSystem ().equals ("SGE maintrunk") ||
+                  session.getDrmSystem ().equals ("N1GE maintrunk"));
 
       this.initSession ();
       
-      assertTrue (session.getDrmSystem ().equals ("SGE 6.0u2") ||
-                  session.getDrmSystem ().equals ("N1GE 6.0u2"));
+      assertTrue (session.getDrmSystem ().equals ("SGE maintrunk") ||
+                  session.getDrmSystem ().equals ("N1GE maintrunk"));
       
       this.exitSession ();
    }

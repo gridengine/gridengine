@@ -258,6 +258,22 @@ public class JobTemplateTest extends TestCase {
       
       assertNotSame (mode, retMode);
       assertEquals (mode, retMode);
+      
+      try {
+         new JobTemplate ().setTransferFiles (mode);
+         fail ("Allowed setting of unsupported transferFiles property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
+      
+      try {
+         new JobTemplate ().getTransferFiles ();
+         fail ("Allowed getting of unsupported transferFiles property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
    }
    
    /** Test of g|setDeadlineTime method, of class org.ggf.drmaa.JobTemplate. */
@@ -272,6 +288,22 @@ public class JobTemplateTest extends TestCase {
       
       assertNotSame (pt, retPt);
       assertEquals (pt, retPt);
+      
+      try {
+         new JobTemplate ().setDeadlineTime (pt);
+         fail ("Allowed setting of unsupported deadlineTime property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
+      
+      try {
+         new JobTemplate ().getDeadlineTime ();
+         fail ("Allowed getting of unsupported deadlineTime property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
    }
    
    /** Test of g|setHardWallclockTimeLimit method, of class org.ggf.drmaa.JobTemplate. */
@@ -280,6 +312,22 @@ public class JobTemplateTest extends TestCase {
 
       jt.setHardWallclockTimeLimit (101L);
       assertEquals (101L, jt.getHardWallclockTimeLimit ());
+      
+      try {
+         new JobTemplate ().setHardWallclockTimeLimit (101L);
+         fail ("Allowed setting of unsupported hardWallclockTimeLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
+      
+      try {
+         new JobTemplate ().getHardWallclockTimeLimit ();
+         fail ("Allowed getting of unsupported hardWallclockTimeLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
    }
    
    /** Test of g|setSoftWallclockTimeLimit method, of class org.ggf.drmaa.JobTemplate. */
@@ -288,6 +336,22 @@ public class JobTemplateTest extends TestCase {
       
       jt.setSoftWallclockTimeLimit (101L);
       assertEquals (101L, jt.getSoftWallclockTimeLimit ());
+      
+      try {
+         new JobTemplate ().setSoftWallclockTimeLimit (101L);
+         fail ("Allowed setting of unsupported softWallclockTimeLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
+      
+      try {
+         new JobTemplate ().getSoftWallclockTimeLimit ();
+         fail ("Allowed getting of unsupported softWallclockTimeLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
    }
    
    /** Test of g|setHardRunDurationLimit method, of class org.ggf.drmaa.JobTemplate. */
@@ -296,6 +360,22 @@ public class JobTemplateTest extends TestCase {
       
       jt.setHardRunDurationLimit (101L);
       assertEquals (101L, jt.getHardRunDurationLimit ());
+      
+      try {
+         new JobTemplate ().setHardRunDurationLimit (101L);
+         fail ("Allowed setting of unsupported hardRunDurationLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
+      
+      try {
+         new JobTemplate ().getHardRunDurationLimit ();
+         fail ("Allowed getting of unsupported hardRunDurationLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
    }
    
    /** Test of g|setSoftRunDurationLimit method, of class org.ggf.drmaa.JobTemplate. */
@@ -304,6 +384,22 @@ public class JobTemplateTest extends TestCase {
       
       jt.setSoftRunDurationLimit (101L);
       assertEquals (101L, jt.getSoftRunDurationLimit ());
+      
+      try {
+         new JobTemplate ().setSoftRunDurationLimit (101L);
+         fail ("Allowed setting of unsupported softRunDurationLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
+      
+      try {
+         new JobTemplate ().getSoftRunDurationLimit ();
+         fail ("Allowed getting of unsupported softRunDurationLimit property");
+      }
+      catch (UnsupportedAttributeException e) {
+         /* Don't care. */
+      }
    }
    
    /** Test of getAttributeNames method, of class org.ggf.drmaa.JobTemplate. */

@@ -72,7 +72,7 @@ import java.util.*;
  * @see Session
  * @since 0.4.2
  */
-public abstract class JobTemplate {
+public class JobTemplate {
    /** The names of all the required properties */   
    private static final String[] attributeNames = new String[] {
       "args",

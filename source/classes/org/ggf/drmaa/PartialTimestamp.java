@@ -2333,17 +2333,11 @@ public class PartialTimestamp extends Calendar {
     * @return a complete copy of this object
     */   
    public Object clone () {
-      PartialTimestamp pt = new PartialTimestamp ();
+      PartialTimestamp pt = (PartialTimestamp)super.clone ();
+
+      pt.modifiers = new int[FIELD_COUNT];
       
-      for (int field = CENTURY; field < FIELD_COUNT; field++) {
-         pt.modifiers[field] = this.modifiers[field];
-         pt.fields[field] = this.fields[field];
-         
-         /* Make sure set fields are marked as set. */
-         if (this.isSet (field)) {
-            pt.set (field, pt.internalGet (field));
-         }
-      }
+      System.arraycopy (this.modifiers, 0, pt.modifiers, 0, FIELD_COUNT);
       
       pt.lastHourSet = this.lastHourSet;
       pt.fieldsModified = this.fieldsModified;

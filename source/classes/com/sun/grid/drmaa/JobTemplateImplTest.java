@@ -389,8 +389,8 @@ public class JobTemplateImplTest extends TestCase {
       jt2.setBlockEmail (true);
       assertFalse (jt.equals (jt2));
       assertFalse (jt2.equals (jt));
-      jt2.setDeadlineTime (new PartialTimestamp (10, 21, 01));
-      jt.setDeadlineTime (new PartialTimestamp (10, 21, 01));
+      jt2.setStartTime (new PartialTimestamp (10, 21, 01));
+      jt.setStartTime (new PartialTimestamp (10, 21, 01));
       assertFalse (jt.equals (jt2));
       assertFalse (jt2.equals (jt));
       
@@ -407,8 +407,8 @@ public class JobTemplateImplTest extends TestCase {
       jt.setBlockEmail (true);
       jt2.setBlockEmail (true);
       assertFalse (jt.hashCode () == jt2.hashCode ());
-      jt2.setDeadlineTime (new PartialTimestamp (10, 21, 01));
-      jt.setDeadlineTime (new PartialTimestamp (10, 21, 01));
+      jt2.setStartTime (new PartialTimestamp (10, 21, 01));
+      jt.setStartTime (new PartialTimestamp (10, 21, 01));
       assertFalse (jt.hashCode () == jt2.hashCode ());
       
       session.deleteJobTemplate (jt2);

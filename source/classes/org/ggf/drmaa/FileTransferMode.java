@@ -46,7 +46,7 @@ package org.ggf.drmaa;
  * @author dan.templeton@sun.com
  * @since 0.5
  */
-public class FileTransferMode implements java.io.Serializable {
+public class FileTransferMode implements java.io.Serializable, Cloneable {
    /** Whether to transfer error stream files. */   
    private boolean errorStream = false;
    /** Whether to transfer input stream files. */   
@@ -139,7 +139,13 @@ public class FileTransferMode implements java.io.Serializable {
     * @return a copy of this FileTransferMode object
     */   
    public Object clone () {
-      return new FileTransferMode (inputStream, outputStream, errorStream);
+      try {
+         return super.clone ();
+      }
+      catch (CloneNotSupportedException e) {
+         // this shouldn't happen, since we are Cloneable
+         throw new InternalError ();
+      }
    }
    
    /** Returns a string containing the stream settings.

@@ -1,4 +1,4 @@
-JG-2005-03-24-0: Testsuite: Testsuite didn't compile / instal binaries for 
+JG-2005-03-24-0: Testsuite: Testsuite didn't compile / install binaries for 
                             bdb_server and submit_only_hosts.
                  Issue:     1523
                             Fixed checks functional/usage and 

@@ -52,7 +52,6 @@ SCHEDLIB_SRC = sge_select_queue.c \
               scale_usage.c \
               sgeee.c \
               sge_urgency.c \
-              sge_gdi_attributes.c \
               sge_resource_utilization.c \
               sge_serf.c \
               sge_support.c \
@@ -100,9 +99,6 @@ include $(SCHEDLIB_DIR)/sched_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-sge_gdi_attributes.o : $(SCHEDLIB_DIR)/sge_gdi_attributes.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_gdi_attributes.c
-      
 sge_orders.o : $(SCHEDLIB_DIR)/sge_orders.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_orders.c
 

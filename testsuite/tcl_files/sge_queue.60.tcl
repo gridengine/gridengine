@@ -176,7 +176,6 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
       set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
       if { $result != 0 } {
          add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
-         break
       }
    }
 

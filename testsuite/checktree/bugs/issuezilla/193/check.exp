@@ -557,6 +557,8 @@ proc issue193_pe_jobs {} {
        while { $run == 1 } {
           set job_info [get_standard_job_info $job 1]
           foreach elem $job_info {
+puts $CHECK_OUTPUT [llength $job_info]
+puts $CHECK_OUTPUT $elem
              puts $CHECK_OUTPUT $elem
              if { [string first "MASTER" $elem ] >= 0 } {
                 set master_queue [lindex $elem 7]
@@ -580,13 +582,13 @@ proc issue193_pe_jobs {} {
           sleep 1
        }
 
-       if { [string compare $master_queue $rerun_queue] != 0 } {
+       if { [string first $rerun_queue $master_queue] == -1 } {
           puts $CHECK_OUTPUT "\"$master_queue\"\n\"$rerun_queue\""
           add_proc_error "reschedule_pe_jobs" "-1" "job $job: master task is not on queue $rerun_queue, pe $pe"
        }
       
        if { [string compare $pe "reschpe_1"] == 0 } {
-          if { [string compare $slave_queue $rerun_queue2] != 0 } {
+          if { [string first $rerun_queue2 $slave_queue] == -1 } {
              puts $CHECK_OUTPUT "\"$slave_queue\"\n\"$rerun_queue2\""
              add_proc_error "reschedule_pe_jobs" "-1" "job $job: slave task is not on queue $rerun_queue2, pe $pe"
           }
@@ -756,14 +758,13 @@ proc issue193_cleanup {} {
    } 
 
    puts $CHECK_OUTPUT "removing queues ..."
-   del_queue $rerun_queue
-   del_queue $no_rerun_queue
-   del_queue $rerun_queue2
+   del_queue $rerun_queue "" 0 1
+   del_queue $no_rerun_queue "" 0 1
+   del_queue $rerun_queue2 "" 0 1
 
    puts $CHECK_OUTPUT "enabling queues ..."
-   foreach elem $CHECK_CORE_EXECD {
-      puts "${elem}.q"
-      enable_queue "${elem}.q"
+   foreach host $CHECK_CORE_EXECD {
+      enable_queue [get_queue_instance "all.q" $host]
    }
 
    if {[delete_operator $ts_user_config(first_foreign_user)] != 0} {

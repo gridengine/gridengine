@@ -1,3 +1,9 @@
+CR-2002-04-17-0: Testsuite: 
+                 Enhancem.: new file procedure: get_all_subdirectories()
+                 Bugfix:    report error if cat failes in procedure
+                            get_file_content()
+                            
+
 JG-2002-04-17-0: Cleanup:   multiple defines for same error message
                  Issue:     #203
 

@@ -113,6 +113,43 @@ proc get_dir_names { path } {
   return $r2;
 }
 
+#****** file_procedures/get_all_subdirectories() *******************************
+#  NAME
+#     get_all_subdirectories() -- returns all subdirectories in path 
+#
+#  SYNOPSIS
+#     get_all_subdirectories { path } 
+#
+#  FUNCTION
+#     This procedure returns a list of all sub directories (recursive) in
+#     given path
+#
+#  INPUTS
+#     path - root directory path
+#
+#  RESULT
+#     list of subdirectories
+#
+#*******************************************************************************
+proc get_all_subdirectories { path } {
+
+  set directories ""
+  set files [get_file_names $path] 
+  set dirs [get_dir_names $path]
+  
+  foreach elem $dirs {
+     lappend directories "$elem"
+  }
+  
+  foreach element $dirs {
+     set sub_dirs [ get_all_subdirectories "$path/$element"]
+     foreach elem $sub_dirs {
+        lappend directories "$element/$elem"
+     }
+  }
+  return $directories
+}
+
 
 # get all file names of path
 #                                                             max. column:     |
@@ -388,11 +425,15 @@ proc get_file_content { host user file { file_a "file_array" } } {
    set program "cat"
    set program_arg $file
    set output [ start_remote_prog $host $user $program $program_arg]
-   set help [ split $output "\n" ]
    set lcounter 0
-   foreach line $help {
-      incr lcounter 1
-      set back($lcounter) $line
+   if { $prg_exit_state != 0 } {
+      add_proc_error "get_file_content" -1 "\'cat\' returned error: $output"
+   } else {
+      set help [ split $output "\n" ]
+      foreach line $help {
+         incr lcounter 1
+         set back($lcounter) $line
+      }
    }
    set back(0) $lcounter
 }

@@ -67,10 +67,7 @@ proc init_level {} {
 }
 
 proc commlib_issues_setup {} {
-   global ts_config
-
-   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
-   after 5000
+   shutdown_core_system
    set_error 0 "ok"
 }
 
@@ -168,9 +165,7 @@ proc commlib_issues_run  {} {
 }
 
 proc commlib_issues_cleanup {} {
-   global ts_config 
-   startup_qmaster
-
+   startup_core_system
    set_error 0 "ok"
 }
 

@@ -293,7 +293,7 @@ extern int main(int argc, char** argv)
      cl_commlib_send_message(handle, com_host, "server", 1, 
                             CL_MIH_MAT_ACK, 
                             (cl_byte_t*) "#1400i", 7, 
-                            NULL, 0,0, CL_FALSE, CL_TRUE);
+                            NULL, 0,0, CL_TRUE, CL_TRUE);
 
      printf("creating new connections ...\n");
 
@@ -304,19 +304,19 @@ extern int main(int argc, char** argv)
      cl_commlib_send_message(handle, com_host, "server", 1, 
                             CL_MIH_MAT_ACK, 
                             (cl_byte_t*) "test", 5, 
-                            NULL, 0,0, CL_FALSE, CL_TRUE);
+                            NULL, 0,0, CL_TRUE, CL_TRUE);
 
      printf("sending via connection 2 ...\n");
      cl_commlib_send_message(handle1, com_host, "server", 1, 
                             CL_MIH_MAT_ACK, 
                             (cl_byte_t*) "test", 5, 
-                            NULL, 0,0, CL_FALSE, CL_TRUE);
+                            NULL, 0,0, CL_TRUE, CL_TRUE);
 
      printf("sending via connection 3 ...\n");
      ret_val = cl_commlib_send_message(handle2, com_host, "server", 1, 
                             CL_MIH_MAT_ACK, 
                             (cl_byte_t*) "test", 5, 
-                            NULL, 0,0, CL_FALSE, CL_TRUE);
+                            NULL, 0,0, CL_TRUE, CL_TRUE);
 
      if (ret_val == CL_RETVAL_OK) {
         printf("issue #1400 failed\n");
@@ -330,7 +330,7 @@ extern int main(int argc, char** argv)
      cl_commlib_send_message(handle, com_host, "server", 1, 
                             CL_MIH_MAT_ACK, 
                             (cl_byte_t*) "#1400r", 7, 
-                            NULL, 0,0, CL_FALSE, CL_TRUE);
+                            NULL, 0,0, CL_TRUE, CL_TRUE);
 
 
   }

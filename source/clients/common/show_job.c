@@ -52,7 +52,7 @@ void cull_show_job(
 lListElem *job,
 int flags 
 ) {
-   char *delis[] = {NULL, ",", "\n"};
+   const char *delis[] = {NULL, ",", "\n"};
    time_t ultime;   /* used to be u_long32, but problem w/ 64 bit times */
 
    DENTER(TOP_LAYER, "cull_show_job");
@@ -70,10 +70,6 @@ DTRACE;
          printf("job_number:                 %s\n", MSG_JOB_UNASSIGNED);
    }
 DTRACE;
-
-   if (lGetPosViaElem(job, JB_job_file)>=0)
-      if (lGetString(job, JB_job_file))
-         printf("job_file:                   %s\n", lGetString(job, JB_job_file));
 
    if (lGetPosViaElem(job, JB_exec_file)>=0)
       if (lGetString(job, JB_exec_file))
@@ -404,7 +400,7 @@ DTRACE;
 
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
-         intprt_type fields[] = { JRE_job_number, 0 };
+         intprt_type fields[] = { JRE_job_name, 0 };
 
          delis[0] = "";
          printf("jid_predecessor_list:       ");
@@ -483,7 +479,7 @@ DTRACE;
    if (lGetPosViaElem(job, JB_ja_structure)>=0) {
       u_long32 start, end, step;
 
-      get_ja_task_ids(job, &start, &end, &step);
+      job_get_ja_task_ids(job, &start, &end, &step);
       if (is_array(job))
          printf("job-array tasks             "u32"-"u32":"u32"\n", start, end, step);
    }
@@ -505,13 +501,6 @@ DTRACE;
    if (lGetPosViaElem(job, JB_start_time)>=0)
       if ((ultime = lGetUlong(job, JB_start_time))) {
          printf("start_time:                 %s", ctime((time_t *) &ultime));
-      }
-
-   if (lGetPosViaElem(job, JB_hold)>=0)
-      if (lGetUlong(job, JB_hold)) {
-         printf("hold_list:                  ");
-         sge_show_hold_list(lGetUlong(job, JB_hold), SGE_STDOUT);
-         printf("\n");
       }
 
    if (lGetPosViaElem(job, JB_granted_destin_identifier_list)>=0)
@@ -599,10 +588,10 @@ DTRACE;
 
          /* slave tasks */
          for_each (pe_task_ep, lGetList(jatep, JAT_task_list)) {
-            SUM_UP_USAGE(pe_task_ep, cpu, USAGE_ATTR_CPU);
-            SUM_UP_USAGE(pe_task_ep, vmem, USAGE_ATTR_VMEM);
-            SUM_UP_USAGE(pe_task_ep, mem, USAGE_ATTR_MEM);
-            SUM_UP_USAGE(pe_task_ep, io, USAGE_ATTR_IO);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), cpu, USAGE_ATTR_CPU);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), vmem, USAGE_ATTR_VMEM);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), mem, USAGE_ATTR_MEM);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_IO);
          }
 
          printf("cpu=%s, vmem=%s, mem=%-5.5f GBs, io=%-5.5f\n",

@@ -38,7 +38,7 @@
 #include "msg_qmaster.h"
 #include "commlib.h"
 
-static int notify_new_conf(char *hostname, int progname_id);
+static int notify_new_conf(const char *hostname, int progname_id);
 
 /*
 ** NAME
@@ -59,7 +59,7 @@ int notify_new_conf_2_execd(
 lListElem *hep 
 ) {
    int ret;
-   char *hostname;
+   const char *hostname;
    
    DENTER(BASIS_LAYER, "notify_new_conf_2_execd");
    
@@ -89,7 +89,7 @@ int notify_new_conf_2_qstd(
 lListElem *hep 
 ) {
    int ret;
-   char *hostname;
+   const char *hostname;
    
    DENTER(BASIS_LAYER, "notify_new_conf_2_qstd");
    
@@ -103,7 +103,7 @@ lListElem *hep
 
 /*-------------------------------------------------------------------------*/
 static int notify_new_conf(
-char *hostname,
+const char *hostname,
 int progname_id 
 ) {
    int ret;

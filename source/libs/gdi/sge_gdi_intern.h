@@ -45,11 +45,13 @@
 extern "C" {
 #endif
 
-/* v5.0:   0x10000000 */
-/* v5.1:   0x10000001 */
-/* v5.2:   0x10000002 */
-/* v5.2.3: 0x10000003 */
-#define GRM_GDI_VERSION 0x100000F0
+/* v5.0:       0x10000000 */
+/* v5.1:       0x10000001 */
+/* v5.2:       0x10000002 */
+/* v5.2.3:     0x10000003 */
+/* v5.3 alpha1 0x100000F0 */
+/* before hash 0x100000F1 */
+#define GRM_GDI_VERSION 0x100000F2
 
 
 /* sge_gdi_request.c */
@@ -74,19 +76,21 @@ struct _sge_gdi_request {
 };
 
 
-int sge_send_gdi_request(int sync, char *rhost, char *commproc, int id, sge_gdi_request *head);
+int sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, sge_gdi_request *head);
+
 int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp);
+
 int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar);
+
 sge_gdi_request* free_gdi_request(sge_gdi_request *ar);
+
 sge_gdi_request* new_gdi_request(void);
 
 
 #define INIT_ALPP(alpp) (alpp && !*alpp)?((*alpp=lCreateList("answers", AN_Type))!=NULL):0
 
 /* sge_send_reports */
-int sge_send_reports(char *rhost, char *commproc, int id, lList *report_list, int synchron, u_long32 *mid);
-
-
+int sge_send_reports(const char *rhost, const char *commproc, int id, lList *report_list, int synchron, u_long32 *mid);
 
 /* sge_any_request.c */
 enum {
@@ -122,24 +126,25 @@ enum {
 };
 
 enum {
-   ACK_JOB_DELIVERY,        /* sent back by execd, when master gave him a job    */
-   ACK_SIGNAL_DELIVERY,     /* sent back by execd, when master sends a queue     */
-   ACK_JOB_EXIT,            /* sent back by qmaster, when execd sends a job_exit */
-   ACK_SIGNAL_JOB,          /* sent back by qmaster, when execd reports a job as */
-                            /* running - that was not supposed to be there       */
-   ACK_EVENT_DELIVERY       /* sent back by schedd, when master sends events     */
+   ACK_JOB_DELIVERY,     /* sent back by execd, when master gave him a job    */
+   ACK_SIGNAL_DELIVERY,  /* sent back by execd, when master sends a queue     */
+   ACK_JOB_EXIT,         /* sent back by qmaster, when execd sends a job_exit */
+   ACK_SIGNAL_JOB,       /* sent back by qmaster, when execd reports a job as */
+                         /* running - that was not supposed to be there       */
+   ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
 };
 
 /* sending/receiving any request */
 
-void prepare_enroll(char *name, u_short id, int *tag_priority_list);
+void prepare_enroll(const char *name, u_short id, int *tag_priority_list);
 
 int do_enroll(int);
 
-int sge_send_any_request(int synchron, u_long32 *mid, char *rhost, char *commproc, int id, sge_pack_buffer *pb, int tag);
+int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const char *commproc, int id, sge_pack_buffer *pb, int tag);
 
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron);
-int send_message_pb(int synchron, char *tocomproc, int toid, char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
+
+int send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
 
 /* setup.c */
 void sge_setup(u_long32 sge_formal_prog_name, lList **alpp);
@@ -148,9 +153,9 @@ int reresolve_me_qualified_hostname(void);
 /* sge_ack.c */
 int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val);
 
-
 u_long32 sge_get_recoverable(lListElem *aep);  
-char *quality_text(lListElem *aep);
+
+const char *quality_text(lListElem *aep);
 
 #ifdef  __cplusplus
 }

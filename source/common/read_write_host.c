@@ -228,8 +228,8 @@ int parsing_type
  **** cull_read_in_host
  ****/
 lListElem *cull_read_in_host(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool_type, /* CULL_READ_xxx */
 int type,
 int *tag,
@@ -299,7 +299,8 @@ char *file
    FILE *fp = NULL;
    char *dir = NULL;
    lListElem *sep = NULL;
-   char real_filename[SGE_PATH_MAX], filename[SGE_PATH_MAX], *hostname;
+   char real_filename[SGE_PATH_MAX], filename[SGE_PATH_MAX];
+   const char *hostname;
    int ret;
 
    DENTER(TOP_LAYER, "write_host");
@@ -485,7 +486,7 @@ char *file
       } 
       if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
          intprt_type print_elements[] = { HS_name, HS_value, 0 };
-         char *delis[] = {"=", ",", NULL};
+         const char *delis[] = {"=", ",", NULL};
 
          ret = fprint_cull_list(fp,  "projects                   ", 
             lGetList(ep, EH_prj), UP_name);

@@ -43,8 +43,9 @@
 #include "sge_usersetL.h"
 #include "sge_gdi_intern.h"
 #include "msg_schedd.h"
-static int sge_contained_in_access_list_(char *user, char *group, lList *acl, lList *acl_list);
 
+static int sge_contained_in_access_list_(const char *user, const char *group, 
+                                         lList *acl, lList *acl_list);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
@@ -55,12 +56,9 @@ static int sge_contained_in_access_list_(char *user, char *group, lList *acl, lL
       0 for false
 
 */
-int sge_has_access(
-char *user, 
-char *group,
-lListElem *q,
-lList *acl_list 
-) {
+int sge_has_access(const char *user, const char *group, lListElem *q,
+                   lList *acl_list) 
+{
    return sge_has_access_(user, group, 
          lGetList(q, QU_acl), lGetList(q, QU_xacl), acl_list);
 }
@@ -68,13 +66,9 @@ lList *acl_list
 /* needed to test also sge_queue_type structures without converting the
 ** whole queue
 */
-int sge_has_access_(
-char *user,
-char *group,
-lList *q_acl,
-lList *q_xacl,
-lList *acl_list 
-) {
+int sge_has_access_(const char *user, const char *group, lList *q_acl,
+                    lList *q_xacl, lList *acl_list) 
+{
    int ret;
 
    DENTER(TOP_LAYER, "sge_has_access_");
@@ -110,13 +104,13 @@ lList *acl_list
 /* sge_contained_in_access_list_() returns 
    1  yes it is contained in the acl
    0  no 
-   -1 got NULL for user/group */
-static int sge_contained_in_access_list_(
-char *user,  /* may be NULL */
-char *group, /* may be NULL */
-lList *acl,
-lList *acl_list 
-) {
+   -1 got NULL for user/group 
+
+   user, group: may be NULL
+*/
+static int sge_contained_in_access_list_(const char *user, const char *group,
+                                         lList *acl, lList *acl_list) 
+{
    lListElem *acl_search, *acl_found;
 
    DENTER(TOP_LAYER,"sge_contained_in_access_list_");
@@ -142,14 +136,13 @@ lList *acl_list
 /* sge_contained_in_access_list() returns 
    1  yes it is contained in the acl
    0  no 
+
+   user, group: may be NULL
 */   
-int sge_contained_in_access_list(
-char *user,  /* may be NULL */
-char *group, /* may be NULL */
-lListElem *acl,
-lList **alpp 
-) {
-   char *entry_name;
+int sge_contained_in_access_list(const char *user, const char *group, 
+                                 lListElem *acl, lList **alpp) 
+{
+   const char *entry_name;
    lListElem *acl_entry;
 
    DENTER(TOP_LAYER,"sge_contained_in_access_list");

@@ -96,6 +96,8 @@
 #include "sge_security.h" 
 #include "sge_dirent.h"
 #include "sge_feature.h"
+#include "sge_file_path.h"
+#include "read_write_job.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -164,6 +166,12 @@ void sge_reap_children_execd()
          continue;
       }
 
+#ifdef WIFCONTINUED
+      if (WIFCONTINUED(status)) {
+         DPRINTF(("PID %d WIFCONTINUED\n", pid));
+         continue;
+      }
+#endif
 
       if (WIFSIGNALED(status)) {
          child_signal = WTERMSIG(status);
@@ -173,11 +181,14 @@ void sge_reap_children_execd()
          core_dumped = status & 80;
 #endif
          failed = ESSTATE_DIED_THRU_SIGNAL;
-      }
-      else {
+      } else if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);
          if (exit_status)
             failed = ESSTATE_SHEPHERD_EXIT;
+      } else {
+         /* not signaled and not exited - so what else happend with this guy? */
+         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_PI, pid, status));
+         continue;
       }
    
       /* search whether it was a job or one of its tasks */
@@ -359,7 +370,7 @@ int is_array
    char error[10000];
    FILE *fp;
    u_long32 jobid, job_pid, ckpt_arena, general_failure = 0, jataskid;
-   char *pe_task_id_str = NULL;
+   const char *pe_task_id_str = NULL;
    lListElem *du;
 
    DENTER(TOP_LAYER, "clean_up_job");
@@ -423,8 +434,7 @@ int is_array
       lSetUlong(jr, JR_failed, ESSTATE_NO_CONFIG);
       lSetString(jr, JR_err_str, (char *) MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART);
 
-      job_log(jobid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER, prognames[me.who], 
-              me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
       DEXIT;
       return 0;
    }
@@ -732,49 +742,52 @@ int is_array
    DPRINTF(("job report for job "u32"."u32": general_failure = %ld\n", 
       jobid, jataskid, general_failure));
 
-   job_log(jobid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER, 
-      prognames[me.who], me.unqualified_hostname);
+   job_log(jobid, jataskid, MSG_SHEPHERD_REPORTINGJOBFINSIHTOQMASTER);
 
    /* Check whether a message about tasks exit has to be sent.
       We need job data to know whether an ack about exit status was requested */
-   if (pe_task_id_str) {
-      lListElem *jep, *tep, *uep;
+   if (pe_task_id_str != NULL) {
+      lListElem *jep = NULL, *jatep = NULL, *tep = NULL, *uep = NULL;
+      const void *iterator;
 
-      if ((jep  = lGetElemUlong(Master_Job_List, JB_job_number, jobid))) {
-         lListElem* jatep;
+      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+      while(jep != NULL) {
+         if((jatep = search_task(jataskid, jep)) != NULL) {
+            break;
+         }
+         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+      }
 
-         jatep = search_task(jataskid, jep);
-         if (jatep && (tep = lGetSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, 
-               JAT_task_list))) {
-            if (!lGetSubStr(tep, VA_variable, OVERWRITE_NO_ACK, JB_env_list)) {
-               char *host, *commproc;
-               u_short id;
-               sge_pack_buffer pb;
-               u_long32 exit_status = 1;
-               u_long32 dummymid;
-               int ret;
+      if (jatep && (tep = lGetSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, 
+            JAT_task_list))) {
+         if (!lGetSubStr(tep, VA_variable, OVERWRITE_NO_ACK, JB_env_list)) {
+            const char *host, *commproc;
+            u_short id;
+            sge_pack_buffer pb;
+            u_long32 exit_status = 1;
+            u_long32 dummymid;
+            int ret;
 
-               /* extract address from JB_job_source */
-               host = sge_strtok(lGetString(tep, JB_job_source), ":"); 
-               commproc = sge_strtok(NULL, ":"); 
-               id = atoi(sge_strtok(NULL, ":")); 
+            /* extract address from JB_job_source */
+            host = sge_strtok(lGetString(tep, JB_job_source), ":"); 
+            commproc = sge_strtok(NULL, ":"); 
+            id = atoi(sge_strtok(NULL, ":")); 
 
-               /* extract exit status from job report */
-               if ((uep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
-                  exit_status = lGetDouble(uep, UA_value);         
-              
-               /* fill in pack buffer */
-               if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-                  packstr(&pb, pe_task_id_str);
-                  packint(&pb, exit_status);
+            /* extract exit status from job report */
+            if ((uep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
+               exit_status = lGetDouble(uep, UA_value);         
+           
+            /* fill in pack buffer */
+            if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
+               packstr(&pb, pe_task_id_str);
+               packint(&pb, exit_status);
 
-                  /* send a task exit message to the submitter of this task */
-                  ret=send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
-                  DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
-                        ret?"failed":"success", pe_task_id_str, 
-                        lGetString(tep, JB_job_source), ret?cl_errstr(ret):""));
-                  clear_packbuffer(&pb);
-               }
+               /* send a task exit message to the submitter of this task */
+               ret=send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
+               DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
+                     ret?"failed":"success", pe_task_id_str, 
+                     lGetString(tep, JB_job_source), ret?cl_errstr(ret):""));
+               clear_packbuffer(&pb);
             }
          }
       }
@@ -792,40 +805,33 @@ lListElem *jr
 ) {
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
    char jobdir[SGE_PATH_MAX];
-   char job_file[SGE_PATH_MAX];
    char fname[SGE_PATH_MAX];
    char err_str[1024];
    SGE_STRUCT_STAT statbuf;
    lListElem *jep, *job, *tep = NULL, *jatep = NULL;
    lListElem *master_q;
-   char *pe_task_id_str; 
+   const char *pe_task_id_str; 
+   const void *iterator;
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
-
-   pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
-
-   /* try to find this job in our job list */
-   for_each (jep, Master_Job_List) {
-      if (lGetUlong(jep, JB_job_number) == jobid) {
-         int Break = 0;
-
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if (lGetUlong(jatep, JAT_task_number) == jataskid) {
-               Break = 1;
-               break;
-            }
-         }
-         if (Break)
-            break;
-      }
-   }
 
    if (jataskid == 0) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(jobid)));
       DEXIT;
       return;
    }
-   sprintf(job_file, "%s/"u32"."u32"", JOB_DIR, jobid, jataskid);
+
+   pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
+
+   /* try to find this job in our job list */ 
+
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   while(jep != NULL) {
+      if((jatep = search_task(jataskid, jep)) != NULL) {
+         break;
+      }
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+   }
 
    if (jep && jatep) {
       int used_slots;
@@ -855,7 +861,7 @@ lListElem *jr
       } else { job = jep;
          master_q = responsible_queue(jep, jatep, NULL, NULL);
       }   
-      job_log(jobid, MSG_SHEPHERD_GOTACKFORJOBEXIT, prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_SHEPHERD_GOTACKFORJOBEXIT);
      
       /* use mail list of job instead of tasks one */
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
@@ -904,8 +910,7 @@ lListElem *jr
       }
 
       if (!pe_task_id_str) {
-         DPRINTF(("removing job file %s\n", job_file));
-         unlink(job_file);
+         job_remove_spool_file(jobid, jataskid, SPOOL_WITHIN_EXECD);
 
          if (lGetString(job, JB_exec_file)) {
             int task_number = 0;
@@ -913,12 +918,13 @@ lListElem *jr
 
             /* it is possible to remove the exec_file if
                less than one task of a job is running */
-            for_each (tmp_job, Master_Job_List) {
-               if (lGetUlong(tmp_job, JB_job_number) == jobid) {
-                  task_number++;
-               }
+            tmp_job = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+            while(tmp_job != NULL) {
+               task_number++;
+               tmp_job = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
             }
-            if (task_number == 1) {
+            
+            if (task_number <= 1) {
                DPRINTF(("unlinking script file %s\n", lGetString(job, JB_exec_file)));
                unlink(lGetString(job, JB_exec_file));
             }
@@ -945,8 +951,7 @@ lListElem *jr
       if (!pe_task_id_str) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
                 u32c(jobid),  u32c(jataskid), (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
-         job_log(jobid, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT, prognames[me.who], 
-            me.unqualified_hostname);
+         job_log(jobid, jataskid, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBEXIT);
 
       /*
       ** security hook
@@ -998,8 +1003,7 @@ lListElem *jr
          }
 
          /* job */
-         DPRINTF(("removing job file %s\n", job_file));
-         unlink(job_file);
+         job_remove_spool_file(jobid, jataskid, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
          if (!getenv("SGE_KEEP_ACTIVE")) {
@@ -1081,10 +1085,9 @@ int failed
    lSetUlong(jr, JR_general_failure, general);
    lSetString(jr, JR_err_str, error_string);
    
-   job_log(jobid, (failed==SSTATE_FAILURE_BEFORE_JOB)?
+   job_log(jobid, jataskid, (failed==SSTATE_FAILURE_BEFORE_JOB)?
       MSG_SHEPHERD_REPORINGJOBSTARTFAILURETOQMASTER:
-      MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER, 
-      prognames[me.who], me.unqualified_hostname);
+      MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER);
 
    lSetUlong(jr, JR_state, JEXITING);
 
@@ -1121,8 +1124,7 @@ char *qname
       lSetUlong(jr, JR_state, JEXITING);
       lSetString(jr, JR_err_str, (char*) MSG_JR_ERRSTR_EXECDDONTKNOWJOB);
    
-      job_log(jobid, MSG_SHEPHERD_ACKINGUNKNWONJOB, prognames[me.who], 
-         me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_SHEPHERD_ACKINGUNKNWONJOB);
    }
 
    DEXIT;
@@ -1208,6 +1210,7 @@ int startup
    while ((dent=SGE_READDIR(cwd))) {
       char string[256], *token, *endp;
       u_long32 tmp_id;
+      const void *iterator;
 
       jobdir = dent->d_name;    /* jobdir is the jobid.jataskid converted to string */
       strcpy(string, jobdir);
@@ -1236,19 +1239,12 @@ int startup
       }
 
       /* seek job to this jobdir */
-      for_each (jep, Master_Job_List) {
-         if (lGetUlong(jep, JB_job_number) == jobid) {
-            int Break = 0;
-
-            for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-               if (lGetUlong(jatep, JAT_task_number) == jataskid) {
-                  Break = 1;
-                  break;
-               }
-            }
-            if (Break)
+      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+      while(jep != NULL) {
+         if((jatep = search_task(jataskid, jep)) != NULL) {
             break;
          }
+         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
       }
  
       if (!jep || !jatep) {
@@ -1297,7 +1293,7 @@ int npids
    pid_t pid;           /* pid of shepherd */
    char err_str[1024];
    u_long32 jobid, jataskid;
-   char *pe_task_id_str;
+   const char *pe_task_id_str;
    static u_long32 startup_time = 0;
 
    DENTER(TOP_LAYER, "examine_job_task_from_file");
@@ -1684,7 +1680,7 @@ lListElem *jr,
 char *name,
 u_long32 udefault 
 ) {
-   char *s;
+   const char *s;
 
    s = get_conf_value(NULL, *cflpp, CF_name, CF_value, name);
    add_usage(jr, name, s, (double)udefault);
@@ -1709,9 +1705,9 @@ lListElem *jr
    char pdc_usage[1024];
    u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
    int exit_status = -1, signo = -1;
-   char *q, *h, *u;
+   const char *q, *h, *u;
    lListElem *ep;
-   char *pe_task_id_str;
+   const char *pe_task_id_str;
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 

@@ -64,6 +64,8 @@
 #include "sge_feature.h"
 #include "msg_common.h"
 #include "jb_now.h"
+#include "sge_range.h"
+#include "job.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -106,10 +108,11 @@ lList *cull_parse_job_parameter(
 lList *cmdline,
 lListElem **pjob 
 ) {
-   char *cp;
-   lListElem *ep, *task;
+   const char *cp;
+   lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
+   char error_string[1024 + 1];
 
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
@@ -122,11 +125,25 @@ lListElem **pjob
    if (!*pjob) {
       *pjob = lCreateElem(JB_Type);
       if (!*pjob) {
-      sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED , 
-                        STATUS_EMALLOC, 0);
-      DEXIT;
-      return answer;
+         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         DEXIT;
+         return answer;
       }
+   }
+
+   if (!lGetList(*pjob, JB_ja_tasks)) {
+      lList *tmpl_task_list = NULL; /* JAT_Type */
+      lListElem *tmpl_task = NULL;  /* JAT_Type */
+
+      tmpl_task_list = lCreateList("template task list", JAT_Type);
+      tmpl_task = lCreateElem(JAT_Type);
+      if (!tmpl_task_list || !tmpl_task) {
+         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         DEXIT;
+         return answer;
+      }
+      lAppendElem(tmpl_task_list, tmpl_task);
+      lSetList(*pjob, JB_ja_tasks, tmpl_task_list); 
    }
 
    if (!lGetUlong(*pjob, JB_submission_time)) {
@@ -174,30 +191,66 @@ lListElem **pjob
    DTRACE;
 
    /*
-   ** -t option was specified => Create a real JobArray with more than one task
-   ** otherwise create a job with one task
-   */
+    * -t
+    */
    {
-      long start = 1, end = 1, step = 1;
-      lList *jat_list = NULL;
-      lList *rn_list = NULL;
+      lList *range_list = NULL;
+      lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
 
-      if ((ep = lGetElemStr(cmdline, SPA_switch, "-t"))) {
-         lList *list = lGetList(ep, SPA_argval_lListT);
-         lListElem *elem = lFirst(list);
-         start = lGetUlong(elem, RN_min);
-         end = lGetUlong(elem, RN_max);
-         step = lGetUlong(elem, RN_step);
-         rn_list = lCopyList("task id range", list);
+      ep = lGetElemStr(cmdline, SPA_switch, "-t");
+      if (ep) {
+         lListElem *range_elem = NULL; /* RN_Type */
+         u_long32 start, end, step;
+
+         range_list = lGetList(ep, SPA_argval_lListT);
+         range_elem = lFirst(range_list);
+         start = lGetUlong(range_elem, RN_min);
+         end = lGetUlong(range_elem, RN_max);
+         step = lGetUlong(range_elem, RN_step);
+         job_set_ja_task_ids(*pjob, start, end, step);
+      } else {
+         job_set_ja_task_ids(*pjob, 1, 1, 1);
+         range_list = lGetList(*pjob, JB_ja_structure);
+      }
+      n_h_list = lCopyList("range list", range_list);
+      u_h_list = lCreateList("user hold list", RN_Type);
+      o_h_list = lCreateList("operator hold list", RN_Type);
+      s_h_list = lCreateList("system hold list", RN_Type);
+      if (!n_h_list || !u_h_list || !o_h_list || !s_h_list) {
+         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         DEXIT;
+         return answer;
+      }     
+      lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
+      lSetList(*pjob, JB_ja_u_h_ids, u_h_list);
+      lSetList(*pjob, JB_ja_o_h_ids, o_h_list);
+      lSetList(*pjob, JB_ja_s_h_ids, s_h_list);
+
+#if 0 /* EB: Test */
+      {
+         lListElem *elem;
+         u_long32 id;
+
+         StringBufferT string = {NULL, 0};
+         lWriteListTo(range_list, stderr);
+      
+         range_remove_id(range_list, 5);
+
+         range_print_to_string(range_list, &string);
+         fprintf(stderr, "%s\n", string.s);
+         sge_string_free(&string);
+         for_each_id_in_range_list(id, elem, range_list) {
+            fprintf(stderr, u32"\n", id); 
+         }
+         exit (1); 
+      }
+#endif
+
+
+      if (ep) {
          lRemoveElem(cmdline, ep);
       }
-      lSetList(*pjob, JB_ja_structure, rn_list);
-      for (; start<=end; start+=step) {
-         lAddElemUlong(&jat_list, JAT_task_number, start, JAT_Type);
-      }
-      lSetList(*pjob, JB_ja_tasks, jat_list);
    }
-
 
    /*
    ** -clear option is special, is sensitive to order
@@ -206,7 +259,7 @@ lListElem **pjob
    */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-clear"))) {
       lListElem *ep_run;
-      char *cp_switch;
+      const char *cp_switch;
 
       for (ep_run = lFirst(cmdline); ep_run;) {
          /*
@@ -344,9 +397,28 @@ lListElem **pjob
    */
    parse_list_simple(cmdline, "-e", *pjob, JB_stderr_path_list, PN_host, PN_path, FLG_LIST_MERGE);
 
+   /* -h */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
-      for_each(task, lGetList(*pjob, JB_ja_tasks))
-         lSetUlong(task, JAT_hold, lGetInt(ep, SPA_argval_lIntT));
+      int in_hold_state = 0;
+
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
+         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_OPERATOR) {
+         lSetList(*pjob, JB_ja_o_h_ids, lCopyList("operator hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_SYSTEM) {
+         lSetList(*pjob, JB_ja_s_h_ids, lCopyList("system hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (in_hold_state) {
+         lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+      }
       lRemoveElem(cmdline, ep);
    }
 
@@ -356,39 +428,26 @@ lListElem **pjob
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
-      char str[1024];
-
       lRemoveElem(cmdline, ep);
-      sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
+      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
       DEXIT;
       return answer;
    }
 
    /* -hold_jid */
    if (lGetElemStr(cmdline, SPA_switch, "-hold_jid")) {
-      lListElem *jid;
-      lList *jid_list = NULL;
+      lListElem *ep, *sep;
       lList *jref_list = NULL;
-      if (!parse_multi_jobtaskslist(&cmdline, "-hold_jid", &answer, &jid_list)) {
-         DEXIT;
-         return answer;
-      }
-      for_each (jid, jid_list) {
-         u_long32 id = 0;
-         id = atol(lGetString(jid, ID_str));
-         if (id)
-            lAddElemUlong(&jref_list, JRE_job_number, id, JRE_Type);
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
+         for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+            DPRINTF(("-hold_jid %s\n", lGetString(sep, STR)));
+            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, STR), JRE_Type);
+         }
+         lRemoveElem(cmdline, ep);
       }
       lSetList(*pjob, JB_jid_predecessor_list, jref_list);
    }
-
-#if 0
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
-      lSwapList(*pjob, JB_jid_predecessor_list, ep, SPA_argval_lListT);
-      lRemoveElem(cmdline, ep);
-   }
-#endif
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
       lSetUlong(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
@@ -572,17 +631,15 @@ lListElem **pjob
    }
    
    for_each(ep, cmdline) {
-      char str[1024];
-
-      sprintf(str, MSG_ANSWER_UNKOWNOPTIONX_S, 
+      sprintf(error_string, MSG_ANSWER_UNKOWNOPTIONX_S, 
          lGetString(ep, SPA_switch));
       cp = lGetString(ep, SPA_switch_arg);
       if (cp) {
-         strcat(str, " ");
-         strcat(str, cp);
+         strcat(error_string, " ");
+         strcat(error_string, cp);
       }
-      strcat(str, "\n");
-      sge_add_answer(&answer, str, STATUS_ENOIMP, 0);
+      strcat(error_string, "\n");
+      sge_add_answer(&answer, error_string, STATUS_ENOIMP, 0);
    } 
 
    cp = lGetString(*pjob, JB_script_file);
@@ -595,11 +652,16 @@ lListElem **pjob
       lSetString(*pjob, JB_job_name,  cp);
    }
 
-   for_each(task, lGetList(*pjob, JB_ja_tasks)) {
-      if (lGetUlong(task, JAT_hold)) {
-         lSetUlong(task, JAT_state, JHELD);
+#if 0
+   {
+      lListElem *tmpl_task = NULL;
+   
+      tmpl_task = lFirst(lGetList(*pjob, JB_ja_tasks));
+      if (lGetUlong(tmpl_task, JAT_hold)) {
+         lSetUlong(tmpl_task, JAT_state, JHELD);
       }
    }
+#endif
 
    DEXIT;
    return answer;
@@ -693,6 +755,7 @@ u_long32 flags
    lList *lp_new_opts = NULL;
    char buffer[MAX_STRING_SIZE];
    char *s;
+   char error_string[1024 + 1];
 
 
    DENTER(TOP_LAYER, "parse_script_file");
@@ -707,10 +770,8 @@ u_long32 flags
    if (script_file && strcmp(script_file, "-")) {
       /* are we able to access this file? */
       if ((fp = fopen(script_file, "r")) == NULL) {
-         char str[1024 + 1];
-
-         sprintf(str, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-         sge_add_answer(&answer, str, STATUS_EDISK, 0);
+         sprintf(error_string, MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
+         sge_add_answer(&answer, error_string, STATUS_EDISK, 0);
          DEXIT;
          return answer;
       }
@@ -721,10 +782,8 @@ u_long32 flags
       filestrptr = str_from_file(script_file, &script_len);
 
       if (!filestrptr) {
-         char str[1024 + 1];
-
-         sprintf(str, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-         sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+         sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
+         sge_add_answer(&answer, error_string, STATUS_EUNKNOWN, 0);
          DEXIT;
          return answer;
       }
@@ -758,12 +817,13 @@ u_long32 flags
    s = filestrptr;
    while(*s != 0) {
       int length = 0;
-      char *parameters;
+      char *parameters = NULL;
       char *d = buffer;
 
       /* copy MAX_STRING_SIZE bytes maximum */
       while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
          *d++ = *s++;
+         length++;
       }
 
       /* terminate target string */
@@ -828,6 +888,7 @@ u_long32 flags
          for (i=0; str_table[i]; i++) {
             DPRINTF(("str_table[%d] = '%s'\n", i, str_table[i]));           
          }
+
          /*
          ** problem: error handling missing here and above
          */

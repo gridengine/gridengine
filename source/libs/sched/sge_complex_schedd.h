@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 /* Use this to control how resource attributes are generated:
 
    QS_STATE_FULL 
@@ -48,29 +46,47 @@ enum {
 };
 
 void set_qs_state(int qs_state);
+
 int get_qs_state(void);
+
 void set_global_load_correction(int flag);
+
 int get_global_load_correction(void);
 
-
 void monitor_dominance(char *str, u_long32 mask);
-lListElem* sge_locate_complex_attr(char *name, lList *complex_list);
-lListElem *find_attribute_in_complex_list(char *attrname, lListElem *first);
 
-int global_complexes2scheduler(lList **new_complex_list, lListElem *global_host, lList *complex_list, int recompute_debitation_dependent);
+lListElem* sge_locate_complex_attr(const char *name, lList *complex_list);
 
-int host_complexes2scheduler(lList **new_complex_list, lListElem *host, lList *exechost_list, lList *complex_list, int recompute_debitation_dependent);  
+lListElem *find_attribute_in_complex_list(const char *attrname, 
+                                          lListElem *first);
 
-int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue, lList *host_list, lList *complex_list, int recompute_debitation_dependent);
+int global_complexes2scheduler(lList **new_complex_list, 
+                               lListElem *global_host, lList *complex_list, 
+                               int recompute_debitation_dependent);
 
-int compare_complexes(int slots, lListElem *util_max_ep, lListElem *complex1, lListElem *complex2, char *availability_text, int is_threshold, int force_existence);
+int host_complexes2scheduler(lList **new_complex_list, lListElem *host, 
+                             lList *exechost_list, lList *complex_list, 
+                             int recompute_debitation_dependent);  
 
-int fillComplexFromHost(lList **new_complex, lList *complex_list, lListElem *host, lListElem *complex, u_long32 layer, int recompute_debitation_dependent);
+int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue, 
+                              lList *host_list, lList *complex_list, 
+                              int recompute_debitation_dependent);
 
-int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, int slots, int config_nm, int actual_nm, char *obj_name);
+int compare_complexes(int slots, lListElem *util_max_ep, lListElem *complex1, 
+                      lListElem *complex2, char *availability_text, 
+                      int is_threshold, int force_existence);
+
+int fillComplexFromHost(lList **new_complex, lList *complex_list, 
+                        lListElem *host, lListElem *complex, u_long32 layer, 
+                        int recompute_debitation_dependent);
+
+int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 
+                     int slots, int config_nm, int actual_nm, 
+                     const char *obj_name);
 
 /* mapping functions - useful for in-/output */
 const char *map_op2str(u_long32 op);
+
 const char *map_type2str(u_long32 type);
 
 #endif /* __SGE_COMPLEX_SCHEDD_H */

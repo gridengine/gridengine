@@ -32,7 +32,7 @@
 #include "sge_prognames.h"
 
 /* Must match Qxxx defines in sge_prognames.h */
-char *prognames[] =
+const char *prognames[] =
 {
    "unknown"	,
    "qalter"		,       /* 1   */

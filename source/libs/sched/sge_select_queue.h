@@ -37,8 +37,6 @@
  * if not why?
  * 
  */
-int sge_why_not_job2queue(lListElem *queue, lListElem *job, lListElem *pe, lListElem *ckpt, lList *cplx_list, lList *exechost_list, lList *acl_list);
-
 int sge_select_queue(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots, lList *consumable_config_list[3]);
 
 
@@ -54,7 +52,7 @@ int sge_load_alarm(lListElem *queue, lList *threshold, lList *exechost_list, lLi
  * get reason for alarm state on queue
  * 
  */
-char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, char  *reason, int reason_size, char *type); 
+char *sge_load_alarm_reason(lListElem *queue, lList *threshold, lList *exechost_list, lList *complex_list, char  *reason, int reason_size, const char *type); 
 
 /* 
  * split queue list into unloaded and overloaded
@@ -89,7 +87,7 @@ int sge_split_suspended(lList **queue_list, lList **suspended);
 
 enum { DISPATCH_TYPE_NONE = 0, DISPATCH_TYPE_FAST, DISPATCH_TYPE_COMPREHENSIVE };
 
-lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, lList *load_adjustments, int ndispatched, int *last_dispatch_type);
+lList *sge_replicate_queues_suitable4job(lList *queues, lListElem *job, lListElem *ja_task, lListElem *pe_list, lListElem *ckpt, int sort_seq_no, lList *complex_list, lList *host_list, lList *acl_list, lList *load_adjustments, int ndispatched, int *last_dispatch_type, int host_order_changed);
 
 
 /* 

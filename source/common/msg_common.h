@@ -307,6 +307,12 @@
 #define MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S    _("invalid value \"%s\" for queue_sort_method")
 #define MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION    _("can't create scheduler configuration\n")
 
+/* read_write_job.c */
+#define MSG_JOB_CANNOT_REMOVE_SS       _("can not remove "SFN": "SFN"\n")
+#define MSG_JOB_TASK_SPOOL_FILE        _("task spool file")
+#define MSG_JOB_JOB_SPOOL_FILE         _("job spool file")
+#define MSG_JOB_JOB_SPOOL_DIRECTORY    _("job spool directory")
+
 
 /* read_write_ume.c */
 #define MSG_UM_CONFIGTEXT1 _("# configuration file for user mapping\n")

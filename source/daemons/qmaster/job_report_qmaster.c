@@ -69,7 +69,7 @@
 extern lList *Master_Job_List;
 extern lList *Master_Exechost_List;
 
-static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, char *task_str);
+static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, const char *task_str);
 
 #define is_running(state) (state==JWRITTEN || state==JRUNNING|| state==JWAITING4OSJID)
 
@@ -78,7 +78,7 @@ static void pack_job_exit(
 sge_pack_buffer *pb,
 u_long32 jobid,
 u_long32 jataskid,
-char *task_str 
+const char *task_str 
 ) {
    packint(pb, ACK_JOB_EXIT);
    packint(pb, jobid);
@@ -152,7 +152,7 @@ sge_pack_buffer *pb
    lList* jrl = NULL; /* JR_Type */
    lListElem *jep, *jr, *ep, *jatep = NULL; 
    u_long32 jobid, rstate = 0, jataskid = 0;
-   char *s;
+   const char *s;
 
    DENTER(TOP_LAYER, "process_job_report");
 
@@ -185,7 +185,7 @@ sge_pack_buffer *pb
    ** removed from job report list
    */
    for_each(jr, jrl) {
-      char *queue_name, *pe_task_id_str;
+      const char *queue_name, *pe_task_id_str;
       u_long32 status = 0;
       lListElem *task = NULL;
       lListElem *task_task = NULL;
@@ -284,7 +284,7 @@ sge_pack_buffer *pb
                         lSetList(task_task, JAT_granted_destin_identifier_list, NULL);
                         if ((ep=lAddSubStr(task_task, JG_qhostname, rhost, JAT_granted_destin_identifier_list, JG_Type)))
                            lSetString(ep, JG_qname, queue_name);
-                        cull_write_job_to_disk(jep);
+                        job_write_spool_file(jep, 0, SPOOL_DEFAULT);
                     }
 
                     /* store unscaled usage directly in sub-task */
@@ -494,7 +494,8 @@ sge_pack_buffer *pb
                   if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JRUNNING ||
                      lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)==JTRANSITING) {
                      u_long32 failed;
-                     char *err_str, failed_msg[256];
+                     const char *err_str;
+                     char failed_msg[256];
 
                      failed = lGetUlong(jr, JR_failed);
 
@@ -506,7 +507,7 @@ sge_pack_buffer *pb
                      sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
                      lSetString(task, JB_sge_o_mail, failed_msg);
                      sge_log_dusage(jr, jep, jatep);
-                     cull_write_job_to_disk(jep);
+                     job_write_spool_file(jep, 0, SPOOL_DEFAULT);
 
 
                      /* get rid of this job in case a task died from XCPU/XFSZ or 

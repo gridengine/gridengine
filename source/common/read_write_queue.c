@@ -93,7 +93,8 @@ int flag,
 int *tag,
 int parsing_type 
 ) {
-   char *str, *qname;
+   const char *str;
+   const char *qname;
    int ret, generic_queue = 0;
    char unique[MAXHOSTLEN];
    
@@ -241,7 +242,7 @@ int parsing_type
    }
 
    if ((str = lGetString(ep, QU_processors))) {
-      (void)parse_ranges(str, JUST_PARSE, 0, alpp, NULL, INF_ALLOWED);
+      parse_ranges(str, JUST_PARSE, 0, alpp, NULL, INF_ALLOWED);
       if (*alpp) {
          DEXIT;
          return -1;
@@ -584,8 +585,8 @@ int parsing_type
  **** cull_read_in_qconf
  ****/
 lListElem *cull_read_in_qconf(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int type,
 int *tag,
@@ -678,14 +679,14 @@ lList *lp;
 int cull_write_qconf(
 int spool,
 int write_2_stdout,
-char *file_prefix,
-char *file_name,
+const char *file_prefix,
+const char *file_name,
 char *rfile,            /* has to be allocated by caller; can be NULL */
 lListElem *qep 
 ) {
    char **ptr;
    FILE *fp;
-   char *s, *cp = NULL;
+   const char *s, *cp = NULL;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX]; 
    u_long32 bitmask;
    int ret;

@@ -74,7 +74,7 @@ unsigned int mail_str_len
    int comma_needed = 0; /* whether we need to insert a comma */
    char tmpstr[1000];    /* need 1000 for brain damaged mail addresse(e)s */
    lListElem *elem;
-   char *h;
+   const char *h;
    const char *u;
    
    if (!head) {
@@ -107,19 +107,15 @@ unsigned int mail_str_len
 }
 
 /*-------------------------------------------------------------------------*/
-void sge_parse_string_list(
-lList **lp,
-char *str,
-int field,
-lDescr *descr 
-) {
-   char *cp;
+void sge_parse_string_list(lList **lp, const char *str, int field, 
+                           lDescr *descr) {
+   const char *cp;
 
    DENTER(TOP_LAYER, "sge_parse_string_list");
 
-   cp = strtok(str, ",");
-   lAddElemStr(lp, field, str, descr);
-   while((cp = strtok(NULL, ","))) {
+   cp = sge_strtok(str, ",");
+   lAddElemStr(lp, field, cp, descr);
+   while((cp = sge_strtok(NULL, ","))) {
       lAddElemStr(lp, field, cp, descr);
    }
 
@@ -133,11 +129,11 @@ lDescr *descr
 int sge_parse_jobtasks(
 lList **ipp,          /* ID_Type List */
 lListElem **idp,     /* New ID_Type-Elem parsed from str_jobtask */
-char *str_jobtask,   
+const char *str_jobtask,   
 lList **alpp 
 ) {
    char *token;
-   char job_str[1024], str[1024];
+   char *job_str, *str;
    lList *task_id_range_list = NULL;
    lListElem *range;
 
@@ -150,18 +146,23 @@ lList **alpp
 
    DENTER(TOP_LAYER, "sge_parse_jobtasks");
 
-   strcpy (str, str_jobtask);
-   if ((token = strtok(str, " ."))) {
-      strcpy(job_str, token);
+   /*
+   ** dup the input string for tokenizing
+   */
+   str = strdup(str_jobtask);
+   if (str) {
+      token = strtok(str, " ."); 
    }
-   else {
-      strcpy(job_str, str);
-   }
+   job_str = str;
 
    if ((token = strtok(NULL, ""))) {
       task_id_range_list = parse_ranges(token, 0, 1, alpp, NULL, 
                                           INF_NOT_ALLOWED);
       if (*alpp) {
+         /*
+         ** free the dupped string
+         */
+         free(str);
          DEXIT;
          return -1;
       }
@@ -173,6 +174,10 @@ lList **alpp
    }
 
    if (!atol(job_str) && strcmp(job_str, "all")) {
+      /*
+      ** free the dupped string
+      */
+      free(str);
       DEXIT;
       return -1;
    }
@@ -180,7 +185,11 @@ lList **alpp
    *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
    if (*idp)
       lSetList(*idp, ID_ja_structure, task_id_range_list);
-   
+  
+   /*
+   ** free the dupped string
+   */
+   free(str); 
    DEXIT;
    return 1;
 }
@@ -190,8 +199,8 @@ lList **alpp
 lListElem *sge_add_noarg(
 lList **popt_list,
 u_long32 opt_number,
-char *opt_switch,
-char *opt_switch_arg 
+const char *opt_switch,
+const char *opt_switch_arg 
 ) {
    lListElem *ep;
 
@@ -223,8 +232,8 @@ lListElem *sge_add_arg(
 lList **popt_list,
 u_long32 opt_number,
 u_long32 opt_type,
-char *opt_switch,
-char *opt_switch_arg 
+const char *opt_switch,
+const char *opt_switch_arg 
 ) {
    lListElem *ep;
 
@@ -264,8 +273,8 @@ char *opt_switch_arg
  ****/
 char **parse_noopt(
 char **sp,
-char *shortopt,
-char *longopt,
+const char *shortopt,
+const char *longopt,
 lList **ppcmdline,
 lList **alpp 
 ) {
@@ -298,8 +307,8 @@ lList **alpp
  ****/
 char **parse_until_next_opt(
 char **sp,
-char *shortopt,
-char *longopt,
+const char *shortopt,
+const char *longopt,
 lList **ppcmdline,
 lList **alpp 
 ) {
@@ -346,8 +355,8 @@ lListElem *ep; /* SPA_Type */
  ****/
 char **parse_until_next_opt2(
 char **sp,
-char *shortopt,
-char *longopt,
+const char *shortopt,
+const char *longopt,
 lList **ppcmdline,
 lList **alpp 
 ) {
@@ -391,7 +400,7 @@ lList **alpp
  ****/
 char **parse_param(
 char **sp,
-char *opt,
+const char *opt,
 lList **ppcmdline,
 lList **alpp 
 ) {
@@ -427,14 +436,14 @@ lListElem *ep = NULL; /* SPA_Type */
  ****/
 int parse_flag(
 lList **ppcmdline,
-char *opt,
+const char *opt,
 lList **ppal,
 u_long32 *pflag 
 ) {
 lListElem *ep;
 char* actual_opt;
 
-   DENTER(TOP_LAYER, "parse_flag");
+   DENTER(BASIS_LAYER, "parse_flag");
 
    if((ep = lGetElemStrLike(*ppcmdline, SPA_switch, opt))) {
       actual_opt = sge_strdup(NULL, lGetString(ep, SPA_switch));
@@ -467,7 +476,7 @@ char* actual_opt;
  ****/ 
 int parse_multi_stringlist(
 lList **ppcmdline,
-char *opt,
+const char *opt,
 lList **ppal,
 lList **ppdestlist,
 lDescr *type,
@@ -496,7 +505,7 @@ int field
 
 int parse_multi_jobtaskslist(
 lList **ppcmdline,
-char *opt,
+const char *opt,
 lList **alpp,
 lList **ppdestlist 
 ) {
@@ -529,7 +538,7 @@ lList **ppdestlist
 
 int parse_string(
 lList **ppcmdline,
-char *opt,
+const char *opt,
 lList **ppal,
 char **str 
 ) {

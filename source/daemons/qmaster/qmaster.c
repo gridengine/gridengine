@@ -94,7 +94,6 @@
 #include "sge_prognames.h"
 #include "sched_conf_qmaster.h"
 #include "qmaster.h"
-#include "sge_hash.h"
 #include "sge_feature.h"
 #include "sge_user_mapping.h"
 #include "sge_groups.h"
@@ -148,8 +147,6 @@ lList *Master_Feature_Set_List = NULL;
 lList *Master_Usermapping_Entry_List = NULL;
 lList *Master_Host_Group_List = NULL;
 #endif
-
-HashTable Master_Job_Hash_Table = NULL;
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void qmaster_exit_func(int i);

@@ -54,12 +54,14 @@ static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
 static int fillComplexFromQueue(lList **new_complexl, lList *complex_listl, lListElem *complexl, lListElem *queue, int recompute_debitation_dependent);
 
-static int decide_dominance(lListElem *ep, double dval, char *as_str, u_long32 mask);
+static int decide_dominance(lListElem *ep, double dval, const char *as_str, u_long32 mask);
 static int append_complexes(lList **new_complex, lListElem *to_add, u_long32 layer, int recompute_debitation_dependent); 
 
 static int fixed_and_consumable(lList *new_complex, lList *config, lList *actual, u_long32 layer, int recompute_debitation_dependent);
 
-static int load_values(lList *new_complex, char *hostname, lList *lv_list, u_long32 layer, int recompute_debitation_dependent, double lc_factor);
+static int load_values(lList *new_complex, const char *hostname, 
+                       lList *lv_list, u_long32 layer, 
+                       int recompute_debitation_dependent, double lc_factor);
 
 static int max_resources = QS_STATE_FULL;
 static int global_load_correction = 0;
@@ -139,7 +141,7 @@ int recompute_debitation_dependent
    lListElem *conf_ep, *ep, *act_ep;
    double dval;
    char as_str[100];
-   char *name;
+   const char *name;
 
    DENTER(TOP_LAYER, "fixed_and_consumable");
 
@@ -231,12 +233,8 @@ int recompute_debitation_dependent
    return 0;
 }
 
-static int decide_dominance(
-lListElem *ep,
-double dval,
-char *as_str,
-u_long32 mask 
-) {
+static int decide_dominance(lListElem *ep, double dval, const char *as_str,
+                            u_long32 mask) {
    u_long32 op;
    int initial;
    int nm_dominant, nm_doubleval, nm_stringval;
@@ -282,7 +280,8 @@ u_long32 mask
 
       if (!initial) {
          char new_dom[4], old_dom[4];
-         char *name = lGetString(ep, CE_name);
+         const char *name = lGetString(ep, CE_name);
+
          monitor_dominance(old_dom, lGetUlong(ep, nm_dominant));
          monitor_dominance(new_dom, mask);
          DPRINTF(("%s:%s = %s <- %s:%s = %s\n", 
@@ -311,7 +310,7 @@ int recompute_debitation_dependent
    lListElem *newep, *ep, *already_here;
    lList *lp_add;
    const lDescr *lp_add_descr;
-   char *name;
+   const char *name;
    int pos_CE_name, pos_CE_dominant, pos_CE_pj_dominant;
    int prev;
 
@@ -562,14 +561,14 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
 
 static int load_values(
 lList *new_complex,
-char *hostname,
+const char *hostname,
 lList *lv_list,
 u_long32 layer,
 int recompute_debitation_dependent,
 double lc_factor 
 ) {
    lListElem *ep, *load_sensor;
-   char *name, *load_value;
+   const char *name, *load_value;
    lListElem *job_load;
    u_long32 type, dom_type;
    double dval;
@@ -578,7 +577,6 @@ double lc_factor
    DENTER(TOP_LAYER, "load_values");
 
    for_each (load_sensor, lv_list) {
-
       name = lGetString(load_sensor, HL_name);
 
       /* is this attribute contained in the complexes? */
@@ -619,8 +617,9 @@ double lc_factor
                   look for 'name' in our load_adjustments list
                */
                if (job_load) {
-                  char *s;
+                  const char *s;
                   double load_correction;
+
                   s = lGetString(job_load, CE_stringval);
                   if (!parse_ulong_val(&load_correction, NULL, type, s,
                      err_str, 255)) {
@@ -631,7 +630,7 @@ double lc_factor
                         double old_dval;
                         int nproc;
                         lListElem *ep_nproc;
-                        char *cp;
+                        const char *cp;
 
                         if (!strncmp(name, "np_", 3)) {
                            nproc = 1;
@@ -712,7 +711,8 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
                                     /*   (-> CE_consumable)                  */
 {
    lListElem *cep, *complexel;
-   char *value, as_str[100];
+   const char *value;
+   char as_str[100];
    struct queue2cmplx *q2cptr;
 
    /* *INDENT-OFF* */
@@ -882,8 +882,9 @@ int force_existence
    u_long32 type, relop, used_relop = 0;
    double req_dl, src_dl;
    int match, m1, m2;
-   char *s;
-   char *name, *offer;
+   const char *s;
+   const char *name;
+   const char *offer;
    char dom_str[5]  /* , r1str[100], r2str[100] */ ; 
    char availability_text1[2048];
    char availability_text2[2048]; 
@@ -919,7 +920,7 @@ int force_existence
    }
 
    switch (type) {
-      char *request;
+      const char *request;
       double req_all_slots;
 
    case TYPE_STR:
@@ -1090,10 +1091,8 @@ int main(int argc, char *argv[], char *envp[])
 }
 #endif
 
-lListElem* sge_locate_complex_attr(
-char *name,
-lList *complex_list 
-) {
+lListElem* sge_locate_complex_attr(const char *name, lList *complex_list) 
+{
    lListElem *cep, *ep;
 
    DENTER(CULL_LAYER, "sge_locate_complex_attr");
@@ -1113,10 +1112,11 @@ lList *complex_list
  Find an attribute in a complex list. 
  Iterate over all Complexes and look into their attribute lists.
  ***************************************************************/
-lListElem *find_attribute_in_complex_list(char *attrname, lListElem *cmplxl) 
+lListElem *find_attribute_in_complex_list(const char *attrname, 
+                                          lListElem *cmplxl) 
 {
    lListElem *attr;
-   char *str;
+   const char *str;
    int pos_CE_name, pos_CE_shortcut;
 
    DENTER(TOP_LAYER, "find_attribute_in_complex_list");
@@ -1150,18 +1150,13 @@ lListElem *find_attribute_in_complex_list(char *attrname, lListElem *cmplxl)
    for 'slots' slots of the given job. Since it is also 
    allowed to pass negative slot amounts for purposes of undebiting
 */
-int debit_consumable(
-lListElem *jep,
-lListElem *ep,
-lList *complex_list,
-int slots,
-int config_nm, 
-int actual_nm,
-char *obj_name 
-) {
+int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
+                     int slots, int config_nm, int actual_nm, 
+                     const char *obj_name) 
+{
    lListElem *cr, *cr_config, *dcep;
    double dval;
-   char *name;
+   const char *name;
    int mods = 0;
 
    DENTER(TOP_LAYER, "debit_consumable");

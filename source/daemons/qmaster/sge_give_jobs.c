@@ -81,7 +81,6 @@
 #include "slots_used.h"
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
-#include "sge_hash.h"
 #include "sge_afsutil.h"
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
@@ -98,6 +97,8 @@
 #include "sge_peL.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -115,15 +116,13 @@ extern lList *Master_Usermapping_Entry_List;
 extern lList *Master_Host_Group_List;
 #endif
 
-extern HashTable Master_Job_Hash_Table;
-
 static void sge_clear_granted_resources(lListElem *jep, lListElem *jatep, int incslots);
 
 static void reduce_queue_limit(lListElem *qep, lListElem *jep, int nm, char *rlimit_name);
 
 static void release_successor_jobs(lListElem *jep);
 
-static int send_job(char *rhost, char *target, lListElem *jep, lListElem *jatep, lListElem *pe, lListElem *hep, int master);
+static int send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep, lListElem *pe, lListElem *hep, int master);
 
 static int sge_bury_job(lListElem *jep, u_long32 jid, lListElem *jatep, int spool_job);
 
@@ -143,8 +142,8 @@ lListElem *master_qep,
 lListElem *pe, /* NULL in case of serial jobs */
 lListElem *hep 
 ) {
-   char *target;   /* prognames[EXECD|QSTD] */
-   char *rhost;   /* prognames[EXECD|QSTD] */
+   const char *target;   /* prognames[EXECD|QSTD] */
+   const char *rhost;   /* prognames[EXECD|QSTD] */
    lListElem *gdil_ep, *q;
    int ret = 0, sent_slaves = 0;
    
@@ -247,8 +246,8 @@ lListElem *hep
 }
 
 static int send_job(
-char *rhost,
-char *target,
+const char *rhost,
+const char *target,
 lListElem *jep,
 lListElem *jatep,
 lListElem *pe,
@@ -263,7 +262,7 @@ int master
    lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep;
    lListElem *ckpt = NULL, *tmp_ckpt;
    lList *ckpt_lp, *qlp;
-   char *ckpt_name;
+   const char *ckpt_name;
    static u_short number_one = 1;
    lListElem *gdil_ep;
    char *str;
@@ -488,11 +487,11 @@ u_long32 type,
 u_long32 when,
 u_long32 jobid,
 u_long32 jataskid,
-char *queue 
+const char *queue 
 ) {
    lListElem* jep, *jatep, *ep, *hep, *pe, *mqep;
    lList* jatasks;
-   char *qnm, *hnm;
+   const char *qnm, *hnm;
    time_t now;
    
    DENTER(TOP_LAYER, "resend_job");
@@ -611,7 +610,6 @@ u_long32 tid
 void ck_4_zombie_jobs(
 u_long now 
 ) {
-   char zombiepath[SGE_PATH_MAX];
    lListElem *dep;
    
    DENTER(TOP_LAYER, "ck_4_zombie_jobs");
@@ -619,9 +617,9 @@ u_long now
    while (Master_Zombie_List &&
             (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs)) {
       dep = lFirst(Master_Zombie_List);
-      sprintf(zombiepath, "%s/" u32, ZOMBIE_DIR, lGetUlong(dep, JB_job_number));
+      job_remove_spool_file(lGetUlong(dep, JB_job_number), 0, 
+                            SPOOL_HANDLE_AS_ZOMBIE);
       lRemoveElem(Master_Zombie_List, dep);
-      unlink(zombiepath);
    }
 
    DEXIT;
@@ -649,13 +647,13 @@ u_long now
       This is the same as mode=2 except we delete the job from disk and
       generate a delete event 
 
-   SGE
+   SGEEE
       If we get a job exit that leads to a deletion of the job we have 
       to free the resources for further usage (mode==4)
       Here we remove the job script but not the job file itself. 
 
-      Getting the permission from SGE schedd to remove the job (mode==5)
-      we may delete the job itself from internal lists (hash/joblist)
+      Getting the permission from SGEEE schedd to remove the job (mode==5)
+      we may delete the job itself from internal lists (joblist)
       and we may remove it the job file.
 
    Input:
@@ -678,18 +676,20 @@ int spool_job
 ) {
    lListElem *qep, *hep, *task, *tmp_ja_task;
    int slots;
-   lUlong jid = 0;
+   lUlong jid, tid;
    int no_unlink = 0;
    time_t now = 0;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
+   jid = lGetUlong(jep, JB_job_number);
+   tid = jatep?lGetUlong(jatep, JAT_task_number):0;
+
    switch (mode) {
    case 0:
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSITING);
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_SENT2EXECD, 
-              prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_SENT2EXECD);
 
       /* should use jobs gdil instead of tagging queues */
       for_each(qep, Master_Queue_List) {
@@ -714,15 +714,16 @@ int spool_job
 
       now = sge_get_gmt();
       lSetUlong(jatep, JAT_start_time, now);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, tid);
+      job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       break;
 
    case 1:
       lSetUlong(jatep, JAT_status, JRUNNING);
-      job_log(lGetUlong(jep, JB_job_number), "job received by execd", prognames[me.who], 
-              me.qualified_hostname);
-      cull_write_job_to_disk(jep);
+      job_log(jid, tid, "job received by execd");
+      job_enroll(jep, tid);
+      job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       break;
 
    case 2:
@@ -735,9 +736,9 @@ int spool_job
          hosts where a part of that job ran */
       {
          lListElem *granted_queue;
-         char *master_host = NULL;
+         const char *master_host = NULL;
          lListElem *pe;
-         char *pe_name;      
+         const char *pe_name;      
 
          pe_name = lGetString(jep, JB_pe);
          if (pe_name) {
@@ -767,6 +768,18 @@ int spool_job
                   }
                }
             }
+         } else {
+            lList *granted_list = NULL;
+            lListElem *granted_queue = NULL;
+            lListElem *host = NULL;
+
+            granted_list = lGetList(jatep, JAT_granted_destin_identifier_list);
+            granted_queue = lFirst(granted_list);
+            host = lGetElemCaseStr(Master_Exechost_List, EH_name,
+                                   lGetString(granted_queue, JG_qhostname));
+            add_to_reschedule_unknown_list(host, lGetUlong(jep, JB_job_number),
+                                           lGetUlong(jatep, JAT_task_number),
+                                           RESCHEDULE_SKIP_JR);
          }
       }
 
@@ -777,7 +790,7 @@ int spool_job
       lSetList(jatep, JAT_scaled_usage_list, NULL);
       {
          lListElem *ep;
-         char *s;
+         const char *s;
 
          DPRINTF(("osjobid = %s\n", (s=lGetString(jatep, JAT_osjobid))?s:"(null)"));
          for_each(ep, lGetList(jatep, JAT_previous_usage_list)) {
@@ -808,15 +821,14 @@ int spool_job
       }
 
       sge_clear_granted_resources(jep, jatep, 1);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, tid);
+      job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
       break;
 
    case 3:
-      jid = lGetUlong(jep, JB_job_number);
-      job_log(jid, MSG_LOG_EXITED,
-         prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_EXITED);
       if (conf.zombie_jobs > 0)
          sge_to_zombies(jep, jatep, spool_job);
       sge_clear_granted_resources(jep, jatep, 1);
@@ -827,14 +839,14 @@ int spool_job
 
    case 4:
       jid = lGetUlong(jep, JB_job_number);
-      job_log(jid, MSG_LOG_WAIT4SGEDEL,
-         prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_WAIT4SGEDEL);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
       if (conf.zombie_jobs > 0)
          sge_to_zombies(jep, jatep, spool_job);
       sge_clear_granted_resources(jep, jatep, 1);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, tid);
+      job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       for_each(task, lGetList(jatep, JAT_task_list)) {
          lListElem* task_ja_task;
 
@@ -863,9 +875,7 @@ int spool_job
 
    case 5: /* triggered by ORT_remove_job */
    case 6: /* triggered by ORT_remove_immediate_job */
-      job_log(lGetUlong(jep, JB_job_number), 
-              (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE,
-              prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jid = lGetUlong(jep, JB_job_number);
       sge_bury_job(jep, jid, jatep, spool_job);
       break;
@@ -879,7 +889,8 @@ int spool_job
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(jep, jatep, 0);
-      cull_write_job_to_disk(jep);
+      job_enroll(jep, tid);
+      job_write_spool_file(jep, tid, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
       sge_flush_events(FLUSH_EVENTS_JOB_FINISHED);
       break;
@@ -893,21 +904,29 @@ static void release_successor_jobs(
 lListElem *jep 
 ) {
    lListElem *jid, *suc_jep;
+   char job_ident[256];
 
    DENTER(TOP_LAYER, "release_successor_jobs");
 
    for_each(jid, lGetList(jep, JB_jid_sucessor_list)) {
       suc_jep = sge_locate_job(lGetUlong(jid, JRE_job_number));
       if (suc_jep) {
-         lDelSubUlong(suc_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
-            JB_jid_predecessor_list);
-         if (lGetList(suc_jep, JB_jid_predecessor_list))
-            DPRINTF(("removed job "u32"'s dependance from exiting job "u32"\n",
+         /* if we don't find it by job id we try it with the name */
+         sprintf(job_ident, u32, lGetUlong(jep, JB_job_number));
+         if (!lDelSubStr(suc_jep, JRE_job_name, job_ident, JB_jid_predecessor_list) &&
+             !lDelSubStr(suc_jep, JRE_job_name, lGetString(jep, JB_job_name), JB_jid_predecessor_list)) {
+             DPRINTF(("no reference %s and %s to job "u32" in predecessor list of job "u32"\n", 
+               job_ident, lGetString(jep, JB_job_name),
                lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
-         else 
-            DPRINTF(("job "u32"'s job exit triggers start of job "u32"\n",
-               lGetUlong(jep, JB_job_number), lGetUlong(suc_jep, JB_job_number)));
-         sge_add_job_event(sgeE_JOB_MOD, suc_jep, 0);
+         } else {
+            if (lGetList(suc_jep, JB_jid_predecessor_list)) {
+               DPRINTF(("removed job "u32"'s dependance from exiting job "u32"\n",
+                  lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
+            } else 
+               DPRINTF(("job "u32"'s job exit triggers start of job "u32"\n",
+                  lGetUlong(jep, JB_job_number), lGetUlong(suc_jep, JB_job_number)));
+            sge_add_job_event(sgeE_JOB_MOD, suc_jep, 0);
+         }
       }
    }
 
@@ -1009,7 +1028,7 @@ lListElem *jep,
 int nm,
 char *rlimit_name 
 ) {
-   char *s;
+   const char *s;
    lListElem *res, *rep;
    int found = 0;
 
@@ -1063,6 +1082,7 @@ u_long32 jid,
 lListElem *jatep,
 int spool_job 
 ) {
+   u_long32 tid;
    int RemoveJob;
 
    DENTER(TOP_LAYER, "sge_bury_job");
@@ -1075,33 +1095,24 @@ int spool_job
       RemoveJob = 1;
 
    jep = sge_locate_job(jid);
+   tid = lGetUlong(jatep, JAT_task_number);
 
-   te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, jid, lGetUlong(jatep, JAT_task_number));
+   te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, jid, tid);
 
    if (!RemoveJob) {
       /* Remove one ja task or move it into the Master_Zombie_List*/
-      job_log(jid, MSG_LOG_JATASKEXIT,
-              prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_JATASKEXIT);
       sge_add_event(sgeE_JATASK_DEL, jid, lGetUlong(jatep, JAT_task_number), 
                      NULL, NULL);
-
 
       /*
       ** remove the task
       */
+      job_remove_spool_file(jid, tid, 0);
       lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);
-
-      /*
-      ** the job still exists, another task has been finished
-      */
-      if (spool_job) {
-         cull_write_job_to_disk(jep);
-      }
-   
    } else {
       /* Remove the job with the last task */
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_EXITED,
-         prognames[me.who], me.qualified_hostname);
+      job_log(jid, tid, MSG_LOG_EXITED);
       release_successor_jobs(jep);
 
       /*
@@ -1114,14 +1125,12 @@ int spool_job
          unlink(lGetString(jep, JB_exec_file));
       }
       sge_add_event(sgeE_JOB_DEL, jid, lGetUlong(jatep, JAT_task_number), NULL, NULL);
-
-      unlink(lGetString(jep, JB_job_file));
+      job_remove_spool_file(jid, 0, 0);
 
       /*
       ** remove the job
       */
       lRemoveElem(Master_Job_List, jep);
-      HashTableDelete(Master_Job_Hash_Table, (void *)(long) jid); 
    }
 
    DEXIT;
@@ -1135,7 +1144,7 @@ int spool_job
 ) {
    lListElem *zombie = NULL;
    lListElem *zombie_task = NULL;
-   u_long32 jid;
+   u_long32 jid, tid;
    
    DENTER(TOP_LAYER, "sge_to_zombies");
    
@@ -1144,6 +1153,7 @@ int spool_job
 
    
    jid = lGetUlong(jep, JB_job_number);
+   tid = lGetUlong(jatep, JAT_task_number);
    /*
    ** add task to zombie list
    */
@@ -1168,9 +1178,9 @@ int spool_job
       lSetList(zombie, JB_ja_tasks, tasks);
       lAppendElem(Master_Zombie_List, zombie);
    }
-   if (spool_job) {
-      cull_write_zombiejob_to_disk(zombie);
-   }
+
+   job_write_spool_file(zombie, tid, SPOOL_HANDLE_AS_ZOMBIE);
+
    DEXIT;
    return True;
 }

@@ -47,9 +47,9 @@ int host_mod(lList **alpp, lListElem *new_host, lListElem *ep, int add, char *ru
 
 int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
-void sge_mark_unheard(lListElem *hep, char *target);
+void sge_mark_unheard(lListElem *hep, const char *target);
 
-int sge_add_host_of_type(char *, u_long32);
+int sge_add_host_of_type(const char *hostname, u_long32 target);
 
 void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
@@ -63,11 +63,11 @@ int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, 
 
 u_long32 load_report_interval(lListElem *hep); 
 
-void sge_change_queue_version_exechost(char *exechost_name);
+void sge_change_queue_version_exechost(const char *exechost_name);
 
-lListElem *get_local_conf_val(char *host, char *name);  
+lListElem *get_local_conf_val(const char *host, const char *name);  
 
-int notify_new_features(lListElem *host, enum featureset_id_t featureset, char *target);
+int notify_new_features(lListElem *host, featureset_id_t featureset, const char *target);
 
 void master_notify_execds(void);
 

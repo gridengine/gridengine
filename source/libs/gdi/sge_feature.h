@@ -38,16 +38,15 @@
 extern "C" {
 #endif  
 
-
-enum featureset_product_name_id_t {
+typedef enum {
    FS_SHORT,
    FS_LONG,
    FS_VERSION,
    FS_SHORT_VERSION,
    FS_LONG_VERSION
-};
+} featureset_product_name_id_t;
 
-enum featureset_id_t {
+typedef enum {
    FEATURESET_UNINITIALIZED,
    FEATURESET_SGE,
    FEATURESET_SGEEE,
@@ -63,18 +62,20 @@ enum featureset_id_t {
    /* DON'T CHANGE THE ORDER OF THE ENTRIES ABOVE */
  
    FEATURESET_LAST_ENTRY
-};
+} featureset_id_t;
  
  
-enum feature_id_t {
+typedef enum {
    FEATURE_UNINITIALIZED,
-   FEATURE_USE_OSJOB_ID,            /* jobs will get a unique job id during startup */
+   FEATURE_USE_OSJOB_ID,            /* jobs will get a unique job id during 
+                                       startup */
    FEATURE_REPRIORISATION,          /* PTFs auto repriorisation */
    FEATURE_REPORT_USAGE,            /* PDC data collection and
                                        usage reports from execd to master */
-   FEATURE_SPOOL_ADD_ATTR,          /* spool additional attributes for sge objects in sg3e-mode */
-   FEATURE_SGEEE,                   /* activate the remaining code needed in sg3e-mode */
- 
+   FEATURE_SPOOL_ADD_ATTR,          /* spool additional attributes for sge 
+                                       objects in sg3e-mode */
+   FEATURE_SGEEE,                   /* activate the remaining code needed in 
+                                       sg3e-mode */
    FEATURE_NO_SECURITY,             /* No security mode active */
    FEATURE_AFS_SECURITY,            /* AFS security */
    FEATURE_DCE_SECURITY,            /* DCE security */
@@ -84,40 +85,37 @@ enum feature_id_t {
    /* DON'T CHANGE THE ORDER OF THE ENTRIES ABOVE */
  
    FEATURE_LAST_ENTRY
-};
+} feature_id_t;
  
-struct feature_names_t {
+typedef struct {
    int id;
    char *name;
-};            
+} feature_names_t;            
 
 extern lList *Master_FeatureSet_List;
  
-int feature_initialize_from_file(char *filename);
+int feature_initialize_from_file(const char *filename);
  
-int feature_initialize_from_string(char *mode);
+int feature_initialize_from_string(const char *mode);
  
-void feature_activate(enum featureset_id_t id);
- 
-int feature_is_active(enum featureset_id_t id);
- 
-char *feature_get_featureset_name(enum featureset_id_t id);
- 
-enum featureset_id_t feature_get_featureset_id(char *name);
- 
-char *feature_get_product_name(enum featureset_product_name_id_t style);
- 
-enum featureset_id_t feature_get_active_featureset_id(void);
- 
- 
-int feature_is_enabled(enum feature_id_t id);
- 
-char *feature_get_name(enum feature_id_t id);
- 
-enum feature_id_t feature_get_id(char *name);
- 
-char *feature_get_last_error_msg(void);
+void feature_activate(featureset_id_t id);
 
+int feature_is_active(featureset_id_t id);
+ 
+const char *feature_get_featureset_name(featureset_id_t id);
+ 
+featureset_id_t feature_get_featureset_id(const char *name);
+ 
+const char *feature_get_product_name(featureset_product_name_id_t style);
+ 
+featureset_id_t feature_get_active_featureset_id(void);
+ 
+int feature_is_enabled(feature_id_t id);
+ 
+const char *feature_get_name(feature_id_t id);
+ 
+feature_id_t feature_get_id(const char *name);
+ 
 #ifdef  __cplusplus
 }
 #endif                   

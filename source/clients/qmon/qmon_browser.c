@@ -111,7 +111,7 @@ XtPointer cld, cad;
 
 /*-------------------------------------------------------------------------*/
 void qmonBrowserShow(
-String s 
+StringConst s 
 ) {
    Widget browser;
    

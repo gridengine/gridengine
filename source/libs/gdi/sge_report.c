@@ -37,8 +37,8 @@
 
 
 int sge_send_reports(
-char *rhost,
-char *commproc,
+const char *rhost,
+const char *commproc,
 int id,
 lList *rlp, /* REP_Type */
 int synchron,

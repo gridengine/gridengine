@@ -110,7 +110,7 @@ int show_always
    lListElem *aep = NULL;
    XmTextPosition pos;
    Boolean error = False;
-   String msg;
+   StringConst msg;
    u_long32 as = 0;
    u_long32 aq = 0;
    Boolean show = False;
@@ -155,7 +155,8 @@ int show_always
          error = True;
       if ((as != STATUS_OK) || show_always) { 
          show = True;
-         XmTextInsert(msg_text_w, pos, msg);
+         /* FIX_CONST_GUI */
+         XmTextInsert(msg_text_w, pos, (String)msg);
          pos += strlen(msg);
       }
    }

@@ -34,6 +34,6 @@
 
 int tst_sos(int used, int total, int own_sos, lListElem* so);
 
-int sos_schedd(char *qname, lList *qlist);
+int sos_schedd(const char *qname, lList *qlist);
 
 #endif /* __SUBORDINATE_SCHEDD_H */

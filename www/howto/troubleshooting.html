@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
+	<META NAME="CREATED" CONTENT="20010717;16113100">
+	<META NAME="CHANGEDBY" CONTENT=" ">
+	<META NAME="CHANGED" CONTENT="20010717;17090000">
+</HEAD>
+<BODY>
+<H1>Grid Engine Trouble Shooting</H1>
+<H2>Problem with a pending jobs not being dispatched</H2>
+<P>Sometimes a pending job is obviously runnable, but does not get dispatched.
+Grid Engine can be asked for the reason:</P>
+<UL>
+	<LI><P>qstat -j &lt;jobid&gt;</P>
+	<P>If enabled qstat -j &lt;jobid&gt; provides the user with
+	information enlisting the reasons why a certain job has not been
+	<I>dispatched in the last scheduling run</I>. This monitoring can be enabled/disabled
+	as it can cause undesired communication overhead between Schedd and
+	Qmaster (see under 'schedd_job_info' in 
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman5/sched_conf.html?content-type=text/html" NAME="sched_conf">sched_conf(5)</A>
+). Here is a
+	sample output:</P>
+	<PRE>% qstat -j 242059
+scheduling info: queue &quot;fangorn.q&quot; dropped because it is temporarily not available
+                 queue &quot;lolek.q&quot; dropped because it is temporarily not available
+                 queue &quot;balrog.q&quot; dropped because it is temporarily not available
+                 queue &quot;saruman.q&quot; dropped because it is full
+                 cannot run in queue &quot;bilbur.q&quot; because it is not contained in its hard queue list (-q)
+                 cannot run in queue &quot;dwain.q&quot; because it is not contained in its hard queue list (-q)
+                 has no permission for host &quot;ori&quot;</PRE>
+</UL>
+<UL>
+	<P>This information is generated directly by Schedd and takes the
+	current utilization of the cluster into account. Sometimes this is
+	not exactly what you are interested in: E.g. if all queue slots are
+	already occupied by jobs of other users, no detailed message is
+	generated for the job you are interested in.</P>
+</UL>
+<UL>
+	<LI><P>qalter -w v &lt;jobid&gt;</P>
+	<P>This command enlists the reasons why a job is not <I>dispatchable in
+	principle</I>. For this purpose a dry scheduling run is performed. The
+	special with this dry scheduling run is that all consumable
+	resources (also slots) are considered to be fully available for this
+	job. Similarly all load values are ignored because they are varying.</P>
+</UL>
+<H2>Job or Queue goes in error state &quot;E&quot;</H2>
+<P>Job or queue errors are indicated by an uppercase &quot;E&quot; in the qstat output. 
+A job enters the error state when Grid Engine tried to execute a job in a 
+queue, but it failed for a reason that is specific to the job. A queue enters the error
+state when Grid Engine tried to execute a job in a queue, but it failed for a reason that 
+is specific to the queue.</P>
+<P>Grid Engine offers a set of possiblities for users and administrators to get diagnosis
+information in case of job execution errors. Since both the queue and the job error state 
+result from a failed job execution the diagnosis possibilities are applicable to both types
+of error states:</P>
+<UL>
+	<LI><P>user abort mail</P>
+	<P>If jobs are submitted with the submit option &quot;-m a&quot; a abort mail is
+   sent to the adress specified with the &quot;-M user[@host]&quot; option. The abort
+   mail contains diagnosis information about job errors and are the recommended source
+   of information for users.</P>
+</UL>
+<UL>
+	<LI><P>qacct accounting</P>
+	<P>If no abort mail is available the user can run</P>
+   <PRE>qacct -j <jobid></PRE>
+	<P>to get information about the job error from Grid Engine job accounting.</P>
+</UL>
+<UL>
+	<LI><P>administrator abort mail</P>
+	<P>An administrator can order admistrator mails about job execution problems 
+   by specifying an appropriate email adress (see under administrator_mail in 
+   <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman5/sge_conf.html" NAME="sched_conf">sge_conf(5)</A>
+  ). Administrator mails contain more detailed diagnosis information than user 
+   abort mails and are the recommended in case of frequent job execution errors.
+</UL>
+<UL>
+	<LI><P>messages files</P>
+	<P>If no administrator mail is available the Qmasters messages file should 
+   be first investigated. Loggings related to a certain job can be found by searching
+   for the appropriate job ID. In the 'default' installation the Qmaster messages
+   file is located at</P>
+   <UL>
+      <PRE>$SGE_ROOT/default/spool/qmaster/messages</PRE>
+   </UL>
+   <P>Additional information can be sometimes found in the messages of the Execd where 
+   the job was started. Use qacct -j &lt;jobid&gt; to figure out the host where the job was 
+   started and search in</P>
+
+   <UL>
+      <PRE>$SGE_ROOT/default/spool/&lt;host&gt;/messages</PRE>
+   </UL>
+
+   for the jobid.
+</UL>
+</BODY>
+</HTML>

@@ -91,11 +91,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set result -100
    puts $CHECK_OUTPUT "starting \"$prog_binary $prog_args\""
 
-   catch {
       set id [ eval open_spawn_process "$prog_binary" "$prog_args" ]
       set sp_id [ lindex $id 1 ] 
-      puts "starting ..."
-      puts "$prog_binary $prog_args"
+      puts $CHECK_OUTPUT "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
          log_user 1
          set send_speed .05
@@ -133,8 +131,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             -i $sp_id "line" {
                set stop_line_wait 1
             }
-            -i $sp_id timeout { 
-               send ""
+            -i $sp_id timeout {  
+               send -i $sp_id ""
+            }
+            -i $sp_id "erminal too wide" {
+               add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
+               set stop_line_wait 1
             }
             -i $sp_id eof {
                add_proc_error "handle_vi_edit" -1 "unexpected end of file"
@@ -142,51 +144,62 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             }
          }
       }
-
       set timeout 0
+      set send_slow "1 $send_speed" 
+
       foreach elem $vi_command_sequence {
          set com_length [ string length $elem ]
          set com_sent 0
+         expect -i $sp_id
+         send -s -i $sp_id -- "$elem"
+         expect -i $sp_id
 
-
-         while { $com_sent < $com_length } {
-            set send_slow "1 $send_speed" 
-            set send_string [string index $elem $com_sent]
-            incr com_sent 1
-            set last_char 0
-
-            if { $com_sent < $com_length } { 
-              append send_string [string index $elem $com_sent] 
-               incr com_sent 1
-               if { $com_sent == $com_length } {
-                  set send_slow "1 $send_line_speed" 
-                  set last_char 1
-               }
-
-            }
-            if { $com_sent == $com_length } {
-                set send_slow "1 $send_line_speed"
-                set last_char 1
-            }
-
-            send -s -- "$send_string"
-
-            set timeout 0 
-            expect -i $sp_id
-
-            if {$CHECK_DEBUG_LEVEL == 2} {
-               if { $last_char == 1 } {
-                  gets stdin user_input
-               }
-            }
-         }
+        
+#         puts $CHECK_OUTPUT "elem: $elem\n"
+#         while { $com_sent < $com_length } {
+#            set send_slow "1 $send_speed" 
+#            set send_string [string index $elem $com_sent]
+#            incr com_sent 1
+#            set last_char 0
+#
+#            if { $com_sent < $com_length } { 
+#              append send_string [string index $elem $com_sent] 
+#               incr com_sent 1
+#               if { $com_sent == $com_length } {
+#                  set send_slow "1 $send_line_speed" 
+#                  set last_char 1
+#               }
+#
+#            }
+#            if { $com_sent == $com_length } {
+#                set send_slow "1 $send_line_speed"
+#                set last_char 1
+#            }
+##            puts -nonewline $CHECK_OUTPUT "$send_string"
+#
+#            send -s -i $sp_id -- "$send_string"
+#
+##            puts -nonewline $CHECK_OUTPUT ":"
+#
+#            set timeout 0
+#
+#            expect -i $sp_id
+#            
+##            puts -nonewline $CHECK_OUTPUT ":"
+#
+#            if {$CHECK_DEBUG_LEVEL == 2} {
+#               if { $last_char == 1 } {
+#                  gets stdin user_input
+#               }
+#            }
+#         }
       }
 
       # wait 1 second for new file date!!! 
       while { [ timestamp ] == $start_time } { 
       }
-      send ":wq\n"
-      set timeout 30
+      send -i $sp_id ":wq\n"
+      set timeout 100
       set doStop 0
       while { $doStop == 0 } {
       expect {
@@ -215,7 +228,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
      }
      puts $CHECK_OUTPUT $expect_out(buffer)
      close_spawn_process $id
-  }
   log_user 1
   foreach elem $vi_command_sequence {
       debug_puts "sequence: $elem"
@@ -451,7 +463,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
       "solaris64" - 
       "solaris86" { 
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"s=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"args=_____args\""]
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"s=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"args=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
          set pid_pos     0
          set gid_pos     1
@@ -465,7 +478,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       }
      
       "solaris" { 
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid s stime vsz time args\""]
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID   UID S    STIME  VSZ        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
@@ -480,7 +494,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
       "osf4" -
       "tru64" { 
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid state stime vsz time args\""]
+         set myenvironment(COLUMNS) "500"
+         
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid state stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "   PID   PGID   PPID        UID {S   } {STIME   }   VSZ        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
@@ -496,7 +512,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
 
       "irix6" { 
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid state stime vsz time args\""]
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid state stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID   UID S    STIME {VSZ   }        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
@@ -511,7 +528,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
  
       "aix43"   {
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid=BIG_AIX_PGID ppid=BIG_AIX_PPID uid=BIG_AIX_UID stat=AIXSTATE started vsz=BIG_AIX_VSZ time args\""]
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid=BIG_AIX_PGID ppid=BIG_AIX_PPID uid=BIG_AIX_UID stat=AIXSTATE started vsz=BIG_AIX_VSZ time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID BIG_AIX_PGID BIG_AIX_PPID BIG_AIX_UID AIXSTATE  STARTED BIG_AIX_VSZ        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
@@ -526,7 +544,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       }
       
       "aix42"   {
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid=BIG_AIX_PGID ppid=BIG_AIX_PPID uid=BIG_AIX_UID stat=AIXSTATE started vsz=BIG_AIX_VSZ time args\""]
+         set myenvironment(COLUMNS) "500"
+
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid=BIG_AIX_PGID ppid=BIG_AIX_PPID uid=BIG_AIX_UID stat=AIXSTATE started vsz=BIG_AIX_VSZ time args\"" prg_exit_state 60 0 myenvironment ]
          set index_names "  PID BIG_AIX_PGID BIG_AIX_PPID BIG_AIX_UID AIXSTATE  STARTED BIG_AIX_VSZ        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
@@ -544,7 +564,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
       "hp10" -
       "hp11" {
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-efl"]
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-efl" prg_exit_state 60 0 myenvironment]
          set index_names "  F S      UID   PID  PPID  C PRI NI     ADDR   SZ    WCHAN    STIME {TTY   }    TIME COMD"
          set pid_pos     3
          set gid_pos     -1
@@ -559,7 +580,22 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
  
       
       "glinux"    { 
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\""]
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
+         set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"
+         set pid_pos     0
+         set gid_pos     1
+         set ppid_pos    2
+         set uid_pos     3
+         set state_pos   4
+         set stime_pos   5
+         set vsz_pos     6
+         set time_pos    7
+         set command_pos 8
+      }
+      "slinux"    { 
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
@@ -574,7 +610,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       "alinux" {
          if { $additional_run == 0 } {
             # this is the first ps without any size position
-            set result [start_remote_prog "$host" "$CHECK_USER" "ps" "xajw"]  
+            set myenvironment(COLUMNS) "500"
+            set result [start_remote_prog "$host" "$CHECK_USER" "ps" "xajw" prg_exit_state 60 0 myenvironment]  
             #                   0     1    2      3   4    5      6   7     8     9  
             set index_names " PPID   PID  PGID   SID TTY TPGID  STAT  UID   TIME COMMAND"
             set pid_pos     1
@@ -589,7 +626,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          } 
          if { $additional_run == 1 } {
             # this is the first ps without any size position
-            set result [start_remote_prog "$host" "$CHECK_USER" "ps" "waux"]  
+            set myenvironment(COLUMNS) "500"
+            set result [start_remote_prog "$host" "$CHECK_USER" "ps" "waux" prg_exit_state 60 0 myenvironment]  
             #                   0       1    2    3     4      5   6   7    8       9   10
             set index_names "{USER    }   PID %CPU %MEM  SIZE   RSS TTY STAT START   TIME COMMAND"
             set pid_pos     1
@@ -630,6 +668,11 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 
    set help_list [ split $result "\n" ]
 
+#   foreach elem $help_list {
+#      puts $CHECK_OUTPUT $elem
+#   }
+
+
    # delete empty lines (occurs e.g. on alinux)
    set empty_index [lsearch -exact $help_list ""]
    while {$empty_index >= 0} {
@@ -660,18 +703,18 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
    # cut heading garbage and header line
    set ps_list [ lrange $help_list [expr $x + 1] [expr ([llength $help_list]-1)]]
    
-   #puts $CHECK_OUTPUT "index names: \n$index_names" 
-   #puts $CHECK_OUTPUT "          1         2         3         4         5         6         7         8"
-   #puts $CHECK_OUTPUT "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-   #puts $CHECK_OUTPUT "header:\n$header"
+#   puts $CHECK_OUTPUT "index names: \n$index_names" 
+#   puts $CHECK_OUTPUT "          1         2         3         4         5         6         7         8         9"
+#   puts $CHECK_OUTPUT "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+#   puts $CHECK_OUTPUT "header:\n$header"
    
    set s_index 0
    set indexcount [llength $index_names]
    foreach index $index_names { 
       incr indexcount -1
       set position1 [string first $index $header]
-      #puts $CHECK_OUTPUT "\nstringlength of $index is [string length $index]"
-      #puts $CHECK_OUTPUT "position1 is $position1"
+#      puts $CHECK_OUTPUT "\nstringlength of $index is [string length $index]"
+#      puts $CHECK_OUTPUT "position1 is $position1"
       set last_position [expr ($position1 + [string length $index] - 1)]
       if {$indexcount == 0 } {
          set last_position 200
@@ -805,8 +848,6 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       set value [string trim $value_str] 
       set psinfo($act_pid,command) $value 
       set psinfo(command,$process_count) $value
-
-
 
       incr process_count 1
       set psinfo(proc_count) $process_count

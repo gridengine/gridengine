@@ -32,12 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 int cshift(char *area, int area_len, int n, int direction);
-int print_area(char *fname, char *label, char *area, int area_len);
-void xor_area(char *area, int area_len, char *key, int key_len);
-int areacmp(char *a1, char *a2, int size);
+
+int print_area(const char *fname, const char *label, const char *area, 
+               int area_len);
+
+void xor_area(char *area, int area_len, const char *key, int key_len);
+
+int areacmp(const char *a1, const char *a2, int size);
 
 #define SHIFT_RIGHT -1
 #define SHIFT_LEFT   1

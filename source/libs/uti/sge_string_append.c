@@ -37,11 +37,7 @@
 
 #define REALLOC_CHUNK   1024
 
-   
-char* sge_string_append(
-StringBufferT *sb,
-char *a 
-) {
+char* sge_string_append(StringBufferT *sb, const char *a) {
    int n, m;
 
    if (!sb)
@@ -68,7 +64,7 @@ char *a
    return sb->s;
 }
 
-char* sge_string_printf(StringBufferT *sb, char *format,...)
+char* sge_string_printf(StringBufferT *sb, const char *format,...)
 {
    char buf[BUFSIZ];
    va_list ap;

@@ -38,7 +38,7 @@
 #   define DEFAULT_EDITOR     "vi"
 #endif
 
-#define MAX_SEQNUM         999999
+#define MAX_SEQNUM        9999999
 #define MAX_ULONG32     999999999
 
 /* template/global/default/queue names */

@@ -63,7 +63,7 @@ int lSwapList(lListElem *to, int to_nm, lListElem *from, int from_nm);
 
 lInt lGetPosInt(const lListElem *ep, int id);
 lUlong lGetPosUlong(const lListElem *ep, int id);
-char *lGetPosString(const lListElem *ep, int id);
+const char *lGetPosString(const lListElem *ep, int id);
 lList *lGetPosList(const lListElem *ep, int id);
 lFloat lGetPosFloat(const lListElem *ep, int id);
 lDouble lGetPosDouble(const lListElem *ep, int id);
@@ -83,7 +83,7 @@ int lSetPosRef(const lListElem *ep, int pos, lRef value);
 
 lInt lGetInt(const lListElem *ep, int name);
 lUlong lGetUlong(const lListElem *ep, int name);
-char * lGetString(const lListElem *ep, int name);
+const char *lGetString(const lListElem *ep, int name);
 lList *lGetList(const lListElem *ep, int name);
 lFloat lGetFloat(const lListElem *ep, int name);
 lDouble lGetDouble(const lListElem *ep, int name);
@@ -124,6 +124,8 @@ int unknownType(const char *str);
 lListElem* lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp);
 int lDelElemStr(lList **lpp, int nm, const char *str); 
 lListElem *lGetElemStr(const lList *lp, int nm, const char *str);
+lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str, const void **iterator);
+lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void **iterator);
 lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - 
@@ -143,6 +145,8 @@ lListElem *lGetSubStr(const lListElem *ep, int nm, const char *str, int snm);
 lListElem* lAddElemUlong(lList **lpp, int nm, lUlong val, const lDescr *dp);
 int lDelElemUlong(lList **lpp, int nm, lUlong val); 
 lListElem *lGetElemUlong(const lList *lp, int nm, lUlong val);
+lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **iterator);
+lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **iterator);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- - 
 

@@ -39,7 +39,6 @@ QHOST_TARGETS = qhost
 QHOST_SRC = qhost.c
 
 QHOST_ADD_SRC = \
-               qstat_util.c \
                qstat_printing.c \
                complex.c \
                show_job.c \

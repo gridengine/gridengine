@@ -61,8 +61,11 @@ enum {
 int sge_flush_events(int);
 int sge_next_flush(int);
 
-void sge_add_list_event(u_long32 type, u_long32 intkey, u_long32 intkey2, char *strkey, lList *list); 
-void sge_add_event(u_long32 type, u_long32 intkey, u_long32 intkey2, char *strkey, lListElem *element);
+void sge_add_list_event(u_long32 type, u_long32 intkey, u_long32 intkey2, 
+                        const char *strkey, lList *list); 
+
+void sge_add_event(u_long32 type, u_long32 intkey, u_long32 intkey2, 
+                   const char *strkey, lListElem *element);
 
 u_long32 sge_get_next_event_number(u_long32 client_type);
 

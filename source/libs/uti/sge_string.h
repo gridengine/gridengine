@@ -38,32 +38,46 @@
 extern "C" {
 #endif
 
-char *sge_basename(char *name, int delim);
-char *sge_delim_str(char *str, char **delim_pos, char *delim);
-char *sge_dirname(char *name, int delim);
+const char *sge_basename(const char *name, int delim);
+
+char *sge_delim_str(char *str, char **delim_pos, const char *delim);
+
+char *sge_dirname(const char *name, int delim);
+
 char *sge_strdup(char *old, const char *src);
+
 char *sge_strtok(const char *str, const char *delimitor);
-int sge_is_pattern(char *p);
+
+int sge_is_pattern(const char *p);
 
 struct saved_vars_s {
    char *static_cp;
    char *static_str;
 };
+
 char *sge_strtok_r(const char *str, const char *delimitor, struct saved_vars_s **last);
+
 void free_saved_vars(struct saved_vars_s *last);
 
-char *stradd(char *cp1, char *cp2, char *res);
-int check_fname(char *fname);
-int sge_strnullcasecmp(char *a, char *b);
-int sge_strnullcmp(char *a, char *b);
+char *stradd(const char *cp1, const char *cp2, char *res);
+
+int check_fname(const char *fname);
+
+int sge_strnullcasecmp(const char *a, const char *b);
+
+int sge_strnullcmp(const char *a, const char *b);
+
 void strip_blanks(char *str);
 
 /* compare hosts with FQDN or not */
 #define MAXHOSTLEN 256
 extern int fqdn_cmp;
+
 /* compare hosts by using a default domain FQDN or not */
 extern char *default_domain;
+
 int hostcmp(const char *h1, const char *h2);
+
 void hostdup(const char *raw, char *dst);
 
 #ifndef WIN32NATIVE

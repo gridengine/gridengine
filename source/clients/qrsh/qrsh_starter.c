@@ -46,19 +46,20 @@
 #include "sge_getpwnam.h"
 #include "sge_pgrp.h"
 #include "sge_string.h"
+#include "config_file.h"
 #include "msg_qrsh.h"
 
 #define MAX_ENVIRONMENT_LENGTH 4096
 
 pid_t child_pid = 0;
 
-/****** qrsh_starter/setEnvironment() ***************************************
+/****** Interactive/qrsh_starter/setEnvironment() ***************************************
 *
 *  NAME
 *     setEnvironment() -- set environment from file
 *
 *  SYNOPSIS
-*     static char *setEnvironment(char *envFileName, char **wrapper);
+*     static char *setEnvironment(const char *jobdir, char **wrapper);
 *
 *  FUNCTION
 *     Reads environment variables and their values from file <envFileName>
@@ -78,7 +79,8 @@ pid_t child_pid = 0;
 *     in the responsibility of the caller to free this memory.
 *
 *  INPUTS
-*     envFileName - path and name of file to read
+*     jobdir - the jobs spool directory
+*     wrapper - buffer to take the path and name of a wrapper script
 *
 *  RESULT
 *     command, if all actions could be performed
@@ -88,28 +90,32 @@ pid_t child_pid = 0;
 *                 - necessary memory cannot be allocated
 *                 - the variable QRSH_COMMAND is not found
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
 ****************************************************************************
 */
-static char *setEnvironment(const char *envFileName, char **wrapper)
+static char *setEnvironment(const char *jobdir, char **wrapper)
 {
+   char *envFileName = NULL;
    FILE *envFile = NULL;
    char line[MAX_ENVIRONMENT_LENGTH];
    char *duplicate = NULL;
    char *command   = NULL;
 
    *wrapper = NULL;
-   
+
+   /* build path of environmentfile */
+   envFileName = (char *)malloc(strlen(jobdir) + strlen("environment") + 2);
+
+   if(envFileName == NULL) {
+      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+      return 0;
+   }
+
+   sprintf(envFileName, "%s/environment", jobdir);
+  
    /* open sge environment file */
    if((envFile = fopen(envFileName, "r")) == NULL) {
       fprintf(stderr, MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
+      free(envFileName);
       return NULL;
    }
 
@@ -121,44 +127,106 @@ static char *setEnvironment(const char *envFileName, char **wrapper)
          *c = 0;
       }
 
-      if(strncmp(line, "PWD=", 4) == 0) {
-         /* change to dir PWD */
-         if(chdir(line + 4) == -1) {
-            fprintf(stderr, MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS, line + 4, strerror(errno));
+      if(strncmp(line, "QRSH_COMMAND=", 13) == 0) {
+         if((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+            fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+            fclose(envFile); free(envFileName);
             return NULL;
          }
-      } else {
-         if(strncmp(line, "QRSH_COMMAND=", 13) == 0) {
-            if((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
-               fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-               return NULL;
-            }
-            strcpy(command, line + 13);
-         } else {  
-            if(strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
+         strcpy(command, line + 13);
+      } else {  
+         if(strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
+            if(*(line + 13) == 0) {
+               fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
+            } else {
                if((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                   fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+                  fclose(envFile); free(envFileName);
                   return NULL;
                }
                strcpy(*wrapper, line + 13);
-            } else {
-               /* set variable */
-               if((duplicate = (char *)malloc(strlen(line) + 1)) == NULL) {
-                  fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-                  return NULL;
-               }
-               strcpy(duplicate, line);
-               putenv(duplicate);
             }
+         } else {
+            /* set variable */
+            if((duplicate = (char *)malloc(strlen(line) + 1)) == NULL) {
+               fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+               fclose(envFile); free(envFileName);
+               return NULL;
+            }
+            strcpy(duplicate, line);
+            putenv(duplicate);
          }
-      }   
+      }
    }
 
-   fclose(envFile);
+   fclose(envFile); free(envFileName);
    return command;
 }
 
-/****** qrsh_starter/write_pid_file() ***************************************
+/****** Interactive/qrsh_starter/changeDirectory() *****************************************
+*  NAME
+*     changeDirectory() -- change to directory named in job config
+*
+*  SYNOPSIS
+*     static int changeDirectory(const char *jobdir) 
+*
+*  FUNCTION
+*     Reads the target working directory for a qrsh job from the jobs 
+*     configuration (<job spool dir>/config) and tries to 
+*     change the current working directory.
+*
+*  INPUTS
+*     const char *jobdir - the jobs spool directory
+*
+*  RESULT
+*     static int - 0, if an error occured
+*                  1, if function completed without errors
+*
+*******************************************************************************/
+static int changeDirectory(const char *jobdir) 
+{
+   char *configFileName = NULL;
+   char *cwd = NULL;
+
+   /* build path of configfile */
+   configFileName = (char *)malloc(strlen(jobdir) + strlen("config") + 2);
+
+   if(configFileName == NULL) {
+      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+      return 0;
+   }
+
+   sprintf(configFileName, "%s/config", jobdir);
+
+   /* read jobs config file */
+   if(read_config(configFileName) != 0) {
+      fprintf(stderr, MSG_QRSH_STARTER_CANNOTREADCONFIGFROMFILE_S, configFileName);
+      free(configFileName);
+      return 0;
+   }
+
+   /* get jobs target directory */
+   cwd = get_conf_val("cwd");
+
+   if(cwd == NULL) {
+      fprintf(stderr, "MSG_QRSH_STARTER_NOCWDINCONFIG");
+      free(configFileName);
+      return 0;
+   }
+
+   /* change to dir cwd */
+   if(chdir(cwd) == -1) {
+      fprintf(stderr, MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS, cwd, strerror(errno));
+      free(configFileName);
+      return 0;
+   }
+
+   free(configFileName);
+   return 1;
+}
+
+
+/****** Interactive/qrsh_starter/write_pid_file() ***************************************
 *
 *  NAME
 *     write_pid_file()  -- write a pid to file pid in $TMPDIR
@@ -178,14 +246,6 @@ static char *setEnvironment(const char *envFileName, char **wrapper)
 *     0, if an error occured. Possible error situations are:
 *        - the environement variable TMPDIR cannot be read
 *        - the file cannot be opened
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -221,7 +281,7 @@ static int write_pid_file(pid_t pid)
    return 1;
 }
 
-/****** qrsh_starter/forward_signal() ***************************************
+/****** Interactive/qrsh_starter/forward_signal() ***************************************
 *
 *  NAME
 *     forward_signal() -- forward a signal to qrsh_starter's child
@@ -236,16 +296,6 @@ static int write_pid_file(pid_t pid)
 *  INPUTS
 *     sig - the signal to forward
 *
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
 ****************************************************************************
 */
 static void forward_signal(int sig)
@@ -255,7 +305,7 @@ static void forward_signal(int sig)
    }
 }
 
-/****** qrsh_starter/split_command() *******************************************
+/****** Interactive/qrsh_starter/split_command() *******************************************
 *  NAME
 *     split_command() -- split commandline into tokens
 *
@@ -279,14 +329,8 @@ static void forward_signal(int sig)
 *  RESULT
 *     static int - the number of arguments or 0 if an error occured
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qrsh_starter/join_command()
+*     Interactive/qrsh_starter/join_command()
 *
 *******************************************************************************/
 static int split_command(char *command, char ***cmdargs) {
@@ -333,7 +377,7 @@ static int split_command(char *command, char ***cmdargs) {
    return argc;
 }
 
-/****** qrsh_starter/join_command() ********************************************
+/****** Interactive/qrsh_starter/join_command() ********************************************
 *  NAME
 *     join_command() -- join arguments to a single string
 *
@@ -353,14 +397,8 @@ static int split_command(char *command, char ***cmdargs) {
 *  RESULT
 *     static char* - the resulting commandline or NULL, if an error occured.
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qrsh_starter/split_command()
+*     Interactive/qrsh_starter/split_command()
 *
 *******************************************************************************/
 static char *join_command(int argc, char **argv) {
@@ -392,7 +430,7 @@ static char *join_command(int argc, char **argv) {
 }
 
 
-/****** qrsh_starter/startJob() ***************************************
+/****** Interactive/qrsh_starter/startJob() ***************************************
 *
 *  NAME
 *     startJob() -- start a shell with commands to execute
@@ -429,16 +467,10 @@ static char *join_command(int argc, char **argv) {
 *        - necessary memory cannot be allocated
 *        - executing the shell failed
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qrsh_starter/write_pid_file()
-*     qrsh_starter/split_command()
-*     qrsh_starter/join_command()
+*     Interactive/qrsh_starter/write_pid_file()
+*     Interactive/qrsh_starter/split_command()
+*     Interactive/qrsh_starter/join_command()
 *
 ****************************************************************************
 */
@@ -464,7 +496,7 @@ static int startJob(char *command, char *wrapper, int noshell)
       char *shell    = NULL;
       char *userName = NULL;
       int    argc = 0;
-      char **args = NULL;
+      const char **args = NULL;
       struct passwd *pw = NULL;
       char *cmd = NULL;
       int cmdargc;
@@ -545,7 +577,7 @@ static int startJob(char *command, char *wrapper, int noshell)
 #endif
 
       SETPGRP;
-      execvp(cmd, args);
+      execvp(cmd, (char *const *)args);
       /* exec failed */
       fprintf(stderr, MSG_QRSH_STARTER_EXECCHILDFAILED_S, args[0], strerror(errno));
       exit(EXIT_FAILURE);
@@ -555,7 +587,7 @@ static int startJob(char *command, char *wrapper, int noshell)
    return EXIT_FAILURE; 
 }
 
-/****** qrsh_starter/writeExitCode() ***************************************
+/****** Interactive/qrsh_starter/writeExitCode() ***************************************
 *
 *  NAME
 *    writeExitCode() -- write exit code of child process to file
@@ -581,14 +613,6 @@ static int startJob(char *command, char *wrapper, int noshell)
 *     EXIT_FAILURE, if one of the following errors occured:
 *        - the environment variable TMPDIR cannot be read
 *        - the file $TMPDIR/qrsh_exit_code cannot be written
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -636,7 +660,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
    return EXIT_SUCCESS;
 }
 
-/****** qrsh_starter/--Introduction-qrsh_starter ***************************************
+/****** Interactive/qrsh_starter/--Introduction ***************************************
 *
 *  NAME
 *     qrsh_starter -- start a command special correct environment
@@ -674,12 +698,8 @@ static int writeExitCode(int myExitCode, int programExitCode)
 *     env > ~/myenvironment
 *     rsh <hostname> qrsh_starter ~/myenvironment 
 *
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qsh/--Introduction-qsh
+*     Interactive/qsh/--Introduction
 *
 ****************************************************************************
 */
@@ -692,7 +712,7 @@ int main(int argc, char *argv[])
 
    /* check for correct usage */
    if(argc < 2) {
-      fprintf(stderr, "usage: %s <environment file> [<noshell>]\n", argv[0]);
+      fprintf(stderr, "usage: %s <job spooldir> [noshell]\n", argv[0]);
       exit(EXIT_FAILURE);        
    }
 
@@ -709,6 +729,11 @@ int main(int argc, char *argv[])
       writeExitCode(EXIT_FAILURE, 0);
       exit(EXIT_FAILURE);
    }   
+
+   if(!changeDirectory(argv[1])) {
+      writeExitCode(EXIT_FAILURE, 0);
+      exit(EXIT_FAILURE);
+   }
 
    /* start job */
    exitCode = startJob(command, wrapper, noshell);

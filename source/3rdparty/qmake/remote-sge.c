@@ -51,7 +51,7 @@ Boston, MA 02111-1307, USA.  */
 extern char *strerror(int errno);
 #endif
 
-/****** qmake/--Introduction-- ***************************************
+/****** Interactive/qmake/--Introduction ***************************************
 *
 *  NAME
 *     qmake -- Scheduled parallel distributed make
@@ -79,16 +79,14 @@ extern char *strerror(int errno);
 *     Build sge system: aimk -qmake -parallel 10
 *
 *  NOTES
-*     not yet internationalized
-*
-*  BUGS
-*
-*  SEE ALSO
+*     Not yet internationalized
+*     Should be updated to latest gmake version or (better) be contributed
+*     to the GNU make project
 *
 ****************************************************************************
 */
 
-/****** qmake/-typedefs- ***************************************
+/****** Interactive/qmake/-Typedefs ***************************************
 *
 *  NAME
 *     Typedefs -- type definitions
@@ -150,7 +148,7 @@ struct finished_job {
    int   coredump;
 } finished_job;
 
-/****** qmake/-defines- ***************************************
+/****** Interactive/qmake/-Defines ***************************************
 *
 *  NAME
 *     Defines -- constant and macro definitions
@@ -178,7 +176,7 @@ struct finished_job {
 #define WAIT_SLOT_TIME    5 /* [s]  */
 
 
-/****** qmake/-global_variables- ***************************************
+/****** Interactive/qmake/-Global_Variables ***************************************
 *
 *  NAME
 *     global Variables -- global Variables used for remote mechanism
@@ -303,7 +301,7 @@ static void read_and_save_remote_status();
 
 static int hostcmp(const char *h1, const char *h2);
 
-/****** qmake/remote_exit() ***************************************
+/****** Interactive/qmake/remote_exit() ***************************************
 *
 *  NAME
 *     remote_exit() -- exit qmake 
@@ -379,7 +377,7 @@ static void dump_hostfile() {
 }
 #endif
 
-/****** qmake/read_hostinfo() ***************************************
+/****** Interactive/qmake/read_hostinfo() ***************************************
 *
 *  NAME
 *     read_hostinfo() -- read info record from qmake hostfile
@@ -405,10 +403,8 @@ static void dump_hostfile() {
 *     on subsequent calls to read_hostinfo().
 *     It is in the responsibility of the caller to save values for later use.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/write_hostinfo()
+*     Interactive/qmake/write_hostinfo()
 *
 ****************************************************************************
 */
@@ -427,7 +423,7 @@ static struct hostfile_info *read_hostinfo()
  
    return &hostinfo;
 }
-/****** qmake/write_hostinfo() ***************************************
+/****** Interactive/qmake/write_hostinfo() ***************************************
 *
 *  NAME
 *     write_hostinfo() -- write info record to qmake hostfile
@@ -443,16 +439,8 @@ static struct hostfile_info *read_hostinfo()
 *  INPUTS
 *     hostinfo - pointer to structure hostfile_info to write to the hostfile
 *
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/read_hostinfo()
+*     Interactive/qmake/read_hostinfo()
 *
 ****************************************************************************
 */
@@ -467,7 +455,7 @@ static void write_hostinfo(const struct hostfile_info *hostinfo)
    }
 }
 
-/****** qmake/get_host_count() ***************************************
+/****** Interactive/qmake/get_host_count() ***************************************
 *
 *  NAME
 *     get_host_count() -- get number of entries in qmake hostfile
@@ -488,12 +476,10 @@ static void write_hostinfo(const struct hostfile_info *hostinfo)
 *     The filehandle "hostfile" (global variable) must have been initialized
 *     by a call to open(...) and be a valid qmake hostfile.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/-global_variables-
-*     qmake/init_remote
-*     qmake/create_hostfile
+*     Interactive/qmake/-Global_Variables
+*     Interactive/qmake/init_remote
+*     Interactive/qmake/create_hostfile
 *
 ****************************************************************************
 */
@@ -516,7 +502,7 @@ static int get_host_count()
 }
 
 
-/****** qmake/create_hostfile() ***************************************
+/****** Interactive/qmake/create_hostfile() ***************************************
 *
 *  NAME
 *     create_hostfile -- create special qmake hostfile
@@ -544,21 +530,13 @@ static int get_host_count()
 *     If any system call (file access) fails, qmake exits with an appropriate
 *     error description and error code.
 *
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
 *  NOTES
 *     The global variables sge_hostfile_name and hostfile_name must be
 *     initialized.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/-global_variables-
-*     qmake/init_remote()
+*     Interactive/qmake/-Global_Variables
+*     Interactive/qmake/init_remote()
 *
 ****************************************************************************
 */
@@ -628,7 +606,7 @@ static void create_hostfile()
    fclose(sge_hostfile);
 }
 
-/****** qmake/init_remote() ***************************************
+/****** Interactive/qmake/init_remote() ***************************************
 *
 *  NAME
 *     init_remote() -- initialize remote execution of jobs
@@ -646,21 +624,13 @@ static void create_hostfile()
 *
 *     Creates qmake hostfile
 *
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
 *  NOTES
 *     If an error occures, that makes remote execution impossible,
 *     qmake exits with an appropriate error message and error code.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/-global_variables-
-*     qmake/create_hostfile()
+*     Interactive/qmake/-Global_Variables
+*     Interactive/qmake/create_hostfile()
 *
 ****************************************************************************
 */
@@ -728,7 +698,7 @@ static void init_remote()
    }  
 }
 
-/****** qmake/lock_hostfile() ***************************************
+/****** Interactive/qmake/lock_hostfile() ***************************************
 *
 *  NAME
 *     lock_hostfile() -- get lock on hostfile
@@ -747,23 +717,15 @@ static void init_remote()
 *     If an error occurs when creating the lockfile, qmake exits with an 
 *     appropriate error message and error code.
 *
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
 *  NOTES
 *     Probably, a timeout for getting the lock should be introduced to 
 *     avoid deadlocks in case of errors.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/-defines-
-*     qmake/-global_variables-
-*     qmake/init_remote()
-*     qmake/unlock_hostfile()
+*     Interactive/qmake/-Defines
+*     Interactive/qmake/-Global_Variables
+*     Interactive/qmake/init_remote()
+*     Interactive/qmake/unlock_hostfile()
 *
 ****************************************************************************
 */
@@ -793,7 +755,7 @@ static void lock_hostfile()
    }
 }
 
-/****** qmake/unlock_hostfile() ***************************************
+/****** Interactive/qmake/unlock_hostfile() ***************************************
 *
 *  NAME
 *     unlock_hostfile() -- unlock hostfile
@@ -805,20 +767,10 @@ static void lock_hostfile()
 *     Remove the lock to the qmake hostfile.
 *     The lockfile (lockfile_name) is removed.
 *
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/-global_variables-
-*     qmake/init_remote()
-*     qmake/lock_hostfile()
+*     Interactive/qmake/-Global_Variables
+*     Interactive/qmake/init_remote()
+*     Interactive/qmake/lock_hostfile()
 *
 ****************************************************************************
 */
@@ -834,7 +786,7 @@ static void unlock_hostfile()
    }   
 }
 
-/****** qmake/unlock_hostentry() ***************************************
+/****** Interactive/qmake/unlock_hostentry() ***************************************
 *
 *  NAME
 *     unlock_hostentry() -- unlock one host in hostfile
@@ -853,16 +805,8 @@ static void unlock_hostfile()
 *     offset - offset to the host to be unlocked. Describes the position
 *              of the host in the hostfile, e.g. 2 for the 2nd host.
 *
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
-*     next_host();
+*     Interactive/qmake/next_host();
 *
 ****************************************************************************
 */
@@ -895,7 +839,7 @@ static void unlock_hostentry(off_t offset) {
    }
 }
 
-/****** qmake/next_host() ***************************************
+/****** Interactive/qmake/next_host() ***************************************
 *
 *  NAME
 *     next_host -- determine next free remote host
@@ -917,18 +861,8 @@ static void unlock_hostentry(off_t offset) {
 *     If an error occurs during file operations, qmake exits with an 
 *     appropriate error message and error code.
 *
-*  INPUTS
-*
 *  RESULT
 *     hostname - pointer to character string with name of host to use
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1012,7 +946,7 @@ static const char *next_host()
    return buffer;
 }
 
-/****** qmake/parse_options() ***************************************
+/****** Interactive/qmake/parse_options() ***************************************
 *
 *  NAME
 *     parse_options() -- split sge and gmake options
@@ -1035,14 +969,6 @@ static const char *next_host()
 *  RESULT
 *     if everything is OK: 1
 *     if no sge options found (no option --): 0 --> standard gmake
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1208,7 +1134,7 @@ static int parse_options(int *p_argc, char **p_argv[])
    return 1;
 }
 
-/****** qmake/inherit_job() ***************************************
+/****** Interactive/qmake/inherit_job() ***************************************
 *
 *  NAME
 *     inherit_job() -- is qmake option -inherit set?
@@ -1243,7 +1169,7 @@ static int inherit_job()
    return 0;
 }
 
-/****** qmake/set_default_options() ***************************************
+/****** Interactive/qmake/set_default_options() ***************************************
 *
 *  NAME
 *     set_default_options() -- initialize remote mechanism before gmake startup
@@ -1257,18 +1183,6 @@ static int inherit_job()
 *          the architecture (-l arch=$ARCH)
 *     If a system call failes (reading environment, malloc), qmake exits with
 *     an appropriate error message and error code.
-*
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1332,7 +1246,7 @@ void set_default_options()
 
 
 
-/****** qmake/equalize_nslots() ***************************************
+/****** Interactive/qmake/equalize_nslots() ***************************************
 *
 *  NAME
 *     equalize_nslots() -- equalize -j option with NSLOTS environment
@@ -1350,16 +1264,6 @@ void set_default_options()
 *  INPUTS
 *     p_argc - pointer to argument counter
 *     p_argv - pointer to argument vector
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1425,7 +1329,7 @@ static void equalize_nslots(int *p_argc, char **p_argv[])
    *p_argv = gmake_argv;
 }
 
-/****** qmake/equalize_pe_j() ***************************************
+/****** Interactive/qmake/equalize_pe_j() ***************************************
 *
 *  NAME
 *     equalize_pe_j() -- equalize no slots from -pe and -j option
@@ -1441,18 +1345,6 @@ static void equalize_nslots(int *p_argc, char **p_argv[])
 *     inserted into the sge options.
 *     If an error occurs (invalid -j option, malloc) qmake exits with
 *     an appropriate error message and error code.
-*
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1514,7 +1406,7 @@ static void equalize_pe_j()
 }
 
 
-/****** qmake/start_qrsh() ***************************************
+/****** Interactive/qmake/start_qrsh() ***************************************
 *
 *  NAME
 *     start_qrsh() -- start a scheduled qmake with qrsh
@@ -1532,18 +1424,6 @@ static void equalize_pe_j()
 *     The parent process waits for qrsh to exit and then exits with 
 *     the exit status from qrsh or EXIT_FAILURE, if qrsh exited because
 *     it was signaled.
-*
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1643,7 +1523,7 @@ static void start_qrsh()
 }
 
 
-/****** qmake/remote_options() ***************************************
+/****** Interactive/qmake/remote_options() ***************************************
 *
 *  NAME
 *     remote_options() -- initialize remote mechanism before gmake startup
@@ -1663,16 +1543,6 @@ static void start_qrsh()
 *  INPUTS
 *     p_argc - pointer to argument counter
 *     p_argv - pointer to argument vector
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 *
 ****************************************************************************
 */
@@ -1719,7 +1589,7 @@ void remote_options(int *p_argc, char **p_argv[])
    }
 }
 
-/****** qmake/remote_setup() ***************************************
+/****** Interactive/qmake/remote_setup() ***************************************
 *
 *  NAME
 *     remote_setup() -- setup remote mechanism after gmake startup
@@ -1735,20 +1605,12 @@ void remote_options(int *p_argc, char **p_argv[])
 *     If an error occurs in a system call (gethostname, gethostbyname, malloc)
 *     qmake exits with an appropriate error message and error code.
 *
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
 *  NOTES
 *     Initialization of localhost should be moved to init_remote.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/init_remote()
-*     qmake/remote_cleanup()
+*     Interactive/qmake/init_remote()
+*     Interactive/qmake/remote_cleanup()
 *
 ****************************************************************************
 */
@@ -1780,7 +1642,7 @@ void remote_setup ()
    }
 }
 
-/****** qmake/remote_cleanup() ***************************************
+/****** Interactive/qmake/remote_cleanup() ***************************************
 *
 *  NAME
 *     remote_cleanup() -- cleanup remote mechanism before exit
@@ -1793,19 +1655,11 @@ void remote_setup ()
 *        - hostfile
 *        - lockfile
 *
-*  INPUTS
-*
-*  RESULT
-*
-*  EXAMPLE
-*
 *  NOTES
 *     Probably not complete.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     remote_setup()
+*     Interactive/qmake/remote_setup()
 *
 ****************************************************************************
 */
@@ -1829,7 +1683,7 @@ void remote_cleanup ()
 }
 /* Return nonzero if the next job should be done remotely.  */
 
-/****** qmake/start_remote_job_p() ***************************************
+/****** Interactive/qmake/start_remote_job_p() ***************************************
 *
 *  NAME
 *     start_remote_job_p() -- shall next job be started remote?
@@ -1848,16 +1702,12 @@ void remote_cleanup ()
 *     start_remote - 0 if next job shall be started locally,
 *                    1 if it may be started remotely
 *
-*  EXAMPLE
-*
 *  NOTES
 *     Probably determination of next host to use and the decision, if this
 *     host is really the local host (-> local execution) should be done here.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/start_remote_job
+*     Interactive/qmake/start_remote_job
 *
 ****************************************************************************
 */
@@ -1892,7 +1742,7 @@ int start_remote_job_p (int first_p)
 }
 
 
-/****** qmake/is_recursive_make() ***************************************
+/****** Interactive/qmake/is_recursive_make() ***************************************
 *
 *  NAME
 *     is_recursive_make -- is a command to execute a recursive make?
@@ -1913,17 +1763,13 @@ int start_remote_job_p (int first_p)
 *     0, if no recursive make is detected
 *     1, if a recursive make is detected
 *
-*  EXAMPLE
-*
 *  NOTES
 *     This function will only detect directly called recursive make calls,
 *     if make is called from within a shellscript, it will not be detected.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/might_be_recursive_make()
-*     qmake/start_remote_job()
+*     Interactive/qmake/might_be_recursive_make()
+*     Interactive/qmake/start_remote_job()
 *
 ****************************************************************************
 */
@@ -1944,7 +1790,7 @@ static int is_recursive_make(const char *argv_0) {
    return 0;
 }
 
-/****** qmake/might_be_recursive_make() ***************************************
+/****** Interactive/qmake/might_be_recursive_make() ***************************************
 *
 *  NAME
 *     might_be_recursive_make -- might a command to exec be recursive make?
@@ -1966,8 +1812,6 @@ static int is_recursive_make(const char *argv_0) {
 *     1, if a potential recursive make is detected,
 *     0, else
 *
-*  EXAMPLE
-*
 *  NOTES
 *     This function will probably deliver true much too often.
 *     Imagine, you call qmake and the compiler is passed a define containing
@@ -1977,11 +1821,9 @@ static int is_recursive_make(const char *argv_0) {
 *     be executed locally without considering the number of slots reserved
 *     on this host - this behavior might lead to overload on the local host.
 *
-*  BUGS
-*
 *  SEE ALSO
-*     qmake/is_recursive_make()
-*     qmake/start_remote_job()
+*     Interactive/qmake/is_recursive_make()
+*     Interactive/qmake/start_remote_job()
 *
 ****************************************************************************
 */
@@ -2008,7 +1850,7 @@ static int might_be_recursive_make(char *argv[]) {
    a unique identification, and set *IS_REMOTE to zero if the job is local,
    nonzero if it is remote (meaning *ID_PTR is a process ID).  */
 
-/****** qmake/start_remote_job() ***************************************
+/****** Interactive/qmake/start_remote_job() ***************************************
 *
 *  NAME
 *     start_remote_job() -- start a remote job
@@ -2019,26 +1861,36 @@ static int might_be_recursive_make(char *argv[]) {
 *                          int *is_remote, int *id_ptr, int *used_stdin);
 *
 *  FUNCTION
+*     Starts a make task.
+*
+*     If the task is a recursive make call or looks as if it could be a 
+*     recursive make, it is started on the local host.
+*    
+*     The next free execution host is read from qmake's hostfile,
+*     if it is the localhost, the task is started locally.
+*
+*     The commandline and the tasks environment are setup and 
+*     the task is started by forking and executing qrsh -inherit ...
+*
+*     Some administrative information is passed back to the caller.
 *
 *  INPUTS
-*     argv       -
-*     envp       - 
-*     stdin_fd   - 
-*     is_remote  -
-*     id_ptr     -
-*     used_stdin -
+*     argv       - argument vector of task to start
+*     envp       - pointer to process environment
+*     stdin_fd   - stdin filehandle, if != 0, stdin will be closed in
+*                  calls to qrsh (qrsh -nostdin)
+*     is_remote  - will task be executed on remote host?
+*     id_ptr     - pid of forked child process
+*     used_stdin - did we use stdin?
 *
 *  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*     *** function is subject to bigger changes in the next weeks *** 
-*     *** no documentation yet                                    ***
-*
-*  BUGS
+*     0 if function completed successfully
 *
 *  SEE ALSO
+*     Interactive/qmake/next_host()
+*     Interactive/qmake/is_recursive_make()
+*     Interactive/qmake/might_be__recursive_make()
+*
 *
 ****************************************************************************
 */
@@ -2139,38 +1991,16 @@ int start_remote_job (char **argv, char **envp,
       /* parent */
       *is_remote = 1;
       *id_ptr = child_pid;
-      used_stdin = 0;
       jobs[next_job].pid = child_pid;
    } else {
       /* child */
       int argc, no_args, i;
       char **args;
 
-      if(exec_remote || recursive_make) {
-         char pwd_buffer[PATH_MAX + 1];
-         static char pwd_env[PATH_MAX + 5];
-         for(i = 0; envp[i] != NULL; i++) { 
-            if(strncmp(envp[i], "PWD=", 4) != 0) {
-               char *new_env;
-               new_env = (char *)malloc(strlen(envp[i]) + 1);
-               strcpy(new_env, envp[i]);
-               putenv(new_env);
-            }   
-         }
-         if(getcwd(pwd_buffer, PATH_MAX) == NULL) {
-            remote_exit(EXIT_FAILURE, "cannot determine current working directory", strerror(errno));
-         }
-         if(chdir(pwd_buffer) == -1) {
-            fprintf(stderr, "qmake: error changing dir to %s: %s\n", pwd_buffer, strerror(errno));
-         }
-         sprintf(pwd_env, "PWD=%s", pwd_buffer); 
-         putenv(pwd_env); 
-
-         if(getenv("JOB_ID")) {
-            static char buffer[1024];
-            sprintf(buffer, "PARENT=%s", getenv("JOB_ID"));
-            putenv(buffer);
-         }
+      if(getenv("JOB_ID")) {
+         static char buffer[1024];
+         sprintf(buffer, "PARENT=%s", getenv("JOB_ID"));
+         putenv(buffer);
       }
    
       argc = 0;
@@ -2179,7 +2009,7 @@ int start_remote_job (char **argv, char **envp,
       
       while(argv[no_args++]);
 
-      args = (char **)malloc((no_args + sge_v_argc + 6 + pass_cwd * 3 + be_verbose) * sizeof(char *));
+      args = (char **)malloc((no_args + sge_v_argc + 6 + pass_cwd + be_verbose) * sizeof(char *));
 
       if(exec_remote) {
          args[argc++] = "qrsh";
@@ -2198,8 +2028,6 @@ int start_remote_job (char **argv, char **envp,
 
          if(pass_cwd) {
             args[argc++] = "-cwd";
-            args[argc++] = "-v";
-            args[argc++] = "PWD";
          }
 
          for(i = 0; i < sge_v_argc; i++) {
@@ -2460,7 +2288,7 @@ static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump
       return -1;
    }
   
-#if !defined(LINUX) && !defined(SUN4)
+#ifdef WIFCONTINUED
    if(WIFCONTINUED(status)) {
       fprintf(stderr, "child %d is continuing\n", child_pid);
       return -1;
@@ -2473,7 +2301,7 @@ static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump
 
    if(WIFSIGNALED(status)) {
       *signal_ptr = WTERMSIG(status);
-#if !defined(AIX43) && !defined(SUN4) && !defined(AIX42)
+#ifdef WCOREDUMP
       *coredump_ptr = WCOREDUMP(status);
 #endif      
    }

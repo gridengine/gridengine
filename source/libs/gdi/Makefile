@@ -63,6 +63,8 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_resource.c \
          sge_feature.c \
          sge_security.c \
+         sge_range.c \
+         sge_job_jatask.c \
          version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
@@ -185,4 +187,11 @@ sge_feature.o: $(GDILIB_DIR)/sge_feature.c
 
 sge_security.o: $(GDILIB_DIR)/sge_security.c 
 		$(CC) $(CFLAGS) $(GCC_NOERR_CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_security.c
+
+sge_range.o: $(GDILIB_DIR)/sge_range.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_range.c
+
+sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_jatask.c
+
 

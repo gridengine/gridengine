@@ -411,7 +411,7 @@ Cardinal size
    if (type == QmonQMR_Type) {
       String *str_table = NULL;
       Cardinal itemCount;
-      String str1, str2;
+      StringConst str1, str2;
       int size, i;
       char buf[BUFSIZ];
       lListElem *ep = NULL;
@@ -640,10 +640,10 @@ Cardinal size
          for_each(ep, list) {
             if (first_time) {
                first_time = 0;
-               sprintf(buf, "%d", (int) lGetUlong(ep, JRE_job_number));
+               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
             }
             else
-               sprintf(buf, "%s %d", buf, (int)lGetUlong(ep, JRE_job_number));
+               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
          }
       }
       str = buf;
@@ -711,8 +711,7 @@ Cardinal size
          lListElem *ep = NULL;
          cull_parse_jid_hold_list(&sl, str); 
          for_each (ep, sl) {
-            u_long32 id = atol(lGetString(ep, STR));
-            lAddElemUlong(&ret_list, JRE_job_number, id, JRE_Type);
+            lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, STR), JRE_Type);
          }
          sl = lFreeList(sl);
       }
@@ -732,7 +731,7 @@ int type
    lListElem *ep;
    static char pair_string[ 10 * BUFSIZ];
    int nm1 = 0, nm2 = 0;
-   String field1, field2;
+   StringConst field1, field2;
    char delimitor[10];
    char comma[10];
    int set_comma = 0;

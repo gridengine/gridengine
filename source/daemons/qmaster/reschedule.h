@@ -38,7 +38,7 @@
 #define RESCHEDULE_HANDLE_JR_REMOVE    0x00000004
 #define RESCHEDULE_HANDLE_JR_WAIT      0x00000008
 
-void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, char *queue);
+void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);
  
 u_long32 skip_restarted_job(lListElem *host, lListElem *job_report, u_long32 job_number, u_long32 task_number);
  

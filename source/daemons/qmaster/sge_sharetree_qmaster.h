@@ -38,7 +38,7 @@ int sge_del_sharetree(lList **lpp, lList **alpp, char *ruser, char *rhost);
 
 int update_sharetree(lList **alpp, lList *dst, lList *src);
 
-lListElem *getNode(lList *share_tree, char *name, int node_type, int recurse);
+lListElem *getNode(lList *share_tree, const char *name, int node_type, int recurse);
 
 #endif /*  _SGE_SHARETREE_QMASTER_H_ */
 

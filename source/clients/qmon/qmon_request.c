@@ -491,7 +491,7 @@ XtPointer cld, cad;
    int type;
    char stringval[MAXHOSTLEN];
    int status = 0;
-   String strval;
+   StringConst strval;
    lListElem *ep = NULL;
    
 

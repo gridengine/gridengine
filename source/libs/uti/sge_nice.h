@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #ifdef SOLARIS
 #   include <sys/resource.h>
 #endif

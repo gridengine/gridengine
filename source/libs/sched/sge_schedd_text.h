@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
- 
-
 /*
 ** Code was former
 ** in sge_text.h ( sge_text() is now sge_schedd_text() )

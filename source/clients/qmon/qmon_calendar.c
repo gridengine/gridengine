@@ -159,7 +159,7 @@ lListElem *ep
 ) {
    XmString *items;
    Cardinal itemCount; 
-   char *s;
+   const char *s;
    int i;
    StringBufferT sb = {NULL, 0};
 
@@ -369,7 +369,7 @@ XtPointer cld, cad;
    lEnumeration *what;
    Boolean status = False;
    XmString xcalname = NULL;
-   String calname = NULL;
+   StringConst calname = NULL;
 
    DENTER(GUI_LAYER, "qmonCalendarOk");
    /*
@@ -487,9 +487,9 @@ XtPointer cld, cad;
 static void qmonCalendarSetAsk(
 lListElem *calp 
 ) {
-   String cal_name = NULL;
-   String year_calendar = NULL;
-   String week_calendar = NULL;
+   StringConst cal_name = NULL;
+   StringConst year_calendar = NULL;
+   StringConst week_calendar = NULL;
 
    DENTER(GUI_LAYER, "qmonCalendarSetAsk");
 

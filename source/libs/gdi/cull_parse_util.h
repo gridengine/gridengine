@@ -55,7 +55,7 @@ int parse_list_simple(lList *cmdline, char *option, lListElem *job, int field, i
 
 int parse_list_hardsoft(lList *cmdline, char *option, lListElem *job, int hard_field, int soft_field);
 
-int cull_parse_definition_list(char *str, lList **lpp, char *name, lDescr *descr, intprt_type *interpretation_rule);
+int cull_parse_definition_list(char *str, lList **lpp, const char *name, lDescr *descr, intprt_type *interpretation_rule);
 
 int cull_merge_definition_list(lList **lpp_old, lList *lp_new, int nm_var, int nm_value);
 
@@ -68,9 +68,9 @@ int cull_parse_job_list(char *str, lList **lpp, char *name, lDescr *descr, intpr
 
 char **string_list(char *str, char *delis, char **pstr);
 
-int cull_parse_string_list(char **pstrlist, char *listname, lDescr *descr, intprt_type *interpretation_rule, lList **pplist);
+int cull_parse_string_list(char **pstrlist, const char *listname, lDescr *descr, intprt_type *interpretation_rule, lList **pplist);
 
-int uni_print_list(FILE *fp, char *buff, u_long32 max_len, lList *lp, intprt_type *which_elements_rule, char *pdelis[], unsigned long flags);
+int uni_print_list(FILE *fp, char *buff, u_long32 max_len, lList *lp, intprt_type *which_elements_rule, const char *pdelis[], unsigned long flags);
 
 int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi); 
 int fprint_thresholds(FILE *fp, char *str, lList *thresholds, int print_slots); 

@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int get_qm_name(char *master_host, const char *master_file, char *err_str);
 
+int write_qm_name(char *master_host, const char *master_file, char *err_str);
 
-int get_qm_name(char *master_host, char *master_file, char *err_str);
-int write_qm_name(char *master_host, char *master_file, char *err_str);
-char *sge_get_master(int read_master_file);
+const char *sge_get_master(int read_master_file);
  
 #endif /* __QM_NAME_H */
 

@@ -98,8 +98,8 @@ lListElem *jatep
 ) {
    lListElem *qep, *queueep;
    const char *err_str;
-   char *qname; 
-   char *host;
+   const char *qname; 
+   const char *host;
    u_long32 jobid, state, jataskid;
    lListElem *hep;
    int enhanced_product_mode;
@@ -163,8 +163,7 @@ lListElem *jatep
     */
    if (((lGetUlong(jatep, JAT_state) & JDELETED) == JDELETED) ||
          (failed && !lGetString(jep, JB_exec_file))) {
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_JREMOVED, 
-         prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_JREMOVED);
       sge_log_dusage(jr, jep, jatep);
 
       sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), 1);
@@ -176,8 +175,7 @@ lListElem *jatep
       *    --> user did not exist at the execution machine
       */
    else if ((failed && general_failure==GFSTATE_JOB)) {
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_JERRORSET, 
-         prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_JERRORSET);
       DPRINTF(("set job "u32"."u32" in ERROR state\n", lGetUlong(jep, JB_job_number),
          jataskid));
       sge_log_dusage(jr, jep, jatep);
@@ -191,8 +189,7 @@ lListElem *jatep
    else if (((failed && (failed <= SSTATE_BEFORE_JOB)) || 
         general_failure)) {
       DTRACE;
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_JNOSTARTRESCHEDULE, 
-              prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE);
       sge_commit_job(jep, jatep, 2, 1);
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
@@ -206,8 +203,7 @@ lListElem *jatep
              (lGetUlong(jep, JB_checkpoint_attr) & ~NO_CHECKPOINT)) ||
              (!lGetUlong(jep, JB_restart) && lGetUlong(queueep, QU_rerun)))) {
       DTRACE;
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_JRERUNRESCHEDULE, 
-               prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
@@ -218,8 +214,7 @@ lListElem *jatep
    }
    else if (failed == SSTATE_MIGRATE) {
       DTRACE;
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_JCKPTRESCHEDULE,  
-              prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_JCKPTRESCHEDULE);
       /* job_restarted == 2 means a checkpoint in the ckpt arena */
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
@@ -230,8 +225,7 @@ lListElem *jatep
       sge_commit_job(jep, jatep, 2, 1);
    }
    else if (failed == SSTATE_AGAIN) {
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_JNORESRESCHEDULE,
-              prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_JNORESRESCHEDULE);
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
@@ -241,8 +235,7 @@ lListElem *jatep
       sge_commit_job(jep, jatep, 2, 1);
    }
    else {
-      job_log(lGetUlong(jep, JB_job_number), MSG_LOG_EXITED, 
-              prognames[me.who], me.unqualified_hostname);
+      job_log(jobid, jataskid, MSG_LOG_EXITED);
       sge_log_dusage(jr, jep, jatep);
       sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), 1);
    }

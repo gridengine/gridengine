@@ -1,7 +1,5 @@
 #!/bin/sh
 #
-# (c) 2000, 2001 Sun Microsystems, Inc.
-#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -55,8 +53,8 @@
 
 PATH=/bin:/usr/bin
 
-ARCH=`$CODINE_ROOT/util/arch`
-HOST=`$CODINE_ROOT/utilbin/$ARCH/gethostname -name`
+ARCH=`$SGE_ROOT/util/arch`
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 ls_log_file=/tmp/ls.dbg
 

@@ -47,17 +47,32 @@
 int fqdn_cmp = 0;
 char *default_domain = NULL;
 
-/*-------------------------------------------------------------------
- * sge_basename
- *
- * returns: pointer to base of name after delimter
- *          NULL if "name" is NULL or zero length string or delimiter is 
- *          last character in "name"
- *-------------------------------------------------------------------*/
-char *sge_basename(
-char *name,
-int delim 
-) {
+/****** uti/string/sge_basename() **********************************************
+*  NAME
+*     sge_basename() -- get basename for path
+*
+*  SYNOPSIS
+*     char* sge_basename(const char *name, int delim) 
+*
+*  FUNCTION
+*     Determines the basename for a path like string - the last field of a
+*     string where fields are separated by a fixed one character delimiter.
+*
+*  INPUTS
+*     const char *name - contains the input string (path)
+*     int delim        - delimiter
+*
+*  RESULT
+*     char* - pointer to base of name after the last delimter
+*             NULL if "name" is NULL or zero length string or delimiter is 
+*             the last character in "name"
+*
+*  EXAMPLE
+*     sge_basename("/usr/local/bin/flex", '/'); returns "flex"
+*
+*******************************************************************************/
+const char *sge_basename(const char *name, int delim) 
+{
    char *cp;
 
    DENTER(BASIS_LAYER, "sge_basename");
@@ -70,7 +85,7 @@ int delim
    cp = strrchr(name, delim);
    if (!cp) {
       DEXIT;
-      return name;
+      return name; 
    }
    else {
       cp++;
@@ -97,7 +112,7 @@ int delim
  *          but is mostly used to strip off the domainname of a FQDN
  *-------------------------------------------------------------------*/
 char *sge_dirname(
-char *name,
+const char *name,
 int delim 
 ) {
    char *cp, * cp2;
@@ -397,7 +412,7 @@ char *str
 char *sge_delim_str(
 char *str,
 char **delim_pos,
-char *delim 
+const char *delim 
 ) {
    char *cp, *tstr;
 
@@ -432,8 +447,7 @@ char *delim
 }
 
 /************************************************/
-char *stradd(cp1, cp2, res)
-char *cp1, *cp2, *res;
+char *stradd(const char *cp1, const char *cp2, char *res)
 {
    strcpy(res, cp1);
    strcat(res, cp2);
@@ -457,10 +471,8 @@ char *cp1, *cp2, *res;
    **   these are treated as being less than any not-NULL string
    **   important for sorting lists where NULL strings can occur
  */
-int sge_strnullcmp(
-char *a,
-char *b 
-) {
+int sge_strnullcmp(const char *a, const char *b) 
+{
    if (!a && b)
       return -1;
    if (a && !b)
@@ -486,8 +498,8 @@ char *b
    **   like sge_strnullcmp, only insensitive to case
  */
 int sge_strnullcasecmp(
-char *a,
-char *b 
+const char *a,
+const char *b 
 ) {
    if (!a && b)
       return -1;
@@ -506,9 +518,9 @@ char *b
    
    returns 0 if filename is correct 
  ***********************************************************************/
-int check_fname(char *fname)
+int check_fname(const char *fname)
 {
-   char *cp = fname;
+   const char *cp = fname;
 
    if (!fname)
       return 1;
@@ -523,9 +535,7 @@ int check_fname(char *fname)
 
 
 /* test whether a string contains a wildcard pattern */
-int sge_is_pattern(
-char *s 
-) {
+int sge_is_pattern(const char *s) {
    char c;
    while ((c = *s++)) {
       if (strchr("*?[]", c))

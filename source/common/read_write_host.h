@@ -38,7 +38,8 @@
 #define CULL_READ_SPOOL 1
 #define CULL_READ_HISTORY 2
 
-lListElem *cull_read_in_host(char *dirname, char *filename, int spool, int type, int *tag, int fields[]);
+lListElem *cull_read_in_host(const char *dirname, const char *filename, 
+                             int spool, int type, int *tag, int fields[]);
 
 char *write_host(int spool, int how, lListElem *ep, int nm, char *file);
 

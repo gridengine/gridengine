@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 
 #ifndef WIN32NATIVE
 #	include <grp.h>
@@ -593,9 +594,8 @@ int max
 
 /*****************************************************************/
 int sge_unlink(
-char *prefix,
-char *suffix 
-
+const char *prefix,
+const char *suffix 
 ) {
    int status;
    stringT str;
@@ -617,6 +617,7 @@ char *suffix
    status = unlink(str);
 
    if (status) {
+      ERROR((SGE_EVENT, "ERROR: "SFN"\n", strerror(errno)));
       DEXIT;
       return -1;
    }
@@ -627,12 +628,11 @@ char *suffix
 }
 
 /************************************************************************/
-char *sge_getenv(
-char *env_str 
-
+const char *sge_getenv(
+const char *env_str 
 ) {
 
-   char *cp=NULL;
+   const char *cp=NULL;
 
    DENTER(BASIS_LAYER, "sge_getenv");
 
@@ -686,7 +686,7 @@ int usec
  returning 0 means OK.
  ***************************************************/
 int verify_filename(
-char *fname 
+const char *fname 
 ) {
    int i=0;
 
@@ -719,7 +719,7 @@ char *fname
  *    CL_FIRST_FREE_EC+2   can't connect to commd
  *-------------------------------------------------------------------------*/
 int check_isalive(
-char *masterhost 
+const char *masterhost 
 ) {
    int alive = 0;
 

@@ -43,9 +43,15 @@
 
 int is_array(lListElem *job); 
 
+int job_get_number_of_ja_tasks(lListElem *job);
+
 lListElem *search_task(u_long32 jataskid, lListElem *job);
 
-int get_ja_task_ids(lListElem *job, u_long32 *start, u_long32 *end, u_long32 *step);
+int job_get_ja_task_ids(lListElem *job, u_long32 *start, u_long32 *end, 
+                        u_long32 *step);
+
+int job_set_ja_task_ids(lListElem *job, u_long32 start, u_long32 end,
+                        u_long32 step); 
 
 int job_log_alljobs(void);
 

@@ -44,6 +44,7 @@
 #include "cull_pack.h"
 #include "cull_sort.h"
 #include "cull_tree.h"
+#include "cull_hash.h"
 #include "pack.h"
 
 #endif /* __CULL_H */

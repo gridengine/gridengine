@@ -113,10 +113,12 @@ extern char execd_spool_dir[SGE_PATH_MAX];
 /* import Master Job List */
 extern lList *Master_Job_List;
 
+#if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
 /* local functions */
 static int addgrpid_already_in_use(long);
 static long get_next_addgrpid(lList *, long);
+#endif
 #endif
 
 /* 
@@ -139,7 +141,7 @@ lListElem *slave_jatep
          JAT_granted_destin_identifier_list)), JG_queue));
    else {
       /* seek responsible queue for this task in gdil of slave job */
-      char *qnm;
+      const char *qnm;
       lListElem *gdil_ep;
 
       qnm = lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
@@ -157,6 +159,7 @@ lListElem *slave_jatep
    return master_q;
 }
 
+#if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
 static long get_next_addgrpid(
 lList *rlp,
@@ -214,6 +217,7 @@ long add_grp_id
    }
    return (0);
 }
+#endif
 #endif
 
 /****** execd/add_or_replace_env() ***************************************
@@ -448,7 +452,7 @@ static const char *get_sharedlib_path_name(void) {
 /****** execd/set_sharedlib_path() ***************************************
 *
 *  NAME
-*     set_sharedlib_path -- dump environment from list to file
+*     set_sharedlib_path -- set the shared library search path
 *
 *  SYNOPSIS
 *     void set_sharedlib_path(lList environmentList);
@@ -492,15 +496,16 @@ static void set_sharedlib_path(lList *environmentList) {
 
    /* if allready in environment: extend by SGE sharedlib path, else set */
    if((sharedlib_elem = lGetElemStr(environmentList, VA_variable, sharedlib_path_name)) != NULL) {
-      char *old_value = lGetString(sharedlib_elem, VA_value);
+      const char *old_value = lGetString(sharedlib_elem, VA_value);
+
       if(old_value && strlen(old_value) > 0) {
          DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
-         lWriteElemTo(sharedlib_elem, stderr);
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + strlen(sge_sharedlib_path) + 1);
          strcpy(sharedlib_path, sge_sharedlib_path);
          strcat(sharedlib_path, ":");
          strcat(sharedlib_path, old_value);
          lSetString(sharedlib_elem, VA_value, sharedlib_path);
+         free(sharedlib_path);
       } else {
          DPRINTF(("overwriting empty sharedlib path %s\n", sharedlib_path_name));
          lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
@@ -511,6 +516,7 @@ static void set_sharedlib_path(lList *environmentList) {
       lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
    }
 
+   free(sge_sharedlib_path);
    DEXIT;
 }
 
@@ -543,14 +549,17 @@ char *err_str
    SGE_STRUCT_STAT buf;
    int used_slots, pe_slots = 0, host_slots = 0, nhosts = 0;
    static lList *processor_set = NULL;
-   char *cp, *shell;
-   char *cwd;
+   const char *cp;
+   char *shell;
+   const char *cwd = NULL;
    lList *cplx;
    char dce_wrapper_cmd[128];
-   
+
+#if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
    static gid_t last_addgrpid;
 #endif
+#endif   
 
    char dir[SGE_PATH_MAX], 
         shepherd_path[SGE_PATH_MAX], 
@@ -712,7 +721,7 @@ char *err_str
          int slots;
          lListElem *qep;
          lList *alp = NULL;
-         char *q_set;
+         const char *q_set;
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
          qep = lFirst(lGetList(gdil_ep, JG_queue)); 
@@ -766,7 +775,7 @@ char *err_str
    }
 
    if (slave_jep) {
-      char *s, *name;
+      const char *s, *name;
       int n = strlen(COMPLEX2ENV_PREFIX);
       for_each(env, lGetList(slave_jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
@@ -778,22 +787,8 @@ char *err_str
       }
    }
 
-   /* write PWD, might get overridden by task environment */
-   if (lGetString(job_jep, JB_cwd)) { 
-      static char cwd_out[SGE_PATH_MAX];
-      
-      /* path aliasing only for cwd flag set */
-      get_path_alias(lGetString(job_jep, JB_cwd), cwd_out, SGE_PATH_MAX, 
-               lGetList(job_jep, JB_path_aliases), me.qualified_hostname, NULL);
-      cwd = cwd_out;
-   }
-   else 
-      cwd = pw->pw_dir;
-
-   add_or_replace_env(environmentList, "PWD", cwd);
-
    {
-      char *s, *name;
+      const char *s, *name;
       int n = strlen(COMPLEX2ENV_PREFIX);
       for_each(env, lGetList(jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
@@ -804,6 +799,35 @@ char *err_str
          add_or_replace_env(environmentList, name, s ? s : "");
       }
    }
+  
+   /* in case of pe task: 
+   ** jep = pe task
+   ** slave_jep = job_jep = job 
+   */
+   /* write PWD and set, might get overridden by task environment */
+   
+   /* 1.) try to read cwd from pe task */
+   if(slave_jep) {
+      cwd = lGetString(jep, JB_cwd);
+   } 
+
+   /* 2.) try to read cwd from job */
+   if(cwd == NULL) {
+      cwd = lGetString(job_jep, JB_cwd);
+   }
+
+   /* 3.) if task or job set cwd: do path mapping */
+   if(cwd != NULL) {
+      static char cwd_out[SGE_PATH_MAX];
+     
+      /* path aliasing only for cwd flag set */
+      get_path_alias(cwd, cwd_out, SGE_PATH_MAX, 
+               lGetList(job_jep, JB_path_aliases), me.qualified_hostname, NULL);
+      cwd = cwd_out;
+      add_or_replace_env(environmentList, "PWD", cwd);
+   }
+   else 
+      cwd = pw->pw_dir;
 
    if (lGetString(job_jep, JB_sge_o_home)) {
       if (set_sge_environment) 
@@ -891,7 +915,8 @@ char *err_str
    ** login jobs have LOGIN
    */
    if (lGetString(jep, JB_script_file)) {
-      char *s;
+      const char *s;
+
       /* build basename */ 
       s=strrchr(lGetString(jep, JB_script_file), '/');
       if (s) 
@@ -1342,8 +1367,14 @@ char *err_str
       lListElem *se;
       int nargs=1;
       fprintf(fp, "njob_args=%d\n", lGetNumberOfElem(lGetList(jep, JB_job_args)));
-      for_each(se, lGetList(jep, JB_job_args)) 
-         fprintf(fp, "job_arg%d=%s\n", nargs++, lGetString(se, STR));
+      for_each(se, lGetList(jep, JB_job_args)) {
+         const char *arg = lGetString(se, STR);
+         if(arg != NULL) {
+            fprintf(fp, "job_arg%d=%s\n", nargs++, arg);
+         } else {
+            fprintf(fp, "job_arg%d=\n", nargs++);
+         }
+      }   
 
    }
 
@@ -1420,7 +1451,7 @@ char *err_str
    /* config for interactive jobs */
    {
       lListElem *tmp_elem;
-      char *tmp_string;
+      const char *tmp_string;
       u_long32 qrsh_task_id = 0;
       u_long32 jb_now = lGetUlong(jep, JB_now); 
 
@@ -1542,7 +1573,7 @@ char *err_str
    else if (feature_is_enabled(FEATURE_AFS_SECURITY) && conf.pag_cmd &&
             strlen(conf.pag_cmd) && strcasecmp(conf.pag_cmd, "none")) {
       int fd, len;
-      char *cp;
+      const char *cp;
 
       if (SGE_STAT(coshepherd_path, &buf)) {
          shepherd_name = SGE_COSHEPHERD;
@@ -1854,7 +1885,7 @@ char *err_str
    };
 
    int i, failed = 0;
-   char *s;
+   const char *s;
    lListElem *attr;
 
    DENTER(TOP_LAYER, "arch_dep_config");
@@ -1889,7 +1920,7 @@ lList *cplx,
 lListElem *job,
 char *err_str 
 ) {
-   char *s, *name;
+   const char *s, *name;
    lListElem *env, *attr;
    int n;
 

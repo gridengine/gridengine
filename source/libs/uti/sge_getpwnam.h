@@ -32,9 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-struct passwd *sge_getpwnam(char *name);
+struct passwd *sge_getpwnam(const char *name);
  
 #endif /* __SGE_GETPWNAM_H */
 

@@ -116,14 +116,14 @@ FPRINTF_ERROR:
 }
 
 
-char *read_adminuser_from_configuration(
-char *fname, 
-char *conf_name,
+const char *read_adminuser_from_configuration(
+const char *fname, 
+const char *conf_name,
 u_long32 flags 
 ) {
    lListElem *el = NULL;
    lListElem *conf = NULL;
-   char *ret = NULL;
+   const char *ret = NULL;
 
    DENTER(TOP_LAYER, "read_adminuser_from_configuration");
 
@@ -150,8 +150,8 @@ u_long32 flags
  * conf_name: Internal name of configuration
  *---------------------------------------------------------*/
 lListElem *read_configuration(
-char *fname,
-char *conf_name,
+const char *fname,
+const char *conf_name,
 u_long32 flags 
 ) {
    FILE *fp;

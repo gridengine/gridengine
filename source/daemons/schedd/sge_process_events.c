@@ -83,6 +83,7 @@
 #include "job.h"
 #include "msg_schedd.h"
 #include "scheduler.h"
+#include "job_log.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -487,7 +488,7 @@ int sge_process_all_events(lList *event_list) {
    lList *data_list, **lpp;
    lListElem *event, *ep, *ja_task = NULL;
    u_long32 number, type, intkey, intkey2;
-   char *strkey;
+   const char *strkey;
    int ret;
    int sge_mode = feature_is_enabled(FEATURE_SGEEE);
    int rebuild_categories = 0, 
@@ -638,6 +639,8 @@ int sge_process_all_events(lList *event_list) {
                      if (!sge_mode && user_sort)
                         at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
                   }
+
+                  job_log(lGetUlong(ep, JB_job_number), lGetUlong(ja_task, JAT_task_number), "arrived at schedd");
                }
                /* put it in sort order into the list */
                lAppendElem(lists.job_list, ep);
@@ -648,7 +651,7 @@ int sge_process_all_events(lList *event_list) {
                   at_register_job_array(ep);
                sge_add_job_category(ep, lists.acl_list);
 
-               get_ja_task_ids(ep, &start, &end, &step);
+               job_get_ja_task_ids(ep, &start, &end, &step);
                if (is_array(ep)) {
                   DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", lGetUlong(ep, JB_job_number),
                      start, end, step));
@@ -798,11 +801,6 @@ int sge_process_all_events(lList *event_list) {
                JAT_pending_signal_delivery_time,
                JAT_pid,
                JAT_fshare,
-               JAT_ticket,
-               JAT_oticket,
-               JAT_dticket,
-               JAT_fticket,
-               JAT_sticket,
                JAT_suitable,
 
                JAT_job_restarted, /* BOOL <-> ULONG */
@@ -822,6 +820,11 @@ int sge_process_all_events(lList *event_list) {
             static int double_nm[] =
             {
                JAT_share,
+               JAT_ticket,
+               JAT_oticket,
+               JAT_dticket,
+               JAT_fticket,
+               JAT_sticket,
                NoName
             };
 

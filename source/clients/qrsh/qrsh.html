@@ -52,7 +52,7 @@ Controll flow</h1>
 <h2>
 Remote execution</h2>
 If a user submits a job with qrsh, the following actions are taken
-<ul>
+<ol>
 <li>
 The commandline is parsed and split into codine options and commandline
 to be executed</li>
@@ -100,15 +100,15 @@ code, it communicates the exitcode to qrsh</li>
 <li>
 qrsh exits with the exitcode of the command or an error, if an error in
 the mechanism occurred.</li>
-</ul>
-<img SRC="process_flow1.gif" NAME="Graphic1" BORDER=0 height=788 width=1121 align=RIGHT>
+</ol>
+<img SRC="process_flow1.gif" NAME="Graphic1" BORDER=0 height=788 width=1121 align=TEXTTOP>
 <br>&nbsp;
 <br>&nbsp;
 <h2>
 Remote login</h2>
 If a user submits a login session with qrsh (rlogin), the following actions
 are taken
-<ul>
+<ol>
 <li>
 The commandline is parsed (codine options)</li>
 
@@ -151,8 +151,8 @@ will communicate the job end to qrsh</li>
 <li>
 qrsh exits with the exitcode 0 or an error, if an error in the mechanism
 occurred.</li>
-</ul>
-<img SRC="process_flow2.gif" NAME="Graphic2" BORDER=0 height=788 width=1121 align=LEFT>
+</ol>
+<img SRC="process_flow2.gif" NAME="Graphic2" BORDER=0 height=788 width=1121 align=TEXTTOP>
 <br>&nbsp;
 <br>&nbsp;
 <br>&nbsp;

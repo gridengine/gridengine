@@ -227,7 +227,7 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     create_shell_script -- create a /bin/sh script file 
 #
 #  SYNOPSIS
-#     create_shell_script { scriptfile exec_command exec_arguments } 
+#     create_shell_script { scriptfile exec_command exec_arguments {envlist ""}} 
 #
 #  FUNCTION
 #     This procedure generates a script which will execute the given command. 
@@ -239,12 +239,14 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     scriptfile     - full path and name of scriptfile to generate 
 #     exec_command   - command to execute 
 #     exec_arguments - command parameters 
+#     {envlist ""}   - array with environment settings to export
 #
 #  RESULT
 #     no results 
 #
 #  EXAMPLE
-#     ??? 
+#     set envlist(COLUMNS) 500
+#     create_shell_script "/tmp/script.sh" "ps" "-ef" "envlist" 
 #
 #  NOTES
 #     ??? 
@@ -254,14 +256,21 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #
 #  SEE ALSO
 #     file_procedures/get_dir_names
+#     file_procedures/create_path_aliasing_file()
+#
 #*******************************
-proc create_shell_script { scriptfile exec_command exec_arguments } {
+proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} } {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
-
+ 
+   upvar $envlist users_env
+ 
+   
 
    set script [ open "$scriptfile" "w" ]
 
+
+   
 
    # script header
    puts $script "#!/bin/sh"
@@ -281,6 +290,15 @@ proc create_shell_script { scriptfile exec_command exec_arguments } {
    puts $script "   export COMMD_PORT"
    puts $script "   export SGE_ROOT"
    puts $script "fi"
+
+   foreach u_env [ array names users_env ] {
+      set u_val [set users_env($u_env)] 
+      debug_puts "setting $u_env to $u_val"
+      puts $script "${u_env}=${u_val}"
+      puts $script "export ${u_env}"
+   }
+
+
    puts $script "echo \"_start_mark_:(\$?)\""
    puts $script "$exec_command $exec_arguments"
    puts $script "exit_val=\"\$?\""
@@ -368,7 +386,7 @@ proc get_binary_path { hostname binary } {
    if { [file exists $config] } {
       set file_p [ open $config r ]
       set line_no 0
-      while { [gets $file_p line] > 0 } {
+      while { [gets $file_p line] >= 0 } {
          if { [string first "#" $line ] == 0 } {
             debug_puts "found comment in line $line_no"
             incr line_no 1
@@ -892,6 +910,89 @@ proc delete_directory { path } {
       set return_value -1
    }
   return $return_value
+}
+
+
+
+#****** file_procedures/create_path_aliasing_file() ****************************
+#  NAME
+#     create_path_aliasing_file() -- ??? 
+#
+#  SYNOPSIS
+#     create_path_aliasing_file { filename data elements } 
+#
+#  FUNCTION
+#     This procedure will create a path aliasing file.
+#
+#  INPUTS
+#     filename - full path file name of path aliasing file
+#     data     - data array with following fields:
+#                arrayname(src-path,$i)
+#                arrayname(sub-host,$i)
+#                arrayname(exec-host,$i)
+#                arrayname(replacement,$i)
+#                where $i is the index number of each entry 
+#     elements - nr. of entries (starting from zero)
+#
+#  EXAMPLE
+#     set data(src-path,0)     "/tmp_mnt/"
+#     set data(sub-host,0)     "*"
+#     set data(exec-host,0)    "*" 
+#     set data(replacement,0)  "/home/"
+#     create_path_aliasing_file /tmp/test.txt data 1
+#      
+#  SEE ALSO
+#     file_procedures/create_shell_script()
+#     
+#    
+#*******************************************************************************
+proc create_path_aliasing_file { filename data elements} {
+   global CHECK_OUTPUT
+ 
+   upvar $data mydata 
+    
+# Path Aliasing File
+# src-path   sub-host   exec-host   replacement
+#     /tmp_mnt/    *          *           /
+# replaces any occurrence of /tmp_mnt/ by /
+# if submitting or executing on any host.
+# Thus paths on nfs server and clients are the same
+
+#     <sge_root>/<cell>/common/sge_aliases    global alias file
+#     $HOME/.sge_aliases                         user local aliases file
+
+   if { [ file isfile $filename ] == 1 } {
+      add_proc_error "create_path_aliasing_file" -1 "file $filename already exists"
+      return
+   }
+
+   puts $CHECK_OUTPUT "creating path alias file: $filename"
+   set fout [ open "$filename" "w" ] 
+   puts $fout "# testsuite automatic generated Path Aliasing File\n# \"$filename\""
+   puts $fout "# src-path   sub-host   exec-host   replacement"
+   puts $fout "#     /tmp_mnt/    *          *           /"
+   puts $fout "# replaces any occurrence of /tmp_mnt/ by /"
+   puts $fout "# if submitting or executing on any host."
+   puts $fout "# Thus paths on nfs server and clients are the same"
+   puts $fout "##########"
+   puts $fout "# <sge_root>/<cell>/common/sge_aliases    global alias file"
+   puts $fout "# \$HOME/.sge_aliases                         user local aliases file"
+   puts $fout "##########"
+   puts $fout "# src-path   sub-host   exec-host   replacement"
+   for { set i 0} { $i < $elements} { incr i 1 } {
+       if { [info exists mydata(src-path,$i) ] != 1 } {
+          add_proc_error "create_path_aliasing_file" -1 "array has no (src-path,$i) element"
+          break
+       } 
+       set    line "[ set mydata(src-path,$i) ]\t"
+       append line "[ set mydata(sub-host,$i) ]\t" 
+       append line "[ set mydata(exec-host,$i) ]\t"
+       append line "[ set mydata(replacement,$i) ]"
+       puts $fout $line
+   } 
+   flush $fout
+   close $fout
+   puts $CHECK_OUTPUT "closing file"
 }
 
 

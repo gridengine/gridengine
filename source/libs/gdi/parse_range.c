@@ -49,17 +49,18 @@
 /***** functions **********************************/
 
 static void expand_range_list(lListElem *r, lList **rl);
-static lListElem* extract_range(char *, int step_allowed, lList **alpp, int inf_allowed);
 
-
+static lListElem* extract_range(const char *rstr, int step_allowed, 
+                                lList **alpp, int inf_allowed);
 
 static lListElem *extract_range(
-char *rstr,
+const char *rstr,
 int step_allowed,
 lList **alpp,
 int inf_allowed 
 ) {
-   char *old_str,*dptr;
+   const char *old_str;
+   char *dptr;
    u_long32 rmin, rmax, ldummy, step = 1;
    lListElem *r;
    char msg[BUFSIZ];
@@ -223,13 +224,14 @@ static void expand_range_list(
 lListElem *r,
 lList **rl 
 ) {
-   u_long32 rmin, rmax;
+   u_long32 rmin, rmax, rstep;
    lListElem *ep, *rr;
 
    DENTER(TOP_LAYER, "expand_range_list");
 
    rmin = lGetUlong(r, RN_min);
    rmax = lGetUlong(r, RN_max);
+   rstep = lGetUlong(r, RN_step);
 
    /* create list */
    if ( !*rl ) {
@@ -240,7 +242,11 @@ lList **rl
       ep = lFirst(*rl);
       while (ep) {
 
-         if (rmin > lGetUlong(ep, RN_max)) {
+         if (rstep != lGetUlong(ep, RN_step) || rstep > 1 || 
+             lGetUlong(ep, RN_step) > 1) {
+            lInsertElem(*rl, NULL, r);
+            break;
+         } else if (rmin > lGetUlong(ep, RN_max)) {
 
             /* 
             ** r and ep are non-overlapping and r is to be
@@ -346,15 +352,9 @@ lList **rl
    answer list and returns NULL, *alpp must be NULL !
 
 */
-lList *parse_ranges(
-char *str,
-int just_parse,
-int step_allowed,
-lList **alpp,
-lList **rl,
-int inf_allowed 
-) {
-   char *s;
+lList *parse_ranges(const char *str, int just_parse, int step_allowed,
+                    lList **alpp, lList **rl, int inf_allowed) {
+   const char *s;
    lListElem *r = NULL;
    lList *range_list = NULL;
    int undefined = 0, first = 1;

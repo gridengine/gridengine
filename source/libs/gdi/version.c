@@ -30,17 +30,28 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+const char GDI_VERSION[] = "5.3beta1";
+
 #ifdef ADD_COPYRIGHT
 #  include "copyright.h"
 #endif
 
-char GDI_VERSION[] = "5.3 alpha1";
+#if !(ADD_COPYRIGHT || ADD_SUN_COPYRIGHT)
+char SFLN_ELN[] = "\n\
+   Grid Engine is based on code donated by Sun Microsystems.\n\
+   The copyright is owned by Sun Microsystems and other contributors.\n\
+   It has been made available to the open source community under the SISSL license.\n\
+   For further information and the latest news visit: @fBhttp://gridengine.sunsource.net\n\n";
 
-char DQS_ACK[] = "\n\
+const char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\
 Florida State University in creating the DQS program.\n";
 
-char SISSL[] = "\n\
+#endif
+
+#ifndef ADD_SUN_COPYRIGHT
+
+const char SISSL[] = "\n\
 The Contents of this file are made available subject to the terms of\n\
 the Sun Industry Standards Source License Version 1.2\n\
 \n\
@@ -67,4 +78,4 @@ Copyright: 2001 by Sun Microsystems, Inc.\n\
 \n\
 All Rights Reserved.\n"; 
 
-
+#endif /* ADD_SUN_COPYRIGHT */

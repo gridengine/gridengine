@@ -76,7 +76,7 @@ u_long32 program_number         /* internal program number */
 #ifdef WIN32NATIVE
    char *envs;	
 #endif /* WIN32NATIVE */
-   char *cp;
+   const char *cp;
    stringT tmp_str;
 
 #ifndef WIN32

@@ -612,6 +612,11 @@ XtPointer cld, cad;
    }
 
    ep = lGetElemStr(qmonMirrorList(SGE_USERSET_LIST), US_name, usetname);
+   if (usetname && !strcmp(usetname, DEFAULT_DEPARTMENT)) 
+      XtSetSensitive(manop_modify, False);
+   else
+      XtSetSensitive(manop_modify, True);
+
    XtFree((char*) usetname);
    
    qmonUsersetFillConf(userset_user_list, ep);
@@ -727,10 +732,12 @@ Widget parent
    XtAddCallback(uset_user, XmNinputCallback,
                   qmonUsersetUserAdd, NULL);
 
+#if 0
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtAddCallback(uset_name, XmNinputCallback,
                   qmonUsersetName, NULL);
    }
+#endif   
 
    XtAddEventHandler(XtParent(userset_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
@@ -1020,7 +1027,7 @@ XtPointer cld, cad;
    lList *pl = NULL;
    lListElem *cep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    lList *lp = NULL;
    lList *alp = NULL;
@@ -1042,7 +1049,7 @@ XtPointer cld, cad;
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*(n+1)); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*(n+1)); 
       strs[0] = "NONE";
       for (cep=lFirst(pl), i=0; i<n; cep=lNext(cep), i++) {
         /*
@@ -1052,8 +1059,9 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a project}",
-                        "@{Available projects}", strs, n+1,
+                        "@{Available projects}", (String*)strs, n+1,
                         False, buf, BUFSIZ, NULL); 
       
       if (status) {

@@ -33,8 +33,8 @@
 /*___INFO__MARK_END__*/
 
 void sge_setup_sge_execd(void);
-void sge_setup_old_jobs(void);
 int daemonize_execd(void);
+int job_initialize_job(lListElem *job);
 
 #endif /* __SETUP_EXECD_H */
 

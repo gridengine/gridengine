@@ -84,7 +84,7 @@ typedef struct _sge_path_type {
 
 extern sge_path_type path;
 
-void sge_setup_paths(char *cell, sge_path_type *p, lList **alpp);
+void sge_setup_paths(const char *cell, sge_path_type *p, lList **alpp);
 
 #ifdef WIN32NATIVE
 void sge_delete_paths ();

@@ -258,17 +258,17 @@ lList **alpp
 
 /*-------------------------------------------------------------------------*/
 int get_path_alias(
-char *inpath,                /* in/out path */
+const char *inpath,                /* in/out path */
 char *outpath,
 int outmax,
 lList *path_aliases,
-char *myhost,
+const char *myhost,
 lList **alpp 
 ) {
    lListElem *pap;
-   char *origin;
-   char *translation;
-   char *exec_host;
+   const char *origin;
+   const char *translation;
+   const char *exec_host;
    char the_path[SGE_PATH_MAX];
  
    DENTER(TOP_LAYER, "get_path_alias");

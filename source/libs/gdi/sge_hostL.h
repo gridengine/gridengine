@@ -134,7 +134,7 @@ enum {
 };
 
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
-   SGE_KSTRING(EH_name)
+   SGE_KSTRINGHU(EH_name)
    SGE_TLIST(EH_scaling_list, HS_Type)
    SGE_TLIST(EH_complex_list, CX_Type)
    SGE_TLIST(EH_consumable_config_list, CE_Type)
@@ -157,7 +157,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
 
    SGE_RSTRING(EH_real_name)
 
-   SGE_XULONG(EH_sge_tickets)
+   SGE_XDOUBLE(EH_sge_tickets)
    SGE_DOUBLE(EH_resource_capability_factor)
    SGE_XULONG(EH_sge_load)
    SGE_XDOUBLE(EH_sge_ticket_pct)

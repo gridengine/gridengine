@@ -78,7 +78,7 @@ char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {
-   char *s, *pe_name;
+   const char *s, *pe_name;
 
    DENTER(TOP_LAYER, "pe_mod");
 
@@ -204,7 +204,7 @@ lListElem *ep,
 lListElem *old_ep,
 gdi_object_t *object 
 ) {
-   char *pe_name;
+   const char *pe_name;
 
    DENTER(TOP_LAYER, "pe_success");
 
@@ -233,7 +233,7 @@ char *rhost
 ) {
    int pos;
    lListElem *ep;
-   char *pe;
+   const char *pe;
 
    DENTER(TOP_LAYER, "sge_del_pe");
 
@@ -291,7 +291,7 @@ char *rhost
 /* try to find a pe that matches with 
    requested wildcard expression for pe */ 
 lListElem *sge_match_pe(
-char *wildcard 
+const char *wildcard 
 ) {
    lListElem *pep;
    for_each (pep, Master_Pe_List)
@@ -301,7 +301,7 @@ char *wildcard
 }
 
 lListElem *sge_locate_pe(
-char *pe_name 
+const char *pe_name 
 ) {
    return lGetElemStr(Master_Pe_List, PE_name, pe_name);
 }
@@ -309,7 +309,7 @@ char *pe_name
 void debit_all_jobs_from_pes(
 lList *pe_list  
 ) {
-   char *pe_name;
+   const char *pe_name;
    lListElem *jep, *pep;
    int slots;
 
@@ -349,11 +349,6 @@ u_long32 job_id  /* needed for job logging */
    int n;
 
    DENTER(TOP_LAYER, "debit_job_from_pe");
-  
-   if (is_active_job_logging()) {
-      sprintf(SGE_EVENT, MSG_PE_DEBITSLOTS_IS, slots, lGetString(pep, PE_name));
-      job_log(job_id, SGE_EVENT, prognames[me.who], me.unqualified_hostname);
-   }
 
    if (pep) {
       n = (int)lGetUlong(pep, PE_used_slots);
@@ -375,11 +370,6 @@ u_long32 job_id  /* needed for job logging */
 
    DENTER(TOP_LAYER, "reverse_job_from_pe");
 
-   if (is_active_job_logging()) {
-      sprintf(SGE_EVENT, MSG_PE_REVERSESLOTS_IS, slots, lGetString(pep, PE_name));
-      job_log(job_id, SGE_EVENT, prognames[me.who], me.unqualified_hostname);
-   }
-
    if (pep) {
       n = (int)lGetUlong(pep, PE_used_slots);
       n -= slots;
@@ -400,8 +390,8 @@ int startup,
 lListElem *pep,
 lList **alpp 
 ) {
-   char *s;
-   char *pe_name;
+   const char *s;
+   const char *pe_name;
    int ret;
 
    DENTER(TOP_LAYER, "validate_pe");

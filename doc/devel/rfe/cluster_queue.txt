@@ -1,0 +1,146 @@
+Cluster Queue (CQ)
+==================
+ 
+- CQs replace the GE/GEEE-queues
+- CQs are assigned to at least one host
+- Each CQ has one or more Queue Incarnations (QI)
+- A CQ has a maximum of one QI per host
+- A CQ assigned to one host corresponds one QI
+- All QIs of a CQ have the same configurable attributes (slots, seq_no, ...)
+ 
+Possible Syntax
+===============
+ 
+QueueList := QueueName [{[","] QueueName}].
+ 
+ClusterQueueList := CQN [{[","] CQN }].
+ 
+QueueName := CQN | QIN.
+ 
+CQN := CQName.
+ 
+QIN := (CQName "@" Hostname) |
+       (CQName "@"  Hostname [{":" Hostname}] ).
+ 
+CQName := <<<Syntax_for_queues_as_before>>>
+ 
+Hostname := <<<Short_or_long_hostname>>>
+ 
+Examples for QueueList:
+ 
+   big
+   big@lis
+   big@lis:balrog,small@aragorn
+   big@lis:balrog:fangorn small
+ 
+Changes in the current behaviour
+================================
+ 
+Subordinate list of a CQ:
+- Only CQNs are allowed for the "subordinale_list"-Attribute of a CQ
+- A relationship between two CQs does not cause limitations in respect of
+  host sets of both CQs (overlapping)
+- Add/Modify requests which do not fulfil the conditions above will
+  result in a corresponding error message.
+ 
+Queue references used in PEs and CKPTs:
+- CQNs and QINs are both allowed in the "queue_list" field
+ 
+Properties of CQs:
+- For qstat, qmon and other client commands it is necessary to
+  hold a table in qmaster which is used to identify how many
+  QIs are in a certain state.
+ 
+GDI:
+- One CULL-Queue-Object represents a CQ
+- The hostname-field will be converted into a list of hostnames
+  (hostname groups?)
+- A sublist will be added to the Queue-Object which holds QIs
+  information.
+- Each QI object containes the hostname and a set of attributes necessary to
+  administer QIs
+- For client applications it is only possible to address CQs (not CIs)
+- The GDI subcommand can be used to modify object entries of a sublist    
+
+Client modification
+===================
+- qconf commands using queuenames will await CQNs
+- Output commands for queues show CQ information and not QI data
+- All client commands (except qconf) which expect queuenames as parameter
+  have to handle "QueueList"s
+- Qutput of client commands (except qconf) will be as before.
+  QI information will be displayed.
+- Even if a CQ has only one QI the whole QIN including the hostname will
+  be printed.
+ 
+qconf
+-----
+ 
+aq- mq- dq- option
+mattr- dattr- rattr- aattr-Optionen fuer die queue:
+- Modifications apply to all QIs of a QC
+- "hostname" may be a list of hostnames
+ 
+sq-option;
+- shows a CQ with all attributs
+ 
+sql-Option:
+- shows a list of all existing CQs
+ 
+cq-option:
+- CQNs or CINs
+ 
+NEW-option (-scql [ClusterQueueList]):
+- show a list of all existing QIs
+- if user specified "ClusterQueueList" then only those QIs will be
+  displayed
+ 
+qsub, qalter, qsh, qrsh, qacct, qlogin
+--------------------------------------
+ 
+q-Option bzw. -masterq:
+- list of "QueueNamen"
+ 
+l-Option:
+- List of CQNs
+ 
+qmod
+- List of "QueueNamen"
+ 
+qhost
+-----
+ 
+q-Option:
+- analog zu qstat -f
+ 
+j-Option:
+- see qstat without Parameter 
+
+qselect
+-------
+ 
+q-Option:
+- List of "QueueNamen"
+- List of QINs
+ 
+QMon
+====
+ 
+- Prior to the "Queue Control Dialog" a new dialog could be shown, which
+  displays some current information about CQs. After selecting a
+  certain CQ the "Queue Control Dialog" could show data concerning QIs
+ 
+Future enhancements
+===================
+ 
+- Hostgroups on all places where hostnames are allowed
+- Pattern matching for queuenames
+- Different attributes for singe QIs
+ 
+Additional Questions
+====================
+ 
+Which documentation changes are necessary?
+Which changes are necessary for the installation procedures?
+Are CQs without hostname specification allowed in the System?   
+

@@ -203,7 +203,7 @@ typedef struct {
 static double mem, cpu, io, ltmem, ltcpu, ltio, level, total,
        lt_share, st_share, actual_share, combined_usage;
 static lUlong current_time, time_stamp, shares, job_count;
-static char *node_name, *user_name, *project_name;
+static const char *node_name, *user_name, *project_name;
 
 static item_t item[] = {
     { "curr_time", DATE_T, &current_time },
@@ -580,7 +580,7 @@ main(int argc, char **argv)
       _sge_calc_share_tree_proportions(sharetree,
 		users, 
 		projects,
-		config, curr_time);
+		config, NULL, curr_time);
 
       print_nodes(outfile, root, NULL, NULL, users, projects, group_nodes,
                   names, &format);

@@ -153,7 +153,7 @@ enum {
 
 enum {
    JB_job_number = JB_LOWERBOUND,
-   JB_job_file,
+   JB_job_file,                     /* unused */
    JB_exec_file,
    JB_script_file,
    JB_script_size,
@@ -257,14 +257,19 @@ enum {
    JB_tgt,
    JB_cred,
    JB_context,
+   JB_category,
+
    JB_ja_structure,
-   JB_ja_tasks,
-   JB_category
+   JB_ja_n_h_ids,
+   JB_ja_u_h_ids,
+   JB_ja_s_h_ids,
+   JB_ja_o_h_ids,
+   JB_ja_tasks
 };
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
-   SGE_KULONG(JB_job_number)
-   SGE_XSTRING(JB_job_file)
+   SGE_KULONGH(JB_job_number)
+   SGE_XSTRING(JB_job_file)            /* unused */
    SGE_XSTRING(JB_exec_file)
    SGE_STRING(JB_script_file)
    SGE_ULONG(JB_script_size)
@@ -369,16 +374,16 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_master_hard_queue_list)  /* QR_Type - "-masterq dest_identifier" */
                                         /* specifies a queue (qsub)         */
 
-   SGE_LIST(JB_job_identifier_list)     /* JRE_Type                         */
+   SGE_LIST(JB_job_identifier_list)     /* ID_Type                          */
    SGE_XSTRING(JB_message)
    SGE_XSTRING(JB_job_source)           /* name of the component that fed   */
    SGE_XULONG(JB_ext)
    SGE_XSTRING(JB_pe)                   /* see JB_pe_object for qidl obj    */
    SGE_TLIST(JB_pe_range, RN_Type)      /* RN_Type                          */
    SGE_XULONG(JB_scheduling_priority)   /* unused ? */
-   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) /* JRE_Type               */ 
-   SGE_ILIST(JB_jid_predecessor_list, JB_Type) /* IDL only               */ 
-   SGE_LIST(JB_jid_sucessor_list)       /* JRE_Type                         */
+   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) /* JRE_Type only JRE_job_name */ 
+   SGE_ILIST(JB_jid_predecessor_list, JB_Type) /* IDL only                   */ 
+   SGE_LIST(JB_jid_sucessor_list)       /* JRE_Type only JRE_job_number      */
    SGE_XULONG(JB_pvm_pid)
    SGE_XULONG(JB_verify_suitable_queues)  
    SGE_XULONG(JB_sig)
@@ -424,11 +429,16 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_XSTRING(JB_tgt)                  /* Kerberos client TGT              */
    SGE_XSTRING(JB_cred)                 /* DCE / Kerberos credentials       */
    SGE_TLIST(JB_context, VA_Type)       /* custom attributes,(name,val)pairs*/
+   SGE_REF(JB_category)                 /* category string ref for scheduler */
 
    SGE_RLIST(JB_ja_structure, RN_Type)  /* Elements describe task id range */ 
-                                             
+
+   SGE_RLIST(JB_ja_n_h_ids, RN_Type)    /* just submitted and no hold state */
+   SGE_RLIST(JB_ja_u_h_ids, RN_Type)    /* just submitted with user hold */
+   SGE_RLIST(JB_ja_s_h_ids, RN_Type)    /* just submitted with system hold */
+   SGE_RLIST(JB_ja_o_h_ids, RN_Type)    /* just submitted with operator hold */
+
    SGE_RLIST(JB_ja_tasks, JAT_Type)     /* List of JobArray Tasks */
-   SGE_REF(JB_category)                 /* category string ref for scheduler */
 
    /*IDL
    void submit()
@@ -580,9 +590,13 @@ NAMEDEF(JBN)
    NAME("JB_tgt")
    NAME("JB_cred")
    NAME("JB_context")
-   NAME("JB_ja_structure")
-   NAME("JB_ja_tasks")
    NAME("JB_category")
+   NAME("JB_ja_structure")
+   NAME("JB_ja_n_h_ids")
+   NAME("JB_ja_u_h_ids")
+   NAME("JB_ja_s_h_ids")
+   NAME("JB_ja_o_h_ids")
+   NAME("JB_ja_tasks")
 NAMEEND
 
 
@@ -710,13 +724,13 @@ SLISTDEF( JG_Type, GrantedQueue )
                                  * of pe's with sge controlled slaves 
                                  * the valid range is from JG_task_id to 
                                  * JG_task_id + TASK_ID_RANGE_SIZE -1 */
-   SGE_RULONG(JG_ticket)    /* SGEEE tickets assigned to slots              */
-   SGE_RULONG(JG_oticket)   /* SGEEE override tickets assigned to slots     */
-   SGE_RULONG(JG_fticket)   /* SGEEE functional tickets assigned to slots   */
-   SGE_RULONG(JG_dticket)   /* SGEEE deadline tickets assigned to slots     */
-   SGE_RULONG(JG_sticket)   /* SGEEE sharetree tickets assigned to slots    */
-   SGE_XULONG(JG_jcoticket) /* SGEEE job class override tickets             */
-   SGE_XULONG(JG_jcfticket) /* SGEEE job class functional tickets           */
+   SGE_RDOUBLE(JG_ticket)    /* SGEEE tickets assigned to slots              */
+   SGE_RDOUBLE(JG_oticket)   /* SGEEE override tickets assigned to slots     */
+   SGE_RDOUBLE(JG_fticket)   /* SGEEE functional tickets assigned to slots   */
+   SGE_RDOUBLE(JG_dticket)   /* SGEEE deadline tickets assigned to slots     */
+   SGE_RDOUBLE(JG_sticket)   /* SGEEE sharetree tickets assigned to slots    */
+   SGE_XDOUBLE(JG_jcoticket) /* SGEEE job class override tickets             */
+   SGE_XDOUBLE(JG_jcfticket) /* SGEEE job class functional tickets           */
 LISTEND
 
 NAMEDEF( JGN )

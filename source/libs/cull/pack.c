@@ -581,7 +581,7 @@ double d
  */
 int packstr(
 register sge_pack_buffer *pb,
-register char *str 
+register const char *str 
 ) {
 
    DENTER(PACK_LAYER, "packstr");

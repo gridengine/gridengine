@@ -127,11 +127,11 @@ lList *granted
          lSetUlong(ep2, OQ_slots, qslots);
          lSetString(ep2, OQ_dest_queue, lGetString(gel, JG_qname));
          lSetUlong(ep2, OQ_dest_version, lGetUlong(gel, JG_qversion));
-         lSetUlong(ep2, OQ_ticket, lGetUlong(gel, JG_ticket));
-         lSetUlong(ep2, OQ_oticket, lGetUlong(gel, JG_oticket));
-         lSetUlong(ep2, OQ_fticket, lGetUlong(gel, JG_fticket));
-         lSetUlong(ep2, OQ_dticket, lGetUlong(gel, JG_dticket));
-         lSetUlong(ep2, OQ_sticket, lGetUlong(gel, JG_sticket));
+         lSetDouble(ep2, OQ_ticket, lGetDouble(gel, JG_ticket));
+         lSetDouble(ep2, OQ_oticket, lGetDouble(gel, JG_oticket));
+         lSetDouble(ep2, OQ_fticket, lGetDouble(gel, JG_fticket));
+         lSetDouble(ep2, OQ_dticket, lGetDouble(gel, JG_dticket));
+         lSetDouble(ep2, OQ_sticket, lGetDouble(gel, JG_sticket));
          
          if (!ql)
             ql=lCreateList("orderlist",OQ_Type);
@@ -143,26 +143,48 @@ lList *granted
    /* OR_force is set to zero */
    ep=lCreateElem(OR_Type);
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      lSetUlong(ep, OR_ticket, lGetUlong(ja_task, JAT_ticket));
-      if (type == ORT_tickets) {
-         lList *jlist = lCreateList("", lGetElemDescr(job));
-         lCondition *where = 
-         lWhere("%T(%I == %u)", lGetElemDescr(job), JB_job_number,
-                     lGetUlong(job, JB_job_number));
-         lEnumeration *what = lWhat("%T(%I %I)", 
-                                    lGetElemDescr(job), JB_job_number, JB_ja_tasks);
-         lAppendElem(jlist, lCopyElem(job));
+      lSetDouble(ep, OR_ticket, lGetDouble(ja_task, JAT_ticket));
 
-         {
+      if (type == ORT_tickets|| type == ORT_ptickets) {
+         lListElem *jep;
+         lList *jlist = lCreateList("", lGetElemDescr(job));
+         lList *tlist;
+
+         /* Create a reduced task list with only the required fields */
+
+         tlist = lCreateList("", lGetElemDescr(ja_task));
+         lAppendElem(tlist, lCopyElem(ja_task));
+         { 
+            lEnumeration *what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
+                  lGetElemDescr(ja_task), JAT_task_number, JAT_status, JAT_ticket,
+                  JAT_oticket, JAT_dticket, JAT_fticket, JAT_sticket, JAT_share,
+                  JAT_granted_destin_identifier_list);
             lList *tmp_list;
-            if ((tmp_list = lSelect("", jlist, where, what))) {
+            if ((tmp_list = lSelect("", tlist, NULL, what))) {
+               lFreeList(tlist);
+               tlist = tmp_list;
+            }
+            lFreeWhat(what);
+         }
+
+         /* Create a reduced job list with only the required fields */
+
+         jep = lCreateElem(lGetElemDescr(job));
+         lSetUlong(jep, JB_job_number, lGetUlong(job, JB_job_number));
+         lSetList(jep, JB_ja_tasks, tlist);
+         lAppendElem(jlist, jep);
+         {
+            lEnumeration *what = lWhat("%T(%I %I)", 
+                  lGetElemDescr(job), JB_job_number, JB_ja_tasks);
+            lList *tmp_list;
+            if ((tmp_list = lSelect("", jlist, NULL, what))) {
                lFreeList(jlist);
                jlist = tmp_list;
             }
+            lFreeWhat(what);
          }
+
          lSetList(ep, OR_joker, jlist);
-         lFreeWhat(what);
-         lFreeWhere(where);
       }
    }
    
@@ -173,7 +195,8 @@ lList *granted
    lSetUlong(ep, OR_job_version, lGetUlong(job, JB_version));
    lSetList(ep, OR_queuelist, ql);
    {
-      char *s;
+      const char *s;
+
       s = lGetString(ja_task, JAT_granted_pe);
       if (s)
          lSetString(ep, OR_pe, s);
@@ -230,7 +253,8 @@ lList *orders
    else {
       success = (lGetUlong(aep, AN_status)==STATUS_OK);
       if (!success) {
-         char *s;
+         const char *s;
+
          if (aep) {
             s = lGetString(aep, AN_text);
             ERROR((SGE_EVENT, MSG_LIST_SENDORDERXFAILED_S , s?s:MSG_NULL));

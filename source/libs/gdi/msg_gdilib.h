@@ -257,6 +257,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name}[,{job_id|job_name},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST        "listname_list           listname[,listname,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
@@ -486,8 +487,8 @@
 #define MSG_GDI_USAGE_help_OPT                           "[-help]"
 #define MSG_GDI_UTEXT_help_OPT                           _("print this help")
 
-#define MSG_GDI_USAGE_hold_jid_OPT                       "[-hold_jid]"
-#define MSG_GDI_UTEXT_hold_jid_OPT                       _("define job dependencies")
+#define MSG_GDI_USAGE_hold_jid_OPT                       "[-hold_jid job_identifier_list]"
+#define MSG_GDI_UTEXT_hold_jid_OPT                       _("define jobnet interdependencies")
 
 #define MSG_GDI_USAGE_j_OPT_YN                           "[-j y|n]"
 #define MSG_GDI_UTEXT_j_OPT_YN                           _("merge stdout and stderr stream of job")
@@ -555,12 +556,6 @@
 
 #define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq [queue]]"
 #define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _("modify a queue")
-
-#define MSG_GDI_USAGE_meattr_OPT_ATTR_NAME_VALUE_HOST_LIST   "[-meattr attr_name value host_id_list]"
-#define MSG_GDI_UTEXT_meattr_OPT_ATTR_NAME_VALUE_HOST_LIST   _("modify particular exec server attributes")
-
-#define MSG_GDI_USAGE_Meattr_OPT_FNAME_HOST_LIST   "[-Meattr fname host_id_list]"
-#define MSG_GDI_UTEXT_Meattr_OPT_FNAME_HOST_LIST   _("modify particular exec server attributes from file")
 
 #define MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   "[-mqattr attr_name value destin_id_list]"
 #define MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   _("modify particular queue attributes")
@@ -924,6 +919,14 @@
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _("can't unpack gdi request"    )
 #define MSG_SGETEXT_NOQMASTER                   _("unable to contact qmaster\n")
 
+
+#define MSG_JOB_JLPPNULL              _("jlpp == NULL in job_add_job()\n")
+#define MSG_JOB_JEPNULL               _("jep == NULL in job_add_job()\n")
+#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n")
+
+/* sge_job_jatask.c */
+
+#define MSG_JOB_REJECTED_NO_TASK_LIST  _("job "u32" was rejected because it was not possible to create task list\n")
 
 #endif /* __MSG_GDILIB_H */
 

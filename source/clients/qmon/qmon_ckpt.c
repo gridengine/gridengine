@@ -483,7 +483,7 @@ XtPointer cld, cad;
    lList *alp;
    lEnumeration *what;
    XmString xckpt_name = NULL;
-   String ckpt_name = NULL;
+   StringConst ckpt_name = NULL;
 
    DENTER(GUI_LAYER, "qmonCkptOk");
    /*
@@ -595,15 +595,15 @@ XtPointer cld, cad;
 static void qmonCkptSetAsk(
 lListElem *ckp 
 ) {
-   String ckpt_name = NULL;
-   String ckpt_interface = NULL;
-   String ckpt_ckpt_command = NULL;
-   String ckpt_migr_command = NULL;
-   String ckpt_rest_command = NULL;
-   String ckpt_clean_command = NULL;
-   String ckpt_ckpt_dir = NULL;
-   String ckpt_when = NULL;
-   String ckpt_signal = NULL;
+   StringConst ckpt_name = NULL;
+   StringConst ckpt_interface = NULL;
+   StringConst ckpt_ckpt_command = NULL;
+   StringConst ckpt_migr_command = NULL;
+   StringConst ckpt_rest_command = NULL;
+   StringConst ckpt_clean_command = NULL;
+   StringConst ckpt_ckpt_dir = NULL;
+   StringConst ckpt_when = NULL;
+   StringConst ckpt_signal = NULL;
    lList *ql = NULL;
    int i;
    int state = 0;

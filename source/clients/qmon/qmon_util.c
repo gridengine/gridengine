@@ -266,7 +266,7 @@ Boolean UpdateXmListFromCull(Widget list, XmStringCharSet tag, lList *lp,
 {
    lListElem *ep;
    Cardinal itemCount;
-   String str;
+   StringConst str;
    int pos;
    Widget lw;
    Boolean found = False;
@@ -295,7 +295,8 @@ Boolean UpdateXmListFromCull(Widget list, XmStringCharSet tag, lList *lp,
    pos = lGetPosInDescr(lGetListDescr(lp), field); 
    for (ep=lFirst(lp); ep; ep=lNext(ep)) {
       str = lGetPosString(ep, pos);
-      XmListAddItemUniqueSorted(list, str);
+      /* FIX_CONST_GUI */
+      XmListAddItemUniqueSorted(list, (String)str);
       DPRINTF(("UpdateXmListFromCull: str = '%s'\n", str));
    }   
 

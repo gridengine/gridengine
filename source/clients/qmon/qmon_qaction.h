@@ -59,12 +59,12 @@ typedef struct _tQCEntry {
    int  seq_no;
    int initial_state;
 /*---- methods -----*/
-   char *prolog;
-   char *epilog;
-   char *starter_method;
-   char *suspend_method;
-   char *resume_method;
-   char *terminate_method;
+   const char *prolog;
+   const char *epilog;
+   const char *starter_method;
+   const char *suspend_method;
+   const char *resume_method;
+   const char *terminate_method;
 /*---- checkpointing -----*/
    char max_migr_time[20];
    char max_no_migr[20];

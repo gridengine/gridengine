@@ -339,7 +339,7 @@ int *all_users
          char tmp_str[SGE_PATH_MAX + 1];
          char tmp_str2[SGE_PATH_MAX + 1];
          char tmp_str3[SGE_PATH_MAX + 1];
-         char *sge_o_home = NULL;
+         const char *sge_o_home = NULL;
  
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
             sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
@@ -454,32 +454,18 @@ int *all_users
    if (me.who != QRESUB) {
       /* -hold_jid */
       if (lGetElemStr(cmdline, SPA_switch, "-hold_jid")) {
-         lListElem *jid;
-         lList *jid_list = NULL;
+         lListElem *sep, *ep;
          lList *jref_list = NULL;
-         if (!parse_multi_jobtaskslist(&cmdline, "-hold_jid", &answer, &jid_list)) {
-            DEXIT;
-            return answer;
-         }
-         for_each (jid, jid_list) {
-            u_long32 id = 0;
-            id = atol(lGetString(jid, ID_str));
-            if (id)
-               lAddElemUlong(&jref_list, JRE_job_number, id, JRE_Type);
+         while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
+            for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+               DPRINTF(("-hold_jid %s\n", lGetString(sep, STR)));
+               lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, STR), JRE_Type);
+            }
+            lRemoveElem(cmdline, ep);
          }
          lSetList(job, JB_jid_predecessor_list, jref_list);
          nm_set(job_field, JB_jid_predecessor_list);
       }
-
-   #if 0
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
-         lList *lp = NULL;
-         lXchgList(ep, SPA_argval_lListT, &lp);
-         lSetList(job, JB_jid_predecessor_list, lp);
-         lRemoveElem(cmdline, ep);
-         nm_set(job_field, JB_jid_predecessor_list);
-      }
-   #endif
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
          lSetUlong(job, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
@@ -659,7 +645,8 @@ int *all_users
 
    /* complain about unused options */
    for_each(ep, cmdline) {
-      char *cp, str[1024];
+      const char *cp;
+      char str[1024];
  
       sprintf(str, MSG_ANSWER_UNKOWNOPTIONX_S,
          lGetString(ep, SPA_switch));

@@ -41,7 +41,7 @@
 
 int build_path_aliases(lList **path_alias_list, char *user, char *host, lList **alpp);
 
-int get_path_alias(char *inpath, char *outpath, int outmax, lList *path_aliases, char *myhost, lList **alpp);
+int get_path_alias(const char *inpath, char *outpath, int outmax, lList *path_aliases, const char *myhost, lList **alpp);
 
 
 #endif /* __PATH_ALIASES_H */

@@ -59,12 +59,19 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    ;;
- alinux|glinux)
+ alinux|glinux|slinux)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
-   RC_FILE=sysv_rc
-   RC_PREFIX=/etc/rc.d
-   RC_DIR=rc3.d
+   if [ -x /sbin/insserv ]; then
+      # SuSe 7.1 and higher uses insserv to add the startup script
+      RC_FILE=insserv-linux
+      RC_PREFIX=/etc/init.d
+      RC_DIR=unused
+   else
+      RC_FILE=sysv_rc
+      RC_PREFIX=/etc/rc.d
+      RC_DIR=rc3.d
+   fi
    XTERM=/usr/bin/X11/xterm
    MAILER=/bin/mail
    QLOGIN_COMMAND=telnet

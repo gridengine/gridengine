@@ -51,8 +51,9 @@
 #include "sge_spoolmsg.h"
 #include "sge_feature.h"
 
-static int parse_flag(lList **alpp, char *cp, lListElem *ep, int nm, char *name, char *fname, int line);
-static int parse_requestable(lList **alpp, char *cp, lListElem *ep, char *fname, int line);
+static int parse_flag(lList **alpp, const char *cp, lListElem *ep, int nm, const char *name, const char *fname, int line);
+
+static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const char *fname, int line);
 
 /* 
    Stuff to handle complexes.
@@ -122,17 +123,18 @@ static int parse_requestable(lList **alpp, char *cp, lListElem *ep, char *fname,
 *     lListElem* - a CX_Type list
 *******************************************************************************/
 lListElem *read_cmplx(
-char *fname,
-char *cmplx_name,
+const char *fname,
+const char *cmplx_name,
 lList **alpp 
 ) {
    FILE *fp;
    lListElem *ep=NULL, *epc;
    int line = 0;
    int type = 0;
-   char *name;
+   const char *name;
    int relop = 0;
-   char buf[10000], *cp, *s;
+   char buf[10000], *cp;
+   const char *s;
    lList *lp;
    int ret;
    double dval;
@@ -441,15 +443,15 @@ lList **alpp
 
 static int parse_flag(
 lList **alpp,
-char *cp,
+const char *cp,
 lListElem *ep,
 int nm,
-char *name,
-char *fname,
+const char *name,
+const char *fname,
 int line 
 ) {
    int flag;
-   char *s;
+   const char *s;
 
    DENTER(TOP_LAYER, "parse_flag");
 
@@ -481,13 +483,13 @@ int line
       
 static int parse_requestable(
 lList **alpp,
-char *cp,
+const char *cp,
 lListElem *ep,
-char *fname,
+const char *fname,
 int line 
 ) {
    int flag;
-   char *s;
+   const char *s;
 
    DENTER(TOP_LAYER, "parse_flag");
 
@@ -532,7 +534,7 @@ int line
  **********************************************************************/
 int write_cmplx(
 int spool,
-char *fname,
+const char *fname,
 lList *lpc,
 FILE *fpout,
 lList **alpp 
@@ -637,7 +639,7 @@ int allow_empty_boolean,
 int allow_neg_consumable 
 ) {
    lListElem *c, *entry, *cep;
-   char *name;
+   const char *name;
 
    DENTER(TOP_LAYER, "sge_fill_requests");
 
@@ -646,7 +648,8 @@ int allow_neg_consumable
    
       cep = NULL;
       for_each (c, complex_list) {
-         if ((cep = find_attribute_in_complex_list(name, lFirst(lGetList(c, CX_entries)))))
+         if ((cep = find_attribute_in_complex_list(name, 
+                                             lFirst(lGetList(c, CX_entries)))))
             break;
       }
       if (!cep) {
@@ -716,7 +719,7 @@ int allow_empty_boolean,
 int allow_neg_consumable
 ) {
    static char tmp[1000];
-   char *name, *s;
+   const char *name, *s;
    u_long32 type;
    double dval;
    int ret;

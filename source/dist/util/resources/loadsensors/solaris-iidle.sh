@@ -1,4 +1,5 @@
 #!/bin/sh
+#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -30,8 +31,6 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-
-# (c) 2000, 2001 Sun Microsystems, Inc.
 #
 # load sensor script for Solaris platform
 #
@@ -46,7 +45,7 @@
 
 PATH=/bin:/usr/bin
 
-ARCH=`$CODINE_ROOT/util/arch`
+ARCH=`$SGE_ROOT/util/arch`
 
 end=false
 while [ $end = false ]; do
@@ -68,12 +67,12 @@ while [ $end = false ]; do
    # "filestat -atime" returns time of last access of given file
    # in seconds since 1/1/1970
    #
-   kbdtime=`$CODINE_ROOT/utilbin/$ARCH/filestat -atime /dev/kbd`
-   mousetime=`$CODINE_ROOT/utilbin/$ARCH/filestat -atime /dev/mouse`   
+   kbdtime=`$SGE_ROOT/utilbin/$ARCH/filestat -atime /dev/kbd`
+   mousetime=`$SGE_ROOT/utilbin/$ARCH/filestat -atime /dev/mouse`   
 
    # "now" command returns current time in seconds since 1/1/1970
    #
-   now=`$CODINE_ROOT/utilbin/$ARCH/now`
+   now=`$SGE_ROOT/utilbin/$ARCH/now`
 
    if [ "$kbdtime" -gt "$mousetime" ]; then
       idletime=`expr "$now" - "$kbdtime"`

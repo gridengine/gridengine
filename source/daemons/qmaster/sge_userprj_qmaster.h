@@ -44,9 +44,9 @@ int userprj_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
 
 int sge_del_userprj(lListElem *ep, lList **alpp, lList **upl, char *ruser, char *rhost, int user);
 
-lListElem *sge_locate_user_prj(char *up_name, lList *upl);
+lListElem *sge_locate_user_prj(const char *up_name, lList *upl);
 
-int verify_userprj_list(lList **alpp, lList *name_list, lList *userprj_list, char *attr_name, char *obj_descr, char *obj_name);
+int verify_userprj_list(lList **alpp, lList *name_list, lList *userprj_list, const char *attr_name, const char *obj_descr, const char *obj_name);
 
 #endif /* _SGE_USERPRJ_QMASTER_H_ */
 

@@ -57,7 +57,7 @@
 
 
 double sge_gdi_myhost_scaling(
-char *attr_name 
+const char *attr_name 
 ) {
    double scaling;
 
@@ -71,10 +71,10 @@ char *attr_name
    return scaling;
 }
 
-char *sge_gdi_myhost_attribute(
-char *attr_name 
+const char *sge_gdi_myhost_attribute(
+const char *attr_name 
 ) {
-   char *attr;
+   const char *attr;
 
    DENTER(TOP_LAYER, "sge_gdi_myhost_attribute");
 
@@ -109,8 +109,8 @@ u_long32 jobid
 }
 
 double sge_gdi_host_scaling(
-char *hostname,
-char *attr_name 
+const char *hostname,
+const char *attr_name 
 ) {
    double scaling;
    lList *exechost_list = NULL, *alp;
@@ -174,9 +174,9 @@ char *attr_name
    return scaling;
 }
 
-char *sge_gdi_host_attribute(
-char *hostname,
-char *attr_name 
+const char *sge_gdi_host_attribute(
+const char *hostname,
+const char *attr_name 
 ) {
    int global, ret;
    lList *alp, *complex_list = NULL, *exechost_list = NULL, *attributes = NULL;
@@ -184,7 +184,8 @@ char *attr_name
    lListElem *cep, *aep, *hep;
    lEnumeration *what;
    lCondition* where;
-   char *s, unique[MAXHOSTLEN];
+   const char *s;
+   char unique[MAXHOSTLEN];
    int pos;
 
    DENTER(TOP_LAYER, "sge_gdi_host_scaling");
@@ -294,7 +295,7 @@ char *attr_name
 
 
 int sge_gdi_host_nslots(
-char *hostname,
+const char *hostname,
 u_long32 jobid 
 ) {
    lListElem *gdil_ep, *aep;

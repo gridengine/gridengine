@@ -74,7 +74,7 @@ lList **pcmdline,
 lListElem *job,
 int flags 
 ) {
-   char *cp;
+   const char *cp;
    u_long32 ul;
    lList *answer = NULL;
    char str[1024 + 1];
@@ -178,7 +178,7 @@ int flags
    */
    if ((lp = lGetList(job, JB_jid_predecessor_list))) {
       intprt_type fields[] = { JRE_job_number, 0 };
-      char *delis[] = {NULL, ",", NULL};
+      const char *delis[] = {NULL, ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 0);
       if (ret) {
@@ -204,7 +204,7 @@ int flags
    */
    if ((lp = lGetList(job, JB_job_identifier_list))) {
       intprt_type fields[] = { JRE_job_number, 0};
-      char *delis[] = {"", ",", NULL};
+      const char *delis[] = {"", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
          0);
@@ -265,8 +265,8 @@ int flags
       lList *lp_new = NULL;
       lListElem *ep_new = NULL;
       lListElem *ep = NULL;
-      char *host;
-      char *user;
+      const char *host;
+      const char *user;
 
       /*
       ** or rather take all if there are more than one elements?
@@ -282,7 +282,7 @@ int flags
       }
       if (lp_new) {
          intprt_type fields[] = { MR_user, MR_host, 0 };
-         char *delis[] = {"@", ",", NULL};
+         const char *delis[] = {"@", ",", NULL};
 
          ret = uni_print_list(NULL, str, sizeof(str) - 1, lp_new, fields, delis, 
             FLG_NO_DELIS_STRINGS);
@@ -406,7 +406,7 @@ int flags
    */
    if ((lp = lGetList(job, JB_qs_args))) {
       intprt_type fields[] = {STR, 0};
-      char *delis[] = {" ", NULL};
+      const char *delis[] = {" ", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
          FLG_NO_DELIS_STRINGS);
@@ -439,7 +439,7 @@ int flags
    */
    if ((lp = lGetList(job, JB_shell_list))) {
       intprt_type fields[] = { PN_host, PN_path, 0 };
-      char *delis[] = {":", ",", NULL};
+      const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
       if (ret) {
@@ -459,7 +459,7 @@ int flags
    */
    if ((lp = lGetList(job, JB_env_list))) {
       intprt_type fields[] = { VA_variable, VA_value, 0};
-      char *delis[] = {"=", ",", NULL};
+      const char *delis[] = {"=", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
          FLG_NO_DELIS_STRINGS);
@@ -498,7 +498,7 @@ int flags
    if ((flags & FLG_FULL_CMDLINE) &&
       (lp = lGetList(job, JB_job_args))) {
       intprt_type fields[] = { STR, 0};
-      char *delis[] = {NULL, " ", NULL};
+      const char *delis[] = {NULL, " ", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 
          FLG_NO_DELIS_STRINGS);
@@ -613,7 +613,7 @@ lListElem *job,
 lList **pcmdline,
 lList **alpp 
 ) {
-   char *cp;
+   const char *cp;
    lListElem *ep_opt;
 
    DENTER(TOP_LAYER, "sge_unparse_account_string");
@@ -676,7 +676,7 @@ lList **pcmdline,
 lList **alpp 
 ) {
    lListElem *ep_opt = NULL;
-   char *cp;
+   const char *cp;
 
    DENTER(TOP_LAYER, "sge_unparse_string_option");
    
@@ -754,7 +754,7 @@ lListElem *job,
 lList **pcmdline,
 lList **alpp 
 ) {
-   char *cp;
+   const char *cp;
    lList *lp = NULL;
    lListElem *ep_opt;
    char str[BUFSIZ];
@@ -806,7 +806,7 @@ lList **alpp
 
    if ((lp = lGetList(job, nm))) {
       intprt_type fields[] = { PN_host, PN_path, 0 };
-      char *delis[] = {":", ",", NULL};
+      const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
       if (ret) {
@@ -839,7 +839,7 @@ lList **alpp
 
    if ((lp = lGetList(job, nm))) {
       intprt_type fields[] = { QR_name, 0 };
-      char *delis[] = {":", ",", NULL};
+      const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
       if (ret) {
@@ -857,9 +857,9 @@ lList **alpp
 
 /*-------------------------------------------------------------------------*/
 int sge_unparse_acl(
-char *owner,
-char *group,
-char *option,
+const char *owner,
+const char *group,
+const char *option,
 lList *acl,
 lList **pcmdline,
 lList **alpp 
@@ -878,7 +878,7 @@ lList **alpp
 
    if (lGetNumberOfElem(lp) > 0) {
       intprt_type fields[] = { STR, 0 };
-      char *delis[] = {":", ",", NULL};
+      const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
       lp = lFreeList(lp);

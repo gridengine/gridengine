@@ -82,7 +82,7 @@ register int n
 /************************************************************************/
 int sge_writenbytes(
 register int sfd,
-register char *ptr,
+register const char *ptr,
 register int n 
 
 /*

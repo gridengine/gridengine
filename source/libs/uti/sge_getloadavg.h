@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(CRAY) || defined(NEXSX4) || defined(NECSX5) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6)
 #  define SGE_LOADAVG
 #endif

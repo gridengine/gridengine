@@ -765,7 +765,7 @@ XtPointer cld, cad;
    lEnumeration *what;
    Boolean status = False;
    XmString xehname = NULL;
-   String ehname = NULL;
+   StringConst ehname = NULL;
 
    DENTER(GUI_LAYER, "qmonExecHostOk");
 

@@ -195,7 +195,7 @@ lListElem **ja_taskp
 ) {
    u_long32 jstate, qstate;
    lListElem *jep, *jshortest = NULL, *shortest = NULL, *ja_task;
-   char *qnm;
+   const char *qnm;
 
    DENTER(TOP_LAYER, "select4suspension");
 
@@ -260,7 +260,7 @@ lListElem **ja_taskp
 ) {
    u_long32 jstate;
    lListElem *jep, *jlongest = NULL, *longest = NULL, *ja_task;
-   char *qnm;
+   const char *qnm;
 
    DENTER(TOP_LAYER, "select4unsuspension");
 

@@ -192,7 +192,7 @@ static u_long32 sge_get_queue_number()
 }
 
 lListElem *sge_locate_queue(
-char *cp 
+const char *cp 
 ) {
    DENTER(BASIS_LAYER, "sge_locate_queue");
 
@@ -220,10 +220,9 @@ lListElem *qep, /* reduced queue element */
 int add,
 int sub_command 
 ) {
-   char *qname;
+   const char *qname;
 
    DENTER(TOP_LAYER, "mod_queue_attributes");
-
 
    /* ---- QU_qname cannot get changed - we just ignore it */
    if (add) {
@@ -496,7 +495,7 @@ int sub_command
          sub_command, SGE_ATTR_COMPLEX_VALUES, SGE_OBJ_QUEUE)) 
       goto ERROR;            
    
-   if (!feature_is_enabled(FEATURE_SGEEE)) {
+   if (feature_is_enabled(FEATURE_SGEEE)) {
       attr_mod_ulong(qep, new_queue, QU_fshare, "functional share");
       attr_mod_ulong(qep, new_queue, QU_oticket, "override tickets");
 
@@ -549,7 +548,7 @@ int sub_command
 
    /* ---- QU_calendar */
    if (lGetPosViaElem(qep, QU_calendar)>=0) {
-      char *nc, *oc;
+      const char *nc, *oc;
       lListElem *new_cal = NULL;
 
       nc = lGetString(qep, QU_calendar);
@@ -598,7 +597,7 @@ int sub_command
       goto ERROR;            
    }
    if (lGetPosViaElem(qep, QU_shell_start_mode)>=0) {
-      char *s;
+      const char *s;
 
       s = lGetString(qep, QU_shell_start_mode);
       if (s && strcasecmp("none", s) && 
@@ -616,7 +615,7 @@ int sub_command
       goto ERROR;
    }
    if (lGetPosViaElem(qep, QU_initial_state)>=0) {
-      char *s;
+      const char *s;
 
       s = lGetString(qep, QU_initial_state);
       if (s && strcasecmp("default", s) && 
@@ -723,7 +722,7 @@ char *rhost,
 int add, /* true in case of add */
 int sub_command 
 ) {
-   char *qname;
+   const char *qname;
    lList *tmp_alp = NULL;
    lListElem *new_queue = NULL,
              *old_queue;
@@ -959,7 +958,7 @@ int sub_command
 
       for_each(job, Master_Job_List) {
          for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-            char *queue_name;
+            const char *queue_name;
             u_long32 state;
 
             state = lGetUlong(ja_task, JAT_state);
@@ -980,7 +979,7 @@ int sub_command
             CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
             lSetUlong(ja_task, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, job, ja_task);
-            cull_write_job_to_disk(job);
+            job_write_spool_file(job, 0, SPOOL_DEFAULT);
          }
       }
    }            
@@ -1067,7 +1066,7 @@ char *rhost
       lList*     qlist;
       lListElem* qliste;
       lListElem* ckpte;
-      char* chkpt_qname = NULL;
+      const char* chkpt_qname = NULL;
       const char* chkpt_name = NULL;
 
 
@@ -1096,7 +1095,7 @@ char *rhost
       lList*     qlist;
       lListElem* qliste;
       lListElem* pee;
-      char* pe_qname = NULL;
+      const char* pe_qname = NULL;
       const char* pe_name = NULL;
 
       for_each (pee,Master_Pe_List ) {
@@ -1203,12 +1202,12 @@ lList *project_list  /* UP_Type */
 
 int verify_complex_list(
 lList **alpp,
-char *obj_name,
-char *qname,
+const char *obj_name,
+const char *qname,
 lList *complex_list  /* CX_Type */
 ) {
    lListElem *cep;
-   char *s;
+   const char *s;
    int ret = STATUS_OK;
 
    DENTER(TOP_LAYER, "verify_complex_list");
@@ -1287,7 +1286,7 @@ int write_history
 
 */
 int sge_del_queue(
-char *qname 
+const char *qname 
 ) {
    lListElem *qep;
 

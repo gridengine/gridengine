@@ -68,7 +68,7 @@ int sos_using_gdil(
 lList *gdil,
 u_long32 jobid  /* just for logging in case of errors */
 ) {
-   char *qname;
+   const char *qname;
    lListElem *ep, *so, *qep, *subqep;
    int ret = 0;
 
@@ -171,7 +171,7 @@ int usos_using_gdil(
 lList *gdil,
 u_long32 jobid  /* just for logging in case of errors */
 ) {
-   char *qname;
+   const char *qname;
    int ret = 0;
    lListElem *ep, *so, *qep, *subqep;
 
@@ -260,8 +260,8 @@ int rebuild_cache
 /* in case of setting up unknown references are allowed */
 int check_subordinate_list(
 lList **alpp,
-char *qname,
-char *host,
+const char *qname,
+const char *host,
 u_long32 slots,
 lList *sol,
 int how 
@@ -272,7 +272,7 @@ int how
 
    for_each (so, sol) {
       u_long32 so_threshold;
-      char *so_qname;
+      const char *so_qname;
       lListElem *refqep;
 
       so_qname = lGetString(so, SO_qname);
@@ -392,7 +392,7 @@ int suspend_all(
 lList *sol,
 int recompute_caches 
 ) {
-   char *qnm;
+   const char *qnm;
    lListElem *so, *qep;
    int ret = 0;
 
@@ -413,7 +413,7 @@ int unsuspend_all(
 lList *sol,
 int recompute_caches 
 ) {
-   char *qnm;
+   const char *qnm;
    lListElem *so, *qep;
    int ret = 0;
 

@@ -366,6 +366,12 @@ XtPointer cld, cad;
                         0, &lp, NULL, what);
 
       qmonMessageBox(w, alp, 0);
+
+      if (alp && lGetUlong(lFirst(alp), AN_status) != STATUS_OK)
+         XmtMsgLinePrintf(fticket_message, "Failure");
+      else
+         XmtMsgLinePrintf(fticket_message, "Success");
+      XmtMsgLineClear(fticket_message, DISPLAY_MESSAGE_DURATION); 
    
       if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Functional Ratios-------------------\n");
@@ -1065,7 +1071,7 @@ int nm0,
 int nm1 
 ) {
    lListElem *ep;
-   String name;
+   StringConst name;
    int tickets;
    char buf[128];
    char buf2[128];
@@ -1073,6 +1079,12 @@ int nm1
    int max_rows;
 
    DENTER(GUI_LAYER, "qmonFOTCullToMatrix");
+
+   if (!lp) {
+      DEXIT;
+      return;
+   }   
+     
 
    /*
    ** delete old matrix entries
@@ -1099,7 +1111,8 @@ int nm1
                            1);         /* we add 1 row         */
          max_rows++;
       }
-      XbaeMatrixSetCell(matrix, row, 0, name ? name : "");
+      /* FIX_CONST_GUI */
+      XbaeMatrixSetCell(matrix, row, 0, name ? (const String) name : "");
       XbaeMatrixSetCell(matrix, row, 1, buf);
    }
 

@@ -118,15 +118,6 @@ char **argv
       SGE_EXIT(1);
    } 
    
-
-#if 0
-   jlp = lCreateList("mortui te salutant", JB_Type);
-   jep = lCreateElem(JB_Type);
-   lSetUlong(jep, JB_force, force);
-   lAppendElem(jlp, jep); 
-   lSetList(jep, JB_job_identifier_list, lCreateList("job_identifier_list", JRE_Type));
-#endif
-
    if (user_list) {
       lListElem *id;
 
@@ -140,21 +131,6 @@ char **argv
       lSetUlong(idep, ID_force, force);
    }
 
-#if 0  
-   nxt_rep = lFirst(ref_list);
-   while((rep = nxt_rep)) {
-      nxt_rep = lNext(rep);
-      jrep = lCreateElem(JRE_Type);
-      job_number = (u_long32)strtol(lGetString(rep, STR), NULL, 10);
-      if(!job_number) {
-         ERROR((SGE_EVENT, "\"%s\" is not a job number\n", lGetString(rep, STR)));
-         lRemoveElem(ref_list, rep);
-      } else {
-         lSetUlong(jrep, JRE_job_number, job_number);
-         lAppendElem(lGetList(jep, JB_job_identifier_list), jrep); 
-      }
-   }
-#endif   
    if (verify) {
       for_each(idep, ref_list) {
          printf(MSG_JOB_XDELETIONOFJOBY_SS,force?MSG_FORCED:"",lGetString(idep, ID_str));

@@ -39,6 +39,7 @@ int signal_job(u_long32 jobid, u_long32 jataskid, u_long32 signal);
 int sge_execd_deliver_signal(u_long32 sig, lListElem *jep, lListElem *jatep);
 
 
-int sge_kill(int pid, u_long32 sge_signal, u_long32 jobid, u_long32 jataskid, char *petask);
+int sge_kill(int pid, u_long32 sge_signal, u_long32 jobid, u_long32 jataskid, 
+             const char *petask);
 
 #endif /* _EXECD_SIGNAL_QUEUE_H */

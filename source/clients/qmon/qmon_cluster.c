@@ -328,6 +328,7 @@ static Widget cluster_global_layout = 0;
 static Widget cluster_host = 0;
 
 static Widget cluster_qmaster_spool_dir = 0;
+static Widget cluster_execd_spool_dir = 0;
 static Widget cluster_admin_mail = 0;
 static Widget cluster_login_shells = 0;
 static Widget cluster_default_domain = 0;
@@ -633,6 +634,8 @@ Widget parent
                            "cluster_xprojects", &cluster_xprojects,
                            "cluster_qmaster_spool_dir", 
                                     &cluster_qmaster_spool_dir,
+                           "cluster_execd_spool_dir", 
+                                    &cluster_execd_spool_dir,
                            "cluster_admin_mail", &cluster_admin_mail,
                            "cluster_login_shells", &cluster_login_shells,
                            "cluster_default_domain", &cluster_default_domain,
@@ -908,7 +911,13 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 {
    DENTER(GUI_LAYER, "qmonClusterLayoutSetSensitive");
 
-   XtSetSensitive(cluster_qmaster_spool_dir, mode);
+
+   XtSetSensitive(cluster_qmaster_spool_dir, False);
+   XtSetSensitive(cluster_execd_spool_dir, False);
+   XtSetSensitive(cluster_ignore_fqdn, False);
+   XtSetSensitive(cluster_default_domain, False);
+   XtSetSensitive(cluster_admin_user, False);
+   
    XtSetSensitive(cluster_admin_mail, mode);
    XtSetSensitive(cluster_login_shells, mode);
    XtSetSensitive(cluster_min_uid, mode);
@@ -920,7 +929,6 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_max_unheardPB, mode);
    XtSetSensitive(cluster_shell_start_mode, mode);
    XtSetSensitive(cluster_loglevel, mode);
-   XtSetSensitive(cluster_ignore_fqdn, mode);
 
    XtSetSensitive(cluster_users, mode);
    XtSetSensitive(cluster_usersPB, mode);
@@ -931,7 +939,6 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
    XtSetSensitive(cluster_qmaster_params, mode);
    XtSetSensitive(cluster_schedd_params, mode);
-   XtSetSensitive(cluster_admin_user, mode);
   
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtSetSensitive(cluster_enforce_project, mode);
@@ -1181,14 +1188,19 @@ int local
          lAppendElem(lp, new);
       }
 
-      ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
       if (clen->reschedule_unknown && clen->reschedule_unknown[0] != '\0'
            /* && strcmp(lGetString(ep, CF_value), clen->reschedule_unknown)*/) {
          if (check_white(clen->reschedule_unknown)) {
             strcpy(errstr, "No whitespace allowed in value for reschedule_unknown");
             goto error;
          }
-         new = lCopyElem(ep);
+         ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "reschedule_unknown");
+         }
+         else
+            new = lCopyElem(ep);
          lSetString(new, CF_value, clen->reschedule_unknown);
          lAppendElem(lp, new);
       }
@@ -1508,13 +1520,19 @@ int local
       }
       lSetString(ep, CF_value, clen->max_unheard);
 
-      ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
-      if (check_white(clen->reschedule_unknown)) {
-         strcpy(errstr, "No whitespace allowed in value for reschedule_unknown");
-         goto error;
+      if (clen->reschedule_unknown && clen->reschedule_unknown[0] != '\0') {
+         if (check_white(clen->reschedule_unknown)) {
+            strcpy(errstr, "No whitespace allowed in value for reschedule_unknown");
+            goto error;
+         }
+         ep = lGetElemStr(confl, CF_name, "reschedule_unknown");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "reschedule_unknown", CF_Type);
+         lSetString(ep, CF_value, clen->reschedule_unknown);
       }
-      lSetString(ep, CF_value, clen->reschedule_unknown);
-
+      else {
+         lDelElemStr(&confl, CF_name, "reschedule_unknown");
+      }
 
       if (clen->shell_start_mode >= 0 && 
                clen->shell_start_mode < XtNumber(shell_start_mode))
@@ -1829,10 +1847,10 @@ tCClEntry *clen
 ) {
    lList *confl;
    lListElem *ep;
-   String str = NULL;
-   String min_uid;
-   String min_gid;
-   String zombie_jobs;
+   StringConst str = NULL;
+   StringConst min_uid;
+   StringConst min_gid;
+   StringConst zombie_jobs;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
 

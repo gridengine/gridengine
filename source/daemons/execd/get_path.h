@@ -48,7 +48,9 @@
 #define SGE_PAR_STDOUT      0x20000000
 #define SGE_PAR_STDERR      0x40000000
 
-int sge_get_path(lList *lp, char *cwd, char *owner, char *job_name, u_long32 job_number, u_long32 task_number, int type, char *path);
+int sge_get_path(lList *lp, const char *cwd, const char *owner, 
+                 const char *job_name, u_long32 job_number, 
+                 u_long32 task_number, int type, char *path);
 
 #endif /* __GET_PATH_H */
 

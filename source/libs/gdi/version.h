@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern char GDI_VERSION[];  /* set in version.c  */
+extern const char GDI_VERSION[];  /* set in version.c  */
 
 #endif /* __VERISON_H */

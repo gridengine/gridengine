@@ -68,9 +68,9 @@ extern lList *Master_Userset_List;
 extern lList *Master_Pe_List;
 extern lList *Master_Exechost_List;
 
-static void sge_change_queue_version_acl(char *acl_name);
+static void sge_change_queue_version_acl(const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);
-static int verify_userset_deletion(lList **alpp, char *userset_name);
+static int verify_userset_deletion(lList **alpp, const char *userset_name);
 
 /*********************************************************************
    sge_add_userset() - Master code
@@ -84,7 +84,7 @@ lList **userset_list,
 char *ruser,
 char *rhost 
 ) {
-   char *userset_name;
+   const char *userset_name;
    int pos, ret;
    lListElem *found;
    char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
@@ -209,7 +209,7 @@ char *rhost
 ) {
    lListElem *found;
    int pos, ret;
-   char *userset_name;
+   const char *userset_name;
 
    DENTER(TOP_LAYER, "sge_del_userset");
 
@@ -280,7 +280,7 @@ lList **userset_list,
 char *ruser,
 char *rhost 
 ) {
-   char *userset_name;
+   const char *userset_name;
    int pos, ret;
    lListElem *found;
    char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
@@ -381,7 +381,7 @@ char *rhost
    of all queues containing this complex;
  **********************************************************************/
 static void sge_change_queue_version_acl(
-char *acl_name 
+const char *acl_name 
 ) {
    lListElem *qep;
 
@@ -406,7 +406,7 @@ char *acl_name
    sge_locate_userset() - searches an userset
  ***********************************************************/
 lListElem *sge_locate_userset(
-char *name,
+const char *name,
 lList *lp 
 ) {
    lListElem *ep;
@@ -549,7 +549,7 @@ lListElem *old
    lList *old_users = NULL; 
    lListElem *np;
    lList *alp = NULL;
-   char *nname;
+   const char *nname;
    
    DENTER(TOP_LAYER, "do_depts_conflict");
    
@@ -596,7 +596,7 @@ lListElem *job,
 lList *userset_list 
 ) {
    lListElem *dep;
-   char *owner, *group; 
+   const char *owner, *group; 
 
    DENTER(TOP_LAYER, "set_department");
 
@@ -682,7 +682,7 @@ const char *obj_name   /* e.g. "fangorn.q"  */
 
 static int verify_userset_deletion(
 lList **alpp,
-char *userset_name 
+const char *userset_name 
 ) {
    int ret = STATUS_OK;
    lListElem *ep;

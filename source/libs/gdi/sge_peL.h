@@ -72,7 +72,7 @@ enum {
 
 ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    /* configuration fields */
-   SGE_KSTRING(PE_name)
+   SGE_KSTRINGHU(PE_name)
    SGE_XLIST(PE_queue_list, QR_Type)  /* QR_Type, cull only */
    SGE_ILIST(PE_queue_list, QU_Type)
    SGE_ULONG(PE_slots)

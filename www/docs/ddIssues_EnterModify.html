@@ -1,259 +1,502 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-
-<title>Entering and Modifying Issues</title>
-
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <title>Entering and Modifying Issues</title>
 </head>
 <body>
-
-    <span class="Header" nowrap>Entering and modifying issues</span>  
-
-<p>
-<span class="PlainText"><strong>More help on IssueZilla: Index</strong>
-<p>
-
+<span class="Header" nowrap>Entering and modifying
+issues</span>
+<p><span class="PlainText"><b>More help on IssueZilla: Index</b>
 <ul>
 <dl>
-<dt><a href="ProjectIssues.html">Project issue tracking</a>
-	<dd><strong>You are here: Entering and modifying issues</a>
-		<ul>
-		<li><a href="#enterissue">Entering a new issue</a>
-		<li><a href="#entryfields">Issue entry field descriptions</a>
-	    <li><a href="#editissue">Viewing and modifying issues</a>
-		</ul></strong>
-	<dd><a href="ddIssues_Query.html">Querying and tracking issues</a>
-	<dd><a href="ddIssues_Reports.html">Generating status reports about project issues</a>
-<dt><a href="/servlets/HelpTOC">Back to main Help index</a>
+<dt>
+<a href="ProjectIssues.html">Project issue tracking</a></dt>
+
+<dd>
+<b>You are here: Entering and modifying issues</b></dd>
+
+<ul>
+<li>
+<a href="#enterissue">Entering a new issue</a></li>
+
+<li>
+<a href="#entryfields">Issue entry field descriptions</a></li>
+
+<li>
+<a href="#editissue">Viewing and modifying issues</a></li>
+</ul>
+
+<dd>
+<a href="ddIssues_Query.html">Querying and tracking issues</a></dd>
+
+<dd>
+<a href="ddIssues_Reports.html">Generating status reports about project
+issues</a></dd>
+
+<dt>
+<a href="/servlets/HelpTOC">Back to main Help index</a></dt>
+</dl>
+</ul>
+<span class="PlainText">
+<p><b>More help about issues</b>
+<ul>
+<dl>
+<dt>
+<a href="issuewritinghelp.html">Issue writing guidelines</a></dt>
+
+<dt>
+<a href="contributing_patches.html">Contributing patches</a></dt>
+
+<dt>
+<a href="issue_lifecycle.html">The lifecycle of an issue</a></dt>
+
+<dt>
+<a href="issues_unconfirmedhelp.html">Understanding the UNCONFIRMED issue
+state</a></dt>
 </dl>
 </ul>
 
-<span class="PlainText">
-	
-<p>
-<strong>More help about issues</strong>
+<hr noshade size=1><a NAME="enterissue"></a><span class="InputHeader">Entering
+a new issue</span>
 <ul>
-	<dl>	
-	 <dt><a href="issuewritinghelp.html">Issue writing guidelines</a><br>
-	 <dt><a href="contributing_patches.html">Contributing patches</a>
-	 <dt><a href="issue_lifecycle.html">The lifecycle of an issue</a><br>
-	 <dt><a href="issues_unconfirmedhelp.html">Understanding the UNCONFIRMED issue state</a>
-	</dl> 
+<li>
+Choose the appropriate link in the "Enter An Issue" section of the Project
+Issues page. Once you have invoked IssueZilla, a secondary "Issue Tracking"
+tool bar appears on this page and you can also enter an issue by clicking
+the <i>New</i> link in the IssueZilla tool bar.</li>
+
+<li>
+Choose the appropriate project component.</li>
+
+<li>
+Selected the appropriate options or input information for each field before
+using the <i>Commit</i> button to enter your issue.</li>
 </ul>
-     <p>
+The information you provide here significantly determines the effectiveness
+of your issue reports and the response to them. Descriptions for each of
+these fields follow to help you optimize your issue reports.
+<p><b>Important note</b>: When you first enter a new issue, you cannot
+set a target milestone date, nor can you assign dependencies (flag other
+issues that depend on this new issue or those that it depends upon). To
+designate a target milestone or dependencies, you must first submit the
+new issue successfully, then retrieve it to access fields for setting a
+target milestone and creating dependencies.
+<p>
 <hr noshade size=1>
-<a name="enterissue"></a><span class="InputHeader">Entering a new issue</span>
-     <ul>
-      <li>Choose the appropriate link in the "Enter An Issue" section of the Project Issues page. Once you have invoked IssueZilla, a secondary "Issue Tracking" tool bar appears on this page and you can also enter an issue by clicking the <i>New</i> link in the IssueZilla tool bar.
+<p><a NAME="entryfields"></a><span class="InputHeader">Issue entry field
+descriptions</span>
+<dl>
+<dt>
+<span class="InputHeader">Version</span></dt>
+
+<dd>
+The release in which you identified this issue or found the defect.</dd>
+
+<dt>
+<span class="InputHeader">Component/Sub Component</span></dt>
+
+<dd>
+Identify area within the project that this issue is associated with. Only
+one selection is permitted.</dd>
+
+<dt>
+<a NAME="rep_platform"></a><span class="InputHeader">Platform</span></dt>
+
+<dd>
+This corresponds to <i>your</i> hardware platform when you are reporting
+a defect. Options include:</dd>
+
+<ul>
+<li>
+All (happens on all platform; cross-platform issue)</li>
+
+<li>
+Macintosh</li>
+
+<li>
+PC</li>
+
+<li>
+Sun</li>
+
+<li>
+HP</li>
+</ul>
+<b>Note:</b> Selecting the option "All" does not select issues assigned
+against all platforms. It merely selects issues that <i>occur</i> on all
+platforms.
+<dt>
+<a NAME="op_sys"></a><span class="InputHeader">Operating System</span></dt>
+
+<dd>
+This is the operating system against which the issue is being reported.
+Legal operating systems include:</dd>
+
+<ul>
+<li>
+All (happens on all operating systems, making this a cross-platform issue)</li>
+
+<li>
+Windows 95</li>
+
+<li>
+Mac System 8.0</li>
+
+<li>
+Linux</li>
+</ul>
+Note that the operating system implies the platform, but not always. For
+example, Linux can run on PC, Macintosh, and others.
+<dt>
+<a NAME="priority"></a><span class="InputHeader">Priority</span></dt>
+
+<dd>
+This field let you assign a level of importance to help determine when
+this issue should be addressed relative to other issues. This field is
+utilized by the programmers/engineers to prioritize their work.</dd>
+
+<table>
+<tr>
+<th>P1</th>
+
+<td>Most important&nbsp;</td>
+</tr>
+
+<tr>
+<th>P2</th>
+
+<td></td>
+</tr>
+
+<tr>
+<th>P3</th>
+
+<td></td>
+</tr>
+
+<tr>
+<th>P4</th>
+
+<td></td>
+</tr>
+
+<tr>
+<th>P5</th>
+
+<td>Least important&nbsp;</td>
+</tr>
+</table>
+
+<dt>
+<a NAME="issue_type"></a><span class="InputHeader">Issue Type</span></dt>
+
+<blockquote><b><i>Defect</i></b> is a problem with an existing feature
+that is either not developed to spec or does not work as designed. These
+are often referred to as "bugs."
+<p><b><i>Enhancement</i></b> is an improvement to an existing feature.
+<p><b><i>Feature</i></b> is an addition to the software to add a piece
+of functionality that does not yet exist.
+<p><b><i>Task</i></b> is an activity to be done on behalf or in support
+of a feature or enhancement. Tasks do not typically require direct changes
+to the code base.
+<p><b><i>Patch</i></b> is a special kind of issue, a section of code to
+be applied or attached to existing software, often to fix a defect.</blockquote>
+
+<dt>
+<span class="InputHeader">Initial state</span></dt>
+
+<dd>
+Newly entered issues are either "new" or "unconfirmed." Marking an issue
+<a href="/docs/issues_unconfirmedhelp.html">unconfirmed</a> means you have
+not yet determined whether it is true or valid. Read more about "state"
+in the <a href="issue_lifecycle.html">lifecycle of an issue</a>.</dd>
+
+<dt>
+<a NAME="assigned_to"></a><span class="InputHeader">Assigned To</span></dt>
+
+<dd>
+Enter the email address of the one individual who is in charge of resolving
+the issue. If this field is left blank, the issue by default is assigned
+to the component/sub component owner. Every time this field changes, the
+status changes to <b>NEW</b> to make it visible in the assignee's list
+of issues.</dd>
+
+<p><br><span class="InputHeader">Cc:</span>
+<dd>
+Add email addresses of other individuals who need email notification when
+this issue changes status or when there is other activity on this issue.
+Delimit multiple email addressees by single spaces only -- no commas or
+semi-colons are necessary.</dd>
+
+<p><br>Note: Assign cc addresses sparingly. Project participants whose
+interest or involvement in this issue is peripheral should be encouraged
+to use IssueZilla to check and track issues rather than to rely on automatic
+email notification.
+<dt>
+<span class="InputHeader">URL</span></dt>
+
+<dd>
+How to use this field depends on the issue type:</dd>
+
+<ul>
+<li>
+For defects, URL should lead to a fairly stable system where the the problem
+is obvious or can be easily reproduced.</li>
+
+<li>
+For enhancements, URL should provide details pertaining to the improvement,
+such as mockups.</li>
+
+<li>
+For features, URL should link to any web-based form of material explaining
+the improvement such as mockups or design specs.</li>
+
+<li>
+For tasks, URL is optional and may include linking to the associated feature
+or enhancement.</li>
+</ul>
+
+<dt>
+<span class="InputHeader">Summary</span></dt>
+
+<dd>
+A terse, specific statement to describe this issue. This should be a few
+unique, self-explanatory words to identify this issue easily in reports
+and short lists. Limiting your entry to the width of the field is best
+for the columnar display of query results.</dd>
+
+<dt>
+<span class="InputHeader">Description</span></dt>
+
+<dd>
+Provide a full description of the issue including any pertinent history
+or activity around this issue. Because this field is additive, it serves
+as the knowledge base and means of communicating through this issue's life
+cycle. Other project participants view and add comments or information
+using this field.</dd>
+
+<br>&nbsp;
+<p>&nbsp;</dl>
+<span class="InputHeader">After completing all necessary fields:&nbsp;</span>
+<blockquote><i>Commit</i> enters this issue into the project's issue database.
+<p><i>Reset</i> returns all field values to their default or blank settings.
+<p><i>Remember values as bookmark template</i> lets you save your input
+settings to save keystrokes when entering multiple issues for the same
+project component.</blockquote>
+For more information about entering issues into IssueZilla, see also <a href="issuewritinghelp.html">Issue
+Writing Guidelines</a>.
 <p>
-      <li>Choose the appropriate project component.
-<p>
-      <li>Selected the appropriate options or input information for each field before using the <i>Commit</i> button to enter your issue.
-     </ul>
-     <p>
-      The information you provide here significantly determines the effectiveness of your issue reports and the response to them. Descriptions for each of these fields follow to help you optimize your issue reports.
-<p>
-<b>Important note</b>: When you first enter a new issue, you cannot set a target milestone date, nor can you assign dependencies (flag other issues that depend on this new issue or those that it depends upon). To designate a target milestone or dependencies, you must first submit the new issue successfully, then retrieve it to access fields for setting a target milestone and creating dependencies.
-<p>
+<hr noshade size=1><a NAME="editissue"></a><span class="InputHeader">Viewing
+and modifying issues</span>
+<p>Existing issues may be accessed in two different ways:
+<ul>
+<li>
+Entering a specific issue number in the "Find" field located in the IssueZilla
+tool bar displays the "Issue View" page.</li>
 
-<hr noshade size=1>
-<p>
-<a name="entryfields"></a><span class="InputHeader">Issue entry field descriptions</span>
-     <dl>
-      <dt><span class="InputHeader">Version</span>
-      <dd>The release in which you identified this issue or found the defect. 
-      <p>
-      <dt><span class="InputHeader">Component/Sub Component</span>
-      <dd>Identify area within the project that this issue is associated with. Only one selection is permitted.
-      <p>
-      <dt><a name="rep_platform"><span class="InputHeader">Platform</span></a>
-      <dd>This corresponds to <i>your</i> hardware platform when you are reporting a defect. Options include:
-      <ul>
-       <li> All (happens on all platform; cross-platform issue)
-       <li> Macintosh
-       <li> PC
-       <li> Sun
-       <li> HP
-      </ul>
-      <b>Note:</b> Selecting the option "All" does not select issues assigned against all platforms.  It merely selects issues that <i>occur</i> on all platforms.
-      <p>
-      <dt><a name="op_sys"><span class="InputHeader">Operating System</span></a>
-       <dd>This is the operating system against which the issue is being reported. Legal operating systems include:
-      <ul>
-       <li> All (happens on all operating systems, making this a cross-platform issue)
-       <li> Windows 95
-       <li> Mac System 8.0
-       <li> Linux
-      </ul>
+<li>
+Querying for issues either by clicking the "Query database" button in the
+Project Issues page, or by clicking the "Query" link in the IssueZilla
+tool bar displays an "Issue List" page of your results. (See <a href="ddIssues_Query.html">Querying
+and tracking issues</a>.)</li>
+</ul>
+The Issue View page is similar to the Issue Entry page and contains many
+of the same fields, but there are several important additions:
+<dl>
+<dt>
+<span class="InputHeader">Target Milestone</span></dt>
 
-       Note that the operating system implies the platform, but not always. For example, Linux can run on PC, Macintosh, and others.
-      <p>
-      <dt><a name="priority"><span class="InputHeader">Priority</span></a>
-       <dd>This field let you assign a level of importance to help determine when this issue should be addressed relative to other issues. This field is utilized by the programmers/engineers to prioritize their work.
-      <p>
-      <table>
-       <tr><th>P1</th><td>Most important
-       <tr><th>P2</th><td>
-       <tr><th>P3</th><td>
-       <tr><th>P4</th><td>
-       <tr><th>P5</th><td>Least important
-      </table>
-      <p>
-      <dt><a name="issue_type"><span class="InputHeader">Issue Type</span></a>
-      <blockquote>
-       <p><b><i>Defect</i></b> is a problem with an existing feature that is either not developed to spec or does not work as designed. These are often referred to as "bugs."
-       <p><b><i>Enhancement</i></b> is an improvement to an existing feature.
-       <p><b><i>Feature</i></b> is an addition to the software to add a piece of functionality that does not yet exist.
-       <p><b><i>Task</i></b> is an activity to be done on behalf or in support of a feature or enhancement. Tasks do not typically require direct changes to the code base.
-	   <p><b><i>Patch</i></b> is a special kind of issue, a section of code to be applied or attached to existing software, often to fix a defect.
-      </blockquote>
-      <p>
+<dd>
+If your project has designated milestones, this field can be used to associated
+issues with those milestones, such as version releases. A milestone plan
+enumerates when different features are expected to be completed. If an
+issue has a target date or version release, this means the work on this
+issue must be completed by that date. This field should only be set or
+changed by the person responsible for the issue.</dd>
 
-      <dt><span class="InputHeader">Initial state</span>
-       <dd>Newly entered issues are either "new" or "unconfirmed." Marking an issue <a  href="/docs/issues_unconfirmedhelp.html">unconfirmed</a> means you have not yet determined whether it is true or valid. Read more about "state" in the <a href="issue_lifecycle.html">lifecycle of an issue</a>.
+<dt>
+<span class="InputHeader">Add/Remove CC:</span></dt>
 
+<dd>
+You can add additional email addresses to this issue to alert other project
+members when activity occurs on this issue. If you are adding multiple
+addresses, delimit these with single spaces; do not use commas or semi-colons.
+You can also <i>remove</i> one or more email address listed by selecting
+it and checking the "Remove selected Cc's" box below.</dd>
 
-       <p>
-       <dt><a name="assigned_to"><span class="InputHeader">Assigned To</span></a>
-        <dd>Enter the email address of the one individual who is in charge of resolving the issue. If this field is left blank, the issue by default is assigned to the component/sub component owner. Every time this field changes, the status changes to <b>NEW</b> to make it visible in the assignee's list of issues.
-       <dt><p><span class="InputHeader">Cc:</span>
-		<dd>Add email addresses of other individuals who need email notification when this issue changes status or when there is other activity on this issue. Delimit multiple email addressees by single spaces only -- no commas or semi-colons are necessary.
-       <p>Note: Assign cc addresses sparingly. Project participants whose interest or involvement in this issue is peripheral should be encouraged to use IssueZilla to check and track issues rather than to rely on automatic email notification.
+<dt>
+<span class="InputHeader">QA Contact</span></dt>
 
-       <p>
-       <dt><span class="InputHeader">URL</span>
-        <dd>How to use this field depends on the issue type:
-       <p>
-       <ul>
-        <li>For defects, URL should lead to a fairly stable system where the the problem is obvious or can be easily reproduced.
-        <li>For enhancements, URL should provide details pertaining to the improvement, such as mockups.
-        <li>For features, URL should link to any web-based form of material explaining the improvement such as mockups or design specs.
-        <li>For tasks, URL is optional and may include linking to the associated feature or enhancement.
-       </ul>
-       <p>
-       <dt><span class="InputHeader">Summary</span>
-        <dd>A terse, specific statement to describe this issue. This should a few unique, self-explanatory words to identify this issue easily in reports and short lists. Limiting your entry to the width of the field is best for the columnar display of query results.
-       <p>
-       <dt><span class="InputHeader">Description</span>
-        <dd>Provide a full description of the issue including any pertinent history or activity around this issue. Because this field is additive, it serves as the knowledge base and means of communicating through this issue's life cycle. Other project participants view and add comments or information using this field.
-       <p>
-     </dl><span class="InputHeader">After completing all necessary fields: </span>
-     <p>
-     <blockquote>
-      <i>Commit</i> enters this issue into the project's issue database.
-      <p><i>Reset</i> returns all field values to their default or blank settings.
-      <p><i>Remember values as bookmark template</i> lets you save your input settings to save keystrokes when entering multiple issues for the same project component.
-    </blockquote>
+<dd>
+This field should contain an email address or alias for the person(s) responsible
+for quality control of this issue.</dd>
 
-    <p>For more information about entering issues into IssueZilla, see also <a href="issuewritinghelp.html">Issue Writing Guidelines</a>.
-<p>
+<dt>
+<span class="InputHeader">URL</span></dt>
 
-<hr noshade size=1>
-<a name="editissue"><span class="InputHeader">Viewing and modifying issues</span></a>
+<dd>
+If this field is populated, clicking the field label links directly to
+the designated URL.</dd>
 
-    <p>Existing issues may be accessed in two different ways:
-    <ul>
-     <li>Entering a specific issue number in the "Find" field located in the IssueZilla tool bar displays the "Issue View" page. 
-     <li>Querying for issues either by clicking the "Query database" button in the Project Issues page, or by clicking the "Query" link in the IssueZilla tool bar displays an "Issue List" page of your results. (See <a href="ddIssues_Query.html">Querying and tracking issues</a>.)
-    </ul>
+<dt>
+<span class="InputHeader">Status Whiteboard</span></dt>
 
-    <p>The Issue View page is similar to the Issue Entry page and contains many of the same fields, but there are several important additions:
+<dd>
+The purpose of this generic field can be user-defined and project-specific.
+(In BugZilla, this field is used for writing short, one-line notes about
+the bug.)</dd>
 
-    <p>
-    <dl>
-     <dt><span class="InputHeader">Target Milestone</span>
-      <dd>If your project has designated milestones, this field can be used to associated issues with those milestones, such as version releases. A milestone plan enumerates when different features are expected to be completed. If an issue has a target date or version release, this means the work on this issue must be completed by that date. This field should only be set or changed by the person responsible for the issue. 
-     <p>
+<dt>
+<span class="InputHeader">Attachments</span></dt>
 
-     <dt><span class="InputHeader">Add/Remove CC:</span>
-      <dd>You can add additional email addresses to this issue to alert other project members when activity occurs on this issue. If you are adding multiple addresses, delimit these with single spaces; do not use commas or semi-colons. You can also <i>remove</i> one or more email address listed by selecting it and checking the "Remove selected Cc's" box below.
-     <p>
-     <dt><span class="InputHeader">QA Contact</span>
-      <dd>This field should contain an email address or alias for the person(s) responsible for quality control of this issue.
-     <p>
+<dd>
+Adding attachment to an issue can be very useful. For defects, appending
+test cases, screen shots and/or editor logs to the issue can help pinpoint
+the problem to help the developer reproduce it.</dd>
 
-     <dt><span class="InputHeader">URL</span>
-      <dd>If this field is populated, clicking the field label links directly to the designated URL.
-     <p>
+<p><br>For features, enhancements, and tasks, you can attach screen shots,
+mockups, and other files to provide supplemental information to illustrate
+the issue.
+<p>You can also used this field to attach a patch related to the issue
+when appropriate. Read more about <a href="contributing_patches.html">contributing
+patches</a>.
+<dt>
+<span class="InputHeader">Dependencies</span></dt>
 
-     <dt><span class="InputHeader">Status Whiteboard</span>
-      <dd>The purpose of this generic field can be user-defined and project-specific. (In BugZilla, this field is used for writing short, one-line notes about the bug.)
-     <p>
+<dd>
+When an issue can't be addressed until one or more other issues are resolved,
+these are dependencies. Each issue can have other issues it depends upon
+, as well as issues that depend upon it, that is, other issues that this
+issue "blocks" while being unresolved. The links next to these fields display
+a tree and graph illustrating the dependencies associated with the issue
+currently being viewed.</dd>
 
-     <dt><span class="InputHeader">Attachments</span>
-      <dd>Adding attachment to an issue can be very useful. For defects, appending test cases, screen shots and/or editor logs to the issue can help pinpoint the problem to help the developer reproduce it.
+<dt>
+<span class="InputHeader">Vote for this issue</span></dt>
 
-     <p> <p>For features, enhancements, and tasks, you can attach screen shots, mockups, and other files to provide supplemental information to illustrate the issue.
-	<p>You can also used this field to attach a patch related to the issue when appropriate. Read more about <a href="contributing_patches.html">contributing patches</a>.
-    
-     <p>
-     <dt><span class="InputHeader">Dependencies</span>
-      <dd>When an issue can't be addressed until one or more other issues are resolved, these are dependencies. Each issue can have other issues it depends upon , as well as issues that depend upon it, that is, other issues that this issue "blocks" while being unresolved. The links next to these fields display a tree and graph illustrating the dependencies associated with the issue currently being viewed.
-     <p>
+<dd>
+<!-- (adapted from bugzilla.mozilla.org's "Bugzilla Voting" page) -->IssueZilla's
+"voting" feature allows project members to have a certain number of votes
+in their project to use toward issues. Project owners set the number of
+votes allowed per issue, as well as the number of votes allowed per member.
+Some projects/components may not allow any, which means you can't vote
+on those issues at all. Your vote indicates which issues you believe are
+the most important to be addressed.</dd>
 
+<p><br>You may vote for the same bug more than once, however, you have
+a limited number of total votes allocated to you. You can either vote once
+for many issues, or use multiple votes for a fewer issues that you think
+are particularly critical.
+<p>If an issue has received votes, the total number appears next to "Votes
+for this issue", or "0" if no votes have been logged. Clicking on this
+number displays the Show Votes page. If there are votes, names and their
+associated number of votes are listed.
+<p>To view a list of issues that have received votes, use the IssueZilla
+Query page, and enter the numeral "1" in the "At least ___ votes" field.
+This returns issues in your query results with at least one vote.
+<p>To vote for an issue:
+<ul>
+<li>
+Open the issue (using the "Find" link in the tool bar or by clicking the
+issue from a list or report).</li>
 
- 	<dt><span class="InputHeader">Vote for this issue</span> 
-      <dd>
-<!-- (adapted from bugzilla.mozilla.org's "Bugzilla Voting" page) -->
+<li>
+Click on the "Vote for this issue" link just above the "Additional Comments"
+field. (If no such link appears, then voting may not be allowed for this
+issue's project/component.)</li>
 
-IssueZilla's "voting" feature allows project members to have a certain number of votes in their project to use toward issues. Project owners set the number of votes allowed per issue, as well as the number of votes allowed per member. Some projects/components may not allow any, which means you can't vote on those issues at all. Your vote indicates which issues you believe are the most important to be addressed. 
-     <p>
-You may vote for the same bug more than once, however, you have a limited number of total votes allocated to you. You can either vote once for many issues, or use multiple votes for a fewer issues that you think are particularly critical.
-     <p>
-If an issue has received votes, the total number appears next to "Votes for this issue", or "0" if no votes have been logged. Clicking on this number displays the Show Votes page. If there are votes, names and their associated number of votes are listed.
-     <p>
-To view a list of issues that have received votes, use the IssueZilla Query page, and enter the numeral "1" in the "At least ___ votes" field. This returns issues in your query results with at least one vote.
+<li>
+Indicate the number of votes you want to log for this issue. This page
+also displays how many votes you've given to other bugs, allowing you may
+reallocate your votes as necessary.</li>
 
-     <p>To vote for an issue: 
-     <ul>
-      <li>Open the issue (using the "Find" link in the tool bar or by clicking the issue from a list or report).
-      <li>Click on the "Vote for this issue" link just above the "Additional Comments" field. (If no such link appears, then voting may not be allowed for this issue's project/component.) 
-      <li>Indicate the number of votes you want to log for this issue. This page also displays how many votes you've given to other bugs, allowing you may reallocate your votes as necessary.
-      <li>You receive automatic email notification anytime changes occur on issues you have voted for. 
-      <li>You may review your votes at any time by clicking the "Change your password or preferences" link in the IssueZilla tool bar or at the bottom of the query page.
-     </ul>
-     <p>
-What's the purpose of this voting feature? Read about the important role of <a href="http://www.tigris.org/editorial/safetynet.html" target="_new">consensus voting in open source projects</a>.
-     <p>
+<li>
+You receive automatic email notification anytime changes occur on issues
+you have voted for.</li>
 
-     <dt><span class="InputHeader">Groups</span>
-      <dd>If one or more drop boxes appear identifying project-defined groups to be included in or excluded from viewing an issue, this indicates that the project/component owner has created groups within the project. You should contact this person to determine how to use these fields.
-     <p>
+<li>
+You may review your votes at any time by clicking the "Change your password
+or preferences" link in the IssueZilla tool bar or at the bottom of the
+query page.</li>
+</ul>
+What's the purpose of this voting feature? Read about the important role
+of <a href="http://www.tigris.org/editorial/safetynet.html" target="_new">consensus
+voting in open source projects</a>.
+<dt>
+<span class="InputHeader">Groups</span></dt>
 
-     <dt><span class="InputHeader">Leave as NEW</span>
-      <dd>If you are viewing an issue with the status NEW but it is not assigned to you, leave this default as checked. When the issue <i>is</i> assigned to you, you should accept it by changing its status to "Started."
-     <p>
+<dd>
+If one or more drop boxes appear identifying project-defined groups to
+be included in or excluded from viewing an issue, this indicates that the
+project/component owner has created groups within the project. You should
+contact this person to determine how to use these fields.</dd>
 
-     <dt><span class="InputHeader">Resolve issue</span> 
-      <dd>Once an issue is resolved, this is where to designate the type of resolution. Changing an issue to "Resolved" means that as far as the assignee is concerned, this issue is completed. <a href="issue_lifecycle.html#resolvedissues">Read more</a> about the multiple options in this field's pull-down menu. <b>Note: Changing an issue's status to FIXED signals all other project members that any source file changes associated with this issue have been checked into the CVS repository.</b>
-     <p>
+<dt>
+<span class="InputHeader">Leave as NEW</span></dt>
 
-     <dt><span class="InputHeader">Reassign</span>
-      <dd>The person responsible for the issue can be changed here by entering a new email address, or reassigned to the component/sub component owner. 
-     <p>
+<dd>
+If you are viewing an issue with the status NEW but it is not assigned
+to you, leave this default as checked. When the issue <i>is</i> assigned
+to you, you should accept it by changing its status to "Started."</dd>
 
-     <dt><span class="InputHeader">View Issue Activity</span>
-      <dd>This link displays a snapshot page of changes made to an issue.
-     <p>
+<dt>
+<span class="InputHeader">Resolve issue</span></dt>
 
-     <dt><span class="InputHeader">Format For Printing</span>
-      <dd>This links redisplays the Issue View in a format for printing out. 
+<dd>
+Once an issue is resolved, this is where to designate the type of resolution.
+Changing an issue to "Resolved" means that as far as the assignee is concerned,
+this issue is completed. <a href="issue_lifecycle.html#resolvedissues">Read
+more</a> about the multiple options in this field's pull-down menu. <b>Note:
+Changing an issue's status to FIXED signals all other project members that
+any source file changes associated with this issue have been checked into
+the CVS repository.</b></dd>
 
-     <p>
-     <dt><span class="InputHeader">Commit</span>
-      <dd>This button saves any modifications made to this issue. <b>Caution! When viewing an issue, the "Enter" key works like the <i>Commit</i> button. Any modifications you may have made (accidentally or otherwise) are saved and the issue's assignee and cc list receive email notification of activity on this issue.</b>
+<dt>
+<span class="InputHeader">Reassign</span></dt>
 
-     <p><b><i>To exit out of viewing this issue without making any changes</i></b>, use the links at the top of this page or in the IssueZilla tool bar to view other issues, or the <i>Back</i> button in your browser. Even when you have changed fields, as long as you do not use the <i>Commit</i> button or the "Enter" key, the issue remains unchanged in the database.
-     <p>
+<dd>
+The person responsible for the issue can be changed here by entering a
+new email address, or reassigned to the component/sub component owner.</dd>
 
-     <dt><span class="InputHeader">Reset</span>
-      <dd>Returns all fields to their <i>previously committed</i> values.
-    </dl>
-<p>
+<dt>
+<span class="InputHeader">View Issue Activity</span></dt>
 
-<hr noshade size=1>
-<a href="ProjectIssues.html">Back to Project Issues help</a><br>
-<a href="/servlets/HelpTOC">Back to main Help index</a></p></span>
-</span>
+<dd>
+This link displays a snapshot page of changes made to an issue.</dd>
 
+<dt>
+<span class="InputHeader">Format For Printing</span></dt>
+
+<dd>
+This links redisplays the Issue View in a format for printing out.</dd>
+
+<dt>
+<span class="InputHeader">Commit</span></dt>
+
+<dd>
+This button saves any modifications made to this issue. <b>Caution! When
+viewing an issue, the "Enter" key works like the <i>Commit</i> button.
+Any modifications you may have made (accidentally or otherwise) are saved
+and the issue's assignee and cc list receive email notification of activity
+on this issue.</b></dd>
+
+<p><br><b><i>To exit out of viewing this issue without making any changes</i></b>,
+use the links at the top of this page or in the IssueZilla tool bar to
+view other issues, or the <i>Back</i> button in your browser. Even when
+you have changed fields, as long as you do not use the <i>Commit</i> button
+or the "Enter" key, the issue remains unchanged in the database.
+<dt>
+<span class="InputHeader">Reset</span></dt>
+
+<dd>
+Returns all fields to their <i>previously committed</i> values.</dd>
+</dl>
+
+<hr noshade size=1><a href="ProjectIssues.html">Back to Project Issues
+help</a>
+<br><a href="/servlets/HelpTOC">Back to main Help index</a>
+<br></span></span>
 </body>
 </html>

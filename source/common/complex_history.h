@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_static_load.h"
 
 /*
@@ -42,6 +40,7 @@
 #define FLG_BY_NAME_NOCASE 1
 
 int init_history_subdirs(char *dirname, lList **pplist);
+
 int init_history_files(lList *ldir, lListElem *lsubdir, lList **pplist);
 
 int find_complex_version(lList *ldir, lListElem *version_subdir, unsigned long uldate, lListElem **ppelem);
@@ -60,12 +59,12 @@ int make_complex_list(lList *ldir, unsigned long uldate, lList **pplist);
 
 int make_filename(char *buf, unsigned int max_len, const char *dir1, const char *dir2, const char *file);
 
-time_t version_filename_to_t_time(char *timestr);
+time_t version_filename_to_t_time(const char *timestr);
 char *t_time_to_version_filename(char *buf, size_t buflen, time_t t_time);
 
-int create_version_subdir(lList *ldir, char *dirname, lListElem **ppelem);
+int create_version_subdir(lList *ldir, const char *dirname, lListElem **ppelem);
 
-int find_version_subdir_by_name(lList *ldir, char *dirname, lListElem **ppelem, unsigned long flags);
+int find_version_subdir_by_name(lList *ldir, const char *dirname, lListElem **ppelem, unsigned long flags);
 
 int write_complex_host_version(lList *ldir, lListElem *version_subdir, unsigned long uldate, lList *cmplx, lListElem *host);
 
@@ -77,9 +76,9 @@ int sge_write_queue_history(lListElem *qep);
 int write_host_history(lListElem *host);
 int write_complex_history(lListElem *complex);
 
-int prepare_version_subdir(lList **psubdirs, char *sname, char *name, lListElem **pversion_subdir);
+int prepare_version_subdir(lList **psubdirs, const char *sname, const char *name, lListElem **pversion_subdir);
 
-int is_object_in_history(char *sname, char *name);
+int is_object_in_history(const char *sname, const char *name);
 
 #endif /* __COMPLEX_HISTORY_H */
 

@@ -73,7 +73,7 @@ static int initialized = 0;
  *        -2 if module is already initialized
  *--------------------------------------------------------------*/
 int set_admin_username(
-char *user,
+const char *user,
 char *err_str  
 ) {
    struct passwd *admin_user;

@@ -107,7 +107,7 @@ char **argv
    char *cp;
    fd_set fds;
    int fd;
-   char *admin_user;
+   const char *admin_user;
    char err_str[1024];
    char shadowd_pidfile[SGE_PATH_MAX];
 

@@ -129,7 +129,7 @@ int i
 /*---------------------------------------------------------------*/
 void log_time(
 int i,
-char *str 
+const char *str 
 ) {
 
    if (i < 0 || i >= NESTLEVEL)

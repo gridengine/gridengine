@@ -64,7 +64,7 @@ typedef struct _TOVEntry {
    Cardinal      override_tickets;
 } tTOVEntry;
 
-static tTOVEntry cdata;
+static tTOVEntry cdata = {0, 0, 0, 0, 0};
 static Boolean data_changed = False;
 
 static Widget qmon_tov = 0;
@@ -117,6 +117,7 @@ static void qmonTOVUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonTOVApply(Widget w, XtPointer cld, XtPointer cad);
 static Boolean qmonTOVEntryToCull(lListElem *scep, tTOVEntry *tov_data);
 static Boolean qmonCulltoTOVEntry(tTOVEntry *tov_data, lListElem *scep);
+static int qmonTOVUpdateFill(Widget w, lList **alpp);
 
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
@@ -125,6 +126,7 @@ void qmonPopupTicketOverview(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   lList *alp = NULL;
    DENTER(GUI_LAYER, "qmonPopupTicketOverview");
 
    /* set busy cursor */
@@ -148,8 +150,12 @@ XtPointer cld, cad;
    ** set the Ticket Overview Data
    ** cdata should always contain the actual data
    */
-   qmonTOVUpdate(qmon_tov, NULL, NULL);
-   
+   if (qmonTOVUpdateFill(qmon_tov, &alp)) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
 
    /*
    ** popup and raise the dialog
@@ -351,22 +357,37 @@ static void qmonTOVUpdate(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   lList *scl = NULL;
-   lListElem *scep = NULL;
-   
    DENTER(GUI_LAYER, "qmonTOVUpdate");
    
-   /*
-   ** set and get the sge conf list
-   */
-   qmonMirrorMulti(SC_T);
-   scl = qmonMirrorList(SGE_SC_LIST);
-   scep = lFirst(scl);
-   if (qmonCulltoTOVEntry(&cdata, scep))
-      XmtDialogSetDialogValues(tov_layout, &cdata);
+   qmonTOVUpdateFill(w, NULL);
       
    DEXIT;
 }
+
+/*-------------------------------------------------------------------------*/
+static int qmonTOVUpdateFill(Widget w, lList **alpp)
+{
+   lList *scl = NULL;
+   lListElem *scep = NULL;
+   
+   DENTER(GUI_LAYER, "qmonTOVUpdateFill");
+   /*
+   ** set and get the sge conf list
+   */
+   if (qmonMirrorMultiAnswer(SC_T, alpp)) {
+      DEXIT;
+      return -1;
+   }
+   
+   scl = qmonMirrorList(SGE_SC_LIST);
+   scep = lFirst(scl);
+   qmonCulltoTOVEntry(&cdata, scep);
+   
+   XmtDialogSetDialogValues(tov_layout, &cdata);
+   
+   DEXIT;
+   return 0;
+}   
 
 /*-------------------------------------------------------------------------*/
 static void qmonTOVApply(w, cld, cad)

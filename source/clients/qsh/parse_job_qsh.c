@@ -57,6 +57,9 @@
 #include "resolve_host.h"
 #include "path_aliases.h"
 #include "msg_common.h"
+#include "job.h"
+#include "sge_rangeL.h"
+#include "sge_job_refL.h"
 
 #include "jb_now.h"
 
@@ -80,7 +83,7 @@ lList *cull_parse_qsh_parameter(
 lList *cmdline,
 lListElem **pjob 
 ) {
-   char *cp;
+   const char *cp;
    lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
@@ -172,7 +175,7 @@ lListElem **pjob
    */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-clear"))) {
       lListElem *ep_run;
-      char *cp_switch;
+      const char *cp_switch;
 
       for (ep_run = lFirst(cmdline); ep_run;) {
          /*
@@ -272,6 +275,67 @@ lListElem **pjob
    ** a little redesign of cull would be nice
    ** see parse_list_simple
    */
+#if 1 /* EB: todo */   
+{
+   lList *range_list;
+   lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+
+   job_set_ja_task_ids(*pjob, 1, 1, 1);
+   range_list = lGetList(*pjob, JB_ja_structure);
+
+   n_h_list = lCopyList("range list", range_list);
+   u_h_list = lCreateList("user hold list", RN_Type);
+   o_h_list = lCreateList("operator hold list", RN_Type);
+   s_h_list = lCreateList("system hold list", RN_Type);
+   if (!n_h_list || !u_h_list || !o_h_list || !s_h_list) {
+      sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+      DEXIT;
+      return answer;
+   }     
+   lSetList(*pjob, JB_ja_n_h_ids, n_h_list);
+   lSetList(*pjob, JB_ja_u_h_ids, u_h_list);
+   lSetList(*pjob, JB_ja_o_h_ids, o_h_list);
+   lSetList(*pjob, JB_ja_s_h_ids, s_h_list);
+}
+#endif
+
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
+      int in_hold_state = 0;
+
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
+         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_OPERATOR) {
+         lSetList(*pjob, JB_ja_o_h_ids, lCopyList("operator hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_SYSTEM) {
+         lSetList(*pjob, JB_ja_s_h_ids, lCopyList("system hold ids",
+            lGetList(*pjob, JB_ja_n_h_ids)));
+         in_hold_state = 1;
+      }
+      if (in_hold_state) {
+         lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+      }
+      lRemoveElem(cmdline, ep);
+   }
+
+   /* -hold_jid */
+   if (lGetElemStr(cmdline, SPA_switch, "-hold_jid")) {
+      lListElem *ep, *sep;
+      lList *jref_list = NULL;
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid"))) {
+         for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+            DPRINTF(("-hold_jid %s\n", lGetString(sep, STR)));
+            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, STR), JRE_Type);
+         }
+         lRemoveElem(cmdline, ep);
+      }
+      lSetList(*pjob, JB_jid_predecessor_list, jref_list);
+   }
 
 
    /* not needed in job struct */
@@ -468,15 +532,26 @@ lListElem **pjob
 
    if (!(ep = lGetElemStr(lGetList(*pjob, JB_env_list), VA_variable, 
          "DISPLAY"))) {
-      char *display;
+      const char *display;
+      char *new_display = NULL;
       lList  *lp;
       lListElem *vep;
       char str[1024 + 1];
 
       display = sge_getenv("DISPLAY");
+
+      lp = lGetList(*pjob, JB_env_list);
+      if (!lp) {
+         lp = lCreateList("env list", VA_Type);
+         lSetList(*pjob, JB_env_list, lp);
+      }
+
+      vep = lCreateElem(VA_Type);
+      lSetString(vep, VA_variable, "DISPLAY");
+
       if (!display || (*display == ':')) {
          lListElem *hep;
-         char *ending = NULL;
+         const char *ending = NULL;
 
          if (display) {
             ending = display;
@@ -491,32 +566,29 @@ lListElem **pjob
             case -1:
                sprintf(str, MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S,
                   cl_errstr(-1));
-            sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
                lFreeElem(hep);
                DEXIT;
             return answer;
             default:
-               sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(hep, EH_name));
-            sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
+               sprintf(str, MSG_SGETEXT_CANTRESOLVEHOST_S, 
+                       lGetString(hep, EH_name));
+               sge_add_answer(&answer, str, STATUS_EUNKNOWN, 0);
                lFreeElem(hep);
             DEXIT;
             return answer;
          }
-         display = malloc(strlen(lGetString(hep, EH_name)) + 4 + 1 +
+         new_display = malloc(strlen(lGetString(hep, EH_name)) + 4 + 1 +
                            (ending ? strlen(ending) : 0));
-         strcpy(display, lGetString(hep, EH_name));
-         strcat(display, (ending ? ending : ":0.0"));
+         strcpy(new_display, lGetString(hep, EH_name));
+         strcat(new_display, (ending ? ending : ":0.0"));
          lFreeElem(hep);
+         lSetString(vep, VA_value, new_display);
+         FREE(new_display);
+      } else {
+         lSetString(vep, VA_value, display);
       }
 
-      lp = lGetList(*pjob, JB_env_list);
-      vep = lCreateElem(VA_Type);
-      lSetString(vep, VA_variable, "DISPLAY");
-      lSetString(vep, VA_value, display);
-      if (!lp) {
-         lp = lCreateList("env list", VA_Type);
-         lSetList(*pjob, JB_env_list, lp);
-      }
       lAppendElem(lp, vep);
    }
 

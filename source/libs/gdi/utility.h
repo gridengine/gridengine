@@ -37,20 +37,34 @@
 #include "basis_types.h"
 
 void sge_show_hold_list(int hold, int how);
-int sge_atoi(char *int_str);
+
+int sge_atoi(const char *int_str);
+
 char *sge_malloc(int size);
+
 char *sge_realloc(char *ptr, int size);
+
 char *sge_free(char *cp);
+
 void sge_show_checkpoint(int how, int op);
+
 void sge_show_y_n(int op, int how);
+
 void sge_show_mail_options(int op, int how);
+
 void sge_get_states(int nm, char *str, u_long32 op);
+
 void sge_show_states(int nm, u_long32 how, u_long32 states);
-int sge_unlink(char *prefix, char *suffix);
-char *sge_getenv(char *env_str);
+
+int sge_unlink(const char *prefix, const char *suffix);
+
+const char *sge_getenv(const char *env_str);
+
 void sge_sleep(int sec, int usec);
-int check_isalive(char *);
-int verify_filename(char *fname);
+
+int check_isalive(const char *);
+
+int verify_filename(const char *fname);
 
 #endif /* __UTILITY_H */
 

@@ -38,7 +38,7 @@
 #   include "sge_gdi_intern.h"
 #endif
 
-void resend_signal_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, char *queue);
+void resend_signal_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);
 void rebuild_signal_events(void);
 void sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 

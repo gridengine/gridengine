@@ -32,20 +32,26 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
 unsigned char *pack_ushort(u_short us, unsigned char *cp);
+
 int pack_ushort_len(u_short us);
+
 unsigned char *unpack_ushort(u_short *us, unsigned char *cp);
+
 unsigned char *pack_ulong(u_long32 ul, unsigned char *cp);
+
 int pack_ulong_len(u_long ul);
+
 unsigned char *unpack_ulong(u_long32 *ul, unsigned char *cp);
-unsigned char *pack_string(char *str, unsigned char *cp);
-int pack_string_len(char *str);
+
+unsigned char *pack_string(const char *str, unsigned char *cp);
+
+int pack_string_len(const char *str);
+
 unsigned char *unpack_string(char *str, int len, unsigned char *cp);
-int packed_strlen(char *cp);
-int writenbytes(int sfd, char *ptr, int n);
-int readnbytes(int sfd, char *ptr, int n);
+
 int readnbytes_nb(int sfd, char *ptr, int n, int timeout);
-int writenbytes_nb(int sfd, char *ptr, int n, int timeout);
+
+int writenbytes_nb(int sfd, const char *ptr, int n, int timeout);
 
 #endif /* __COMMD_IO_H */

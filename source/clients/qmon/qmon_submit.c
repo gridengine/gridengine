@@ -90,7 +90,7 @@
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "job.h"
 #include "path_aliases.h"
 #include "jb_now.h"
@@ -338,7 +338,7 @@ static void qmonFreeSMData(tSMEntry *data);
 static void qmonInitSMData(tSMEntry *data);
 static u_long32 ConvertMailOptions(int mail_options);
 static int MailOptionsToDialog(u_long32 mail_options);
-static String cwd_string(String sge_o_home);
+static String cwd_string(StringConst sge_o_home);
 static void qmonSubmitChangeResourcesPixmap(void); 
 static void qmonSubmitReadScript(Widget w, String file, String merges, int r_defaults);
 static void qmonSubmitSetSensitive(int mode, int submode);
@@ -1279,7 +1279,6 @@ XtPointer cld, cad;
          JB_mail_options,
          JB_mail_list,
          JB_notify,
-/*          JB_hold, */
          JB_restart,
          JB_account,
          JB_project,
@@ -1649,17 +1648,17 @@ lListElem *jep,
 tSMEntry *data,
 char *prefix 
 ) {
-   String job_script;
-   char job_tasks[1024];
+   StringConst job_script;
+   StringBufferT dyn_job_tasks = {NULL, 0};
    char pe_tasks[BUFSIZ];
    char pe_range[BUFSIZ];
-   String job_name;
-   String directive_prefix;
-   String cell;
-   String account_string;
-   String pe;
-   String project;
-   String ckpt_obj;
+   StringConst job_name;
+   StringConst directive_prefix;
+   StringConst cell;
+   StringConst account_string;
+   StringConst pe;
+   StringConst project;
+   StringConst ckpt_obj;
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -1677,11 +1676,10 @@ char *prefix
    else
       data->job_script = NULL;
 
-   strcpy(job_tasks, "");
    if (is_array(jep))
-      get_taskrange_str(lGetList(jep, JB_ja_tasks), job_tasks);
-   if (job_tasks[0] != '\0')
-      data->job_tasks = XtNewString(job_tasks);
+      get_taskrange_str(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
+   if (dyn_job_tasks.s && (dyn_job_tasks.s)[0] != '\0')
+      data->job_tasks = XtNewString(dyn_job_tasks.s);
 
    if ((job_name = lGetString(jep, JB_job_name)))
       data->job_name = XtNewString(job_name);
@@ -1824,7 +1822,8 @@ int save
 ) {
    int len;
    char *job_script;
-   char *cp, *s;
+   const char *cp;
+   char *s;
    int reduced_job;
    char pe_tasks[BUFSIZ];
    char *pe = NULL;
@@ -1874,6 +1873,33 @@ int save
          lSetUlong(tap, RN_max, 1);
          lSetUlong(tap, RN_step, 1);
       }
+
+#if 1 /* EB: TODO*/
+      if (!reduced_job) {
+         lList *n_h_list, *u_h_list, *o_h_list, *s_h_list; 
+
+         n_h_list = lCopyList("range list", range_list);
+         u_h_list = lCreateList("user hold list", RN_Type);
+         o_h_list = lCreateList("operator hold list", RN_Type);
+         s_h_list = lCreateList("system hold list", RN_Type);
+         lSetList(jep, JB_ja_n_h_ids, n_h_list);
+         lSetList(jep, JB_ja_u_h_ids, u_h_list);
+         lSetList(jep, JB_ja_o_h_ids, o_h_list);
+         lSetList(jep, JB_ja_s_h_ids, s_h_list); 
+
+         for_each (range, range_list) {
+            start = lGetUlong(range, RN_min);
+            end = lGetUlong(range, RN_max);
+            step = lGetUlong(range, RN_step);
+            for (; start<=end; start+=step) {
+               lAddElemUlong(&jat_list, JAT_task_number, start, JAT_Type);
+            }
+         }
+         lSetList(jep, JB_ja_tasks, jat_list);
+         lSetList(jep, JB_ja_structure, range_list);
+      }
+
+#else
       for_each (range, range_list) {
          start = lGetUlong(range, RN_min);
          end = lGetUlong(range, RN_max);
@@ -1884,6 +1910,7 @@ int save
       }
       lSetList(jep, JB_ja_structure, range_list);
       lSetList(jep, JB_ja_tasks, jat_list);
+#endif
    }
    else {   
       if (reduced_job) {
@@ -1898,7 +1925,30 @@ int save
          lSetList(jep, JB_ja_structure, NULL);
          lAddElemUlong(&jat_list, JAT_task_number, 1, JAT_Type);
          lSetList(jep, JB_ja_tasks, jat_list);
-      }   
+      }  
+ 
+#if 1 /* EB: TODO*/
+      if (!reduced_job) {
+         lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+         lListElem *tap = NULL;
+         lList *range_list = NULL;
+
+         tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
+         lSetUlong(tap, RN_max, 1);
+         lSetUlong(tap, RN_step, 1);
+
+         n_h_list = lCopyList("range list", range_list);
+         u_h_list = lCreateList("user hold list", RN_Type);
+         o_h_list = lCreateList("operator hold list", RN_Type);
+         s_h_list = lCreateList("system hold list", RN_Type);
+
+         lSetList(jep, JB_ja_n_h_ids, n_h_list);
+         lSetList(jep, JB_ja_u_h_ids, u_h_list);
+         lSetList(jep, JB_ja_o_h_ids, o_h_list);
+         lSetList(jep, JB_ja_s_h_ids, s_h_list);
+         lSetList(jep, JB_ja_structure, range_list);
+      }                       
+#endif
    }
 
    if (!data->job_name || data->job_name[0] == '\0') {
@@ -2014,14 +2064,17 @@ int save
 
    if (data->hold) {
       lListElem *jap;
-      /* simple job */
-      if (!lGetList(jep, JB_ja_tasks)) {
-         for_each (jap, lGetList(jep, JB_ja_tasks)) {
-            lSetUlong(jap, JAT_hold, MINUS_H_TGT_USER); 
-         }
+      if (!is_array(jep)) {
+         /* 
+          * simple job 
+          */
+         lSetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_hold,
+                     MINUS_H_CMD_SET|MINUS_H_TGT_USER);
       }
-      /* array job */
       else {
+         /* 
+          * array job 
+          */
          if (data->task_range) {
             lListElem *range;
             u_long32 start, end, step;
@@ -2034,18 +2087,26 @@ int save
                   while (jap && lGetUlong(jap, JAT_task_number) != start) {
                      jap = lNext(jap);
                   }
-                  lSetUlong(jap, JAT_hold, MINUS_H_TGT_USER);
-                  jap = lNext(jap);
+                  if (jap) {
+                     lSetUlong(jap, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
+                  }   
                }
             }
          }
          else {
             lListElem *jap;
             for_each (jap, lGetList(jep, JB_ja_tasks)) {
-               lSetUlong(jap, JAT_hold, MINUS_H_TGT_USER);
+               lSetUlong(jap, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
             }
          }
       }
+#if 1 /* EB: TODO*/
+      if (!reduced_job) {
+         lSetList(jep, JB_ja_u_h_ids, lCopyList("user hold ids",
+            lGetList(jep, JB_ja_n_h_ids))); 
+         lSetList(jep, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
+      }
+#endif
    }
    else {
       lListElem *jap;
@@ -2134,7 +2195,7 @@ int save
 
 /*-------------------------------------------------------------------------*/
 static String cwd_string(
-String sge_o_home 
+StringConst sge_o_home 
 ) {
    static char cwd_str[BUFSIZ];
    char cwd_str2[BUFSIZ];
@@ -2449,7 +2510,7 @@ XtPointer cld, cad;
    lList *pel = NULL;
    lListElem *pep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonSubmitAskForPE");
@@ -2457,7 +2518,7 @@ XtPointer cld, cad;
    pel = qmonMirrorList(SGE_PE_LIST);
    n = lGetNumberOfElem(pel);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (pep=lFirst(pel), i=0; i<n; pep=lNext(pep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -2466,9 +2527,10 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a Parallel Environment}",
-                        "@{Available Parallel Environments}", strs, n,
-                        False, buf, BUFSIZ, NULL); 
+                        "@{Available Parallel Environments}", 
+                        (String*) strs, n, False, buf, BUFSIZ, NULL); 
       
       if (status) {
          strcat(buf, " 1");
@@ -2502,7 +2564,7 @@ XtPointer cld, cad;
    lList *ckptl = NULL;
    lListElem *cep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonSubmitAskForCkpt");
@@ -2511,7 +2573,7 @@ XtPointer cld, cad;
    ckptl = qmonMirrorList(SGE_CKPT_LIST);
    n = lGetNumberOfElem(ckptl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (cep=lFirst(ckptl), i=0; i<n; cep=lNext(cep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -2520,9 +2582,10 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a checkpoint object}",
-                        "@{Available checkpoint objects}", strs, n,
-                        False, buf, BUFSIZ, NULL); 
+                        "@{Available checkpoint objects}", 
+                        (String*) strs, n, False, buf, BUFSIZ, NULL); 
       
       if (status) {
          XmtInputFieldSetString(submit_ckpt_obj, buf);
@@ -2548,7 +2611,7 @@ XtPointer cld, cad;
    lList *pl = NULL;
    lListElem *cep = NULL;
    int n, i;
-   String *strs = NULL;
+   StringConst *strs = NULL;
    static char buf[BUFSIZ];
    
    DENTER(GUI_LAYER, "qmonSubmitAskForProject");
@@ -2557,7 +2620,7 @@ XtPointer cld, cad;
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
       for (cep=lFirst(pl), i=0; i<n; cep=lNext(cep), i++) {
         /*
         ** we get only references don't free, the strings
@@ -2566,8 +2629,9 @@ XtPointer cld, cad;
       }
     
       strcpy(buf, "");
+      /* FIX_CONST_GUI */
       status = XmtAskForItem(w, NULL, "@{Select a project}",
-                        "@{Available projects}", strs, n,
+                        "@{Available projects}", (String*) strs, n,
                         False, buf, BUFSIZ, NULL); 
       
       if (status) {

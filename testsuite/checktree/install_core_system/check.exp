@@ -345,6 +345,11 @@ proc install_qmaster {} {
           close_spawn_process $id;
           return;  
        }
+       -i $sp_id "coredump" {
+          set_error "-2" "install_qmaster - coredump";
+          close_spawn_process $id
+          return
+       }
 
        -i $sp_id timeout { 
           set_error "-1" "install_qmaster - timeout while waiting for output"; 
@@ -392,7 +397,7 @@ proc install_qmaster {} {
              puts "press RETURN"
              gets stdin anykey
           }
-          send "\n"
+          send -i $sp_id "\n"
           continue;
        }
 
@@ -408,7 +413,7 @@ proc install_qmaster {} {
              puts "press RETURN"
              gets stdin anykey
           }
-          send "y\n"
+          send -i $sp_id "y\n"
           continue;
        }
  
@@ -418,7 +423,7 @@ proc install_qmaster {} {
              puts "press RETURN"
              gets stdin anykey
           }
-          send "y\n"
+          send -i $sp_id "y\n"
           continue;
        }
 
@@ -428,7 +433,7 @@ proc install_qmaster {} {
              puts "press RETURN"
              gets stdin anykey
           }
-          send "y\n"
+          send -i $sp_id "y\n"
           continue;
        }
 
@@ -438,7 +443,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "Do you want to set the file permissions" {
@@ -447,7 +452,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "yes\n"
+          send -i $sp_id "yes\n"
           continue;
        }
 
@@ -457,7 +462,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "y\n"
+          send -i $sp_id "y\n"
           continue;
        }
 
@@ -467,7 +472,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "if this is ok or stop the installation with" {
@@ -477,7 +482,7 @@ proc install_qmaster {} {
                   puts "press RETURN"
                   gets stdin anykey
              }
-             send "\n"
+             send -i $sp_id "\n"
              continue;
           } else {
              set_error "-1" "install_qmaster - tried to install not as root"
@@ -492,7 +497,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "under an user id other than" {
@@ -501,7 +506,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "you want to select another qmaster spool directory" {
@@ -510,7 +515,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "<RETURN> to see where" {
@@ -520,7 +525,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "\n"
+          send -i $sp_id "\n"
           continue;
        }
        -i $sp_id "Did you install this version with >pkgadd<" {
@@ -530,7 +535,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "Enter spool directory or hit" {
@@ -543,7 +548,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
             }
-            send "$spooldir\n"
+            send -i $sp_id "$spooldir\n"
             set local_master_spool_set 1
           } else {
             # use default spool dir
@@ -552,7 +557,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
             }
-            send "\n"
+            send -i $sp_id "\n"
           }
           continue;
        }
@@ -565,7 +570,7 @@ proc install_qmaster {} {
                puts "(2)press RETURN"
                gets stdin anykey
           }
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
 
@@ -576,7 +581,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "$CHECK_DEFAULT_DOMAIN\n"
+          send -i $sp_id "$CHECK_DEFAULT_DOMAIN\n"
 
           continue;
        }
@@ -589,7 +594,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "Do you want to create a new configuration" {
@@ -599,7 +604,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "y\n"
+          send -i $sp_id "y\n"
           continue;
        }
        -i $sp_id "Do you want to use a file which contains the list of hosts" {
@@ -609,7 +614,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
    
@@ -620,7 +625,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "n\n"
+          send -i $sp_id "n\n"
           continue;
        }
        -i $sp_id "enter a range" {
@@ -631,7 +636,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send "${myrange}\n"
+          send -i $sp_id "${myrange}\n"
           continue;
        }
        -i $sp_id "installation is now completed" {
@@ -646,14 +651,14 @@ proc install_qmaster {} {
           incr hostcount 1 
           if {$hostcount == 1} {
              foreach exechost $CHECK_CORE_EXECD {
-               send " $exechost"
+               send -i $sp_id " $exechost"
                puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
              } 
              puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-             send "\n"
+             send -i $sp_id "\n"
           } else {
              puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-             send "\n"
+             send -i $sp_id "\n"
           }
           continue;
        }
@@ -665,7 +670,7 @@ proc install_qmaster {} {
                gets stdin anykey
           }
 
-          send " "
+          send -i $sp_id " "
           continue;
        }
        -i $sp_id "Error:" {
@@ -695,7 +700,7 @@ proc install_qmaster {} {
                puts "press RETURN"
                gets stdin anykey
           }
-          send "\n"
+          send -i $sp_id "\n"
           continue;
        }
        -i $sp_id default {
@@ -837,6 +842,11 @@ proc install_execd {} {
                close_spawn_process $id
                set do_stop 1
             }
+            -i $sp_id "coredump" {
+               set_error "-2" "install_execd - coredump on host $exec_host";
+               close_spawn_process $id
+               set do_stop 1
+            }
 
             -i $sp_id timeout { 
                set_error "-1" "install_execd - timeout while waiting for output"; 
@@ -856,7 +866,7 @@ proc install_execd {} {
                     puts "press RETURN"
                     gets stdin anykey
                }
-               send "y\n"
+               send -i $sp_id "y\n"
                continue;
             }
 
@@ -868,7 +878,7 @@ proc install_execd {} {
                     puts "press RETURN"
                     gets stdin anykey
                }
-               send "y\n"
+               send -i $sp_id "y\n"
                continue;
             }
             -i $sp_id "lease enter cell name which you used for" {
@@ -877,7 +887,7 @@ proc install_execd {} {
                    puts "press RETURN"
                    gets stdin anykey
                }
-               send "\n"
+               send -i $sp_id "\n"
                continue;
             }
             -i $sp_id "<RETURN> to see where" {
@@ -886,7 +896,7 @@ proc install_execd {} {
                    puts "press RETURN"
                    gets stdin anykey
                }
-               send "\n"
+               send -i $sp_id "\n"
                continue;
             }
 
@@ -909,7 +919,7 @@ proc install_execd {} {
                        puts "press RETURN"
                        gets stdin anykey
                   }
-                  send "\n"
+                  send -i $sp_id "\n"
                   continue;
                } else {
                   set_error "-1" "install_execd - host $exec_host: tried to install not as root"
@@ -926,7 +936,7 @@ proc install_execd {} {
                     gets stdin anykey
                }
      
-               send "n\n"
+               send -i $sp_id "n\n"
                continue;
             }
             -i $sp_id "Do you want to add a default queue for this host" { 
@@ -936,7 +946,7 @@ proc install_execd {} {
                     gets stdin anykey
                }
      
-               send "y\n"
+               send -i $sp_id "y\n"
                continue;
             }
 
@@ -962,7 +972,7 @@ proc install_execd {} {
                     gets stdin anykey
                }
      
-               send "n\n"
+               send -i $sp_id "n\n"
                continue;
             }
             -i $sp_id "Do you want to see previous screen about using" { 
@@ -972,7 +982,7 @@ proc install_execd {} {
                     gets stdin anykey
                }
      
-               send "n\n"
+               send -i $sp_id "n\n"
                continue;
             }
             -i $sp_id "Error:" {
@@ -1006,7 +1016,7 @@ proc install_execd {} {
                     gets stdin anykey
                }
      
-               send "\n"
+               send -i $sp_id "\n"
                continue;
             }
             -i $sp_id default {
@@ -1062,7 +1072,7 @@ proc get_spool_dir {host subdir} {
    puts "searching spooldir for host $host, type $subdir"
    if {[file exists $spool_config ]} {
       set f [open $spool_config r]
-      while { [gets $f line] > 0 } {
+      while { [gets $f line] >= 0 } {
          if { [string first "#" $line ] == 0 } {
             continue 
          }  
@@ -1139,6 +1149,9 @@ proc setup_queues {} {
       sleep 1
   } 
 
+  puts $CHECK_OUTPUT "\nremoving share tree"
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dstree" } result
+  puts $CHECK_OUTPUT $result
 
   puts $CHECK_OUTPUT "\nremoving ckpt objects ..."
   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sckptl" } result
@@ -1542,7 +1555,27 @@ proc setup_schedconf {} {
   global CHECK_PRODUCT_TYPE 
 
   # reset_schedd_config has global error reporting
+  get_schedd_config old_config
   reset_schedd_config 
+  get_schedd_config new_config
+
+  set arrays_old [ array names old_config ]
+  set arrays_new [ array names new_config ]
+
+  if { [ llength $arrays_old] == [ llength $arrays_new ] } {
+    foreach param $arrays_old {
+       set old  $old_config($param)
+       set new  $new_config($param)
+
+       if { [ string compare $old $new ] != 0 } {
+          if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
+          if { [ string compare $param "weight_tickets_deadline" ] == 0 } { continue }
+          add_proc_error "setup_schedconf" -1 "scheduler parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
+       }
+    }
+  } else {
+     add_proc_error "setup_schedconf" -1 "parameter count new/old scheduler configuration error"
+  }
 
   set_error 0 "ok"
 }

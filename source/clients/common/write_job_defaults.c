@@ -151,7 +151,7 @@ char *filename,
 int flags 
 ) {
    lListElem *ep;
-   char *cp;
+   const char *cp;
    FILE *fp;
    lList *answer = NULL;
    int i = 0;

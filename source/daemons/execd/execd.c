@@ -70,6 +70,8 @@
 #include "startprog.h"
 #include "usage.h"
 #include "sge_switch_user.h"
+#include "read_write_job.h"
+#include "sge_file_path.h"
 
 #include "basis_types.h"
 #include "msg_utilib.h"
@@ -93,6 +95,7 @@ char execd_spool_dir[SGE_PATH_MAX];
 
 lList *execd_config_list = NULL;
 lList *Master_Job_List = NULL;
+lList *Master_Zombie_List = NULL;
 
 static void execd_exit_func(int i);
 static void execd_register(void);
@@ -250,8 +253,6 @@ char **argv
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd();
 
-   /* EB: */
-
    if (!getenv("SGE_ND"))
       daemonize_execd();
 
@@ -288,8 +289,11 @@ char **argv
    }         
 #endif
 
-   sge_setup_old_jobs();
-
+   Master_Job_List = lCreateList("Master_Job_List", JB_Type);
+   job_list_read_from_disk(&Master_Job_List, "Master_Job_List",
+                           0, SPOOL_WITHIN_EXECD, 
+                          job_initialize_job);
+   
    /* clean up jobs hanging around (look in active_dir) */
    clean_up_old_jobs(1);
    sge_send_all_reports(0, NUM_REP_REPORT_JOB, execd_report_sources);

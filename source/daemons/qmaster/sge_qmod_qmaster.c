@@ -348,7 +348,7 @@ lList **answer
          if (VALID(JERROR, lGetUlong(jatep, JAT_state))) {
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            cull_write_job_to_disk(jep);
+            job_write_spool_file(jep, task_id, SPOOL_DEFAULT);
             if (is_array(jep)) {
                INFO((SGE_EVENT, MSG_JOB_CLEARERRORTASK_SSUU, user, host, u32c(job_id), u32c(task_id)));
             } else {
@@ -905,7 +905,7 @@ char *host
       lSetUlong(jatep, JAT_state, state);
 
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      cull_write_job_to_disk(jep);
+      job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
    }
    else {   /* job wasn't suspended yet */
       if (queueep) {
@@ -937,7 +937,7 @@ char *host
          SETBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         cull_write_job_to_disk(jep);
+         job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
       }
       else {
          if (!i) {
@@ -953,7 +953,7 @@ char *host
             SETBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            cull_write_job_to_disk(jep);
+            job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
          }
       }
    }
@@ -995,7 +995,7 @@ char *host
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         cull_write_job_to_disk(jep);
+         job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
          DEXIT;
          return;
       } 
@@ -1079,7 +1079,7 @@ char *host
          CLEARBIT(JSUSPENDED, state);
          lSetUlong(jatep, JAT_state, state);
          sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-         cull_write_job_to_disk(jep);
+         job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
       }
       else {
          /* set job state only if communication works */
@@ -1096,7 +1096,7 @@ char *host
             CLEARBIT(JSUSPENDED, state);
             lSetUlong(jatep, JAT_state, state);
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-            cull_write_job_to_disk(jep);
+            job_write_spool_file(jep, jataskid, SPOOL_DEFAULT);
          }
       }
    }
@@ -1140,7 +1140,7 @@ u_long32 type,
 u_long32 when,
 u_long32 jobid,
 u_long32 jataskid,
-char *queue 
+const char *queue 
 ) {
    lListElem *qep, *jep, *jatep;
 
@@ -1191,8 +1191,7 @@ lListElem *jatep
 
    /* don't try to signal unheard queues */
    if ((lGetUlong(qep, QU_state) & QUNKNOWN)==0) {
-
-      char *hnm, *pnm;
+      const char *hnm, *pnm;
 
       if (lGetUlong(qep, QU_qtype) & TQ) {
          lListElem *hep;
@@ -1250,7 +1249,7 @@ lListElem *jatep
       DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
             lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time, 
             lGetString(qep, QU_qhostname)));
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, lGetUlong(jep, JB_job_number), 0);
+      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number));
       lSetUlong(jatep, JAT_pending_signal, how);
       te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, lGetUlong(jep, JB_job_number),
             lGetUlong(jatep, JAT_task_number), NULL);
@@ -1289,7 +1288,7 @@ lListElem *qep
 ) {
    lList *gdil_lp;
    lListElem *mq, *pe, *jep, *gdil_ep, *jatep;
-   char *qname, *mqname, *pe_name;
+   const char *qname, *mqname, *pe_name;
 
    DENTER(TOP_LAYER, "signal_slave_jobs_in_queue");
 
@@ -1342,7 +1341,7 @@ lListElem *jatep
 ) {
    lList *gdil_lp;
    lListElem *mq, *pe, *gdil_ep;
-   char *qname, *pe_name;
+   const char *qname, *pe_name;
 
    DENTER(TOP_LAYER, "signal_slave_tasks_of_job");
 
@@ -1387,7 +1386,7 @@ lListElem *qep,
 u_long32 old_state,
 u_long32 new_state 
 ) {
-   char *qname = lGetString(qep, QU_qname);
+   const char *qname = lGetString(qep, QU_qname);
 
    DENTER(TOP_LAYER, "signal_on_calendar");
 
@@ -1441,7 +1440,7 @@ int queue_initial_state(
 lListElem *qep,
 char *rhost  /* rhost != NULL -> mod */
 ) {
-   char *is;
+   const char *is;
    int enable, changed = 0;
    u_long32 state;
 

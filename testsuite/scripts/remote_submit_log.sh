@@ -40,6 +40,7 @@
 # par6: optional - second parameter for jobscript
 . $1/default/common/settings.sh
 
+arch=`$1/util/arch`
 jobscript=$1/examples/jobs/sleeper.sh
 touchdir=""
 if [ $# -ge 5 ]; then
@@ -49,11 +50,8 @@ fi
 
 stop_job_id=$2
 times=$4
-if [ x$HOST != x ]; then
-   hostname=$HOST
-else
-   hostname=unknown
-fi 
+
+hostname=`$1/utilbin/$arch/gethostname -name | cut -f 1 -d .`
 
 logfile="$3/${hostname}.submit.log"
 jobs_submitted_file="$3/${hostname}.submitted"

@@ -8,7 +8,7 @@
 # Requires groff to be installed and accessible.
 #
 # $1 = directory where aimk is installed
-# $2 = "sge" or "sgeee"
+# $2 = "ge" "geee" "sge" or "sgeee"
 # $3 = 0 or 1 - flag if man pages in ASCII format should be created
 # $4 = 0 or 1 - flag if man pages in HTML format  should be created
 # $5 = 0 or 1 - checkout man pages with "-kv" flag
@@ -50,17 +50,19 @@ if ( ! $?CVSROOT ) then
    exit 1
 endif
 
-set MANBUILDDIR = $1/MANSBUILD
-
-
+set MANBUILDDIR = $1/MANSBUILD_$2
 set MANMODE = $2
-set MANASC = $3
+set MANASC  = $3
 set MANHTML = $4
-set KVMAN = $5
+set KVMAN   = $5
 
-echo "Removing old manpages"
+echo "Removing old manpages in $MANBUILDDIR"
 \rm -rf $MANBUILDDIR
 mkdir -p $MANBUILDDIR
+
+# Take CVSROOT from current CVS direcotry
+#
+setenv CVSROOT `cat CVS/Root`
 cd $MANBUILDDIR
 
 if ( $KVMAN == 1 ) then
@@ -78,22 +80,41 @@ endif
 # which are created if they do not exist.
 #
 # Requires sed to be installed and accessible.
-if ( $MANMODE == "sge" ) then 
+if ( $MANMODE == "ge" ) then 
    set xxQS_NAMExx = "Grid Engine" 
    set xxQS_NAME_Cxx = "Grid Engine" 
    set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
    set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "Grid Engine 5.3"
-else   
+   set xxRELxx = "GE 5.3beta1"
+else if ( $MANMODE == "geee" ) then
    set xxQS_NAMExx = "Grid Engine Enterprise Edition" 
    set xxQS_NAME_Cxx = "Grid Engine" 
    set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
    set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "Grid Engine Enterprise Edition 5.3"
+   set xxRELxx = "GEEE 5.3"
+else if ( $MANMODE == "sge" ) then
+   set xxQS_NAMExx = "Sun Grid Engine"
+   set xxQS_NAME_Cxx = "Sun Grid Engine"
+   set xxQS_NAME_EExx = "Sun Grid Engine, Enterprise Edition"
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR"
+   set xxQS_NAME_Sxx = "SGE"
+   set xxqs_name_sxx = "sge"
+   set xxRELxx = "SGE 5.3beta1"
+else if ( $MANMODE == "sgeee" ) then
+   set xxQS_NAMExx = "Sun Grid Engine, Enterprise Edition"
+   set xxQS_NAME_Cxx = "Sun Grid Engine"
+   set xxQS_NAME_EExx = "Sun Grid Engine, Enterprise Edition"
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR"
+   set xxQS_NAME_Sxx = "SGE"
+   set xxqs_name_sxx = "sge"
+   set xxRELxx = "SGEEE 5.3beta1"
+else
+   echo error wrong MANMODE=$MANMODE. Exit
+   exit 1
 endif
 
 echo "Building SEDMAN pages"
@@ -142,7 +163,8 @@ if ( "$MANASC" == 1 ) then
          exit 1
       endif
            
-      foreach f ( $MANBUILDDIR/SEDMAN/man/man${n}/*.${n} )
+      cd $MANBUILDDIR/SEDMAN/man     
+      foreach f ( man${n}/*.${n} )
          echo Processing $f
          groff -man -t -Tascii $f >! $MANBUILDDIR/ASCMAN/man/man${n}/`basename $f .${n}`
       end

@@ -33,10 +33,7 @@
 
 /**********************************************************************/
 /* a strlen which doesn't overrun if string isn't 0 delimited */
-int secure_strlen(
-char *cp,
-int maxlen 
-) {
+int secure_strlen(const char *cp, int maxlen) {
    int len = 0;
 
    while (len < maxlen && *cp) {

@@ -36,7 +36,8 @@
 
 #define COMMENT_CHAR '#'  
 
-int sge_spoolmsg_write(FILE *file, char comment_char, char *version);
+int sge_spoolmsg_write(FILE *file, const char comment_char, 
+                       const char *version);
 
 #endif /* __SGE_SPOOLMSG_H */
 

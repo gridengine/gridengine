@@ -181,7 +181,7 @@ lList *entries
            /*
            ** build the strings to display 
            */
-           String name = lGetString(ep, CE_name);
+           StringConst name = lGetString(ep, CE_name);
 /*            String type = lGetUlong(ep, CE_consumable) ? "C" : "F"; */
 /*            sprintf(stringval, "%s: %s", type, name ? name : "");  */
            strcpy(stringval, name ? name : ""); 

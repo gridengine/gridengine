@@ -105,6 +105,9 @@ if [ -x /bin/uname ]; then
    Linux,alpha)
       ARCH=alinux
       ;;
+   Linux,sparc)
+      ARCH=slinux
+      ;;
    Linux,*)
       rev="`/bin/uname -r`"
       case $rev in

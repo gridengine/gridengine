@@ -173,7 +173,16 @@ int type
 
 /*-------------------------------------------------------------------------*/
 int qmonMirrorMulti(
-u_long32 selector 
+u_long32 selector
+) {
+   return qmonMirrorMultiAnswer(selector, NULL);
+}   
+
+
+/*-------------------------------------------------------------------------*/
+int qmonMirrorMultiAnswer(
+u_long32 selector,
+lList **answerp
 ) {
    lList *mal = NULL;
    lList *alp = NULL;
@@ -185,7 +194,7 @@ u_long32 selector
    int status;
    char msg[BUFSIZ];
 
-   DENTER(GUI_LAYER, "qmonMirrorMulti");
+   DENTER(GUI_LAYER, "qmonMirrorMultiAnswer");
 
    starttime(0);
 
@@ -258,7 +267,9 @@ u_long32 selector
                qmonExitFunc(1);
             }   
             if (lGetUlong(aep, AN_status) != STATUS_OK) {
-               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+               if (!answerp) {
+                  fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+               }   
                goto error;
             }   
          }      
@@ -273,7 +284,12 @@ u_long32 selector
 
    error:
       mal = lFreeList(mal);
-      alp = lFreeList(alp);
+      if (answerp) {
+         *answerp = alp;
+      }
+      else {
+         alp = lFreeList(alp);
+      }   
       DEXIT;
       return -1;
 }

@@ -34,7 +34,7 @@
 
 
 
-lListElem *cull_read_in_cal(char *dirname, char *filename, int spool, int flag, int *tag, int fields[]);
+lListElem *cull_read_in_cal(const char *dirname, const char *filename, int spool, int flag, int *tag, int fields[]);
 
 char *write_cal(int spool, int how, lListElem *calp);
 

@@ -44,7 +44,7 @@
 #define QUEUE_GRID_HEIGHT 80
 
 #define QUEUE_MAX_HORIZ   7    /* So we have QUEUE_MAX_HORIZ * QUEUE_MAX_VERT */
-#define QUEUE_MAX_VERT    500  /*  PB's (queues)                              */     
+#define QUEUE_MAX_VERT    394  /*  PB's (queues)                              */     
 
 #if 0
 #define QUEUE_DRAWINGAREA_HEIGHT QUEUE_MAX_VERT * \

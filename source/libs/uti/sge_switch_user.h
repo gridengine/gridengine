@@ -38,9 +38,12 @@
 
 #include <sys/types.h>
 
-int set_admin_username(char *username, char *err_str);
+int set_admin_username(const char *username, char *err_str);
+
 int switch2admin_user(void);
+
 int switch2start_user(void);
+
 int run_as_user(void);
 
 #endif /* __SGE_SWITCH_USER_H */

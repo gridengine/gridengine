@@ -84,7 +84,7 @@ lList *acl_list
    StringBufferT sb = {NULL, 0};
    lList *cmdl = NULL;
    lListElem *ep;
-   char *owner, *group;
+   const char *owner, *group;
 
    DENTER(TOP_LAYER, "sge_build_job_category");
    

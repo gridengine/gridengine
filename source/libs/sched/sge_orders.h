@@ -32,14 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "cull.h"
-/*#include "sge_schedd.h" */
  
 lList *sge_add_schedd_info(lList *or_list);
+
 lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, lList *queue_list);
+
 int sge_send_orders2master(lList *orders);
+
 int get_seq_nr(void);
 
 lList *create_delete_job_orders(lList *finished_jobs, lList *order_list);

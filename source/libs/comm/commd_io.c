@@ -82,19 +82,15 @@ int pack_ushort_len(u_short us)
    return 2;
 }
 
-unsigned char *unpack_ushort(
-u_short *us,
-unsigned char *cp 
-) {
+unsigned char *unpack_ushort(u_short *us, unsigned char *cp) 
+{
    *us = (*cp++ << 8);
    (*us) += *cp++;
    return cp;
 }
 
-unsigned char *pack_ulong(
-u_long32 ul,
-unsigned char *cp 
-) {
+unsigned char *pack_ulong(u_long32 ul, unsigned char *cp) 
+{
 #ifndef WIN32NATIVE
    *cp++ = (ul >> 24) & 0xff;
    *cp++ = (ul >> 16) & 0xff;
@@ -109,16 +105,13 @@ unsigned char *cp
    return cp;
 }
 
-int pack_ulong_len(
-u_long ul 
-) {
+int pack_ulong_len(u_long ul) 
+{
    return 4;
 }
 
-unsigned char *unpack_ulong(
-u_long32 *ul,
-unsigned char *cp 
-) {
+unsigned char *unpack_ulong(u_long32 *ul, unsigned char *cp) 
+{
    *ul = *cp++ << 24;
    (*ul) += *cp++ << 16;
    (*ul) += *cp++ << 8;
@@ -126,27 +119,22 @@ unsigned char *cp
    return cp;
 }
 
-unsigned char *pack_string(
-char *str,
-unsigned char *cp 
-) {
-   while (*str)
+unsigned char *pack_string(const char *str, unsigned char *cp) 
+{
+   while (*str) {
       *cp++ = *str++;
+   }
    *cp++ = '\0';
    return cp;
 }
 
-int pack_string_len(
-char *str 
-) {
+int pack_string_len(const char *str) 
+{
    return strlen(str) + 1;
 }
 
-unsigned char *unpack_string(
-char *str,
-int len,
-unsigned char *cp 
-) {
+unsigned char *unpack_string(char *str, int len, unsigned char *cp) 
+{
    while (len && *cp) {
       *str++ = *cp++;
       len--;
@@ -161,17 +149,6 @@ unsigned char *cp
       *(str - 1) = '\0';
 
    return cp + 1;
-}
-
-int packed_strlen(
-char *cp 
-) {
-   int len = 0;
-
-   while (*cp++)
-      len++;
-
-   return len;
 }
 
 /**********************************************************************
@@ -191,12 +168,8 @@ char *cp
      -3 interrupted by signal
 
  **********************************************************************/
-int readnbytes_nb(
-int sfd,
-char *ptr,
-int n,
-int timeout 
-) {
+int readnbytes_nb(int sfd, char *ptr, int n, int timeout) 
+{
    fd_set readfds;
    int res, j, errorcode, first, to;
    struct timeval timeleft;
@@ -327,12 +300,8 @@ int timeout
  *    -4 reading end of fd was closed
  *
  *--------------------------------------------------------------------*/
-int writenbytes_nb(
-int sfd,
-char *ptr,
-int n,
-int timeout 
-) {
+int writenbytes_nb(int sfd, const char *ptr, int n, int timeout) 
+{
    fd_set writefds;
    int res, j, errorcode, to, first;
    struct timeval timeleft;

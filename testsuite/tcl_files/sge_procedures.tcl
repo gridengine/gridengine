@@ -147,11 +147,15 @@ proc resolve_version { { internal_number -100 } } {
    set versions(system_not_installed_-_run_compile_option_first)  -2
    set versions(unknown)                                          -1
 
-   set versions(SGE_5.3)     1
-   set versions(SGE_5.3_alpha1)     1
-   set versions(SGEEE_5.3)     1
-   set versions(SGEEE_5.3_alpha1)     1
-   set versions(SGE_6.0_pre) 1
+   set versions(SGE_5.3)             1
+   set versions(SGE_5.3_alpha1)      1
+   set versions(SGEEE_5.3)           1
+   set versions(SGEEE_5.3_alpha1)    1
+   set versions(SGE_6.0_pre)         1
+   set versions(SGE_5.3_maintrunc)   2
+   set versions(SGEEE_5.3_maintrunc) 2
+   set versions(SGE_5.3beta1)        2
+   set versions(SGEEE_5.3beta1)      2
 
    if { $internal_number == -100 } {
       if { $CHECK_PRODUCT_VERSION_NUMBER == "" } {
@@ -468,7 +472,7 @@ proc get_loadsensor_path { arch } {
    if { [file exists $config] } {
       set file_p [ open $config r ]
       set line_no 0
-      while { [gets $file_p line] > 0 } {
+      while { [gets $file_p line] >= 0 } {
          if { [string first "#" $line ] == 0 } {
 #            puts $CHECK_OUTPUT "found comment in line $line_no"
             continue
@@ -528,7 +532,7 @@ proc get_gid_range { user port } {
   if { [file exists $config] } {
     set file_p [ open $config r ]
     set line_no 0
-    while { [gets $file_p line ] > 0 } {
+    while { [gets $file_p line ] >= 0 } {
        if { [string first "#" $line ] == 0 } {
           debug_puts "found comment in line $line_no"
           incr line_no 1
@@ -673,13 +677,13 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 #     The default values are:
 #     
 #     SGE system:
-#     
+#    
 #     algorithm                   "default"
 #     schedule_interval           "0:0:15"
 #     maxujobs                    "0"
 #     maxgjobs                    "0"
 #     queue_sort_method           "load"
-#     user_sort                   "true"
+#     user_sort                   "false"
 #     job_load_adjustments        "np_load_avg=0.50"
 #     load_adjustment_decay_time  "0:7:30"
 #     load_formula                "np_load_avg"
@@ -689,15 +693,15 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 #     SGEEE differences:
 #     queue_sort_method           "share"
 #     user_sort                   "false"
-#     sgeee_schedule_interval       "00:01:00"
-#     halftime                    "0"
-#     usage_weight_list           "cpu=0.34,mem=0.33,io=0.33"
+#     sgeee_schedule_interval     "00:01:00"
+#     halftime                    "24"
+#     usage_weight_list           "cpu=1,mem=0,io=0"
 #     compensation_factor         "5"
-#     weight_user                 "0"
-#     weight_project              "0"
-#     weight_jobclass             "0"
-#     weight_department           "0"
-#     weight_job                  "0"
+#     weight_user                 "0.2"
+#     weight_project              "0.2"
+#     weight_jobclass             "0.2"
+#     weight_department           "0.2"
+#     weight_job                  "0.2"
 #     weight_tickets_functional   "0"
 #     weight_tickets_share        "0"
 #     weight_tickets_deadline     "10000"
@@ -712,7 +716,7 @@ proc reset_schedd_config {} {
   set default_array(schedule_interval)          "0:0:15"
   set default_array(maxujobs)                   "0"
   set default_array(maxgjobs)                   "0"
-  set default_array(queue_sort_method)          "share"
+  set default_array(queue_sort_method)          "load"
   set default_array(user_sort)                  "false"
   set default_array(job_load_adjustments)       "np_load_avg=0.50"
   set default_array(load_adjustment_decay_time) "0:7:30"
@@ -721,15 +725,16 @@ proc reset_schedd_config {} {
 
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
-     set default_array(sgeee_schedule_interval)      "00:01:00"
-     set default_array(halftime)                   "0"
-     set default_array(usage_weight_list)          "cpu=0.34,mem=0.33,io=0.33"
+     set default_array(queue_sort_method)          "share"
+     set default_array(sgeee_schedule_interval)    "00:01:00"
+     set default_array(halftime)                   "24"
+     set default_array(usage_weight_list)          "cpu=1,mem=0,io=0"
      set default_array(compensation_factor)        "5"
-     set default_array(weight_user)                "0"
-     set default_array(weight_project)             "0"
-     set default_array(weight_jobclass)            "0"
-     set default_array(weight_department)          "0"
-     set default_array(weight_job)                 "0"
+     set default_array(weight_user)                "0.2"
+     set default_array(weight_project)             "0.2"
+     set default_array(weight_jobclass)            "0.2"
+     set default_array(weight_department)          "0.2"
+     set default_array(weight_job)                 "0.2"
      set default_array(weight_tickets_functional)  "0"
      set default_array(weight_tickets_share)       "0"
      set default_array(weight_tickets_deadline)    "10000"
@@ -896,7 +901,7 @@ proc get_config { change_array {host global}} {
 #     set_config -- change global or host specific configuration
 #
 #  SYNOPSIS
-#     set_config { change_array {host global} } 
+#     set_config { change_array {host global}{do_add 0} } 
 #
 #  FUNCTION
 #     Set the cluster global or exec host local configuration corresponding to 
@@ -906,6 +911,7 @@ proc get_config { change_array {host global}} {
 #     change_array  - name of an array variable that will be set by get_config
 #     {host global} - set configuration for a specific hostname (host) or set
 #                     the global configuration (global)
+#     {do_add 0}    - if 1: this is a new configuration, no old one exists)
 #
 #  RESULT
 #     -1 : timeout
@@ -965,12 +971,14 @@ proc get_config { change_array {host global}} {
 #  SEE ALSO
 #     sge_procedures/get_config()
 #*******************************
-proc set_config { change_array {host global} } {
+proc set_config { change_array {host global} {do_add 0}} {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   upvar $change_array chgar
   set values [array names chgar]
 
-  get_config old_values $host
+  if { $do_add == 0 } {
+     get_config old_values $host
+  }
 
   set vi_commands ""
   foreach elem $values {
@@ -990,9 +998,9 @@ proc set_config { change_array {host global} } {
         lappend vi_commands [format "%c" 27]
      }
   } 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands "modified" "edit failed"]
-  if { $result != 0 } {
-     add_proc_error "set_config" -1 "could not modify configruation for host $host"
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands "modified" "edit failed" "added" ]
+  if { ($result != 0) &&  ($result != -3) } {
+     add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
   }
   return $result
 }
@@ -1409,12 +1417,12 @@ proc set_queue { q_name change_array } {
 #*******************************
 proc add_queue { change_array {fast_add 0} } {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
+  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
 
   upvar $change_array chgar
   set values [array names chgar]
 
-    if { [ string compare $fast_add "0"] != 0 } {
+    if { $fast_add != 0 } {
      # add queue from file!
      set default_array(qname)                "queuename"
      set default_array(hostname)             "hostname"
@@ -1468,7 +1476,14 @@ proc add_queue { change_array {fast_add 0} } {
      set default_array(h_rss)                "INFINITY"
      set default_array(s_vmem)               "INFINITY"
      set default_array(h_vmem)               "INFINITY"
-   
+  
+     if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+       set default_array(projects)           "NONE"
+       set default_array(xprojects)          "NONE"
+       set default_array(fshare)             "0"
+       set default_array(oticket)            "0"
+     }
+  
      foreach elem $values {
         set value [set chgar($elem)]
         puts $CHECK_OUTPUT "--> setting \"$elem\" to \"$value\""
@@ -3704,15 +3719,16 @@ proc get_extended_job_info {jobid {variable job_info}} {
 #     parser/parse_qacct()
 #*******************************
 proc get_qacct {jobid {variable qacct_info}} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
    upvar $variable qacctinfo
    
    set exit_code [catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qacct" -j $jobid} result]
-
    if { $exit_code == 0 } {
       parse_qacct result qacctinfo $jobid
       return 1
-   } 
+   } else {
+      puts $CHECK_OUTPUT "result of qacct -j $jobid:\n$result"
+   }
    return 0
 }
 
@@ -3800,7 +3816,7 @@ proc is_job_running { jobid jobname } {
 #     wait_for_jobstart -- wait for job to get out of pending list
 #
 #  SYNOPSIS
-#     wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} } 
+#     wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } 
 #
 #  FUNCTION
 #     This procedure will call the is_job_running procedure in a while
@@ -3813,6 +3829,8 @@ proc is_job_running { jobid jobname } {
 #     seconds           - timeout in seconds
 #     {do_errorcheck 1} - enable error check (default)
 #                         if 0: do not report errors
+#     {do_tsm 0}        - do qconf -tsm before waiting
+#                         if 1: do qconf -tsm (trigger scheduler) 
 #
 #  RESULT
 #     -1 - job is not running (timeout error)
@@ -3833,9 +3851,15 @@ proc is_job_running { jobid jobname } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} } {
+proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
   
-  global CHECK_OUTPUT
+  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+
+  if { $do_tsm == 1 } {
+     puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+     catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+     puts $CHECK_OUTPUT $result
+  }
 
   puts $CHECK_OUTPUT "Waiting for start of job $jobid ($jobname)"
    
@@ -3965,7 +3989,7 @@ proc wait_for_jobpending { jobid jobname seconds} {
     }
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
-       add_proc_error "wait_for_jobpending" -1 "timeout waiting for job \"$jobid\" \"$jobname\""
+       add_proc_error "wait_for_jobpending" -1 "timeout waiting for job \"$jobid\" \"$jobname\" (timeout was $seconds sec)"
        return -1
     }
     sleep 1

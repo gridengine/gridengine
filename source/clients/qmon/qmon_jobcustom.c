@@ -70,7 +70,7 @@
 #include "sge_feature.h"
 #include "parse_range.h"
 #include "sge_hash.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "job.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
@@ -84,6 +84,7 @@ static void addToSelected(Widget w, XtPointer cld, XtPointer cad);
 static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad);
 
 static String PrintUlong(lListElem *ep, lListElem *jat, lList *jal, int nm);
+static String PrintDoubleAsUlong(lListElem *ep, lListElem *jat, lList *jal, int nm);
 static String PrintDouble(lListElem *ep, lListElem *jat, lList *jal, int nm);
 static String PrintPriority(lListElem *ep, lListElem *jat, lList *jal, int nm);
 static String PrintString(lListElem *ep, lListElem *jat, lList *jal, int nm);
@@ -126,7 +127,7 @@ static HashTable JobColumnPrintHashTable = NULL;
 static HashTable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
-#define SGE_FIELDS      13
+#define SGEEE_FIELDS      13
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -136,7 +137,6 @@ static tJobField job_items[] = {
    { 1, JB_owner, "@{Owner}", 10, 50, PrintString },
    { 1, JAT_status, "@{Status}", 8, 30, PrintStatus },
    { 1, 0, "@{Queue}", 10, 500, PrintGrantedQueue},
-   { 0, JB_job_file, "@{Script}", 10, 30, PrintString },
    { 0, JB_submission_time, "@{SubmitTime}", 12, 30, PrintTime },
    { 0, JAT_start_time, "@{StartTime}", 12, 30, PrintStartTime },
    { 0, JB_execution_time, "@{ScheduleTime}", 12, 30, PrintTime },
@@ -156,11 +156,11 @@ static tJobField job_items[] = {
    { 0, JB_pe_range, "@{PERange}", 15, 30, PrintPERange },
    { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessors },
 /**** SGE specific fields *****/
-   { 0, JAT_ticket, "@{Ticket}", 10, 30, PrintUlong},
-   { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintUlong},
-   { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintUlong },
-   { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintUlong },
-   { 0, JAT_sticket, "@{STicket}", 10, 30, PrintUlong },
+   { 0, JAT_ticket, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
+   { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
+   { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintDoubleAsUlong },
+   { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintDoubleAsUlong },
+   { 0, JAT_sticket, "@{STicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_share, "@{Share}", 10, 30, PrintDouble },
    { 0, JB_override_tickets, "@{OverrideTickets}", 15, 30, PrintUlong },
    { 0, JB_project, "@{Project}", 10, 30, PrintString },
@@ -207,6 +207,31 @@ int nm
    }
    else
       sprintf(buf, "%d", (int)lGetUlong(ep, nm));
+
+   str = XtNewString(buf);
+
+   DEXIT;
+   return str;
+}
+
+/*-------------------------------------------------------------------------*/
+static String PrintDoubleAsUlong(
+lListElem *ep,
+lListElem *jat,
+lList *jal,
+int nm
+) {
+   char buf[BUFSIZ];
+   String str;
+
+   DENTER(GUI_LAYER, "PrintDoubleAsUlong");
+
+   if (nm >= JAT_LOWERBOUND && nm <= JAT_UPPERBOUND) {
+      jat = lFirst(lGetList(ep, JB_ja_tasks));
+      sprintf(buf, "%d", (int)lGetDouble(jat, nm));
+   }
+   else
+      sprintf(buf, "%d", (int)lGetDouble(ep, nm));
 
    str = XtNewString(buf);
 
@@ -277,7 +302,12 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, job_args) {
-      sprintf(buf, "%s %s", buf, lGetString(jep, STR));
+      const char *arg = lGetString(jep, STR);
+      if(arg != NULL) {
+         sprintf(buf, "%s %s", buf, arg);
+      } else {
+         sprintf(buf, "%s \"\"", buf);
+      }
    }
    str = XtNewString(buf);
 
@@ -558,7 +588,7 @@ int nm
    lList *ql = NULL;
    lListElem *qgep = NULL;
    int n, len;
-   String queue;
+   StringConst queue;
 
    DENTER(GUI_LAYER, "PrintGrantedQueue");
 
@@ -676,31 +706,35 @@ lListElem *jat,
 lList *jal,
 int nm 
 ) {
-   char buf[BUFSIZ];
-   char buf2[BUFSIZ];
+   StringBufferT dyn_buf = {NULL, 0};
    String str;
 
    DENTER(GUI_LAYER, "PrintJobTaskId");
    /*
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
+   sge_string_printf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
    if (is_array(ep)) {
+      StringBufferT dyn_buf2 = {NULL, 0};
+
       if (jat) {
-         sprintf(buf2, u32, lGetUlong(jat, JAT_task_number));
+         sge_string_printf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
       }
       else if (jal) {
-         buf2[0] = '\0';
-         get_taskrange_str(jal, buf2);
+         get_taskrange_str(jal, &dyn_buf2);
       }
-      sprintf(buf, u32 ".%s", lGetUlong(ep, JB_job_number), buf2);
-   }
-   else {
-      sprintf(buf, u32 , lGetUlong(ep, JB_job_number));
+      if (dyn_buf2.s) {
+         sge_string_append(&dyn_buf, ".");
+         sge_string_append(&dyn_buf, dyn_buf2.s);
+         sge_string_free(&dyn_buf2);
+      }
    }
 
-   DPRINTF(("PrintJobTaskId: %s\n", buf));
+   DPRINTF(("PrintJobTaskId: %s\n", dyn_buf.s));
 
-   str = XtNewString(buf);
+   str = XtNewString(dyn_buf.s);
+
+   sge_string_free(&dyn_buf);
 
    DEXIT;
    return str;
@@ -856,7 +890,7 @@ int nm
 ) {
 
    String str;
-   String temp;
+   StringConst temp;
    
    DENTER(GUI_LAYER, "PrintString");
 
@@ -1017,10 +1051,12 @@ XtPointer cld,cad;
    for (i=0; i<nr_fields; i++) {
       if (strlist[i]) {
          String text;
+         u_long32 temp;
          XmStringGetLtoR(strlist[i], XmFONTLIST_DEFAULT_TAG, &text);
+         temp = XrmStringToQuark(text);
          if (HashTableLookup(NameMappingHashTable, 
-                             (void*)XrmStringToQuark(text),
-                             (void **) &job_item)) {
+                             &temp,
+                             (const void **) &job_item)) {
             job_item->show = 1;
          }
          XtFree(text);
@@ -1263,7 +1299,7 @@ int how
 
    num_jobs = XtNumber(job_items);
    if (!feature_is_enabled(FEATURE_SGEEE))
-      num_jobs -= SGE_FIELDS;
+      num_jobs -= SGEEE_FIELDS;
 
 #if 0
    if (how == FILL_ALL)
@@ -1371,23 +1407,26 @@ XtPointer cld
    /*
    ** create JobColumnPrintHashTable
    */
-   JobColumnPrintHashTable = HashTableCreate(5);
+   JobColumnPrintHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
+      u_long32 temp = XrmStringToQuark(job_items[i].name);
       HashTableStore(JobColumnPrintHashTable,
-                     (void *)XrmStringToQuark(job_items[i].name),
+                     &temp,
                      (void *)&job_items[i]);
    }
 
    /*
    ** create NameMappingHashTable
    */
-   NameMappingHashTable = HashTableCreate(5);
+   NameMappingHashTable = HashTableCreate(5, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32);
    for (i=0; i<sizeof(job_items)/sizeof(tJobField); i++) {
       String text;
+      u_long32 temp;
       XmString xstr = XmtCreateLocalizedXmString(jcu, job_items[i].name);
       XmStringGetLtoR(xstr, XmFONTLIST_DEFAULT_TAG, &text);
+      temp = XrmStringToQuark(text);
       HashTableStore(NameMappingHashTable,
-                     (void *) XrmStringToQuark(text),
+                     &temp,
                      (void *)&job_items[i]);
       XmStringFree(xstr);
       XtFree(text);
@@ -1433,9 +1472,10 @@ XtPointer cld
       ** set the fields which shall be shown
       */
       for_each(field, jobfilter_fields) {
+         u_long32 temp = XrmStringToQuark(lGetString(field, STR));
          if (HashTableLookup(JobColumnPrintHashTable, 
-             (void*)XrmStringToQuark(lGetString(field, STR)),
-                             (void **) &job_item)) {
+             &temp,
+             (const void **) &job_item)) {
             job_item->show = 1;
          }
       }
@@ -1559,7 +1599,7 @@ XtPointer cld, cad;
    int type;
    char stringval[MAXHOSTLEN];
    Boolean status = False;
-   String name, value, strval;
+   StringConst name, value, strval;
    Boolean found = False;
    lListElem *fill_in_request = NULL;
    
@@ -1634,7 +1674,7 @@ XtPointer cld, cad;
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
    lListElem *dep = NULL;
    Boolean found = False;
-   String name, value;
+   StringConst name, value;
 
    DENTER(GUI_LAYER, "qmonJobFilterRemoveResource");
 

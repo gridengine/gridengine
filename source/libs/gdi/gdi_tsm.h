@@ -32,14 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #define MASTER_KILL     (1<<0)
 #define SCHEDD_KILL     (1<<1)
 #define EXECD_KILL      (1<<2)
 #define JOB_KILL        (1<<3)
 
-lList *gdi_tsm(char *schedd_name, char *cell); 
+lList *gdi_tsm(const char *schedd_name, const char *cell); 
 
 /*
 ** kill requests
@@ -49,7 +47,7 @@ lList *gdi_tsm(char *schedd_name, char *cell);
 ** -ke [host ...]
 ** -kj [host ...
 */
-lList *gdi_kill(lList *host_list, char *cell, u_long32 option_flags, u_long32 action_flag);
+lList *gdi_kill(lList *host_list, const char *cell, u_long32 option_flags, u_long32 action_flag);
 
 
 #endif /* __GDI_TSM_H */

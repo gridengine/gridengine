@@ -64,6 +64,7 @@
 */
 #define MSG_SLAVE    _("slave ")
 #define MSG_COREDUMPED    _("(core dumped) ")
+#define MSG_WAITPIDNOSIGNOEXIT_PI   _("waitpid() returned for pid "pid_t_fmt" status %d unequal WIFSIGNALED/WIFEXITED\n")
 #define MSG_SHEPHERD_VSHEPHERDOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI    _("%sshepherd of job "U32CFormat"."U32CFormat" died through signal %s= %d")
 #define MSG_SHEPHERD_WSHEPHERDOFJOBXYEXITEDWITHSTATUSZ_SUUI    _("%sshepherd of job "U32CFormat"."U32CFormat" exited with exit status = %d\n")
 #define MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU    _("missing job "U32CFormat"."U32CFormat" in job report for exiting job - adding it")

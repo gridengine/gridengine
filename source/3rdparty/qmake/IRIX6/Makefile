@@ -131,7 +131,8 @@ PROGRAMS =  $(bin_PROGRAMS)
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I.
 CPPFLAGS =  -I../glob
 LDFLAGS = 
-LIBS = -lsun -lelf -lsun -lelf 
+#LIBS = -lsun -lelf -lsun -lelf
+LIBS = -lsun
 make_OBJECTS =  main.o commands.o job.o dir.o file.o misc.o read.o \
 remake.o rule.o implicit.o default.o variable.o expand.o function.o \
 vpath.o version.o ar.o arscan.o remote-$(REMOTE).o signame.o getopt.o \

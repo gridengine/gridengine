@@ -98,7 +98,7 @@ static int sge_has_active_queue(char *uniquie);
 
 static void master_kill_execds(sge_gdi_request *request, sge_gdi_request *answer);
 
-static int notify_kill_job(lListElem *lel, int kill_jobs, char *target);
+static int notify_kill_job(lListElem *lel, int kill_jobs, const char *target);
 
 static void notify(lListElem *lel, sge_gdi_request *answer, int kill_jobs, int force);
 
@@ -123,7 +123,7 @@ extern u_long32 pw_num_qsi_qs;
 
  */
 int sge_add_host_of_type(
-char *hostname,
+const char *hostname,
 u_long32 target 
 ) {
    int ret;
@@ -167,7 +167,7 @@ u_long32 target
 ) {
    int pos;
    lListElem *ep;
-   char *host;
+   const char *host;
    char unique[MAXHOSTLEN];
    lList **host_list = NULL;
    int nm = 0;
@@ -304,7 +304,7 @@ char *rhost,
 gdi_object_t *object,
 int sub_command 
 ) {
-   char *host;
+   const char *host;
    int nm;
 
    DENTER(TOP_LAYER, "host_mod");
@@ -468,7 +468,7 @@ gdi_object_t *object
 
    if (object->key_nm == EH_name) { 
       lListElem *jep;
-      char *host = lGetString(ep, EH_name);
+      const char *host = lGetString(ep, EH_name);
       int slots, global_host = !strcmp("global", host);
 
       lSetList(ep, EH_consumable_actual_list, NULL);
@@ -498,10 +498,10 @@ gdi_object_t *object
 
 void sge_mark_unheard(
 lListElem *hep,
-char *target    /* prognames[QSTD|EXECD] */
+const char *target    /* prognames[QSTD|EXECD] */
 ) {
    lListElem *qep;
-   char *host;
+   const char *host;
    u_long32 state;
 
    DENTER(TOP_LAYER, "sge_mark_unheard");
@@ -572,7 +572,7 @@ char *rhost,
 lList *lp 
 ) {
    u_long32 now;
-   char *report_host = NULL, *name, *value;
+   const char *report_host = NULL, *name, *value;
    lListElem *ep, **hepp = NULL;
    lListElem *lep;
    lListElem *global_ep = NULL, *host_ep = NULL;
@@ -624,7 +624,7 @@ lList *lp
          }
       }
       else {
-         char *oldval;
+         const char *oldval;
 
          oldval = lGetString(lep, HL_value);
          if (!is_nohist() && sge_is_static_load_value(name) && 
@@ -695,11 +695,11 @@ u_long32 now
 ) {
    extern int new_config;
    lListElem *qep, *hep, *ep, *nextep; 
-   char *host;
+   const char *host;
    int host_unheard;
    u_short id = 1;
-   char *comproc;
-   char *real_host;
+   const char *comproc;
+   const char *real_host;
    u_long32 timeout; 
    int nstatics, nbefore;
    static u_long32 next_garbage_collection = 0;
@@ -715,7 +715,6 @@ u_long32 now
 
    /* take each host including the "global" host */
    for_each(hep, Master_Exechost_List) {
-
       host = lGetString(hep, EH_name);
 
       if (!strcasecmp(host, "template"))
@@ -727,7 +726,8 @@ u_long32 now
 
       comproc = prognames[EXECD];
       
-      if ((now > last_heard_from(comproc, &id, real_host) + timeout) && 
+      if ((now > last_heard_from(comproc, &id, real_host) 
+                        + timeout) && 
                strcmp(SGE_GLOBAL_NAME, host)) {
          host_unheard = 1;
 
@@ -797,7 +797,7 @@ lListElem *hep
    extern int new_config;
    u_long32 timeout; 
    lListElem *cfep;
-   char *host;
+   const char *host;
 
    DENTER(TOP_LAYER, "load_report_interval");
 
@@ -825,8 +825,8 @@ lListElem *hep
 }
 
 lListElem *get_local_conf_val(
-char *host,
-char *name 
+const char *host,
+const char *name 
 ) {
    lListElem *cfep, *ep = NULL;
 
@@ -884,7 +884,7 @@ int nm
 }
 
 void sge_change_queue_version_exechost(
-char *exechost_name 
+const char *exechost_name 
 ) {
    int change_all = 0;
    lListElem *qep;
@@ -1052,7 +1052,8 @@ sge_gdi_request *answer
 ) {
    int kill_jobs;
    lListElem *lel, *rep;
-   char host[MAXHOSTLEN], *hostname;
+   char host[MAXHOSTLEN];
+   const char *hostname;
 
    DENTER(TOP_LAYER, "master_kill_execds");
 
@@ -1111,7 +1112,7 @@ sge_gdi_request *answer
 void master_notify_execds()
 {
    lListElem *host;
-   char *hostname;
+   const char *hostname;
 
    for_each(host , Master_Exechost_List) {
       hostname = lGetString(host, EH_name);
@@ -1131,7 +1132,7 @@ sge_gdi_request *answer,
 int kill_jobs,
 int force 
 ) {
-   char *hostname;
+   const char *hostname;
    u_long qstd_alive;
    u_long execd_alive;
    static u_short number_one = 1;
@@ -1210,7 +1211,7 @@ int force
                   SETBIT(JDELETED, state);
                   lSetUlong(jatep, JAT_state, state);
                   /* spool job */
-                  cull_write_job_to_disk(jep);
+                  job_write_spool_file(jep, 0, SPOOL_DEFAULT);
                }
             }
          }
@@ -1230,9 +1231,9 @@ int force
 static int notify_kill_job(
 lListElem *lel,
 int kill_jobs,
-char *target 
+const char *target 
 ) {
-   char *hostname;
+   const char *hostname;
    sge_pack_buffer pb;
    int ret;
    u_long32 dummy;
@@ -1258,10 +1259,10 @@ char *target
 
 int notify_new_features(
 lListElem *host,
-enum featureset_id_t featureset,
-char *target 
+featureset_id_t featureset,
+const char *target 
 ) {
-   char *hostname;
+   const char *hostname;
    sge_pack_buffer pb;
    int ret;
    u_long32 dummy;
@@ -1362,7 +1363,7 @@ lListElem *hep
 ) {
    lListElem *ep;
    lList *resources = NULL;
-   char *name;
+   const char *name;
 
    DENTER(TOP_LAYER, "verify_scaling_list");
 

@@ -52,7 +52,7 @@ static char cached_master_name[MAXHOSTLEN] = "";
  * if read_master_file==0 we return the cached master_name
  *                   ==1 we look into the master_file
  *------------------------------------------------------------*/
-char *sge_get_master(
+const char *sge_get_master(
 int read_master_file 
 ) {
    char err_str[SGE_PATH_MAX+128];
@@ -86,7 +86,7 @@ int read_master_file
  *-----------------------------------------------------------------------*/
 int get_qm_name(
 char *master_host,
-char *master_file,
+const char *master_file,
 char *err_str 
 ) {
    FILE *fp;
@@ -162,7 +162,7 @@ char *err_str
  *********************************************************************/
 int write_qm_name(
 char *master_host,
-char *master_file,
+const char *master_file,
 char *err_str 
 ) {
    FILE *fp;

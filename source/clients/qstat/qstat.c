@@ -67,7 +67,7 @@
 #include "sge_string.h"
 #include "show_job.h"
 #include "qstat_printing.h"
-#include "qstat_util.h"
+#include "sge_range.h"
 #include "sge_schedd_text.h"
 #include "qm_name.h"
 #include "load_correction.h"
@@ -76,6 +76,8 @@
 #include "msg_clients_common.h"
 #include "msg_qstat.h"
 #include "sge_conf.h" 
+#include "sgeee.h" 
+#include "sge_support.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -509,11 +511,14 @@ char **argv
          lRemoveElem(job_list, jep);
       jep = tmp;
    }
-   
 
    if (lGetNumberOfElem(job_list)>0 ) {
-      so = sge_job_sort_order(lGetListDescr(job_list));
-      lSortList(job_list, so);
+      if (feature_is_enabled(FEATURE_SGEEE))
+         sgeee_sort_jobs(&job_list);
+      else {
+         so = sge_job_sort_order(lGetListDescr(job_list));
+         lSortList(job_list, so);
+      }
    }
 
    /* 
@@ -1022,7 +1027,7 @@ lList *queue_list,
 lList *hql 
 ) {
    int nqueues = 0;
-   char *qrnm;
+   const char *qrnm;
    lListElem *qrep, *qep;
    int need_hit;
 
@@ -1089,13 +1094,22 @@ lList *pe_list
       return 1;
    }
 
-   /* untag all queues not referenced by a pe in the selected pe list */
+   /* untag all non-parallel queues and queues not referenced 
+      by a pe in the selected pe list */
    for_each(qep, queue_list) {
-      char *qname;
+      const char *qname;
+
       lListElem* found = NULL;
+
+      if (!(lGetUlong(qep, QU_qtype) & PQ)) {
+         lSetUlong(qep, QU_tagged, 0);
+         continue;
+      }
+
       qname = lGetString(qep, QU_qname);
       for_each (pe, pe_selected) 
-         if ((found=lGetSubStr(pe, QR_name, qname, PE_queue_list)))
+         if ((found=lGetSubStr(pe, QR_name, qname, PE_queue_list))
+            || (found=lGetSubCaseStr(pe, QR_name, SGE_ATTRVAL_ALL, PE_queue_list))) 
             break;
       if (!found)
          lSetUlong(qep, QU_tagged, 0);
@@ -1129,7 +1143,7 @@ lList *acl_list
    for_each(qep, queue_list) {
       int access = 0;
       for_each (qu, queue_user_list) {
-         char *name = lGetString(qu, STR);
+         const char *name = lGetString(qu, STR);
          if ((access = (name[0]=='@')?
                sge_has_access(NULL, &name[1], qep, acl_list): /* group */
                sge_has_access(name, NULL, qep, acl_list))) /*user */

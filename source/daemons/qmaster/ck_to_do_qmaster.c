@@ -57,25 +57,12 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 
-#ifdef DEBUG_JOB_HASH 
-#include "sge_hash.h"
-extern HashTable Master_Job_Hash_Table;
-#endif
 
 extern lList *Master_Queue_List;
 extern lList *Master_Job_List;
 
 static void log_consumables(FILE *fp, lList *actual, lList *total); 
 static void log_stat_file(u_long32 now);
-
-#ifdef DEBUG_JOB_HASH 
-/*-------------------------------------------------------------------------*/
-static void doForAllHashEntries(HashTable ht, void* key, void** data)
-{
-    printf("FAHE: (" u32 ", %s)\n", (u_long32) key, 
-                           lGetString((lListElem*) *data, JB_owner));
-}
-#endif
 
 /******************************************************************************/
 void sge_ck_to_do_qmaster(
@@ -110,10 +97,6 @@ int had_free_epoch
    te_deliver(now, te_tab);
 }
 
-#ifdef DEBUG_JOB_HASH
-   HashTableForEach(Master_Job_Hash_Table, doForAllHashEntries);
-#endif
-   
    log_stat_file(now);
    sge_load_value_garbage_collector(now);
 

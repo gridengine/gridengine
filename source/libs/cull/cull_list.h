@@ -32,8 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "basis_types.h"
 #include <stdio.h> 
+
+#include "basis_types.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -58,7 +59,7 @@ typedef struct _lEnumeration lEnumeration;
 typedef union _lMultiType lMultiType;
 typedef struct _lSortOrder lSortOrder;
 typedef struct _WhereArg WhereArg, *WhereArgList;
-
+typedef struct _lHash lHash;
 
 /* IF YOU CHANGE THIS ENUM, CHANGE cull_multitype.c/multitypes[] */
 enum _enum_lMultiType {
@@ -80,64 +81,70 @@ enum _enum_lMultiType {
 #define XLISTDEF( name, idlname ) lDescr name[] = {
 #define ILISTDEF( name, idlname, listname ) lDescr name[] = {
 #define SLISTDEF( name, idlname ) lDescr name[] = {
-#define LISTEND {NoName, lEndT}};
+#define LISTEND {NoName, lEndT, NULL}};
 
-#define SGE_INT(name) { name, lIntT },
-#define SGE_RINT(name) { name, lIntT },
+#define SGE_INT(name) { name, lIntT, NULL },
+#define SGE_RINT(name) { name, lIntT, NULL },
 #define SGE_IINT(name)
 #define SGE_IRINT(name)
-#define SGE_XINT(name) { name, lIntT },
-#define SGE_STRING(name) { name, lStringT },
-#define SGE_KSTRING(name) { name, lStringT },
-#define SGE_RSTRING(name) { name, lStringT },
+#define SGE_XINT(name) { name, lIntT, NULL },
+#define SGE_STRING(name) { name, lStringT, NULL },
+#define SGE_STRINGH(name) { name, lStringT, &template_hash },
+#define SGE_STRINGHU(name) { name, lStringT, &template_hash_unique },
+#define SGE_KSTRING(name) { name, lStringT, NULL },
+#define SGE_KSTRINGH(name) { name, lStringT, &template_hash },
+#define SGE_KSTRINGHU(name) { name, lStringT, &template_hash_unique },
+#define SGE_RSTRING(name) { name, lStringT, NULL },
 #define SGE_ISTRING(name)
 #define SGE_IRSTRING(name)
-#define SGE_XSTRING(name) { name, lStringT },
-#define SGE_FLOAT(name) { name, lFloatT },
+#define SGE_XSTRING(name) { name, lStringT, NULL },
+#define SGE_FLOAT(name) { name, lFloatT, NULL },
 #define SGE_IFLOAT(name)
-#define SGE_RFLOAT(name) { name, lFloatT },
+#define SGE_RFLOAT(name) { name, lFloatT, NULL },
 #define SGE_IRFLOAT(name)
-#define SGE_XFLOAT(name) { name, lFloatT },
-#define SGE_DOUBLE(name) { name, lDoubleT },
+#define SGE_XFLOAT(name) { name, lFloatT, NULL },
+#define SGE_DOUBLE(name) { name, lDoubleT, NULL },
 #define SGE_IDOUBLE(name)
-#define SGE_RDOUBLE(name) { name, lDoubleT },
+#define SGE_RDOUBLE(name) { name, lDoubleT, NULL },
 #define SGE_IRDOUBLE(name)
-#define SGE_XDOUBLE(name) { name, lDoubleT },
-#define SGE_CHAR(name) { name, lCharT },
+#define SGE_XDOUBLE(name) { name, lDoubleT, NULL },
+#define SGE_CHAR(name) { name, lCharT, NULL },
 #define SGE_ICHAR(name)
-#define SGE_RCHAR(name) { name, lCharT },
+#define SGE_RCHAR(name) { name, lCharT, NULL },
 #define SGE_IRCHAR(name)
-#define SGE_XCHAR(name) { name, lCharT },
-#define SGE_LONG(name) { name, lLongT },
+#define SGE_XCHAR(name) { name, lCharT, NULL },
+#define SGE_LONG(name) { name, lLongT, NULL },
 #define SGE_ILONG(name)
-#define SGE_RLONG(name) { name, lLongT },
+#define SGE_RLONG(name) { name, lLongT, NULL },
 #define SGE_IRLONG(name)
-#define SGE_XLONG(name) { name, lLongT },
-#define SGE_ULONG(name) { name, lUlongT },
-#define SGE_KULONG(name) { name, lUlongT },
+#define SGE_XLONG(name) { name, lLongT, NULL },
+#define SGE_ULONG(name) { name, lUlongT, NULL },
+#define SGE_KULONG(name) { name, lUlongT, NULL },
+#define SGE_KULONGH(name) { name, lUlongT, &template_hash },
+#define SGE_KULONGHU(name) { name, lUlongT, &template_hash_unique },
 #define SGE_IULONG(name)
-#define SGE_RULONG(name) { name, lUlongT },
+#define SGE_RULONG(name) { name, lUlongT, NULL },
 #define SGE_IRULONG(name)
-#define SGE_XULONG(name) { name, lUlongT },
-#define SGE_BOOL(name) { name, lUlongT },
+#define SGE_XULONG(name) { name, lUlongT, NULL },
+#define SGE_BOOL(name) { name, lUlongT, NULL },
 #define SGE_IBOOL(name)
-#define SGE_RBOOL(name) { name, lUlongT },
+#define SGE_RBOOL(name) { name, lUlongT, NULL },
 #define SGE_IRBOOL(name)
-#define SGE_XBOOL(name) { name, lUlongT },
+#define SGE_XBOOL(name) { name, lUlongT, NULL },
 
-#define SGE_LIST(name) { name, lListT },
-#define SGE_TLIST(name, type) { name, lListT },
+#define SGE_LIST(name) { name, lListT, NULL },
+#define SGE_TLIST(name, type) { name, lListT, NULL },
 #define SGE_ILIST(name, type)
-#define SGE_RLIST(name, type) { name, lListT },
+#define SGE_RLIST(name, type) { name, lListT, NULL },
 #define SGE_IRLIST(name, type)
-#define SGE_XLIST(name, type) { name, lListT },
-#define SGE_OBJECT(name, type) { name, lListT },
+#define SGE_XLIST(name, type) { name, lListT, NULL },
+#define SGE_OBJECT(name, type) { name, lListT, NULL },
 #define SGE_IOBJECT(name, type)
-#define SGE_ROBJECT(name, type) { name, lListT },
+#define SGE_ROBJECT(name, type) { name, lListT, NULL },
 #define SGE_IROBJECT(name, type)
-#define SGE_XOBJECT(name, type) { name, lListT },
+#define SGE_XOBJECT(name, type) { name, lListT, NULL },
 
-#define SGE_REF(name) { name, lRefT },
+#define SGE_REF(name) { name, lRefT, NULL },
 
 #define NAMEDEF( name ) char *name[] = {
 #define NAME( name ) name ,
@@ -157,7 +164,11 @@ enum _enum_lMultiType {
 #define SGE_IRINT(name)
 #define SGE_XINT(name)
 #define SGE_STRING(name)
+#define SGE_STRINGH(name)
+#define SGE_STRINGHU(name)
 #define SGE_KSTRING(name)
+#define SGE_KSTRINGH(name)
+#define SGE_KSTRINGHU(name)
 #define SGE_ISTRING(name)
 #define SGE_RSTRING(name)
 #define SGE_IRSTRING(name)
@@ -184,6 +195,8 @@ enum _enum_lMultiType {
 #define SGE_XLONG(name)
 #define SGE_ULONG(name)
 #define SGE_KULONG(name)
+#define SGE_KULONGH(name)
+#define SGE_KULONGHU(name)
 #define SGE_IULONG(name)
 #define SGE_RULONG(name)
 #define SGE_IRULONG(name)
@@ -223,8 +236,8 @@ struct _lNameSpace {
 struct _lDescr {
    int nm;                             /* name */
    int mt;                             /* multitype information */
+   lHash *hash;
 };
-
 
 /* LIST SPECIFIC FUNCTIONS */
 const char *lGetListName(const lList *lp);

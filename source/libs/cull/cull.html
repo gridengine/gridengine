@@ -19,7 +19,7 @@
 <body>
 
 <h1 STYLE="margin-top: 0.17in; page-break-after: avoid">
-<b><font face="Times New Roman, serif">Common Usable List Library<a NAME="sdfootnote1anc" CLASS="sdfootnoteanc" HREF="#sdfootnote1sym"></a><sup><a href="#sdfootnote1sym" CLASS="sdfootnoteanc" NAME="sdfootnote1anc">1</a></sup></font></b></h1>
+<b><font face="Times New Roman, serif">Common Usable List Library<a NAME="sdfootnote1anc" CLASS="sdfootnoteanc" HREF="#sdfootnote1sym"></a><a NAME="sdfootnote1anc" href="#sdfootnote1sym" CLASS="sdfootnoteanc"></a><sup><a href="#sdfootnote1sym" CLASS="sdfootnoteanc" NAME="sdfootnote1anc">1</a></sup></font></b></h1>
 
 <h2>
 Capabilities of the Common Usable List Library (CULL)</h2>
@@ -33,7 +33,8 @@ features:
 <p STYLE="margin-bottom: 0in">reusability of list management code.
 <p>no need for recompilation of client code in case of uncritical data
 structure changes.
-<p>interface duality - either list oriented or SQL inspired.</ul>
+<p>interface duality - either list oriented or SQL inspired.
+<p>fast search functions using hash tables</ul>
 </ul>
 The CULL is the building block for the Grid Engine Database Interface (GDI
 - see&nbsp; <a href="../gdi/gdi.html">here</a>).
@@ -88,9 +89,23 @@ the name of the field and the other one the associated type. The names
 are represented by unique numbers, which can be mapped to enum definitions
 or #define statements (the steps to define a list are shown below.)
 <pre>typedef struct {
-int nm; /* unique number that stands for a name */
-int mt; /* multitype information */
+int nm;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* unique number that stands for a name */
+int mt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* multitype information */
+lHash *hash;&nbsp;/*&nbsp;hashing information */
 } lDescr;</pre>
+
+<h3>
+lHash</h3>
+The lHash structure stores information about hash tables to be used for
+certain data fields.
+<br>For each data field that shall be accessed by a hash table, the corresponding
+descriptor (lDesc) contains a reference to an lHash object. The lHash object
+defines the type of hash table (unique or non unique keys) and a pointer
+to a HashTable object.
+<pre>typedef struct {
+int unique;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /*&nbsp;0 =&nbsp;non unique keys, 1 = unique keys */
+HashTable table;&nbsp;/* pointer to HashTable from libs/uti/sge_hash.* */
+} lHash;</pre>
 
 <h3>
 lMultiType</h3>
@@ -154,10 +169,10 @@ Here an array of type lNameSpace has to be defined. This table will be
 used to convert field names to field numbers and vice versa within the
 CULL library.</div>
 
-
-<p STYLE="margin-bottom: 0in">The example1.h file can be found <a href="example1.h">here</a>.
+<div STYLE="margin-bottom: 0in">The example1.h file can be found <a href="example1.h">here</a>.
 The file source/libs/gdi/sge_all_listsL.h containes the array used in Grid
-Engine.
+Engine.</div>
+
 <h3>
 List Usage Example</h3>
 
@@ -178,14 +193,14 @@ functions may reduce the size of the code dramatically. There are no man
 pages available for the composite functions currently but they are documented
 in the sourcecode. Here their names are listed:</div>
 
-
-<p STYLE="margin-bottom: 0in">lGetElemCaseStr(), lGetElemDescr(), lGetElemHost(),
+<div STYLE="margin-bottom: 0in">lGetElemCaseStr(), lGetElemDescr(), lGetElemHost(),
 lGetElemIndex(), lGetElemStr(), lGetElemStrLike(), lGetElemUlong(), lGetSubCaseStr(),
 lGetSubHost(), lGetSubStr(), lGetSubUlong(), lAddElemUlong(), lAddElemStr(),
 lAddSubStr(), lAddSubUlong(), lDelElemCaseStr(), lDelElemHost(), lDelElemStr(),
-lDelElemUlong(), lDelSubCaseStr(), lDelSubStr(), lDelSubUlong()
+lDelElemUlong(), lDelSubCaseStr(), lDelSubStr(), lDelSubUlong()</div>
+
 <div ID="sdfootnote1">
-<center><a NAME="sdfootnote1sym" CLASS="sdfootnotesym" HREF="#sdfootnote1anc"></a><a href="#sdfootnote1anc" CLASS="sdfootnotesym" NAME="sdfootnote1sym">1</a>Copyright
+<center><a NAME="sdfootnote1sym" CLASS="sdfootnotesym" HREF="#sdfootnote1anc"></a><a NAME="sdfootnote1sym" href="#sdfootnote1anc" CLASS="sdfootnotesym"></a><a href="#sdfootnote1anc" CLASS="sdfootnotesym" NAME="sdfootnote1sym">1</a>Copyright
 2001 Sun Microsystems, Inc. All rights reserved.</center>
 </div>
 

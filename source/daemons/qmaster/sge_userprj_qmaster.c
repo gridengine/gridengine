@@ -86,7 +86,7 @@ int sub_command
 ) {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    int pos;
-   char *userprj;
+   const char *userprj;
    u_long32 uval;
    lList *lp;
    const char *obj_name;
@@ -131,7 +131,8 @@ int sub_command
    if (user_flag) {
       /* ---- UP_default_project */
       if ((pos=lGetPosViaElem(ep, UP_default_project))>=0) {
-         char *dproj;
+         const char *dproj;
+
          /* make sure default project exists */
          if ((dproj = lGetPosString(ep, pos))) {
             if (!Master_Project_List ||
@@ -243,7 +244,8 @@ char *ruser,
 char *rhost,
 int user        /* =1 user, =0 project */
 ) {
-   char *name, fname[SGE_PATH_MAX];
+   const char *name;
+   char fname[SGE_PATH_MAX];
    lListElem *ep;
    lListElem *myep;
 
@@ -360,7 +362,7 @@ int user        /* =1 user, =0 project */
 }
 
 lListElem *sge_locate_user_prj(
-char *up_name,
+const char *up_name,
 lList *upl 
 ) {
    return lGetElemStr(upl, UP_name, up_name);
@@ -371,9 +373,9 @@ int verify_userprj_list(
 lList **alpp,
 lList *name_list,
 lList *userprj_list,
-char *attr_name, /* e.g. "xprojects" */
-char *obj_descr, /* e.g. "host"      */
-char *obj_name   /* e.g. "fangorn"  */
+const char *attr_name, /* e.g. "xprojects" */
+const char *obj_descr, /* e.g. "host"      */
+const char *obj_name   /* e.g. "fangorn"  */
 ) {
    lListElem *up;
 

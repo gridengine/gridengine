@@ -42,9 +42,13 @@
 #define INF_ALLOWED        1
 #define INF_NOT_ALLOWED    0
 
-lList *parse_ranges(char *str, int just_parse, int step_allowed, lList **alpp, lList **rl, int inf_allowed);
+lList *parse_ranges(const char *str, int just_parse, int step_allowed, 
+                    lList **alpp, lList **rl, int inf_allowed);
+
 int unparse_ranges(FILE *fp, char *buff, u_long32 max_len, lList *lp);
+
 void show_ranges(char *buffer, int step_allowed, FILE *fp, lList *rlp);
+
 int id_in_range(u_long32 id, lList *rlp);
 
 #endif /* __PARSE_RANGE_H */

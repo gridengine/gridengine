@@ -38,15 +38,16 @@
 #	include "win32nativetypes.h"
 #endif 
 
-
-
 #ifndef __BASIS_TYPES_H
 #   include "basis_types.h"
 #endif
 
 u_long32 sge_get_gmt(void);
+
 char *sge_ctime(time_t); 
+
 char *sge_ctime32(u_long32 *); 
+
 char *sge_at_time(time_t);
 
 #endif /* __SGE_TIME_H */

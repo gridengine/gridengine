@@ -59,8 +59,8 @@ RETURN
 
 */
 int filecmp(
-char *name0,
-char *name1 
+const char *name0,
+const char *name1 
 ) {
    SGE_STRUCT_STAT buf0, buf1;
 

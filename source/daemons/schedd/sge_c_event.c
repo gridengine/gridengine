@@ -368,7 +368,9 @@ lList **report_list
 
    id = 0;
    tag = TAG_REPORT_REQUEST;
-   ret = sge_get_any_request(sge_get_master(0), prognames[QMASTER], &id, &pb, &tag, sync);
+   /* FIX_CONST */
+   ret = sge_get_any_request((char*)sge_get_master(0), 
+                             (char*)prognames[QMASTER], &id, &pb, &tag, sync);
 
    if (ret == 0) {
       if (cull_unpack_list(&pb, report_list)) {

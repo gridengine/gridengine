@@ -227,7 +227,7 @@ lList *joblist
 
 		  }
 
-                  cull_write_job_to_disk(job);
+                  job_write_spool_file(job, 0, SPOOL_DEFAULT);;
 
 		  if (new_creds[0])
 		     krb5_free_creds(context, new_creds[0]);

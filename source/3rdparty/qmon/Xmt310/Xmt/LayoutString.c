@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: LayoutString.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: LayoutString.c,v 1.2 2001/10/29 16:27:45 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,15 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: LayoutString.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.2  2001/10/29 16:27:45  andre
+ * AA-2001-10-29-0: Fix for weired characters in helper dialogs (PE,Project Configi, Calendar, Cluster Config,
+ *                  Complex Config)
+ *                  Queue Control Reschedule functionality added (corresponds qmod -r <qname>)
+ *                  Cluster config Reschedule Unknown bug fixed
+ *                  Job Custom dialogue core dump fix
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -288,7 +295,7 @@ Cardinal *num_args;
 	if (cs->layout_string.label_string)
 	    XmStringFree(cs->layout_string.label_string);
 	ss->layout_string.label_string =
-	    XmtCreateXmString(ss->layout_string.label);
+	    XmtCreateLocalizedXmString((Widget) lw, ss->layout_string.label);
 	ss->layout_string.label = empty_string;
         cs_width  = cs->layout_string.width;
         cs_height = cs->layout_string.height;

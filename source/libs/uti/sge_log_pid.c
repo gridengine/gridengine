@@ -40,9 +40,8 @@
 
 /************************************************************************/
 void sge_log_pid(
-char *pid_log_file 
+const char *pid_log_file 
 ) {
-
    int pid;
    FILE *fp;
 
@@ -64,7 +63,7 @@ char *pid_log_file
 
 /************************************************************************/
 int read_pid(
-char *pid_log_file 
+const char *pid_log_file 
 ) {
    int pid=-1;
    FILE *fp;

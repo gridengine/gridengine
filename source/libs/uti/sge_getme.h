@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 void sge_getme(u_long32 sge_formal_prog_name);
 
 #ifdef WIN32NATIVE

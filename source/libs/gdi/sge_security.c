@@ -97,7 +97,7 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
 *  SEE ALSO
 *
 **************************************************************************/
-int sge_security_initialize(char *name)
+int sge_security_initialize(const char *name)
 {
    static int initialized = 0;
 
@@ -325,7 +325,7 @@ int set_sec_cred(lListElem *job)
 #endif
 
 
-void cache_sec_cred(lListElem *jep, char *rhost)
+void cache_sec_cred(lListElem *jep, const char *rhost)
 {
    DENTER(TOP_LAYER, "cache_sec_cred");
 
@@ -587,7 +587,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char* err_str)
 {
    int ret = 0;
-   char *cred;
+   const char *cred;
    
    DENTER(TOP_LAYER, "store_sec_cred2");
 
@@ -722,7 +722,7 @@ struct dispatch_entry *de
 
 
 /* get TGT from job entry and store in client connection */
-void tgt2cc(lListElem *jep, char *rhost, char* target)
+void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 {
 
 #ifdef KERBEROS
@@ -764,7 +764,7 @@ void tgt2cc(lListElem *jep, char *rhost, char* target)
 }
 
 
-void tgtcclr(lListElem *jep, char *rhost, char* target)
+void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 {
 #ifdef KERBEROS
 

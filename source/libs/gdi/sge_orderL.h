@@ -48,6 +48,7 @@ extern "C" {
 enum {
    ORT_start_job = 1,               /* SGE & SGEEE */
    ORT_tickets,                     /*       SGEEE */
+   ORT_ptickets,                    /*       SGEEE */
    ORT_remove_job,                  /* SGE & SGEEE */
    ORT_update_project_usage,        /*       SGEEE */
    ORT_update_user_usage,           /*       SGEEE */
@@ -68,6 +69,7 @@ enum {
    OR_job_version,
    OR_queuelist,
    OR_ticket,
+   OR_pticket,
    OR_joker,
    OR_pe
 };
@@ -80,7 +82,8 @@ LISTDEF(OR_Type)
    SGE_ULONG(OR_ja_task_number)       /* which JobArray task */
    SGE_ULONG(OR_job_version)  /* which job version */
    SGE_LIST(OR_queuelist)     /* associated queue list */
-   SGE_ULONG(OR_ticket)       /* SGEEE job tickets */
+   SGE_DOUBLE(OR_ticket)      /* SGEEE job tickets */
+   SGE_DOUBLE(OR_pticket)     /* SGEEE job tickets */
    SGE_LIST(OR_joker)         /* type of this sublist depends on OR_type:  
                                * ORT_start_job empty ORT_remove_job empty  
                                * ORT_tickets reduced job element JB_Type
@@ -101,6 +104,7 @@ NAMEDEF(ORN)
      NAME("OR_job_version")
      NAME("OR_queuelist")
      NAME("OR_ticket")
+     NAME("OR_pticket")
      NAME("OR_joker")
      NAME("OR_pe")
      NAMEEND
@@ -122,11 +126,11 @@ LISTDEF(OQ_Type)
    SGE_ULONG(OQ_slots)        /* number of slots on this queue */
    SGE_STRING(OQ_dest_queue)  /* queue where job has to run */
    SGE_ULONG(OQ_dest_version) /* version of this queue */
-   SGE_ULONG(OQ_ticket)       /* total SGEEE tickets for slots */
-   SGE_ULONG(OQ_oticket)      /* total SGEEE override tickets */
-   SGE_ULONG(OQ_fticket)      /* total SGEEE functional tickets */
-   SGE_ULONG(OQ_dticket)      /* total SGEEE deadline tickets */
-   SGE_ULONG(OQ_sticket)      /* total SGEEE sharetree tickets */
+   SGE_DOUBLE(OQ_ticket)       /* total SGEEE tickets for slots */
+   SGE_DOUBLE(OQ_oticket)      /* total SGEEE override tickets */
+   SGE_DOUBLE(OQ_fticket)      /* total SGEEE functional tickets */
+   SGE_DOUBLE(OQ_dticket)      /* total SGEEE deadline tickets */
+   SGE_DOUBLE(OQ_sticket)      /* total SGEEE sharetree tickets */
 LISTEND 
 
 NAMEDEF(OQN)

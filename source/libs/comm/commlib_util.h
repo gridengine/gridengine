@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-int secure_strlen(char *cp, int maxlen);
+int secure_strlen(const char *cp, int maxlen);
 
 #endif /* __COMMLIB_UTIL_H */

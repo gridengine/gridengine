@@ -34,15 +34,15 @@
 
 #include <stdio.h>
 
-
-
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
 char *str_from_file(const char *fname, int *len);
+
 char *str_from_stream(FILE *fp, int *len); 
-int str2file(char *str, int len, char *fname);
+
+int str2file(const char *str, int len, const char *fname);
 
 #ifdef  __cplusplus
 }

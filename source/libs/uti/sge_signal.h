@@ -36,8 +36,6 @@
 #   include "basis_types.h"
 #endif
 
-
-
 #define SGE_SIGHUP                         901
 #define SGE_SIGINT                         902
 #define SGE_SIGQUIT                        903
@@ -80,11 +78,16 @@ typedef struct sig_mapT {
 } sig_mapT;
 
 int sge_unmap_signal(u_long32 sge_sig);
+
 u_long32 sge_map_signal(int sys_sig);
-u_long32 str2signal(char *str);
+
+u_long32 str2signal(const char *str);
+
 const char *sge_sig2str(u_long32 sge_sig);
+
 const char *sys_sig2str(u_long32 sig);
-u_long32 sys_str2signal(char *str);
+
+u_long32 sys_str2signal(const char *str);
 
 #endif /* __SGE_SIGNAL_H */
 

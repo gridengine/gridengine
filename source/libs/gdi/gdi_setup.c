@@ -77,7 +77,7 @@ static int exit_on_error = 1;
 *
 ********************************************************************************
 */
-int sge_gdi_setup(char *programname)
+int sge_gdi_setup(const char *programname)
 {
    lList *alp = NULL;
 

@@ -148,7 +148,7 @@ char *units
 */
 int sge_add_int2load_report(
 lList **lpp,
-char *name,
+const char *name,
 int value,
 int global 
 ) {
@@ -171,8 +171,8 @@ int global
 */
 int sge_add_str2load_report(
 lList **lpp,
-char *name,
-char *value,
+const char *name,
+const char *value,
 int global 
 ) {
    lListElem *ep;

@@ -69,7 +69,7 @@ int sge_pe_slots_per_host(
 lListElem *pep,
 int slots 
 ) {
-   char *alloc_rule;
+   const char *alloc_rule;
    int ret = 0;
 
    DENTER(TOP_LAYER, "sge_pe_slots_per_host");
@@ -136,7 +136,7 @@ int *sm
 
 ) {
    lListElem *hep;
-   char *alloc_rule;
+   const char *alloc_rule;
    int ret = 0;
    int available;
    DENTER(TOP_LAYER, "or_sge_pe_slots_per_host");

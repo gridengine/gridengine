@@ -1,7 +1,7 @@
 <table border="0" cellpadding="2" cellspacing="0" width="100%">
 <! -- //content -->
 <tr>
-<td><B><font color="#336699" size="+2" class="PageHeader">Installation Summary for Grid Engine</font></B></td>
+<td><H2><font color="#336699" class="PageHeader">Installation Summary for Grid Engine</font></H2></td>
 </tr>
 </table>
 <br><br>
@@ -33,7 +33,7 @@ before installing</a></li>
 <li>
 <a href="#Using Grid Engine">Using Grid Engine</a></li>
 </ul>
-<p><h4><font color="#990000">General Overview
+<p><h4><font color="#CC3300">General Overview
 <a NAME="Create a Grid Engine administrator account and set up a service"></a>Create
 a Grid Engine administrator account and set up a service port</font></H4>
 An administrator account must be specified. The administrator can be an
@@ -60,7 +60,7 @@ matter, it must be unused on your system and should be a reserved port)
 Or, add the above manually to the /etc/services file on each machine</li>
 </ul>
 
-<p><h4><font color="#990000">
+<p><h4><font color="#CC3300">
 <a NAME="Create a directory and unpack the distribution"></a>Create a directory
 and unpack the distribution</font></h4>
 As the Grid Engine administrator, do the following:
@@ -93,7 +93,7 @@ some files need to be installed suid root)
 to chown/chmod file.
 <br>This script not necessarily need to run on the qmaster machine.</ul>
 
-<p><h4><font color="#990000">
+<p><h4><font color="#CC3300">
 <a NAME="Additional information before installing"></a>Additional information
 before installing</font></h4>
 
@@ -141,7 +141,7 @@ before executing. For example:</li>
 <br>endif</ul>
 </ul>
 
-<p><h4><font color="#990000">
+<p><h4><font color="#CC3300">
 <a NAME="Install Grid Engine"></a>Install Grid Engine</font></h4>
 The installation is a two step process. First, the Grid Engine files are
 installed and configured on the master. Then, a small installation is&nbsp;
@@ -170,7 +170,7 @@ The installation programs start the Grid Engine daemons, so at the completion
 of a successful install, Grid Engine is up and running. If&nbsp; the&nbsp;&nbsp;&nbsp;&nbsp;
 master host will also be an execution host execute Step Two also on the
 master machine.
-<p><h4><font color="#990000">
+<p><h4><font color="#CC3300">
 <a NAME="Verify installation"></a>Verify installation</font></h4>
 After the installation is completed, the installation can be verified.
 There are some sample scripts in $SGE_ROOT/examples/jobs.
@@ -194,7 +194,7 @@ Verify that all of the queues have been installed properly by running the
 following:
 <blockquote>% qstat -f&nbsp;&nbsp; (full listing of the queues)</blockquote>
 
-<p><h4><font color="#990000">
+<p><h4><font color="#CC3300">
 <a NAME="Using Grid Engine"></a>Using Grid Engine</font></h4>
 The main submit commands are qsub, qrsh and qtcsh. See the man pages for
 submit(1) and qtcsh(1) for more details.

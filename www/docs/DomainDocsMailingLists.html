@@ -1,192 +1,206 @@
-<TABLE BORDER="0" CELLSPACING="1" CELLPADDING="3" BORDER="0" WIDTH="100%">
-  <TR>
-    <TD class="Header" nowrap>Mailing list management and archiving</TD>  
-  </TR>
-</TABLE>
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body>
+&nbsp;
+<table BORDER=0 CELLPADDING=3 WIDTH="100%" >
+<tr>
+<td NOWRAP class="Header">Mailing list management and archiving</td>
+</tr>
+</table>
 
+<table BORDER=0 CELLSPACING=2 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td VALIGN=TOP class="PlainText"><a href="#aboutmail">About project mailing
+lists</a>
+<br><a href="#mailfeatures">Mailing list features</a>
+<br><a href="#mailarchives">Mailing list archives</a>
+<br><a href="#mailadmin">Mailing list administration</a>
+<p><span class="InputHeader"><a NAME="aboutmail"></a>About project mailing
+lists</span>
+<p>Mailing lists provide a way for developers on a project to communicate
+with one another and to receive notifications of project events. In general,
+the way mailing lists work depends upon the type of project:&nbsp;
+<ul>
+<li>
+Open source project mailings lists are open to any subscriber, although
+project owners can choose to limit who may subscribe and post to certain
+lists.</li>
 
-<TABLE BORDER="0" CELLSPACING="2" CELLPADDING="2" BORDER="0" width="100%">
-  <TR>
-    <TD class="PlainText" VALIGN="top" >
-     <P>
-     <A HREF="#aboutmail">About project mailing lists</A><BR>
-     <A HREF="#mailfeatures">Mailing list features</A><BR>
-     <A HREF="#mailarchives">Mailing list archives</A><BR>
-	 <A HREF="#mailadmin">Mailing list administration</A>
-     <P>
-     <span class="InputHeader"><A NAME="aboutmail">About project mailing lists</A></span>
+<li>
+Proprietary project mailing lists are always private, that is, limited
+only to approved subscribers who are usually project members.&nbsp;</li>
+</ul>
+In either case, all project mailing lists are created with <a href="http://anzu.tigris.org/">anzu</a>,
+an open source mail alias and list management extension of qmail simple
+mail transfer protocol (smtp). Anzu supports multiple domains, enabling
+each project to define and manage its own unique set of mailing lists for
+the project domain.&nbsp;
+<p>Every standard development project is created with the following set
+of default lists:&nbsp;
+<blockquote>
+<dl>
+<dt>
+<span class="InputHeader">dev@PROJECTNAME.domain.com</span>&nbsp;</dt>
 
-     <P>Mailing lists provide a way for developers on a project to
-     communicate with one another and to receive notifications of
-     project events. In general, the way mailing lists work depends
-     upon the type of project:
+<dd>
+The main list for developers to discuss specific project development issues
+and requirements for version control in the project.</dd>
+
+<dt>
+<span class="InputHeader">cvs@PROJECTNAME.domain.com</span>&nbsp;</dt>
+
+<dd>
+Automated notifications of file version control changes and discussion
+of those changes.</dd>
+
+<dt>
+<span class="InputHeader">announce@PROJECTNAME.domain.com</span>&nbsp;</dt>
+
+<dd>
+Announcements of new releases and other major project events.</dd>
+
+<dt>
+<span class="InputHeader">issues@PROJECTNAME@domain.com</span>&nbsp;</dt>
+
+<dd>
+Automated notifications and discussions of the project's reported issues
+(defects, enhancements, features, tasks, and patches) and changes made
+to issues, such as reassignment, comments, or resolution.</dd>
+
+<dt>
+<span class="InputHeader">users@PROJECTNAME.domain.com</span>&nbsp;</dt>
+
+<dd>
+A more general discussion list for the project's end users.&nbsp;</dd>
+</dl>
+</blockquote>
+Discussion-only projects are set up with one mailing list initially.&nbsp;
+<p>Default lists for each project are "top-level" mailing lists. If traffic
+relating to a particular module or component becomes too high for a particular
+top-level list, the project owner can create a separate mailing list to
+splinter off the discussion.&nbsp;
+<p>Most lists also have a corresponding "digest" version -- subscribers
+to the digest list receive a single message per day with all of that day's
+postings.&nbsp;
+<p><span class="InputHeader"><a NAME="mailfeatures"></a>Mailing list features</span>
+<p>The default, customary mailing list features are:&nbsp;
+<ul>
+<li>
+list subscribe/unsubscribe&nbsp;</li>
+
+<li>
+digest subscribe/unsubscribe&nbsp;</li>
+
+<li>
+post a message&nbsp;</li>
+
+<li>
+get help&nbsp;</li>
+
+<li>
+view the archive&nbsp;</li>
+</ul>
+These generic list options are generated for every project mailing list.
+Project owners can modify these default mailing lists, add new lists, delete
+unnecessary lists, add and remove subscribers, add and remove moderators,
+and set other mailing list parameters. <a href="#mailadmin">See mailing
+list administration</a>.&nbsp;
+<p>For instructions on using the mailing lists for a particular project,
+first click on the name of the project at left, then select "Mailing List"
+in the Project Resources tool bar.&nbsp;
+<blockquote><span class="InputHeader">Subscribing</span>
+<br>To subscribe to a list named LIST for a project named PROJ, send a
+blank email message to:
+<br><b>LIST-subscribe@PROJ.domain.xxx</b>
+<br>For example, to subscribe to the dev mailing list for a project's platform
+component, send email to
+<br><b>dev-subscribe@platform.PROJ.domain.xxx</b>
+<p><span class="InputHeader">Unsubscribing</span>
+<br>To unsubscribe from a list named LIST for a project named PROJ, send
+a blank email message to:
+<br><b>LISTNAME-unsubscribe@PROJ.domain.xxx</b>
+<br>For example, to unsubscribe from the dev mailing list in project platform,
+send email to
+<br><b>dev-unsubscribe@platform.PROJ.domain.xxx</b>
+<p><span class="InputHeader">Mailing list digests</span>
+<br>If you find that you are getting too many email messages from a given
+list, you can sign up for a daily digest of messages instead.&nbsp;
+<br>To subscribe, send a message to <b>LIST-digest-subscribe@PROJ.domain.xxx</b>
+<br>To unsubscribe, send a message to <b>LIST-digest-unsubscribe@PROJ.domain.xxx</b>
+<p><span class="InputHeader">Posting a Message</span>
+<br>To post a message to a list named LIST for a project named PROJ, send
+your message to:
+<br><b>LISTNAME@PROJ.domain.xxx</b>
+<br>For example, to post a message to the dev mailing list in project platform,
+send email to
+<br><b>dev@platform.PROJ.domain.xxx</b>
+<p><span class="InputHeader">Getting Help</span>
+<br>To get an automated help message for a list named LIST for a project
+named PROJ, send a blank email message to:
+<br><b>LIST-help@PROJ.domain.xxx</b>
+<br>For example, for the dev mailing list in project platform, send email
+to
+<br><b>dev-help@platform.PROJ.domain.xxx</b>
+<p>To communicate with the list moderator, send an email message to:
+<br><b>LIST-owner@PROJ.domain.xxx</b></blockquote>
+<span class="InputHeader"><a NAME="mailarchives"></a>Mailing list archives</span>
+<p>Project/component mailing list archiving is handled by <a href="http://eyebrowse.tigris.org/">eyebrowse</a>,
+a brand new open source tool that stores and indexes list messages, providing
+multiple options for browsing, reading, and searching mailing list archives
+via a web browser. Beyond storing messages, eyebrowse adds a database,
+and text indexing engine to handle rapid message search and retrieval.&nbsp;
+<p><b><i>To view archives for a mailing list</i></b>, first click on the
+project in the list, then select the "Mailing List" option in the Project
+Resources tool bar to see a list of all mailing lists for that project.
+Click on the <i>View Archive</i> link next to the list you want to view.&nbsp;
+<p>The default view for browsing mailing list archives is by date summary.
+Other summary views available are: by author, by subject, and by thread.
+You can also do text string searches of archived messages using simple
+Boolean operators.&nbsp;
+<p><span class="InputHeader"><a NAME="mailadmin"></a>Mailing list administration</span>
+<p>Project owners customize project mailing lists in the Mailing List Edit
+screen, accessed by clicking the <i>Project Edit</i> link on the Project
+Home page. Mailing list links at the bottom of the page display an edit
+screen for each list.&nbsp;
+<p>Project owners establish mailing list management policies by configuring
+two important aspects of project mailing lists:&nbsp;
+<dl>
+<dt>
+<b>Subscription moderation</b>&nbsp;</dt>
+
+<dd>
+Subscriptions to each mailing list can either be open or on an approval
+basis. Subscriptions to proprietary project mailing lists are moderated
+by default because these lists are always private. Open source project
+owners can specify moderated subscriptions for certain mailing lists if
+desired.</dd>
+
+<dt>
+<b>Posting policy</b>&nbsp;</dt>
+
+<dd>
+Mailing lists can be configured to handle message posts at three different
+levels:&nbsp;</dd>
 
 <ul>
+<li>
+"<b>Discuss</b>" allows subscribers to post, and moderates posts (requires
+approval) from others.&nbsp;</li>
 
-<li>Open source project mailings lists are open to any subscriber,
-although project owners can choose to limit who may subscribe and post
-to certain lists.
-<p>
+<li>
+"<b>Announce</b>" moderates <i>all</i> posts.&nbsp;</li>
 
-<li>Proprietary project mailing lists are always private, that is,
-limited only to approved subscribers who are usually project members.
-
+<li>
+"<b>Automated-notification</b>" allows anyone to post messages without
+moderation.&nbsp;</li>
 </ul>
-
-<P>In either case, all project mailing lists are created with <A
-HREF="http://anzu.tigris.org/">anzu</A>, an open source mail alias and
-list management extension of qmail simple mail transfer protocol
-(smtp). Anzu supports multiple domains, enabling each project to
-define and manage its own unique set of mailing lists for the project
-domain.
-
-<P>Every standard development project is created with the following set of default lists:
-
-    <BLOCKQUOTE>
-    <DL>
-	<DT><span class="InputHeader">dev@PROJECTNAME.domain.com</span> 
-
-        <DD>The main list for developers to discuss specific project
-        development issues and requirements for version control in the
-        project.
-<P>
-	<DT><span class="InputHeader">cvs@PROJECTNAME.domain.com</span> 
-        <DD>Automated notifications of file version control changes and discussion of those changes.
-<P>
-        <DT><span class="InputHeader">announce@PROJECTNAME.domain.com</span> 
-        <DD>Announcements of new releases and other major project events.
-<P>
-	<DT><span class="InputHeader">issues@PROJECTNAME@domain.com</span>
-	<DD>Automated notifications and discussions of the project's
-	reported issues (defects, enhancements, features, tasks, and
-	patches) and changes made to issues, such as reassignment,
-	comments, or resolution.
-<P>
-        <DT><span class="InputHeader">users@PROJECTNAME.domain.com</span> 
-        <DD>A more general discussion list for the project's end users.
-    </DL>
-    </BLOCKQUOTE> 
-
-	<P>Discussion-only projects are set up with one mailing list initially.
-
-	<P>Default lists for each project are "top-level" mailing
-	lists. If traffic relating to a particular module or component
-	becomes too high for a particular top-level list, the project
-	owner can create a separate mailing list to splinter off the
-	discussion.
-
-	<P>Most lists also have a corresponding "digest" version --
-	subscribers to the digest list receive a single message per
-	day with all of that day's postings.
-
-     <P><span class="InputHeader"><A NAME="mailfeatures">Mailing list features</A></span> 
-     <P>The default, customary mailing list features are: 
-     <UL>
-     <LI>list subscribe/unsubscribe
-     <LI>digest subscribe/unsubscribe   
-     <LI>post a message
-     <LI>get help
-     <LI>view the archive
-     </UL>
-
-     <P>These generic list options are generated for every project
-     mailing list. Project owners can modify these default mailing
-     lists, add new lists, delete unnecessary lists, add and remove
-     subscribers, add and remove moderators, and set other mailing
-     list parameters. <a href="#mailadmin">See mailing list
-     administration</A>.
-
-     <P>For instructions on using the mailing lists for a particular
-     project, first click on the name of the project at left, then
-     select "Mailing List" in the Project Resources tool bar.
-
-     <BLOCKQUOTE>
-    <span class="InputHeader">Subscribing</span><BR>
-     To subscribe to a list named LIST for a project named PROJ, send a blank email message to:<BR>
-     <B>LIST-subscribe@PROJ.domain.xxx</B><BR>
-      For example, to subscribe to the dev mailing list for a project's platform component, send email to<BR>
-     <B>dev-subscribe@platform.PROJ.domain.xxx</B>
-
-     <P><span class="InputHeader">Unsubscribing</span><BR>
-To unsubscribe from a list named LIST for a project named PROJ, send a blank email message to:<BR>
-     <B>LISTNAME-unsubscribe@PROJ.domain.xxx</B><BR>
-      For example, to unsubscribe from the dev mailing list in project platform, send email to<BR>
-     <B>dev-unsubscribe@platform.PROJ.domain.xxx</B>
-
-     <P><span class="InputHeader">Mailing list digests</span><BR>
-If you find that you are getting too many email messages from a given list, you can sign up for a daily digest of messages
-instead. <BR>
-      To subscribe, send a message to <B>LIST-digest-subscribe@PROJ.domain.xxx</B><BR>
-      To unsubscribe, send a message to <B>LIST-digest-unsubscribe@PROJ.domain.xxx</B><BR>
-
-     <P><span class="InputHeader">Posting a Message</span><BR>
-To post a message to a list named LIST for a project named PROJ, send your message to:<BR>
-     <B>LISTNAME@PROJ.domain.xxx</B><BR>
-      For example, to post a message to the dev mailing list in project platform, send email to<BR>
-     <B>dev@platform.PROJ.domain.xxx</B>
-
-     <P><span class="InputHeader">Getting Help</span><BR>
-To get an automated help message for a list named LIST for a project named PROJ, send a blank email message to:<BR>
-     <B>LIST-help@PROJ.domain.xxx</B><BR> 
-For example, for the dev mailing list in project platform, send email to<BR> <B>dev-help@platform.PROJ.domain.xxx</B>
-     <P>To communicate with the list moderator, send an email message to:<BR>
-     <B>LIST-owner@PROJ.domain.xxx</B>
-
-     </BLOCKQUOTE>
-
-    <P><span class="InputHeader"><A NAME="mailarchives">Mailing list archives</A></span>
-
-     <P>Project/component mailing list archiving is handled by <A
-     HREF="http://eyebrowse.tigris.org/">eyebrowse</A>, a brand new
-     open source tool that stores and indexes list messages, providing
-     multiple options for browsing, reading, and searching mailing
-     list archives via a web browser. Beyond storing messages,
-     eyebrowse adds a database, and text indexing engine to handle
-     rapid message search and retrieval.
-
-	<P><B><I>To view archives for a mailing list</I></B>, first
-	click on the project in the list, then select the "Mailing
-	List" option in the Project Resources tool bar to see a list
-	of all mailing lists for that project. Click on the <I>View
-	Archive</I> link next to the list you want to view.
-
-     <P>The default view for browsing mailing list archives is by date
-     summary. Other summary views available are: by author, by
-     subject, and by thread. You can also do text string searches of
-     archived messages using simple Boolean operators.
-
-<P><span class="InputHeader"><A NAME="mailadmin">Mailing list administration</A></span>
-
-	<P>Project owners customize project mailing lists in the
-	Mailing List Edit screen, accessed by clicking the <I>Project
-	Edit</I> link on the Project Home page. Mailing list links at
-	the bottom of the page display an edit screen for each list.
-
-	<P>Project owners establish mailing list management policies by configuring two important aspects of project
-mailing lists: 
-
-	<DL>
-	<DT><b>Subscription moderation</b> 
-        <DD>Subscriptions to each
-	mailing list can either be open or on an approval
-	basis. Subscriptions to proprietary project mailing lists are
-	moderated by default because these lists are always
-	private. Open source project owners can specify moderated
-	subscriptions for certain mailing lists if desired.
-<p>
-	<DT><b>Posting policy</b>
-	<DD>Mailing lists can be configured to handle message posts at three different levels:
-		<ul>
-		<li>"<B>Discuss</B>" allows subscribers to post, and moderates posts (requires approval) from others.
-		<li>"<B>Announce</B>" moderates <I>all</I> posts.
-		<li>"<B>Automated-notification</B>" allows anyone to post messages without moderation.
-		</ul>
-	</DL>
-
-	<P>As part of the configuration options for all lists, a footer in the every message with subscribe/unsubscribe
-instructions can be turned on or off.
-
-<!--
+</dl>
+As part of the configuration options for all lists, a footer in every message
+with subscribe/unsubscribe instructions can be turned on or off.&nbsp;<!--
 	<P>Other pre-set mailing list features include:
 <ul>
 <li>Indexing 
@@ -210,13 +224,9 @@ things***)
 restriction is not applied to the other types of mailing lists by default but can be set up through domain level
 administration.
 </ul>
--->
+--></td>
+</tr>
+</table>
 
-    </TD>
-  </TR>
-</TABLE>
-
-
-
-
-
+</body>
+</html>

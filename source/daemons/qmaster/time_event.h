@@ -36,7 +36,7 @@
 
 #include "sge_time_eventL.h"
 
-typedef void (*te_deliver_func_t)(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, char *sval);
+typedef void (*te_deliver_func_t)(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, const char *sval);
 
 typedef struct {
    u_long32 type;
@@ -44,10 +44,11 @@ typedef struct {
 } te_tab_t;
 
 void te_deliver(u_long32 now, te_tab_t *tab);
-void te_add(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, char *sval);
+void te_add(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, 
+            const char *sval);
 
 /* removes all pending events with 'str' as key */
-int te_delete(u_long32 type, char *str, u_long32 uval0, u_long32 uval1);
+int te_delete(u_long32 type, const char *str, u_long32 uval0, u_long32 uval1);
 
 
 #endif /* __TIME_EVENT_H */

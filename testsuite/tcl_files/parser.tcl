@@ -804,11 +804,10 @@ proc repeat_column {input {column 0}} {
 #     ???/???
 #*******************************
 proc transform_cpu { s_cpu } {
-   scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
-   set cpu  [expr $days * 86400 + \
-            $hours * 3600  + \
-            $minutes * 60    + \
-            $seconds]
+   catch {
+      scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
+      set cpu  [expr $days * 86400 + $hours * 3600 + $minutes * 60 + $seconds]
+   }
 }
 
 #                                                             max. column:     |
@@ -1094,60 +1093,116 @@ proc rule_max { a b } {
 #***************************************************************************
 #
 proc parse_qstat {input output {jobid ""} {ext 0}} {
+   global CHECK_PRODUCT_VERSION_NUMBER
    upvar $input  in
    upvar $output out
 
-   if { $ext } {
-      set   position(0)  "0 5"               ; set    names(0)    id
-      set   position(1)  "7 11"              ; set    names(1)    prior
-      set   position(2)  "13 22"             ; set    names(2)    name
-      set   position(3)  "24 35"             ; set    names(3)    user
-      set   position(4)  "37 52"             ; set    names(4)    project
-      set   position(5)  "54 63"             ; set    names(5)    department
-      set   position(6)  "65 69"             ; set    names(6)    state
-      set   position(7)  "71 89"             ; set    names(7)    time
-      set  transform(7)  transform_date_time
-      set      rules(7)  rule_min
-      set   position(8)  "91 107"            ; set    names(8)    deadline
-      set  transform(8)  transform_date_time
-      set   position(9)  "109 118"           ; set    names(9)    cpu
-      set      rules(9)  rule_sum
-      set    replace(9,) 0:00:00:00          ; set  replace(9,NA) 0:00:00:00
-      set  transform(9)  transform_cpu
-      set  position(10)  "120 126"           ; set   names(10)    mem
-      set   replace(10,) 0                   ; set replace(10,NA) 0
-      set     rules(10)  rule_sum
-      set  position(11) "128 134"            ; set   names(11)    io
-      set   replace(11,) 0                   ; set replace(11,NA) 0
-      set     rules(11)  rule_sum
-      set  position(12)  "136 140"           ; set   names(12)    tckts
-      set  position(13)  "142 146"           ; set   names(13)    ovrts
-      set  position(14)  "148 152"           ; set   names(14)    otckt
-      set  position(15)  "154 158"           ; set   names(15)    dtckt
-      set  position(16)  "160 164"           ; set   names(16)    ftckt
-      set  position(17)  "166 170"           ; set   names(17)    stckt
-      set  position(18)  "172 175"           ; set   names(18)    share
-      set  position(19)  "178 187"           ; set   names(19)    queue
-      set     rules(19)  rule_list
-      set  position(20)  "189 195"           ; set   names(20)    master
-      set     rules(20)  rule_list
-      set  position(21)  "197 end"           ; set   names(21)    jatask
-      set     rules(21)  rule_list
+   if { $CHECK_PRODUCT_VERSION_NUMBER >= 2 } {
+      if { $ext } {
+         set   position(0)  "0 6"               ; set    names(0)    id
+         set   position(1)  "8 12"              ; set    names(1)    prior
+         set   position(2)  "14 23"             ; set    names(2)    name
+         set   position(3)  "25 36"             ; set    names(3)    user
+         set   position(4)  "38 53"             ; set    names(4)    project
+         set   position(5)  "55 64"             ; set    names(5)    department
+         set   position(6)  "66 70"             ; set    names(6)    state
+         set   position(7)  "72 90"             ; set    names(7)    time
+         set  transform(7)  transform_date_time
+         set      rules(7)  rule_min
+         set   position(8)  "92 108"            ; set    names(8)    deadline
+         set  transform(8)  transform_date_time
+         set   position(9)  "112 121"           ; set    names(9)    cpu
+         set      rules(9)  rule_sum
+         set    replace(9,) 0:00:00:00          ; set  replace(9,NA) 0:00:00:00
+         set  transform(9)  transform_cpu
+         set  position(10)  "123 129"           ; set   names(10)    mem
+         set   replace(10,) 0                   ; set replace(10,NA) 0
+         set     rules(10)  rule_sum
+         set  position(11) "131 137"            ; set   names(11)    io
+         set   replace(11,) 0                   ; set replace(11,NA) 0
+         set     rules(11)  rule_sum
+         set  position(12)  "139 143"           ; set   names(12)    tckts
+         set  position(13)  "145 149"           ; set   names(13)    ovrts
+         set  position(14)  "151 155"           ; set   names(14)    otckt
+         set  position(15)  "157 161"           ; set   names(15)    dtckt
+         set  position(16)  "163 167"           ; set   names(16)    ftckt
+         set  position(17)  "169 173"           ; set   names(17)    stckt
+         set  position(18)  "175 178"           ; set   names(18)    share
+         set  position(19)  "180 190"           ; set   names(19)    queue
+         set     rules(19)  rule_list
+         set  position(20)  "192 198"           ; set   names(20)    master
+         set     rules(20)  rule_list
+         set  position(21)  "200 end"           ; set   names(21)    jatask
+         set     rules(21)  rule_list
+      } else {
+         set   position(0)  "0 6"               ; set    names(0)    id   
+         set   position(1)  "8 12"              ; set    names(1)    prior
+         set   position(2)  "14 23"             ; set    names(2)    name
+         set   position(3)  "25 36"             ; set    names(3)    user
+         set   position(4)  "38 42"             ; set    names(4)    state
+         set   position(5)  "44 62"             ; set    names(5)    time
+         set  transform(5)  transform_date_time
+         set      rules(7)  rule_min
+         set   position(6)  "64 73"             ; set    names(6)    queue
+         set      rules(6)  rule_list
+         set   position(7)  "75 81"             ; set    names(7)    master
+         set      rules(7)  rule_list
+         set   position(8)  "83 end"            ; set    names(8)    jatask
+         set      rules(8)  rule_list
+      }
    } else {
-      set   position(0)  "0 5"               ; set    names(0)    id   
-      set   position(1)  "7 11"              ; set    names(1)    prior
-      set   position(2)  "13 22"             ; set    names(2)    name
-      set   position(3)  "24 35"             ; set    names(3)    user
-      set   position(4)  "37 41"             ; set    names(4)    state
-      set   position(5)  "43 61"             ; set    names(5)    time
-      set  transform(5)  transform_date_time
-      set      rules(7)  rule_min
-      set   position(6)  "63 72"             ; set    names(6)    queue
-      set      rules(6)  rule_list
-      set   position(7)  "74 80"             ; set    names(7)    master
-      set      rules(7)  rule_list
-      set   position(8)  "82 end"            ; set    names(8)    jatask
-      set      rules(8)  rule_list
+      if { $ext } {
+         set   position(0)  "0 5"               ; set    names(0)    id
+         set   position(1)  "7 11"              ; set    names(1)    prior
+         set   position(2)  "13 22"             ; set    names(2)    name
+         set   position(3)  "24 35"             ; set    names(3)    user
+         set   position(4)  "37 52"             ; set    names(4)    project
+         set   position(5)  "54 63"             ; set    names(5)    department
+         set   position(6)  "65 69"             ; set    names(6)    state
+         set   position(7)  "71 89"             ; set    names(7)    time
+         set  transform(7)  transform_date_time
+         set      rules(7)  rule_min
+         set   position(8)  "91 107"            ; set    names(8)    deadline
+         set  transform(8)  transform_date_time
+         set   position(9)  "109 118"           ; set    names(9)    cpu
+         set      rules(9)  rule_sum
+         set    replace(9,) 0:00:00:00          ; set  replace(9,NA) 0:00:00:00
+         set  transform(9)  transform_cpu
+         set  position(10)  "120 126"           ; set   names(10)    mem
+         set   replace(10,) 0                   ; set replace(10,NA) 0
+         set     rules(10)  rule_sum
+         set  position(11) "128 134"            ; set   names(11)    io
+         set   replace(11,) 0                   ; set replace(11,NA) 0
+         set     rules(11)  rule_sum
+         set  position(12)  "136 140"           ; set   names(12)    tckts
+         set  position(13)  "142 146"           ; set   names(13)    ovrts
+         set  position(14)  "148 152"           ; set   names(14)    otckt
+         set  position(15)  "154 158"           ; set   names(15)    dtckt
+         set  position(16)  "160 164"           ; set   names(16)    ftckt
+         set  position(17)  "166 170"           ; set   names(17)    stckt
+         set  position(18)  "172 175"           ; set   names(18)    share
+         set  position(19)  "178 187"           ; set   names(19)    queue
+         set     rules(19)  rule_list
+         set  position(20)  "189 195"           ; set   names(20)    master
+         set     rules(20)  rule_list
+         set  position(21)  "197 end"           ; set   names(21)    jatask
+         set     rules(21)  rule_list
+      } else {
+         set   position(0)  "0 5"               ; set    names(0)    id   
+         set   position(1)  "7 11"              ; set    names(1)    prior
+         set   position(2)  "13 22"             ; set    names(2)    name
+         set   position(3)  "24 35"             ; set    names(3)    user
+         set   position(4)  "37 41"             ; set    names(4)    state
+         set   position(5)  "43 61"             ; set    names(5)    time
+         set  transform(5)  transform_date_time
+         set      rules(7)  rule_min
+         set   position(6)  "63 72"             ; set    names(6)    queue
+         set      rules(6)  rule_list
+         set   position(7)  "74 80"             ; set    names(7)    master
+         set      rules(7)  rule_list
+         set   position(8)  "82 end"            ; set    names(8)    jatask
+         set      rules(8)  rule_list
+      }
    }
 
    # split text output of qstat to Array (list of lists)

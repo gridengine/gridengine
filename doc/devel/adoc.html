@@ -70,10 +70,9 @@ Generate Documentation in PDF Format:</li>
 Writing documentation</h2>
 Each function of C, TCL or shell code should have an autodoc header, especially
 these in function libraries.
-<br>The header can be inserted from a template (see<font color="#000000">
-<tt>doc/devel/c-header</tt> </font>for C-Syntax, <tt><font color="#000000">doc/devel/sh-header</font><font color="#FF0000">
-</font></tt>for TCL and shell syntax) or by using a tcl script defined
-as editor macro.
+<br>The header can be inserted from a template (see<tt><font color="#000000">doc/devel/c-header</font></tt>for
+C-Syntax, <tt><font color="#000000">doc/devel/sh-header</font></tt>for
+TCL and shell syntax) or by using a tcl script defined as editor macro.
 <h3>
 Macro for automated insertion of autodoc headers</h3>
 The&nbsp; distribution contains a small tcl script that may be used to
@@ -137,6 +136,14 @@ comm</li>
 <li>
 cull</li>
 
+<ul>
+<li>
+hash - cull specific hash table extensions, based on uti/hash</li>
+
+<li>
+search - searching certain elements</li>
+</ul>
+
 <li>
 gdi</li>
 
@@ -148,6 +155,14 @@ sched</li>
 
 <li>
 uti</li>
+
+<ul>
+<li>
+hash - generic hash table implementation</li>
+
+<li>
+string - string parsing functions</li>
+</ul>
 </ul>
 
 <h4>
@@ -375,6 +390,7 @@ variables, structures, typedefs etc.
 documentation:
 <br>-Defines
 <br>-Global_Variables
+<br>-Templates
 <br>-Typedefs
 <br>-Misc
 <p>Again, the hyphen before the identifiers name influence adoc's sorting

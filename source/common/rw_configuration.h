@@ -37,8 +37,8 @@
 
 int write_configuration(int write_configuration, lList **alpp, char *fname, lListElem *conf_list, FILE *fpout, u_long32 flags);
 
-lListElem *read_configuration(char *fname, char *conf_name, u_long32 flags);
+lListElem *read_configuration(const char *fname, const char *conf_name, u_long32 flags);
 
-char *read_adminuser_from_configuration(char *fname, char *conf_name, u_long32 flags);
+const char *read_adminuser_from_configuration(const char *fname, const char *conf_name, u_long32 flags);
 
 #endif /* __RW_CONFIGURATION_H */

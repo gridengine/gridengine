@@ -57,6 +57,10 @@
 
       pe
          - the number of free slots gets reduced
+      
+      sort_hostlist
+         - if the sort order of the host_list is changed, 
+           sort_hostlist is set to 1
 
    The other objects get not changed and are needed to present
    and interprete the debitations on the upper objects:
@@ -92,7 +96,8 @@ lList *granted,      /* a JB-List containing one element for each queue */
 lList *queue_list,   /* in this queue list the job gets debited */
 lListElem *pe,       /* in this pe the job gets debited */
 lList *host_list,    /* in this host list the job gets debited */
-lList *complex_list  /* needed for interpretation of jobs resource request */
+lList *complex_list, /* needed for interpretation of jobs resource request */
+int *sort_hostlist   /* do we have to resort the hostlist? */
 ) {
    u_long32 pe_slots;
 
@@ -103,7 +108,7 @@ lList *complex_list  /* needed for interpretation of jobs resource request */
       return -1;
    }
 
-   debit_job_from_hosts(job, granted, host_list, complex_list);
+   debit_job_from_hosts(job, granted, host_list, complex_list, sort_hostlist);
    debit_job_from_queues(job, granted, queue_list, complex_list, &pe_slots);
 
    if (pe)

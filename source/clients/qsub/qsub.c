@@ -63,7 +63,6 @@
 #include "msg_qsub.h"
 
 
-/* static u_long32 get_jobid_from_string(char *str, int scan_array); */
 static void delete_job(u_long32 job_id, lList *lp);
 
 extern char **environ;
@@ -91,7 +90,7 @@ char **argv
    int scheduled = 0;
    int just_verify;
    lListElem *ep;
-   char *dprefix = NULL;
+   const char *dprefix = NULL;
    int cl_err = 0;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
@@ -116,7 +115,8 @@ char **argv
    */
    alp = get_all_defaults_files(&opts_defaults, environ);
    for_each(aep, alp) {
-      char *s;
+      const char *s;
+
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
       if (quality == NUM_AN_ERROR) {
@@ -265,14 +265,14 @@ char **argv
    /* add job */
    lp_jobs = lCreateList("submitted jobs", JB_Type);
    lAppendElem(lp_jobs, job);
-   
+  
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp_jobs, NULL, NULL);
 
    /* reinitialize 'job' with pointer to new version from qmaster */
    job = lFirst(lp_jobs);
 
    for_each(aep, alp) {
-      char *s;
+      const char *s;
 
       status = lGetUlong(aep, AN_status);
       quality = lGetUlong(aep, AN_quality);
@@ -400,11 +400,6 @@ lList *jlp
       return;
    }
    
-#if 0
-   lAddSubUlong(jep, JRE_job_number, job_id, JB_job_identifier_list, JRE_Type);
-   lSetUlong(jep, JB_job_number, job_id);
-#endif
-
    sprintf(job_str, u32, job_id);
    idp = lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 
@@ -415,32 +410,3 @@ lList *jlp
    */
 }
 
-
-/* not used anymore since SGE_GDI_RETURN_NEW_VERSION
-*  static u_long32 get_jobid_from_string(str, parse_ja_job_id)
-*  char *str;
-*  int parse_ja_job_id;
-* {
-*     char *cp;
-*   int jobid = 0;
-*
-*
-*   if (parse_ja_job_id) {
-*     cp = strstr(str, "your job-array ");
-*      if (!cp) {
-*         return 0;
-*      }
-*      cp += strlen("your job-array ");
-*      sscanf(cp, "%d", &jobid); 
-*  } else {
-*      cp = strstr(str, "your job ");
-*      if (!cp) {
-*         return 0;
-*      }
-*      cp += strlen("your job ");
-*      sscanf(cp, "%d", &jobid);
-*   }
-*
-*   return (u_long32) jobid;
-*}
-*/

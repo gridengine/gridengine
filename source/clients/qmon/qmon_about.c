@@ -43,36 +43,44 @@
 #include "utility.h"
 #include "sge_string_append.h"
 #include "sge_me.h"
+#include "version.h"
 
-static char about[] = 
-   "@fBWelcome %s@@%s to %s qmon\n\n\
-   Copyright © 2001 Sun Microsystems, Inc. All rights reserved. Use is subject\n\
-   to license terms. Third-party software, including font technology, is\n\
-   copyrighted and licensed from Sun suppliers. Portions may be derived from\n\
-   Berkeley BSD systems, licensed from U. of CA. Sun, Sun Microsystems and the\n\
-   Sun logo are trademarks or registered trademarks of Sun Microsystems, Inc.\n\
-   in the U.S. and other countries. All SPARC trademarks are used under license\n\
-   and are trademarks or registered trademarks of SPARC International, Inc. in\n\
-   the U.S. and other countries. Federal Acquisitions: Commercial Software -\n\
-   Government Users Subject to Standard License Terms and Conditions.\n";
+static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s";
+extern char SFLN_ELN[];
 
-  
+#ifdef ADD_SUN_COPYRIGHT
+static char mailto[] = "For further information and feedback use: @fBsgebeta53-support@@sun.com@fR\n\n";
+#else
+static char mailto[] = "\n";
+#endif
 
 void qmonAboutMsg(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
    int sge_mode; 
+   static char *message = NULL;
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
+   
+   if (!message) {
+      int len = strlen(header) + strlen(SFLN_ELN);
+      message = XtMalloc(len);
+      if (!message) {
+         DEXIT;
+         return;
+      }
+      strcpy(message, header);
+      strcat(message, SFLN_ELN);
+   }    
 
    sge_mode = feature_is_enabled(FEATURE_SGEEE);
 
-   XmtDisplayMessage(w, "about_msg", "Help", about, 
+   XmtDisplayMessage(w, "about_msg", "Help", message, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
-                     XmDIALOG_INFORMATION, me.user_name, me.qualified_hostname, 
+                     XmDIALOG_INFORMATION, 
+                     me.user_name, me.qualified_hostname, 
                      feature_get_product_name(FS_LONG_VERSION), 
-                     feature_get_product_name(FS_LONG));
-
+                     me.default_cell, mailto);
    DEXIT;
 }

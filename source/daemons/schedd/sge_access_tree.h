@@ -49,8 +49,8 @@ void at_unregister_job_array(lListElem *job_array);
 
 /* notify access tree of jobs state transitions between 
    running/pending per user and per priority group */
-void at_inc_job_counter(u_long32 priority, char *owner, int slots);
-void at_dec_job_counter(u_long32 priority, char *owner, int slots);
+void at_inc_job_counter(u_long32 priority, const char *owner, int slots);
+void at_dec_job_counter(u_long32 priority, const char *owner, int slots);
 
 /*
 ** ------------ to be called from within the decision-making layer 
@@ -60,12 +60,9 @@ void at_dec_job_counter(u_long32 priority, char *owner, int slots);
 void at_notice_runnable_job_arrays(lList *job_list);
 
 /* get the actual job array to be scheduled */
-lListElem *at_get_actual_job_array(void);
+lListElem *at_get_actual_job_array(lList *job_list);
 
 /* a task has been dispatched - notify the access tree of this event */
 void at_dispatched_a_task(lListElem *job, int slots);
-
-/* a job array  has been dispatched completely */
-void at_finished_array_dispatching(lListElem *job);
 
 #endif /* _SGE_ACCESS_TREE_H_ */

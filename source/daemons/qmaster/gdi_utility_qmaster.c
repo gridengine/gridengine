@@ -78,7 +78,7 @@ lListElem *new_ep,
 int nm,
 char *attr_name 
 ) {
-   char *s;
+   const char *s;
 
    DENTER(TOP_LAYER, "attr_mod_ctrl_method");
 
@@ -130,12 +130,13 @@ char *variables[]
 
    /* ---- attribute nm */
    if (lGetPosViaElem(qep, nm)>=0) {
-      char *s; 
+      const char *s; 
       DPRINTF(("got new %s\n", attr_name));
 
       s = lGetString(qep, nm);
       if (s) {
-         char *t, *script = s;
+         char *t; 
+         const char *script = s;
 
          /* skip user name */
          if ((t = strpbrk(script, "@ ")) && *t == '@')
@@ -198,7 +199,7 @@ char *attr_name
 
    /* ---- attribute nm */
    if (lGetPosViaElem(qep, nm)>=0) {
-      char *s;
+      const char *s;
 
       DPRINTF(("got new %s\n", attr_name));
       if (!(s = lGetString(qep, nm))) {
@@ -310,7 +311,7 @@ char *attr_name
 
    /* ---- attribute nm */
    if (lGetPosViaElem(qep, nm)>=0) {
-      char *str;
+      const char *str;
 
       str = lGetString(qep, nm);
       DPRINTF(("got new %s\n", attr_name));
@@ -340,7 +341,7 @@ int enable_infinity
 
    /* ---- attribute nm */
    if (lGetPosViaElem(qep, nm)>=0) {
-      char *str; 
+      const char *str; 
 
       str = lGetString(qep, nm);
       DPRINTF(("got new %s\n", attr_name));
@@ -464,11 +465,11 @@ lList **alpp,
 lList *lp1,
 lList *lp2,
 int nm,
-char *name,
-char *obj_name 
+const char *name,
+const char *obj_name 
 ) {
    lListElem *ep1;
-   char *s;
+   const char *s;
 
    DENTER(TOP_LAYER, "multiple_occurrencies");
 
@@ -498,7 +499,7 @@ lList **alpp,
 lListElem *ep,
 int nm 
 ) {
-   char *name, *obj_name = "none", *obj_descr = "none";
+   const char *name, *obj_name = "none", *obj_descr = "none";
    lListElem *attr;
    lList *resources = NULL; 
    extern lList *Master_Complex_List;

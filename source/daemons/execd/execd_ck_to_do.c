@@ -77,7 +77,9 @@
 #  endif
 #endif
 
+#if COMPILE_DC
 static int repriorisation_enabled = 0;
+#endif
 
 extern volatile int dead_children;
 extern volatile int waiting4osjid;
@@ -158,7 +160,8 @@ static void notify_ptf()
                }
             }
             if (write_job)
-               cull_write_jobtask_to_disk(jep, lGetUlong(jatep, JAT_task_number));
+               job_write_spool_file(jep, 
+                  lGetUlong(jatep, JAT_task_number), SPOOL_WITHIN_EXECD);
          }
       }
 
@@ -325,7 +328,9 @@ int answer_error
       notify_ptf();
    }
    if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+      switch2start_user();
       ptf_update_job_usage();
+      switch2admin_user();
    }
    if (feature_is_enabled(FEATURE_REPRIORISATION)) {
       switch2start_user();
@@ -514,7 +519,8 @@ static int sge_start_jobs()
 
          /* now save this job so we are up to date on restart */
          if (state_changed)
-            cull_write_jobtask_to_disk(jep, lGetUlong(jatep, JAT_task_number));
+            job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
+               SPOOL_WITHIN_EXECD);
       }
    }
 
@@ -531,7 +537,7 @@ lListElem *slave_jatep
 ) {
    char err_str[256];
    int pid;
-   char *tid;
+   const char *tid;
    u_long32 now;
 
    DENTER(TOP_LAYER, "exec_job_or_task");
@@ -594,7 +600,7 @@ lListElem *jep,
 lListElem *jatep,
 lListElem *tep 
 ) {
-   char *task_id_str=NULL;
+   const char *task_id_str=NULL;
    u_long32 jobid;   
    u_long32 jataskid;   
    int success, newerrno;
@@ -648,7 +654,7 @@ lListElem *tep
    newerrno = errno;
    fclose(fp);
    if (!success) {
-      WARNING((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SUUS, addgrpid_path, u32c(jobid), u32c(jataskid), strerror(newerrno)));
+      /* can happen that shepherd has opend the file but not written */
       DEXIT;
       return (1);
    }
@@ -699,8 +705,7 @@ lListElem *tep
    newerrno = errno;
    fclose(fp);
    if (!success) {
-      WARNING((SGE_EVENT, MSG_EXECD_NOOSJOBIDREAD_SUUS, osjobid_path, u32c(jobid), u32c(jataskid), strerror(newerrno)));
-      /* could happen that shepherd has opend the file but not written */
+      /* can happen that shepherd has opend the file but not written */
       DEXIT;
       return 1;
    }

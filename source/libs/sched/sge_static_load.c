@@ -54,9 +54,8 @@
 **   
 */
 
-int sge_is_static_load_value(
-char *name 
-) {
+int sge_is_static_load_value(const char *name) 
+{
    DENTER(BASIS_LAYER, "sge_is_static_load_value");
 
    if (!name) {

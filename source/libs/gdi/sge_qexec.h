@@ -54,9 +54,11 @@ typedef int sge_tid_t;
 #define QIFSIGNALED(status) (0)
 #define QTERMSIG(status)    (0)
 
-sge_tid_t sge_qexecve(char *hostname, char *path, char *argv[], lList *envlp, int is_qlogin);
+sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *cwd, const char *argv[], const lList *envlp, int is_qrsh);
+
 sge_tid_t sge_qwaittid(sge_tid_t tid, int *status, int options);
-char *qexec_last_err(void);
+
+const char *qexec_last_err(void);
 
 #ifdef  __cplusplus
 }

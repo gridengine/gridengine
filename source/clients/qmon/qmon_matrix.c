@@ -71,7 +71,7 @@ static void ColumnNoEdit(Widget w, XtPointer cld, XtPointer cad);
 static void set_2xN(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_2xN(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_CE_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
-static Boolean getCE_TypeValues(lListElem *ep, char **ce_entry); 
+static Boolean getCE_TypeValues(lListElem *ep, const char **ce_entry); 
 static Boolean setCE_TypeValues(lListElem *ep, char **ce_entry);
 static void set_CX_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_CX_Type(Widget w, XtPointer address, XrmQuark type, Cardinal size);
@@ -520,7 +520,7 @@ int field2
    lListElem *ep;
    int row;
    int max_rows;
-   char *col1 = NULL, *col2 = NULL;
+   const char *col1 = NULL, *col2 = NULL;
    int val;
    double dval;
    char buf[128];
@@ -573,8 +573,10 @@ int field2
       }
 
       if (col1) {
-         XbaeMatrixSetCell(w, row, 0 , col1 ? col1 : "");
-         XbaeMatrixSetCell(w, row, 1 , col2 ? col2 : "");
+         /* FIX_CONST_GUI */
+         XbaeMatrixSetCell(w, row, 0 , col1 ? (String)col1 : "");
+         /* FIX_CONST_GUI */
+         XbaeMatrixSetCell(w, row, 1 , col2 ? (String)col2 : "");
       }
    }
        
@@ -671,7 +673,7 @@ int full
    lListElem *ep;
    int row;
    int max_rows;
-   char *ce_entry[CE_MAX];
+   const char *ce_entry[CE_MAX];
    int i;
    
    DENTER(GUI_LAYER, "qmonSetCE_Type");
@@ -693,19 +695,25 @@ int full
       }
       if (getCE_TypeValues(ep, ce_entry)) {
          if (full) {
-            for (i=0; i<CE_MAX; i++) 
+            for (i=0; i<CE_MAX; i++) {
+               /* FIX_CONST_GUI */
                XbaeMatrixSetCell(w, row, i, 
-                  ce_entry[i] ? ce_entry[i] : "");
+                  ce_entry[i] ? (String)ce_entry[i] : "");
+            }
          }
          else {
+            /* FIX_CONST_GUI */
             XbaeMatrixSetCell(w, row, 0, 
-               ce_entry[CE_NAME] ? ce_entry[CE_NAME] : "");
+               ce_entry[CE_NAME] ? (String)ce_entry[CE_NAME] : "");
+            /* FIX_CONST_GUI */
             XbaeMatrixSetCell(w, row, 1, 
-               ce_entry[CE_TYPE] ? ce_entry[CE_TYPE] : "");
+               ce_entry[CE_TYPE] ? (String)ce_entry[CE_TYPE] : "");
+            /* FIX_CONST_GUI */
             XbaeMatrixSetCell(w, row, 2, 
-               ce_entry[CE_RELOP] ? ce_entry[CE_RELOP] : "");
+               ce_entry[CE_RELOP] ? (String)ce_entry[CE_RELOP] : "");
+            /* FIX_CONST_GUI */
             XbaeMatrixSetCell(w, row, 3, 
-               ce_entry[CE_VALUE] ? ce_entry[CE_VALUE] : "");
+               ce_entry[CE_VALUE] ? (String)ce_entry[CE_VALUE] : "");
          }
       }
       else
@@ -719,7 +727,7 @@ int full
 /*-------------------------------------------------------------------------*/
 static Boolean getCE_TypeValues(
 lListElem *ep,
-String *ce_entry 
+StringConst *ce_entry 
 ) {
    DENTER(GUI_LAYER, "getCE_TypeValues");
    
@@ -1192,8 +1200,8 @@ lList *lp
    int max_rows;
    int rn_min, rn_max;
    char buf[BUFSIZ];
-   char *name = NULL;
-   char *value = NULL;
+   const char *name = NULL;
+   const char *value = NULL;
    
    DENTER(GUI_LAYER, "qmonSetRQ_Type");
    
@@ -1241,8 +1249,10 @@ lList *lp
       for_each(ep, lGetList(rep, RE_entries)) {
          name = lGetString(ep, CE_name);    
          value = lGetString(ep, CE_stringval);
-         XbaeMatrixSetCell(w, row, 1, name ? name : "");
-         XbaeMatrixSetCell(w, row, 2, value ? value : "");
+         /* FIX_CONST_GUI */
+         XbaeMatrixSetCell(w, row, 1, name ? (String)name : "");
+         /* FIX_CONST_GUI */
+         XbaeMatrixSetCell(w, row, 2, value ? (String)value : "");
       }
    }
        

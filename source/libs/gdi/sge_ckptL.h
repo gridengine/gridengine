@@ -63,7 +63,7 @@ enum {
 };
 
 ILISTDEF(CK_Type, Checkpoint, SGE_CKPT_LIST)
-   SGE_KSTRING(CK_name)
+   SGE_KSTRINGHU(CK_name)
    SGE_STRING(CK_interface)
    SGE_STRING(CK_ckpt_command)
    SGE_STRING(CK_migr_command)

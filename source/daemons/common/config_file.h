@@ -39,7 +39,7 @@ char *get_conf_val(char *name);
 char *search_conf_val(char *name);
 char *search_nonone_conf_val(char *name);
 
-int replace_params(char *src, char *dst, int dst_len, char **alllowed);
+int replace_params(const char *src, char *dst, int dst_len, char **alllowed);
 void delete_config(void);
 int add_config_entry(char *name, char *value);
 

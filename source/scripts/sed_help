@@ -40,8 +40,8 @@ if [ ! -f '../dist/qmon/qmon_help.ad' ]; then
 fi
 
 horig='../dist/qmon/qmon_help.ad'
-hgrd='../dist/qmon/qmon_help.ad.grd'
-hcod='../dist/qmon/qmon_help.ad.codine'
+hgrd='../dist/qmon/qmon_help.ad.ge'
+hcod='../dist/qmon/qmon_help.ad.geee'
 
 # ------------------------------
         

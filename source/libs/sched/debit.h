@@ -33,6 +33,6 @@
 /*___INFO__MARK_END__*/
 
 /* responsible for all debitations that have to be done */
-int debit_scheduled_job(lListElem *job, lList *granted, lList *queue_list, lListElem *pe, lList *host_list, lList *complex_list);
+int debit_scheduled_job(lListElem *job, lList *granted, lList *queue_list, lListElem *pe, lList *host_list, lList *complex_list, int *sort_hostlist);
 
 #endif /* __DEBIT_H */

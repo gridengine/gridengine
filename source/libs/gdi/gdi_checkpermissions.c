@@ -81,14 +81,14 @@
 */
 /* requestedHost is for getting information for this host */
 int sge_gdi_get_mapping_name(
-char *requestedHost,
+const char *requestedHost,
 char *buf,
 int buflen 
 ) {  
    lList* alp = NULL;
    lList* permList = NULL;
    lListElem *ep = NULL;
-   char* mapName = NULL;
+   const char* mapName = NULL;
    
    DENTER(TOP_LAYER, "sge_gdi_get_mapping_name");
 

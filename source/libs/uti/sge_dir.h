@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int recursive_rmdir(const char *cp, char *err_str); 
 
+int sge_is_directory(const char *name);
 
-int recursive_rmdir(char *cp, char *err_str); 
+int sge_is_file(const char *name);
 
 #endif /* __SGE_DIR_H */
 

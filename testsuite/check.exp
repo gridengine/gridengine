@@ -38,6 +38,10 @@ global no_action                   ;# just put out what would be done
 set no_action 0
 global be_quiet
 set be_quiet 0
+global write_mail_to_file
+set write_mail_to_file 0
+global do_close_rlogin
+set do_close_rlogin 0
 
 global do_compile
 
@@ -45,6 +49,7 @@ global do_compile
 # path/file variables
 global CHECK_TESTSUITE_ROOT        ;# path to TESTSUITE directory
 global CHECK_CHECKTREE_ROOT        ;# path where checktree lies
+
 # never touch these dirs: begin
 global CHECK_RESULT_DIR            ;# check result directory            
 global CHECK_BAD_RESULT_DIR        ;# check rusult directory for failed checkes
@@ -92,6 +97,8 @@ global CHECK_USER                  ;# user who start test
 global CHECK_GROUP                 ;# group of user who start test
 global CHECK_HOST                  ;# hostname of this system (e.g. DWAIN)
 global CHECK_CORE_EXECD            ;# known execd hostnames
+global CHECK_SUBMIT_ONLY_HOSTS     ;# list of submithosts (no execd/commd running)
+set CHECK_SUBMIT_ONLY_HOSTS ""
 global CHECK_CORE_MASTER           ;# qmaster hostname
 global CHECK_CORE_PROCESSORS       ;# real number of processors (in order of CHECK_CORE_EXECD)
 global CHECK_ACT_LEVEL             ;# actual check level ( value from 0 up to xxx )
@@ -102,7 +109,8 @@ global CHECK_BINARY_DIR_CONFIG_FILE ;# file for binary directories in $CHECK_CON
 set CHECK_BINARY_DIR_CONFIG_FILE "binary-path.conf"
 global CHECK_LOADSENSOR_DIR_CONFIG_FILE ;# file for architecture specific loadsensor binaries in
 set CHECK_LOADSENSOR_DIR_CONFIG_FILE "loadsensor.conf" ;# $CHECK_CONFIG_DIR
-
+global CHECK_MAIL_OUTPUT_FILE
+set CHECK_MAIL_OUTPUT_FILE "all_test_mails.txt"
 
 global check_use_installed_system   ;# used only for install_core_system test (noinst parameter)
 set check_use_installed_system 0    ;# set to 1 when installed system parameter is set
@@ -343,7 +351,7 @@ global CHECK_SETUP_NAMES
 
 
 global CHECK_CURRENT_SETTINGS_VERSION
-set CHECK_CURRENT_SETTINGS_VERSION "2"
+set CHECK_CURRENT_SETTINGS_VERSION "3"
 set CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION
 
 set CHECK_SETUP_NAMES(index) "settings_version"
@@ -369,6 +377,9 @@ set CHECK_SETUP_NAMES(list_of_execution_hosts) "CHECK_CORE_EXECD"
 
 lappend CHECK_SETUP_NAMES(index) "processors_on_each_execution_host"
 set CHECK_SETUP_NAMES(processors_on_each_execution_host) "CHECK_CORE_PROCESSORS"
+
+lappend CHECK_SETUP_NAMES(index) "list_of_submit_only_hosts"
+set CHECK_SETUP_NAMES(list_of_submit_only_hosts) "CHECK_SUBMIT_ONLY_HOSTS"
 
 lappend CHECK_SETUP_NAMES(index) "commd_portnumber"
 set CHECK_SETUP_NAMES(commd_portnumber) "CHECK_COMMD_PORT"
@@ -922,6 +933,22 @@ proc send_mail { address cc subject body } {
 
   global CHECK_TESTSUITE_ROOT CHECK_MAILX_HOST CHECK_OUTPUT
   global CHECK_MAILS_SENT CHECK_ENABLE_MAIL
+  global write_mail_to_file CHECK_MAIL_OUTPUT_FILE
+
+
+  if { $write_mail_to_file != 0 } {
+     set fd [ open $CHECK_MAIL_OUTPUT_FILE "a" ]
+     puts $fd "-=*************************************************************=-"
+     puts $fd "Grid Engine Version: [get_version_info]"
+     puts $fd "Subject            : $subject"
+     puts $fd "-=*************************************************************=-"
+     puts $fd "$body"
+     puts $fd "-=*=-"
+     flush $fd
+     close $fd 
+     puts $CHECK_OUTPUT "Added entry in mail output file $CHECK_MAIL_OUTPUT_FILE"
+     return
+  }
 
   set new_subject "[get_version_info] - $subject"
 
@@ -1065,7 +1092,9 @@ proc set_error {erno errtext} {
 #*******************************
 proc save_defaults {} {
   global CHECK_SETTINGS_VERSION
-  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD 
+  global CHECK_CORE_PROCESSORS CHECK_SUBMIT_ONLY_HOSTS 
+  global CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1084,6 +1113,7 @@ proc save_defaults {} {
   lappend data $CHECK_CORE_MASTER
   lappend data $CHECK_CORE_EXECD
   lappend data $CHECK_CORE_PROCESSORS
+  lappend data $CHECK_SUBMIT_ONLY_HOSTS
   lappend data $CHECK_COMMD_PORT
   lappend data $CHECK_MAIN_RESULTS_DIR
   lappend data $CHECK_PRODUCT_TYPE
@@ -1268,7 +1298,7 @@ proc edit_defaults {} {
 proc read_edit_defaults_file { filename } {
    global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION
    global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS
-   global CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+   global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
    global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
    global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1285,7 +1315,7 @@ proc read_edit_defaults_file { filename } {
 
    set catch_return [ catch {
       set input [open "$filename" "r"]
-      while { [gets $input data ] > 0 } {
+      while { [gets $input data ] >= 0 } {
         set input_data([lindex $data 0]) [lrange $data 1 end]
       }
       close $input 
@@ -1352,7 +1382,7 @@ proc read_edit_defaults_file { filename } {
          puts $CHECK_OUTPUT "length of \"list_of_execution_hosts\" doesn't match length of \"processors_on_each_execution_host\""
          return -1
    } 
- 
+
    if {[file isdirectory "$CHECK_MAIN_RESULTS_DIR"] != 1} {
          set catch_return [ catch {  file mkdir "$CHECK_MAIN_RESULTS_DIR" } ]
          if { $catch_return != 0 } {
@@ -1446,7 +1476,8 @@ proc calc_space {space name} {
 #*******************************
 proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   global CHECK_SETTINGS_VERSION
-  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS 
+  global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1510,7 +1541,8 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
 #*******************************
 proc load_defaults {} {
   global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION CHECK_OUTPUT
-  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS CHECK_COMMD_PORT
+  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD 
+  global CHECK_CORE_PROCESSORS CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT
   global CHECK_MAIN_RESULTS_DIR env CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE CHECK_TESTSUITE_ROOT
   global CHECK_PROTOCOL_DIR CHECK_CURRENT_WORKING_DIR
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
@@ -1527,14 +1559,23 @@ proc load_defaults {} {
   set CHECK_TESTSUITE_ROOT "$CHECK_CURRENT_WORKING_DIR"
   set CHECK_CHECKTREE_ROOT "$CHECK_CURRENT_WORKING_DIR/checktree"
   set CHECK_MAIN_RESULTS_DIR "$CHECK_CURRENT_WORKING_DIR/results"
-  set CHECK_CORE_MASTER     "[set env(HOST)]"
+  if { [info exists env(HOST)] } {
+     set CHECK_CORE_MASTER     "[set env(HOST)]"
+  } else {
+     set CHECK_CORE_MASTER "unknown"
+  }
   set CHECK_CORE_EXECD      "$CHECK_CORE_MASTER"  
   set CHECK_CORE_PROCESSORS "1"
+  set CHECK_SUBMIT_ONLY_HOSTS ""
   set CHECK_COMMD_PORT "7776";
   set CHECK_USER "unknown";
   set CHECK_GROUP "unknown";
   set CHECK_ARCH "unknown";
-  set CHECK_HOST "[set env(HOST)]";
+  if { [info exists env(HOST)] } {
+     set CHECK_HOST "[set env(HOST)]";
+  } else {
+     set CHECK_HOST "unknown"
+  }
   set CHECK_PROTOCOL_DIR ""
   set CHECK_PRODUCT_TYPE "sge"
   set CHECK_PRODUCT_ROOT "unknown"
@@ -1545,7 +1586,11 @@ proc load_defaults {} {
   set CHECK_SOURCE_DIR [ get_current_working_dir ]
   cd $old_dir
 
-  set CHECK_SOURCE_HOSTNAME "[set env(HOST)]"
+  if { [info exists env(HOST)] } {
+     set CHECK_SOURCE_HOSTNAME "[set env(HOST)]"
+  } else {
+     set CHECK_SOURCE_HOSTNAME "unknown"
+  }
   set CHECK_SOURCE_COMPILE_HOSTS "unknown"
   set CHECK_AIMK_COMPILE_OPTIONS ""
   set CHECK_DIST_INSTALL_OPTIONS "-allall"
@@ -1553,8 +1598,11 @@ proc load_defaults {} {
   set CHECK_EXECD_INSTALL_OPTIONS ""
   set CHECK_SOURCE_CVS_RELEASE "maintrunc"  
   set CHECK_CONFIG_DIR "$CHECK_CURRENT_WORKING_DIR/demo_config_dir"
-  set CHECK_MAILX_HOST "[set env(HOST)]"
-
+  if { [info exists env(HOST)] } {
+     set CHECK_MAILX_HOST "[set env(HOST)]"
+  } else {
+     set CHECK_MAILX_HOST "unknown"
+  }
   if {[file isfile "$CHECK_DEFAULTS_FILE"] != 1} {
      source_procedures
      return -1
@@ -1657,6 +1705,52 @@ proc load_defaults {} {
             puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
             exit -1
         }
+        if { $CHECK_SETTINGS_VERSION == 2 } {
+            puts $CHECK_OUTPUT "this settings file has version number 2 -> upgrading to version 3"
+            set CHECK_SETTINGS_VERSION "3"
+            set CHECK_TESTSUITE_ROOT                   [lindex $data 1]
+            set CHECK_CHECKTREE_ROOT                   [lindex $data 2]
+            set CHECK_CORE_MASTER                      [lindex $data 3]
+            set CHECK_CORE_EXECD                       [lindex $data 4]
+            set CHECK_CORE_PROCESSORS                  [lindex $data 5]
+            set CHECK_COMMD_PORT                       [lindex $data 6]
+            set CHECK_MAIN_RESULTS_DIR                 [lindex $data 7]
+            set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
+            set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
+           
+            set CHECK_PRODUCT_TYPE                     [lindex $data 8]
+            set CHECK_PRODUCT_ROOT                     [lindex $data 9]
+            set CHECK_SOURCE_DIR                       [lindex $data 10]
+            set CHECK_SOURCE_HOSTNAME                  [lindex $data 11]
+            set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 12]
+            set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 13]
+            set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 14]
+            set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 15]      ;# added for version 2
+            set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 16]      ;# added for version 2
+            set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 17]
+            set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 18]
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 19]
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 20]
+            set CHECK_DEFAULT_DOMAIN                   [lindex $data 21]
+            set CHECK_MAILX_HOST                       [lindex $data 22]
+            set CHECK_REPORT_EMAIL_TO                  [lindex $data 23]
+            set CHECK_REPORT_EMAIL_CC                  [lindex $data 24]
+            set CHECK_SEND_ERROR_MAILS                 [lindex $data 25]
+            set CHECK_MAX_ERROR_MAILS                  [lindex $data 26]
+            set CHECK_USE_SSH                          [lindex $data 27]
+            set CHECK_SOURCE_CVS_RELEASE               [lindex $data 28]
+            set CHECK_CONFIG_DIR                       [lindex $data 29]
+                        
+            set CHECK_SUBMIT_ONLY_HOSTS                ""
+            puts $CHECK_OUTPUT "added list_of_submit_only_hosts"
+            wait_for_enter
+            source_procedures
+            save_defaults 
+            set CHECK_DO_SETUP 1 
+            setup 
+            puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
+            exit -1
+        }
         exit -1
       } else {
         puts "could not copy defaults file"
@@ -1672,33 +1766,34 @@ proc load_defaults {} {
   set CHECK_CORE_MASTER                      [lindex $data 3]
   set CHECK_CORE_EXECD                       [lindex $data 4]
   set CHECK_CORE_PROCESSORS                  [lindex $data 5]
-  set CHECK_COMMD_PORT                       [lindex $data 6]
-  set CHECK_MAIN_RESULTS_DIR                 [lindex $data 7]
+  set CHECK_SUBMIT_ONLY_HOSTS                [lindex $data 6]      ;# added for version 3
+  set CHECK_COMMD_PORT                       [lindex $data 7]
+  set CHECK_MAIN_RESULTS_DIR                 [lindex $data 8]
   set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
   set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
 
-  set CHECK_PRODUCT_TYPE                     [lindex $data 8]
-  set CHECK_PRODUCT_ROOT                     [lindex $data 9]
-  set CHECK_SOURCE_DIR                       [lindex $data 10]
-  set CHECK_SOURCE_HOSTNAME                  [lindex $data 11]
-  set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 12]
-  set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 13]
-  set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 14]
-  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 15]      ;# added for version 2
-  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 16]      ;# added for version 2
-  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 17]
-  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 18]
-  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 19]
-  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 20]
-  set CHECK_DEFAULT_DOMAIN                   [lindex $data 21]
-  set CHECK_MAILX_HOST                       [lindex $data 22]
-  set CHECK_REPORT_EMAIL_TO                  [lindex $data 23]
-  set CHECK_REPORT_EMAIL_CC                  [lindex $data 24]
-  set CHECK_SEND_ERROR_MAILS                 [lindex $data 25]
-  set CHECK_MAX_ERROR_MAILS                  [lindex $data 26]
-  set CHECK_USE_SSH                          [lindex $data 27]
-  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 28]
-  set CHECK_CONFIG_DIR                       [lindex $data 29]
+  set CHECK_PRODUCT_TYPE                     [lindex $data 9]
+  set CHECK_PRODUCT_ROOT                     [lindex $data 10]
+  set CHECK_SOURCE_DIR                       [lindex $data 11]
+  set CHECK_SOURCE_HOSTNAME                  [lindex $data 12]
+  set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 13]
+  set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 14]
+  set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
+  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
+  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
+  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 18]
+  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 19]
+  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 20]
+  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 21]
+  set CHECK_DEFAULT_DOMAIN                   [lindex $data 22]
+  set CHECK_MAILX_HOST                       [lindex $data 23]
+  set CHECK_REPORT_EMAIL_TO                  [lindex $data 24]
+  set CHECK_REPORT_EMAIL_CC                  [lindex $data 25]
+  set CHECK_SEND_ERROR_MAILS                 [lindex $data 26]
+  set CHECK_MAX_ERROR_MAILS                  [lindex $data 27]
+  set CHECK_USE_SSH                          [lindex $data 28]
+  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 29]
+  set CHECK_CONFIG_DIR                       [lindex $data 30]
 
 
   source_procedures
@@ -1710,40 +1805,40 @@ proc load_defaults {} {
 
 proc check_executable_files {  } {
 
-   global CHECK_TESTSUITE_ROOT CHECK_OUTPUT
+   global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_SOURCE_DIR
 
    set filelist ""
-   lappend filelist "scripts/lock.sh"
-   lappend filelist "scripts/remote_submit.sh"
-   lappend filelist "scripts/remote_submit_log.sh"
-   lappend filelist "scripts/remote_tcl_command.sh"
-   lappend filelist "scripts/remotecompile.sh"
-   lappend filelist "scripts/sleeper.sh"
-   lappend filelist "scripts/ssh_progstarter.csh"
-   lappend filelist "checktree/functional/migration/checkpt_job.sh"
-   lappend filelist "checktree/functional/migration/migrate.sh"
-   lappend filelist "checktree/system_tests/clients/qmod/general/qmod_job.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/qsub_gid.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/remote_qrsh.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/sleep_pid.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/terminate.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/trap.sh" 
-   lappend filelist "checktree/system_tests/clients/qrsh/ulimit.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/pminiworm.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/flood_sleeper.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/qstat.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/redir_stderr.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/sge_start.sh"
-   lappend filelist "../source/aimk"
-   lappend filelist "../source/dist/examples/jobs/array_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/env-tester.csh"
-   lappend filelist "../source/dist/examples/jobs/jobnet_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/pminiworm.sh"
-   lappend filelist "../source/dist/examples/jobs/simple.sh"
-   lappend filelist "../source/dist/examples/jobs/sleeper.sh"
-   lappend filelist "../source/dist/examples/jobs/step_A_array_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/step_B_array_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/worker.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/lock.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit_log.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_tcl_command.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remotecompile.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/sleeper.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/ssh_progstarter.csh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/checkpt_job.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/migrate.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qmod/general/qmod_job.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/qsub_gid.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/remote_qrsh.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/sleep_pid.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/terminate.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/trap.sh" 
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/ulimit.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/pminiworm.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/flood_sleeper.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/qstat.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/redir_stderr.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/sge_start.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/aimk"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/array_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/env-tester.csh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/jobnet_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/pminiworm.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/simple.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/sleeper.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/step_A_array_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/step_B_array_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/worker.sh"
    
 
    set change_files ""
@@ -1751,7 +1846,7 @@ proc check_executable_files {  } {
 
    set file_error 0
    foreach elem $filelist {
-      set filename "$CHECK_TESTSUITE_ROOT/$elem"
+      set filename $elem
       if { [ file isfile $filename ] != 1  } {
          puts $CHECK_OUTPUT "file not found: $filename"
          set file_error 1
@@ -1825,6 +1920,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_SETTINGS_VERSION
   global CHECK_CHECKTREE_ROOT CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE env 
   global CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS argv 
+  global CHECK_SUBMIT_ONLY_HOSTS
   global CHECK_PRODUCT_VERSION_NUMBER CHECK_USER CHECK_ARCH CHECK_HOST CHECK_COMMD_PORT
   global CHECK_RESULT_DIR CHECK_BAD_RESULT_DIR CHECK_REPORT_FILE CHECK_GROUP
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
@@ -1858,13 +1954,9 @@ proc setup { {do_only_hostname_resolving 0} } {
   if { $have_defaults == 0 && $do_only_hostname_resolving == 0 } {
 
       if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }
-        }   
+        set env(USER) $CHECK_USER
       } 
 
       set CHECK_ARCH [ resolve_arch ]
@@ -1877,23 +1969,15 @@ proc setup { {do_only_hostname_resolving 0} } {
          set setup_ok -1
       }
       if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }
-        }   
+        set env(USER) $CHECK_USER
       } 
 
       if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
+        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
         puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_GROUP $in
-           }   
-        }
+        set env(GROUP) $CHECK_GROUP
       } 
 
 
@@ -1940,24 +2024,15 @@ proc setup { {do_only_hostname_resolving 0} } {
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
    
      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
-        
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }   
-        }
+        set env(USER) $CHECK_USER
      }
      if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        
+        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
+
         puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_GROUP $in
-           }   
-        }
+        set env(GROUP) $CHECK_GROUP
       } 
  
      
@@ -1995,23 +2070,14 @@ proc setup { {do_only_hostname_resolving 0} } {
      set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
    
      if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
+        set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
         puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_USER $in
-           }   
-        }
+        set env(USER) $CHECK_USER
      } 
      if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
-        
+        set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
         puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
-        if { $do_nomain == 0 } {
-           gets stdin in
-           if { [ string compare "" $in ] != 0 } {
-              set CHECK_GROUP $in
-           }
-        }   
+        set env(GROUP) $CHECK_GROUP
      } 
      set CHECK_ARCH [ resolve_arch ]
      set CHECK_HOST [ gethostname ]
@@ -2070,6 +2136,7 @@ proc setup { {do_only_hostname_resolving 0} } {
      puts "       master host:          $CHECK_CORE_MASTER";
      puts "       execution hosts:      $CHECK_CORE_EXECD";
      puts "       number of procs:      $CHECK_CORE_PROCESSORS";
+     puts "       submit_only_hosts:    $CHECK_SUBMIT_ONLY_HOSTS";
      puts "       username:             $CHECK_USER";
      puts "       user groupname:       $CHECK_GROUP";
      puts "       current working dir:  $CHECK_CURRENT_WORKING_DIR"
@@ -4459,13 +4526,14 @@ proc compile_source {} {
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-   global CHECK_CORE_EXECD
+   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR
 
+   
 
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
    set mail_subject "testsuite error - compile_source"
-   set mail_body    "date: [exec date]\n:\n"
+   set mail_body    "date: [exec date]\n"
 
  
    set was_error 0
@@ -4487,6 +4555,15 @@ proc compile_source {} {
        return -1
    }
 
+   if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
+      set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
+      if { $catch_return != 0 } {
+           puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
+           return -1
+      } 
+   }
+
+
    # shutdown eventually running system
    shutdown_core_system
 
@@ -4494,7 +4571,7 @@ proc compile_source {} {
    # update source 
    if { $do_not_update == 0 } {
       puts $CHECK_OUTPUT "updating source in directory $CHECK_SOURCE_DIR on host $CHECK_SOURCE_HOSTNAME ..."
-      set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; cvs update -d\"" } output ]
+      set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; cvs update -dP \"" } output ]
       set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
       puts $cvs_output $output
       close $cvs_output
@@ -4506,7 +4583,6 @@ proc compile_source {} {
          } 
       }
    } 
-   
 
    puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $CHECK_SOURCE_HOSTNAME ..."
    set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; scripts/zerodepend\"" } output ]
@@ -4520,9 +4596,18 @@ proc compile_source {} {
 
    
    set host_list $CHECK_SOURCE_COMPILE_HOSTS
-
+   
    set num 0
    set spawn_list {} 
+   set file_list {}
+   set file_name_list {}
+ 
+   set cvs_tag "maintrunc"
+   if { [ file isfile "${CHECK_SOURCE_DIR}/CVS/Tag" ] } {
+      set cvs_tag "no_tag_dir" 
+      set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
+   }
+
    foreach elem $host_list {
       # compile the staff
       puts $CHECK_OUTPUT "-> starting compiling on host $elem ..."
@@ -4532,27 +4617,48 @@ proc compile_source {} {
       
       eval spawn rsh $elem "\"$prog $par1 $par2\""
       lappend spawn_list $spawn_id
+      set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
+      lappend file_name_list $myfilename
+      catch { file delete $myfilename }
+      lappend file_list [open $myfilename w]
+     
       incr num 
       puts $CHECK_OUTPUT " spawn id is $spawn_id"
+
    }
+  
+   append mail_body "\n\ncompile output saved in the files:"
+   foreach elem $file_name_list {
+      append mail_body "\n$elem"
+   }
+   append mail_body "\n"
+
    puts $CHECK_OUTPUT "now waiting for end of compile ..." 
    set timeout -1
    set done_count 0
    set compile_bad {}
-   set compile_good {}
    log_user 0
+
+   set original_spawn_list $spawn_list  
+ 
    while { [llength $spawn_list] > 0   } {
       if {[info exists spawn_id]} {
             unset spawn_id
       }
       expect {
          -i $spawn_list full_buffer {
-              add_proc_error "compile_source" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
          -i $spawn_list "remotecompile * aimk compile error" {
               set spawn_id $expect_out(spawn_id)
-              lappend compile_bad $expect_out(0,string)
-              #puts $CHECK_OUTPUT "spawn id $spawn_id done"
+              set host_index 0
+              set host_nr 0
+              foreach el $original_spawn_list {
+                 if { [string compare $el $spawn_id] == 0 } {
+                    set host_index $host_nr
+                 }
+                 incr host_nr 1
+              }
+              lappend compile_bad [lindex $host_list $host_index]
               puts $CHECK_OUTPUT $expect_out(0,string)
               catch {wait -i $spawn_id} output
               catch {close -i $spawn_id} output
@@ -4561,24 +4667,55 @@ proc compile_source {} {
          }
          -i $spawn_list "remotecompile * aimk no errors" {
               set spawn_id $expect_out(spawn_id)
-              lappend compile_good $expect_out(0,string)
-              #puts $CHECK_OUTPUT "spawn id $spawn_id done"
               puts $CHECK_OUTPUT $expect_out(0,string)
               catch {wait -i $spawn_id} output
               catch {close -i $spawn_id} output
               set index [lsearch -exact $spawn_list $spawn_id]
               set spawn_list [lreplace $spawn_list $index $index]
          }
+         -i $spawn_list "*\n" {
+              set spawn_id $expect_out(spawn_id)
+              set index 0
+              set nr 0
+              foreach elem $original_spawn_list {
+                 if { [string compare $elem $spawn_id] == 0 } {
+                    set index $nr
+                 }
+                 incr nr 1
+              }
+#              puts [lindex $file_list $index] "$spawn_id report from host [lindex $host_list $index]"
+              puts [lindex $file_list $index] "$expect_out(0,string)"
+              flush [lindex $file_list $index]
+         }
       }
    }
    log_user 1
- 
+   foreach elem $file_list {
+      flush $elem
+      close $elem
+   } 
+
+   set compile_error 0
    foreach elem $compile_bad {
-      set host_name [lindex $elem 1]
-      puts $CHECK_OUTPUT "compile error on host $host_name"
-      mail_report $mail_subject "$mail_body compile error on host $host_name"
-      return -1
+      set compile_error 1
+      puts $CHECK_OUTPUT "\n=============\ncompile error on host $elem:\n=============\n"
+      append mail_body "\n=============\ncompile error on host $elem:\n=============\n"
+      foreach file $file_name_list {
+         if { [string first $elem $file] >= 0 } {
+             catch { eval exec "touch $file"  }
+             set fp [open $file r]
+             while { [gets $fp line] >= 0 } {
+                append mail_body "\n$line"
+                puts $CHECK_OUTPUT $line
+             }
+             close $fp
+         } 
+      }
    }
+   if { $compile_error != 0 } {
+      mail_report $mail_subject $mail_body
+      return -1
+   } 
 
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"
@@ -4617,13 +4754,18 @@ proc compile_source {} {
 
 
    set arch_list {}
+   set compiled_mail_architectures ""
    puts -nonewline $CHECK_OUTPUT "\narchitectures: "
    foreach elem $host_list {
       set return_state [ catch { exec rsh $elem "$CHECK_SOURCE_DIR/dist/util/arch" } output ]
       lappend arch_list $output 
       puts -nonewline $CHECK_OUTPUT "$output "
+      append compiled_mail_architectures "\n$elem ($output)"
    }
-   
+
+     
+
+ 
    puts $CHECK_OUTPUT "\ninstalling product binaries"
    eval spawn rsh [lindex $host_list 0] "\"cd $CHECK_SOURCE_DIR ; setenv $var_name $CHECK_PRODUCT_ROOT ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list\""  
    set timeout -1
@@ -4631,7 +4773,7 @@ proc compile_source {} {
    while { $done != 1 } {
       expect {
          full_buffer {
-            add_proc_error "compile_source" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
          "Base directory:" {
              send "y\n"
@@ -4675,12 +4817,14 @@ proc compile_source {} {
       mail_report $mail_subject "$mail_body - compile error(s)"
       return -1
    }
- 
-   set mail_body "$mail_body \n Successfully compiled and installed the $CHECK_PRODUCT_TYPE system.\n"
-   set mail_body "$mail_body Now it is [exec date], installed hosts and architectures:\n\n"
+   
+   append mail_body "\nSuccessfully compiled and pre-installed following architectures:"
+   append mail_body "\n${compiled_mail_architectures}\n"
+   
+   append mail_body "\ninit_core_system check will install the $CHECK_PRODUCT_TYPE execd at:"
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
-      set mail_body "$mail_body $elem\t\t($host_arch)\n"
+      append mail_body "\n$elem ($host_arch)"
    }
    if { [string compare $cvs_change_log "" ] != 0 } {
       set mail_body "$mail_body \n\n Update output:\n$cvs_change_log\n\n"
@@ -5113,10 +5257,16 @@ for { set i 0 } { $i < $argc } { incr i } {
       } else {
         puts "could not copy defaults file"
       }
+      continue
    }
    
    if {([string compare [lindex $argv $i] "--quiet"] == 0) || ([string compare [lindex $argv $i] "quiet"] == 0) } {
       set be_quiet 1
+      continue
+   }
+   if {([string compare [lindex $argv $i] "--close_rlogin"] == 0) || ([string compare [lindex $argv $i] "close_rlogin"] == 0) } {
+      set do_close_rlogin 1
+      continue
    }
 
 
@@ -5126,7 +5276,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "help         show this"
       puts "install      just install core system and exit"
       puts "kill         shutdown cluster"
-      puts "setup        remove defaults file and run setup"
+      puts "setup        run setup"
       puts "file FILE    use FILE as defaults file"
       puts "re_init      use allready installed system (will only shutdown/reconfigure the cluster!)"
       puts "             when test install_core_system is called or install option is set"
@@ -5139,43 +5289,73 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "debug LEVEL  run testsuite in debuglevel 0,1 or 2"
       puts "             0=no debug, 1=more output, 2=1+user response"
       puts "quiet        no output on setup"
+      puts "mfile FILE   write all mails into file FILE (when mail is enabled)"
+      puts "close_rlogin don't let rlogin connections open for next command (per default the testsuite"
+      puts "             not close a rlogin connection. The testsuite will reuse the open connection"
+      puts "             for a later remote command. Use close_rlogin if the number of open file "
+      puts "             descriptors is low on your system)"
       exit 1
    }
    if { ( [string compare [lindex $argv $i] "--re_init"] == 0 ) || ([string compare [lindex $argv $i] "re_init"] == 0) } {
       set check_use_installed_system 1
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--kill"] == 0 ) || ([string compare [lindex $argv $i] "kill"] == 0) } {
       set do_kill 1
+      continue
    }
-
    
+   if { ( [string compare [lindex $argv $i] "--mfile"] == 0 ) || ([string compare [lindex $argv $i] "mfile"] == 0) } {
+      incr i
+      set CHECK_MAIL_OUTPUT_FILE [lindex $argv $i]
+      if { [llength $CHECK_MAIL_OUTPUT_FILE] != 1 } {
+         puts $CHECK_OUTPUT "can't use \"mfile\" option without filename!"
+         exit -1 
+      }
+      if { ([ string first "/" $CHECK_MAIL_OUTPUT_FILE ] < 0) && ([ string first "\/" $CHECK_MAIL_OUTPUT_FILE ] < 0)} {
+          set CHECK_MAIL_OUTPUT_FILE "$CHECK_CURRENT_WORKING_DIR/$CHECK_MAIL_OUTPUT_FILE"
+      }
+      set write_mail_to_file 1
+      puts $CHECK_OUTPUT " ---> writing all mails into \"$CHECK_MAIL_OUTPUT_FILE\" ! <---"
+      continue
+   }
  
    if { ( [string compare [lindex $argv $i] "--file"] == 0 ) || ([string compare [lindex $argv $i] "file"] == 0) } {
       incr i
       set CHECK_DEFAULTS_FILE [lindex $argv $i]
+      if { [llength $CHECK_DEFAULTS_FILE] != 1 } {
+         puts $CHECK_OUTPUT "can't use \"file\" option without filename!"
+         exit -1 
+      }
+
       if { ([ string first "/" $CHECK_DEFAULTS_FILE ] < 0) && ([ string first "\/" $CHECK_DEFAULTS_FILE ] < 0)} {
           set CHECK_DEFAULTS_FILE "$CHECK_CURRENT_WORKING_DIR/$CHECK_DEFAULTS_FILE"
       }
-      debug_puts " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
+      puts $CHECK_OUTPUT " ---> using \"$CHECK_DEFAULTS_FILE\" for setup! <---"
+      continue
    }
   
    if { ( [string compare [lindex $argv $i] "--install"] == 0 ) || ([string compare [lindex $argv $i] "install"] == 0 ) } {
       set do_install 1
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--compile"] == 0 ) || ([string compare [lindex $argv $i] "compile"] == 0 ) } {
       set do_compile 1
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--no_update"] == 0 ) || ([string compare [lindex $argv $i] "no_update"] == 0 ) } {
       set do_not_update 1
+      continue
    }
 
    
    
    if { ( [string compare [lindex $argv $i] "--test_perm"] == 0 ) || ([string compare [lindex $argv $i] "test_perm"] == 0 ) } {
       set do_only_test_perm 1
+      continue
    }
   
 
@@ -5193,6 +5373,8 @@ for { set i 0 } { $i < $argc } { incr i } {
          mail_report $mail_subject "$mail_body used all parameter without runlevel" 
          exit -1
       }
+      incr i
+      continue
    }
 
    if { ( [string compare [lindex $argv $i] "--debug"] == 0 ) || ([string compare [lindex $argv $i] "debug"] == 0 ) } {
@@ -5200,6 +5382,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       set CHECK_DEBUG_LEVEL [lindex $argv $deb_lev]
 
       debug_puts "debuglevel is $CHECK_DEBUG_LEVEL"
+      incr i
+      continue
    }
 
 
@@ -5207,6 +5391,7 @@ for { set i 0 } { $i < $argc } { incr i } {
    if { ( [string compare [lindex $argv $i] "--no_main"] == 0 ) || ([string compare [lindex $argv $i] "no_main"] == 0 ) } {
       set do_nomain 1
       set no_action 0
+      continue
    }
 }   
 
@@ -5222,6 +5407,26 @@ set mail_body "$mail_body check is running on host \"$CHECK_HOST\" architecture 
 set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n-------\n"
 
 if { $no_action == 1 } {
+
+  set hosts ""   
+  foreach elem $hosts {
+     set output [start_remote_prog $elem cr114091 hostname ";id" prg_exit_state 15]
+#     puts "-------->out : $output"
+#     puts "-------->exit: $prg_exit_state"
+#     puts [exec pstree [getpid]]
+     if { [string first $elem $output ] < 0 } {
+        exit -1
+     }
+     set output [start_remote_prog $elem codadmin hostname ";id" prg_exit_state 15]
+#     puts "-------->out : $output"
+#     puts "-------->exit: $prg_exit_state"
+
+#     puts [exec pstree [getpid]]
+     if { [string first $elem $output ] < 0 } {
+        exit -1
+     }
+
+  }
 
   puts "No action flag is set -> exit 1"
   exit 1

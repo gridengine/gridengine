@@ -76,6 +76,7 @@
 #include "sge_string.h"
 #include "setup_path.h" 
 #include "sge_time.h" 
+#include "job_log.h" 
 
 
 /* number of current scheduling alorithm in above array */
@@ -113,7 +114,7 @@ int argc,
 char *argv[] 
 ) {
    int check_qmaster;
-   char *master_host;
+   const char *master_host;
    int ret;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
@@ -312,6 +313,12 @@ char *argv[]
             exit(0);
          }
 
+         /* -lj */
+         if (!strcmp("-lj", *argv)) {
+            enable_job_logging(*++argv);
+            continue;
+         }
+
          if (!strcmp("-k", *argv)) {
             if ((i = read_pid(SCHED_PID_FILE)) > 0) {
                kill(i, SIGTERM);
@@ -465,7 +472,7 @@ static int sge_ck_qmaster()
      2 if sched_func_struct.event_func function changed 
 */
 int use_alg(
-char *alg_name 
+const char *alg_name 
 ) {
    int i = 0;
    int scheduler_before = current_scheduler;
@@ -519,7 +526,7 @@ static int sge_setup_sge_schedd()
 {
    int ret;
    extern u_long32 logginglevel;
-   u_long32 saved_logginglevel = logginglevel;
+   u_long32 saved_logginglevel;
    char err_str[1024];
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
@@ -557,8 +564,8 @@ static int sge_setup_sge_schedd()
    switch2admin_user();
    error_file = ERR_FILE;
    sge_log_as_admin_user();
-
    /* suppress the INFO messages during setup phase */
+   saved_logginglevel = logginglevel;
    logginglevel = LOG_WARNING;
    if ((ret = sge_ck_qmaster()) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));
@@ -601,7 +608,7 @@ int sge_before_dispatch(void)
    if (new_global_config) {
       lListElem *global = NULL, *local = NULL;
 
-      if (get_configuration(SGE_GLOBAL_NAME, &global, &local))
+      if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0)
          merge_configuration(global, local, &conf, NULL);
       lFreeElem(global);
       lFreeElem(local);

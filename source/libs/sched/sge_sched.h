@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "cull.h"
 #include "sge_select_queue.h"
 #include "valid_queue_user.h"
@@ -46,7 +44,6 @@
 #include "subordinate_schedd.h"
 #include "scale_usage.h"
 #include "schedd_conf.h"
-
 
 /* Temporary SGE switches */
 #define project_enforcement 0

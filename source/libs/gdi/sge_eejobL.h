@@ -53,7 +53,7 @@ enum {
 };
 
 LISTDEF(SGEJ_Type)
-   SGE_ULONG(SGEJ_ticket)
+   SGE_DOUBLE(SGEJ_ticket)
    SGE_ULONG(SGEJ_job_number)
    SGE_REF(SGEJ_job_reference)
 LISTEND 

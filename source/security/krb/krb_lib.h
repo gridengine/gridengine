@@ -53,8 +53,8 @@ krb5_error_code krb_decrypt_tgt_creds(krb5_data *inbuf, krb5_creds ***tgt_creds)
 int krb_get_client_flags(void);
 int krb_set_client_flags(int flags);
 int krb_clear_client_flags(int flags);
-int krb_put_tgt(char *host, char *comproc, int id, u_long tgt_id, krb5_creds **tgt_creds);
-int krb_get_tgt(char *host, char *comproc, int id, u_long tgt_id, krb5_creds ***tgt_creds);
+int krb_put_tgt(const char *host, const char *comproc, int id, u_long tgt_id, krb5_creds **tgt_creds);
+int krb_get_tgt(const char *host, const char *comproc, int id, u_long tgt_id, krb5_creds ***tgt_creds);
 int krb_store_forwarded_tgt(int uid, int jobid, krb5_creds **tgt_creds);
 int krb_destroy_forwarded_tgt(int jobid);
 char *krb_get_ccname(int jobid, char *ccname);

@@ -20,7 +20,7 @@
  *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* $VER: $Id: gencode.c,v 1.1 2001/07/18 11:05:53 root Exp $ */
+/* $VER: $Id: gencode.c,v 1.2 2001/07/24 09:46:14 joga Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -761,12 +761,14 @@ int gen_texinfo(FILE *fp, int tabsize, int flags, char *body_environment, char *
                        ,subsection
            );            
         }
-
-        fprintf(fp, "\n"
-                    "@findex %s\n"
-                    "\n"
-                    ,function
-        );
+   
+        if(function[0] != '-') {
+          fprintf(fp, "\n"
+                      "@findex %s\n"
+                      "\n"
+                      ,function
+          );
+        }
 
         if(flags & TEXI_TABLE_FUNCTIONS)
           fprintf(fp,"@table @b\n");

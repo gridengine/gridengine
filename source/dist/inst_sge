@@ -50,7 +50,7 @@ ErrUsage()
 {
    $ECHO "" >&2
    Translate "Usage:" 2
-   $ECHO     " $1 -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue] [-resport]" >&2
+   $ECHO     " $1 -m|-x|-s [-nostrict] [-fast] [-auto] [-noqueue] [-resport] [-afs]" >&2
    $ECHO     "       -m        \c" >&2
    Translate "install qmaster host" 2 1
    $ECHO     "       -x        \c" >&2
@@ -65,6 +65,8 @@ ErrUsage()
    Translate "auto answer all questions with default, do not wait at prompt" 2 1
    $ECHO     "       -resport  \c" >&2
    Translate "install system with reserved port security" 2 1
+   $ECHO     "       -afs  \c" >&2
+   Translate "install system with AFS functionality" 2 1
    $ECHO "" >&2
 
    exit 1
@@ -437,7 +439,7 @@ CheckHostNameResolving()
                Translate "and show a load value (load_avg) of 99.99 for this host." 1 1
                $ECHO ""
                if [ $autoinst = true ]; then
-                   sleep 5
+                   exit 1
                fi
            fi
            $ECHO "$LINES--------------------------------------"
@@ -649,9 +651,15 @@ PrintConf()
       $ECHO "enforce_project        false"
    fi
    $ECHO "administrator_mail     $CFG_MAIL_ADDR"
-   $ECHO "set_token_cmd          none"
-   $ECHO "pag_cmd                none"
-   $ECHO "token_extend_time      none"
+   if [ $afs = true ]; then
+      $ECHO "set_token_cmd          /path_to_token_cmd/set_token_cmd"
+      $ECHO "pag_cmd                /usr/afsws/bin/pagsh"
+      $ECHO "token_extend_time      24:0:0"
+   else
+      $ECHO "set_token_cmd          none"
+      $ECHO "pag_cmd                none"
+      $ECHO "token_extend_time      none"
+   fi
    $ECHO "shepherd_cmd           none"
    $ECHO "qmaster_params         none"
    $ECHO "schedd_params          none"
@@ -900,21 +908,26 @@ AddConfiguration()
       SetPerm $COMMONDIR/configuration
    fi
 
-
    TruncCreateAndMakeWriteable $COMMONDIR/product_mode
    if [ $inst = sge ]; then
-      if [ $resport = true ]; then
-         $ECHO sge-reserved_port >> $COMMONDIR/product_mode
-      else
-         $ECHO sge >> $COMMONDIR/product_mode
-      fi
+      PRODUCT_PREFIX=sge
    else
-      if [ $resport = true ]; then
-         $ECHO sgeee-reserved_port >> $COMMONDIR/product_mode
-      else
-         $ECHO sgeee >> $COMMONDIR/product_mode
-      fi
+      PRODUCT_PREFIX=sgeee
    fi
+   
+   if [ $resport = true ]; then
+      RESPORT_PREFIX=-reserved_port
+   else
+      RESPORT_PREFIX=""
+   fi
+
+   if [ $afs = true ]; then
+      AFS_PREFIX=-afs
+   else
+      AFS_PREFIX=""
+   fi
+
+   $ECHO ${PRODUCT_PREFIX}${RESPORT_PREFIX}${AFS_PREFIX} >> $COMMONDIR/product_mode
    SetPerm $COMMONDIR/product_mode
 }
 
@@ -1714,7 +1727,7 @@ AddQsystStartUpScript()
 
    TMP_V5_STARTUP_FILE=/tmp/rcsge.$$
    STARTUP_FILE_NAME=rcsge
-   S95NAME=S95sge
+   S95NAME=S95rcsge
 
    V5_STARTUP_FILE=$QSYST_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
 
@@ -1778,10 +1791,6 @@ AddQsystStartUpScript()
 
    echo
 
-   # If non standard LINUX we need to now the RC_FILE location
-   # where we append the call to the startup script
-   AskIfLINUX
-
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    if [ "$RC_FILE" = "sysv_rc" ]; then
@@ -1797,7 +1806,7 @@ AddQsystStartUpScript()
       # RedHat uses runlevel 3 for full networked mode
       # Suse uses runlevel 2 for full networked mode
       # we already installed the script in level 3
-      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux ]; then
+      if [ $ARCH = linux -o $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             Translate "Installing startup script also in %s" 1 1 "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
@@ -1805,6 +1814,11 @@ AddQsystStartUpScript()
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
          fi
       fi
+   elif [ "$RC_FILE" = "insserv-linux" ]; then
+      echo  cp $V5_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute cp $V5_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE
@@ -1852,54 +1866,6 @@ AddQsystStartUpScript()
    fi
 
    WaitClear clear
-}
-
-#-------------------------------------------------------------------------
-# AskIfLINUX: Ask for location of rc File
-#
-AskIfLINUX()
-{
-   # if this is a LINUX system we do not know exactly where
-   # RC_FILE resides --> ask administrator if we don't find it in
-   # /etc/rc.d
-   #
-   # SUSE distributions have a symbolic link fro
-   #         /etc/rc.d -> /sbin/init.d
-   #         /sbin/init.d/init.d -> .
-   # If this is true, the installation procedure succeeds
-   # Unfortunately the runlevel managment with Linux
-   # is different than on other SysV machines. Therefore we get
-   # the current runlevel and we will install the symbolic link
-   # in the rcX.d direcotry of the current run level
-   #
-
-   # Quick return if possible
-   if [ $ARCH != "linux" -a  $ARCH != "glinux" -a $ARCH != "alinux" ]; then
-      return
-   fi
-
-   if [ -d /etc/rc.d ]; then
-      return
-   fi
-
-   $ECHO ""
-   Translate "You are installing on a non SysV compliant LINUX system. The alternative" 1 1
-   Translate "standard local start-up script (e.g. /etc/rc.d/rc.local) does not reside" 1 1
-   Translate "in the same location for all LINUX distributions. Please enter the proper" 1 1
-   Translate "location for your site:" 1 1
-   $ECHO ""
-
-   OK="false"
-   while [ $OK = "false" ]; do
-      $ECHO "(Default: ${RC_FILE}) >> \c"
-      INP=`Enter $RC_FILE`
-      if [ -f $INP ]; then
-         RC_FILE=$INP
-         OK="true"
-      else
-         $ECHO File $INP does not exist. Please enter again.
-      fi
-   done
 }
 
 #-------------------------------------------------------------------------
@@ -2728,6 +2694,7 @@ fast=false
 autoinst=false
 addqueue=true
 resport=false
+afs=false
 
 ARGC=$#
 while [ $ARGC != 0 ]; do
@@ -2740,6 +2707,9 @@ while [ $ARGC != 0 ]; do
       ;;
    -s)
       WHICH="submit"
+      ;;
+   -afs)
+      afs=true
       ;;
    -nostrict)
       strict=false

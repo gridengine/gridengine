@@ -51,9 +51,7 @@
  **** The lList has to be freed from the caller.
  **** On any error, NULL is returned.
  ****/
-lList *sge_get_dirents(
-char *path 
-) {
+lList *sge_get_dirents(char *path) {
    lList *entries = NULL;
    DIR *cwd;
    SGE_STRUCT_DIRENT *dent;
@@ -80,4 +78,47 @@ char *path
 
    DEXIT;
    return (entries);
+}
+
+u_long32 sge_count_dirents(char *directory_name) 
+{
+   lList *dir_entries;
+   lListElem *dir_entry;
+   u_long32 entries = 0;
+
+   dir_entries = sge_get_dirents(directory_name);
+   for_each(dir_entry, dir_entries) {
+      const char *entry;
+
+      entry = lGetString(dir_entry, STR);
+      if (strcmp(entry, ".") && strcmp(entry, "..")) {
+         entries++;
+      }
+   }
+   dir_entries = lFreeList(dir_entries);
+   return entries;
+}
+
+int has_more_dirents(char *directory_name, u_long32 number_of_entries)
+{
+   lList *dir_entries;
+   lListElem *dir_entry;
+   u_long32 entries = 0;
+   int ret = 0;
+ 
+   dir_entries = sge_get_dirents(directory_name);
+   for_each(dir_entry, dir_entries) {
+      const char *entry;
+ 
+      entry = lGetString(dir_entry, STR);
+      if (strcmp(entry, ".") && strcmp(entry, "..")) {
+         entries++;
+         if (entries > number_of_entries) {
+            ret = 1;
+            break;
+         }
+      }
+   }
+   dir_entries = lFreeList(dir_entries);
+   return ret;  
 }

@@ -54,7 +54,9 @@
 pid_t wait3(int *, int, struct rusage *);
 #endif
 
-static void sge_send_mail(char *mailer, int mailer_has_subj_line, char *user, char *host, char *subj, char *buf);
+static void sge_send_mail(const char *mailer, int mailer_has_subj_line, 
+                          const char *user, const char *host, const char *subj,
+                          const char *buf);
 
 /*
 ** NAME
@@ -74,7 +76,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
    char *mailer;
    int mailer_has_subj_line;
    lListElem *ep;
-   char *user, *host;
+   const char *user, *host;
 
    DENTER(TOP_LAYER, "cull_mail");
 
@@ -112,12 +114,12 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
 /************************************************************/
 
 static void sge_send_mail(
-char *mailer,
+const char *mailer,
 int mailer_has_subj_line,
-char *user,
-char *host,
-char *subj,
-char *buf 
+const char *user,
+const char *host,
+const char *subj,
+const char *buf 
 ) {
    int pid;
    int pid2;

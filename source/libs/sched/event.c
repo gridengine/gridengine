@@ -45,7 +45,7 @@ lListElem *event
    static char buffer[1024];
    u_long32 type, intkey, number, intkey2;
    int n=0;
-   char *strkey;
+   const char *strkey;
    lList *lp;
 
    number = lGetUlong(event, ET_number);

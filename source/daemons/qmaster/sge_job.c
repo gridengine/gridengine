@@ -1,11 +1,10 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
- *  Sun Microsystems Inc., March, 2001
- * 
+ *
+ *  Sun Microsystems Inc., March, 2001    
  * 
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
@@ -34,6 +33,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <fnmatch.h>
+#include <ctype.h>
 
 #include "sgermon.h"
 #include "def.h"
@@ -86,7 +86,6 @@
 #include "sge_rangeL.h"
 #include "sge_identL.h"
 #include "job.h"
-#include "sge_hash.h"
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
@@ -100,6 +99,8 @@
 #include "sge_string.h"
 #include "jb_now.h"
 #include "sge_security.h"
+#include "sge_range.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -113,8 +114,6 @@ extern lList *Master_Job_Schedd_Info_List;
 extern lList *Master_Zombie_List;
 extern lList *Master_Pe_List;
 
-extern HashTable Master_Job_Hash_Table;
-
 extern int enable_forced_qdel;
 
 static int mod_task_attributes(lListElem *job, lListElem *new_ja_task, lListElem *tep, lList **alpp, char *ruser, char *rhost, int *trigger, int is_array);
@@ -126,31 +125,23 @@ static u_long32 guess_highest_job_number(void);
 static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
 
 static lCondition *job_list_filter(int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);
+static int verify_predecessors(lList **alpp, u_long32 jobid, const char *job_name, lList *predecessors);
+static int verify_jobname(lList **alpp, const char *job_name, const char *job_descr);
+static u_long32 is_referenced_by_jobname(lListElem *jep);
 static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs_flag, int jid_flag, int user_list_flag, char *ruser);
-static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);   
+static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
-static int sge_add_job(lListElem *jep, int check);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
-
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
 /*-------------------------------------------------------------------------*/
-
-
- 
-/* submit needs to know user and group */
-int sge_gdi_add_job(
-lListElem *jep,
-lList **alpp,
-lList **lpp,
-char *ruser,
-char *rhost,
-sge_gdi_request *request 
-) {
+int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
+                    char *rhost, sge_gdi_request *request) 
+{
    int ckpt_err;
    lListElem *reqep, *qep, *jatp;
-   char *pe_name, *project, *ckpt_name;
+   const char *pe_name, *project, *ckpt_name;
    u_long32 state, ckpt_attr, ckpt_inter;
    u_long32 job_number;
    lListElem *ckpt_ep;
@@ -225,12 +216,6 @@ sge_gdi_request *request
    lSetString(jep, JB_group, group);
    lSetUlong(jep, JB_gid, gid);
 
-   /* 
-    * preliminary version of the gdi function
-    * convert the cull elem into old format and
-    * use the old functions sge_add_job()/add_del.c
-    */
-
    /* fill name and shortcut for all requests
     * fill numeric values for all bool, time, memory and int type requests
     * use the Master_Complex_List for all fills
@@ -270,7 +255,7 @@ sge_gdi_request *request
 
    /* attribute "qname" in queue complex must be requestable for -q */
    if (lGetList(jep, JB_hard_queue_list)) {
-      char *qname;
+      const char *qname;
       lListElem *ep;
 
       if (!queues_are_requestable(Master_Complex_List)) {
@@ -281,7 +266,8 @@ sge_gdi_request *request
       }
 
       for_each (ep, lGetList(jep, JB_hard_queue_list)) {
-         if (!sge_locate_queue(qname = lGetString(ep, QR_name))) {
+         qname = lGetString(ep, QR_name);
+         if (!sge_locate_queue(qname)) {
             ERROR((SGE_EVENT, MSG_JOB_QUNKNOWN_S, qname));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;
@@ -292,7 +278,7 @@ sge_gdi_request *request
 
    /* attribute "qname" in queue complex must be requestable for -masterq */
    if (lGetList(jep, JB_master_hard_queue_list)) {
-      char *qname;
+      const char *qname;
       lListElem *ep;
 
       if (!queues_are_requestable(Master_Complex_List)) {
@@ -303,7 +289,8 @@ sge_gdi_request *request
       }
 
       for_each (ep, lGetList(jep, JB_master_hard_queue_list)) {
-         if (!sge_locate_queue(qname = lGetString(ep, QR_name))) {
+         qname = lGetString(ep, QR_name);
+         if (!sge_locate_queue(qname)) {
             ERROR((SGE_EVENT, MSG_JOB_QUNKNOWN_S, qname));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;
@@ -322,7 +309,6 @@ sge_gdi_request *request
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
 
    /* 
       here we test (if requested) the 
@@ -530,27 +516,17 @@ sge_gdi_request *request
 
    lSetUlong(jep, JB_submission_time, sge_get_gmt());
 
-   /* we are very generous here: if the user does not supply ja_tasks,
-    * we assume a single-task job */
-   if(!lGetList(jep, JB_ja_tasks)) {
-      lListElem* task;
-      lList* tasklist = lCreateList("tasks", JAT_Type);
-      lAppendElem(tasklist, (task = lCreateElem(JAT_Type)));
-      lSetUlong(task, JAT_task_number, 1);
-      lSetList(jep, JB_ja_tasks, tasklist);
-   } else {
-      lListElem *task;
+   {
+      int ret;
 
-      for_each(task, lGetList(jep, JB_ja_tasks)) {
-         if (lGetUlong(task, JAT_task_number) == 0) {
-            ERROR((SGE_EVENT, MSG_JOB_TASKIDZERO_U, u32c(job_number)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
+      ret = job_initialize_ja_tasks(jep);
+      if (ret != STATUS_OK) {
+         DEXIT;
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0); 
+         return ret;  
       }
    }
-  
+
    /* initialize state */
    for_each (jatp, lGetList(jep, JB_ja_tasks)) {
       lSetUlong(jatp, JAT_status, JIDLE);
@@ -580,6 +556,18 @@ sge_gdi_request *request
    if (!lGetString(jep, JB_job_name)) {        /* look for job name */
       ERROR((SGE_EVENT, MSG_JOB_NOJOBNAME_U, u32c(job_number)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   if (verify_jobname(alpp, lGetString(jep, JB_job_name), "this job")) {
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   /* checks on -hold_jid */
+   if (verify_predecessors(alpp, 0 /* jobid not yet known here */, 
+         lGetString(jep, JB_job_name), lGetList(jep, JB_jid_predecessor_list))) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -614,10 +602,9 @@ sge_gdi_request *request
       }
    }
 
-
    job_suc_pre(jep);
 
-   if (cull_write_job_to_disk(jep)) {
+   if (job_write_spool_file(jep, 0, SPOOL_DEFAULT)) {
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, u32c(job_number)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
@@ -627,14 +614,14 @@ sge_gdi_request *request
    if (!is_array(jep)) {
       DPRINTF(("Added Job "u32"\n", lGetUlong(jep, JB_job_number)));
    } else {
-      get_ja_task_ids(jep, &start, &end, &step);
+      job_get_ja_task_ids(jep, &start, &end, &step);
       DPRINTF(("Added JobArray "u32"."u32"-"u32":"u32"\n", 
                 lGetUlong(jep, JB_job_number), start, end, step));
    }
    
    /* add into job list */
-   if (sge_add_job(lCopyElem(jep), 1)) {
-      /* SGE_EVENT must be filled by sge_add_job */
+   if (job_list_add_job(&Master_Job_List, "Master_Job_List", lCopyElem(jep), 
+                        1)) {
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -659,10 +646,11 @@ sge_gdi_request *request
       lListElem *se;
 
       for_each(se,sp) {
-         if (strlen(str) + strlen(lGetString(se,STR))> sizeof(str)-1)
+         const char *s = lGetString(se,STR);
+         if (strlen(str) + (s ? strlen(s) : 2) > sizeof(str)-1)
             break;
          strcat(str, " ");
-         strcat(str, lGetString(se,STR));
+         strcat(str, s ? s : "\"\"");
       }
    }
 
@@ -688,8 +676,7 @@ sge_gdi_request *request
       lAppendElem(*lpp, lCopyElem(jep));
    }   
 
-   job_log(lGetUlong(jep, JB_job_number), MSG_LOG_NEWJOB, prognames[me.who], 
-           me.unqualified_hostname);
+   job_log(lGetUlong(jep, JB_job_number), 0, MSG_LOG_NEWJOB);
 
    DEXIT;
    return STATUS_OK;
@@ -711,13 +698,17 @@ char *rhost,
 int sub_command 
 ) {
    lListElem *nxt, *job = NULL, *jatask, *rn, *tmp_task;
-   u_long32 start, end, step, job_number;
-   int alltasks, showmessage;
+   u_long32 start = 0;
+   u_long32 end = 0;
+   u_long32 step = 0;
+   u_long32 job_number = 0;
+   int alltasks = 1;
+   int showmessage = 0;
    int all_jobs_flag;
    int all_users_flag;
    int jid_flag;
    int user_list_flag;
-   char *jid_str;
+   const char *jid_str;
    lCondition *where = NULL; 
    int ret, njobs = 0;
 
@@ -802,6 +793,7 @@ int sub_command
          alltasks = 1;
       }
 
+      DPRINTF(("----> alltasks = %d, start = %d, end = %d, step = %d\n", alltasks, start, end, step));
 
       /* Does user have privileges to delete the job/task? */
       if (sge_job_owner(ruser, lGetUlong(job, JB_job_number)) 
@@ -817,18 +809,27 @@ int sub_command
       jatask = lFirst(lGetList(job, JB_ja_tasks));
       while ((tmp_task = jatask)) {
          u_long32 task_number;
+
          jatask = lNext(tmp_task);
          task_number = lGetUlong(tmp_task, JAT_task_number);
-
-         if (lGetUlong(tmp_task, JAT_status) == JFINISHED)
-            continue;
-
-         njobs++; 
 
          if (task_number >= start && task_number <= end &&
             ((task_number-start)%step) == 0) {
             int spool_job = 1;
 
+            if (lGetUlong(tmp_task, JAT_status) == JFINISHED) {
+               DPRINTF(("job "U32CFormat", task "U32CFormat" already in state finished\n", job_number, task_number));
+               continue;
+            }   
+
+            njobs++; 
+
+            if(lGetUlong(idep, ID_force) == 0 && lGetUlong(tmp_task, JAT_state) & JDELETED) {
+               DPRINTF(("job "U32CFormat", task "U32CFormat" already in state deleted\n", job_number, task_number));
+               continue;
+            }   
+
+#if 0
             /* spool job after the deletion of the last task */      
             if (jatask) {
                u_long32 next_task_number;
@@ -839,6 +840,7 @@ int sub_command
                   spool_job = 0;
                }
             } 
+#endif
 
             if (lGetString(tmp_task, JAT_master_queue)) {
                get_rid_of_job(alpp, job, tmp_task, lGetUlong(idep, ID_force), 
@@ -867,7 +869,8 @@ int sub_command
       empty_job_list_filter(alpp, 0, user_list_flag,
             lGetList(idep, ID_user_list), jid_flag,
             jid_flag?atol(lGetString(idep, ID_str)):0,
-            all_users_flag, all_jobs_flag, ruser);
+            all_users_flag, all_jobs_flag, ruser,
+            alltasks == 0 ? 1 : 0, start, end, step);
       DEXIT;
       return STATUS_EEXIST;
    }    
@@ -885,7 +888,11 @@ int jid_flag,
 u_long32 jobid,
 int all_users_flag,
 int all_jobs_flag,
-char *ruser 
+char *ruser, 
+int is_array,
+u_long32 start, 
+u_long32 end, 
+u_long32 step
 ) {
    DENTER(TOP_LAYER, "empty_job_list_filter");
 
@@ -910,7 +917,15 @@ char *ruser
    } else if (all_jobs_flag)
       ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOJOBSFORUSERS_S, ruser));
    else if (jid_flag) {
-      ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SU, "job", u32c(jobid)));
+      if(is_array) {
+         if(start == end) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASK_UU, u32c(jobid), u32c(start)));
+         } else {
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU, u32c(jobid), u32c(start), u32c(end), u32c(step)));
+         }
+      } else {
+         ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SU, "job", u32c(jobid)));
+      }      
    } else {
       /* Should not be possible */
       ERROR((SGE_EVENT,
@@ -1097,7 +1112,7 @@ sge_pack_buffer *pb,
 char *pb_host,
 char *ruser,
 char *rhost,
-char *err_str,
+const char *err_str,
 char *commproc 
 ) {
    char sge_mail_subj[1024];
@@ -1106,7 +1121,7 @@ char *commproc
    int mail_options;
    lListElem *qep;
    u_long32 job_number, task_number;
-   char *job_name;
+   const char *job_name;
 
    DENTER(TOP_LAYER, "get_rid_of_job");
 
@@ -1180,6 +1195,7 @@ char *commproc
                         ruser, u32c(job_number)));
             }
             sge_commit_job(j, t, 3, 1);
+            cancel_job_resend(job_number, task_number);
             j = NULL;
             sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO); 
          }
@@ -1199,6 +1215,7 @@ char *commproc
                         ruser, u32c(job_number)));
             }
             sge_commit_job(j, t, 3, 1);
+            cancel_job_resend(job_number, task_number);
             j = NULL;
          }
          else {
@@ -1232,7 +1249,7 @@ char *commproc
       SETBIT(JDELETED, state); 
       lSetUlong(t, JAT_state, state);
       /* spool job */
-      cull_write_job_to_disk(j);  
+      job_write_spool_file(j, task_number, SPOOL_DEFAULT);  
    }
    DEXIT;
    return;
@@ -1372,7 +1389,7 @@ int sub_command
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
-         if (cull_write_job_to_disk(new_job)) {
+         if (job_write_spool_file(new_job, 0, SPOOL_DEFAULT)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
             lFreeList(tmp_alp);
@@ -1386,13 +1403,6 @@ int sub_command
          if (!*alpp)
             *alpp = lCreateList("answer", AN_Type);
          lAddList(*alpp, tmp_alp);
-
-         if (trigger & RECHAIN_JID_HOLD) {
-            lListElem *ep;
-            for_each (ep, lGetList(new_job, JB_jid_predecessor_list)) {
-               DPRINTF((" JOB #"u32": P: "u32"\n", jobid, lGetUlong(ep, JRE_job_number))); 
-            }
-         }
 
          if (trigger & MOD_EVENT) {
             sge_add_job_event(sgeE_JOB_MOD, new_job, 0);
@@ -1410,9 +1420,13 @@ int sub_command
          if (trigger & RECHAIN_JID_HOLD) {
             lListElem *suc_jobep, *jid;
             for_each(jid, lGetList(jobep, JB_jid_predecessor_list)) {
-               if ((suc_jobep = sge_locate_job(lGetUlong(jid, JRE_job_number))))  {
+               const char *pre_ident = lGetString(jid, JRE_job_name);
+
+               DPRINTF((" JOB #"u32": P: %s\n", jobid, pre_ident)); 
+
+               if ((suc_jobep = locate_job_by_identifier(pre_ident))) {
                   DPRINTF(("  JOB "u32" removed from trigger "
-                     "list of job "u32"\n", jobid, lGetUlong(jid, JRE_job_number)));
+                     "list of job %s\n", jobid, lGetString(jid, JRE_job_name)));
                   lRemoveElem(lGetList(suc_jobep, JB_jid_sucessor_list), 
                      lGetElemUlong(lGetList(suc_jobep, JB_jid_sucessor_list), JRE_job_number, jobid));
                } 
@@ -1422,12 +1436,8 @@ int sub_command
          /* write data back into job list  */
          {
             lListElem *prev = lPrev(jobep);
-            u_long32 jid =  lGetUlong(jobep, JB_job_number);
             lRemoveElem(Master_Job_List, jobep);
-            HashTableDelete(Master_Job_Hash_Table, (void *)(long)jid);
             lInsertElem(Master_Job_List, prev, new_job);
-            HashTableStore(Master_Job_Hash_Table, (void *) (long)jid, 
-               (void *) new_job);
          }   
          /* no need to spool these mods */
          if (trigger & RECHAIN_JID_HOLD) 
@@ -1442,7 +1452,7 @@ int sub_command
       empty_job_list_filter(alpp, 1, user_list_flag,
             user_list_flag?lGetPosList(jep, user_list_pos):NULL,
             jid_flag, jid_flag?lGetPosUlong(jep, job_id_pos):0,
-            all_users_flag, all_jobs_flag, ruser);
+            all_users_flag, all_jobs_flag, ruser, 0, 0, 0, 0);
       DEXIT;
       return STATUS_EEXIST;
    }   
@@ -1476,6 +1486,13 @@ lListElem *jatask
    return;  
 }        
 
+lListElem *locate_job_by_identifier(const char *pre_ident)
+{
+   if (isdigit(pre_ident[0]))
+      return sge_locate_job(atoi(pre_ident));
+   else
+      return lGetElemStr(Master_Job_List, JB_job_name, pre_ident);
+}
 
 /* 
    build up jid hold links for a job 
@@ -1495,8 +1512,9 @@ lListElem *jep
    */
    prep = lFirst(lGetList(jep, JB_jid_predecessor_list));
    while (prep) {
+      const char *pre_ident = lGetString(prep, JRE_job_name);
 
-      parent_jep = sge_locate_job(lGetUlong(prep, JRE_job_number));
+      parent_jep = locate_job_by_identifier(pre_ident);
 
       if (parent_jep) {
          int Exited = 1;
@@ -1519,8 +1537,8 @@ lListElem *jep
                break;
          }
          if (!Exited) {
-            DPRINTF(("adding jid "u32" into sucessor list of job "u32"\n",
-               lGetUlong(jep, JB_job_number), lGetUlong(prep, JRE_job_number)));
+            DPRINTF(("adding jid "u32" into sucessor list of job %s\n",
+               lGetUlong(jep, JB_job_number), pre_ident));
 
             /* add jid to sucessor_list of parent job */
             lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
@@ -1529,22 +1547,16 @@ lListElem *jep
             prep = lNext(prep);
             
          } else {
-            u_long32 to_delete = lGetUlong(prep, JRE_job_number); 
-
-            DPRINTF(("job %d from predecessor list already exited - ignoring it\n", 
-                  (int)to_delete));
+            DPRINTF(("job %s from predecessor list already exited - ignoring it\n", 
+                  pre_ident));
 
             prep = lNext(prep);      
-            lDelSubUlong(jep, JRE_job_number, to_delete, JB_jid_predecessor_list);
+            lDelSubStr(jep, JRE_job_name, pre_ident, JB_jid_predecessor_list);
          }
       } else {
-         u_long32 to_delete = lGetUlong(prep, JRE_job_number);
-
-         DPRINTF(("predecessor job "u32" does not exist\n", 
-            lGetUlong(prep, JRE_job_number)));
-
+         DPRINTF(("predecessor job %s does not exist\n", pre_ident));
          prep = lNext(prep);
-         lDelSubUlong(jep, JRE_job_number, to_delete, JB_jid_predecessor_list);
+         lDelSubStr(jep, JRE_job_name, pre_ident, JB_jid_predecessor_list);
       }
    }
    DEXIT;
@@ -1664,7 +1676,7 @@ int is_array
             break;
       }
 
-      lSetUlong(new_ja_task, JAT_hold, hold); 
+      job_set_hold_state(job, new_ja_task, hold); 
 
       /* (un)set hold held */
       if (!hold)
@@ -1855,7 +1867,8 @@ int *trigger
 
    /* ---- JB_checkpoint_object */
    if ((pos=lGetPosViaElem(jep, JB_checkpoint_object))>=0) {
-      char *ckpt_name;
+      const char *ckpt_name;
+
       DPRINTF(("got new JB_checkpoint_object\n")); 
       ckpt_name = lGetString(jep, JB_checkpoint_object);
       if (ckpt_name && !sge_locate_ckpt(ckpt_name)) {
@@ -1878,93 +1891,6 @@ int *trigger
             lCopyList("", lGetList(jep, JB_stderr_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDERRPATHLIST, u32c(jobid));
       sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
-   }
-
-   /* ---- JB_jid_predecessor_list */
-   if ((pos=lGetPosViaElem(jep, JB_jid_predecessor_list))>=0) {
-      lList *new_pre_list, *exited_pre_list = NULL;
-      lListElem *pre, *exited, *nxt, *job;
-
-      DPRINTF(("got new JB_jid_predecessor_list\n"));
-
-      for_each(pre,lGetList(jep, JB_jid_predecessor_list)) {
-         DPRINTF(("my jobid is "u32", current JRE_job_number is "u32".\n",jobid,lGetUlong(pre, JRE_job_number) ));
-         if ( lGetUlong(pre, JRE_job_number) == jobid ) {
-            DPRINTF(("got my own jobid in JRE_job_number\n"));
-            ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U, u32c(jobid)));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         } 
-      }
-
- 
-      new_pre_list =  lCopyList("predecessor list", lGetList(jep, JB_jid_predecessor_list));
-
-      /* remove jobid's of all no longer existing jobs from this
-         new job - this must be done before event is sent to schedd */
-
-      nxt = lFirst(new_pre_list);
-      while ((pre=nxt)) {
-         int move_to_exited = 0;
-         nxt = lNext(pre);
-         DPRINTF(("jid: "u32"\n", lGetUlong(pre, JRE_job_number)));
-         job = sge_locate_job(lGetUlong(pre, JRE_job_number));
-
-
-         /* in SGE jobs are exited when they dont exist */ 
-         if (!job && feature_is_enabled(FEATURE_SGEEE)) {
-            move_to_exited = 1;
-         } 
-
-
-
-         /* in SGE/BUD the job may be still known by qmaster
-            and in state JFINISHED but it is exited */ 
-         if (!feature_is_enabled(FEATURE_SGEEE)) {
-            lListElem *ja_task; 
-
-            if (job) {   /* yes, we have the job */
-               if (lGetList(job, JB_ja_tasks) == NULL ) {
-                  move_to_exited = 1;
-                  for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-                     if (lGetUlong(ja_task, JAT_status)!=JFINISHED) {
-                        move_to_exited = 0;
-                     }
-                  } 
-               }
-            } else {     /* job not found */
-              move_to_exited = 1; 
-            }
-         }          
-         
-      
-         if (move_to_exited) {
-            if (!exited_pre_list)
-               exited_pre_list = lCreateList("exited list", JRE_Type);
-            exited = lDechainElem(new_pre_list, pre);
-            lAppendElem(exited_pre_list, exited);
-         }
-      }
-
-      if (!lGetNumberOfElem(new_pre_list))
-         new_pre_list = lFreeList(new_pre_list);
-      
-      *trigger |= (RECHAIN_JID_HOLD|MOD_EVENT);
-
-      /* added primarily for own debugging purposes - andreas */
-      {
-         char str_predec[256], str_exited[256]; 
-         char *delis[] = {NULL, ",", ""};
-         intprt_type fields[] = { JRE_job_number, 0 };
-         uni_print_list(NULL, str_predec, sizeof(str_predec)-1, new_pre_list, fields, delis, 0);
-         uni_print_list(NULL, str_exited, sizeof(str_exited)-1, exited_pre_list, fields, delis, 0);
-         sprintf(SGE_EVENT, MSG_JOB_HOLDLISTMOD_USS, 
-                    u32c(jobid), str_predec, str_exited);
-         sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
-      }  
-      lSetList(new_job, JB_jid_predecessor_list, new_pre_list); 
-      lFreeList(exited_pre_list);
    }
 
    /* ---- JB_merge_stderr */
@@ -2037,13 +1963,118 @@ int *trigger
    }
 
    /* ---- JB_job_name */
-   if ((pos=lGetPosViaElem(jep, JB_job_name))>=0 && 
-         lGetString(jep, JB_job_name)) {
+   if ((pos=lGetPosViaElem(jep, JB_job_name))>=0 && lGetString(jep, JB_job_name)) {
+      u_long32 succ_jid;
+      const char *new_name = lGetString(jep, JB_job_name);
+
       DPRINTF(("got new JB_job_name\n")); 
-      lSetString(new_job, JB_job_name, lGetString(jep, JB_job_name));
+
+      /* preform checks only if job name _really_ changes */
+      if (strcmp(new_name, lGetString(new_job, JB_job_name))) {
+         char job_descr[100];
+
+         /* reject changing job name if at least one other job points to this job
+            in it's -hold_jid list using the job name */
+         if ((succ_jid = is_referenced_by_jobname(new_job))) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_CHGJOBNAMEDESTROYSREF_UU,
+                      u32c(jobid), u32c(succ_jid)));
+            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
+
+         sprintf(job_descr, "job "u32, jobid);
+         if (verify_jobname(alpp, lGetString(jep, JB_job_name), job_descr)) {
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
+      }
+      
+      lSetString(new_job, JB_job_name, new_name);
+
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_JOBNAME, u32c(jobid));
       sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   }
+
+   /* ---- JB_jid_predecessor_list */
+   if ((pos=lGetPosViaElem(jep, JB_jid_predecessor_list))>=0) {
+      lList *new_pre_list, *exited_pre_list = NULL;
+      lListElem *pre, *exited, *nxt, *job;
+
+      DPRINTF(("got new JB_jid_predecessor_list\n"));
+
+      if (verify_predecessors(alpp, jobid, lGetString(new_job, JB_job_name), 
+               lGetList(jep, JB_jid_predecessor_list))) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+      new_pre_list = lCopyList("predecessor list", lGetList(jep, JB_jid_predecessor_list));
+
+      /* remove jobid's of all no longer existing jobs from this
+         new job - this must be done before event is sent to schedd */
+      nxt = lFirst(new_pre_list);
+      while ((pre=nxt)) {
+         int move_to_exited = 0;
+         const char *pre_ident = lGetString(pre, JRE_job_name);
+
+         nxt = lNext(pre);
+         DPRINTF(("jid: %s\n", pre_ident));
+
+         job = locate_job_by_identifier(pre_ident);
+
+         /* in SGE jobs are exited when they dont exist */ 
+         if (!job) {
+            if (feature_is_enabled(FEATURE_SGEEE))
+              move_to_exited = 1;
+            else {
+               /* in SGEEE the job may be still known by qmaster
+                  and in state JFINISHED but it is exited */ 
+               lListElem *ja_task; 
+
+               if (job) {   /* yes, we have the job */
+                  if (lGetList(job, JB_ja_tasks) == NULL ) {
+                     move_to_exited = 1;
+                     for_each(ja_task, lGetList(job, JB_ja_tasks)) {
+                        if (lGetUlong(ja_task, JAT_status)!=JFINISHED) {
+                           move_to_exited = 0;
+                        }
+                     } 
+                  }
+               } else {     /* job not found */
+                 move_to_exited = 1; 
+               }
+            }
+         }
+         
+         if (move_to_exited) {
+            if (!exited_pre_list)
+               exited_pre_list = lCreateList("exited list", JRE_Type);
+            exited = lDechainElem(new_pre_list, pre);
+            lAppendElem(exited_pre_list, exited);
+         }
+      }
+
+      if (!lGetNumberOfElem(new_pre_list))
+         new_pre_list = lFreeList(new_pre_list);
+      
+      *trigger |= (RECHAIN_JID_HOLD|MOD_EVENT);
+
+      /* added primarily for own debugging purposes - andreas */
+      {
+         char str_predec[256], str_exited[256]; 
+         const char *delis[] = {NULL, ",", ""};
+
+         intprt_type fields[] = { JRE_job_name, 0 };
+         uni_print_list(NULL, str_predec, sizeof(str_predec)-1, new_pre_list, fields, delis, 0);
+         uni_print_list(NULL, str_exited, sizeof(str_exited)-1, exited_pre_list, fields, delis, 0);
+         sprintf(SGE_EVENT, MSG_JOB_HOLDLISTMOD_USS, 
+                    u32c(jobid), str_predec, str_exited);
+         sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+      }  
+      lSetList(new_job, JB_jid_predecessor_list, new_pre_list); 
+      lFreeList(exited_pre_list);
    }
 
    /* ---- JB_notify */
@@ -2066,7 +2097,7 @@ int *trigger
 
    /* ---- JB_project */
    if ((pos=lGetPosViaElem(jep, JB_project))>=0) {
-      char *project;
+      const char *project;
 
       DPRINTF(("got new JB_project\n")); 
       
@@ -2093,7 +2124,8 @@ int *trigger
 
    /* ---- JB_pe */
    if ((pos=lGetPosViaElem(jep, JB_pe))>=0) {
-      char *pe_name;
+      const char *pe_name;
+
       DPRINTF(("got new JB_pe\n")); 
       pe_name = lGetString(jep, JB_pe);
       if (pe_name && !sge_match_pe(pe_name)) {
@@ -2252,6 +2284,180 @@ int *trigger
    return 0;
 }
 
+/****** sge_job/verify_jobname() ***********************************************
+*  NAME
+*     verify_jobname() - verifies job name
+*
+*  SYNOPSIS
+*     static int verify_jobname(lList **alpp, char *job_name, job_descr) 
+*
+*  FUNCTION
+*     These checks are done:
+*     #1 reject job name if it starts with a digit
+*     #2 reject job name if the same name is already used by another job 
+*        and if this is the referenced as predecessor in a -hold_jid list.
+*     A detailed problem description is added to the answer list.
+*
+*  INPUTS
+*     lList **alpp    - the answer list
+*     char *job_name  - the job name
+*     char *job_descr - used for the text in the answer list 
+*
+*  RESULT
+*     int - returns != 0 if there is a problem with the job name
+*******************************************************************************/
+static int verify_jobname(lList **alpp, const char *job_name, const char *job_descr)
+{
+   lListElem *jep;
+
+   DENTER(TOP_LAYER, "verify_jobname");
+
+   if (isdigit(job_name[0])) {
+      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   for_each (jep, Master_Job_List) {
+      u_long32 succ_jid;
+
+      if (strcmp(job_name, lGetString(jep, JB_job_name)))
+         continue;
+
+      if ((succ_jid = is_referenced_by_jobname(jep))) {
+         ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU, 
+            job_name, job_descr, u32c(lGetUlong(jep, JB_job_number)), u32c(succ_jid)));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+
+
+/****** sge_job/is_referenced_by_jobname() *************************************
+*  NAME
+*     is_referenced_by_jobname()
+*
+*  SYNOPSIS
+*     static u_long32 is_referenced_by_jobname(lListElem *jep) 
+*
+*  FUNCTION
+*     Check whether a certain job is (still) referenced by a second
+*     job in it's -hold_jid list.
+*
+*  INPUTS
+*     lListElem *jep - the job
+*
+*  RESULT
+*     static u_long32 - job ID of the job referencing 'jep' or 0 if no such
+*******************************************************************************/
+static u_long32 is_referenced_by_jobname(lListElem *jep)
+{
+   lList *succ_lp;
+
+   DENTER(TOP_LAYER, "is_referenced_by_jobname");
+
+   if ((succ_lp=lGetList(jep, JB_jid_sucessor_list))) {
+      lListElem *succ_ep, *succ_jep;
+      const char *job_name = lGetString(jep, JB_job_name);
+
+      for_each (succ_ep, succ_lp) { 
+         u_long32 succ_jid;
+         succ_jid = lGetUlong(succ_ep, JRE_job_number);
+         if ((succ_jep = sge_locate_job(succ_jid)) &&
+            lGetSubStr(succ_jep, JRE_job_name, job_name, JB_jid_predecessor_list)) {
+            DEXIT;
+            return succ_jid;
+         }
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+
+
+/****** sge_job/verify_predecessors() ******************************************
+*  NAME
+*     verify_predecessors() -- verify -hold_jid list of a job
+*
+*  SYNOPSIS
+*     static int verify_predecessors(lList **alpp, u_long32 jobid, char 
+*     *job_name, lList *predecessors) 
+*
+*  FUNCTION
+*     These checks are done:
+*       #1 Ensure the job will not become it's own predecessor
+*       #2 Reject ambiguous job name references
+*     A detailed problem description is added to the answer list.
+*
+*  INPUTS
+*     lList **alpp        - the answer list
+*     u_long32 jobid      - job id of this job or 0 if not yet know (at submit time)
+*     char *job_name      - job name of this job
+*     lList *predecessors - the list of predecessors to be verified
+*
+*  RESULT
+*     int - returns != 0 if there is a problem with predecessors
+*******************************************************************************/
+static int verify_predecessors(lList **alpp, u_long32 jobid, const char *job_name, lList *predecessors)
+{
+   lListElem *pre;
+
+   DENTER(TOP_LAYER, "verify_predecessors");
+
+   for_each(pre, predecessors) {
+      const char *pre_ident = lGetString(pre, JRE_job_name);
+
+      if (isdigit(pre_ident[0])) {
+         if ( jobid && atoi(pre_ident) == jobid ) {
+            DPRINTF(("got my own jobid in JRE_job_name\n"));
+            ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U, u32c(jobid)));
+            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         } 
+      } else {
+         lListElem *jep;
+         u_long32 jid_ref = 0;
+
+         /* prevent self-references */   
+         if (job_name && !strcmp(pre_ident, job_name)) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_S, pre_ident));
+            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
+
+         /* reject ambiguous job name references */
+         for_each (jep, Master_Job_List) {
+            if (!strcmp(lGetString(jep, JB_job_name), pre_ident)) {
+               if (jid_ref == 0) {
+                  jid_ref = lGetUlong(jep, JB_job_number);
+               } else {
+                  ERROR((SGE_EVENT, MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU, 
+                     pre_ident, u32c(jid_ref), u32c(lGetUlong(jep, JB_job_number))));
+                  sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+                  DEXIT;
+                  return STATUS_EUNKNOWN;
+               }
+            }
+         }
+
+         /* if no matching job has been found we have to assume 
+            the job finished already */
+      }
+   }
+
+   DEXIT;
+   return 0;
+}
+
 /* remove multiple requests for one resource */
 /* this can't be done fully in clients without having complex definitions */ 
 /* -l arch=linux -l a=sun4 */
@@ -2261,7 +2467,7 @@ lList *rl     /* RE_Type */
 ) {
    lListElem *ep, *prev, *rm_ep, *meta_ep;
    lList *lp;
-   char *attr_name;
+   const char *attr_name;
 
    DENTER(TOP_LAYER, "compress_ressources");
 
@@ -2443,87 +2649,6 @@ static u_long32 guess_highest_job_number()
 }   
       
       
-
-/*
-
-   sge_add_job - adds a job to the Master_Job_List.
-
-   returns:
-   -1 if job already exists;
-   0  if successful
-   1  on error
-*/
-int sge_add_job(
-lListElem *jep,
-int check 
-) {
-   DENTER(TOP_LAYER, "sge_add_job");
-   DEXIT;
-   return sge_add_job_(&Master_Job_List, "Master_Job_List", jep, check, 1);
-}
-
-
-/*
-
-   sge_add_job_ - adds a job to a job list.
-   jlpp  address of job_list
-   jep   new Job
-   check check if job already exists in *jlpp
-   hash  enable hashing for Master_Job_List (1 else 0)
-
-   returns:
-   -1 if job already exists;
-   0  if successful
-   1  on error
-*/
-int sge_add_job_(
-lList **jlpp,
-char *name,
-lListElem *jep,
-int check,
-int hash 
-) {
-   DENTER(TOP_LAYER, "sge_add_job_");
-
-   if (!jlpp) {
-      ERROR((SGE_EVENT, MSG_JOB_JLPPNULL));
-      DEXIT;
-      return 1;
-   }
-   if (!jep) {
-      ERROR((SGE_EVENT, MSG_JOB_JEPNULL));
-      DEXIT;
-      return 1;
-   }
-
-   if(!*jlpp)
-      *jlpp = lCreateList(name, JB_Type);
-
-   if (check && *jlpp && 
-       lGetElemUlong(*jlpp, JB_job_number, lGetUlong(jep, JB_job_number))) {
-      ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_U, u32c(lGetUlong(jep, JB_job_number))));
-      DEXIT;
-      return -1;
-   }
-   
-   lAppendElem(*jlpp, jep);
-   
-   if (hash) {
-      /*
-      ** hash job entry
-      */
-      if (!Master_Job_Hash_Table)
-         Master_Job_Hash_Table = HashTableCreate(14); /* 2^14 entries */
-
-      HashTableStore(Master_Job_Hash_Table, 
-                     (void *) (long)lGetUlong(jep, JB_job_number),
-                     (void *) jep);
-   } 
-   DEXIT;
-   return 0;
-}
-
-
 /*******************************************************/
 lListElem *sge_locate_job(
 u_long32 jobid 
@@ -2532,12 +2657,7 @@ u_long32 jobid
 
    DENTER(BASIS_LAYER, "sge_locate_job");
    
-   if (Master_Job_Hash_Table && HashTableLookup(Master_Job_Hash_Table, 
-                                 (void *) (long) jobid, (void **) &jep)) {
-   }
-   else {
-      jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
-   } 
+   jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
 
    DEXIT;
    return jep;
@@ -2568,7 +2688,7 @@ int *trigger
          lList *talp = NULL;
          int ngranted = 0;
          int try_it = 1;
-         char *pe_name, *ckpt_name;
+         const char *pe_name, *ckpt_name;
 
          DPRINTF(("verify schedulability = %c\n", OPTION_VERIFY_STR[verify_mode]));
 
@@ -2609,7 +2729,7 @@ int *trigger
             granted = sge_replicate_queues_suitable4job(Master_Queue_List, 
                   jep, NULL, pep, ckpt_ep, scheddconf.queue_sort_method,
                   Master_Complex_List, Master_Exechost_List, 
-                  Master_Userset_List, NULL, 0, &prev_dipatch_type);
+                  Master_Userset_List, NULL, 0, &prev_dipatch_type, 0);
             ngranted = nslots_granted(granted, NULL);
             granted = lFreeList(granted);
 
@@ -2715,20 +2835,30 @@ sge_gdi_request *request
       }
    }
 
+#if 1 /* EB: TODO */
+   {
+      lList *n_h_list, *u_h_list, *o_h_list, *s_h_list;
+
+      n_h_list = lCopyList("range list", lGetList(old_jep, JB_ja_structure));
+      u_h_list = lCreateList("user hold list", RN_Type);
+      o_h_list = lCreateList("operator hold list", RN_Type);
+      s_h_list = lCreateList("system hold list", RN_Type); 
+      lSetList(new_jep, JB_ja_n_h_ids, n_h_list);
+      lSetList(new_jep, JB_ja_u_h_ids, u_h_list);
+      lSetList(new_jep, JB_ja_o_h_ids, o_h_list);
+      lSetList(new_jep, JB_ja_s_h_ids, s_h_list); 
+   }
+#endif
+
    /* reinit state of all job array tasks - same is done by qsub */
    {
-      long start = 1, end = 1, step = 1;
-      lListElem *range;
-      lList *rn_list; 
+      u_long32 start, end, step;
       lList *jat_list = NULL;
 
-      if ((rn_list = lGetList(new_jep, JB_ja_structure)) && (range=lFirst(rn_list))) {
-         start = lGetUlong(range, RN_min);
-         end = lGetUlong(range, RN_max);
-         step = lGetUlong(range, RN_step);
-      }
-      for (; start<=end; start+=step)
+      job_get_ja_task_ids(new_jep, &start, &end, &step);
+      for (; start<=end; start+=step) {
          lAddElemUlong(&jat_list, JAT_task_number, start, JAT_Type);
+      }
       lSetList(new_jep, JB_ja_tasks, jat_list);
    }
 
@@ -2746,3 +2876,4 @@ sge_gdi_request *request
    DEXIT;
    return ret;
 }
+

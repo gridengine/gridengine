@@ -37,23 +37,23 @@ extern "C" {
 #endif
 
 /* gdi setup, get attribute value for this host, gdi shutdown */
-char *sge_gdi_myhost_attribute(char *attr_name);
+const char *sge_gdi_myhost_attribute(const char *attr_name);
 
 /* gdi setup, get scaling value for this host, gdi shutdown */
-double sge_gdi_myhost_scaling(char *attr_name);
+double sge_gdi_myhost_scaling(const char *attr_name);
 
 /* gdi setup, get # of slots for job at this host, gdi shutdown 
    jobid may be 0 -> getenv("JOB_ID") is used */
 int sge_gdi_myhost_nslots(u_long32 jobid);
 
 /* get attribute value for given host */
-double sge_gdi_host_scaling(char *hostname, char *attr_name);
+double sge_gdi_host_scaling(const char *hostname, const char *attr_name);
 
 /* get scaling value for this host */
-char *sge_gdi_host_attribute(char *hostname, char *attr_name);
+const char *sge_gdi_host_attribute(const char *hostname, const char *attr_name);
 
 /* get # of slots for job at this host */
-int sge_gdi_host_nslots(char *hostname, u_long32 jobid);
+int sge_gdi_host_nslots(const char *hostname, u_long32 jobid);
 
 #ifdef  __cplusplus
 }

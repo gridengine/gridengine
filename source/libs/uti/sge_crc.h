@@ -32,13 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #ifndef __BASIS_TYPES_H
 #   include "basis_types.h"
 #endif
 
-u_long32 cksum(char *buf, int buf_len);
+u_long32 cksum(const char *buf, int buf_len);
  
 #endif /* __SGE_CRC_H */
 

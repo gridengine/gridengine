@@ -53,6 +53,7 @@ enum {
    UP_oticket,
    UP_fshare,
    UP_job_cnt,
+   UP_pending_job_cnt,
    UP_usage,
    UP_usage_time_stamp,
    UP_usage_seqno,
@@ -71,6 +72,9 @@ ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
    SGE_ULONG(UP_fshare)       /* configured functional shares (set by Qmon, 
                                * used by SGEEE schedd) spooled */
    SGE_XULONG(UP_job_cnt)     /* job count (set and used by SGEEE schedd, not 
+                               * spooled) schedd local, not stored to 
+                               * qmaster */
+   SGE_XULONG(UP_pending_job_cnt)  /* job count (set and used by SGEEE schedd, not 
                                * spooled) schedd local, not stored to 
                                * qmaster */
    SGE_LIST(UP_usage)         /* UA_Type; decayed usage set and used by SGEEE 
@@ -105,6 +109,7 @@ NAMEDEF(UPN)
    NAME("UP_oticket")
    NAME("UP_fshare")
    NAME("UP_job_cnt")
+   NAME("UP_pending_job_cnt")
    NAME("UP_usage")
    NAME("UP_usage_time_stamp")
    NAME("UP_usage_seqno")

@@ -45,6 +45,7 @@
 #include "cull_whatP.h"
 #include "cull_multitypeP.h"
 #include "cull_lerrnoP.h"
+#include "cull_hash.h"
 #include "sge_string.h"
 
 /* -------- intern prototypes --------------------------------- */
@@ -518,7 +519,9 @@ const lEnumeration *enp
       DEXIT;
       return NULL;
    }
+
    /* free the descriptor, it has been copied by lCreateList */
+   cull_hash_free_descr(dp);
    free(dp);
 
    /*
@@ -605,6 +608,11 @@ int *indexp
       for (i = 0; sdp[i].mt != lEndT; i++) {
          ddp[*indexp].mt = sdp[i].mt;
          ddp[*indexp].nm = sdp[i].nm;
+         if(sdp[i].hash != NULL) {
+            ddp[*indexp].hash = cull_hash_copy_descr(&sdp[i]);
+         } else {
+            ddp[*indexp].hash = NULL;
+         }
          (*indexp)++;
       }
       break;
@@ -615,6 +623,12 @@ int *indexp
              ep[i].nm == sdp[ep[i].pos].nm) {
             ddp[*indexp].mt = sdp[ep[i].pos].mt;
             ddp[*indexp].nm = sdp[ep[i].pos].nm;
+            if(sdp[ep[i].pos].hash != NULL) {
+               ddp[*indexp].hash = cull_hash_copy_descr(&sdp[ep[i].pos]);
+            } else {
+               ddp[*indexp].hash = NULL;
+            }
+ 
             (*indexp)++;
          }
          else {
@@ -627,6 +641,7 @@ int *indexp
    /* copy end mark */
    ddp[*indexp].mt = lEndT;
    ddp[*indexp].nm = NoName;
+   ddp[*indexp].hash = NULL;
 
    /* 
       We don't do (*indexp)++ in order to end up correctly if
@@ -709,8 +724,7 @@ const lEnumeration *ep1
    return ddp;
 }
 
-/****** cull/lString2List() **********************************
-*
+/****** cull/lString2List() ***************************************************
 *  NAME
 *     lString2List() -- convert char* string into cull list 
 *
@@ -719,27 +733,24 @@ const lEnumeration *ep1
 *     #include "cull_db.h"
 *     #include <cull/src/cull_db.h>
 * 
-*     int lString2List(char *s, lList **lpp, lDescr *dp, int nm, 
-*                      char *delimitor)); 
-*       
+*     int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
+*                      const char *delimitor); 
 *
 *  FUNCTION
-*     parses separated strings and adds them
-*     into the cull list *lpp
-*     the string is a unique key for the
-*     list and resides at field nm
+*     parses separated strings and adds them into the cull list *lpp
+*     the string is a unique key for the list and resides at field nm
 *  
 *     if delimitor==NULL
-*     use isspace()
+*        use isspace()
 *     else
-*     use delimitor
+*        use delimitor
 *
 *  INPUTS
-*     char *s         - String to parse   
-*     lList **lpp     - reference to lList*      
-*     lDescr *dp      - list Type     
-*     int nm          - list field       
-*     char *delimitor - string delimitor        
+*     const char *s         - String to parse   
+*     lList **lpp           - reference to lList*      
+*     const lDescr *dp      - list Type     
+*     int nm                - list field       
+*     const char *delimitor - string delimitor        
 *
 *  RESULT
 *     0 on error
@@ -747,43 +758,10 @@ const lEnumeration *ep1
 *
 *  EXAMPLE
 *     lList* stringList = NULL;
-*     lString2List("host1, host2, host3 host4", &stringList, ST_Type, STR, ", ");
-*
-*  NOTES
-*
-*
-*  BUGS
-*     no bugs known
-*
-*
-*  SEE ALSO
-*     /()
-*     
-****************************************************************************
-*/
-/* ----------------------------------------
-
-   parses separated strings and adds them
-   into the cull list *lpp
-   the string is a unique key for the
-   list and resides at field nm
-
-   if delimitor==NULL
-   use isspace()
-   else
-   use delimitor
-
-   returns
-   0 on error
-   1 ok
- */
-int lString2List(
-char *s,
-lList **lpp,
-const lDescr *dp,
-int nm,
-const char *dlmt 
-) {
+*     lString2List("host1, host2 host3", &stringList, ST_Type, STR, ", ");
+******************************************************************************/
+int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, 
+                 const char *dlmt) {
    DENTER(TOP_LAYER, "lString2List");
 
    if (!s) {
@@ -793,7 +771,8 @@ const char *dlmt
 
    for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
       if (lGetElemStr(*lpp, nm, s)) {
-         continue; /* silently ignore multiple occurencies */
+         /* silently ignore multiple occurencies */
+         continue;
       }
       if (!lAddElemStr(lpp, nm, s, dp)) {
          lFreeList(*lpp);
@@ -808,7 +787,7 @@ const char *dlmt
 }
 
 int lString2ListNone(
-char *s,
+const char *s,
 lList **lpp,
 const lDescr *dp,
 int nm,
@@ -839,7 +818,7 @@ int nm,
 lList **lpp1,
 lList **lpp2 
 ) {
-   char *key;
+   const char *key;
    lListElem *ep, *to_check, *to_del;
 
    DENTER(CULL_LAYER, "lDiffListStr");

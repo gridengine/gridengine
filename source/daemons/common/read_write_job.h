@@ -32,12 +32,19 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-lListElem *cull_read_job(char *filename);
-int cull_write_job_to_disk(lListElem *jep);
-int cull_write_jobtask_to_disk(lListElem *jep, u_long32 ja_taskid);
-int cull_write_zombiejob_to_disk(lListElem *jep);
+#include "sge_file_path.h"
+#include "sge_hash.h"
+
+int job_write_spool_file(lListElem *jep, u_long32 ja_taskid, 
+                         sge_spool_flags_t flags);
+
+int job_remove_spool_file(u_long32 job_id, u_long32 ja_taskid, 
+                          sge_spool_flags_t flags);
+
+int job_list_read_from_disk(lList **job_list, char *list_name, int check,
+                            sge_spool_flags_t flags,
+                            int (*init_function)(lListElem*)); 
+
+int job_remove_script_file(u_long32 job_id);
 
 #endif /* _READ_WRITE_JOB_H_ */
-
-
-

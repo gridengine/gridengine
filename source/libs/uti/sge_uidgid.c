@@ -58,7 +58,7 @@
 
 */
 int sge_user2uid(
-char *user,
+const char *user,
 uid_t *uidp,
 int retries 
 ) {
@@ -96,7 +96,7 @@ int retries
 
 */
 int sge_group2gid(
-char *gname,
+const char *gname,
 gid_t *gidp,
 int retries 
 ) {
@@ -132,7 +132,7 @@ int retries
       1 on failure
 
 */
-int sge_uid2user( uid_t uid, char *dst, size_t sz, int retries)
+int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
 {
    struct passwd *pw;
    static uid_t last_uid;
@@ -189,7 +189,7 @@ int sge_uid2user( uid_t uid, char *dst, size_t sz, int retries)
    if id is resolvable
 
 */
-int sge_gid2group( gid_t gid, char *dst, size_t sz, int retries)
+int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 {
    struct group *gr;
    static gid_t last_gid;

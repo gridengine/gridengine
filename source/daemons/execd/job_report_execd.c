@@ -59,7 +59,8 @@ void trace_jr()
 
    DPRINTF(("--- JOB REPORT LIST ----------------\n"));
    for_each (jr, jr_list) {
-      char *s;
+      const char *s;
+
       if ((s=lGetString(jr, JR_pe_task_id_str)))
          DPRINTF(("Jobtask "u32"."u32" task %s\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number), s));
       else
@@ -100,15 +101,16 @@ lListElem *jep
 lListElem *get_job_report(
 u_long32 jobid, 
 u_long32 jataskid, 
-char *pe_task_id_str 
+const char *pe_task_id_str 
 ) {
    lListElem *jr;
-   char *s;
+   const char *s;
 
    DENTER(TOP_LAYER, "get_job_report");
 
    for_each (jr, jr_list) {
       s = lGetString(jr, JR_pe_task_id_str);
+
       if (lGetUlong(jr, JR_job_number) == jobid && 
           lGetUlong(jr, JR_ja_task_number) == jataskid &&
           !sge_strnullcmp(s, pe_task_id_str))
@@ -139,7 +141,8 @@ u_long32 jataskid
       nxt = lNext(jr);
       if (lGetUlong(jr, JR_job_number) == jobid &&
           lGetUlong(jr, JR_ja_task_number) == jataskid) {
-         char *s = lGetString(jr, JR_pe_task_id_str);
+         const char *s = lGetString(jr, JR_pe_task_id_str);
+
          DPRINTF(("!!!! removing jobreport for "u32"."u32" task %s !!!!\n",
             jobid, jataskid, s?s:"master"));
          lRemoveElem(jr_list, jr);
@@ -167,12 +170,8 @@ u_long32 jataskid
       0 on success
       -1 on error
    ------------------------------------------------------------ */
-int add_usage(
-lListElem *jr,
-char *name,
-char *val_as_str,
-double val 
-) {
+int add_usage(lListElem *jr, char *name, const char *val_as_str, double val) 
+{
    lListElem *usage;
    double old_val = 0;
 

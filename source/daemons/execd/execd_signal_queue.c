@@ -107,7 +107,7 @@ int answer_error;
    } else {            /* signal a queue */
       for_each(jep, Master_Job_List) {
          lListElem *gdil_ep, *master_q, *jatep;
-         char *qnm;
+         const char *qnm;
 
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
 
@@ -125,8 +125,7 @@ int answer_error;
 
                   /* job signaling triggerd by a queue signal */
                   sprintf(tmpstr, "%s (%s)", sge_sig2str(signal), qnm);
-                  job_log(lGetUlong(jep, JB_job_number), tmpstr, 
-                     prognames[me.who], me.unqualified_hostname);
+                  job_log(lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), tmpstr);
                   /* if the queue gets suspended and the job is already suspended
                      we do not deliver a signal */
                   if (signal == SGE_SIGSTOP) {
@@ -153,8 +152,9 @@ int answer_error;
                   }
                   found = lGetUlong(jep, JB_job_number);
 
-                  cull_write_jobtask_to_disk(jep, 
-                     lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_task_number));
+                  job_write_spool_file(jep, 
+                     lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
+                     JAT_task_number), SPOOL_WITHIN_EXECD);
 
                }
             }
@@ -268,7 +268,7 @@ int pid,
 u_long32 sge_signal,
 u_long32 jobid,
 u_long32 jataskid,
-char *petask 
+const char *petask 
 ) {
    int sig;
    int status=0;
@@ -410,20 +410,21 @@ u_long32 signal
    lListElem *master_q;
    lListElem *jatep = NULL;
    int getridofjob = 0;
+   const void *iterator;
 
    DENTER(TOP_LAYER, "signal_job");
 
-   job_log(jobid, sge_sig2str(signal), prognames[me.who], me.unqualified_hostname);
+   job_log(jobid, jataskid, sge_sig2str(signal));
 
    /* search appropriate array task and job */
-   for_each (jep, Master_Job_List) {
-      if (jobid == lGetUlong(jep, JB_job_number)) {
-         jatep = search_task(jataskid, jep);
-         if (!jatep)
-            continue; /* next master job list entry */
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   while(jep != NULL) {
+      if((jatep = search_task(jataskid, jep)) != NULL) {
          break;
       }
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
+
    if (!jatep) {
       DEXIT;
       return 1;
@@ -483,7 +484,7 @@ u_long32 signal
 
    /* now save this job/queue so we are up to date on restart */
    if (!getridofjob)
-      cull_write_jobtask_to_disk(jep, jataskid);
+      job_write_spool_file(jep, jataskid, SPOOL_WITHIN_EXECD);
    else
       DPRINTF(("Job  "u32"."u32" is no longer running\n", jobid, jataskid));
 

@@ -35,13 +35,15 @@
 extern int flush_jr;
 
 lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, lListElem *jep);
-lListElem *get_job_report(u_long32 jobid, u_long32 jataskid, char *pe_task_id_str);
+lListElem *get_job_report(u_long32 jobid, u_long32 jataskid, 
+                          const char *pe_task_id_str);
+
 void del_job_report(lListElem *jr);
 void cleanup_job_report(u_long32 jobid, u_long32 jataskid);
 void flush_job_report(void);
 void trace_jr(void);
 
-int add_usage(lListElem *jr, char *name, char *uval_as_str, double val);
+int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);
 
 #include "dispatcher.h"
 

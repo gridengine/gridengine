@@ -61,8 +61,8 @@
          
  ****/
 lListElem* read_object(
-char *dirname,
-char *filename,
+const char *dirname,
+const char *filename,
 int spool,
 int flag,
 int read_config_list_flag,
@@ -135,7 +135,7 @@ int fields[]
       DEXIT;
       return NULL;
    }
-   
+
    free(buf);
    fclose(fp);
 

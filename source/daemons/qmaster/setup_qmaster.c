@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>  
 #include <errno.h>
 #include <time.h>
@@ -95,7 +96,6 @@
 #include "qmaster_to_execd.h"
 #include "shutdown.h"
 #include "sge_hostname.h"
-#include "qmaster_running.h"
 #include "sge_any_request.h"
 #include "sge_os.h"
 #include "lock.h"
@@ -110,15 +110,13 @@ static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
 static lList* parse_qmaster(lList**, u_long32*);
 static void   qmaster_init(char**);
-static void   communication_setup(char**);
+static void   communication_setup(void);
+static bool   is_qmaster_already_running(void);
 static void   qmaster_lock_and_shutdown(int);
 static int    setup_qmaster(void);
 static int    remove_invalid_job_references(int user);
 static int    debit_all_jobs_from_qs(void);
 
-#if !defined(ENABLE_NGC)
-static void   set_message_priorities(const char*);
-#endif
 
 
 /****** qmaster/setup_qmaster/sge_setup_qmaster() ******************************
@@ -130,8 +128,8 @@ static void   set_message_priorities(const char*);
 *
 *  FUNCTION
 *     Process commandline arguments. Remove qmaster lock file. Write qmaster
-*     host to the 'act_qmaster' file. Write qmaster PID file. Initialize
-*     qmaster and reporting.  
+*     host to the 'act_qmaster' file. Initialize qmaster and reporting. Write
+*     qmaster PID file.  
 *
 *     NOTE: Before this function is invoked, qmaster must become admin user.
 *
@@ -143,6 +141,18 @@ static void   set_message_priorities(const char*);
 *
 *  NOTES
 *     MT-NOTE: sge_setup_qmaster() is NOT MT safe! 
+*     MT-NOTE:
+*     MT-NOTE: This function must be called exclusively, with the qmaster main
+*     MT-NOTE: thread being the *only* active thread. In other words, do not
+*     MT-NOTE: invoke this function after any additional thread (directly or
+*     MT-NOTE: indirectly) has been created.
+*
+*     Do *not* write the qmaster pid file, before 'qmaster_init()' did return
+*     successfully. Otherwise, if we do have a running qmaster and a second
+*     qmaster is started (illegally) on the same host, the second qmaster will
+*     overwrite the pid of the qmaster started first. The second qmaster will
+*     detect it's insubordinate doing and terminate itself, thus leaving behind
+*     a useless pid.
 *
 *******************************************************************************/
 int sge_setup_qmaster(char* anArgv[])
@@ -164,9 +174,9 @@ int sge_setup_qmaster(char* anArgv[])
       SGE_EXIT(1);
    }
 
-   sge_write_pid(QMASTER_PID_FILE);
-
    qmaster_init(anArgv);
+
+   sge_write_pid(QMASTER_PID_FILE);
 
    reporting_initialize(NULL);
 
@@ -419,7 +429,7 @@ static void qmaster_init(char **anArgv)
 
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
   
-   communication_setup(anArgv);
+   communication_setup();
 
    host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
 
@@ -431,47 +441,60 @@ static void qmaster_init(char **anArgv)
 
 /****** qmaster/setup_qmaster/communication_setup() ****************************
 *  NAME
-*     communication_setup() -- Communication setup 
+*     communication_setup() -- set up communication
 *
 *  SYNOPSIS
-*     static void communication_setup(char **anArgv) 
+*     static void communication_setup(void) 
 *
 *  FUNCTION
-*     Set message priorities. Do local host name resolution. Check if qmaster
-*     is already running. Enroll in 'commd'.
+*     Initialize qmaster communication. 
+*
+*     This function will fail, if the configured qmaster port is already in
+*     use.
+*
+*     This could happen if either qmaster has been terminated shortly before
+*     and the operating system did not get around to free the port or there
+*     is a qmaster already running.
 *
 *  INPUTS
-*     char **anArgv - process argument vector 
+*     void - none 
 *
 *  RESULT
 *     void - none 
 *
 *  NOTES
-*     MT-NOTE: communication_setup() is NOT MT safe. 
+*     MT-NOTE: communication_setup() is NOT MT safe 
 *
 *******************************************************************************/
-#ifdef ENABLE_NGC
-static void communication_setup(char **anArgv)
+static void communication_setup(void)
 {
-   const char *msg_prio = NULL;
    cl_com_handle_t* com_handle = NULL;
 
    DENTER(TOP_LAYER, "communication_setup");
-
-   if ((msg_prio = getenv("SGE_PRIORITY_TAGS")) != NULL) {
-      /* TODO: message priority flags ?*/
-      ERROR((SGE_EVENT, "SGE_PRIORITY_TAGS not supported by NGC\n"));
-   }
 
    DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n", uti_state_get_qualified_hostname()));
 
    com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
 
-   if (com_handle == NULL) {
-      ERROR((SGE_EVENT, "could not find qmaster communication handle\n"));
-      ERROR((SGE_EVENT, "check if port %d is used by another process\n", sge_get_qmaster_port()));
+   if (com_handle == NULL)
+   {
+      ERROR((SGE_EVENT, "port %d already bound\n", sge_get_qmaster_port()));
+
+      if (is_qmaster_already_running() == true)
+      {
+         char *host = NULL;
+         int res = -1; 
+
+         res = cl_com_gethostname(&host, NULL, NULL);
+
+         CRITICAL((SGE_EVENT, MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S, ((CL_RETVAL_OK == res ) ? host : "unknown")));
+
+         if (CL_RETVAL_OK == res) { free(host); }
+      }
+
       SGE_EXIT(1);
    }
+
    /* CR - TODO: enable and test max connection close count */
    /* cl_com_enable_max_connection_close(com_handle); */
    
@@ -484,135 +507,58 @@ static void communication_setup(char **anArgv)
    DEXIT;
    return;
 } /* communication_setup() */
-#else /* !ENABLE_NGC */
-static void communication_setup(char **anArgv)
-{
-   const char *msg_prio = NULL;
-   const char *host = NULL;
-   int enrolled = 0;
 
-   DENTER(TOP_LAYER, "communication_setup");
-
-   if ((msg_prio = getenv("SGE_PRIORITY_TAGS")) != NULL) {
-      set_message_priorities(msg_prio);
-   }
-
-   /* to ensure SGE host_aliasing is considered when resolving
-    * me.qualified_hostname before commd might be available
-    */
-   if ((host = sge_host_resolve_name_local(uti_state_get_qualified_hostname()))) {
-      uti_state_set_qualified_hostname(host);
-   }
-
-   if ((enrolled = check_for_running_qmaster())> 0) {
-      remove_pending_messages(NULL, 0, 0, 0);
-   }
-
-   set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_qualified_hostname(), NULL);
-   commlib_state_set_logging_function(sge_log);     
-   
-   if (!enrolled) {
-      int ret;
-
-      set_commlib_param(CL_P_NAME, 0, prognames[QMASTER], NULL);
-      set_commlib_param(CL_P_ID, 1, NULL, NULL);
-
-      if ((ret = enroll())) {
-         if (ret == CL_CONNECT && start_commd) {
-            startprog(1, 2, anArgv[0], NULL, SGE_COMMD, NULL);
-            sleep(5);
-         } else if (ret == COMMD_NACK_CONFLICT) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, uti_state_get_sge_formal_prog_name()));
-            SGE_EXIT(1);
-         } else {
-            ERROR((SGE_EVENT, MSG_COMMD_CANTENROLLTOCOMMD_S, cl_errstr(ret)));
-            SGE_EXIT(1);
-         }             
-      } else {
-         WARNING((SGE_EVENT, MSG_COMMD_FOUNDRUNNINGCOMMDONLOCALHOST));
-      }
-   } /* !enrolled */
-
-   reset_last_heard(); /* commlib call to mark all commprocs as unknown */
-
-   set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, NULL, NULL);
-
-   DEXIT;
-   return;
-} /* communication_setup() */
-
-#endif /* ENABLE_NGC */
-
-
-#if !defined(ENABLE_NGC)
-/****** qmaster/setup_qmaster/set_message_priorities() *************************
+/****** qmaster/setup_qmaster/is_qmaster_already_running() *********************
 *  NAME
-*     set_message_priorities() -- set message priorities for commd
+*     is_qmaster_already_running() -- is qmaster already running 
 *
 *  SYNOPSIS
-*     static void set_message_priorities(const char* thePriorities)
+*     static bool is_qmaster_already_running(void) 
 *
 *  FUNCTION
-*     Message priorities are used by 'commd' to determine the sequence of message
-*     delivery. Messages with higher priorities are delivered prior to messages 
-*     with lower priorities.
-*
-*     'thePriorities' contains a blank separated list of tag id's (values
-*     0-n, n = enum value of the TAG_* enum as defined in libs/gdi/sge_any_request.h
-*     The position within the string determines the priority of the message tag
-*     denoted by the given integer.
+*     Check, whether there is running qmaster already.
 *
 *  INPUTS
-*     const char* thePriorities - blank separated list of priotities
-*
-*  EXAMPLE
-*
-*     '3 2 9'
-*
-*       Position  Value    Message Tag     Priority
-*
-*           0       3    TAG_ACK_REQUEST      0 (lowest)
-*           1       2    TAG_GDI_REQUEST      1
-*           2       9    TAG_SIGJOB           2 (highest)
-* 
-*     The old message priorities used correspond to the string '3 2'.
+*     void - none 
 *
 *  RESULT
-*     void - none
+*     true  - running qmaster detected. 
+*     false - otherwise
 *
 *  NOTES
-*     MT-NOTE: set_message_priorities() is MT safe. 
+*     MT-NOTE: is_qmaster_already_running() is not MT safe 
 *
-******************************************************************************/
-static void set_message_priorities(const char* thePriorities)
+*  BUGS
+*     This function will only work, if the PID found in the qmaster PID file
+*     either does belong to a running qmaster or no process at all.
+*
+*     Of course PID's will be reused. This is, however, not a problem because
+*     of the very specifc situation in which this function is called.
+*
+*******************************************************************************/
+static bool is_qmaster_already_running(void)
 {
-   enum { NUM_OF_PRIORITIES = 10 };
+   enum { NULL_SIGNAL = 0 };
 
-   int prio[NUM_OF_PRIORITIES] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-   char *str, *tok, *pos = NULL;
-   int cnt = 0;
+   bool res = true;
+   char pidfile[SGE_PATH_MAX] = { '\0' };
+   pid_t pid = 0;
 
-   DENTER(TOP_LAYER, "set_message_priorities");
-   INFO((SGE_EVENT, MSG_SETTING_PRIORITY_TAGS_S, thePriorities));
+   DENTER(TOP_LAYER, "is_qmaster_already_running");
 
-   str = strdup(thePriorities);
-   tok = strtok_r(str, " ", &pos);
-   while (tok != NULL) {
-      if (cnt >= (NUM_OF_PRIORITIES - 1) ) {
-         WARNING((SGE_EVENT, MSG_TOO_MANY_PRIORITY_TAGS_S, thePriorities));
-         break;
-      }   
-      prio[cnt++] = atoi(tok);
-      tok = strtok_r(NULL, " ", &pos);
+   sprintf(pidfile, "%s/%s", bootstrap_get_qmaster_spool_dir(), QMASTER_PID_FILE);
+
+   if ((pid = sge_readpid(pidfile)) == 0)
+   {
+      DEXIT;
+      return false;
    }
-   free(str);
 
-   prepare_enroll(prognames[QMASTER], 1, prio);
+   res = (kill(pid, NULL_SIGNAL) == 0) ? true: false;
 
    DEXIT;
-   return;
-} /* set_message_priorities */
-#endif /* !ENABLE_NGC */
+   return res;
+} /* is_qmaster_already_running() */
 
 /****** qmaster/setup_qmaster/qmaster_lock_and_shutdown() ***************************
 *  NAME

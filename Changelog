@@ -1,3 +1,9 @@
+AD-2004-02-20-0: Bugfix:    Generate error message if qmaster is already
+                            running.
+                 Changed:   qmaster, shadowd, daemons/common
+                 Review:    CR
+                 Issue:     684
+
 EB-2004-02-20-0: Bugfix:    Added missing documentation
                  Issue:     691
 

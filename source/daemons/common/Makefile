@@ -42,7 +42,6 @@ DAEMONS_COMMON_SRC = admin_mail.c \
                     mail.c \
                     qlogin_starter.c \
                     qmaster_heartbeat.c \
-                    qmaster_running.c \
                     setosjobid.c \
                     shutdown.c \
                     startprog.c \
@@ -102,9 +101,6 @@ qlogin_starter.o: $(DAEMONS_COMMON_DIR)/qlogin_starter.c
 
 qmaster_heartbeat.o: $(DAEMONS_COMMON_DIR)/qmaster_heartbeat.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/qmaster_heartbeat.c
-
-qmaster_running.o:	$(DAEMONS_COMMON_DIR)/qmaster_running.c
-		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/qmaster_running.c
 
 setosjobid.o: $(DAEMONS_COMMON_DIR)/setosjobid.c
 		$(CC) -I$(DAEMONS_COMMON_DIR) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/setosjobid.c

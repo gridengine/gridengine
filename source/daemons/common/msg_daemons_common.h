@@ -87,19 +87,9 @@
 
 
 /*
-** qmaster_running.c
-*/
-#define MSG_QMASTER_FOUNDRUNNINGQMASTERWITHPIDXNOTSTARTING_I    _MESSAGE(27031, _("found running qmaster with pid %d - not starting"))
-#define MSG_QMASTER_ALREADYENROLLEDSHOULDNOTHAPPEN    _MESSAGE(27032, _("already enrolled - should not happen"))
-#define MSG_QMASTER_CANTRESOLVEHOSTNAMEXFROMACTQMASTERFILE_S    _MESSAGE(27033, _("can't resolve hostname "SFQ" from act_qmaster file"))
-#define MSG_QMASTER_CANTRESOLVESERVEICESGECOMMDTCP    _MESSAGE(27034, _("can't resolve service \"sge_commd/tcp\""))
-#define MSG_QMASTER_COMMDONHOSTXEXPECTSRESERVEDPORT_S    _MESSAGE(27035, _("commd on host "SFQ" expects reserved port"))
-#define MSG_QMASTER_COMMDONHOSTXCANTRESOLVEOURHOSTNAME_S    _MESSAGE(27036, _("commd on host "SFQ" can't resolve our hostname verify your resolving (reverse mapping) or start commd with an alias file"))
-#define MSG_QMASTER_COMMUNICATIONPROBLEONHOSTX_SS    _MESSAGE(27037, _("communication problem with commd on host "SFQ": "SFN))
+ * setup_qmaster.c
+ */
 #define MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S    _MESSAGE(27038, _("found running qmaster on host "SFQ"- not starting"))
-#define MSG_QMASTER_CANTCHECKFORRUNNINGQMASTERX_S    _MESSAGE(27039, _("can't check for running qmaster: "SFN))
-#define MSG_COMMD_CANTCONTACTCOMMDX_S    _MESSAGE(27040, _("can't contact commd: "SFN))
-
 
 
 /* 

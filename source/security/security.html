@@ -179,18 +179,59 @@ answers</font></li>
 <font color="#000000">This applies to any other client command.</font>
 <p><a NAME="Enhanced Security Using Kerberos/DCE Authentication"></a><font color="#990000">Enhanced
 Security Using Kerberos/DCE Authentication</font>
+<p>This GSS-API Kerberos implementation has used regularly in Grid Engine 5.3
+development and test environments and is used full-time at least one production
+site which is running Grid Engine 5.3.  This
+implementation is different than the
+<font color="#990000">Enhanced Security Using Kerberos</font>
+implementation described below in that it is not a full Kerberos implementation
+but uses Kerberos to authenticate users submitting jobs and to forward user
+credentials with the job by calling security sub-programs at the appropriate times.
+This implementation does not require recompiling Grid Engine.  It consists of security
+modules which can be compiled separately and are called by Grid Engine to do
+authentication and to forward the Kerberos credentials.  The security sub-modules
+are called by client commands (e.g. qsub) and by the Grid Engine daemons
+(sge_qmaster, sge_execd) at the appropriate times to get and store credentials.
+The Kerberos modules are used by Grid Engine when it is running in Kerberos mode
+(i.e. For GE 5.3, the $SGE_ROOT/default/common/product_mode file contains the
+string "sgeee-kerberos" or "sge-kerberos").  The source code for this implementation
+is located in the directory gridengine/source/security/gss.  The source code is
+not dependent on other Grid Engine components or libraries and can be compiled
+stand-alone.  Details on how to use this implementation can be found in
+gridengine/source/security/gss/doc/gss_customer.html.
 <p>Before you start digging into this, make sure how Kerberos/DCE functions
 in general. There are many good sites out there in Netland.
 <br><font color="#000000">Grid Engine can be run in a Kerberos/DCE environment
 using the corresponding authentication mechanisms. A detailed description
 how to integrate Grid Engine in such an enviroment can be found <a href="gss/doc/gss.html">here</a>.</font>
+
 <p><a NAME="Enhanced Security Using Kerberos"></a><font color="#990000">Enhanced
 Security Using Kerberos</font>
-<p>The Grid Engine has been prepared for usage in a Kerberos V environment.
-A former version of Grid Engine (aka Codine/GRD) is in use in a production
-environment with Kerberos support. Although several source code changes
-have been applied to the current version, it should be easy to integrate
-Grid Engine into a Kerberos V environment. A description of the integration
+
+<p>This implementation isn't really usable in its current form. This code was
+developed around 1997
+for a Raytheon customer which required Kerberos security at their site. This was a
+full Kerberos implementation which used the Kerberos libraries for all communication
+between the daemons and clients. However, the code was never put into production
+and has not been used at any production sites. It was not fully tested and it has
+not been kept up-to-date with the many changes that have been put into Grid Engine
+since that time. The Kerberos support compiled into Grid Engine should be considered
+experimental.  There were several reasons for not finishing this implementation
+(e.g. time and money), but the main reason was the impracticality of supporting
+this version as a product back then (long before Grid Engine was open source)
+because of export restrictions on Kerberos itself and other practical considerations.
+At that time, allowing the customer to compile the code on his own was simply not an
+option, because we didn't supply the source code to customers.
+<p>
+If you need Kerberos to authenticate users who are submitting jobs to allow Grid
+Engine jobs to run with Kerberos credentials (which have been forwarded and are
+protected by encryption), then the 
+<font color="#990000">Enhanced Security Using Kerberos/DCE Authentication</font>
+implementation is the way to
+go.  Full authentication and encrypted communication via Kerberos between all
+Grid Engine clients (e.g. qmon, qstat) and deamons would require using the
+Kerberos code in security/krb, but sure this would involve a significant
+amount of further testing and development. A description of the integration
 and a setup example can be found in the following documents:
 <ul>
 <li>

@@ -1,3 +1,6 @@
+SD-2004-11-30-0: Bugfix:  : Updated security.html with proper information about
+                            the kerberos and GSSAPI security code.
+
 SG-2004-11-30-0: Enhancem.: ADDED A SECOND GDI THREAD
 
 CR-2004-11-26-1: Testsuite: - fixed bug in system_tests/clients/qmake test

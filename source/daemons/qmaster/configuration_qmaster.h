@@ -36,5 +36,6 @@ int sge_del_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost
 int sge_mod_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 int is_configuration_up_to_date(lListElem *hep, lList *conf_list, lList *to_check_list);
 int select_configuration(const char *config_name, lList *lp, lListElem **cepp);
+lListElem *get_local_conf_val(const char *host, const char *name);  
 
 #endif /* __CONFIGURATION_QMASTER_H */

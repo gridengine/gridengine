@@ -675,5 +675,28 @@ lList *to_check_list
    return 1;
 }
 
+lListElem *get_local_conf_val(const char *host, const char *name)
+{
+   lListElem *cfep, *ep = NULL;
 
+   DENTER(TOP_LAYER, "get_local_conf_val");
+
+   /* try to find load_report_time for this host in the local configuration */
+   if (!select_configuration(host, Master_Config_List, &ep) && 
+       (cfep=lGetSubStr(ep, CF_name, name, CONF_entries))) {
+      DEXIT;
+      return cfep;
+   }
+
+   /* no success - take global configuration */
+   ep = NULL;
+   if (!select_configuration("global", Master_Config_List, &ep) && 
+       (cfep=lGetSubStr(ep, CF_name, name, CONF_entries))) {
+      DEXIT;
+      return cfep;
+   }
+
+   DEXIT;
+   return NULL;
+}
 

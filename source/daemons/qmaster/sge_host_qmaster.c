@@ -978,33 +978,6 @@ u_long32 sge_get_max_unheard_value(void)
    return max_unheard_secs;
 }
 
-lListElem *get_local_conf_val(
-const char *host,
-const char *name 
-) {
-   lListElem *cfep, *ep = NULL;
-
-   DENTER(TOP_LAYER, "get_local_conf_val");
-
-   /* try to find load_report_time for this host in the local configuration */
-   if (!select_configuration(host, Master_Config_List, &ep) && 
-       (cfep=lGetSubStr(ep, CF_name, name, CONF_entries))) {
-      DEXIT;
-      return cfep;
-   }
-
-   /* no success - take global configuration */
-   ep = NULL;
-   if (!select_configuration("global", Master_Config_List, &ep) && 
-       (cfep=lGetSubStr(ep, CF_name, name, CONF_entries))) {
-      DEXIT;
-      return cfep;
-   }
-
-   DEXIT;
-   return NULL;
-}
-
 void 
 sge_change_queue_version_exechost(const char *exechost_name) 
 {

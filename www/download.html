@@ -1,0 +1,243 @@
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699">DOWNLOAD</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<! begin content -->
+
+<h2>
+<b><font color="#990000">General Instructions for Downloads</font></b></h2>
+You can download most files by clicking on their corresponding links. In
+some cases, this will launch a browser's plug-in such as Adobe Acrobat
+for PDF files, or an archive extractor for ZIP files. If you prefer to
+download a file rather than viewing it with your browser's plug-in, click
+on the right mouse button, and select <b>Save Link As</b> for Netscape&reg;
+or <b>Save Target As</b> for Microsoft&reg; Internet Explorer to specify
+where the file will be saved on your system.
+
+&nbsp;<br>
+
+<h2><a NAME="Binaries"></a><b><font color="#990000">Grid Engine Binary Download</font></b></h2>
+
+<table BORDER=0 CELLSPACING=10 CELLPADDING=0 WIDTH="100%" NOSAVE>
+<tr NOSAVE>
+<td VALIGN=TOP NOSAVE>
+<blockquote><a href="#GEPrebuiltBinaries">Grid Engine prebuilt binaries</a></blockquote>
+</td>
+
+<td>
+These builds generally work but certain
+features may not be tested.&nbsp;
+<br>Includes the complete Grid Engine distribution for various architectures.
+</td>
+</tr>
+
+<tr>
+<td>
+<blockquote><a href="#GESnapshot">Grid Engine snapshot binaries</a></blockquote></td>
+<td>
+These builds are work in progress and may not function at all.
+</td>
+</tr>
+</table>
+
+<h2><a NAME="GESource"></a><b><font color="#990000">Grid Engine Source Code Downloads</font></b></h2>
+
+<blockquote>To browse the Grid Engine source code or retrieve it using
+CVS follow <a href="#GESource">Grid Engine Source</a> .
+<br>To retrieve a Grid Engine source tarball follow one of these links:
+
+<br>&nbsp;
+
+<table BORDER COLS=1 WIDTH="80%" NOSAVE>
+<tr>
+<td><a href="#GESource">Grid Engine Prebuilt Source</a>
+</td>
+</tr>
+
+<tr>
+<td><a href="#GESource">Grid Engine Snapshot Source</a>
+</td>
+</tr>
+</table>
+</blockquote>
+
+<h2>
+<a NAME="Documentation"></a><b><font color="#990000">Grid Engine Documentation</font></b></h2>
+
+<blockquote>The Grid Engine Documentation can be found at: <a
+href="/project/www/white_papers.html">/project/www/white_papers.html</a>.</blockquote>
+
+<h2>
+<a NAME="GEPrebuiltBinaries"></a><b><font color="#990000">Grid Engine Prebuilt
+Binaries</font></b></h2>
+
+<ul>
+<li>
+<b>Step 1: </b>Download common files (necessary for all architectures)</li>
+
+<table BORDER CELLSPACING=0 CELLPADDING=0 WIDTH="40%" NOSAVE >
+<tr>
+<td><a href="ftp://__GESERVER__/sge_common_troet.tar.gz">Grid Engine common
+files</a></td>
+</tr>
+</table>
+</ul>
+
+<ul>
+<li>
+<b>Step 2:</b> Download binary and data files for every architecture you
+need</li>
+</ul>
+
+<ul>&nbsp;
+<table BORDER WIDTH="80%" NOSAVE >
+<tr>
+<td><a href="ftp://__GESERVER__/sge_osf_bin_troet.tar.gz">Compaq - osf4</a>
+<br><a href="ftp://__GESERVER__/sge_osf_bin_troet.tar.gz">Compaq - tru64</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_hp10_bin_troet.tar.gz">Hewlett Packard
+- HP-UX 10.20</a>
+<br><a href="ftp://__GESERVER__/sge_hp10_bin_troet.tar.gz">Hewlett Packard
+- HP-UX 11.x</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_aix42_bin_troet.tar.gz">IBM - AIX 4.2.x</a>
+<br><a href="ftp://__GESERVER__/sge_aix41_bin_troet.tar.gz">IBM - AIX 4.3.x</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_irix5_bin_troet.tar.gz">Linux i386</a>
+<br><a href="ftp://__GESERVER__/sge_aix41_bin_troet.tar.gz">Linux alpha</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_irix5_bin_troet.tar.gz">Silicon Graphics
+- IRIX 5.x</a>
+<br><a href="ftp://__GESERVER__/sge_irix6_bin.tar.gz">Silicon Graphics
+- IRIX 6.0 - 6.4</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_solaris32_bin.tar.gz">SUN - Solaris32
+(Solaris > 2.6, 32bit binaries, tar.gz)</a>
+<br><a href="ftp://__GESERVER__/sge_solaris64_bin.tar.gz">SUN - Solaris64
+(Solaris > 2.7, 64bit binaries, tar.gz)</a>
+<br><a href="ftp://__GESERVER__/sge_solaris32_bin.pkg">SUN - Solaris32
+(Solaris > 2.6, 32bit binaries, pkg)</a>
+<br><a href="ftp://__GESERVER__/sge_solaris64_bin.pkg">SUN - Solaris64
+(Solaris > 2.7, 64bit binaries, pkg)</a></td>
+</tr>
+</table>
+
+<li>
+<b>Step 3:</b> Installation</li>
+
+<br><i>Unpacking the files</i>
+<p>All files must be unpacked to a directory which is accessible from all
+machines which use Grid Engine. For execution hosts this directory should
+be read/write exported for the root user.
+<ul>&nbsp;
+<br>create SGE_ROOT directory (and export it for NFS access if necessary)
+<pre>% mkdir &lt;your_gridengine_root_direcotry>
+% cd &lt;your_gridengine_root_direcotry></pre>
+unpack the "common" files
+<pre STYLE="margin-bottom: 0.2in">% gzip -dc sge_&lt;version>_common.tar.gz | tar xvf -</pre>
+unpack the binaries for all architectures
+<pre STYLE="margin-bottom: 0.2in">% gzip -dc sge_&lt;version>_&lt;arch>.tar.gz | tar xvf -</pre>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; It's recommended
+to add the service
+<pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sge_commd xxx/tcp</pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to your services
+database (/etc/services or at your NIS server). You should use an unused
+number below 1024.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; If you don't
+want to add this service, you will be prompted for a port number during
+installation.
+<p><i>Install Grid Engine</i>
+<p>Run the script "inst_sge" in the $SGE_ROOT directory to install Grid
+Engine.
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; First
+run
+<pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp; % ./inst_sge -m</pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; on the
+machine where the Grid Engine master daemon (sge_qmaster) will run.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The script asks you to add one queue for each host, where you plan to install
+an execution host.
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; On
+all hosts (including the qmaster machine) on which you want to execute
+jobs, run the the script
+<pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp; %./inst_sge -x</pre>
+
+<br>The "Quick Start Guide" in the Grid Engine manual (which is included as a postscript
+file in the doc/
+directory of your distribution) contains more information about installing Grid Engine.
+</ul>
+
+<h2 STYLE="margin-bottom: 0.2in">
+<a NAME="GESnapshot"></a><font color="#990000">Grid Engine Snapshot Binaries</font></h2>
+
+<div STYLE="margin-bottom: 0.2in"><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</font><font color="#000000">Here you can download snapshot binaries.
+They are for experimental use only and may not work at all.</font></div>
+
+<ul>&nbsp;
+<table BORDER WIDTH="80%" NOSAVE >
+<tr>
+<td><a href="ftp://__GESERVER__/sge_osf_bin_troet.tar.gz">Compaq - osf4</a>
+<br><a href="ftp://__GESERVER__/sge_osf_bin_troet.tar.gz">Compaq - tru64</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_hp10_bin_troet.tar.gz">Hewlett Packard
+- HP-UX 10.20</a>
+<br><a href="ftp://__GESERVER__/sge_hp10_bin_troet.tar.gz">Hewlett Packard
+- HP-UX 11.x</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_aix41_bin_troet.tar.gz">IBM - AIX 4.2.x</a>
+<br><a href="ftp://__GESERVER__/sge_aix42_bin_troet.tar.gz">IBM - AIX 4.3.x</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_irix5_bin_troet.tar.gz">Linux i386</a>
+<br><a href="ftp://__GESERVER__/sge_irix5_bin_troet.tar.gz">Linux alpha</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_irix5_bin_troet.tar.gz">Silicon Graphics
+- IRIX 5.x</a>
+<br><a href="ftp://__GESERVER__/sge_irix6_bin.tar.gz">Silicon Graphics
+- IRIX 6.0 - 6.4</a></td>
+</tr>
+
+<tr>
+<td><a href="ftp://__GESERVER__/sge_solaris32_bin.tar.gz">SUN - Solaris32
+(Solaris > 2.6, 32bit binaries, tar.gz)</a>
+<br><a href="ftp://__GESERVER__/sge_solaris64_bin.tar.gz">SUN - Solaris64
+(Solaris > 2.7, 64bit binaries, tar.gz)</a>
+<br><a href="ftp://__GESERVER__/sge_solaris32_bin.pkg">SUN - Solaris32
+(Solaris > 2.6, 32bit binaries, pkg)</a>
+<br><a href="ftp://__GESERVER__/sge_solaris64_bin.pkg">SUN - Solaris64
+(Solaris > 2.7, 64bit binaries, pkg)</a></td>
+</tr>
+</table>
+</ul>
+
+<!-- end content -->
+
+</td>
+</tr>
+</table>

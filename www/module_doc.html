@@ -1,0 +1,260 @@
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699">MODULE DOC</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<P>This document describes the Grid Engine source code modules, and
+is written for use by software developers. Our goal is to provide you
+with useful information if you are considering participating in the
+Grid Engine project or will be using Grid Engine source code. In
+addition to this source documentation, the user product documentation
+is necessary for a full understanding of the functional operation of
+the software. Consequently the man pages are refered to herein where
+appropriate.</P>
+<P>If you have problems with finding functions or browsing through
+the souce code we suggest the use of grep or preferably <A HREF="http://ctags.sourceforge.net/">ctags</A>.</P>
+<H1>1. Job life cycle</H1>
+<P>The job life cycle is a good way to understand to overall system. 
+</P>
+<OL>
+	<LI>Execd's report load information to qmaster</LI>
+	<LI>User submits job using qsub command</LI>
+	<LI>Qmaster notifies Schedd about new job</LI>
+	<LI>Schedd dispatches job to an Execd</LI>
+	<LI>Qmaster delivers job to Execd; Execd starts job using Shepherd</LI>
+	<LI>At job end Execd notfies Qmaster about job finish</LI>
+	<LI>Qmaster feeds jobs resource consumption in accounting database</LI>
+</OL>
+<P><IMG SRC="/branding/images/structure.gif" NAME="Graphic1" ALIGN=MIDDLE WIDTH=657 HEIGHT=415 BORDER=0></P>
+<H1>2. Components</H1>
+<H2>2.1 Daemon components</H2>
+<P>In the &quot;source/daemons&quot; subdirectory there is one
+directory for each daemon.</P>
+<UL>
+	<LI><H4><A
+HREF="http://gridengine.sunsource.inst.collab.net/unbranded-source/browse/~checkout~/gridengine/source/daemons/qmaster/qmaster.html?content-type=text/html" NAME="Qmaster">Qmaster</A></H4>
+	<P>The Qmaster (Queue Master) controls the overall behaviour in a
+	cluster. For the purpose of scheduling jobs Qmaster cooperates with
+	Schedd. The Qmaster is the responsible for answering GDI requests
+	from clients and for delivering dispatched jobs to the assigned
+	Execd's. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/schedd/schedd.html" NAME="Schedd">Schedd</A></H4>
+	<P>The Schedd (Scheduling Daemon) gets notified via events about all
+	scheduling relevant information. The resulting scheduling decisions
+	are sent as orders to Qmaster. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/execd/execd.html" NAME="Execd">Execd</A></H4>
+	<P>The Execd (Execution Daemon) provides Qmaster with information
+	about utilization and availability of resources. Each job sent to
+	Execd by Qmaster is started by writing all relevant information into
+	a couple files describing the job and forking a Sheperd. After
+	Shepherds termination Execd reports details about the job run back
+	to Qmaster. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/shepherd/shepherd.html" NAME="Shepherd">Shepherd</A></H4>
+	<P>The Shepherd starts all kinds of jobs according to what he finds
+	in the per-job configuration files written by Execd. If necessary
+	administrator supplied procedures are started before the job is
+	started (prolog, PE start-up), during job run (checkpoint/migrate,
+	terminate/suspend/resume) and after job termination (PE shut-down,
+	epilog). 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/commd/commd.html" NAME="Commd">Commd</A></H4>
+	<P>Nearly all network communication in a cluster is handled via the
+	Commd (Communication Daemon). Daemons and clients use the commlib
+	(communication library) calls to send and receive messages
+	(sync/async), but also a hostname resolving service is provided by
+	Commd. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/shadowd/shadowd.html" NAME="Shadowd">Shadowd</A></H4>
+	<P>The Shadowd (Shadow Daemon) detects failures of the Qmaster and
+	starts a new Qmaster if necessary. 
+	</P>
+</UL>
+<H2>2.2 Client components</H2>
+<P>In the &quot;source/clients&quot;
+subdirectory there is one directory for each client.</P>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qsub" NAME="Qsub">Qsub</A></H4>
+	<P>Qsub combines all information provided with the command line and
+	in per-cluster or per-user default settings files in a job object
+	and sends the job via GDI to Qmaster. As response Qsub receives a
+	job ID and prints it. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qrsh" NAME="Qrsh">Qrsh</A></H4>
+	<P>Qrsh combines all job relevant information in a job object like
+	Qsub does and sends it as an interactive job via GDI to Qmaster. For
+	stdin/stdout/stderr redirection rsh command is forked by qrsh. The
+	rsh command cooperates with the rshd forked by shepherd for jobs of
+	that type. Instead of rsh/rshd also other commands can be used. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/qmon/qmon.html" NAME="Qmon">Qmon</A></H4>
+	<P>Qmon is a Motif GUI allowing to administer and monitor the system
+	but also to submit and monitor jobs. Qmon uses GDI to retrieve from
+	Qmaster the whole configuration and to change it. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qdel" NAME="Qdel">Qdel</A></H4>
+	<P>Qdel uses GDI to initiate job termination. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qacct" NAME="Qacct">Qacct</A></H4>
+	<P>Qacct produces accounting reports by scanning the accounting data
+	file. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qlogin" NAME="Qlogin">Qlogin</A></H4>
+	<P>Qlogin invokes an interactive login session in the current
+	terminal using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qresub" NAME="Qresub">Qresub</A></H4>
+	<P>Qresub creates a copy from an existing job using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qselect" NAME="Qselect">Qselect</A></H4>
+	<P>Qselect prints a list of queues matching the specified criteria
+	from the command line. The necessary information about the clusters
+	configuration is fetched from Qmaster using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qalter" NAME="Qalter">Qalter</A></H4>
+	<P>Qalter modifies an already submitted job using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qhold" NAME="Qhold">Qhold</A></H4>
+	<P>Qhold puts a hold on a job using Qalter. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qrls" NAME="Qrls">Qrls</A></H4>
+	<P>Qhold releases a hold from a job using Qalter. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qsh" NAME="Qsh">Qsh</A></H4>
+	<P>Qsh submits an interactive X-windows session job using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qconf" NAME="Qconf">Qconf</A></H4>
+	<P>Qconf allows to add, delete, modify and view the configuration of
+	all kind of configuration objects. Qconf uses GDI to do this. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qhost" NAME="Qhost">Qhost</A></H4>
+	<P>Qhost shows the current status of all hosts in the cluster based
+	on information retrieved using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qstat" NAME="Qstat">Qstat</A></H4>
+	<P>Qstat shows the current status of all queues in the cluster based
+	on information retrieved using GDI. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/clients/clients.html#qmod" NAME="Qmod">Qmod</A></H4>
+	<P>Qmod allows to modify the state of queues and jobs by using GDI. 
+	</P>
+</UL>
+<H2>2.3 Libraries</H2>
+<P>In the &quot;source/libs&quot;
+subdirectory there is one directory for each library.</P>
+<UL>
+	<LI><H4><A HREF="http://source/libs/rmon/rmon.html" NAME="librmon">librmon</A></H4>
+	<P>This low level library provides functionality to run daemons in a
+	monitoring mode. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/libs/rmon/uti.html" NAME="libuti">libuti</A></H4>
+	<P>A low level library with several utility functions. This library
+	bases on functionality of librmon. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/libs/cull/cull.html" NAME="libcull">libcull</A></H4>
+	<P>The generic list library which is used in nearly all components
+	of the system. The cull library bases on functionality of libuti and
+	librmon. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/commd/commd.html" NAME="libcomm">libcomm</A></H4>
+	<P>The communication libraryis the interface providing communication
+	via Commd. This library bases on librmon. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/gdi/gdi.html" NAME="libgdi">libgdi</A></H4>
+	<P>The Gridengine Database Interface library provides methods to
+	retrieve, add, delete and modify all internal objects hosted by the
+	Qmaster. The GDI library bases on libcomm and libcull. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/daemons/sched/sched.html" NAME="libsched">libsched</A></H4>
+	<P>This library contains many important high-level functions mainly
+	used by Schedd. Some of them however have turned out to be very
+	helpful also in other clients like Qstat, Qhost or qmon and also in
+	Qmaster. 
+	</P>
+</UL>
+<H2>2.4 Third-party components</H2>
+<P>The &quot;source/3rdparty&quot; directory contains modules with
+different licenses than SISSL. 
+</P>
+<UL>
+	<LI><H4><A HREF="http://source/3rdparty/qmake/qmake.html" NAME="Qmake">Qmake</A></H4>
+	<P>This client is a GNU make enhanced with transparent remote
+	execution. The implementation of transparent remote execution bases
+	on a forked 'qrsh -inherit' command. 
+	</P>
+</UL>
+<UL>
+	<LI><H4><A HREF="http://source/3rdparty/qtcsh/qtcsh.html" NAME="Qtcsh">Qtcsh</A></H4>
+	<P>This client program is an extension to the popular csh(1)
+	derivative tcsh. The implementation of transparent remote execution
+	bases on libgdi. 
+	</P>
+	</UL>
+<UL>
+	<LI><H4><A HREF="http://source/3rdparty/remote/remote.html" NAME="Qtcsh">Remote
+	tools</A></H4>
+	<P>This directory is the home of
+	rsh, rshd, rlogin.
+	</P>
+</UL>
+</td>
+</tr>
+</table>
+

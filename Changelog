@@ -1,8 +1,14 @@
+AA-2003-11-13-0  Bugfix:    qmon dumps core if it gets an empty hold list
+                 Review:    EB
+                 Issue:     
+                 Bugtraq:   4949917
+                 Changed:   qmon
+
 EB-2003-11-13-0  Bugfix:    qmon cores if it should show qtch jobs which
                             where submitted with -h parameter (qtask-file)
                  Review:    AA
                  Issue:
-                 Bugtraq:   
+                 Bugtraq:   4949917
                  Changed:   qsh, qrsh, qtcsh
 
 SD-2003-11-12-0: Bugfix:    Fixed problem reading in qmaster_param 

@@ -780,7 +780,7 @@ void updateJobList(void)
             if (range_list[i] != NULL) {
                lList *task_ids = range_list[i]; 
 
-               if (task_ids != NULL) {
+               if (task_ids != NULL && lGetNumberOfElem(task_ids) > 0) {
                   tow = 0;
                   if (qmonJobFilterArraysCompressed()) {
                      qmonJobToMatrix(job_pending_jobs, jep, NULL, task_ids,

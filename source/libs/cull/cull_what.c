@@ -738,7 +738,7 @@ lEnumeration *lWhatFromElem(const lListElem *what){
       }
    }
    else {
-      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_II, lGetUlong(what, PACK_id), SGE_WHAT));
+      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, lGetUlong(what, PACK_id), SGE_WHAT));
    }
    DEXIT;
    return cond;

@@ -1,3 +1,13 @@
+EB-2003-11-21-0: Bugfix:    Fixed broken build
+                            SuSE 9.0 x86:
+                              Linux 2.4.21 i686
+                              GNU C Library 2.3.2
+                              gcc version 3.3.1
+                            SuSE 7.2 Sparc:
+                              Linux 2.2.20 sparc
+                              GNU C Library 2.2.4
+                              gcc version 2.95.3
+
 JG-2003-11-21-0: Testsuite: Handling of SGE version dependencies.
 
 SG-2003-11-20-0: Enhancem.: - Added the posability to specify what and where

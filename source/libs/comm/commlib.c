@@ -812,7 +812,7 @@ u_short *compressed
       }
 
    if (fromid)
-      if ((*fromid < MINID || *fromid > MAXID) && *fromid != 0) {
+      if ((*fromid < MINID  || *fromid > MAXID) && *fromid != 0) {
          DEXIT;
          return CL_RANGE;
       }

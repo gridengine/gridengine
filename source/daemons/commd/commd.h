@@ -38,7 +38,7 @@ extern "C" {
 #define MAXHOSTLEN 256
 #define MAXCOMPONENTLEN 256
 
-#define MAXID 0xffff  /* max commproc ID */
+#define MAXID 0xfffe  /* max commproc ID */
 #define MINID 1       /* min commproc ID */
 #define STRLEN_ID 4
 

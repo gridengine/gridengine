@@ -492,7 +492,7 @@ lCondition *lWhereFromElem(const lListElem *where){
       }
    }
    else {
-      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_II, lGetUlong(where, PACK_id), SGE_WHERE));
+      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, u32c(lGetUlong(where, PACK_id)), SGE_WHERE));
    }
    DEXIT;
    return cond;

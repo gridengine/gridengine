@@ -1491,6 +1491,8 @@ case SLINUX:
 
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-lpthread"
    breaksw
 
 case SOLARIS:

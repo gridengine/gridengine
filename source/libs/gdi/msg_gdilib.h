@@ -140,7 +140,7 @@
  */
 #define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(43150, _("error unpacking: "SFN"\n"))
 #define MSG_PACK_INVALIDPACKDATA       _MESSAGE(43151, _("the pack string contained invalid characters\n"))
-#define MSG_PACK_WRONGPACKTYPE_II      _MESSAGE(43152, _("wrong pack type (got: %d / expected %d\n"))
+#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(43152, _("wrong pack type (got: "U32CFormat" / expected %d\n"))
  
 /*
  * common/usage.c

@@ -9379,7 +9379,7 @@ proc enhanced_setup {} {
       puts "   local host:   $CHECK_HOST";
       puts "starting enhanced setup ... ok"
    }
-
+   update_macro_messages_list
 #
 # uncomment the following line, if the unused macros should be removed from source code
 # ======================================================================================  

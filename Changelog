@@ -1,3 +1,17 @@
+JG-2002-04-02-1  Merge:     merged JG-2002-04-02-0, JG-2002-03-28-2, 
+                            JG-2002-03-28-1, JG-2002-03-28-0 
+                            from V53_beta2_BRANCH
+                 Testsuite: Fixed problems when creating HTML charts
+                            in large_cluster test.
+                 Testsuite: - sge_procedures: new functions shutdown_qmaster, 
+                              shutdown_scheduler and startup_scheduler.
+                            - large_cluster test: shutdown scheduler before 
+                              initializing new test to get time for first 
+                              scheduling.
+                 Testsuite: Create HTML output after each run level.
+                 Testsuite: large_cluster test: submit jobs in parallel from
+                            multiple hosts.
+
 CR-2002-04-02-0  Testsuite: testsuite should not fail if writing a script
                             file fails
                  Issue:     #186

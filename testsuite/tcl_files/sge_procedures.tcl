@@ -5570,7 +5570,7 @@ proc startup_qmaster {} {
       set startup_user $CHECK_USER
    } 
 
-   puts $CHECK_OUTPUT "starting up qmaster on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   puts $CHECK_OUTPUT "starting up qmaster and scheduler on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
    set arch [resolve_arch $CHECK_CORE_MASTER]
 
    if { $master_debug != 0 } {
@@ -5593,6 +5593,35 @@ proc startup_qmaster {} {
 #      add_proc_error "startup_qmaster" -1 "qmaster on host $CHECK_CORE_MASTER is allready running"
 #      return -1
 #   }
+   return 0
+}
+
+proc startup_scheduler {} {
+   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+   global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
+   global schedd_debug CHECK_DISPLAY_OUTPUT
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+      if { [have_root_passwd] != 0  } {
+         add_proc_error "startup_scheduler" "-2" "no root password set or ssh not available"
+         return -1
+      }
+      set startup_user "root"
+   } else {
+      set startup_user $CHECK_USER
+   } 
+
+   puts $CHECK_OUTPUT "starting up scheduler on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
+   set arch [resolve_arch $CHECK_CORE_MASTER]
+
+   if { $schedd_debug != 0 } {
+      puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+   } else {
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
+   }
+   
    return 0
 }
 
@@ -5836,27 +5865,24 @@ proc are_master_and_scheduler_running { hostname qmaster_spool_dir } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
+proc shutdown_master_and_scheduler {hostname qmaster_spool_dir} {
+   shutdown_scheduler $hostname $qmaster_spool_dir
+   shutdown_qmaster $hostname $qmaster_spool_dir
+}
 
+proc shutdown_scheduler {hostname qmaster_spool_dir} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
    global CHECK_PRODUCT_TYPE CHECK_ARCH
 
-   puts $CHECK_OUTPUT "shutdown_master_and_scheduler ..."
+   puts $CHECK_OUTPUT "shutdown_scheduler ..."
 
    puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "killing qmaster and scheduler on host $hostname ..."
+   puts $CHECK_OUTPUT "killing scheduler on host $hostname ..."
    puts $CHECK_OUTPUT "retrieving data from spool dir $qmaster_spool_dir"
 
 
 
-   set qmaster_pid -1
    set scheduler_pid -1
-
-   set qmaster_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/qmaster.pid" ]
-   set qmaster_pid [ string trim $qmaster_pid ]
-   if { $prg_exit_state != 0 } {
-      set qmaster_pid -1
-   }
 
    set scheduler_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/schedd/schedd.pid" ]
    set scheduler_pid [ string trim $scheduler_pid ]
@@ -5875,12 +5901,35 @@ proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
          shutdown_system_daemon $hostname sched
 
       } else {
-         add_proc_error "shutdown_master_and_scheduler" "-1" "scheduler pid $scheduler_pid not found"
+         add_proc_error "shutdown_scheduler" "-1" "scheduler pid $scheduler_pid not found"
          set scheduler_pid -1
       }
    } else {
-      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed (1), pid=$scheduler_pid"
+      add_proc_error "shutdown_scheduler" "-1" "ps_info failed (1), pid=$scheduler_pid"
       set scheduler_pid -1
+   }
+
+   puts $CHECK_OUTPUT "done."
+}  
+
+proc shutdown_qmaster {hostname qmaster_spool_dir} {
+   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
+   global CHECK_PRODUCT_TYPE CHECK_ARCH
+
+   puts $CHECK_OUTPUT "shutdown_qmaster ..."
+
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "killing qmaster on host $hostname ..."
+   puts $CHECK_OUTPUT "retrieving data from spool dir $qmaster_spool_dir"
+
+
+
+   set qmaster_pid -1
+
+   set qmaster_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/qmaster.pid" ]
+   set qmaster_pid [ string trim $qmaster_pid ]
+   if { $prg_exit_state != 0 } {
+      set qmaster_pid -1
    }
 
    get_ps_info $qmaster_pid $hostname
@@ -5894,11 +5943,11 @@ proc shutdown_master_and_scheduler { hostname qmaster_spool_dir} {
          shutdown_system_daemon $hostname qmaster
 
       } else {
-         add_proc_error "shutdown_master_and_scheduler" "-1" "qmaster pid $qmaster_pid not found"
+         add_proc_error "shutdown_qmaster" "-1" "qmaster pid $qmaster_pid not found"
          set qmaster_pid -1
       }
    } else {
-      add_proc_error "shutdown_master_and_scheduler" "-1" "ps_info failed (2), pid=$qmaster_pid"
+      add_proc_error "shutdown_qmaster" "-1" "ps_info failed (2), pid=$qmaster_pid"
       set qmaster_pid -1
    }
    puts $CHECK_OUTPUT "done."

@@ -86,7 +86,6 @@ for {set i 300} {$i <= $check_highest_level} {incr i} {
 
 # define test's dependencies
 set check_needs           "init_core_system" 
-set check_needs           "" 
 
 # define test's procedure order
 set check_functions ""
@@ -169,9 +168,38 @@ proc large_cluster_parse_cpu {s_cpu} {
    return $cpu
 }
 
+proc large_cluster_submit_a_job {host job_list_var id_list_var sids_var hosts_var} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT
+
+   upvar $job_list_var job_list
+   upvar $id_list_var  id_list
+   upvar $sids_var     sids
+   upvar $hosts_var    hosts
+
+   if {[llength $job_list] > 0} {
+      set job [lindex $job_list 0]
+      set job_list [lrange $job_list 1 end]
+      set args [lindex $job 0]
+      set user [lindex $job 1]
+      
+      set sid [open_remote_spawn_process $host $user "$CHECK_PRODUCT_ROOT/bin/[resolve_arch $host]/qsub" $args]
+
+      set id [lindex $sid 1]
+      lappend id_list $id
+      set sids($id) $sid
+      set hosts($id) $host
+
+      puts $CHECK_OUTPUT "user $user submitted job \"$args\" on host $host"
+
+      return 1
+   } else {
+      return 0
+   }
+}
+
 proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
    global CHECK_OUTPUT LARGE_CLUSTER_JOB_DURATION CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_HOST
-   global CHECK_PRODUCT_TYPE
+   global CHECK_PRODUCT_TYPE CHECK_CORE_EXECD
    
    # parse array job info
    set l_size [split $size "*"]
@@ -201,7 +229,11 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
 
    # submit jobs
    puts $CHECK_OUTPUT "submitting $size jobs with a duration of $LARGE_CLUSTER_JOB_DURATION s each"
+
+   # build a list with jobs to submit
    set jobs_submitted 0
+   set job_list {}
+   set finished 0
    while {$jobs_submitted < $num_jobs} {
       foreach project $projects {
          if {[string compare $CHECK_PRODUCT_TYPE sgeee] == 0} {
@@ -211,14 +243,77 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
          }
          foreach user $users {
             set runtime [expr $LARGE_CLUSTER_JOB_DURATION -5 + $jobs_submitted % 11]
-            submit_job "$prj_args $args $runtime" 1 300 $CHECK_HOST $user
+            # store job in list
+            lappend job_list [list "$prj_args $args $runtime" "$user"]
+            #submit_job "$prj_args $args $runtime" 1 300 $CHECK_HOST $user
             incr jobs_submitted
             if {$jobs_submitted >= $num_jobs} {
-               return
+               set finished 1
+               break
             }
          }
+         if {$finished == 1} {
+            break
+         }
       }
-   }   
+   }
+
+   set submit_host_list [lrange $CHECK_CORE_EXECD 0 9]
+
+   # submit first bunch of jobs
+   # keep a list of expect spawn id's for expect calls
+   # keep arrays: 
+   #    - sids(id): the spawn ids for close_spawn_process
+   #    - hosts(id): the host for an id - can be reused when qsub finishes
+   set id_list {}
+   foreach host $submit_host_list {
+      if {[large_cluster_submit_a_job $host job_list id_list sids hosts] == 0} {
+         break
+      }
+   }
+
+   # process all jobs
+   set finished 0
+   while {$finished == 0} {
+      set timeout 60
+      expect {
+         full_buffer {
+            add_proc_error large_cluster_submit_jobs -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         }
+         timeout {
+            add_proc_error large_cluster_submit_jobs -2 "timeout waiting for submit to finish"
+            set finished 1
+         }
+         -i $id_list -- "has been submitted" {
+            # close old connection
+            set id $expect_out(spawn_id)
+            close_spawn_process $sids($id)
+            unset sids($id)
+            set index [lsearch -exact $id_list $id]
+            set id_list [lreplace $id_list $index $index]
+
+            # submit next
+            # if no jobs left to submit and id_list empty, we are finished
+            set host $hosts($id)
+            unset hosts($id)
+            if {[large_cluster_submit_a_job $host job_list id_list sids hosts] == 0} {
+               if {[llength $id_list] == 0} {
+                  set finished 1
+               }
+            }
+         }
+         -i $id_list -- default {
+            add_proc_error large_cluster_submit_jobs -2 "submit failed"
+            # close old connection
+            set id $expect_out(spawn_id)
+            close_spawn_process $sids($id)
+            unset sids($id)
+            unset hosts($id)
+            set index [lsearch -exact $id_list $id]
+            set id_list [lreplace $id_list $index $index]
+         }
+      }
+   }
 }
 
 proc large_cluster_init_monitoring {} {
@@ -346,9 +441,6 @@ proc large_cluster_job_runtime {} {
          # parse line, sum up runtime
          set temp [split $line ":"]
          incr runtime [expr [lindex $temp 10] - [lindex $temp 9]]
-
-         puts $CHECK_OUTPUT $line
-         puts $CHECK_OUTPUT "runtime = $runtime"
       }
    }
 
@@ -570,12 +662,16 @@ proc large_cluster_size {size} {
 }
 
 proc large_cluster_process_jobs {type} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACT_LEVEL
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACT_LEVEL CHECK_HOST
    global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
    global LARGE_CLUSTER_HOSTS_PER_HOST LARGE_CLUSTER_QUEUES_PER_HOST LARGE_CLUSTER_SLOTS_PER_QUEUE
    global LARGE_CLUSTER_JOB_SIZES LARGE_CLUSTER_JOB_DURATION
 
    foreach size $LARGE_CLUSTER_JOB_SIZES {
+      # shutdown scheduler
+      puts $CHECK_OUTPUT "shutting down scheduler"
+      shutdown_scheduler $CHECK_HOST [get_qmaster_spool_dir]
+
       # disable all queues
       large_cluster_disable_queues
 
@@ -586,22 +682,19 @@ proc large_cluster_process_jobs {type} {
          large_cluster_submit_jobs $size
       }
 
-      # trigger a scheduling run to make sure we see the first one after enabling all queues
-      puts $CHECK_OUTPUT "trigger a scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
-
       # initialize scheduler monitoring
       set tail_id [large_cluster_init_monitoring]
 
       # enable all queues
       large_cluster_enable_queues
 
+      # restart scheduler
+      startup_scheduler
+      sleep 5
+      large_cluster_update_schedd_pid
+
       # initialize statistic
       large_cluster_statistics start_time start_cpu mem dummy $size
-
-      # trigger scheduling run
-      puts $CHECK_OUTPUT "triggering scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
 
       # gather statistics until all jobs have completed
       puts $CHECK_OUTPUT "waiting for all jobs to finish"
@@ -692,7 +785,7 @@ proc large_cluster_setup_sharetree {size} {
 }
 
 proc large_cluster_sharetree {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_HOST
    global CHECK_PRODUCT_TYPE
    global LARGE_CLUSTER_POLICIES_PROJECTS LARGE_CLUSTER_POLICIES_JOBS LARGE_CLUSTER_JOB_DURATION  
    global project_list
@@ -716,6 +809,10 @@ proc large_cluster_sharetree {} {
    }
 
    foreach size $LARGE_CLUSTER_POLICIES_PROJECTS {
+      # shutdown scheduler
+      puts $CHECK_OUTPUT "shutting down scheduler"
+      shutdown_scheduler $CHECK_HOST [get_qmaster_spool_dir]
+
       # setup sharetree
       large_cluster_setup_sharetree $size
    
@@ -725,22 +822,19 @@ proc large_cluster_sharetree {} {
       # submit jobs
       large_cluster_submit_jobs $LARGE_CLUSTER_POLICIES_JOBS "$CHECK_USER $CHECK_FIRST_FOREIGN_SYSTEM_USER" $project_list
 
-      # trigger a scheduling run to make sure we see the first one after enabling all queues
-      puts $CHECK_OUTPUT "trigger a scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
-
       # initialize scheduler monitoring
       set tail_id [large_cluster_init_monitoring]
 
       # enable all queues
       large_cluster_enable_queues
 
+      # restart scheduler
+      startup_scheduler
+      sleep 5
+      large_cluster_update_schedd_pid
+
       # initialize statistic
       large_cluster_statistics start_time start_cpu mem dummy $size
-
-      # trigger scheduling run
-      puts $CHECK_OUTPUT "triggering scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
 
       # gather statistics until all jobs have completed
       puts $CHECK_OUTPUT "waiting for all jobs to finish"
@@ -761,6 +855,14 @@ proc large_cluster_sharetree {} {
    large_cluster_write_statistics stree $LARGE_CLUSTER_POLICIES_PROJECTS start_time end_time start_cpu end_cpu mem first_sched total_sched job_runtime
 
    set_error 0 "ok"
+}
+
+proc large_cluster_update_schedd_pid {} {
+   global pids qmaster_spool_dir
+
+   set f [open "$qmaster_spool_dir/schedd/schedd.pid" r]
+   gets $f pids(schedd)
+   close $f
 }
 
 proc large_cluster_setup {} {
@@ -852,17 +954,15 @@ proc large_cluster_setup {} {
    set new_config(loglevel) "log_warning"
    set_config new_config
   
-   # set a high scheduling interval to be able to monitor the first scheduling run
-   # by explicitly triggering it with qconf -tsm
-   if {[info exists new_schedd_config]} {
-      unset new_schedd_config
-   }
 
-   set new_schedd_config(schedule_interval) "0:1:0"
+   # in case of sgeee, set sharetree tickets
    if {[string compare $CHECK_PRODUCT_TYPE sgeee] == 0} {
+      if {[info exists new_schedd_config]} {
+         unset new_schedd_config
+      }
       set new_schedd_config(weight_tickets_share) 10000
+      set_schedd_config new_schedd_config
    }
-   set_schedd_config new_schedd_config
   
    # create queues
    puts $CHECK_OUTPUT "creating queues"
@@ -994,9 +1094,7 @@ proc large_cluster_cleanup {} {
    global check_description check_functions check_errno check_init_level_procedure check_use_installed_system
 
    # dump html code
-   if {$CHECK_ACT_LEVEL == $check_highest_level} {
-      large_cluster_create_html
-   }
+   large_cluster_create_html
 
    # reinit system
 
@@ -1008,12 +1106,11 @@ proc large_cluster_cleanup {} {
    set_config new_config
   
    # restore cluster configuration
-   puts $CHECK_OUTPUT "reset scheduler configuration"
-   set new_schedd_config(schedule_interval) "0:0:15"
    if {[string compare $CHECK_PRODUCT_TYPE sgeee] == 0} {
+      puts $CHECK_OUTPUT "reset scheduler configuration"
       set new_schedd_config(weight_tickets_share) 0
+      set_schedd_config new_schedd_config
    }
-   set_schedd_config new_schedd_config
 
    # backup check variables
    foreach var "check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system CHECK_ACTUAL_TEST_PATH check_highest_level" {
@@ -1056,10 +1153,6 @@ proc large_cluster_cleanup {} {
       }
    }
    puts ""
-
-   if {$CHECK_ACT_LEVEL == $check_highest_level} {
-      large_cluster_create_html
-   }
 
    set_error 0 "ok"
 }
@@ -1190,11 +1283,14 @@ proc large_cluster_create_chart {report_dir html title check data gnuplot} {
    }
    puts $f ""
    close $f
+
+   # wait for NFS
+   sleep 5
   
    # call gnuplot
    set returncode [catch {exec $gnuplot $commandfile} output]
    if {$returncode != 0} {
-      add_proc_error large_cluster_create_chart -1 "calling gnuplot failed: $output"
+      add_proc_error large_cluster_create_chart -3 "calling gnuplot failed: $output"
    }
   
    # cleanup
@@ -1266,9 +1362,12 @@ proc large_cluster_create_html {} {
    large_cluster_create_chart $report_dir $output "Size of qmaster and scheduler dependent on the number of hosts" global memory $gnuplot
 
    # create charts for checks
-   set check_types {job throughput usersort}
+   set check_types {job throughput}
    if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
       lappend check_types stree
+   }
+   if {[string compare $CHECK_PRODUCT_TYPE "sge"] == 0 } {
+      lappend check_types usersort
    }
 
    foreach check_type $check_types {

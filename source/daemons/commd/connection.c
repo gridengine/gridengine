@@ -174,7 +174,8 @@ connection *create_connection(char* toHost)
 *     connection* - pointer to connection struct
 *
 *******************************************************************************/
-connection *get_first_connection(void) {
+connection *get_first_connection(void) 
+{
    return connection_list;
 }
 
@@ -194,7 +195,8 @@ connection *get_first_connection(void) {
 *     connection *to_delete - pointer to connection which should be deleted
 *
 *******************************************************************************/
-void delete_connection( connection *to_delete ) {
+void delete_connection( connection *to_delete ) 
+{
    connection *con = connection_list, *last = NULL;
 
    while (con && (con != to_delete)) {
@@ -243,7 +245,8 @@ void delete_connection( connection *to_delete ) {
 *     u_long32 - connection count
 *
 *******************************************************************************/
-u_long32 get_connection_count(void) {
+u_long32 get_connection_count(void) 
+{
    connection *con = connection_list;
    u_long32 count = 0;
  
@@ -273,7 +276,8 @@ u_long32 get_connection_count(void) {
 *     connection* - pointer to connection struct
 *
 *******************************************************************************/
-connection *search_connection_to_host(char* toHost) {
+connection *search_connection_to_host(char* toHost) 
+{
    connection *con = connection_list;
  
    while (con) {
@@ -302,7 +306,8 @@ connection *search_connection_to_host(char* toHost) {
 *     message *mp     - message of the connection member
 *
 *******************************************************************************/
-void create_con_member( connection *con, message *mp ) {
+void create_con_member( connection *con, message *mp ) 
+{
    con_member *cm;
    
    if (!con)
@@ -342,7 +347,8 @@ void create_con_member( connection *con, message *mp ) {
 *     con_member *to_delete - connection member to delete from member list
 *
 *******************************************************************************/
-int delete_con_member (connection *con, con_member *to_delete) {
+int delete_con_member (connection *con, con_member *to_delete) 
+{
    con_member *cm = NULL;
    con_member *last = NULL;
 
@@ -374,9 +380,6 @@ int delete_con_member (connection *con, con_member *to_delete) {
    return 1;
 }
 
-
-
-
 /****** connection/delete_con_member_via_mp() **********************************
 *  NAME
 *     delete_con_member_via_mp() -- Remove a connection member from a connection
@@ -390,10 +393,9 @@ int delete_con_member (connection *con, con_member *to_delete) {
 *  INPUTS
 *     connection *con - pointer to connection where the member should be added
 *     message    *mp  - message of the connection member
-*
-*
 *******************************************************************************/
-int delete_con_member_via_mp (connection *con, struct message    *mp) {
+int delete_con_member_via_mp (connection *con, struct message *mp) 
+{
    con_member *cm = NULL;
    con_member *last = NULL;
 
@@ -443,7 +445,8 @@ int delete_con_member_via_mp (connection *con, struct message    *mp) {
 *                   associated with
 *
 *******************************************************************************/
-con_member *search_con_member(connection *con, message    *mp) {
+con_member *search_con_member(connection *con, message *mp) 
+{
    con_member *cm = NULL;
 
    if (!con) {
@@ -479,7 +482,8 @@ con_member *search_con_member(connection *con, message    *mp) {
 *                connection)
 *
 *******************************************************************************/
-u_long32   get_con_member_count(connection *con) {
+u_long32   get_con_member_count(connection *con) 
+{
    con_member *cm = NULL;
    u_long32 count = 0;
 
@@ -514,7 +518,8 @@ u_long32   get_con_member_count(connection *con) {
 *           0: the member is not the first member in member list of connection
 *
 *******************************************************************************/
-int add_connection_request(message *mp) {
+int add_connection_request(message *mp) 
+{
    connection *con = NULL;
    if (mp) {
       con = create_connection( sge_host_get_mainname(mp->to.host) );
@@ -550,7 +555,8 @@ int add_connection_request(message *mp) {
 *     connection* - pointer to connection list entry
 *
 *******************************************************************************/
-connection *search_con_member_in_connections(message *mp) {
+connection *search_con_member_in_connections(message *mp) 
+{
    connection *con = connection_list;
    con_member *cm = NULL;
    while(con) {
@@ -579,9 +585,11 @@ connection *search_con_member_in_connections(message *mp) {
 *     message *mp - message for which a connection member is associated with
 *
 *******************************************************************************/
-void del_connection_request(message *mp) {
+void del_connection_request(message *mp) 
+{
    connection *con = NULL;
-   for ( con = connection_list ; con ; con = con->next) {
+
+   for (con = connection_list; con; con = con->next) {
       if ( delete_con_member_via_mp(con,mp) ) { 
          if (con->member_list == NULL) {
             delete_connection(con); 

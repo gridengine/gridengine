@@ -745,11 +745,16 @@ int sge_read_project_list_from_disk()
                                        0, &config_tag);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, PROJECT_DIR, 
-                        lGetString(direntry, STR)));
+                      lGetString(direntry, STR)));
                DEXIT;
                return -1;
             }
-
+            if (strcmp(lGetString(ep, UP_name), lGetString(direntry, STR))) {
+               ERROR((SGE_EVENT, MSG_QMASTER_PRJINCORRECT_S,
+                      lGetString(direntry, STR)));
+               DEXIT;
+               return -1;
+            }
             lAppendElem(Master_Project_List, ep);
          } else {
             sge_unlink(PROJECT_DIR, userprj_str);

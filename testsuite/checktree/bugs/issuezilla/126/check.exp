@@ -183,11 +183,12 @@ proc issue_126_check {} {
    sleep 15 
 
    set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
+   puts $CHECK_OUTPUT "suspend state is \"$state1\""
    if { [string compare $state1 "T" ] != 0 } {
       #
       # Bug #126 is present
       #   
-      add_proc_error "issue_126_check" "-1" "Bug #126 is present"
+      add_proc_error "issue_126_check" "-1" "Bug #126 is present - suspend state is \"$state1\""
    }
 
    #

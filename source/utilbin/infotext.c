@@ -911,7 +911,7 @@ char **argv
    }
 
    if (real_args < string_arguments) {
-      printf("to less arguments\n");
+      printf("infotext: too few arguments\n");
       exit(10);
    }
 

@@ -37,6 +37,9 @@
 #
 # set -x
 
+DIST_VERSION="6.0u4beta"
+SCRIPT_VERSION="4"
+
 #Reset PATH to a safe value
 #
 PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd:/usr/ucb
@@ -118,7 +121,7 @@ while [ $ARGC != 0 ]; do
      SGE_NOMSG=1
      export SGE_NOMSG
      CreateLog
-     exec 1>/tmp/$LOGSNAME 2>&1
+     Stdout2Log
      ;;
    -m)
      QMASTER="install"

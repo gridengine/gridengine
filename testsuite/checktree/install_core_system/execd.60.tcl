@@ -68,10 +68,15 @@ proc install_execd {} {
    global CHECK_COMMD_PORT CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
 
-   set CORE_INSTALLED "" 
+   set CORE_INSTALLED ""
+   set INST_VERSION 0 
+   set LOCAL_ALREADY_CHECKED 0 
+ 
    read_install_list
 
    set_error "0" "install_execd - no errors"
+
+   set catch_result [ catch { eval exec "cat $CHECK_PRODUCT_ROOT/inst_sge | grep \"SCRIPT_VERSION\" | cut -d\"=\" -f2" } INST_VERSION ]
 
    if {! $check_use_installed_system} {
       set feature_install_options ""
@@ -316,25 +321,59 @@ proc install_execd {} {
                continue;
             }
 
-            -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK { 
-               set spooldir [get_spool_dir $exec_host execd]
-               if { $spooldir == "" } {
-                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
-                  if {$do_log_output == 1} {
-                       puts "press RETURN"
-                       set anykey [wait_for_enter 1]
-                  }
-                  send -i $sp_id "$ANSWER_NO\n"
-                  continue;
-               } else {
+            -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK {
 
-                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
-                  if {$do_log_output == 1} {
-                       puts "press RETURN"
-                       set anykey [wait_for_enter 1]
+               if { $INST_VERSION >= "4" } {
+                  if { $LOCAL_ALREADY_CHECKED == 0 } {
+                     set LOCAL_ALREADY_CHECK 1
+                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
+                     if {$do_log_output == 1} {
+                          puts "press RETURN"
+                          set anykey [wait_for_enter 1]
+                     }
+                     send -i $sp_id "$ANSWER_YES\n"
+                     continue;
+                  } else {
+                     set spooldir [get_spool_dir $exec_host execd]
+                     if { $spooldir == "" } {
+                        puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
+                        if {$do_log_output == 1} {
+                             puts "press RETURN"
+                             set anykey [wait_for_enter 1]
+                        }
+                        send -i $sp_id "$ANSWER_NO\n"
+                        continue;
+                     } else {
+
+                        puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
+                        if {$do_log_output == 1} {
+                             puts "press RETURN"
+                             set anykey [wait_for_enter 1]
+                        }
+                        send -i $sp_id "$ANSWER_YES\n"
+                        continue;
+                     }
                   }
-                  send -i $sp_id "$ANSWER_YES\n"
-                  continue;
+               } else {
+                  set spooldir [get_spool_dir $exec_host execd]
+                  if { $spooldir == "" } {
+                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
+                     if {$do_log_output == 1} {
+                          puts "press RETURN"
+                          set anykey [wait_for_enter 1]
+                     }
+                     send -i $sp_id "$ANSWER_NO\n"
+                     continue;
+                  } else {
+
+                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
+                     if {$do_log_output == 1} {
+                          puts "press RETURN"
+                          set anykey [wait_for_enter 1]
+                     }
+                     send -i $sp_id "$ANSWER_YES\n"
+                     continue;
+                  }
                }
             }
 

@@ -1,3 +1,12 @@
+MD-2005-03-17-4: Enhancm:  Request for start-up script additions / 
+                           Use LSB installation procedure for rc scripts when available
+                           - minor bugfixes
+                           testsuitetest IZ: 1384
+                 Changed:  rc templates, inst_common.sh
+                 RFE IZ:   1424
+                 Bugtraq:  6221850   
+                 Review:   HP
+
 MD-2005-03-17-3: Bugfix:   install_execd does not pick up $SGE_CELL
                  Changed:  inst_execd.sh
                  Issue:    1493

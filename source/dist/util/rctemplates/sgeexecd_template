@@ -270,6 +270,7 @@ if [ "$startup" = true ]; then
       echo "   starting sge_execd"
       exec 1>/dev/null 2>&1
       $bin_dir/sge_execd
+      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
 else
    if [ $execd = true ]; then
       # Shutdown execution daemon
@@ -279,6 +280,7 @@ else
       # Send SIGTERM to execd
       echo "   Shutting down Grid Engine execution daemon"
       Shutdown sge_execd $execd_spool_dir/execd.pid
+      [ -f /var/lock/subsys/sgeexecd ] && rm /var/lock/subsys/sgeexecd
 
       if [ $softstop = false ]; then
          # Send SIGTERM to all shepherds

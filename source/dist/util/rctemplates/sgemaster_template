@@ -426,6 +426,7 @@ if [ "$startup" = true ]; then
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
       $bin_dir/sge_qmaster
+      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster
       CheckRunningQmaster
       echo "   starting sge_schedd"
       $bin_dir/sge_schedd
@@ -487,6 +488,7 @@ else
          # Send SIGTERM to qmaster
          echo "   Shutting down Grid Engine qmaster"
          Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
+         [ -f /var/lock/subsys/sgemaster ] && rm /var/lock/subsys/sgemaster
       fi
    fi
 

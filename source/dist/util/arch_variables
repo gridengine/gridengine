@@ -70,7 +70,11 @@ case $ARCH in
  lx*)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
-   if [ -x /sbin/insserv ]; then
+   if [ -x /usr/lib/lsb/install_initd ]; then
+      RC_FILE=lsb
+      RC_PREFIX=/etc/init.d
+      RC_DIR=unused
+   elif [ -x /sbin/insserv ]; then
       # SuSe 7.1 and higher uses insserv to add the startup script
       RC_FILE=insserv-linux
       RC_PREFIX=/etc/init.d

@@ -11,6 +11,7 @@ AA-2003-05-22-0  Bugfix:    missing comment and syntax errors in qmon resource
                             file Q
                             aimk.site, upgrade to openssl 0.9.7a
                  IZ:        560           
+                 Bugtraq:   4869784
                  Changed:   all binaries
 
 AS-2003-05-22-0  Bugfix:    resource limits not correctly set for Linux x86.

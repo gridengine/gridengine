@@ -1,3 +1,6 @@
+JG-2002-03-25-0  Testsuite: Bugfix: In a cluster with very similar hostnames
+                            testsuite wrongly reused open remote connections.
+
 AS-2002-03-22-0  Change:    reresolve_me_qualified_hostname() does not log
                             anymore. Calling functions now do appropriate
                             logging.

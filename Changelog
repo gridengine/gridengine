@@ -1,3 +1,8 @@
+CR-2002-02-26-0: Feature:   qmaster installation script will now check if
+                            sge_qmaster binary is compiled with aimk -secure
+                            when -csp option is used, otherwise installation
+                            of qmaster will fail.
+
 JG-2002-02-26-0: Bugfix:    qlogin did no longer work for solaris exec hosts.
                  Issue:     #151
 

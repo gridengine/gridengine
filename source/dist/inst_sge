@@ -776,7 +776,17 @@ AddConfiguration()
    fi
 
    if [ $csp = true ]; then
-      CSP_PREFIX=-csp
+      X509_COUNT=`strings $V5BIN/sge_qmaster | grep X509 | wc -l`
+      if [ 50 -gt $X509_COUNT ]; then
+         $ECHO ""
+         Translate 0 "sge_qmaster binary is not compiled with -secure option!"
+         $ECHO ""
+         Translate 4 "Hit <RETURN> to cancel the installation >>"
+         WaitClear noclear "$transout \c"
+         exit 1
+      else
+         CSP_PREFIX=-csp
+      fi  
    else
       CSP_PREFIX=""
    fi

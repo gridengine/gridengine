@@ -1243,6 +1243,8 @@ static void build_name_filter(const char **filter, lList *list, int t_name, int 
 
 
 /* wrapper for strcmp() of all string types */ 
+/* s1 is the pattern */
+/* s2 the string that should be matched against the pattern */
 int string_base_cmp(u_long32 type, const char *s1, const char *s2)
 {
    int match=0;

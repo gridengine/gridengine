@@ -179,13 +179,13 @@ int flags
    /*
    ** -hold_jid
    */
-   if ((lp = lGetList(job, JB_jid_predecessor_list))) {
+   if ((lp = lGetList(job, JB_jid_request_list))) {
       int fields[] = { JRE_job_name, 0 };
       const char *delis[] = {NULL, ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 0);
       if (ret) {
-         DPRINTF(("Error %d formatting jid_predecessor_list as -hold_jid\n", ret));
+         DPRINTF(("Error %d formatting jid_request_list as -hold_jid\n", ret));
          sprintf(str, MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJID);
          answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return answer;

@@ -191,7 +191,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
           modified_job = lFirst(lGetList(event, ET_new_version));
           if(job != NULL && modified_job != NULL) {
             lXchgList(modified_job, JB_ja_tasks, &ja_tasks);
-            lSetString(modified_job, JB_jobclass, lGetString(job, JB_jobclass));
+/*            lSetString(modified_job, JB_jobclass, lGetString(job, JB_jobclass)); */
             lSetHost(modified_job, JB_host, lGetHost(job, JB_host));
             lSetRef(modified_job, JB_category, lGetRef(job, JB_category));
           }

@@ -1046,7 +1046,7 @@ static void release_successor_jobs(
 lListElem *jep 
 ) {
    lListElem *jid, *suc_jep;
-   char job_ident[256];
+   u_long32 job_ident;
 
    DENTER(TOP_LAYER, "release_successor_jobs");
 
@@ -1054,10 +1054,10 @@ lListElem *jep
       suc_jep = job_list_locate(Master_Job_List, lGetUlong(jid, JRE_job_number));
       if (suc_jep) {
          /* if we don't find it by job id we try it with the name */
-         sprintf(job_ident, u32, lGetUlong(jep, JB_job_number));
-         if (!lDelSubStr(suc_jep, JRE_job_name, job_ident, JB_jid_predecessor_list) &&
-             !lDelSubStr(suc_jep, JRE_job_name, lGetString(jep, JB_job_name), JB_jid_predecessor_list)) {
-             DPRINTF(("no reference %s and %s to job "u32" in predecessor list of job "u32"\n", 
+         job_ident = lGetUlong(jep, JB_job_number);
+         if (!lDelSubUlong(suc_jep, JRE_job_number, job_ident, JB_jid_predecessor_list)) {
+
+             DPRINTF(("no reference "u32" and %s to job "u32" in predecessor list of job "u32"\n", 
                job_ident, lGetString(jep, JB_job_name),
                lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
          } else {

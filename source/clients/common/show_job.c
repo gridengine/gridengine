@@ -400,9 +400,20 @@ void cull_show_job(lListElem *job, int flags)
          sge_dstring_free(&range_string);
       }
 
+   if (lGetPosViaElem(job, JB_jid_request_list)>=0)
+      if (lGetList(job, JB_jid_request_list) ) {
+         int fields[] = { JRE_job_name, 0 };
+
+         delis[0] = "";
+         printf("jid_predecessor_list (req):  ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_jid_request_list), 
+            fields, delis, 0);
+      }
+
+
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
-         int fields[] = { JRE_job_name, 0 };
+         int fields[] = { JRE_job_number, 0 };
 
          delis[0] = "";
          printf("jid_predecessor_list:       ");

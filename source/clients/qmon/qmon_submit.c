@@ -1407,7 +1407,8 @@ XtPointer cld, cad;
          JB_hard_queue_list,
          JB_soft_queue_list,
          JB_master_hard_queue_list,
-         JB_jid_predecessor_list,
+         JB_jid_request_list,
+/*         JB_jid_predecessor_list, */
          JB_shell_list,
          JB_env_list,
          JB_verify_suitable_queues,
@@ -1901,9 +1902,11 @@ char *prefix
    data->master_queue_list = lCopyList("JB_master_hard_queue_list", 
                                     lGetList(jep, JB_master_hard_queue_list));;
 
-   data->hold_jid = lCopyList("JB_jid_predecessor_list", 
-                                    lGetList(jep, JB_jid_predecessor_list));;
-
+/*   data->hold_jid = lCopyList("JB_jid_predecessor_list", 
+                                    lGetList(jep, JB_jid_predecessor_list));; */
+   data->hold_jid = lCopyList("JB_jid_request_list", 
+                                    lGetList(jep, JB_jid_request_list));; 
+                                    
    data->restart = lGetUlong(jep, JB_restart);
 
    if ((pe = lGetString(jep, JB_pe))) {
@@ -2276,9 +2279,10 @@ int save
 
    DPRINTF(("data->hold_jid is %s\n", 
             data->hold_jid ? "NOT NULL" : "NULL"));
-   lSetList(jep, JB_jid_predecessor_list, 
-               lCopyList("JB_jid_predecessor_list", data->hold_jid));
-
+/*   lSetList(jep, JB_jid_predecessor_list, 
+               lCopyList("JB_jid_predecessor_list", data->hold_jid));*/
+   lSetList(jep, JB_jid_request_list, 
+               lCopyList("JB_jid_request_list", data->hold_jid));
    
    DPRINTF(("data->pe is %s\n", data->pe ? data->pe: "NULL"));
    if (data->pe && data->pe[0] != '\0') {

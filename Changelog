@@ -1,3 +1,15 @@
+SG-2003-12-09-1: Enhancem.: Reqular expression are allowed for the switch
+                            -hold_jid in qsub, qalter, and qmon. Qstat -j
+                            displayes an extra row, showing the requested
+                            job dependency. The row for current pending
+                            job dependencies will only show job numbers.
+                 Changed:   qmaster, qstat, qsub, qmon
+                 Review:    AA, JG
+
+SG-2003-12-09-0: Bugfix:    Scheduler crashed. The bug was introduced by:
+                            SG-2003-11-20-0
+                 Changed:   scheduler
+
 JG-2003-12-08-0: Bugfix:    Fixed a bug in BerkeleyDB spooling for ja_tasks.
                  Review:    EB
 

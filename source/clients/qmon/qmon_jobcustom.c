@@ -118,6 +118,7 @@ nm, const char *s);
 static String PrintPERange(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintJobArgs(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintPredecessors(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintPredecessorsNr( lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintRestart(lListElem *ep, lListElem *jat, lList *eleml, int nm);                           
 static void SetJobLabels(Widget w);
 static void qmonWhatSetItems(Widget list, int how);
@@ -167,7 +168,8 @@ static tJobField job_items[] = {
    { 0, JB_job_args, "@{JobArgs}", 15, 30, PrintJobArgs},
    { 0, JB_pe, "@{PE}", 10, 30, PrintString },
    { 0, JB_pe_range, "@{PERange}", 15, 30, PrintPERange },
-   { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessors },
+   { 0, JB_jid_request_list, "@{Predecessors Req}", 12, 30, PrintPredecessors },
+   { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessorsNr },
    { 0, JAT_scaled_usage_list, "@{CPU}", 10, 30, PrintCPU },
    { 0, JAT_scaled_usage_list, "@{MEM}", 10, 30, PrintMEM },
    { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
@@ -496,6 +498,31 @@ int nm
    return str;
 }
 
+/*-------------------------------------------------------------------------*/
+static String PrintPredecessorsNr(
+lListElem *ep,
+lListElem *jat,
+lList *eleml,
+int nm 
+) {
+   String str;
+   lList *pred;
+   lListElem *jep = NULL;
+   char buf[ 100 * BUFSIZ];
+
+   DENTER(GUI_LAYER, "PrintPredecessors");
+
+   pred = lGetList(ep, nm);
+   
+   strcpy(buf, "");
+   for_each(jep, pred) {
+      sprintf(buf, "%s "u32, buf, lGetUlong(jep, JRE_job_number));
+   }
+   str = XtNewString(buf);
+
+   DEXIT;
+   return str;
+}
 
 /*-------------------------------------------------------------------------*/
 static String PrintPERange(

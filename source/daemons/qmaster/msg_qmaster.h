@@ -446,7 +446,7 @@
 #define MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS             _MESSAGE(33334, _("job rejected: no access to project "SFQ" for user "SFQ"\n") ) 
 #define MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID        _MESSAGE(33335, _("it is not allowed to select users and job ids together\n"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33336, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
-
+#define MSG_JOB_MOD_JOBDEPENDENCY_MEMORY              _MESSAGE(33337, _("could not create job dependency list\n"))
 
 #define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
 

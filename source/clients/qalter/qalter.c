@@ -457,7 +457,8 @@ int *all_users
             }
             lRemoveElem(cmdline, ep);
          }
-         lSetList(job, JB_jid_predecessor_list, jref_list);
+         lSetList(job, JB_jid_request_list , jref_list);
+         nm_set(job_field, JB_jid_request_list );
          nm_set(job_field, JB_jid_predecessor_list);
       }
 
@@ -799,7 +800,8 @@ int *all_users
          };
          static int list_nm[] = {
             JB_stderr_path_list,
-            JB_jid_predecessor_list,
+            JB_jid_request_list,
+/*            JB_jid_predecessor_list,*/
             JB_hard_resource_list,
             JB_soft_resource_list,
             JB_mail_list,

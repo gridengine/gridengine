@@ -652,10 +652,17 @@ Cardinal size
          for_each(ep, list) {
             if (first_time) {
                first_time = 0;
-               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
+               if (lGetString(ep, JRE_job_name))
+                  sprintf(buf, "%s", lGetString(ep, JRE_job_name));
+               else
+                  sprintf(buf, u32, lGetUlong(ep, JRE_job_number));
             }
-            else
-               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
+            else {
+               if (lGetString(ep, JRE_job_name))
+                  sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
+               else  
+                  sprintf(buf, "%s "u32, buf, lGetUlong(ep, JRE_job_number)); 
+            }   
          }
       }
       str = buf;

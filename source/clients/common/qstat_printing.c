@@ -1476,10 +1476,18 @@ int slots_per_line  /* number of slots to be printed in slots column
             }
          }
          ql = lGetList(job, JB_master_hard_queue_list);
-         if (ql) {
+         if (ql){
             printf(QSTAT_INDENT "Master task hard requested queues: ");
             for_each(qrep, ql) {
                printf("%s", lGetString(qrep, QR_name));
+               printf("%s", lNext(qrep)?", ":"\n");
+            }
+         }
+         ql = lGetList(job, JB_jid_request_list );
+         if (ql) {
+            printf(QSTAT_INDENT "Predecessor Jobs (request): ");
+            for_each(qrep, ql) {
+               printf("%s", lGetString(qrep, JRE_job_name));
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }
@@ -1487,7 +1495,7 @@ int slots_per_line  /* number of slots to be printed in slots column
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");
             for_each(qrep, ql) {
-               printf("%s", lGetString(qrep, JRE_job_name));
+               printf(u32, lGetUlong(qrep, JRE_job_number));
                printf("%s", lNext(qrep)?", ":"\n");
             }
          }

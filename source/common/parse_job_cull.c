@@ -378,7 +378,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          }
          lRemoveElem(cmdline, ep);
       }
-      lSetList(*pjob, JB_jid_predecessor_list, jref_list);
+      lSetList(*pjob, JB_jid_request_list, jref_list);
+/*      lSetList(*pjob, JB_jid_predecessor_list, jref_list); */
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {

@@ -165,6 +165,9 @@ enum {
 *
 *     SGE_XULONG(JB_version)
 *
+*     SGE_LIST(JB_jid_request_list)
+*        job requested dependencies (JRE_Type only JRE_job_name)
+*
 *     SGE_LIST(JB_jid_predecessor_list)
 *        Predecessor jobs (JRE_Type only JRE_job_name)
 *  
@@ -384,7 +387,7 @@ enum {
 *
 *     SGE_XSTRING(JB_jobclass)
 *        Job class name. Local to schedd. Identical to master_queue.
-*        Not spooled.
+*        Not spooled. NOT USED
 *
 *     SGE_HOST(JB_host)                    
 *        SGEEE - host job is executing on. Local to schedd. 
@@ -493,6 +496,7 @@ enum {
    JB_job_number = JB_LOWERBOUND,
    JB_job_name,     
    JB_version,
+   JB_jid_request_list,
    JB_jid_predecessor_list,
    JB_jid_sucessor_list,
    JB_session,
@@ -561,7 +565,7 @@ enum {
    JB_ja_template,
    JB_ja_tasks,
 
-   JB_jobclass,
+/*   JB_jobclass,*/
    JB_host,
    JB_category,
 
@@ -590,6 +594,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_ULONG(JB_job_number, CULL_PRIMARY_KEY | CULL_HASH | CULL_SPOOL) 
    SGE_STRING(JB_job_name, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_version, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(JB_jid_request_list, JRE_TYPE, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT) /* JG: TODO: typo: successor */
    SGE_STRING(JB_session, CULL_DEFAULT | CULL_SPOOL) 
@@ -658,7 +663,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
    SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
 
-   SGE_STRING(JB_jobclass, CULL_DEFAULT)
+/*   SGE_STRING(JB_jobclass, CULL_DEFAULT)*/
    SGE_HOST(JB_host, CULL_DEFAULT)       
    SGE_REF(JB_category, CT_Type, CULL_DEFAULT)    
 
@@ -732,6 +737,7 @@ NAMEDEF(JBN)
    NAME("JB_job_number")
    NAME("JB_job_name")
    NAME("JB_version")
+   NAME("JB_jid_request_list")
    NAME("JB_jid_predecessor_list")
    NAME("JB_jid_sucessor_list")
    NAME("JB_session")
@@ -800,7 +806,7 @@ NAMEDEF(JBN)
    NAME("JB_ja_template")
    NAME("JB_ja_tasks")
 
-   NAME("JB_jobclass")
+/*   NAME("JB_jobclass")*/
    NAME("JB_host")
    NAME("JB_category")
    

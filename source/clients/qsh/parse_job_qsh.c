@@ -277,9 +277,8 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          }
          lRemoveElem(cmdline, ep);
       }
-      lSetList(*pjob, JB_jid_predecessor_list, jref_list);
+      lSetList(*pjob, JB_jid_request_list, jref_list);
    }
-
 
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-hard"))) {

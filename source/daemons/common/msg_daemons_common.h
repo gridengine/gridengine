@@ -55,7 +55,7 @@
 /*
 ** unparse_job_cull.c
 */
-#define MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJID       _MESSAGE(27007, _("Error formatting jid_predecessor_list as -hold_jid\n"))
+#define MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJID       _MESSAGE(27007, _("Error formatting jid_request_list as -hold_jid\n"))
 #define MSG_LIST_ERRORFORMATINGJOBIDENTIFIERLISTASJID       _MESSAGE(27008, _("Error formatting job_identifier_list as -jid\n"))
 #define MSG_PARSE_ERRORUNPARSINGMAILOPTIONS       _MESSAGE(27009, _("Error unparsing mail options\n"))
 #define MSG_LIST_ERRORFORMATTINGMAILLISTASM       _MESSAGE(27010, _("Error formatting mail list as -M\n"))

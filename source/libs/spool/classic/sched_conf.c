@@ -202,6 +202,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    FPRINTF((fp, "weight_urgency                   %.10g\n", lGetDouble(ep, SC_weight_urgency)));
    FPRINTF((fp, "weight_priority                  %.10g\n", lGetDouble(ep, SC_weight_priority)));
    FPRINTF((fp, "max_reservation                  " u32 "\n", lGetUlong(ep, SC_max_reservation)));
+   FPRINTF((fp, "default_duration                 %s\n", lGetString(ep, SC_default_duration)));
 
    if (how != 0) {
       fclose(fp);
@@ -520,6 +521,12 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       return -1;
    }
 
+   /* --------- SC_max_reservation */
+   if (!set_conf_string(alpp, clpp, fields, "default_duration", ep, SC_default_duration)) {
+      DEXIT;
+      return -1;
+   }   
+   
    DEXIT;
    return 0;
 }

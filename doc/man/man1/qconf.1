@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2001/12/05 13:25:13 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/01/29 15:48:07 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2001/12/05 13:25:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2002/01/29 15:48:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -731,23 +731,26 @@ Requires root or manager privileges.
 .IP "\fB\-help\fP"
 Prints a listing of all options.
 .\"
-.IP "\fB\-k{m|s|e[j] [host,...]}\fP	\fI<shutdown xxQS_NAMExx>\fP"
+.IP "\fB\-k{m|s|e[j] {host,...|all}}\fP	\fI<shutdown xxQS_NAMExx>\fP"
 Used to shutdown xxQS_NAMExx components (daemons).
 In the form \fB\-km\fP
 .M xxqs_name_sxx_qmaster 8
 is forced to terminate in a controlled fashion. In the
 same way the \fB\-ks\fP switch causes termination of
 .M xxqs_name_sxx_schedd 8 .
-Shutdown of all running
+Shutdown of running
 .M xxqs_name_sxx_execd 8
 processes currently registered is initiated by the
 \fB\-ke\fP option. If \fB\-kej\fP is specified instead, all
 jobs running on the execution hosts are aborted prior to 
 termination of the corresponding
 .M xxqs_name_sxx_execd 8 .
-The optional comma separated host list specifies the execution
+The comma separated host list specifies the execution
 hosts to be addressed by the \fB\-ke\fP and \fB\-kej\fP
-option.
+option. If the keyword \fBall\fP is specified instead of a
+host list, all running
+.M xxqs_name_sxx_execd 8
+processes are shutdown.
 .br
 Requires root or manager privileges.
 .\"

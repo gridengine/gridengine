@@ -206,7 +206,7 @@ correct_capacities(lList *host_list, lList *centry_list)
             continue;
          if (!(total=lGetSubStr(hep, CE_name, attr_name, EH_consumable_config_list)))
             continue;
-         if (!(inuse_rms=lGetSubStr(hep, CE_name, attr_name, EH_resource_utilization)))
+         if (!(inuse_rms=lGetSubStr(hep, RUE_name, attr_name, EH_resource_utilization)))
             continue;
 
          relop = lGetUlong(cep, CE_relop);

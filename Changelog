@@ -1,3 +1,8 @@
+MD-2004-04-05-0: Bugfix:    qstat -r prints low level error messages
+                 Issue:     930
+                 Changed:   qstat, schedd, qmon
+                 Review:    AH
+
 EB-2004-04-05-0: Bugfix:    qconf -aattr deletes the new attribute if it 
                             allready exists
                  Changed:   sge_qmaster

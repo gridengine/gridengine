@@ -196,7 +196,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
    bool ret = true;
    int pos;
 
-   DENTER(TOP_LAYER, "cqueue_mod_sublist");
+   DENTER(CQUEUE_LAYER, "cqueue_mod_sublist");
   
    pos = lGetPosViaElem(reduced_elem, attribute_name);
    if (pos >= 0) {
@@ -239,11 +239,9 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          if (org_elem == NULL && 
              (!strcmp(name, HOSTREF_DEFAULT) || sub_command == SGE_GDI_SET_ALL)) {
             if (org_list == NULL) {
-               DTRACE;
                org_list = lCreateList("", lGetElemDescr(mod_elem));
                lSetList(this_elem, attribute_name, org_list);
             } 
-            DTRACE;
             org_elem = lCreateElem(lGetElemDescr(mod_elem));
             lSetHost(org_elem, sublist_host_name, name);
             lAppendElem(org_list, org_elem);
@@ -253,7 +251,6 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
           * Modify sublist according to subcommand
           */
          if (org_elem != NULL) {
-            DTRACE;
             attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
                               subsub_key, mod_elem, sub_command, 
                               attribute_name_str, object_name_str, 0);

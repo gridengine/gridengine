@@ -97,8 +97,10 @@ cuser_get_remote_user(const lListElem *this_elem, lList **answer_list,
    
       attr_list = lGetList(this_elem, CU_ruser_list);
       if (attr_list != NULL) {
+         bool is_ambiguous = false;
+
          ret &= str_attr_list_find_value(attr_list, answer_list,
-                                         hostname, remote_user); 
+                                         hostname, remote_user, &is_ambiguous); 
       } else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                 MSG_CUSER_NOREMOTE_USER_S, "remote_user"));

@@ -71,7 +71,6 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                gdi_object_t *object, int sub_command) 
 {
    bool ret = true;
-   int pos;
    lList *add_hosts = NULL;
    lList *rem_hosts = NULL;
    lList *add_groups = NULL;
@@ -81,8 +80,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    DENTER(TOP_LAYER, "cqueue_mod");
 
    if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_name);
+      int pos = lGetPosViaElem(reduced_elem, CQ_name);
 
       if (pos >= 0) {
          const char *name = lGetPosString(reduced_elem, pos);
@@ -125,8 +123,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
     * => add_hosts, rem_hosts, add_groups, rem_groups
     */
    if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
+      int pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
 
       if (pos >= 0) {
          lList *list = lGetPosList(reduced_elem, pos);
@@ -160,9 +157,9 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    if (ret) {
       int index = 0;
 
-      while (cqueue_attribute_array[index].cqueue_attr == NoName && ret) {
-         pos = lGetPosViaElem(reduced_elem, 
-                              cqueue_attribute_array[index].cqueue_attr);
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         int pos = lGetPosViaElem(reduced_elem, 
+                                  cqueue_attribute_array[index].cqueue_attr);
 
          if (pos >= 0) {
             /*
@@ -185,29 +182,92 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
                         lCopyList("", list));
             }
          }
+         index++;
       }
    }
 
    /*
-    *
+    * Check all cqueue modifications
     */
    if (ret) {
-      
+      int index = 0;
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         int pos = lGetPosViaElem(reduced_elem,
+                                  cqueue_attribute_array[index].cqueue_attr);
+
+         if (pos >= 0) {
+            lList *list;
+            lListElem *elem;
+
+            list = lGetList(cqueue, cqueue_attribute_array[index].cqueue_attr);
+            elem = lGetElemHost(list, cqueue_attribute_array[index].href_attr,
+                                HOSTREF_DEFAULT);
+
+
+            if (elem == NULL) {
+               /* EB: TODO: move to msg file */
+               ERROR((SGE_EVENT, SFQ" has no default value\n", 
+                                 cqueue_attribute_array[index].name));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                               ANSWER_QUALITY_ERROR);
+               ret = false;
+            } 
+         }
+         index++;
+      }
    }
 
    /*
-    * Create new qinstances
+    * Remove qinstances
+    */
+   if (ret) {
+      lListElem *href = NULL;
+
+      for_each(href, rem_hosts) {
+         const char *hostname = lGetHost(href, HR_name);
+         lList *list = lGetList(cqueue, CQ_qinstances);
+         lListElem* qinstance = lGetElemHost(list, QI_hostname, hostname);
+
+         if (qinstance != NULL) {
+            DPRINTF(("Deleting qinstance for host "SFQ"\n", hostname));
+            lRemoveElem(list, qinstance);
+         } else {
+            DPRINTF(("Cannot delete qinstance for host "SFQ"\n", hostname));
+         }
+      }
+   }
+
+   /*
+    * Modify existing ones
+    */
+   if (ret) {
+   }
+
+   /*
+    * Create qinstances
     */
    if (ret) {
       lListElem *href = NULL;
 
       for_each(href, add_hosts) {
          const char *hostname = lGetHost(href, HR_name);
+         lList *list = lGetList(cqueue, CQ_qinstances);
          lListElem* new_qinstance;
+         bool is_ambiguous = false;
 
-         new_qinstance = qinstance_create(cqueue, answer_list, hostname);
+         if (list == NULL) {
+            list = lCreateList("", QI_Type);
+            lSetList(cqueue, CQ_qinstances, list);
+         }
+         DPRINTF(("Creating qinstance for host "SFQ"\n", hostname));
+         new_qinstance = qinstance_create(cqueue, answer_list, 
+                                          hostname, &is_ambiguous);
+         if (is_ambiguous) {
+            DPRINTF(("qinstance has ambiguous configuaration\n", hostname));
+         }
+         lAppendElem(list, new_qinstance);
 
-         lWriteElemTo(new_qinstance, stderr); 
       }
    }
 
@@ -218,6 +278,9 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 
    DEXIT;
    if (ret) {
+#if 0 /* EB: debug */
+      lWriteElemTo(cqueue, stderr);
+#endif
       return 0;
    } else {
       return STATUS_EUNKNOWN;

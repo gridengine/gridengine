@@ -78,10 +78,12 @@ PREFIX##_list_add(lList **this_list, lList **answer_list, lListElem **attr,   \
                                                                               \
 bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
-                         const char *hostname, INTERNAL_TYPE *value)          \
+                         const char *hostname, INTERNAL_TYPE *value,          \
+                         bool *is_ambiguous)                                  \
 {                                                                             \
    return attr_list_find_value(this_list, answer_list, hostname,              \
-                               value, DESCRIPTOR, HREF_NM, VALUE_NM);         \
+                               value, is_ambiguous, DESCRIPTOR, HREF_NM,      \
+                               VALUE_NM);                                     \
 }                                                                             \
                                                                               \
 bool                                                                          \
@@ -123,8 +125,9 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
 
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
-                     const char *hostname, void *value_buffer,
-                     const lDescr *descriptor, int href_nm, int value_nm);
+                     const char *hostname, void *value_buffer, 
+                     bool *is_ambiguous, const lDescr *descriptor, 
+                     int href_nm, int value_nm);
 
 static bool
 attr_list_append_to_dstring(const lList *this_list, dstring *string,
@@ -323,7 +326,8 @@ value_nm          ASTR_value
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
                      const char *hostname, void *value_buffer,
-                     const lDescr *descriptor, int href_nm, int value_nm)
+                     bool *is_ambiguous, const lDescr *descriptor, 
+                     int href_nm, int value_nm)
 {
    bool ret = false;
 
@@ -341,9 +345,9 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
          DTRACE;
          ret = true;
       } else {
-         bool is_ambiguous = false;
          bool already_found = false;
 
+         *is_ambiguous = false;
          /*
           * Try to find a value for all hgroup definitions
           * if there was no host related value
@@ -375,7 +379,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                      DTRACE;
                      ret = true;
                   } else {
-                     is_ambiguous = true;
+                     *is_ambiguous = true;
                      DTRACE;
                      ret = false;
                      break;

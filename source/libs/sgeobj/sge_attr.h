@@ -59,7 +59,8 @@ PREFIX##_list_find(const lList *this_list, const char *href);                 \
                                                                               \
 bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
-                         const char *hostname, INTERNAL_TYPE *value);         \
+                         const char *hostname, INTERNAL_TYPE *value,          \
+                         bool *is_ambiguous);                                 \
 bool                                                                          \
 PREFIX##_list_verify(const lList *this_list, lList **answer_list,             \
                      bool *is_ambiguous);                                     \

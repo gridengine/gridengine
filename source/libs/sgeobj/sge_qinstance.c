@@ -44,11 +44,11 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define QINSTANCE_LAYER TOP_LAYER
+#define QINSTANCE_LAYER BASIS_LAYER
 
 lListElem * 
 qinstance_create(const lListElem *cqueue, lList **answer_list,
-                 const char *hostname) 
+                 const char *hostname, bool *is_ambiguous) 
 {
    lListElem *ret = NULL;
    int index;
@@ -61,12 +61,21 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
 
    index = 0;
    while (cqueue_attribute_array[index].cqueue_attr != NoName) {
+      bool tmp_is_ambiguous = false;
+
       qinstance_modify(ret, answer_list, cqueue, 
                        cqueue_attribute_array[index].qinstance_attr,
                        cqueue_attribute_array[index].cqueue_attr, 
                        cqueue_attribute_array[index].href_attr,
                        cqueue_attribute_array[index].value_attr,
-                       cqueue_attribute_array[index].primary_key_attr);
+                       cqueue_attribute_array[index].primary_key_attr,
+                       is_ambiguous);
+      if (tmp_is_ambiguous) {
+         /* EB: TODO: move to msg file */ 
+         WARNING(("Attribute "SFQ" has ambiguous value for host "SFQ"\n",
+                  cqueue_attribute_array[index].name, hostname));
+         *is_ambiguous = tmp_is_ambiguous;
+      }
       index++;
    }
 
@@ -80,7 +89,7 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
                  int attribute_name, 
                  int cqueue_attibute_name,
                  int sub_host_name, int sub_value_name,
-                 int subsub_key)
+                 int subsub_key, bool *is_ambiguous)
 {
    bool ret = true;
    
@@ -102,7 +111,8 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
       switch (cqueue_attibute_name) {
          case CQ_qtype:
             qtlist_attr_list_find_value(attr_list, answer_list, 
-                                        hostname, &ulong32_value);
+                                        hostname, &ulong32_value,
+                                        is_ambiguous);
             lSetUlong(this_elem, attribute_name, ulong32_value);
             break;
          case CQ_s_fsize:
@@ -118,7 +128,7 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          case CQ_s_vmem:
          case CQ_h_vmem:
             mem_attr_list_find_value(attr_list, answer_list, 
-                                     hostname, &str_value);
+                                     hostname, &str_value, is_ambiguous);
             lSetString(this_elem, attribute_name, str_value);
             break;
          case CQ_s_rt:
@@ -126,51 +136,51 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          case CQ_s_cpu:
          case CQ_h_cpu:
             time_attr_list_find_value(attr_list, answer_list, 
-                                      hostname, &str_value);
+                                      hostname, &str_value, is_ambiguous);
             lSetString(this_elem, attribute_name, str_value);
             break;
          case CQ_suspend_interval:
          case CQ_min_cpu_interval:
          case CQ_notify:
             inter_attr_list_find_value(attr_list, answer_list, 
-                                       hostname, &str_value);
+                                       hostname, &str_value, is_ambiguous);
             lSetString(this_elem, attribute_name, str_value);
             break;
          case CQ_ckpt_list:
          case CQ_pe_list:
             strlist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value);
+                                         hostname, &list_value, is_ambiguous);
 
-            lSetList(this_elem, attribute_name, list_value);
+            lSetList(this_elem, attribute_name, lCopyList("", list_value));
             break;
          case CQ_owner_list:
          case CQ_acl:
          case CQ_xacl:
             usrlist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value);
+                                         hostname, &list_value, is_ambiguous);
 
-            lSetList(this_elem, attribute_name, list_value);
+            lSetList(this_elem, attribute_name, lCopyList("", list_value));
             break;
          case CQ_projects:
          case CQ_xprojects:
             prjlist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value);
+                                         hostname, &list_value, is_ambiguous);
 
-            lSetList(this_elem, attribute_name, list_value);
+            lSetList(this_elem, attribute_name, lCopyList("", list_value));
             break;
          case CQ_consumable_config_list:
          case CQ_load_thresholds:
          case CQ_suspend_thresholds:
             celist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value);
+                                         hostname, &list_value, is_ambiguous);
 
-            lSetList(this_elem, attribute_name, list_value);
+            lSetList(this_elem, attribute_name, lCopyList("", list_value));
             break;
          case CQ_subordinate_list:
             solist_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &list_value);
+                                        hostname, &list_value, is_ambiguous);
 
-            lSetList(this_elem, attribute_name, list_value);
+            lSetList(this_elem, attribute_name, lCopyList("", list_value));
             break;
          default:
             value_found = false;
@@ -181,18 +191,18 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          switch (type) {
             case lStringT:
                str_attr_list_find_value(attr_list, answer_list,
-                                        hostname, &str_value);
+                                        hostname, &str_value, is_ambiguous);
                lSetString(this_elem, attribute_name, str_value);
                break;
             case lUlongT:
-               ulng_attr_list_find_value(attr_list, answer_list, 
-                                         hostname, &ulong32_value);
+               ulng_attr_list_find_value(attr_list, answer_list, hostname, 
+                                         &ulong32_value, is_ambiguous);
 
                lSetUlong(this_elem, attribute_name, ulong32_value);
                break;
             case lBoolT:
                bool_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &bool_value);
+                                         hostname, &bool_value, is_ambiguous);
                lSetBool(this_elem, attribute_name, bool_value);
                break;
             default:

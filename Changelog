@@ -18,6 +18,8 @@ EB-2003-06-25-0: Bugfix:    SGEEE: qmaster crashed on qdel of tightly
 CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
                             not set.
                  Review:    AS
+                 Bugtraq:   4885719
+                 Issue:     577
                  Changed:   utilib (all binaries)
 
 AH-2003-06-21-0: Bugfix:    Fixed bug "sge_schedd dies...". 

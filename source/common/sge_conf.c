@@ -112,7 +112,7 @@ int keep_active = 0;
 
 int classic_sgeee_scheduling = 0;
 int share_override_tickets = 1;
-int share_functional_shares = 0;
+int share_functional_shares = 1;
 int share_deadline_tickets = 1;
 int max_functional_jobs_to_schedule = 200;
 int max_pending_tasks_per_job = 50;
@@ -685,7 +685,7 @@ lList **lpp
       flush_finish_sec = -1;
       classic_sgeee_scheduling = 0;
       share_override_tickets = 1;
-      share_functional_shares = 0;
+      share_functional_shares = 1;
       share_deadline_tickets = 1;
       max_functional_jobs_to_schedule = 200;
       max_pending_tasks_per_job = 50;

@@ -144,6 +144,7 @@ lList *granted
    ep=lCreateElem(OR_Type);
    if (feature_is_enabled(FEATURE_SGEEE)) {
       lSetDouble(ep, OR_ticket, lGetDouble(ja_task, JAT_ticket));
+
       if (type == ORT_tickets|| type == ORT_ptickets) {
          lListElem *jep;
          lList *jlist = lCreateList("", lGetElemDescr(job));

@@ -4,6 +4,7 @@ JG-2001-10-30-0: qtcsh could not be compiled on newer linux systems (SuSE 7.2)
 EB-2001-10-30-0: Modifications for sgeee scheduler
                   - Changed initial ticket count for started jobs
                   - Normalized pending job tickets 
+                  - Changed several parameter for sgeee scheduler
 
 JG-2001-10-29-0: Removed explicit hash tables on job lists in 
                  qmaster and scheduler - they are no longer needed, 

@@ -1492,7 +1492,11 @@ SetScheddConfig()
 
       $INFOTEXT -auto $AUTO -n "Enter the number of your prefered configuration and hit <RETURN>! \n" \
                    "Default configuration is [1] >> "
-      SCHEDD_CONF=`Enter 1`
+      SCHEDD=`Enter 1`
+
+      if [ $AUTO = "false" ]; then
+         SCHEDD_CONF=$SCHEDD
+      fi
 
       if [ $SCHEDD_CONF = "1" ]; then
          is_selected="Normal"

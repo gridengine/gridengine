@@ -221,7 +221,7 @@ fi
 
 
 if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" ]; then
-   WelcomeTheUser
+   WelcomeTheUserUpgrade
    CheckForLocalHostResolving
    CheckWhoInstallsSGE
    ProcessSGERoot 

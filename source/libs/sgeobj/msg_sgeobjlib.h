@@ -220,10 +220,10 @@
 #define MSG_ATTR_NONEWATTRSETTING_S    _MESSAGE(64219, _("Cannot create new attribute setting for host "SFQ"\n"))
 #define MSG_ATTR_RESULTUNAMBIGUOUS_S   _MESSAGE(64220, _("Modification would result in ambiguous configuration\n"))
 #define MSG_ATTR_NOCONFVALUE           _MESSAGE(64221, _("No default/hostgroup/host value found\n"))
-#define MSG_ATTR_MISSINGCOMMA          _MESSAGE(64222, _("All list elements must be separated by commas\n"))
-#define MSG_ATTR_MISSINGBRACE_S        _MESSAGE(64223, _("The last character of each list item must be enclosed in brackets.\n"))
+#define MSG_ATTR_MISSINGCOMMA_S        _MESSAGE(64222, _("All list elements must be separated by commas: "SFQ"\n"))
+#define MSG_ATTR_MISSINGBRACKET_S      _MESSAGE(64223, _("The last character of each list item must be enclosed in brackets: "SFQ"\n"))
 #define MSG_ATTR_EQUALSIGNEXPRECTED    _MESSAGE(64224, _("\'=\' has to sepatate host or group from value\n"))
-#define MSG_ATTR_TRAILINGCOMMA         _MESSAGE(64225, _("There is an extra comma at the end of the list\n"))
+#define MSG_ATTR_TRAILINGCOMMA_S       _MESSAGE(64225, _("There is an extra comma at the end of the list: "SFQ"\n"))
 #define MSG_ATTR_PARSINGERROR_S        _MESSAGE(64226, _("Error during parsing of attribute value "SFQ"\n"))
 #define MSG_ATTR_NOVALUEGIVEN          _MESSAGE(64227, _("No value specified\n"))
 

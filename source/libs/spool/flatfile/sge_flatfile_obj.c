@@ -284,98 +284,98 @@ static spooling_field RUE_sub_fields[] = {
 };
 
 static spooling_field ACELIST_sub_fields[] = {
-   {  ACELIST_href,        0, NULL,                NULL, NULL, NULL},
-   {  ACELIST_value,       0, NULL,                CE_sub_fields, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  ACELIST_href,        0, NULL, NULL, NULL, NULL, NULL},
+   {  ACELIST_value,       0, NULL, CE_sub_fields, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field AULNG_sub_fields[] = {
-   {  AULNG_href,          0, NULL,                NULL, NULL, NULL},
-   {  AULNG_value,         0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  AULNG_href,          0, NULL, NULL, NULL, NULL, NULL},
+   {  AULNG_value,         0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field CF_sub_fields[] = {
-   {  CF_name,             28, NULL, NULL, NULL, NULL},
-   {  CF_value,            28, NULL, NULL, NULL, read_CF_value},
-   {  NoName,              28, NULL, NULL, NULL, NULL}
+   {  CF_name,             28, NULL, NULL, NULL, NULL, NULL},
+   {  CF_value,            28, NULL, NULL, NULL, read_CF_value, NULL},
+   {  NoName,              28, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field STN_sub_fields[] = {
-   {  STN_id,              0, NULL, NULL, NULL, NULL},
-   {  NoName,              0, NULL, NULL, NULL, NULL}
+   {  STN_id,              0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field HS_sub_fields[] = {
-   {  HS_name,             0, NULL,                NULL, NULL, NULL},
-   {  HS_value,            0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  HS_name,             0, NULL, NULL, NULL, NULL, NULL},
+   {  HS_value,            0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field RU_sub_fields[] = {
-   {  RU_job_number,         0, NULL,                NULL, NULL, NULL},
-   {  RU_task_number,        0, NULL,                NULL, NULL, NULL},
-   {  RU_state,              0, NULL,                NULL, NULL, NULL}
+   {  RU_job_number,         0, NULL, NULL, NULL, NULL, NULL},
+   {  RU_task_number,        0, NULL, NULL, NULL, NULL, NULL},
+   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field HL_sub_fields[] = {
-   {  HL_name,             0, NULL,                NULL, NULL, NULL},
-   {  HL_value,            0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  HL_name,             0, NULL, NULL, NULL, NULL, NULL},
+   {  HL_value,            0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field STU_sub_fields[] = {
-   {  STU_name,            0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  STU_name,            0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field UE_sub_fields[] = {
-   {  UE_name,             0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  UE_name,             0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field UA_sub_fields[] = {
-   {  UA_name,             0, NULL,                NULL, NULL, NULL},
-   {  UA_value,            0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  UA_name,             0, NULL,                NULL, NULL, NULL, NULL},
+   {  UA_value,            0, NULL,                NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
 static spooling_field UPP_sub_fields[] = {
-   {  UPP_name,            0, NULL,                NULL, NULL, NULL},
-   {  UPP_usage,           0, NULL,                UA_sub_fields, NULL, NULL},
-   {  UPP_long_term_usage, 0, NULL,                UA_sub_fields, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  UPP_name,            0, NULL,                NULL, NULL, NULL, NULL},
+   {  UPP_usage,           0, NULL,                UA_sub_fields, NULL, NULL, NULL},
+   {  UPP_long_term_usage, 0, NULL,                UA_sub_fields, NULL, NULL, NULL},
+   {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
 static spooling_field UPU_sub_fields[] = {
-   {  UPU_job_number,      0, NULL,                NULL, NULL, NULL},
-   {  UPU_old_usage_list,  0, NULL,                UA_sub_fields, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  UPU_job_number,      0, NULL,                NULL, NULL, NULL, NULL},
+   {  UPU_old_usage_list,  0, NULL,                UA_sub_fields, NULL, NULL, NULL},
+   {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
 static spooling_field HR_sub_fields[] = {
-   {  HR_name,             0, NULL,                NULL, NULL, NULL},
-   {  NoName,              0, NULL,                NULL, NULL, NULL}
+   {  HR_name,             0, NULL,                NULL, NULL, NULL, NULL},
+   {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
 /* Field lists for context-independent object spooling */
 spooling_field CE_fields[] = {
-   {  CE_name,            11, "name",          NULL, NULL, NULL},
-   {  CE_shortcut,        11, "shortcut",      NULL, NULL, NULL},
-   {  CE_valtype,         11, "type",          NULL, NULL, NULL},
-   {  CE_relop,           11, "relop",         NULL, NULL, NULL},
-   {  CE_requestable,     11, "requestable",   NULL, NULL, NULL},
-   {  CE_consumable,      11, "consumable",    NULL, NULL, NULL},
-   {  CE_default,         11, "default",       NULL, NULL, NULL},
-   {  CE_urgency_weight,  11, "urgency",       NULL, NULL, NULL},
-   {  NoName,             11, NULL,            NULL, NULL, NULL}
+   {  CE_name,            11, "name",          NULL, NULL, NULL, NULL},
+   {  CE_shortcut,        11, "shortcut",      NULL, NULL, NULL, NULL},
+   {  CE_valtype,         11, "type",          NULL, NULL, NULL, NULL},
+   {  CE_relop,           11, "relop",         NULL, NULL, NULL, NULL},
+   {  CE_requestable,     11, "requestable",   NULL, NULL, NULL, NULL},
+   {  CE_consumable,      11, "consumable",    NULL, NULL, NULL, NULL},
+   {  CE_default,         11, "default",       NULL, NULL, NULL, NULL},
+   {  CE_urgency_weight,  11, "urgency",       NULL, NULL, NULL, NULL},
+   {  NoName,             11, NULL,            NULL, NULL, NULL, NULL}
 };
 
 spooling_field CAL_fields[] = {
-   {  CAL_name,           16, "calendar_name", NULL, NULL, NULL},
-   {  CAL_year_calendar,  16, "year",          NULL, NULL, NULL},
-   {  CAL_week_calendar,  16, "week",          NULL, NULL, NULL},
-   {  NoName,             16, NULL,            NULL, NULL, NULL}
+   {  CAL_name,           16, "calendar_name", NULL, NULL, NULL, NULL},
+   {  CAL_year_calendar,  16, "year",          NULL, NULL, NULL, NULL},
+   {  CAL_week_calendar,  16, "week",          NULL, NULL, NULL, NULL},
+   {  NoName,             16, NULL,            NULL, NULL, NULL, NULL}
 };
 
 spooling_field CK_fields[] = {
@@ -1044,7 +1044,6 @@ static int read_CQ_ulng_attr_list (lListElem *ep, int nm, const char *buffer, lL
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1074,7 +1073,6 @@ static int read_CQ_celist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1104,7 +1102,6 @@ static int read_CQ_inter_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1134,7 +1131,6 @@ static int read_CQ_str_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1164,7 +1160,6 @@ static int read_CQ_qtlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1194,7 +1189,6 @@ static int read_CQ_strlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1224,7 +1218,6 @@ static int read_CQ_bool_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1254,7 +1247,6 @@ static int read_CQ_usrlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1284,7 +1276,6 @@ static int read_CQ_solist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1314,7 +1305,6 @@ static int read_CQ_prjlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1344,7 +1334,6 @@ static int read_CQ_time_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1374,7 +1363,6 @@ static int read_CQ_mem_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
-      answer_list_add(alp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       return 0;
    }
    
@@ -1410,7 +1398,7 @@ static int read_CQ_hostlist (lListElem *ep, int nm, const char *buffer,
       }
    }
 
-   return true;
+   return 1;
 }
 
 static int write_CQ_hostlist(const lListElem *ep, int nm,

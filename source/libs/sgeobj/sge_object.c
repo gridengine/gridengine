@@ -661,7 +661,6 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
             }
 
             if (type == 0) {
-               /* error output necessary? Should be created by parsing function */
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_SGETEXT_UNKNOWN_ATTR_TYPE_S,

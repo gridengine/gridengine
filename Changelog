@@ -1,3 +1,10 @@
+DT-2004-04-07-0: Bugfix:    o Removed duplicate qconf error messages
+                            o Fixed build on MacOS X
+                            o Fixed qsub bug introduced in DT-2004-04-06-0
+                 Changed:   qconf, sgeobj, qsub
+                 Issue:     868
+                 Review:    SG
+
 JG-2004-05-07-0: Bugfix:    Calling dbstat while qmaster was running caused
                             a spooling error in qmaster.
                             Fixed dependencies to spooling libs (qmaster, 
@@ -22,8 +29,9 @@ DT-2004-04-06-0: Bugfix:    o Fixed bad error messages for qconf -mc
                             o Improved qconf error messages
                             o Updated DRMAA man pages
                             o Fixed byte ordering bug in JGrid
-                 Issue:     773, 868, 1013
                  Changed:   sgeobj, qconf, centry, qsub, JGrid
+                 Issue:     773, 868, 1013
+                 Review:    SG
 
 AA-2004-05-06-0: Bugfix:    qtcsh shows strange error messages on AIX 43/51
                  Issue:     849

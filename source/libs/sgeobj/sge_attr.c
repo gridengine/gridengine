@@ -685,14 +685,16 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   token[length - 1] = '\0';
                   length--;
                } else {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_MISSINGCOMMA));
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_MISSINGCOMMA_S,
+                                         string));
                   answer_list_add(answer_list, SGE_EVENT,
                                   STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                   ret = false;
                }
             }
             else if (ret && is_last_token && (token[length - 1] == ',')) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_TRAILINGCOMMA));
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_TRAILINGCOMMA_S,
+                                      string));
                answer_list_add(answer_list, SGE_EVENT,
                                STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                ret = false;
@@ -713,8 +715,8 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                   token[length - 1] = '\0';
                   length--;
                } else {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                 MSG_ATTR_MISSINGBRACE_S, "]", token));
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_MISSINGBRACKET_S,
+                                         string));
                   answer_list_add(answer_list, SGE_EVENT,
                                   STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                   ret = false;

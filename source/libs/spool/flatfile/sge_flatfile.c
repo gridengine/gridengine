@@ -1504,13 +1504,19 @@ FF_DEBUG("detected end_token");
          spool_return_whitespace = false;
          
          if (fields[field_index].read_func == NULL) {
-            object_parse_field_from_string(*object, answer_list, nm, 
-                                           sge_dstring_get_string(&buffer));
+            if (object_parse_field_from_string(*object, answer_list, nm, 
+                                        sge_dstring_get_string(&buffer)) == 0) {
+               stop = true;
+               continue;
+            }
          }
          else {
-            fields[field_index].read_func (*object, nm,
-                                           sge_dstring_get_string (&buffer),
-                                           answer_list);
+            if (fields[field_index].read_func (*object, nm,
+                                               sge_dstring_get_string (&buffer),
+                                               answer_list) == 0) {
+               stop = true;
+               continue;
+            }
          }
       }
       else { /* if (type == lListT) */

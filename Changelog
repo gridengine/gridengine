@@ -371,12 +371,14 @@ SG-2004-11-05-0: Bugfix:    the scheduler had critical errors, when host groups
 SG-2004-11-04-2: Bugfix:    qconf -ks gives bad error message if scheduler isn't
                             running
                  Issue:     1319
+                 Bugtraq:   6201039
                  Changed:   qmaster
                  Review:    DT
 
 JG-2004-11-04-0: Bugfix:    Jobs were not rescheduled to the same host they ran 
                             on before.
                  Issue:     1317
+                 Bugtraq:   6201040
                  Changed:   execd
                  Review:    SG
 
@@ -384,6 +386,7 @@ SG-2004-11-04-1: Bugfix:    the scheduler logs 2 error message, when job
                             was deleted by a user during a scheduling run
                             and that you was dispatched from the scheduler.
                  Issue:     1030
+                 Bugtraq:   6201042
                  Changed:   qmaster
                  Review:    JG
 
@@ -536,7 +539,8 @@ SG-2004-10-22-0: Bugfix:    - fixed SG-2004-10-21-1
 
 AH-2004-10-22-0: Doc:       Checkpoint README refers to wrong script
                             queue_conf(5) incomplete for owner_list description
-                 Issue:     1262, 601,
+                 Issue:     1262,   601
+                 Bugtraq:   6201044, 
                  Changed:   README.cpr and README.cray
    
 JG-2004-10-21-0: Testsuite: Fixed a number of tests, fixed typos and incorrect

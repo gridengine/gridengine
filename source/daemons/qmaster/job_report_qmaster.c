@@ -123,6 +123,56 @@ u_long32 status
 
    return s;
 }
+
+static void pe_task_sum_previous_usage(lListElem *previous_task, const lListElem *task)
+{
+   lList *prev_usage_list        = NULL;
+   const lList *task_usage_list  = NULL;
+   const lListElem *ep           = NULL;
+
+   DENTER(TOP_LAYER, "pe_task_sum_previous_usage");
+
+   /* get tasks usage list, if not exists: error */
+   task_usage_list = lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_scaled_usage_list);
+   if(task_usage_list == NULL) {
+      ERROR((SGE_EVENT, "task %s has no scaled usage list\n", lGetString(task, JB_pe_task_id_str)));
+      DEXIT;
+      return;
+   }
+
+   /* get usage list for previous tasks, if not yet exists, create */
+   prev_usage_list = lGetList(lFirst(lGetList(previous_task, JB_ja_tasks)), JAT_usage_list); 
+   if(prev_usage_list == NULL) {
+      prev_usage_list = lCreateList("previous usage", UA_Type);
+      lSetList(lFirst(lGetList(previous_task, JB_ja_tasks)), JAT_usage_list, prev_usage_list);
+   }
+   
+   /* sum up usage */
+   for_each(ep, task_usage_list) {
+      if (!strcmp(lGetString(ep, UA_name), USAGE_ATTR_CPU) ||
+          !strcmp(lGetString(ep, UA_name), USAGE_ATTR_IO)  ||
+          !strcmp(lGetString(ep, UA_name), USAGE_ATTR_IOW) ||
+          !strcmp(lGetString(ep, UA_name), USAGE_ATTR_VMEM) ||
+          !strcmp(lGetString(ep, UA_name), USAGE_ATTR_MAXVMEM) ||
+          !strcmp(lGetString(ep, UA_name), USAGE_ATTR_MEM)) {
+         lListElem *sum = lGetElemStr(prev_usage_list, UA_name, lGetString(ep, UA_name));
+         if(sum == NULL) {
+            lAppendElem(prev_usage_list, lCopyElem(ep));
+         } else {
+            lSetDouble(sum, UA_value, lGetDouble(sum, UA_value) + lGetDouble(ep, UA_value));
+         }
+      }   
+   }
+
+   /* copy to scaled usage list to make used by scheduler */
+   /* old list is freed implicitly in lSetList */
+   lSetList(lFirst(lGetList(previous_task, JB_ja_tasks)), 
+            JAT_scaled_usage_list, 
+            lCopyList("previous scaled usage", prev_usage_list));
+
+   DEXIT;
+}
+
 /* ----------------------------------------
 
 NAME 
@@ -273,8 +323,7 @@ sge_pack_buffer *pb
                         /* here qmaster hears the first time about this task
                            and thus adds it to the task list of the appropriate job */
                         new_task = 1;
-                        DPRINTF(("--- task (#%d) "u32"/%s -> running\n", 
-                           lGetNumberOfElem(lGetList(jatep, JAT_task_list)), jobid, pe_task_id_str));
+                        DPRINTF(("--- task "u32"/%s -> running\n", jobid, pe_task_id_str));
                         task = lAddSubStr(jatep, JB_pe_task_id_str, pe_task_id_str, JAT_task_list, JB_Type);
                         task_tasks = lCreateList("", JAT_Type);
                         task_task = lCreateElem(JAT_Type);
@@ -504,6 +553,32 @@ sge_pack_buffer *pb
                      sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
                      lSetString(task, JB_sge_o_mail, failed_msg);
                      sge_log_dusage(jr, jep, jatep);
+
+                     /* remove pe task from job */
+                     {
+                        /* we have to store the tasks usage in a jatask global container */
+                        lListElem *previous_task;  /* hold usage of previous pe tasks */
+                        previous_task = lGetElemStr(lGetList(jatep, JAT_task_list), JB_pe_task_id_str, "past_usage");
+
+                        /* container not yet created */
+                        if (previous_task == NULL) {
+                           lList* task_tasks;
+                           lListElem *task_task;
+
+                           DPRINTF(("creating dummy pe task \"past_usage\" to store usage of finished pe tasks"));
+                           previous_task = lAddSubStr(jatep, JB_pe_task_id_str, "past_usage", JAT_task_list, JB_Type);
+                           task_tasks = lCreateList("", JAT_Type);
+                           task_task = lCreateElem(JAT_Type);
+                           lAppendElem(task_tasks, task_task);
+                           lSetList(previous_task, JB_ja_tasks, task_tasks);
+                        }
+
+                        /* add tasks (scaled) usage to previous usage */
+                        pe_task_sum_previous_usage(previous_task, task);
+                     }
+
+                     lRemoveElem(lGetList(jatep, JAT_task_list), task);
+                     
                      job_write_spool_file(jep, 0, SPOOL_DEFAULT);
 
 

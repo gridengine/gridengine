@@ -244,6 +244,7 @@ typedef struct cl_com_handle {
    cl_com_handle_statistic_t* statistic; /* statistic data of handle */
 
 /* Threads */
+   cl_thread_condition_t* app_condition;   /* triggered when there are messages to read for application (by read thread) */
    cl_thread_condition_t* read_condition;  /* condition variable for data write */
    cl_thread_condition_t* write_condition; /* condition variable for data read */
    cl_thread_settings_t*  service_thread;  /* pointer to cl_com_handle_service_thread() thread pointer */

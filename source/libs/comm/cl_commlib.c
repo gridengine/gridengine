@@ -552,6 +552,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    CL_LOG_INT(CL_LOG_INFO, "max. used descriptors for communication:", new_handle->max_open_connections);
    
    new_handle->max_con_close_mode = CL_ON_MAX_COUNT_OFF;
+   new_handle->app_condition = NULL;
    new_handle->read_condition = NULL;
    new_handle->write_condition = NULL;
    new_handle->service_thread = NULL;
@@ -781,6 +782,14 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
          return_value = cl_thread_create_thread_condition(&(new_handle->read_condition));
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not setup read condition");
+            thread_start_error = 1;
+            break;
+         }
+
+         CL_LOG(CL_LOG_INFO,"creating application read condition ...");
+         return_value = cl_thread_create_thread_condition(&(new_handle->app_condition));
+         if (return_value != CL_RETVAL_OK) {
+            CL_LOG(CL_LOG_ERROR,"could not setup application read condition");
             thread_start_error = 1;
             break;
          }
@@ -1074,6 +1083,14 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                CL_LOG(CL_LOG_INFO,"shutdown handle write condition OK");
             }
    
+            CL_LOG(CL_LOG_INFO,"shutdown handle application read condition ...");
+            ret_val = cl_thread_delete_thread_condition(&(handle->app_condition));
+            if (ret_val != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle application read condition", cl_get_error_text(ret_val));
+            } else {
+               CL_LOG(CL_LOG_INFO,"shutdown handle application read condition OK");
+            }
+
             CL_LOG(CL_LOG_INFO,"shutdown handle read condition ...");
             ret_val = cl_thread_delete_thread_condition(&(handle->read_condition));
             if (ret_val != CL_RETVAL_OK) {
@@ -3212,6 +3229,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
       CL_LOG(CL_LOG_INFO,"message filtering not supported");
    }
    do {
+      /* return if there are no connections in list */
       cl_raw_list_lock(handle->connection_list);
       elem = cl_connection_list_get_first_elem(handle->connection_list);     
       if (elem == NULL) {
@@ -3223,6 +3241,9 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
       pthread_mutex_lock(handle->messages_ready_mutex);
       if (handle->messages_ready_for_read > 0) {
          pthread_mutex_unlock(handle->messages_ready_mutex);
+
+         cl_thread_clear_triggered_conditions(handle->app_condition);
+
          while(elem) {
             int endpoint_match = 1;
             connection = elem->connection;
@@ -3379,7 +3400,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                break;
             case CL_ONE_THREAD:
                cl_thread_trigger_event(handle->read_thread);
-               return_value = cl_thread_wait_for_thread_condition(handle->read_condition,
+               return_value = cl_thread_wait_for_thread_condition(handle->app_condition,
                                                    handle->select_sec_timeout,
                                                    handle->select_usec_timeout);
                if (return_value == CL_RETVAL_CONDITION_WAIT_TIMEOUT) {
@@ -4906,6 +4927,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          }
          cl_raw_list_unlock(cl_com_handle_list);
       } else {
+         unsigned long messages_ready_before_read = 0;
 
          
          /* check number of connections */
@@ -4971,6 +4993,9 @@ static void *cl_com_handle_read_thread(void *t_conf) {
             }
          }
 
+         pthread_mutex_lock(handle->messages_ready_mutex);
+         messages_ready_before_read = handle->messages_ready_for_read;
+         pthread_mutex_unlock(handle->messages_ready_mutex);
 
          cl_raw_list_lock(handle->connection_list);
          /* read messages */
@@ -5089,14 +5114,23 @@ static void *cl_com_handle_read_thread(void *t_conf) {
             cl_thread_trigger_event(handle->write_thread);
          }
          
-         pthread_mutex_lock(handle->messages_ready_mutex);
-         if ( wait_for_events || message_received != 0 || handle->messages_ready_for_read > 0 ) {
-            pthread_mutex_unlock(handle->messages_ready_mutex);
-            /* trigger application with broadcast (if app uses threads)*/
+         /* trigger threads which are waiting for read_condition when
+            we will do a wait by itself (because we have no descriptors 
+            for reading) or when we have received a message */
+         if ( wait_for_events || message_received != 0 ) {
             cl_thread_trigger_thread_condition(handle->read_condition,1);
-         } else {
-            pthread_mutex_unlock(handle->messages_ready_mutex);
-         }
+
+            /* if we have received a message which was no protocol message
+               trigger application ( cl_commlib_receive_message() ) */
+            pthread_mutex_lock(handle->messages_ready_mutex);
+
+            if ( handle->messages_ready_for_read > 0 && handle->messages_ready_for_read != messages_ready_before_read ) {
+               pthread_mutex_unlock(handle->messages_ready_mutex);
+               cl_thread_trigger_thread_condition(handle->app_condition,1); 
+            } else {
+               pthread_mutex_unlock(handle->messages_ready_mutex);
+            }
+         } 
       }
 
       if (wait_for_events != 0) {

@@ -66,6 +66,7 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               setup_qmaster.c \
               subordinate_qmaster.c \
               time_event.c \
+              sge_utility_qmaster.c \
               sge_user_mapping.c
              
 QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
@@ -227,6 +228,9 @@ subordinate_qmaster.o   : $(QMASTER_DIR)/subordinate_qmaster.c
 
 time_event.o   : $(QMASTER_DIR)/time_event.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/time_event.c
+
+sge_utility_qmaster.o   : $(QMASTER_DIR)/sge_utility_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_utility_qmaster.c
 
 sge_user_mapping.o   : $(QMASTER_DIR)/sge_user_mapping.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_user_mapping.c

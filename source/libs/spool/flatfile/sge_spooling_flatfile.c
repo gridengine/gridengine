@@ -53,8 +53,9 @@
 #include "sge_unistd.h"
 #include "sge_dstring.h"
 
-#include "gdi_utility.h"
+#include "sge_answer.h"
 #include "sge_object.h"
+#include "sge_utility.h"
 #include "config.h"
 
 #include "msg_common.h"

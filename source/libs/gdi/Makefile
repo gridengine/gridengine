@@ -40,7 +40,6 @@ GDILIB_SRC = gdi_setup.c \
          gdi_tsm.c \
          gdi_qmod.c \
          gdi_checkpermissions.c \
-         gdi_utility.c \
          gdi_conf.c \
          pack_job_delivery.c \
          sge_any_request.c \
@@ -103,9 +102,6 @@ gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
 
 gdi_qmod.o:	$(GDILIB_DIR)/gdi_qmod.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_qmod.c
-
-gdi_utility.o:	$(GDILIB_DIR)/gdi_utility.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_utility.c
 
 sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ack.c

@@ -49,7 +49,7 @@
 #include "config_file.h"
 #include "rw_configuration.h"
 #include "sge_userset_qmaster.h"
-#include "gdi_utility.h"
+#include "sge_utility.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_parse_num_par.h"
 #include "setup_path.h"

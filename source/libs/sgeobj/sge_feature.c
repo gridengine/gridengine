@@ -45,7 +45,7 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "gdi_utility.h"
+#include "sge_utility.h"
 #include "sge_answer.h"
 #include "sge_feature.h"         
 #include "version.h"

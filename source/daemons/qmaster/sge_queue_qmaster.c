@@ -62,7 +62,6 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_host.h"
-#include "gdi_utility.h"
 #include "sge_qmod_qmaster.h"
 #include "config_file.h"
 #include "sge_userprj_qmaster.h"
@@ -81,6 +80,7 @@
 #include "sge_complex_schedd.h"
 #include "sge_utility.h"
 #include "sge_todo.h"
+#include "sge_utility_qmaster.h"
 
 #include "sge_spooling.h"
 

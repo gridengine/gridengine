@@ -44,7 +44,6 @@
 #include "sge_userset_qmaster.h"
 #include "sge_feature.h"
 #include "sge_conf.h"
-#include "gdi_utility.h"
 #include "valid_queue_user.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"

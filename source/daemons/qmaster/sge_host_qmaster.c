@@ -47,7 +47,7 @@
 #include "sge_gdi_request.h"
 #include "sge_host_qmaster.h"
 #include "sge_queue_qmaster.h"
-#include "gdi_utility.h"
+#include "sge_utility.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 #include "sge_static_load.h"
@@ -83,6 +83,7 @@
 #include "sge_complex.h"
 #include "sge_queue.h"
 #include "sge_queue_qmaster.h"
+#include "sge_utility_qmaster.h"
 #include "qmaster_to_execd.h"
 #include "sge_todo.h"
 

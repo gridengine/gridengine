@@ -56,13 +56,14 @@
 #include "sge_usermap.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_gdi.h"
 
 #include "sge_answer.h"
 #include "sge_range.h"
 
 #include "sge_object.h"
 
-#include "gdi_utility.h"
+#include "sge_utility.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -1015,4 +1016,143 @@ int object_type_get_key_nm(const sge_object_type type)
    DEXIT;
    return ret;
 }
+
+void attr_mod_sub_list(
+lList **alpp,
+lListElem *this_elem,
+int this_elem_name,
+int this_elem_primary_key,
+lListElem *delta_elem,
+int sub_command,
+char *sub_list_name,
+char *object_name,
+int no_info
+) {
+   DENTER(TOP_LAYER, "attr_mod_sub_list");
+
+   if (lGetPosViaElem(delta_elem, this_elem_name)<0) {
+      return;
+   }
+
+   if (sub_command == SGE_GDI_CHANGE ||
+       sub_command == SGE_GDI_APPEND ||
+       sub_command == SGE_GDI_REMOVE) {
+      lList *reduced_sublist;
+      lList *full_sublist;
+      lListElem *reduced_element, *next_reduced_element;
+      lListElem *full_element, *next_full_element;
+
+      reduced_sublist = lGetList(delta_elem, this_elem_name);
+      full_sublist = lGetList(this_elem, this_elem_name);
+      next_reduced_element = lFirst(reduced_sublist);
+      /*
+      ** we try to find each element of the delta_elem
+      ** in the sublist if this_elem. Elements which can be found
+      ** will be moved into sublist of this_elem.
+      */
+      while ((reduced_element = next_reduced_element)) {
+         int restart_loop = 0;
+
+         next_reduced_element = lNext(reduced_element);
+         next_full_element = lFirst(full_sublist);
+         while ((full_element = next_full_element)) {
+            next_full_element = lNext(full_element);
+
+            if (!strcmp(lGetString(reduced_element, this_elem_primary_key),
+                   lGetString(full_element, this_elem_primary_key))) {
+               lListElem *new_sub_elem;
+               lListElem *old_sub_elem;
+
+               next_reduced_element = lNext(reduced_element);
+               new_sub_elem =
+                  lDechainElem(reduced_sublist, reduced_element);
+               old_sub_elem = lDechainElem(full_sublist, full_element);
+               if (sub_command == SGE_GDI_CHANGE ||
+                   sub_command == SGE_GDI_APPEND) {
+
+                  if (!no_info && sub_command == SGE_GDI_APPEND) {
+                     INFO((SGE_EVENT, SFQ" already exists in "SFQ" of "SFQ"\n",
+                        lGetString(reduced_element, this_elem_primary_key),
+                        sub_list_name, object_name));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                  }
+
+                  lFreeElem(old_sub_elem);
+                  lAppendElem(full_sublist, new_sub_elem);
+
+                  restart_loop = 1;
+                  break;
+               } else if (sub_command == SGE_GDI_REMOVE) {
+
+                  lFreeElem(old_sub_elem);
+                  lFreeElem(new_sub_elem);
+
+                  restart_loop = 1;
+                  break;
+               }
+            }
+         }
+         if (restart_loop) {
+            next_reduced_element = lFirst(reduced_sublist);
+         }
+      }
+      if (sub_command == SGE_GDI_CHANGE ||
+          sub_command == SGE_GDI_APPEND ||
+          sub_command == SGE_GDI_REMOVE) {
+         next_reduced_element = lFirst(reduced_sublist);
+         while ((reduced_element = next_reduced_element)) {
+            lListElem *new_sub_elem;
+
+            next_reduced_element = lNext(reduced_element);
+
+            if (!no_info && sub_command == SGE_GDI_REMOVE) {
+               INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
+                   lGetString(reduced_element, this_elem_primary_key),
+                   sub_list_name, object_name));
+               answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+            } else {
+               if (!full_sublist) {
+                  if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                     INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
+                        "Adding new element(s).\n",
+                        sub_list_name, object_name));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                  }
+                  lSetList(this_elem, this_elem_name, lCopyList("",
+                     lGetList(delta_elem, this_elem_name)));
+                  full_sublist = lGetList(this_elem, this_elem_name);
+                  break;
+               } else {
+                  if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                     INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
+                        " - Adding new element.\n",
+                        lGetString(reduced_element, this_elem_primary_key),
+                        sub_list_name, object_name));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                  }
+                  new_sub_elem =
+                     lDechainElem(reduced_sublist, reduced_element);
+                  lAppendElem(full_sublist, new_sub_elem);
+               }
+            }
+         }
+      }
+   } else if (sub_command == SGE_GDI_SET) {
+      /*
+      ** Overwrite the complete list
+      */
+      lSetList(this_elem, this_elem_name, lCopyList("",
+         lGetList(delta_elem, this_elem_name)));
+   }
+   /*
+   ** If the list does not contain any elements, we will delete
+   ** the list itself
+   */
+   if (lGetList(this_elem, this_elem_name)
+       && !lGetNumberOfElem(lGetList(this_elem, this_elem_name))) {
+      lSetList(this_elem, this_elem_name, NULL);
+   }
+   DEXIT;
+}
+
  

@@ -44,7 +44,6 @@
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "gdi_utility.h"
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
@@ -52,6 +51,7 @@
 #include "sge_calendar.h"
 #include "sge_complex.h"
 #include "sge_utility.h"
+#include "sge_utility_qmaster.h"
 
 #include "sge_spooling.h"
 

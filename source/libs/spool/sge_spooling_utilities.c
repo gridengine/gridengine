@@ -36,8 +36,9 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 
-#include "gdi_utility.h"
+#include "sge_answer.h"
 #include "sge_object.h"
+#include "sge_utility.h"
 
 #include "msg_common.h"
 #include "msg_spoollib.h"

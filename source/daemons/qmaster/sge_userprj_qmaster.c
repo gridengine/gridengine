@@ -55,7 +55,6 @@
 #include "cull_parse_util.h"
 #include "config.h"
 #include "sge_log.h"
-#include "gdi_utility.h"
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_userprj.h"
@@ -63,6 +62,7 @@
 #include "sge_userset.h"
 #include "sge_sharetree.h"
 #include "sge_utility.h"
+#include "sge_utility_qmaster.h"
 
 #include "sge_spooling.h"
 

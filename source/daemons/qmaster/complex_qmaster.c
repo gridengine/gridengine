@@ -49,7 +49,6 @@
 #include "opt_history.h"
 #include "path_history.h"
 #include "sge_log.h"
-#include "gdi_utility.h"
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
 #include "sge_select_queue.h"

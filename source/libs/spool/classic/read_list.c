@@ -51,7 +51,6 @@
 
 #include "sge.h"
 #include "sge_dirent.h"
-#include "gdi_utility.h"
 #include "sort_hosts.h"          /* JG: TODO: from libsched. Do we need it for spooling? */
 #include "sge_complex_schedd.h"  /* JG: TODO: dito */
 #include "slots_used.h"          /* JG: TODO: dito */

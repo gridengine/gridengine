@@ -44,12 +44,11 @@
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_todo.h"
-#include "sge_utility.h"
 #include "sge_string.h"
 #include "sge_userset.h"
 #include "config_file.h"
 #include "sge_event_master.h"
-#include "gdi_utility.h"
+#include "sge_utility.h"
 #include "sge_signal.h"
 #include "sge_userprj.h"
 #include "sge_pe_task.h"
@@ -251,7 +250,7 @@ int pe_validate(int startup, lListElem *pep, lList **alpp)
    }
 
    /* register our error function for use in replace_params() */
-   config_errfunc = error;
+   config_errfunc = set_error;
 
    /* -------- start_proc_args */
    s = lGetString(pep, PE_start_proc_args);

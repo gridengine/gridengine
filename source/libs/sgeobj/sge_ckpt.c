@@ -39,7 +39,6 @@
 #include "config_file.h"
 #include "sge_signal.h"
 
-#include "gdi_utility.h"
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_queue.h"

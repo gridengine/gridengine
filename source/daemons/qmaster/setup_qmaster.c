@@ -77,7 +77,7 @@
 #include "sge_feature.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
-#include "gdi_utility.h"
+#include "sge_utility.h"
 #include "setup.h"
 #include "setup_qmaster.h"
 #include "sge_prog.h"
@@ -165,7 +165,7 @@ int sge_setup_qmaster()
    }
 
    /* register our error function for use in replace_params() */
-   config_errfunc = error;
+   config_errfunc = set_error;
 
    /*
     * Initialize Master lists and hash tables, if necessary 

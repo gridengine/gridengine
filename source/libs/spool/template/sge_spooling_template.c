@@ -35,7 +35,6 @@
 
 #include "sge_dstring.h"
 
-#include "gdi_utility.h"
 #include "sge_object.h"
 
 #include "msg_common.h"

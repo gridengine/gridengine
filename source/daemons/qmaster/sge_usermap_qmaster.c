@@ -48,7 +48,7 @@
 #include "sge_log.h"
 #include "sge_c_gdi.h"
 #include "sge_string.h"
-#include "gdi_utility.h"
+#include "sge_utility.h"
 #include "sge_user_mapping.h"
 #include "sge_usermap_qmaster.h"
 #include "sge_answer.h"

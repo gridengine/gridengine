@@ -37,7 +37,6 @@
 #include "symbols.h"
 #include "sge.h"
 
-#include "gdi_utility.h"
 #include "sge_object.h"
 #include "sge_complex.h"
 #include "sge_job.h"
@@ -48,6 +47,7 @@
 #include "sge_range.h"
 #include "sge_queue.h"
 #include "sge_todo.h"
+#include "sge_utility.h"
 #include "parse.h"
 
 #include "commlib.h"

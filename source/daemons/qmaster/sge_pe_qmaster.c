@@ -49,13 +49,13 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_job_schedd.h"
-#include "gdi_utility.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_queue.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
+#include "sge_utility_qmaster.h"
 
 #include "sge_spooling.h"
 

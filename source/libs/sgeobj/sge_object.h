@@ -196,4 +196,11 @@ int
 object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
                             u_long32 step);
 
+void 
+attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
+                  int this_elem_primary_key, lListElem *delta_elem, 
+                  int sub_command, char *sub_list_name, char *object_name, 
+                  int no_info); 
+
+
 #endif /* __SGE_OBJECT_H */

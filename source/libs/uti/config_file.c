@@ -41,6 +41,22 @@
 #include "msg_daemons_common.h"
 
 
+char err_msg[1000];
+
+/* ------------------------------
+
+   register passed error string in
+   err_msg for later use
+
+*/
+void set_error(char *err_str) 
+{
+   if (err_str) {
+      strncpy(err_msg, err_str, sizeof(err_msg)-1);
+      err_msg[sizeof(err_msg)-1] = '\0';
+   }
+}
+
 /* handle the config file
    This file is used to transfer parameters to the shepherd */
 typedef struct config_entry {

@@ -50,7 +50,7 @@
 #include "sge_queue.h"
 #include "sge_host.h"
 #include "sge_complex.h"
-#include "gdi_utility.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"

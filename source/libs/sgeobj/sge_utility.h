@@ -32,6 +32,24 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#define SGE_CHECK_POINTER_NULL(pointer)                              \
+   if ((pointer) == NULL) {                                          \
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \
+                              ANSWER_QUALITY_ERROR,                  \
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);  \
+      DEXIT;                                                         \
+      return NULL;                                                   \
+   }
+
+#define SGE_CHECK_POINTER_FALSE(pointer)                             \
+   if ((pointer) == NULL) {                                          \
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \
+                              ANSWER_QUALITY_ERROR,                  \
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);  \
+      DEXIT;                                                         \
+      return false;                                                  \
+   }
+
 int verify_str_key(lList **alpp, const char *str, const char *name);
 
 #endif /* __SGE_VAR_H */

@@ -1,3 +1,8 @@
+JG-2003-11-10-0: Bugfix:    Fixed the build
+                 Enhancem.: Added information (host load and consumables) to
+                            reporting file. Which variables are to report is 
+                            configurable through the exec host configuration.
+
 AD-2003-11-10-1: Bugfix:    Fixed the build
                  Changed:   rmon
 

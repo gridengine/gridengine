@@ -172,6 +172,8 @@ char **argv
    
    char **argp = argv;
 
+   bool done = false;
+
    DENTER_MAIN(TOP_LAYER, "commd");
    
    /* This needs a better solution */
@@ -393,7 +395,7 @@ char **argv
    /*
     * main loop waiting for external events 
     */
-   while (1) {
+   while (!done) {
       int maxfd, maxrfd, maxwfd;
                 
       now = sge_get_gmt();
@@ -874,6 +876,7 @@ char **argv
       }
    }
    DEXIT;
+   return EXIT_SUCCESS;
 }
 
 /*-----------------------------------------------------------------------*/

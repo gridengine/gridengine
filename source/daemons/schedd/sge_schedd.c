@@ -118,6 +118,7 @@ char *argv[]
    int ret;
    char initial_qmaster_host[1024];
    time_t next_prof_output = 0;
+   bool done = false;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
@@ -208,7 +209,7 @@ char *argv[]
    set_commlib_param(CL_P_TIMEOUT_SRCV, 4*60, NULL, NULL);
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
 
-   while (1) {
+   while (!done) {
       if (shut_me_down) {
          sge_mirror_shutdown();
          sge_shutdown();
@@ -257,6 +258,7 @@ char *argv[]
       }
    }
    DEXIT;
+   return EXIT_SUCCESS;
 }
 
 /*************************************************************/
